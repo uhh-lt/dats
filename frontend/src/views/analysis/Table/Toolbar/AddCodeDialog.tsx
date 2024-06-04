@@ -2,7 +2,7 @@ import { Box, Button, ButtonProps, Dialog, DialogTitle, Stack } from "@mui/mater
 import { MRT_RowSelectionState } from "material-react-table";
 import { useState } from "react";
 import { CodeRead } from "../../../../api/openapi/models/CodeRead.ts";
-import CodeTable from "../../../../components/CodeTable/CodeTable.tsx";
+import CodeTable from "../../../../components/Code/CodeTable.tsx";
 
 export interface AddCodeDialogProps {
   projectId: number;

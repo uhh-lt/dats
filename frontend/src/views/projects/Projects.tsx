@@ -13,28 +13,16 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import PreProHooks from "../../api/PreProHooks.ts";
 import UserHooks from "../../api/UserHooks.ts";
 import { ProjectRead } from "../../api/openapi/models/ProjectRead.ts";
 import { useAuth } from "../../auth/useAuth.ts";
-import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition.ts";
-import ProjectContextMenu from "./ProjectContextMenu.tsx";
 import RecentActivity from "./RecentActivity.tsx";
 
 function Projects() {
   const { user } = useAuth();
   const projects = UserHooks.useGetProjects(user?.id);
-
-  // context menu
-  const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
-  const [contextMenuData, setContextMenuData] = useState<number>();
-  const onContextMenu = (projectId: number) => (event: React.MouseEvent) => {
-    event.preventDefault();
-    setContextMenuPosition({ x: event.clientX, y: event.clientY });
-    setContextMenuData(projectId);
-  };
 
   return (
     <Box sx={{ height: "100%", overflowY: "auto", pb: 2 }}>
@@ -77,7 +65,7 @@ function Projects() {
                     </Card>
                   </Grid>
                   {projects.data.map((project) => (
-                    <ProjectCard key={project.id} project={project} onContextMenu={onContextMenu}></ProjectCard>
+                    <ProjectCard key={project.id} project={project} />
                   ))}
                 </Grid>
               </Grid>
@@ -86,12 +74,6 @@ function Projects() {
                 <RecentActivity />
               </Grid>
             </Grid>
-
-            <ProjectContextMenu
-              projectId={contextMenuData}
-              position={contextMenuPosition}
-              handleClose={() => setContextMenuPosition(null)}
-            />
           </>
         )}
       </Container>
@@ -101,14 +83,13 @@ function Projects() {
 
 interface ProjectCardProps {
   project: ProjectRead;
-  onContextMenu: (projectId: number) => (event: React.MouseEvent) => void;
 }
 
-function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
+function ProjectCard({ project }: ProjectCardProps) {
   const preProStatus = PreProHooks.useGetPreProProjectStatus(project.id);
   return (
     <Grid item sm={4}>
-      <Card onContextMenu={onContextMenu(project.id)}>
+      <Card>
         <CardActionArea component={Link} to={`/project/${project.id}/search`}>
           <CardContent sx={{ padding: "0px !important" }}>
             <Typography variant="body2" color="text.primary" bgcolor="lightgray" p={2} height={100}>

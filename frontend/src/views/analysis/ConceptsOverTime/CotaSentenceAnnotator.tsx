@@ -26,8 +26,8 @@ import { COTARead } from "../../../api/openapi/models/COTARead.ts";
 import { COTASentence } from "../../../api/openapi/models/COTASentence.ts";
 import { COTASentenceID } from "../../../api/openapi/models/COTASentenceID.ts";
 import { DateGroupBy } from "../../../api/openapi/models/DateGroupBy.ts";
-import SdocRenderer from "../../../components/DataGrid/SdocRenderer.tsx";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
+import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { dateToLocaleDate } from "../../../utils/DateUtils.ts";
 import { CotaActions } from "./cotaSlice.ts";
@@ -90,6 +90,9 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
   const provenanceSdocIdSentenceId = useAppSelector((state) => state.cota.provenanceSdocIdSentenceId);
   const selectedDate = useAppSelector((state) => state.cota.selectedDate);
   const dispatch = useAppDispatch();
+
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
 
   // virtualization
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
@@ -204,7 +207,7 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
       },
       {
         onSuccess(data) {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Updated CotA '${data.name}'`,
             severity: "success",
           });
@@ -223,7 +226,7 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
       },
       {
         onSuccess(data) {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Updated CotA '${data.name}'`,
             severity: "success",
           });

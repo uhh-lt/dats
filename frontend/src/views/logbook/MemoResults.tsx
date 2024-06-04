@@ -1,22 +1,12 @@
 import { Box, List } from "@mui/material";
 import { BoxProps } from "@mui/system";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import React, { useRef, useState } from "react";
-import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
-import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
-import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition.ts";
-import MemoCard from "../../features/Memo/MemoCard/MemoCard.tsx";
-import MemoResultsContextMenu from "./MemoResultsContextMenu.tsx";
+import { useRef } from "react";
+import MemoCard from "../../components/Memo/MemoCard/MemoCard.tsx";
 
 interface MemoResultsProps {
   memoIds: number[];
   noResultsText: string;
-}
-
-export interface MemoCardContextMenuData {
-  memoId: number | undefined;
-  memoStarred: boolean | undefined;
-  attachedObjectType: AttachedObjectType | undefined;
 }
 
 function MemoResults({ noResultsText, memoIds, ...props }: MemoResultsProps & BoxProps) {
@@ -28,24 +18,8 @@ function MemoResults({ noResultsText, memoIds, ...props }: MemoResultsProps & Bo
     estimateSize: () => 170,
   });
 
-  // context menu
-  const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
-  const [contextMenuData, setContextMenuData] = useState<MemoRead | undefined>(undefined);
-  const onContextMenu = (memo: MemoRead) => (event: React.MouseEvent) => {
-    event.preventDefault();
-    setContextMenuPosition({ x: event.clientX, y: event.clientY });
-    setContextMenuData(memo);
-  };
-
   return (
     <>
-      <MemoResultsContextMenu
-        memoId={contextMenuData?.id}
-        memoStarred={contextMenuData?.starred}
-        attachedObjectType={contextMenuData?.attached_object_type || AttachedObjectType.SPAN_GROUP}
-        position={contextMenuPosition}
-        handleClose={() => setContextMenuPosition(null)}
-      />
       <Box ref={containerRef} style={{ height: "90%", overflowY: "auto" }} {...props}>
         <List
           style={{
@@ -69,7 +43,7 @@ function MemoResults({ noResultsText, memoIds, ...props }: MemoResultsProps & Bo
                 transform: `translateY(${virtualItem.start}px)`,
               }}
             >
-              <MemoCard memo={memoIds[virtualItem.index]} onContextMenu={onContextMenu} />
+              <MemoCard memo={memoIds[virtualItem.index]} />
             </Box>
           ))}
           {memoIds.length === 0 && <div>{noResultsText}</div>}

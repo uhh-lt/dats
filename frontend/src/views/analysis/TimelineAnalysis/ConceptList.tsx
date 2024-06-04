@@ -15,7 +15,7 @@ import { LogicalOperator } from "../../../api/openapi/models/LogicalOperator.ts"
 import { TimelineAnalysisColumns } from "../../../api/openapi/models/TimelineAnalysisColumns.ts";
 import { TimelineAnalysisConcept_Output } from "../../../api/openapi/models/TimelineAnalysisConcept_Output.ts";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
-import { MyFilter } from "../../../features/FilterDialog/filterUtils.ts";
+import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 import { useAppDispatch, useAppStore } from "../../../plugins/ReduxHooks.ts";
 import ConceptEditor from "./ConceptEditor.tsx";
 import ConceptListItem from "./ConceptListItem.tsx";

@@ -12,8 +12,8 @@ import {
 import { useMemo, useState } from "react";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
-import SdocRenderer from "../../../components/DataGrid/SdocRenderer.tsx";
-import SdocTagsRenderer from "../../../components/DataGrid/SdocTagRenderer.tsx";
+import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
+import SdocTagsRenderer from "../../../components/SourceDocument/SdocTagRenderer.tsx";
 import { ProjectProps } from "./ProjectProps.ts";
 
 interface DuplicateDocumentData {

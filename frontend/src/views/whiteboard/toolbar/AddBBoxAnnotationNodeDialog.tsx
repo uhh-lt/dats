@@ -3,7 +3,7 @@ import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "ma
 import { useEffect, useState } from "react";
 import { XYPosition } from "reactflow";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
-import BBoxAnnotationTable from "../../../components/BBoxAnnotationTable/BBoxAnnotationTable.tsx";
+import BBoxAnnotationTable from "../../../components/BBoxAnnotation/BBoxAnnotationTable/BBoxAnnotationTable.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
 import { PendingAddNodeAction } from "../types/PendingAddNodeAction.ts";
@@ -75,7 +75,6 @@ function AddBBoxAnnotationNodeDialog({ projectId, buttonProps, onClick }: AddBBo
             onSortingChange={setSortingModel}
             columnVisibilityModel={visibilityModel}
             onColumnVisibilityChange={setVisibilityModel}
-            onRowContextMenu={(_, bboxAnnotationId) => console.log("Row context menu", bboxAnnotationId)}
             cardProps={{ elevation: 2, className: "myFlexFillAllContainer myFlexContainer" }}
             renderBottomToolbarCustomActions={(props) => (
               <>

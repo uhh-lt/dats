@@ -8,7 +8,7 @@ import React, { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
-import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
+import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import ProjectCodes from "./ProjectCodes.tsx";
 import ProjectDetails from "./ProjectDetails.tsx";
 import ProjectDocuments from "./ProjectDocuments.tsx";

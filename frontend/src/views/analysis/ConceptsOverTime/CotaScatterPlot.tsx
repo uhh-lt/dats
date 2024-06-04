@@ -32,8 +32,8 @@ import { COTAConcept } from "../../../api/openapi/models/COTAConcept.ts";
 import { COTARead } from "../../../api/openapi/models/COTARead.ts";
 import { COTASentence } from "../../../api/openapi/models/COTASentence.ts";
 import { COTASentenceID } from "../../../api/openapi/models/COTASentenceID.ts";
-import { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu.tsx";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import { GenericPositionMenuHandle } from "../../../components/GenericPositionMenu.tsx";
+import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import CotaEditMenu from "./CotaEditMenu.tsx";
 import CotaPlotToggleButton from "./CotaPlotToggleButton.tsx";
@@ -46,7 +46,7 @@ interface CotaScatterPlotProps {
 
 function CotaScatterPlot({ cota }: CotaScatterPlotProps) {
   // local state
-  const cotaEditMenuRef = useRef<GenericPositionContextMenuHandle>(null);
+  const cotaEditMenuRef = useRef<GenericPositionMenuHandle>(null);
   const [rightClickedSentence, setRightClickedSentence] = useState<COTASentenceID | undefined>(undefined);
 
   // redux
@@ -94,6 +94,9 @@ function CotaScatterPlot({ cota }: CotaScatterPlotProps) {
     };
   }, [cota]);
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   // actions
   const handleDotClick = (sdocIdSentenceId: string) => {
     dispatch(CotaActions.onScatterPlotDotClick(sdocIdSentenceId));
@@ -117,7 +120,7 @@ function CotaScatterPlot({ cota }: CotaScatterPlotProps) {
       },
       {
         onSuccess(data) {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Updated CotA '${data.name}'`,
             severity: "success",
           });
@@ -138,7 +141,7 @@ function CotaScatterPlot({ cota }: CotaScatterPlotProps) {
       },
       {
         onSuccess(data) {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Updated CotA '${data.name}'`,
             severity: "success",
           });
@@ -218,7 +221,7 @@ function CotaScatterPlot({ cota }: CotaScatterPlotProps) {
         <CardHeader
           className="myFlexFitContentContainer"
           title={"Scatter Plot"}
-          subheader={`Hover on a dot to see more information.`}
+          subheader={`Hover on a dot to see more information. Right-click dot to modify.`}
           action={<CotaPlotToggleButton />}
         />
         <CardContent className="myFlexFillAllContainer">{content}</CardContent>

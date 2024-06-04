@@ -17,25 +17,23 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useContext, useRef, useState } from "react";
+import { useContext, useState } from "react";
 import { useParams } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
 import { useAuth } from "../../auth/useAuth.ts";
-import EditableDocumentName, {
-  EditableDocumentNameHandle,
-} from "../../components/EditableDocumentName/EditableDocumentName.tsx";
-import EditableDocumentNameButton from "../../components/EditableDocumentName/EditableDocumentNameButton.tsx";
+import CodeExplorer from "../../components/Code/CodeExplorer/CodeExplorer.tsx";
+import EditableTypography from "../../components/EditableTypography.tsx";
+import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
+import DocumentInformation from "../../components/SourceDocument/DocumentInformation/DocumentInformation.tsx";
 import { AppBarContext } from "../../layouts/TwoBarLayout.tsx";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
-import AudioVideoViewer from "../search/DocumentViewer/AudioVideoViewer.tsx";
-import DocumentInformation from "../search/DocumentViewer/DocumentInformation/DocumentInformation.tsx";
-import ImageViewer from "../search/DocumentViewer/ImageViewer.tsx";
-import TextViewer from "../search/DocumentViewer/TextViewer.tsx";
 import { AnnotationDocumentSelector } from "./AnnotationDocumentSelector.tsx";
 import BBoxAnnotationExplorer from "./AnnotationExploer/BBoxAnnotationExplorer.tsx";
 import SpanAnnotationExplorer from "./AnnotationExploer/SpanAnnotationExplorer.tsx";
-import CodeExplorer from "./CodeExplorer/CodeExplorer.tsx";
+import AudioVideoViewer from "./DocumentViewer/AudioVideoViewer.tsx";
+import ImageViewer from "./DocumentViewer/ImageViewer.tsx";
+import TextViewer from "./DocumentViewer/TextViewer.tsx";
 import ImageAnnotator from "./ImageAnnotator/ImageAnnotator.tsx";
 import TextAnnotator from "./TextAnnotator/TextAnnotator.tsx";
 import { AnnoActions } from "./annoSlice.ts";
@@ -45,9 +43,6 @@ function Annotation() {
   const params = useParams() as { projectId: string; sdocId: string };
   const sdocId = parseInt(params.sdocId);
   const { user } = useAuth();
-
-  // local state
-  const editableDocumentNameHandle = useRef<EditableDocumentNameHandle>(null);
 
   // global client state (context)
   const appBarContainerRef = useContext(AppBarContext);
@@ -59,6 +54,33 @@ function Annotation() {
   // global server state (react query)
   const sdoc = SdocHooks.useGetDocument(sdocId);
   const annotationDocument = SdocHooks.useGetOrCreateAdocOfUser(sdocId, user?.id);
+
+  // rename document
+  const openSnackbar = useOpenSnackbar();
+  const updateNameMutation = SdocHooks.useUpdateName();
+  const handleUpdateName = (newName: string) => {
+    if (sdoc.isSuccess) {
+      if (newName === sdoc.data.name) {
+        return;
+      }
+      updateNameMutation.mutate(
+        {
+          sdocId: sdoc.data.id,
+          requestBody: {
+            name: newName,
+          },
+        },
+        {
+          onSuccess: (data) => {
+            openSnackbar({
+              text: `Updated document name to ${data.name}`,
+              severity: "success",
+            });
+          },
+        },
+      );
+    }
+  };
 
   // tabs
   const [tab, setTab] = useState("code");
@@ -158,16 +180,15 @@ function Annotation() {
                       {sdoc.isSuccess && annotationDocument.isSuccess ? (
                         <Stack spacing={2}>
                           <div style={{ display: "flex", alignItems: "center" }}>
-                            <EditableDocumentName
-                              sdocId={sdoc.data.id}
-                              variant={"h4"}
-                              style={{ margin: 0 }}
-                              inputProps={{ style: { fontSize: "2.125rem", padding: 0, width: "auto" } }}
-                              ref={editableDocumentNameHandle}
-                            />
-                            <EditableDocumentNameButton
-                              editableDocumentNameHandle={editableDocumentNameHandle.current}
-                              sx={{ ml: 1 }}
+                            <EditableTypography
+                              value={sdoc.data.name || sdoc.data.filename}
+                              onChange={handleUpdateName}
+                              variant="h4"
+                              whiteColor={false}
+                              stackProps={{
+                                width: "50%",
+                                flexGrow: 1,
+                              }}
                             />
                           </div>
                           {sdoc.data.doctype === DocType.IMAGE ? (

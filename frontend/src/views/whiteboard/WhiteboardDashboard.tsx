@@ -2,14 +2,14 @@ import { MRT_Row, MRT_TableOptions } from "material-react-table";
 import { useParams } from "react-router";
 import WhiteboardHooks from "../../api/WhiteboardHooks.ts";
 import { useAuth } from "../../auth/useAuth.ts";
-import AnalysisDashboard from "../../features/AnalysisDashboard/AnalysisDashboard.tsx";
+import ConfirmationAPI from "../../components/ConfirmationDialog/ConfirmationAPI.ts";
+import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
+import AnalysisDashboard from "../analysis/AnalysisDashboard/AnalysisDashboard.tsx";
 import {
   AnaylsisDashboardRow,
   HandleCreateAnalysis,
   useAnalysisDashboardTable,
-} from "../../features/AnalysisDashboard/useAnalysisDashboardTable.tsx";
-import ConfirmationAPI from "../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import SnackbarAPI from "../../features/Snackbar/SnackbarAPI.ts";
+} from "../analysis/AnalysisDashboard/useAnalysisDashboardTable.tsx";
 
 function WhiteboardDashboard() {
   // global client state
@@ -38,6 +38,9 @@ function WhiteboardDashboard() {
     variables: duplicatingVariables,
   } = WhiteboardHooks.useDuplicateWhiteboard();
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   // CRUD actions
   const handleDuplicateClick = (row: MRT_Row<AnaylsisDashboardRow>) => {
     duplicateWhiteboard(
@@ -46,7 +49,7 @@ function WhiteboardDashboard() {
       },
       {
         onSuccess(data) {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Duplicated whiteboard '${data.title}'`,
             severity: "success",
           });
@@ -65,7 +68,7 @@ function WhiteboardDashboard() {
           },
           {
             onSuccess(data) {
-              SnackbarAPI.openSnackbar({
+              openSnackbar({
                 text: `Deleted whiteboard '${data.title}'`,
                 severity: "success",
               });
@@ -90,7 +93,7 @@ function WhiteboardDashboard() {
         },
         {
           onSuccess(data) {
-            SnackbarAPI.openSnackbar({
+            openSnackbar({
               text: `Created new whiteboard '${data.title}'`,
               severity: "success",
             });
@@ -117,7 +120,7 @@ function WhiteboardDashboard() {
       },
       {
         onSuccess(data) {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Updated whiteboard '${data.title}'`,
             severity: "success",
           });

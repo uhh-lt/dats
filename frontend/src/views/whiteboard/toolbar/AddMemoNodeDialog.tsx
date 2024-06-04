@@ -3,7 +3,7 @@ import { MRT_RowSelectionState } from "material-react-table";
 import { useState } from "react";
 import { XYPosition } from "reactflow";
 import { MemoRead } from "../../../api/openapi/models/MemoRead.ts";
-import MemoTable from "../../../components/MemoTable/MemoTable.tsx";
+import MemoTable from "../../../components/Memo/MemoTable.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
 import { PendingAddNodeAction } from "../types/PendingAddNodeAction.ts";

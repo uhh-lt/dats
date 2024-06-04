@@ -9,10 +9,11 @@ import { AnnotationDocumentRead } from "../../../api/openapi/models/AnnotationDo
 import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
 import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
+import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import SpanContextMenu, { CodeSelectorHandle } from "../SpanContextMenu/SpanContextMenu.tsx";
-import { ICode } from "../TextAnnotator/ICode.ts";
+import AnnotationMenu, { CodeSelectorHandle } from "../AnnotationMenu.tsx";
+import { ICode } from "../ICode.ts";
 import SVGBBox from "./SVGBBox.tsx";
 import SVGBBoxText from "./SVGBBoxText.tsx";
 
@@ -51,6 +52,9 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
   // global server state (react query)
   const annotationsBatch = AdocHooks.useGetAllBboxAnnotationsBatch(visibleAdocIds);
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   // computed
   const annotations = useMemo(() => {
     const annotationsIsUndefined = annotationsBatch.some((a) => !a.data);
@@ -71,8 +75,8 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
   const updateMutation = BboxAnnotationHooks.useUpdateBBox();
   const deleteMutation = BboxAnnotationHooks.useDeleteBBox();
 
-  // right click (contextmenu) handling
-  const handleRightClick = useCallback(
+  // click handling
+  const handleClick = useCallback(
     (
       event: React.MouseEvent<SVGRectElement, MouseEvent> | React.MouseEvent<SVGTextElement, MouseEvent>,
       bbox: BBoxAnnotationReadResolvedCode,
@@ -231,7 +235,7 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
         },
         {
           onSuccess: (bboxAnnotation) => {
-            SnackbarAPI.openSnackbar({
+            openSnackbar({
               text: `Created Bounding Box Annotation ${bboxAnnotation.id}`,
               severity: "success",
             });
@@ -260,7 +264,7 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
         },
         {
           onSuccess: (updatedBboxAnnotation) => {
-            SnackbarAPI.openSnackbar({
+            openSnackbar({
               text: `Updated Bounding Box Annotation ${updatedBboxAnnotation.id}`,
               severity: "success",
             });
@@ -275,18 +279,22 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
 
   const onCodeSelectorDeleteCode = () => {
     if (selectedBbox) {
-      deleteMutation.mutate(
-        { bboxToDelete: selectedBbox },
-        {
-          onSuccess: (data) => {
-            SnackbarAPI.openSnackbar({
-              text: `Deleted Bounding Box Annotation ${data.id}`,
-              severity: "success",
-            });
-          },
+      ConfirmationAPI.openConfirmationDialog({
+        text: `Do you really want to remove the BBoxAnnotation ${selectedBbox.id}? You can reassign it later!`,
+        onAccept: () => {
+          deleteMutation.mutate(
+            { bboxToDelete: selectedBbox },
+            {
+              onSuccess: (data) => {
+                openSnackbar({
+                  text: `Deleted Bounding Box Annotation ${data.id}`,
+                  severity: "success",
+                });
+              },
+            },
+          );
         },
-      );
-      // console.log("Delete", code);
+      });
     } else {
       console.error("This should never happen! (onCodeSelectorDeleteCode)");
     }
@@ -314,12 +322,12 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
         <Typography variant="body1" component="div" sx={{ ml: 2 }}>
           Hint:{" "}
           {isZooming
-            ? "Try to drag the image & use mouse wheel to zoom. Right click boxes to edit annotations."
-            : "Drag to create annotations. Right click boxes to edit annotations."}
+            ? "Try to drag the image & use mouse wheel to zoom. Click boxes to edit annotations."
+            : "Drag to create annotations. Click boxes to edit annotations."}
         </Typography>
       </Toolbar>
 
-      <SpanContextMenu
+      <AnnotationMenu
         ref={codeSelectorRef}
         onAdd={onCodeSelectorAddCode}
         onEdit={onCodeSelectorEditCode}
@@ -348,7 +356,12 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
           </g>
           <g>
             {data.map((bbox) => (
-              <SVGBBox key={bbox.id} bbox={bbox} onContextMenu={handleRightClick} />
+              <SVGBBox
+                key={bbox.id}
+                bbox={bbox}
+                onClick={(event) => handleClick(event, bbox)}
+                style={{ cursor: "pointer" }}
+              />
             ))}
           </g>
           <g>
@@ -356,8 +369,9 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
               <SVGBBoxText
                 key={bbox.id}
                 bbox={bbox}
-                onContextMenu={handleRightClick}
-                fontSize={Math.max(21, height / 17)}
+                onClick={(event) => handleClick(event, bbox)}
+                fontSize={`${Math.max(21, height / 17)}px`}
+                style={{ cursor: "pointer" }}
               />
             ))}
           </g>

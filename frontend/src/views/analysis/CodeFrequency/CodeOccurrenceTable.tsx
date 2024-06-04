@@ -13,8 +13,8 @@ import React, { useRef } from "react";
 import AnalysisHooks from "../../../api/AnalysisHooks.ts";
 import CodeHooks from "../../../api/CodeHooks.ts";
 import { CodeOccurrence } from "../../../api/openapi/models/CodeOccurrence.ts";
-import SdocRenderer from "../../../components/DataGrid/SdocRenderer.tsx";
-import UserName from "../../../components/UserName.tsx";
+import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
+import UserName from "../../../components/User/UserName.tsx";
 import { docTypeToIcon } from "../../../utils/docTypeToIcon.tsx";
 
 const columns: MRT_ColumnDef<CodeOccurrence>[] = [

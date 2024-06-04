@@ -35,11 +35,11 @@ import ProjectHooks from "../../api/ProjectHooks.ts";
 import SpanAnnotationHooks from "../../api/SpanAnnotationHooks.ts";
 import TagHooks from "../../api/TagHooks.ts";
 import WhiteboardHooks, { Whiteboard, WhiteboardGraph } from "../../api/WhiteboardHooks.ts";
-import BBoxAnnotationEditDialog from "../../features/CrudDialog/BBoxAnnotation/BBoxAnnotationEditDialog.tsx";
-import CodeEditDialog from "../../features/CrudDialog/Code/CodeEditDialog.tsx";
-import SpanAnnotationEditDialog from "../../features/CrudDialog/SpanAnnotation/SpanAnnotationEditDialog.tsx";
-import TagEditDialog from "../../features/CrudDialog/Tag/TagEditDialog.tsx";
-import SnackbarAPI from "../../features/Snackbar/SnackbarAPI.ts";
+import BBoxAnnotationEditDialog from "../../components/BBoxAnnotation/BBoxAnnotationEditDialog.tsx";
+import CodeEditDialog from "../../components/Code/CodeEditDialog.tsx";
+import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
+import SpanAnnotationEditDialog from "../../components/SpanAnnotation/SpanAnnotationEditDialog.tsx";
+import TagEditDialog from "../../components/Tag/TagEditDialog.tsx";
 import StraightConnectionLine from "./connectionlines/StraightConnectionLine.tsx";
 import CustomEdge from "./edges/CustomEdge.tsx";
 import FloatingEdge from "./edges/FloatingEdge.tsx";
@@ -184,6 +184,9 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   const [selectedEdges, setSelectedEdges] = useState<Edge[]>([]);
   const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   const handleChangePendingAction = useCallback(
     (action: PendingAddNodeAction | undefined) => {
       resetSelection();
@@ -225,7 +228,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
             },
             {
               onSuccess() {
-                SnackbarAPI.openSnackbar({
+                openSnackbar({
                   text: "Tag added to document",
                   severity: "success",
                 });
@@ -246,7 +249,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
             },
             {
               onSuccess() {
-                SnackbarAPI.openSnackbar({
+                openSnackbar({
                   text: "Updated parent code",
                   severity: "success",
                 });
@@ -267,7 +270,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
             },
             {
               onSuccess() {
-                SnackbarAPI.openSnackbar({
+                openSnackbar({
                   text: "Updated span annotation",
                   severity: "success",
                 });
@@ -288,7 +291,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
             },
             {
               onSuccess() {
-                SnackbarAPI.openSnackbar({
+                openSnackbar({
                   text: "Updated span annotation",
                   severity: "success",
                 });
@@ -301,13 +304,14 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
       }
     },
     [
-      projectId,
       reactFlowInstance,
-      setEdges,
       bulkLinkDocumentTagsMutation.mutate,
-      updateBBoxAnnotationMutation.mutate,
+      projectId,
+      openSnackbar,
       updateCodeMutation.mutate,
       updateSpanAnnotationMutation.mutate,
+      updateBBoxAnnotationMutation.mutate,
+      setEdges,
     ],
   );
 
@@ -393,14 +397,14 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
       },
       {
         onSuccess(data) {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Saved whiteboard '${data.title}'`,
             severity: "success",
           });
         },
       },
     );
-  }, [edges, nodes, updateWhiteboard.mutate, whiteboard.id, whiteboard.title]);
+  }, [edges, nodes, openSnackbar, updateWhiteboard.mutate, whiteboard.id, whiteboard.title]);
 
   // autosave whiteboard every 3 minutes
   if (Date.now() - lastSaveTime.current > 1000 * 60 * 3) {

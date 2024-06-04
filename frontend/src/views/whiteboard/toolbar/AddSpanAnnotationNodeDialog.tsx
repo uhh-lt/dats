@@ -3,7 +3,7 @@ import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "ma
 import { useEffect, useState } from "react";
 import { XYPosition } from "reactflow";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
-import SpanAnnotationTable from "../../../components/SpanAnnotationTable/SpanAnnotationTable.tsx";
+import SpanAnnotationTable from "../../../components/SpanAnnotation/SpanAnnotationTable/SpanAnnotationTable.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
 import { PendingAddNodeAction } from "../types/PendingAddNodeAction.ts";

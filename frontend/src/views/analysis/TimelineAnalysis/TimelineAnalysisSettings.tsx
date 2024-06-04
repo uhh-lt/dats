@@ -12,7 +12,7 @@ import { DateGroupBy } from "../../../api/openapi/models/DateGroupBy.ts";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
 import { MetaType } from "../../../api/openapi/models/MetaType.ts";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
-import ValidDocumentsChecker from "./ValidDocumentsChecker.tsx";
+import SdocsWithDateCounter from "../../../components/Metadata/SdocsWithDateCounter/SdocsWithDateCounter.tsx";
 
 interface TimelineAnalysisSettingsProps {
   timelineAnalysis: TimelineAnalysisRead;
@@ -101,7 +101,7 @@ function TimelineAnalysisSettings({ timelineAnalysis }: TimelineAnalysisSettings
             value={timelineAnalysis.settings.date_metadata_id || -1}
             onChange={handleChangeMetadataId}
             helperText={
-              <ValidDocumentsChecker
+              <SdocsWithDateCounter
                 projectId={projectId}
                 dateMetadataId={timelineAnalysis.settings.date_metadata_id || -1}
               />

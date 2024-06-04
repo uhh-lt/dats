@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { LogicalOperator } from "../../../api/openapi/models/LogicalOperator.ts";
 import { StringOperator } from "../../../api/openapi/models/StringOperator.ts";
 import { WordFrequencyColumns } from "../../../api/openapi/models/WordFrequencyColumns.ts";
-import { FilterState, filterReducer } from "../../../features/FilterDialog/filterSlice.ts";
+import { FilterState, filterReducer } from "../../../components/FilterDialog/filterSlice.ts";
 
 const initialState: FilterState = {
   filter: {

@@ -17,7 +17,7 @@ import { WordFrequencyResult } from "../../../api/openapi/models/WordFrequencyRe
 import { WordFrequencyStat } from "../../../api/openapi/models/WordFrequencyStat.ts";
 import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
-import { MyFilter } from "../../../features/FilterDialog/filterUtils.ts";
+import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import WordFrequencyFilterDialog from "./WordFrequencyFilterDialog.tsx";
 import { useInitWordFrequencyFilterSlice } from "./useInitWordFrequencyFilterSlice.ts";

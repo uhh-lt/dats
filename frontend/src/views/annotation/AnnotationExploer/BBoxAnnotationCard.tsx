@@ -3,7 +3,7 @@ import { Card, CardActionArea, CardContent, CardHeader, CircularProgress } from 
 import SdocHooks from "../../../api/SdocHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
-import UserName from "../../../components/UserName.tsx";
+import UserName from "../../../components/User/UserName.tsx";
 import ImageCropper from "../../whiteboard/nodes/ImageCropper.tsx";
 import AnnotationCardActionsMenu from "./AnnotationCardActionMenu.tsx";
 import { AnnotationCardProps } from "./AnnotationCardProps.ts";

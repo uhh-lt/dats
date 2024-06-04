@@ -7,14 +7,14 @@ import { LogicalOperator } from "../../api/openapi/models/LogicalOperator.ts";
 import { SearchColumns } from "../../api/openapi/models/SearchColumns.ts";
 import { SourceDocumentMetadataReadResolved } from "../../api/openapi/models/SourceDocumentMetadataReadResolved.ts";
 import { StringOperator } from "../../api/openapi/models/StringOperator.ts";
-import { FilterState, filterReducer, getOrCreateFilter } from "../../features/FilterDialog/filterSlice.ts";
+import { FilterState, filterReducer, getOrCreateFilter } from "../../components/FilterDialog/filterSlice.ts";
 import {
   MyFilterExpression,
   filterOperator2FilterOperatorType,
   getDefaultOperator,
-} from "../../features/FilterDialog/filterUtils.ts";
-import { getValue } from "../../views/search/DocumentViewer/DocumentMetadata/metadataUtils.ts";
-import { SearchActions } from "../../views/search/searchSlice.ts";
+} from "../../components/FilterDialog/filterUtils.ts";
+import { SearchActions } from "./DocumentSearch/searchSlice.ts";
+import { getValue } from "./metadataUtils.ts";
 
 const initialState: FilterState = {
   filter: {

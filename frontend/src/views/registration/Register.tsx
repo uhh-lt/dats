@@ -20,7 +20,7 @@ import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import UserHooks from "../../api/UserHooks.ts";
 import { UserCreate } from "../../api/openapi/models/UserCreate.ts";
-import SnackbarAPI from "../../features/Snackbar/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { EMAIL_REGEX } from "../../utils/GlobalConstants.ts";
 
 interface RegisterFormValues extends UserCreate {
@@ -52,6 +52,9 @@ function Register() {
   // registration
   const registerUserMutation = UserHooks.useRegister();
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   // form handling
   const handleRegistration: SubmitHandler<RegisterFormValues> = (data) => {
     registerUserMutation.mutate(
@@ -65,7 +68,7 @@ function Register() {
       },
       {
         onSuccess: () => {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: "Registration success! Redirecting to login...",
             severity: "success",
           });

@@ -15,12 +15,6 @@ from app.core.analysis.annotated_segments import (
     find_annotated_segments,
     find_annotated_segments_info,
 )
-from app.core.analysis.timeline import (
-    TimelineAnalysisColumns,
-    timeline_analysis,
-    timeline_analysis_info,
-    timeline_analysis_valid_documents,
-)
 from app.core.analysis.word_frequency import (
     WordFrequencyColumns,
     word_frequency,
@@ -33,9 +27,7 @@ from app.core.data.dto.analysis import (
     AnnotationOccurrence,
     CodeFrequency,
     CodeOccurrence,
-    DateGroupBy,
     SampledSdocsResults,
-    TimelineAnalysisResultNew,
     WordFrequencyResult,
 )
 from app.core.filters.columns import ColumnInfo
@@ -191,11 +183,11 @@ def annotated_images(
 
 
 @router.get(
-    "/timeline_analysis_valid_docments/{project_id}/metadata/{date_metadata_id}}",
+    "/count_sdocs_with_date_metadata/{project_id}/metadata/{date_metadata_id}}",
     response_model=Tuple[int, int],
-    summary="Returns TimelineAnalysis Info.",
+    summary="Returns Tuple[num_sdocs_with_date_metadata, num_total_sdocs].",
 )
-def get_timeline_analysis_valid_documents(
+def count_sdocs_with_date_metadata(
     *,
     project_id: int,
     date_metadata_id: int,
@@ -203,49 +195,9 @@ def get_timeline_analysis_valid_documents(
 ) -> Tuple[int, int]:
     authz_user.assert_in_project(project_id)
 
-    return timeline_analysis_valid_documents(
+    return AnalysisService().count_sdocs_with_date_metadata(
         project_id=project_id,
         date_metadata_id=date_metadata_id,
-    )
-
-
-@router.get(
-    "/timeline_analysis2_info/{project_id}",
-    response_model=List[ColumnInfo[TimelineAnalysisColumns]],
-    summary="Returns TimelineAnalysis Info.",
-)
-def timeline_analysis2_info(
-    *,
-    project_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> List[ColumnInfo[TimelineAnalysisColumns]]:
-    authz_user.assert_in_project(project_id)
-
-    return timeline_analysis_info(
-        project_id=project_id,
-    )
-
-
-@router.post(
-    "/timeline_analysis2",
-    response_model=List[TimelineAnalysisResultNew],
-    summary="Perform new timeline analysis.",
-)
-def timeline_analysis2(
-    *,
-    project_id: int,
-    group_by: DateGroupBy,
-    project_metadata_id: int,
-    filter: Filter[TimelineAnalysisColumns],
-    authz_user: AuthzUser = Depends(),
-) -> List[TimelineAnalysisResultNew]:
-    authz_user.assert_in_project(project_id)
-
-    return timeline_analysis(
-        project_id=project_id,
-        group_by=group_by,
-        project_metadata_id=project_metadata_id,
-        filter=filter,
     )
 
 

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
-import { ColumnInfo } from "../../../features/FilterDialog/filterUtils.ts";
+import { TimelineAnalysisService } from "../../../api/openapi/services/TimelineAnalysisService.ts";
+import { ColumnInfo } from "../../../components/FilterDialog/filterUtils.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { AppDispatch } from "../../../store/store.ts";
 import { TimelineAnalysisFilterActions } from "./timelineAnalysisFilterSlice.ts";
@@ -9,7 +9,7 @@ const useGetTimelineAnalysisInfo = (projectId: number, dispatch: AppDispatch) =>
   useQuery<ColumnInfo[]>({
     queryKey: ["tableInfo", "timelineAnalysis", projectId],
     queryFn: async () => {
-      const result = await AnalysisService.timelineAnalysis2Info({ projectId });
+      const result = await TimelineAnalysisService.info({ projectId });
       const columnInfo = result.map((info) => {
         return {
           ...info,

@@ -21,10 +21,8 @@ import React, { useMemo, useState } from "react";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
 import UserHooks from "../../../api/UserHooks.ts";
 import { PublicUserRead } from "../../../api/openapi/models/PublicUserRead.ts";
-import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition.ts";
-import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
+import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import { ProjectProps } from "./ProjectProps.ts";
-import ProjectUsersContextMenu from "./ProjectUsersContextMenu.tsx";
 
 function ProjectUsers({ project }: ProjectProps) {
   const [selectedUser, setSelectedUser] = useState<PublicUserRead | null>(null);
@@ -77,15 +75,6 @@ function ProjectUsers({ project }: ProjectProps) {
     setSelectedUser(value);
   };
 
-  // context menu
-  const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
-  const [contextMenuData, setContextMenuData] = useState<number>();
-  const onContextMenu = (userId: number) => (event: React.MouseEvent) => {
-    event.preventDefault();
-    setContextMenuPosition({ x: event.clientX, y: event.clientY });
-    setContextMenuData(userId);
-  };
-
   return (
     <Box display="flex" className="myFlexContainer h100">
       <Toolbar variant="dense" className="myFlexFitContentContainer">
@@ -134,7 +123,6 @@ function ProjectUsers({ project }: ProjectProps) {
             <ListItem
               disablePadding
               key={user.id}
-              onContextMenu={onContextMenu(user.id)}
               secondaryAction={
                 <Tooltip title={"Remove user from project"}>
                   <span>
@@ -152,12 +140,6 @@ function ProjectUsers({ project }: ProjectProps) {
           ))}
         </List>
       )}
-      <ProjectUsersContextMenu
-        position={contextMenuPosition}
-        userId={contextMenuData}
-        handleClose={() => setContextMenuPosition(null)}
-        onDeleteUser={handleClickRemoveUser}
-      />
     </Box>
   );
 }

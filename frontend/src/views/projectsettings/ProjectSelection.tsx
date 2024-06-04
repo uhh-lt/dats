@@ -12,12 +12,9 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
-import React, { useState } from "react";
 import { Link, Link as RouterLink, useParams } from "react-router-dom";
 import UserHooks from "../../api/UserHooks.ts";
 import { useAuth } from "../../auth/useAuth.ts";
-import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition.ts";
-import ProjectSelectionContextMenu from "./ProjectSelectionContextMenu.tsx";
 
 function ProjectSelection() {
   const { user } = useAuth();
@@ -27,15 +24,6 @@ function ProjectSelection() {
 
   // global server state (react query)
   const projects = UserHooks.useGetProjects(user?.id);
-
-  // context menu
-  const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
-  const [contextMenuData, setContextMenuData] = useState<number>();
-  const onContextMenu = (projectId: number) => (event: React.MouseEvent) => {
-    event.preventDefault();
-    setContextMenuPosition({ x: event.clientX, y: event.clientY });
-    setContextMenuData(projectId);
-  };
 
   return (
     <>
@@ -63,7 +51,7 @@ function ProjectSelection() {
               {projects.data
                 ?.sort((a, b) => a.id - b.id)
                 .map((project) => (
-                  <ListItem disablePadding key={project.id} onContextMenu={onContextMenu(project.id)}>
+                  <ListItem disablePadding key={project.id}>
                     <ListItemButton
                       component={RouterLink}
                       to={`/projectsettings/${project.id}`}
@@ -81,11 +69,6 @@ function ProjectSelection() {
           )}
         </CardContent>
       </Card>
-      <ProjectSelectionContextMenu
-        projectId={contextMenuData}
-        position={contextMenuPosition}
-        handleClose={() => setContextMenuPosition(null)}
-      />
     </>
   );
 }

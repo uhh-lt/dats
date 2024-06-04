@@ -3,8 +3,8 @@ import { useEffect, useRef } from "react";
 import { Edge, Node, NodeProps, XYPosition, useReactFlow } from "reactflow";
 import MemoHooks from "../../../api/MemoHooks.ts";
 
-import MemoAPI from "../../../features/Memo/MemoAPI.ts";
-import useGetMemosAttachedObject from "../../../features/Memo/useGetMemosAttachedObject.ts";
+import MemoDialogAPI from "../../../components/Memo/MemoDialog/MemoDialogAPI.ts";
+import useGetMemosAttachedObject from "../../../components/Memo/useGetMemosAttachedObject.ts";
 import { useReactFlowService } from "../hooks/ReactFlowService.ts";
 
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
@@ -13,8 +13,8 @@ import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
-import MemoRenderer from "../../../components/DataGrid/MemoRenderer.tsx";
-import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu.tsx";
+import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../components/GenericPositionMenu.tsx";
+import MemoRenderer from "../../../components/Memo/MemoRenderer.tsx";
 import { DWTSNodeData } from "../types/DWTSNodeData.ts";
 import { BBoxAnnotationNodeData } from "../types/dbnodes/BBoxAnnotationNodeData.ts";
 import { CodeNodeData } from "../types/dbnodes/CodeNodeData.ts";
@@ -186,7 +186,7 @@ function MemoNode(props: NodeProps<MemoNodeData>) {
   const reactFlowService = useReactFlowService(reactFlowInstance);
 
   // context menu
-  const contextMenuRef = useRef<GenericPositionContextMenuHandle>(null);
+  const contextMenuRef = useRef<GenericPositionMenuHandle>(null);
   const readonly = !props.isConnectable;
 
   // global server state (react-query)
@@ -223,7 +223,7 @@ function MemoNode(props: NodeProps<MemoNodeData>) {
     if (!memo.data) return;
 
     if (event.detail >= 2) {
-      MemoAPI.openMemo({
+      MemoDialogAPI.openMemo({
         memoId: memo.data.id,
         attachedObjectType: memo.data.attached_object_type,
         attachedObjectId: memo.data.attached_object_id,

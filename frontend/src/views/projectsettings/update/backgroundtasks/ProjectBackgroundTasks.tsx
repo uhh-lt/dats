@@ -1,12 +1,11 @@
 import { Box, Divider, List, Toolbar, Typography } from "@mui/material";
-import { useMemo, useRef } from "react";
+import { useMemo } from "react";
 import CrawlerHooks from "../../../../api/CrawlerHooks.ts";
 import PreProHooks from "../../../../api/PreProHooks.ts";
 import { BackgroundJobStatus } from "../../../../api/openapi/models/BackgroundJobStatus.ts";
 import { CrawlerJobRead } from "../../../../api/openapi/models/CrawlerJobRead.ts";
 import { PreprocessingJobRead } from "../../../../api/openapi/models/PreprocessingJobRead.ts";
 import { ProjectRead } from "../../../../api/openapi/models/ProjectRead.ts";
-import ProjectDocumentsContextMenu, { ProjectDocumentsContextMenuHandle } from "../ProjectDocumentsContextMenu.tsx";
 import CrawlerJobListItem from "./CrawlerJobListItem.tsx";
 import PreProJobListItem from "./PreProJobListItem.tsx";
 
@@ -18,8 +17,6 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
   // global server state (react-query)
   const crawlerJobs = CrawlerHooks.useGetAllCrawlerJobs(project.id);
   const preProJobs = PreProHooks.useGetAllPreProJobs(project.id);
-
-  const contextMenuRef = useRef<ProjectDocumentsContextMenuHandle>(null);
 
   const backgroundJobsByStatus = useMemo(() => {
     const result: Record<BackgroundJobStatus, (CrawlerJobRead | PreprocessingJobRead)[]> = {
@@ -69,13 +66,7 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
               if ("parameters" in job) {
                 return <CrawlerJobListItem key={job.id} initialCrawlerJob={job as CrawlerJobRead} />;
               } else if ("payloads" in job) {
-                return (
-                  <PreProJobListItem
-                    key={job.id}
-                    initialPreProJob={job as PreprocessingJobRead}
-                    contextMenuRef={contextMenuRef}
-                  />
-                );
+                return <PreProJobListItem key={job.id} initialPreProJob={job as PreprocessingJobRead} />;
               } else {
                 return null;
               }
@@ -94,13 +85,7 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
               if ("parameters" in job) {
                 return <CrawlerJobListItem key={job.id} initialCrawlerJob={job as CrawlerJobRead} />;
               } else if ("payloads" in job) {
-                return (
-                  <PreProJobListItem
-                    key={job.id}
-                    initialPreProJob={job as PreprocessingJobRead}
-                    contextMenuRef={contextMenuRef}
-                  />
-                );
+                return <PreProJobListItem key={job.id} initialPreProJob={job as PreprocessingJobRead} />;
               } else {
                 return null;
               }
@@ -119,13 +104,7 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
               if ("parameters" in job) {
                 return <CrawlerJobListItem key={job.id} initialCrawlerJob={job as CrawlerJobRead} />;
               } else if ("payloads" in job) {
-                return (
-                  <PreProJobListItem
-                    key={job.id}
-                    initialPreProJob={job as PreprocessingJobRead}
-                    contextMenuRef={contextMenuRef}
-                  />
-                );
+                return <PreProJobListItem key={job.id} initialPreProJob={job as PreprocessingJobRead} />;
               } else {
                 return null;
               }
@@ -144,13 +123,7 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
               if ("parameters" in job) {
                 return <CrawlerJobListItem key={job.id} initialCrawlerJob={job as CrawlerJobRead} />;
               } else if ("payloads" in job) {
-                return (
-                  <PreProJobListItem
-                    key={job.id}
-                    initialPreProJob={job as PreprocessingJobRead}
-                    contextMenuRef={contextMenuRef}
-                  />
-                );
+                return <PreProJobListItem key={job.id} initialPreProJob={job as PreprocessingJobRead} />;
               } else {
                 return null;
               }
@@ -169,13 +142,7 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
               if ("parameters" in job) {
                 return <CrawlerJobListItem key={job.id} initialCrawlerJob={job as CrawlerJobRead} />;
               } else if ("payloads" in job) {
-                return (
-                  <PreProJobListItem
-                    key={job.id}
-                    initialPreProJob={job as PreprocessingJobRead}
-                    contextMenuRef={contextMenuRef}
-                  />
-                );
+                return <PreProJobListItem key={job.id} initialPreProJob={job as PreprocessingJobRead} />;
               } else {
                 return null;
               }
@@ -186,7 +153,6 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
           </List>
         </>
       )}
-      <ProjectDocumentsContextMenu ref={contextMenuRef} />
     </>
   );
 }

@@ -2,7 +2,7 @@ import { Box, Button, ButtonProps, Dialog } from "@mui/material";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { useEffect, useState } from "react";
 import ProjectHooks from "../../../../api/ProjectHooks.ts";
-import SpanAnnotationTable from "../../../../components/SpanAnnotationTable/SpanAnnotationTable.tsx";
+import SpanAnnotationTable from "../../../../components/SpanAnnotation/SpanAnnotationTable/SpanAnnotationTable.tsx";
 
 const filterName = "spanAnnotationDialogTable";
 

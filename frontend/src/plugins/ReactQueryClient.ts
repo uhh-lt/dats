@@ -1,6 +1,7 @@
 import { MutationCache, QueryClient } from "@tanstack/react-query";
 import { ApiError } from "../api/openapi/core/ApiError.ts";
-import SnackbarAPI from "../features/Snackbar/SnackbarAPI.ts";
+import { CRUDDialogActions } from "../components/dialogSlice.ts";
+import { store } from "../store/store.ts";
 
 function messageFromStringOrFunction(input: unknown, data: unknown): string | undefined {
   if (typeof input === "string") {
@@ -20,22 +21,25 @@ const queryClient = new QueryClient({
       if (error instanceof ApiError) {
         text = error.message + (error.body ? ": " + error.body : "");
       }
-      SnackbarAPI.openSnackbar({
-        text,
-        title,
-        severity: "error",
-      });
+      store.dispatch(
+        CRUDDialogActions.openSnackbar({
+          text,
+          title,
+          severity: "error",
+        }),
+      );
     },
     onSuccess: (data, _variables, _context, mutation) => {
       const text = messageFromStringOrFunction(mutation.meta?.successMessage, data);
       if (text === undefined) {
         return;
       }
-
-      SnackbarAPI.openSnackbar({
-        text,
-        severity: "success",
-      });
+      store.dispatch(
+        CRUDDialogActions.openSnackbar({
+          text,
+          severity: "success",
+        }),
+      );
     },
   }),
 });

@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import { ReactFlowProvider } from "reactflow";
 import WhiteboardHooks from "../../api/WhiteboardHooks.ts";
 import { useAuth } from "../../auth/useAuth.ts";
-import EditableTypography from "../../components/NavBarTop/EditableTypography.tsx";
+import EditableTypography from "../../components/EditableTypography.tsx";
 import { AppBarContext } from "../../layouts/TwoBarLayout.tsx";
 import WhiteboardFlow from "./WhiteboardFlow.tsx";
 

@@ -1,10 +1,10 @@
 import { Box, CssBaseline } from "@mui/material";
 import React from "react";
 import { Outlet } from "react-router-dom";
-import TopBar from "../components/NavBarTop/TopBar.tsx";
-import ConfirmationDialog from "../features/ConfirmationDialog/ConfirmationDialog.tsx";
-import DialMenu from "../features/DialMenu/DialMenu.tsx";
-import SnackbarDialog from "../features/Snackbar/SnackbarDialog.tsx";
+import ConfirmationDialog from "../components/ConfirmationDialog/ConfirmationDialog.tsx";
+import SnackbarDialog from "../components/SnackbarDialog/SnackbarDialog.tsx";
+import DialMenu from "./DialMenu/DialMenu.tsx";
+import TopBar from "./TopBar/TopBar.tsx";
 
 function OneBarLayout() {
   return (

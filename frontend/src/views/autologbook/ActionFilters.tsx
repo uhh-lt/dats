@@ -8,7 +8,7 @@ import ProjectHooks from "../../api/ProjectHooks.ts";
 import { ActionTargetObjectType } from "../../api/openapi/models/ActionTargetObjectType.ts";
 import { ActionType } from "../../api/openapi/models/ActionType.ts";
 import { useAuth } from "../../auth/useAuth.ts";
-import UserName from "../../components/UserName.tsx";
+import UserName from "../../components/User/UserName.tsx";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { AutologbookActions } from "./autologbookSlice.ts";
 import { actionTarget2Title } from "./utils.ts";

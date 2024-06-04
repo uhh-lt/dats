@@ -1,16 +1,16 @@
 import { Box, CssBaseline } from "@mui/material";
 import React, { useRef } from "react";
 import { Outlet, useParams } from "react-router-dom";
-import BottomBar from "../components/NavBarBottom/BottomBar.tsx";
-import TopBar from "../components/NavBarTop/TopBar.tsx";
-import ConfirmationDialog from "../features/ConfirmationDialog/ConfirmationDialog.tsx";
-import CodeCreateDialog from "../features/CrudDialog/Code/CodeCreateDialog.tsx";
-import TagCreateDialog from "../features/CrudDialog/Tag/TagCreateDialog.tsx";
-import DialMenu from "../features/DialMenu/DialMenu.tsx";
-import ExporterDialog from "../features/Exporter/ExporterDialog.tsx";
-import MemoDialog from "../features/Memo/MemoDialog.tsx";
-import SnackbarDialog from "../features/Snackbar/SnackbarDialog.tsx";
+import CodeCreateDialog from "../components/Code/CodeCreateDialog.tsx";
+import ConfirmationDialog from "../components/ConfirmationDialog/ConfirmationDialog.tsx";
+import ExporterDialog from "../components/Exporter/ExporterDialog.tsx";
+import MemoDialog from "../components/Memo/MemoDialog/MemoDialog.tsx";
+import SnackbarDialog from "../components/SnackbarDialog/SnackbarDialog.tsx";
+import TagCreateDialog from "../components/Tag/TagCreateDialog.tsx";
+import BottomBar from "./BottomBar/BottomBar.tsx";
+import DialMenu from "./DialMenu/DialMenu.tsx";
 import "./Layout.css";
+import TopBar from "./TopBar/TopBar.tsx";
 
 export const AppBarContext = React.createContext<React.MutableRefObject<HTMLDivElement | null> | null>(null);
 

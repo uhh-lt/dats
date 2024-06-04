@@ -13,7 +13,8 @@
     "update-api": "node bin/updateAPI.js",
     "generate-api": "node bin/generateAPI.js",
     "update-version": "node bin/updateVersion.js",
-    "generate": "npm run update-api && npm run generate-api && npm run update-version"
+    "generate": "npm run update-api && npm run generate-api && npm run update-version",
+    "check-unimported": "npx unimported"
   },
   "dependencies": {
     "@emotion/react": "^11.11.3",
@@ -71,6 +72,7 @@
     "openapi-typescript-codegen": "^0.27.0",
     "prettier": "^3.2.5",
     "typescript": "^5.2.2",
+    "unimported": "^1.31.1",
     "vite": "^5.1.4"
   },
   "prettier": {

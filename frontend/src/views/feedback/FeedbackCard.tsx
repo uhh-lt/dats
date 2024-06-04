@@ -7,8 +7,8 @@ import React from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import FeedbackHooks from "../../api/FeedbackHooks.ts";
 import { FeedbackRead } from "../../api/openapi/models/FeedbackRead.ts";
-import UserName from "../../components/UserName.tsx";
-import SnackbarAPI from "../../features/Snackbar/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
+import UserName from "../../components/User/UserName.tsx";
 
 type FeedbackReplyValues = {
   message: string;
@@ -22,6 +22,9 @@ interface FeedbackCardProps {
 function FeedbackCard({ feedback, showReplyTo }: FeedbackCardProps) {
   // local client state
   const [expanded, setExpanded] = React.useState(false);
+
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
 
   // react form
   const {
@@ -43,7 +46,7 @@ function FeedbackCard({ feedback, showReplyTo }: FeedbackCardProps) {
       },
       {
         onSuccess: (data) => {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: data,
             severity: "success",
           });

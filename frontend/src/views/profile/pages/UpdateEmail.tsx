@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import UserHooks from "../../../api/UserHooks.ts";
 import { UserRead } from "../../../api/openapi/models/UserRead.ts";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { EMAIL_REGEX, SUPPORT_EMAIL } from "../../../utils/GlobalConstants.ts";
 type UpdateEmailValues = {
   newemail: string;
@@ -27,6 +27,9 @@ export default function UpdateEmail({ user }: UpdateEmailProps) {
   const newemail = useRef("");
   newemail.current = watch("newemail", "");
 
+  // snack bar
+  const openSnackbar = useOpenSnackbar();
+
   const handleUpdate: SubmitHandler<UpdateEmailValues> = (data) => {
     updateUserMutation.mutate(
       {
@@ -37,13 +40,13 @@ export default function UpdateEmail({ user }: UpdateEmailProps) {
       },
       {
         onSuccess: () => {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Hurray! Your email updated successfully.`,
             severity: "success",
           });
         },
         onError: () => {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Sorry! Your email update failed. Please contact` + { SUPPORT_EMAIL },
             severity: "error",
           });

@@ -3,14 +3,14 @@ import { useMemo } from "react";
 import { useParams } from "react-router";
 import CotaHooks from "../../../api/CotaHooks.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
-import AnalysisDashboard from "../../../features/AnalysisDashboard/AnalysisDashboard.tsx";
+import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
+import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
+import AnalysisDashboard from "../AnalysisDashboard/AnalysisDashboard.tsx";
 import {
   AnaylsisDashboardRow,
   HandleCreateAnalysis,
   useAnalysisDashboardTable,
-} from "../../../features/AnalysisDashboard/useAnalysisDashboardTable.tsx";
-import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+} from "../AnalysisDashboard/useAnalysisDashboardTable.tsx";
 
 function CotaDashboard() {
   // global client state
@@ -45,6 +45,9 @@ function CotaDashboard() {
     variables: duplicatingVariables,
   } = CotaHooks.useDuplicateCota();
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   // CRUD actions
   const handleCreateAnalysis: HandleCreateAnalysis =
     () =>
@@ -60,7 +63,7 @@ function CotaDashboard() {
         },
         {
           onSuccess(data) {
-            SnackbarAPI.openSnackbar({
+            openSnackbar({
               text: `Created new timeline analysis '${data.name}'`,
               severity: "success",
             });
@@ -77,7 +80,7 @@ function CotaDashboard() {
       },
       {
         onSuccess(data) {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Duplicated analysis '${data.name}'`,
             severity: "success",
           });
@@ -96,7 +99,7 @@ function CotaDashboard() {
           },
           {
             onSuccess(data) {
-              SnackbarAPI.openSnackbar({
+              openSnackbar({
                 text: `Deleted analysis '${data.name}'`,
                 severity: "success",
               });
@@ -117,7 +120,7 @@ function CotaDashboard() {
       },
       {
         onSuccess(data) {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Updated analysis '${data.name}'`,
             severity: "success",
           });

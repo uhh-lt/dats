@@ -1,25 +1,9 @@
 import ReorderIcon from "@mui/icons-material/Reorder";
 import VerticalSplitIcon from "@mui/icons-material/VerticalSplit";
-import {
-  Box,
-  Card,
-  CardContent,
-  Grid,
-  IconButton,
-  MenuItem,
-  Portal,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography,
-} from "@mui/material";
-import React, { useContext, useMemo, useRef } from "react";
+import { Box, Card, CardContent, Grid, IconButton, Portal, Stack, TextField, Tooltip, Typography } from "@mui/material";
+import { useContext, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu.tsx";
-import SpanAnnotationEditDialog from "../../../features/CrudDialog/SpanAnnotation/SpanAnnotationEditDialog.tsx";
-import { CRUDDialogActions } from "../../../features/CrudDialog/dialogSlice.ts";
-import MemoAPI from "../../../features/Memo/MemoAPI.ts";
+import SpanAnnotationEditDialog from "../../../components/SpanAnnotation/SpanAnnotationEditDialog.tsx";
 import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import AnnotatedSegmentsTable from "./AnnotatedSegmentsTable.tsx";
@@ -29,9 +13,6 @@ import { AnnotatedSegmentsActions } from "./annotatedSegmentsSlice.ts";
 
 function AnnotatedSegments() {
   const appBarContainerRef = useContext(AppBarContext);
-
-  // local client state
-  const contextMenuRef = useRef<GenericPositionContextMenuHandle>(null);
 
   // global client state (react router)
   const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
@@ -51,36 +32,6 @@ function AnnotatedSegments() {
   // actions
   const handleClickSplitView = () => {
     dispatch(AnnotatedSegmentsActions.toggleSplitView());
-  };
-
-  const openMemo = (spanAnnotationId: number) => {
-    MemoAPI.openMemo({
-      attachedObjectType: AttachedObjectType.SPAN_ANNOTATION,
-      attachedObjectId: spanAnnotationId,
-    });
-  };
-
-  const openSpanAnnotation = (spanAnnotationIds: number[]) => {
-    dispatch(CRUDDialogActions.openSpanAnnotationEditDialog({ spanAnnotationIds }));
-  };
-
-  // events
-  const handleRowContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
-    contextMenuRef.current?.open({ left: event.clientX, top: event.clientY });
-  };
-
-  const handleContextMenuOpenMemo = () => {
-    if (selectedAnnotationIds.length !== 1) return;
-
-    contextMenuRef.current?.close();
-    openMemo(selectedAnnotationIds[0]);
-  };
-
-  const handleContextMenuChangeCode = () => {
-    if (selectedAnnotationIds.length !== 1) return;
-
-    contextMenuRef.current?.close();
-    openSpanAnnotation([selectedAnnotationIds[0]]);
   };
 
   return (
@@ -124,18 +75,11 @@ function AnnotatedSegments() {
             />
           )}
 
-          <AnnotatedSegmentsTable
-            cardProps={{ elevation: 2, className: "myFlexFillAllContainer myFlexContainer" }}
-            onRowContextMenu={handleRowContextMenu}
-          />
+          <AnnotatedSegmentsTable cardProps={{ elevation: 2, className: "myFlexFillAllContainer myFlexContainer" }} />
         </Grid>
         {isSplitView && <SpanAnnotationCardList spanAnnotationIds={selectedAnnotationIds} />}
       </Grid>
       <SpanAnnotationEditDialog projectId={projectId} />
-      <GenericPositionMenu ref={contextMenuRef}>
-        <MenuItem onClick={handleContextMenuChangeCode}>Change code</MenuItem>
-        <MenuItem onClick={handleContextMenuOpenMemo}>Edit memo</MenuItem>
-      </GenericPositionMenu>
     </Box>
   );
 }

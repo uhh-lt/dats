@@ -6,10 +6,10 @@ import CodeHooks from "../../../api/CodeHooks.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
-import CodeRenderer from "../../../components/DataGrid/CodeRenderer.tsx";
-import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu.tsx";
-import { CRUDDialogActions } from "../../../features/CrudDialog/dialogSlice.ts";
-import MemoAPI from "../../../features/Memo/MemoAPI.ts";
+import CodeRenderer from "../../../components/Code/CodeRenderer.tsx";
+import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../components/GenericPositionMenu.tsx";
+import MemoDialogAPI from "../../../components/Memo/MemoDialog/MemoDialogAPI.ts";
+import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { useReactFlowService } from "../hooks/ReactFlowService.ts";
 import { DWTSNodeData } from "../types/DWTSNodeData.ts";
@@ -39,7 +39,7 @@ function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
   const reactFlowService = useReactFlowService(reactFlowInstance);
 
   // context menu
-  const contextMenuRef = useRef<GenericPositionContextMenuHandle>(null);
+  const contextMenuRef = useRef<GenericPositionMenuHandle>(null);
   const readonly = !props.isConnectable;
 
   // global server state (react-query)
@@ -160,7 +160,7 @@ function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
   const handleContextMenuCreateMemo = () => {
     if (memo.data) return;
 
-    MemoAPI.openMemo({
+    MemoDialogAPI.openMemo({
       attachedObjectType: AttachedObjectType.BBOX_ANNOTATION,
       attachedObjectId: props.data.bboxAnnotationId,
       onCreateSuccess: (memo) => {

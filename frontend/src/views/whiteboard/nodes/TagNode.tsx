@@ -6,10 +6,10 @@ import SdocHooks from "../../../api/SdocHooks.ts";
 import TagHooks from "../../../api/TagHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
-import TagRenderer from "../../../components/DataGrid/TagRenderer.tsx";
-import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu.tsx";
-import { CRUDDialogActions } from "../../../features/CrudDialog/dialogSlice.ts";
-import MemoAPI from "../../../features/Memo/MemoAPI.ts";
+import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../components/GenericPositionMenu.tsx";
+import MemoDialogAPI from "../../../components/Memo/MemoDialog/MemoDialogAPI.ts";
+import TagRenderer from "../../../components/Tag/TagRenderer.tsx";
+import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { useReactFlowService } from "../hooks/ReactFlowService.ts";
 import { DWTSNodeData } from "../types/DWTSNodeData.ts";
@@ -35,7 +35,7 @@ function TagNode(props: NodeProps<TagNodeData>) {
   const reactFlowService = useReactFlowService(reactFlowInstance);
 
   // context menu
-  const contextMenuRef = useRef<GenericPositionContextMenuHandle>(null);
+  const contextMenuRef = useRef<GenericPositionMenuHandle>(null);
   const readonly = !props.isConnectable;
 
   // global server state (react-query)
@@ -114,7 +114,7 @@ function TagNode(props: NodeProps<TagNodeData>) {
   const handleContextMenuCreateMemo = () => {
     if (memo.data) return;
 
-    MemoAPI.openMemo({
+    MemoDialogAPI.openMemo({
       attachedObjectType: AttachedObjectType.DOCUMENT_TAG,
       attachedObjectId: props.data.tagId,
       onCreateSuccess: (memo) => {

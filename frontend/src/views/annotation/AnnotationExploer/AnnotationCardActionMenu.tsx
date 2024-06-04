@@ -2,7 +2,7 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { IconButton, Menu } from "@mui/material";
 import { useState } from "react";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import MemoMenuItem from "../../../features/Memo/MemoMenuItem.tsx";
+import MemoMenuItem from "../../../components/Memo/MemoMenuItem.tsx";
 import BBoxAnnotationDeleteMenuItem from "./BBoxAnnotationDeleteMenuItem.tsx";
 import SpanAnnotationDeleteMenuItem from "./SpanAnnotationDeleteMenuItem.tsx";
 

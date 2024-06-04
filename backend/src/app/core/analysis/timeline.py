@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Tuple
+from typing import List
 
 import pandas as pd
 from sqlalchemy import String, cast, func
@@ -7,7 +7,7 @@ from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg
 
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.doc_type import DocType
-from app.core.data.dto.analysis import DateGroupBy, TimelineAnalysisResultNew
+from app.core.data.dto.analysis import DateGroupBy, TimelineAnalysisResult
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
@@ -101,29 +101,6 @@ class TimelineAnalysisColumns(str, AbstractColumns):
                 return "Span annotations"
 
 
-def timeline_analysis_valid_documents(
-    project_id: int, date_metadata_id: int
-) -> Tuple[int, int]:
-    with SQLService().db_session() as db:
-        query = (
-            db.query(func.count(SourceDocumentORM.id))
-            .join(SourceDocumentORM.metadata_)
-            .filter(
-                SourceDocumentORM.project_id == project_id,
-                SourceDocumentMetadataORM.project_metadata_id == date_metadata_id,
-                SourceDocumentMetadataORM.date_value.isnot(None),
-            )
-        )
-        sdocs_with_valid_date = query.scalar()
-
-        query = db.query(func.count(SourceDocumentORM.id)).filter(
-            SourceDocumentORM.project_id == project_id
-        )
-        sdocs_total = query.scalar()
-
-    return (sdocs_with_valid_date, sdocs_total)
-
-
 def timeline_analysis_info(
     project_id: int,
 ) -> List[ColumnInfo[TimelineAnalysisColumns]]:
@@ -142,7 +119,7 @@ def timeline_analysis(
     group_by: DateGroupBy,
     project_metadata_id: int,
     filter: Filter[TimelineAnalysisColumns],
-) -> List[TimelineAnalysisResultNew]:
+) -> List[TimelineAnalysisResult]:
     # project_metadata_id has to refer to a DATE metadata
 
     with SQLService().db_session() as db:
@@ -245,7 +222,7 @@ def timeline_analysis(
 
         # prepare the result
         result = [
-            TimelineAnalysisResultNew(
+            TimelineAnalysisResult(
                 sdoc_ids=result_dict[date] if date in result_dict else [],
                 date=date,
             )

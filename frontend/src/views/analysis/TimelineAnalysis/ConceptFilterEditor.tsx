@@ -1,5 +1,5 @@
 import { Box, Typography } from "@mui/material";
-import FilterRenderer from "../../../features/FilterDialog/FilterRenderer.tsx";
+import FilterRenderer from "../../../components/FilterDialog/FilterRenderer.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { TimelineAnalysisFilterActions } from "./timelineAnalysisFilterSlice.ts";
 

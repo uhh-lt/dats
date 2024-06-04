@@ -3,7 +3,7 @@ import * as React from "react";
 import { useEffect, useMemo } from "react";
 import SdocHooks from "../../api/SdocHooks.ts";
 import { useAuth } from "../../auth/useAuth.ts";
-import UserName from "../../components/UserName.tsx";
+import UserName from "../../components/User/UserName.tsx";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { AnnoActions } from "./annoSlice.ts";
 

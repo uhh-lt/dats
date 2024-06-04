@@ -9,15 +9,18 @@ import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
 import { SpanAnnotationCreateWithCodeId } from "../../../api/openapi/models/SpanAnnotationCreateWithCodeId.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
-import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import DocumentRenderer from "../../../features/DocumentRenderer/DocumentRenderer.tsx";
-import useComputeTokenData from "../../../features/DocumentRenderer/useComputeTokenData.ts";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
+import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import SpanContextMenu, { CodeSelectorHandle } from "../SpanContextMenu/SpanContextMenu.tsx";
+import AnnotationMenu, { CodeSelectorHandle } from "../AnnotationMenu.tsx";
+import DocumentRenderer from "../DocumentRenderer/DocumentRenderer.tsx";
+import useComputeTokenData from "../DocumentRenderer/useComputeTokenData.ts";
+import { ICode } from "../ICode.ts";
 import { AnnoActions } from "../annoSlice.ts";
-import { ICode } from "./ICode.ts";
-import { selectionIsEmpty } from "./utils.ts";
+
+const selectionIsEmpty = (selection: Selection): boolean => {
+  return selection.toString().trim().length === 0;
+};
 
 interface AnnotatorRemasteredProps {
   sdoc: SourceDocumentWithDataRead;
@@ -26,13 +29,16 @@ interface AnnotatorRemasteredProps {
 
 function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
   // local state
-  const spanContextMenuRef = useRef<CodeSelectorHandle>(null);
+  const spanMenuRef = useRef<CodeSelectorHandle>(null);
   const [fakeAnnotation, setFakeAnnotation] = useState<SpanAnnotationCreateWithCodeId | undefined>(undefined);
 
   // global client state (redux)
   const visibleAdocIds = useAppSelector((state) => state.annotations.visibleAdocIds);
   const codes = useAppSelector((state) => state.annotations.codesForSelection);
   const dispatch = useAppDispatch();
+
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
 
   // computed / custom hooks
   const { tokenData, annotationsPerToken, annotationMap } = useComputeTokenData({
@@ -47,7 +53,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
   const deleteMutation = SpanAnnotationHooks.useDeleteSpan();
 
   // handle ui events
-  const handleContextMenu = (event: React.MouseEvent) => {
+  const handleMenu = (event: React.MouseEvent) => {
     if (!annotationsPerToken) return;
     if (!annotationMap) return;
 
@@ -83,7 +89,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       };
 
       // open code selector
-      spanContextMenuRef.current!.open(
+      spanMenuRef.current!.open(
         position,
         annos.map((a) => annotationMap.get(a)!),
       );
@@ -94,9 +100,13 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
     if (event.button === 2) return;
     if (!tokenData) return;
 
-    // make sure that selection is valid
     const selection = window.getSelection();
-    if (!selection || selectionIsEmpty(selection)) return;
+    // the selection is empty
+    if (!selection || selectionIsEmpty(selection)) {
+      handleMenu(event);
+      return;
+    }
+    // the selection is valid
 
     // get the selected begin and end token
     let selectionStartElement = selection?.anchorNode?.parentElement;
@@ -181,7 +191,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       };
 
       // open code selector
-      spanContextMenuRef.current!.open(position);
+      spanMenuRef.current!.open(position);
     }
 
     // clear selection
@@ -199,7 +209,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
           { spanAnnotationToDelete: annotation as SpanAnnotationReadResolved },
           {
             onSuccess: (spanAnnotation) => {
-              SnackbarAPI.openSnackbar({
+              openSnackbar({
                 text: `Deleted Span Annotation ${spanAnnotation.id}`,
                 severity: "success",
               });
@@ -222,7 +232,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       },
       {
         onSuccess: (spanAnnotation) => {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Updated Span Annotation ${spanAnnotation.id}`,
             severity: "success",
           });
@@ -245,7 +255,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
             // if we use an existing code to annotate, we move it to the top
             dispatch(AnnoActions.moveCodeToTop(code));
           }
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Created Span Annotation ${spanAnnotation.id}`,
             severity: "success",
           });
@@ -263,7 +273,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
           { requestBody: fakeAnnotation },
           {
             onSuccess: (spanAnnotation) => {
-              SnackbarAPI.openSnackbar({
+              openSnackbar({
                 text: `Created Span Annotation ${spanAnnotation.id}`,
                 severity: "success",
               });
@@ -290,8 +300,8 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
 
   return (
     <>
-      <SpanContextMenu
-        ref={spanContextMenuRef}
+      <AnnotationMenu
+        ref={spanMenuRef}
         onAdd={handleCodeSelectorAddCode}
         onClose={handleCodeSelectorClose}
         onEdit={handleCodeSelectorEditCode}
@@ -299,7 +309,6 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       />
       <DocumentRenderer
         className="myFlexFillAllContainer"
-        onContextMenu={handleContextMenu}
         onMouseUp={handleMouseUp}
         html={sdoc.html}
         tokenData={tokenData}

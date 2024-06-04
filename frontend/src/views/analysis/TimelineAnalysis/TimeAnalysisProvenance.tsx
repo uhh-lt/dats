@@ -4,7 +4,7 @@ import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
 import { useMemo } from "react";
-import SimpleSdocTable from "../../../components/DocumentTable/SimpleSdocTable.tsx";
+import SdocTableSimple from "../../../components/SourceDocument/SdocTableSimple.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 
 interface TimeAnalysisProvenanceProps {
@@ -37,7 +37,7 @@ function TimeAnalysisProvenance({ provenanceData }: TimeAnalysisProvenanceProps)
         subheader="Investigate the Timeline Analysis."
       />
       <CardContent className="myFlexFillAllContainer" style={{ padding: 0 }}>
-        <SimpleSdocTable sdocIds={provenance} />
+        <SdocTableSimple sdocIds={provenance} />
       </CardContent>
     </Card>
   );

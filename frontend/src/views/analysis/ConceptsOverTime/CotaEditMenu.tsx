@@ -4,7 +4,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { Divider, ListItemIcon, ListItemText, MenuItem } from "@mui/material";
 import { forwardRef } from "react";
 import { COTARead } from "../../../api/openapi/models/COTARead.ts";
-import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu.tsx";
+import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../components/GenericPositionMenu.tsx";
 
 interface CotaEditMenuProps {
   cota: COTARead;
@@ -12,7 +12,7 @@ interface CotaEditMenuProps {
   onRemoveSentences: () => void;
 }
 
-const CotaEditMenu = forwardRef<GenericPositionContextMenuHandle, CotaEditMenuProps>(
+const CotaEditMenu = forwardRef<GenericPositionMenuHandle, CotaEditMenuProps>(
   ({ cota, onAnnotateSentences, onRemoveSentences }, ref) => {
     return (
       <GenericPositionMenu ref={ref}>

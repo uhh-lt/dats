@@ -2,7 +2,7 @@ import { Box, Button, ButtonProps, Dialog, DialogTitle } from "@mui/material";
 import { MRT_RowSelectionState, MRT_SortingState } from "material-react-table";
 import { useState } from "react";
 import { XYPosition } from "reactflow";
-import DocumentTable from "../../../components/DocumentTable/DocumentTable.tsx";
+import SdocTable from "../../../components/SourceDocument/SdocTable/SdocTable.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
 import { createSdocNodes } from "../whiteboardUtils.ts";
@@ -44,7 +44,7 @@ function AddDocumentNodeDialog({ projectId, buttonProps, onClick }: AddDocumentN
       </Button>
       <Dialog onClose={handleClose} open={open} maxWidth="lg" fullWidth>
         <DialogTitle>Select documents to add to Whiteboard</DialogTitle>
-        <DocumentTable
+        <SdocTable
           projectId={projectId}
           filterName={filterName}
           rowSelectionModel={rowSelectionModel}

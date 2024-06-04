@@ -3,8 +3,8 @@ import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { TimelineAnalysisColumns } from "../../../api/openapi/models/TimelineAnalysisColumns.ts";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
-import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
-import { MyFilter } from "../../../features/FilterDialog/filterUtils.ts";
+import { TimelineAnalysisService } from "../../../api/openapi/services/TimelineAnalysisService.ts";
+import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 
 export interface TimelineAnalysisCount {
   date: string;
@@ -25,7 +25,7 @@ export const useTimelineAnalysis = (timelineAnalysis: TimelineAnalysisRead) => {
           concept.filter,
         ],
         queryFn: () => {
-          return AnalysisService.timelineAnalysis2({
+          return TimelineAnalysisService.doAnalysis({
             projectId,
             groupBy: timelineAnalysis.settings.group_by!,
             projectMetadataId: timelineAnalysis.settings.date_metadata_id!,

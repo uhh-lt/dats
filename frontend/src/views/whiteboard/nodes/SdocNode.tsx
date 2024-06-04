@@ -7,9 +7,9 @@ import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectTy
 import { DocType } from "../../../api/openapi/models/DocType.ts";
 import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
-import SdocRenderer from "../../../components/DataGrid/SdocRenderer.tsx";
-import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu.tsx";
-import MemoAPI from "../../../features/Memo/MemoAPI.ts";
+import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../components/GenericPositionMenu.tsx";
+import MemoDialogAPI from "../../../components/Memo/MemoDialog/MemoDialogAPI.ts";
+import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
 import { useReactFlowService } from "../hooks/ReactFlowService.ts";
 import { DWTSNodeData } from "../types/DWTSNodeData.ts";
 import { SdocNodeData } from "../types/dbnodes/SdocNodeData.ts";
@@ -33,7 +33,7 @@ function SdocNode(props: NodeProps<SdocNodeData>) {
   const reactFlowService = useReactFlowService(reactFlowInstance);
 
   // context menu
-  const contextMenuRef = useRef<GenericPositionContextMenuHandle>(null);
+  const contextMenuRef = useRef<GenericPositionMenuHandle>(null);
   const readonly = !props.isConnectable;
 
   // global server state (react-query)
@@ -108,7 +108,7 @@ function SdocNode(props: NodeProps<SdocNodeData>) {
   const handleContextMenuCreateMemo = () => {
     if (memo.data) return;
 
-    MemoAPI.openMemo({
+    MemoDialogAPI.openMemo({
       attachedObjectType: AttachedObjectType.SOURCE_DOCUMENT,
       attachedObjectId: props.data.sdocId,
       onCreateSuccess: (memo) => {

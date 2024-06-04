@@ -1,19 +1,16 @@
 import { List, ListSubheader } from "@mui/material";
-import React from "react";
 import PreProHooks from "../../../../api/PreProHooks.ts";
 import { BackgroundJobStatus } from "../../../../api/openapi/models/BackgroundJobStatus.ts";
 import { PreprocessingJobRead } from "../../../../api/openapi/models/PreprocessingJobRead.ts";
 import { dateToLocaleString } from "../../../../utils/DateUtils.ts";
-import { ProjectDocumentsContextMenuHandle } from "../ProjectDocumentsContextMenu.tsx";
 import BackgroundJobListItem from "./BackgroundJobListItem.tsx";
 import PreProJobPayloadListItem from "./PreProJobPayloadListItem.tsx";
 
 interface PreprocessingJobListItemProps {
   initialPreProJob: PreprocessingJobRead;
-  contextMenuRef: React.RefObject<ProjectDocumentsContextMenuHandle>;
 }
 
-function PreProJobListItem({ initialPreProJob, contextMenuRef }: PreprocessingJobListItemProps) {
+function PreProJobListItem({ initialPreProJob }: PreprocessingJobListItemProps) {
   // global server state (react-query)
   const preProJob = PreProHooks.usePollPreProJob(initialPreProJob.id, initialPreProJob);
 
@@ -46,7 +43,7 @@ function PreProJobListItem({ initialPreProJob, contextMenuRef }: PreprocessingJo
           dense
         >
           {preProJob.data.payloads.map((ppj, index) => (
-            <PreProJobPayloadListItem key={index} ppj={ppj} contextMenuRef={contextMenuRef} />
+            <PreProJobPayloadListItem key={index} ppj={ppj} />
           ))}
         </List>
       </BackgroundJobListItem>

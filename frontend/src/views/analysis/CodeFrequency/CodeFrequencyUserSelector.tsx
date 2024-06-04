@@ -1,8 +1,8 @@
 import { AppBar, AppBarProps, Toolbar } from "@mui/material";
 import { useEffect } from "react";
 import { useAuth } from "../../../auth/useAuth.ts";
+import UserSelectorMulti from "../../../components/User/UserSelectorMulti.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import UserSelectorMulti from "../UserSelectorMulti.tsx";
 import { AnalysisActions } from "../analysisSlice.ts";
 
 interface CodeFrequencyUserSelectorProps {

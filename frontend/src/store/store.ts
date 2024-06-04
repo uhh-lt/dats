@@ -1,10 +1,10 @@
 import { Action, ThunkAction, configureStore } from "@reduxjs/toolkit";
 import { FLUSH, PAUSE, PERSIST, PURGE, REGISTER, REHYDRATE, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
-import bboxFilterReducer from "../components/BBoxAnnotationTable/bboxFilterSlice.ts";
-import documentTableFilterReducer from "../components/DocumentTable/documentTableFilterSlice.ts";
-import satFilterReducer from "../components/SpanAnnotationTable/satFilterSlice.ts";
-import dialogReducer from "../features/CrudDialog/dialogSlice.ts";
+import bboxFilterReducer from "../components/BBoxAnnotation/BBoxAnnotationTable/bboxFilterSlice.ts";
+import documentTableFilterReducer from "../components/SourceDocument/SdocTable/documentTableFilterSlice.ts";
+import satFilterReducer from "../components/SpanAnnotation/SpanAnnotationTable/satFilterSlice.ts";
+import dialogReducer from "../components/dialogSlice.ts";
 import annotatedSegmentsReducer from "../views/analysis/AnnotatedSegments/annotatedSegmentsSlice.ts";
 import cotaReducer from "../views/analysis/ConceptsOverTime/cotaSlice.ts";
 import documentSamplerReducer from "../views/analysis/DocumentSampler/documentSamplerSlice.ts";
@@ -16,10 +16,10 @@ import analysisReducer from "../views/analysis/analysisSlice.ts";
 import annoReducer from "../views/annotation/annoSlice.ts";
 import autologbookReducer from "../views/autologbook/autologbookSlice.ts";
 import logbookReducer from "../views/logbook/logbookSlice.ts";
+import searchReducer from "../views/search/DocumentSearch/searchSlice.ts";
+import imageSearchReducer from "../views/search/ImageSearch/imageSearchSlice.ts";
+import sentenceSearchReducer from "../views/search/SentenceSearch/sentenceSearchSlice.ts";
 import searchFilterReducer from "../views/search/searchFilterSlice.ts";
-import searchReducer from "../views/search/searchSlice.ts";
-import imageSearchReducer from "../views/searchimages/imageSearchSlice.ts";
-import sentenceSearchReducer from "../views/searchsentences/sentenceSearchSlice.ts";
 import settingsReducer from "../views/settings/settingsSlice.ts";
 
 const persistConfig = {

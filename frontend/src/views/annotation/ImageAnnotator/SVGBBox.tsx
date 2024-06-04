@@ -2,12 +2,16 @@ import React from "react";
 import CodeHooks from "../../../api/CodeHooks.ts";
 import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
 
+type CustomSVGProps = Omit<
+  React.SVGProps<SVGRectElement>,
+  "className" | "x" | "y" | "width" | "height" | "stroke" | "strokeWidth" | "fill" | "bbox"
+>;
+
 interface SVGBBoxProps {
   bbox: BBoxAnnotationReadResolvedCode;
-  onContextMenu: (e: React.MouseEvent<SVGRectElement, MouseEvent>, bbox: BBoxAnnotationReadResolvedCode) => void;
 }
 
-function SVGBBox({ bbox, onContextMenu }: SVGBBoxProps) {
+function SVGBBox({ bbox, ...props }: SVGBBoxProps & CustomSVGProps) {
   const code = CodeHooks.useGetCode(bbox.code.id);
 
   return (
@@ -23,7 +27,7 @@ function SVGBBox({ bbox, onContextMenu }: SVGBBoxProps) {
           stroke={code.data.color}
           strokeWidth={3}
           fill={"transparent"}
-          onContextMenu={(e) => onContextMenu(e, bbox)}
+          {...props}
         />
       )}
     </>
