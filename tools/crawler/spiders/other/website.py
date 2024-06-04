@@ -1,3 +1,5 @@
+from urllib.parse import urlparse
+
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 
@@ -15,7 +17,22 @@ class WebsiteSpider(CrawlSpiderBase):
     visited_links = set()
     filenams = set()
 
-    rules = (Rule(LinkExtractor(), callback="parse_item", follow=True),)
+    rules = (
+        Rule(
+            LinkExtractor(),
+            process_links="filter_links",
+            callback="parse_item",
+            follow=True,
+        ),
+    )
+
+    def filter_links(self, links):
+        filtered_links = []
+        for link in links:
+            url = urlparse(link.url)
+            if url.path.endswith(".html"):
+                filtered_links.append(link)
+        return filtered_links
 
     def parse_item(self, response, **kwargs):
         # skip already visited links
