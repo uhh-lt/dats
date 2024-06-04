@@ -33,8 +33,8 @@ jobs:
       - name: Migrate database
         working-directory: docker
         run: |
-          docker compose -f compose-test.yml run dwts-backend-api /opt/envs/dwts/bin/python run_migrations.py
+          docker compose -f compose-test.yml run dats-backend-api /opt/envs/dats/bin/python run_migrations.py
       - name: Check that database schema is up-to-date
         working-directory: docker
         run: |
-          docker compose -f compose-test.yml run dwts-backend-api /opt/envs/dwts/bin/alembic check
+          docker compose -f compose-test.yml run dats-backend-api /opt/envs/dats/bin/alembic check

@@ -87,7 +87,7 @@ class SimSearchService(metaclass=SingletonMeta):
             )
 
             if kwargs["flush"] if "flush" in kwargs else False:
-                logger.warning("Flushing DWTS Weaviate Data!")
+                logger.warning("Flushing DATS Weaviate Data!")
                 if cls._client.schema.exists(cls._sentence_class_name):
                     cls._client.schema.delete_class(cls._sentence_class_name)
                 if cls._client.schema.exists(cls._image_class_name):
@@ -145,7 +145,7 @@ class SimSearchService(metaclass=SingletonMeta):
         query_image_path = self._get_image_path_from_sdoc_id(sdoc_id=image_sdoc_id)
         # FIXME HACK FOR LOCAL RUN
         query_image_path = Path(
-            str(query_image_path).replace(conf.repo.root_directory, "/tmp/dwts")
+            str(query_image_path).replace(conf.repo.root_directory, "/tmp/dats")
         )
 
         encoded_query = self.rms.clip_image_embedding(

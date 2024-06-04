@@ -12,7 +12,7 @@ import MemoDialogAPI from "../../../components/Memo/MemoDialog/MemoDialogAPI.ts"
 import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { useReactFlowService } from "../hooks/ReactFlowService.ts";
-import { DWTSNodeData } from "../types/DWTSNodeData.ts";
+import { DATSNodeData } from "../types/DATSNodeData.ts";
 import { SpanAnnotationNodeData } from "../types/dbnodes/SpanAnnotationNodeData.ts";
 import { isCodeNode, isMemoNode, isSdocNode } from "../types/typeGuards.ts";
 import {
@@ -34,7 +34,7 @@ function SpanAnnotationNode(props: NodeProps<SpanAnnotationNodeData>) {
   const dispatch = useAppDispatch();
 
   // whiteboard state (react-flow)
-  const reactFlowInstance = useReactFlow<DWTSNodeData>();
+  const reactFlowInstance = useReactFlow<DATSNodeData>();
   const reactFlowService = useReactFlowService(reactFlowInstance);
 
   // context menu

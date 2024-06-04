@@ -92,13 +92,13 @@ function Register() {
       }}
     >
       <Typography variant="h4" component="div" align="center">
-        D-WISE Tool Suite
+        Discourse Analysis Tool Suite
       </Typography>
       <Card sx={{ width: 450 }} raised>
         <form onSubmit={handleSubmit(handleRegistration, handleError)}>
           <CardContent>
             <Typography variant="h5" component="div" align="center">
-              Create your D-WISE Account
+              Create your DATS Account
             </Typography>
             <Stack direction="row" spacing={2} sx={{ mt: 1, mb: 0.5 }}>
               <TextField

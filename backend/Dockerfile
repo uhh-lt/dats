@@ -1,5 +1,5 @@
-# docker build -f Dockerfile -t uhhlt/dwts_backend:debian_dev_latest .
-# docker push uhhlt/dwts_backend:debian_dev_latest
+# docker build -f Dockerfile -t uhhlt/dats_backend:debian_dev_latest .
+# docker push uhhlt/dats_backend:debian_dev_latest
 
 FROM ubuntu:jammy-20221020 as ubuntu
 CMD ["/bin/bash"]
@@ -21,7 +21,7 @@ RUN curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/${MICROMAMBA_VERSION
 RUN tar -xvj -f mamba.tar.bz2 bin/micromamba
 RUN rm mamba.tar.bz2
 
-# create the 'dwts' python environment with all dependencies
+# create the 'dats' python environment with all dependencies
 ENV MAMBA_ROOT_PREFIX=/opt
 COPY environment.yml .
 COPY requirements.txt /requirements.txt
@@ -34,7 +34,7 @@ RUN micromamba create -f environment.yml -q -y &&\
 
 # These settings & scripts are needed to automatically start any CMD in the container with the python environment
 ENV MAMBA_EXE="/bin/micromamba"
-ENV ENV_NAME=dwts
+ENV ENV_NAME=dats
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
 COPY _entrypoint.sh /usr/local/bin/_entrypoint.sh
 COPY _activate_current_env.sh /usr/local/bin/_activate_current_env.sh
@@ -45,8 +45,8 @@ SHELL ["/usr/local/bin/_dockerfile_shell.sh"]
 
 
 # set up python env variables
-ARG DWTS_ENV
-ENV DWTS_ENV=${DWTS_ENV} \
+ARG DATS_ENV
+ENV DATS_ENV=${DATS_ENV} \
     PYTHONFAULTHANDLER=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONHASHSEED=random \
@@ -60,9 +60,9 @@ ENV C_FORCE_ROOT=1
 # Using inside the container:
 # jupyter lab --ip=0.0.0.0 --allow-root --NotebookApp.custom_display_url=http://127.0.0.1:8888
 ARG INSTALL_JUPYTER=false
-RUN bash -c "if [ $INSTALL_JUPYTER == 'true' ] ; then micromamba install jupyterlab -c conda-forge -q -y -n dwts && micromamba clean -a -f -q -y ; fi"
+RUN bash -c "if [ $INSTALL_JUPYTER == 'true' ] ; then micromamba install jupyterlab -c conda-forge -q -y -n dats && micromamba clean -a -f -q -y ; fi"
 
-# copy the actual DWTS source code into the image
-WORKDIR /dwts_code
-COPY . /dwts_code
-WORKDIR /dwts_code/src
+# copy the actual dats source code into the image
+WORKDIR /dats_code
+COPY . /dats_code
+WORKDIR /dats_code/src

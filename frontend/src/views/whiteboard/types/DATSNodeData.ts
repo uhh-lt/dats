@@ -8,7 +8,7 @@ import { SdocNodeData } from "./dbnodes/SdocNodeData.ts";
 import { SpanAnnotationNodeData } from "./dbnodes/SpanAnnotationNodeData.ts";
 import { TagNodeData } from "./dbnodes/TagNodeData.ts";
 
-export type DWTSNodeData =
+export type DATSNodeData =
   | TextNodeData
   | NoteNodeData
   | BorderNodeData

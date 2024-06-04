@@ -15,8 +15,8 @@ if disable_ray:
     # remove ray as it's too resource-intensive for CI
     data["services"].pop("ray", None)
     data["services"]["celery-background-jobs-worker"]["links"].remove("ray")
-    data["services"]["dwts-backend-api"]["depends_on"].remove("ray")
-    data["services"]["dwts-backend-api"]["links"].remove("ray")
+    data["services"]["dats-backend-api"]["depends_on"].remove("ray")
+    data["services"]["dats-backend-api"]["links"].remove("ray")
 
 for a in data["services"]:
     data["services"][a].pop("deploy", None)

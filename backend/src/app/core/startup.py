@@ -10,7 +10,7 @@ from migration.migrate import run_required_migrations
 
 
 def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
-    progress_indicator_file = "/tmp/DWTS_START_UP_IN_PROGRESS"
+    progress_indicator_file = "/tmp/DATS_START_UP_IN_PROGRESS"
 
     def is_startup_in_progress() -> bool:
         # Flo: sleep for some random time so that an eventual other process can create the file
@@ -42,7 +42,7 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
     """
     System Start Up Process
     """
-    logger.info("Booting D-WISE Tool Suite Backend ...")
+    logger.info("Booting Discourse Analysis Tool Suite Backend ...")
 
     startup_in_progress = is_startup_in_progress()
     if startup_in_progress:
@@ -80,7 +80,7 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
         delete_progress_indicator_file()
 
     delete_progress_indicator_file()
-    logger.info("Started D-WISE Tool Suite Backend!")
+    logger.info("Started Discourse Analysis Tool Suite Backend!")
 
 
 # noinspection PyUnresolvedReferences,PyProtectedMember

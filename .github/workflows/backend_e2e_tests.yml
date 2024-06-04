@@ -100,5 +100,5 @@ jobs:
           pip install -r requirements.txt
           wget -q http://ltdata1.informatik.uni-hamburg.de/dwts/totalitarismo.zip
           unzip -q -P "$TESTDATA_PASSWORD" totalitarismo.zip
-          python dwts_importer.py --input_dir images --backend_url http://localhost:13120/ --project_name incel --tag_name totalitarisimo
-          python dwts_importer.py --input_dir json --backend_url http://localhost:13120/ --project_name incel --tag_name totalitarismo --is_json
+          python dats_importer.py --input_dir images --backend_url http://localhost:13120/ --project_name incel --tag_name totalitarisimo
+          python dats_importer.py --input_dir json --backend_url http://localhost:13120/ --project_name incel --tag_name totalitarismo --is_json

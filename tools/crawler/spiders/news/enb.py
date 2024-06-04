@@ -60,7 +60,7 @@ class ENBSpider(scrapy.Spider):
         item = ENBItem()
         item["file_name"] = title
         item["output_dir"] = (
-            f"/home/tfischer/Development/dwts/data/enb/{subtitle.replace(' ', '_')}"
+            f"/home/tfischer/Development/dats/data/enb/{subtitle.replace(' ', '_')}"
         )
 
         item["url"] = response.url

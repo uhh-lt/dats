@@ -6,11 +6,11 @@ from urllib.parse import quote
 import requests
 
 
-class DWTSAPI:
+class DATSAPI:
     def __init__(
         self,
         base_path: str = "http://localhost:14140/",
-        username: str = "SYSTEM@dwts.org",
+        username: str = "SYSTEM@dats.org",
         password: str = "12SYSTEM34",
     ):
         self.BASE_PATH = base_path
@@ -310,45 +310,45 @@ class DWTSAPI:
 
 # main (test that everything works)
 if __name__ == "__main__":
-    dwts = DWTSAPI(base_path="http://localhost:19220/")
-    dwts.login()
+    dats = DATSAPI(base_path="http://localhost:19220/")
+    dats.login()
 
     # create project
-    project = dwts.create_project(title="test", description="test")
+    project = dats.create_project(title="test", description="test")
     print("created project", project)
 
     # get project
-    project = dwts.get_proj_by_title(title="test")
+    project = dats.get_proj_by_title(title="test")
     print("got project by title", project)
 
     # get project
-    project = dwts.get_proj_by_id(proj_id=project["id"])
+    project = dats.get_proj_by_id(proj_id=project["id"])
     print("got project by id", project)
 
     # get all projects
-    projects = dwts.read_all_projects()
+    projects = dats.read_all_projects()
     print("got all projects", projects)
 
     # get project status
-    status = dwts.read_project_status(proj_id=project["id"])
+    status = dats.read_project_status(proj_id=project["id"])
     print("got project status", status)
 
     # create tag
-    tag = dwts.create_tag(
+    tag = dats.create_tag(
         title="test tag", description="my test tag", color="blue", proj_id=project["id"]
     )
     print("created tag", tag)
 
     # get tag
-    tag = dwts.get_tag_by_title(proj_id=project["id"], title="test tag")
+    tag = dats.get_tag_by_title(proj_id=project["id"], title="test tag")
     print("got tag", tag)
 
     # get tags
-    tags = dwts.read_all_tags(proj_id=project["id"])
+    tags = dats.read_all_tags(proj_id=project["id"])
     print("got tags", tags)
 
     # status before upload
-    status = dwts.read_project_status(proj_id=project["id"])
+    status = dats.read_project_status(proj_id=project["id"])
     sdocs_in_project = status["num_sdocs_finished"]
 
     # file upload
@@ -365,15 +365,15 @@ if __name__ == "__main__":
         mime = magic.from_buffer(file_bytes, mime=True)
         files.append(("uploaded_files", (file.name, file_bytes, mime)))
 
-    num_files_to_upload = dwts.upload_files(
+    num_files_to_upload = dats.upload_files(
         proj_id=project["id"], files=files, filter_duplicate_files_before_upload=True
     )
 
     # wait for pre-processing to finishe
-    status = dwts.read_project_status(proj_id=project["id"])
+    status = dats.read_project_status(proj_id=project["id"])
     while status["num_sdocs_finished"] != (sdocs_in_project + num_files_to_upload):
         sleep(1)
-        status = dwts.read_project_status(proj_id=project["id"])
+        status = dats.read_project_status(proj_id=project["id"])
         print(
             f"Uploading documents. Current status: {status['num_sdocs_finished'] - sdocs_in_project} / {num_files_to_upload}"
         )
@@ -381,33 +381,33 @@ if __name__ == "__main__":
     print("Upload success!")
 
     # get all sdocs
-    sdoc_ids = dwts.read_all_sdocs(proj_id=project["id"])
+    sdoc_ids = dats.read_all_sdocs(proj_id=project["id"])
     print("got all sdocs ids", sdoc_ids)
 
     # bulk apply tags
-    dwts.bulk_apply_tags(sdoc_ids=sdoc_ids, tag_ids=[tag["id"]])
+    dats.bulk_apply_tags(sdoc_ids=sdoc_ids, tag_ids=[tag["id"]])
     print("applied tags to sdocs")
 
     # read all sdocs by tags
-    sdoc_ids = dwts.read_all_sdocs_by_tags(proj_id=project["id"], tags=[tag["id"]])
+    sdoc_ids = dats.read_all_sdocs_by_tags(proj_id=project["id"], tags=[tag["id"]])
     print("got all sdocs ids by tags", sdoc_ids)
 
     # create project metadata
-    project_metadata = dwts.create_project_metadata(
+    project_metadata = dats.create_project_metadata(
         proj_id=project["id"], key="sdoc_id", metatype="STRING", doctype="text"
     )
-    project_metadata = dwts.create_project_metadata(
+    project_metadata = dats.create_project_metadata(
         proj_id=project["id"], key="sdoc_id", metatype="STRING", doctype="image"
     )
     print("created project metadata", project_metadata)
 
     # get all project metadata
-    project_metadatas = dwts.read_all_project_metadata(proj_id=project["id"])
+    project_metadatas = dats.read_all_project_metadata(proj_id=project["id"])
     print("got all project metadata", project_metadatas)
 
     # update sdoc metadata
     for sdoc_id in sdoc_ids:
-        sdoc_metadata = dwts.update_sdoc_metadata(
+        sdoc_metadata = dats.update_sdoc_metadata(
             sdoc_id=sdoc_id,
             value=f"meine id ist {sdoc_id}",
             key="sdoc_id",

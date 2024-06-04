@@ -34,34 +34,23 @@ jobs:
           context: ./backend
           push: true
           tags: |
-            "uhhlt/dwts_backend:${{ steps.extract_version.outputs.version }}"
+            "uhhlt/dats_backend:${{ steps.extract_version.outputs.version }}"
       - name: Build and push frontend container
         uses: docker/build-push-action@v4
         with:
           context: ./frontend
           push: true
           tags: |
-            "uhhlt/dwts_frontend:${{ steps.extract_version.outputs.version }}"
+            "uhhlt/dats_frontend:${{ steps.extract_version.outputs.version }}"
       - name: Build and push ray container
         uses: docker/build-push-action@v4
         with:
           context: ./backend/src/app/preprocessing/ray_model_worker
           push: true
           tags: |
-            "uhhlt/dwts_ray:${{ steps.extract_version.outputs.version }}"
+            "uhhlt/dats_ray:${{ steps.extract_version.outputs.version }}"
 
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
           generateReleaseNotes: true
-      # - name: Create Release
-      #   uses: actions/create-release@v1
-      #   id: create_release
-      #   with:
-      #     draft: false
-      #     prerelease: false
-      #     release_name: DWTS ${{  github.ref_name }}
-      #     tag_name: ${{ github.ref }}
-      #     body_path: CHANGELOG.md
-      #   env:
-      #     GITHUB_TOKEN: ${{ github.token }}

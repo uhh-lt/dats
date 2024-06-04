@@ -11,7 +11,7 @@ import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../compone
 import MemoDialogAPI from "../../../components/Memo/MemoDialog/MemoDialogAPI.ts";
 import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
 import { useReactFlowService } from "../hooks/ReactFlowService.ts";
-import { DWTSNodeData } from "../types/DWTSNodeData.ts";
+import { DATSNodeData } from "../types/DATSNodeData.ts";
 import { SdocNodeData } from "../types/dbnodes/SdocNodeData.ts";
 import { isMemoNode, isTagNode } from "../types/typeGuards.ts";
 import {
@@ -29,7 +29,7 @@ function SdocNode(props: NodeProps<SdocNodeData>) {
   const userId = useAuth().user?.id;
 
   // whiteboard state (react-flow)
-  const reactFlowInstance = useReactFlow<DWTSNodeData>();
+  const reactFlowInstance = useReactFlow<DATSNodeData>();
   const reactFlowService = useReactFlowService(reactFlowInstance);
 
   // context menu

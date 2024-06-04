@@ -12,7 +12,7 @@ import MemoDialogAPI from "../../../components/Memo/MemoDialog/MemoDialogAPI.ts"
 import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { useReactFlowService } from "../hooks/ReactFlowService.ts";
-import { DWTSNodeData } from "../types/DWTSNodeData.ts";
+import { DATSNodeData } from "../types/DATSNodeData.ts";
 import { BBoxAnnotationNodeData } from "../types/dbnodes/BBoxAnnotationNodeData.ts";
 import { isCodeNode, isMemoNode, isSdocNode } from "../types/typeGuards.ts";
 import {
@@ -35,7 +35,7 @@ function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
   const dispatch = useAppDispatch();
 
   // whiteboard state (react-flow)
-  const reactFlowInstance = useReactFlow<DWTSNodeData>();
+  const reactFlowInstance = useReactFlow<DATSNodeData>();
   const reactFlowService = useReactFlowService(reactFlowInstance);
 
   // context menu

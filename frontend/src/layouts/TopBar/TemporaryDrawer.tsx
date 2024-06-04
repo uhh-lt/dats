@@ -96,7 +96,7 @@ export default function TemporaryDrawer() {
         </ListItem>
 
         <ListItem disablePadding>
-          <ListItemButton component={Link} href="https://github.com/uhh-lt/dwts/wiki" target="_blank">
+          <ListItemButton component={Link} href="https://github.com/uhh-lt/dats/wiki" target="_blank">
             <ListItemIcon>
               <AutoStoriesIcon />
             </ListItemIcon>

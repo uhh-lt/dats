@@ -18,8 +18,8 @@ function About() {
         About
       </Typography>
       <Typography variant={"body1"} gutterBottom>
-        This is the about page of the D-WISE Tool Suite. Read further to learn more about the D-WISE Project and Tool
-        Suite. More information can be found on the D-WISE website (
+        This is the about page of the Discourse Analysis Tool Suite. Read further to learn more about the D-WISE Project
+        and Discourse Analysis Tool Suite. More information can be found on the D-WISE website (
         <a href="https://www.dwise.uni-hamburg.de/en.html">link</a>).
       </Typography>
       <Typography variant={"h4"} gutterBottom mt={3}>
@@ -45,23 +45,23 @@ function About() {
         University of Hamburg.
       </Typography>
       <Typography variant={"h4"} gutterBottom mt={3}>
-        The D-WISE Tool Suite (DWTS)
+        The Discourse Analysis Tool Suite (DATS)
       </Typography>
       <Typography variant={"body1"} gutterBottom>
-        The D-WISE Tool Suite (DWTS) is a web-based open-source tool for the digital support of sociological discourse
-        analyzes (WDA) where hermeneutic-circular methods, filtering, scalable reading and coding are the dominant
-        principles. In addition, collaboration, the mutually complementary combination of human-in-the-loop and
+        The Discourse Analysis Tool Suite (DATS) is a web-based open-source tool for the digital support of sociological
+        discourse analyzes (WDA) where hermeneutic-circular methods, filtering, scalable reading and coding are the
+        dominant principles. In addition, collaboration, the mutually complementary combination of human-in-the-loop and
         AI-in-the-loop, multimodality and big data are core topics and were therefore taken into account from the very
         beginning when developing the tool.
       </Typography>
       <Typography variant={"body1"} gutterBottom>
-        The DWTS aims to overcome challenges that researchers face with regard to methodological approaches from the
+        The DATS aims to overcome challenges that researchers face with regard to methodological approaches from the
         Digital Humanities (DH), discourse analysis and the increasing use of open corpora, consisting of heterogeneous,
         multimodal and large amounts of data
       </Typography>
       <Typography variant={"body1"} gutterBottom>
-        To this end, the D-WISE Tool Suite expands the existing range of DH methods and improves the research process
-        using artificial intelligence-supported functionalities and partially automated processes.
+        To this end, the Discourse Analysis Tool Suite expands the existing range of DH methods and improves the
+        research process using artificial intelligence-supported functionalities and partially automated processes.
       </Typography>
     </Container>
   );

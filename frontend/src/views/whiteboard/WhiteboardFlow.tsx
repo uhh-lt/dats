@@ -67,7 +67,7 @@ import DatabaseEdgeEditMenu, { DatabaseEdgeEditMenuHandle } from "./toolbar/Data
 import EdgeEditMenu, { EdgeEditMenuHandle } from "./toolbar/EdgeEditMenu.tsx";
 import NodeEditMenu, { NodeEditMenuHandle } from "./toolbar/NodeEditMenu.tsx";
 import { CustomEdgeData } from "./types/CustomEdgeData.ts";
-import { DWTSNodeData } from "./types/DWTSNodeData.ts";
+import { DATSNodeData } from "./types/DATSNodeData.ts";
 import { PendingAddNodeAction } from "./types/PendingAddNodeAction.ts";
 import {
   isBBoxAnnotationNode,
@@ -152,7 +152,7 @@ interface WhiteboardFlowProps {
 
 function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   // whiteboard (react-flow)
-  const reactFlowInstance = useReactFlow<DWTSNodeData>();
+  const reactFlowInstance = useReactFlow<DATSNodeData>();
   const reactFlowService = useReactFlowService(reactFlowInstance);
   const resetSelection = useStore(resetSelectedElementsSelector);
   const connectionHandleId = useStore(connectionHandleIdSelector);
@@ -179,7 +179,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   // local state
   const lastSaveTime = useRef<number>(Date.now());
   const [pendingAction, setPendingAction] = useState<PendingAddNodeAction | undefined>(undefined);
-  const [nodes, , onNodesChange] = useNodeStateCustom<DWTSNodeData>(whiteboard.content.nodes);
+  const [nodes, , onNodesChange] = useNodeStateCustom<DATSNodeData>(whiteboard.content.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgeStateCustom(whiteboard.content.edges);
   const [selectedEdges, setSelectedEdges] = useState<Edge[]>([]);
   const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
@@ -479,7 +479,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
                 <Panel position="top-left">
                   <Paper elevation={1} sx={{ mb: 3 }}>
                     <Stack>
-                      <Typography p={1}>DWTS Objects</Typography>
+                      <Typography p={1}>DATS Objects</Typography>
                       <AddDocumentNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
                       <AddTagNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
                       <AddCodeNodeDialog projectId={projectId} onClick={handleChangePendingAction} />

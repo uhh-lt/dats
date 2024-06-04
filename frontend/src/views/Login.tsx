@@ -71,7 +71,7 @@ function Login() {
       }}
     >
       <Typography variant="h4" component="div" align="center">
-        D-WISE Tool Suite
+        Discourse Analysis Tool Suite
       </Typography>
       <Card sx={{ width: 450 }} raised component={"form"} onSubmit={handleSubmit(handleLogin, handleError)}>
         <CardContent>
@@ -125,7 +125,7 @@ function Login() {
         <Card sx={{ width: "66%", mt: 4 }} variant="outlined" component={"div"}>
           <CardContent>
             <Typography component="div" align="justify">
-              Please use the Chrome browser for the best experience! We cannot guarantee that the DWTS works properly in
+              Please use the Chrome browser for the best experience! We cannot guarantee that DATS works properly in
               other browsers.
             </Typography>
           </CardContent>
@@ -135,8 +135,8 @@ function Login() {
         <Card sx={{ width: "66%", borderColor: "red", mt: 4 }} variant="outlined" component={"div"}>
           <CardContent>
             <Typography component="div" align="justify">
-              You are about to enter the D-WISE Tool Suite Demo. Several projects are prepared, but you can also create
-              new projects and import your own data. This server is wiped regulary.{" "}
+              You are about to enter the Discourse Analysis Tool Suite Demo. Several projects are prepared, but you can
+              also create new projects and import your own data. This server is wiped regulary.{" "}
               <u style={{ backgroundColor: "yellow" }}>Do not store sensitive data!</u>
             </Typography>
             <Typography sx={{ mt: 1 }}>

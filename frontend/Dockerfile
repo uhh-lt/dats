@@ -1,5 +1,5 @@
-# docker build -f Dockerfile -t uhhlt/dwts_frontend:latest .
-# docker push uhhlt/dwts_frontend:latest
+# docker build -f Dockerfile -t uhhlt/dats_frontend:latest .
+# docker push uhhlt/dats_frontend:latest
 
 # STAGE 1: BUILD REACT APP
 

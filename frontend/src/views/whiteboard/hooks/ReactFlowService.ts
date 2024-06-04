@@ -1,19 +1,19 @@
 import { differenceBy } from "lodash";
 import { useMemo } from "react";
 import { Node, ReactFlowInstance } from "reactflow";
-import { DWTSNodeData } from "../types/DWTSNodeData.ts";
+import { DATSNodeData } from "../types/DATSNodeData.ts";
 
 export class ReactFlowService {
   zoom = 1.85;
   duration = 1000;
   timeout = 100;
-  reactFlowInstance: ReactFlowInstance<DWTSNodeData>;
+  reactFlowInstance: ReactFlowInstance<DATSNodeData>;
 
-  constructor(reactFlowInstance: ReactFlowInstance<DWTSNodeData>) {
+  constructor(reactFlowInstance: ReactFlowInstance<DATSNodeData>) {
     this.reactFlowInstance = reactFlowInstance;
   }
 
-  addNodes(nodes: Node<DWTSNodeData>[]) {
+  addNodes(nodes: Node<DATSNodeData>[]) {
     const currentNodes = this.reactFlowInstance.getNodes();
     const newNodes = differenceBy(nodes, currentNodes, "id");
 
@@ -24,13 +24,13 @@ export class ReactFlowService {
     });
   }
 
-  addNodesWithoutDelay(nodes: Node<DWTSNodeData>[]) {
+  addNodesWithoutDelay(nodes: Node<DATSNodeData>[]) {
     const currentNodes = this.reactFlowInstance.getNodes();
     const newNodes = differenceBy(nodes, currentNodes, "id");
     this.reactFlowInstance.addNodes(newNodes);
   }
 }
 
-export const useReactFlowService = (reactFlowInstance: ReactFlowInstance<DWTSNodeData>) => {
+export const useReactFlowService = (reactFlowInstance: ReactFlowInstance<DATSNodeData>) => {
   return useMemo(() => new ReactFlowService(reactFlowInstance), [reactFlowInstance]);
 };

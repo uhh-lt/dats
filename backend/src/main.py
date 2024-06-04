@@ -93,10 +93,10 @@ def custom_generate_unique_id(route: APIRoute):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    logger.info("Starting D-WISE Tool Suite FastAPI!")
+    logger.info("Starting Discourse Analysis Tool Suite FastAPI!")
     yield
     # Shutdown
-    logger.info("Stopping D-WISE Tool Suite FastAPI!")
+    logger.info("Stopping Discourse Analysis Tool Suite FastAPI!")
     RepoService().purge_temporary_files()
 
 

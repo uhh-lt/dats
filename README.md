@@ -20,7 +20,7 @@ _Please also have a look at our [Wiki](https://github.com/uhh-lt/dats/wiki) for 
 
 ## Tech Stack
 
-![TechStack](docs/DWTS_Arch-backend-techstack.drawio.png)
+![TechStack](assets/DATS_Arch-backend-techstack.drawio.png)
 
 ## License
 

@@ -22,12 +22,12 @@ import React, { forwardRef, useCallback, useImperativeHandle, useState } from "r
 import { Edge, EdgeMarker, MarkerType, useReactFlow } from "reactflow";
 import { isDashed, isDotted } from "../edges/edgeUtils.ts";
 import { CustomEdgeData } from "../types/CustomEdgeData.ts";
+import { DATSNodeData } from "../types/DATSNodeData.ts";
 import ColorTool from "./tools/ColorTool.tsx";
 import NumberTool from "./tools/NumberTool.tsx";
 import SliderTool from "./tools/SliderTool.tsx";
 import SolidDashedDottedTool from "./tools/SolidDashedDottedTool.tsx";
 import TypographyVariantTool from "./tools/TypographyVariantTool.tsx";
-import { DWTSNodeData } from "../types/DWTSNodeData.ts";
 
 interface EdgeEditMenuProps {}
 
@@ -56,7 +56,7 @@ export interface EdgeEditMenuHandle {
 }
 
 const EdgeEditMenu = forwardRef<EdgeEditMenuHandle, EdgeEditMenuProps>((_, ref) => {
-  const reactFlowInstance = useReactFlow<DWTSNodeData, CustomEdgeData>();
+  const reactFlowInstance = useReactFlow<DATSNodeData, CustomEdgeData>();
   const [edges, setEdges] = useState<Edge<CustomEdgeData>[]>([]);
 
   // exposed methods (via ref)

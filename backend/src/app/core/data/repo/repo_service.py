@@ -32,7 +32,7 @@ class SourceDocumentNotFoundInRepositoryError(Exception):
         super().__init__(
             (
                 f"The original file of SourceDocument {sdoc.id} ({sdoc.filename}) cannot be found in "
-                f"the DWTS Repository at {dst}"
+                f"the DATS Repository at {dst}"
             )
         )
 
@@ -40,7 +40,7 @@ class SourceDocumentNotFoundInRepositoryError(Exception):
 class FileNotFoundInRepositoryError(Exception):
     def __init__(self, proj_id: int, filename: Union[str, Path], dst: Union[str, Path]):
         super().__init__(
-            f"The file '{filename}' of Project {proj_id} cannot be found in the DWTS Repository at {dst}"
+            f"The file '{filename}' of Project {proj_id} cannot be found in the DATS Repository at {dst}"
         )
 
 
@@ -48,7 +48,7 @@ class FileAlreadyExistsInRepositoryError(Exception):
     def __init__(self, proj_id: int, filename: Union[str, Path], dst: str):
         super().__init__(
             f"Cannot store the file '{filename}' of Project {proj_id} because there is a file with the "
-            f"same name in the DWTS Repository at {dst}"
+            f"same name in the DATS Repository at {dst}"
         )
 
 
@@ -109,7 +109,7 @@ class RepoService(metaclass=SingletonMeta):
     def _create_root_repo_directory_structure(self, remove_if_exists: bool = False):
         try:
             if self.repo_root.exists() and remove_if_exists:
-                logger.warning(f"Removing DWTS Repo at {self.repo_root}")
+                logger.warning(f"Removing DATS Repo at {self.repo_root}")
                 for filename in self.repo_root.iterdir():
                     file_path = self.repo_root.joinpath(self.repo_root, filename)
                     try:
@@ -123,24 +123,24 @@ class RepoService(metaclass=SingletonMeta):
             # make sure repository root dir exists
             if not self.repo_root.exists():
                 self.repo_root.mkdir(parents=True)
-                logger.info(f"Created DWTS repository at {str(self.repo_root)}")
+                logger.info(f"Created DATS repository at {str(self.repo_root)}")
 
             # make sure projtemp_files_root exists
             if not self.temp_files_root.exists():
                 self.temp_files_root.mkdir(parents=True)
                 logger.info(
-                    f"Created DWTS temp files root at {str(self.temp_files_root)}"
+                    f"Created DATS temp files root at {str(self.temp_files_root)}"
                 )
 
             # make sure logs dir exists
             if not self.logs_root.exists():
                 self.logs_root.mkdir()
-                logger.info(f"Created DWTS logs root at {str(self.logs_root)}")
+                logger.info(f"Created DATS logs root at {str(self.logs_root)}")
 
             # make sure projects dir exists
             if not self.proj_root.exists():
                 self.proj_root.mkdir()
-                logger.info(f"Created DWTS project root at {str(self.proj_root)}")
+                logger.info(f"Created DATS project root at {str(self.proj_root)}")
 
         except Exception as e:
             msg = f"Cannot create repository directory structure at {conf.repo.root_directory}: {e}"

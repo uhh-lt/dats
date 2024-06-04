@@ -41,7 +41,7 @@ def test_crud_cycle() -> None:
     assert updated.results_url is None
 
     update = ExportJobUpdate(
-        status=BackgroundJobStatus.FINISHED, results_url="www.dwts.io"
+        status=BackgroundJobStatus.FINISHED, results_url="www.dats.io"
     )
     updated = redis.update_export_job(key=read.id, update=update)
     assert updated is not None
@@ -50,7 +50,7 @@ def test_crud_cycle() -> None:
     assert updated.created == read.created
     assert updated.parameters == read.parameters
     assert updated.status == BackgroundJobStatus.FINISHED
-    assert updated.results_url == "www.dwts.io"
+    assert updated.results_url == "www.dats.io"
 
     deleted = redis.delete_export_job(key=updated.id)
     assert deleted is not None
