@@ -19,9 +19,9 @@ import { ImageSearchActions } from "../../search/ImageSearch/imageSearchSlice.ts
 import { SentenceSearchActions } from "../../search/SentenceSearch/sentenceSearchSlice.ts";
 import { SearchFilterActions } from "../../search/searchFilterSlice.ts";
 
-interface SentenceContextMenuProps {}
+interface SentenceMenuProps {}
 
-export interface SentenceContextMenuHandle {
+export interface SentenceMenuHandle {
   open: (
     position: PopoverPosition,
     sentence: string | undefined,
@@ -31,7 +31,7 @@ export interface SentenceContextMenuHandle {
 }
 
 // eslint-disable-next-line no-empty-pattern
-const SentenceContextMenu = forwardRef<SentenceContextMenuHandle, SentenceContextMenuProps>(({}, ref) => {
+const SentenceMenu = forwardRef<SentenceMenuHandle, SentenceMenuProps>(({}, ref) => {
   const navigate = useNavigate();
 
   // local state
@@ -167,4 +167,4 @@ const SentenceContextMenu = forwardRef<SentenceContextMenuHandle, SentenceContex
   );
 });
 
-export default SentenceContextMenu;
+export default SentenceMenu;

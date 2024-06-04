@@ -4,7 +4,7 @@ import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import DocumentRenderer from "../DocumentRenderer/DocumentRenderer.tsx";
 import useComputeTokenData from "../DocumentRenderer/useComputeTokenData.ts";
 import ImageContextMenu, { ImageContextMenuHandle } from "./ImageContextMenu.tsx";
-import SentenceContextMenu, { SentenceContextMenuHandle } from "./SentenceContextMenu.tsx";
+import SentenceMenu, { SentenceMenuHandle } from "./SentenceMenu.tsx";
 
 interface AnnotationVisualizerProps {
   sdoc: SourceDocumentWithDataRead;
@@ -15,7 +15,7 @@ interface AnnotationVisualizerProps {
  */
 function TextViewer({ sdoc }: AnnotationVisualizerProps) {
   // local state
-  const sentenceContextMenuRef = useRef<SentenceContextMenuHandle>(null);
+  const sentenceContextMenuRef = useRef<SentenceMenuHandle>(null);
   const imageContextMenuRef = useRef<ImageContextMenuHandle>(null);
 
   // global client state (redux)
@@ -29,7 +29,7 @@ function TextViewer({ sdoc }: AnnotationVisualizerProps) {
   });
 
   // ui events
-  const handleContextMenu = (event: React.MouseEvent) => {
+  const handleClick = (event: React.MouseEvent) => {
     if (!annotationsPerToken) return;
     if (!annotationMap) return;
     if (!sentences) return;
@@ -110,14 +110,14 @@ function TextViewer({ sdoc }: AnnotationVisualizerProps) {
         tokenData={tokenData}
         annotationsPerToken={annotationsPerToken}
         annotationMap={annotationMap}
-        onContextMenu={handleContextMenu}
+        onClick={handleClick}
         isViewer={true}
         html={sdoc.html}
         projectId={sdoc.project_id}
         style={{ zIndex: 1, overflowY: "auto" }}
         className="h100"
       />
-      <SentenceContextMenu ref={sentenceContextMenuRef} />
+      <SentenceMenu ref={sentenceContextMenuRef} />
       <ImageContextMenu ref={imageContextMenuRef} />
     </>
   );
