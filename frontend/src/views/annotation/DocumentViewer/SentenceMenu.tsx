@@ -1,3 +1,4 @@
+import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import SearchIcon from "@mui/icons-material/Search";
 import {
   Box,
@@ -18,7 +19,6 @@ import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { ImageSearchActions } from "../../search/ImageSearch/imageSearchSlice.ts";
 import { SentenceSearchActions } from "../../search/SentenceSearch/sentenceSearchSlice.ts";
 import { SearchFilterActions } from "../../search/searchFilterSlice.ts";
-
 interface SentenceMenuProps {}
 
 export interface SentenceMenuHandle {
@@ -131,11 +131,11 @@ const SentenceMenu = forwardRef<SentenceMenuHandle, SentenceMenuProps>(({}, ref)
               <ListItem disablePadding>
                 <ListItemButton onClick={() => handleAddFilter(anno)}>
                   <ListItemIcon>
-                    <SearchIcon />
+                    <FilterAltIcon />
                   </ListItemIcon>
-                  <ListItemText primary="Add filter: " />
+                  <ListItemText primary="Filter: " />
                   <Box
-                    style={{ width: 20, height: 20, backgroundColor: anno.code.color, marginRight: 8, marginLeft: 8 }}
+                    style={{ width: 20, height: 20, backgroundColor: anno.code.color, marginRight: 8, marginLeft: 16 }}
                   />
                   <ListItemText primary={`${anno.code.name}: ${anno.span_text}`} />
                 </ListItemButton>
