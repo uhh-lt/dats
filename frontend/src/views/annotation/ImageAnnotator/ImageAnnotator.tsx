@@ -9,6 +9,7 @@ import { AnnotationDocumentRead } from "../../../api/openapi/models/AnnotationDo
 import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
 import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
 import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import AnnotationMenu, { CodeSelectorHandle } from "../AnnotationMenu.tsx";
@@ -278,18 +279,22 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
 
   const onCodeSelectorDeleteCode = () => {
     if (selectedBbox) {
-      deleteMutation.mutate(
-        { bboxToDelete: selectedBbox },
-        {
-          onSuccess: (data) => {
-            openSnackbar({
-              text: `Deleted Bounding Box Annotation ${data.id}`,
-              severity: "success",
-            });
-          },
+      ConfirmationAPI.openConfirmationDialog({
+        text: `Do you really want to remove the BBoxAnnotation ${selectedBbox.id}? You can reassign it later!`,
+        onAccept: () => {
+          deleteMutation.mutate(
+            { bboxToDelete: selectedBbox },
+            {
+              onSuccess: (data) => {
+                openSnackbar({
+                  text: `Deleted Bounding Box Annotation ${data.id}`,
+                  severity: "success",
+                });
+              },
+            },
+          );
         },
-      );
-      // console.log("Delete", code);
+      });
     } else {
       console.error("This should never happen! (onCodeSelectorDeleteCode)");
     }
