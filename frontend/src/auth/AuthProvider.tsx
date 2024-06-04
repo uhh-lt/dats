@@ -11,7 +11,7 @@ import { LoginStatus } from "./LoginStatus.ts";
 
 // init once
 OpenAPI.BASE = import.meta.env.VITE_APP_SERVER || "";
-OpenAPI.TOKEN = localStorage.getItem("dwts-access") || undefined;
+OpenAPI.TOKEN = localStorage.getItem("dats-access") || undefined;
 
 interface AuthContextType {
   user: UserRead | undefined;
@@ -28,13 +28,13 @@ interface AuthContextProps {
 
 export const AuthProvider = ({ children }: AuthContextProps) => {
   // state
-  const [accessToken, setAccessToken] = useState<string | undefined>(localStorage.getItem("dwts-access") || undefined);
+  const [accessToken, setAccessToken] = useState<string | undefined>(localStorage.getItem("dats-access") || undefined);
   const [accessTokenExpires, setAccessTokenExpires] = useState<Date | undefined>(() => {
-    const expiryString = localStorage.getItem("dwts-access-expires");
+    const expiryString = localStorage.getItem("dats-access-expires");
     return expiryString ? new Date(expiryString) : undefined;
   });
   const [refreshToken, setRefreshToken] = useState<string | undefined>(
-    localStorage.getItem("dwts-refresh-access") || undefined,
+    localStorage.getItem("dats-refresh-access") || undefined,
   );
 
   // fetch user data
@@ -47,14 +47,14 @@ export const AuthProvider = ({ children }: AuthContextProps) => {
 
   // methods
   const updateAuthData = useCallback((authData: UserAuthorizationHeaderData) => {
-    localStorage.setItem("dwts-access", authData.access_token);
+    localStorage.setItem("dats-access", authData.access_token);
     OpenAPI.TOKEN = authData.access_token;
     setAccessToken(authData.access_token);
 
-    localStorage.setItem("dwts-access-expires", authData.access_token_expires);
+    localStorage.setItem("dats-access-expires", authData.access_token_expires);
     setAccessTokenExpires(new Date(authData.access_token_expires));
 
-    localStorage.setItem("dwts-refresh-access", authData.refresh_token);
+    localStorage.setItem("dats-refresh-access", authData.refresh_token);
     setRefreshToken(authData.refresh_token);
   }, []);
 
@@ -68,9 +68,9 @@ export const AuthProvider = ({ children }: AuthContextProps) => {
         return;
       }
       OpenAPI.TOKEN = undefined;
-      localStorage.removeItem("dwts-access");
-      localStorage.removeItem("dwts-access-expires");
-      localStorage.removeItem("dwts-refresh-access");
+      localStorage.removeItem("dats-access");
+      localStorage.removeItem("dats-access-expires");
+      localStorage.removeItem("dats-refresh-access");
       setAccessToken(undefined);
       setRefreshToken(undefined);
       setAccessTokenExpires(undefined);

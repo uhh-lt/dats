@@ -57,7 +57,7 @@ class RedisService(metaclass=SingletonMeta):
             raise SystemExit(msg)
 
         if kwargs["flush_all_clients"] if "flush_all_clients" in kwargs else False:
-            logger.warning("Flushing all DWTS Redis Clients!")
+            logger.warning("Flushing all DATS Redis Clients!")
             for typ, client in clients.items():
                 client.flushdb()
                 client.save()

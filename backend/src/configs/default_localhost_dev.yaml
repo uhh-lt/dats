@@ -13,7 +13,7 @@ api:
 system_user:
   first_name: ${oc.env:SYSTEM_USER_FIRST_NAME, "SYSTEM"}
   last_name: ${oc.env:SYSTEM_USER_LAST_NAME, "USER"}
-  email: ${oc.env:SYSTEM_USER_EMAIL, "SYSTEM@dwts.org"}
+  email: ${oc.env:SYSTEM_USER_EMAIL, "SYSTEM@dats.org"}
   password: ${oc.env:SYSTEM_USER_PASSWORD, "SYSTEM"}
 
 ray:
@@ -23,7 +23,7 @@ ray:
   port: ${oc.env:RAY_PORT, 33132}
 
 repo:
-  root_directory: ${oc.env:REPO_ROOT, /home/7schneid/gitrepos/dwts/docker/backend_repo}
+  root_directory: ${oc.env:REPO_ROOT, /home/7schneid/gitrepos/dats/docker/backend_repo}
   content_server:
     https: False
     host: ${oc.env:CONTENT_SERVER_HOST, 127.0.0.1}
@@ -40,12 +40,12 @@ celery:
     host: ${oc.env:REDIS_HOST, localhost}
     port: ${oc.env:REDIS_PORT, 6379}
     db: 0
-    password: ${oc.env:REDIS_PASSWORD, dwts123}
+    password: ${oc.env:REDIS_PASSWORD, dats123}
   broker:
     host: ${oc.env:RABBITMQ_HOST, localhost}
     port: ${oc.env:RABBITMQ_PORT, 5672}
-    user: ${oc.env:RABBITMQ_USER, dwtsuser}
-    password: ${oc.env:RABBITMQ_PASSWORD, dwts123}
+    user: ${oc.env:RABBITMQ_USER, datsuser}
+    password: ${oc.env:RABBITMQ_PASSWORD, dats123}
   preprocessing:
     extract_images_from_pdf: True
     extract_images_from_docx: True
@@ -57,16 +57,16 @@ weaviate:
 postgres:
   host: ${oc.env:POSTGRES_HOST, 127.0.0.1}
   port: ${oc.env:POSTGRES_PORT, 5432}
-  db: ${oc.env:POSTGRES_DB, dwts}
-  user: ${oc.env:POSTGRES_USER, dwtsuser}
-  password: ${oc.env:POSTGRES_PASSWORD, dwts123}
+  db: ${oc.env:POSTGRES_DB, dats}
+  user: ${oc.env:POSTGRES_USER, datsuser}
+  password: ${oc.env:POSTGRES_PASSWORD, dats123}
   pool:
     pool_size: 32
     max_overflow: 16
 
 mail:
   enabled: ${oc.env:MAIL_ENABLED, False}
-  mail: ${oc.env:MAIL_FROM, dwise@uni-hamburg.de}
+  mail: ${oc.env:MAIL_FROM, dats@uni-hamburg.de}
   user: ${oc.env:MAIL_USERNAME, "user"}
   password: ${oc.env:MAIL_PASSWORD, "pass"}
   server: ${oc.env:MAIL_SERVER, exchange.uni-hamburg.de}
@@ -79,7 +79,7 @@ mail:
 redis:
   host: ${oc.env:REDIS_HOST, localhost}
   port: ${oc.env:REDIS_PORT, 6379}
-  password: ${oc.env:REDIS_PASSWORD, dwts123}
+  password: ${oc.env:REDIS_PASSWORD, dats123}
   clients:
     feedback: 1 # name: redis db index -- DO NOT USE DB 0, it's reserved for RabbitMQ!
     export: 2

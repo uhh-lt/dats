@@ -15,7 +15,7 @@ import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRe
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../components/GenericPositionMenu.tsx";
 import MemoRenderer from "../../../components/Memo/MemoRenderer.tsx";
-import { DWTSNodeData } from "../types/DWTSNodeData.ts";
+import { DATSNodeData } from "../types/DATSNodeData.ts";
 import { BBoxAnnotationNodeData } from "../types/dbnodes/BBoxAnnotationNodeData.ts";
 import { CodeNodeData } from "../types/dbnodes/CodeNodeData.ts";
 import { MemoNodeData } from "../types/dbnodes/MemoNodeData.ts";
@@ -76,7 +76,7 @@ const isAttachedObjectNode = (attachedObjectType: AttachedObjectType) => {
   }
 };
 
-const getAttachedObjectNodeId = (attachedObjectType: AttachedObjectType) => (node: Node<DWTSNodeData>) => {
+const getAttachedObjectNodeId = (attachedObjectType: AttachedObjectType) => (node: Node<DATSNodeData>) => {
   switch (attachedObjectType) {
     case AttachedObjectType.DOCUMENT_TAG:
       return (node as Node<TagNodeData>).data.tagId;
@@ -138,7 +138,7 @@ const createAttachedObjectNodes = (
     | BBoxAnnotationReadResolvedCode
     | SourceDocumentRead,
   position: XYPosition,
-): Node<DWTSNodeData>[] => {
+): Node<DATSNodeData>[] => {
   switch (attachedObjectType) {
     case AttachedObjectType.DOCUMENT_TAG:
       return createTagNodes({
@@ -182,7 +182,7 @@ const attachedObjectType2Label: Record<AttachedObjectType, string> = {
 
 function MemoNode(props: NodeProps<MemoNodeData>) {
   // whiteboard state (react-flow)
-  const reactFlowInstance = useReactFlow<DWTSNodeData>();
+  const reactFlowInstance = useReactFlow<DATSNodeData>();
   const reactFlowService = useReactFlowService(reactFlowInstance);
 
   // context menu

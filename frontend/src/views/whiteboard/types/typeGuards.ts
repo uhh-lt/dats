@@ -1,5 +1,5 @@
 import { Node } from "reactflow";
-import { DWTSNodeData } from "./DWTSNodeData.ts";
+import { DATSNodeData } from "./DATSNodeData.ts";
 import { BackgroundColorData } from "./base/BackgroundColorData.ts";
 import { BorderData } from "./base/BorderData.ts";
 import { TextData } from "./base/TextData.ts";
@@ -56,26 +56,26 @@ export const isBackgroundColorDataArray = (nodes: Node[]): nodes is Node<Backgro
   return nodes.every(hasBackgroundColorData);
 };
 
-export const isTagNode = (node: Node<DWTSNodeData>): node is Node<TagNodeData> => {
+export const isTagNode = (node: Node<DATSNodeData>): node is Node<TagNodeData> => {
   return (node.data as TagNodeData).tagId !== undefined;
 };
 
-export const isSdocNode = (node: Node<DWTSNodeData>): node is Node<SdocNodeData> => {
+export const isSdocNode = (node: Node<DATSNodeData>): node is Node<SdocNodeData> => {
   return (node.data as SdocNodeData).sdocId !== undefined;
 };
 
-export const isSpanAnnotationNode = (node: Node<DWTSNodeData>): node is Node<SpanAnnotationNodeData> => {
+export const isSpanAnnotationNode = (node: Node<DATSNodeData>): node is Node<SpanAnnotationNodeData> => {
   return (node.data as SpanAnnotationNodeData).spanAnnotationId !== undefined;
 };
 
-export const isBBoxAnnotationNode = (node: Node<DWTSNodeData>): node is Node<BBoxAnnotationNodeData> => {
+export const isBBoxAnnotationNode = (node: Node<DATSNodeData>): node is Node<BBoxAnnotationNodeData> => {
   return (node.data as BBoxAnnotationNodeData).bboxAnnotationId !== undefined;
 };
 
-export const isMemoNode = (node: Node<DWTSNodeData>): node is Node<MemoNodeData> => {
+export const isMemoNode = (node: Node<DATSNodeData>): node is Node<MemoNodeData> => {
   return (node.data as MemoNodeData).memoId !== undefined;
 };
 
-export const isCodeNode = (node: Node<DWTSNodeData>): node is Node<CodeNodeData> => {
+export const isCodeNode = (node: Node<DATSNodeData>): node is Node<CodeNodeData> => {
   return (node.data as CodeNodeData).codeId !== undefined;
 };

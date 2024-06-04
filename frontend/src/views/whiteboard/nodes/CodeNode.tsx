@@ -15,7 +15,7 @@ import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants.ts";
 import { useReactFlowService } from "../hooks/ReactFlowService.ts";
-import { DWTSNodeData } from "../types/DWTSNodeData.ts";
+import { DATSNodeData } from "../types/DATSNodeData.ts";
 import { CodeNodeData } from "../types/dbnodes/CodeNodeData.ts";
 import { isCodeNode, isMemoNode } from "../types/typeGuards.ts";
 import {
@@ -37,7 +37,7 @@ function CodeNode(props: NodeProps<CodeNodeData>) {
   const dispatch = useAppDispatch();
 
   // whiteboard state (react-flow)
-  const reactFlowInstance = useReactFlow<DWTSNodeData>();
+  const reactFlowInstance = useReactFlow<DATSNodeData>();
   const reactFlowService = useReactFlowService(reactFlowInstance);
 
   // context menu

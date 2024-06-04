@@ -6,8 +6,8 @@ set -euxo pipefail
 # always remove any docker containers it created to prevent
 # them from lying around unused.
 function cleanup() {
-	docker stop "dwts-weaviate-testing-$TEST_CONTAINER_ID" >/dev/null
-	docker stop "dwts-elasticsearch-testing-$TEST_CONTAINER_ID" >/dev/null
+	docker stop "dats-weaviate-testing-$TEST_CONTAINER_ID" >/dev/null
+	docker stop "dats-elasticsearch-testing-$TEST_CONTAINER_ID" >/dev/null
 }
 trap "cleanup" EXIT
 
@@ -26,7 +26,7 @@ TEST_CONTAINER_ID=$(date +%s)
 
 # Start a temporary elasticsearch database for testing
 docker run --detach \
-    --name "dwts-elasticsearch-testing-$TEST_CONTAINER_ID" \
+    --name "dats-elasticsearch-testing-$TEST_CONTAINER_ID" \
     --publish "$ELASTICSEARCH_TEST_PORT:9200" \
     --mount type=bind,source="$ELASTICSEARCH_CONFIG",destination=/usr/share/elasticsearch/config/elasticsearch.yml \
     --tmpfs /usr/share/elasticsearch/data \
@@ -37,7 +37,7 @@ docker run --detach \
 
 # Start a temporary weaviate database for testing
 docker run --detach \
-    --name "dwts-weaviate-testing-$TEST_CONTAINER_ID" \
+    --name "dats-weaviate-testing-$TEST_CONTAINER_ID" \
     --publish "$WEAVIATE_TEST_PORT:8080" \
     --tmpfs /var/lib/weaviate \
     --env "QUERY_DEFAULTS_LIMIT=25" \
@@ -54,7 +54,7 @@ export WEAVIATE_PORT=$WEAVIATE_TEST_PORT
 export ES_PORT=$ELASTICSEARCH_TEST_PORT
 
 # Activate the conda environment for testing
-ENV_NAME=dwts source _activate_current_env.sh
+ENV_NAME=dats source _activate_current_env.sh
 
 # Tests will wipe all data; use a temporary repo root
 # to protect our development files

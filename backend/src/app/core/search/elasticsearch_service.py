@@ -109,8 +109,8 @@ class ElasticSearchService(metaclass=SingletonMeta):
         logger.info("Successfully established connection to ElasticSearch!")
 
         if kwargs["remove_all_indices"] if "remove_all_indices" in kwargs else False:
-            logger.warning("Removing all DWTS ElasticSearch indices!")
-            esc.indices.delete(index="dwts_*", allow_no_indices=True)
+            logger.warning("Removing all DATS ElasticSearch indices!")
+            esc.indices.delete(index="dats_*", allow_no_indices=True)
 
         return super(ElasticSearchService, cls).__new__(cls)
 
@@ -143,9 +143,9 @@ class ElasticSearchService(metaclass=SingletonMeta):
 
     def __get_index_name(self, proj_id: int, index_type: str = "doc") -> str:
         if "doc" in index_type:
-            return f"dwts_project_{proj_id}_docs"
+            return f"dats_project_{proj_id}_docs"
         elif "memo" in index_type:
-            return f"dwts_project_{proj_id}_memos"
+            return f"dats_project_{proj_id}_memos"
         else:
             raise NotImplementedError("Only Document and Memo indices exist!")
 

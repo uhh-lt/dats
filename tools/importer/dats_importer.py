@@ -6,10 +6,10 @@ from time import sleep
 from typing import List, Tuple
 
 import magic
-from dwts_api import DWTSAPI
+from tools.importer.dats_api import DATSAPI
 from tqdm import tqdm
 
-parser = argparse.ArgumentParser(description="DWTS file importer")
+parser = argparse.ArgumentParser(description="DATS file importer")
 parser.add_argument(
     "--input_dir",
     type=str,
@@ -20,7 +20,7 @@ parser.add_argument(
 parser.add_argument(
     "--backend_url",
     type=str,
-    help="URL of the dwts backend api",
+    help="URL of the dats backend api",
     default="http://localhost:5500/",
     dest="backend_url",
 )
@@ -28,7 +28,7 @@ parser.add_argument(
     "--username",
     type=str,
     help="The username",
-    default="SYSTEM@dwts.org",
+    default="SYSTEM@dats.org",
     dest="username",
 )
 parser.add_argument(
@@ -151,7 +151,7 @@ if len(args.metadata_keys) != len(args.metadata_types):
     print("Number of metadata keys and types does not match!")
     exit()
 
-api = DWTSAPI(
+api = DATSAPI(
     base_path=args.backend_url, username=args.username, password=args.password
 )
 api.login()

@@ -14,5 +14,5 @@ COPY requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt
 
 # copy source code into the image
-WORKDIR /dwts_code_ray
+WORKDIR /dats_code_ray
 COPY . .

@@ -36,31 +36,31 @@ class MailService(metaclass=SingletonMeta):
             await self.fast_mail.send_message(message)
 
     async def send_welcome_mail(self, user: UserRead):
-        subject = "Welcome to D-WISE Tool Suite"
+        subject = "Welcome to Discourse Analysis Tool Suite"
         body = f"""
             <p>Hi {user.first_name} {user.last_name},</p>
-            <p>Thanks for using D-WISE Tool Suite!</p>
+            <p>Thanks for using Discourse Analysis Tool Suite!</p>
             <p>
-            For your first steps, we highly recommend you to take a look at our <a href="https://github.com/uhh-lt/dwts/wiki/User-Guide">Wiki & User Guide</a>.
+            For your first steps, we highly recommend you to take a look at our <a href="https://github.com/uhh-lt/dats/wiki/User-Guide">Wiki & User Guide</a>.
             <br>
-            If you have further questions, feel free to reach out to us and write us <a href="mailto:dwise@uni-hamburg.de">dwise@uni-hamburg.de</a>.
+            If you have further questions, feel free to reach out to us and write us <a href="mailto:tim.fischer@uni-hamburg.de">tim.fischer@uni-hamburg.de</a>.
             </p>
-            <p>Best regards,<br>The D-WISE Team</p>
+            <p>Best regards,<br>The DATS Team</p>
             """
         await self.send_mail(email=user.email, subject=subject, body=body)
 
     async def send_feedback_received_mail(self, user: UserRead, feedback: FeedbackRead):
         feedback_html = "> " + "<br>> ".join(feedback.user_content.splitlines())
         subject = (
-            f"[DWTS Feedback] New feedback from {user.first_name} {user.last_name}"
+            f"[DATS Feedback] New feedback from {user.first_name} {user.last_name}"
         )
         body = f"""
-            <p>Hi D-WISE Team,</p>
+            <p>Hi DATS Team,</p>
             <p>We recieved new feedback!</p>
             <p>
             {feedback_html}
             </p>
-            <p>Best regards,<br>DWTS Notification Service</p>
+            <p>Best regards,<br>DATS Notification Service</p>
             """
         await self.send_mail(
             email=self.feedback_mail_address, subject=subject, body=body
@@ -70,7 +70,7 @@ class MailService(metaclass=SingletonMeta):
         self, user: UserRead, feedback: FeedbackRead, message: str
     ):
         feedback_html = "> " + "<br>> ".join(feedback.user_content.splitlines())
-        subject = "Your DWTS Feedback"
+        subject = "Your DATS Feedback"
         body = f"""
             <p>Hi {user.first_name} {user.last_name},</p>
             <p>Thanks for you feedback!</p>
@@ -82,6 +82,6 @@ class MailService(metaclass=SingletonMeta):
             <br>
             {message}
             </p>
-            <p>Best regards,<br>The D-WISE Team</p>
+            <p>Best regards,<br>The DATS Team</p>
             """
         await self.send_mail(email=user.email, subject=subject, body=body)

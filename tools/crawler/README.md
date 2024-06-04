@@ -55,19 +55,19 @@ scrapy crawl SpiegelSearchResults -a search_terms_csv="covid-19,Impfung" -a pref
 
 
 # global voices
-scrapy crawl globalvoices -a prefix=gv -a output_dir=/home/tfischer/Development/dwts/data/globalvoices -s IMAGES_STORE=/home/tfischer/Development/dwts/data/globalvoices/images
+scrapy crawl globalvoices -a prefix=gv -a output_dir=/home/tfischer/Development/dats/data/globalvoices -s IMAGES_STORE=/home/tfischer/Development/dats/data/globalvoices/images
 
 # ekw news
-scrapy crawl file_with_urls -a url_file=/home/tfischer/Development/dwts/tools/crawler/urls/ekw-urls.txt -a prefix=ekw -a output_dir=/home/tfischer/Development/dwts/data/ekw -s IMAGES_STORE=/home/tfischer/Development/dwts/data/ekw/images
+scrapy crawl file_with_urls -a url_file=/home/tfischer/Development/dats/tools/crawler/urls/ekw-urls.txt -a prefix=ekw -a output_dir=/home/tfischer/Development/dats/data/ekw -s IMAGES_STORE=/home/tfischer/Development/dats/data/ekw/images
 
 # wikinews
-scrapy crawl file_with_urls -a url_file=/home/tfischer/Development/dwts/tools/crawler/urls/wikinews-urls.txt -a prefix=wikinews -a output_dir=/home/tfischer/Development/dwts/data/wikinews -s IMAGES_STORE=/home/tfischer/Development/dwts/data/wikinews/images
+scrapy crawl file_with_urls -a url_file=/home/tfischer/Development/dats/tools/crawler/urls/wikinews-urls.txt -a prefix=wikinews -a output_dir=/home/tfischer/Development/dats/data/wikinews -s IMAGES_STORE=/home/tfischer/Development/dats/data/wikinews/images
 
 # bbc
-scrapy crawl bbc -a prefix=bbc -a output_dir=/home/tfischer/Development/dwts/data/bbc -s IMAGES_STORE=/home/tfischer/Development/dwts/data/bbc/images
+scrapy crawl bbc -a prefix=bbc -a output_dir=/home/tfischer/Development/dats/data/bbc -s IMAGES_STORE=/home/tfischer/Development/dats/data/bbc/images
 
 # tagesschau [315 docs] [825 imgs]
-scrapy crawl tagesschau -a prefix=tagesschau -a output_dir=/home/tfischer/Development/dwts/data/tagesschau -s IMAGES_STORE=/home/tfischer/Development/dwts/data/tagesschau/images
+scrapy crawl tagesschau -a prefix=tagesschau -a output_dir=/home/tfischer/Development/dats/data/tagesschau -s IMAGES_STORE=/home/tfischer/Development/dats/data/tagesschau/images
 
 # ilredpillatore [315 docs] [825 imgs]
 scrapy crawl ilredpillatore -a prefix=ilredpillatore -a output_dir=/home/tfischer/Notebooks/data/ilredpillatore -s IMAGES_STORE=/home/tfischer/Notebooks/data/ilredpillatore/images

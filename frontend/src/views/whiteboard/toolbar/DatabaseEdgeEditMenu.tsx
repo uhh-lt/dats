@@ -5,7 +5,7 @@ import CodeHooks from "../../../api/CodeHooks.ts";
 import TagHooks from "../../../api/TagHooks.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { CustomEdgeData } from "../types/CustomEdgeData.ts";
-import { DWTSNodeData } from "../types/DWTSNodeData.ts";
+import { DATSNodeData } from "../types/DATSNodeData.ts";
 import { isCodeNode, isSdocNode, isTagNode } from "../types/typeGuards.ts";
 import { isCodeParentCodeEdgeArray, isTagSdocEdgeArray } from "../whiteboardUtils.ts";
 
@@ -19,7 +19,7 @@ export interface DatabaseEdgeEditMenuHandle {
 }
 
 const DatabaseEdgeEditMenu = forwardRef<DatabaseEdgeEditMenuHandle, DatabaseEdgeEditMenuProps>(({ projectId }, ref) => {
-  const reactFlowInstance = useReactFlow<DWTSNodeData, CustomEdgeData>();
+  const reactFlowInstance = useReactFlow<DATSNodeData, CustomEdgeData>();
 
   const [edges, setEdges] = useState<Edge[]>([]);
 

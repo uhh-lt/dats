@@ -18,13 +18,13 @@ include .env
 
 .PHONY: run
 run:
-	ENV_NAME=dwts source _activate_current_env.sh
+	ENV_NAME=dats source _activate_current_env.sh
 	cd src
 	python main.py
 
 .PHONY: migrate
 migrate:
-	ENV_NAME=dwts source _activate_current_env.sh
+	ENV_NAME=dats source _activate_current_env.sh
 	cd src
 	python run_migrations.py
 
@@ -36,11 +36,11 @@ test:
 
 .PHONY: wipe_database
 wipe_all_data:
-	ENV_NAME=dwts source _activate_current_env.sh
+	ENV_NAME=dats source _activate_current_env.sh
 	cd src
 	python wipe_database.py
 
 .PHONY: update_version
 update_version:
-	ENV_NAME=dwts source _activate_current_env.sh
+	ENV_NAME=dats source _activate_current_env.sh
 	python update_version.py --version $(VERSION)

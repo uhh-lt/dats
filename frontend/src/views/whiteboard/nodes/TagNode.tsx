@@ -12,7 +12,7 @@ import TagRenderer from "../../../components/Tag/TagRenderer.tsx";
 import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { useReactFlowService } from "../hooks/ReactFlowService.ts";
-import { DWTSNodeData } from "../types/DWTSNodeData.ts";
+import { DATSNodeData } from "../types/DATSNodeData.ts";
 import { TagNodeData } from "../types/dbnodes/TagNodeData.ts";
 import { isMemoNode, isSdocNode } from "../types/typeGuards.ts";
 import {
@@ -31,7 +31,7 @@ function TagNode(props: NodeProps<TagNodeData>) {
   const dispatch = useAppDispatch();
 
   // whiteboard state (react-flow)
-  const reactFlowInstance = useReactFlow<DWTSNodeData>();
+  const reactFlowInstance = useReactFlow<DATSNodeData>();
   const reactFlowService = useReactFlowService(reactFlowInstance);
 
   // context menu

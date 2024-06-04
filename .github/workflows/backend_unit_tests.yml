@@ -52,7 +52,7 @@ jobs:
       # disable backend and frontend
       COMPOSE_PROFILES: "background"
       RAY_ENABLED: False
-      POSTGRES_DB: dwts-test
+      POSTGRES_DB: dats-test
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
     steps:
       - name: Set Swap Space to 10GB
@@ -75,4 +75,4 @@ jobs:
         working-directory: docker
         run: |
           export RAY_ENABLED=False
-          docker compose -f compose-test.yml run -i dwts-backend-api /opt/envs/dwts/bin/python -m pytest
+          docker compose -f compose-test.yml run -i dats-backend-api /opt/envs/dats/bin/python -m pytest
