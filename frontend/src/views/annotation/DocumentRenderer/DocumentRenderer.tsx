@@ -8,7 +8,7 @@ import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnno
 import DocumentPage from "./DocumentPage.tsx";
 import { IToken } from "./IToken.ts";
 import SdocAudioLink from "./SdocAudioLink.tsx";
-import SdocImageLink from "./SdocImageLink.tsx";
+import SdocImage from "./SdocImage.tsx";
 import SdocVideoLink from "./SdocVideoLink.tsx";
 import Token from "./Token.tsx";
 
@@ -74,14 +74,7 @@ function DocumentRenderer({
             // images
             if (domNode.name === "img" && domNode.attribs.src) {
               const filename = domNode.attribs.src;
-              return (
-                <SdocImageLink
-                  key={`image-link-${filename}`}
-                  filename={filename}
-                  toPrefix={"../annotation/"}
-                  projectId={projectId}
-                />
-              );
+              return <SdocImage key={`image-link-${filename}`} filename={filename} projectId={projectId} />;
             }
             //  videos
             else if (domNode.name === "video" && domNode.attribs.src) {

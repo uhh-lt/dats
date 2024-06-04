@@ -110,11 +110,6 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
     }, [showCodeSelection]);
 
     // event handlers
-    const handleContextMenu: React.MouseEventHandler<HTMLDivElement> = (event) => {
-      event.preventDefault();
-      closeCodeSelector("backdropClick");
-    };
-
     const handleChange: UseAutocompleteProps<ICodeFilter, false, false, true>["onChange"] = (_event, newValue) => {
       if (typeof newValue === "string") {
         alert("HOW DID YOU DO THIS? (Please tell Tim)");
@@ -174,7 +169,6 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
           vertical: "top",
           horizontal: "left",
         }}
-        onContextMenu={handleContextMenu}
       >
         {!showCodeSelection && annotationsToEdit ? (
           <List dense>

@@ -23,7 +23,7 @@ interface StatisticsFilter {
 
 const filter = createFilterOptions<StatisticsFilter>();
 
-interface SearchContextMenuProps {
+interface SearchMenuProps {
   menuItems: CodeRead[];
   handleMenuItemClick: (navigateTo: string) => void;
 }
@@ -32,7 +32,7 @@ function SearchStatisticsMenu({
   menuItems,
   handleMenuItemClick,
   ...props
-}: SearchContextMenuProps & Omit<IconButtonProps, "onClick">) {
+}: SearchMenuProps & Omit<IconButtonProps, "onClick">) {
   const [position, setPosition] = useState<PopoverPosition | undefined>();
   const debouncedPosition = useDebounce(position, 200);
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {

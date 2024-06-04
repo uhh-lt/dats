@@ -45,12 +45,12 @@ const SentenceMenu = forwardRef<SentenceMenuHandle, SentenceMenuProps>(({}, ref)
 
   // exposed methods (via ref)
   useImperativeHandle(ref, () => ({
-    open: openContextMenu,
-    close: closeContextMenu,
+    open: openMenu,
+    close: closeMenu,
   }));
 
   // methods
-  const openContextMenu = (
+  const openMenu = (
     position: PopoverPosition,
     sentence: string | undefined,
     annotations: SpanAnnotationReadResolved[] | undefined,
@@ -61,28 +61,23 @@ const SentenceMenu = forwardRef<SentenceMenuHandle, SentenceMenuProps>(({}, ref)
     setAnnotations(annotations);
   };
 
-  const closeContextMenu = () => {
+  const closeMenu = () => {
     setIsPopoverOpen(false);
   };
 
   // ui events
-  const handleContextMenu: React.MouseEventHandler<HTMLDivElement> = (event) => {
-    event.preventDefault();
-    closeContextMenu();
-  };
-
   const handleSentenceSimilaritySearch = () => {
-    closeContextMenu();
+    closeMenu();
     dispatch(SentenceSearchActions.onChangeSearchQuery(sentence || ""));
     dispatch(SentenceSearchActions.clearSelectedDocuments());
-    closeContextMenu();
+    closeMenu();
     navigate("../searchsentences");
   };
 
   const handleImageSimilaritySearch = () => {
     dispatch(ImageSearchActions.onChangeSearchQuery(sentence || ""));
     dispatch(ImageSearchActions.clearSelectedDocuments());
-    closeContextMenu();
+    closeMenu();
     navigate("../imagesearch");
   };
 
@@ -94,14 +89,14 @@ const SentenceMenu = forwardRef<SentenceMenuHandle, SentenceMenuProps>(({}, ref)
         filterName: "root",
       }),
     );
-    closeContextMenu();
+    closeMenu();
     navigate("../search");
   };
 
   return (
     <Popover
       open={isPopoverOpen}
-      onClose={() => closeContextMenu()}
+      onClose={() => closeMenu()}
       anchorPosition={position}
       anchorReference="anchorPosition"
       anchorOrigin={{
@@ -112,7 +107,6 @@ const SentenceMenu = forwardRef<SentenceMenuHandle, SentenceMenuProps>(({}, ref)
         vertical: "top",
         horizontal: "left",
       }}
-      onContextMenu={handleContextMenu}
     >
       <List dense>
         <ListItem disablePadding>
@@ -147,7 +141,7 @@ const SentenceMenu = forwardRef<SentenceMenuHandle, SentenceMenuProps>(({}, ref)
                 </ListItemButton>
               </ListItem>
               <MemoListItemButton
-                onClick={() => closeContextMenu()}
+                onClick={() => closeMenu()}
                 attachedObjectId={anno.id}
                 attachedObjectType={AttachedObjectType.SPAN_ANNOTATION}
                 content={

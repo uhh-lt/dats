@@ -227,12 +227,6 @@ function BBoxAnnotationTable({
     fetchMoreOnBottomReached(tableContainerRef.current);
   }, [fetchMoreOnBottomReached]);
 
-  // actions
-  const handleRowContextMenu = (event: React.MouseEvent<HTMLTableRowElement>, bboxAnnotationId: number) => {
-    event.preventDefault();
-    onRowSelectionChange({ [bboxAnnotationId]: true });
-  };
-
   // table
   const table = useMaterialReactTable<BBoxAnnotationTableRow>({
     data: flatData,
@@ -274,9 +268,6 @@ function BBoxAnnotationTable({
       onColumnVisibilityChange(newVisibilityModel);
     },
     // mui components
-    muiTableBodyRowProps: ({ row }) => ({
-      onContextMenu: (event) => handleRowContextMenu(event, row.original.id),
-    }),
     muiTablePaperProps: {
       elevation: 0,
       style: { height: "100%", display: "flex", flexDirection: "column" },

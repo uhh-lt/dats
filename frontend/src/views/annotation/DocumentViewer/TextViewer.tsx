@@ -3,7 +3,6 @@ import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDo
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import DocumentRenderer from "../DocumentRenderer/DocumentRenderer.tsx";
 import useComputeTokenData from "../DocumentRenderer/useComputeTokenData.ts";
-import ImageContextMenu, { ImageContextMenuHandle } from "./ImageContextMenu.tsx";
 import SentenceMenu, { SentenceMenuHandle } from "./SentenceMenu.tsx";
 
 interface AnnotationVisualizerProps {
@@ -15,8 +14,7 @@ interface AnnotationVisualizerProps {
  */
 function TextViewer({ sdoc }: AnnotationVisualizerProps) {
   // local state
-  const sentenceContextMenuRef = useRef<SentenceMenuHandle>(null);
-  const imageContextMenuRef = useRef<ImageContextMenuHandle>(null);
+  const sentenceMenuRef = useRef<SentenceMenuHandle>(null);
 
   // global client state (redux)
   const visibleAdocIds = useAppSelector((state) => state.annotations.visibleAdocIds);
@@ -67,12 +65,11 @@ function TextViewer({ sdoc }: AnnotationVisualizerProps) {
 
     if (!isNaN(imageSdocId)) {
       // calculate position of the context menu
-      const position = {
-        left: event.clientX,
-        top: event.clientY,
-      };
-
-      imageContextMenuRef.current?.open(position, imageSdocId);
+      // const position = {
+      //   left: event.clientX,
+      //   top: event.clientY,
+      // };
+      // imageMenuRef.current?.open(position, imageSdocId);
     } else {
       // calculate position of the context menu (based on selection end)
       const boundingBox = (event.target as HTMLElement).getBoundingClientRect();
@@ -95,11 +92,7 @@ function TextViewer({ sdoc }: AnnotationVisualizerProps) {
 
       // open code selector if there are annotations
       if (annos || sentence) {
-        sentenceContextMenuRef.current?.open(
-          position,
-          sentence,
-          annos ? annos.map((a) => annotationMap.get(a)!) : undefined,
-        );
+        sentenceMenuRef.current?.open(position, sentence, annos ? annos.map((a) => annotationMap.get(a)!) : undefined);
       }
     }
   };
@@ -117,8 +110,7 @@ function TextViewer({ sdoc }: AnnotationVisualizerProps) {
         style={{ zIndex: 1, overflowY: "auto" }}
         className="h100"
       />
-      <SentenceMenu ref={sentenceContextMenuRef} />
-      <ImageContextMenu ref={imageContextMenuRef} />
+      <SentenceMenu ref={sentenceMenuRef} />
     </>
   );
 }

@@ -1,12 +1,14 @@
-import { Box } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import { Box, Button } from "@mui/material";
 import * as d3 from "d3";
-import React, { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import AdocHooks from "../../../api/AdocHooks.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
 import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
-import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import ImageContextMenu, { ImageContextMenuHandle } from "./ImageContextMenu.tsx";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { ImageSearchActions } from "../../search/ImageSearch/imageSearchSlice.ts";
 
 interface ImageViewerProps {
   sdoc: SourceDocumentWithDataRead;
@@ -37,7 +39,6 @@ function ImageViewerWithData({ sdoc, height, width }: ImageViewerProps & { heigh
   const bboxRef = useRef<SVGGElement>(null);
   const textRef = useRef<SVGGElement>(null);
   const imgRef = useRef<SVGImageElement>(null);
-  const imageContextMenuRef = useRef<ImageContextMenuHandle>(null);
 
   const imgContainerHeight = 500;
 
@@ -60,18 +61,6 @@ function ImageViewerWithData({ sdoc, height, width }: ImageViewerProps & { heigh
   }, [annotations, hiddenCodeIds]);
 
   // ui events
-  const handleContextMenu = (event: React.MouseEvent) => {
-    event.preventDefault();
-
-    // calculate position of the context menu
-    const position = {
-      left: event.clientX,
-      top: event.clientY,
-    };
-
-    imageContextMenuRef.current?.open(position, sdoc.id);
-  };
-
   const handleZoom = (e: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
     d3.select(gRef.current).attr("transform", e.transform.toString());
   };
@@ -135,8 +124,19 @@ function ImageViewerWithData({ sdoc, height, width }: ImageViewerProps & { heigh
       );
   }, [width, height, annotationData, sdoc.content]);
 
+  // find similar images
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const handleImageSimilaritySearch = () => {
+    dispatch(ImageSearchActions.onChangeSearchQuery(sdoc.id));
+    navigate("../imagesearch");
+  };
+
   return (
-    <Box onContextMenu={handleContextMenu}>
+    <Box>
+      <Button variant="outlined" onClick={handleImageSimilaritySearch} startIcon={<SearchIcon />} sx={{ mb: 2 }}>
+        Find similar images
+      </Button>
       <svg ref={svgRef} width="100%" height={imgContainerHeight + "px"} style={{ cursor: "move" }}>
         <g ref={gRef}>
           <image ref={imgRef} href={sdoc.content} height={imgContainerHeight} />
@@ -144,7 +144,6 @@ function ImageViewerWithData({ sdoc, height, width }: ImageViewerProps & { heigh
           <g ref={textRef}></g>
         </g>
       </svg>
-      <ImageContextMenu ref={imageContextMenuRef} />
     </Box>
   );
 }

@@ -74,7 +74,7 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
   const updateMutation = BboxAnnotationHooks.useUpdateBBox();
   const deleteMutation = BboxAnnotationHooks.useDeleteBBox();
 
-  // right click (contextmenu) handling
+  // click handling
   const handleClick = useCallback(
     (
       event: React.MouseEvent<SVGRectElement, MouseEvent> | React.MouseEvent<SVGTextElement, MouseEvent>,

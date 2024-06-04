@@ -214,14 +214,6 @@ function SpanAnnotationTable({
     fetchMoreOnBottomReached(tableContainerRef.current);
   }, [fetchMoreOnBottomReached]);
 
-  // actions
-  const handleRowContextMenu = (event: React.MouseEvent<HTMLTableRowElement>, spanAnnotationId: number) => {
-    event.preventDefault();
-    if (onRowSelectionChange) {
-      onRowSelectionChange({ [spanAnnotationId]: true });
-    }
-  };
-
   // table
   const table = useMaterialReactTable<AnnotationTableRow>({
     data: flatData,
@@ -254,9 +246,6 @@ function SpanAnnotationTable({
     // column visiblility
     onColumnVisibilityChange,
     // mui components
-    muiTableBodyRowProps: ({ row }) => ({
-      onContextMenu: (event) => handleRowContextMenu(event, row.original.id),
-    }),
     muiTablePaperProps: {
       elevation: 0,
       style: { height: "100%", display: "flex", flexDirection: "column" },

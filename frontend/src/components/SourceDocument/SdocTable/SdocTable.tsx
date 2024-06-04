@@ -248,12 +248,6 @@ function SdocTable({
     fetchMoreOnBottomReached(tableContainerRef.current);
   }, [fetchMoreOnBottomReached]);
 
-  // actions
-  const handleRowContextMenu = (event: React.MouseEvent<HTMLTableRowElement>, sdocId: number) => {
-    event.preventDefault();
-    onRowSelectionChange({ [sdocId]: true });
-  };
-
   // table
   const table = useMaterialReactTable<ElasticSearchDocumentHit>({
     data: flatData,
@@ -319,9 +313,6 @@ function SdocTable({
             ) : null
         : undefined,
     // mui components
-    muiTableBodyRowProps: ({ row }) => ({
-      onContextMenu: (event) => handleRowContextMenu(event, row.original.sdoc_id),
-    }),
     muiTablePaperProps: {
       elevation: 0,
       style: { height: "100%", display: "flex", flexDirection: "column" },
