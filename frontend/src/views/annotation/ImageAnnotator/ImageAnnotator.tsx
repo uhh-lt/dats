@@ -11,7 +11,7 @@ import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDo
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import AnnotationContextMenu, { CodeSelectorHandle } from "../AnnotationContextMenu.tsx";
+import AnnotationMenu, { CodeSelectorHandle } from "../AnnotationMenu.tsx";
 import { ICode } from "../ICode.ts";
 import SVGBBox from "./SVGBBox.tsx";
 import SVGBBoxText from "./SVGBBoxText.tsx";
@@ -75,7 +75,7 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
   const deleteMutation = BboxAnnotationHooks.useDeleteBBox();
 
   // right click (contextmenu) handling
-  const handleRightClick = useCallback(
+  const handleClick = useCallback(
     (
       event: React.MouseEvent<SVGRectElement, MouseEvent> | React.MouseEvent<SVGTextElement, MouseEvent>,
       bbox: BBoxAnnotationReadResolvedCode,
@@ -317,12 +317,12 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
         <Typography variant="body1" component="div" sx={{ ml: 2 }}>
           Hint:{" "}
           {isZooming
-            ? "Try to drag the image & use mouse wheel to zoom. Right click boxes to edit annotations."
-            : "Drag to create annotations. Right click boxes to edit annotations."}
+            ? "Try to drag the image & use mouse wheel to zoom. Click boxes to edit annotations."
+            : "Drag to create annotations. Click boxes to edit annotations."}
         </Typography>
       </Toolbar>
 
-      <AnnotationContextMenu
+      <AnnotationMenu
         ref={codeSelectorRef}
         onAdd={onCodeSelectorAddCode}
         onEdit={onCodeSelectorEditCode}
@@ -351,7 +351,12 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
           </g>
           <g>
             {data.map((bbox) => (
-              <SVGBBox key={bbox.id} bbox={bbox} onContextMenu={handleRightClick} />
+              <SVGBBox
+                key={bbox.id}
+                bbox={bbox}
+                onClick={(event) => handleClick(event, bbox)}
+                style={{ cursor: "pointer" }}
+              />
             ))}
           </g>
           <g>
@@ -359,8 +364,9 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
               <SVGBBoxText
                 key={bbox.id}
                 bbox={bbox}
-                onContextMenu={handleRightClick}
-                fontSize={Math.max(21, height / 17)}
+                onClick={(event) => handleClick(event, bbox)}
+                fontSize={`${Math.max(21, height / 17)}px`}
+                style={{ cursor: "pointer" }}
               />
             ))}
           </g>

@@ -12,7 +12,7 @@ import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnno
 import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
 import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import AnnotationContextMenu, { CodeSelectorHandle } from "../AnnotationContextMenu.tsx";
+import AnnotationMenu, { CodeSelectorHandle } from "../AnnotationMenu.tsx";
 import DocumentRenderer from "../DocumentRenderer/DocumentRenderer.tsx";
 import useComputeTokenData from "../DocumentRenderer/useComputeTokenData.ts";
 import { ICode } from "../ICode.ts";
@@ -29,7 +29,7 @@ interface AnnotatorRemasteredProps {
 
 function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
   // local state
-  const spanContextMenuRef = useRef<CodeSelectorHandle>(null);
+  const spanMenuRef = useRef<CodeSelectorHandle>(null);
   const [fakeAnnotation, setFakeAnnotation] = useState<SpanAnnotationCreateWithCodeId | undefined>(undefined);
 
   // global client state (redux)
@@ -53,7 +53,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
   const deleteMutation = SpanAnnotationHooks.useDeleteSpan();
 
   // handle ui events
-  const handleContextMenu = (event: React.MouseEvent) => {
+  const handleMenu = (event: React.MouseEvent) => {
     if (!annotationsPerToken) return;
     if (!annotationMap) return;
 
@@ -89,7 +89,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       };
 
       // open code selector
-      spanContextMenuRef.current!.open(
+      spanMenuRef.current!.open(
         position,
         annos.map((a) => annotationMap.get(a)!),
       );
@@ -100,9 +100,13 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
     if (event.button === 2) return;
     if (!tokenData) return;
 
-    // make sure that selection is valid
     const selection = window.getSelection();
-    if (!selection || selectionIsEmpty(selection)) return;
+    // the selection is empty
+    if (!selection || selectionIsEmpty(selection)) {
+      handleMenu(event);
+      return;
+    }
+    // the selection is valid
 
     // get the selected begin and end token
     let selectionStartElement = selection?.anchorNode?.parentElement;
@@ -187,7 +191,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       };
 
       // open code selector
-      spanContextMenuRef.current!.open(position);
+      spanMenuRef.current!.open(position);
     }
 
     // clear selection
@@ -296,8 +300,8 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
 
   return (
     <>
-      <AnnotationContextMenu
-        ref={spanContextMenuRef}
+      <AnnotationMenu
+        ref={spanMenuRef}
         onAdd={handleCodeSelectorAddCode}
         onClose={handleCodeSelectorClose}
         onEdit={handleCodeSelectorEditCode}
@@ -305,7 +309,6 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       />
       <DocumentRenderer
         className="myFlexFillAllContainer"
-        onContextMenu={handleContextMenu}
         onMouseUp={handleMouseUp}
         html={sdoc.html}
         tokenData={tokenData}

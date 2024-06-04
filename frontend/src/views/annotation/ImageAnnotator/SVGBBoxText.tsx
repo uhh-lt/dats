@@ -2,13 +2,16 @@ import React from "react";
 import CodeHooks from "../../../api/CodeHooks.ts";
 import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
 
+type CustomTextProps = Omit<
+  React.SVGTextElementAttributes<SVGTextElement>,
+  "x" | "y" | "width" | "height" | "stroke" | "strokeWidth" | "fill" | "bbox"
+>;
+
 interface SVGBBoxTextProps {
   bbox: BBoxAnnotationReadResolvedCode;
-  onContextMenu: (e: React.MouseEvent<SVGTextElement, MouseEvent>, bbox: BBoxAnnotationReadResolvedCode) => void;
-  fontSize: number;
 }
 
-function SVGBBoxText({ bbox, onContextMenu, fontSize }: SVGBBoxTextProps) {
+function SVGBBoxText({ bbox, ...props }: SVGBBoxTextProps & CustomTextProps) {
   const code = CodeHooks.useGetCode(bbox.code.id);
 
   return (
@@ -23,8 +26,7 @@ function SVGBBoxText({ bbox, onContextMenu, fontSize }: SVGBBoxTextProps) {
           fill={"white"}
           stroke={"black"}
           strokeWidth={0.75}
-          fontSize={`${fontSize}px`}
-          onContextMenu={(e) => onContextMenu(e, bbox)}
+          {...props}
         >
           {code.data.name}
         </text>
