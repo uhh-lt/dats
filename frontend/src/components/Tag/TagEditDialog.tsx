@@ -9,11 +9,11 @@ import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import TagHooks from "../../api/TagHooks.ts";
 import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
 import { DocumentTagUpdate } from "../../api/openapi/models/DocumentTagUpdate.ts";
-import ConfirmationAPI from "../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import { useOpenSnackbar } from "../../features/SnackbarDialog/useOpenSnackbar.ts";
-import { CRUDDialogActions } from "../../features/dialogSlice.ts";
+import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import ColorUtils from "../../utils/ColorUtils.ts";
+import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI.ts";
+import { CRUDDialogActions } from "../dialogSlice.ts";
 import TagRenderer from "./TagRenderer.tsx";
 
 interface TagEditDialogProps {

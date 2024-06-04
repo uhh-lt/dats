@@ -8,7 +8,7 @@ import { MetaType } from "../../../../api/openapi/models/MetaType.ts";
 import { SourceDocumentMetadataRead } from "../../../../api/openapi/models/SourceDocumentMetadataRead.ts";
 import { SourceDocumentMetadataReadResolved } from "../../../../api/openapi/models/SourceDocumentMetadataReadResolved.ts";
 import { SourceDocumentMetadataUpdate } from "../../../../api/openapi/models/SourceDocumentMetadataUpdate.ts";
-import { useOpenSnackbar } from "../../../../features/SnackbarDialog/useOpenSnackbar.ts";
+import { useOpenSnackbar } from "../../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { dateToLocaleYYYYMMDDString } from "../../../../utils/DateUtils.ts";
 import DocumentMetadataAddFilterButton from "./DocumentMetadataAddFilterButton.tsx";
 import DocumentMetadataGoToButton from "./DocumentMetadataGoToButton.tsx";

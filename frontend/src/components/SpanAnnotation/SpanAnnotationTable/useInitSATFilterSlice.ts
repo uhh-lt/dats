@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
-import { ColumnInfo } from "../../../features/FilterDialog/filterUtils.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { AppDispatch } from "../../../store/store.ts";
+import { ColumnInfo } from "../../FilterDialog/filterUtils.ts";
 import { SATFilterActions } from "./satFilterSlice.ts";
 
 const useGetSATInfo = (projectId: number, dispatch: AppDispatch) =>

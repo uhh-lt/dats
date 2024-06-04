@@ -9,7 +9,7 @@ import CodeEditDialog from "../../../components/Code/CodeEditDialog.tsx";
 import useComputeCodeTree from "../../../components/Code/CodeExplorer/useComputeCodeTree.ts";
 import CodeToggleEnabledButton from "../../../components/Code/CodeToggleEnabledButton.tsx";
 import CodeToggleVisibilityButton from "../../../components/Code/CodeToggleVisibilityButton.tsx";
-import TreeExplorer from "../../../features/TreeExplorer/TreeExplorer.tsx";
+import TreeExplorer from "../../../components/TreeExplorer/TreeExplorer.tsx";
 
 function ProjectCodes() {
   // custom hooks

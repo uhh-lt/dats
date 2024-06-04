@@ -1,9 +1,9 @@
 import { Box, Checkbox, Toolbar, Typography } from "@mui/material";
 import { useRef } from "react";
+import ReduxFilterDialog from "../../../components/FilterDialog/ReduxFilterDialog.tsx";
 import DeleteSdocsButton from "../../../components/SourceDocument/DeleteSdocsButton.tsx";
 import DownloadSdocsButton from "../../../components/SourceDocument/DownloadSdocsButton.tsx";
 import TagMenuButton from "../../../components/Tag/TagMenu/TagMenuButton.tsx";
-import ReduxFilterDialog from "../../../features/FilterDialog/ReduxFilterDialog.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
 import { SearchFilterActions } from "../searchFilterSlice.ts";

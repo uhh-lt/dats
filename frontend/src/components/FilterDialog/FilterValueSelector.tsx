@@ -5,11 +5,11 @@ import ProjectHooks from "../../api/ProjectHooks.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
 import { FilterOperator } from "../../api/openapi/models/FilterOperator.ts";
 import { FilterValueType } from "../../api/openapi/models/FilterValueType.ts";
-import CodeRenderer from "../../components/Code/CodeRenderer.tsx";
-import TagRenderer from "../../components/Tag/TagRenderer.tsx";
-import UserRenderer from "../../components/User/UserRenderer.tsx";
 import { isValidDateString } from "../../utils/DateUtils.ts";
 import { docTypeToIcon } from "../../utils/docTypeToIcon.tsx";
+import CodeRenderer from "../Code/CodeRenderer.tsx";
+import TagRenderer from "../Tag/TagRenderer.tsx";
+import UserRenderer from "../User/UserRenderer.tsx";
 import { ColumnInfo, MyFilterExpression } from "./filterUtils.ts";
 
 interface SharedFilterValueSelectorProps {

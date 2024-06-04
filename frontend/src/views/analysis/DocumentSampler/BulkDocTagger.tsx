@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
 import TagHooks from "../../../api/TagHooks.ts";
-import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
+import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 
 function BulkDocTagger() {

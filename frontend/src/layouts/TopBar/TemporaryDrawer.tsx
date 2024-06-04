@@ -21,7 +21,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { OpenAPI } from "../../api/openapi/core/OpenAPI.ts";
 import { LoginStatus } from "../../auth/LoginStatus.ts";
 import { useAuth } from "../../auth/useAuth.ts";
-import ExporterListItemButton from "../../features/Exporter/ExporterListItemButton.tsx";
+import ExporterListItemButton from "../../components/Exporter/ExporterListItemButton.tsx";
 
 type Anchor = "top" | "left" | "bottom" | "right";
 

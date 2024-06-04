@@ -1,4 +1,4 @@
-import FilterDialog, { FilterDialogProps } from "../../../features/FilterDialog/FilterDialog.tsx";
+import FilterDialog, { FilterDialogProps } from "../../../components/FilterDialog/FilterDialog.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { WordFrequencyFilterActions } from "./wordFrequencyFilterSlice.ts";
 

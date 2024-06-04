@@ -33,7 +33,7 @@ import Handsontable from "handsontable/base";
 import "handsontable/dist/handsontable.full.min.css";
 import { registerAllModules } from "handsontable/registry";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
+import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import CustomHTMLCellRenderer from "./Renderer/CustomHTMLCellRenderer.tsx";
 import AddAnnotationDialog from "./Toolbar/AddAnnotationDialog.tsx";
 import AddCodeDialog from "./Toolbar/AddCodeDialog.tsx";

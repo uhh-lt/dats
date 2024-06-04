@@ -9,7 +9,7 @@ import { useAuth } from "../../../auth/useAuth.ts";
 import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../components/GenericPositionMenu.tsx";
 import MemoDialogAPI from "../../../components/Memo/MemoDialog/MemoDialogAPI.ts";
 import TagRenderer from "../../../components/Tag/TagRenderer.tsx";
-import { CRUDDialogActions } from "../../../features/dialogSlice.ts";
+import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { useReactFlowService } from "../hooks/ReactFlowService.ts";
 import { DWTSNodeData } from "../types/DWTSNodeData.ts";

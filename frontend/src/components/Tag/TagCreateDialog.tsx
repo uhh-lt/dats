@@ -20,10 +20,10 @@ import { useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import TagHooks from "../../api/TagHooks.ts";
 import { DocumentTagCreate } from "../../api/openapi/models/DocumentTagCreate.ts";
-import { useOpenSnackbar } from "../../features/SnackbarDialog/useOpenSnackbar.ts";
-import { CRUDDialogActions } from "../../features/dialogSlice.ts";
+import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { contrastiveColors } from "../../utils/colors.ts";
+import { CRUDDialogActions } from "../dialogSlice.ts";
 import TagRenderer from "./TagRenderer.tsx";
 
 /**

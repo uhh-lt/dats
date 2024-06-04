@@ -3,7 +3,7 @@ import StarOutlineIcon from "@mui/icons-material/StarOutline";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import React from "react";
 import MemoHooks from "../../api/MemoHooks.ts";
-import { useOpenSnackbar } from "../../features/SnackbarDialog/useOpenSnackbar.ts";
+import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 
 interface MemoStarButtonProps {
   memoId: number | undefined;

@@ -35,8 +35,8 @@ import { SingleUserAllCodesExportJobParams } from "../../api/openapi/models/Sing
 import { SingleUserAllMemosExportJobParams } from "../../api/openapi/models/SingleUserAllMemosExportJobParams.ts";
 import { SingleUserLogbookExportJobParams } from "../../api/openapi/models/SingleUserLogbookExportJobParams.ts";
 import { useAuth } from "../../auth/useAuth.ts";
-import UserName from "../../components/User/UserName.tsx";
-import { useOpenSnackbar } from "../SnackbarDialog/useOpenSnackbar.ts";
+import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
+import UserName from "../User/UserName.tsx";
 import ExporterItemSelectList from "./ExporterItemSelectList.tsx";
 
 // users documents codes tags attached_to

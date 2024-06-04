@@ -4,11 +4,11 @@ import { Box, Button, ButtonProps, Dialog, DialogActions, DialogTitle, Divider, 
 import { MRT_RowSelectionState } from "material-react-table";
 import { useState } from "react";
 import SpanAnnotationHooks from "../../api/SpanAnnotationHooks.ts";
-import { useOpenSnackbar } from "../../features/SnackbarDialog/useOpenSnackbar.ts";
-import { CRUDDialogActions } from "../../features/dialogSlice.ts";
+import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import CodeRenderer from "../Code/CodeRenderer.tsx";
 import CodeTable from "../Code/CodeTable.tsx";
+import { CRUDDialogActions } from "../dialogSlice.ts";
 import SpanAnnotationRenderer from "./SpanAnnotationRenderer.tsx";
 
 export interface SpanAnnotationEditDialogProps extends ButtonProps {

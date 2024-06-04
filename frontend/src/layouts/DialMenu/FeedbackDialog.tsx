@@ -6,7 +6,7 @@ import React from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import FeedbackHooks from "../../api/FeedbackHooks.ts";
 import { UserRead } from "../../api/openapi/models/UserRead.ts";
-import { useOpenSnackbar } from "../../features/SnackbarDialog/useOpenSnackbar.ts";
+import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 
 interface FeedbackFormValues {
   content: string;

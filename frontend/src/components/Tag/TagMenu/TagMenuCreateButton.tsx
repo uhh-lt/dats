@@ -1,7 +1,7 @@
 import AddIcon from "@mui/icons-material/Add";
 import { ListItemButton, ListItemButtonProps, ListItemIcon, ListItemText } from "@mui/material";
-import { CRUDDialogActions } from "../../../features/dialogSlice.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
+import { CRUDDialogActions } from "../../dialogSlice.ts";
 
 interface TagActionButtonCreateProps {
   tagName: string;

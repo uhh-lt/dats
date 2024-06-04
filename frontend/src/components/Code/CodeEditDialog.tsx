@@ -9,13 +9,13 @@ import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import CodeHooks from "../../api/CodeHooks.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { CodeUpdate } from "../../api/openapi/models/CodeUpdate.ts";
-import ConfirmationAPI from "../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import { useOpenSnackbar } from "../../features/SnackbarDialog/useOpenSnackbar.ts";
-import { CRUDDialogActions } from "../../features/dialogSlice.ts";
+import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import ColorUtils from "../../utils/ColorUtils.ts";
 import { SYSTEM_USER_ID } from "../../utils/GlobalConstants.ts";
 import { AnnoActions } from "../../views/annotation/annoSlice.ts";
+import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI.ts";
+import { CRUDDialogActions } from "../dialogSlice.ts";
 import CodeRenderer from "./CodeRenderer.tsx";
 
 type CodeEditValues = {

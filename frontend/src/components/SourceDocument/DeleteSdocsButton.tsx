@@ -5,10 +5,10 @@ import Tooltip from "@mui/material/Tooltip";
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks.ts";
-import ConfirmationAPI from "../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import { useOpenSnackbar } from "../../features/SnackbarDialog/useOpenSnackbar.ts";
+import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
 import { SearchActions } from "../../views/search/DocumentSearch/searchSlice.ts";
+import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI.ts";
 
 interface DeleteSdocsButtonProps {
   sdocIds: number[];

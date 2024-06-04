@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { SearchService } from "../../api/openapi/services/SearchService.ts";
-import { ColumnInfo } from "../../features/FilterDialog/filterUtils.ts";
+import { ColumnInfo } from "../../components/FilterDialog/filterUtils.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
 import { AppDispatch } from "../../store/store.ts";
 import { SearchFilterActions } from "./searchFilterSlice.ts";

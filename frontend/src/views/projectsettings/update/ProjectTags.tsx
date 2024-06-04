@@ -6,7 +6,7 @@ import TagEditDialog from "../../../components/Tag/TagEditDialog.tsx";
 import TagEditButton from "../../../components/Tag/TagExplorer/TagEditButton.tsx";
 import useComputeTagTree from "../../../components/Tag/TagExplorer/useComputeTagTree.ts";
 import TagMenuCreateButton from "../../../components/Tag/TagMenu/TagMenuCreateButton.tsx";
-import TreeExplorer from "../../../features/TreeExplorer/TreeExplorer.tsx";
+import TreeExplorer from "../../../components/TreeExplorer/TreeExplorer.tsx";
 
 function ProjectTags() {
   // custom hooks

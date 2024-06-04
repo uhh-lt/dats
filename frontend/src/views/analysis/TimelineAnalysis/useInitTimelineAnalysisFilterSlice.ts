@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { TimelineAnalysisService } from "../../../api/openapi/services/TimelineAnalysisService.ts";
-import { ColumnInfo } from "../../../features/FilterDialog/filterUtils.ts";
+import { ColumnInfo } from "../../../components/FilterDialog/filterUtils.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { AppDispatch } from "../../../store/store.ts";
 import { TimelineAnalysisFilterActions } from "./timelineAnalysisFilterSlice.ts";

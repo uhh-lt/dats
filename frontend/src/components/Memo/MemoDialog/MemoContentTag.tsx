@@ -3,8 +3,8 @@ import MemoHooks from "../../../api/MemoHooks.ts";
 import TagHooks from "../../../api/TagHooks.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
-import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
+import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
+import ConfirmationAPI from "../../ConfirmationDialog/ConfirmationAPI.ts";
 import { MemoContentProps } from "./MemoContentBboxAnnotation.tsx";
 import { MemoForm, MemoFormValues } from "./MemoForm.tsx";
 

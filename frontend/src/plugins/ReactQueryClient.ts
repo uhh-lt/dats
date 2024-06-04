@@ -1,6 +1,6 @@
 import { MutationCache, QueryClient } from "@tanstack/react-query";
 import { ApiError } from "../api/openapi/core/ApiError.ts";
-import { CRUDDialogActions } from "../features/dialogSlice.ts";
+import { CRUDDialogActions } from "../components/dialogSlice.ts";
 import { store } from "../store/store.ts";
 
 function messageFromStringOrFunction(input: unknown, data: unknown): string | undefined {

@@ -2,8 +2,8 @@ import { AlertProps } from "@mui/material";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
 import { BBoxAnnotationReadResolvedCode } from "../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
 import { CodeRead } from "../api/openapi/models/CodeRead.ts";
-import { CodeCreateSuccessHandler } from "../components/Code/CodeCreateDialog.tsx";
-import { SnackbarEvent } from "./SnackbarDialog/SnackbarEvent.ts";
+import { SnackbarEvent } from "../components/SnackbarDialog/SnackbarEvent.ts";
+import { CodeCreateSuccessHandler } from "./Code/CodeCreateDialog.tsx";
 
 interface DialogState {
   // tags

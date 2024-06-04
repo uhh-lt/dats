@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import CodeExplorer from "../../../components/Code/CodeExplorer/CodeExplorer.tsx";
-import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
+import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import ForceLayout, { GraphData, LinkData } from "./ForceLayout.tsx";
 
 function generateGraphData(selectedIds: number[], allCodes: CodeRead[]): GraphData {

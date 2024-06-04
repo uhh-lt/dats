@@ -2,8 +2,8 @@ import EditIcon from "@mui/icons-material/Edit";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import React from "react";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import { CRUDDialogActions } from "../../../features/dialogSlice.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
+import { CRUDDialogActions } from "../../dialogSlice.ts";
 
 interface CodeEditMenuItemProps {
   code: CodeRead;

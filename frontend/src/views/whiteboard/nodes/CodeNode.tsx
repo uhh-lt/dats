@@ -11,7 +11,7 @@ import { useAuth } from "../../../auth/useAuth.ts";
 import CodeRenderer from "../../../components/Code/CodeRenderer.tsx";
 import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../components/GenericPositionMenu.tsx";
 import MemoDialogAPI from "../../../components/Memo/MemoDialog/MemoDialogAPI.ts";
-import { CRUDDialogActions } from "../../../features/dialogSlice.ts";
+import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants.ts";
 import { useReactFlowService } from "../hooks/ReactFlowService.ts";

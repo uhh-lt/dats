@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import { TimelineAnalysisColumns } from "../../../api/openapi/models/TimelineAnalysisColumns.ts";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
 import { TimelineAnalysisService } from "../../../api/openapi/services/TimelineAnalysisService.ts";
-import { MyFilter } from "../../../features/FilterDialog/filterUtils.ts";
+import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 
 export interface TimelineAnalysisCount {
   date: string;

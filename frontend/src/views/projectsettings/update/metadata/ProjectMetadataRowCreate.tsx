@@ -8,7 +8,7 @@ import ProjectMetadataHooks from "../../../../api/ProjectMetadataHooks.ts";
 import { DocType } from "../../../../api/openapi/models/DocType.ts";
 import { MetaType } from "../../../../api/openapi/models/MetaType.ts";
 import { ProjectMetadataCreate } from "../../../../api/openapi/models/ProjectMetadataCreate.ts";
-import { useOpenSnackbar } from "../../../../features/SnackbarDialog/useOpenSnackbar.ts";
+import { useOpenSnackbar } from "../../../../components/SnackbarDialog/useOpenSnackbar.ts";
 
 function ProjectMetadataRowCreate({ docType, projectId }: { docType: DocType; projectId: number }) {
   // use react hook form

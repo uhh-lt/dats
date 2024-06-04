@@ -13,7 +13,7 @@ import SdocHooks from "../../../api/SdocHooks.ts";
 import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import MemoButton from "../../../components/Memo/MemoButton.tsx";
-import { CRUDDialogActions } from "../../../features/dialogSlice.ts";
+import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 
 interface SpanAnnotationCardProps {

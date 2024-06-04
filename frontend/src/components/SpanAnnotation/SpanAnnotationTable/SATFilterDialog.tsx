@@ -1,5 +1,5 @@
-import FilterDialog, { FilterDialogProps } from "../../../features/FilterDialog/FilterDialog.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import FilterDialog, { FilterDialogProps } from "../../FilterDialog/FilterDialog.tsx";
 import { SATFilterActions } from "./satFilterSlice.ts";
 
 function SATFilterDialog({

@@ -21,12 +21,12 @@ import CodeHooks from "../../api/CodeHooks.ts";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { useAuth } from "../../auth/useAuth.ts";
-import { useOpenSnackbar } from "../../features/SnackbarDialog/useOpenSnackbar.ts";
-import { CRUDDialogActions } from "../../features/dialogSlice.ts";
+import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { SYSTEM_USER_ID } from "../../utils/GlobalConstants.ts";
 import { contrastiveColors } from "../../utils/colors.ts";
 import { AnnoActions } from "../../views/annotation/annoSlice.ts";
+import { CRUDDialogActions } from "../dialogSlice.ts";
 import CodeRenderer from "./CodeRenderer.tsx";
 
 export type CodeCreateSuccessHandler = ((code: CodeRead, isNewCode: boolean) => void) | undefined;

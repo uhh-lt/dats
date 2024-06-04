@@ -2,8 +2,8 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { IconButton, IconButtonProps, Menu } from "@mui/material";
 import { useState } from "react";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { IDataTree } from "../../../features/TreeExplorer/IDataTree.ts";
 import MemoMenuItem from "../../Memo/MemoMenuItem.tsx";
+import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
 import TagEditMenuItem from "./TagEditMenuItem.tsx";
 
 interface TagExplorerMenuProps {

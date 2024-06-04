@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { SearchService } from "../../../api/openapi/services/SearchService.ts";
-import { ColumnInfo } from "../../../features/FilterDialog/filterUtils.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { AppDispatch } from "../../../store/store.ts";
+import { ColumnInfo } from "../../FilterDialog/filterUtils.ts";
 import { DocumentTableFilterActions } from "./documentTableFilterSlice.ts";
 
 const useGetSearchInfo = (projectId: number, dispatch: AppDispatch) =>

@@ -4,8 +4,8 @@ import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import { useCallback } from "react";
 import ProjectMetadataHooks from "../../../../api/ProjectMetadataHooks.ts";
-import ConfirmationAPI from "../../../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import { useOpenSnackbar } from "../../../../features/SnackbarDialog/useOpenSnackbar.ts";
+import ConfirmationAPI from "../../../../components/ConfirmationDialog/ConfirmationAPI.ts";
+import { useOpenSnackbar } from "../../../../components/SnackbarDialog/useOpenSnackbar.ts";
 
 interface ProjectMetadataDeleteButtonProps {
   metadataId: number;

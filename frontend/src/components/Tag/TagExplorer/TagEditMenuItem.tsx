@@ -1,8 +1,8 @@
 import EditIcon from "@mui/icons-material/Edit";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
-import { CRUDDialogActions } from "../../../features/dialogSlice.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
+import { CRUDDialogActions } from "../../dialogSlice.ts";
 
 interface TagEditMenuItemProps {
   tag: DocumentTagRead;

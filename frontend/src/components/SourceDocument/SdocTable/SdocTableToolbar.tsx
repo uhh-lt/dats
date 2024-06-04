@@ -7,8 +7,8 @@ import {
 } from "material-react-table";
 import React from "react";
 import { ElasticSearchDocumentHit } from "../../../api/openapi/models/ElasticSearchDocumentHit.ts";
-import ReduxFilterDialog from "../../../features/FilterDialog/ReduxFilterDialog.tsx";
-import { ReduxFilterDialogProps } from "../../../features/FilterDialog/ReduxFilterDialogProps.ts";
+import ReduxFilterDialog from "../../FilterDialog/ReduxFilterDialog.tsx";
+import { ReduxFilterDialogProps } from "../../FilterDialog/ReduxFilterDialogProps.ts";
 
 export interface SdocTableToolbarProps extends ReduxFilterDialogProps {
   table: MRT_TableInstance<ElasticSearchDocumentHit>;

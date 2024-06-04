@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { LogicalOperator } from "../../../api/openapi/models/LogicalOperator.ts";
 import { SearchColumns } from "../../../api/openapi/models/SearchColumns.ts";
 import { StringOperator } from "../../../api/openapi/models/StringOperator.ts";
-import { FilterState, filterReducer } from "../../../features/FilterDialog/filterSlice.ts";
+import { FilterState, filterReducer } from "../../FilterDialog/filterSlice.ts";
 
 const initialState: FilterState = {
   filter: {

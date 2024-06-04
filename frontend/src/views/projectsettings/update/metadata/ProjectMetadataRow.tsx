@@ -7,7 +7,7 @@ import ProjectMetadataHooks from "../../../../api/ProjectMetadataHooks.ts";
 import { MetaType } from "../../../../api/openapi/models/MetaType.ts";
 import { ProjectMetadataRead } from "../../../../api/openapi/models/ProjectMetadataRead.ts";
 import { ProjectMetadataUpdate } from "../../../../api/openapi/models/ProjectMetadataUpdate.ts";
-import ConfirmationAPI from "../../../../features/ConfirmationDialog/ConfirmationAPI.ts";
+import ConfirmationAPI from "../../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import ProjectMetadataDeleteButton from "./ProjectMetadataDeleteButton.tsx";
 
 export function ProjectMetadataRow({ projectMetadataId }: { projectMetadataId: number }) {

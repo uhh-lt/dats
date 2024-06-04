@@ -1,8 +1,8 @@
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton, IconButtonProps, Tooltip, Typography } from "@mui/material";
 import MemoHooks from "../../api/MemoHooks.ts";
-import ConfirmationAPI from "../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import { useOpenSnackbar } from "../../features/SnackbarDialog/useOpenSnackbar.ts";
+import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
+import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI.ts";
 
 interface MemoDeleteButtonProps {
   memoId: number;

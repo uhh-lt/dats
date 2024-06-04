@@ -19,7 +19,7 @@ import { Node } from "ts-tree-structure";
 import AnalysisHooks from "../../../api/AnalysisHooks.ts";
 import { CodeFrequency } from "../../../api/openapi/models/CodeFrequency.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import { IDataTree } from "../../../features/TreeExplorer/IDataTree.ts";
+import { IDataTree } from "../../../components/TreeExplorer/IDataTree.ts";
 
 const renderCustomizedLabel = (data: { value: string; percent: number }) => {
   return `${data.value} (${(data.percent * 100).toFixed(0)}%)`;

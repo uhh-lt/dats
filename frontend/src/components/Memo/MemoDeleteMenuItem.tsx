@@ -1,8 +1,8 @@
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import MemoHooks from "../../api/MemoHooks.ts";
-import ConfirmationAPI from "../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import { useOpenSnackbar } from "../../features/SnackbarDialog/useOpenSnackbar.ts";
+import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
+import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI.ts";
 import { MemoEvent } from "./MemoDialog/MemoDialogAPI.ts";
 
 interface MemoDeleteMenuItemProps {

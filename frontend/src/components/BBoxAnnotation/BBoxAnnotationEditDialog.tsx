@@ -4,10 +4,10 @@ import { Box, Button, ButtonProps, Dialog, DialogActions, DialogTitle, Divider }
 import { MRT_RowSelectionState } from "material-react-table";
 import { useState } from "react";
 import BboxAnnotationHooks from "../../api/BboxAnnotationHooks.ts";
-import { useOpenSnackbar } from "../../features/SnackbarDialog/useOpenSnackbar.ts";
-import { CRUDDialogActions } from "../../features/dialogSlice.ts";
+import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import CodeTable from "../Code/CodeTable.tsx";
+import { CRUDDialogActions } from "../dialogSlice.ts";
 import BBoxAnnotationRenderer from "./BBoxAnnotationRenderer.tsx";
 
 export interface BBoxAnnotationEditDialogProps extends ButtonProps {

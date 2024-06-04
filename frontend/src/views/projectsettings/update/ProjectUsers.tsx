@@ -21,7 +21,7 @@ import React, { useMemo, useState } from "react";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
 import UserHooks from "../../../api/UserHooks.ts";
 import { PublicUserRead } from "../../../api/openapi/models/PublicUserRead.ts";
-import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
+import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import { ProjectProps } from "./ProjectProps.ts";
 
 function ProjectUsers({ project }: ProjectProps) {

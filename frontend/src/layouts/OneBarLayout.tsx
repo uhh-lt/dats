@@ -1,8 +1,8 @@
 import { Box, CssBaseline } from "@mui/material";
 import React from "react";
 import { Outlet } from "react-router-dom";
-import ConfirmationDialog from "../features/ConfirmationDialog/ConfirmationDialog.tsx";
-import SnackbarDialog from "../features/SnackbarDialog/SnackbarDialog.tsx";
+import ConfirmationDialog from "../components/ConfirmationDialog/ConfirmationDialog.tsx";
+import SnackbarDialog from "../components/SnackbarDialog/SnackbarDialog.tsx";
 import DialMenu from "./DialMenu/DialMenu.tsx";
 import TopBar from "./TopBar/TopBar.tsx";
 

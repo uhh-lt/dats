@@ -2,7 +2,7 @@ import StarIcon from "@mui/icons-material/Star";
 import StarOutlineIcon from "@mui/icons-material/StarOutline";
 import { IconButton, IconButtonProps, Tooltip, Typography } from "@mui/material";
 import MemoHooks from "../../api/MemoHooks.ts";
-import { useOpenSnackbar } from "../../features/SnackbarDialog/useOpenSnackbar.ts";
+import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 
 interface MemoStarButtonProps {
   memoId: number;

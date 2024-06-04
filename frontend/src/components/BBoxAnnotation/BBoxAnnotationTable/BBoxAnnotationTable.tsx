@@ -18,10 +18,10 @@ import { BBoxAnnotationTableRow } from "../../../api/openapi/models/BBoxAnnotati
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
-import { MyFilter, createEmptyFilter } from "../../../features/FilterDialog/filterUtils.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import ImageCropper from "../../../views/whiteboard/nodes/ImageCropper.tsx";
 import CodeRenderer from "../../Code/CodeRenderer.tsx";
+import { MyFilter, createEmptyFilter } from "../../FilterDialog/filterUtils.ts";
 import MemoRenderer2 from "../../Memo/MemoRenderer2.tsx";
 import SdocMetadataRenderer from "../../Metadata/SdocMetadataRenderer.tsx";
 import SdocTagsRenderer from "../../SourceDocument/SdocTagRenderer.tsx";
