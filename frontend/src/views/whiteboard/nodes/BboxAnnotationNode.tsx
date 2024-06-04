@@ -7,7 +7,7 @@ import SdocHooks from "../../../api/SdocHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import CodeRenderer from "../../../components/Code/CodeRenderer.tsx";
-import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu.tsx";
+import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../components/GenericPositionMenu.tsx";
 import MemoDialogAPI from "../../../components/Memo/MemoDialog/MemoDialogAPI.ts";
 import { CRUDDialogActions } from "../../../features/dialogSlice.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
@@ -39,7 +39,7 @@ function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
   const reactFlowService = useReactFlowService(reactFlowInstance);
 
   // context menu
-  const contextMenuRef = useRef<GenericPositionContextMenuHandle>(null);
+  const contextMenuRef = useRef<GenericPositionMenuHandle>(null);
   const readonly = !props.isConnectable;
 
   // global server state (react-query)

@@ -32,7 +32,7 @@ import { COTAConcept } from "../../../api/openapi/models/COTAConcept.ts";
 import { COTARead } from "../../../api/openapi/models/COTARead.ts";
 import { COTASentence } from "../../../api/openapi/models/COTASentence.ts";
 import { COTASentenceID } from "../../../api/openapi/models/COTASentenceID.ts";
-import { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu.tsx";
+import { GenericPositionMenuHandle } from "../../../components/GenericPositionMenu.tsx";
 import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import CotaEditMenu from "./CotaEditMenu.tsx";
@@ -46,7 +46,7 @@ interface CotaScatterPlotProps {
 
 function CotaScatterPlot({ cota }: CotaScatterPlotProps) {
   // local state
-  const cotaEditMenuRef = useRef<GenericPositionContextMenuHandle>(null);
+  const cotaEditMenuRef = useRef<GenericPositionMenuHandle>(null);
   const [rightClickedSentence, setRightClickedSentence] = useState<COTASentenceID | undefined>(undefined);
 
   // redux

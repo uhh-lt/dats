@@ -1,7 +1,7 @@
 import { Menu, MenuProps, PopoverPosition } from "@mui/material";
 import { forwardRef, useImperativeHandle, useState } from "react";
 
-export interface GenericPositionContextMenuHandle {
+export interface GenericPositionMenuHandle {
   open: (position: PopoverPosition) => void;
   close: () => void;
 }
@@ -11,7 +11,7 @@ interface GenericPositionContextMenuProps extends Omit<MenuProps, "anchorEl" | "
   onClose?: () => void;
 }
 
-const GenericPositionMenu = forwardRef<GenericPositionContextMenuHandle, GenericPositionContextMenuProps>(
+const GenericPositionMenu = forwardRef<GenericPositionMenuHandle, GenericPositionContextMenuProps>(
   ({ children, onClose, ...props }, ref) => {
     const [anchorPosition, setAnchorPosition] = useState<PopoverPosition | undefined>(undefined);
     const isOpen = Boolean(anchorPosition);
