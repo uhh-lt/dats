@@ -1,18 +1,10 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-export interface SearchSettings {
-  sortStatsByGlobal: boolean;
-}
-
 export interface SettingsState {
-  search: SearchSettings;
   disabledCodeIds: number[];
 }
 
 const initialState: SettingsState = {
-  search: {
-    sortStatsByGlobal: false,
-  },
   disabledCodeIds: [],
 };
 
@@ -20,12 +12,6 @@ export const settingsSlice = createSlice({
   name: "settings",
   initialState,
   reducers: {
-    toggleStatsOrder: (state) => {
-      state.search = {
-        ...state.search,
-        sortStatsByGlobal: !state.search.sortStatsByGlobal,
-      };
-    },
     disableCode: (state, action: PayloadAction<number>) => {
       const codeId = action.payload;
       const disabledCodeIds = state.disabledCodeIds;
