@@ -1,4 +1,4 @@
-import { Divider, Grid, Typography } from "@mui/material";
+import { Divider, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
@@ -10,6 +10,7 @@ import { SearchService } from "../../../api/openapi/services/SearchService.ts";
 import { MyFilter, createEmptyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 import DocumentInformation from "../../../components/SourceDocument/DocumentInformation/DocumentInformation.tsx";
 import TagExplorerNew from "../../../components/Tag/TagExplorer/TagExplorer.tsx";
+import TwoSidebarsLayout from "../../../layouts/TwoSidebarsLayout.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { AnnoActions } from "../../annotation/annoSlice.ts";
 import SearchStatistics from "../Statistics/SearchStatistics.tsx";
@@ -101,19 +102,9 @@ function ImageSimilaritySearch() {
 
   // render
   return (
-    <>
-      <Grid container className="h100">
-        <Grid
-          item
-          md={2}
-          className="h100"
-          sx={{
-            zIndex: (theme) => theme.zIndex.appBar,
-            bgcolor: (theme) => theme.palette.background.paper,
-            borderRight: "1px solid #e8eaed",
-            boxShadow: 4,
-          }}
-        >
+    <TwoSidebarsLayout
+      leftSidebar={
+        <>
           <TagExplorerNew sx={{ height: "50%", pt: 0 }} onTagClick={handleAddTagFilter} />
           <Divider />
           <SearchStatistics
@@ -123,13 +114,10 @@ function ImageSimilaritySearch() {
             handleTagClick={handleAddTagFilter}
             handleCodeClick={handleAddCodeFilter}
           />
-        </Grid>
-        <Grid
-          item
-          md={8}
-          className="h100 myFlexContainer"
-          sx={{ backgroundColor: (theme) => theme.palette.grey[200], overflow: "auto" }}
-        >
+        </>
+      }
+      content={
+        <>
           <ImageSimilaritySearchToolbar searchResultDocumentIds={sdocIds} />
           <ImageSimilarityView
             projectId={projectId}
@@ -142,27 +130,17 @@ function ImageSimilaritySearch() {
               sx: { p: 1 },
             }}
           />
-        </Grid>
-        <Grid
-          item
-          md={2}
+        </>
+      }
+      rightSidebar={
+        <DocumentInformation
+          filterName={filterName}
+          sdocId={selectedDocumentId}
+          isIdleContent={<Typography padding={2}>Click on an image to see info :)</Typography>}
           className="h100"
-          sx={{
-            zIndex: (theme) => theme.zIndex.appBar,
-            bgcolor: (theme) => theme.palette.background.paper,
-            borderLeft: "1px solid #e8eaed",
-            boxShadow: 4,
-          }}
-        >
-          <DocumentInformation
-            filterName={filterName}
-            sdocId={selectedDocumentId}
-            isIdleContent={<Typography padding={2}>Click on an image to see info :)</Typography>}
-            className="h100"
-          />
-        </Grid>
-      </Grid>
-    </>
+        />
+      }
+    />
   );
 }
 
