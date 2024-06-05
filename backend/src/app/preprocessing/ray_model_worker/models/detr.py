@@ -5,9 +5,8 @@ import torch
 from dto.detr import DETRFilePathInput, DETRObjectDetectionOutput, ObjectBBox
 from PIL import Image
 from ray import serve
+from ray_config import build_ray_model_deployment_config, conf
 from transformers import DetrFeatureExtractor, DetrForObjectDetection
-
-from config import build_ray_model_deployment_config, conf
 
 cc = conf.detr
 

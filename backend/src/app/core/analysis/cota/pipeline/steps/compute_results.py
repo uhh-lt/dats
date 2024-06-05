@@ -1,12 +1,12 @@
 from typing import Dict, List
 
+import numpy as np
 import torch
+import umap
 
 from app.core.analysis.cota.pipeline.cargo import Cargo
 from app.core.analysis.cota.pipeline.steps.util import (
-    _apply_umap,
-    _get_annotation_sentence_indices,
-    _has_min_concept_sentence_annotations,
+    has_min_concept_sentence_annotations,
 )
 from app.core.data.dto.concept_over_time_analysis import (
     COTASentence,
@@ -22,9 +22,9 @@ def compute_results(cargo: Cargo) -> Cargo:
     # 2. rank search space sentences for each concept
     # this can only be done if a concept has sentence annotations, because we need those to compute the concept representation
     # if we do not have sentence annotations, the ranking / similarities were already computed by the initial simsearch (in the first step)
-    if _has_min_concept_sentence_annotations(cargo):
+    if has_min_concept_sentence_annotations(cargo):
         # 2.1 compute representation for each concept
-        annotation_indices = _get_annotation_sentence_indices(cargo)
+        annotation_indices = get_annotation_sentence_indices(cargo)
         concept_embeddings: Dict[str, torch.Tensor] = (
             dict()
         )  # Dict[concept_id, concept_embedding]
@@ -50,7 +50,7 @@ def compute_results(cargo: Cargo) -> Cargo:
     # 3. Visualize results: Reduce the refined embeddings with UMAP to 2D
     # 3.1 reduce the dimensionality of the refined embeddings with UMAP
 
-    visual_refined_embeddings = _apply_umap(
+    visual_refined_embeddings = apply_umap(
         embs=search_space_embeddings, n_components=2, return_list=True
     )
 
@@ -65,3 +65,31 @@ def compute_results(cargo: Cargo) -> Cargo:
             sentence.concept_probabilities[concept.id] = probability
 
     return cargo
+
+
+def get_annotation_sentence_indices(cargo: Cargo) -> Dict[str, List[int]]:
+    """Returns the indices of the sentences in the search space that are annotated with a concept, for each concept"""
+
+    annotations: Dict[str, List[int]] = {
+        concept.id: [] for concept in cargo.job.cota.concepts
+    }
+    for idx, sentence in enumerate(cargo.data["search_space"]):
+        if sentence.concept_annotation is not None:
+            annotations[sentence.concept_annotation].append(idx)
+    return annotations
+
+
+def apply_umap(
+    embs: torch.Tensor | np.ndarray,
+    n_components: int,
+    return_list: bool = True,
+) -> np.ndarray | List[List[float]]:
+    if isinstance(embs, torch.Tensor):
+        embs = embs.cpu().numpy()
+    reducer = umap.UMAP(n_components=n_components)
+    reduced_embs = reducer.fit_transform(embs)
+
+    if return_list:
+        return reduced_embs.tolist()
+
+    return reduced_embs

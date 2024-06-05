@@ -130,6 +130,11 @@ def __init_services__(
 
     SimSearchService(flush=reset_database)
 
+    # import and init CotaService
+    from app.core.cota.cota_service import CotaService
+
+    CotaService()
+
 
 def __create_system_user__() -> None:
     from app.core.data.crud.user import crud_user

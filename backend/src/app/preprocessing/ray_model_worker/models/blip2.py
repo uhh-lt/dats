@@ -4,9 +4,8 @@ import torch
 from dto.blip2 import Blip2FilePathInput, Blip2Output
 from PIL import Image
 from ray import serve
+from ray_config import build_ray_model_deployment_config, conf
 from transformers import Blip2ForConditionalGeneration, Blip2Processor
-
-from config import build_ray_model_deployment_config, conf
 
 logger = logging.getLogger("ray.serve")
 
