@@ -1,4 +1,7 @@
-FROM rayproject/ray:latest-py310-gpu as ray
+# docker build -t uhhlt/dats_ray:latest .
+# docker push uhhlt/dats_ray:latest
+
+FROM rayproject/ray:latest-py311-cu117 as ray
 
 CMD ["/bin/bash"]
 
