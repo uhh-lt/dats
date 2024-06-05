@@ -10,6 +10,7 @@ export interface AnnoState {
   expandedCodeIds: string[];
   hiddenCodeIds: number[];
   visibleAdocIds: number[];
+  tagStyle: "inline" | "above";
 }
 
 const initialState: AnnoState = {
@@ -20,6 +21,7 @@ const initialState: AnnoState = {
   expandedCodeIds: [],
   hiddenCodeIds: [],
   visibleAdocIds: [],
+  tagStyle: "inline",
 };
 
 export const annoSlice = createSlice({
@@ -82,6 +84,9 @@ export const annoSlice = createSlice({
       const code = state.codesForSelection[idx];
       state.codesForSelection.splice(idx, 1);
       state.codesForSelection.unshift(code);
+    },
+    onToggleAnnotatorTagStyle: (state) => {
+      state.tagStyle = state.tagStyle === "inline" ? "above" : "inline";
     },
   },
 });

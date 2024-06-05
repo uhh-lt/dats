@@ -1,5 +1,7 @@
 import BorderColorIcon from "@mui/icons-material/BorderColor";
 import ChromeReaderModeIcon from "@mui/icons-material/ChromeReaderMode";
+import FormatOverlineIcon from "@mui/icons-material/FormatOverline";
+import FormatStrikethroughIcon from "@mui/icons-material/FormatStrikethrough";
 import { TabContext, TabPanel } from "@mui/lab";
 import {
   Box,
@@ -49,6 +51,7 @@ function Annotation() {
 
   // global client state (redux)
   const isAnnotationMode = useAppSelector((state) => state.annotations.isAnnotationMode);
+  const tagStyle = useAppSelector((state) => state.annotations.tagStyle);
   const dispatch = useAppDispatch();
 
   // global server state (react query)
@@ -140,7 +143,6 @@ function Annotation() {
                 value={isAnnotationMode}
                 exclusive
                 onChange={() => dispatch(AnnoActions.onToggleAnnotationMode())}
-                aria-label="text alignment"
                 size="small"
                 color="primary"
               >
@@ -156,6 +158,26 @@ function Annotation() {
                 </Tooltip>
               </ToggleButtonGroup>
               {annotationDocument.isSuccess && <AnnotationDocumentSelector sdocId={sdocId} />}
+              {sdoc.data?.doctype === DocType.TEXT && (
+                <ToggleButtonGroup
+                  value={tagStyle}
+                  exclusive
+                  onChange={() => dispatch(AnnoActions.onToggleAnnotatorTagStyle())}
+                  size="small"
+                  color="primary"
+                >
+                  <Tooltip title="Inline" placement="bottom">
+                    <ToggleButton value={"inline"} sx={{ fontSize: 12 }}>
+                      <FormatStrikethroughIcon />
+                    </ToggleButton>
+                  </Tooltip>
+                  <Tooltip title="Above" placement="bottom">
+                    <ToggleButton value={"above"} sx={{ fontSize: 12 }}>
+                      <FormatOverlineIcon />
+                    </ToggleButton>
+                  </Tooltip>
+                </ToggleButtonGroup>
+              )}
             </Toolbar>
             <Box className="myFlexFillAllContainer">
               <Container sx={{ py: 2 }}>
