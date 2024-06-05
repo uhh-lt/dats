@@ -14,7 +14,7 @@ interface TokenProps {
 function Token({ token, spanAnnotations }: TokenProps) {
   // global client state (redux)
   const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
-  const tagStyle = useAppSelector((state) => state.settings.annotator.tagStyle);
+  const tagStyle = useAppSelector((state) => state.annotations.tagStyle);
 
   // computed
   const spans = useMemo(

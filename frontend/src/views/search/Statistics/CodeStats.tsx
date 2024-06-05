@@ -39,7 +39,7 @@ function CodeStatsWithoutData(props: CodeStatsProps) {
   const { user } = useAuth();
 
   // global client state (redux)
-  const sortStatsByGlobal = useAppSelector((state) => state.settings.search.sortStatsByGlobal);
+  const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
 
   // global server state (react-query)
   // TODO does it make sense to only show code stats for the current user here?

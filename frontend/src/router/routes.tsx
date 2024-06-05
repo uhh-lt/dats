@@ -13,28 +13,25 @@ import CodeFrequencyAnalysis from "../views/analysis/CodeFrequency/CodeFrequency
 import CodeGraph from "../views/analysis/CodeGraph/CodeGraph.tsx";
 import CotaDashboard from "../views/analysis/ConceptsOverTime/CotaDashboard.tsx";
 import CotaView from "../views/analysis/ConceptsOverTime/CotaView.tsx";
-import DocumentSampler from "../views/analysis/DocumentSampler/DocumentSampler.tsx";
 import TableDashboard from "../views/analysis/Table/TableDashboard.tsx";
 import TableView from "../views/analysis/Table/TableView.tsx";
 import TimelineAnalysis from "../views/analysis/TimelineAnalysis/TimelineAnalysis.tsx";
 import TimelineAnalysisDashboard from "../views/analysis/TimelineAnalysis/TimelineAnalysisDashboard.tsx";
 import WordFrequency from "../views/analysis/WordFrequency/WordFrequency.tsx";
 import Annotation from "../views/annotation/Annotation.tsx";
-import Autologbook from "../views/autologbook/Autologbook.tsx";
 import Feedback from "../views/feedback/Feedback.tsx";
 import FeedbackAll from "../views/feedback/FeedbackAll.tsx";
 import FeedbackUser from "../views/feedback/FeedbackUser.tsx";
 import Logbook from "../views/logbook/Logbook.tsx";
 import Profile from "../views/profile/Profile.tsx";
 import Projects from "../views/projects/Projects.tsx";
-import ProjectSettings from "../views/projectsettings/ProjectSettings.tsx";
-import ProjectCreation from "../views/projectsettings/creation/ProjectCreation.tsx";
-import ProjectUpdate from "../views/projectsettings/update/ProjectUpdate.tsx";
 import Register from "../views/registration/Register.tsx";
 import Search from "../views/search/DocumentSearch/Search.tsx";
 import ImageSimilaritySearch from "../views/search/ImageSearch/ImageSimilaritySearch.tsx";
 import SentenceSimilaritySearch from "../views/search/SentenceSearch/SentenceSimilaritySearch.tsx";
-import Settings from "../views/settings/Settings.tsx";
+import Autologbook from "../views/tools/AutoLogbook/Autologbook.tsx";
+import DocumentSampler from "../views/tools/DocumentSampler/DocumentSampler.tsx";
+import DuplicateFinder from "../views/tools/DuplicateFinder/DuplicateFinder.tsx";
 import Whiteboard from "../views/whiteboard/Whiteboard.tsx";
 import WhiteboardDashboard from "../views/whiteboard/WhiteboardDashboard.tsx";
 
@@ -66,26 +63,6 @@ const router = createBrowserRouter([
         element: (
           <RequireAuth>
             <Projects />
-          </RequireAuth>
-        ),
-      },
-      {
-        path: "/projectsettings",
-        element: (
-          <RequireAuth>
-            <ProjectSettings />
-          </RequireAuth>
-        ),
-        children: [
-          { index: true, element: <ProjectCreation /> },
-          { path: "/projectsettings/:projectId", element: <ProjectUpdate /> },
-        ],
-      },
-      {
-        path: "/settings",
-        element: (
-          <RequireAuth>
-            <Settings />
           </RequireAuth>
         ),
       },
@@ -194,10 +171,7 @@ const router = createBrowserRouter([
         path: "/project/:projectId/analysis/concepts-over-time-analysis/:cotaId",
         element: <CotaView />,
       },
-      {
-        path: "/project/:projectId/analysis/document-sampler",
-        element: <DocumentSampler />,
-      },
+
       {
         path: "/project/:projectId/whiteboard",
         element: <WhiteboardDashboard />,
@@ -215,8 +189,16 @@ const router = createBrowserRouter([
         element: <Logbook />,
       },
       {
-        path: "/project/:projectId/autologbook",
+        path: "/project/:projectId/tools/autologbook",
         element: <Autologbook />,
+      },
+      {
+        path: "/project/:projectId/tools/duplicate-finder",
+        element: <DuplicateFinder />,
+      },
+      {
+        path: "/project/:projectId/tools/document-sampler",
+        element: <DocumentSampler />,
       },
     ],
   },

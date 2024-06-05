@@ -22,6 +22,7 @@ interface SearchState {
   columnVisibilityModel: MRT_VisibilityState;
   columnSizingModel: MRT_ColumnSizingState;
   gridDensity: MRT_DensityState;
+  sortStatsByGlobal: boolean;
 }
 
 const initialState: SearchState = {
@@ -38,6 +39,7 @@ const initialState: SearchState = {
   columnSizingModel: {},
   gridDensity: "comfortable",
   expertMode: false,
+  sortStatsByGlobal: false,
 };
 
 export const searchSlice = createSlice({
@@ -108,6 +110,11 @@ export const searchSlice = createSlice({
     },
     onPaginationModelChange: (state, action: PayloadAction<MRT_PaginationState>) => {
       state.paginationModel = action.payload;
+    },
+
+    // search statistics
+    onToggleSortStatsByGlobal: (state) => {
+      state.sortStatsByGlobal = !state.sortStatsByGlobal;
     },
 
     // search

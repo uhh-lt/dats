@@ -3,7 +3,7 @@ import FactCheckIcon from "@mui/icons-material/FactCheck";
 import GavelIcon from "@mui/icons-material/Gavel";
 import InfoIcon from "@mui/icons-material/Info";
 import MenuIcon from "@mui/icons-material/Menu";
-import SettingsIcon from "@mui/icons-material/Settings";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
 import {
   Box,
   Divider,
@@ -15,18 +15,21 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  ListSubheader,
 } from "@mui/material";
 import React, { useState } from "react";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useParams } from "react-router-dom";
 import { OpenAPI } from "../../api/openapi/core/OpenAPI.ts";
 import { LoginStatus } from "../../auth/LoginStatus.ts";
 import { useAuth } from "../../auth/useAuth.ts";
 import ExporterListItemButton from "../../components/Exporter/ExporterListItemButton.tsx";
+import ProjectSettingsListItemButton from "../../components/ProjectSettings/ProjectSettingsListItemButton.tsx";
 
 type Anchor = "top" | "left" | "bottom" | "right";
 
 export default function TemporaryDrawer() {
   const { loginStatus } = useAuth();
+  const { projectId } = useParams() as { projectId: string | undefined };
 
   const [state, setState] = useState({
     top: false,
@@ -54,28 +57,78 @@ export default function TemporaryDrawer() {
       onKeyDown={toggleDrawer(anchor, false)}
       className="h100"
     >
-      <List className="h100">
+      {projectId && (
+        <>
+          <List
+            sx={{ width: "100%", maxWidth: 360, bgcolor: "background.paper" }}
+            subheader={<ListSubheader>Project</ListSubheader>}
+          >
+            <ProjectSettingsListItemButton />
+          </List>
+
+          <Divider />
+
+          <List
+            sx={{ width: "100%", maxWidth: 360, bgcolor: "background.paper" }}
+            subheader={<ListSubheader>Tools</ListSubheader>}
+          >
+            <ExporterListItemButton />
+
+            <ListItem disablePadding>
+              <ListItemButton component={RouterLink} to={`/project/${projectId}/tools/autologbook`}>
+                <ListItemIcon>
+                  <MenuBookIcon />
+                </ListItemIcon>
+                <ListItemText primary="Auto Logbook" />
+              </ListItemButton>
+            </ListItem>
+
+            <ListItem disablePadding>
+              <ListItemButton component={RouterLink} to={`/project/${projectId}/tools/duplicate-finder`}>
+                <ListItemIcon>
+                  <InfoIcon />
+                </ListItemIcon>
+                <ListItemText primary="Duplicate Finder" />
+              </ListItemButton>
+            </ListItem>
+
+            <ListItem disablePadding>
+              <ListItemButton component={RouterLink} to={`/project/${projectId}/tools/document-sampler`}>
+                <ListItemIcon>
+                  <GavelIcon />
+                </ListItemIcon>
+                <ListItemText primary="Document Sampler" />
+              </ListItemButton>
+            </ListItem>
+          </List>
+        </>
+      )}
+
+      <Divider />
+
+      <List
+        sx={{ width: "100%", maxWidth: 360, bgcolor: "background.paper" }}
+        subheader={<ListSubheader>Links</ListSubheader>}
+      >
         {loginStatus === LoginStatus.LOGGED_IN && (
-          <>
-            <ListItem disablePadding>
-              <ListItemButton component={RouterLink} to="/projects">
-                <ListItemIcon>
-                  <FactCheckIcon />
-                </ListItemIcon>
-                <ListItemText primary="Projects" />
-              </ListItemButton>
-            </ListItem>
-            <Divider />
-            <ListItem disablePadding>
-              <ListItemButton component={RouterLink} to="/settings">
-                <ListItemIcon>
-                  <SettingsIcon />
-                </ListItemIcon>
-                <ListItemText primary="Settings" />
-              </ListItemButton>
-            </ListItem>
-          </>
+          <ListItem disablePadding>
+            <ListItemButton component={RouterLink} to="/projects">
+              <ListItemIcon>
+                <FactCheckIcon />
+              </ListItemIcon>
+              <ListItemText primary="Projects" />
+            </ListItemButton>
+          </ListItem>
         )}
+
+        <ListItem disablePadding>
+          <ListItemButton component={Link} href="https://github.com/uhh-lt/dats/wiki" target="_blank">
+            <ListItemIcon>
+              <AutoStoriesIcon />
+            </ListItemIcon>
+            <ListItemText primary="Wiki" />
+          </ListItemButton>
+        </ListItem>
 
         <ListItem disablePadding>
           <ListItemButton component={RouterLink} to="/about">
@@ -94,22 +147,11 @@ export default function TemporaryDrawer() {
             <ListItemText primary="Imprint" />
           </ListItemButton>
         </ListItem>
-
-        <ListItem disablePadding>
-          <ListItemButton component={Link} href="https://github.com/uhh-lt/dats/wiki" target="_blank">
-            <ListItemIcon>
-              <AutoStoriesIcon />
-            </ListItemIcon>
-            <ListItemText primary="Wiki" />
-          </ListItemButton>
-        </ListItem>
-
-        <ExporterListItemButton />
-
-        <ListItem sx={{ position: "absolute", bottom: 0 }}>
-          <ListItemText primary={`Version ${OpenAPI.VERSION}`} />
-        </ListItem>
       </List>
+
+      <ListItem sx={{ position: "absolute", bottom: 0 }}>
+        <ListItemText primary={`Version ${OpenAPI.VERSION}`} />
+      </ListItem>
     </Box>
   );
 

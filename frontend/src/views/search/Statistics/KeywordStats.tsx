@@ -20,7 +20,7 @@ function KeywordStats({ sdocIds, handleClick, parentRef, filterBy }: KeywordStat
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // global client state (redux)
-  const sortStatsByGlobal = useAppSelector((state) => state.settings.search.sortStatsByGlobal);
+  const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
 
   // global server state (react-query)
   const keywordStats = SearchHooks.useSearchKeywordStats(projectId, sdocIds, sortStatsByGlobal);

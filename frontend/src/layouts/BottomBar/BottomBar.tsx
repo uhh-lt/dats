@@ -1,4 +1,3 @@
-import { MenuBook } from "@mui/icons-material";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import BookIcon from "@mui/icons-material/Book";
@@ -24,8 +23,6 @@ function calculateValue(path: string) {
     return 3;
   } else if (path.match(/project\/\d+\/logbook.*/i)) {
     return 4;
-  } else if (path.match(/project\/\d+\/autologbook.*/i)) {
-    return 5;
   }
 }
 
@@ -86,13 +83,6 @@ function BottomBar(props: BottomNavigationProps) {
           icon={<BookIcon />}
           component={Link}
           to={`/project/${projectId}/logbook`}
-        />
-
-        <BottomNavigationAction
-          label="Autologbook"
-          icon={<MenuBook />}
-          component={Link}
-          to={`/project/${projectId}/autologbook`}
         />
       </BottomNavigation>
       <Menu

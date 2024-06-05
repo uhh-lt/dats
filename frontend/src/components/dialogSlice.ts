@@ -29,6 +29,8 @@ interface DialogState {
   // snackbar
   isSnackbarOpen: boolean;
   snackbarData: SnackbarEvent;
+  // project settings
+  isProjectSettingsOpen: boolean;
 }
 
 const initialState: DialogState = {
@@ -59,6 +61,8 @@ const initialState: DialogState = {
     text: "",
     title: undefined,
   },
+  // project settings
+  isProjectSettingsOpen: false,
 };
 
 export const dialogSlice = createSlice({
@@ -140,6 +144,12 @@ export const dialogSlice = createSlice({
     closeSnackbar: (state) => {
       state.isSnackbarOpen = false;
       state.snackbarData = initialState.snackbarData;
+    },
+    openProjectSettings: (state) => {
+      state.isProjectSettingsOpen = true;
+    },
+    closeProjectSettings: (state) => {
+      state.isProjectSettingsOpen = false;
     },
   },
 });

@@ -5,14 +5,14 @@ import Tooltip from "@mui/material/Tooltip";
 import React from "react";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { RootState } from "../../store/store.ts";
-import { SettingsActions } from "../../views/settings/settingsSlice.ts";
+import { AnnoActions } from "../../views/annotation/annoSlice.ts";
 import { IDataTree } from "../TreeExplorer/IDataTree.ts";
 import { flatTree } from "../TreeExplorer/TreeUtils.ts";
 
 function CodeToggleEnabledButton({ code, ...props }: IconButtonProps & { code: IDataTree | null | undefined }) {
   // redux (global client state)
   const isDisabled = useAppSelector((state: RootState) =>
-    code ? state.settings.disabledCodeIds.indexOf(code.data.id) !== -1 : false,
+    code ? state.annotations.disabledCodeIds.indexOf(code.data.id) !== -1 : false,
   );
   const dispatch = useAppDispatch();
 
@@ -26,7 +26,7 @@ function CodeToggleEnabledButton({ code, ...props }: IconButtonProps & { code: I
     if (code.children) {
       codeIds.push(...flatTree(code).map((c) => c.id));
     }
-    dispatch(SettingsActions.toggleCodeDisabled(codeIds));
+    dispatch(AnnoActions.toggleCodeDisabled(codeIds));
   };
 
   return (

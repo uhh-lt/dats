@@ -17,7 +17,7 @@ interface DocumentTagStatsProps {
 
 function DocumentTagStats({ sdocIds, handleClick, parentRef, filterBy }: DocumentTagStatsProps) {
   // global client state (redux)
-  const sortStatsByGlobal = useAppSelector((state) => state.settings.search.sortStatsByGlobal);
+  const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
 
   // global server state (react-query)
   const tagStats = SearchHooks.useSearchTagStats(sdocIds, sortStatsByGlobal);
