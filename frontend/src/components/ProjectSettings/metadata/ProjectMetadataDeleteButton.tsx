@@ -13,11 +13,10 @@ interface ProjectMetadataDeleteButtonProps {
 
 function ProjectMetadataDeleteButton({ metadataId, ...props }: ProjectMetadataDeleteButtonProps & IconButtonProps) {
   // mutations
-  const deleteMutation = ProjectMetadataHooks.useDeleteMetadata();
 
   // snackbar
   const openSnackbar = useOpenSnackbar();
-
+  const deleteMutation = ProjectMetadataHooks.useDeleteMetadata();
   const handleDeleteMetadata = useCallback(() => {
     ConfirmationAPI.openConfirmationDialog({
       text: `Do you really want to delete the ProjectMetadata ${metadataId}? This will remove metadata from all corresponding documents. This action cannot be undone!`,

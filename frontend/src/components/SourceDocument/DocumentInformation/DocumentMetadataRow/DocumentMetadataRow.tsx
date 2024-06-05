@@ -10,6 +10,7 @@ import { SourceDocumentMetadataReadResolved } from "../../../../api/openapi/mode
 import { SourceDocumentMetadataUpdate } from "../../../../api/openapi/models/SourceDocumentMetadataUpdate.ts";
 import { useOpenSnackbar } from "../../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { dateToLocaleYYYYMMDDString } from "../../../../utils/DateUtils.ts";
+import MetadataEditMenu from "../MetadataEditMenu.tsx";
 import DocumentMetadataAddFilterButton from "./DocumentMetadataAddFilterButton.tsx";
 import DocumentMetadataGoToButton from "./DocumentMetadataGoToButton.tsx";
 import { isValidHttpUrl } from "./utils.ts";
@@ -210,15 +211,7 @@ function DocumentMetadataRow({ metadata, filterName }: DocumentMetadataRowProps)
 
   return (
     <Stack direction="row" alignItems="flex-end" mt={1}>
-      <TextField
-        variant="standard"
-        error={false}
-        helperText={<></>}
-        disabled
-        defaultValue={metadata.project_metadata.key}
-        sx={{ flexGrow: 1, flexBasis: 1 }}
-        inputProps={{ style: { textAlign: "right", paddingRight: "8px" } }}
-      />
+      <MetadataEditMenu metadata={metadata} />
       {inputField}
       {isLink && <DocumentMetadataGoToButton link={metadata.str_value!} size="small" />}
       {filterName && <DocumentMetadataAddFilterButton metadata={metadata} filterName={filterName} size="small" />}

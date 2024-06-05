@@ -10,6 +10,7 @@ const useCreateMetadata = () =>
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_METADATA, data.id] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_METADATAS, data.project_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATAS] });
       queryClient.invalidateQueries({ queryKey: ["tableInfo"] }); // tableInfo queries need to be refetched, as there is new metadata now!
     },
     meta: {
@@ -45,6 +46,7 @@ const useDeleteMetadata = () =>
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_METADATA, data.id] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_METADATAS, data.project_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATAS] });
     },
   });
 
