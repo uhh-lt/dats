@@ -18,7 +18,6 @@ import searchReducer from "../views/search/DocumentSearch/searchSlice.ts";
 import imageSearchReducer from "../views/search/ImageSearch/imageSearchSlice.ts";
 import sentenceSearchReducer from "../views/search/SentenceSearch/sentenceSearchSlice.ts";
 import searchFilterReducer from "../views/search/searchFilterSlice.ts";
-import settingsReducer from "../views/settings/settingsSlice.ts";
 import autologbookReducer from "../views/tools/AutoLogbook/autologbookSlice.ts";
 import documentSamplerReducer from "../views/tools/DocumentSampler/documentSamplerSlice.ts";
 
@@ -28,7 +27,6 @@ const persistConfig = {
 };
 
 // store slices in local storage
-const persistedSettingsReducer = persistReducer(persistConfig, settingsReducer);
 const persistedAnnoReducer = persistReducer(persistConfig, annoReducer);
 
 export const store = configureStore({
@@ -40,7 +38,6 @@ export const store = configureStore({
     sentenceSearch: sentenceSearchReducer,
     logbook: logbookReducer,
     autologbook: autologbookReducer,
-    settings: persistedSettingsReducer,
     annotatedSegments: annotatedSegmentsReducer,
     timelineAnalysis: timelineAnalysisReducer,
     searchFilter: searchFilterReducer,

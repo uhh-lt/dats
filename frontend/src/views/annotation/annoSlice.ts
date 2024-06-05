@@ -11,6 +11,7 @@ export interface AnnoState {
   hiddenCodeIds: number[];
   visibleAdocIds: number[];
   tagStyle: "inline" | "above";
+  disabledCodeIds: number[];
 }
 
 const initialState: AnnoState = {
@@ -22,6 +23,7 @@ const initialState: AnnoState = {
   hiddenCodeIds: [],
   visibleAdocIds: [],
   tagStyle: "inline",
+  disabledCodeIds: [],
 };
 
 export const annoSlice = createSlice({
@@ -87,6 +89,39 @@ export const annoSlice = createSlice({
     },
     onToggleAnnotatorTagStyle: (state) => {
       state.tagStyle = state.tagStyle === "inline" ? "above" : "inline";
+    },
+    // code enable / disable
+    disableCode: (state, action: PayloadAction<number>) => {
+      const codeId = action.payload;
+      const disabledCodeIds = state.disabledCodeIds;
+      if (disabledCodeIds.indexOf(codeId) === -1) {
+        disabledCodeIds.push(codeId);
+        state.disabledCodeIds = disabledCodeIds;
+      }
+    },
+    toggleCodeDisabled: (state, action: PayloadAction<number[]>) => {
+      if (action.payload.length === 0) {
+        return;
+      }
+      const codeId = action.payload[0];
+      const disabledCodeIds = state.disabledCodeIds;
+      if (disabledCodeIds.indexOf(codeId) === -1) {
+        // add codes
+        action.payload.forEach((codeId) => {
+          if (disabledCodeIds.indexOf(codeId) === -1) {
+            disabledCodeIds.push(codeId);
+          }
+        });
+      } else {
+        // delete codes
+        action.payload.forEach((codeId) => {
+          const index = disabledCodeIds.indexOf(codeId);
+          if (index !== -1) {
+            disabledCodeIds.splice(index, 1);
+          }
+        });
+      }
+      state.disabledCodeIds = disabledCodeIds;
     },
   },
 });

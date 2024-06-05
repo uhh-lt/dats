@@ -13,7 +13,7 @@ import DocumentInformation from "../../../components/SourceDocument/DocumentInfo
 import TagExplorer from "../../../components/Tag/TagExplorer/TagExplorer.tsx";
 import TwoSidebarsLayout from "../../../layouts/TwoSidebarsLayout.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { SettingsActions } from "../../settings/settingsSlice.ts";
+import { AnnoActions } from "../../annotation/annoSlice.ts";
 import SearchStatistics from "../Statistics/SearchStatistics.tsx";
 import { SearchFilterActions } from "../searchFilterSlice.ts";
 import SearchDocumentTable from "./SearchDocumentTable.tsx";
@@ -65,7 +65,7 @@ function Search() {
     if (projectCodes.data) {
       const sentence = projectCodes.data.find((code) => code.name === "SENTENCE");
       if (sentence) {
-        dispatch(SettingsActions.disableCode(sentence.id));
+        dispatch(AnnoActions.disableCode(sentence.id));
       }
     }
   }, [dispatch, projectCodes.data]);

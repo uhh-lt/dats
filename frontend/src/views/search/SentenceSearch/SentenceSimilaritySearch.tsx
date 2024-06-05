@@ -11,7 +11,7 @@ import { MyFilter, createEmptyFilter } from "../../../components/FilterDialog/fi
 import DocumentInformation from "../../../components/SourceDocument/DocumentInformation/DocumentInformation.tsx";
 import TagExplorerNew from "../../../components/Tag/TagExplorer/TagExplorer.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { SettingsActions } from "../../settings/settingsSlice.ts";
+import { AnnoActions } from "../../annotation/annoSlice.ts";
 import SearchStatistics from "../Statistics/SearchStatistics.tsx";
 import { SearchFilterActions } from "../searchFilterSlice.ts";
 import SentenceSimilaritySearchTable from "./SentenceSimilaritySearchTable.tsx";
@@ -63,7 +63,7 @@ function SentenceSimilaritySearch() {
     if (projectCodes.data) {
       const sentence = projectCodes.data.find((code) => code.name === "SENTENCE");
       if (sentence) {
-        dispatch(SettingsActions.disableCode(sentence.id));
+        dispatch(AnnoActions.disableCode(sentence.id));
       }
     }
   }, [dispatch, projectCodes.data]);
