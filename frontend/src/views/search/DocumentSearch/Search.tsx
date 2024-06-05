@@ -1,4 +1,4 @@
-import { Divider, Grid, Typography } from "@mui/material";
+import { Box, Divider, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
@@ -11,6 +11,7 @@ import { SearchService } from "../../../api/openapi/services/SearchService.ts";
 import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 import DocumentInformation from "../../../components/SourceDocument/DocumentInformation/DocumentInformation.tsx";
 import TagExplorer from "../../../components/Tag/TagExplorer/TagExplorer.tsx";
+import TwoSidebarsLayout from "../../../layouts/TwoSidebarsLayout.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { SettingsActions } from "../../settings/settingsSlice.ts";
 import SearchStatistics from "../Statistics/SearchStatistics.tsx";
@@ -102,19 +103,9 @@ function Search() {
 
   // render
   return (
-    <>
-      <Grid container className="h100">
-        <Grid
-          item
-          md={2}
-          className="h100"
-          sx={{
-            zIndex: (theme) => theme.zIndex.appBar,
-            bgcolor: (theme) => theme.palette.background.paper,
-            borderRight: "1px solid #e8eaed",
-            boxShadow: 4,
-          }}
-        >
+    <TwoSidebarsLayout
+      leftSidebar={
+        <>
           <TagExplorer sx={{ height: "50%", pt: 0 }} onTagClick={handleAddTagFilter} />
           <Divider />
           <SearchStatistics
@@ -124,14 +115,10 @@ function Search() {
             handleTagClick={handleAddTagFilter}
             handleCodeClick={handleAddCodeFilter}
           />
-        </Grid>
-        <Grid
-          item
-          md={8}
-          className="h100"
-          p={2}
-          sx={{ backgroundColor: (theme) => theme.palette.grey[200], overflow: "auto" }}
-        >
+        </>
+      }
+      content={
+        <Box className="h100" sx={{ p: 2 }}>
           <SearchDocumentTable
             projectId={projectId}
             data={data}
@@ -139,27 +126,17 @@ function Search() {
             isFetching={isFetching}
             isError={isError}
           />
-        </Grid>
-        <Grid
-          item
-          md={2}
+        </Box>
+      }
+      rightSidebar={
+        <DocumentInformation
+          sdocId={selectedDocumentId}
+          filterName={filterName}
+          isIdleContent={<Typography padding={2}>Click a document to see info :)</Typography>}
           className="h100"
-          sx={{
-            zIndex: (theme) => theme.zIndex.appBar,
-            bgcolor: (theme) => theme.palette.background.paper,
-            borderLeft: "1px solid #e8eaed",
-            boxShadow: 4,
-          }}
-        >
-          <DocumentInformation
-            sdocId={selectedDocumentId}
-            filterName={filterName}
-            isIdleContent={<Typography padding={2}>Click a document to see info :)</Typography>}
-            className="h100"
-          />
-        </Grid>
-      </Grid>
-    </>
+        />
+      }
+    />
   );
 }
 

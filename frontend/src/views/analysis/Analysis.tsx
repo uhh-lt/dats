@@ -1,5 +1,4 @@
 import { Box, Container, Grid, Portal, Typography } from "@mui/material";
-import { range } from "lodash";
 import { useContext } from "react";
 import { AppBarContext } from "../../layouts/TwoBarLayout.tsx";
 import AnalysisCard from "./AnalysisCard.tsx";
@@ -73,26 +72,8 @@ function Analysis() {
             </Grid>
 
             <Grid item>
-              <AnalysisCard
-                to={"document-sampler"}
-                title={"Document Sampler"}
-                description={"Sample documents for annotation projects."}
-                color={"#77dd77"}
-              />
-            </Grid>
-
-            <Grid item>
               <AnalysisCard to={"table"} title={"Table"} description={"Analyse with tables."} color={"#77dd77"} />
             </Grid>
-            {range(0, 2).map((i) => (
-              <Grid item key={i}>
-                <AnalysisCard
-                  to={""}
-                  title={"Mock Analysis Feature"}
-                  description="This Analysis Feature does not actually exist..."
-                />
-              </Grid>
-            ))}
           </Grid>
         </Container>
       </Box>
