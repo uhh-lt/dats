@@ -1,9 +1,11 @@
 import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
+import FileCopyIcon from "@mui/icons-material/FileCopy";
 import GavelIcon from "@mui/icons-material/Gavel";
 import InfoIcon from "@mui/icons-material/Info";
 import MenuIcon from "@mui/icons-material/Menu";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
+import StackedBarChartIcon from "@mui/icons-material/StackedBarChart";
 import {
   Box,
   Divider,
@@ -86,7 +88,7 @@ export default function TemporaryDrawer() {
             <ListItem disablePadding>
               <ListItemButton component={RouterLink} to={`/project/${projectId}/tools/duplicate-finder`}>
                 <ListItemIcon>
-                  <InfoIcon />
+                  <FileCopyIcon />
                 </ListItemIcon>
                 <ListItemText primary="Duplicate Finder" />
               </ListItemButton>
@@ -95,7 +97,7 @@ export default function TemporaryDrawer() {
             <ListItem disablePadding>
               <ListItemButton component={RouterLink} to={`/project/${projectId}/tools/document-sampler`}>
                 <ListItemIcon>
-                  <GavelIcon />
+                  <StackedBarChartIcon />
                 </ListItemIcon>
                 <ListItemText primary="Document Sampler" />
               </ListItemButton>
