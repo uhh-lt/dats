@@ -4,11 +4,8 @@ from typing import Any, Dict, List, Optional, Set, Union
 import srsly
 from elasticsearch import Elasticsearch, helpers
 from loguru import logger
-from omegaconf import OmegaConf
 
-from app.core.data.dto.memo import MemoRead
 from app.core.data.dto.search import (
-    ElasticMemoHit,
     ElasticSearchDocumentCreate,
     ElasticSearchDocumentHit,
     ElasticSearchDocumentRead,
@@ -16,7 +13,6 @@ from app.core.data.dto.search import (
     ElasticSearchMemoRead,
     ElasticSearchMemoUpdate,
     PaginatedElasticSearchDocumentHits,
-    PaginatedMemoSearchResults,
 )
 from app.util.singleton_meta import SingletonMeta
 from config import conf
@@ -365,7 +361,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
     def __search(
         self,
         *,
-        sdoc: bool = True,
+        index: str,
         source_fields: Union[bool, List[str]] = False,
         proj_id: int,
         query: Dict[str, Any],
@@ -381,13 +377,8 @@ class ElasticSearchService(metaclass=SingletonMeta):
         :return: A (possibly empty) list of Memo matching the query
         :rtype: PaginatedElasticSearchDocumentHits
         """
-        if sdoc:
-            idx = self.__get_index_name(proj_id=proj_id, index_type="doc")
-        else:
-            idx = self.__get_index_name(proj_id=proj_id, index_type="memo")
-
-        if not self.__client.indices.exists(index=idx):
-            raise ValueError(f"ElasticSearch Index '{idx}' does not exist!")
+        if not self.__client.indices.exists(index=index):
+            raise ValueError(f"ElasticSearch Index '{index}' does not exist!")
 
         if query is None or len(query) < 1:
             raise ValueError("Query DSL object must not be None or empty!")
@@ -403,7 +394,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
             # use scroll api
             res = list(
                 helpers.scan(
-                    index=idx,
+                    index=index,
                     query={
                         "query": query,
                         "_source": source_fields,
@@ -422,7 +413,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
                     document["highlight"]["content"] if "highlight" in document else []
                 )
                 document_hit = ElasticSearchDocumentHit(
-                    sdoc_id=document["_id"],
+                    document_id=document["_id"],
                     score=document["_score"],
                     highlights=highlights,
                 )
@@ -432,7 +423,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
         else:
             # use search_api
             client_response = self.__client.search(
-                index=idx,
+                index=index,
                 query=query,
                 size=limit,
                 from_=skip,
@@ -443,7 +434,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
             for hit in client_response["hits"]["hits"]:
                 highlights = hit["highlight"]["content"] if "highlight" in hit else []
                 document = ElasticSearchDocumentHit(
-                    sdoc_id=hit["_id"], score=hit["_score"], highlights=highlights
+                    document_id=hit["_id"], score=hit["_score"], highlights=highlights
                 )
                 hits.append(document)
             total_results = client_response["hits"]["total"]["value"]
@@ -461,8 +452,9 @@ class ElasticSearchService(metaclass=SingletonMeta):
         skip: Optional[int] = None,
         highlight: Optional[Dict[str, Any]],
     ) -> PaginatedElasticSearchDocumentHits:
+        index = self.__get_index_name(proj_id=proj_id, index_type="doc")
         return self.__search(
-            sdoc=True,
+            index=index,
             proj_id=proj_id,
             query=query,
             limit=limit,
@@ -476,89 +468,19 @@ class ElasticSearchService(metaclass=SingletonMeta):
         *,
         proj_id: int,
         query: Dict[str, Any],
-        user_id: int,
-        starred: Optional[bool] = None,
         limit: Optional[int] = None,
         skip: Optional[int] = None,
-    ) -> PaginatedMemoSearchResults:
-        # add user to query
-        query["bool"]["must"].append({"match": {"user_id": user_id}})
-        if starred is not None:
-            # add starred to query
-            query["bool"]["must"].append({"match": {"starred": str(starred).lower()}})
-
-        res = self.__search(
-            sdoc=False,
+        highlight: Optional[Dict[str, Any]],
+    ) -> PaginatedElasticSearchDocumentHits:
+        index = self.__get_index_name(proj_id=proj_id, index_type="memo")
+        return self.__search(
+            index=index,
             proj_id=proj_id,
             query=query,
             limit=limit,
             skip=skip,
             source_fields=True,
-        )
-        # Flo: for convenience only...
-        res = OmegaConf.create(res)
-        if res.hits.total.value == 0:
-            return PaginatedMemoSearchResults(
-                memos=[],
-                has_more=False,
-                total=0,
-                current_page_offset=skip if skip is not None else 0,
-                next_page_offset=0,
-            )
-
-        esmemos = [
-            ElasticMemoHit(
-                **OmegaConf.to_container(doc["_source"]), score=doc["_score"]
-            )
-            for doc in res.hits.hits
-        ]
-
-        memos = [
-            MemoRead(
-                title=esmemo.title,
-                content=esmemo.content,
-                starred=esmemo.starred,
-                id=esmemo.memo_id,
-                user_id=esmemo.user_id,
-                project_id=esmemo.project_id,
-                created=esmemo.created,
-                updated=esmemo.updated,
-                attached_object_id=esmemo.attached_object_id,
-                attached_object_type=esmemo.attached_object_type,
-            )
-            for esmemo in esmemos
-        ]
-
-        next_page_offset = skip + limit
-        has_more = limit is not None and res.hits.total.value > next_page_offset
-
-        return PaginatedMemoSearchResults(
-            memos=memos,
-            has_more=has_more,
-            total=res.hits.total.value,
-            current_page_offset=skip if skip is not None else 0,
-            next_page_offset=next_page_offset
-            if skip is not None and limit is not None and has_more
-            else 0,
-        )
-
-    def search_sdocs_by_filename_query(
-        self,
-        *,
-        proj_id: int,
-        query: str,
-        limit: Optional[int] = None,
-        skip: Optional[int] = None,
-    ) -> PaginatedElasticSearchDocumentHits:
-        return self.__search_sdocs(
-            proj_id=proj_id,
-            query={
-                "bool": {
-                    "must": [{"match": {"filename": {"query": query, "fuzziness": 1}}}]
-                }
-            },
-            limit=limit,
-            skip=skip,
+            highlight=highlight,
         )
 
     def search_sdocs_by_content_query(
@@ -597,46 +519,48 @@ class ElasticSearchService(metaclass=SingletonMeta):
         self,
         *,
         proj_id: int,
-        user_id: int,
+        memo_ids: Set[int],
         query: str,
-        starred: Optional[bool] = None,
         limit: Optional[int] = None,
         skip: Optional[int] = None,
-    ) -> PaginatedMemoSearchResults:
+    ) -> PaginatedElasticSearchDocumentHits:
         return self.__search_memos(
             proj_id=proj_id,
             query={
                 "bool": {
-                    "must": [{"match": {"title": {"query": query, "fuzziness": 1}}}]
+                    "must": [
+                        {"terms": {"memo_id": list(memo_ids)}},
+                        {"match": {"title": {"query": query, "fuzziness": 1}}},
+                    ]
                 }
             },
-            user_id=user_id,
-            starred=starred,
             limit=limit,
             skip=skip,
+            highlight=None,
         )
 
     def search_memos_by_content_query(
         self,
         *,
         proj_id: int,
-        user_id: int,
+        memo_ids: Set[int],
         query: str,
-        starred: Optional[bool] = None,
         limit: Optional[int] = None,
         skip: Optional[int] = None,
-    ) -> PaginatedMemoSearchResults:
+    ) -> PaginatedElasticSearchDocumentHits:
         return self.__search_memos(
             proj_id=proj_id,
             query={
                 "bool": {
-                    "must": [{"match": {"content": {"query": query, "fuzziness": 1}}}]
+                    "must": [
+                        {"terms": {"memo_id": list(memo_ids)}},
+                        {"match": {"content": {"query": query, "fuzziness": 1}}},
+                    ]
                 }
             },
-            user_id=user_id,
-            starred=starred,
             limit=limit,
             skip=skip,
+            highlight=None,
         )
 
     def _get_client(self) -> Elasticsearch:

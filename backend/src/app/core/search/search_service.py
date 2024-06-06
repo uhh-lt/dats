@@ -92,7 +92,7 @@ class SearchService(metaclass=SingletonMeta):
                 )
             return PaginatedElasticSearchDocumentHits(
                 hits=[
-                    ElasticSearchDocumentHit(sdoc_id=sdoc_id)
+                    ElasticSearchDocumentHit(document_id=sdoc_id)
                     for sdoc_id in filtered_sdoc_ids
                 ],
                 total_results=total_results,
@@ -172,13 +172,12 @@ class SearchService(metaclass=SingletonMeta):
             query=query, filter=filter, db=db, subquery_dict=subquery.c
         )
 
-        if sorts is not None:
+        if sorts is not None and len(sorts) > 0:
             query = apply_sorting(query=query, sorts=sorts, db=db)
+        else:
+            query = query.order_by(SourceDocumentORM.id.desc())
 
         if page_number is not None and page_size is not None:
-            query = query.order_by(
-                SourceDocumentORM.id
-            )  # this is very important, otherwise pagination will not work!
             query, pagination = apply_pagination(
                 query=query, page_number=page_number + 1, page_size=page_size
             )

@@ -1,15 +1,13 @@
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from api.dependencies import get_current_user, get_db_session, skip_limit_params
+from api.dependencies import get_current_user, get_db_session
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.dto.search import (
-    MemoContentQuery,
     PaginatedElasticSearchDocumentHits,
-    PaginatedMemoSearchResults,
     SearchColumns,
     SimSearchImageHit,
     SimSearchQuery,
@@ -149,28 +147,6 @@ def search_tag_stats(
     if sort_by_global:
         tag_stats.sort(key=lambda x: x.global_count, reverse=True)
     return tag_stats
-
-
-@router.post(
-    "/lexical/memo/content",
-    response_model=PaginatedMemoSearchResults,
-    summary="Returns all Memos where the content matches the query via lexical search",
-)
-def search_memos_by_content_query(
-    *,
-    content_query: MemoContentQuery,
-    skip_limit: Dict[str, int] = Depends(skip_limit_params),
-    authz_user: AuthzUser = Depends(),
-) -> PaginatedMemoSearchResults:
-    authz_user.assert_in_project(content_query.proj_id)
-
-    return es.search_memos_by_content_query(
-        proj_id=content_query.proj_id,
-        query=content_query.content_query,
-        user_id=content_query.user_id,
-        starred=content_query.starred,
-        **skip_limit,
-    )
 
 
 @router.post(
