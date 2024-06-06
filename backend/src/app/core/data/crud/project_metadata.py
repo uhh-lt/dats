@@ -12,6 +12,7 @@ from app.core.data.dto.project_metadata import (
     ProjectMetadataUpdate,
 )
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
+from app.core.data.meta_type import MetaType
 from app.core.data.orm.project_metadata import ProjectMetadataORM
 from app.core.filters.columns import ColumnInfo
 from app.core.filters.filtering_operators import FilterValueType
@@ -31,18 +32,29 @@ class CRUDProjectMetadata(
         db_obj = super().create(db=db, create_dto=create_dto)
 
         # we have to create sdoc metadata for all existing sdocs
+        self.__create_all_sdoc_metadata(
+            db=db, project_metadata=db_obj, metatype=create_dto.metatype
+        )
+
+        return db_obj
+
+    def __create_all_sdoc_metadata(
+        self,
+        db: Session,
+        *,
+        project_metadata: ProjectMetadataORM,
+        metatype: MetaType | str,
+    ):
         metadata_create_dtos = [
             SourceDocumentMetadataCreate.with_metatype(
                 source_document_id=sdoc.id,
-                project_metadata_id=db_obj.id,
-                metatype=create_dto.metatype,
+                project_metadata_id=project_metadata.id,
+                metatype=metatype,
             )
-            for sdoc in db_obj.project.source_documents
-            if sdoc.doctype == create_dto.doctype
+            for sdoc in project_metadata.project.source_documents
+            if sdoc.doctype == project_metadata.doctype
         ]
         crud_sdoc_meta.create_multi(db=db, create_dtos=metadata_create_dtos)
-
-        return db_obj
 
     def update(
         self, db: Session, *, metadata_id: int, update_dto: ProjectMetadataUpdate
@@ -57,15 +69,29 @@ class CRUDProjectMetadata(
             )
             return db_obj
         else:
-            # There's no way to reasonably convert the
+            # If the user wants to change the type of a metadata,
+            # there's no way to reasonably convert the
             # values of existing sdoc metadatas,
             # so we have to remove them.
-            # the frontend warns users about this.
-            crud_sdoc_meta.delete_by_project_metadata(
-                db, project_metadata_id=metadata_id
-            )
+            # The frontend warns users about this.
+            if (
+                update_dto.metatype is not None
+                and db_obj.metatype != update_dto.metatype
+            ):
+                crud_sdoc_meta.delete_by_project_metadata(
+                    db, project_metadata_id=metadata_id
+                )
+
+                # we have to create sdoc metadata for all existing sdocs (as we deleted them before)
+                self.__create_all_sdoc_metadata(
+                    db=db,
+                    project_metadata=db_obj,
+                    metatype=update_dto.metatype,
+                )
+
             # update metadata
             metadata_orm = super().update(db, id=metadata_id, update_dto=update_dto)
+
             return metadata_orm
 
     def read_by_project_and_key(

@@ -38,7 +38,7 @@ class SourceDocumentMetadataCreate(SourceDocumentMetadataBaseDTO):
     def with_metatype(
         source_document_id: int,
         project_metadata_id: int,
-        metatype: MetaType,
+        metatype: MetaType | str,
         value=None,
     ) -> "SourceDocumentMetadataCreate":
         match metatype:

@@ -33,6 +33,7 @@ const useUpdateMetadata = () =>
     onSuccess: (metadata) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_METADATA, metadata.id] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_METADATAS, metadata.project_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATAS] });
     },
     meta: {
       successMessage: (projectMetadata: ProjectMetadataRead) =>
