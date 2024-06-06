@@ -264,7 +264,7 @@ function MemoNode(props: NodeProps<MemoNodeData>) {
       >
         {memo.isSuccess ? (
           <>
-            <CardHeader title={<MemoRenderer memo={memo.data} />} />
+            <CardHeader title={<MemoRenderer memo={memo.data} showIcon showTitle />} />
             <CardContent>
               <Typography>{memo.data.content}</Typography>
             </CardContent>

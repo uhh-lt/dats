@@ -1,8 +1,8 @@
 import { ActionCreatorWithPayload } from "@reduxjs/toolkit";
 import { MRT_Updater } from "material-react-table";
 import { useCallback, useEffect, useState } from "react";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { RootState } from "../../../store/store.ts";
+import { useAppDispatch, useAppSelector } from "../plugins/ReduxHooks.ts";
+import { RootState } from "../store/store.ts";
 
 export function useReduxConnector<T>(
   reduxStateSelectorFn: (state: RootState) => T,

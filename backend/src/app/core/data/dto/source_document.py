@@ -9,7 +9,6 @@ from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.dto_base import UpdateDTOBase
 from app.core.data.dto.source_document_data import SourceDocumentDataRead
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
-from app.core.data.dto.util import PaginatedResults
 
 SDOC_FILENAME_MAX_LENGTH = 200
 SDOC_SUFFIX_MAX_LENGTH = 30
@@ -53,12 +52,6 @@ class SourceDocumentReadAction(SourceDocumentRead):
     tags: List[DocumentTagRead] = Field(description="Tags of the SourceDocument")
     metadata: List[SourceDocumentMetadataRead] = Field(
         description="Metadata of the SourceDocument"
-    )
-
-
-class PaginatedSourceDocumentReads(PaginatedResults):
-    sdocs: List[SourceDocumentRead] = Field(
-        description="The SourceDocuments on this page"
     )
 
 

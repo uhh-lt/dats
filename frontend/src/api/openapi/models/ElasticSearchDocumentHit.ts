@@ -4,11 +4,11 @@
 /* eslint-disable */
 export type ElasticSearchDocumentHit = {
   /**
-   * The ID of the SourceDocument as it is in the SQL DB
+   * The ID of the Document
    */
-  sdoc_id: number;
+  document_id: number;
   /**
-   * The score of the SourceDocument that was found by a ES Query
+   * The score of the Document that was found by a ES Query
    */
   score?: number | null;
   /**

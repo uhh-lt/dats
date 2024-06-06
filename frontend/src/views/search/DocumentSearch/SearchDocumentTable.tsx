@@ -85,23 +85,23 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
           return {
             ...colDef,
             size: 100,
-            Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdoc_id} renderDoctypeIcon />,
+            Cell: ({ row }) => <SdocRenderer sdoc={row.original.document_id} renderDoctypeIcon />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case SearchColumns.SC_SOURCE_DOCUMENT_FILENAME:
           return {
             ...colDef,
             size: 360,
-            Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdoc_id} renderFilename />,
+            Cell: ({ row }) => <SdocRenderer sdoc={row.original.document_id} renderFilename />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case SearchColumns.SC_DOCUMENT_TAG_ID_LIST:
           return {
             ...colDef,
-            Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.sdoc_id} />,
+            Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.document_id} />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case SearchColumns.SC_USER_ID_LIST:
           return {
             ...colDef,
-            Cell: ({ row }) => <SdocAnnotatorsRenderer sdocId={row.original.sdoc_id} />,
+            Cell: ({ row }) => <SdocAnnotatorsRenderer sdocId={row.original.document_id} />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case SearchColumns.SC_CODE_ID_LIST:
           return null;
@@ -113,7 +113,7 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
             return {
               ...colDef,
               Cell: ({ row }) => (
-                <SdocMetadataRenderer sdocId={row.original.sdoc_id} projectMetadataId={parseInt(column.column)} />
+                <SdocMetadataRenderer sdocId={row.original.document_id} projectMetadataId={parseInt(column.column)} />
               ),
             } as MRT_ColumnDef<ElasticSearchDocumentHit>;
           } else {
@@ -136,7 +136,7 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
   const table = useMaterialReactTable<ElasticSearchDocumentHit>({
     data: hits,
     columns: columns,
-    getRowId: (row) => `${row.sdoc_id}`,
+    getRowId: (row) => `${row.document_id}`,
     // state
     state: {
       globalFilter: searchQuery,
@@ -227,7 +227,7 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
             row.original.highlights ? (
               <Box className="search-result-highlight">
                 {row.original.highlights.map((highlight, index) => (
-                  <Typography key={`sdoc-${row.original.sdoc_id}-highlight-${index}`} m={0.5}>
+                  <Typography key={`sdoc-${row.original.document_id}-highlight-${index}`} m={0.5}>
                     {parse(highlight)}
                   </Typography>
                 ))}
@@ -238,13 +238,13 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
     muiTableBodyRowProps: ({ row }) => ({
       onClick: (event) => {
         if (event.detail >= 2) {
-          navigate(`/project/${projectId}/annotation/${row.original.sdoc_id}`);
+          navigate(`/project/${projectId}/annotation/${row.original.document_id}`);
         } else {
-          dispatch(SearchActions.onToggleSelectedDocumentIdChange(row.original.sdoc_id));
+          dispatch(SearchActions.onToggleSelectedDocumentIdChange(row.original.document_id));
         }
       },
       sx: {
-        backgroundColor: selectedDocumentId === row.original.sdoc_id ? "lightgrey !important" : undefined,
+        backgroundColor: selectedDocumentId === row.original.document_id ? "lightgrey !important" : undefined,
       },
     }),
     muiToolbarAlertBannerProps: isError

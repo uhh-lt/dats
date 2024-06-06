@@ -4,8 +4,7 @@ from typing import List, Optional, Union
 from pydantic import BaseModel, Field
 
 from app.core.data.dto.dto_base import UpdateDTOBase
-from app.core.data.dto.memo import AttachedObjectType, MemoRead
-from app.core.data.dto.util import PaginatedResults
+from app.core.data.dto.memo import AttachedObjectType
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.filters.columns import AbstractColumns
 from app.core.filters.filtering import Filter
@@ -23,20 +22,6 @@ class MemoQueryBase(BaseModel):
             "given starred status"
         ),
         default=None,
-    )
-
-
-class MemoContentQuery(MemoQueryBase):
-    content_query: str = Field(
-        description="The query term to search within the content of the Memo",
-        min_length=1,
-    )
-
-
-class MemoTitleQuery(MemoQueryBase):
-    title_query: str = Field(
-        description="The query term to search within the title of the Memo",
-        min_length=1,
     )
 
 
@@ -120,11 +105,9 @@ class ElasticSearchDocumentRead(BaseModel):
 
 
 class ElasticSearchDocumentHit(BaseModel):
-    sdoc_id: int = Field(
-        description="The ID of the SourceDocument as it is in the SQL DB"
-    )
+    document_id: int = Field(description="The ID of the Document")
     score: Optional[float] = Field(
-        description="The score of the SourceDocument that was found by a ES Query",
+        description="The score of the Document that was found by a ES Query",
         default=None,
     )
     highlights: list[str] = Field(
@@ -189,27 +172,15 @@ class ElasticSearchMemoUpdate(BaseModel, UpdateDTOBase):
     )
 
 
-class ElasticMemoHit(ElasticSearchMemoRead):
-    score: float = Field(
-        description="The score of the Memo that was found by a ES Query"
-    )
-
-
 class PaginatedElasticSearchDocumentHits(BaseModel):
     hits: List[ElasticSearchDocumentHit] = Field(
         description=(
-            "The IDs, scores and (optional) highlights of SourceDocument search results on "
+            "The IDs, scores and (optional) highlights of Document search results on "
             "the requested page."
         )
     )
     total_results: int = Field(
         description="The total number of hits. Used for pagination."
-    )
-
-
-class PaginatedMemoSearchResults(PaginatedResults):
-    memos: List[MemoRead] = Field(
-        description="The Memo search results on the requested page."
     )
 
 

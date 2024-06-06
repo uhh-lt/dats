@@ -104,25 +104,25 @@ function SdocTable({
         case SearchColumns.SC_SOURCE_DOCUMENT_TYPE:
           return {
             ...colDef,
-            Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdoc_id} renderDoctypeIcon />,
+            Cell: ({ row }) => <SdocRenderer sdoc={row.original.document_id} renderDoctypeIcon />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case SearchColumns.SC_SOURCE_DOCUMENT_FILENAME:
           return {
             ...colDef,
             flex: 2,
-            Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdoc_id} renderFilename />,
+            Cell: ({ row }) => <SdocRenderer sdoc={row.original.document_id} renderFilename />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case SearchColumns.SC_DOCUMENT_TAG_ID_LIST:
           return {
             ...colDef,
             flex: 2,
-            Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.sdoc_id} />,
+            Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.document_id} />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case SearchColumns.SC_USER_ID_LIST:
           return {
             ...colDef,
             flex: 2,
-            Cell: ({ row }) => <SdocAnnotatorsRenderer sdocId={row.original.sdoc_id} />,
+            Cell: ({ row }) => <SdocAnnotatorsRenderer sdocId={row.original.document_id} />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case SearchColumns.SC_CODE_ID_LIST:
           return null;
@@ -135,7 +135,7 @@ function SdocTable({
               ...colDef,
               flex: 2,
               Cell: ({ row }) => (
-                <SdocMetadataRenderer sdocId={row.original.sdoc_id} projectMetadataId={parseInt(column.column)} />
+                <SdocMetadataRenderer sdocId={row.original.document_id} projectMetadataId={parseInt(column.column)} />
               ),
             } as MRT_ColumnDef<ElasticSearchDocumentHit>;
           } else {
@@ -252,7 +252,7 @@ function SdocTable({
   const table = useMaterialReactTable<ElasticSearchDocumentHit>({
     data: flatData,
     columns: columns,
-    getRowId: (row) => `${row.sdoc_id}`,
+    getRowId: (row) => `${row.document_id}`,
     // state
     state: {
       globalFilter: searchQuery,
@@ -305,7 +305,7 @@ function SdocTable({
             row.original.highlights ? (
               <Box className="search-result-highlight">
                 {row.original.highlights.map((highlight, index) => (
-                  <Typography key={`sdoc-${row.original.sdoc_id}-highlight-${index}`} m={0.5}>
+                  <Typography key={`sdoc-${row.original.document_id}-highlight-${index}`} m={0.5}>
                     {parse(highlight)}
                   </Typography>
                 ))}
@@ -334,14 +334,14 @@ function SdocTable({
       ? (props) =>
           renderTopToolbarCustomActions({
             table: props.table,
-            selectedDocuments: flatData.filter((row) => rowSelectionModel[row.sdoc_id]),
+            selectedDocuments: flatData.filter((row) => rowSelectionModel[row.document_id]),
           })
       : undefined,
     renderToolbarInternalActions: renderToolbarInternalActions
       ? (props) =>
           renderToolbarInternalActions({
             table: props.table,
-            selectedDocuments: flatData.filter((row) => rowSelectionModel[row.sdoc_id]),
+            selectedDocuments: flatData.filter((row) => rowSelectionModel[row.document_id]),
           })
       : (props) => (
           <SdocTableToolbar
@@ -360,7 +360,7 @@ function SdocTable({
         {renderBottomToolbarCustomActions &&
           renderBottomToolbarCustomActions({
             table: props.table,
-            selectedDocuments: flatData.filter((row) => rowSelectionModel[row.sdoc_id]),
+            selectedDocuments: flatData.filter((row) => rowSelectionModel[row.document_id]),
           })}
       </Stack>
     ),

@@ -1,34 +1,32 @@
 import StarIcon from "@mui/icons-material/Star";
 import StarOutlineIcon from "@mui/icons-material/StarOutline";
-import { IconButton, IconButtonProps, Tooltip, Typography } from "@mui/material";
+import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import MemoHooks from "../../api/MemoHooks.ts";
 import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 
 interface MemoStarButtonProps {
-  memoId: number;
+  memoIds: number[];
   isStarred: boolean;
 }
 
-function MemoStarButton({ memoId, isStarred, ...props }: MemoStarButtonProps & IconButtonProps) {
+function MemoStarButton({ memoIds, isStarred, ...props }: MemoStarButtonProps & IconButtonProps) {
   // mutation
-  const updateMutation = MemoHooks.useUpdateMemo();
+  const starMutation = MemoHooks.useStarMemos();
 
   // snackbar
   const openSnackbar = useOpenSnackbar();
 
   // ui events
   const handleClick = () => {
-    updateMutation.mutate(
+    starMutation.mutate(
       {
-        memoId: memoId,
-        requestBody: {
-          starred: !isStarred,
-        },
+        memoIds,
+        isStarred,
       },
       {
-        onSuccess: (memo) => {
+        onSuccess: (memos) => {
           openSnackbar({
-            text: `Toggled favorite status of memo ${memo.id}`,
+            text: `Set favorite status of ${memos.length} Memo(s) to ${isStarred ? "favorite" : "normal"}!`,
             severity: "success",
           });
         },
@@ -37,11 +35,10 @@ function MemoStarButton({ memoId, isStarred, ...props }: MemoStarButtonProps & I
   };
 
   return (
-    <Tooltip title={isStarred ? "Marked" : "Not marked"}>
-      <span style={{ width: "100%" }}>
-        <IconButton size="small" onClick={handleClick} disabled={updateMutation.isPending} disableRipple {...props}>
+    <Tooltip title={isStarred ? "Mark as favorite" : "Mark as normal"}>
+      <span>
+        <IconButton onClick={handleClick} disabled={starMutation.isPending} {...props}>
           {isStarred ? <StarIcon /> : <StarOutlineIcon />}
-          <Typography variant="body1">Star Memo</Typography>
         </IconButton>
       </span>
     </Tooltip>

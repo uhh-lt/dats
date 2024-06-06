@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy.orm import Session
@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 from api.dependencies import (
     get_current_user,
     get_db_session,
-    skip_limit_params,
 )
 from api.util import get_object_memo_for_user, get_object_memos
 from api.validation import Validate
@@ -27,11 +26,6 @@ from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, Mem
 from app.core.data.dto.preprocessing_job import PreprocessingJobRead
 from app.core.data.dto.project import ProjectCreate, ProjectRead, ProjectUpdate
 from app.core.data.dto.project_metadata import ProjectMetadataRead
-from app.core.data.dto.source_document import (
-    PaginatedSourceDocumentReads,
-    SDocStatus,
-    SourceDocumentRead,
-)
 from app.core.data.dto.user import UserRead
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.search.elasticsearch_service import ElasticSearchService
@@ -129,48 +123,6 @@ def delete_project(
         )
 
     return ProjectRead.model_validate(db_obj)
-
-
-@router.get(
-    "/{proj_id}/sdoc",
-    response_model=PaginatedSourceDocumentReads,
-    summary="Returns all SourceDocuments of the Project with the given ID.",
-)
-def get_project_sdocs(
-    *,
-    proj_id: int,
-    only_finished: bool = True,
-    db: Session = Depends(get_db_session),
-    skip_limit: Dict[str, int] = Depends(skip_limit_params),
-    authz_user: AuthzUser = Depends(),
-) -> PaginatedSourceDocumentReads:
-    authz_user.assert_in_project(proj_id)
-
-    sdocs_on_page = [
-        SourceDocumentRead.model_validate(sdoc)
-        for sdoc in crud_sdoc.read_by_project(
-            db=db, proj_id=proj_id, only_finished=only_finished, **skip_limit
-        )
-    ]
-    total_sdocs = crud_sdoc.count_by_project(
-        db=db,
-        proj_id=proj_id,
-        status=SDocStatus.finished
-        if only_finished
-        else SDocStatus.unfinished_or_erroneous,
-    )
-    skip, limit = skip_limit.values()
-    # FIXME skip can be None
-    has_more = (int(skip) + len(sdocs_on_page)) < total_sdocs
-    return PaginatedSourceDocumentReads(
-        sdocs=sdocs_on_page,
-        has_more=has_more,
-        total=total_sdocs,
-        current_page_offset=skip if skip is not None else 0,
-        next_page_offset=(skip + limit)
-        if skip is not None and limit is not None and has_more
-        else 0,
-    )
 
 
 @router.put(

@@ -391,55 +391,6 @@
       }
     },
     "/project/{proj_id}/sdoc": {
-      "get": {
-        "tags": ["project"],
-        "summary": "Returns all SourceDocuments of the Project with the given ID.",
-        "operationId": "get_project_sdocs",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
-          {
-            "name": "only_finished",
-            "in": "query",
-            "required": false,
-            "schema": { "type": "boolean", "default": true, "title": "Only Finished" }
-          },
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [{ "type": "integer", "maximum": 10000000, "minimum": 0 }, { "type": "null" }],
-              "title": "Skip",
-              "description": "The number of elements to skip (offset)"
-            },
-            "description": "The number of elements to skip (offset)"
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [{ "type": "integer", "maximum": 1000, "minimum": 1 }, { "type": "null" }],
-              "title": "Limit",
-              "description": "The maximum number of returned elements"
-            },
-            "description": "The maximum number of returned elements"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedSourceDocumentReads" } }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      },
       "put": {
         "tags": ["project"],
         "summary": "Uploads one or multiple SourceDocument to the Project with the given ID if it exists",
@@ -3113,6 +3064,96 @@
         }
       }
     },
+    "/memo/info": {
+      "post": {
+        "tags": ["memo"],
+        "summary": "Returns Memo Table Info.",
+        "operationId": "search_memo_info",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ColumnInfo_MemoColumns_" },
+                  "title": "Response Memo-Search Memo Info"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/memo/search": {
+      "post": {
+        "tags": ["memo"],
+        "summary": "Returns all Memo Ids that match the query parameters.",
+        "operationId": "search_memos",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "search_query",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "title": "Search Query" }
+          },
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "search_content",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "boolean", "title": "Search Content" }
+          },
+          {
+            "name": "page_number",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Page Number" }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Page Size" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Body_memo-search_memos" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedElasticSearchDocumentHits" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/search/sdoc_info": {
       "post": {
         "tags": ["search"],
@@ -3333,54 +3374,6 @@
                   "title": "Response Search-Search Tag Stats"
                 }
               }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/search/lexical/memo/content": {
-      "post": {
-        "tags": ["search"],
-        "summary": "Returns all Memos where the content matches the query via lexical search",
-        "operationId": "search_memos_by_content_query",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [{ "type": "integer", "maximum": 10000000, "minimum": 0 }, { "type": "null" }],
-              "title": "Skip",
-              "description": "The number of elements to skip (offset)"
-            },
-            "description": "The number of elements to skip (offset)"
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [{ "type": "integer", "maximum": 1000, "minimum": 1 }, { "type": "null" }],
-              "title": "Limit",
-              "description": "The maximum number of returned elements"
-            },
-            "description": "The maximum number of returned elements"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoContentQuery" } } }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedMemoSearchResults" } }
             }
           },
           "422": {
@@ -6094,6 +6087,15 @@
         "required": ["username", "password"],
         "title": "Body_authentication-login"
       },
+      "Body_memo-search_memos": {
+        "properties": {
+          "filter": { "$ref": "#/components/schemas/Filter_MemoColumns_" },
+          "sorts": { "items": { "$ref": "#/components/schemas/Sort_MemoColumns_" }, "type": "array", "title": "Sorts" }
+        },
+        "type": "object",
+        "required": ["filter", "sorts"],
+        "title": "Body_memo-search_memos"
+      },
       "Body_project-upload_project_sdoc": {
         "properties": {
           "uploaded_files": {
@@ -6557,6 +6559,21 @@
         "required": ["label", "column", "sortable", "operator", "value"],
         "title": "ColumnInfo[AnnotatedSegmentsColumns]"
       },
+      "ColumnInfo_MemoColumns_": {
+        "properties": {
+          "label": { "type": "string", "title": "Label" },
+          "column": {
+            "anyOf": [{ "$ref": "#/components/schemas/MemoColumns" }, { "type": "integer" }],
+            "title": "Column"
+          },
+          "sortable": { "type": "boolean", "title": "Sortable" },
+          "operator": { "$ref": "#/components/schemas/FilterOperator" },
+          "value": { "$ref": "#/components/schemas/FilterValueType" }
+        },
+        "type": "object",
+        "required": ["label", "column", "sortable", "operator", "value"],
+        "title": "ColumnInfo[MemoColumns]"
+      },
       "ColumnInfo_SearchColumns_": {
         "properties": {
           "label": { "type": "string", "title": "Label" },
@@ -6777,15 +6794,11 @@
       },
       "ElasticSearchDocumentHit": {
         "properties": {
-          "sdoc_id": {
-            "type": "integer",
-            "title": "Sdoc Id",
-            "description": "The ID of the SourceDocument as it is in the SQL DB"
-          },
+          "document_id": { "type": "integer", "title": "Document Id", "description": "The ID of the Document" },
           "score": {
             "anyOf": [{ "type": "number" }, { "type": "null" }],
             "title": "Score",
-            "description": "The score of the SourceDocument that was found by a ES Query"
+            "description": "The score of the Document that was found by a ES Query"
           },
           "highlights": {
             "items": { "type": "string" },
@@ -6796,7 +6809,7 @@
           }
         },
         "type": "object",
-        "required": ["sdoc_id"],
+        "required": ["document_id"],
         "title": "ElasticSearchDocumentHit"
       },
       "ExportFormat": { "type": "string", "enum": ["CSV", "JSON"], "title": "ExportFormat" },
@@ -6979,6 +6992,39 @@
         "required": ["column", "operator", "value"],
         "title": "FilterExpression[AnnotatedSegmentsColumns]"
       },
+      "FilterExpression_MemoColumns_": {
+        "properties": {
+          "column": {
+            "anyOf": [{ "$ref": "#/components/schemas/MemoColumns" }, { "type": "integer" }],
+            "title": "Column"
+          },
+          "operator": {
+            "anyOf": [
+              { "$ref": "#/components/schemas/IDOperator" },
+              { "$ref": "#/components/schemas/NumberOperator" },
+              { "$ref": "#/components/schemas/StringOperator" },
+              { "$ref": "#/components/schemas/IDListOperator" },
+              { "$ref": "#/components/schemas/ListOperator" },
+              { "$ref": "#/components/schemas/DateOperator" },
+              { "$ref": "#/components/schemas/BooleanOperator" }
+            ],
+            "title": "Operator"
+          },
+          "value": {
+            "anyOf": [
+              { "type": "boolean" },
+              { "type": "string" },
+              { "type": "integer" },
+              { "items": { "type": "string" }, "type": "array" },
+              { "items": { "items": { "type": "string" }, "type": "array" }, "type": "array" }
+            ],
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": ["column", "operator", "value"],
+        "title": "FilterExpression[MemoColumns]"
+      },
       "FilterExpression_SearchColumns_": {
         "properties": {
           "column": {
@@ -7124,6 +7170,24 @@
         "required": ["items", "logic_operator"],
         "title": "Filter[AnnotatedSegmentsColumns]"
       },
+      "Filter_MemoColumns_": {
+        "properties": {
+          "items": {
+            "items": {
+              "anyOf": [
+                { "$ref": "#/components/schemas/FilterExpression_MemoColumns_" },
+                { "$ref": "#/components/schemas/Filter_MemoColumns_" }
+              ]
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "logic_operator": { "$ref": "#/components/schemas/LogicalOperator" }
+        },
+        "type": "object",
+        "required": ["items", "logic_operator"],
+        "title": "Filter[MemoColumns]"
+      },
       "Filter_SearchColumns_": {
         "properties": {
           "items": {
@@ -7234,33 +7298,10 @@
         "title": "LogicalOperator",
         "description": "This tells our filter how to combine multiple column expressions."
       },
-      "MemoContentQuery": {
-        "properties": {
-          "proj_id": {
-            "type": "integer",
-            "title": "Proj Id",
-            "description": "The ID of the Project the Memo have to belong to."
-          },
-          "user_id": {
-            "type": "integer",
-            "title": "User Id",
-            "description": "The ID of the User the Memo have to belong to."
-          },
-          "starred": {
-            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
-            "title": "Starred",
-            "description": "If set (i.e. not NULL / NONE), only returns Memo that have the given starred status"
-          },
-          "content_query": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Content Query",
-            "description": "The query term to search within the content of the Memo"
-          }
-        },
-        "type": "object",
-        "required": ["proj_id", "user_id", "content_query"],
-        "title": "MemoContentQuery"
+      "MemoColumns": {
+        "type": "string",
+        "enum": ["M_TITLE", "M_CONTENT", "M_STARRED", "M_USER_ID"],
+        "title": "MemoColumns"
       },
       "MemoCreate": {
         "properties": {
@@ -7357,7 +7398,7 @@
             "items": { "$ref": "#/components/schemas/ElasticSearchDocumentHit" },
             "type": "array",
             "title": "Hits",
-            "description": "The IDs, scores and (optional) highlights of SourceDocument search results on the requested page."
+            "description": "The IDs, scores and (optional) highlights of Document search results on the requested page."
           },
           "total_results": {
             "type": "integer",
@@ -7368,64 +7409,6 @@
         "type": "object",
         "required": ["hits", "total_results"],
         "title": "PaginatedElasticSearchDocumentHits"
-      },
-      "PaginatedMemoSearchResults": {
-        "properties": {
-          "has_more": {
-            "type": "boolean",
-            "title": "Has More",
-            "description": "Flag that indicates whether there are more search results."
-          },
-          "total": { "type": "integer", "title": "Total", "description": "The total number of results." },
-          "current_page_offset": {
-            "type": "integer",
-            "title": "Current Page Offset",
-            "description": "The offset that returns the current results."
-          },
-          "next_page_offset": {
-            "type": "integer",
-            "title": "Next Page Offset",
-            "description": "The offset that returns the next results."
-          },
-          "memos": {
-            "items": { "$ref": "#/components/schemas/MemoRead" },
-            "type": "array",
-            "title": "Memos",
-            "description": "The Memo search results on the requested page."
-          }
-        },
-        "type": "object",
-        "required": ["has_more", "total", "current_page_offset", "next_page_offset", "memos"],
-        "title": "PaginatedMemoSearchResults"
-      },
-      "PaginatedSourceDocumentReads": {
-        "properties": {
-          "has_more": {
-            "type": "boolean",
-            "title": "Has More",
-            "description": "Flag that indicates whether there are more search results."
-          },
-          "total": { "type": "integer", "title": "Total", "description": "The total number of results." },
-          "current_page_offset": {
-            "type": "integer",
-            "title": "Current Page Offset",
-            "description": "The offset that returns the current results."
-          },
-          "next_page_offset": {
-            "type": "integer",
-            "title": "Next Page Offset",
-            "description": "The offset that returns the next results."
-          },
-          "sdocs": {
-            "items": { "$ref": "#/components/schemas/SourceDocumentRead" },
-            "type": "array",
-            "title": "Sdocs",
-            "description": "The SourceDocuments on this page"
-          }
-        },
-        "type": "object",
-        "required": ["has_more", "total", "current_page_offset", "next_page_offset", "sdocs"],
-        "title": "PaginatedSourceDocumentReads"
       },
       "PreProProjectStatus": {
         "properties": {
@@ -7973,6 +7956,18 @@
         "type": "object",
         "required": ["column", "direction"],
         "title": "Sort[AnnotatedSegmentsColumns]"
+      },
+      "Sort_MemoColumns_": {
+        "properties": {
+          "column": {
+            "anyOf": [{ "$ref": "#/components/schemas/MemoColumns" }, { "type": "integer" }],
+            "title": "Column"
+          },
+          "direction": { "$ref": "#/components/schemas/SortDirection" }
+        },
+        "type": "object",
+        "required": ["column", "direction"],
+        "title": "Sort[MemoColumns]"
       },
       "Sort_SearchColumns_": {
         "properties": {

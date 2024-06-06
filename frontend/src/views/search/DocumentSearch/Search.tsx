@@ -99,7 +99,7 @@ function Search() {
         pageSize: undefined,
       }),
   });
-  const sdocIds = useMemo(() => data?.hits.map((hit) => hit.sdoc_id) || [], [data]);
+  const sdocIds = useMemo(() => data?.hits.map((hit) => hit.document_id) || [], [data]);
 
   // render
   return (

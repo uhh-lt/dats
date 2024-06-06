@@ -2,8 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey.ts";
 
 import { KeywordStat } from "./openapi/models/KeywordStat.ts";
-import { MemoContentQuery } from "./openapi/models/MemoContentQuery.ts";
-import { MemoRead } from "./openapi/models/MemoRead.ts";
 import { SimSearchImageHit } from "./openapi/models/SimSearchImageHit.ts";
 import { SimSearchSentenceHit } from "./openapi/models/SimSearchSentenceHit.ts";
 import { SpanEntityStat } from "./openapi/models/SpanEntityStat.ts";
@@ -106,24 +104,10 @@ const useSearchTagStats = (sdocIds: number[], sortStatsByGlobal: boolean) => {
   });
 };
 
-const useSearchMemoContent = (params: MemoContentQuery) =>
-  useQuery<MemoRead[], Error>({
-    queryKey: [QueryKey.MEMOS_BY_CONTENT_SEARCH, params],
-    queryFn: async () => {
-      const result = await SearchService.searchMemosByContentQuery({
-        requestBody: params,
-      });
-
-      return result.memos;
-    },
-    enabled: params.content_query.length > 0,
-  });
-
 const SearchHooks = {
   useSearchCodeStats,
   useSearchKeywordStats,
   useSearchTagStats,
-  useSearchMemoContent,
 };
 
 export default SearchHooks;

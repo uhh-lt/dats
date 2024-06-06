@@ -9,7 +9,6 @@ import type { CodeRead } from "../models/CodeRead";
 import type { DocumentTagRead } from "../models/DocumentTagRead";
 import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
-import type { PaginatedSourceDocumentReads } from "../models/PaginatedSourceDocumentReads";
 import type { PreprocessingJobRead } from "../models/PreprocessingJobRead";
 import type { ProjectCreate } from "../models/ProjectCreate";
 import type { ProjectMetadataRead } from "../models/ProjectMetadataRead";
@@ -89,44 +88,6 @@ export class ProjectService {
       url: "/project/{proj_id}",
       path: {
         proj_id: projId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns all SourceDocuments of the Project with the given ID.
-   * @returns PaginatedSourceDocumentReads Successful Response
-   * @throws ApiError
-   */
-  public static getProjectSdocs({
-    projId,
-    onlyFinished = true,
-    skip,
-    limit,
-  }: {
-    projId: number;
-    onlyFinished?: boolean;
-    /**
-     * The number of elements to skip (offset)
-     */
-    skip?: number | null;
-    /**
-     * The maximum number of returned elements
-     */
-    limit?: number | null;
-  }): CancelablePromise<PaginatedSourceDocumentReads> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/project/{proj_id}/sdoc",
-      path: {
-        proj_id: projId,
-      },
-      query: {
-        only_finished: onlyFinished,
-        skip: skip,
-        limit: limit,
       },
       errors: {
         422: `Validation Error`,

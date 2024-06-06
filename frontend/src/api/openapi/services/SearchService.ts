@@ -5,9 +5,7 @@
 import type { Body_search_search_sdocs } from "../models/Body_search_search_sdocs";
 import type { ColumnInfo_SearchColumns_ } from "../models/ColumnInfo_SearchColumns_";
 import type { KeywordStat } from "../models/KeywordStat";
-import type { MemoContentQuery } from "../models/MemoContentQuery";
 import type { PaginatedElasticSearchDocumentHits } from "../models/PaginatedElasticSearchDocumentHits";
-import type { PaginatedMemoSearchResults } from "../models/PaginatedMemoSearchResults";
 import type { SimSearchImageHit } from "../models/SimSearchImageHit";
 import type { SimSearchQuery } from "../models/SimSearchQuery";
 import type { SimSearchSentenceHit } from "../models/SimSearchSentenceHit";
@@ -154,40 +152,6 @@ export class SearchService {
       url: "/search/tag_stats",
       query: {
         sort_by_global: sortByGlobal,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns all Memos where the content matches the query via lexical search
-   * @returns PaginatedMemoSearchResults Successful Response
-   * @throws ApiError
-   */
-  public static searchMemosByContentQuery({
-    requestBody,
-    skip,
-    limit,
-  }: {
-    requestBody: MemoContentQuery;
-    /**
-     * The number of elements to skip (offset)
-     */
-    skip?: number | null;
-    /**
-     * The maximum number of returned elements
-     */
-    limit?: number | null;
-  }): CancelablePromise<PaginatedMemoSearchResults> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/search/lexical/memo/content",
-      query: {
-        skip: skip,
-        limit: limit,
       },
       body: requestBody,
       mediaType: "application/json",
