@@ -19,6 +19,7 @@ import ReduxFilterDialog from "../../../components/FilterDialog/ReduxFilterDialo
 import { MyFilter, createEmptyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 import MemoDeleteButton from "../../../components/Memo/MemoDeleteButton.tsx";
 import MemoRenderer from "../../../components/Memo/MemoRenderer.tsx";
+import MemoStarButton from "../../../components/Memo/MemoStarButton.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
 import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
@@ -266,6 +267,8 @@ function SearchMemoTable({ projectId }: SearchMemoTableProps) {
         {selectedMemoIds.length > 0 && (
           <>
             <MemoDeleteButton memoIds={selectedMemoIds} />
+            <MemoStarButton memoIds={selectedMemoIds} isStarred={true} />
+            <MemoStarButton memoIds={selectedMemoIds} isStarred={false} />
           </>
         )}
       </Stack>

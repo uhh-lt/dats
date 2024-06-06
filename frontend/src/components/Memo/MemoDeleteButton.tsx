@@ -34,7 +34,7 @@ function MemoDeleteButton({ memoIds, ...props }: MemoDeleteButtonProps & IconBut
   return (
     <Tooltip title={"Delete"}>
       <span>
-        <IconButton onClick={handleDeleteMemo} {...props}>
+        <IconButton onClick={handleDeleteMemo} disabled={deleteMutation.isPending} {...props}>
           <DeleteIcon />
         </IconButton>
       </span>

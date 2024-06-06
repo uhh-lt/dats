@@ -11,7 +11,7 @@ interface MemoStarButtonProps {
   onClick?: () => void;
 }
 
-function MemoStarButton({ memoId, isStarred, onClick, ...props }: MemoStarButtonProps & MenuItemProps) {
+function MemoStarMenuItem({ memoId, isStarred, onClick, ...props }: MemoStarButtonProps & MenuItemProps) {
   // mutation
   const updateMutation = MemoHooks.useUpdateMemo();
 
@@ -56,4 +56,4 @@ function MemoStarButton({ memoId, isStarred, onClick, ...props }: MemoStarButton
   );
 }
 
-export default MemoStarButton;
+export default MemoStarMenuItem;
