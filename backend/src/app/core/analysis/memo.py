@@ -85,7 +85,7 @@ class MemoColumns(str, AbstractColumns):
             # case MemoColumns.ATTACHED_TO:
             #     return "Attached to"
             case MemoColumns.USER_ID:
-                return "User ID"
+                return "User"
 
 
 def memo_info(
