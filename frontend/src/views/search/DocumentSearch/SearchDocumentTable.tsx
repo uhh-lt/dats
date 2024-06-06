@@ -1,16 +1,16 @@
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, Card, Toolbar, Typography } from "@mui/material";
 import parse from "html-react-parser";
 import {
   MRT_ColumnDef,
   MRT_ColumnSizingState,
   MRT_DensityState,
+  MRT_GlobalFilterTextField,
   MRT_RowSelectionState,
   MRT_RowVirtualizer,
   MRT_ShowHideColumnsButton,
   MRT_SortingState,
+  MRT_TableContainer,
   MRT_ToggleDensePaddingButton,
-  MRT_ToggleGlobalFilterButton,
-  MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
 import { useMemo, useRef } from "react";
@@ -64,7 +64,7 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
   const dispatch = useAppDispatch();
 
   // virtualization
-  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
 
   // table columns
@@ -131,8 +131,6 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
 
   // table data
   const hits = data?.hits ?? [];
-  const totalDBRowCount = data?.total_results ?? 0;
-  const totalFetched = hits.length;
 
   // table
   const table = useMaterialReactTable<ElasticSearchDocumentHit>({
@@ -150,6 +148,7 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
       isLoading: isLoading || columns.length === 0,
       showAlertBanner: isError,
       showProgressBars: isFetching,
+      showGlobalFilter: true,
     },
     // search query
     autoResetAll: false,
@@ -248,30 +247,38 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
         backgroundColor: selectedDocumentId === row.original.sdoc_id ? "lightgrey !important" : undefined,
       },
     }),
-    muiTablePaperProps: {
-      elevation: 8,
-      style: { height: "100%", display: "flex", flexDirection: "column" },
-    },
-    muiTableContainerProps: {
-      ref: tableContainerRef, //get access to the table container element
-      style: { flexGrow: 1 },
-    },
     muiToolbarAlertBannerProps: isError
       ? {
           color: "error",
           children: "Error loading data",
         }
-      : undefined,
+      : { style: { width: "100%" }, className: "fixAlertBanner" },
     // toolbar
     positionToolbarAlertBanner: "head-overlay",
-    renderTopToolbarCustomActions: () => (
-      <Stack direction={"row"} spacing={1} alignItems="center" height={48}>
+  });
+
+  return (
+    <>
+      <Toolbar
+        variant="dense"
+        sx={{
+          zIndex: (theme) => theme.zIndex.appBar + 1,
+          bgcolor: (theme) => theme.palette.background.paper,
+          borderBottom: "1px solid #e8eaed",
+          boxShadow: 4,
+          justifyContent: "center",
+          gap: 1,
+        }}
+        ref={toolbarRef}
+      >
         <ReduxFilterDialog
-          anchorEl={tableContainerRef.current}
+          anchorEl={toolbarRef.current}
           buttonProps={{ size: "small" }}
           filterName={filterName}
           filterStateSelector={filterStateSelector}
           filterActions={SearchFilterActions}
+          transformOrigin={{ horizontal: "left", vertical: "top" }}
+          anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
         />
         {selectedDocumentIds.length > 0 && (
           <>
@@ -283,26 +290,17 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
             <DownloadSdocsButton sdocIds={selectedDocumentIds} />
           </>
         )}
-      </Stack>
-    ),
-    renderToolbarInternalActions: ({ table }) => (
-      <Stack direction={"row"} spacing={1} alignItems="center" height={48}>
-        <MRT_ToggleGlobalFilterButton table={table} disabled={false} />
+        <Box sx={{ flexGrow: 1 }} />
+        <MRT_GlobalFilterTextField table={table} />
         <SearchOptionsMenu />
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleDensePaddingButton table={table} />
-      </Stack>
-    ),
-    renderBottomToolbarCustomActions: () => (
-      <Stack direction={"row"} spacing={1} alignItems="center">
-        <Typography>
-          Fetched {totalFetched} of {totalDBRowCount} total documents.
-        </Typography>
-      </Stack>
-    ),
-  });
-
-  return <MaterialReactTable table={table} />;
+      </Toolbar>
+      <Card elevation={8} sx={{ height: "100%", display: "flex", flexDirection: "column", m: 2 }}>
+        <MRT_TableContainer table={table} style={{ flexGrow: 1 }} />
+      </Card>
+    </>
+  );
 }
 
 export default SearchDocumentTable;

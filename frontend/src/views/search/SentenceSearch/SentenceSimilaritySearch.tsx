@@ -1,4 +1,4 @@
-import { Box, Divider, Typography } from "@mui/material";
+import { Divider, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
@@ -113,15 +113,13 @@ function SentenceSimilaritySearch() {
         </>
       }
       content={
-        <Box className="h100" sx={{ p: 2 }}>
-          <SentenceSimilaritySearchTable
-            projectId={projectId}
-            data={data}
-            isLoading={isLoading}
-            isFetching={isFetching}
-            isError={isError}
-          />
-        </Box>
+        <SentenceSimilaritySearchTable
+          projectId={projectId}
+          data={data}
+          isLoading={isLoading}
+          isFetching={isFetching}
+          isError={isError}
+        />
       }
       rightSidebar={
         <DocumentInformation

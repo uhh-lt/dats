@@ -47,3 +47,7 @@ code {
   background-color: yellow;
   font-style: normal;
 }
+
+.fixAlertBanner .MuiAlert-message {
+  max-width: 100% !important;
+}
