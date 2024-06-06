@@ -120,10 +120,6 @@ export const QueryKey = {
   // multiple bbox annotations (by user id and code id)
   BBOX_ANNOTATIONS_USER_CODE: "bboxAnnotationsUserCode",
 
-  // a single metadata (by metadata id)
-  SDOC_METADATA: "sdocMetadata",
-  // a single metadata (by metadata id)
-  PROJECT_METADATA: "projectMetadata",
   // project metadata (by project id)
   PROJECT_METADATAS: "projectMetadatas",
 

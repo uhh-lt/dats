@@ -25,7 +25,12 @@ function TwoSidebarsLayout({
       >
         {leftSidebar}
       </Grid>
-      <Grid item md={8} className="h100" sx={{ backgroundColor: (theme) => theme.palette.grey[200], overflow: "auto" }}>
+      <Grid
+        item
+        md={8}
+        className="myFlexContainer h100"
+        sx={{ backgroundColor: (theme) => theme.palette.grey[200], overflow: "auto" }}
+      >
         {content}
       </Grid>
       <Grid

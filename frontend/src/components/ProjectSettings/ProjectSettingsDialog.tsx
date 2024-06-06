@@ -26,7 +26,6 @@ import ProjectBackgroundTasks from "./backgroundtasks/ProjectBackgroundTasks.tsx
 import ProjectCodes from "./tabs/ProjectCodes.tsx";
 import ProjectDetails from "./tabs/ProjectDetails.tsx";
 import ProjectDocuments from "./tabs/ProjectDocuments.tsx";
-import ProjectMetadata from "./tabs/ProjectMetadata.tsx";
 import ProjectTags from "./tabs/ProjectTags.tsx";
 import ProjectUsers from "./tabs/ProjectUsers.tsx";
 
@@ -90,8 +89,7 @@ function ProjectSettingsDialog() {
             <Tab label="User" value="3" />
             <Tab label="Codes" value="4" />
             <Tab label="Tags" value="5" />
-            <Tab label="Metadata" value="6" />
-            <Tab label="Background Tasks" value="7" />
+            <Tab label="Background Tasks" value="6" />
           </Tabs>
         </AppBar>
         {project.isLoading && <DialogContent>Loading project...</DialogContent>}
@@ -114,9 +112,6 @@ function ProjectSettingsDialog() {
               <ProjectTags />
             </TabPanel>
             <TabPanel value="6" sx={{ p: 0 }} className="myFlexFillAllContainer">
-              <ProjectMetadata project={project.data} />
-            </TabPanel>
-            <TabPanel value="7" sx={{ p: 0 }} className="myFlexFillAllContainer">
               <ProjectBackgroundTasks project={project.data} />
             </TabPanel>
           </React.Fragment>

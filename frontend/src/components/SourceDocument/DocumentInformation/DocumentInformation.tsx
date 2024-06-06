@@ -11,6 +11,7 @@ import MemoDialogAPI from "../../Memo/MemoDialog/MemoDialogAPI.ts";
 import TagMenuButton from "../../Tag/TagMenu/TagMenuButton.tsx";
 import DocumentMetadataRow from "./DocumentMetadataRow/DocumentMetadataRow.tsx";
 import DocumentTagRow from "./DocumentTagRow.tsx";
+import MetadataCreateButton from "./MetadataCreateButton.tsx";
 import SdocListItem from "./SdocListItem.tsx";
 
 interface DocumentInformationProps {
@@ -58,9 +59,7 @@ export default function DocumentInformation({
         </Box>
         <Box className="myFlexFillAllContainer">
           <TabPanel value="info" sx={{ p: 1 }} className="h100">
-            <Button variant="text" size="small" startIcon={<AddCircleIcon />} disabled>
-              Add Metadata
-            </Button>
+            <MetadataCreateButton sdocId={sdocId} />
             <Stack direction="column" spacing={0.5}>
               {metadata.isLoading && (
                 <Box textAlign={"center"} pt={2}>
