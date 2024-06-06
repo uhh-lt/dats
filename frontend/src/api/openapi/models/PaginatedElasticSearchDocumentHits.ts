@@ -5,7 +5,7 @@
 import type { ElasticSearchDocumentHit } from "./ElasticSearchDocumentHit";
 export type PaginatedElasticSearchDocumentHits = {
   /**
-   * The IDs, scores and (optional) highlights of SourceDocument search results on the requested page.
+   * The IDs, scores and (optional) highlights of Document search results on the requested page.
    */
   hits: Array<ElasticSearchDocumentHit>;
   /**

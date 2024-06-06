@@ -1,15 +1,13 @@
-import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import queryClient from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
 
-import { useSelectEnabledCodes } from "./utils.ts";
 import { useAuth } from "../auth/useAuth.ts";
 import { ActionQueryParameters } from "./openapi/models/ActionQueryParameters.ts";
 import { ActionRead } from "./openapi/models/ActionRead.ts";
 import { CodeRead } from "./openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "./openapi/models/DocumentTagRead.ts";
 import { MemoRead } from "./openapi/models/MemoRead.ts";
-import { PaginatedSourceDocumentReads } from "./openapi/models/PaginatedSourceDocumentReads.ts";
 import { PreprocessingJobRead } from "./openapi/models/PreprocessingJobRead.ts";
 import { ProjectCreate } from "./openapi/models/ProjectCreate.ts";
 import { ProjectMetadataRead } from "./openapi/models/ProjectMetadataRead.ts";
@@ -17,6 +15,7 @@ import { ProjectRead } from "./openapi/models/ProjectRead.ts";
 import { ProjectUpdate } from "./openapi/models/ProjectUpdate.ts";
 import { UserRead } from "./openapi/models/UserRead.ts";
 import { ProjectService } from "./openapi/services/ProjectService.ts";
+import { useSelectEnabledCodes } from "./utils.ts";
 
 //tags
 const useGetAllTags = (projectId: number) =>
@@ -54,29 +53,6 @@ const useUploadDocument = () =>
       successMessage: (data: PreprocessingJobRead) =>
         `Successfully uploaded ${data.payloads.length} documents and started PreprocessingJob ${data.id} in the background!`,
     },
-  });
-
-const useGetProjectDocuments = (projectId: number) =>
-  useQuery<PaginatedSourceDocumentReads, Error>({
-    queryKey: [QueryKey.PROJECT_SDOCS, projectId],
-    queryFn: () =>
-      ProjectService.getProjectSdocs({
-        projId: projectId,
-      }),
-  });
-
-const useGetProjectDocumentsInfinite = (projectId: number, refetch: boolean) =>
-  useInfiniteQuery({
-    queryKey: [QueryKey.PROJECT_SDOCS_INFINITE, projectId],
-    queryFn: async ({ pageParam = 0 }) =>
-      await ProjectService.getProjectSdocs({
-        projId: projectId,
-        skip: pageParam,
-        limit: 10,
-      }),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => (lastPage.has_more ? lastPage.next_page_offset : undefined),
-    refetchInterval: refetch ? 1000 : false,
   });
 
 const useCreateProject = () => {
@@ -248,8 +224,6 @@ const ProjectHooks = {
   useDeleteProject,
   // sdoc
   useUploadDocument,
-  useGetProjectDocuments,
-  useGetProjectDocumentsInfinite,
   // users
   useGetAllUsers,
   useAddUser,
