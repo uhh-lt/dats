@@ -1,0 +1,16 @@
+{
+  "recommendations": [
+    "ms-azuretools.vscode-docker",
+    // git
+    "eamodio.gitlens",
+    "github.vscode-github-actions",
+    "github.copilot",
+    // backend
+    "ms-python.python",
+    "ms-python.debugpy",
+    "charliermarsh.ruff",
+    // frontend
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode"
+  ]
+}
