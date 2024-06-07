@@ -1,12 +1,12 @@
 import FilterDialog, { FilterDialogProps } from "../../../components/FilterDialog/FilterDialog.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { WordFrequencyFilterActions } from "./wordFrequencyFilterSlice.ts";
+import { WordFrequencyActions } from "./wordFrequencySlice.ts";
 
 function WordFrequencyFilterDialog({ anchorEl }: Pick<FilterDialogProps, "anchorEl">) {
-  const filter = useAppSelector((state) => state.wordFrequencyFilter.filter["root"]);
-  const editableFilter = useAppSelector((state) => state.wordFrequencyFilter.editableFilter);
-  const column2Info = useAppSelector((state) => state.wordFrequencyFilter.column2Info);
-  const expertMode = useAppSelector((state) => state.wordFrequencyFilter.expertMode);
+  const filter = useAppSelector((state) => state.wordFrequency.filter["root"]);
+  const editableFilter = useAppSelector((state) => state.wordFrequency.editableFilter);
+  const column2Info = useAppSelector((state) => state.wordFrequency.column2Info);
+  const expertMode = useAppSelector((state) => state.wordFrequency.expertMode);
   const dispatch = useAppDispatch();
 
   return (
@@ -14,10 +14,10 @@ function WordFrequencyFilterDialog({ anchorEl }: Pick<FilterDialogProps, "anchor
       anchorEl={anchorEl}
       filter={filter}
       editableFilter={editableFilter}
-      filterActions={WordFrequencyFilterActions}
+      filterActions={WordFrequencyActions}
       column2Info={column2Info}
       expertMode={expertMode}
-      onChangeExpertMode={(expertMode) => dispatch(WordFrequencyFilterActions.onChangeExpertMode({ expertMode }))}
+      onChangeExpertMode={(expertMode) => dispatch(WordFrequencyActions.onChangeExpertMode({ expertMode }))}
     />
   );
 }

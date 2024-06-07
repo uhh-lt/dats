@@ -8,7 +8,6 @@ import dialogReducer from "../components/dialogSlice.ts";
 import annotatedSegmentsReducer from "../views/analysis/AnnotatedSegments/annotatedSegmentsSlice.ts";
 import cotaReducer from "../views/analysis/ConceptsOverTime/cotaSlice.ts";
 import timelineAnalysisReducer from "../views/analysis/TimelineAnalysis/timelineAnalysisSlice.ts";
-import wordFrequencyFilterReducer from "../views/analysis/WordFrequency/wordFrequencyFilterSlice.ts";
 import wordFrequencyReducer from "../views/analysis/WordFrequency/wordFrequencySlice.ts";
 import analysisReducer from "../views/analysis/analysisSlice.ts";
 import annoReducer from "../views/annotation/annoSlice.ts";
@@ -44,7 +43,6 @@ export const store = configureStore({
     bboxFilter: bboxFilterReducer,
     documentTableFilter: documentTableFilterReducer,
     wordFrequency: wordFrequencyReducer,
-    wordFrequencyFilter: wordFrequencyFilterReducer,
     cota: cotaReducer,
     dialog: dialogReducer,
     documentSampler: documentSamplerReducer,

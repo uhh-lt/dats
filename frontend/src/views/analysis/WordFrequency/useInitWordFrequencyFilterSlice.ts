@@ -3,7 +3,7 @@ import { AnalysisService } from "../../../api/openapi/services/AnalysisService.t
 import { ColumnInfo } from "../../../components/FilterDialog/filterUtils.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { AppDispatch } from "../../../store/store.ts";
-import { WordFrequencyFilterActions } from "./wordFrequencyFilterSlice.ts";
+import { WordFrequencyActions } from "./wordFrequencySlice.ts";
 
 const useGetWordFrequencyTableInfo = (projectId: number, dispatch: AppDispatch) =>
   useQuery<ColumnInfo[]>({
@@ -22,7 +22,7 @@ const useGetWordFrequencyTableInfo = (projectId: number, dispatch: AppDispatch) 
           [info.column]: info,
         };
       }, {});
-      dispatch(WordFrequencyFilterActions.init({ columnInfoMap }));
+      dispatch(WordFrequencyActions.init({ columnInfoMap }));
       return columnInfo;
     },
     staleTime: Infinity,

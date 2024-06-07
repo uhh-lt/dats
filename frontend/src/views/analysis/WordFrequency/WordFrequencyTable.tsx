@@ -38,7 +38,7 @@ function WordFrequencyTable() {
   const dispatch = useAppDispatch();
 
   // filtering
-  const filter = useAppSelector((state) => state.wordFrequencyFilter.filter["root"]);
+  const filter = useAppSelector((state) => state.wordFrequency.filter["root"]);
 
   // virtualization
   const tableContainerRef = useRef<HTMLDivElement>(null);
