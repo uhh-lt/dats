@@ -24,6 +24,26 @@ export interface FilterState {
   expertMode: boolean;
 }
 
+export const createInitialFilterState = (defaultFilterExpression: MyFilterExpression): FilterState => {
+  return {
+    filter: {
+      root: {
+        id: "root",
+        logic_operator: LogicalOperator.AND,
+        items: [],
+      },
+    },
+    editableFilter: {
+      id: "root",
+      logic_operator: LogicalOperator.AND,
+      items: [],
+    },
+    defaultFilterExpression,
+    column2Info: {},
+    expertMode: false,
+  };
+};
+
 export const getOrCreateFilter = (state: FilterState, filterId: string, filter?: MyFilter): MyFilter => {
   if (!state.filter[filterId]) {
     if (filter) {

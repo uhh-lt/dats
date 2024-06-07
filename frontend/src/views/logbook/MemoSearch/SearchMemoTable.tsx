@@ -23,8 +23,8 @@ import MemoStarButton from "../../../components/Memo/MemoStarButton.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
 import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
+import { LogbookActions } from "../logbookSlice.ts";
 import SearchMemoOptionsMenu from "./SearchMemoOptionsMenu.tsx";
-import { MemoFilterActions } from "./memoFilterSlice.ts";
 import { useInitMemoFilterSlice } from "./useInitMemoFilterSlice.ts";
 
 const filterStateSelector = (state: RootState) => state.memoFilter;
@@ -42,27 +42,27 @@ function SearchMemoTable({ projectId }: SearchMemoTableProps) {
   // global client state (redux) connected to table state
   const [searchQuery, setSearchQuery] = useReduxConnector(
     (state) => state.memoFilter.searchQuery,
-    MemoFilterActions.onSearchQueryChange,
+    LogbookActions.onSearchQueryChange,
   );
   const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
     (state) => state.memoFilter.rowSelectionModel,
-    MemoFilterActions.onRowSelectionModelChange,
+    LogbookActions.onRowSelectionModelChange,
   );
   const [sortingModel, setSortingModel] = useReduxConnector(
     (state) => state.memoFilter.sortingModel,
-    MemoFilterActions.onSortModelChange,
+    LogbookActions.onSortModelChange,
   );
   const [columnVisibilityModel, setColumnVisibilityModel] = useReduxConnector(
     (state) => state.memoFilter.columnVisibilityModel,
-    MemoFilterActions.onColumnVisibilityChange,
+    LogbookActions.onColumnVisibilityChange,
   );
   const [columnSizingModel, setColumnSizingModel] = useReduxConnector(
     (state) => state.memoFilter.columnSizingModel,
-    MemoFilterActions.onColumnSizingChange,
+    LogbookActions.onColumnSizingChange,
   );
   const [gridDensity, setGridDensity] = useReduxConnector(
     (state) => state.memoFilter.gridDensity,
-    MemoFilterActions.onGridDensityChange,
+    LogbookActions.onGridDensityChange,
   );
   const selectedMemoIds = Object.keys(rowSelectionModel).map((id) => parseInt(id));
 
@@ -262,7 +262,7 @@ function SearchMemoTable({ projectId }: SearchMemoTableProps) {
           buttonProps={{ size: "small" }}
           filterName={filterName}
           filterStateSelector={filterStateSelector}
-          filterActions={MemoFilterActions}
+          filterActions={LogbookActions}
         />
         {selectedMemoIds.length > 0 && (
           <>

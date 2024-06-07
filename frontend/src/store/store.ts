@@ -13,7 +13,6 @@ import wordFrequencyFilterReducer from "../views/analysis/WordFrequency/wordFreq
 import wordFrequencyReducer from "../views/analysis/WordFrequency/wordFrequencySlice.ts";
 import analysisReducer from "../views/analysis/analysisSlice.ts";
 import annoReducer from "../views/annotation/annoSlice.ts";
-import memoFilterReducer from "../views/logbook/MemoSearch/memoFilterSlice.ts";
 import logbookReducer from "../views/logbook/logbookSlice.ts";
 import searchReducer from "../views/search/DocumentSearch/searchSlice.ts";
 import imageSearchReducer from "../views/search/ImageSearch/imageSearchSlice.ts";
@@ -51,7 +50,6 @@ export const store = configureStore({
     cota: cotaReducer,
     dialog: dialogReducer,
     documentSampler: documentSamplerReducer,
-    memoFilter: memoFilterReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
