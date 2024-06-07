@@ -27,7 +27,7 @@ import { LogbookActions } from "../logbookSlice.ts";
 import SearchMemoOptionsMenu from "./SearchMemoOptionsMenu.tsx";
 import { useInitMemoFilterSlice } from "./useInitMemoFilterSlice.ts";
 
-const filterStateSelector = (state: RootState) => state.memoFilter;
+const filterStateSelector = (state: RootState) => state.logbook;
 const filterName = "root";
 const fetchSize = 20;
 
@@ -41,27 +41,27 @@ function SearchMemoTable({ projectId }: SearchMemoTableProps) {
 
   // global client state (redux) connected to table state
   const [searchQuery, setSearchQuery] = useReduxConnector(
-    (state) => state.memoFilter.searchQuery,
+    (state) => state.logbook.searchQuery,
     LogbookActions.onSearchQueryChange,
   );
   const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
-    (state) => state.memoFilter.rowSelectionModel,
+    (state) => state.logbook.rowSelectionModel,
     LogbookActions.onRowSelectionModelChange,
   );
   const [sortingModel, setSortingModel] = useReduxConnector(
-    (state) => state.memoFilter.sortingModel,
+    (state) => state.logbook.sortingModel,
     LogbookActions.onSortModelChange,
   );
   const [columnVisibilityModel, setColumnVisibilityModel] = useReduxConnector(
-    (state) => state.memoFilter.columnVisibilityModel,
+    (state) => state.logbook.columnVisibilityModel,
     LogbookActions.onColumnVisibilityChange,
   );
   const [columnSizingModel, setColumnSizingModel] = useReduxConnector(
-    (state) => state.memoFilter.columnSizingModel,
+    (state) => state.logbook.columnSizingModel,
     LogbookActions.onColumnSizingChange,
   );
   const [gridDensity, setGridDensity] = useReduxConnector(
-    (state) => state.memoFilter.gridDensity,
+    (state) => state.logbook.gridDensity,
     LogbookActions.onGridDensityChange,
   );
   const selectedMemoIds = Object.keys(rowSelectionModel).map((id) => parseInt(id));
@@ -127,8 +127,8 @@ function SearchMemoTable({ projectId }: SearchMemoTableProps) {
   }, [tableInfo, user]);
 
   // table data
-  const filter = useAppSelector((state) => state.memoFilter.filter[filterName]) || createEmptyFilter(filterName);
-  const isSearchContent = useAppSelector((state) => state.memoFilter.isSearchContent);
+  const filter = useAppSelector((state) => state.logbook.filter[filterName]) || createEmptyFilter(filterName);
+  const isSearchContent = useAppSelector((state) => state.logbook.isSearchContent);
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchDocumentHits>({
     queryKey: [
       "search-memo-table-data",

@@ -19,7 +19,6 @@ import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 import { useAppDispatch, useAppStore } from "../../../plugins/ReduxHooks.ts";
 import ConceptEditor from "./ConceptEditor.tsx";
 import ConceptListItem from "./ConceptListItem.tsx";
-import { TimelineAnalysisFilterActions } from "./timelineAnalysisFilterSlice.ts";
 import { TimelineAnalysisActions } from "./timelineAnalysisSlice.ts";
 import { useInitTimelineAnalysisFilterSlice } from "./useInitTimelineAnalysisFilterSlice.ts";
 
@@ -63,7 +62,7 @@ function ConceptList({ timelineAnalysis }: ConceptListProps) {
     if (concept) {
       dispatch(TimelineAnalysisActions.onStartConceptEdit({ concept }));
       dispatch(
-        TimelineAnalysisFilterActions.onStartFilterEdit({
+        TimelineAnalysisActions.onStartFilterEdit({
           filterId: conceptId,
           filter: { ...concept.filter, id: conceptId } as MyFilter<TimelineAnalysisColumns>,
         }),
@@ -77,7 +76,7 @@ function ConceptList({ timelineAnalysis }: ConceptListProps) {
     if (index === -1) {
       console.error(`Concept ${concept.id} not found`);
     } else {
-      const updatedFilter = store.getState().timelineAnalysisFilter.editableFilter as MyFilter<TimelineAnalysisColumns>;
+      const updatedFilter = store.getState().timelineAnalysis.editableFilter as MyFilter<TimelineAnalysisColumns>;
       timelineAnalysis.concepts[index] = {
         ...concept,
         filter: updatedFilter,
@@ -90,7 +89,7 @@ function ConceptList({ timelineAnalysis }: ConceptListProps) {
         },
       });
     }
-    dispatch(TimelineAnalysisFilterActions.onFinishFilterEdit());
+    dispatch(TimelineAnalysisActions.onFinishFilterEdit());
     dispatch(TimelineAnalysisActions.onFinishConceptEdit());
   };
 

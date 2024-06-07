@@ -1,16 +1,16 @@
 import { Box, Typography } from "@mui/material";
 import FilterRenderer from "../../../components/FilterDialog/FilterRenderer.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { TimelineAnalysisFilterActions } from "./timelineAnalysisFilterSlice.ts";
+import { TimelineAnalysisActions } from "./timelineAnalysisSlice.ts";
 
 function ConceptFilterEditor() {
-  const filter = useAppSelector((state) => state.timelineAnalysisFilter.editableFilter);
-  const column2Info = useAppSelector((state) => state.timelineAnalysisFilter.column2Info);
+  const filter = useAppSelector((state) => state.timelineAnalysis.editableFilter);
+  const column2Info = useAppSelector((state) => state.timelineAnalysis.column2Info);
 
   return (
     <Box>
       <Typography>Filter:</Typography>
-      <FilterRenderer editableFilter={filter} filterActions={TimelineAnalysisFilterActions} column2Info={column2Info} />
+      <FilterRenderer editableFilter={filter} filterActions={TimelineAnalysisActions} column2Info={column2Info} />
     </Box>
   );
 }

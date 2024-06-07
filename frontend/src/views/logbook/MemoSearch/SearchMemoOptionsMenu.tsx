@@ -10,7 +10,7 @@ function SearchMemoOptionsMenu() {
   const open = Boolean(anchorEl);
 
   // global client state (redux)
-  const isQueryContent = useAppSelector((state) => state.memoFilter.isSearchContent);
+  const isQueryContent = useAppSelector((state) => state.logbook.isSearchContent);
   const dispatch = useAppDispatch();
 
   return (

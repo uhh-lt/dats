@@ -7,7 +7,6 @@ import satFilterReducer from "../components/SpanAnnotation/SpanAnnotationTable/s
 import dialogReducer from "../components/dialogSlice.ts";
 import annotatedSegmentsReducer from "../views/analysis/AnnotatedSegments/annotatedSegmentsSlice.ts";
 import cotaReducer from "../views/analysis/ConceptsOverTime/cotaSlice.ts";
-import timelineAnalysisFilterReducer from "../views/analysis/TimelineAnalysis/timelineAnalysisFilterSlice.ts";
 import timelineAnalysisReducer from "../views/analysis/TimelineAnalysis/timelineAnalysisSlice.ts";
 import wordFrequencyFilterReducer from "../views/analysis/WordFrequency/wordFrequencyFilterSlice.ts";
 import wordFrequencyReducer from "../views/analysis/WordFrequency/wordFrequencySlice.ts";
@@ -44,7 +43,6 @@ export const store = configureStore({
     satFilter: satFilterReducer,
     bboxFilter: bboxFilterReducer,
     documentTableFilter: documentTableFilterReducer,
-    timelineAnalysisFilter: timelineAnalysisFilterReducer,
     wordFrequency: wordFrequencyReducer,
     wordFrequencyFilter: wordFrequencyFilterReducer,
     cota: cotaReducer,
