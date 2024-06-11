@@ -68,8 +68,8 @@ const SentenceMenu = forwardRef<SentenceMenuHandle, SentenceMenuProps>(({}, ref)
   // ui events
   const handleSentenceSimilaritySearch = () => {
     closeMenu();
-    dispatch(SentenceSearchActions.onChangeSearchQuery(sentence || ""));
-    dispatch(SentenceSearchActions.clearSelectedDocuments());
+    dispatch(SentenceSearchActions.onSearchQueryChange(sentence || ""));
+    dispatch(SentenceSearchActions.onClearRowSelectionModel());
     closeMenu();
     navigate("../searchsentences");
   };

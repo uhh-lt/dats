@@ -5,7 +5,7 @@ import { TableState, initialTableState, tableReducer } from "../../../components
 import { SearchFilterActions } from "../searchFilterSlice.ts";
 
 interface SearchState {
-  expertMode: boolean;
+  expertSearchMode: boolean;
   selectedDocumentId: number | undefined;
   sortStatsByGlobal: boolean;
 }
@@ -13,7 +13,7 @@ interface SearchState {
 const initialState: TableState & SearchState = {
   ...initialTableState,
   selectedDocumentId: undefined,
-  expertMode: false,
+  expertSearchMode: false,
   sortStatsByGlobal: false,
 };
 
@@ -41,8 +41,8 @@ export const searchSlice = createSlice({
       state.sortStatsByGlobal = !state.sortStatsByGlobal;
     },
     // expert mode
-    onChangeExpertMode: (state, action: PayloadAction<boolean>) => {
-      state.expertMode = action.payload;
+    onChangeExpertSearchMode: (state, action: PayloadAction<boolean>) => {
+      state.expertSearchMode = action.payload;
     },
   },
   extraReducers(builder) {

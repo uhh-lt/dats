@@ -27,7 +27,7 @@ import SdocAnnotatorsRenderer from "../../../components/SourceDocument/SdocAnnot
 import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
 import SdocTagsRenderer from "../../../components/SourceDocument/SdocTagRenderer.tsx";
 import TagMenuButton from "../../../components/Tag/TagMenu/TagMenuButton.tsx";
-import { getSelectedDocumentIds } from "../../../components/tableSlice.ts";
+import { selectSelectedDocumentIds } from "../../../components/tableSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
 import { SearchFilterActions } from "../searchFilterSlice.ts";
@@ -62,7 +62,7 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
   const columnSizingModel = useAppSelector((state) => state.search.columnSizingModel);
   const gridDensity = useAppSelector((state) => state.search.gridDensity);
   const dispatch = useAppDispatch();
-  const selectedDocumentIds = useAppSelector((state) => getSelectedDocumentIds(state.search));
+  const selectedDocumentIds = useAppSelector((state) => selectSelectedDocumentIds(state.search));
 
   // virtualization
   const toolbarRef = useRef<HTMLDivElement>(null);

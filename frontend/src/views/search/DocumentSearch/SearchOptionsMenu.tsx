@@ -11,7 +11,7 @@ function SearchOptionsMenu() {
   const open = Boolean(anchorEl);
 
   // global client state (redux)
-  const expertMode = useAppSelector((state) => state.search.expertMode);
+  const expertMode = useAppSelector((state) => state.search.expertSearchMode);
   const dispatch = useAppDispatch();
 
   return (
@@ -44,7 +44,7 @@ function SearchOptionsMenu() {
             control={
               <Switch
                 checked={expertMode}
-                onChange={(event) => dispatch(SearchActions.onChangeExpertMode(event.target.checked))}
+                onChange={(event) => dispatch(SearchActions.onChangeExpertSearchMode(event.target.checked))}
               />
             }
             label="Expert search"

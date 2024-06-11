@@ -40,6 +40,9 @@ export const tableReducer = {
   onRowSelectionModelChange: (state: Draft<TableState>, action: PayloadAction<MRT_RowSelectionState>) => {
     state.rowSelectionModel = action.payload;
   },
+  onClearRowSelectionModel: (state: Draft<TableState>) => {
+    state.rowSelectionModel = {};
+  },
   // pagination
   onPaginationModelChange: (state: Draft<TableState>, action: PayloadAction<MRT_PaginationState>) => {
     state.paginationModel = action.payload;
@@ -63,7 +66,7 @@ export const tableReducer = {
 };
 
 // selectors
-export const getSelectedDocumentIds = (state: TableState) =>
+export const selectSelectedDocumentIds = (state: TableState) =>
   Object.keys(state.rowSelectionModel)
     .filter((key) => state.rowSelectionModel[key])
     .map((key) => parseInt(key));
