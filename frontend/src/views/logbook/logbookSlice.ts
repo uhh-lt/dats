@@ -4,6 +4,7 @@ import { MemoColumns } from "../../api/openapi/models/MemoColumns.ts";
 import { StringOperator } from "../../api/openapi/models/StringOperator.ts";
 import { FilterState, createInitialFilterState, filterReducer } from "../../components/FilterDialog/filterSlice.ts";
 import { TableState, initialTableState, tableReducer } from "../../components/tableSlice.ts";
+
 interface MemoSearchState {
   isSearchContent: boolean;
 }

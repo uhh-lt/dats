@@ -7,7 +7,11 @@ import { LogicalOperator } from "../../api/openapi/models/LogicalOperator.ts";
 import { SearchColumns } from "../../api/openapi/models/SearchColumns.ts";
 import { SourceDocumentMetadataReadResolved } from "../../api/openapi/models/SourceDocumentMetadataReadResolved.ts";
 import { StringOperator } from "../../api/openapi/models/StringOperator.ts";
-import { FilterState, filterReducer, getOrCreateFilter } from "../../components/FilterDialog/filterSlice.ts";
+import {
+  createInitialFilterState,
+  filterReducer,
+  getOrCreateFilter,
+} from "../../components/FilterDialog/filterSlice.ts";
 import {
   MyFilterExpression,
   filterOperator2FilterOperatorType,
@@ -15,28 +19,12 @@ import {
 } from "../../components/FilterDialog/filterUtils.ts";
 import { getValue } from "./metadataUtils.ts";
 
-const initialState: FilterState = {
-  filter: {
-    root: {
-      id: "root",
-      logic_operator: LogicalOperator.AND,
-      items: [],
-    },
-  },
-  editableFilter: {
-    id: "root",
-    logic_operator: LogicalOperator.AND,
-    items: [],
-  },
-  defaultFilterExpression: {
-    id: uuidv4(),
-    column: SearchColumns.SC_SOURCE_DOCUMENT_FILENAME,
-    operator: StringOperator.STRING_CONTAINS,
-    value: "",
-  },
-  column2Info: {},
-  expertMode: false,
-};
+const initialState = createInitialFilterState({
+  id: uuidv4(),
+  column: SearchColumns.SC_SOURCE_DOCUMENT_FILENAME,
+  operator: StringOperator.STRING_CONTAINS,
+  value: "",
+});
 
 const searchFilterSlice = createSlice({
   name: "searchFilter",
