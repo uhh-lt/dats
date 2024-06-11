@@ -9,7 +9,6 @@ import annotatedSegmentsReducer from "../views/analysis/AnnotatedSegments/annota
 import cotaReducer from "../views/analysis/ConceptsOverTime/cotaSlice.ts";
 import timelineAnalysisReducer from "../views/analysis/TimelineAnalysis/timelineAnalysisSlice.ts";
 import wordFrequencyReducer from "../views/analysis/WordFrequency/wordFrequencySlice.ts";
-import analysisReducer from "../views/analysis/analysisSlice.ts";
 import annoReducer from "../views/annotation/annoSlice.ts";
 import logbookReducer from "../views/logbook/logbookSlice.ts";
 import searchReducer from "../views/search/DocumentSearch/searchSlice.ts";
@@ -30,7 +29,6 @@ const persistedAnnoReducer = persistReducer(persistConfig, annoReducer);
 export const store = configureStore({
   reducer: {
     annotations: persistedAnnoReducer,
-    analysis: analysisReducer,
     search: searchReducer,
     imageSearch: imageSearchReducer,
     sentenceSearch: sentenceSearchReducer,

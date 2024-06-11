@@ -2,9 +2,8 @@ import { Card, CardHeader, Grid, Portal, Stack, Typography } from "@mui/material
 import { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import useComputeCodeTree from "../../../components/Code/CodeExplorer/useComputeCodeTree.ts";
+import UserSelectorMulti from "../../../components/User/UserSelectorMulti.tsx";
 import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
-import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import CodeFrequencyUserSelector from "./CodeFrequencyUserSelector.tsx";
 import CodeFrequencyView from "./CodeFrequencyView.tsx";
 import CodeOccurrenceTable from "./CodeOccurrenceTable.tsx";
 
@@ -15,7 +14,7 @@ function CodeFrequencyAnalysis() {
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // global client state (react-redux)
-  const selectedUserIds = useAppSelector((state) => state.analysis.selectedUserIds);
+  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
 
   // custom hook
   const { codeTree, allCodes } = useComputeCodeTree();
@@ -40,19 +39,30 @@ function CodeFrequencyAnalysis() {
           </Portal>
           <Grid item xs={6} className="h100" sx={{ overflowY: "auto", pr: 1, py: 1 }}>
             <Stack spacing={2}>
-              <CodeFrequencyUserSelector projectId={projectId} />
-              <CodeFrequencyView
-                key={selectedUserIds?.join(",")} // re-render when selectedUserIds change
+              <UserSelectorMulti
                 projectId={projectId}
-                userIds={selectedUserIds || []}
-                data={codeTree}
-                setSelectedCode={setSelectedCode}
+                userIds={selectedUserIds}
+                onUserIdChange={setSelectedUserIds}
+                title="User(s)"
               />
+              {selectedUserIds.length === 0 ? (
+                <Card variant="outlined">
+                  <CardHeader title={`Select user(s) above!`} />
+                </Card>
+              ) : (
+                <CodeFrequencyView
+                  key={selectedUserIds.join(",")} // re-render when selectedUserIds change
+                  projectId={projectId}
+                  userIds={selectedUserIds}
+                  data={codeTree}
+                  setSelectedCode={setSelectedCode}
+                />
+              )}
             </Stack>
           </Grid>
           <Grid item xs={6} className="h100" sx={{ py: 1 }}>
             {selectedCode ? (
-              <CodeOccurrenceTable projectId={projectId} codeId={selectedCode} userIds={selectedUserIds || []} />
+              <CodeOccurrenceTable projectId={projectId} codeId={selectedCode} userIds={selectedUserIds} />
             ) : (
               <Card className="h100" variant="outlined">
                 <CardHeader title={`Click on a bar / slice to see occurrences!`} />
