@@ -1,4 +1,4 @@
-import { Draft, PayloadAction } from "@reduxjs/toolkit";
+import { Draft, PayloadAction, createSelector } from "@reduxjs/toolkit";
 import {
   MRT_ColumnSizingState,
   MRT_DensityState,
@@ -66,7 +66,10 @@ export const tableReducer = {
 };
 
 // selectors
-export const selectSelectedDocumentIds = (state: TableState) =>
-  Object.keys(state.rowSelectionModel)
-    .filter((key) => state.rowSelectionModel[key])
+export const selectRowSelectionModel = (state: TableState) => state.rowSelectionModel;
+
+export const selectSelectedDocumentIds = createSelector([selectRowSelectionModel], (rowSelectionModel) => {
+  return Object.keys(rowSelectionModel)
+    .filter((key) => rowSelectionModel[key])
     .map((key) => parseInt(key));
+});
