@@ -181,7 +181,7 @@ function WordFrequencyTable() {
     enableRowSelection: true,
     onRowSelectionChange: (updater) => {
       const newRowSelectionModel = updater instanceof Function ? updater(rowSelectionModel) : updater;
-      dispatch(WordFrequencyActions.onSelectionModelChange(newRowSelectionModel));
+      dispatch(WordFrequencyActions.onRowSelectionModelChange(newRowSelectionModel));
     },
     // virtualization
     enableRowVirtualization: true,
@@ -196,12 +196,12 @@ function WordFrequencyTable() {
     manualSorting: true,
     onSortingChange: (updater) => {
       const newSortingModel = updater instanceof Function ? updater(sortingModel) : updater;
-      dispatch(WordFrequencyActions.onSortingModelChange(newSortingModel));
+      dispatch(WordFrequencyActions.onSortModelChange(newSortingModel));
     },
     // column visiblility
     onColumnVisibilityChange: (updater) => {
       const newVisibilityModel = updater instanceof Function ? updater(columnVisibilityModel) : updater;
-      dispatch(WordFrequencyActions.onColumnVisibilityModelChange(newVisibilityModel));
+      dispatch(WordFrequencyActions.onColumnVisibilityChange(newVisibilityModel));
     },
     // mui components
     muiTablePaperProps: {
