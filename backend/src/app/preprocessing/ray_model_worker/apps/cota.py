@@ -1,6 +1,6 @@
 import logging
 
-from dto.cota import RayCOTARefinementJob
+from dto.cota import RayCOTAJobInput, RayCOTAJobResponse
 from fastapi import FastAPI
 from models.cota import CotaModel
 from ray import serve
@@ -17,10 +17,9 @@ class CotaApi:
     def __init__(self, cota_model_handle: DeploymentHandle) -> None:
         self.cota = cota_model_handle
 
-    @api.post("/refinement", response_model=RayCOTARefinementJob)
-    async def refinement(self, input: RayCOTARefinementJob):
-        refinement_result = await self.cota.refinement.remote(input)
-        return refinement_result
+    @api.post("/finetune_apply_compute", response_model=RayCOTAJobResponse)
+    async def finetune_apply_compute(self, input: RayCOTAJobInput):
+        return await self.cota.finetune_apply_compute.remote(input)
 
 
 app = CotaApi.bind(

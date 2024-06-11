@@ -143,7 +143,7 @@ services:
       TRANSFORMERS_CACHE: /models_cache
       TORCH_HOME: /models_cache
       NUMBA_CACHE_DIR: /numba_cache
-      SHARED_REPO_ROOT: ${SHARED_REPO_ROOT:-/tmp/dwts}
+      SHARED_REPO_ROOT: ${SHARED_REPO_ROOT:-/tmp/dats}
     volumes:
       - ../backend/src:/dats_code/src
       - ./backend_repo:${SHARED_REPO_ROOT:-/tmp/dats}
@@ -190,12 +190,14 @@ services:
       RAY_PROCESSING_DEVICE_CLIP: ${RAY_PROCESSING_DEVICE_CLIP:-cuda}
       RAY_PROCESSING_DEVICE_COTA: ${RAY_PROCESSING_DEVICE_COTA:-cuda}
       RAY_BLIP2_PRECISION_BIT: ${RAY_BLIP2_PRECISION_BIT:-32}
-      SHARED_REPO_ROOT: ${SHARED_REPO_ROOT:-/tmp/dwts}
+      SHARED_REPO_ROOT: ${SHARED_REPO_ROOT:-/tmp/dats}
+      NUMBA_CACHE_DIR: /numba_cache
     volumes:
       - ../backend/src/app/preprocessing/ray_model_worker:/dats_code_ray
       - ./spacy_models:/spacy_models
       - ./backend_repo:${SHARED_REPO_ROOT:-/tmp/dats}
       - ./models_cache:/models_cache
+      - ./numba_cache:/numba_cache
     ports:
       - "${RAY_API_EXPOSED:-8000}:8000"
       - "${RAY_DASHBOARD_EXPOSED:-8265}:8265"
@@ -251,7 +253,7 @@ services:
       SYSTEM_USER_LAST_NAME: ${SYSTEM_USER_LAST_NAME}
       SYSTEM_USER_EMAIL: ${SYSTEM_USER_EMAIL}
       SYSTEM_USER_PASSWORD: ${SYSTEM_USER_PASSWORD}
-      SHARED_REPO_ROOT: ${SHARED_REPO_ROOT:-/tmp/dwts}
+      SHARED_REPO_ROOT: ${SHARED_REPO_ROOT:-/tmp/dats}
     healthcheck:
       test: curl --fail "http://localhost:${API_PORT}" || exit 1
       interval: 60s

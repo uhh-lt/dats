@@ -238,7 +238,6 @@ class RepoService(metaclass=SingletonMeta):
 
     def create_directory_structure_for_project(self, proj_id: int) -> Optional[Path]:
         paths = [
-            self.get_embeddings_root_dir(proj_id=proj_id),
             self.get_models_root_path(proj_id=proj_id),
             self.get_dataloaders_root_dir(proj_id=proj_id),
             self._get_project_repo_sdocs_root_path(proj_id=proj_id),
@@ -523,28 +522,4 @@ class RepoService(metaclass=SingletonMeta):
     ) -> bool:
         return self.get_dataloader_filename(
             proj_id=proj_id, dataloader_name=dataloader_name
-        ).exists()
-
-    def get_embeddings_root_dir(self, proj_id: int) -> Path:
-        return self.get_project_repo_root_path(proj_id=proj_id).joinpath("embeddings")
-
-    def get_embeddings_filename(
-        self,
-        proj_id: int,
-        embedding_name: str,
-        embeddings_prefix: str = "cota_",
-    ) -> Path:
-        return (
-            self.get_embeddings_root_dir(proj_id=proj_id)
-            / f"{embeddings_prefix}{embedding_name}.pt"
-        )
-
-    def embeddings_exists(
-        self,
-        proj_id: int,
-        embedding_name: str,
-        embeddings_prefix: str = "cota_",
-    ) -> bool:
-        return self.get_embeddings_filename(
-            proj_id=proj_id, embedding_name=embedding_name
         ).exists()

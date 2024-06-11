@@ -10,7 +10,10 @@ from app.preprocessing.ray_model_worker.dto.clip import (
     ClipImageEmbeddingInput,
     ClipTextEmbeddingInput,
 )
-from app.preprocessing.ray_model_worker.dto.cota import RayCOTARefinementJob
+from app.preprocessing.ray_model_worker.dto.cota import (
+    RayCOTAJobInput,
+    RayCOTAJobResponse,
+)
 from app.preprocessing.ray_model_worker.dto.detr import (
     DETRFilePathInput,
     DETRObjectDetectionOutput,
@@ -125,6 +128,8 @@ class RayModelService(metaclass=SingletonMeta):
         response = self._make_post_request("/clip/embedding/image", input.model_dump())
         return ClipEmbeddingOutput.model_validate(response.json())
 
-    def cota_refinement(self, input: RayCOTARefinementJob) -> RayCOTARefinementJob:
-        response = self._make_post_request("/cota/refinement", input.model_dump())
-        return RayCOTARefinementJob.model_validate(response.json())
+    def cota_finetune_apply_compute(self, input: RayCOTAJobInput) -> RayCOTAJobResponse:
+        response = self._make_post_request(
+            "/cota/finetune_apply_compute", input.model_dump()
+        )
+        return RayCOTAJobResponse.model_validate(response.json())

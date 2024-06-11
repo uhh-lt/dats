@@ -1,58 +1,63 @@
 from typing import Dict, List
 
 import numpy as np
-import torch
-import umap
+from loguru import logger
+from umap.umap_ import UMAP
 
 from app.core.analysis.cota.pipeline.cargo import Cargo
 from app.core.analysis.cota.pipeline.steps.util import (
     has_min_concept_sentence_annotations,
 )
+from app.core.cota.cota_service import CotaService
 from app.core.data.dto.concept_over_time_analysis import (
     COTASentence,
 )
+from app.core.data.repo.repo_service import RepoService
+from app.core.search.simsearch_service import SimSearchService
+
+cs = CotaService()
+repo: RepoService = RepoService()
+sims: SimSearchService = SimSearchService()
 
 
-def compute_results(cargo: Cargo) -> Cargo:
+def finetune_apply_compute(cargo: Cargo) -> Cargo:
     # 1. get required data
     search_space: List[COTASentence] = cargo.data["search_space"]
-    search_space_embeddings: torch.Tensor = cargo.data["search_space_embeddings"]
-    probabilities = cargo.data["concept_probabilities"]
 
     # 2. rank search space sentences for each concept
     # this can only be done if a concept has sentence annotations, because we need those to compute the concept representation
     # if we do not have sentence annotations, the ranking / similarities were already computed by the initial simsearch (in the first step)
     if has_min_concept_sentence_annotations(cargo):
-        # 2.1 compute representation for each concept
-        annotation_indices = get_annotation_sentence_indices(cargo)
-        concept_embeddings: Dict[str, torch.Tensor] = (
-            dict()
-        )  # Dict[concept_id, concept_embedding]
-        for concept in cargo.job.cota.concepts:
-            # the concept representation is the average of all annotated concept sentences
-            concept_embeddings[concept.id] = search_space_embeddings[
-                annotation_indices[concept.id]
-            ].mean(axis=0)  # TODO: normalize??
-
-        # 2.2  compute similarity of average representation to each sentence
-        concept_similarities: Dict[str, List[float]] = (
-            dict()
-        )  # Dict[concept_id, List[similarity]]
-        for concept_id, concept_embedding in concept_embeddings.items():
-            sims = concept_embedding @ search_space_embeddings.T
-            concept_similarities[concept_id] = sims.tolist()  # TODO normalize?
-
-        # 2.3 update search_space with the concept similarities
+        visual_refined_embeddings: List[List[float]]
+        concept_similarities: Dict[str, List[float]]
+        probabilities: List[List[float]]
+        # visual_refined_embeddings, probabilities = call_ray()
+        visual_refined_embeddings, concept_similarities, probabilities = (
+            cs.cota_finetune_apply_compute(
+                cota_id=cargo.job.cota.id,
+                project_id=cargo.job.cota.project_id,
+                min_required_annotations_per_concept=cargo.job.cota.training_settings.min_required_annotations_per_concept,
+                concepts=cargo.job.cota.concepts,
+                search_space=search_space,
+            )
+        )
+        # update search_space with the concept similarities
         for concept_id, similarities in concept_similarities.items():
             for sentence, similarity in zip(search_space, similarities):
                 sentence.concept_similarities[concept_id] = similarity
 
+    else:
+        embeddings_tensor = sims.get_sentence_embeddings(
+            search_tuples=[
+                (cota_sent.sentence_id, cota_sent.sdoc_id) for cota_sent in search_space
+            ]
+        )
+        probabilities = [[0.5, 0.5] for _ in search_space]
+        logger.debug("No model exists. We use weaviate embeddings.")
+        visual_refined_embeddings = apply_umap(embs=embeddings_tensor, n_components=2)
+        cargo.data["search_space_embeddings"] = embeddings_tensor
+    cargo.data["concept_probabilities"] = probabilities
     # 3. Visualize results: Reduce the refined embeddings with UMAP to 2D
-    # 3.1 reduce the dimensionality of the refined embeddings with UMAP
-
-    visual_refined_embeddings = apply_umap(
-        embs=search_space_embeddings, n_components=2, return_list=True
-    )
 
     # 3.2 update search_space with the 2D coordinates
     for sentence, coordinates in zip(search_space, visual_refined_embeddings):
@@ -60,8 +65,8 @@ def compute_results(cargo: Cargo) -> Cargo:
         sentence.y = coordinates[1]
 
     # 4. update search_space with concept_probabilities
-    for sentence, probabilities in zip(search_space, probabilities):
-        for concept, probability in zip(cargo.job.cota.concepts, probabilities):
+    for sentence, probabilities_outer in zip(search_space, probabilities):
+        for concept, probability in zip(cargo.job.cota.concepts, probabilities_outer):
             sentence.concept_probabilities[concept.id] = probability
 
     return cargo
@@ -80,16 +85,10 @@ def get_annotation_sentence_indices(cargo: Cargo) -> Dict[str, List[int]]:
 
 
 def apply_umap(
-    embs: torch.Tensor | np.ndarray,
+    embs: np.ndarray,
     n_components: int,
-    return_list: bool = True,
-) -> np.ndarray | List[List[float]]:
-    if isinstance(embs, torch.Tensor):
-        embs = embs.cpu().numpy()
-    reducer = umap.UMAP(n_components=n_components)
+) -> List[List[float]]:
+    reducer = UMAP(n_components=n_components)
     reduced_embs = reducer.fit_transform(embs)
-
-    if return_list:
-        return reduced_embs.tolist()
-
-    return reduced_embs
+    assert isinstance(reduced_embs, np.ndarray)
+    return reduced_embs.tolist()

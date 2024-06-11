@@ -2,6 +2,7 @@ accelerate==0.22.0
 bitsandbytes==0.41.1
 ctranslate2==3.19.0
 cupy-cuda11x==12.2.0
+datasets
 faster-whisper==0.8.0
 ffmpeg-python==0.2.0
 omegaconf==2.3.0
