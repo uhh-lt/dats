@@ -17,12 +17,15 @@ import { WordFrequencyResult } from "../../../api/openapi/models/WordFrequencyRe
 import { WordFrequencyStat } from "../../../api/openapi/models/WordFrequencyStat.ts";
 import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
+import ReduxFilterDialog from "../../../components/FilterDialog/ReduxFilterDialog.tsx";
 import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import WordFrequencyFilterDialog from "./WordFrequencyFilterDialog.tsx";
+import { RootState } from "../../../store/store.ts";
 import { useInitWordFrequencyFilterSlice } from "./useInitWordFrequencyFilterSlice.ts";
 import { WordFrequencyActions } from "./wordFrequencySlice.ts";
 
+const filterStateSelector = (state: RootState) => state.wordFrequency;
+const filterName = "root";
 const fetchSize = 20;
 
 function WordFrequencyTable() {
@@ -228,7 +231,13 @@ function WordFrequencyTable() {
     ),
     renderTopToolbarCustomActions: () => (
       <Stack direction={"row"} spacing={1} alignItems="center" height={48}>
-        <WordFrequencyFilterDialog anchorEl={tableContainerRef.current} />
+        <ReduxFilterDialog
+          anchorEl={tableContainerRef.current}
+          buttonProps={{ size: "small" }}
+          filterName={filterName}
+          filterStateSelector={filterStateSelector}
+          filterActions={WordFrequencyActions}
+        />
       </Stack>
     ),
     renderToolbarInternalActions: ({ table }) => (
