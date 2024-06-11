@@ -13,7 +13,6 @@ import {
   filterOperator2FilterOperatorType,
   getDefaultOperator,
 } from "../../components/FilterDialog/filterUtils.ts";
-import { SearchActions } from "./DocumentSearch/searchSlice.ts";
 import { getValue } from "./metadataUtils.ts";
 
 const initialState: FilterState = {
@@ -114,15 +113,6 @@ const searchFilterSlice = createSlice({
         },
       ];
     },
-  },
-  extraReducers(builder) {
-    builder.addCase(SearchActions.onClearSearch, (state) => {
-      state.filter["root"] = {
-        id: "root",
-        logic_operator: LogicalOperator.AND,
-        items: [],
-      };
-    });
   },
 });
 

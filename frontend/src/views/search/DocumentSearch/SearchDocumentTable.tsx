@@ -27,6 +27,7 @@ import SdocAnnotatorsRenderer from "../../../components/SourceDocument/SdocAnnot
 import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
 import SdocTagsRenderer from "../../../components/SourceDocument/SdocTagRenderer.tsx";
 import TagMenuButton from "../../../components/Tag/TagMenu/TagMenuButton.tsx";
+import { getSelectedDocumentIds } from "../../../components/tableSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
 import { SearchFilterActions } from "../searchFilterSlice.ts";
@@ -54,14 +55,14 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
 
   // global client state (redux)
   const searchQuery = useAppSelector((state) => state.search.searchQuery);
-  const rowSelectionModel = useAppSelector((state) => state.search.selectionModel);
+  const rowSelectionModel = useAppSelector((state) => state.search.rowSelectionModel);
   const selectedDocumentId = useAppSelector((state) => state.search.selectedDocumentId);
-  const selectedDocumentIds = useAppSelector((state) => state.search.selectedDocumentIds);
   const sortingModel = useAppSelector((state) => state.search.sortingModel);
   const columnVisibilityModel = useAppSelector((state) => state.search.columnVisibilityModel);
   const columnSizingModel = useAppSelector((state) => state.search.columnSizingModel);
   const gridDensity = useAppSelector((state) => state.search.gridDensity);
   const dispatch = useAppDispatch();
+  const selectedDocumentIds = useAppSelector((state) => getSelectedDocumentIds(state.search));
 
   // virtualization
   const toolbarRef = useRef<HTMLDivElement>(null);
@@ -161,7 +162,7 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
       } else {
         newSearchQuery = globalFilterUpdater;
       }
-      dispatch(SearchActions.onChangeSearchQuery(newSearchQuery || ""));
+      dispatch(SearchActions.onSearchQueryChange(newSearchQuery || ""));
     },
     // selection
     enableRowSelection: true,
@@ -172,7 +173,7 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
       } else {
         newRowSelectionModel = rowSelectionUpdater;
       }
-      dispatch(SearchActions.onUpdateSelectionModel(newRowSelectionModel));
+      dispatch(SearchActions.onRowSelectionModelChange(newRowSelectionModel));
     },
     // virtualization
     enableRowVirtualization: true,
@@ -201,7 +202,7 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
       } else {
         newGridDensity = densityUpdater;
       }
-      dispatch(SearchActions.setTableDensity(newGridDensity));
+      dispatch(SearchActions.onGridDensityChange(newGridDensity));
     },
     // column visiblility
     onColumnVisibilityChange: (updater) => {

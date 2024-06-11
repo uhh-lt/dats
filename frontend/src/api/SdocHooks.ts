@@ -85,17 +85,6 @@ const useGetLinkedSdocIds = (sdocId: number | null | undefined) =>
     enabled: !!sdocId,
   });
 
-const useDeleteDocument = () =>
-  useMutation({
-    mutationFn: SourceDocumentService.deleteById,
-    onSuccess: (sdoc) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_SDOCS, sdoc.project_id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_SDOCS_INFINITE, sdoc.project_id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, sdoc.project_id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOCS_BY_PROJECT_AND_TAG_SEARCH, sdoc.project_id] });
-    },
-  });
-
 const useDeleteDocuments = () =>
   useMutation({
     mutationFn: ({ sdocIds }: { sdocIds: number[] }) => {
@@ -103,6 +92,7 @@ const useDeleteDocuments = () =>
       return Promise.all(promises);
     },
     onSuccess: (sdocs) => {
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
       sdocs.forEach((sdoc) => {
         queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_SDOCS, sdoc.project_id] });
         queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_SDOCS_INFINITE, sdoc.project_id] });
@@ -304,7 +294,6 @@ const SdocHooks = {
   useGetDocument,
   useGetDocumentByAdocId,
   useGetLinkedSdocIds,
-  useDeleteDocument,
   useDeleteDocuments,
   useGetDocumentIdByFilename,
   // tags

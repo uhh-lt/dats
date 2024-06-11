@@ -61,3 +61,9 @@ export const tableReducer = {
     state.gridDensity = action.payload;
   },
 };
+
+// selectors
+export const getSelectedDocumentIds = (state: TableState) =>
+  Object.keys(state.rowSelectionModel)
+    .filter((key) => state.rowSelectionModel[key])
+    .map((key) => parseInt(key));

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
+import { QueryKey } from "../../../api/QueryKey.ts";
 import { PaginatedElasticSearchDocumentHits } from "../../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
 import { SearchColumns } from "../../../api/openapi/models/SearchColumns.ts";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
@@ -76,7 +77,7 @@ function Search() {
   const sortingModel = useAppSelector((state) => state.search.sortingModel);
   const { data, isError, isFetching, isLoading } = useQuery<PaginatedElasticSearchDocumentHits>({
     queryKey: [
-      "search-document-table-data",
+      QueryKey.SEARCH_TABLE,
       projectId,
       searchQuery, // refetch when searchQuery changes
       filter, // refetch when columnFilters changes
