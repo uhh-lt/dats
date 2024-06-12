@@ -1,18 +1,24 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import numpy as np
 from loguru import logger
 from umap.umap_ import UMAP
 
 from app.core.analysis.cota.pipeline.cargo import Cargo
-from app.core.cota.cota_service import CotaService
 from app.core.data.dto.concept_over_time_analysis import (
+    COTAConcept,
     COTASentence,
 )
 from app.core.data.repo.repo_service import RepoService
 from app.core.search.simsearch_service import SimSearchService
+from app.preprocessing.ray_model_service import RayModelService
+from app.preprocessing.ray_model_worker.dto.cota import (
+    RayCOTAJobInput,
+    RayCOTAJobResponse,
+    RayCOTASentenceBase,
+)
 
-cs = CotaService()
+rms: RayModelService = RayModelService()
 repo: RepoService = RepoService()
 sims: SimSearchService = SimSearchService()
 
@@ -27,7 +33,7 @@ def finetune_apply_compute(cargo: Cargo) -> Cargo:
     if __has_min_concept_sentence_annotations(cargo):
         # visual_refined_embeddings, probabilities = call_ray()
         visual_refined_embeddings, concept_similarities, probabilities = (
-            cs.cota_finetune_apply_compute(
+            __ray_cota_finetune_apply_compute(
                 cota_id=cargo.job.cota.id,
                 project_id=cargo.job.cota.project_id,
                 concepts=cargo.job.cota.concepts,
@@ -61,6 +67,33 @@ def finetune_apply_compute(cargo: Cargo) -> Cargo:
             sentence.concept_probabilities[concept.id] = probability
 
     return cargo
+
+
+def __ray_cota_finetune_apply_compute(
+    cota_id: int,
+    project_id: int,
+    concepts: List[COTAConcept],
+    search_space: List[COTASentence],
+) -> Tuple[List[List[float]], Dict[str, List[float]], List[List[float]]]:
+    concept_ids: List[str] = [concept.id for concept in concepts]
+    ray_search_space: List[RayCOTASentenceBase] = [
+        RayCOTASentenceBase(
+            concept_annotation=sentence.concept_annotation, text=sentence.text
+        )
+        for sentence in search_space
+    ]
+    job = RayCOTAJobInput(
+        id=cota_id,
+        project_id=project_id,
+        concept_ids=concept_ids,
+        search_space=ray_search_space,
+    )
+    response: RayCOTAJobResponse = rms.cota_finetune_apply_compute(job)
+    return (
+        response.visual_refined_embeddings,
+        response.concept_similarities,
+        response.probabilities,
+    )
 
 
 def __apply_umap(
