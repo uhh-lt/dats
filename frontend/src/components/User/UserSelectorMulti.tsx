@@ -1,4 +1,13 @@
-import { Checkbox, FormControl, InputLabel, ListItemText, MenuItem, Select, SelectChangeEvent } from "@mui/material";
+import {
+  Checkbox,
+  FormControl,
+  FormControlProps,
+  InputLabel,
+  ListItemText,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
+} from "@mui/material";
 import React from "react";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import UserName from "./UserName.tsx";
@@ -10,7 +19,13 @@ interface UserSelectorProps {
   title: string;
 }
 
-function UserSelectorMulti({ projectId, userIds, onUserIdChange, title }: UserSelectorProps) {
+function UserSelectorMulti({
+  projectId,
+  userIds,
+  onUserIdChange,
+  title,
+  ...props
+}: UserSelectorProps & FormControlProps) {
   // global server state (react query)
   const projectUsers = ProjectHooks.useGetAllUsers(projectId);
 
@@ -21,7 +36,7 @@ function UserSelectorMulti({ projectId, userIds, onUserIdChange, title }: UserSe
 
   // render
   return (
-    <FormControl>
+    <FormControl {...props}>
       <InputLabel id="multi-user-select-label">{title}</InputLabel>
       <Select
         labelId="multi-user-select-label"
@@ -30,6 +45,7 @@ function UserSelectorMulti({ projectId, userIds, onUserIdChange, title }: UserSe
         multiple
         onChange={handleChange}
         disabled={!projectUsers.isSuccess}
+        fullWidth
         renderValue={(userIds) =>
           userIds.map((userId, index) => (
             <React.Fragment key={userId}>

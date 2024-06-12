@@ -29,7 +29,7 @@ function CodeFrequencyAnalysis() {
   }, [selectedUserIds]);
 
   return (
-    <Grid container columnSpacing={1} className="h100" px={2} pt={2}>
+    <Grid container columnSpacing={1} className="h100" px={2} pt={2} bgcolor="grey.200">
       {codeTree ? (
         <>
           <Portal container={appBarContainerRef?.current}>
@@ -44,6 +44,8 @@ function CodeFrequencyAnalysis() {
                 userIds={selectedUserIds}
                 onUserIdChange={setSelectedUserIds}
                 title="User(s)"
+                fullWidth
+                sx={{ bgcolor: "background.paper" }}
               />
               {selectedUserIds.length === 0 ? (
                 <Card variant="outlined">
