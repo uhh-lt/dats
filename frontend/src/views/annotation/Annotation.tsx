@@ -100,30 +100,32 @@ function Annotation() {
       </Portal>
       <TwoSidebarsLayout
         leftSidebar={
-          <TabContext value={tab}>
-            <Box sx={{ borderBottom: 1, borderColor: "divider" }} className="myFlexFitContentContainer">
-              <Tabs value={tab} onChange={handleTabChange} variant="scrollable">
-                <Tab label="Code Explorer" value="code" />
-                <Tab label="Annotation Explorer" value="Annotation" />
-              </Tabs>
-            </Box>
-            <Box className="myFlexFillAllContainer">
-              <TabPanel value="code" style={{ padding: 0 }} className="h100">
-                <CodeExplorer className="h100" />
-              </TabPanel>
-              {annotationDocument.isSuccess && sdoc.isSuccess && (
-                <TabPanel value="Annotation" style={{ padding: 0 }} className="h100">
-                  {sdoc.data.doctype === DocType.TEXT ? (
-                    <SpanAnnotationExplorer />
-                  ) : sdoc.data.doctype === DocType.IMAGE ? (
-                    <BBoxAnnotationExplorer />
-                  ) : (
-                    <>Not supported (yet)!</>
-                  )}
+          <Box className="h100 myFlexContainer">
+            <TabContext value={tab}>
+              <Box sx={{ borderBottom: 1, borderColor: "divider" }} className="myFlexFitContentContainer">
+                <Tabs value={tab} onChange={handleTabChange} variant="scrollable">
+                  <Tab label="Code Explorer" value="code" />
+                  <Tab label="Annotation Explorer" value="Annotation" />
+                </Tabs>
+              </Box>
+              <Box className="myFlexFillAllContainer">
+                <TabPanel value="code" style={{ padding: 0 }} className="h100">
+                  <CodeExplorer className="h100" />
                 </TabPanel>
-              )}
-            </Box>
-          </TabContext>
+                {annotationDocument.isSuccess && sdoc.isSuccess && (
+                  <TabPanel value="Annotation" style={{ padding: 0 }} className="h100">
+                    {sdoc.data.doctype === DocType.TEXT ? (
+                      <SpanAnnotationExplorer />
+                    ) : sdoc.data.doctype === DocType.IMAGE ? (
+                      <BBoxAnnotationExplorer />
+                    ) : (
+                      <>Not supported (yet)!</>
+                    )}
+                  </TabPanel>
+                )}
+              </Box>
+            </TabContext>
+          </Box>
         }
         content={
           <>
