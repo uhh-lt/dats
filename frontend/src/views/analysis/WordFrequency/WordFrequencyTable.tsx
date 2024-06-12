@@ -19,8 +19,9 @@ import { AnalysisService } from "../../../api/openapi/services/AnalysisService.t
 import { useAuth } from "../../../auth/useAuth.ts";
 import ReduxFilterDialog from "../../../components/FilterDialog/ReduxFilterDialog.tsx";
 import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
+import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
 import { useInitWordFrequencyFilterSlice } from "./useInitWordFrequencyFilterSlice.ts";
 import { WordFrequencyActions } from "./wordFrequencySlice.ts";
 
@@ -35,10 +36,18 @@ function WordFrequencyTable() {
   const { user } = useAuth();
 
   // global client state (redux)
-  const rowSelectionModel = useAppSelector((state) => state.wordFrequency.rowSelectionModel);
-  const sortingModel = useAppSelector((state) => state.wordFrequency.sortingModel);
-  const columnVisibilityModel = useAppSelector((state) => state.wordFrequency.columnVisibilityModel);
-  const dispatch = useAppDispatch();
+  const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
+    (state) => state.wordFrequency.rowSelectionModel,
+    WordFrequencyActions.onRowSelectionChange,
+  );
+  const [sortingModel, setSortingModel] = useReduxConnector(
+    (state) => state.wordFrequency.sortingModel,
+    WordFrequencyActions.onSortChange,
+  );
+  const [columnVisibilityModel, setColumnVisibilityModel] = useReduxConnector(
+    (state) => state.wordFrequency.columnVisibilityModel,
+    WordFrequencyActions.onColumnVisibilityChange,
+  );
 
   // filtering
   const filter = useAppSelector((state) => state.wordFrequency.filter["root"]);
@@ -164,7 +173,7 @@ function WordFrequencyTable() {
   }, [fetchMoreOnBottomReached]);
 
   // table
-  const table = useMaterialReactTable({
+  const table = useMaterialReactTable<WordFrequencyStat>({
     data: flatData,
     columns: columns,
     getRowId: (row) => row.word,
@@ -179,10 +188,7 @@ function WordFrequencyTable() {
     },
     // selection
     enableRowSelection: true,
-    onRowSelectionChange: (updater) => {
-      const newRowSelectionModel = updater instanceof Function ? updater(rowSelectionModel) : updater;
-      dispatch(WordFrequencyActions.onRowSelectionModelChange(newRowSelectionModel));
-    },
+    onRowSelectionChange: setRowSelectionModel,
     // virtualization
     enableRowVirtualization: true,
     rowVirtualizerInstanceRef: rowVirtualizerInstanceRef,
@@ -194,15 +200,9 @@ function WordFrequencyTable() {
     enablePagination: false,
     // sorting
     manualSorting: true,
-    onSortingChange: (updater) => {
-      const newSortingModel = updater instanceof Function ? updater(sortingModel) : updater;
-      dispatch(WordFrequencyActions.onSortModelChange(newSortingModel));
-    },
+    onSortingChange: setSortingModel,
     // column visiblility
-    onColumnVisibilityChange: (updater) => {
-      const newVisibilityModel = updater instanceof Function ? updater(columnVisibilityModel) : updater;
-      dispatch(WordFrequencyActions.onColumnVisibilityChange(newVisibilityModel));
-    },
+    onColumnVisibilityChange: setColumnVisibilityModel,
     // mui components
     muiTablePaperProps: {
       elevation: 4,

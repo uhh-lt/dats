@@ -69,7 +69,7 @@ const SentenceMenu = forwardRef<SentenceMenuHandle, SentenceMenuProps>(({}, ref)
   const handleSentenceSimilaritySearch = () => {
     closeMenu();
     dispatch(SentenceSearchActions.onSearchQueryChange(sentence || ""));
-    dispatch(SentenceSearchActions.onClearRowSelectionModel());
+    dispatch(SentenceSearchActions.onClearRowSelection());
     closeMenu();
     navigate("../sentencesearch");
   };

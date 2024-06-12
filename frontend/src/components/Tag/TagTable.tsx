@@ -3,6 +3,7 @@ import {
   MRT_ColumnDef,
   MRT_RowSelectionState,
   MRT_TableInstance,
+  MRT_TableOptions,
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
@@ -59,7 +60,7 @@ interface TagTableProps {
   // selection
   enableMultiRowSelection?: boolean;
   rowSelectionModel: MRT_RowSelectionState;
-  onRowSelectionChange: (rowSelectionModel: MRT_RowSelectionState) => void;
+  onRowSelectionChange: MRT_TableOptions<TagTableRow>["onRowSelectionChange"];
   // toolbar
   renderToolbarInternalActions?: (props: CodeTableActionProps) => React.ReactNode;
   renderTopToolbarCustomActions?: (props: CodeTableActionProps) => React.ReactNode;
@@ -97,7 +98,7 @@ function TagTable({
   }, [projectTags.data]);
 
   // table
-  const table = useMaterialReactTable({
+  const table = useMaterialReactTable<TagTableRow>({
     data: projectTagRows,
     columns: columns,
     getRowId: (row) => `${row.id}`,
@@ -128,16 +129,8 @@ function TagTable({
     enableRowVirtualization: true,
     // selection
     enableRowSelection: true,
-    enableMultiRowSelection: enableMultiRowSelection,
-    onRowSelectionChange: (rowSelectionUpdater) => {
-      let newRowSelectionModel: MRT_RowSelectionState;
-      if (typeof rowSelectionUpdater === "function") {
-        newRowSelectionModel = rowSelectionUpdater(rowSelectionModel);
-      } else {
-        newRowSelectionModel = rowSelectionUpdater;
-      }
-      onRowSelectionChange(newRowSelectionModel);
-    },
+    enableMultiRowSelection,
+    onRowSelectionChange,
     // toolbar
     enableBottomToolbar: true,
     renderTopToolbarCustomActions: renderTopToolbarCustomActions

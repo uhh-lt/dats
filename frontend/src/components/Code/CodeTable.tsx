@@ -2,6 +2,7 @@ import {
   MRT_ColumnDef,
   MRT_RowSelectionState,
   MRT_TableInstance,
+  MRT_TableOptions,
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
@@ -60,7 +61,7 @@ export interface CodeTableProps {
   // selection
   enableMultiRowSelection?: boolean;
   rowSelectionModel: MRT_RowSelectionState;
-  onRowSelectionChange: (rowSelectionModel: MRT_RowSelectionState) => void;
+  onRowSelectionChange: MRT_TableOptions<CodeTableRow>["onRowSelectionChange"];
   // toolbar
   renderToolbarInternalActions?: (props: CodeTableActionProps) => React.ReactNode;
   renderTopToolbarCustomActions?: (props: CodeTableActionProps) => React.ReactNode;
@@ -98,7 +99,7 @@ function CodeTable({
   }, [projectCodes.data]);
 
   // table
-  const table = useMaterialReactTable({
+  const table = useMaterialReactTable<CodeTableRow>({
     data: projectCodesRows,
     columns: columns,
     getRowId: (row) => `${row.id}`,
@@ -130,15 +131,7 @@ function CodeTable({
     // selection
     enableRowSelection: true,
     enableMultiRowSelection: enableMultiRowSelection,
-    onRowSelectionChange: (rowSelectionUpdater) => {
-      let newRowSelectionModel: MRT_RowSelectionState;
-      if (typeof rowSelectionUpdater === "function") {
-        newRowSelectionModel = rowSelectionUpdater(rowSelectionModel);
-      } else {
-        newRowSelectionModel = rowSelectionUpdater;
-      }
-      onRowSelectionChange(newRowSelectionModel);
-    },
+    onRowSelectionChange,
     // toolbar
     enableBottomToolbar: true,
     renderTopToolbarCustomActions: renderTopToolbarCustomActions

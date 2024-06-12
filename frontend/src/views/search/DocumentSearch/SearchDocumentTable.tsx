@@ -2,13 +2,9 @@ import { Box, Card, Toolbar, Typography } from "@mui/material";
 import parse from "html-react-parser";
 import {
   MRT_ColumnDef,
-  MRT_ColumnSizingState,
-  MRT_DensityState,
   MRT_GlobalFilterTextField,
-  MRT_RowSelectionState,
   MRT_RowVirtualizer,
   MRT_ShowHideColumnsButton,
-  MRT_SortingState,
   MRT_TableContainer,
   MRT_ToggleDensePaddingButton,
   useMaterialReactTable,
@@ -30,6 +26,7 @@ import TagMenuButton from "../../../components/Tag/TagMenu/TagMenuButton.tsx";
 import { selectSelectedDocumentIds } from "../../../components/tableSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
+import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
 import { SearchFilterActions } from "../searchFilterSlice.ts";
 import { useInitSearchFilterSlice } from "../useInitSearchFilterSlice.ts";
 import SearchOptionsMenu from "./SearchOptionsMenu.tsx";
@@ -53,14 +50,32 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
   // global client state (react router)
   const { user } = useAuth();
 
-  // global client state (redux)
-  const searchQuery = useAppSelector((state) => state.search.searchQuery);
-  const rowSelectionModel = useAppSelector((state) => state.search.rowSelectionModel);
+  // global client state (redux) connected to table state
+  const [searchQuery, setSearchQuery] = useReduxConnector(
+    (state) => state.search.searchQuery,
+    SearchActions.onSearchQueryChange,
+  );
+  const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
+    (state) => state.search.rowSelectionModel,
+    SearchActions.onRowSelectionChange,
+  );
+  const [sortingModel, setSortingModel] = useReduxConnector(
+    (state) => state.search.sortingModel,
+    SearchActions.onSortChange,
+  );
+  const [columnVisibilityModel, setColumnVisibilityModel] = useReduxConnector(
+    (state) => state.search.columnVisibilityModel,
+    SearchActions.onColumnVisibilityChange,
+  );
+  const [columnSizingModel, setColumnSizingModel] = useReduxConnector(
+    (state) => state.search.columnSizingModel,
+    SearchActions.onColumnSizingChange,
+  );
+  const [gridDensity, setGridDensityModel] = useReduxConnector(
+    (state) => state.search.gridDensityModel,
+    SearchActions.onGridDensityChange,
+  );
   const selectedDocumentId = useAppSelector((state) => state.search.selectedDocumentId);
-  const sortingModel = useAppSelector((state) => state.search.sortingModel);
-  const columnVisibilityModel = useAppSelector((state) => state.search.columnVisibilityModel);
-  const columnSizingModel = useAppSelector((state) => state.search.columnSizingModel);
-  const gridDensity = useAppSelector((state) => state.search.gridDensity);
   const dispatch = useAppDispatch();
   const selectedDocumentIds = useAppSelector((state) => selectSelectedDocumentIds(state.search));
 
@@ -155,26 +170,10 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
     autoResetAll: false,
     manualFiltering: true, // turn of client-side filtering
     // enableGlobalFilter: true,
-    onGlobalFilterChange: (globalFilterUpdater) => {
-      let newSearchQuery: string | undefined;
-      if (typeof globalFilterUpdater === "function") {
-        newSearchQuery = globalFilterUpdater(searchQuery);
-      } else {
-        newSearchQuery = globalFilterUpdater;
-      }
-      dispatch(SearchActions.onSearchQueryChange(newSearchQuery || ""));
-    },
+    onGlobalFilterChange: setSearchQuery,
     // selection
     enableRowSelection: true,
-    onRowSelectionChange: (rowSelectionUpdater) => {
-      let newRowSelectionModel: MRT_RowSelectionState;
-      if (typeof rowSelectionUpdater === "function") {
-        newRowSelectionModel = rowSelectionUpdater(rowSelectionModel);
-      } else {
-        newRowSelectionModel = rowSelectionUpdater;
-      }
-      dispatch(SearchActions.onRowSelectionModelChange(newRowSelectionModel));
-    },
+    onRowSelectionChange: setRowSelectionModel,
     // virtualization
     enableRowVirtualization: true,
     rowVirtualizerInstanceRef: rowVirtualizerInstanceRef,
@@ -185,42 +184,15 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
     enablePagination: false,
     // sorting
     manualSorting: false,
-    onSortingChange: (sortingUpdater) => {
-      let newSortingModel: MRT_SortingState;
-      if (typeof sortingUpdater === "function") {
-        newSortingModel = sortingUpdater(sortingModel);
-      } else {
-        newSortingModel = sortingUpdater;
-      }
-      dispatch(SearchActions.onSortModelChange(newSortingModel));
-    },
+    onSortingChange: setSortingModel,
     // density
-    onDensityChange: (densityUpdater) => {
-      let newGridDensity: MRT_DensityState;
-      if (typeof densityUpdater === "function") {
-        newGridDensity = densityUpdater(gridDensity);
-      } else {
-        newGridDensity = densityUpdater;
-      }
-      dispatch(SearchActions.onGridDensityChange(newGridDensity));
-    },
+    onDensityChange: setGridDensityModel,
     // column visiblility
-    onColumnVisibilityChange: (updater) => {
-      const newVisibilityModel = updater instanceof Function ? updater(columnVisibilityModel) : updater;
-      dispatch(SearchActions.onColumnVisibilityChange(newVisibilityModel));
-    },
+    onColumnVisibilityChange: setColumnVisibilityModel,
     // column resizing
     enableColumnResizing: true,
     columnResizeMode: "onEnd",
-    onColumnSizingChange: (sizingUpdater) => {
-      let newColumnSizingModel: MRT_ColumnSizingState;
-      if (typeof sizingUpdater === "function") {
-        newColumnSizingModel = sizingUpdater(columnSizingModel);
-      } else {
-        newColumnSizingModel = sizingUpdater;
-      }
-      dispatch(SearchActions.onColumnSizingChange(newColumnSizingModel));
-    },
+    onColumnSizingChange: setColumnSizingModel,
     // detail (highlights)
     renderDetailPanel:
       searchQuery.trim().length > 0

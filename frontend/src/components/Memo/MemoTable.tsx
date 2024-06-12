@@ -2,6 +2,7 @@ import {
   MRT_ColumnDef,
   MRT_RowSelectionState,
   MRT_TableInstance,
+  MRT_TableOptions,
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
@@ -58,7 +59,7 @@ interface MemoTableProps {
   // selection
   enableMultiRowSelection?: boolean;
   rowSelectionModel: MRT_RowSelectionState;
-  onRowSelectionChange: (rowSelectionModel: MRT_RowSelectionState) => void;
+  onRowSelectionChange: MRT_TableOptions<MemoTableRow>["onRowSelectionChange"];
   // toolbar
   renderToolbarInternalActions?: (props: MemoTableActionProps) => React.ReactNode;
   renderTopToolbarCustomActions?: (props: MemoTableActionProps) => React.ReactNode;
@@ -102,7 +103,7 @@ function MemoTable({
   }, [userMemos.data]);
 
   // table
-  const table = useMaterialReactTable({
+  const table = useMaterialReactTable<MemoTableRow>({
     data: userMemoRows,
     columns: columns,
     getRowId: (row) => `${row.id}`,
@@ -134,15 +135,7 @@ function MemoTable({
     // selection
     enableRowSelection: true,
     enableMultiRowSelection: enableMultiRowSelection,
-    onRowSelectionChange: (rowSelectionUpdater) => {
-      let newRowSelectionModel: MRT_RowSelectionState;
-      if (typeof rowSelectionUpdater === "function") {
-        newRowSelectionModel = rowSelectionUpdater(rowSelectionModel);
-      } else {
-        newRowSelectionModel = rowSelectionUpdater;
-      }
-      onRowSelectionChange(newRowSelectionModel);
-    },
+    onRowSelectionChange,
     // toolbar
     enableBottomToolbar: true,
     renderTopToolbarCustomActions: renderTopToolbarCustomActions

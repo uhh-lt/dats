@@ -111,7 +111,7 @@ function ProjectDuplicateDocuments() {
   }, [findDuplicateDocumentsMutation.data]);
 
   // table
-  const table = useMaterialReactTable({
+  const table = useMaterialReactTable<DuplicateDocumentData>({
     columns,
     data,
     getRowId: (row) => row.sdocId,
