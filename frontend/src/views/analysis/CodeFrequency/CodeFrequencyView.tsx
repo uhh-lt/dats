@@ -1,6 +1,6 @@
 import BarChartIcon from "@mui/icons-material/BarChart";
 import PieChartIcon from "@mui/icons-material/PieChart";
-import { Card, CardContent, CardHeader, IconButton, Tooltip } from "@mui/material";
+import { Card, CardContent, CardHeader, CircularProgress, IconButton, Tooltip } from "@mui/material";
 import React, { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
 import {
   Bar,
@@ -141,9 +141,13 @@ function CodeFrequencyView({ projectId, userIds, data, setSelectedCode }: CodeFr
                 </BarChart>
               )}
             </ResponsiveContainer>
-          ) : (
+          ) : chartData.isSuccess && chartData.data.length === 0 ? (
             <>No plot available!</>
-          )}
+          ) : chartData.isLoading || chartData.isFetching ? (
+            <CircularProgress />
+          ) : chartData.isError ? (
+            <>An Error occurred: {chartData.error.message}</>
+          ) : null}
         </CardContent>
       </Card>
       {selectedData && (
