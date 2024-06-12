@@ -19,7 +19,7 @@ BATCH_SIZE = cc.batch_size
 
 SHARED_REPO_ROOT: Path = Path(conf.repo_root)
 
-LOGGER = logging.getLogger("ray.serve")
+logger = logging.getLogger("ray.serve")
 
 cota_conf: Dict = build_ray_model_deployment_config("cota")
 
@@ -92,7 +92,7 @@ class CotaModel:
         )
 
         # 2. load a SetFit model from Hub
-        LOGGER.info(f"Loading COTA model {MODEL} on {DEVICE}")
+        logger.info(f"Loading COTA model {MODEL} on {DEVICE}")
         model = SetFitModel.from_pretrained(MODEL, device=DEVICE)
 
         # 3. init training
