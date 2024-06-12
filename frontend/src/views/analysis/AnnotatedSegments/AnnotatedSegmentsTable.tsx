@@ -18,11 +18,11 @@ function AnnotatedSegmentsTable({ cardProps }: AnnotatedSegmentsTableProps) {
   // global client state (redux) connected to table state
   const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
     (state) => state.annotatedSegments.rowSelectionModel,
-    AnnotatedSegmentsActions.onRowSelectionModelChange,
+    AnnotatedSegmentsActions.onRowSelectionChange,
   );
   const [sortingModel, setSortingModel] = useReduxConnector(
     (state) => state.annotatedSegments.sortingModel,
-    AnnotatedSegmentsActions.onSortModelChange,
+    AnnotatedSegmentsActions.onSortChange,
   );
   const [columnVisibilityModel, setColumnVisibilityModel] = useReduxConnector(
     (state) => state.annotatedSegments.columnVisibilityModel,

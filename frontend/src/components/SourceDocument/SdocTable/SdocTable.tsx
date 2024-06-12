@@ -13,7 +13,6 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from "react";
-import { AnnotationTableRow } from "../../../api/openapi/models/AnnotationTableRow.ts";
 import { ElasticSearchDocumentHit } from "../../../api/openapi/models/ElasticSearchDocumentHit.ts";
 import { PaginatedElasticSearchDocumentHits } from "../../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
 import { SearchColumns } from "../../../api/openapi/models/SearchColumns.ts";
@@ -43,12 +42,12 @@ interface SdocTableProps {
   projectId: number;
   // selection
   rowSelectionModel: MRT_RowSelectionState;
-  onRowSelectionChange: (rowSelectionModel: MRT_RowSelectionState) => void;
+  onRowSelectionChange: MRT_TableOptions<ElasticSearchDocumentHit>["onRowSelectionChange"];
   // sorting
   sortingModel: MRT_SortingState;
-  onSortingChange: (sortingModel: MRT_SortingState) => void;
+  onSortingChange: MRT_TableOptions<ElasticSearchDocumentHit>["onSortingChange"];
   // toolbar
-  positionToolbarAlertBanner?: MRT_TableOptions<AnnotationTableRow>["positionToolbarAlertBanner"];
+  positionToolbarAlertBanner?: MRT_TableOptions<ElasticSearchDocumentHit>["positionToolbarAlertBanner"];
   renderToolbarInternalActions?: (props: DocumentTableActionProps) => React.ReactNode;
   renderTopToolbarCustomActions?: (props: DocumentTableActionProps) => React.ReactNode;
   renderBottomToolbarCustomActions?: (props: DocumentTableActionProps) => React.ReactNode;
@@ -268,15 +267,7 @@ function SdocTable({
     onGlobalFilterChange: setSearchQuery,
     // selection
     enableRowSelection: true,
-    onRowSelectionChange: (rowSelectionUpdater) => {
-      let newRowSelectionModel: MRT_RowSelectionState;
-      if (typeof rowSelectionUpdater === "function") {
-        newRowSelectionModel = rowSelectionUpdater(rowSelectionModel);
-      } else {
-        newRowSelectionModel = rowSelectionUpdater;
-      }
-      onRowSelectionChange(newRowSelectionModel);
-    },
+    onRowSelectionChange,
     // virtualization
     enableRowVirtualization: true,
     rowVirtualizerInstanceRef: rowVirtualizerInstanceRef,
@@ -287,15 +278,7 @@ function SdocTable({
     enablePagination: false,
     // sorting
     manualSorting: true,
-    onSortingChange: (sortingUpdater) => {
-      let newSortingModel: MRT_SortingState;
-      if (typeof sortingUpdater === "function") {
-        newSortingModel = sortingUpdater(sortingModel);
-      } else {
-        newSortingModel = sortingUpdater;
-      }
-      onSortingChange(newSortingModel);
-    },
+    onSortingChange,
     // column visiblility
     onColumnVisibilityChange: setColumnVisibilityModel,
     // detail (highlights)

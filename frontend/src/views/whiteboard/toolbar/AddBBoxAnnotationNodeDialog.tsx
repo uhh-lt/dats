@@ -21,7 +21,7 @@ function AddBBoxAnnotationNodeDialog({ projectId, buttonProps, onClick }: AddBBo
   const [open, setOpen] = useState(false);
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
   const [sortingModel, setSortingModel] = useState<MRT_SortingState>([]);
-  const [visibilityModel, setVisibilityModel] = useState<MRT_VisibilityState | undefined>(undefined);
+  const [visibilityModel, setVisibilityModel] = useState<MRT_VisibilityState>({});
   const selectedAnnotationIds = Object.keys(rowSelectionModel).map((id) => parseInt(id));
 
   // init visibility (disable metadata)
@@ -64,29 +64,27 @@ function AddBBoxAnnotationNodeDialog({ projectId, buttonProps, onClick }: AddBBo
         Add bbox annotations
       </Button>
       <Dialog onClose={handleClose} open={open} maxWidth="lg" fullWidth PaperProps={{ style: { height: "100%" } }}>
-        {visibilityModel && (
-          <BBoxAnnotationTable
-            title="Select bbox annotations to add to Whiteboard"
-            projectId={projectId}
-            filterName={filterName}
-            rowSelectionModel={rowSelectionModel}
-            onRowSelectionChange={setRowSelectionModel}
-            sortingModel={sortingModel}
-            onSortingChange={setSortingModel}
-            columnVisibilityModel={visibilityModel}
-            onColumnVisibilityChange={setVisibilityModel}
-            cardProps={{ elevation: 2, className: "myFlexFillAllContainer myFlexContainer" }}
-            renderBottomToolbarCustomActions={(props) => (
-              <>
-                <Box flexGrow={1} />
-                <Button onClick={handleClose}>Close</Button>
-                <Button onClick={handleConfirmSelection} disabled={props.selectedAnnotations.length === 0}>
-                  Add {props.selectedAnnotations.length > 0 ? props.selectedAnnotations.length : null} Annotations
-                </Button>
-              </>
-            )}
-          />
-        )}
+        <BBoxAnnotationTable
+          title="Select bbox annotations to add to Whiteboard"
+          projectId={projectId}
+          filterName={filterName}
+          rowSelectionModel={rowSelectionModel}
+          onRowSelectionChange={setRowSelectionModel}
+          sortingModel={sortingModel}
+          onSortingChange={setSortingModel}
+          columnVisibilityModel={visibilityModel}
+          onColumnVisibilityChange={setVisibilityModel}
+          cardProps={{ elevation: 2, className: "myFlexFillAllContainer myFlexContainer" }}
+          renderBottomToolbarCustomActions={(props) => (
+            <>
+              <Box flexGrow={1} />
+              <Button onClick={handleClose}>Close</Button>
+              <Button onClick={handleConfirmSelection} disabled={props.selectedAnnotations.length === 0}>
+                Add {props.selectedAnnotations.length > 0 ? props.selectedAnnotations.length : null} Annotations
+              </Button>
+            </>
+          )}
+        />
       </Dialog>
     </>
   );

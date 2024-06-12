@@ -46,11 +46,11 @@ function SearchMemoTable({ projectId }: SearchMemoTableProps) {
   );
   const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
     (state) => state.logbook.rowSelectionModel,
-    LogbookActions.onRowSelectionModelChange,
+    LogbookActions.onRowSelectionChange,
   );
   const [sortingModel, setSortingModel] = useReduxConnector(
     (state) => state.logbook.sortingModel,
-    LogbookActions.onSortModelChange,
+    LogbookActions.onSortChange,
   );
   const [columnVisibilityModel, setColumnVisibilityModel] = useReduxConnector(
     (state) => state.logbook.columnVisibilityModel,
@@ -60,8 +60,8 @@ function SearchMemoTable({ projectId }: SearchMemoTableProps) {
     (state) => state.logbook.columnSizingModel,
     LogbookActions.onColumnSizingChange,
   );
-  const [gridDensity, setGridDensity] = useReduxConnector(
-    (state) => state.logbook.gridDensity,
+  const [gridDensity, setGridDensityModel] = useReduxConnector(
+    (state) => state.logbook.gridDensityModel,
     LogbookActions.onGridDensityChange,
   );
   const selectedMemoIds = Object.keys(rowSelectionModel).map((id) => parseInt(id));
@@ -230,7 +230,7 @@ function SearchMemoTable({ projectId }: SearchMemoTableProps) {
     manualSorting: false,
     onSortingChange: setSortingModel,
     // density
-    onDensityChange: setGridDensity,
+    onDensityChange: setGridDensityModel,
     // column visiblility
     onColumnVisibilityChange: setColumnVisibilityModel,
     // column resizing

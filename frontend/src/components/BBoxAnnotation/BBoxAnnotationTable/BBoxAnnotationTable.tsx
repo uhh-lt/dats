@@ -37,13 +37,13 @@ export interface BBoxAnnotationTableProps {
   filterName: string;
   // selection
   rowSelectionModel: MRT_RowSelectionState;
-  onRowSelectionChange: (rowSelectionModel: MRT_RowSelectionState) => void;
+  onRowSelectionChange: MRT_TableOptions<BBoxAnnotationTableRow>["onRowSelectionChange"];
   // sorting
   sortingModel: MRT_SortingState;
-  onSortingChange: (sortingModel: MRT_SortingState) => void;
+  onSortingChange: MRT_TableOptions<BBoxAnnotationTableRow>["onSortingChange"];
   // column visibility
   columnVisibilityModel: MRT_VisibilityState;
-  onColumnVisibilityChange: (columnVisibilityModel: MRT_VisibilityState) => void;
+  onColumnVisibilityChange: MRT_TableOptions<BBoxAnnotationTableRow>["onColumnVisibilityChange"];
   // components
   cardProps?: CardProps;
   positionToolbarAlertBanner?: MRT_TableOptions<BBoxAnnotationTableRow>["positionToolbarAlertBanner"];
@@ -243,10 +243,7 @@ function BBoxAnnotationTable({
     },
     // selection
     enableRowSelection: true,
-    onRowSelectionChange: (updater) => {
-      const newRowSelectionModel = updater instanceof Function ? updater(rowSelectionModel) : updater;
-      onRowSelectionChange(newRowSelectionModel);
-    },
+    onRowSelectionChange,
     // virtualization
     enableRowVirtualization: true,
     rowVirtualizerInstanceRef: rowVirtualizerInstanceRef,
@@ -258,15 +255,9 @@ function BBoxAnnotationTable({
     enablePagination: false,
     // sorting
     manualSorting: true,
-    onSortingChange: (updater) => {
-      const newSortingModel = updater instanceof Function ? updater(sortingModel) : updater;
-      onSortingChange(newSortingModel);
-    },
+    onSortingChange,
     // column visiblility
-    onColumnVisibilityChange: (updater) => {
-      const newVisibilityModel = updater instanceof Function ? updater(columnVisibilityModel) : updater;
-      onColumnVisibilityChange(newVisibilityModel);
-    },
+    onColumnVisibilityChange,
     // mui components
     muiTablePaperProps: {
       elevation: 0,

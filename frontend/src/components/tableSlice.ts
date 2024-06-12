@@ -15,7 +15,7 @@ export interface TableState {
   sortingModel: MRT_SortingState;
   columnVisibilityModel: MRT_VisibilityState;
   columnSizingModel: MRT_ColumnSizingState;
-  gridDensity: MRT_DensityState;
+  gridDensityModel: MRT_DensityState;
 }
 
 export const initialTableState: TableState = {
@@ -28,7 +28,7 @@ export const initialTableState: TableState = {
   sortingModel: [],
   columnVisibilityModel: {},
   columnSizingModel: {},
-  gridDensity: "comfortable",
+  gridDensityModel: "comfortable",
 };
 
 export const tableReducer = {
@@ -37,18 +37,18 @@ export const tableReducer = {
     state.searchQuery = action.payload;
   },
   // selection
-  onRowSelectionModelChange: (state: Draft<TableState>, action: PayloadAction<MRT_RowSelectionState>) => {
+  onRowSelectionChange: (state: Draft<TableState>, action: PayloadAction<MRT_RowSelectionState>) => {
     state.rowSelectionModel = action.payload;
   },
-  onClearRowSelectionModel: (state: Draft<TableState>) => {
+  onClearRowSelection: (state: Draft<TableState>) => {
     state.rowSelectionModel = {};
   },
   // pagination
-  onPaginationModelChange: (state: Draft<TableState>, action: PayloadAction<MRT_PaginationState>) => {
+  onPaginationChange: (state: Draft<TableState>, action: PayloadAction<MRT_PaginationState>) => {
     state.paginationModel = action.payload;
   },
   // sorting
-  onSortModelChange: (state: Draft<TableState>, action: PayloadAction<MRT_SortingState>) => {
+  onSortChange: (state: Draft<TableState>, action: PayloadAction<MRT_SortingState>) => {
     state.sortingModel = action.payload;
   },
   // column visibility
@@ -61,7 +61,7 @@ export const tableReducer = {
   },
   // density
   onGridDensityChange: (state: Draft<TableState>, action: PayloadAction<MRT_DensityState>) => {
-    state.gridDensity = action.payload;
+    state.gridDensityModel = action.payload;
   },
 };
 

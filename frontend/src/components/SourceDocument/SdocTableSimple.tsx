@@ -62,7 +62,7 @@ function SdocTableSimple({ sdocIds }: { sdocIds: number[] }) {
   );
 
   // table
-  const table = useMaterialReactTable({
+  const table = useMaterialReactTable<SdocTableRow>({
     data: data,
     columns: columns,
     getRowId: (row) => `${row.sdocId}`,

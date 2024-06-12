@@ -63,7 +63,7 @@ function CodeOccurrenceTable({ projectId, codeId, userIds }: CodeOccurrenceTable
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
 
   // table
-  const table = useMaterialReactTable({
+  const table = useMaterialReactTable<CodeOccurrence>({
     data: codeOccurrences.data || [],
     columns: columns,
     getRowId: (row) => `sdoc-${row?.sdoc?.id}-code-${row?.code?.id}-${row?.text}`,

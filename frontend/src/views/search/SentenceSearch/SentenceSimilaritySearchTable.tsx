@@ -1,13 +1,9 @@
 import { Box, Card, Toolbar } from "@mui/material";
 import {
   MRT_ColumnDef,
-  MRT_ColumnSizingState,
-  MRT_DensityState,
   MRT_GlobalFilterTextField,
-  MRT_RowSelectionState,
   MRT_RowVirtualizer,
   MRT_ShowHideColumnsButton,
-  MRT_SortingState,
   MRT_TableContainer,
   MRT_ToggleDensePaddingButton,
   useMaterialReactTable,
@@ -29,6 +25,7 @@ import TagMenuButton from "../../../components/Tag/TagMenu/TagMenuButton.tsx";
 import { selectSelectedDocumentIds } from "../../../components/tableSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
+import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
 import { SearchFilterActions } from "../searchFilterSlice.ts";
 import { useInitSearchFilterSlice } from "../useInitSearchFilterSlice.ts";
 import SentenceSimilaritySearchOptionsMenu from "./SentenceSimilaritySearchOptionsMenu.tsx";
@@ -59,13 +56,32 @@ function SentenceSimilaritySearchTable({
   const { user } = useAuth();
 
   // global client state (redux)
-  const searchQuery = useAppSelector((state) => state.sentenceSearch.searchQuery);
-  const rowSelectionModel = useAppSelector((state) => state.sentenceSearch.rowSelectionModel);
+
+  const [searchQuery, setSearchQuery] = useReduxConnector(
+    (state) => state.sentenceSearch.searchQuery,
+    SentenceSearchActions.onSearchQueryChange,
+  );
+  const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
+    (state) => state.sentenceSearch.rowSelectionModel,
+    SentenceSearchActions.onRowSelectionChange,
+  );
+  const [sortingModel, setSortingModel] = useReduxConnector(
+    (state) => state.sentenceSearch.sortingModel,
+    SentenceSearchActions.onSortChange,
+  );
+  const [columnVisibilityModel, setColumnVisibilityModel] = useReduxConnector(
+    (state) => state.sentenceSearch.columnVisibilityModel,
+    SentenceSearchActions.onColumnVisibilityChange,
+  );
+  const [columnSizingModel, setColumnSizingModel] = useReduxConnector(
+    (state) => state.sentenceSearch.columnSizingModel,
+    SentenceSearchActions.onColumnSizingChange,
+  );
+  const [gridDensity, setGridDensityModel] = useReduxConnector(
+    (state) => state.sentenceSearch.gridDensityModel,
+    SentenceSearchActions.onGridDensityChange,
+  );
   const selectedDocumentId = useAppSelector((state) => state.sentenceSearch.selectedDocumentId);
-  const sortingModel = useAppSelector((state) => state.sentenceSearch.sortingModel);
-  const columnVisibilityModel = useAppSelector((state) => state.sentenceSearch.columnVisibilityModel);
-  const columnSizingModel = useAppSelector((state) => state.sentenceSearch.columnSizingModel);
-  const gridDensity = useAppSelector((state) => state.sentenceSearch.gridDensity);
   const dispatch = useAppDispatch();
   const selectedDocumentIds = useAppSelector((state) => selectSelectedDocumentIds(state.sentenceSearch));
 
@@ -176,26 +192,10 @@ function SentenceSimilaritySearchTable({
     autoResetAll: false,
     manualFiltering: true, // turn of client-side filtering
     // enableGlobalFilter: true,
-    onGlobalFilterChange: (globalFilterUpdater) => {
-      let newSearchQuery: string | undefined;
-      if (typeof globalFilterUpdater === "function") {
-        newSearchQuery = globalFilterUpdater(searchQuery);
-      } else {
-        newSearchQuery = globalFilterUpdater;
-      }
-      dispatch(SentenceSearchActions.onSearchQueryChange(newSearchQuery || ""));
-    },
+    onGlobalFilterChange: setSearchQuery,
     // selection
     enableRowSelection: true,
-    onRowSelectionChange: (rowSelectionUpdater) => {
-      let newRowSelectionModel: MRT_RowSelectionState;
-      if (typeof rowSelectionUpdater === "function") {
-        newRowSelectionModel = rowSelectionUpdater(rowSelectionModel);
-      } else {
-        newRowSelectionModel = rowSelectionUpdater;
-      }
-      dispatch(SentenceSearchActions.onRowSelectionModelChange(newRowSelectionModel));
-    },
+    onRowSelectionChange: setRowSelectionModel,
     // virtualization
     enableRowVirtualization: true,
     rowVirtualizerInstanceRef: rowVirtualizerInstanceRef,
@@ -206,42 +206,15 @@ function SentenceSimilaritySearchTable({
     enablePagination: false,
     // sorting
     manualSorting: true,
-    onSortingChange: (sortingUpdater) => {
-      let newSortingModel: MRT_SortingState;
-      if (typeof sortingUpdater === "function") {
-        newSortingModel = sortingUpdater(sortingModel);
-      } else {
-        newSortingModel = sortingUpdater;
-      }
-      dispatch(SentenceSearchActions.onSortModelChange(newSortingModel));
-    },
+    onSortingChange: setSortingModel,
     // density
-    onDensityChange: (densityUpdater) => {
-      let newGridDensity: MRT_DensityState;
-      if (typeof densityUpdater === "function") {
-        newGridDensity = densityUpdater(gridDensity);
-      } else {
-        newGridDensity = densityUpdater;
-      }
-      dispatch(SentenceSearchActions.onGridDensityChange(newGridDensity));
-    },
+    onDensityChange: setGridDensityModel,
     // column visiblility
-    onColumnVisibilityChange: (updater) => {
-      const newVisibilityModel = updater instanceof Function ? updater(columnVisibilityModel) : updater;
-      dispatch(SentenceSearchActions.onColumnVisibilityChange(newVisibilityModel));
-    },
+    onColumnVisibilityChange: setColumnVisibilityModel,
     // column resizing
     enableColumnResizing: true,
     columnResizeMode: "onEnd",
-    onColumnSizingChange: (sizingUpdater) => {
-      let newColumnSizingModel: MRT_ColumnSizingState;
-      if (typeof sizingUpdater === "function") {
-        newColumnSizingModel = sizingUpdater(columnSizingModel);
-      } else {
-        newColumnSizingModel = sizingUpdater;
-      }
-      dispatch(SentenceSearchActions.onColumnSizingChange(newColumnSizingModel));
-    },
+    onColumnSizingChange: setColumnSizingModel,
     // mui components
     muiTableBodyRowProps: ({ row }) => ({
       onClick: (event) => {
