@@ -23,7 +23,6 @@ class CotaService(metaclass=SingletonMeta):
         self,
         cota_id: int,
         project_id: int,
-        min_required_annotations_per_concept: int,
         concepts: List[COTAConcept],
         search_space: List[COTASentence],
     ) -> Tuple[List[List[float]], Dict[str, List[float]], List[List[float]]]:
@@ -37,7 +36,6 @@ class CotaService(metaclass=SingletonMeta):
         job = RayCOTAJobInput(
             id=cota_id,
             project_id=project_id,
-            min_required_annotations_per_concept=min_required_annotations_per_concept,
             concept_ids=concept_ids,
             search_space=ray_search_space,
         )

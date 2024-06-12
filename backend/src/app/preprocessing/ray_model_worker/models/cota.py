@@ -28,18 +28,12 @@ cota_conf: Dict = build_ray_model_deployment_config("cota")
 class CotaModel:
     def finetune_apply_compute(self, input: RayCOTAJobInput) -> RayCOTAJobResponse:
         # 1 finetune
-        sentences: List[str]
-        model: SetFitModel
         model, sentences = self.__finetune(input)
 
         # 2 apply_st
-        embeddings: np.ndarray
-        probabilities: List[List[float]]
         embeddings, probabilities = self.__apply_st(model, sentences)
 
         # 3 compute results
-        visual_refined_embeddings: List[List[float]]
-        concept_similarities: Dict[str, List[float]]
         visual_refined_embeddings, concept_similarities = self.__compute_results(
             input, embeddings
         )
@@ -53,12 +47,6 @@ class CotaModel:
         return response
 
     def __finetune(self, input: RayCOTAJobInput) -> Tuple[SetFitModel, List[str]]:
-        # Only train if we have enough annotated data
-        if not self.__has_min_concept_sentence_annotations(input):
-            raise ValueError(
-                f"Expected input to have at least {input.min_required_annotations_per_concept} annotations, but got {input} instead."
-            )
-
         search_space: List[RayCOTASentenceBase] = input.search_space
         sentences: List[str] = [ss.text for ss in search_space]
 
@@ -173,11 +161,8 @@ class CotaModel:
     ) -> Tuple[List[List[float]], Dict[str, List[float]]]:
         # 2. rank search space sentences for each concept
         # this can only be done if a concept has sentence annotations, because we need those to compute the concept representation
-        # if we do not have sentence annotations, the ranking / similarities were already computed by the initial simsearch (in the first step)
-        if not self.__has_min_concept_sentence_annotations(input):
-            raise ValueError("not enough annotations")
         # 2.1 compute representation for each concept
-        annotation_indices = self.__get_concept_sentence_indices(input)
+        annotation_indices = self.__get_annotation_sentence_indices(input)
         concept_embeddings: Dict[str, np.ndarray] = (
             dict()
         )  # Dict[concept_id, concept_embedding]
@@ -203,17 +188,6 @@ class CotaModel:
         )
         return visual_refined_embeddings, concept_similarities
 
-    def __has_min_concept_sentence_annotations(self, cargo: RayCOTAJobInput) -> bool:
-        """Returns true if each concept has at least min_required_annotations_per_concept"""
-
-        annotations = self.__get_concept_sentence_annotations(cargo)
-
-        for concept_annotations in annotations.values():
-            if len(concept_annotations) < cargo.min_required_annotations_per_concept:
-                return False
-
-        return True
-
     def __get_concept_sentence_annotations(
         self, job: RayCOTAJobInput
     ) -> Dict[str, List[RayCOTASentenceBase]]:
@@ -226,7 +200,7 @@ class CotaModel:
                 annotations[sentence.concept_annotation].append(sentence)
         return annotations
 
-    def __get_concept_sentence_indices(
+    def __get_annotation_sentence_indices(
         self, job: RayCOTAJobInput
     ) -> Dict[str, List[int]]:
         """Returns the indices of the sentences in the search space that are annotated with a concept, for each concept"""
@@ -266,61 +240,3 @@ class CotaModel:
         reduced_embs = reducer.fit_transform(embs)
         assert isinstance(reduced_embs, np.ndarray)
         return reduced_embs.tolist()
-
-    def __get_embeddings_root_path(self, proj_id: int) -> Path:
-        return self.__get_project_repo_root_path(proj_id=proj_id).joinpath("embeddings")
-
-    def __get_probabilities_root_path(self, proj_id: int) -> Path:
-        return self.__get_project_repo_root_path(proj_id=proj_id).joinpath(
-            "probabilities"
-        )
-
-    def get_embeddings_filename(
-        self,
-        proj_id: int,
-        embedding_name: str,
-        embeddings_prefix: str = "cota_",
-    ) -> Path:
-        return (
-            self.__get_embeddings_root_path(proj_id=proj_id)
-            / f"{embeddings_prefix}{embedding_name}.npy"
-        )
-
-    def get_probabilities_filename(
-        self,
-        proj_id: int,
-        probability_name: str,
-        probabilities_s_prefix: str = "cota_",
-    ) -> Path:
-        return (
-            self.__get_probabilities_root_path(proj_id=proj_id)
-            / f"{probabilities_s_prefix}{probability_name}.npy"
-        )
-
-    def _store_embeddings_probabilities(
-        self, id: int, proj_id: int, embeddings: np.ndarray, probabilities: np.ndarray
-    ) -> Tuple[Path, Path]:
-        if not isinstance(embeddings, np.ndarray):
-            raise ValueError(
-                f"Embeddings must be of type np.ndarray, but was {type(embeddings)}"
-            )
-        name = str(id)
-        embeddings_path = self.get_embeddings_filename(
-            proj_id=proj_id, embedding_name=name
-        )
-        embeddings_path.parent.mkdir(exist_ok=True, parents=True)
-        with open(embeddings_path, "wb+") as f:
-            np.save(f, embeddings)
-        LOGGER.debug(
-            f"Stored embeddings of shape {embeddings.shape} at {embeddings_path}!"
-        )
-        probabilities_path = self.get_probabilities_filename(
-            proj_id=proj_id, probability_name=name
-        )
-        probabilities_path.parent.mkdir(exist_ok=True, parents=True)
-        with open(probabilities_path, "wb+") as f:
-            np.save(f, probabilities)
-        LOGGER.debug(
-            f"Stored probabilities of shape {probabilities.shape} at {probabilities_path}!"
-        )
-        return embeddings_path, probabilities_path

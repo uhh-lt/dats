@@ -18,10 +18,6 @@ class RayCOTAJob(BaseModel):
 
 
 class RayCOTAJobInput(RayCOTAJob):
-    min_required_annotations_per_concept: int = Field(
-        description="Minimum number of annotations per concept required to train the CEM.",
-        default=5,
-    )
     concept_ids: List[str] = Field(
         description="List of Concepts Ids that are part of the ConceptOverTimeAnalysis"
     )
@@ -39,8 +35,8 @@ class RayCOTAJobResponse(RayCOTAJob):
         ),
     )
     concept_similarities: Dict[str, List[float]] = Field(
-        description="Dictionary of Concept IDs and their similarity score"
+        description="DDictionary of Concept IDs and their similarity score to each sentence"
     )
     probabilities: List[List[float]] = Field(
-        description="A List of Probabilities for each concept to each sentence"
+        description="List of concept classification probability scores for each sentence"
     )
