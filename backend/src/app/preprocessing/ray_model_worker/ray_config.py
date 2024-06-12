@@ -2,13 +2,14 @@ import logging
 import os
 from typing import Any, Dict
 
-from omegaconf import OmegaConf
+from omegaconf import DictConfig, OmegaConf
 
 logger = logging.getLogger("ray.serve")
 
 # global config
 __conf_file__ = os.getenv("RAY_CONFIG", "./config.yaml")
 conf = OmegaConf.load(__conf_file__)
+assert type(conf) == DictConfig
 
 logger.info(f"Loaded config '{__conf_file__}'")
 

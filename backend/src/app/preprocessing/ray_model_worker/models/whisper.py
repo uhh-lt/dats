@@ -13,9 +13,8 @@ from dto.whisper import (
 )
 from faster_whisper import WhisperModel as wm
 from ray import serve
+from ray_config import build_ray_model_deployment_config, conf
 from scipy.io import wavfile
-
-from config import build_ray_model_deployment_config, conf
 
 logger = logging.getLogger("ray.serve")
 

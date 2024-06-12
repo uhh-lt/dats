@@ -179,10 +179,6 @@ class COTAService(metaclass=SingletonMeta):
         )
         if best_model_dir.exists():
             shutil.rmtree(best_model_dir)
-        # delete the embeddings
-        self.repo.get_embeddings_filename(cota.project_id, str(cota.id)).unlink(
-            missing_ok=True
-        )
         # delete the refinement jobs
         self.redis.delete_all_cota_job_by_cota_id(cota_id=cota.id)
         # reset the search space

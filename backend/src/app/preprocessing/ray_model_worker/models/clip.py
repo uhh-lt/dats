@@ -8,9 +8,8 @@ from dto.clip import (
 )
 from PIL import Image
 from ray import serve
+from ray_config import build_ray_model_deployment_config, conf
 from sentence_transformers import SentenceTransformer
-
-from config import build_ray_model_deployment_config, conf
 
 cc = conf.clip
 

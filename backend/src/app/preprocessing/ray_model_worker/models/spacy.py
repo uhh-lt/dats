@@ -4,9 +4,8 @@ from typing import Dict, List
 import spacy
 from dto.spacy import SpacyInput, SpacyPipelineOutput, SpacySpan, SpacyToken
 from ray import serve
+from ray_config import build_ray_model_deployment_config, conf
 from spacy import Language
-
-from config import build_ray_model_deployment_config, conf
 
 cc = conf.spacy
 
