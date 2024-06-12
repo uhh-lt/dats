@@ -71,7 +71,7 @@ const SentenceMenu = forwardRef<SentenceMenuHandle, SentenceMenuProps>(({}, ref)
     dispatch(SentenceSearchActions.onSearchQueryChange(sentence || ""));
     dispatch(SentenceSearchActions.onClearRowSelectionModel());
     closeMenu();
-    navigate("../searchsentences");
+    navigate("../sentencesearch");
   };
 
   const handleImageSimilaritySearch = () => {
