@@ -176,4 +176,7 @@ export const QueryKey = {
 
   // crawler (by crawler job id)
   CRAWLER_JOB: "crawlerJob",
+
+  // tables
+  SEARCH_TABLE: "search-document-table-data",
 };

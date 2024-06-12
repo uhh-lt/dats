@@ -7,13 +7,9 @@ import satFilterReducer from "../components/SpanAnnotation/SpanAnnotationTable/s
 import dialogReducer from "../components/dialogSlice.ts";
 import annotatedSegmentsReducer from "../views/analysis/AnnotatedSegments/annotatedSegmentsSlice.ts";
 import cotaReducer from "../views/analysis/ConceptsOverTime/cotaSlice.ts";
-import timelineAnalysisFilterReducer from "../views/analysis/TimelineAnalysis/timelineAnalysisFilterSlice.ts";
 import timelineAnalysisReducer from "../views/analysis/TimelineAnalysis/timelineAnalysisSlice.ts";
-import wordFrequencyFilterReducer from "../views/analysis/WordFrequency/wordFrequencyFilterSlice.ts";
 import wordFrequencyReducer from "../views/analysis/WordFrequency/wordFrequencySlice.ts";
-import analysisReducer from "../views/analysis/analysisSlice.ts";
 import annoReducer from "../views/annotation/annoSlice.ts";
-import memoFilterReducer from "../views/logbook/MemoSearch/memoFilterSlice.ts";
 import logbookReducer from "../views/logbook/logbookSlice.ts";
 import searchReducer from "../views/search/DocumentSearch/searchSlice.ts";
 import imageSearchReducer from "../views/search/ImageSearch/imageSearchSlice.ts";
@@ -33,7 +29,6 @@ const persistedAnnoReducer = persistReducer(persistConfig, annoReducer);
 export const store = configureStore({
   reducer: {
     annotations: persistedAnnoReducer,
-    analysis: analysisReducer,
     search: searchReducer,
     imageSearch: imageSearchReducer,
     sentenceSearch: sentenceSearchReducer,
@@ -45,13 +40,10 @@ export const store = configureStore({
     satFilter: satFilterReducer,
     bboxFilter: bboxFilterReducer,
     documentTableFilter: documentTableFilterReducer,
-    timelineAnalysisFilter: timelineAnalysisFilterReducer,
     wordFrequency: wordFrequencyReducer,
-    wordFrequencyFilter: wordFrequencyFilterReducer,
     cota: cotaReducer,
     dialog: dialogReducer,
     documentSampler: documentSamplerReducer,
-    memoFilter: memoFilterReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

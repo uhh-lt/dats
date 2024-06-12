@@ -22,12 +22,13 @@ function UserSelectorMulti({ projectId, userIds, onUserIdChange, title }: UserSe
   // render
   return (
     <FormControl sx={{ mx: 1 }}>
-      <InputLabel id="user-select-label">{title}</InputLabel>
+      <InputLabel id="multi-user-select-label">{title}</InputLabel>
       <Select
-        labelId="user-select-label"
+        labelId="multi-user-select-label"
         label={title}
         size="small"
         value={userIds}
+        multiple
         onChange={handleChange}
         disabled={!projectUsers.isSuccess}
         renderValue={(userIds) =>

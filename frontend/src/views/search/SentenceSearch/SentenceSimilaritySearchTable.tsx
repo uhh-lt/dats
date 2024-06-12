@@ -26,6 +26,7 @@ import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
 import SdocSentenceRenderer from "../../../components/SourceDocument/SdocSentenceRenderer.tsx";
 import SdocTagsRenderer from "../../../components/SourceDocument/SdocTagRenderer.tsx";
 import TagMenuButton from "../../../components/Tag/TagMenu/TagMenuButton.tsx";
+import { selectSelectedDocumentIds } from "../../../components/tableSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
 import { SearchFilterActions } from "../searchFilterSlice.ts";
@@ -59,14 +60,14 @@ function SentenceSimilaritySearchTable({
 
   // global client state (redux)
   const searchQuery = useAppSelector((state) => state.sentenceSearch.searchQuery);
-  const rowSelectionModel = useAppSelector((state) => state.sentenceSearch.selectionModel);
+  const rowSelectionModel = useAppSelector((state) => state.sentenceSearch.rowSelectionModel);
   const selectedDocumentId = useAppSelector((state) => state.sentenceSearch.selectedDocumentId);
-  const selectedDocumentIds = useAppSelector((state) => state.sentenceSearch.selectedDocumentIds);
   const sortingModel = useAppSelector((state) => state.sentenceSearch.sortingModel);
   const columnVisibilityModel = useAppSelector((state) => state.sentenceSearch.columnVisibilityModel);
   const columnSizingModel = useAppSelector((state) => state.sentenceSearch.columnSizingModel);
   const gridDensity = useAppSelector((state) => state.sentenceSearch.gridDensity);
   const dispatch = useAppDispatch();
+  const selectedDocumentIds = useAppSelector((state) => selectSelectedDocumentIds(state.sentenceSearch));
 
   // virtualization
   const toolbarRef = useRef<HTMLDivElement>(null);
@@ -182,7 +183,7 @@ function SentenceSimilaritySearchTable({
       } else {
         newSearchQuery = globalFilterUpdater;
       }
-      dispatch(SentenceSearchActions.onChangeSearchQuery(newSearchQuery || ""));
+      dispatch(SentenceSearchActions.onSearchQueryChange(newSearchQuery || ""));
     },
     // selection
     enableRowSelection: true,
@@ -193,7 +194,7 @@ function SentenceSimilaritySearchTable({
       } else {
         newRowSelectionModel = rowSelectionUpdater;
       }
-      dispatch(SentenceSearchActions.onUpdateSelectionModel(newRowSelectionModel));
+      dispatch(SentenceSearchActions.onRowSelectionModelChange(newRowSelectionModel));
     },
     // virtualization
     enableRowVirtualization: true,
@@ -222,7 +223,7 @@ function SentenceSimilaritySearchTable({
       } else {
         newGridDensity = densityUpdater;
       }
-      dispatch(SentenceSearchActions.setTableDensity(newGridDensity));
+      dispatch(SentenceSearchActions.onGridDensityChange(newGridDensity));
     },
     // column visiblility
     onColumnVisibilityChange: (updater) => {

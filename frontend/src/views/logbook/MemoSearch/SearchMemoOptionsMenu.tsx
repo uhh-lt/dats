@@ -2,7 +2,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import { Box, FormControlLabel, IconButton, Popover, Switch, Tooltip } from "@mui/material";
 import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { MemoFilterActions } from "./memoFilterSlice.ts";
+import { LogbookActions } from "../logbookSlice.ts";
 
 function SearchMemoOptionsMenu() {
   // local state
@@ -10,7 +10,7 @@ function SearchMemoOptionsMenu() {
   const open = Boolean(anchorEl);
 
   // global client state (redux)
-  const isQueryContent = useAppSelector((state) => state.memoFilter.isSearchContent);
+  const isQueryContent = useAppSelector((state) => state.logbook.isSearchContent);
   const dispatch = useAppDispatch();
 
   return (
@@ -43,7 +43,7 @@ function SearchMemoOptionsMenu() {
             control={
               <Switch
                 checked={isQueryContent}
-                onChange={(event) => dispatch(MemoFilterActions.onChangeIsSearchContent(event.target.checked))}
+                onChange={(event) => dispatch(LogbookActions.onChangeIsSearchContent(event.target.checked))}
               />
             }
             label="Search title / content"

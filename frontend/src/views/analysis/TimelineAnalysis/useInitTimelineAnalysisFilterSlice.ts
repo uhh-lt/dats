@@ -3,7 +3,7 @@ import { TimelineAnalysisService } from "../../../api/openapi/services/TimelineA
 import { ColumnInfo } from "../../../components/FilterDialog/filterUtils.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { AppDispatch } from "../../../store/store.ts";
-import { TimelineAnalysisFilterActions } from "./timelineAnalysisFilterSlice.ts";
+import { TimelineAnalysisActions } from "./timelineAnalysisSlice.ts";
 
 const useGetTimelineAnalysisInfo = (projectId: number, dispatch: AppDispatch) =>
   useQuery<ColumnInfo[]>({
@@ -22,7 +22,7 @@ const useGetTimelineAnalysisInfo = (projectId: number, dispatch: AppDispatch) =>
           [info.column]: info,
         };
       }, {});
-      dispatch(TimelineAnalysisFilterActions.init({ columnInfoMap }));
+      dispatch(TimelineAnalysisActions.init({ columnInfoMap }));
       return columnInfo;
     },
     staleTime: Infinity,

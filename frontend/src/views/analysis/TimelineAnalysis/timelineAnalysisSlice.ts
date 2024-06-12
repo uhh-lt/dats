@@ -2,7 +2,10 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
 import { DateGroupBy } from "../../../api/openapi/models/DateGroupBy.ts";
 import { LogicalOperator } from "../../../api/openapi/models/LogicalOperator.ts";
+import { StringOperator } from "../../../api/openapi/models/StringOperator.ts";
+import { TimelineAnalysisColumns } from "../../../api/openapi/models/TimelineAnalysisColumns.ts";
 import { TimelineAnalysisConcept_Output } from "../../../api/openapi/models/TimelineAnalysisConcept_Output.ts";
+import { createInitialFilterState, filterReducer, FilterState } from "../../../components/FilterDialog/filterSlice.ts";
 
 export interface TimelineAnalysisConceptOLD {
   id: string;
@@ -27,7 +30,13 @@ export interface TimelineAnalysisState {
   isBarPlot: boolean;
 }
 
-const initialState: TimelineAnalysisState = {
+const initialState: FilterState & TimelineAnalysisState = {
+  ...createInitialFilterState({
+    id: uuidv4(),
+    column: TimelineAnalysisColumns.TA_SOURCE_DOCUMENT_FILENAME,
+    operator: StringOperator.STRING_CONTAINS,
+    value: "",
+  }),
   selectedUserIds: undefined,
   groupBy: DateGroupBy.YEAR,
   projectMetadataId: -1,
@@ -55,6 +64,7 @@ export const timelineAnalysisSlice = createSlice({
   name: "timelineAnalysis",
   initialState,
   reducers: {
+    ...filterReducer,
     setSelectedUserIds: (state, action: PayloadAction<number[]>) => {
       state.selectedUserIds = action.payload;
     },

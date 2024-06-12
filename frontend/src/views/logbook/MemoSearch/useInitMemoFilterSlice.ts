@@ -3,7 +3,7 @@ import { MemoService } from "../../../api/openapi/services/MemoService.ts";
 import { ColumnInfo } from "../../../components/FilterDialog/filterUtils.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { AppDispatch } from "../../../store/store.ts";
-import { MemoFilterActions } from "./memoFilterSlice.ts";
+import { LogbookActions } from "../logbookSlice.ts";
 
 const useGetMemoSearchInfo = (projectId: number, dispatch: AppDispatch) =>
   useQuery<ColumnInfo[]>({
@@ -22,7 +22,7 @@ const useGetMemoSearchInfo = (projectId: number, dispatch: AppDispatch) =>
           [info.column]: info,
         };
       }, {});
-      dispatch(MemoFilterActions.init({ columnInfoMap }));
+      dispatch(LogbookActions.init({ columnInfoMap }));
       return columnInfo;
     },
     staleTime: Infinity,

@@ -1,52 +1,28 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import {
-  MRT_PaginationState,
-  MRT_RowSelectionState,
-  MRT_SortingState,
-  MRT_VisibilityState,
-} from "material-react-table";
 import { SATFilterActions } from "../../../components/SpanAnnotation/SpanAnnotationTable/satFilterSlice.ts";
+import { initialTableState, tableReducer, TableState } from "../../../components/tableSlice.ts";
 
-export interface AnnotatedSegmentsState {
+interface AnnotatedSegmentsState {
   isSplitView: boolean;
   contextSize: number;
-  paginationModel: MRT_PaginationState;
-  rowSelectionModel: MRT_RowSelectionState;
-  sortModel: MRT_SortingState;
-  columnVisibilityModel: MRT_VisibilityState;
 }
 
-const initialState: AnnotatedSegmentsState = {
+const initialState: TableState & AnnotatedSegmentsState = {
+  ...initialTableState,
   isSplitView: false,
   contextSize: 100,
-  paginationModel: { pageIndex: 0, pageSize: 5 },
-  rowSelectionModel: {},
-  sortModel: [],
-  columnVisibilityModel: {},
 };
 
 export const AnnotatedSegmentsSlice = createSlice({
   name: "annotatedSegments",
   initialState,
   reducers: {
+    ...tableReducer,
     toggleSplitView: (state) => {
       state.isSplitView = !state.isSplitView;
     },
     setContextSize: (state, action: PayloadAction<number>) => {
       state.contextSize = action.payload;
-    },
-    onPaginationModelChange: (state, action: PayloadAction<MRT_PaginationState>) => {
-      state.paginationModel = action.payload;
-    },
-    onSelectionModelChange: (state, action: PayloadAction<MRT_RowSelectionState>) => {
-      state.rowSelectionModel = action.payload;
-    },
-    onSortModelChange: (state, action: PayloadAction<MRT_SortingState>) => {
-      state.sortModel = action.payload;
-    },
-    // column visibility
-    onColumnVisibilityChange: (state, action: PayloadAction<MRT_VisibilityState>) => {
-      state.columnVisibilityModel = action.payload;
     },
   },
   extraReducers: (builder) => {

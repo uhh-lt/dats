@@ -23,11 +23,11 @@ import MemoStarButton from "../../../components/Memo/MemoStarButton.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
 import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
+import { LogbookActions } from "../logbookSlice.ts";
 import SearchMemoOptionsMenu from "./SearchMemoOptionsMenu.tsx";
-import { MemoFilterActions } from "./memoFilterSlice.ts";
 import { useInitMemoFilterSlice } from "./useInitMemoFilterSlice.ts";
 
-const filterStateSelector = (state: RootState) => state.memoFilter;
+const filterStateSelector = (state: RootState) => state.logbook;
 const filterName = "root";
 const fetchSize = 20;
 
@@ -41,28 +41,28 @@ function SearchMemoTable({ projectId }: SearchMemoTableProps) {
 
   // global client state (redux) connected to table state
   const [searchQuery, setSearchQuery] = useReduxConnector(
-    (state) => state.memoFilter.searchQuery,
-    MemoFilterActions.onSearchQueryChange,
+    (state) => state.logbook.searchQuery,
+    LogbookActions.onSearchQueryChange,
   );
   const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
-    (state) => state.memoFilter.rowSelectionModel,
-    MemoFilterActions.onRowSelectionModelChange,
+    (state) => state.logbook.rowSelectionModel,
+    LogbookActions.onRowSelectionModelChange,
   );
   const [sortingModel, setSortingModel] = useReduxConnector(
-    (state) => state.memoFilter.sortingModel,
-    MemoFilterActions.onSortModelChange,
+    (state) => state.logbook.sortingModel,
+    LogbookActions.onSortModelChange,
   );
   const [columnVisibilityModel, setColumnVisibilityModel] = useReduxConnector(
-    (state) => state.memoFilter.columnVisibilityModel,
-    MemoFilterActions.onColumnVisibilityChange,
+    (state) => state.logbook.columnVisibilityModel,
+    LogbookActions.onColumnVisibilityChange,
   );
   const [columnSizingModel, setColumnSizingModel] = useReduxConnector(
-    (state) => state.memoFilter.columnSizingModel,
-    MemoFilterActions.onColumnSizingChange,
+    (state) => state.logbook.columnSizingModel,
+    LogbookActions.onColumnSizingChange,
   );
   const [gridDensity, setGridDensity] = useReduxConnector(
-    (state) => state.memoFilter.gridDensity,
-    MemoFilterActions.onGridDensityChange,
+    (state) => state.logbook.gridDensity,
+    LogbookActions.onGridDensityChange,
   );
   const selectedMemoIds = Object.keys(rowSelectionModel).map((id) => parseInt(id));
 
@@ -127,8 +127,8 @@ function SearchMemoTable({ projectId }: SearchMemoTableProps) {
   }, [tableInfo, user]);
 
   // table data
-  const filter = useAppSelector((state) => state.memoFilter.filter[filterName]) || createEmptyFilter(filterName);
-  const isSearchContent = useAppSelector((state) => state.memoFilter.isSearchContent);
+  const filter = useAppSelector((state) => state.logbook.filter[filterName]) || createEmptyFilter(filterName);
+  const isSearchContent = useAppSelector((state) => state.logbook.isSearchContent);
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchDocumentHits>({
     queryKey: [
       "search-memo-table-data",
@@ -262,7 +262,7 @@ function SearchMemoTable({ projectId }: SearchMemoTableProps) {
           buttonProps={{ size: "small" }}
           filterName={filterName}
           filterStateSelector={filterStateSelector}
-          filterActions={MemoFilterActions}
+          filterActions={LogbookActions}
         />
         {selectedMemoIds.length > 0 && (
           <>
