@@ -10,7 +10,7 @@ from api.dependencies import (
 )
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud.annotation_document import crud_adoc
-from app.core.data.crud.user import crud_user
+from app.core.data.crud.user import SYSTEM_USER_ID, crud_user
 from app.core.data.dto.annotation_document import AnnotationDocumentRead
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.user import PublicUserRead, UserRead, UserUpdate
@@ -66,7 +66,8 @@ def update_by_id(
     user: UserUpdate,
     authz_user: AuthzUser = Depends(),
 ) -> UserRead:
-    authz_user.assert_is_same_user(user_id)
+    if user_id != SYSTEM_USER_ID:
+        authz_user.assert_is_same_user(user_id)
 
     db_user = crud_user.update(db=db, id=user_id, update_dto=user)
     return UserRead.model_validate(db_user)
@@ -83,7 +84,9 @@ def delete_by_id(
     user_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> UserRead:
-    authz_user.assert_is_same_user(user_id)
+    if user_id != SYSTEM_USER_ID:
+        authz_user.assert_is_same_user(user_id)
+
     db_user = crud_user.remove(db=db, id=user_id)
     return UserRead.model_validate(db_user)
 
