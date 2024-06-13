@@ -66,7 +66,7 @@ def update_by_id(
     user: UserUpdate,
     authz_user: AuthzUser = Depends(),
 ) -> UserRead:
-    if user_id != SYSTEM_USER_ID:
+    if authz_user.user.id != SYSTEM_USER_ID:
         authz_user.assert_is_same_user(user_id)
 
     db_user = crud_user.update(db=db, id=user_id, update_dto=user)
@@ -84,7 +84,7 @@ def delete_by_id(
     user_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> UserRead:
-    if user_id != SYSTEM_USER_ID:
+    if authz_user.user.id != SYSTEM_USER_ID:
         authz_user.assert_is_same_user(user_id)
 
     db_user = crud_user.remove(db=db, id=user_id)
