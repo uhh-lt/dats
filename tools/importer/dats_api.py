@@ -114,6 +114,16 @@ class DATSAPI:
         r.raise_for_status()
         return r.json()
 
+    # PREPROCESSING JOB
+
+    def read_preprocessing_job_status(self, preprojob_id: int) -> Dict[str, Any]:
+        r = requests.get(
+            self.BASE_PATH + f"prepro/{preprojob_id}",
+            headers={"Authorization": f"Bearer {self.access_token}"},
+        )
+        r.raise_for_status()
+        return r.json()
+
     # SDOCS
 
     def resolve_sdoc_id_from_proj_and_filename(
@@ -176,7 +186,7 @@ class DATSAPI:
         proj_id: int,
         files: List[Tuple[str, Tuple[str, bytes, str]]],
         filter_duplicate_files_before_upload: bool = False,
-    ) -> int:
+    ) -> Dict[str, Any] | None:
         # upload files
         if filter_duplicate_files_before_upload:
             print("Filtering files to upload ...")
@@ -199,10 +209,11 @@ class DATSAPI:
                 headers={"Authorization": f"Bearer {self.access_token}"},
             )
             r.raise_for_status()
+            return r.json()
             print(f"Started uploading {len(files)} files.")
         else:
             print("No files to upload!")
-        return len(files)
+            return None
 
     # TAGS
 

@@ -243,26 +243,37 @@ files = list(temp.values())
 
 
 def upload_file_batch(file_batch: List[Tuple[str, Tuple[str, bytes, str]]]):
-    # status before upload
-    status = api.read_project_status(proj_id=project["id"])
-    sdocs_in_project = status["num_sdocs_finished"]
-
     # file upload
-    num_files_to_upload = api.upload_files(
+    preprocessing_job = api.upload_files(
         proj_id=project["id"],
         files=file_batch,
         filter_duplicate_files_before_upload=args.filter_duplicate_files_before_upload,
     )
+    if preprocessing_job is None:
+        print("Upload skipped!")
+        return
 
-    # wait for pre-processing to finishe
-    status = api.read_project_status(proj_id=project["id"])
-    with tqdm(
-        total=num_files_to_upload, desc="Document Preprocessing: ", position=1
-    ) as pbar:
-        while status["num_sdocs_finished"] != (sdocs_in_project + num_files_to_upload):
+    total = len(preprocessing_job["payloads"])
+
+    status = preprocessing_job["status"]
+    finished_docs = [doc["status"] for doc in preprocessing_job["payloads"]].count(
+        "Finished"
+    )
+
+    with tqdm(total=total, desc="Document Preprocessing: ", position=1) as pbar:
+        pbar.update(finished_docs)
+        while status != "Finished":
             sleep(5)
-            status = api.read_project_status(proj_id=project["id"])
-            pbar.update(status["num_sdocs_finished"] - sdocs_in_project)
+
+            preprocessing_job = api.read_preprocessing_job_status(
+                preprojob_id=preprocessing_job["id"]
+            )
+            status = preprocessing_job["status"]
+            finished_docs = [
+                doc["status"] for doc in preprocessing_job["payloads"]
+            ].count("Finished")
+
+            pbar.update(finished_docs)
 
     print("Upload success!")
 
