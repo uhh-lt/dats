@@ -19,6 +19,7 @@ class DATSAPI:
         self.access_token = None
         self.refresh_token = None
         self.token_type = None
+        self.user_id = None
 
     # LOGIN
     def login(self):
@@ -59,6 +60,15 @@ class DATSAPI:
         self.token_type = data["token_type"]
         print("Refreshed login!")
 
+    def me(self):
+        r = requests.get(
+            self.BASE_PATH + "user/me",
+            headers={"Authorization": f"Bearer {self.access_token}"},
+        )
+        r.raise_for_status()
+        data = r.json()
+        self.user_id = data["id"]
+
     # PROJECTS
 
     def create_project(self, title: str, description: str):
@@ -90,7 +100,7 @@ class DATSAPI:
 
     def read_all_projects(self):
         r = requests.get(
-            self.BASE_PATH + "project",
+            self.BASE_PATH + f"user/{self.user_id}/project",
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()
@@ -120,24 +130,25 @@ class DATSAPI:
         except Exception:
             return None
 
-    def read_all_sdocs(self, proj_id: int):
+    def read_all_sdocIDs(self, proj_id: int):
         # get all sdoc ids
         r = requests.post(
             self.BASE_PATH
-            + f"search/sdoc?search_query=%27%27&project_id={proj_id}&expert_mode=true",
+            + f"search/sdoc?search_query=%20&project_id={proj_id}&expert_mode=false&highlight=false",
             data=json.dumps(
                 {"filter": {"items": [], "logic_operator": "or"}, "sorts": []}
             ),
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()
-        return r.json()
+        hits = r.json()["hits"]
+        return [hit["document_id"] for hit in hits]
 
-    def read_all_sdocs_by_tags(self, proj_id: int, tags: List[int]):
+    def read_all_sdocIDs_by_tags(self, proj_id: int, tags: List[int]):
         # get all sdoc ids
         r = requests.post(
             self.BASE_PATH
-            + f"search/sdoc?search_query=%27%27&project_id={proj_id}&expert_mode=true",
+            + f"search/sdoc?search_query=%20&project_id={proj_id}&expert_mode=false&highlight=false",
             data=json.dumps(
                 {
                     "filter": {
@@ -157,7 +168,8 @@ class DATSAPI:
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()
-        return r.json()
+        hits = r.json()["hits"]
+        return [hit["document_id"] for hit in hits]
 
     def upload_files(
         self,
@@ -194,12 +206,12 @@ class DATSAPI:
 
     # TAGS
 
-    def create_tag(self, title: str, description: str, color: str, proj_id: int):
+    def create_tag(self, name: str, description: str, color: str, proj_id: int):
         r = requests.put(
             self.BASE_PATH + "doctag",
             data=json.dumps(
                 {
-                    "title": title,
+                    "name": name,
                     "description": description,
                     "color": color,
                     "project_id": proj_id,
@@ -220,10 +232,10 @@ class DATSAPI:
         r.raise_for_status()
         return r.json()
 
-    def get_tag_by_title(self, proj_id: int, title: str):
+    def get_tag_by_name(self, proj_id: int, name: str):
         tags = self.read_all_tags(proj_id=proj_id)
         try:
-            idx = list(map(lambda x: x["title"], tags)).index(title)
+            idx = list(map(lambda x: x["name"], tags)).index(name)
             return tags[idx]
         except ValueError:
             return None
@@ -312,6 +324,7 @@ class DATSAPI:
 if __name__ == "__main__":
     dats = DATSAPI(base_path="http://localhost:19220/")
     dats.login()
+    dats.me()
 
     # create project
     project = dats.create_project(title="test", description="test")
@@ -335,12 +348,12 @@ if __name__ == "__main__":
 
     # create tag
     tag = dats.create_tag(
-        title="test tag", description="my test tag", color="blue", proj_id=project["id"]
+        name="test tag", description="my test tag", color="blue", proj_id=project["id"]
     )
     print("created tag", tag)
 
     # get tag
-    tag = dats.get_tag_by_title(proj_id=project["id"], title="test tag")
+    tag = dats.get_tag_by_name(proj_id=project["id"], name="test tag")
     print("got tag", tag)
 
     # get tags
@@ -358,7 +371,7 @@ if __name__ == "__main__":
 
     files: List[Tuple[str, Tuple[str, bytes, str]]] = []
     for file in Path("./test_files").iterdir():
-        if not file.is_file():
+        if not file.is_file() or file.suffix != ".txt":
             continue
 
         file_bytes = file.read_bytes()
@@ -381,15 +394,14 @@ if __name__ == "__main__":
     print("Upload success!")
 
     # get all sdocs
-    sdoc_ids = dats.read_all_sdocs(proj_id=project["id"])
+    sdoc_ids = dats.read_all_sdocIDs(proj_id=project["id"])
     print("got all sdocs ids", sdoc_ids)
 
     # bulk apply tags
     dats.bulk_apply_tags(sdoc_ids=sdoc_ids, tag_ids=[tag["id"]])
-    print("applied tags to sdocs")
 
     # read all sdocs by tags
-    sdoc_ids = dats.read_all_sdocs_by_tags(proj_id=project["id"], tags=[tag["id"]])
+    sdoc_ids = dats.read_all_sdocIDs_by_tags(proj_id=project["id"], tags=[tag["id"]])
     print("got all sdocs ids by tags", sdoc_ids)
 
     # create project metadata

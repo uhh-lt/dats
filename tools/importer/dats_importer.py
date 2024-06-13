@@ -6,7 +6,7 @@ from time import sleep
 from typing import List, Tuple
 
 import magic
-from tools.importer.dats_api import DATSAPI
+from dats_api import DATSAPI
 from tqdm import tqdm
 
 parser = argparse.ArgumentParser(description="DATS file importer")
@@ -139,9 +139,9 @@ parser.add_argument(
 )
 parser.add_argument(
     "--max_num_docs",
-    help="The maximum number of documents to upload. Default is 400",
+    help="The maximum number of documents to upload. Default is no limit",
     type=int,
-    default=400,
+    default=-1,
     required=False,
     dest="max_num_docs",
 )
@@ -155,6 +155,7 @@ api = DATSAPI(
     base_path=args.backend_url, username=args.username, password=args.password
 )
 api.login()
+api.me()
 
 # create new project if it does not exist
 # if project_id is set, use that
@@ -267,7 +268,9 @@ def upload_file_batch(file_batch: List[Tuple[str, Tuple[str, bytes, str]]]):
 
 
 print(f"Uploading {len(files)} files to project '{project['title']}'!")
-print(f"Limited to {args.max_num_docs}.")
+if (args.max_num_docs != -1) and (len(files) > args.max_num_docs):
+    print("WARNING: More files found than max_num_docs!")
+    print(f"Limited to {args.max_num_docs}.")
 
 # upload files batchwise, 200 files at a time
 num_batches = math.ceil(len(files) / args.batch_size)
@@ -278,15 +281,15 @@ for i in tqdm(
 ):
     upload_file_batch(file_batch=files[i : i + args.batch_size])
     api.refresh_login()
-    if (i + args.batch_size) >= args.max_num_docs:
+    if args.max_num_docs != -1 and (i + args.batch_size) >= args.max_num_docs:
         break
 
 
 # create new tag if it does not exist
-tag = api.get_tag_by_title(proj_id=project["id"], title=args.tag_name)
+tag = api.get_tag_by_name(proj_id=project["id"], name=args.tag_name)
 if tag is None:
     tag = api.create_tag(
-        title=args.tag_name,
+        name=args.tag_name,
         description=args.tag_description,
         color="blue",
         proj_id=project["id"],
@@ -294,8 +297,8 @@ if tag is None:
 
 # apply tag to all untagged documents
 tag_ids = [tag["id"] for tag in api.read_all_tags(proj_id=project["id"])]
-sdoc_ids = set(api.read_all_sdocs(proj_id=project["id"]))
-tagged_sdoc_ids = set(api.read_all_sdocs_by_tags(proj_id=project["id"], tags=tag_ids))
+sdoc_ids = set(api.read_all_sdocIDs(proj_id=project["id"]))
+tagged_sdoc_ids = set(api.read_all_sdocIDs_by_tags(proj_id=project["id"], tags=tag_ids))
 untagged_sdoc_ids = sdoc_ids - tagged_sdoc_ids
 api.bulk_apply_tags(sdoc_ids=list(untagged_sdoc_ids), tag_ids=[tag["id"]])
 
