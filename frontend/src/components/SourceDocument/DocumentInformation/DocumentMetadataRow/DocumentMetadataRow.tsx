@@ -1,7 +1,7 @@
 import { ErrorMessage } from "@hookform/error-message";
-import { Autocomplete, Box, Chip, Stack, Switch, TextField } from "@mui/material";
+import { Stack } from "@mui/material";
 import { useCallback } from "react";
-import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import SdocMetadataHooks from "../../../../api/SdocMetadataHooks.ts";
 
 import { MetaType } from "../../../../api/openapi/models/MetaType.ts";
@@ -10,6 +10,11 @@ import { SourceDocumentMetadataReadResolved } from "../../../../api/openapi/mode
 import { SourceDocumentMetadataUpdate } from "../../../../api/openapi/models/SourceDocumentMetadataUpdate.ts";
 import { useOpenSnackbar } from "../../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { dateToLocaleYYYYMMDDString } from "../../../../utils/DateUtils.ts";
+import FormChipList from "../../../FormInputs/FormChipList.tsx";
+import FormDate from "../../../FormInputs/FormDate.tsx";
+import FormNumber from "../../../FormInputs/FormNumber.tsx";
+import FormSwitch from "../../../FormInputs/FormSwitch.tsx";
+import FormText from "../../../FormInputs/FormText.tsx";
 import MetadataEditMenu from "../MetadataEditMenu.tsx";
 import DocumentMetadataAddFilterButton from "./DocumentMetadataAddFilterButton.tsx";
 import DocumentMetadataGoToButton from "./DocumentMetadataGoToButton.tsx";
@@ -23,7 +28,6 @@ interface DocumentMetadataRowProps {
 function DocumentMetadataRow({ metadata, filterName }: DocumentMetadataRowProps) {
   // use react hook form
   const {
-    register,
     handleSubmit,
     formState: { errors },
     control,
@@ -88,122 +92,92 @@ function DocumentMetadataRow({ metadata, filterName }: DocumentMetadataRowProps)
   switch (metadata.project_metadata.metatype) {
     case MetaType.STRING:
       inputField = (
-        <TextField
-          {...register("str_value", { required: "Value is required" })}
-          error={Boolean(errors.str_value)}
-          helperText={<ErrorMessage errors={errors} name="str_value" />}
-          variant="standard"
-          disabled={metadata.project_metadata.read_only}
-          onBlur={() => handleSubmit(handleUpdateMetadata, handleError)()}
-          sx={{
-            flexGrow: 1,
-            flexBasis: 1,
+        <FormText
+          name="str_value"
+          control={control}
+          textFieldProps={{
+            error: Boolean(errors.str_value),
+            helperText: <ErrorMessage errors={errors} name="str_value" />,
+            variant: "standard",
+            disabled: metadata.project_metadata.read_only,
+            onBlur: () => handleSubmit(handleUpdateMetadata, handleError)(),
+            sx: {
+              flexGrow: 1,
+              flexBasis: 1,
+            },
           }}
         />
       );
       break;
     case MetaType.NUMBER:
       inputField = (
-        <TextField
-          {...register("int_value", { required: "Value is required" })}
-          error={Boolean(errors.int_value)}
-          helperText={<ErrorMessage errors={errors} name="int_value" />}
-          variant="standard"
-          type="number"
-          disabled={metadata.project_metadata.read_only}
-          onBlur={() => handleSubmit(handleUpdateMetadata, handleError)()}
-          sx={{
-            flexGrow: 1,
-            flexBasis: 1,
+        <FormNumber
+          name="int_value"
+          control={control}
+          textFieldProps={{
+            error: Boolean(errors.int_value),
+            helperText: <ErrorMessage errors={errors} name="int_value" />,
+            variant: "standard",
+            disabled: metadata.project_metadata.read_only,
+            onBlur: () => handleSubmit(handleUpdateMetadata, handleError)(),
+            sx: {
+              flexGrow: 1,
+              flexBasis: 1,
+            },
           }}
         />
       );
       break;
     case MetaType.BOOLEAN:
       inputField = (
-        <Controller
+        <FormSwitch
           name="boolean_value"
-          render={({ field }) => (
-            <Box
-              sx={{
-                flexGrow: 1,
-                flexBasis: 1,
-              }}
-            >
-              <Switch
-                {...field}
-                checked={field.value === null ? false : field.value}
-                onChange={(e) => field.onChange(e.target.checked)}
-                onBlur={() => handleSubmit(handleUpdateMetadata, handleError)()}
-              />
-            </Box>
-          )}
           control={control}
+          boxProps={{ sx: { flexGrow: 1, flexBasis: 1 } }}
+          switchProps={{ onBlur: () => handleSubmit(handleUpdateMetadata, handleError)() }}
         />
       );
       break;
     case MetaType.DATE:
       inputField = (
-        <TextField
-          {...register("date_value", { required: "Value is required" })}
-          error={Boolean(errors.date_value)}
-          helperText={<ErrorMessage errors={errors} name="date_value" />}
-          variant="standard"
-          type="date"
-          disabled={metadata.project_metadata.read_only}
-          onBlur={() => handleSubmit(handleUpdateMetadata, handleError)()}
-          sx={{
-            flexGrow: 1,
-            flexBasis: 1,
+        <FormDate
+          name="date_value"
+          control={control}
+          textFieldProps={{
+            error: Boolean(errors.date_value),
+            helperText: <ErrorMessage errors={errors} name="date_value" />,
+            variant: "standard",
+            disabled: metadata.project_metadata.read_only,
+            onBlur: () => handleSubmit(handleUpdateMetadata, handleError)(),
+            sx: {
+              flexGrow: 1,
+              flexBasis: 1,
+            },
           }}
         />
       );
       break;
     case MetaType.LIST:
       inputField = (
-        <Controller
+        <FormChipList
           name="list_value"
-          rules={{ required: true }}
-          render={({ field }) => {
-            return (
-              <Autocomplete
-                value={field.value ? [...field.value] : []}
-                onChange={(_event, newValue) => {
-                  field.onChange(newValue);
-                }}
-                disabled={metadata.project_metadata.read_only}
-                sx={{
-                  flexGrow: 1,
-                  flexBasis: 1,
-                }}
-                multiple
-                options={[]}
-                freeSolo
-                disableClearable
-                renderTags={(value: readonly string[], getTagProps) =>
-                  value.map((option: string, index: number) => (
-                    <Chip
-                      style={{ borderRadius: "4px", height: "100%" }}
-                      variant="filled"
-                      label={option}
-                      {...getTagProps({ index })}
-                    />
-                  ))
-                }
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    fullWidth
-                    variant="standard"
-                    placeholder={metadata.project_metadata.key}
-                    onBlur={() => handleSubmit(handleUpdateMetadata, handleError)()}
-                    helperText={<></>}
-                  />
-                )}
-              />
-            );
-          }}
           control={control}
+          rules={{ required: true }}
+          autoCompleteProps={{
+            sx: {
+              flexGrow: 1,
+              flexBasis: 1,
+            },
+            disabled: metadata.project_metadata.read_only,
+          }}
+          textFieldProps={{
+            fullWidth: true,
+            variant: "standard",
+            placeholder: metadata.project_metadata.key,
+            onBlur: () => handleSubmit(handleUpdateMetadata, handleError)(),
+            error: Boolean(errors.list_value),
+            helperText: <ErrorMessage errors={errors} name="list_value" />,
+          }}
         />
       );
       break;
