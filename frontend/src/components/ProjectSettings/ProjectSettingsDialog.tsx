@@ -60,7 +60,7 @@ function ProjectSettingsDialog() {
           deleteProjectMutation.mutate(
             { projId: project.data.id, userId: user.id },
             {
-              onSuccess: () => navigate(`/projectsettings`),
+              onSuccess: () => navigate(`/projects`),
             },
           );
         },

@@ -10,10 +10,6 @@ export const USER_GUIDE_ROUTE_MAP = {
     route: "project-overview",
     description: "This page provides provides an overview of all your projects and recently annotated documents",
   },
-  projectsettings: {
-    route: "project-settings",
-    description: "This page provides tools to create, edit, and delete projects",
-  },
   search: { route: "search", description: "This page provides tools for searching and filtering documents" },
   annotation: { route: "annotation", description: "This page provides tools to annotate documents" },
   analysis: { route: "analysis", description: "This page provides tools for analysis" },
