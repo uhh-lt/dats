@@ -255,23 +255,31 @@ def upload_file_batch(file_batch: List[Tuple[str, Tuple[str, bytes, str]]]):
 
     total = len(preprocessing_job["payloads"])
 
-    status = preprocessing_job["status"]
-    finished_docs = [doc["status"] for doc in preprocessing_job["payloads"]].count(
-        "Finished"
-    )
+    # WAITING = "Waiting"  # Initializing (not started yet)
+    # RUNNING = "Running"  # (currently in progress)
+    # FINISHED = "Finished"  # (successfully finished)
+    # ERROR = "Errorneous"  # (failed to finish)
+    # ABORTED = "Aborted"  # (aborted by user)
+    payloads_status = [payload["status"] for payload in preprocessing_job["payloads"]]
+    finished_docs = payloads_status.count("Finished")
+    is_finished = not ("Waiting" in payloads_status or "Running" in payloads_status)
 
     with tqdm(total=total, desc="Document Preprocessing: ", position=1) as pbar:
         pbar.update(finished_docs)
-        while status != "Finished":
+        while not is_finished:
             sleep(5)
 
             preprocessing_job = api.read_preprocessing_job_status(
                 preprojob_id=preprocessing_job["id"]
             )
-            status = preprocessing_job["status"]
-            finished_docs = [
-                doc["status"] for doc in preprocessing_job["payloads"]
-            ].count("Finished")
+
+            payloads_status = [
+                payload["status"] for payload in preprocessing_job["payloads"]
+            ]
+            finished_docs = payloads_status.count("Finished")
+            is_finished = not (
+                "Waiting" in payloads_status or "Running" in payloads_status
+            )
 
             pbar.update(finished_docs)
 
