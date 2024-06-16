@@ -164,11 +164,6 @@ services:
       - ray
     networks:
       - dats_demo_network
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - capabilities: [gpu]
     profiles:
       - background
 
@@ -209,7 +204,9 @@ services:
       resources:
         reservations:
           devices:
-            - capabilities: [gpu]
+            - driver: nvidia
+              device_ids: ["0"]
+              capabilities: [gpu]
     profiles:
       - ray
 
