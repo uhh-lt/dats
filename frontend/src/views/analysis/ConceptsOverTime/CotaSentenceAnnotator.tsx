@@ -261,6 +261,7 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
     autoResetAll: false,
     manualFiltering: false, // turn on client-side filtering
     enableGlobalFilter: true,
+    enableGlobalFilterModes: true, //enable the user to choose between multiple search filter modes
     // selection
     enableRowSelection: true,
     onRowSelectionChange: setRowSelectionModel,
