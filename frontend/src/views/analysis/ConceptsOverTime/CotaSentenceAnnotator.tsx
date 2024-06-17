@@ -15,7 +15,6 @@ import {
   MRT_RowVirtualizer,
   MRT_ShowHideColumnsButton,
   MRT_ToggleDensePaddingButton,
-  MRT_ToggleGlobalFilterButton,
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
@@ -249,6 +248,7 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
     // state
     state: {
       rowSelection: rowSelectionModel,
+      showGlobalFilter: true,
     },
     // initial state
     initialState: {
@@ -313,7 +313,6 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
     ),
     renderToolbarInternalActions: ({ table }) => (
       <Stack direction={"row"} spacing={1} alignItems="center">
-        <MRT_ToggleGlobalFilterButton table={table} disabled={false} />
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleDensePaddingButton table={table} />
       </Stack>
