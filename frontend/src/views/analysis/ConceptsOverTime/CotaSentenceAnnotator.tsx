@@ -65,6 +65,7 @@ function CotaSentenceAnnotator2({ cota }: CotaSentenceAnnotatorProps) {
         }
         title={title}
         subheader="Annotate sentences to improve the timeline analysis"
+        sx={{ pb: 0 }}
       />
       <CardContent className="myFlexFillAllContainer" style={{ ...(selectedConcept && { padding: 0 }) }}>
         {!selectedConcept ? (

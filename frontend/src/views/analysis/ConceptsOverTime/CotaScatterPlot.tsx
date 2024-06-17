@@ -223,6 +223,7 @@ function CotaScatterPlot({ cota }: CotaScatterPlotProps) {
           title={"Scatter Plot"}
           subheader={`Hover on a dot to see more information. Right-click dot to modify.`}
           action={<CotaPlotToggleButton />}
+          sx={{ pb: 0 }}
         />
         <CardContent className="myFlexFillAllContainer">{content}</CardContent>
       </Card>
