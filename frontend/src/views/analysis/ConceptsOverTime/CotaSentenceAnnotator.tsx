@@ -3,7 +3,7 @@ import CircleIcon from "@mui/icons-material/Circle";
 import ClearIcon from "@mui/icons-material/Clear";
 import DeleteIcon from "@mui/icons-material/Delete";
 import InfoIcon from "@mui/icons-material/Info";
-import { Button, ListItemIcon, ListItemText, Menu, MenuItem, Stack, Typography } from "@mui/material";
+import { Button, ListItemIcon, ListItemText, Menu, MenuItem, Stack } from "@mui/material";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
@@ -299,6 +299,8 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
     muiTableContainerProps: {
       style: { flexGrow: 1 },
     },
+    // disable footer
+    enableBottomToolbar: false,
     // toolbar
     positionToolbarAlertBanner: "head-overlay",
     renderTopToolbarCustomActions: () => (
@@ -314,11 +316,6 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
         <MRT_ToggleGlobalFilterButton table={table} disabled={false} />
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleDensePaddingButton table={table} />
-      </Stack>
-    ),
-    renderBottomToolbarCustomActions: () => (
-      <Stack direction={"row"} spacing={1} alignItems="center">
-        <Typography>Found {searchSpace.length} sentences.</Typography>
       </Stack>
     ),
   });
