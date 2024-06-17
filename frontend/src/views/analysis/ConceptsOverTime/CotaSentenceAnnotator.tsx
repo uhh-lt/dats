@@ -138,18 +138,21 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
       {
         id: "similarity",
         header: "Similarity",
+        size: 145,
         Cell: ({ row }) => <>{(row.original.concept_similarities[concept.id] * 100.0).toFixed(2)}</>,
         accessorFn: (row) => row.concept_similarities[concept.id],
       },
       {
         id: "probability",
         header: "Probability",
+        size: 155,
         Cell: ({ row }) => <>{(row.original.concept_probabilities[concept.id] * 100.0).toFixed(2)}</>,
         accessorFn: (row) => row.concept_probabilities[concept.id],
       },
       {
         id: "annotation",
         header: "Annotation",
+        size: 155,
         accessorFn: (row) => (row.concept_annotation ? conceptDict[row.concept_annotation].name : ""),
         muiTableBodyCellProps({ row }) {
           return {
@@ -169,6 +172,7 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
       {
         id: "sentence",
         header: "Sentence",
+        grow: 1,
         accessorFn: (row) => row.text,
       },
     ] as MRT_ColumnDef<COTASentence>[];
