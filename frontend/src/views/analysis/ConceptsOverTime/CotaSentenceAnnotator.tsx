@@ -162,7 +162,7 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
         },
       },
       {
-        id: "sdocId",
+        id: "sdoc",
         header: "Document",
         Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdoc_id} link renderFilename />,
       },
@@ -253,6 +253,9 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
           desc: true,
         },
       ],
+      columnVisibility: {
+        sdoc: false,
+      },
     },
     // search query
     autoResetAll: false,
