@@ -48,7 +48,7 @@ function CotaSentenceAnnotator2({ cota }: CotaSentenceAnnotatorProps) {
 
   let title = "Similar sentences";
   if (selectedConcept) {
-    title += ` for concept ${selectedConcept.name}`;
+    title += ` for "${selectedConcept.name}"`;
   }
   if (selectedDate) {
     title += ` on date ${selectedDate}`;
