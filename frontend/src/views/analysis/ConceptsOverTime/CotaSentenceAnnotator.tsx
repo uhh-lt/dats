@@ -241,7 +241,6 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
             text: `Updated CotA '${data.name}'`,
             severity: "success",
           });
-          setRowSelectionModel({});
         },
       },
     );
