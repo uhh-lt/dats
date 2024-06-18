@@ -18,7 +18,7 @@ import {
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef } from "react";
 import CotaHooks from "../../../api/CotaHooks.ts";
 import { COTAConcept } from "../../../api/openapi/models/COTAConcept.ts";
 import { COTARead } from "../../../api/openapi/models/COTARead.ts";
@@ -26,8 +26,9 @@ import { COTASentenceID } from "../../../api/openapi/models/COTASentenceID.ts";
 import { DateGroupBy } from "../../../api/openapi/models/DateGroupBy.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { dateToLocaleDate } from "../../../utils/DateUtils.ts";
+import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
 import { CotaActions } from "./cotaSlice.ts";
 
 interface CotaSentenceAnnotatorProps {
@@ -87,13 +88,12 @@ interface SimilarSentencesTableProps {
 }
 
 function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
-  // local state
-  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
-
   // global client state (redux)
-  const provenanceSdocIdSentenceId = useAppSelector((state) => state.cota.provenanceSdocIdSentenceId);
+  const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
+    (state) => state.cota.rowSelectionModel,
+    CotaActions.onRowSelectionChange,
+  );
   const selectedDate = useAppSelector((state) => state.cota.selectedDate);
-  const dispatch = useAppDispatch();
 
   // snackbar
   const openSnackbar = useOpenSnackbar();
@@ -205,26 +205,26 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
   }, [cota.concepts]);
 
   // scroll
-  useEffect(() => {
-    provenanceSdocIdSentenceId &&
-      requestIdleCallback(() => {
-        const [sdocIdStr, sentenceIdStr] = provenanceSdocIdSentenceId.toString().split("-");
-        const sdocId = parseInt(sdocIdStr);
-        const sentenceId = parseInt(sentenceIdStr);
-        const scrollToIndex = searchSpace.findIndex(
-          (cotaSentence) => cotaSentence.sdocId === sdocId && cotaSentence.sentenceId === sentenceId,
-        );
-        try {
-          if (scrollToIndex !== -1) {
-            rowVirtualizerInstanceRef.current?.scrollToIndex?.(scrollToIndex);
-          } else {
-            rowVirtualizerInstanceRef.current?.scrollToIndex?.(0);
-          }
-        } catch (error) {
-          console.error(error);
-        }
-      });
-  }, [provenanceSdocIdSentenceId, searchSpace]);
+  // useEffect(() => {
+  //   provenanceSdocIdSentenceId &&
+  //     requestIdleCallback(() => {
+  //       const [sdocIdStr, sentenceIdStr] = provenanceSdocIdSentenceId.toString().split("-");
+  //       const sdocId = parseInt(sdocIdStr);
+  //       const sentenceId = parseInt(sentenceIdStr);
+  //       const scrollToIndex = searchSpace.findIndex(
+  //         (cotaSentence) => cotaSentence.sdocId === sdocId && cotaSentence.sentenceId === sentenceId,
+  //       );
+  //       try {
+  //         if (scrollToIndex !== -1) {
+  //           rowVirtualizerInstanceRef.current?.scrollToIndex?.(scrollToIndex);
+  //         } else {
+  //           rowVirtualizerInstanceRef.current?.scrollToIndex?.(0);
+  //         }
+  //       } catch (error) {
+  //         console.error(error);
+  //       }
+  //     });
+  // }, [provenanceSdocIdSentenceId, searchSpace]);
 
   // actions
   const annotateCotaSentences = CotaHooks.useAnnotateCotaSentences();
@@ -310,14 +310,6 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
     enableColumnResizing: true,
     columnResizeMode: "onEnd",
     // mui components
-    muiTableBodyRowProps: ({ row }) => ({
-      onClick: () => {
-        dispatch(CotaActions.onSentenceAnnotatorRowClick(row.id));
-      },
-      sx: {
-        backgroundColor: provenanceSdocIdSentenceId === row.id ? "lightgrey !important" : undefined,
-      },
-    }),
     muiTablePaperProps: {
       style: { height: "100%", display: "flex", flexDirection: "column" },
     },

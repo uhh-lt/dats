@@ -14,6 +14,7 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
+import { MRT_RowSelectionState } from "material-react-table";
 import React, { useMemo, useRef, useState } from "react";
 import {
   CartesianGrid,
@@ -51,7 +52,7 @@ function CotaScatterPlot({ cota }: CotaScatterPlotProps) {
 
   // redux
   const dispatch = useAppDispatch();
-  const provenanceSdocIdSentenceId = useAppSelector((state) => state.cota.provenanceSdocIdSentenceId);
+  const rowSelectionModel = useAppSelector((state) => state.cota.rowSelectionModel);
 
   // computed
   const { chartData, xDomain, yDomain, conceptId2Concept } = useMemo(() => {
@@ -188,7 +189,7 @@ function CotaScatterPlot({ cota }: CotaScatterPlotProps) {
                 <ScatterPlotDot
                   props={props}
                   onClick={handleDotClick}
-                  provenanceSdocIdSentenceId={provenanceSdocIdSentenceId}
+                  selectionModel={rowSelectionModel}
                   onContextMenu={handleDotContextMenu}
                   radius={5}
                 />
@@ -204,7 +205,7 @@ function CotaScatterPlot({ cota }: CotaScatterPlotProps) {
               <ScatterPlotDot
                 props={props}
                 onClick={handleDotClick}
-                provenanceSdocIdSentenceId={provenanceSdocIdSentenceId}
+                selectionModel={rowSelectionModel}
                 onContextMenu={handleDotContextMenu}
                 radius={2}
               />
@@ -240,14 +241,14 @@ function CotaScatterPlot({ cota }: CotaScatterPlotProps) {
 interface ScatterPlotDotProps {
   props: any;
   onClick: (sdocIdSentenceId: string) => void;
-  provenanceSdocIdSentenceId: string | undefined;
+  selectionModel: MRT_RowSelectionState;
   onContextMenu: (position: PopoverPosition, sentence: COTASentenceID) => void;
   radius: number;
 }
 
-function ScatterPlotDot({ props, onClick, provenanceSdocIdSentenceId, onContextMenu, radius }: ScatterPlotDotProps) {
+function ScatterPlotDot({ props, onClick, selectionModel, onContextMenu, radius }: ScatterPlotDotProps) {
   const sdocIdSentenceId = `${props.sdoc_id}-${props.sentence_id}`;
-  const isSelected = sdocIdSentenceId === provenanceSdocIdSentenceId;
+  const isSelected = Boolean(selectionModel[sdocIdSentenceId]);
 
   const handleContextMenu = (_dot: DotProps, event: React.MouseEvent<SVGCircleElement, MouseEvent>) => {
     event.preventDefault();

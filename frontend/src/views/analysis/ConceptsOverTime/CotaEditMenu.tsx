@@ -23,7 +23,7 @@ const CotaEditMenu = forwardRef<GenericPositionMenuHandle, CotaEditMenuProps>(
           <ListItemText>Clear annotation</ListItemText>
         </MenuItem>
         {cota.concepts.map((concept) => (
-          <MenuItem onClick={() => onAnnotateSentences(concept.id)}>
+          <MenuItem onClick={() => onAnnotateSentences(concept.id)} key={concept.id}>
             <ListItemIcon>
               <CircleIcon fontSize="small" style={{ color: concept.color }} />
             </ListItemIcon>
