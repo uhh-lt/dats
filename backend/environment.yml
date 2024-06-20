@@ -37,6 +37,7 @@ dependencies:
   - python-jose=3.3
   - python-magic=0.4
   - python-multipart=0.0.5
+  - pytest-order=1.0.1
   - python=3.11
   - readability-lxml=0.8.1
   - redis-py=4.3
