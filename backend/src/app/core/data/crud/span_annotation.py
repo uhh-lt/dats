@@ -5,11 +5,14 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.annotation_document import crud_adoc
+from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import CRUDBase
+from app.core.data.crud.entity import crud_entity
 from app.core.data.crud.span_group import crud_span_group
 from app.core.data.crud.span_text import crud_span_text
 from app.core.data.dto.action import ActionType
 from app.core.data.dto.code import CodeRead
+from app.core.data.dto.entity import EntityCreate, EntityMark
 from app.core.data.dto.span_annotation import (
     SpanAnnotationCreate,
     SpanAnnotationCreateWithCodeId,
@@ -33,6 +36,20 @@ class CRUDSpanAnnotation(
         # first create the SpanText
         span_text_orm = crud_span_text.create(
             db=db, create_dto=SpanTextCreate(text=create_dto.span_text)
+        )
+
+        # create the entity
+        code = (
+            db.query(CodeORM).filter(CodeORM.id == create_dto.current_code_id).first()
+        )
+        project_id = code.project_id
+        crud_entity.create(
+            db=db,
+            create_dto=EntityCreate(
+                name=create_dto.span_text,
+                project_id=project_id,
+                span_text_ids=[span_text_orm.id],
+            ),
         )
 
         # create the SpanAnnotation (and link the SpanText via FK)
@@ -89,6 +106,23 @@ class CRUDSpanAnnotation(
                 SpanTextCreate(text=create_dto.span_text) for create_dto in create_dtos
             ],
         )
+
+        # create the entities
+        code = crud_code.read(db=db, id=create_dtos[0].current_code_id)
+        project_id = code.project_id
+        try:
+            crud_entity.mark_multi(
+                db=db,
+                mark_dtos=[
+                    EntityMark(
+                        project_id=project_id,
+                        span_text_id=span_text_orm.id,
+                    )
+                    for span_text_orm in span_texts_orm
+                ],
+            )
+        except Exception as e:
+            raise Exception(e)
 
         # create the SpanAnnotation (and link the SpanText via FK)
         dto_objs_data = [
