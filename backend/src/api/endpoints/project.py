@@ -551,19 +551,3 @@ def get_project_entities(
     result = [EntityRead.model_validate(entity) for entity in result]
     result.sort(key=lambda c: c.id)
     return result
-
-
-@router.delete(
-    "/{proj_id}/entity",
-    response_model=List[int],
-    summary="Removes all Entities of the Project with the given ID if it exists",
-)
-def delete_project_entity(
-    *,
-    proj_id: int,
-    db: Session = Depends(get_db_session),
-    authz_user: AuthzUser = Depends(),
-) -> List[int]:
-    authz_user.assert_in_project(proj_id)
-
-    return crud_entity.remove_by_project(db=db, proj_id=proj_id)

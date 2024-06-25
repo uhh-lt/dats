@@ -12,7 +12,7 @@ from app.core.data.crud.span_group import crud_span_group
 from app.core.data.crud.span_text import crud_span_text
 from app.core.data.dto.action import ActionType
 from app.core.data.dto.code import CodeRead
-from app.core.data.dto.entity import EntityCreate, EntityMark
+from app.core.data.dto.entity import EntityCreate
 from app.core.data.dto.span_annotation import (
     SpanAnnotationCreate,
     SpanAnnotationCreateWithCodeId,
@@ -111,14 +111,15 @@ class CRUDSpanAnnotation(
         code = crud_code.read(db=db, id=create_dtos[0].current_code_id)
         project_id = code.project_id
         try:
-            crud_entity.mark_multi(
+            crud_entity.create_multi(
                 db=db,
-                mark_dtos=[
-                    EntityMark(
+                create_dtos=[
+                    EntityCreate(
                         project_id=project_id,
-                        span_text_id=span_text_orm.id,
+                        name=dto.span_text,
+                        span_text_ids=[id[0]],
                     )
-                    for span_text_orm in span_texts_orm
+                    for id, dto in zip(span_texts_orm, create_dtos)
                 ],
             )
         except Exception as e:

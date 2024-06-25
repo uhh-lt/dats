@@ -31,11 +31,7 @@ class EntityUpdate(EntityBaseDTO, UpdateDTOBase):
     pass
 
 
-class EntityMark(EntityBaseDTO):
-    span_text_id: int = Field(description="Span Text Id to mark")
-    project_id: int = Field(description="Project the Entity belongs to")
-
-
+# Properties for merging entities/span texts
 class EntityMerge(EntityBaseDTO):
     name: str = Field(description="Name of the Entity")
     project_id: int = Field(description="Id of the current Project")
@@ -43,14 +39,9 @@ class EntityMerge(EntityBaseDTO):
     spantext_ids: List[int] = Field(description="List of Span Text IDs to merge")
 
 
-class EntityResolve(EntityBaseDTO):
-    project_id: int = Field(description="Id of the current Project")
-    entity_ids: List[int] = Field(description="List of Entity IDs to merge")
-    spantext_ids: List[int] = Field(description="List of Span Text IDs to merge")
-
-
+# Properties for releasing entities/span texts
 class EntityRelease(EntityBaseDTO):
-    name: str = Field(description="Name of the Entity")
+    project_id: int = Field(description="Id of the current Project")
     entity_ids: List[int] = Field(description="List of Entity IDs to merge")
     spantext_ids: List[int] = Field(description="List of Span Text IDs to merge")
 

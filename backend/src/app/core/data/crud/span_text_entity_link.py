@@ -1,6 +1,5 @@
-from typing import Any, Dict, List, Optional
+from typing import List
 
-import srsly
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
@@ -11,7 +10,6 @@ from app.core.data.dto.span_text_entity_link import (
 )
 from app.core.data.orm.entity import EntityORM
 from app.core.data.orm.span_text_entity_link import SpanTextEntityLinkORM
-from config import conf
 
 # we need:
 # create
@@ -33,23 +31,94 @@ class CRUDSpanTextEntityLink(
         db.commit()
         return db_obj
 
+    def create_multi(
+        self, db: Session, *, create_dtos: List[SpanTextEntityLinkCreate], force: bool
+    ) -> List[SpanTextEntityLinkORM]:
+        # One assumption is that all entities have the same project_id
+        if len(create_dtos) == 0:
+            return []
+        project_id = (
+            db.query(EntityORM)
+            .filter(EntityORM.id == create_dtos[0].linked_entity_id)
+            .first()
+            .project_id
+        )
+        all_ids = [link.linked_span_text_id for link in create_dtos]
+        existing_links = self.read_multi_span_text_and_project_id(
+            db=db, span_text_ids=all_ids, project_id=project_id
+        )
+        existing_ids = [d.linked_span_text_id for d in existing_links]
+        to_create = {
+            dto.linked_span_text_id: dto
+            for dto in create_dtos
+            if dto.linked_span_text_id not in existing_ids
+        }
+        to_create = to_create.values()
+
+        if len(to_create) > 0:
+            db_objs = [self.model(**jsonable_encoder(dto)) for dto in to_create]
+            db.bulk_save_objects(db_objs)
+            db.commit()
+        if len(existing_links) > 0:
+            if force:
+                existing_links_map = {
+                    link.linked_span_text_id: link for link in existing_links
+                }
+                for create_dto in create_dtos:
+                    if create_dto.linked_span_text_id in existing_links_map:
+                        existing_links_map[
+                            create_dto.linked_span_text_id
+                        ].linked_entity_id = create_dto.linked_entity_id
+                ids = [dto.id for dto in existing_links]
+                update_dtos = [
+                    SpanTextEntityLinkUpdate(
+                        linked_entity_id=dto.linked_entity_id,
+                        linked_span_text_id=dto.linked_span_text_id,
+                    )
+                    for dto in existing_links
+                ]
+                self.update_multi(db, ids=ids, update_dtos=update_dtos)
+
     def update(
         self, db: Session, *, id: int, update_dto: SpanTextEntityLinkUpdate
-    ) -> SpanTextEntityLinkUpdate:
+    ) -> SpanTextEntityLinkORM:
         return super().update(db, id=id, update_dto=update_dto)
 
-    def read_by_span_text_id_and_project_id(
-        self, db: Session, *, span_text_id: int, project_id: int
+    def update_multi(
+        self,
+        db: Session,
+        *,
+        ids: List[int],
+        update_dtos: List[SpanTextEntityLinkUpdate],
     ) -> SpanTextEntityLinkORM:
-        return (
+        if len(ids) != len(update_dtos):
+            raise ValueError("The number of IDs must match the number of update DTOs")
+
+        update_mappings = []
+        for id, dto in zip(ids, update_dtos):
+            dto_data = jsonable_encoder(dto)
+            dto_data["id"] = id
+            update_mappings.append(dto_data)
+
+        db.bulk_update_mappings(self.model, update_mappings)
+        db.commit()
+
+        updated_records = db.query(self.model).filter(self.model.id.in_(ids)).all()
+        return updated_records
+
+    def read_multi_span_text_and_project_id(
+        self, db: Session, *, span_text_ids: List[int], project_id: int
+    ) -> List[SpanTextEntityLinkORM]:
+        query = (
             db.query(SpanTextEntityLinkORM)
-            .filter(SpanTextEntityLinkORM.linked_span_text_id == span_text_id)
             .join(EntityORM, SpanTextEntityLinkORM.linked_entity_id == EntityORM.id)
             .filter(
+                SpanTextEntityLinkORM.linked_span_text_id.in_(span_text_ids),
                 EntityORM.project_id == project_id,
             )
-            .first()
+            .distinct()
         )
+        return query.all()
 
 
 crud_span_text_entity_link = CRUDSpanTextEntityLink(SpanTextEntityLinkORM)
