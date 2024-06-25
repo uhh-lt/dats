@@ -56,6 +56,9 @@ from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
 from app.util.singleton_meta import SingletonMeta
 
+PROJECT_USERS_EXPORT_NAMING_TEMPLATE = "project_{project_id}_users_export"
+PROJECT_METADATA_EXPORT_NAMING_TEMPLATE = "project_{project_id}_metadata_export"
+
 
 class NoDataToExportError(Exception):
     def __init__(self, what_msg: str):
@@ -103,6 +106,7 @@ class ExportService(metaclass=SingletonMeta):
         # map from job_type to function
         cls.export_method_for_job_type: Dict[ExportJobType, Callable[..., str]] = {
             ExportJobType.SINGLE_PROJECT_ALL_DATA: cls._export_all_data_from_proj,
+            ExportJobType.SINGLE_PROJECT_ALL_USER: cls._export_all_user_from_proj,
             ExportJobType.SINGLE_PROJECT_ALL_TAGS: cls._export_all_tags_from_proj,
             ExportJobType.SINGLE_PROJECT_ALL_CODES: cls._export_all_codes_from_proj,
             ExportJobType.SINGLE_PROJECT_SELECTED_SDOCS: cls._export_selected_sdocs_from_proj,
@@ -490,6 +494,40 @@ class ExportService(metaclass=SingletonMeta):
         df = pd.DataFrame(data=data)
         return df
 
+    def __generate_export_df_for_users_in_project(
+        self, db: Session, project_id: int
+    ) -> pd.DataFrame:
+        users_data = crud_project.read(db=db, id=project_id).users
+        data = [
+            {
+                "id": user_data.id,
+                "email": user_data.email,
+                "first_name": user_data.first_name,
+                "last_name": user_data.last_name,
+                "created": user_data.created,
+                "updated": user_data.updated,
+            }
+            for user_data in users_data
+        ]
+        users_data_df = pd.DataFrame(data)
+        return users_data_df
+
+    def __generate_export_df_for_project_metadata(
+        self, db: Session, project_id: int
+    ) -> pd.DataFrame:
+        project_data = crud_project.read(db=db, id=project_id)
+        data = [
+            {
+                "id": project_data.id,
+                "title": project_data.title,
+                "description": project_data.description,
+                "created": project_data.created,
+                "updated": project_data.updated,
+            }
+        ]
+
+        return pd.DataFrame(data)
+
     def __generate_export_dfs_for_all_sdoc_metadata_in_proj(
         self, db: Session, project_id: int
     ) -> List[pd.DataFrame]:
@@ -835,6 +873,16 @@ class ExportService(metaclass=SingletonMeta):
         exported_memos: List[pd.DataFrame] = []
         exported_logbooks: List[Tuple[int, str]] = []
 
+        # generate all users in project data
+        exported_users = self.__generate_export_df_for_users_in_project(
+            db=db, project_id=project_id
+        )
+
+        # generate project meta data
+        exported_project_metadata = self.__generate_export_df_for_project_metadata(
+            db=db, project_id=project_id
+        )
+
         for user in users:
             (
                 ex_adocs,
@@ -870,8 +918,24 @@ class ExportService(metaclass=SingletonMeta):
         for adoc_id in exported_adocs.keys():
             merged_exported_adocs.append(pd.concat(exported_adocs[adoc_id]))
 
-        # write adocs to files
         exported_files = []
+        # write users to files
+        users_file = self.__write_export_data_to_temp_file(
+            data=exported_users,
+            export_format=export_format,
+            fn=PROJECT_USERS_EXPORT_NAMING_TEMPLATE.format(project_id=project_id),
+        )
+        exported_files.append(users_file)
+
+        # write project metadata to files
+        project_file = self.__write_export_data_to_temp_file(
+            data=exported_project_metadata,
+            export_format=export_format,
+            fn=PROJECT_METADATA_EXPORT_NAMING_TEMPLATE.format(project_id=project_id),
+        )
+        exported_files.append(project_file)
+
+        # write adocs to files
         for adoc_df in merged_exported_adocs:
             export_file = self.__write_export_data_to_temp_file(
                 data=adoc_df,
@@ -946,6 +1010,23 @@ class ExportService(metaclass=SingletonMeta):
         )
 
         return self.repo.get_temp_file_url(export_zip.name, relative=True)
+
+    def _export_all_user_from_proj(
+        self,
+        db: Session,
+        project_id: int,
+        export_format: ExportFormat = ExportFormat.CSV,
+    ) -> str:
+        users_df = self.__generate_export_df_for_users_in_project(
+            db=db, project_id=project_id
+        )
+        export_file = self.__write_export_data_to_temp_file(
+            data=users_df,
+            export_format=export_format,
+            fn=PROJECT_USERS_EXPORT_NAMING_TEMPLATE.format(project_id=project_id),
+        )
+        export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
+        return export_url
 
     def _export_user_logbook_from_proj(
         self, db: Session, project_id: int, user_id: int
