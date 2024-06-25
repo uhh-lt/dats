@@ -11,28 +11,26 @@ import ProjectHooks from "../../api/ProjectHooks.ts";
 import { EntityRead } from "../../api/openapi/models/EntityRead.ts";
 import { SpanTextRead } from "../../api/openapi/models/SpanTextRead.ts";
 
-interface EnitityTableRow{
-  id: string,
-  original: EntityRead,
+export interface EnitityTableRow extends EntityRead{
+  table_id: string,
   subRows: SpanTextTableRow[];
   editable: boolean;
 }
 
-interface SpanTextTableRow{
-  id: string,
-  original: SpanTextRead,
+export interface SpanTextTableRow extends SpanTextRead{
+  table_id: string,
   subRows: SpanTextTableRow[];
   editable: boolean;
 }
 
 const columns: MRT_ColumnDef<EnitityTableRow|SpanTextTableRow>[] = [
   {
-    accessorKey: "original.id",
+    accessorKey: "id",
     header: "ID",
     enableEditing: false,
   },
   {
-    accessorKey: 'original.name',
+    accessorKey: 'name',
     header: 'Name',
     enableEditing: true,
   },
@@ -42,6 +40,10 @@ export interface EntityTableActionProps {
   table: MRT_TableInstance<EnitityTableRow | SpanTextTableRow>;
   selectedEntities: EntityRead[];
   selectedSpanTexts: SpanTextRead[];
+}
+
+export interface EntityTableSaveRowProps extends EntityTableActionProps {
+  name: string
 }
 
 export interface EntityTableProps {
@@ -56,6 +58,7 @@ export interface EntityTableProps {
   renderBottomToolbarCustomActions?: (props: EntityTableActionProps) => React.ReactNode;
   // editing
   onSaveEditRow: MRT_TableOptions<EnitityTableRow | SpanTextTableRow>['onEditingRowSave'];
+  onCreateSaveRow: (props: EntityTableSaveRowProps) => void;
 }
 
 function EntityTable({
@@ -67,6 +70,7 @@ function EntityTable({
   renderTopToolbarCustomActions,
   renderBottomToolbarCustomActions,
   onSaveEditRow,
+  onCreateSaveRow
 }: EntityTableProps) {
   // global server state
   const projectEntities = ProjectHooks.useGetAllEntities(projectId);
@@ -85,15 +89,15 @@ function EntityTable({
     );
     const projectEntitiesRows = projectEntities.data.map(entity => {
       const subRows = entity.span_texts?.map(span => ({
-        id: `S-${span.id}`,
-        original: {...span, name: span.text},
+        ...span,
+        table_id: `S-${span.id}`,
+        name: span.text,
         subRows: [],
         editable: false,
       })) || [];
-      const original = entity;
-      const id = `E-${entity.id}`;
+      const table_id = `E-${entity.id}`;
       const editable = true;
-      return { id, original, subRows, editable };
+      return { table_id, ...entity, subRows, editable };
     });
 
     const projectSpanTextMap = projectEntities.data.reduce((acc, entity) => {
@@ -112,10 +116,19 @@ function EntityTable({
   const table = useMaterialReactTable<EnitityTableRow|SpanTextTableRow>({
     data: projectEntitiesRows,
     columns: columns,
-    getRowId: (row) => `${row.id}`,
+    getRowId: (row) => `${row.table_id}`,
     enableEditing: (row) => {return row.original.editable},
+    createDisplayMode: 'modal',
     editDisplayMode: 'row',
     onEditingRowSave: onSaveEditRow,
+    onCreatingRowSave: (props) => {
+      onCreateSaveRow({
+        selectedEntities: Object.keys(props.table.getState().rowSelection).filter(id => id.startsWith('E-')).map(entityId => projectEntitiesMap[entityId]),
+        selectedSpanTexts: Object.keys(props.table.getState().rowSelection).filter(id => id.startsWith('S-')).map(spanTextId => projectSpanTextMap[spanTextId]),
+        name: props.values.name,
+        table: props.table
+      });
+    },
     // style
     muiTablePaperProps: {
       elevation: 0,
