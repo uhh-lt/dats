@@ -1,7 +1,15 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.data.orm.orm_base import ORMBase
@@ -19,6 +27,8 @@ class EntityORM(ORMBase):
     updated: Mapped[Optional[datetime]] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.current_timestamp()
     )
+    is_human: Mapped[Boolean] = mapped_column(Boolean, default=False, index=True)
+    knowledge_base_id: Mapped[str] = mapped_column(String, default="", index=True)
 
     project_id: Mapped[int] = mapped_column(
         Integer,

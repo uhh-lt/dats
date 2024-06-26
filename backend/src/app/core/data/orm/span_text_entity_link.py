@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import ForeignKey, Integer
+from sqlalchemy import Boolean, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.data.orm.orm_base import ORMBase
@@ -17,3 +17,4 @@ class SpanTextEntityLinkORM(ORMBase):
     linked_span_text_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("spantext.id", ondelete="CASCADE"), index=True
     )
+    is_human: Mapped[Boolean] = mapped_column(Boolean, default=False, index=True)

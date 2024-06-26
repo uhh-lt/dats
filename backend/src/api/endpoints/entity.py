@@ -35,7 +35,7 @@ def update_by_id(
     authz_user: AuthzUser = Depends(),
 ) -> EntityRead:
     authz_user.assert_in_same_project_as(Crud.ENTITY, entity_id)
-
+    entity.is_human = True
     db_obj = crud_entity.update(db=db, id=entity_id, update_dto=entity)
     return EntityRead.model_validate(db_obj)
 
@@ -66,6 +66,8 @@ def merge_entities(
         name=entity_merge.name,
         project_id=entity_merge.project_id,
         span_text_ids=all_span_texts,
+        is_human=True,
+        knowledge_base_id=entity_merge.knowledge_base_id,
     )
     db_obj = crud_entity.create(db=db, create_dto=new_entity, force=True)
     return EntityRead.model_validate(db_obj)

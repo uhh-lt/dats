@@ -117,13 +117,22 @@ class CRUDSpanAnnotation(
                     EntityCreate(
                         project_id=project_id,
                         name=dto.span_text,
-                        span_text_ids=[id[0]],
+                        span_text_ids=[id.id],
+                        is_human=False,
                     )
                     for id, dto in zip(span_texts_orm, create_dtos)
                 ],
             )
         except Exception as e:
-            raise Exception(e)
+            raise Exception(
+                str(e)
+                + "\n"
+                + str(span_texts_orm)
+                + "\n"
+                + str([type(id) for id in span_texts_orm])
+                + "\n"
+                + str([id.as_dict() for id in span_texts_orm])
+            )
 
         # create the SpanAnnotation (and link the SpanText via FK)
         dto_objs_data = [

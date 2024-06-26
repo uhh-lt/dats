@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -10,7 +10,10 @@ from .dto_base import UpdateDTOBase
 
 # Properties shared across all DTOs
 class EntityBaseDTO(BaseModel):
-    pass
+    is_human: Optional[bool] = Field(
+        False, description="Whether the link was created by a human"
+    )
+    knowledge_base_id: Optional[str] = Field("", description="Link to wikidata")
 
 
 # Properties for creation
@@ -34,6 +37,7 @@ class EntityUpdate(EntityBaseDTO, UpdateDTOBase):
 # Properties for merging entities/span texts
 class EntityMerge(EntityBaseDTO):
     name: str = Field(description="Name of the Entity")
+    knowledge_base_id: Optional[str] = Field("", description="Link to wikidata")
     project_id: int = Field(description="Id of the current Project")
     entity_ids: List[int] = Field(description="List of Entity IDs to merge")
     spantext_ids: List[int] = Field(description="List of Span Text IDs to merge")
