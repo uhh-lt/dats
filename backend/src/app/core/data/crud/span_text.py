@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
@@ -25,19 +25,24 @@ class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, None]):
         # Only create when not already present
         span_texts: List[SpanTextORM] = []
         to_create: List[SpanTextCreate] = []
+        span_text_idx: List[int] = []
         to_create_idx: List[int] = []
+        text_create_map: Dict[str, int] = {}
 
         # TODO best would be "insert all (ignore existing) followed by get all"
         for i, create_dto in enumerate(create_dtos):
             db_obj = self.read_by_text(db=db, text=create_dto.text)
             span_texts.append(db_obj)
             if db_obj is None:
-                to_create.append(create_dto)
-                to_create_idx.append(i)
+                if create_dto.text not in text_create_map:
+                    text_create_map[create_dto.text] = len(to_create)
+                    to_create.append(create_dto)
+                span_text_idx.append(i)
+                to_create_idx.append(text_create_map[create_dto.text])
         if len(to_create) > 0:
             created = super().create_multi(db=db, create_dtos=to_create)
-            for i, obj in zip(to_create_idx, created):
-                span_texts[i] = obj
+            for obj_idx, pos_idx in zip(to_create_idx, span_text_idx):
+                span_texts[pos_idx] = created[obj_idx]
         # Ignore types: We've made sure that no `None` values remain since we've created
         # span texts to replace them
         return span_texts  # type: ignore
