@@ -44,27 +44,30 @@ function EntityDashboard() {
     values,
     table,
   }) => {
-    console.log(table)
     const requestBody =
     {
       entityId: row.original.id,
       requestBody: {
         name: values.name,
-        span_text_ids: row.original.subRows.map(span_text => span_text.id)
+        span_text_ids: row.original.subRows.map(span_text => span_text.id),
+        knowledge_base_id: values.knowledge_base_id
       }
     };
     entityUpdate.mutate(requestBody);
     table.setEditingRow(null);
   }
+
   function handleMerge(props: EntityTableSaveRowProps): void {
     props.table.setCreatingRow(null);
-    const name = props.name;
+    const name = props.values.name;
+    const knowledge_base_id = props.values.knowledge_base_id;
     const requestBody = {
       requestBody: {
         name: name,
         project_id: projectId,
         entity_ids: props.selectedEntities.map(entity => entity.id),
-        spantext_ids: props.selectedSpanTexts.map(spantext => spantext.id)
+        spantext_ids: props.selectedSpanTexts.map(spantext => spantext.id),
+        knowledge_base_id: knowledge_base_id
       }
     };
     entityMerge.mutate(requestBody);

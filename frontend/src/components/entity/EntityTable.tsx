@@ -1,4 +1,5 @@
 import {
+  LiteralUnion,
   MRT_ColumnDef,
   MRT_RowSelectionState,
   MRT_TableInstance,
@@ -34,6 +35,17 @@ const columns: MRT_ColumnDef<EnitityTableRow|SpanTextTableRow>[] = [
     header: 'Name',
     enableEditing: true,
   },
+  {
+    accessorKey: 'knowledge_base_id',
+    header: 'Knowledge Base ID',
+    enableEditing: true,
+  },
+  {
+    accessorKey: 'is_human',
+    header: 'Is Human',
+    enableEditing: false,
+    Cell: ({ cell }) => {console.log(cell); return cell.getValue() ? 'True' : 'False';},
+  },
 ];
 
 export interface EntityTableActionProps {
@@ -43,7 +55,7 @@ export interface EntityTableActionProps {
 }
 
 export interface EntityTableSaveRowProps extends EntityTableActionProps {
-  name: string
+  values: Record<LiteralUnion<"id" | "name" | "knowledge_base_id", string>, string >
 }
 
 export interface EntityTableProps {
@@ -78,7 +90,7 @@ function EntityTable({
   // computed
   const { projectEntitiesMap, projectEntitiesRows, projectSpanTextMap } = useMemo(() => {
     if (!projectEntities.data) return { projectEntitiesMap: {} as Record<string, EntityRead>, projectEntitiesRows: [], projectSpanTextMap: {} as Record<string, SpanTextRead>};
-  
+
     const projectEntitiesMap = projectEntities.data.reduce(
       (entity_map, projectEntity) => {
         const id = `E-${projectEntity.id}`;
@@ -125,7 +137,7 @@ function EntityTable({
       onCreateSaveRow({
         selectedEntities: Object.keys(props.table.getState().rowSelection).filter(id => id.startsWith('E-')).map(entityId => projectEntitiesMap[entityId]),
         selectedSpanTexts: Object.keys(props.table.getState().rowSelection).filter(id => id.startsWith('S-')).map(spanTextId => projectSpanTextMap[spanTextId]),
-        name: props.values.name,
+        values: props.values,
         table: props.table
       });
     },
