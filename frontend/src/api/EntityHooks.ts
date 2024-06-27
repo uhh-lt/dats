@@ -4,7 +4,6 @@ import { QueryKey } from "./QueryKey.ts";
 import { EntityRead } from "./openapi/models/EntityRead.ts";
 import { EntityService } from "./openapi/services/EntityService.ts";
 
-
 // enitity
 const useGetEntity = (entityId: number | null | undefined) =>
   useQuery<EntityRead, Error>({
@@ -43,20 +42,19 @@ const useMerge = () =>
   useMutation({
     mutationFn: EntityService.mergeEntities,
     onSuccess: (data) => {
-      queryClient.invalidateQueries({queryKey: [QueryKey.ENTITY, data.project_id]});
-      queryClient.invalidateQueries({queryKey: [QueryKey.PROJECT_ENTITIES, data.project_id]})
-    }
-  })
+      queryClient.invalidateQueries({ queryKey: [QueryKey.ENTITY, data.project_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_ENTITIES, data.project_id] });
+    },
+  });
 
-  const useResolve = () =>
-    useMutation({
-      mutationFn: EntityService.resolveEntities,
-      onSuccess: (data) => {
-        queryClient.invalidateQueries({queryKey: [QueryKey.ENTITY, data[0].project_id]});
-        queryClient.invalidateQueries({queryKey: [QueryKey.PROJECT_ENTITIES, data[0].project_id]})
-      }
-    })
-
+const useResolve = () =>
+  useMutation({
+    mutationFn: EntityService.resolveEntities,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: [QueryKey.ENTITY, data[0].project_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_ENTITIES, data[0].project_id] });
+    },
+  });
 
 const EntityHooks = {
   useGetEntity,
@@ -64,7 +62,7 @@ const EntityHooks = {
   useUpdateEntity,
   useDeleteEntity,
   useMerge,
-  useResolve
+  useResolve,
 };
 
 export default EntityHooks;

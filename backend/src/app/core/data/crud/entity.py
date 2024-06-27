@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select

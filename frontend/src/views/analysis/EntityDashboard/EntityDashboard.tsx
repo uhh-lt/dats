@@ -5,10 +5,13 @@ import { useParams } from "react-router-dom";
 import EntityHooks from "../../../api/EntityHooks.ts";
 import { EntityRead } from "../../../api/openapi/models/EntityRead.ts";
 import { SpanTextRead } from "../../../api/openapi/models/SpanTextRead.ts";
-import EntityTable, { EnitityTableRow, EntityTableSaveRowProps, SpanTextTableRow } from "../../../components/entity/EntityTable.tsx";
+import EntityTable, {
+  EnitityTableRow,
+  EntityTableSaveRowProps,
+  SpanTextTableRow,
+} from "../../../components/entity/EntityTable.tsx";
 import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
-
 
 function EntityDashboard() {
   const appBarContainerRef = useContext(AppBarContext);
@@ -23,39 +26,34 @@ function EntityDashboard() {
   const entityRelease = EntityHooks.useRelease();
   const entityUpdate = EntityHooks.useUpdateEntity();
 
-
-
   function handleRelease(selectedEntities: EntityRead[], selectedSpanTexts: SpanTextRead[]): void {
     const requestBody = {
       requestBody: {
         project_id: projectId,
-        entity_ids: selectedEntities.map(entity => entity.id),
-        spantext_ids: selectedSpanTexts.map(spantext => spantext.id)
-      }
+        entity_ids: selectedEntities.map((entity) => entity.id),
+        spantext_ids: selectedSpanTexts.map((spantext) => spantext.id),
+      },
     };
     entityRelease.mutate(requestBody);
     setRowSelectionModel({});
   }
 
-
-
-  const handleUpdate: MRT_TableOptions<EnitityTableRow|SpanTextTableRow>['onEditingRowSave']= async ({
+  const handleUpdate: MRT_TableOptions<EnitityTableRow | SpanTextTableRow>["onEditingRowSave"] = async ({
     row,
     values,
     table,
   }) => {
-    const requestBody =
-    {
+    const requestBody = {
       entityId: row.original.id,
       requestBody: {
         name: values.name,
-        span_text_ids: row.original.subRows.map(span_text => span_text.id),
-        knowledge_base_id: values.knowledge_base_id
-      }
+        span_text_ids: row.original.subRows.map((span_text) => span_text.id),
+        knowledge_base_id: values.knowledge_base_id,
+      },
     };
     entityUpdate.mutate(requestBody);
     table.setEditingRow(null);
-  }
+  };
 
   function handleMerge(props: EntityTableSaveRowProps): void {
     props.table.setCreatingRow(null);
@@ -65,10 +63,10 @@ function EntityDashboard() {
       requestBody: {
         name: name,
         project_id: projectId,
-        entity_ids: props.selectedEntities.map(entity => entity.id),
-        spantext_ids: props.selectedSpanTexts.map(spantext => spantext.id),
-        knowledge_base_id: knowledge_base_id
-      }
+        entity_ids: props.selectedEntities.map((entity) => entity.id),
+        spantext_ids: props.selectedSpanTexts.map((spantext) => spantext.id),
+        knowledge_base_id: knowledge_base_id,
+      },
     };
     entityMerge.mutate(requestBody);
     setRowSelectionModel({});
@@ -83,21 +81,24 @@ function EntityDashboard() {
       </Portal>
       <Grid container className="h100" columnSpacing={2} padding={2} bgcolor={"grey.200"}>
         <Grid item md={isSplitView ? 6 : 12} className="myFlexContainer h100">
-
           <EntityTable
             projectId={projectId}
             rowSelectionModel={rowSelectionModel}
             onRowSelectionChange={setRowSelectionModel}
             renderBottomToolbarCustomActions={(props) => {
-            return (
-              <Stack direction={"row"} spacing={1} alignItems="center" p={1}>
-                <Box flexGrow={1} />
-                <Button onClick={() => props.table.setCreatingRow(true)}>Merge</Button>
-                <Button onClick={() => handleRelease(props.selectedEntities, props.selectedSpanTexts)}>Release</Button>
-              </Stack>
-            )}}
+              return (
+                <Stack direction={"row"} spacing={1} alignItems="center" p={1}>
+                  <Box flexGrow={1} />
+                  <Button onClick={() => props.table.setCreatingRow(true)}>Merge</Button>
+                  <Button onClick={() => handleRelease(props.selectedEntities, props.selectedSpanTexts)}>
+                    Release
+                  </Button>
+                </Stack>
+              );
+            }}
             onSaveEditRow={handleUpdate}
-            onCreateSaveRow={handleMerge}/>
+            onCreateSaveRow={handleMerge}
+          />
         </Grid>
       </Grid>
     </Box>
