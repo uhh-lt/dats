@@ -106,6 +106,7 @@ redis:
     trainer: 4
     cota: 5
     llm: 6
+    import_: 7
 
 logging:
   max_file_size: 500 # MB

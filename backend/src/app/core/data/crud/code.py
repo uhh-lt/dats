@@ -68,6 +68,25 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
             .first()
         )
 
+    def read_by_name_and_user_and_project_and_parent(
+        self,
+        db: Session,
+        code_name: str,
+        user_id: int,
+        proj_id: int,
+        parent_id: int,
+    ) -> Optional[CodeORM]:
+        return (
+            db.query(self.model)
+            .filter(
+                self.model.name == code_name,
+                self.model.user_id == user_id,
+                self.model.project_id == proj_id,
+                self.model.parent_id == parent_id,
+            )
+            .first()
+        )
+
     def exists_by_name(self, db: Session, *, code_name: str) -> bool:
         return (
             db.query(self.model.id).filter(self.model.name == code_name).first()
