@@ -131,7 +131,12 @@ class CRUDSpanAnnotation(
                 + "\n"
                 + str([type(id) for id in span_texts_orm])
                 + "\n"
-                + str([id.as_dict() for id in span_texts_orm])
+                + str(
+                    [
+                        id.as_dict() if not isinstance(id, tuple) else id
+                        for id in span_texts_orm
+                    ]
+                )
             )
 
         # create the SpanAnnotation (and link the SpanText via FK)

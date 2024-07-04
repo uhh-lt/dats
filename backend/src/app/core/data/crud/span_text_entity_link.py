@@ -32,11 +32,11 @@ class CRUDSpanTextEntityLink(
         return db_obj
 
     def create_multi(
-        self, db: Session, *, create_dtos: List[SpanTextEntityLinkCreate], force: bool
+        self, db: Session, *, create_dtos: List[SpanTextEntityLinkCreate]
     ) -> List[SpanTextEntityLinkORM]:
-        # One assumption is that all entities have the same project_id
         if len(create_dtos) == 0:
             return []
+        # One assumption is that all entities have the same project_id
         project_id = (
             db.query(EntityORM)
             .filter(EntityORM.id == create_dtos[0].linked_entity_id)
@@ -60,24 +60,23 @@ class CRUDSpanTextEntityLink(
             db.bulk_save_objects(db_objs)
             db.commit()
         if len(existing_links) > 0:
-            if force:
-                existing_links_map = {
-                    link.linked_span_text_id: link for link in existing_links
-                }
-                for create_dto in create_dtos:
-                    if create_dto.linked_span_text_id in existing_links_map:
-                        existing_links_map[
-                            create_dto.linked_span_text_id
-                        ].linked_entity_id = create_dto.linked_entity_id
-                ids = [dto.id for dto in existing_links]
-                update_dtos = [
-                    SpanTextEntityLinkUpdate(
-                        linked_entity_id=dto.linked_entity_id,
-                        linked_span_text_id=dto.linked_span_text_id,
-                    )
-                    for dto in existing_links
-                ]
-                self.update_multi(db, ids=ids, update_dtos=update_dtos)
+            existing_links_map = {
+                link.linked_span_text_id: link for link in existing_links
+            }
+            for create_dto in create_dtos:
+                if create_dto.linked_span_text_id in existing_links_map:
+                    existing_links_map[
+                        create_dto.linked_span_text_id
+                    ].linked_entity_id = create_dto.linked_entity_id
+            ids = [dto.id for dto in existing_links]
+            update_dtos = [
+                SpanTextEntityLinkUpdate(
+                    linked_entity_id=dto.linked_entity_id,
+                    linked_span_text_id=dto.linked_span_text_id,
+                )
+                for dto in existing_links
+            ]
+            self.update_multi(db, ids=ids, update_dtos=update_dtos)
 
     def update(
         self, db: Session, *, id: int, update_dto: SpanTextEntityLinkUpdate
