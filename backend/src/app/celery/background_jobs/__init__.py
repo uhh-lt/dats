@@ -60,14 +60,14 @@ def prepare_and_start_export_job_async(
     return ex_job
 
 
-def prepare_and_start_import_codes_job_async(
+def prepare_and_start_import_job_async(
     import_job_params: ImportJobParameters,
 ) -> ImportJobRead:
-    from app.celery.background_jobs.tasks import start_import_codes_job
+    from app.celery.background_jobs.tasks import start_import_job
 
     ims: ImportService = ImportService()
     ims_job = ims.prepare_import_job(import_job_params)
-    start_import_codes_job.apply_async(kwargs={"import_job": ims_job})
+    start_import_job.apply_async(kwargs={"import_job": ims_job})
     return ims_job
 
 
