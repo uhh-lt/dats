@@ -4,7 +4,7 @@ from typing import Tuple
 from app.celery.background_jobs.cota import start_cota_refinement_job_
 from app.celery.background_jobs.crawl import start_crawler_job_
 from app.celery.background_jobs.export import start_export_job_
-from app.celery.background_jobs.import_ import start_import_code_job_
+from app.celery.background_jobs.import_ import start_import_job_
 from app.celery.background_jobs.llm import start_llm_job_
 from app.celery.background_jobs.preprocess import (
     execute_audio_preprocessing_pipeline_,
@@ -48,8 +48,8 @@ def start_export_job(export_job: ExportJobRead) -> None:
 
 
 @celery_worker.task(acks_late=True)
-def start_import_codes_job(import_job: ImportJobRead) -> None:
-    start_import_code_job_(import_job=import_job)
+def start_import_job(import_job: ImportJobRead) -> None:
+    start_import_job_(import_job=import_job)
 
 
 @celery_worker.task(acks_late=True)
