@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Callable, Dict, Optional
 
 import pandas as pd
 from loguru import logger
@@ -12,6 +12,7 @@ from app.core.data.dto.import_job import (
     ImportJobCreate,
     ImportJobParameters,
     ImportJobRead,
+    ImportJobType,
     ImportJobUpdate,
 )
 from app.core.data.repo.repo_service import RepoService
@@ -39,11 +40,29 @@ class NoSuchImportJobError(Exception):
         super().__init__(f"There exists not ImportJob with ID {import_job_id}! {cause}")
 
 
+class UnsupportedImportJobTypeError(Exception):
+    def __init__(self, export_job_type: ImportJobType) -> None:
+        super().__init__(f"ImportJobType {export_job_type} is not supported! ")
+
+
 class ImportService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.repo: RepoService = RepoService()
         cls.redis: RedisService = RedisService()
         cls.sqls: SQLService = SQLService()
+
+        cls.import_method_for_job_type: Dict[ImportJobType, Callable[..., None]] = {
+            # ImportJobType.SINGLE_PROJECT_ALL_DATA: cls._import_all_data_to_proj,
+            # ImportJobType.SINGLE_PROJECT_ALL_USER: cls._import_all_user_to_proj,
+            ImportJobType.SINGLE_PROJECT_ALL_TAGS: cls._import_all_tags_to_proj,
+            # ImportJobType.SINGLE_PROJECT_SELECTED_SDOCS: cls._import_selected_sdocs_to_proj,
+            # ImportJobType.SINGLE_USER_ALL_DATA: cls._import_user_data_to_proj,
+            ImportJobType.SINGLE_USER_ALL_CODES: cls._import_user_codes_to_proj,
+            # ImportJobType.SINGLE_USER_ALL_MEMOS: cls._import_user_memos_to_proj,
+            # ImportJobType.SINGLE_USER_LOGBOOK: cls._import_user_logbook_to_proj,
+            # ImportJobType.SINGLE_DOC_ALL_USER_ANNOTATIONS: cls._import_all_user_annotations_to_sdoc,
+            # ImportJobType.SINGLE_DOC_SINGLE_USER_ANNOTATIONS: cls._import_user_annotations_to_sdoc,
+        }
 
         return super(ImportService, cls).__new__(cls)
 
@@ -70,7 +89,7 @@ class ImportService(metaclass=SingletonMeta):
 
         return exj
 
-    def start_import_codes_sync(self, import_job_id: str) -> ImportJobRead:
+    def start_import_sync(self, import_job_id: str) -> ImportJobRead:
         imj = self.get_import_job(import_job_id=import_job_id)
         if imj.status != BackgroundJobStatus.WAITING:
             raise ImportJobAlreadyStartedOrDoneError(import_job_id=import_job_id)
@@ -79,40 +98,20 @@ class ImportService(metaclass=SingletonMeta):
             status=BackgroundJobStatus.RUNNING, import_job_id=import_job_id
         )
         try:
-            project_id = imj.parameters.proj_id
-            filename = imj.parameters.filename
-            user_id = imj.parameters.user_id
-            code_id_mapping: dict[str, str] = dict()
-
             with self.sqls.db_session() as db:
-                path_to_file = self.repo._get_dst_path_for_temp_file(filename)
-                df = pd.read_csv(path_to_file)
-                df = df.fillna(
-                    value={
-                        "description": "",
-                    }
+                # get the export method based on the jobtype
+                import_method = self.import_method_for_job_type.get(
+                    imj.parameters.import_job_type, None
                 )
-                self.__check_missing_values(df)
-                self.__check_parents_defined(df)
-                self.__check_root_clashes(
-                    df=df, user_id=user_id, project_id=project_id, db=db
-                )
-                sorted_dfs = self.__breadth_search_sort(
-                    df
-                )  # split the df into layers of codes starting with root codes.
+                if import_method is None:
+                    raise UnsupportedImportJobTypeError(imj.parameters.import_job_type)
 
-                logger.info(f"Importing Code {sorted_dfs} ...")
-                for layer in sorted_dfs:
-                    layer.apply(
-                        lambda row: self.__find_and_create_codes(
-                            row,
-                            db,
-                            user_id,
-                            project_id,
-                            code_id_mapping=code_id_mapping,
-                        ),
-                        axis=1,
-                    )
+                # execute the import_method with the provided specific parameters
+                import_method(
+                    self=self,
+                    db=db,
+                    imj_parameters=imj.parameters,
+                )
 
             imj = self._update_import_job(
                 status=BackgroundJobStatus.FINISHED,
@@ -237,3 +236,75 @@ class ImportService(metaclass=SingletonMeta):
             df = df[~mask]
             mask = df["parent_code_id"].isin(layers[-1]["code_id"])
         return layers
+
+    def _import_user_codes_to_proj(
+        self,
+        db: Session,
+        imj_parameters: ImportJobParameters,
+    ) -> None:
+        project_id = imj_parameters.proj_id
+        filename = imj_parameters.filename
+        user_id = imj_parameters.user_id
+        code_id_mapping: dict[str, str] = dict()
+        path_to_file = self.repo._get_dst_path_for_temp_file(filename)
+        df = pd.read_csv(path_to_file)
+        df = df.fillna(
+            value={
+                "description": "",
+            }
+        )
+        self.__check_missing_values(df)
+        self.__check_parents_defined(df)
+        self.__check_root_clashes(df=df, user_id=user_id, project_id=project_id, db=db)
+        sorted_dfs = self.__breadth_search_sort(
+            df
+        )  # split the df into layers of codes starting with root codes.
+
+        logger.info(f"Importing Code {sorted_dfs} ...")
+        for layer in sorted_dfs:
+            layer.apply(
+                lambda row: self.__find_and_create_codes(
+                    row,
+                    db,
+                    user_id,
+                    project_id,
+                    code_id_mapping=code_id_mapping,
+                ),
+                axis=1,
+            )
+
+    def _import_all_tags_to_proj(
+        self,
+        db: Session,
+        imj_parameters: ImportJobParameters,
+    ) -> None:
+        project_id = imj_parameters.proj_id
+        filename = imj_parameters.filename
+        user_id = imj_parameters.user_id
+        code_id_mapping: dict[str, str] = dict()
+        path_to_file = self.repo._get_dst_path_for_temp_file(filename)
+        df = pd.read_csv(path_to_file)
+        df = df.fillna(
+            value={
+                "description": "",
+            }
+        )
+        self.__check_missing_values(df)
+        self.__check_parents_defined(df)
+        self.__check_root_clashes(df=df, user_id=user_id, project_id=project_id, db=db)
+        sorted_dfs = self.__breadth_search_sort(
+            df
+        )  # split the df into layers of codes starting with root codes.
+
+        logger.info(f"Importing Code {sorted_dfs} ...")
+        for layer in sorted_dfs:
+            layer.apply(
+                lambda row: self.__find_and_create_codes(
+                    row,
+                    db,
+                    user_id,
+                    project_id,
+                    code_id_mapping=code_id_mapping,
+                ),
+                axis=1,
+            )

@@ -1219,7 +1219,7 @@ class ExportService(metaclass=SingletonMeta):
 
         except Exception as e:
             logger.error(f"Cannot finish export job: {e}")
-            self._update_export_job(
+            self._update_export_job(  # There the exj has to be taken and passed back?
                 status=BackgroundJobStatus.ERROR,
                 url=None,
                 export_job_id=export_job_id,
