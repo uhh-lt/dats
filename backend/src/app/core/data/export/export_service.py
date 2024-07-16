@@ -1,6 +1,7 @@
+import json
 import zipfile
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import pandas as pd
 from loguru import logger
@@ -11,6 +12,7 @@ from app.core.data.crud.code import crud_code
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
+from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.crud.sentence_annotation import crud_sentence_anno
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
@@ -154,6 +156,20 @@ class ExportService(metaclass=SingletonMeta):
 
         return temp_file
 
+    def __write_exported_sdoc_metadata_to_json_temp_file(
+        self,
+        exported_sdoc_metadata: Dict[str, Any],
+        fn: Optional[str] = None,
+    ) -> Path:
+        temp_file = self.repo.create_temp_file(fn=fn)
+        temp_file = temp_file.replace(temp_file.with_suffix(".json"))
+
+        logger.info(f"Writing export data to {temp_file} !")
+        with open(temp_file, "w") as f:
+            json.dump(exported_sdoc_metadata, f, indent=4)
+
+        return temp_file
+
     def __get_raw_sdocs_files_for_export(
         self,
         db: Session,
@@ -175,8 +191,51 @@ class ExportService(metaclass=SingletonMeta):
         ]
         return sdoc_files
 
+    def __get_sdocs_metadata_for_export(
+        self,
+        db: Session,
+        sdoc_ids: Optional[List[int]] = None,
+        sdocs: Optional[List[SourceDocumentRead]] = None,
+    ) -> List[Dict[str, Any]]:
+        # TODO Flo: paging for too many docs
+        if sdocs is None:
+            if sdoc_ids is None:
+                raise ValueError("Either IDs or DTOs must be not None")
+            sdocs = [
+                SourceDocumentRead.model_validate(sdoc)
+                for sdoc in crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)
+            ]
+        exported_sdocs_metadata = []
+        for sdoc in sdocs:
+            sdoc_metadatas = crud_sdoc_meta.read_by_sdoc(db=db, sdoc_id=sdoc.id)
+            sdoc_tags = crud_project.read(db=db, id=sdoc.project_id).document_tags
+            sdoc_metadata_dtos = [
+                SourceDocumentMetadataReadResolved.model_validate(sdoc_metadata)
+                for sdoc_metadata in sdoc_metadatas
+            ]
+            metadata_dict = dict()
+            for metadata in sdoc_metadata_dtos:
+                metadata_dict[metadata.project_metadata.key] = {
+                    "value": metadata.get_value(),
+                    "id": metadata.id,
+                }
+            exported_sdocs_metadata.append(
+                {
+                    "name": sdoc.name if sdoc.name else "",
+                    "id": sdoc.id,
+                    "filename": sdoc.filename,
+                    "doctype": sdoc.doctype,
+                    "metadata": metadata_dict,
+                    "tags": [tag.id for tag in sdoc_tags],
+                    "tags_verbose": [tag.name for tag in sdoc_tags],
+                }
+            )
+        return exported_sdocs_metadata
+
     def __get_all_raw_sdocs_files_in_project_for_export(
-        self, db: Session, project_id: int
+        self,
+        db: Session,
+        project_id: int,
     ) -> List[Path]:
         # TODO Flo: paging for too many docs
         sdocs = [
@@ -185,6 +244,18 @@ class ExportService(metaclass=SingletonMeta):
         ]
         sdoc_files = self.__get_raw_sdocs_files_for_export(db=db, sdocs=sdocs)
         return sdoc_files
+
+    def __get_all_sdoc_metadatas_in_project_for_export(
+        self, db: Session, project_id: int
+    ) -> List[Dict[str, Any]]:
+        sdocs = [
+            SourceDocumentRead.model_validate(sdoc)
+            for sdoc in crud_sdoc.read_by_project(db=db, proj_id=project_id)
+        ]
+        exported_sdocs_metadata = self.__get_sdocs_metadata_for_export(
+            db=db, sdocs=sdocs
+        )
+        return exported_sdocs_metadata
 
     def __generate_export_df_for_adoc(
         self,
@@ -394,6 +465,7 @@ class ExportService(metaclass=SingletonMeta):
         # avoid circular imports
         from app.core.data.crud.object_handle import crud_object_handle
 
+        assert memo.attached_to is not None
         attached_to = crud_object_handle.resolve_handled_object(
             db=db, handle=memo.attached_to
         )
@@ -530,7 +602,21 @@ class ExportService(metaclass=SingletonMeta):
 
     def __generate_export_dfs_for_all_sdoc_metadata_in_proj(
         self, db: Session, project_id: int
-    ) -> List[pd.DataFrame]:
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        project_metadatas = crud_project_meta.read_by_project(db=db, proj_id=project_id)
+        exported_project_metadata = []
+        for project_metadata in project_metadatas:
+            exported_project_metadata.append(
+                {
+                    "project_id": project_id,
+                    "id": project_metadata.id,
+                    "key": project_metadata.key,
+                    "metatype": project_metadata.metatype,
+                    "doctype": project_metadata.doctype,
+                }
+            )
+        exported_project_metadata = pd.DataFrame(exported_project_metadata)
+
         metadata = crud_sdoc_meta.read_by_project(db=db, proj_id=project_id)
         metadata_dfs = []
         for md in metadata:
@@ -540,8 +626,10 @@ class ExportService(metaclass=SingletonMeta):
                     metadata_dto=SourceDocumentMetadataReadResolved.model_validate(md),
                 )
             )
+        if len(metadata_dfs) > 0:
+            exported_document_metadata = pd.concat(metadata_dfs)
 
-        return metadata_dfs
+        return exported_project_metadata, exported_document_metadata
 
     def __generate_export_df_for_document_tag(
         self, db: Session, tag_id: int
@@ -578,6 +666,7 @@ class ExportService(metaclass=SingletonMeta):
         from app.core.data.crud.object_handle import crud_object_handle
 
         for memo in memos:
+            assert memo.attached_to is not None
             # get attached object
             attached_to = crud_object_handle.resolve_handled_object(
                 db=db, handle=memo.attached_to
@@ -705,6 +794,7 @@ class ExportService(metaclass=SingletonMeta):
             export_data = pd.concat((export_data, adoc_data))
 
         # write single file for all annos of that doc
+        assert isinstance(export_data, pd.DataFrame)  # for surpessing the warning
         export_file = self.__write_export_data_to_temp_file(
             data=export_data,
             export_format=export_format,
@@ -756,6 +846,7 @@ class ExportService(metaclass=SingletonMeta):
             )
             export_data = pd.concat((export_data, memo_data))
 
+        assert isinstance(export_data, pd.DataFrame)  # for surpessing the warning
         export_file = self.__write_export_data_to_temp_file(
             data=export_data,
             export_format=export_format,
@@ -873,16 +964,19 @@ class ExportService(metaclass=SingletonMeta):
         exported_memos: List[pd.DataFrame] = []
         exported_logbooks: List[Tuple[int, str]] = []
 
+        logger.info("exporting user data...")
         # generate all users in project data
         exported_users = self.__generate_export_df_for_users_in_project(
             db=db, project_id=project_id
         )
 
         # generate project meta data
+        logger.info("exporting project meta data...")
         exported_project_metadata = self.__generate_export_df_for_project_metadata(
             db=db, project_id=project_id
         )
 
+        logger.info("exporting user memos...")
         for user in users:
             (
                 ex_adocs,
@@ -972,6 +1066,7 @@ class ExportService(metaclass=SingletonMeta):
             )
             exported_files.append(export_file)
 
+        logger.info("exporting document tags...")
         # write all tags to one file
         exported_tags = self.__generate_export_dfs_for_all_document_tags_in_project(
             db=db, project_id=project_id
@@ -986,23 +1081,46 @@ class ExportService(metaclass=SingletonMeta):
             exported_files.append(export_file)
 
         # write all sdoc metadata to one file
-        exported_metadata = self.__generate_export_dfs_for_all_sdoc_metadata_in_proj(
-            db=db, project_id=project_id
+        exported_project_metadata, exported_document_metadata = (
+            self.__generate_export_dfs_for_all_sdoc_metadata_in_proj(
+                db=db, project_id=project_id
+            )
         )
-        if len(exported_metadata) > 0:
-            exported_metadata_df = pd.concat(exported_metadata)
+        if len(exported_project_metadata) > 0:
             export_file = self.__write_export_data_to_temp_file(
-                data=exported_metadata_df,
+                data=exported_project_metadata,
+                export_format=export_format,
+                fn=f"project_{project_id}_project_metadata_export",
+            )
+            exported_files.append(export_file)
+        if len(exported_document_metadata) > 0:
+            export_file = self.__write_export_data_to_temp_file(
+                data=exported_document_metadata,
                 export_format=export_format,
                 fn=f"project_{project_id}_sdoc_metadata_export",
             )
             exported_files.append(export_file)
 
+        logger.info("exporting raw sdocs...")
         # add all raw sdocs to export
         sdoc_files = self.__get_all_raw_sdocs_files_in_project_for_export(
             db=db, project_id=project_id
         )
         exported_files.extend(sdoc_files)
+
+        # add the sdoc metadatafiles (jsons)
+        exported_sdocs_metadata = self.__get_all_sdoc_metadatas_in_project_for_export(
+            db=db, project_id=project_id
+        )
+        exported_files.extend(
+            [
+                self.__write_exported_sdoc_metadata_to_json_temp_file(
+                    exported_sdoc_metadata=exported_sdoc_metadata,
+                    fn=Path(str(exported_sdoc_metadata["filename"])).stem,
+                )
+                for exported_sdoc_metadata in exported_sdocs_metadata
+            ]
+        )
 
         # ZIP all files
         export_zip = self.__create_export_zip(
@@ -1091,13 +1209,24 @@ class ExportService(metaclass=SingletonMeta):
         raise NoDataToExportError(msg)
 
     def _export_selected_sdocs_from_proj(
-        self, db: Session, project_id: int, sdoc_ids: List[int]
+        self,
+        db: Session,
+        project_id: int,
+        sdoc_ids: List[int],
+        export_format: ExportFormat = ExportFormat.CSV,
     ) -> str:
         files = self.__get_raw_sdocs_files_for_export(db, sdoc_ids=sdoc_ids)
+        files.extend(
+            self.__get_selected_sdoc_metadata_files_from_project_for_export(
+                db=db,
+                project_id=project_id,
+                sdoc_ids=sdoc_ids,
+                export_format=export_format,
+            )
+        )
         zip = self.__create_export_zip(
             f"{len(files)}_exported_documents_project_{project_id}.zip", files
         )
-
         return self.repo.get_temp_file_url(zip.name, relative=True)
 
     def _export_selected_span_annotations_from_proj(
@@ -1133,6 +1262,48 @@ class ExportService(metaclass=SingletonMeta):
             fn=f"project_{project_id}_selected_sentence_annotations_export",
         )
         return self.repo.get_temp_file_url(export_file.name, relative=True)
+
+    def __get_selected_sdoc_metadata_files_from_project_for_export(
+        self,
+        db: Session,
+        project_id: int,
+        sdoc_ids: List[int],
+        export_format: ExportFormat = ExportFormat.CSV,
+    ) -> List[Path]:
+        sdocs = [
+            SourceDocumentRead.model_validate(sdoc)
+            for sdoc in crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)
+        ]
+
+        sdocs_metadata = self.__get_sdocs_metadata_for_export(db=db, sdocs=sdocs)
+        files = [
+            self.__write_exported_sdoc_metadata_to_json_temp_file(
+                sdoc_metadata, fn=Path(str(sdoc_metadata["filename"])).stem
+            )
+            for sdoc_metadata in sdocs_metadata
+        ]
+        project_metadata, _ = self.__generate_export_dfs_for_all_sdoc_metadata_in_proj(
+            db=db, project_id=project_id
+        )
+        # we filter by the metadata actually present in the exported sdocs.
+        metadata_ids_in_sdocs = set()
+        for sdoc_metadata in sdocs_metadata:
+            for metadata in sdoc_metadata["metadata"].values():
+                metadata_ids_in_sdocs.add(metadata["id"])
+        project_metadata = project_metadata[
+            project_metadata.apply(
+                lambda row: row["id"] in metadata_ids_in_sdocs, axis=1
+            )
+        ]
+        if len(project_metadata) > 0:
+            files.append(
+                self.__write_export_data_to_temp_file(
+                    project_metadata,
+                    export_format=export_format,
+                    fn=f"project_{project_id}_metadata_export",
+                )
+            )
+        return files
 
     def _assert_all_requested_data_exists(
         self, export_params: ExportJobParameters
