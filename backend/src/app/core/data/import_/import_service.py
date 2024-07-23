@@ -6,8 +6,10 @@ from pandas import Series
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.code import crud_code
+from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.code import CodeCreate
+from app.core.data.dto.document_tag import DocumentTagCreate
 from app.core.data.dto.import_job import (
     ImportJobCreate,
     ImportJobParameters,
@@ -172,6 +174,42 @@ class ImportService(metaclass=SingletonMeta):
                 code_id_mapping[code_id] = code.id
         return row
 
+    def __find_and_create_tags(
+        self,
+        row: Series,
+        db: Session,
+        proj_id: int,
+        tag_id_mapping: dict[int, int],
+    ) -> Series:
+        tag_id = row["tag_id"]
+        tag_name = row["tag_name"]
+        description = row["description"]
+        color = row["color"]
+        parent_tag_id = row["parent_tag_id"]
+        if pd.isna(parent_tag_id) or parent_tag_id in tag_id_mapping:
+            if pd.isna(parent_tag_id):
+                parent_tag_id = None
+            else:
+                parent_tag_id = tag_id_mapping[parent_tag_id]
+            if pd.notna(color):
+                create_tag = DocumentTagCreate(
+                    name=tag_name,
+                    color=color,
+                    description=description,
+                    parent_id=parent_tag_id,
+                    project_id=proj_id,
+                )
+            else:
+                create_tag = DocumentTagCreate(
+                    name=tag_name,
+                    description=description,
+                    parent_id=parent_tag_id,
+                    project_id=proj_id,
+                )
+            tag = crud_document_tag.create(db=db, create_dto=create_tag)
+            tag_id_mapping[tag_id] = tag.id
+        return row
+
     def _update_import_job(
         self,
         import_job_id: str,
@@ -190,7 +228,7 @@ class ImportService(metaclass=SingletonMeta):
         filename = import_code_job_params.filename
         return self.repo._temp_file_exists(filename=filename)
 
-    def __check_parents_defined(self, df: pd.DataFrame) -> None:
+    def __check_code_parents_defined(self, df: pd.DataFrame) -> None:
         if (
             not df[df["parent_code_id"].notna()]["parent_code_id"]
             .isin(df["code_id"])
@@ -198,7 +236,15 @@ class ImportService(metaclass=SingletonMeta):
         ):
             raise ValueError("Not all parent code ids are present in the code ids.")
 
-    def __check_missing_values(self, df: pd.DataFrame) -> None:
+    def __check_tag_parents_defined(self, df: pd.DataFrame) -> None:
+        if (
+            not df[df["parent_tag_id"].notna()]["parent_tag_id"]
+            .isin(df["tag_id"])
+            .all()
+        ):
+            raise ValueError("Not all parent tag ids are present in the tag ids.")
+
+    def __check_code_missing_values(self, df: pd.DataFrame) -> None:
         def has_missing_value(row: pd.Series) -> pd.Series:
             if pd.isna(row["code_id"]):
                 raise ValueError(f"Missing code id on row {row}")
@@ -208,7 +254,17 @@ class ImportService(metaclass=SingletonMeta):
 
         df.apply(has_missing_value, axis=1)
 
-    def __check_root_clashes(
+    def __check_tag_missing_values(self, df: pd.DataFrame) -> None:
+        def has_missing_value(row: pd.Series) -> pd.Series:
+            if pd.isna(row["tag_id"]):
+                raise ValueError(f"Missing tag id on row {row}")
+            if pd.isna(row["tag_name"]):
+                raise ValueError(f"Missing tag name on tag id {row['tag_id']}")
+            return row
+
+        df.apply(has_missing_value, axis=1)
+
+    def __check_code_root_clashes(
         self, df: pd.DataFrame, user_id: int, project_id: int, db: Session
     ) -> None:
         df = df[
@@ -228,13 +284,41 @@ class ImportService(metaclass=SingletonMeta):
                 f"Some root codenames already exist for user {user_id} in project {project_id}"
             )
 
-    def __breadth_search_sort(self, df: pd.DataFrame) -> list[pd.DataFrame]:
+    def __check_tag_root_clashes(
+        self, df: pd.DataFrame, project_id: int, db: Session
+    ) -> None:
+        df = df[
+            df["parent_tag_id"].isna()
+        ]  # We only have to check if one of the roots already exists, because child tags are always in another namespace.
+        mask = df["tag_name"].apply(
+            lambda tag_name: crud_document_tag.exists_by_project_and_tag_name_and_parent_id(
+                db=db,
+                tag_name=tag_name,
+                project_id=project_id,
+                parent_id=None,
+            )
+        )
+        if mask.any():
+            raise ValueError(
+                f"Some root tagnames already exist for project {project_id}"
+            )
+
+    def __code_breadth_search_sort(self, df: pd.DataFrame) -> list[pd.DataFrame]:
         layers: list[pd.DataFrame] = []
         mask = df["parent_code_id"].isna()
         while mask.any() and len(df) > 0:
             layers.append(df[mask])
             df = df[~mask]
             mask = df["parent_code_id"].isin(layers[-1]["code_id"])
+        return layers
+
+    def __tag_breadth_search_sort(self, df: pd.DataFrame) -> list[pd.DataFrame]:
+        layers: list[pd.DataFrame] = []
+        mask = df["parent_tag_id"].isna()
+        while mask.any() and len(df) > 0:
+            layers.append(df[mask])
+            df = df[~mask]
+            mask = df["parent_tag_id"].isin(layers[-1]["tag_id"])
         return layers
 
     def _import_user_codes_to_proj(
@@ -245,7 +329,7 @@ class ImportService(metaclass=SingletonMeta):
         project_id = imj_parameters.proj_id
         filename = imj_parameters.filename
         user_id = imj_parameters.user_id
-        code_id_mapping: dict[str, str] = dict()
+        code_id_mapping: dict[int, int] = dict()
         path_to_file = self.repo._get_dst_path_for_temp_file(filename)
         df = pd.read_csv(path_to_file)
         df = df.fillna(
@@ -253,10 +337,12 @@ class ImportService(metaclass=SingletonMeta):
                 "description": "",
             }
         )
-        self.__check_missing_values(df)
-        self.__check_parents_defined(df)
-        self.__check_root_clashes(df=df, user_id=user_id, project_id=project_id, db=db)
-        sorted_dfs = self.__breadth_search_sort(
+        self.__check_code_missing_values(df)
+        self.__check_code_parents_defined(df)
+        self.__check_code_root_clashes(
+            df=df, user_id=user_id, project_id=project_id, db=db
+        )
+        sorted_dfs = self.__code_breadth_search_sort(
             df
         )  # split the df into layers of codes starting with root codes.
 
@@ -280,8 +366,7 @@ class ImportService(metaclass=SingletonMeta):
     ) -> None:
         project_id = imj_parameters.proj_id
         filename = imj_parameters.filename
-        user_id = imj_parameters.user_id
-        code_id_mapping: dict[str, str] = dict()
+        tag_id_mapping: dict[int, int] = dict()
         path_to_file = self.repo._get_dst_path_for_temp_file(filename)
         df = pd.read_csv(path_to_file)
         df = df.fillna(
@@ -289,22 +374,21 @@ class ImportService(metaclass=SingletonMeta):
                 "description": "",
             }
         )
-        self.__check_missing_values(df)
-        self.__check_parents_defined(df)
-        self.__check_root_clashes(df=df, user_id=user_id, project_id=project_id, db=db)
-        sorted_dfs = self.__breadth_search_sort(
+        self.__check_tag_missing_values(df)
+        self.__check_tag_parents_defined(df)
+        self.__check_tag_root_clashes(df=df, project_id=project_id, db=db)
+        sorted_dfs = self.__tag_breadth_search_sort(
             df
-        )  # split the df into layers of codes starting with root codes.
+        )  # split the df into layers of tags starting with root tags.
 
-        logger.info(f"Importing Code {sorted_dfs} ...")
+        logger.info(f"Importing Tags {sorted_dfs} ...")
         for layer in sorted_dfs:
             layer.apply(
-                lambda row: self.__find_and_create_codes(
+                lambda row: self.__find_and_create_tags(
                     row,
                     db,
-                    user_id,
                     project_id,
-                    code_id_mapping=code_id_mapping,
+                    tag_id_mapping=tag_id_mapping,
                 ),
                 axis=1,
             )
