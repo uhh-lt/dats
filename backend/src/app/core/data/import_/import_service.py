@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.document_tag import crud_document_tag
+from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.code import CodeCreate
@@ -18,6 +19,7 @@ from app.core.data.dto.import_job import (
     ImportJobType,
     ImportJobUpdate,
 )
+from app.core.data.dto.project_metadata import ProjectMetadataCreate
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
@@ -61,6 +63,7 @@ class ImportService(metaclass=SingletonMeta):
             # ImportJobType.SINGLE_PROJECT_SELECTED_SDOCS: cls._import_selected_sdocs_to_proj,
             # ImportJobType.SINGLE_USER_ALL_DATA: cls._import_user_data_to_proj,
             ImportJobType.SINGLE_USER_ALL_CODES: cls._import_user_codes_to_proj,
+            ImportJobType.SINGLE_PROJECT_ALL_PROJECT_PROJECT_METADATA: cls._import_project_project_metadata_to_proj,
             # ImportJobType.SINGLE_USER_ALL_MEMOS: cls._import_user_memos_to_proj,
             # ImportJobType.SINGLE_USER_LOGBOOK: cls._import_user_logbook_to_proj,
             # ImportJobType.SINGLE_DOC_ALL_USER_ANNOTATIONS: cls._import_all_user_annotations_to_sdoc,
@@ -341,6 +344,23 @@ class ImportService(metaclass=SingletonMeta):
             mask = df["parent_tag_id"].isin(layers[-1]["tag_id"])
         return layers
 
+    def __import_project_project_metadata_to_proj(
+        self, row: Series, db: Session, proj_id: int
+    ) -> Series:
+        key = row["key"]
+        metatype = row["metatype"]
+        doctype = row["doctype"]
+        if not crud_project_meta.exists_by_project_and_key_and_metatype_and_doctype(
+            db=db, project_id=proj_id, key=key, metatype=metatype, doctype=doctype
+        ):
+            crud_project_meta.create(
+                db=db,
+                create_dto=ProjectMetadataCreate(
+                    key=key, metatype=metatype, doctype=doctype, project_id=proj_id
+                ),
+            )
+        return row
+
     def _import_user_codes_to_proj(
         self,
         db: Session,
@@ -412,3 +432,19 @@ class ImportService(metaclass=SingletonMeta):
                 ),
                 axis=1,
             )
+
+    def _import_project_project_metadata_to_proj(
+        self,
+        db: Session,
+        imj_parameters: ImportJobParameters,
+    ) -> None:
+        proj_id = imj_parameters.proj_id
+        filename = imj_parameters.filename
+        path_to_file = self.repo._get_dst_path_for_temp_file(filename)
+        df = pd.read_csv(path_to_file)
+        df.apply(
+            lambda row: self.__import_project_project_metadata_to_proj(
+                row, db=db, proj_id=proj_id
+            ),
+            axis=1,
+        )
