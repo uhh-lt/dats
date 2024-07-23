@@ -1,5 +1,6 @@
 import json
 import zipfile
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
@@ -156,9 +157,9 @@ class ExportService(metaclass=SingletonMeta):
 
         return temp_file
 
-    def __write_exported_sdoc_metadata_to_json_temp_file(
+    def __write_exported_json_to_temp_file(
         self,
-        exported_sdoc_metadata: Dict[str, Any],
+        exported_file: Dict[str, Any],
         fn: Optional[str] = None,
     ) -> Path:
         temp_file = self.repo.create_temp_file(fn=fn)
@@ -166,7 +167,7 @@ class ExportService(metaclass=SingletonMeta):
 
         logger.info(f"Writing export data to {temp_file} !")
         with open(temp_file, "w") as f:
-            json.dump(exported_sdoc_metadata, f, indent=4)
+            json.dump(exported_file, f, indent=4)
 
         return temp_file
 
@@ -584,21 +585,19 @@ class ExportService(metaclass=SingletonMeta):
         users_data_df = pd.DataFrame(data)
         return users_data_df
 
-    def __generate_export_df_for_project_metadata(
+    def __generate_export_dict_for_project_metadata(
         self, db: Session, project_id: int
-    ) -> pd.DataFrame:
+    ) -> Dict[str, Union[str, int, datetime]]:
         project_data = crud_project.read(db=db, id=project_id)
-        data = [
-            {
-                "id": project_data.id,
-                "title": project_data.title,
-                "description": project_data.description,
-                "created": project_data.created,
-                "updated": project_data.updated,
-            }
-        ]
+        data = {
+            "id": project_data.id,
+            "title": project_data.title,
+            "description": project_data.description,
+            "created": project_data.created.isoformat(),
+            "updated": project_data.updated.isoformat(),
+        }
 
-        return pd.DataFrame(data)
+        return data
 
     def __generate_export_dfs_for_all_sdoc_metadata_in_proj(
         self, db: Session, project_id: int
@@ -960,6 +959,7 @@ class ExportService(metaclass=SingletonMeta):
         exported_adocs: Dict[int, List[pd.DataFrame]] = dict()
         exported_memos: List[pd.DataFrame] = []
         exported_logbooks: List[Tuple[int, str]] = []
+        exported_files = []
 
         logger.info("exporting user data...")
         # generate all users in project data
@@ -969,9 +969,15 @@ class ExportService(metaclass=SingletonMeta):
 
         # generate project meta data
         logger.info("exporting project meta data...")
-        exported_project_metadata = self.__generate_export_df_for_project_metadata(
+        exported_project_metadata = self.__generate_export_dict_for_project_metadata(
             db=db, project_id=project_id
         )
+        # write project metadata to files
+        project_file = self.__write_exported_json_to_temp_file(
+            exported_file=exported_project_metadata,
+            fn=PROJECT_METADATA_EXPORT_NAMING_TEMPLATE.format(project_id=project_id),
+        )
+        exported_files.append(project_file)
 
         logger.info("exporting user memos...")
         for user in users:
@@ -1009,7 +1015,6 @@ class ExportService(metaclass=SingletonMeta):
         for adoc_id in exported_adocs.keys():
             merged_exported_adocs.append(pd.concat(exported_adocs[adoc_id]))
 
-        exported_files = []
         # write users to files
         users_file = self.__write_export_data_to_temp_file(
             data=exported_users,
@@ -1017,14 +1022,6 @@ class ExportService(metaclass=SingletonMeta):
             fn=PROJECT_USERS_EXPORT_NAMING_TEMPLATE.format(project_id=project_id),
         )
         exported_files.append(users_file)
-
-        # write project metadata to files
-        project_file = self.__write_export_data_to_temp_file(
-            data=exported_project_metadata,
-            export_format=export_format,
-            fn=PROJECT_METADATA_EXPORT_NAMING_TEMPLATE.format(project_id=project_id),
-        )
-        exported_files.append(project_file)
 
         # write adocs to files
         for adoc_df in merged_exported_adocs:
@@ -1097,8 +1094,8 @@ class ExportService(metaclass=SingletonMeta):
         )
         exported_files.extend(
             [
-                self.__write_exported_sdoc_metadata_to_json_temp_file(
-                    exported_sdoc_metadata=exported_sdoc_metadata,
+                self.__write_exported_json_to_temp_file(
+                    exported_file=exported_sdoc_metadata,
                     fn=Path(str(exported_sdoc_metadata["filename"])).stem,
                 )
                 for exported_sdoc_metadata in exported_sdocs_metadata
@@ -1260,8 +1257,9 @@ class ExportService(metaclass=SingletonMeta):
 
         sdocs_metadata = self.__get_sdocs_metadata_for_export(db=db, sdocs=sdocs)
         files = [
-            self.__write_exported_sdoc_metadata_to_json_temp_file(
-                sdoc_metadata, fn=Path(str(sdoc_metadata["filename"])).stem
+            self.__write_exported_json_to_temp_file(
+                exported_file=sdoc_metadata,
+                fn=Path(str(sdoc_metadata["filename"])).stem,
             )
             for sdoc_metadata in sdocs_metadata
         ]
