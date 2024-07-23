@@ -103,6 +103,21 @@ class CRUDProjectMetadata(
         )
         return db_objs
 
+    def exists_by_project_and_key_and_metatype_and_doctype(
+        self, db: Session, project_id: int, key: str, metatype: str, doctype: str
+    ) -> bool:
+        return (
+            db.query(self.model)
+            .filter(
+                self.model.project_id == project_id,
+                self.model.key == key,
+                self.model.metatype == metatype,
+                self.model.doctype == doctype,
+            )
+            .first()
+            is not None
+        )
+
     def read_by_project(
         self,
         db: Session,
