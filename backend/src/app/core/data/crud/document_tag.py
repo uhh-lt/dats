@@ -37,6 +37,30 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
 
         return ids
 
+    def exists_by_project_and_tag_name_and_parent_id(
+        self, db: Session, tag_name: str, project_id: int, parent_id: Optional[int]
+    ) -> bool:
+        if parent_id:
+            return (
+                db.query(self.model)
+                .filter(
+                    self.model.project_id == project_id,
+                    self.model.parent_id == parent_id,
+                    self.model.name == tag_name,
+                )
+                .first()
+                is not None
+            )
+        else:
+            return (
+                db.query(self.model)
+                .filter(
+                    self.model.project_id == project_id, self.model.name == tag_name
+                )
+                .first()
+                is not None
+            )
+
     def link_multiple_document_tags(
         self, db: Session, *, sdoc_ids: List[int], tag_ids: List[int]
     ) -> int:
