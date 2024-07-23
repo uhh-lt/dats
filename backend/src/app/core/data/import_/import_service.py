@@ -1,3 +1,4 @@
+import json
 from typing import Callable, Dict, Optional
 
 import pandas as pd
@@ -7,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.document_tag import crud_document_tag
+from app.core.data.crud.project import crud_project
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.background_job_base import BackgroundJobStatus
@@ -19,6 +21,7 @@ from app.core.data.dto.import_job import (
     ImportJobType,
     ImportJobUpdate,
 )
+from app.core.data.dto.project import ProjectUpdate
 from app.core.data.dto.project_metadata import ProjectMetadataCreate
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.redis_service import RedisService
@@ -63,6 +66,7 @@ class ImportService(metaclass=SingletonMeta):
             # ImportJobType.SINGLE_PROJECT_SELECTED_SDOCS: cls._import_selected_sdocs_to_proj,
             # ImportJobType.SINGLE_USER_ALL_DATA: cls._import_user_data_to_proj,
             ImportJobType.SINGLE_USER_ALL_CODES: cls._import_user_codes_to_proj,
+            ImportJobType.SINGLE_PROJECT_ALL_METADATA: cls._import_all_project_metadata,
             ImportJobType.SINGLE_PROJECT_ALL_PROJECT_PROJECT_METADATA: cls._import_project_project_metadata_to_proj,
             # ImportJobType.SINGLE_USER_ALL_MEMOS: cls._import_user_memos_to_proj,
             # ImportJobType.SINGLE_USER_LOGBOOK: cls._import_user_logbook_to_proj,
@@ -432,6 +436,44 @@ class ImportService(metaclass=SingletonMeta):
                 ),
                 axis=1,
             )
+
+    def _import_all_project_metadata(
+        self,
+        db: Session,
+        imj_parameters: ImportJobParameters,
+    ) -> None:
+        proj_id = imj_parameters.proj_id
+        try:
+            filename = imj_parameters.filename
+            path_to_file = self.repo._get_dst_path_for_temp_file(filename)
+            with open(path_to_file, "r") as f:
+                project_metadata = json.load(f)
+            user_id = imj_parameters.user_id
+            assert "id" in project_metadata
+            assert "title" in project_metadata
+            assert "description" in project_metadata
+            assert "created" in project_metadata
+            assert "updated" in project_metadata
+            title = project_metadata["title"]
+            description = project_metadata["description"]
+            assert title != ""
+            if crud_project.exists_by_user_and_title(
+                db=db, user_id=user_id, title=title
+            ):
+                new_title = f"{title}_(1)"
+                counter = 1
+                while crud_project.exists_by_user_and_title(
+                    db=db, user_id=user_id, title=new_title
+                ):
+                    counter += 1
+                    new_title = f"{title}_({counter})"
+            else:
+                new_title = title
+            project_update = ProjectUpdate(title=new_title, description=description)
+            crud_project.update(db=db, id=proj_id, update_dto=project_update)
+        except Exception as e:
+            crud_project.remove(db=db, id=proj_id)
+            raise e
 
     def _import_project_project_metadata_to_proj(
         self,
