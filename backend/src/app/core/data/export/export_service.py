@@ -646,9 +646,19 @@ class ExportService(metaclass=SingletonMeta):
             "description": [tag_dto.description],
             "color": [tag_dto.color],
             "created": [tag_dto.created],
+            "parent_tag_id": [None],
+            "parent_tag_name": [None],
             "applied_to_sdoc_ids": [applied_to_sdoc_ids],
             "applied_to_sdoc_filenames": [applied_to_sdoc_filenames],
         }
+        if tag_dto.parent_id:
+            parent_id = tag_dto.parent_id
+            data["parent_tag_id"] = [parent_id]
+            data["parent_tag_name"] = [
+                DocumentTagRead.model_validate(
+                    crud_document_tag.read(db=db, id=parent_id)
+                ).name
+            ]
 
         df = pd.DataFrame(data=data)
         return df

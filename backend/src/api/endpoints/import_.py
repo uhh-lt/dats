@@ -62,7 +62,7 @@ def start_import_codes_job(
 
 
 @router.post(
-    "/{proj_id}/{sdoc_id}/tags",
+    "/{proj_id}/tags",
     response_model=ImportJobRead,
     summary="Starts the import tags job on given project and sdoc id.",
 )
@@ -70,7 +70,6 @@ def start_import_tags_job(
     *,
     # Ahmad: Since we're uploading a file we have to use multipart/form-data directly in the router method (see project put)
     proj_id: int,
-    sdoc_id: int,
     uploaded_file: UploadFile = File(
         ...,
         description=("CSV file of codes that gets uploaded into project"),
@@ -78,18 +77,13 @@ def start_import_tags_job(
     authz_user: AuthzUser = Depends(),
 ) -> ImportJobRead:
     authz_user.assert_in_project(proj_id)
-    if not uploaded_file:
-        raise HTTPException(
-            status_code=418,
-            detail="Missing codes file.",
-        )
     if not __is_file_csv(uploaded_file=uploaded_file):
         raise HTTPException(
             status_code=415,
             detail="Codes need to be in csv format.",
         )
     user_id = authz_user.user.id
-    filename = f"import_tags_{user_id}_{proj_id}_{sdoc_id}.csv"
+    filename = f"import_tags_{user_id}_{proj_id}.csv"
     filepath = repo._get_dst_path_for_temp_file(filename)
     filepath = repo.store_uploaded_file(
         uploaded_file=uploaded_file, filepath=filepath, fn=filename
