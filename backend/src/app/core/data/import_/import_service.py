@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.document_tag import crud_document_tag
+from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.code import CodeCreate
 from app.core.data.dto.document_tag import DocumentTagCreate
@@ -186,6 +187,9 @@ class ImportService(metaclass=SingletonMeta):
         description = row["description"]
         color = row["color"]
         parent_tag_id = row["parent_tag_id"]
+        applied_to_sdoc_filenames = (
+            row["applied_to_sdoc_filenames"].strip("[]").replace("'", "").split(", ")
+        )
         if pd.isna(parent_tag_id) or parent_tag_id in tag_id_mapping:
             if pd.isna(parent_tag_id):
                 parent_tag_id = None
@@ -208,6 +212,22 @@ class ImportService(metaclass=SingletonMeta):
                 )
             tag = crud_document_tag.create(db=db, create_dto=create_tag)
             tag_id_mapping[tag_id] = tag.id
+            sdoc_ids = []
+            for applied_to_sdoc_filename in applied_to_sdoc_filenames:
+                if applied_to_sdoc_filename != "":
+                    sdoc = crud_sdoc.read_by_filename(
+                        db=db, proj_id=proj_id, filename=applied_to_sdoc_filename
+                    )
+                    if sdoc:
+                        sdoc_ids.append(sdoc.id)
+                    else:
+                        logger.info(
+                            f"Did not find {proj_id}, {applied_to_sdoc_filename}"
+                        )
+            if len(sdoc_ids) > 0:
+                crud_document_tag.link_multiple_document_tags(
+                    db=db, sdoc_ids=sdoc_ids, tag_ids=[tag.id]
+                )
         return row
 
     def _update_import_job(
