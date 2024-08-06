@@ -143,7 +143,7 @@ function EntityTable({
         .filter((id) => id.startsWith("S-"))
         .map((spanTextId) => projectSpanTextMap[spanTextId]);
 
-      const allSpanTexts = [ ...selectedSpanTexts];
+      const allSpanTexts = [...selectedSpanTexts];
 
       onCreateSaveRow({
         selectedSpanTexts: allSpanTexts,
