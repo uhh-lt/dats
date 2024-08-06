@@ -51,6 +51,7 @@ function CotaScatterPlotly({ cota }: CotaScatterPlotlyProps) {
         selected: {
           marker: { size: 20 },
         },
+        visible: concept.visible,
       } as Partial<ScatterData>;
     });
     chartData["NO_CONCEPT"] = {
@@ -131,6 +132,7 @@ function CotaScatterPlotly({ cota }: CotaScatterPlotlyProps) {
       },
       xaxis: { zeroline: false },
       yaxis: { zeroline: false },
+      showlegend: false,
     },
     frames: null,
   });
