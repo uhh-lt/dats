@@ -101,6 +101,7 @@ export function MemoContentCode({
 
   return (
     <MemoForm
+      key={memo?.id}
       title={`Memo for code ${code.name}`}
       memo={memo}
       handleCreateOrUpdateMemo={handleCreateOrUpdateCodeMemo}

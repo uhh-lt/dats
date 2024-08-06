@@ -1,28 +1,21 @@
 import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  MenuItem,
-  Stack,
-  TextField,
-  rgbToHex,
-} from "@mui/material";
-import { useEffect, useState } from "react";
-import { HexColorPicker } from "react-colorful";
-import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, rgbToHex } from "@mui/material";
+import { useMemo } from "react";
+import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import TagHooks from "../../api/TagHooks.ts";
 import { DocumentTagCreate } from "../../api/openapi/models/DocumentTagCreate.ts";
+import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
 import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { contrastiveColors } from "../../utils/colors.ts";
+import FormColorPicker from "../FormInputs/FormColorPicker.tsx";
+import FormMenu from "../FormInputs/FormMenu.tsx";
+import FormText from "../FormInputs/FormText.tsx";
+import FormTextMultiline from "../FormInputs/FormTextMultiline.tsx";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 import TagRenderer from "./TagRenderer.tsx";
 
@@ -38,44 +31,22 @@ function TagCreateDialog() {
   // global state (redux)
   const tags = ProjectHooks.useGetAllTags(projectId);
 
-  // use react hook form
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    setValue,
-    control,
-  } = useForm<DocumentTagCreate>({
-    defaultValues: {
-      parent_id: -1,
-      name: "",
-      color: "#000000",
-      description: "",
-      project_id: projectId,
-    },
-  });
-
-  // local state
-  const [color, setColor] = useState("#000000");
-
   // global client state (redux)
   const isTagCreateDialogOpen = useAppSelector((state) => state.dialog.isTagCreateDialogOpen);
   const tagName = useAppSelector((state) => state.dialog.tagName);
   const parentTagId = useAppSelector((state) => state.dialog.parentTagId);
   const dispatch = useAppDispatch();
 
-  // initialize form when tag changes
-  useEffect(() => {
-    // reset
-    const randomHexColor = rgbToHex(contrastiveColors[Math.floor(Math.random() * contrastiveColors.length)]);
-    reset({
-      name: tagName || "",
-      color: randomHexColor,
-      parent_id: parentTagId ? parentTagId : -1,
-    });
-    setColor(randomHexColor);
-  }, [parentTagId, reset, tagName]);
+  // computed
+  const tag: DocumentTagCreate | undefined = useMemo(() => {
+    return tagName
+      ? {
+          name: tagName,
+          parent_id: parentTagId,
+          project_id: projectId,
+        }
+      : undefined;
+  }, [tagName, parentTagId, projectId]);
 
   // actions
   const handleClose = () => {
@@ -115,82 +86,128 @@ function TagCreateDialog() {
   const handleError: SubmitErrorHandler<DocumentTagCreate> = (data) => console.error(data);
 
   return (
-    <Dialog open={isTagCreateDialogOpen} onClose={handleClose} maxWidth="md" fullWidth>
+    <TagCreateDialogContent
+      key={`${tagName}-${parentTagId}`} // re-render dialog when tag changes
+      tag={tag}
+      tags={tags.data || []}
+      isOpen={isTagCreateDialogOpen}
+      handleClose={handleClose}
+      handleTagCreation={handleTagCreation}
+      isCreateLoading={createTagMutation.isPending}
+      handleError={handleError}
+    />
+  );
+}
+
+interface TagCreateDialogContentProps {
+  isOpen: boolean;
+  handleClose: () => void;
+  handleTagCreation: SubmitHandler<DocumentTagCreate>;
+  isCreateLoading: boolean;
+  handleError: SubmitErrorHandler<DocumentTagCreate>;
+  tag?: DocumentTagCreate;
+  tags: DocumentTagRead[];
+}
+
+function TagCreateDialogContent({
+  tag,
+  tags,
+  isOpen,
+  handleClose,
+  handleTagCreation,
+  isCreateLoading,
+  handleError,
+}: TagCreateDialogContentProps) {
+  const projectId = parseInt((useParams() as { projectId: string }).projectId);
+
+  // use react hook form
+  const {
+    handleSubmit,
+    formState: { errors },
+    control,
+  } = useForm<DocumentTagCreate>({
+    defaultValues: {
+      parent_id: tag?.parent_id || -1,
+      name: tag?.name || "",
+      color: tag?.color || rgbToHex(contrastiveColors[Math.floor(Math.random() * contrastiveColors.length)]),
+      description: tag?.description || "",
+      project_id: projectId,
+    },
+  });
+
+  return (
+    <Dialog open={isOpen} onClose={handleClose} maxWidth="md" fullWidth>
       <form onSubmit={handleSubmit(handleTagCreation, handleError)}>
         <DialogTitle>New tag</DialogTitle>
         <DialogContent>
           <Stack spacing={3}>
-            <Controller
+            <FormMenu
               name="parent_id"
+              rules={{
+                required: "Selection is required",
+              }}
+              control={control}
+              textFieldProps={{
+                label: "Parent Tag",
+                variant: "filled",
+                fullWidth: true,
+                error: Boolean(errors.parent_id),
+                helperText: <ErrorMessage errors={errors} name="parent_id" />,
+                InputLabelProps: { shrink: true },
+              }}
+            >
+              <MenuItem value={-1}>No parent</MenuItem>
+              {tags.map((tag) => (
+                <MenuItem key={tag.id} value={tag.id}>
+                  <TagRenderer tag={tag} />
+                </MenuItem>
+              ))}
+            </FormMenu>
+            <FormText
+              name="name"
+              rules={{
+                required: "Tag name is required",
+              }}
+              control={control}
+              textFieldProps={{
+                label: "Tag name",
+                variant: "standard",
+                fullWidth: true,
+                error: Boolean(errors.name),
+                helperText: <ErrorMessage errors={errors} name="name" />,
+                InputLabelProps: { shrink: true },
+                autoFocus: true,
+              }}
+            />
+            <FormColorPicker
+              name="color"
+              rules={{
+                required: "Color is required",
+              }}
+              control={control}
+              textFieldProps={{
+                label: "Color",
+                variant: "standard",
+                fullWidth: true,
+                error: Boolean(errors.color),
+                helperText: <ErrorMessage errors={errors} name="color" />,
+                InputLabelProps: { shrink: true },
+              }}
+            />
+            <FormTextMultiline
+              name="description"
               control={control}
               rules={{
-                required: "Value is required",
+                required: "Description is required",
               }}
-              render={({ field: { onBlur, onChange, value } }) => (
-                <TextField
-                  fullWidth
-                  select
-                  label="Parent Tag"
-                  variant="filled"
-                  onChange={onChange}
-                  onBlur={onBlur}
-                  value={value}
-                  error={Boolean(errors.parent_id)}
-                  helperText={<ErrorMessage errors={errors} name="parent_id" />}
-                  InputLabelProps={{ shrink: true }}
-                >
-                  <MenuItem value={-1}>No parent</MenuItem>
-                  {tags.data?.map((tag) => (
-                    <MenuItem key={tag.id} value={tag.id}>
-                      <TagRenderer tag={tag} />
-                    </MenuItem>
-                  ))}
-                </TextField>
-              )}
-            />
-            <TextField
-              label="Please enter a name for the new tag"
-              autoFocus
-              fullWidth
-              variant="standard"
-              {...register("name", { required: "Tag name is required" })}
-              error={Boolean(errors?.name)}
-              helperText={<ErrorMessage errors={errors} name="color" />}
-              InputLabelProps={{ shrink: true }}
-            />
-            <Stack direction="row">
-              <TextField
-                label="Choose a color for the new tag"
-                fullWidth
-                variant="standard"
-                {...register("color", { required: "Color is required" })}
-                onChange={(e) => {
-                  setColor(e.target.value);
-                }}
-                error={Boolean(errors.color)}
-                helperText={<ErrorMessage errors={errors} name="color" />}
-                InputLabelProps={{ shrink: true }}
-              />
-              <Box sx={{ width: 48, height: 48, backgroundColor: color, ml: 1, flexShrink: 0 }} />
-            </Stack>
-            <HexColorPicker
-              style={{ width: "100%" }}
-              color={color}
-              onChange={(newColor) => {
-                setValue("color", newColor); // set value of text input
-                setColor(newColor); // set value of color picker (and box)
+              textFieldProps={{
+                label: "Description",
+                variant: "standard",
+                fullWidth: true,
+                error: Boolean(errors.description),
+                helperText: <ErrorMessage errors={errors} name="description" />,
+                InputLabelProps: { shrink: true },
               }}
-            />
-            <TextField
-              multiline
-              minRows={5}
-              label="Description"
-              fullWidth
-              variant="standard"
-              {...register("description")}
-              error={Boolean(errors.description)}
-              helperText={<ErrorMessage errors={errors} name="description" />}
-              InputLabelProps={{ shrink: true }}
             />
           </Stack>
         </DialogContent>
@@ -200,7 +217,7 @@ function TagCreateDialog() {
             variant="contained"
             type="submit"
             startIcon={<SaveIcon />}
-            loading={createTagMutation.isPending}
+            loading={isCreateLoading}
             loadingPosition="start"
           >
             Create

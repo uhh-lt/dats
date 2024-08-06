@@ -2,9 +2,8 @@ import { ErrorMessage } from "@hookform/error-message";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
-import { Box, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from "@mui/material";
-import React, { useEffect, useMemo, useState } from "react";
-import { HexColorPicker } from "react-colorful";
+import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack } from "@mui/material";
+import React, { useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import CodeHooks from "../../api/CodeHooks.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
@@ -16,6 +15,10 @@ import { SYSTEM_USER_ID } from "../../utils/GlobalConstants.ts";
 import { AnnoActions } from "../../views/annotation/annoSlice.ts";
 import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI.ts";
 import { CRUDDialogActions } from "../dialogSlice.ts";
+import FormColorPicker from "../FormInputs/FormColorPicker.tsx";
+import FormMenu from "../FormInputs/FormMenu.tsx";
+import FormText from "../FormInputs/FormText.tsx";
+import FormTextMultiline from "../FormInputs/FormTextMultiline.tsx";
 import CodeRenderer from "./CodeRenderer.tsx";
 
 type CodeEditValues = {
@@ -30,39 +33,10 @@ interface CodeEditDialogProps {
 }
 
 function CodeEditDialog({ codes }: CodeEditDialogProps) {
-  // use react hook form
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    setValue,
-  } = useForm<CodeEditValues>();
-
-  // local state
-  const [color, setColor] = useState("#000000");
-
   // redux
   const open = useAppSelector((state) => state.dialog.isCodeEditDialogOpen);
   const code = useAppSelector((state) => state.dialog.code);
   const dispatch = useAppDispatch();
-
-  // computed
-  const parentCodes = useMemo(() => codes.filter((code) => code.user_id !== SYSTEM_USER_ID), [codes]);
-
-  // initialize form when code changes
-  useEffect(() => {
-    if (code) {
-      const c = ColorUtils.rgbStringToHex(code.color) || code.color;
-      reset({
-        name: code.name,
-        description: code.description,
-        color: c,
-        parentCodeId: code.parent_id || -1,
-      });
-      setColor(c);
-    }
-  }, [code, reset]);
 
   // mutations
   const updateCodeMutation = CodeHooks.useUpdateCode();
@@ -150,6 +124,67 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
     }
   };
 
+  return (
+    <>
+      {code && (
+        <CodeEditDialogContent
+          key={code.id} // rerender component if code id changes
+          isOpen={open}
+          handleClose={handleClose}
+          handleCodeUpdate={handleCodeUpdate}
+          isUpdateLoading={updateCodeMutation.isPending}
+          handleError={handleError}
+          handleCodeDelete={handleCodeDelete}
+          isDeleteLoading={deleteCodeMutation.isPending}
+          code={code}
+          codes={codes}
+        />
+      )}
+    </>
+  );
+}
+
+interface CodeEditDialogContentProps {
+  isOpen: boolean;
+  handleClose: () => void;
+  handleCodeUpdate: SubmitHandler<CodeEditValues>;
+  isUpdateLoading: boolean;
+  handleError: SubmitErrorHandler<CodeEditValues>;
+  handleCodeDelete: () => void;
+  isDeleteLoading: boolean;
+  code: CodeRead;
+  codes: CodeRead[];
+}
+
+function CodeEditDialogContent({
+  isOpen,
+  handleClose,
+  handleCodeUpdate,
+  isUpdateLoading,
+  handleError,
+  handleCodeDelete,
+  isDeleteLoading,
+  code,
+  codes,
+}: CodeEditDialogContentProps) {
+  // use react hook form
+  const {
+    handleSubmit,
+    formState: { errors },
+    control,
+  } = useForm<CodeEditValues>({
+    defaultValues: {
+      name: code.name,
+      description: code.description,
+      color: ColorUtils.rgbStringToHex(code.color) || code.color,
+      parentCodeId: code.parent_id || -1,
+    },
+  });
+
+  // computed
+  const parentCodes = useMemo(() => codes.filter((code) => code.user_id !== SYSTEM_USER_ID), [codes]);
+
+  // render
   let menuItems: React.ReactNode[];
   if (!code || code.user_id === SYSTEM_USER_ID) {
     menuItems = codes
@@ -170,68 +205,63 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
   }
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+    <Dialog open={isOpen} onClose={handleClose} maxWidth="md" fullWidth>
       <form onSubmit={handleSubmit(handleCodeUpdate, handleError)}>
         <DialogTitle>Edit code {code?.name}</DialogTitle>
         <DialogContent>
           <Stack spacing={3}>
-            <TextField
-              key={code?.id}
-              fullWidth
-              select
-              label="Parent Code"
-              variant="filled"
-              defaultValue={code?.parent_id || -1}
-              {...register("parentCodeId")}
-              error={Boolean(errors.parentCodeId)}
-              helperText={<ErrorMessage errors={errors} name="parentCodeId" />}
-              disabled={!code || code.user_id === SYSTEM_USER_ID}
+            <FormMenu
+              name="parentCodeId"
+              control={control}
+              textFieldProps={{
+                label: "Parent Code",
+                error: Boolean(errors.parentCodeId),
+                helperText: <ErrorMessage errors={errors} name="parentCodeId" />,
+                variant: "filled",
+                disabled: code.user_id === SYSTEM_USER_ID,
+              }}
             >
               <MenuItem key={-1} value={-1}>
                 No parent
               </MenuItem>
               {menuItems}
-            </TextField>
-            <TextField
-              label="Name"
-              fullWidth
-              variant="standard"
-              {...register("name", { required: "Code name is required" })}
-              error={Boolean(errors.name)}
-              helperText={<ErrorMessage errors={errors} name="name" />}
-              disabled={!code || code.user_id === SYSTEM_USER_ID}
-            />
-            <Stack direction="row">
-              <TextField
-                label="Color"
-                fullWidth
-                variant="standard"
-                {...register("color", { required: "Color is required" })}
-                onChange={(e) => setColor(e.target.value)}
-                error={Boolean(errors.color)}
-                helperText={<ErrorMessage errors={errors} name="color" />}
-                InputLabelProps={{ shrink: true }}
-              />
-              <Box sx={{ width: 48, height: 48, backgroundColor: color, ml: 1, flexShrink: 0 }} />
-            </Stack>
-            <HexColorPicker
-              style={{ width: "100%" }}
-              color={color}
-              onChange={(newColor) => {
-                setValue("color", newColor); // set value of text input
-                setColor(newColor); // set value of color picker (and box)
+            </FormMenu>
+            <FormText
+              name="name"
+              control={control}
+              rules={{ required: "Name is required" }}
+              textFieldProps={{
+                label: "Name",
+                error: Boolean(errors.name),
+                helperText: <ErrorMessage errors={errors} name="name" />,
+                variant: "standard",
+                disabled: code.user_id === SYSTEM_USER_ID,
               }}
             />
-            <TextField
-              multiline
-              minRows={5}
-              label="Description"
-              fullWidth
-              variant="standard"
-              {...register("description")}
-              error={Boolean(errors.description)}
-              helperText={<ErrorMessage errors={errors} name="description" />}
-              disabled={!code || code.user_id === SYSTEM_USER_ID}
+            <FormColorPicker
+              name="color"
+              control={control}
+              rules={{ required: "Color is required" }}
+              textFieldProps={{
+                label: "Color",
+                error: Boolean(errors.color),
+                helperText: <ErrorMessage errors={errors} name="color" />,
+                variant: "standard",
+                fullWidth: true,
+                InputLabelProps: { shrink: true },
+              }}
+            />
+            <FormTextMultiline
+              name="description"
+              control={control}
+              rules={{ required: "Description is required" }}
+              textFieldProps={{
+                label: "Description",
+                error: Boolean(errors.description),
+                helperText: <ErrorMessage errors={errors} name="description" />,
+                variant: "standard",
+                disabled: code.user_id === SYSTEM_USER_ID,
+              }}
             />
           </Stack>
         </DialogContent>
@@ -240,7 +270,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
             variant="contained"
             color="error"
             startIcon={<DeleteIcon />}
-            loading={deleteCodeMutation.isPending}
+            loading={isDeleteLoading}
             loadingPosition="start"
             onClick={handleCodeDelete}
             sx={{ flexShrink: 0 }}
@@ -255,7 +285,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
             fullWidth
             type="submit"
             disabled={!code}
-            loading={updateCodeMutation.isPending}
+            loading={isUpdateLoading}
             loadingPosition="start"
           >
             Update Code

@@ -101,6 +101,7 @@ export function MemoContentSpanAnnotation({
 
   return (
     <MemoForm
+      key={memo?.id}
       title={`Memo for Text Annotation '${spanAnnotation.span_text}'`}
       memo={memo}
       handleCreateOrUpdateMemo={handleCreateOrUpdateSpanAnnotationMemo}

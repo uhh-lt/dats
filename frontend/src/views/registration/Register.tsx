@@ -12,7 +12,6 @@ import {
   FormGroup,
   FormHelperText,
   Stack,
-  TextField,
   Typography,
 } from "@mui/material";
 import React, { useRef, useState } from "react";
@@ -20,6 +19,9 @@ import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import UserHooks from "../../api/UserHooks.ts";
 import { UserCreate } from "../../api/openapi/models/UserCreate.ts";
+import FormEmail from "../../components/FormInputs/FormEmail.tsx";
+import FormPassword from "../../components/FormInputs/FormPassword.tsx";
+import FormText from "../../components/FormInputs/FormText.tsx";
 import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { EMAIL_REGEX } from "../../utils/GlobalConstants.ts";
 
@@ -31,10 +33,10 @@ interface RegisterFormValues extends UserCreate {
 function Register() {
   const navigate = useNavigate();
   const {
-    register,
     handleSubmit,
     formState: { errors },
     watch,
+    control,
   } = useForm<RegisterFormValues>();
 
   // password
@@ -101,62 +103,76 @@ function Register() {
               Create your DATS Account
             </Typography>
             <Stack direction="row" spacing={2} sx={{ mt: 1, mb: 0.5 }}>
-              <TextField
-                variant="outlined"
-                fullWidth
-                label="First name"
-                type="text"
-                {...register("first_name", { required: "First name is required" })}
-                error={Boolean(errors.first_name)}
-                helperText={<ErrorMessage errors={errors} name="first_name" />}
+              <FormText
+                name="first_name"
+                control={control}
+                rules={{
+                  required: "First name is required",
+                }}
+                textFieldProps={{
+                  label: "First name",
+                  variant: "outlined",
+                  fullWidth: true,
+                  error: Boolean(errors.first_name),
+                  helperText: <ErrorMessage errors={errors} name="first_name" />,
+                }}
               />
-              <TextField
-                variant="outlined"
-                fullWidth
-                label="Last name"
-                type="text"
-                {...register("last_name", { required: "Last name is required" })}
-                error={Boolean(errors.last_name)}
-                helperText={<ErrorMessage errors={errors} name="last_name" />}
+              <FormText
+                name="last_name"
+                control={control}
+                rules={{
+                  required: "Last name is required",
+                }}
+                textFieldProps={{
+                  label: "Last name",
+                  variant: "outlined",
+                  fullWidth: true,
+                  error: Boolean(errors.last_name),
+                  helperText: <ErrorMessage errors={errors} name="last_name" />,
+                }}
               />
             </Stack>
 
-            <TextField
-              variant="outlined"
-              fullWidth
-              label="E-Mail"
-              type="email"
-              margin="dense"
-              {...register("email", {
+            <FormEmail
+              name="email"
+              control={control}
+              rules={{
                 required: "E-Mail is required",
                 validate: (value) => {
                   return [EMAIL_REGEX].every((pattern) => pattern.test(value)) || "Please enter a valid email address!";
                 },
-              })}
-              error={Boolean(errors.email)}
-              helperText={<ErrorMessage errors={errors} name="email" />}
+              }}
+              textFieldProps={{
+                label: "E-Mail",
+                variant: "outlined",
+                fullWidth: true,
+                error: Boolean(errors.email),
+                helperText: <ErrorMessage errors={errors} name="email" />,
+                margin: "dense",
+              }}
             />
-            <TextField
-              variant="outlined"
-              fullWidth
-              label="E-Mail Confirm"
-              type="email"
-              margin="dense"
-              {...register("confirmMail", {
+            <FormEmail
+              name="confirmMail"
+              control={control}
+              rules={{
                 required: "E-Mail is required",
                 validate: (value) => value === mail.current || "E-Mails do not match!",
-              })}
-              error={Boolean(errors.confirmMail)}
-              helperText={<ErrorMessage errors={errors} name="confirmMail" />}
+              }}
+              textFieldProps={{
+                label: "E-Mail Confirm",
+                variant: "outlined",
+                fullWidth: true,
+                error: Boolean(errors.confirmMail),
+                helperText: <ErrorMessage errors={errors} name="confirmMail" />,
+                margin: "dense",
+              }}
             />
-
             <Stack direction="row" spacing={2} sx={{ mt: 1, mb: 0.5 }}>
-              <TextField
-                variant="outlined"
-                label="Password"
-                type={showPassword ? "text" : "password"}
-                fullWidth
-                {...register("password", {
+              <FormPassword
+                name="password"
+                control={control}
+                showPassword={showPassword}
+                rules={{
                   required: "Password is required",
                   validate: (value) => {
                     return (
@@ -173,21 +189,30 @@ function Register() {
                     value: 8,
                     message: "Password too short! (minimum 8 characters)",
                   },
-                })}
-                error={Boolean(errors.password)}
-                helperText={<ErrorMessage errors={errors} name="password" />}
+                }}
+                textFieldProps={{
+                  label: "Password",
+                  variant: "outlined",
+                  fullWidth: true,
+                  error: Boolean(errors.password),
+                  helperText: <ErrorMessage errors={errors} name="password" />,
+                }}
               />
-              <TextField
-                variant="outlined"
-                label="Password Confirm"
-                type={showPassword ? "text" : "password"}
-                fullWidth
-                {...register("confirmPassword", {
+              <FormPassword
+                name="confirmPassword"
+                control={control}
+                showPassword={showPassword}
+                rules={{
                   required: "Password is required",
                   validate: (value) => value === password.current || "Passwords do not match!",
-                })}
-                error={Boolean(errors.confirmPassword)}
-                helperText={<ErrorMessage errors={errors} name="confirmPassword" />}
+                }}
+                textFieldProps={{
+                  label: "Password Confirm",
+                  variant: "outlined",
+                  fullWidth: true,
+                  error: Boolean(errors.confirmPassword),
+                  helperText: <ErrorMessage errors={errors} name="confirmPassword" />,
+                }}
               />
             </Stack>
             <FormHelperText sx={{ ml: 1.8 }}>

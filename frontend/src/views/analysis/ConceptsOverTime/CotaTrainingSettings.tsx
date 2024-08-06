@@ -1,35 +1,25 @@
 import { ErrorMessage } from "@hookform/error-message";
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  MenuItem,
-  Stack,
-  TextField,
-} from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, MenuItem, Stack } from "@mui/material";
 import { useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { COTARead } from "../../../api/openapi/models/COTARead.ts";
 import { COTATrainingSettings } from "../../../api/openapi/models/COTATrainingSettings.ts";
 import { DimensionalityReductionAlgorithm } from "../../../api/openapi/models/DimensionalityReductionAlgorithm.ts";
+import FormMenu from "../../../components/FormInputs/FormMenu.tsx";
+import FormNumber from "../../../components/FormInputs/FormNumber.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 
 interface CotaTrainingSettingsProps {
-  cota: COTARead;
   onUpdate: (trainingSettings: COTATrainingSettings) => void;
   onCancel: () => void;
 }
 
-function CotaTrainingSettings({ cota, onUpdate, onCancel }: CotaTrainingSettingsProps) {
+function CotaTrainingSettings({ onUpdate, onCancel }: CotaTrainingSettingsProps) {
   // use react hook form
   const {
-    register,
     handleSubmit,
     formState: { errors },
     reset,
+    control,
   } = useForm<COTATrainingSettings>();
 
   // global server state (react-query)
@@ -61,140 +51,155 @@ function CotaTrainingSettings({ cota, onUpdate, onCancel }: CotaTrainingSettings
         <DialogContent>
           <Stack spacing={3} sx={{ mt: 1 }}>
             <Divider>Search Space</Divider>
-            <TextField
-              label="Search Space Top K"
-              fullWidth
-              variant="outlined"
-              key={`${cota.id}-search_space_topk`}
-              {...register("search_space_topk", { required: "Search Space Top K is required" })}
-              error={Boolean(errors.search_space_topk)}
-              helperText={<ErrorMessage errors={errors} name="search_space_topk" />}
-              InputLabelProps={{ shrink: true }}
-              type="number"
-              inputProps={{
-                min: 10,
-                max: 10000,
-                step: 1,
+            <FormNumber
+              name="search_space_topk"
+              control={control}
+              rules={{
+                required: "Search Space Top K is required",
+              }}
+              textFieldProps={{
+                label: "Search Space Top K",
+                variant: "outlined",
+                fullWidth: true,
+                error: Boolean(errors.search_space_topk),
+                helperText: <ErrorMessage errors={errors} name="search_space_topk" />,
+                InputLabelProps: { shrink: true },
+                inputProps: {
+                  min: 10,
+                  max: 10000,
+                  step: 1,
+                },
               }}
             />
-
-            <TextField
-              label="Search Space Threshold"
-              fullWidth
-              variant="outlined"
-              key={`${cota.id}-search_space_threshold`}
-              {...register("search_space_threshold", { required: "Search Space Threshold is required" })}
-              error={Boolean(errors.search_space_threshold)}
-              helperText={<ErrorMessage errors={errors} name="search_space_threshold" />}
-              InputLabelProps={{ shrink: true }}
-              type="number"
-              inputProps={{
-                min: 0.01,
-                max: 1,
-                step: 0.01,
+            <FormNumber
+              name="search_space_threshold"
+              control={control}
+              rules={{
+                required: "Search Space Threshold is required",
+              }}
+              textFieldProps={{
+                label: "Search Space Threshold",
+                variant: "outlined",
+                fullWidth: true,
+                error: Boolean(errors.search_space_threshold),
+                helperText: <ErrorMessage errors={errors} name="search_space_threshold" />,
+                InputLabelProps: { shrink: true },
+                inputProps: {
+                  min: 0.01,
+                  max: 1,
+                  step: 0.01,
+                },
               }}
             />
 
             <Divider>Context Embedding Model</Divider>
 
-            <TextField
-              label="Num. feed forward layers"
-              fullWidth
-              variant="outlined"
-              key={`${cota.id}-layers`}
-              {...register("layers", {
+            <FormNumber
+              name="layers"
+              control={control}
+              rules={{
                 required: "Num. feed forward layers is required",
-              })}
-              error={Boolean(errors.layers)}
-              helperText={<ErrorMessage errors={errors} name="layers" />}
-              InputLabelProps={{ shrink: true }}
-              type="number"
-              inputProps={{
-                min: 1,
-                max: 10000,
-                step: 1,
+              }}
+              textFieldProps={{
+                label: "Num. feed forward layers",
+                variant: "outlined",
+                fullWidth: true,
+                error: Boolean(errors.layers),
+                helperText: <ErrorMessage errors={errors} name="layers" />,
+                InputLabelProps: { shrink: true },
+                inputProps: {
+                  min: 1,
+                  max: 10000,
+                  step: 1,
+                },
               }}
             />
 
-            <TextField
-              label="Dimensions of feed forward layers"
-              fullWidth
-              variant="outlined"
-              key={`${cota.id}-dimensions`}
-              {...register("dimensions", {
+            <FormNumber
+              name="dimensions"
+              control={control}
+              rules={{
                 required: "Dimensions of feed forward layers is required",
-              })}
-              error={Boolean(errors.dimensions)}
-              helperText={<ErrorMessage errors={errors} name="dimensions" />}
-              InputLabelProps={{ shrink: true }}
-              type="number"
-              inputProps={{
-                min: 1,
-                max: 10000,
-                step: 1,
+              }}
+              textFieldProps={{
+                label: "Dimensions of feed forward layers",
+                variant: "outlined",
+                fullWidth: true,
+                error: Boolean(errors.dimensions),
+                helperText: <ErrorMessage errors={errors} name="dimensions" />,
+                InputLabelProps: { shrink: true },
+                inputProps: {
+                  min: 1,
+                  max: 10000,
+                  step: 1,
+                },
               }}
             />
 
             <Divider>Training</Divider>
 
-            <TextField
-              label="Epochs"
-              fullWidth
-              variant="outlined"
-              key={`${cota.id}-epochs`}
-              {...register("epochs", { required: "Epochs is required" })}
-              error={Boolean(errors.epochs)}
-              helperText={<ErrorMessage errors={errors} name="epochs" />}
-              InputLabelProps={{ shrink: true }}
-              type="number"
-              inputProps={{
-                min: 1,
-                max: 100,
-                step: 1,
+            <FormNumber
+              name="epochs"
+              control={control}
+              rules={{
+                required: "Epochs is required",
+              }}
+              textFieldProps={{
+                label: "Epochs",
+                variant: "outlined",
+                fullWidth: true,
+                error: Boolean(errors.epochs),
+                helperText: <ErrorMessage errors={errors} name="epochs" />,
+                InputLabelProps: { shrink: true },
+                inputProps: {
+                  min: 1,
+                  max: 100,
+                  step: 1,
+                },
               }}
             />
 
-            <TextField
-              label="Min. required annotations per concept"
-              fullWidth
-              variant="outlined"
-              key={`${cota.id}-min_required_annotations_per_concept`}
-              {...register("min_required_annotations_per_concept", {
+            <FormNumber
+              name="min_required_annotations_per_concept"
+              control={control}
+              rules={{
                 required: "Min. required annotations per concept is required",
-              })}
-              error={Boolean(errors.min_required_annotations_per_concept)}
-              helperText={<ErrorMessage errors={errors} name="min_required_annotations_per_concept" />}
-              InputLabelProps={{ shrink: true }}
-              type="number"
-              inputProps={{
-                min: 1,
-                max: 10000,
-                step: 1,
+              }}
+              textFieldProps={{
+                label: "Min. required annotations per concept",
+                variant: "outlined",
+                fullWidth: true,
+                error: Boolean(errors.min_required_annotations_per_concept),
+                helperText: <ErrorMessage errors={errors} name="min_required_annotations_per_concept" />,
+                InputLabelProps: { shrink: true },
+                inputProps: {
+                  min: 1,
+                  max: 10000,
+                  step: 1,
+                },
               }}
             />
 
             <Divider>Other</Divider>
 
-            <TextField
-              key={`${cota.id}-${trainingSettings.dimensionality_reduction_algorithm}-dimensionality_reduction_algorithm`}
-              select
-              label="Dimensionality Reduction Algorithm"
-              fullWidth
-              variant="outlined"
-              defaultValue={trainingSettings.dimensionality_reduction_algorithm}
-              {...register("dimensionality_reduction_algorithm", {
-                required: "Dimensionality Reduction Algorithm is required",
-              })}
-              error={Boolean(errors.dimensionality_reduction_algorithm)}
-              helperText={<ErrorMessage errors={errors} name="dimensionality_reduction_algorithm" />}
-              InputLabelProps={{ shrink: true }}
+            <FormMenu
+              name="dimensionality_reduction_algorithm"
+              control={control}
+              textFieldProps={{
+                label: "Dimensionality Reduction Algorithm",
+                error: Boolean(errors.dimensionality_reduction_algorithm),
+                helperText: <ErrorMessage errors={errors} name="dimensionality_reduction_algorithm" />,
+                variant: "outlined",
+                fullWidth: true,
+                InputLabelProps: { shrink: true },
+              }}
             >
               {Object.values(DimensionalityReductionAlgorithm).map((value) => (
                 <MenuItem key={value} value={value}>
                   {value.toLocaleUpperCase()}
                 </MenuItem>
               ))}
-            </TextField>
+            </FormMenu>
           </Stack>
         </DialogContent>
         <DialogActions>

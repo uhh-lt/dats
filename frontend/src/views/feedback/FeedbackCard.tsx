@@ -2,11 +2,12 @@ import { ErrorMessage } from "@hookform/error-message";
 import ReplyIcon from "@mui/icons-material/Reply";
 import SendIcon from "@mui/icons-material/Send";
 import { LoadingButton } from "@mui/lab";
-import { Button, Card, CardActions, CardContent, CardHeader, Collapse, TextField, Typography } from "@mui/material";
+import { Button, Card, CardActions, CardContent, CardHeader, Collapse, Typography } from "@mui/material";
 import React from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import FeedbackHooks from "../../api/FeedbackHooks.ts";
 import { FeedbackRead } from "../../api/openapi/models/FeedbackRead.ts";
+import FormTextMultiline from "../../components/FormInputs/FormTextMultiline.tsx";
 import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import UserName from "../../components/User/UserName.tsx";
 
@@ -28,17 +29,17 @@ function FeedbackCard({ feedback, showReplyTo }: FeedbackCardProps) {
 
   // react form
   const {
-    register,
     handleSubmit,
     formState: { errors },
     reset,
+    control,
   } = useForm<FeedbackReplyValues>();
 
   // mutations
   const replyToFeedbackMutation = FeedbackHooks.useReplyTo();
 
   // react form handlers
-  const handleSubmitCodeCreateDialog: SubmitHandler<FeedbackReplyValues> = (data) => {
+  const handleSubmitFeedbackReply: SubmitHandler<FeedbackReplyValues> = (data) => {
     replyToFeedbackMutation.mutate(
       {
         feedbackId: feedback.id,
@@ -57,11 +58,11 @@ function FeedbackCard({ feedback, showReplyTo }: FeedbackCardProps) {
     );
   };
 
-  const handleErrorCodeCreateDialog: SubmitErrorHandler<FeedbackReplyValues> = (data) => console.error(data);
+  const handleErrorFeedbackReply: SubmitErrorHandler<FeedbackReplyValues> = (data) => console.error(data);
 
   return (
     <Card>
-      <form onSubmit={handleSubmit(handleSubmitCodeCreateDialog, handleErrorCodeCreateDialog)}>
+      <form onSubmit={handleSubmit(handleSubmitFeedbackReply, handleErrorFeedbackReply)}>
         <CardHeader
           title={
             <>
@@ -103,15 +104,20 @@ function FeedbackCard({ feedback, showReplyTo }: FeedbackCardProps) {
             )}
             <Collapse in={expanded} timeout="auto" unmountOnExit>
               <CardContent>
-                <TextField
-                  multiline
-                  minRows={5}
-                  label="Message"
-                  fullWidth
-                  variant="outlined"
-                  {...register("message", { required: "Message is required", minLength: 1 })}
-                  error={Boolean(errors.message)}
-                  helperText={<ErrorMessage errors={errors} name="message" />}
+                <FormTextMultiline
+                  name="message"
+                  control={control}
+                  rules={{
+                    required: "Message is required",
+                    minLength: { value: 1, message: "Message is required" },
+                  }}
+                  textFieldProps={{
+                    label: "Message",
+                    fullWidth: true,
+                    variant: "outlined",
+                    error: Boolean(errors.message),
+                    helperText: <ErrorMessage errors={errors} name="message" />,
+                  }}
                 />
               </CardContent>
             </Collapse>

@@ -1,8 +1,9 @@
 import { ErrorMessage } from "@hookform/error-message";
 import SettingsIcon from "@mui/icons-material/Settings";
-import { Button, IconButton, Popover, Stack, TextField, Tooltip } from "@mui/material";
+import { Button, IconButton, Popover, Stack, Tooltip } from "@mui/material";
 import { useState } from "react";
-import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import FormNumber from "../../../components/FormInputs/FormNumber.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { ImageSearchActions } from "./imageSearchSlice.ts";
 
@@ -73,47 +74,43 @@ function ImageSimilaritySearchOptionsMenu() {
         }}
       >
         <Stack component="form" onSubmit={handleSubmit(handleChangeSearchOptions, handleError)} gap={2}>
-          <Controller
+          <FormNumber
             name="topK"
             control={control}
             rules={{
               required: "Value is required",
             }}
-            render={({ field: { onBlur, onChange, value } }) => (
-              <TextField
-                type="number"
-                inputProps={{ min: 1, max: Infinity, step: 1 }}
-                fullWidth
-                label="Top K"
-                variant="outlined"
-                onChange={onChange}
-                onBlur={onBlur}
-                value={value}
-                error={Boolean(errors.topK)}
-                helperText={<ErrorMessage errors={errors} name="topK" />}
-              />
-            )}
+            textFieldProps={{
+              label: "Top K",
+              variant: "outlined",
+              fullWidth: true,
+              error: Boolean(errors.topK),
+              helperText: <ErrorMessage errors={errors} name="topK" />,
+              inputProps: {
+                min: 1,
+                max: Infinity,
+                step: 1,
+              },
+            }}
           />
-          <Controller
+          <FormNumber
             name="threshold"
             control={control}
             rules={{
               required: "Value is required",
             }}
-            render={({ field: { onBlur, onChange, value } }) => (
-              <TextField
-                type="number"
-                fullWidth
-                inputProps={{ min: 0, max: 1, step: 0.1 }}
-                label="Threshold"
-                variant="outlined"
-                onChange={onChange}
-                onBlur={onBlur}
-                value={value}
-                error={Boolean(errors.threshold)}
-                helperText={<ErrorMessage errors={errors} name="threshold" />}
-              />
-            )}
+            textFieldProps={{
+              label: "Threshold",
+              variant: "outlined",
+              fullWidth: true,
+              error: Boolean(errors.threshold),
+              helperText: <ErrorMessage errors={errors} name="threshold" />,
+              inputProps: {
+                min: 0,
+                max: 1,
+                step: 0.1,
+              },
+            }}
           />
           <Button type="submit" variant="contained">
             Apply

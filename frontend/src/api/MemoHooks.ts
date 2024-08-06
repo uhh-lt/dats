@@ -81,25 +81,25 @@ const deleteInvalidation = (data: MemoRead) => {
     case AttachedObjectType.PROJECT:
       break;
     case AttachedObjectType.SOURCE_DOCUMENT:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC, data.attached_object_id, data.user_id] });
+      queryClient.removeQueries({ queryKey: [QueryKey.MEMO_SDOC, data.attached_object_id, data.user_id] });
       queryClient.invalidateQueries({
         queryKey: [QueryKey.MEMO_SDOC_RELATED, data.user_id, data.attached_object_id],
       });
       break;
     case AttachedObjectType.DOCUMENT_TAG:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_TAG, data.attached_object_id, data.user_id] });
+      queryClient.removeQueries({ queryKey: [QueryKey.MEMO_TAG, data.attached_object_id, data.user_id] });
       break;
     case AttachedObjectType.CODE:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_CODE, data.attached_object_id, data.user_id] });
+      queryClient.removeQueries({ queryKey: [QueryKey.MEMO_CODE, data.attached_object_id, data.user_id] });
       break;
     case AttachedObjectType.SPAN_ANNOTATION:
-      queryClient.invalidateQueries({
+      queryClient.removeQueries({
         queryKey: [QueryKey.MEMO_SPAN_ANNOTATION, data.attached_object_id, data.user_id],
       });
       queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED, data.user_id] }); // todo: this is not optimal
       break;
     case AttachedObjectType.BBOX_ANNOTATION:
-      queryClient.invalidateQueries({
+      queryClient.removeQueries({
         queryKey: [QueryKey.MEMO_BBOX_ANNOTATION, data.attached_object_id, data.user_id],
       });
       queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED, data.user_id] }); // todo: this is not optimal

@@ -1,9 +1,10 @@
 import { ErrorMessage } from "@hookform/error-message";
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
-import { useEffect, useState } from "react";
-import { HexColorPicker } from "react-colorful";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack } from "@mui/material";
+import { useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { TimelineAnalysisConcept_Output } from "../../../api/openapi/models/TimelineAnalysisConcept_Output.ts";
+import FormColorPicker from "../../../components/FormInputs/FormColorPicker.tsx";
+import FormText from "../../../components/FormInputs/FormText.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import ColorUtils from "../../../utils/ColorUtils.ts";
 import ConceptFilterEditor from "./ConceptFilterEditor.tsx";
@@ -14,16 +15,13 @@ interface ConceptEditorProps {
 }
 
 function ConceptEditor({ onUpdate, onCancel }: ConceptEditorProps) {
-  // local state
-  const [color, setColor] = useState("#000000");
-
   // use react hook form
   const {
-    register,
     handleSubmit,
     formState: { errors },
     reset,
     setValue,
+    control,
   } = useForm<TimelineAnalysisConcept_Output>();
 
   // redux
@@ -37,7 +35,6 @@ function ConceptEditor({ onUpdate, onCancel }: ConceptEditorProps) {
       ...currentConcept,
       color: c,
     });
-    setColor(c);
   }, [currentConcept, reset, setValue]);
 
   // event handling
@@ -57,39 +54,37 @@ function ConceptEditor({ onUpdate, onCancel }: ConceptEditorProps) {
         <DialogTitle>Add / edit concept</DialogTitle>
         <DialogContent>
           <Stack spacing={3} sx={{ mt: 1 }}>
-            <TextField
-              label="Name"
-              fullWidth
-              variant="outlined"
-              key={`${currentConcept.name}-name`}
-              {...register("name", { required: "Name is required" })}
-              error={Boolean(errors.name)}
-              helperText={<ErrorMessage errors={errors} name="name" />}
-              InputLabelProps={{ shrink: true }}
+            <FormText
+              name="name"
+              control={control}
+              rules={{
+                required: "Name is required",
+              }}
+              textFieldProps={{
+                label: "Name",
+                variant: "outlined",
+                fullWidth: true,
+                error: Boolean(errors.name),
+                helperText: <ErrorMessage errors={errors} name="name" />,
+                InputLabelProps: { shrink: true },
+              }}
             />
-            <Stack direction="row">
-              <TextField
-                label="Color"
-                fullWidth
-                variant="outlined"
-                InputProps={{
+            <FormColorPicker
+              name="color"
+              control={control}
+              rules={{
+                required: "Color is required",
+              }}
+              textFieldProps={{
+                label: "Color",
+                variant: "outlined",
+                fullWidth: true,
+                error: Boolean(errors.color),
+                helperText: <ErrorMessage errors={errors} name="color" />,
+                InputLabelProps: { shrink: true },
+                InputProps: {
                   readOnly: true,
-                }}
-                key={`${currentConcept.name}-color`}
-                {...register("color", { required: "Color is required" })}
-                onChange={(e) => setColor(e.target.value)}
-                error={Boolean(errors.color)}
-                helperText={<ErrorMessage errors={errors} name="color" />}
-                InputLabelProps={{ shrink: true }}
-              />
-              <Box sx={{ width: 55, height: 55, backgroundColor: color, ml: 1, flexShrink: 0 }} />
-            </Stack>
-            <HexColorPicker
-              style={{ width: "100%" }}
-              color={color}
-              onChange={(newColor) => {
-                setValue("color", newColor); // set value of text input
-                setColor(newColor); // set value of color picker (and box)
+                },
               }}
             />
             <ConceptFilterEditor />

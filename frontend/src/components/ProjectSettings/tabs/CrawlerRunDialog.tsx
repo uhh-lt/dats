@@ -1,10 +1,11 @@
 import { ErrorMessage } from "@hookform/error-message";
 import { PlayCircle } from "@mui/icons-material";
 import { LoadingButton } from "@mui/lab";
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@mui/material";
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import CrawlerHooks from "../../../api/CrawlerHooks.ts";
+import FormTextMultiline from "../../FormInputs/FormTextMultiline.tsx";
 
 interface CrawlerRunDialogProps {
   projectId: number;
@@ -36,10 +37,10 @@ const CrawlerRunDialog = forwardRef<CrawlerRunDialogHandle, CrawlerRunDialogProp
 
   // react form
   const {
-    register,
     handleSubmit,
     formState: { errors },
     reset,
+    control,
   } = useForm<CrawlerFormValues>();
 
   // exposed methods (via forward ref)
@@ -77,18 +78,12 @@ const CrawlerRunDialog = forwardRef<CrawlerRunDialogHandle, CrawlerRunDialogProp
       <form onSubmit={handleSubmit(handleSubmitRun, handleErrorCodeCreateDialog)}>
         <DialogTitle>URL Import</DialogTitle>
         <DialogContent>
-          <TextField
-            label="URLs (one per line)"
-            fullWidth
-            variant="standard"
-            rows={5}
-            multiline
-            {...register("urls", {
+          <FormTextMultiline
+            name="urls"
+            control={control}
+            rules={{
+              required: "At least one URL is required",
               validate: (value) => {
-                if (value.trim().length === 0) {
-                  return "At least one URL is required";
-                }
-
                 const urls = value.split("\n");
 
                 let i = 1;
@@ -101,9 +96,14 @@ const CrawlerRunDialog = forwardRef<CrawlerRunDialogHandle, CrawlerRunDialogProp
 
                 return true;
               },
-            })}
-            error={Boolean(errors.urls)}
-            helperText={<ErrorMessage errors={errors} name="urls" />}
+            }}
+            textFieldProps={{
+              label: "URLs (one per line)",
+              fullWidth: true,
+              variant: "standard",
+              error: Boolean(errors.urls),
+              helperText: <ErrorMessage errors={errors} name="urls" />,
+            }}
           />
         </DialogContent>
         <DialogActions>

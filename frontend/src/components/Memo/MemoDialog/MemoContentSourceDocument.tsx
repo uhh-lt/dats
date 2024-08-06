@@ -101,6 +101,7 @@ export function MemoContentSourceDocument({
 
   return (
     <MemoForm
+      key={memo?.id}
       title={`Memo for Document ${sdoc.filename}`}
       memo={memo}
       handleCreateOrUpdateMemo={handleCreateOrUpdateCodeMemo}

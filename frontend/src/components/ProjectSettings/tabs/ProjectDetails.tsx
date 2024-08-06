@@ -7,15 +7,17 @@ import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
 import { ProjectUpdate } from "../../../api/openapi/models/ProjectUpdate.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
+import FormText from "../../FormInputs/FormText.tsx";
+import FormTextMultiline from "../../FormInputs/FormTextMultiline.tsx";
 import { ProjectProps } from "../ProjectProps.ts";
 
 function ProjectDetails({ project }: ProjectProps) {
   const { user } = useAuth();
   const {
-    register,
     handleSubmit,
     formState: { errors },
     setValue,
+    control,
   } = useForm<ProjectUpdate>();
 
   // mutations
@@ -45,28 +47,33 @@ function ProjectDetails({ project }: ProjectProps) {
     <form onSubmit={handleSubmit(handleProjectUpdate, handleError)}>
       <CardContent>
         <Stack spacing={2}>
-          <TextField
-            label="Project name"
-            variant="outlined"
-            fullWidth
-            {...register("title", {
+          <FormText
+            name="title"
+            control={control}
+            rules={{
               required: "Project name is required",
-              // validate: (value: string) => !/\s/g.test(value) || "Project name must not contain spaces",
-            })}
-            error={Boolean(errors.title)}
-            helperText={<ErrorMessage errors={errors} name="title" />}
+            }}
+            textFieldProps={{
+              label: "Project name",
+              variant: "outlined",
+              fullWidth: true,
+              error: Boolean(errors.title),
+              helperText: <ErrorMessage errors={errors} name="title" />,
+            }}
           />
-          <TextField
-            label="Project description"
-            variant="outlined"
-            fullWidth
-            multiline
-            rows={3}
-            {...register("description", {
+          <FormTextMultiline
+            name="description"
+            control={control}
+            rules={{
               required: "Project description is required",
-            })}
-            error={Boolean(errors.description)}
-            helperText={<ErrorMessage errors={errors} name="description" />}
+            }}
+            textFieldProps={{
+              label: "Project description",
+              variant: "outlined",
+              fullWidth: true,
+              error: Boolean(errors.description),
+              helperText: <ErrorMessage errors={errors} name="description" />,
+            }}
           />
           <TextField
             label="Method"
