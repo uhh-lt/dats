@@ -51,7 +51,6 @@ function EntityDashboard() {
 
   function handleMerge(props: EntityTableSaveRowProps): void {
     props.table.setCreatingRow(null);
-    console.log(props.selectedSpanTexts);
     const name = props.values.name;
     const knowledge_base_id = props.values.knowledge_base_id;
     const requestBody = {

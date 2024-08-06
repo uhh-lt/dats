@@ -6934,12 +6934,6 @@
           },
           "name": { "type": "string", "title": "Name", "description": "Name of the Entity" },
           "project_id": { "type": "integer", "title": "Project Id", "description": "Id of the current Project" },
-          "entity_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Entity Ids",
-            "description": "List of Entity IDs to merge"
-          },
           "spantext_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -6948,7 +6942,7 @@
           }
         },
         "type": "object",
-        "required": ["name", "project_id", "entity_ids", "spantext_ids"],
+        "required": ["name", "project_id", "spantext_ids"],
         "title": "EntityMerge"
       },
       "EntityRead": {
@@ -7007,21 +7001,15 @@
             "default": ""
           },
           "project_id": { "type": "integer", "title": "Project Id", "description": "Id of the current Project" },
-          "entity_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Entity Ids",
-            "description": "List of Entity IDs to merge"
-          },
           "spantext_ids": {
             "items": { "type": "integer" },
             "type": "array",
             "title": "Spantext Ids",
-            "description": "List of Span Text IDs to merge"
+            "description": "List of Span Text IDs to release"
           }
         },
         "type": "object",
-        "required": ["project_id", "entity_ids", "spantext_ids"],
+        "required": ["project_id", "spantext_ids"],
         "title": "EntityRelease"
       },
       "EntityUpdate": {
