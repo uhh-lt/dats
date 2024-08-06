@@ -1,8 +1,8 @@
 import ScatterPlotIcon from "@mui/icons-material/ScatterPlot";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import { Button, Tooltip } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import { CotaActions } from "./cotaSlice";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { CotaActions } from "./cotaSlice.ts";
 
 function CotaPlotToggleButton() {
   // global client state (redux)

@@ -3,7 +3,7 @@ import { COTARead } from "../../../api/openapi/models/COTARead.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import CotaConceptList from "./CotaConceptList.tsx";
 import CotaControl from "./CotaControl.tsx";
-import CotaScatterPlot from "./CotaScatterPlot.tsx";
+import CotaScatterPlotly from "./CotaScatterPlotly.tsx";
 import CotaSentenceAnnotator2 from "./CotaSentenceAnnotator.tsx";
 import CotaTimelinePlot from "./CotaTimelinePlot.tsx";
 import CotaTimelineSettings from "./CotaTimelineSettings.tsx";
@@ -28,7 +28,7 @@ function CotaViewContent({ cota }: CotaViewContentProps) {
       </Grid>
       <Grid item md={9} className="h100">
         <Box style={{ height: "50%" }} sx={{ pb: 1 }}>
-          {isTimelineView ? <CotaTimelinePlot cota={cota} /> : <CotaScatterPlot cota={cota} />}
+          {isTimelineView ? <CotaTimelinePlot cota={cota} /> : <CotaScatterPlotly cota={cota} />}
         </Box>
         <Box style={{ height: "50%" }} sx={{ pt: 1 }}>
           <CotaSentenceAnnotator2 cota={cota} />

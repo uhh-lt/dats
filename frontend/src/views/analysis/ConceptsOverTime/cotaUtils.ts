@@ -1,7 +1,6 @@
 import { COTARead } from "../../../api/openapi/models/COTARead.ts";
 
 export const MIN_ANNOTATIONS_PER_CONCEPT = 5;
-export const UNANNOTATED_SENTENCE_COLOR = "#8884d8a8";
 
 export const conceptsWithUnsufficientAnnotations = (cota: COTARead) => {
   const conceptId2ConceptName = cota.concepts.reduce(

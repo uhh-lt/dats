@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { MRT_RowSelectionState } from "material-react-table";
 import { COTAConcept } from "../../../api/openapi/models/COTAConcept.ts";
 import { COTATrainingSettings } from "../../../api/openapi/models/COTATrainingSettings.ts";
 import { DimensionalityReductionAlgorithm } from "../../../api/openapi/models/DimensionalityReductionAlgorithm.ts";
@@ -7,7 +8,7 @@ export interface CotaState {
   conceptEditorOpen: boolean;
   currentConcept: COTAConcept;
   selectedDate: string | undefined;
-  provenanceSdocIdSentenceId: string | undefined;
+  rowSelectionModel: MRT_RowSelectionState;
   provenanceConcept: string | undefined;
   selectedConceptId: string | undefined;
   isTimelineView: boolean;
@@ -27,7 +28,7 @@ const initialState: CotaState = {
   },
   selectedConceptId: undefined,
   selectedDate: undefined,
-  provenanceSdocIdSentenceId: undefined,
+  rowSelectionModel: {},
   provenanceConcept: undefined,
   isTimelineView: false,
   // COTATrainingSettings.tsx
@@ -82,18 +83,14 @@ export const cotaSlice = createSlice({
       state.isTimelineView = !state.isTimelineView;
       state.selectedDate = undefined;
     },
-    onSentenceAnnotatorRowClick: (state, action: PayloadAction<string | undefined>) => {
-      if (state.provenanceSdocIdSentenceId === action.payload) {
-        state.provenanceSdocIdSentenceId = undefined;
-      } else {
-        state.provenanceSdocIdSentenceId = action.payload;
-      }
+    onRowSelectionChange: (state, action: PayloadAction<MRT_RowSelectionState>) => {
+      state.rowSelectionModel = action.payload;
     },
-    onScatterPlotDotClick: (state, action: PayloadAction<string | undefined>) => {
-      if (state.provenanceSdocIdSentenceId === action.payload) {
-        state.provenanceSdocIdSentenceId = undefined;
+    onScatterPlotDotClick: (state, action: PayloadAction<string>) => {
+      if (action.payload in state.rowSelectionModel) {
+        delete state.rowSelectionModel[action.payload];
       } else {
-        state.provenanceSdocIdSentenceId = action.payload;
+        state.rowSelectionModel[action.payload] = true;
       }
     },
     onOpenTrainingSettings: (state, action: PayloadAction<{ trainingSettings: COTATrainingSettings }>) => {
@@ -107,6 +104,7 @@ export const cotaSlice = createSlice({
     onTimelineDotClick: (state, action: PayloadAction<{ date: string; conceptId: string }>) => {
       state.selectedDate = action.payload.date;
       state.selectedConceptId = action.payload.conceptId;
+      state.rowSelectionModel = {};
     },
   },
 });

@@ -15,21 +15,20 @@ import {
   MRT_RowVirtualizer,
   MRT_ShowHideColumnsButton,
   MRT_ToggleDensePaddingButton,
-  MRT_ToggleGlobalFilterButton,
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef } from "react";
 import CotaHooks from "../../../api/CotaHooks.ts";
 import { COTAConcept } from "../../../api/openapi/models/COTAConcept.ts";
 import { COTARead } from "../../../api/openapi/models/COTARead.ts";
-import { COTASentence } from "../../../api/openapi/models/COTASentence.ts";
 import { COTASentenceID } from "../../../api/openapi/models/COTASentenceID.ts";
 import { DateGroupBy } from "../../../api/openapi/models/DateGroupBy.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { dateToLocaleDate } from "../../../utils/DateUtils.ts";
+import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
 import { CotaActions } from "./cotaSlice.ts";
 
 interface CotaSentenceAnnotatorProps {
@@ -48,7 +47,7 @@ function CotaSentenceAnnotator2({ cota }: CotaSentenceAnnotatorProps) {
 
   let title = "Similar sentences";
   if (selectedConcept) {
-    title += ` for concept ${selectedConcept.name}`;
+    title += ` for "${selectedConcept.name}"`;
   }
   if (selectedDate) {
     title += ` on date ${selectedDate}`;
@@ -65,31 +64,36 @@ function CotaSentenceAnnotator2({ cota }: CotaSentenceAnnotatorProps) {
         }
         title={title}
         subheader="Annotate sentences to improve the timeline analysis"
+        sx={{ pb: 0 }}
       />
-      <CardContent className="myFlexFillAllContainer" style={{ ...(selectedConcept && { padding: 0 }) }}>
-        {!selectedConcept ? (
-          <>Select a concept from the concept list to see similar sentences</>
-        ) : (
-          <SimilarSentencesTable cota={cota} concept={selectedConcept} key={selectedConcept.id} />
-        )}
+      <CardContent className="myFlexFillAllContainer" style={{ padding: 0 }}>
+        <SimilarSentencesTable cota={cota} concept={selectedConcept} />
       </CardContent>
     </Card>
   );
 }
 
+interface COTASentenceRow {
+  sentenceId: number;
+  sdocId: number;
+  similarity: number;
+  probability: number;
+  annotation: string | null;
+  sentence: string;
+}
+
 interface SimilarSentencesTableProps {
   cota: COTARead;
-  concept: COTAConcept;
+  concept: COTAConcept | null | undefined;
 }
 
 function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
-  // local state
-  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
-
   // global client state (redux)
-  const provenanceSdocIdSentenceId = useAppSelector((state) => state.cota.provenanceSdocIdSentenceId);
+  const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
+    (state) => state.cota.rowSelectionModel,
+    CotaActions.onRowSelectionChange,
+  );
   const selectedDate = useAppSelector((state) => state.cota.selectedDate);
-  const dispatch = useAppDispatch();
 
   // snackbar
   const openSnackbar = useOpenSnackbar();
@@ -99,9 +103,25 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
 
   // compute search space
   const searchSpace = useMemo(() => {
-    if (!selectedDate) return cota.search_space;
+    if (!concept?.id) {
+      return [];
+    }
 
-    const result: COTASentence[] = [];
+    if (!selectedDate) {
+      return cota.search_space.map(
+        (cotaSentence) =>
+          ({
+            sentenceId: cotaSentence.sentence_id,
+            sdocId: cotaSentence.sdoc_id,
+            similarity: cotaSentence.concept_similarities[concept.id],
+            probability: cotaSentence.concept_probabilities[concept.id],
+            annotation: cotaSentence.concept_annotation,
+            sentence: cotaSentence.text,
+          }) as COTASentenceRow,
+      );
+    }
+
+    const result: COTASentenceRow[] = [];
     cota.search_space.forEach((cotaSentence) => {
       // prepare date
       const date = dateToLocaleDate(cotaSentence.date);
@@ -119,13 +139,20 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
       }
 
       if (dateStr === selectedDate) {
-        result.push(cotaSentence);
+        result.push({
+          sentenceId: cotaSentence.sentence_id,
+          sdocId: cotaSentence.sdoc_id,
+          similarity: cotaSentence.concept_similarities[concept.id],
+          probability: cotaSentence.concept_probabilities[concept.id],
+          annotation: cotaSentence.concept_annotation,
+          sentence: cotaSentence.text,
+        } as COTASentenceRow);
       }
     });
     return result;
-  }, [cota, selectedDate]);
+  }, [cota, concept?.id, selectedDate]);
 
-  const columns: MRT_ColumnDef<COTASentence>[] = useMemo(() => {
+  const columns: MRT_ColumnDef<COTASentenceRow>[] = useMemo(() => {
     const conceptDict = cota.concepts.reduce(
       (acc, concept) => {
         acc[concept.id] = concept;
@@ -138,63 +165,66 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
       {
         id: "similarity",
         header: "Similarity",
-        Cell: ({ row }) => <>{(row.original.concept_similarities[concept.id] * 100.0).toFixed(2)}</>,
-        accessorFn: (row) => row.concept_similarities[concept.id],
+        size: 145,
+        Cell: ({ row }) => <>{(row.original.similarity * 100.0).toFixed(2)}</>,
+        accessorFn: (row) => row.similarity,
       },
       {
         id: "probability",
         header: "Probability",
-        Cell: ({ row }) => <>{(row.original.concept_probabilities[concept.id] * 100.0).toFixed(2)}</>,
-        accessorFn: (row) => row.concept_probabilities[concept.id],
+        size: 155,
+        Cell: ({ row }) => <>{(row.original.probability * 100.0).toFixed(2)}</>,
+        accessorFn: (row) => row.probability,
       },
       {
         id: "annotation",
         header: "Annotation",
-        accessorFn: (row) => (row.concept_annotation ? conceptDict[row.concept_annotation].name : ""),
+        size: 155,
+        accessorFn: (row) => (row.annotation ? conceptDict[row.annotation].name : ""),
         muiTableBodyCellProps({ row }) {
           return {
             sx: {
-              ...(row.original.concept_annotation && {
-                color: conceptDict[row.original.concept_annotation].color,
+              ...(row.original.annotation && {
+                color: conceptDict[row.original.annotation].color,
               }),
             },
           };
         },
       },
       {
-        id: "sdocId",
+        id: "sdoc",
         header: "Document",
-        Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdoc_id} link renderFilename />,
+        Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdocId} link renderFilename />,
       },
       {
         id: "sentence",
         header: "Sentence",
-        accessorFn: (row) => row.text,
+        accessorFn: (row) => row.sentence,
       },
-    ] as MRT_ColumnDef<COTASentence>[];
-  }, [concept.id, cota.concepts]);
+    ] as MRT_ColumnDef<COTASentenceRow>[];
+  }, [cota.concepts]);
 
   // scroll
-  useEffect(() => {
-    provenanceSdocIdSentenceId &&
-      requestIdleCallback(() => {
-        const [sdocIdStr, sentenceIdStr] = provenanceSdocIdSentenceId.toString().split("-");
-        const sdocId = parseInt(sdocIdStr);
-        const sentenceId = parseInt(sentenceIdStr);
-        const scrollToIndex = searchSpace.findIndex(
-          (cotaSentence) => cotaSentence.sdoc_id === sdocId && cotaSentence.sentence_id === sentenceId,
-        );
-        try {
-          if (scrollToIndex !== -1) {
-            rowVirtualizerInstanceRef.current?.scrollToIndex?.(scrollToIndex);
-          } else {
-            rowVirtualizerInstanceRef.current?.scrollToIndex?.(0);
-          }
-        } catch (error) {
-          console.error(error);
-        }
-      });
-  }, [provenanceSdocIdSentenceId, searchSpace]);
+  // useEffect(() => {
+  //   provenanceSdocIdSentenceId &&
+  //     requestIdleCallback(() => {
+  //       const [sdocIdStr, sentenceIdStr] = provenanceSdocIdSentenceId.toString().split("-");
+  //       const sdocId = parseInt(sdocIdStr);
+  //       const sentenceId = parseInt(sentenceIdStr);
+  //       const scrollToIndex = searchSpace.findIndex(
+  //         (cotaSentence) => cotaSentence.sdocId === sdocId && cotaSentence.sentenceId === sentenceId,
+  //       );
+  //       try {
+  //         if (scrollToIndex !== -1) {
+  //           rowVirtualizerInstanceRef.current?.scrollToIndex?.(scrollToIndex);
+  //         } else {
+  //           rowVirtualizerInstanceRef.current?.scrollToIndex?.(0);
+  //         }
+  //       } catch (error) {
+  //         console.error(error);
+  //       }
+  //     });
+  // }, [provenanceSdocIdSentenceId, searchSpace]);
 
   // actions
   const annotateCotaSentences = CotaHooks.useAnnotateCotaSentences();
@@ -211,7 +241,6 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
             text: `Updated CotA '${data.name}'`,
             severity: "success",
           });
-          setRowSelectionModel({});
         },
       },
     );
@@ -237,13 +266,14 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
   };
 
   // table
-  const table = useMaterialReactTable<COTASentence>({
+  const table = useMaterialReactTable<COTASentenceRow>({
     data: searchSpace,
     columns: columns,
-    getRowId: (row) => `${row.sdoc_id}-${row.sentence_id}`,
+    getRowId: (row) => `${row.sdocId}-${row.sentenceId}`,
     // state
     state: {
       rowSelection: rowSelectionModel,
+      showGlobalFilter: true,
     },
     // initial state
     initialState: {
@@ -253,11 +283,15 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
           desc: true,
         },
       ],
+      columnVisibility: {
+        sdoc: false,
+      },
     },
     // search query
     autoResetAll: false,
     manualFiltering: false, // turn on client-side filtering
     enableGlobalFilter: true,
+    enableGlobalFilterModes: true, //enable the user to choose between multiple search filter modes
     // selection
     enableRowSelection: true,
     onRowSelectionChange: setRowSelectionModel,
@@ -275,21 +309,14 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
     enableColumnResizing: true,
     columnResizeMode: "onEnd",
     // mui components
-    muiTableBodyRowProps: ({ row }) => ({
-      onClick: () => {
-        dispatch(CotaActions.onSentenceAnnotatorRowClick(row.id));
-      },
-      sx: {
-        backgroundColor: provenanceSdocIdSentenceId === row.id ? "lightgrey !important" : undefined,
-      },
-    }),
     muiTablePaperProps: {
-      elevation: 8,
       style: { height: "100%", display: "flex", flexDirection: "column" },
     },
     muiTableContainerProps: {
       style: { flexGrow: 1 },
     },
+    // disable footer
+    enableBottomToolbar: false,
     // toolbar
     positionToolbarAlertBanner: "head-overlay",
     renderTopToolbarCustomActions: () => (
@@ -302,15 +329,14 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
     ),
     renderToolbarInternalActions: ({ table }) => (
       <Stack direction={"row"} spacing={1} alignItems="center">
-        <MRT_ToggleGlobalFilterButton table={table} disabled={false} />
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleDensePaddingButton table={table} />
       </Stack>
     ),
-    renderBottomToolbarCustomActions: () => (
-      <Stack direction={"row"} spacing={1} alignItems="center">
-        <Typography>Found {searchSpace.length} sentences.</Typography>
-      </Stack>
+    renderEmptyRowsFallback: () => (
+      <Typography pt={4} align="center" color="grey" fontStyle="italic">
+        No sentences to display. Select a concept from the Concept List.
+      </Typography>
     ),
   });
 
@@ -386,7 +412,7 @@ function SimilarSentencesToolbar({
           <ListItemText>Clear annotation</ListItemText>
         </MenuItem>
         {concepts.map((concept) => (
-          <MenuItem onClick={() => handleAnnotateSentences(concept.id)}>
+          <MenuItem onClick={() => handleAnnotateSentences(concept.id)} key={concept.id}>
             <ListItemIcon>
               <CircleIcon fontSize="small" style={{ color: concept.color }} />
             </ListItemIcon>
