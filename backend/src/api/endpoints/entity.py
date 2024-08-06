@@ -49,7 +49,7 @@ def merge_entities(
     entity_merge: EntityMerge,
     authz_user: AuthzUser = Depends(),
 ) -> EntityRead:
-    authz_user.assert_in_same_project_as_many(Crud.ENTITY, entity_merge.entity_ids)
+    authz_user.assert_in_project(entity_merge.project_id)
     db_obj = crud_entity.merge(db, entity_merge=entity_merge)
     return EntityRead.model_validate(db_obj)
 
@@ -66,6 +66,6 @@ def release_entities(
     entity_release: EntityRelease,
     authz_user: AuthzUser = Depends(),
 ) -> List[EntityRead]:
-    authz_user.assert_in_same_project_as_many(Crud.ENTITY, entity_release.entity_ids)
+    authz_user.assert_in_project(entity_release.project_id)
     db_objs = crud_entity.release(db=db, entity_release=entity_release)
     return [EntityRead.model_validate(db_obj) for db_obj in db_objs]

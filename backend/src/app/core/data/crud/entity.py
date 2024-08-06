@@ -55,11 +55,12 @@ class CRUDEntity(CRUDBase[EntityORM, EntityCreate, EntityUpdate]):
                 del span_text_dict[id]
 
         indexes_to_use = list(set(span_text_dict.values()))
-        create_dtos = [c for i, c in enumerate(create_dtos) if i in indexes_to_use]
-        dto_objs_data = [
-            jsonable_encoder(dto, exclude={"span_text_ids"}) for dto in create_dtos
-        ]
-        db_objs = [self.model(**data) for data in dto_objs_data]
+        db_objs = []
+        # mit map lösen
+        for i in indexes_to_use:
+            create_dto = create_dtos[i]
+            dto_objs_data = jsonable_encoder(create_dto, exclude={"span_text_ids"})
+            db_objs.append(self.model(**dto_objs_data))
         db.add_all(db_objs)
         db.flush()
         db.commit()
@@ -75,20 +76,13 @@ class CRUDEntity(CRUDBase[EntityORM, EntityCreate, EntityUpdate]):
         crud_span_text_entity_link.create_multi(db=db, create_dtos=links)
         db.commit()
         if force:
-            existing_links = (
-                crud_span_text_entity_link.read_multi_span_text_and_project_id(
-                    db=db, span_text_ids=ids, project_id=project_id
-                )
-            )
-            new_entities = [x.linked_entity_id for x in existing_links]
-            to_check = list(set(old_entities) - set(new_entities))
-            self.remove_unused_entites(db=db, ids=to_check)
+            self.__remove_unused_entites(db=db, ids=list(set(old_entities)))
         return db_objs
 
     def read_by_project(self, db: Session, proj_id: int) -> List[EntityORM]:
         return db.query(self.model).filter(self.model.project_id == proj_id).all()
 
-    def remove_multi(self, db: Session, *, ids: List[int]) -> List[EntityORM]:
+    def __remove_multi(self, db: Session, *, ids: List[int]) -> List[EntityORM]:
         removed = db.query(EntityORM).filter(EntityORM.id.in_(ids)).all()
         db.query(EntityORM).filter(EntityORM.id.in_(ids)).delete(
             synchronize_session=False
@@ -96,7 +90,10 @@ class CRUDEntity(CRUDBase[EntityORM, EntityCreate, EntityUpdate]):
         db.commit()
         return removed
 
-    def remove_unused_entites(self, db: Session, ids: List[int]) -> List[EntityORM]:
+    def remove(self, db: Session, *, id: int) -> EntityORM:
+        pass
+
+    def __remove_unused_entites(self, db: Session, ids: List[int]) -> List[EntityORM]:
         linked_ids_result = (
             db.query(SpanTextEntityLinkORM.linked_entity_id)
             .filter(SpanTextEntityLinkORM.linked_entity_id.in_(ids))
@@ -105,39 +102,21 @@ class CRUDEntity(CRUDBase[EntityORM, EntityCreate, EntityUpdate]):
         )
         linked_ids = {item[0] for item in linked_ids_result}
         ids = list(set(ids) - set(linked_ids))
-        return self.remove_multi(db=db, ids=ids)
+        return self.__remove_multi(db=db, ids=ids)
 
     def merge(self, db: Session, entity_merge: EntityMerge) -> EntityORM:
-        all_span_texts = (
-            list(
-                chain.from_iterable(
-                    [st.id for st in crud_entity.read(db=db, id=id).span_texts]
-                    for id in entity_merge.entity_ids
-                )
-            )
-            + entity_merge.spantext_ids
-        )
         new_entity = EntityCreate(
             name=entity_merge.name,
             project_id=entity_merge.project_id,
-            span_text_ids=all_span_texts,
+            span_text_ids=entity_merge.spantext_ids,
             is_human=True,
             knowledge_base_id=entity_merge.knowledge_base_id,
         )
         return self.create(db=db, create_dto=new_entity, force=True)
 
     def release(self, db: Session, entity_release: EntityRelease) -> List[EntityORM]:
-        all_span_texts = (
-            list(
-                chain.from_iterable(
-                    [st.id for st in self.read(db=db, id=id).span_texts]
-                    for id in entity_release.entity_ids
-                )
-            )
-            + entity_release.spantext_ids
-        )
         new_entities = []
-        for span_text_id in all_span_texts:
+        for span_text_id in entity_release.spantext_ids:
             span_text = crud_span_text.read(db=db, id=span_text_id)
             new_entity = EntityCreate(
                 name=span_text.text,
@@ -146,7 +125,6 @@ class CRUDEntity(CRUDBase[EntityORM, EntityCreate, EntityUpdate]):
             )
             new_entities.append(new_entity)
         db_objs = self.create_multi(db=db, create_dtos=new_entities, force=True)
-        self.remove_unused_entites(db=db, ids=entity_release.entity_ids)
         return db_objs
 
 

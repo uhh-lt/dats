@@ -20,10 +20,6 @@ export type EntityMerge = {
    */
   project_id: number;
   /**
-   * List of Entity IDs to merge
-   */
-  entity_ids: Array<number>;
-  /**
    * List of Span Text IDs to merge
    */
   spantext_ids: Array<number>;

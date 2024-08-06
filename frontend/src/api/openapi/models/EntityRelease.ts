@@ -16,11 +16,7 @@ export type EntityRelease = {
    */
   project_id: number;
   /**
-   * List of Entity IDs to merge
-   */
-  entity_ids: Array<number>;
-  /**
-   * List of Span Text IDs to merge
+   * List of Span Text IDs to release
    */
   spantext_ids: Array<number>;
 };

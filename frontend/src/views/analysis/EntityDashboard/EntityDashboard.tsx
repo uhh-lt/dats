@@ -3,15 +3,14 @@ import { MRT_RowSelectionState, MRT_TableOptions } from "material-react-table";
 import { useContext, useState } from "react";
 import { useParams } from "react-router-dom";
 import EntityHooks from "../../../api/EntityHooks.ts";
-import { EntityRead } from "../../../api/openapi/models/EntityRead.ts";
 import { SpanTextRead } from "../../../api/openapi/models/SpanTextRead.ts";
+import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import EntityTable, {
   EnitityTableRow,
   EntityTableSaveRowProps,
   SpanTextTableRow,
-} from "../../../components/entity/EntityTable.tsx";
-import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
-import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+} from "./EntityTable.tsx";
 
 function EntityDashboard() {
   const appBarContainerRef = useContext(AppBarContext);
@@ -26,11 +25,10 @@ function EntityDashboard() {
   const entityRelease = EntityHooks.useRelease();
   const entityUpdate = EntityHooks.useUpdateEntity();
 
-  function handleRelease(selectedEntities: EntityRead[], selectedSpanTexts: SpanTextRead[]): void {
+  function handleRelease(selectedSpanTexts: SpanTextRead[]): void {
     const requestBody = {
       requestBody: {
         project_id: projectId,
-        entity_ids: selectedEntities.map((entity) => entity.id),
         spantext_ids: selectedSpanTexts.map((spantext) => spantext.id),
       },
     };
@@ -57,13 +55,13 @@ function EntityDashboard() {
 
   function handleMerge(props: EntityTableSaveRowProps): void {
     props.table.setCreatingRow(null);
+    console.log(props.selectedSpanTexts)
     const name = props.values.name;
     const knowledge_base_id = props.values.knowledge_base_id;
     const requestBody = {
       requestBody: {
         name: name,
         project_id: projectId,
-        entity_ids: props.selectedEntities.map((entity) => entity.id),
         spantext_ids: props.selectedSpanTexts.map((spantext) => spantext.id),
         knowledge_base_id: knowledge_base_id,
       },
@@ -71,6 +69,8 @@ function EntityDashboard() {
     entityMerge.mutate(requestBody);
     setRowSelectionModel({});
   }
+
+
 
   return (
     <Box bgcolor={"grey.200"} className="h100">
@@ -90,7 +90,7 @@ function EntityDashboard() {
                 <Stack direction={"row"} spacing={1} alignItems="center" p={1}>
                   <Box flexGrow={1} />
                   <Button onClick={() => props.table.setCreatingRow(true)}>Merge</Button>
-                  <Button onClick={() => handleRelease(props.selectedEntities, props.selectedSpanTexts)}>
+                  <Button onClick={() => handleRelease(props.selectedSpanTexts)}>
                     Release
                   </Button>
                 </Stack>

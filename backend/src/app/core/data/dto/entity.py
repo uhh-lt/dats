@@ -11,9 +11,9 @@ from .dto_base import UpdateDTOBase
 # Properties shared across all DTOs
 class EntityBaseDTO(BaseModel):
     is_human: Optional[bool] = Field(
-        False, description="Whether the link was created by a human"
+        default=False, description="Whether the link was created by a human"
     )
-    knowledge_base_id: Optional[str] = Field("", description="Link to wikidata")
+    knowledge_base_id: Optional[str] = Field(default="", description="Link to wikidata")
 
 
 # Properties for creation
@@ -35,19 +35,19 @@ class EntityUpdate(EntityBaseDTO, UpdateDTOBase):
 
 
 # Properties for merging entities/span texts
+# TODO entity ids löschen und im frontend nur span_text ids weitergeben
 class EntityMerge(EntityBaseDTO):
     name: str = Field(description="Name of the Entity")
     knowledge_base_id: Optional[str] = Field("", description="Link to wikidata")
     project_id: int = Field(description="Id of the current Project")
-    entity_ids: List[int] = Field(description="List of Entity IDs to merge")
     spantext_ids: List[int] = Field(description="List of Span Text IDs to merge")
 
 
 # Properties for releasing entities/span texts
+# TODO entity ids löschen und im frontend nur span_text ids weitergeben
 class EntityRelease(EntityBaseDTO):
     project_id: int = Field(description="Id of the current Project")
-    entity_ids: List[int] = Field(description="List of Entity IDs to merge")
-    spantext_ids: List[int] = Field(description="List of Span Text IDs to merge")
+    spantext_ids: List[int] = Field(description="List of Span Text IDs to release")
 
 
 # Properties for reading (as in ORM)

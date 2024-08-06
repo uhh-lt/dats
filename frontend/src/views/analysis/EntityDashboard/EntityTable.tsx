@@ -8,9 +8,9 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useMemo } from "react";
-import ProjectHooks from "../../api/ProjectHooks.ts";
-import { EntityRead } from "../../api/openapi/models/EntityRead.ts";
-import { SpanTextRead } from "../../api/openapi/models/SpanTextRead.ts";
+import ProjectHooks from "../../../api/ProjectHooks.ts";
+import { EntityRead } from "../../../api/openapi/models/EntityRead.ts";
+import { SpanTextRead } from "../../../api/openapi/models/SpanTextRead.ts";
 
 export interface EnitityTableRow extends EntityRead {
   table_id: string;
@@ -45,7 +45,6 @@ const columns: MRT_ColumnDef<EnitityTableRow | SpanTextTableRow>[] = [
     header: "Is Human",
     enableEditing: false,
     Cell: ({ cell }) => {
-      console.log(cell);
       return cell.getValue() ? "True" : "False";
     },
   },
@@ -53,7 +52,6 @@ const columns: MRT_ColumnDef<EnitityTableRow | SpanTextTableRow>[] = [
 
 export interface EntityTableActionProps {
   table: MRT_TableInstance<EnitityTableRow | SpanTextTableRow>;
-  selectedEntities: EntityRead[];
   selectedSpanTexts: SpanTextRead[];
 }
 
@@ -91,22 +89,24 @@ function EntityTable({
   const projectEntities = ProjectHooks.useGetAllEntities(projectId);
 
   // computed
-  const { projectEntitiesMap, projectEntitiesRows, projectSpanTextMap } = useMemo(() => {
+  const {projectEntitiesRows, projectSpanTextMap } = useMemo(() => {
     if (!projectEntities.data)
+    {
       return {
         projectEntitiesMap: {} as Record<string, EntityRead>,
         projectEntitiesRows: [],
         projectSpanTextMap: {} as Record<string, SpanTextRead>,
       };
+    }
 
-    const projectEntitiesMap = projectEntities.data.reduce(
-      (entity_map, projectEntity) => {
-        const id = `E-${projectEntity.id}`;
-        entity_map[id] = projectEntity;
-        return entity_map;
-      },
-      {} as Record<string, EntityRead>,
-    );
+    //const projectEntitiesMap = projectEntities.data.reduce(
+    //  (entity_map, projectEntity) => {
+    //    const id = `E-${projectEntity.id}`;
+    //    entity_map[id] = projectEntity;
+    //    return entity_map;
+    //  },
+    //  {} as Record<string, EntityRead>,
+    //);
     const projectEntitiesRows = projectEntities.data.map((entity) => {
       const subRows =
         entity.span_texts?.map((span) => ({
@@ -123,7 +123,8 @@ function EntityTable({
 
     const projectSpanTextMap = projectEntities.data.reduce(
       (acc, entity) => {
-        if (Array.isArray(entity.span_texts)) {
+        if (Array.isArray(entity.span_texts))
+        {
           entity.span_texts.forEach((span) => {
             acc[`S-${span.id}`] = span;
           });
@@ -133,7 +134,7 @@ function EntityTable({
       {} as Record<string, SpanTextRead>,
     );
 
-    return { projectEntitiesMap, projectEntitiesRows, projectSpanTextMap };
+    return {projectEntitiesRows, projectSpanTextMap };
   }, [projectEntities.data]);
 
   // table
@@ -148,13 +149,18 @@ function EntityTable({
     editDisplayMode: "row",
     onEditingRowSave: onSaveEditRow,
     onCreatingRowSave: (props) => {
+      //const entitySpanTexts = Object.keys(props.table.getState().rowSelection)
+      //.filter((id) => id.startsWith("E-"))
+      //.flatMap((entityId) => projectEntitiesMap[entityId].span_texts || []);
+      
+      const selectedSpanTexts = Object.keys(props.table.getState().rowSelection)
+      .filter((id) => id.startsWith("S-"))
+      .map((spanTextId) => projectSpanTextMap[spanTextId]);
+
+      const allSpanTexts = [ ...selectedSpanTexts];//[...entitySpanTexts, ...selectedSpanTexts];
+
       onCreateSaveRow({
-        selectedEntities: Object.keys(props.table.getState().rowSelection)
-          .filter((id) => id.startsWith("E-"))
-          .map((entityId) => projectEntitiesMap[entityId]),
-        selectedSpanTexts: Object.keys(props.table.getState().rowSelection)
-          .filter((id) => id.startsWith("S-"))
-          .map((spanTextId) => projectSpanTextMap[spanTextId]),
+        selectedSpanTexts: allSpanTexts,
         values: props.values,
         table: props.table,
       });
@@ -194,9 +200,6 @@ function EntityTable({
       ? (props) =>
           renderTopToolbarCustomActions({
             table: props.table,
-            selectedEntities: Object.keys(rowSelectionModel)
-              .filter((id) => id.startsWith("E-"))
-              .map((entityId) => projectEntitiesMap[entityId]),
             selectedSpanTexts: Object.keys(rowSelectionModel)
               .filter((id) => id.startsWith("S-"))
               .map((spanTextId) => projectSpanTextMap[spanTextId]),
@@ -206,9 +209,6 @@ function EntityTable({
       ? (props) =>
           renderToolbarInternalActions({
             table: props.table,
-            selectedEntities: Object.keys(rowSelectionModel)
-              .filter((id) => id.startsWith("E-"))
-              .map((entityId) => projectEntitiesMap[entityId]),
             selectedSpanTexts: Object.keys(rowSelectionModel)
               .filter((id) => id.startsWith("S-"))
               .map((spanTextId) => projectSpanTextMap[spanTextId]),
@@ -218,9 +218,6 @@ function EntityTable({
       ? (props) =>
           renderBottomToolbarCustomActions({
             table: props.table,
-            selectedEntities: Object.keys(rowSelectionModel)
-              .filter((id) => id.startsWith("E-"))
-              .map((entityId) => projectEntitiesMap[entityId]),
             selectedSpanTexts: Object.keys(rowSelectionModel)
               .filter((id) => id.startsWith("S-"))
               .map((spanTextId) => projectSpanTextMap[spanTextId]),
@@ -236,7 +233,7 @@ function EntityTable({
     enableExpanding: true,
     getSubRows: (originalRow) => originalRow.subRows,
     filterFromLeafRows: true, //search for child rows and preserve parent rows
-    enableSubRowSelection: false,
+    enableSubRowSelection: true,
   });
 
   return <MaterialReactTable table={table} />;
