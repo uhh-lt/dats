@@ -6,11 +6,7 @@ import EntityHooks from "../../../api/EntityHooks.ts";
 import { SpanTextRead } from "../../../api/openapi/models/SpanTextRead.ts";
 import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import EntityTable, {
-  EnitityTableRow,
-  EntityTableSaveRowProps,
-  SpanTextTableRow,
-} from "./EntityTable.tsx";
+import EntityTable, { EnitityTableRow, EntityTableSaveRowProps, SpanTextTableRow } from "./EntityTable.tsx";
 
 function EntityDashboard() {
   const appBarContainerRef = useContext(AppBarContext);
@@ -55,7 +51,7 @@ function EntityDashboard() {
 
   function handleMerge(props: EntityTableSaveRowProps): void {
     props.table.setCreatingRow(null);
-    console.log(props.selectedSpanTexts)
+    console.log(props.selectedSpanTexts);
     const name = props.values.name;
     const knowledge_base_id = props.values.knowledge_base_id;
     const requestBody = {
@@ -69,8 +65,6 @@ function EntityDashboard() {
     entityMerge.mutate(requestBody);
     setRowSelectionModel({});
   }
-
-
 
   return (
     <Box bgcolor={"grey.200"} className="h100">
@@ -90,9 +84,7 @@ function EntityDashboard() {
                 <Stack direction={"row"} spacing={1} alignItems="center" p={1}>
                   <Box flexGrow={1} />
                   <Button onClick={() => props.table.setCreatingRow(true)}>Merge</Button>
-                  <Button onClick={() => handleRelease(props.selectedSpanTexts)}>
-                    Release
-                  </Button>
+                  <Button onClick={() => handleRelease(props.selectedSpanTexts)}>Release</Button>
                 </Stack>
               );
             }}
