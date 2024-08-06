@@ -99,16 +99,8 @@ function EntityTable({
       };
     }
 
-    //const projectEntitiesMap = projectEntities.data.reduce(
-    //  (entity_map, projectEntity) => {
-    //    const id = `E-${projectEntity.id}`;
-    //    entity_map[id] = projectEntity;
-    //    return entity_map;
-    //  },
-    //  {} as Record<string, EntityRead>,
-    //);
-    const projectEntitiesRows = projectEntities.data.map((entity) => {
-      const subRows =
+    const projectEntitiesRows: EnitityTableRow[] = projectEntities.data.map((entity) => {
+      const subRows: SpanTextTableRow[] =
         entity.span_texts?.map((span) => ({
           ...span,
           table_id: `S-${span.id}`,
@@ -149,15 +141,11 @@ function EntityTable({
     editDisplayMode: "row",
     onEditingRowSave: onSaveEditRow,
     onCreatingRowSave: (props) => {
-      //const entitySpanTexts = Object.keys(props.table.getState().rowSelection)
-      //.filter((id) => id.startsWith("E-"))
-      //.flatMap((entityId) => projectEntitiesMap[entityId].span_texts || []);
-      
       const selectedSpanTexts = Object.keys(props.table.getState().rowSelection)
       .filter((id) => id.startsWith("S-"))
       .map((spanTextId) => projectSpanTextMap[spanTextId]);
 
-      const allSpanTexts = [ ...selectedSpanTexts];//[...entitySpanTexts, ...selectedSpanTexts];
+      const allSpanTexts = [ ...selectedSpanTexts];
 
       onCreateSaveRow({
         selectedSpanTexts: allSpanTexts,
