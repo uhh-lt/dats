@@ -89,9 +89,8 @@ function EntityTable({
   const projectEntities = ProjectHooks.useGetAllEntities(projectId);
 
   // computed
-  const {projectEntitiesRows, projectSpanTextMap } = useMemo(() => {
-    if (!projectEntities.data)
-    {
+  const { projectEntitiesRows, projectSpanTextMap } = useMemo(() => {
+    if (!projectEntities.data) {
       return {
         projectEntitiesMap: {} as Record<string, EntityRead>,
         projectEntitiesRows: [],
@@ -123,8 +122,7 @@ function EntityTable({
 
     const projectSpanTextMap = projectEntities.data.reduce(
       (acc, entity) => {
-        if (Array.isArray(entity.span_texts))
-        {
+        if (Array.isArray(entity.span_texts)) {
           entity.span_texts.forEach((span) => {
             acc[`S-${span.id}`] = span;
           });
@@ -134,7 +132,7 @@ function EntityTable({
       {} as Record<string, SpanTextRead>,
     );
 
-    return {projectEntitiesRows, projectSpanTextMap };
+    return { projectEntitiesRows, projectSpanTextMap };
   }, [projectEntities.data]);
 
   // table
@@ -152,12 +150,12 @@ function EntityTable({
       //const entitySpanTexts = Object.keys(props.table.getState().rowSelection)
       //.filter((id) => id.startsWith("E-"))
       //.flatMap((entityId) => projectEntitiesMap[entityId].span_texts || []);
-      
-      const selectedSpanTexts = Object.keys(props.table.getState().rowSelection)
-      .filter((id) => id.startsWith("S-"))
-      .map((spanTextId) => projectSpanTextMap[spanTextId]);
 
-      const allSpanTexts = [ ...selectedSpanTexts];//[...entitySpanTexts, ...selectedSpanTexts];
+      const selectedSpanTexts = Object.keys(props.table.getState().rowSelection)
+        .filter((id) => id.startsWith("S-"))
+        .map((spanTextId) => projectSpanTextMap[spanTextId]);
+
+      const allSpanTexts = [...selectedSpanTexts]; //[...entitySpanTexts, ...selectedSpanTexts];
 
       onCreateSaveRow({
         selectedSpanTexts: allSpanTexts,
