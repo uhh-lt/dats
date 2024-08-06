@@ -1,11 +1,12 @@
 import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
-import { DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
+import { DialogActions, DialogContent, DialogTitle, Stack } from "@mui/material";
 import React from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import FeedbackHooks from "../../api/FeedbackHooks.ts";
 import { UserRead } from "../../api/openapi/models/UserRead.ts";
+import FormTextMultiline from "../../components/FormInputs/FormTextMultiline.tsx";
 import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 
 interface FeedbackFormValues {
@@ -21,9 +22,9 @@ interface FeedbackDialogProps {
 function FeedbackDialog({ setIsFeedbackDialogOpen, user, locPathName }: FeedbackDialogProps) {
   // react form
   const {
-    register,
     handleSubmit,
     formState: { errors },
+    control,
   } = useForm<FeedbackFormValues>();
 
   // mutations
@@ -66,15 +67,19 @@ function FeedbackDialog({ setIsFeedbackDialogOpen, user, locPathName }: Feedback
           <DialogTitle>Submit your feedback</DialogTitle>
           <DialogContent>
             <Stack spacing={3}>
-              <TextField
-                multiline
-                minRows={5}
-                label="Feedback"
-                fullWidth
-                variant="standard"
-                {...register("content", { required: "Content is required" })}
-                error={Boolean(errors.content)}
-                helperText={<ErrorMessage errors={errors} name="content" />}
+              <FormTextMultiline
+                name="content"
+                control={control}
+                rules={{
+                  required: "Content is required",
+                }}
+                textFieldProps={{
+                  label: "Feedback",
+                  variant: "standard",
+                  fullWidth: true,
+                  error: Boolean(errors.content),
+                  helperText: <ErrorMessage errors={errors} name="content" />,
+                }}
               />
             </Stack>
           </DialogContent>

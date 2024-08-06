@@ -1,20 +1,8 @@
 import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  MenuItem,
-  Stack,
-  TextField,
-  rgbToHex,
-} from "@mui/material";
-import { useEffect, useMemo, useState } from "react";
-import { HexColorPicker } from "react-colorful";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, rgbToHex } from "@mui/material";
+import { useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import CodeHooks from "../../api/CodeHooks.ts";
@@ -26,6 +14,10 @@ import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { SYSTEM_USER_ID } from "../../utils/GlobalConstants.ts";
 import { contrastiveColors } from "../../utils/colors.ts";
 import { AnnoActions } from "../../views/annotation/annoSlice.ts";
+import FormColorPicker from "../FormInputs/FormColorPicker.tsx";
+import FormMenu from "../FormInputs/FormMenu.tsx";
+import FormText from "../FormInputs/FormText.tsx";
+import FormTextMultiline from "../FormInputs/FormTextMultiline.tsx";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 import CodeRenderer from "./CodeRenderer.tsx";
 
@@ -49,9 +41,6 @@ function CodeCreateDialog() {
   // computed
   const parentCodes = useMemo(() => codes.data?.filter((code) => code.user_id !== SYSTEM_USER_ID) || [], [codes.data]);
 
-  // local state
-  const [color, setColor] = useState("#000000");
-
   // global client state (redux)
   const onSuccessHandler = useAppSelector((state) => state.dialog.codeCreateSuccessHandler);
   const isCodeCreateDialogOpen = useAppSelector((state) => state.dialog.isCodeCreateDialogOpen);
@@ -61,12 +50,10 @@ function CodeCreateDialog() {
 
   // react form
   const {
-    register,
     handleSubmit,
-    setValue,
     formState: { errors },
     reset,
-    getValues,
+    control,
   } = useForm<CodeCreateValues>({
     defaultValues: {
       parentCodeId: -1,
@@ -89,7 +76,6 @@ function CodeCreateDialog() {
       color: randomHexColor,
       parentCodeId: isParentCodeIdInParentCodes ? parentCodeId || -1 : -1,
     });
-    setColor(randomHexColor);
   }, [codeName, parentCodeId, parentCodes, reset]);
 
   // ui event handlers
@@ -155,62 +141,60 @@ function CodeCreateDialog() {
         <DialogTitle>Create a new code</DialogTitle>
         <DialogContent>
           <Stack spacing={3}>
-            <TextField
-              fullWidth
-              select
-              label="Parent Code"
-              variant="filled"
-              defaultValue={getValues("parentCodeId")}
-              {...register("parentCodeId")}
-              error={Boolean(errors.parentCodeId)}
-              helperText={<ErrorMessage errors={errors} name="parentCodeId" />}
+            <FormMenu
+              name="parentCodeId"
+              control={control}
+              textFieldProps={{
+                label: "Parent Code",
+                error: Boolean(errors.parentCodeId),
+                helperText: <ErrorMessage errors={errors} name="parentCodeId" />,
+                variant: "filled",
+              }}
             >
-              <MenuItem value={-1}>No parent</MenuItem>
+              <MenuItem key={-1} value={-1}>
+                No parent
+              </MenuItem>
               {parentCodes &&
                 parentCodes.map((code) => (
                   <MenuItem key={code.id} value={code.id}>
                     <CodeRenderer code={code} />
                   </MenuItem>
                 ))}
-            </TextField>
-            <TextField
-              label="Name"
-              fullWidth
-              variant="standard"
-              {...register("name", { required: "Name is required" })}
-              error={Boolean(errors.name)}
-              helperText={<ErrorMessage errors={errors} name="name" />}
-            />
-            <Stack direction="row">
-              <TextField
-                label="Color"
-                fullWidth
-                variant="standard"
-                {...register("color", { required: "Color is required" })}
-                onChange={(e) => setColor(e.target.value)}
-                error={Boolean(errors.color)}
-                helperText={<ErrorMessage errors={errors} name="color" />}
-                InputLabelProps={{ shrink: true }}
-              />
-              <Box sx={{ width: 48, height: 48, backgroundColor: color, ml: 1, flexShrink: 0 }} />
-            </Stack>
-            <HexColorPicker
-              style={{ width: "100%" }}
-              color={color}
-              onChange={(newColor) => {
-                setValue("color", newColor); // set value of text input
-                setColor(newColor); // set value of color picker (and box)
+            </FormMenu>
+            <FormText
+              name="name"
+              control={control}
+              rules={{ required: "Name is required" }}
+              textFieldProps={{
+                label: "Name",
+                error: Boolean(errors.name),
+                helperText: <ErrorMessage errors={errors} name="name" />,
+                variant: "standard",
               }}
             />
-            <TextField
-              multiline
-              minRows={5}
-              label="Description"
-              fullWidth
-              variant="standard"
-              {...register("description")}
-              error={Boolean(errors.description)}
-              helperText={<ErrorMessage errors={errors} name="description" />}
+            <FormColorPicker
+              name="color"
+              control={control}
+              rules={{ required: "Color is required" }}
+              textFieldProps={{
+                label: "Color",
+                error: Boolean(errors.color),
+                helperText: <ErrorMessage errors={errors} name="color" />,
+                variant: "standard",
+                fullWidth: true,
+                InputLabelProps: { shrink: true },
+              }}
+            />
+            <FormTextMultiline
+              name="description"
+              control={control}
+              rules={{ required: "Description is required" }}
+              textFieldProps={{
+                label: "Description",
+                error: Boolean(errors.description),
+                helperText: <ErrorMessage errors={errors} name="description" />,
+                variant: "standard",
+              }}
             />
           </Stack>
         </DialogContent>

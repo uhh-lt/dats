@@ -101,6 +101,7 @@ export function MemoContentTag({
 
   return (
     <MemoForm
+      key={memo?.id}
       title={`Memo for tag ${tag.name}`}
       memo={memo}
       handleCreateOrUpdateMemo={handleCreateOrUpdateCodeMemo}

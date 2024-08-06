@@ -3,11 +3,13 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { DialogActions, DialogContent, DialogTitle, Stack, TextField, Tooltip } from "@mui/material";
-import React, { useEffect } from "react";
+import React from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import UserHooks from "../../../api/UserHooks.ts";
 import { MemoRead } from "../../../api/openapi/models/MemoRead.ts";
 import { dateToLocaleYYYYMMDDString } from "../../../utils/DateUtils.ts";
+import FormText from "../../FormInputs/FormText.tsx";
+import FormTextMultiline from "../../FormInputs/FormTextMultiline.tsx";
 
 export interface MemoFormValues {
   title: string;
@@ -35,25 +37,17 @@ export function MemoForm({
 }: MemoFormProps) {
   // use react hook form
   const {
-    register,
     handleSubmit,
     formState: { errors },
-    reset,
-  } = useForm<MemoFormValues>();
+    control,
+  } = useForm<MemoFormValues>({
+    defaultValues: {
+      title: memo?.title || "",
+      content: memo?.content || "",
+    },
+  });
 
   const user = UserHooks.useGetUser(memo?.user_id);
-
-  // initialize form when memo changes
-  useEffect(() => {
-    if (memo) {
-      reset({
-        title: memo.title,
-        content: memo.content,
-      });
-    } else {
-      reset();
-    }
-  }, [memo, reset]);
 
   // form handling
   const handleError: SubmitErrorHandler<MemoFormValues> = (data) => console.error(data);
@@ -99,25 +93,29 @@ export function MemoForm({
                 </Stack>
               </>
             )}
-            <TextField
-              label="Title"
-              fullWidth
-              variant="standard"
-              {...register("title", { required: "Title is required" })}
-              error={Boolean(errors.title)}
-              helperText={<ErrorMessage errors={errors} name="title" />}
-              InputLabelProps={{ shrink: true }}
+            <FormText
+              name="title"
+              control={control}
+              rules={{ required: "Title is required" }}
+              textFieldProps={{
+                label: "Title",
+                error: Boolean(errors.title),
+                helperText: <ErrorMessage errors={errors} name="title" />,
+                variant: "standard",
+                InputLabelProps: { shrink: true },
+              }}
             />
-            <TextField
-              multiline
-              minRows={5}
-              label="Content"
-              fullWidth
-              variant="standard"
-              {...register("content", { required: "Content is required" })}
-              error={Boolean(errors.content)}
-              helperText={<ErrorMessage errors={errors} name="content" />}
-              InputLabelProps={{ shrink: true }}
+            <FormTextMultiline
+              name="content"
+              control={control}
+              rules={{ required: "Content is required" }}
+              textFieldProps={{
+                label: "Content",
+                error: Boolean(errors.content),
+                helperText: <ErrorMessage errors={errors} name="content" />,
+                variant: "standard",
+                InputLabelProps: { shrink: true },
+              }}
             />
           </Stack>
         </DialogContent>

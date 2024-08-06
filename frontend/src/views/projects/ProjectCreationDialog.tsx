@@ -6,6 +6,8 @@ import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import { ProjectCreate } from "../../api/openapi/models/ProjectCreate.ts";
+import FormText from "../../components/FormInputs/FormText.tsx";
+import FormTextMultiline from "../../components/FormInputs/FormTextMultiline.tsx";
 
 interface ProjectCreationDialogProps {
   open: boolean;
@@ -16,9 +18,9 @@ function ProjectCreationDialog({ open, onClose }: ProjectCreationDialogProps) {
   // project creation
   const navigate = useNavigate();
   const {
-    register,
     handleSubmit,
     formState: { errors },
+    control,
   } = useForm<ProjectCreate>();
   const createProjectMutation = ProjectHooks.useCreateProject();
   const handleProjectCreation: SubmitHandler<ProjectCreate> = (data) => {
@@ -44,29 +46,33 @@ function ProjectCreationDialog({ open, onClose }: ProjectCreationDialogProps) {
         <DialogTitle>Create new project</DialogTitle>
         <DialogContent>
           <Stack spacing={2} pt={1}>
-            <TextField
-              label="Project name"
-              variant="outlined"
-              fullWidth
-              {...register("title", {
+            <FormText
+              name="title"
+              control={control}
+              rules={{
                 required: "Project name is required",
-                // validate: (value: string) => !/\s/g.test(value) || "Project name must not contain spaces",
-              })}
-              error={Boolean(errors.title)}
-              helperText={<ErrorMessage errors={errors} name="title" />}
+              }}
+              textFieldProps={{
+                label: "Project name",
+                variant: "outlined",
+                fullWidth: true,
+                error: Boolean(errors.title),
+              }}
             />
-            <TextField
-              label="Project description"
-              placeholder="Describe your project aim, method, and material used in a short abstract."
-              variant="outlined"
-              fullWidth
-              multiline
-              rows={3}
-              {...register("description", {
+            <FormTextMultiline
+              name="description"
+              control={control}
+              rules={{
                 required: "Project description is required",
-              })}
-              error={Boolean(errors.description)}
-              helperText={<ErrorMessage errors={errors} name="description" />}
+              }}
+              textFieldProps={{
+                label: "Project description",
+                placeholder: "Describe your project aim, method, and material used in a short abstract.",
+                variant: "outlined",
+                fullWidth: true,
+                error: Boolean(errors.description),
+                helperText: <ErrorMessage errors={errors} name="description" />,
+              }}
             />
             <TextField
               label="Method"

@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import UserHooks from "../../../api/UserHooks.ts";
 import { UserRead } from "../../../api/openapi/models/UserRead.ts";
+import FormEmail from "../../../components/FormInputs/FormEmail.tsx";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { EMAIL_REGEX, SUPPORT_EMAIL } from "../../../utils/GlobalConstants.ts";
 type UpdateEmailValues = {
@@ -17,10 +18,10 @@ interface UpdateEmailProps {
 export default function UpdateEmail({ user }: UpdateEmailProps) {
   const updateUserMutation = UserHooks.useUpdate();
   const {
-    register,
     handleSubmit,
     formState: { errors },
     watch,
+    control,
   } = useForm<UpdateEmailValues>();
 
   //newemail
@@ -90,20 +91,23 @@ export default function UpdateEmail({ user }: UpdateEmailProps) {
             </Typography>
           </Grid>
           <Grid item xs={12}>
-            <TextField
-              variant="outlined"
-              sx={{ width: "60%" }}
-              size="small"
-              placeholder="Please enter the new e-mail here..."
-              type="email"
-              {...register("newemail", {
+            <FormEmail
+              name="newemail"
+              control={control}
+              rules={{
                 required: "E-Mail is required",
                 validate: (value) => {
                   return [EMAIL_REGEX].every((pattern) => pattern.test(value)) || "Please enter a valid email address!";
                 },
-              })}
-              error={Boolean(errors.newemail)}
-              helperText={<ErrorMessage errors={errors} name="newemail" />}
+              }}
+              textFieldProps={{
+                sx: { width: "60%" },
+                variant: "outlined",
+                size: "small",
+                placeholder: "Please enter the new e-mail here...",
+                error: Boolean(errors.newemail),
+                helperText: <ErrorMessage errors={errors} name="newemail" />,
+              }}
             />
           </Grid>
           <Grid item xs={12}>

@@ -223,7 +223,7 @@ function CotaControl({ cota }: CotaControlProps) {
           ) : null}
         </CardContent>
       </Card>
-      <CotaTrainingSettings cota={cota} onUpdate={handleApplyTrainingSettings} onCancel={handleCloseTrainingSettings} />
+      <CotaTrainingSettings onUpdate={handleApplyTrainingSettings} onCancel={handleCloseTrainingSettings} />
     </>
   );
 }

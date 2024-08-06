@@ -3,7 +3,7 @@ import AccountCircle from "@mui/icons-material/AccountCircle";
 import LockIcon from "@mui/icons-material/Lock";
 import LoginIcon from "@mui/icons-material/Login";
 import LoadingButton from "@mui/lab/LoadingButton/LoadingButton";
-import { Box, Button, Card, CardActions, CardContent, TextField, Typography } from "@mui/material";
+import { Box, Button, Card, CardActions, CardContent, Typography } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { Link, Navigate, useLocation } from "react-router-dom";
@@ -11,6 +11,8 @@ import { ApiError } from "../api/openapi/core/ApiError.ts";
 import { AuthenticationService } from "../api/openapi/services/AuthenticationService.ts";
 import { LoginStatus } from "../auth/LoginStatus.ts";
 import { useAuth } from "../auth/useAuth.ts";
+import FormPassword from "../components/FormInputs/FormPassword.tsx";
+import FormText from "../components/FormInputs/FormText.tsx";
 interface LoginFormValues {
   user: string;
   password: string;
@@ -18,10 +20,10 @@ interface LoginFormValues {
 
 function Login() {
   const {
-    register,
     handleSubmit,
     formState: { errors },
     setError,
+    control,
   } = useForm<LoginFormValues>();
   const location = useLocation();
   const { updateAuthData, loginStatus } = useAuth();
@@ -80,25 +82,38 @@ function Login() {
           </Typography>
           <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
             <AccountCircle sx={{ color: "action.active", mr: 1 }} fontSize="medium" />
-            <TextField
-              variant="outlined"
-              fullWidth
-              placeholder="User"
-              {...register("user", { required: "User is required" })}
-              error={Boolean(errors.user)}
-              helperText={<ErrorMessage errors={errors} name="user" />}
+            <FormText
+              name="user"
+              control={control}
+              rules={{
+                required: "User is required",
+              }}
+              textFieldProps={{
+                label: "User",
+                placeholder: "User",
+                variant: "outlined",
+                fullWidth: true,
+                error: Boolean(errors.user),
+                helperText: <ErrorMessage errors={errors} name="user" />,
+              }}
             />
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
             <LockIcon sx={{ color: "action.active", mr: 1 }} fontSize="medium" />
-            <TextField
-              variant="outlined"
-              fullWidth
-              placeholder="Password"
-              type="password"
-              {...register("password", { required: "Password is required" })}
-              error={Boolean(errors.password)}
-              helperText={<ErrorMessage errors={errors} name="password" />}
+            <FormPassword
+              name="password"
+              control={control}
+              rules={{
+                required: "Password is required",
+              }}
+              textFieldProps={{
+                label: "Password",
+                placeholder: "Password",
+                variant: "outlined",
+                fullWidth: true,
+                error: Boolean(errors.password),
+                helperText: <ErrorMessage errors={errors} name="password" />,
+              }}
             />
           </Box>
         </CardContent>

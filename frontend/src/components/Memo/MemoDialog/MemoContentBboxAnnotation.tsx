@@ -108,6 +108,7 @@ export function MemoContentBboxAnnotation({
 
   return (
     <MemoForm
+      key={memo?.id}
       title={`Memo for Image Annotation ${bboxAnnotation.id}`}
       memo={memo}
       handleCreateOrUpdateMemo={handleCreateOrUpdateBboxAnnotationMemo}

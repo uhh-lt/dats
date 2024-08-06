@@ -2,9 +2,8 @@ import { ErrorMessage } from "@hookform/error-message";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
-import { Box, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from "@mui/material";
-import React, { useEffect, useState } from "react";
-import { HexColorPicker } from "react-colorful";
+import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack } from "@mui/material";
+import React from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import TagHooks from "../../api/TagHooks.ts";
 import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
@@ -13,6 +12,10 @@ import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import ColorUtils from "../../utils/ColorUtils.ts";
 import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI.ts";
+import FormColorPicker from "../FormInputs/FormColorPicker.tsx";
+import FormMenu from "../FormInputs/FormMenu.tsx";
+import FormText from "../FormInputs/FormText.tsx";
+import FormTextMultiline from "../FormInputs/FormTextMultiline.tsx";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 import TagRenderer from "./TagRenderer.tsx";
 
@@ -27,18 +30,6 @@ interface TagEditDialogProps {
  * @constructor
  */
 function TagEditDialog({ tags }: TagEditDialogProps) {
-  // use react hook form
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    setValue,
-  } = useForm<DocumentTagUpdate>();
-
-  // local state
-  const [color, setColor] = useState("#000000");
-
   // global client state (redux)
   const tagId = useAppSelector((state) => state.dialog.tagId);
   const open = useAppSelector((state) => state.dialog.isTagEditDialogOpen);
@@ -46,20 +37,6 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
 
   // query
   const tag = TagHooks.useGetTag(tagId);
-
-  // initialize form when tag changes
-  useEffect(() => {
-    if (tag.data) {
-      const c = ColorUtils.rgbStringToHex(tag.data.color) || tag.data.color;
-      reset({
-        name: tag.data.name,
-        description: tag.data.description,
-        color: tag.data.color,
-        parent_id: tag.data.parent_id || -1,
-      });
-      setColor(c);
-    }
-  }, [tag.data, reset]);
 
   // mutations
   const updateTagMutation = TagHooks.useUpdateTag();
@@ -123,8 +100,65 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
     }
   };
 
+  return (
+    <>
+      {tag.data && (
+        <TagEditDialogContent
+          key={tag.data.id}
+          tag={tag.data}
+          tags={tags}
+          isOpen={open}
+          handleClose={handleClose}
+          handleTagUpdate={handleTagUpdate}
+          isUpdateLoading={updateTagMutation.isPending}
+          handleTagDelete={handleDelete}
+          isDeleteLoading={deleteTagMutation.isPending}
+          handleError={handleError}
+        />
+      )}
+    </>
+  );
+}
+
+interface TagEditDialogContentProps {
+  isOpen: boolean;
+  handleClose: () => void;
+  handleTagUpdate: SubmitHandler<DocumentTagUpdate>;
+  isUpdateLoading: boolean;
+  handleTagDelete: () => void;
+  isDeleteLoading: boolean;
+  handleError: SubmitErrorHandler<DocumentTagUpdate>;
+  tag: DocumentTagRead;
+  tags: DocumentTagRead[];
+}
+
+function TagEditDialogContent({
+  tag,
+  tags,
+  isOpen,
+  handleClose,
+  handleTagUpdate,
+  isUpdateLoading,
+  handleTagDelete,
+  isDeleteLoading,
+  handleError,
+}: TagEditDialogContentProps) {
+  // use react hook form
+  const {
+    handleSubmit,
+    formState: { errors },
+    control,
+  } = useForm<DocumentTagUpdate>({
+    defaultValues: {
+      parent_id: tag.parent_id || -1,
+      name: tag.name,
+      color: ColorUtils.rgbStringToHex(tag.color) || tag.color,
+      description: tag.description,
+    },
+  });
+
   const menuItems: React.ReactNode[] = tags
-    .filter((t) => t.id !== tag.data?.id)
+    .filter((t) => t.id !== tag.id)
     .map((t) => (
       <MenuItem key={t.id} value={t.id}>
         <TagRenderer tag={t} />
@@ -132,74 +166,76 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
     ));
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+    <Dialog open={isOpen} onClose={handleClose} maxWidth="md" fullWidth>
       <form onSubmit={handleSubmit(handleTagUpdate, handleError)}>
-        {tag.isLoading && <DialogTitle>Loading tag...</DialogTitle>}
-        {tag.isError && <DialogTitle>Error: {tag.error.message}</DialogTitle>}
-        {tag.isSuccess && <DialogTitle>Edit tag {tag.data.name}</DialogTitle>}
+        <DialogTitle>Edit tag {tag.name}</DialogTitle>
         <DialogContent>
           <Stack spacing={3}>
-            <TextField
-              key={tag.data?.id}
-              fullWidth
-              select
-              label="Parent Code"
-              variant="filled"
-              defaultValue={tag.data?.parent_id || -1}
-              {...register("parent_id")}
-              error={Boolean(errors.parent_id)}
-              helperText={<ErrorMessage errors={errors} name="parent_id" />}
-              InputLabelProps={{ shrink: true }}
+            <FormMenu
+              name="parent_id"
+              control={control}
+              rules={{
+                required: "Selection is required",
+              }}
+              textFieldProps={{
+                label: "Parent Tag",
+                error: Boolean(errors.parent_id),
+                helperText: <ErrorMessage errors={errors} name="parent_id" />,
+                variant: "filled",
+                fullWidth: true,
+                InputLabelProps: { shrink: true },
+              }}
             >
               <MenuItem key={-1} value={-1}>
                 No parent
               </MenuItem>
               {menuItems}
-            </TextField>
-            <TextField
-              label="Name"
-              fullWidth
-              variant="standard"
-              {...register("name", { required: "Tag name is required" })}
-              error={Boolean(errors?.name)}
-              helperText={<>{errors?.name ? errors.name.message : ""}</>}
-              disabled={!tag.isSuccess}
-              InputLabelProps={{ shrink: true }}
-            />
-            <Stack direction="row">
-              <TextField
-                label="Color"
-                fullWidth
-                variant="standard"
-                {...register("color", { required: "Color is required" })}
-                onChange={(e) => {
-                  setColor(e.target.value);
-                }}
-                error={Boolean(errors.color)}
-                helperText={<ErrorMessage errors={errors} name="color" />}
-                InputLabelProps={{ shrink: true }}
-              />
-              <Box sx={{ width: 48, height: 48, backgroundColor: color, ml: 1, flexShrink: 0 }} />
-            </Stack>
-            <HexColorPicker
-              style={{ width: "100%" }}
-              color={color}
-              onChange={(newColor) => {
-                setValue("color", newColor); // set value of text input
-                setColor(newColor); // set value of color picker (and box)
+            </FormMenu>
+            <FormText
+              name="name"
+              control={control}
+              rules={{
+                required: "Tag name is required",
+              }}
+              textFieldProps={{
+                label: "Tag name",
+                variant: "standard",
+                fullWidth: true,
+                error: Boolean(errors.name),
+                helperText: <ErrorMessage errors={errors} name="name" />,
+                InputLabelProps: { shrink: true },
+                autoFocus: true,
               }}
             />
-            <TextField
-              multiline
-              minRows={5}
-              label="Description"
-              fullWidth
-              variant="standard"
-              {...register("description", { required: "Description is required" })}
-              error={Boolean(errors.description)}
-              helperText={<ErrorMessage errors={errors} name="description" />}
-              disabled={!tag.isSuccess}
-              InputLabelProps={{ shrink: true }}
+            <FormColorPicker
+              name="color"
+              control={control}
+              rules={{
+                required: "Color is required",
+              }}
+              textFieldProps={{
+                label: "Color",
+                variant: "standard",
+                fullWidth: true,
+                error: Boolean(errors.color),
+                helperText: <ErrorMessage errors={errors} name="color" />,
+                InputLabelProps: { shrink: true },
+              }}
+            />
+            <FormTextMultiline
+              name="description"
+              control={control}
+              rules={{
+                required: "Description is required",
+              }}
+              textFieldProps={{
+                label: "Description",
+                variant: "standard",
+                fullWidth: true,
+                error: Boolean(errors.description),
+                helperText: <ErrorMessage errors={errors} name="description" />,
+                InputLabelProps: { shrink: true },
+              }}
             />
           </Stack>
         </DialogContent>
@@ -208,10 +244,9 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
             variant="contained"
             color="error"
             startIcon={<DeleteIcon />}
-            disabled={!tag.isSuccess}
-            loading={deleteTagMutation.isPending}
+            loading={isDeleteLoading}
             loadingPosition="start"
-            onClick={handleDelete}
+            onClick={handleTagDelete}
             sx={{ flexShrink: 0 }}
           >
             Delete Tag
@@ -222,8 +257,7 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
             startIcon={<SaveIcon />}
             fullWidth
             type="submit"
-            disabled={!tag.isSuccess}
-            loading={updateTagMutation.isPending}
+            loading={isUpdateLoading}
             loadingPosition="start"
           >
             Update Tag
