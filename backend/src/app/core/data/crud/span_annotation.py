@@ -110,34 +110,18 @@ class CRUDSpanAnnotation(
         # create the entities
         code = crud_code.read(db=db, id=create_dtos[0].current_code_id)
         project_id = code.project_id
-        try:
-            crud_entity.create_multi(
-                db=db,
-                create_dtos=[
-                    EntityCreate(
-                        project_id=project_id,
-                        name=dto.span_text,
-                        span_text_ids=[id.id],
-                        is_human=False,
-                    )
-                    for id, dto in zip(span_texts_orm, create_dtos)
-                ],
-            )
-        except Exception as e:
-            raise Exception(
-                str(e)
-                + "\n"
-                + str(span_texts_orm)
-                + "\n"
-                + str([type(id) for id in span_texts_orm])
-                + "\n"
-                + str(
-                    [
-                        id.as_dict() if not isinstance(id, tuple) else id
-                        for id in span_texts_orm
-                    ]
+        crud_entity.create_multi(
+            db=db,
+            create_dtos=[
+                EntityCreate(
+                    project_id=project_id,
+                    name=dto.span_text,
+                    span_text_ids=[id.id],
+                    is_human=False,
                 )
-            )
+                for id, dto in zip(span_texts_orm, create_dtos)
+            ],
+        )
 
         # create the SpanAnnotation (and link the SpanText via FK)
         dto_objs_data = [

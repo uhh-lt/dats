@@ -53,13 +53,27 @@ class CRUDEntity(CRUDBase[EntityORM, EntityCreate, EntityUpdate]):
             for id in existing_link_ids:
                 del span_text_dict[id]
 
+        # recompute create dtos
         indexes_to_use = list(set(span_text_dict.values()))
-        db_objs = []
-        # mit map lösen
-        for i in indexes_to_use:
-            create_dto = create_dtos[i]
-            dto_objs_data = jsonable_encoder(create_dto, exclude={"span_text_ids"})
-            db_objs.append(self.model(**dto_objs_data))
+        reversed_span_text_dict = {}
+        for key, value in span_text_dict.items():
+            if value not in reversed_span_text_dict:
+                reversed_span_text_dict[value] = []
+            reversed_span_text_dict[value].append(key)
+
+        def map_index_to_new_dto(index):
+            create_dto = create_dtos[index]
+            create_dto.span_text_ids = reversed_span_text_dict[index]
+            return create_dto
+
+        create_dtos = list(map(map_index_to_new_dto, indexes_to_use))
+
+        # create entity db_objs
+        def create_db_obj(create_dto):
+            data = jsonable_encoder(create_dto, exclude={"span_text_ids"})
+            return self.model(**data)
+
+        db_objs = list(map(create_db_obj, create_dtos))
         db.add_all(db_objs)
         db.flush()
         db.commit()
