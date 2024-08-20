@@ -1,9 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from starlette.datastructures import MutableHeaders
 
-from api.dependencies import get_db_session
+from api.dependencies import get_current_user, get_db_session, reusable_oauth2_scheme
 from api.util import credentials_exception
+from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.refresh_token import crud_refresh_token
 from app.core.data.crud.user import crud_user
@@ -109,3 +113,37 @@ def refresh_access_token(
         token_type="bearer",
         refresh_token_expires=new_token.expires_at,
     )
+
+
+@router.get(
+    "/content",
+    summary="Returns success if the user can access the content",
+)
+async def auth_content(
+    request: Request,
+    db: Session = Depends(get_db_session),
+    x_original_uri: Annotated[str | None, Header()] = None,
+) -> str:
+    
+    prefix = "/content/projects/"
+    
+    if not x_original_uri.startswith(prefix):
+        raise ValueError()
+    
+    index = x_original_uri.find("/", len(prefix))
+
+    project = int(x_original_uri[len(prefix):index])
+    
+    token = request.cookies["Authorization"]
+    
+    new_header = MutableHeaders(request._headers)
+    new_header["Authorization"] = token
+    request._headers = new_header
+    request.scope.update(headers=request.headers.raw)
+
+    tok = await reusable_oauth2_scheme(request)
+
+    a = AuthzUser(request, get_current_user(db, tok), db)
+
+    a.assert_in_project(project)
+
