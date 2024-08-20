@@ -66,7 +66,7 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
             reset_database=reset_data,
             reset_repo=reset_data,
             reset_elasticsearch=reset_data,
-            reset_weaviate=reset_data,
+            reset_vector_index=reset_data,
         )
         if not startup_in_progress:
             __create_system_user__()
@@ -90,7 +90,7 @@ def __init_services__(
     reset_database: bool = False,
     reset_repo: bool = False,
     reset_elasticsearch: bool = False,
-    reset_weaviate: bool = False,
+    reset_vector_index: bool = False,
 ) -> None:
     # import celery workers to configure
     # import and init RepoService
@@ -128,17 +128,7 @@ def __init_services__(
     # import and init SimSearchService
     from app.core.search.simsearch_service import SimSearchService
 
-    SimSearchService(flush=reset_database)
-
-    # import and init TypesenseService
-    # from app.core.search.typesense_service import TypesenseService
-
-    # TypesenseService(flush=reset_database)
-
-    # import and init QdrantService
-    from app.core.search.qdrant_service import QdrantService
-
-    QdrantService(flush=reset_database)
+    SimSearchService(reset_vector_index=reset_vector_index)
 
 
 def __create_system_user__() -> None:

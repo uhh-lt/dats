@@ -50,6 +50,9 @@ celery:
     extract_images_from_pdf: True
     extract_images_from_docx: True
 
+vector_index:
+  service: ${oc.env:VECTOR_INDEX, weaviate}
+
 weaviate:
   host: ${oc.env:WEAVIATE_HOST, 127.0.0.1}
   port: ${oc.env:WEAVIATE_PORT, 8080}
