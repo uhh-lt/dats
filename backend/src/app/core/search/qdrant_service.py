@@ -1,4 +1,4 @@
-from pathlib import Path
+import uuid
 from typing import List, Tuple
 
 import numpy as np
@@ -10,34 +10,21 @@ from qdrant_client.models import (
     FieldCondition,
     Filter,
     FilterSelector,
+    MatchAny,
     MatchValue,
     PointIdsList,
+    RecommendRequest,
 )
 
-from app.core.data.crud.source_document import crud_sdoc
-from app.core.data.doc_type import DocType
-from app.core.data.dto.search import SimSearchSentenceHit
-from app.core.data.dto.source_document import SourceDocumentRead
-from app.preprocessing.ray_model_service import RayModelService
-from app.preprocessing.ray_model_worker.dto.clip import (
-    ClipImageEmbeddingInput,
-    ClipTextEmbeddingInput,
-)
-from app.util.singleton_meta import SingletonMeta
+from app.core.data.dto.search import SimSearchImageHit, SimSearchSentenceHit
+from app.core.search.index_type import IndexType
+from app.core.search.vector_index_service import VectorIndexService
 from config import conf
-import uuid
 
 
-class QdrantService(metaclass=SingletonMeta):
+class QdrantService(VectorIndexService):
     def __new__(cls, *args, **kwargs):
-        cls._sentence_class_name = "Sentence"
-        cls._document_class_name = "Document"
-        cls._image_class_name = "Image"
-        cls._colletions = [
-            cls._sentence_class_name,
-            cls._document_class_name,
-            cls._image_class_name,
-        ]
+        cls._colletions = list(IndexType)
 
         try:
             cls._client = QdrantClient(
@@ -47,7 +34,7 @@ class QdrantService(metaclass=SingletonMeta):
             )
             collections = {c.name for c in cls._client.get_collections().collections}
             if kwargs["flush"] if "flush" in kwargs else False:
-                logger.warning("Flushing DWTS Qdrant Data!")
+                logger.warning("Flushing Qdrant Data!")
                 for c in collections:
                     cls._client.delete_collection(c)
                 collections.clear()
@@ -63,111 +50,46 @@ class QdrantService(metaclass=SingletonMeta):
             msg = f"Cannot connect or initialize to Qdrant DB - Error '{e}'"
             logger.error(msg)
             raise SystemExit(msg)
-
-        cls.rms = RayModelService()
-
         return super(QdrantService, cls).__new__(cls)
 
-    def add_image_sdoc_to_index(self, proj_id: int, sdoc_id: int) -> None:
-        image_emb = self._encode_image(image_sdoc_id=sdoc_id)
-        logger.debug(f"Adding image SDoc {sdoc_id} in Project {proj_id} to Qdrant ...")
-        self._client.upsert(
-            self._image_class_name,
-            [
-                PointStruct(
-                    id=sdoc_id,
-                    vector=image_emb.tolist(),
-                    payload={
-                        "project_id": proj_id,
-                        "sdoc_id": sdoc_id,
-                    },
-                )
-            ],
-        )
+    def add_embeddings_to_index(
+        self, type: IndexType, proj_id: int, sdoc_id: int, embeddings: List[np.ndarray]
+    ):
+        logger.debug(f"Adding {type} SDoc {sdoc_id} in Project {proj_id} to Qdrant ...")
 
-    def add_text_sdoc_to_index(
-        self,
-        proj_id: int,
-        sdoc_id: int,
-        sentences: List[str],
-    ) -> None:
-        sentence_embs = self.rms.clip_text_embedding(
-            ClipTextEmbeddingInput(text=sentences)
-        ).numpy()
-
-        # create cheap&easy (but suboptimal) document embeddings for now
-        doc_emb = sentence_embs.sum(axis=0)
-        doc_emb /= np.linalg.norm(doc_emb)
-
-        logger.debug(
-            f"Adding {len(sentence_embs)} sentences "
-            f"from SDoc {sdoc_id} in Project {proj_id} to Qdrant ..."
-        )
-        sents = [
+        points = [
             PointStruct(
-                id=str(uuid.UUID(int=(proj_id << 64) + sent_id)),
-                vector=sent_emb.tolist(),
+                id=(
+                    self._sentence_uuid(sdoc_id, id)
+                    if type == IndexType.SENTENCE
+                    else sdoc_id
+                ),
+                vector=emb.tolist(),
                 payload={
                     "project_id": proj_id,
                     "sdoc_id": sdoc_id,
-                    "sentence_id": sent_id,
-                    "text": sentences[sent_id],
+                    "sentence_id": id,
                 },
             )
-            for sent_id, sent_emb in enumerate(sentence_embs)
+            for id, emb in enumerate(embeddings)
         ]
-        try:
-            self._client.upsert(self._sentence_class_name, sents)
-            print("added sentences to Qdrant", len(sents))
-        except Exception as e:
-            print("failed to add to qdrant", e)
-        document = PointStruct(
-            id=sdoc_id,
-            vector=doc_emb.tolist(),
-            payload={
-                "project_id": proj_id,
-                "sdoc_id": sdoc_id,
-                "text": " ".join(sentences),
-            },
-        )
-        self._client.upsert(self._document_class_name, [document])
+        self._client.upsert(type, points)
 
-    def remove_text_sdoc_from_index(self, sdoc_id: int) -> None:
-        logger.debug(f"Removing text SDoc {sdoc_id} from Index!")
-        self._client.delete(
-            self._document_class_name, points_selector=PointIdsList(points=[sdoc_id])
-        )
-        self._client.delete(
-            self._sentence_class_name,
-            points_selector=FilterSelector(
+    def remove_embeddings_from_index(self, type: IndexType, sdoc_id: int):
+        selector = (
+            FilterSelector(
                 filter=Filter(
                     must=[
                         FieldCondition(key="sdoc_id", match=MatchValue(value=sdoc_id))
                     ]
                 )
-            ),
+            )
+            if type == IndexType.SENTENCE
+            else PointIdsList(points=[sdoc_id])
         )
+        self._client.delete(type, points_selector=selector)
 
-    def remove_sdoc_from_index(self, doctype: str, sdoc_id: int):
-        match doctype:
-            case DocType.text:
-                self.remove_text_sdoc_from_index(sdoc_id)
-            case DocType.image:
-                self.remove_image_sdoc_from_index(sdoc_id)
-            case _:
-                # Other doctypes are not used for simsearch
-                pass
-
-    def remove_image_sdoc_from_index(self, sdoc_id: int) -> None:
-        logger.debug(f"Removing image SDoc {sdoc_id} from Index!")
-        self._client.delete(
-            self._image_class_name, points_selector=PointIdsList(points=[sdoc_id])
-        )
-
-    def remove_all_project_embeddings(
-        self,
-        proj_id: int,
-    ) -> None:
+    def remove_project_from_index(self, proj_id: int):
         for name in self._colletions:
             self._client.delete(
                 name,
@@ -182,75 +104,76 @@ class QdrantService(metaclass=SingletonMeta):
                 ),
             )
 
-    def suggest_similar_sentences(
-        self, proj_id: int, sdoc_sent_ids: List[Tuple[int, int]]
-    ) -> List[SimSearchSentenceHit]:
-        return self.__suggest(proj_id, sdoc_sent_ids)
-
-    def __suggest(
+    def search_index(
         self,
         proj_id: int,
-        sdoc_sent_ids: List[Tuple[int, int]],
+        index_type: IndexType,
+        query_emb: np.ndarray,
+        sdoc_ids_to_search: List[int],
         top_k: int = 10,
         threshold: float = 0.0,
+    ) -> List[SimSearchSentenceHit] | List[SimSearchImageHit]:
+        filter = Filter(
+            must=[
+                FieldCondition(key="proj_id", match=MatchValue(value=proj_id)),
+                FieldCondition(key="sdoc_id", match=MatchAny(any=sdoc_ids_to_search)),
+            ]
+        )
+        res = self._client.search(
+            index_type,
+            query_vector=query_emb,
+            query_filter=filter,
+            score_threshold=threshold,
+            limit=top_k,
+            with_payload=True,
+        )
+        if index_type == IndexType.IMAGE:
+            return [
+                SimSearchImageHit(
+                    sdoc_id=hit.payload.sdoc_id,
+                    score=hit.score,
+                )
+                for hit in res
+            ]
+        else:
+            return [
+                SimSearchSentenceHit(
+                    sdoc_id=hit.payload.sdoc_id,
+                    sentence_id=hit.payload.sentence_id,
+                    score=hit.score,
+                )
+                for hit in res
+            ]
+
+    def suggest(
+        self,
+        index_type: IndexType,
+        proj_id: int,
+        sdoc_sent_ids: List[Tuple[int, int]],
     ) -> List[SimSearchSentenceHit]:
-        candidates: List[SimSearchSentenceHit] = []
-        vc = "vector_query"
-        queries = [
-            {vc: f"vec:([], id: {proj_id}-{sdoc_id}-{sent_id}, k:1)"}
+        filter = Filter(
+            must=[FieldCondition(key="proj_id", match=MatchValue(value=proj_id))]
+        )
+        # TODO check if directly providing multiple points to a single request works as well
+        req = [
+            RecommendRequest(
+                filter=filter,
+                limit=1,
+                with_payload=True,
+                positive=[self._sentence_uuid(sdoc_id, sent_id)],
+            )
             for sdoc_id, sent_id in sdoc_sent_ids
         ]
+        res = self._client.recommend_batch(index_type, req)
 
-        res = self._client.multi_search.perform(
-            {"searches": queries},
-            {
-                "collection": self._sentence_class_name,
-                "q": "*",
-                "filter_by": f"project_id:= {proj_id}",
-                "include_fields": "id,sdoc_id,sentence_id",
-            },
-        )
+        return [
+            SimSearchSentenceHit(
+                sdoc_id=r[0].payload.sdoc_id,
+                score=r[0].score,
+                sentence_id=r[0].payload.sentence_id,
+            )
+            for r in res
+        ]
 
-        for r in res["results"]:
-            for hit in r["hits"]:
-                candidates.append(
-                    SimSearchSentenceHit(
-                        sdoc_id=hit["document"]["sdoc_id"],
-                        score=hit["vector_distance"],
-                        sentence_id=hit["document"]["sentence_id"],
-                    )
-                )
-
-        candidates.sort(key=lambda x: (x.sdoc_id, x.sentence_id))
-        hits = self.__unique_consecutive(candidates)
-        hits = [h for h in hits if (h.sdoc_id, h.sentence_id) not in sdoc_sent_ids]
-        return hits
-
-    def __unique_consecutive(self, hits: List[SimSearchSentenceHit]):
-        result = []
-        current = SimSearchSentenceHit(sdoc_id=-1, sentence_id=-1, score=0.0)
-        for hit in hits:
-            if hit.sdoc_id != current.sdoc_id or hit.sentence_id != current.sentence_id:
-                current = hit
-                result.append(hit)
-        return result
-
-    def _encode_image(self, image_sdoc_id: int) -> np.ndarray:
-        query_image_path = self._get_image_path_from_sdoc_id(sdoc_id=image_sdoc_id)
-        # FIXME HACK FOR LOCAL RUN
-        query_image_path = Path(
-            str(query_image_path).replace(conf.repo.root_directory, "/tmp/dwts")
-        )
-
-        encoded_query = self.rms.clip_image_embedding(
-            ClipImageEmbeddingInput(image_fps=[str(query_image_path)])
-        )
-        return encoded_query.numpy().squeeze()
-
-    def _get_image_path_from_sdoc_id(self, sdoc_id: int) -> Path:
-        with self.sqls.db_session() as db:
-            sdoc = SourceDocumentRead.model_validate(crud_sdoc.read(db=db, id=sdoc_id))
-            assert (
-                sdoc.doctype == DocType.image
-            ), f"SourceDocument with {sdoc_id=} is not an image!"
-        return self.repo.get_path_to_sdoc_file(sdoc=sdoc, raise_if_not_exists=True)
+    def _sentence_uuid(sdoc_id: int, id: int):
+        return str(uuid.UUID(int=(sdoc_id << 64) + id))

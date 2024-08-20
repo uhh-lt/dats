@@ -72,7 +72,7 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
             reset_database=reset_data,
             reset_repo=reset_data,
             reset_elasticsearch=reset_data,
-            reset_weaviate=reset_data,
+            reset_vector_index=reset_data,
         )
 
         if not startup_in_progress:
@@ -105,7 +105,7 @@ def __init_services__(
     reset_database: bool = False,
     reset_repo: bool = False,
     reset_elasticsearch: bool = False,
-    reset_weaviate: bool = False,
+    reset_vector_index: bool = False,
 ) -> None:
     # import celery workers to configure
     # import and init RepoService
@@ -146,8 +146,6 @@ def __init_services__(
     # import and init SimSearchService
     from app.core.db.simsearch_service import SimSearchService
 
-    SimSearchService(flush=reset_weaviate)
-
     # import and init OllamaService
     from app.core.data.llm.ollama_service import OllamaService
 
@@ -166,6 +164,7 @@ def __init_services__(
     from app.core.search.qdrant_service import QdrantService
 
     QdrantService(flush=reset_database)
+    SimSearchService(reset_vector_index=reset_vector_index)
 
 
 def __create_system_user__() -> None:
