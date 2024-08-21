@@ -84,4 +84,21 @@ export class AuthenticationService {
       },
     });
   }
+  /**
+   * Returns success if the user can access the content
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static authContent({ xOriginalUri }: { xOriginalUri?: string | null }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/authentication/content",
+      headers: {
+        "x-original-uri": xOriginalUri,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }
