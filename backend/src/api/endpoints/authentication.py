@@ -140,11 +140,11 @@ async def auth_content(
     db: Session = Depends(get_db_session),
     x_original_uri: Annotated[str | None, Header()] = None,
 ):
+    token = request.cookies[AUTHORIZATION]
+    a = AuthzUser(request, get_current_user(db, token), db)
     if not x_original_uri.startswith(CONTENT_PREFIX):
-        raise ValueError()
+        return
 
     index = x_original_uri.find("/", len(CONTENT_PREFIX))
     project = int(x_original_uri[len(CONTENT_PREFIX) : index])
-    token = request.cookies[AUTHORIZATION]
-    a = AuthzUser(request, get_current_user(db, token), db)
     a.assert_in_project(project)
