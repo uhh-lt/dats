@@ -2,15 +2,8 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch Chrome",
-      "request": "launch",
-      "type": "chrome",
-      "webRoot": "${workspaceFolder}",
-      "url": "http://localhost:3000"
-    },
-    {
-      "name": "Python: main.py",
-      "type": "python",
+      "name": "backend",
+      "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/backend/src/main.py",
       "console": "integratedTerminal",
@@ -21,7 +14,16 @@
         "HUGGINGFACE_HUB_CACHE": "${workspaceFolder}/docker/models_cache",
         "TRANSFORMERS_CACHE": "${workspaceFolder}/docker/models_cache",
         "TORCH_HOME": "${workspaceFolder}/docker/models_cache"
-      }
+      },
+      "envFile": "${workspaceFolder}/backend/.env"
+    },
+    {
+      "name": "frontend",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/frontend",
+      "envFile": "${workspaceFolder}/frontend/.env.development"
     },
     {
       "name": "Celery",
