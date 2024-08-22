@@ -5,8 +5,17 @@ import traceback
 
 from loguru import logger
 
-import config
-from migration.migrate import run_required_migrations
+#####################################################################################################################
+#                                         READ BEFORE CHANGING ANYTHING                                             #
+#####################################################################################################################
+# 1. It's very important to NOT import any DATS internal models here, as this would lead to circular imports.       #
+#    Import stuff online INSIDE the functions at the time you need it.                                              #
+# 2. It's very important to NOT change the order of the imports, as this would lead to circular imports.            #
+# 3. It's very important to NOT change the order of execution of the imports, DB initialization, and other          #
+#    Services initializations.                                                                                      #
+# 4. Are you sure you need to change this file? Are you sure you know what you wand and need to do? If you're not   #
+#    sure, please ask Flo. Debugging the startup process is tidious ...                                             #
+#####################################################################################################################
 
 
 def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
@@ -52,12 +61,9 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
 
     # noinspection PyUnresolvedReferences
     try:
-        config.verify_config()
+        import config
 
-        if not startup_in_progress:
-            # If we're the first uvicorn worker to start,
-            # run database migrations
-            run_required_migrations()
+        config.verify_config()
 
         # start and init services
         __init_services__(
@@ -68,11 +74,19 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
             reset_elasticsearch=reset_data,
             reset_weaviate=reset_data,
         )
+
+        if not startup_in_progress:
+            from migration.migrate import run_required_migrations
+
+            # If we're the first uvicorn worker to start,
+            # run database migrations
+            run_required_migrations()
+
         if not startup_in_progress:
             __create_system_user__()
 
     except Exception as e:
-        msg = f"Error while starting the API! Exception: {str(e)}"
+        msg = f"Error while booting the Discourse Analysis Tool Suite Backend! Exception: {str(e)}"
         logger.error(msg)
         logger.error(traceback.format_exc())
         raise SystemExit(msg)
@@ -80,7 +94,7 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
         delete_progress_indicator_file()
 
     delete_progress_indicator_file()
-    logger.info("Started Discourse Analysis Tool Suite Backend!")
+    logger.info("Booted Discourse Analysis Tool Suite Backend!")
 
 
 # noinspection PyUnresolvedReferences,PyProtectedMember
@@ -103,6 +117,10 @@ def __init_services__(
     from app.core.db.sql_service import SQLService
 
     SQLService(echo=sql_echo, reset_database=reset_database)
+
+    # create CRUDs
+    from app.core.data.crud import Crud  # noqa: F401
+
     # import and init ElasticSearch
     from app.core.search.elasticsearch_service import ElasticSearchService
 
@@ -128,7 +146,7 @@ def __init_services__(
     # import and init SimSearchService
     from app.core.search.simsearch_service import SimSearchService
 
-    SimSearchService(flush=reset_database)
+    SimSearchService(flush=reset_weaviate)
 
 
 def __create_system_user__() -> None:
