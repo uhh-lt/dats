@@ -16,15 +16,19 @@ from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from uvicorn.main import uvicorn
 
-from api.validation import InvalidError
-from app.core.authorization.authz_user import ForbiddenError
-
-from app.core.startup import startup  # isort: skip
+#####################################################################################################################
+#                                               READ BEFORE CHANGING                                                #
+#####################################################################################################################
+#                               !!!!! IMPORT STUFF ONLY AFTER THE STARTUP CALL !!!!!                                #
+#       It's very important to NOT import ANY DATS internal models here, as this would lead to circular imports.    #
+#####################################################################################################################
 
 # Flo: just do it once. We have to check because if we start the main function,
 #  unvicorn will import this file once more manually, so it would be executed twice.
 STARTUP_DONE = bool(int(os.environ.get("STARTUP_DONE", "0")))
 if not STARTUP_DONE:
+    from app.core.startup import startup  # isort: skip
+
     startup(reset_data=False, sql_echo=False)
     os.environ["STARTUP_DONE"] = "1"
 
@@ -55,6 +59,8 @@ from api.endpoints import (
     user,
     whiteboard,
 )
+from api.validation import InvalidError
+from app.core.authorization.authz_user import ForbiddenError
 from app.core.data.crawler.crawler_service import (
     CrawlerJobPreparationError,
     NoDataToCrawlError,

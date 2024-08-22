@@ -37,8 +37,9 @@ class SQLService(metaclass=SingletonMeta):
             cls.session_maker = sessionmaker(autoflush=False, bind=engine)
 
             if kwargs.get("reset_database") is True:
-                logger.warning("Dropping existing DB!")
-                drop_database(cls.__engine.url)
+                if database_exists(cls.__engine.url):
+                    logger.warning("Dropping existing DB!")
+                    drop_database(cls.__engine.url)
 
             return super(SQLService, cls).__new__(cls)
 
@@ -51,8 +52,9 @@ class SQLService(metaclass=SingletonMeta):
         self.__engine.dispose()
 
     def drop_database(self):
-        logger.warning("Dropping existing DB!")
-        drop_database(self.__engine.url)
+        if database_exists(self.__engine.url):
+            logger.warning("Dropping existing DB!")
+            drop_database(self.__engine.url)
 
     def create_database_if_not_exists(self):
         if not database_exists(self.__engine.url):
