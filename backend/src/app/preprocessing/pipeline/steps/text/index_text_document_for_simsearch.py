@@ -4,8 +4,6 @@ from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 
 sss = SimSearchService()
 
-MIN_SENTENCE_LENGTH = 5
-
 
 def index_text_document_for_simsearch(cargo: PipelineCargo) -> PipelineCargo:
     # assume that all PPTDs come from the same project!
@@ -13,11 +11,7 @@ def index_text_document_for_simsearch(cargo: PipelineCargo) -> PipelineCargo:
     sdoc_id = cargo.data["sdoc_id"]
     proj_id = pptd.project_id
 
-    sentences = [
-        sent.text
-        for sent in pptd.sentences
-        if len(sent.text.split(" ")) >= MIN_SENTENCE_LENGTH
-    ]
+    sentences = [sent.text for sent in pptd.sentences]
     if len(sentences) > 0:
         sss.add_text_sdoc_to_index(
             proj_id=proj_id,
