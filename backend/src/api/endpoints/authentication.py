@@ -102,7 +102,7 @@ def logout(
     db: Session = Depends(get_db_session),
     dto: RefreshAccessTokenData = Depends(),
     response: Response,
-):
+) -> None:
     token = crud_refresh_token.read_and_verify(db, dto.refresh_token)
     crud_refresh_token.revoke(db, token)
     response.delete_cookie(AUTHORIZATION, secure=True, httponly=True, samesite="strict")
@@ -139,7 +139,8 @@ async def auth_content(
     request: Request,
     db: Session = Depends(get_db_session),
     x_original_uri: Annotated[str | None, Header()] = None,
-):
+) -> None:
+    # returns None on purpose
     token = request.cookies[AUTHORIZATION]
     a = AuthzUser(request, get_current_user(db, token), db)
     if not x_original_uri.startswith(CONTENT_PREFIX):
