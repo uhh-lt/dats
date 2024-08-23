@@ -1,9 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from api.dependencies import get_db_session
+from api.dependencies import get_current_user, get_db_session
 from api.util import credentials_exception
+from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.refresh_token import crud_refresh_token
 from app.core.data.crud.user import crud_user
@@ -16,6 +19,9 @@ from app.core.data.dto.user import (
 )
 from app.core.mail.mail_service import MailService
 from app.core.security import generate_jwt
+
+CONTENT_PREFIX = "/content/projects/"
+AUTHORIZATION = "Authorization"
 
 router = APIRouter(prefix="/authentication", tags=["authentication"])
 
@@ -56,6 +62,7 @@ def login(
     *,
     db: Session = Depends(get_db_session),
     user_login_form_data: OAuth2PasswordRequestForm = Depends(),
+    response: Response,
 ) -> UserAuthorizationHeaderData:
     user_login = UserLogin(
         username=user_login_form_data.username,
@@ -67,6 +74,15 @@ def login(
 
     (access_token, access_token_expires) = generate_jwt(user)
     refresh_token = crud_refresh_token.generate(db, user.id)
+
+    response.set_cookie(
+        AUTHORIZATION,
+        access_token,
+        expires=access_token_expires,
+        secure=True,
+        httponly=True,
+        samesite="strict",
+    )
 
     return UserAuthorizationHeaderData(
         access_token=access_token,
@@ -82,10 +98,14 @@ def login(
     summary="Revokes the refresh token associated with the given session.",
 )
 def logout(
-    *, db: Session = Depends(get_db_session), dto: RefreshAccessTokenData = Depends()
-):
+    *,
+    db: Session = Depends(get_db_session),
+    dto: RefreshAccessTokenData = Depends(),
+    response: Response,
+) -> None:
     token = crud_refresh_token.read_and_verify(db, dto.refresh_token)
     crud_refresh_token.revoke(db, token)
+    response.delete_cookie(AUTHORIZATION, secure=True, httponly=True, samesite="strict")
 
 
 @router.post(
@@ -109,3 +129,23 @@ def refresh_access_token(
         token_type="bearer",
         refresh_token_expires=new_token.expires_at,
     )
+
+
+@router.get(
+    "/content",
+    summary="Returns success if the user can access the content",
+)
+async def auth_content(
+    request: Request,
+    db: Session = Depends(get_db_session),
+    x_original_uri: Annotated[str | None, Header()] = None,
+) -> None:
+    # returns None on purpose
+    token = request.cookies[AUTHORIZATION]
+    a = AuthzUser(request, get_current_user(db, token), db)
+    if not x_original_uri.startswith(CONTENT_PREFIX):
+        return
+
+    index = x_original_uri.find("/", len(CONTENT_PREFIX))
+    project = int(x_original_uri[len(CONTENT_PREFIX) : index])
+    a.assert_in_project(project)

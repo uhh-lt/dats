@@ -105,6 +105,8 @@ services:
     tty: true
     networks:
       - dats_demo_network
+    profiles:
+      - dev_frontend
 
   celery-background-jobs-worker:
     image: uhhlt/dats_backend:${DATS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
@@ -203,8 +205,8 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ["0"]
-              capabilities: [gpu]
+              device_ids: [ "0" ]
+              capabilities: [ gpu ]
     profiles:
       - ray
 
@@ -260,7 +262,6 @@ services:
       - ./backend_repo:${SHARED_REPO_ROOT:-/tmp/dats}
     depends_on:
       - elasticsearch
-      - lighttpd
       - postgres
       - rabbitmq
       - redis
@@ -287,6 +288,7 @@ services:
     image: uhhlt/dats_frontend:${DATS_FRONTEND_DOCKER_VERSION:-latest}
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./backend_repo:/usr/share/nginx/content:ro
     depends_on:
       - dats-backend-api
     ports:

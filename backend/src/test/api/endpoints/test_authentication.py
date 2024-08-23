@@ -18,6 +18,7 @@ def test_authentication_required():
         # This route requires authentication, but does so
         # in a manner we couldn't easily verify in the test.
         ({"GET"}, "/user/me"),
+        ({"GET"}, "/authentication/content"),
         # FastAPI built-in routes
         ({"GET", "HEAD"}, "/openapi.json"),
         ({"GET", "HEAD"}, "/docs"),
