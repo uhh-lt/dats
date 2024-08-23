@@ -6,3 +6,4 @@ scrapy-playwright==0.0.31
 scrapy-selenium==0.0.7
 weaviate-client==3.24.1
 webdriver-manager==4.0.1
+yake==0.4.8
