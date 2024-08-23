@@ -115,7 +115,12 @@ class PreprocessingPipeline:
             ppj_status = crud_prepro_job.get_status_by_id(
                 db=db, uuid=cargo.ppj_payload.prepro_job_id
             )
-            if ppj_status == BackgroundJobStatus.RUNNING:
+            running_or_waiting = (
+                crud_prepro_job.get_number_of_running_or_waiting_payloads(
+                    db=db, uuid=cargo.ppj_payload.prepro_job_id
+                )
+            )
+            if ppj_status == BackgroundJobStatus.RUNNING and running_or_waiting == 0:
                 self.__update_status_of_ppj(
                     cargo=cargo, status=BackgroundJobStatus.FINISHED
                 )
