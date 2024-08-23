@@ -6,7 +6,7 @@ from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 
 
-def generate_word_frequncies_and_keywords(cargo: PipelineCargo) -> PipelineCargo:
+def generate_word_frequncies(cargo: PipelineCargo) -> PipelineCargo:
     pptd: PreProTextDoc = cargo.data["pptd"]
     out = pptd.spacy_pipeline_output
 
@@ -34,7 +34,5 @@ def generate_word_frequncies_and_keywords(cargo: PipelineCargo) -> PipelineCargo
         k: v
         for (k, v) in sorted(pptd.word_freqs.items(), key=lambda i: i[1], reverse=True)
     }
-    # use top-5 as keywords
-    pptd.keywords = list(pptd.word_freqs.keys())[:5]
 
     return cargo

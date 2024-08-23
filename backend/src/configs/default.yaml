@@ -513,3 +513,8 @@ system_codes:
             desc: Object Category from COCO 2017
           TRUCK:
             desc: Object Category from COCO 2017
+
+keyword_extraction:
+  max_ngram_size: 2
+  deduplication_threshold: 0.5
+  keyword_proposals: 20

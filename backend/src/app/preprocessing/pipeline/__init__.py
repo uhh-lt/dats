@@ -38,14 +38,17 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     from app.preprocessing.pipeline.steps.text.extract_text_from_html_and_create_source_mapping import (
         extract_text_from_html_and_create_source_mapping,
     )
+    from app.preprocessing.pipeline.steps.text.generate_keywords import (
+        generate_keywords,
+    )
     from app.preprocessing.pipeline.steps.text.generate_named_entity_annotations import (
         generate_named_entity_annotations,
     )
     from app.preprocessing.pipeline.steps.text.generate_sentence_annotations import (
         generate_sentence_annotations,
     )
-    from app.preprocessing.pipeline.steps.text.generate_word_frequencies_and_keywords import (
-        generate_word_frequncies_and_keywords,
+    from app.preprocessing.pipeline.steps.text.generate_word_frequencies import (
+        generate_word_frequncies,
     )
     from app.preprocessing.pipeline.steps.text.index_text_document_for_simsearch import (
         index_text_document_for_simsearch,
@@ -98,7 +101,12 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     )
 
     pipeline.register_step(
-        func=generate_word_frequncies_and_keywords,
+        func=generate_word_frequncies,
+        required_data=["pptd"],
+    )
+
+    pipeline.register_step(
+        func=generate_keywords,
         required_data=["pptd"],
     )
 
@@ -199,11 +207,14 @@ def build_image_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     from app.preprocessing.pipeline.steps.image.write_ppid_to_database import (
         write_ppid_to_database,
     )
+    from app.preprocessing.pipeline.steps.text.generate_keywords import (
+        generate_keywords,
+    )
     from app.preprocessing.pipeline.steps.text.generate_sentence_annotations import (
         generate_sentence_annotations,
     )
-    from app.preprocessing.pipeline.steps.text.generate_word_frequencies_and_keywords import (
-        generate_word_frequncies_and_keywords,
+    from app.preprocessing.pipeline.steps.text.generate_word_frequencies import (
+        generate_word_frequncies,
     )
     from app.preprocessing.pipeline.steps.text.run_spacy_pipeline import (
         run_spacy_pipeline,
@@ -268,7 +279,12 @@ def build_image_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     )
 
     pipeline.register_step(
-        func=generate_word_frequncies_and_keywords,
+        func=generate_word_frequncies,
+        required_data=["pptd"],
+    )
+
+    pipeline.register_step(
+        func=generate_keywords,
         required_data=["pptd"],
     )
 
