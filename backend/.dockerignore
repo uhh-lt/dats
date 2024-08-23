@@ -8,6 +8,8 @@
 src/dev_notebooks
 src/data
 src/experiments
+sample_data
+notebooks
 
 # ignore caches
 .pytest_cache
@@ -15,6 +17,8 @@ src/experiments
 # others
 .dockerignore
 .gitignore
+.idea
+.run
 Dockerfile
 Makefile
 README.md
