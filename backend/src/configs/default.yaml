@@ -86,6 +86,7 @@ redis:
     crawler: 3
     trainer: 4
     cota: 5
+    llm: 6
 
 logging:
   max_file_size: 500 # MB
@@ -105,6 +106,11 @@ elasticsearch:
   index_settings:
     docs: configs/default_sdoc_index_settings.json
     memos: configs/default_memo_index_settings.json
+
+ollama:
+  host: ${oc.env:OLLAMA_HOST, 127.0.0.1}
+  port: ${oc.env:OLLAMA_PORT, 9201}
+  model: ${oc.env:OLLAMA_MODEL, gemma2:9b-instruct-fp16}
 
 project_metadata:
   text_url:

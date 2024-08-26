@@ -144,6 +144,9 @@ services:
       TORCH_HOME: /models_cache
       NUMBA_CACHE_DIR: /numba_cache
       SHARED_REPO_ROOT: ${SHARED_REPO_ROOT:-/tmp/dats}
+      OLLAMA_HOST: ${OLLAMA_HOST:-ollama}
+      OLLAMA_PORT: ${OLLAMA_PORT:-11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma2:9b-instruct-fp16}
     volumes:
       - ../backend/src:/dats_code/src
       - ./backend_repo:${SHARED_REPO_ROOT:-/tmp/dats}
@@ -153,6 +156,7 @@ services:
       - rabbitmq
       - redis
       - postgres
+      - ollama
     ports:
       - "${JUPYTER_BACKGROUND_JOBS_EXPOSED:-8880}:8888"
       - "${CELERY_DEBUG_PORT:-45678}:6900"
@@ -209,6 +213,26 @@ services:
     profiles:
       - ray
 
+  ollama:
+    image: ollama/ollama:0.3.4
+    ports:
+      - ${OLLAMA_EXPOSED:-19290}:11434
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+    tty: true
+    restart: unless-stopped
+    volumes:
+      - ./ollama_cache:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["0"]
+              capabilities: [gpu]
+    networks:
+      - dats_demo_network
+
   dats-backend-api:
     image: uhhlt/dats_backend:${DATS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
     command: /dats_code/src/backend_api_entrypoint.sh
@@ -250,6 +274,9 @@ services:
       SYSTEM_USER_EMAIL: ${SYSTEM_USER_EMAIL}
       SYSTEM_USER_PASSWORD: ${SYSTEM_USER_PASSWORD}
       SHARED_REPO_ROOT: ${SHARED_REPO_ROOT:-/tmp/dats}
+      OLLAMA_HOST: ${OLLAMA_HOST:-ollama}
+      OLLAMA_PORT: ${OLLAMA_PORT:-11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma2:9b-instruct-fp16}
     healthcheck:
       test: curl --fail "http://localhost:${API_PORT}" || exit 1
       interval: 60s
