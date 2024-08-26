@@ -4,7 +4,9 @@ from typing import Any, List
 from app.core.data.crawler.crawler_service import CrawlerService
 from app.core.data.dto.crawler_job import CrawlerJobParameters, CrawlerJobRead
 from app.core.data.dto.export_job import ExportJobParameters, ExportJobRead
+from app.core.data.dto.llm_job import LLMJobParameters, LLMJobRead
 from app.core.data.export.export_service import ExportService
+from app.core.data.llm.llm_service import LLMService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 
 
@@ -74,6 +76,17 @@ def prepare_and_start_crawling_job_async(
     start_export_job_chain.apply_async()
 
     return cj
+
+
+def prepare_and_start_llm_job_async(
+    llm_job_params: LLMJobParameters,
+) -> LLMJobRead:
+    from app.celery.background_jobs.tasks import start_llm_job
+
+    llms: LLMService = LLMService()
+    llm_job = llms.prepare_llm_job(llm_job_params)
+    start_llm_job.apply_async(kwargs={"llm_job": llm_job})
+    return llm_job
 
 
 def execute_text_preprocessing_pipeline_apply_async(

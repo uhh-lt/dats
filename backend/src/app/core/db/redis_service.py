@@ -20,6 +20,7 @@ from app.core.data.dto.crawler_job import (
 )
 from app.core.data.dto.export_job import ExportJobCreate, ExportJobRead, ExportJobUpdate
 from app.core.data.dto.feedback import FeedbackCreate, FeedbackRead
+from app.core.data.dto.llm_job import LLMJobCreate, LLMJobRead, LLMJobUpdate
 from app.core.data.dto.trainer_job import (
     TrainerJobCreate,
     TrainerJobRead,
@@ -416,3 +417,59 @@ class RedisService(metaclass=SingletonMeta):
     def get_all_feedbacks_of_user(self, user_id: int) -> List[FeedbackRead]:
         fbs = self.get_all_feedbacks()
         return [fb for fb in fbs if fb.user_id == user_id]
+
+    def store_llm_job(self, llm_job: Union[LLMJobCreate, LLMJobRead]) -> LLMJobRead:
+        client = self._get_client("llm")
+
+        if isinstance(llm_job, LLMJobCreate):
+            key = self._generate_random_key()
+            llmj = LLMJobRead(id=key, created=datetime.now(), **llm_job.model_dump())
+        elif isinstance(llm_job, LLMJobRead):
+            key = llm_job.id
+            llmj = llm_job
+
+        if client.set(key.encode("utf-8"), llmj.model_dump_json()) != 1:
+            msg = "Cannot store LLMJob!"
+            logger.error(msg)
+            raise RuntimeError(msg)
+
+        logger.debug(f"Successfully stored LLMJob {key}!")
+
+        return llmj
+
+    def get_all_llm_jobs(self, project_id: int) -> List[LLMJobRead]:
+        client = self._get_client("llm")
+        all_llm_jobs: List[LLMJobRead] = [
+            self.load_llm_job(str(key, "utf-8")) for key in client.keys()
+        ]
+        return [job for job in all_llm_jobs if job.parameters.project_id == project_id]
+
+    def load_llm_job(self, key: str) -> LLMJobRead:
+        client = self._get_client("llm")
+        llmj = client.get(key.encode("utf-8"))
+        if llmj is None:
+            msg = f"LLMJob with ID {key} does not exist!"
+            logger.error(msg)
+            raise KeyError(msg)
+
+        logger.debug(f"Successfully loaded LLMJob {key}")
+        return LLMJobRead.model_validate_json(llmj)
+
+    def update_llm_job(self, key: str, update: LLMJobUpdate) -> LLMJobRead:
+        llmj = self.load_llm_job(key=key)
+        data = llmj.model_dump()
+        data.update(**update.model_dump(exclude_none=True))
+        llmj = LLMJobRead(**data)
+        llmj = self.store_llm_job(llm_job=llmj)
+        logger.debug(f"Updated LLMJob {key}")
+        return llmj
+
+    def delete_llm_job(self, key: str) -> LLMJobRead:
+        llmj = self.load_llm_job(key=key)
+        client = self._get_client("llm")
+        if client.delete(key.encode("utf-8")) != 1:
+            msg = f"Cannot delete LLMJob {key}"
+            logger.error(msg)
+            raise RuntimeError(msg)
+        logger.debug(f"Deleted LLMJob {key}")
+        return llmj
