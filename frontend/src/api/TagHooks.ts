@@ -43,6 +43,21 @@ const useDeleteTag = () =>
     },
   });
 
+const useBulkSetDocumentTags = () =>
+  useMutation({
+    mutationFn: DocumentTagService.setDocumentTagsBatch,
+    onSuccess: (_data, variables) => {
+      // we need to invalidate the document tags for every document that we updated
+      variables.requestBody.forEach((links) => {
+        queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_TAGS, links.source_document_id] });
+      });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TAG_STATISTICS] }); // todo: zu unspezifisch!
+      // Invalidate cache of tag statistics query
+      queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
+    },
+  });
+
 const useBulkLinkDocumentTags = () =>
   useMutation({
     mutationFn: (variables: { projectId: number; requestBody: SourceDocumentDocumentTagMultiLink }) =>
@@ -172,6 +187,7 @@ const TagHooks = {
   useCreateTag,
   useUpdateTag,
   useDeleteTag,
+  useBulkSetDocumentTags,
   useBulkUpdateDocumentTags,
   useBulkLinkDocumentTags,
   useBulkUnlinkDocumentTags,

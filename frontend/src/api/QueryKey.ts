@@ -15,8 +15,10 @@ export const QueryKey = {
   PROJECT_TAGS: "projectTags",
   // all crawler jobs of a project (by project id)
   PROJECT_CRAWLER_JOBS: "projectCrawlerJobs",
-  // all crawler jobs of a project (by project id)
+  // all prepro jobs of a project (by project id)
   PROJECT_PREPROCESSING_JOBS: "projectPreprocessingJobs",
+  // all llm jobs of a project (by project id)
+  PROJECT_LLM_JOBS: "projectLLMJobs",
 
   // all users
   USERS: "users",
@@ -176,6 +178,9 @@ export const QueryKey = {
 
   // crawler (by crawler job id)
   CRAWLER_JOB: "crawlerJob",
+
+  // crawler (by llm job id)
+  LLM_JOB: "llmJob",
 
   // tables
   SEARCH_TABLE: "search-document-table-data",
