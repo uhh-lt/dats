@@ -2,8 +2,12 @@ import { AlertProps } from "@mui/material";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
 import { BBoxAnnotationReadResolvedCode } from "../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
 import { CodeRead } from "../api/openapi/models/CodeRead.ts";
+import { DocumentTagRead } from "../api/openapi/models/DocumentTagRead.ts";
+import { LLMJobResult } from "../api/openapi/models/LLMJobResult.ts";
+import { LLMJobType } from "../api/openapi/models/LLMJobType.ts";
 import { SnackbarEvent } from "../components/SnackbarDialog/SnackbarEvent.ts";
 import { CodeCreateSuccessHandler } from "./Code/CodeCreateDialog.tsx";
+import { LLMAssistanceEvent } from "./LLMDialog/LLMEvent.ts";
 
 interface DialogState {
   // tags
@@ -31,6 +35,17 @@ interface DialogState {
   snackbarData: SnackbarEvent;
   // project settings
   isProjectSettingsOpen: boolean;
+  // llm dialog
+  isLLMDialogOpen: boolean;
+  llmMethod?: LLMJobType;
+  llmDocumentIds: number[];
+  llmStep: number;
+  llmSteps: string[];
+  llmTags: DocumentTagRead[];
+  llmSystemPrompt: string;
+  llmUserPrompt: string;
+  llmJobId?: string;
+  llmJobResult: LLMJobResult | null | undefined;
 }
 
 const initialState: DialogState = {
@@ -63,6 +78,17 @@ const initialState: DialogState = {
   },
   // project settings
   isProjectSettingsOpen: false,
+  // llm dialog
+  isLLMDialogOpen: false,
+  llmDocumentIds: [],
+  llmMethod: undefined,
+  llmStep: 0,
+  llmSteps: ["Select campaign settings", "Create an ad group", "Create an ad"],
+  llmTags: [],
+  llmSystemPrompt: "",
+  llmUserPrompt: "",
+  llmJobId: undefined,
+  llmJobResult: undefined,
 };
 
 export const dialogSlice = createSlice({
@@ -150,6 +176,56 @@ export const dialogSlice = createSlice({
     },
     closeProjectSettings: (state) => {
       state.isProjectSettingsOpen = false;
+    },
+    openLLMDialog: (state, action: PayloadAction<{ event: LLMAssistanceEvent }>) => {
+      state.isLLMDialogOpen = true;
+      state.llmDocumentIds = action.payload.event.selectedDocumentIds;
+      state.llmMethod = action.payload.event.method;
+      state.llmStep = action.payload.event.method === undefined ? 0 : 1;
+    },
+    llmDialogSelectMethod: (state, action: PayloadAction<{ method: LLMJobType }>) => {
+      state.llmMethod = action.payload.method;
+      state.llmStep = 1;
+    },
+    llmDialogSelectTags: (state, action: PayloadAction<{ tags: DocumentTagRead[] }>) => {
+      state.llmMethod = LLMJobType.DOCUMENT_TAGGING;
+      state.llmStep = 2;
+      state.llmTags = action.payload.tags;
+    },
+    llmDialogSetPrompts: (
+      state,
+      action: PayloadAction<{ systemPrompt: string; userPrompt: string; jobId: string }>,
+    ) => {
+      state.llmSystemPrompt = action.payload.systemPrompt;
+      state.llmUserPrompt = action.payload.userPrompt;
+      state.llmJobId = action.payload.jobId;
+      state.llmStep = 3;
+    },
+    llmDialogSetResult: (state, action: PayloadAction<{ result: LLMJobResult }>) => {
+      state.llmJobResult = action.payload.result;
+      state.llmStep = 4;
+    },
+    nextLLMDialogStep: (state) => {
+      state.llmStep += 1;
+      if (state.llmStep >= state.llmSteps.length) {
+        state.llmStep = state.llmSteps.length;
+      }
+    },
+    backToMethodSelectionLLMDialogStep: (state) => {
+      state.llmStep = 0;
+      state.llmMethod = initialState.llmMethod;
+    },
+    previousLLMDialogStep: (state) => {
+      state.llmStep -= 1;
+      if (state.llmStep < 0) {
+        state.llmStep = 0;
+      }
+    },
+    closeLLMDialog: (state) => {
+      state.isLLMDialogOpen = initialState.isLLMDialogOpen;
+      state.llmDocumentIds = initialState.llmDocumentIds;
+      state.llmMethod = initialState.llmMethod;
+      state.llmStep = initialState.llmStep;
     },
   },
 });

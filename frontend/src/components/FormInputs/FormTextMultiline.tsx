@@ -2,7 +2,7 @@ import { TextField, TextFieldProps } from "@mui/material";
 import { Control, Controller, ControllerProps, FieldValues } from "react-hook-form";
 
 interface FormTextMultilineProps<T extends FieldValues> extends Omit<ControllerProps<T>, "render"> {
-  textFieldProps?: Omit<TextFieldProps, "value" | "onChange" | "type" | "multiline" | "minRows">;
+  textFieldProps?: Omit<TextFieldProps, "value" | "onChange" | "type" | "multiline">;
   control: Control<T>;
 }
 
@@ -16,7 +16,15 @@ function FormTextMultiline<T extends FieldValues>({
     <Controller
       {...controllerProps}
       name={name}
-      render={({ field }) => <TextField {...field} {...textFieldProps} type="text" multiline minRows={5} />}
+      render={({ field }) => (
+        <TextField
+          {...field}
+          {...textFieldProps}
+          type="text"
+          multiline
+          minRows={textFieldProps?.minRows ? textFieldProps.minRows : 5}
+        />
+      )}
       control={control}
     />
   );

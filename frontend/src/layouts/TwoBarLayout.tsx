@@ -4,6 +4,7 @@ import { Outlet, useParams } from "react-router-dom";
 import CodeCreateDialog from "../components/Code/CodeCreateDialog.tsx";
 import ConfirmationDialog from "../components/ConfirmationDialog/ConfirmationDialog.tsx";
 import ExporterDialog from "../components/Exporter/ExporterDialog.tsx";
+import LLMDialog from "../components/LLMDialog/LLMDialog.tsx";
 import MemoDialog from "../components/Memo/MemoDialog/MemoDialog.tsx";
 import ProjectSettingsDialog from "../components/ProjectSettings/ProjectSettingsDialog.tsx";
 import SnackbarDialog from "../components/SnackbarDialog/SnackbarDialog.tsx";
@@ -40,6 +41,7 @@ function TwoBarLayout() {
         <ConfirmationDialog />
         <ExporterDialog />
         <ProjectSettingsDialog />
+        <LLMDialog projectId={parseInt(projectId)} />
       </AppBarContext.Provider>
     );
   } else {
