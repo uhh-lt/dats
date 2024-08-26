@@ -56,3 +56,8 @@ class SourceDocumentDocumentTagLink(BaseModel):
 class SourceDocumentDocumentTagMultiLink(BaseModel):
     source_document_ids: List[int] = Field(description="List of IDs of SourceDocuments")
     document_tag_ids: List[int] = Field(description="List of IDs of DocumentTags")
+
+
+class SourceDocumentDocumentTagLinks(BaseModel):
+    source_document_id: int = Field(description="ID of SourceDocument")
+    document_tag_ids: List[int] = Field(description="List of IDs of DocumentTags")

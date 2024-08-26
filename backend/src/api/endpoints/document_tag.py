@@ -14,6 +14,7 @@ from app.core.data.dto.document_tag import (
     DocumentTagCreate,
     DocumentTagRead,
     DocumentTagUpdate,
+    SourceDocumentDocumentTagLinks,
     SourceDocumentDocumentTagMultiLink,
 )
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
@@ -111,6 +112,36 @@ def unlink_multiple_tags(
         db=db,
         sdoc_ids=multi_link.source_document_ids,
         tag_ids=multi_link.document_tag_ids,
+    )
+
+
+@router.patch(
+    "/bulk/set",
+    response_model=int,
+    summary="Sets SourceDocuments' tags to the provided tags",
+)
+def set_document_tags_batch(
+    *,
+    db: Session = Depends(get_db_session),
+    links: List[SourceDocumentDocumentTagLinks],
+    authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
+) -> int:
+    sdoc_ids = [link.source_document_id for link in links]
+    tag_ids = list(set([tag_id for link in links for tag_id in link.document_tag_ids]))
+    # TODO this is a little inefficient, but at the moment
+    # the fronend is never sending more than one id at a time
+    authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
+    authz_user.assert_in_same_project_as_many(Crud.DOCUMENT_TAG, tag_ids)
+
+    validate.validate_objects_in_same_project(
+        [(Crud.SOURCE_DOCUMENT, sdoc_id) for sdoc_id in sdoc_ids]
+        + [(Crud.DOCUMENT_TAG, tag_id) for tag_id in tag_ids]
+    )
+
+    return crud_document_tag.set_document_tags_batch(
+        db=db,
+        links={link.source_document_id: link.document_tag_ids for link in links},
     )
 
 
