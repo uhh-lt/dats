@@ -9,7 +9,7 @@ logger = logging.getLogger("ray.serve")
 # global config
 __conf_file__ = os.getenv("RAY_CONFIG", "./config.yaml")
 conf = OmegaConf.load(__conf_file__)
-assert type(conf) == DictConfig
+assert isinstance(conf, DictConfig), f"Cannot load Ray Config from {__conf_file__}"
 
 logger.info(f"Loaded config '{__conf_file__}'")
 
