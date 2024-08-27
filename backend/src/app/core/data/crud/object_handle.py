@@ -69,7 +69,7 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
             return super().create(db=db, create_dto=create_dto)
         except IntegrityError as e:
             # Flo: return existing OH when UC constraint fails
-            if type(e.orig) == UniqueViolation:
+            if isinstance(e.orig, UniqueViolation):
                 db.close()  # Flo: close the session because we have to start a new transaction
                 with SQLService().db_session() as sess:
                     for obj_id_key, obj_id_val in create_dto.model_dump().items():
