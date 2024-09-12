@@ -176,11 +176,11 @@ class LLMService(metaclass=SingletonMeta):
         if len(components) < 2:
             return [], "The answer has to contain at least 2 lines."
 
-        # check that the answer starts with "Kategorie:"
+        # check that the answer starts with expected category word
         if not components[0].startswith(f"{category_word[language]}:"):
             return [], f"The answer has to start with '{category_word[language]}:'."
 
-        # check that the answer contains "Begründung:"
+        # check that the answer contains expected reason word
         if not components[1].startswith(f"{reason_word[language]}:"):
             return [], f"The answer has to contain '{reason_word[language]}:'."
 
