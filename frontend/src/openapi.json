@@ -7591,10 +7591,16 @@
             "format": "date-time",
             "title": "Created",
             "description": "Created timestamp of the LLMJob"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated",
+            "description": "Updated timestamp of the LLMJob"
           }
         },
         "type": "object",
-        "required": ["num_steps_finished", "num_steps_total", "id", "parameters", "created"],
+        "required": ["num_steps_finished", "num_steps_total", "id", "parameters", "created", "updated"],
         "title": "LLMJobRead"
       },
       "LLMJobResult": {

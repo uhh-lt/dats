@@ -34,4 +34,8 @@ export type LLMJobRead = {
    * Created timestamp of the LLMJob
    */
   created: string;
+  /**
+   * Updated timestamp of the LLMJob
+   */
+  updated: string;
 };
