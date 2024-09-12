@@ -183,6 +183,11 @@ export const dialogSlice = createSlice({
       state.llmMethod = action.payload.event.method;
       state.llmStep = action.payload.event.method === undefined ? 0 : 1;
     },
+    resumeLLMDialog: (state, action: PayloadAction<{ jobId: string }>) => {
+      state.isLLMDialogOpen = true;
+      state.llmStep = 3;
+      state.llmJobId = action.payload.jobId;
+    },
     llmDialogSelectMethod: (state, action: PayloadAction<{ method: LLMJobType }>) => {
       state.llmMethod = action.payload.method;
       state.llmStep = 1;
