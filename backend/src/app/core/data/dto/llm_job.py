@@ -156,3 +156,4 @@ class LLMJobRead(LLMJobBaseDTO):
         description="The parameters of the LLMJob that defines what to llm!"
     )
     created: datetime = Field(description="Created timestamp of the LLMJob")
+    updated: datetime = Field(description="Updated timestamp of the LLMJob")

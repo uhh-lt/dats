@@ -423,7 +423,12 @@ class RedisService(metaclass=SingletonMeta):
 
         if isinstance(llm_job, LLMJobCreate):
             key = self._generate_random_key()
-            llmj = LLMJobRead(id=key, created=datetime.now(), **llm_job.model_dump())
+            llmj = LLMJobRead(
+                id=key,
+                **llm_job.model_dump(),
+                created=datetime.now(),
+                updated=datetime.now(),
+            )
         elif isinstance(llm_job, LLMJobRead):
             key = llm_job.id
             llmj = llm_job
@@ -457,9 +462,9 @@ class RedisService(metaclass=SingletonMeta):
 
     def update_llm_job(self, key: str, update: LLMJobUpdate) -> LLMJobRead:
         llmj = self.load_llm_job(key=key)
-        data = llmj.model_dump()
+        data = llmj.model_dump(exclude={"updated"})
         data.update(**update.model_dump(exclude_none=True))
-        llmj = LLMJobRead(**data)
+        llmj = LLMJobRead(**data, updated=datetime.now())
         llmj = self.store_llm_job(llm_job=llmj)
         logger.debug(f"Updated LLMJob {key}")
         return llmj
