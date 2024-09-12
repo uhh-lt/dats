@@ -232,6 +232,8 @@ services:
               capabilities: [gpu]
     networks:
       - dats_demo_network
+    profiles:
+      - ollama
 
   dats-backend-api:
     image: uhhlt/dats_backend:${DATS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
