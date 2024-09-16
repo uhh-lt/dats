@@ -21,6 +21,7 @@ class ProjectMetadataBaseDTO(BaseModel):
     doctype: DocType = Field(
         description="DOCTYPE of the SourceDocument this metadata refers to"
     )
+    description: str = Field(description="Description of the ProjectMetadata")
 
 
 # Properties for creation
@@ -31,7 +32,12 @@ class ProjectMetadataCreate(ProjectMetadataBaseDTO):
 # Properties for updating
 class ProjectMetadataUpdate(BaseModel, UpdateDTOBase):
     key: Optional[str] = Field(description="Key of the ProjectMetadata", default=None)
-    metatype: Optional[MetaType] = Field(description="Type of the ProjectMetadata")
+    metatype: Optional[MetaType] = Field(
+        description="Type of the ProjectMetadata", default=None
+    )
+    description: Optional[str] = Field(
+        description="Description of the ProjectMetadata", default=None
+    )
 
 
 # Properties for reading (as in ORM)
