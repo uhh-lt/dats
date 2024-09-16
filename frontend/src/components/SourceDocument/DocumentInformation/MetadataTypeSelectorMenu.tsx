@@ -72,7 +72,7 @@ function MetadataTypeSelectorMenu({
           }}
           slotProps={{
             paper: {
-              sx: { minHeight: "201px" },
+              sx: { minHeight: "201px", width: "240px" },
             },
           }}
           renderOption={(props, option) => (
@@ -81,7 +81,7 @@ function MetadataTypeSelectorMenu({
               <ListItemText>{option}</ListItemText>
             </ListItem>
           )}
-          sx={{ width: 230 }}
+          sx={{ width: 240 }}
           renderInput={(params) => (
             <TextField autoFocus placeholder={placeholder} sx={{ bgcolor: "white" }} {...params} />
           )}
