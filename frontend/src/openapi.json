@@ -7948,6 +7948,11 @@
             "allOf": [{ "$ref": "#/components/schemas/DocType" }],
             "description": "DOCTYPE of the SourceDocument this metadata refers to"
           },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Description of the ProjectMetadata"
+          },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
@@ -7955,7 +7960,7 @@
           }
         },
         "type": "object",
-        "required": ["key", "metatype", "doctype", "project_id"],
+        "required": ["key", "metatype", "doctype", "description", "project_id"],
         "title": "ProjectMetadataCreate"
       },
       "ProjectMetadataRead": {
@@ -7975,6 +7980,11 @@
             "allOf": [{ "$ref": "#/components/schemas/DocType" }],
             "description": "DOCTYPE of the SourceDocument this metadata refers to"
           },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Description of the ProjectMetadata"
+          },
           "id": { "type": "integer", "title": "Id", "description": "ID of the ProjectMetadata" },
           "project_id": {
             "type": "integer",
@@ -7983,7 +7993,7 @@
           }
         },
         "type": "object",
-        "required": ["key", "metatype", "doctype", "id", "project_id"],
+        "required": ["key", "metatype", "doctype", "description", "id", "project_id"],
         "title": "ProjectMetadataRead"
       },
       "ProjectMetadataUpdate": {
@@ -7996,10 +8006,14 @@
           "metatype": {
             "anyOf": [{ "$ref": "#/components/schemas/MetaType" }, { "type": "null" }],
             "description": "Type of the ProjectMetadata"
+          },
+          "description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Description",
+            "description": "Description of the ProjectMetadata"
           }
         },
         "type": "object",
-        "required": ["metatype"],
         "title": "ProjectMetadataUpdate"
       },
       "ProjectRead": {

@@ -22,6 +22,10 @@ export type ProjectMetadataRead = {
    */
   doctype: DocType;
   /**
+   * Description of the ProjectMetadata
+   */
+  description: string;
+  /**
    * ID of the ProjectMetadata
    */
   id: number;
