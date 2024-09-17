@@ -25,37 +25,9 @@ class MemoQueryBase(BaseModel):
     )
 
 
-class ElasticSearchIntegerRange(BaseModel):
-    gte: int
-    lt: int
-
-
 class ElasticSearchDocumentCreate(BaseModel):
     filename: str = Field(description="The filename of the SourceDocument")
     content: str = Field(description="The raw text of the SourceDocument")
-    html: str = Field(description="The html of the SourceDocument")
-    tokens: List[str] = Field(
-        description="The list of the tokens in the SourceDocument"
-    )
-    token_character_offsets: Optional[List[ElasticSearchIntegerRange]] = Field(
-        description=(
-            "The list of character " "offsets for the tokens " "in the SourceDocument"
-        )
-    )
-    sentences: List[str] = Field(
-        description="The list of the sentences in the SourceDocument"
-    )
-    sentence_character_offsets: Optional[List[ElasticSearchIntegerRange]] = Field(
-        description=(
-            "The list of character "
-            "offsets for the "
-            "sentences "
-            "in the SourceDocument"
-        )
-    )
-    keywords: List[str] = Field(
-        description="The list of keywords of the SourceDocument"
-    )
     sdoc_id: int = Field(
         description="The ID of the SourceDocument as it is in the SQL DB"
     )
@@ -63,43 +35,6 @@ class ElasticSearchDocumentCreate(BaseModel):
         description="The ID of the Project the SourceDocument belongs to"
     )
     created: datetime = Field(
-        description="The created date of the SourceDocument", default=datetime.now()
-    )
-
-
-class ElasticSearchDocumentRead(BaseModel):
-    filename: Optional[str] = Field(description="The filename of the SourceDocument")
-    content: Optional[str] = Field(description="The raw text of the SourceDocument")
-    html: Optional[str] = Field(description="The html of the SourceDocument")
-    tokens: Optional[List[str]] = Field(
-        description="The list of the tokens in the SourceDocument"
-    )
-    token_character_offsets: Optional[List[ElasticSearchIntegerRange]] = Field(
-        description=(
-            "The list of character " "offsets for the tokens " "in the SourceDocument"
-        )
-    )
-    sentences: Optional[List[str]] = Field(
-        description="The list of the sentences in the SourceDocument"
-    )
-    sentence_character_offsets: Optional[List[ElasticSearchIntegerRange]] = Field(
-        description=(
-            "The list of character "
-            "offsets for the "
-            "sentences "
-            "in the SourceDocument"
-        )
-    )
-    keywords: Optional[List[str]] = Field(
-        description="The list of keywords of the SourceDocument"
-    )
-    sdoc_id: Optional[int] = Field(
-        description="The ID of the SourceDocument as it is in the SQL DB"
-    )
-    project_id: Optional[int] = Field(
-        description="The ID of the Project the SourceDocument belongs to"
-    )
-    created: Optional[datetime] = Field(
         description="The created date of the SourceDocument", default=datetime.now()
     )
 
