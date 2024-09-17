@@ -1,12 +1,14 @@
-import { Button, List, ListSubheader } from "@mui/material";
+import { TabContext, TabList, TabPanel } from "@mui/lab";
+import { Box, Button, Stack, Tab, TextField } from "@mui/material";
+import { useState } from "react";
 import LLMHooks from "../../../api/LLMHooks.ts";
 import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobStatus.ts";
 import { LLMJobRead } from "../../../api/openapi/models/LLMJobRead.ts";
+import { LLMPromptTemplates } from "../../../api/openapi/models/LLMPromptTemplates.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { dateToLocaleString } from "../../../utils/DateUtils.ts";
 import { CRUDDialogActions } from "../../dialogSlice.ts";
 import BackgroundJobListItem from "./BackgroundJobListItem.tsx";
-import LLMJobDetailListItem from "./LLMJobDetailListItem.tsx";
 
 interface LLMJobListItemProps {
   initialLLMJob: LLMJobRead;
@@ -49,30 +51,65 @@ function LLMJobListItem({ initialLLMJob }: LLMJobListItemProps) {
         title={`LLM Job: ${llmJob.data.id}`}
         subTitle={subTitle}
       >
-        <List
-          component="div"
-          subheader={<ListSubheader>Task: {llmJob.data.parameters.llm_job_type}</ListSubheader>}
-          disablePadding
-          dense
-          sx={{ pl: 8 }}
-        >
-          <LLMJobDetailListItem detailKey="System Prompt" detailValue={llmJob.data.parameters.system_prompt} />
-          <LLMJobDetailListItem detailKey="User Prompt" detailValue={llmJob.data.parameters.user_prompt} />
+        <Stack sx={{ pl: 8 }}>
           {llmJob.data.status === BackgroundJobStatus.FINISHED ? (
-            <Button sx={{ width: "fit-content" }} onClick={handleViewResults}>
-              View results
+            <Button variant="contained" sx={{ width: "fit-content" }} onClick={handleViewResults}>
+              View {llmJob.data.parameters.llm_job_type} results
             </Button>
           ) : llmJob.data.status === BackgroundJobStatus.RUNNING ? (
-            <Button sx={{ width: "fit-content" }} onClick={handleViewResults}>
-              View progress
+            <Button variant="contained" sx={{ width: "fit-content" }} onClick={handleViewResults}>
+              View {llmJob.data.parameters.llm_job_type} progress
             </Button>
           ) : null}
-        </List>
+          <PromptViewer prompts={llmJob.data.parameters.prompts} />
+        </Stack>
       </BackgroundJobListItem>
     );
   } else {
     return null;
   }
+}
+
+function PromptViewer({ prompts }: { prompts: LLMPromptTemplates[] }) {
+  // tab state
+  const [tab, setTab] = useState(prompts[0].language);
+  const handleChangeTab = (_: React.SyntheticEvent, newValue: string) => {
+    setTab(newValue);
+  };
+
+  return (
+    <TabContext value={tab}>
+      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+        <TabList onChange={handleChangeTab}>
+          {prompts.map((prompt) => (
+            <Tab key={prompt.language} label={prompt.language} value={prompt.language} />
+          ))}
+        </TabList>
+      </Box>
+      {prompts.map((prompt) => (
+        <TabPanel key={prompt.language} value={prompt.language} sx={{ px: 0 }}>
+          <Stack gap={3}>
+            <TextField
+              fullWidth
+              label="System Prompt"
+              value={prompt.system_prompt}
+              type="text"
+              multiline
+              inputProps={{ readOnly: true }}
+            />
+            <TextField
+              fullWidth
+              label="User Prompt"
+              value={prompt.user_prompt}
+              type="text"
+              multiline
+              inputProps={{ readOnly: true }}
+            />
+          </Stack>
+        </TabPanel>
+      ))}
+    </TabContext>
+  );
 }
 
 export default LLMJobListItem;
