@@ -1,10 +1,8 @@
-import re
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Type, Union
 
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.dto.background_job_base import BackgroundJobStatus
@@ -18,15 +16,12 @@ from app.core.data.dto.llm_job import (
     LLMJobResult,
     LLMJobType,
     LLMJobUpdate,
+    LLMPromptTemplates,
     MetadataExtractionLLMJobResult,
 )
 from app.core.data.llm.ollama_service import OllamaService
-from app.core.data.llm.prompt_templates import (
-    category_word,
-    reason_word,
-    system_prompts,
-    user_prompt_templates,
-)
+from app.core.data.llm.prompts.prompt_builder import PromptBuilder
+from app.core.data.llm.prompts.tagging_prompt_builder import TaggingPromptBuilder
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
@@ -65,6 +60,13 @@ class LLMService(metaclass=SingletonMeta):
             LLMJobType.DOCUMENT_TAGGING: cls._llm_document_tagging,
             LLMJobType.METADATA_EXTRACTION: cls._llm_metadata_extraction,
             LLMJobType.ANNOTATION: cls._llm_annotation,
+        }
+
+        # map from job_type to promt builder
+        cls.llm_prompt_builder_for_job_type: Dict[LLMJobType, Type[PromptBuilder]] = {
+            LLMJobType.DOCUMENT_TAGGING: TaggingPromptBuilder,
+            LLMJobType.METADATA_EXTRACTION: TaggingPromptBuilder,
+            LLMJobType.ANNOTATION: TaggingPromptBuilder,
         }
 
         return super(LLMService, cls).__new__(cls)
@@ -127,7 +129,6 @@ class LLMService(metaclass=SingletonMeta):
             status=BackgroundJobStatus.RUNNING, llm_job_id=llm_job_id
         )
 
-        # TODO: parse the parameters and run the respective method
         try:
             with self.sqls.db_session() as db:
                 # get the llm method based on the jobtype
@@ -142,8 +143,7 @@ class LLMService(metaclass=SingletonMeta):
                     self=self,
                     db=db,
                     llm_job_id=llm_job_id,
-                    system_prompt=llmj.parameters.system_prompt,
-                    user_prompt=llmj.parameters.user_prompt,
+                    prompts=llmj.parameters.prompts,
                     project_id=llmj.parameters.project_id,
                     **llmj.parameters.specific_llm_job_parameters.model_dump(
                         exclude={"llm_job_type"}
@@ -165,56 +165,62 @@ class LLMService(metaclass=SingletonMeta):
 
         return llmj
 
-    def _parse_response(self, language: str, response: str) -> Tuple[List[str], str]:
-        # check that the answer contains line break
-        if "\n" not in response:
-            return [], "The answer has to contain a line break."
+    def create_prompt_templates(
+        self, llm_job_params: LLMJobParameters
+    ) -> List[LLMPromptTemplates]:
+        with self.sqls.db_session() as db:
+            # get the llm method based on the jobtype
+            llm_prompt_builder = self.llm_prompt_builder_for_job_type.get(
+                llm_job_params.llm_job_type, None
+            )
+            if llm_prompt_builder is None:
+                raise UnsupportedLLMJobTypeError(llm_job_params.llm_job_type)
 
-        components = re.split(r"\n+", response)
+            # execute the the prompt builder with the provided specific parameters
+            prompt_builder = llm_prompt_builder(
+                db=db, project_id=llm_job_params.project_id
+            )
+            return prompt_builder.build_prompt_templates(
+                **llm_job_params.specific_llm_job_parameters.model_dump(
+                    exclude={"llm_job_type"}
+                )
+            )
 
-        # check that the answer contains at least 2 lines
-        if len(components) < 2:
-            return [], "The answer has to contain at least 2 lines."
+    def construct_prompt_dict(
+        self, prompts: List[LLMPromptTemplates], prompt_builder: PromptBuilder
+    ) -> Dict[str, Dict[str, str]]:
+        prompt_dict = {}
+        for prompt in prompts:
+            # validate prompts
+            if not prompt_builder.is_system_prompt_valid(
+                system_prompt=prompt.system_prompt
+            ):
+                raise ValueError("system prompt is not valid!")
+            if not prompt_builder.is_user_prompt_valid(user_prompt=prompt.user_prompt):
+                raise ValueError("User prompt is not valid!")
 
-        # check that the answer starts with expected category word
-        if not components[0].startswith(f"{category_word[language]}:"):
-            return [], f"The answer has to start with '{category_word[language]}:'."
-
-        # check that the answer contains expected reason word
-        if not components[1].startswith(f"{reason_word[language]}:"):
-            return [], f"The answer has to contain '{reason_word[language]}:'."
-
-        # extract the categories
-        comma_separated_categories = components[0].split(":")[1].strip()
-        if len(comma_separated_categories) == 0:
-            categories = []
-        else:
-            categories = [
-                category.strip() for category in comma_separated_categories.split(",")
-            ]
-
-        # extract the reason
-        reason = components[1].split(":")[1].strip()
-
-        return categories, reason
+            prompt_dict[prompt.language] = {
+                "system_prompt": prompt.system_prompt,
+                "user_prompt": prompt.user_prompt,
+            }
+        return prompt_dict
 
     def _llm_document_tagging(
         self,
         db: Session,
         llm_job_id: str,
-        system_prompt: str,
-        user_prompt: str,
+        prompts: List[LLMPromptTemplates],
         project_id: int,
         sdoc_ids: List[int],
         tag_ids: List[int],
     ) -> LLMJobResult:
         logger.info(f"Starting LLMJob - Document Tagging, num docs: {len(sdoc_ids)}")
 
-        # read all project tags
-        project = crud_project.read(db=db, id=project_id)
-        tagname2id_dict = {tag.name.lower(): tag.id for tag in project.document_tags}
-        tag_descriptions = "\n".join(
-            [f"{tag.name} - {tag.description}" for tag in project.document_tags]
+        prompt_builder = TaggingPromptBuilder(db=db, project_id=project_id)
+
+        # build prompt dict (to validate and access prompts by language and system / user)
+        prompt_dict = self.construct_prompt_dict(
+            prompts=prompts, prompt_builder=prompt_builder
         )
 
         # read sdocs
@@ -233,7 +239,7 @@ class LLMService(metaclass=SingletonMeta):
                 db=db, sdoc_id=sdoc_data.id, key="language"
             ).str_value
             logger.info(f"Processing SDOC id={sdoc_data.id}, lang={language}")
-            if language is None or language not in user_prompt_templates.keys():
+            if language is None or language not in prompt_builder.supported_languages:
                 result.append(
                     DocumentTaggingResult(
                         sdoc_id=sdoc_data.id,
@@ -245,11 +251,14 @@ class LLMService(metaclass=SingletonMeta):
                 self._update_llm_job(num_steps_finished=idx + 1, llm_job_id=llm_job_id)
                 continue
 
-            # construct prompt
-            system_prompt = system_prompts[language]
-            user_prompt = user_prompt_templates[language][
-                LLMJobType.DOCUMENT_TAGGING
-            ].format(tag_descriptions, sdoc_data.content)
+            # construct prompts
+            system_prompt = prompt_builder.build_system_prompt(
+                system_prompt_template=prompt_dict[language]["system_prompt"]
+            )
+            user_prompt = prompt_builder.build_user_prompt(
+                user_prompt_template=prompt_dict[language]["user_prompt"],
+                document=sdoc_data.content,
+            )
 
             # prompt the model
             response = self.ollamas.chat(
@@ -258,19 +267,11 @@ class LLMService(metaclass=SingletonMeta):
             logger.info(f"Got chat response! Response={response}")
 
             # parse the response
-            categories, reason = self._parse_response(
+            tag_ids, reason = prompt_builder.parse_response(
                 language=language, response=response
             )
-            logger.info(
-                f"Parsed the response! Categories={categories}, Reason={reason}"
-            )
+            logger.info(f"Parsed the response! Tag IDs={tag_ids}, Reason={reason}")
 
-            tag_ids = [
-                tagname2id_dict[category.lower()]
-                for category in categories
-                if category.lower() in tagname2id_dict
-            ]
-            logger.info(f"Mapped to tag ids! Tag IDs={tag_ids}")
             result.append(
                 DocumentTaggingResult(
                     sdoc_id=sdoc_data.id,
@@ -292,8 +293,7 @@ class LLMService(metaclass=SingletonMeta):
         self,
         db: Session,
         llm_job_id: str,
-        system_prompt: str,
-        user_prompt: str,
+        prompts: List[LLMPromptTemplates],
         project_id: int,
         sdoc_ids: List[int],
         project_metadata_ids: List[int],
@@ -310,8 +310,7 @@ class LLMService(metaclass=SingletonMeta):
         self,
         db: Session,
         llm_job_id: str,
-        system_prompt: str,
-        user_prompt: str,
+        prompts: List[LLMPromptTemplates],
         project_id: int,
         sdoc_ids: List[int],
         project_metadata_ids: List[int],

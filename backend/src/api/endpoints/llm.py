@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from api.dependencies import get_current_user
 from app.celery.background_jobs import prepare_and_start_llm_job_async
 from app.core.authorization.authz_user import AuthzUser
-from app.core.data.dto.llm_job import LLMJobParameters, LLMJobRead
+from app.core.data.dto.llm_job import LLMJobParameters, LLMJobRead, LLMPromptTemplates
 from app.core.data.llm.llm_service import LLMService
 
 router = APIRouter(
@@ -50,6 +50,19 @@ def get_all_llm_jobs(
 ) -> List[LLMJobRead]:
     authz_user.assert_in_project(project_id)
 
-    crawler_jobs = llms.get_all_llm_jobs(project_id=project_id)
-    crawler_jobs.sort(key=lambda x: x.created, reverse=True)
-    return crawler_jobs
+    llm_jobs = llms.get_all_llm_jobs(project_id=project_id)
+    llm_jobs.sort(key=lambda x: x.created, reverse=True)
+    return llm_jobs
+
+
+@router.post(
+    "/create_prompt_templates",
+    response_model=List[LLMPromptTemplates],
+    summary="Returns the system and user prompt templates for the given llm task in all supported languages",
+)
+def create_prompt_templates(
+    *, llm_job_params: LLMJobParameters, authz_user: AuthzUser = Depends()
+) -> List[LLMPromptTemplates]:
+    authz_user.assert_in_project(llm_job_params.project_id)
+
+    return llms.create_prompt_templates(llm_job_params=llm_job_params)

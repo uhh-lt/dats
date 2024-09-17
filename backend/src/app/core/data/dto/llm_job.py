@@ -14,6 +14,13 @@ class LLMJobType(str, Enum):
     ANNOTATION = "ANNOTATION"
 
 
+# Prompt template
+class LLMPromptTemplates(BaseModel):
+    language: str = Field(description="The language of the prompt template")
+    system_prompt: str = Field(description="The system prompt to use for the job")
+    user_prompt: str = Field(description="The user prompt to use for the job")
+
+
 # --- START PARAMETERS ---
 
 
@@ -49,8 +56,9 @@ class AnnotationLLMJobParams(DocumentBasedLLMJobParams):
 class LLMJobParameters(BaseModel):
     llm_job_type: LLMJobType = Field(description="The type of the LLMJob (what to llm)")
     project_id: int = Field(description="The ID of the Project to analyse")
-    system_prompt: str = Field(description="The system prompt to use for the job")
-    user_prompt: str = Field(description="The user prompt to use for the job")
+    prompts: List[LLMPromptTemplates] = Field(
+        description="The prompt templates to use for the job"
+    )
     specific_llm_job_parameters: Union[
         DocumentTaggingLLMJobParams,
         MetadataExtractionLLMJobParams,
