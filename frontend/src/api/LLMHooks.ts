@@ -56,10 +56,16 @@ const useGetAllLLMJobs = (projectId: number) => {
   });
 };
 
+const useCreatePromptTemplates = () =>
+  useMutation({
+    mutationFn: LlmService.createPromptTemplates,
+  });
+
 const LLMHooks = {
   usePollLLMJob,
   useStartLLMJob,
   useGetAllLLMJobs,
+  useCreatePromptTemplates,
 };
 
 export default LLMHooks;

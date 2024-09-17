@@ -4,6 +4,7 @@
 /* eslint-disable */
 import type { LLMJobParameters } from "../models/LLMJobParameters";
 import type { LLMJobRead } from "../models/LLMJobRead";
+import type { LLMPromptTemplates } from "../models/LLMPromptTemplates";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -53,6 +54,26 @@ export class LlmService {
       path: {
         project_id: projectId,
       },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the system and user prompt templates for the given llm task in all supported languages
+   * @returns LLMPromptTemplates Successful Response
+   * @throws ApiError
+   */
+  public static createPromptTemplates({
+    requestBody,
+  }: {
+    requestBody: LLMJobParameters;
+  }): CancelablePromise<Array<LLMPromptTemplates>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/llm/create_prompt_templates",
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },

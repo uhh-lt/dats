@@ -5619,6 +5619,36 @@
           }
         }
       }
+    },
+    "/llm/create_prompt_templates": {
+      "post": {
+        "tags": ["llm"],
+        "summary": "Returns the system and user prompt templates for the given llm task in all supported languages",
+        "operationId": "create_prompt_templates",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobParameters" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/LLMPromptTemplates" },
+                  "type": "array",
+                  "title": "Response Llm-Create Prompt Templates"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
     }
   },
   "components": {
@@ -7532,15 +7562,11 @@
             "description": "The type of the LLMJob (what to llm)"
           },
           "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project to analyse" },
-          "system_prompt": {
-            "type": "string",
-            "title": "System Prompt",
-            "description": "The system prompt to use for the job"
-          },
-          "user_prompt": {
-            "type": "string",
-            "title": "User Prompt",
-            "description": "The user prompt to use for the job"
+          "prompts": {
+            "items": { "$ref": "#/components/schemas/LLMPromptTemplates" },
+            "type": "array",
+            "title": "Prompts",
+            "description": "The prompt templates to use for the job"
           },
           "specific_llm_job_parameters": {
             "oneOf": [
@@ -7561,7 +7587,7 @@
           }
         },
         "type": "object",
-        "required": ["llm_job_type", "project_id", "system_prompt", "user_prompt", "specific_llm_job_parameters"],
+        "required": ["llm_job_type", "project_id", "prompts", "specific_llm_job_parameters"],
         "title": "LLMJobParameters"
       },
       "LLMJobRead": {
@@ -7635,6 +7661,24 @@
         "type": "string",
         "enum": ["DOCUMENT_TAGGING", "METADATA_EXTRACTION", "ANNOTATION"],
         "title": "LLMJobType"
+      },
+      "LLMPromptTemplates": {
+        "properties": {
+          "language": { "type": "string", "title": "Language", "description": "The language of the prompt template" },
+          "system_prompt": {
+            "type": "string",
+            "title": "System Prompt",
+            "description": "The system prompt to use for the job"
+          },
+          "user_prompt": {
+            "type": "string",
+            "title": "User Prompt",
+            "description": "The user prompt to use for the job"
+          }
+        },
+        "type": "object",
+        "required": ["language", "system_prompt", "user_prompt"],
+        "title": "LLMPromptTemplates"
       },
       "ListOperator": { "type": "string", "enum": ["LIST_CONTAINS", "LIST_NOT_CONTAINS"], "title": "ListOperator" },
       "LogicalOperator": {

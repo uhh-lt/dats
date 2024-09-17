@@ -5,6 +5,7 @@
 import type { AnnotationLLMJobParams } from "./AnnotationLLMJobParams";
 import type { DocumentTaggingLLMJobParams } from "./DocumentTaggingLLMJobParams";
 import type { LLMJobType } from "./LLMJobType";
+import type { LLMPromptTemplates } from "./LLMPromptTemplates";
 import type { MetadataExtractionLLMJobParams } from "./MetadataExtractionLLMJobParams";
 export type LLMJobParameters = {
   /**
@@ -16,13 +17,9 @@ export type LLMJobParameters = {
    */
   project_id: number;
   /**
-   * The system prompt to use for the job
+   * The prompt templates to use for the job
    */
-  system_prompt: string;
-  /**
-   * The user prompt to use for the job
-   */
-  user_prompt: string;
+  prompts: Array<LLMPromptTemplates>;
   /**
    * Specific parameters for the LLMJob w.r.t it's type
    */
