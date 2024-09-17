@@ -5,6 +5,7 @@ import { CodeRead } from "../api/openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "../api/openapi/models/DocumentTagRead.ts";
 import { LLMJobResult } from "../api/openapi/models/LLMJobResult.ts";
 import { LLMJobType } from "../api/openapi/models/LLMJobType.ts";
+import { LLMPromptTemplates } from "../api/openapi/models/LLMPromptTemplates.ts";
 import { SnackbarEvent } from "../components/SnackbarDialog/SnackbarEvent.ts";
 import { CodeCreateSuccessHandler } from "./Code/CodeCreateDialog.tsx";
 import { LLMAssistanceEvent } from "./LLMDialog/LLMEvent.ts";
@@ -40,10 +41,8 @@ interface DialogState {
   llmMethod?: LLMJobType;
   llmDocumentIds: number[];
   llmStep: number;
-  llmSteps: string[];
   llmTags: DocumentTagRead[];
-  llmSystemPrompt: string;
-  llmUserPrompt: string;
+  llmPrompts: LLMPromptTemplates[];
   llmJobId?: string;
   llmJobResult: LLMJobResult | null | undefined;
 }
@@ -83,10 +82,8 @@ const initialState: DialogState = {
   llmDocumentIds: [],
   llmMethod: undefined,
   llmStep: 0,
-  llmSteps: ["Select campaign settings", "Create an ad group", "Create an ad"],
   llmTags: [],
-  llmSystemPrompt: "",
-  llmUserPrompt: "",
+  llmPrompts: [],
   llmJobId: undefined,
   llmJobResult: undefined,
 };
@@ -197,23 +194,42 @@ export const dialogSlice = createSlice({
       state.llmStep = 2;
       state.llmTags = action.payload.tags;
     },
-    llmDialogSetPrompts: (
-      state,
-      action: PayloadAction<{ systemPrompt: string; userPrompt: string; jobId: string }>,
-    ) => {
-      state.llmSystemPrompt = action.payload.systemPrompt;
-      state.llmUserPrompt = action.payload.userPrompt;
+    llmDialogGoToWaiting: (state, action: PayloadAction<{ jobId: string }>) => {
       state.llmJobId = action.payload.jobId;
       state.llmStep = 3;
     },
-    llmDialogSetResult: (state, action: PayloadAction<{ result: LLMJobResult }>) => {
+    llmDialogGoToResult: (state, action: PayloadAction<{ result: LLMJobResult }>) => {
       state.llmJobResult = action.payload.result;
       state.llmStep = 4;
     },
+    llmDialogGoToPromptEditor: (
+      state,
+      action: PayloadAction<{ prompts: LLMPromptTemplates[]; tags: DocumentTagRead[] }>,
+    ) => {
+      state.llmStep = 2;
+      state.llmPrompts = action.payload.prompts;
+      state.llmTags = action.payload.tags;
+    },
+    updateLLMPrompts: (
+      state,
+      action: PayloadAction<{ language: string; systemPrompt: string; userPrompt: string }>,
+    ) => {
+      const updatedPrompts = state.llmPrompts.map((prompt) => {
+        if (prompt.language === action.payload.language) {
+          return {
+            ...prompt,
+            system_prompt: action.payload.systemPrompt,
+            user_prompt: action.payload.userPrompt,
+          };
+        }
+        return prompt;
+      });
+      state.llmPrompts = updatedPrompts.slice();
+    },
     nextLLMDialogStep: (state) => {
       state.llmStep += 1;
-      if (state.llmStep >= state.llmSteps.length) {
-        state.llmStep = state.llmSteps.length;
+      if (state.llmStep >= 4) {
+        state.llmStep = 4;
       }
     },
     backToMethodSelectionLLMDialogStep: (state) => {

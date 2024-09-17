@@ -20,7 +20,7 @@ function StatusStep() {
 
   const handleNext = () => {
     if (llmJob.data && llmJob.data.status === BackgroundJobStatus.FINISHED && llmJob.data.result) {
-      dispatch(CRUDDialogActions.llmDialogSetResult({ result: llmJob.data.result }));
+      dispatch(CRUDDialogActions.llmDialogGoToResult({ result: llmJob.data.result }));
     } else {
       console.error("Job is not finished yet.");
     }
