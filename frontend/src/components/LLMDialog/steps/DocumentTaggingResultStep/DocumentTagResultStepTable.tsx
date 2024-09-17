@@ -45,8 +45,8 @@ const columns: MRT_ColumnDef<DocumentTaggingResultRow>[] = [
     Cell: ({ row }) => <CustomTagsRenderer tags={row.original.suggested_tags} />,
   },
   {
-    id: "NewTags",
-    header: "New Tags",
+    id: "FinalTags",
+    header: "Final Tags",
     Cell: ({ row }) => <CustomTagsRenderer tags={row.original.merged_tags} />,
   },
 ];
