@@ -29,13 +29,6 @@ class SourceDocumentDataORM(ORMBase):
     sentence_ends: Mapped[List[int]] = mapped_column(
         ARRAY(Integer), nullable=False, index=False
     )
-    # JSON representation of List[{word: str, count: int}]
-    word_frequencies: Mapped[str] = mapped_column(
-        String,
-        server_default="[]",
-        nullable=False,
-        index=False,
-    )
 
     @property
     def tokens(self):

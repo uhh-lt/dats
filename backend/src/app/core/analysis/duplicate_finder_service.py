@@ -3,15 +3,12 @@ from typing import List
 
 import networkx as nx
 import numpy as np
-import srsly
 from loguru import logger
 from scipy import sparse
 from sklearn.metrics.pairwise import manhattan_distances
 
+from app.core.data.crud.word_frequency import crud_word_frequency
 from app.core.data.doc_type import DocType
-from app.core.data.dto.word_frequency import WordFrequencyRead
-from app.core.data.orm.source_document import SourceDocumentORM
-from app.core.data.orm.source_document_data import SourceDocumentDataORM
 from app.core.db.sql_service import SQLService
 from app.util.singleton_meta import SingletonMeta
 
@@ -27,30 +24,11 @@ class DuplicateFinderService(metaclass=SingletonMeta):
         logger.info("Finding duplicate text sdocs")
         t0 = time.time()
         with self.sqls.db_session() as db:
-            result = (
-                db.query(
-                    SourceDocumentDataORM.id, SourceDocumentDataORM.word_frequencies
-                )
-                .join(
-                    SourceDocumentORM, SourceDocumentORM.id == SourceDocumentDataORM.id
-                )
-                .filter(
-                    SourceDocumentORM.project_id == project_id,
-                    SourceDocumentORM.doctype == DocType.text,
-                )
-                .all()
+            result = crud_word_frequency.read_by_project_and_doctype(
+                db, project_id=project_id, doctype=DocType.text
             )
         t1 = time.time()
         logger.info(f"query took: {t1 - t0}")
-
-        t0 = time.time()
-        result = [
-            WordFrequencyRead(sdoc_id=int(row[0]), **wf)
-            for row in result
-            for wf in srsly.json_loads(row[1])
-        ]
-        t1 = time.time()
-        logger.info(f"convert took: {t1 - t0}")
 
         t0 = time.time()
         # unique words in project

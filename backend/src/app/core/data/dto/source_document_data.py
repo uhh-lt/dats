@@ -37,8 +37,4 @@ class SourceDocumentDataRead(SourceDocumentDataBase):
 
 # Properties for creation
 class SourceDocumentDataCreate(SourceDocumentDataBase):
-    word_frequencies: str = Field(
-        description=(
-            "JSON Representation of List[WordFrequency] of the SourceDocument"
-        ),
-    )
+    pass
