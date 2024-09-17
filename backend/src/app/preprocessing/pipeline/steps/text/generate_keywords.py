@@ -50,15 +50,19 @@ def generate_keywords(cargo: PipelineCargo) -> PipelineCargo:
     ]
     keywords = []
     for kp in keyword_proposals:
-        ws = kp.split()
-        if len(ws) == 1:
-            if tok2pos[ws[0]] in keep:
-                keywords.append(kp)
-        elif len(ws) == 2:
-            if [tok2pos[w] for w in ws] in keep:
-                keywords.append(kp)
-            elif tok2pos[ws[0]] in keep and tok2pos[ws[1]] == "ADJ":
-                keywords.append(ws[0])
+        try:
+            ws = kp.split()
+            if len(ws) == 1:
+                if tok2pos[ws[0]] in keep:
+                    keywords.append(kp)
+            elif len(ws) == 2:
+                if [tok2pos[w] for w in ws] in keep:
+                    keywords.append(kp)
+                elif tok2pos[ws[0]] in keep and tok2pos[ws[1]] == "ADJ":
+                    keywords.append(ws[0])
+        except Exception as e:  # noqa
+            # if any of the words is not in the pos dict, we skip the keyword
+            pass
 
     pptd.keywords = keywords
 
