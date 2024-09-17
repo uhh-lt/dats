@@ -12,7 +12,6 @@ from app.core.data.crud.source_document_data import crud_sdoc_data
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.doc_type import DocType
 from app.core.data.dto.project_metadata import ProjectMetadataCreate
-from app.core.data.dto.search import ElasticSearchDocumentRead
 from app.core.data.dto.source_document import SDocStatus
 from app.core.data.dto.source_document_data import SourceDocumentDataCreate
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
@@ -138,7 +137,7 @@ def __migrate_project_docs(
 
 
 def __es_doc_to_sdoc_data(
-    es_doc: ElasticSearchDocumentRead,
+    es_doc,
 ) -> SourceDocumentDataCreate:
     data = SourceDocumentDataCreate(
         id=es_doc.sdoc_id,
