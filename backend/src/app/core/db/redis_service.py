@@ -463,7 +463,7 @@ class RedisService(metaclass=SingletonMeta):
     def update_llm_job(self, key: str, update: LLMJobUpdate) -> LLMJobRead:
         llmj = self.load_llm_job(key=key)
         data = llmj.model_dump(exclude={"updated"})
-        data.update(**update.model_dump(exclude_none=True))
+        data.update(**update.model_dump(exclude_unset=True))
         llmj = LLMJobRead(**data, updated=datetime.now())
         llmj = self.store_llm_job(llm_job=llmj)
         logger.debug(f"Updated LLMJob {key}")

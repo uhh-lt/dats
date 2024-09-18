@@ -1,4 +1,4 @@
-from typing import Callable, Dict, List, Optional, Type, Union
+from typing import Callable, Dict, List, Type, Union
 
 from loguru import logger
 from sqlalchemy.orm import Session
@@ -18,8 +18,13 @@ from app.core.data.dto.llm_job import (
     LLMJobUpdate,
     LLMPromptTemplates,
     MetadataExtractionLLMJobResult,
+    MetadataExtractionResult,
+)
+from app.core.data.dto.source_document_metadata import (
+    SourceDocumentMetadataReadResolved,
 )
 from app.core.data.llm.ollama_service import OllamaService
+from app.core.data.llm.prompts.metadata_prompt_builder import MetadataPromptBuilder
 from app.core.data.llm.prompts.prompt_builder import PromptBuilder
 from app.core.data.llm.prompts.tagging_prompt_builder import TaggingPromptBuilder
 from app.core.data.repo.repo_service import RepoService
@@ -65,7 +70,7 @@ class LLMService(metaclass=SingletonMeta):
         # map from job_type to promt builder
         cls.llm_prompt_builder_for_job_type: Dict[LLMJobType, Type[PromptBuilder]] = {
             LLMJobType.DOCUMENT_TAGGING: TaggingPromptBuilder,
-            LLMJobType.METADATA_EXTRACTION: TaggingPromptBuilder,
+            LLMJobType.METADATA_EXTRACTION: MetadataPromptBuilder,
             LLMJobType.ANNOTATION: TaggingPromptBuilder,
         }
 
@@ -104,16 +109,7 @@ class LLMService(metaclass=SingletonMeta):
     def get_all_llm_jobs(self, project_id: int) -> List[LLMJobRead]:
         return self.redis.get_all_llm_jobs(project_id=project_id)
 
-    def _update_llm_job(
-        self,
-        llm_job_id: str,
-        status: Optional[BackgroundJobStatus] = None,
-        result: Optional[LLMJobResult] = None,
-        num_steps_finished: Optional[int] = None,
-    ) -> LLMJobRead:
-        update = LLMJobUpdate(
-            status=status, result=result, num_steps_finished=num_steps_finished
-        )
+    def _update_llm_job(self, llm_job_id: str, update: LLMJobUpdate) -> LLMJobRead:
         try:
             llmj = self.redis.update_llm_job(key=llm_job_id, update=update)
         except Exception as e:
@@ -126,7 +122,8 @@ class LLMService(metaclass=SingletonMeta):
             raise LLMJobAlreadyStartedOrDoneError(llm_job_id=llm_job_id)
 
         llmj = self._update_llm_job(
-            status=BackgroundJobStatus.RUNNING, llm_job_id=llm_job_id
+            llm_job_id=llm_job_id,
+            update=LLMJobUpdate(status=BackgroundJobStatus.RUNNING),
         )
 
         try:
@@ -151,16 +148,15 @@ class LLMService(metaclass=SingletonMeta):
                 )
 
             llmj = self._update_llm_job(
-                result=result,
-                status=BackgroundJobStatus.FINISHED,
                 llm_job_id=llm_job_id,
+                update=LLMJobUpdate(result=result, status=BackgroundJobStatus.FINISHED),
             )
 
         except Exception as e:
             logger.error(f"Cannot finish LLMJob: {e}")
             self._update_llm_job(
-                status=BackgroundJobStatus.ERROR,
                 llm_job_id=llm_job_id,
+                update=LLMJobUpdate(status=BackgroundJobStatus.ERROR),
             )
 
         return llmj
@@ -248,7 +244,10 @@ class LLMService(metaclass=SingletonMeta):
                         reasoning="Language not supported",
                     )
                 )
-                self._update_llm_job(num_steps_finished=idx + 1, llm_job_id=llm_job_id)
+                self._update_llm_job(
+                    llm_job_id=llm_job_id,
+                    update=LLMJobUpdate(num_steps_finished=idx + 1),
+                )
                 continue
 
             # construct prompts
@@ -280,7 +279,10 @@ class LLMService(metaclass=SingletonMeta):
                     reasoning=reason,
                 )
             )
-            self._update_llm_job(num_steps_finished=idx + 1, llm_job_id=llm_job_id)
+            self._update_llm_job(
+                llm_job_id=llm_job_id,
+                update=LLMJobUpdate(num_steps_finished=idx + 1),
+            )
 
         return LLMJobResult(
             llm_job_type=LLMJobType.DOCUMENT_TAGGING,
@@ -298,11 +300,103 @@ class LLMService(metaclass=SingletonMeta):
         sdoc_ids: List[int],
         project_metadata_ids: List[int],
     ) -> LLMJobResult:
-        # TODO implement the metadata extraction
+        logger.info(f"Starting LLMJob - Metadata Extraction, num docs: {len(sdoc_ids)}")
+
+        prompt_builder = MetadataPromptBuilder(db=db, project_id=project_id)
+
+        # build prompt dict (to validate and access prompts by language and system / user)
+        prompt_dict = self.construct_prompt_dict(
+            prompts=prompts, prompt_builder=prompt_builder
+        )
+
+        # read sdocs
+        sdoc_datas = crud_sdoc.read_with_data_batch(db=db, ids=sdoc_ids)
+        # automatic metadata extraction
+        result: List[MetadataExtractionResult] = []
+        for idx, sdoc_data in enumerate(sdoc_datas):
+            # get current metadata values
+            current_metadata = [
+                SourceDocumentMetadataReadResolved.model_validate(metadata)
+                for metadata in crud_sdoc.read(db=db, id=sdoc_data.id).metadata_
+                if metadata.project_metadata_id in project_metadata_ids
+            ]
+            current_metadata_dict = {
+                metadata.project_metadata.id: metadata for metadata in current_metadata
+            }
+
+            # get language
+            language = crud_sdoc_meta.read_by_sdoc_and_key(
+                db=db, sdoc_id=sdoc_data.id, key="language"
+            ).str_value
+            logger.info(f"Processing SDOC id={sdoc_data.id}, lang={language}")
+            if language is None or language not in prompt_builder.supported_languages:
+                result.append(
+                    MetadataExtractionResult(
+                        sdoc_id=sdoc_data.id,
+                        current_metadata=current_metadata,
+                        suggested_metadata=[],
+                    )
+                )
+                self._update_llm_job(
+                    llm_job_id=llm_job_id,
+                    update=LLMJobUpdate(num_steps_finished=idx + 1),
+                )
+                continue
+
+            # construct prompts
+            system_prompt = prompt_builder.build_system_prompt(
+                system_prompt_template=prompt_dict[language]["system_prompt"]
+            )
+            user_prompt = prompt_builder.build_user_prompt(
+                user_prompt_template=prompt_dict[language]["user_prompt"],
+                document=sdoc_data.content,
+            )
+
+            # prompt the model
+            response = self.ollamas.chat(
+                system_prompt=system_prompt, user_prompt=user_prompt
+            )
+            logger.info(f"Got chat response! Response={response}")
+
+            # parse the response
+            parsed_response = prompt_builder.parse_response(
+                language=language, response=response
+            )
+
+            # create correct suggested metadata (map the parsed response to the current metadata)
+            suggested_metadata = []
+            for project_metadata_id in project_metadata_ids:
+                current = current_metadata_dict.get(project_metadata_id)
+                suggestion = parsed_response.get(project_metadata_id)
+                if current is None or suggestion is None:
+                    continue
+
+                suggested_metadata.append(
+                    SourceDocumentMetadataReadResolved.with_value(
+                        sdoc_metadata_id=current.id,
+                        source_document_id=current.source_document_id,
+                        project_metadata=current.project_metadata,
+                        value=suggestion,
+                    )
+                )
+            logger.info(f"Parsed the response! suggested metadata={suggested_metadata}")
+
+            result.append(
+                MetadataExtractionResult(
+                    sdoc_id=sdoc_data.id,
+                    current_metadata=current_metadata,
+                    suggested_metadata=suggested_metadata,
+                )
+            )
+            self._update_llm_job(
+                llm_job_id=llm_job_id,
+                update=LLMJobUpdate(num_steps_finished=idx + 1),
+            )
+
         return LLMJobResult(
             llm_job_type=LLMJobType.METADATA_EXTRACTION,
             specific_llm_job_result=MetadataExtractionLLMJobResult(
-                llm_job_type=LLMJobType.METADATA_EXTRACTION, results=[]
+                llm_job_type=LLMJobType.METADATA_EXTRACTION, results=result
             ),
         )
 

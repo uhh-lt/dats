@@ -6,6 +6,9 @@ from pydantic import BaseModel, Field
 
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.dto_base import UpdateDTOBase
+from app.core.data.dto.source_document_metadata import (
+    SourceDocumentMetadataReadResolved,
+)
 
 
 class LLMJobType(str, Enum):
@@ -92,7 +95,12 @@ class DocumentTaggingLLMJobResult(BaseModel):
 
 class MetadataExtractionResult(BaseModel):
     sdoc_id: int = Field(description="ID of the source document")
-    data: str = Field(description="data")
+    current_metadata: List[SourceDocumentMetadataReadResolved] = Field(
+        description="Current metadata"
+    )
+    suggested_metadata: List[SourceDocumentMetadataReadResolved] = Field(
+        description="Suggested metadata"
+    )
 
 
 class MetadataExtractionLLMJobResult(BaseModel):
