@@ -5,7 +5,6 @@ import { Box, Button, DialogActions, DialogContent, Stack, Tab, Typography } fro
 import { useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import LLMHooks from "../../../api/LLMHooks.ts";
-import { LLMJobType } from "../../../api/openapi/models/LLMJobType.ts";
 import { LLMPromptTemplates } from "../../../api/openapi/models/LLMPromptTemplates.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { CRUDDialogActions } from "../../dialogSlice.ts";
@@ -20,6 +19,8 @@ type PromptEditorValues = {
 function PromptEditorStep({ projectId }: { projectId: number }) {
   // global state
   const tags = useAppSelector((state) => state.dialog.llmTags);
+  const metadata = useAppSelector((state) => state.dialog.llmMetadata);
+  const method = useAppSelector((state) => state.dialog.llmMethod);
   const sdocIds = useAppSelector((state) => state.dialog.llmDocumentIds);
   const prompts = useAppSelector((state) => state.dialog.llmPrompts);
   const dispatch = useAppDispatch();
@@ -44,16 +45,19 @@ function PromptEditorStep({ projectId }: { projectId: number }) {
   // start llm job
   const startLLMJobMutation = LLMHooks.useStartLLMJob();
   const handleStartLLMJob = () => {
+    if (method === undefined) return;
+
     startLLMJobMutation.mutate(
       {
         requestBody: {
           project_id: projectId,
           prompts: prompts,
-          llm_job_type: LLMJobType.DOCUMENT_TAGGING,
+          llm_job_type: method,
           specific_llm_job_parameters: {
-            llm_job_type: LLMJobType.DOCUMENT_TAGGING,
-            tag_ids: tags.map((tag) => tag.id),
+            llm_job_type: method,
             sdoc_ids: sdocIds,
+            tag_ids: tags.map((tag) => tag.id),
+            project_metadata_ids: metadata.map((m) => m.id),
           },
         },
       },

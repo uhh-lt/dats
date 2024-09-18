@@ -4,7 +4,9 @@ import { LLMJobType } from "../../api/openapi/models/LLMJobType.ts";
 import { useAppSelector } from "../../plugins/ReduxHooks.ts";
 import DocumentTagResultStep from "./steps/DocumentTaggingResultStep/DocumentTagResultStep.tsx";
 import DocumentTagSelectionStep from "./steps/DocumentTagSelectionStep.tsx";
+import MetadataExtractionResultStep from "./steps/MetadataExtractionResultStep/MetadataExtractionResultStep.tsx";
 import MethodSelectionStep from "./steps/MethodSelectionStep.tsx";
+import ProjectMetadataSelectionStep from "./steps/ProjectMetadataSelectionStep.tsx";
 import PromptEditorStep from "./steps/PromptEditorStep.tsx";
 import StatusStep from "./steps/StatusStep.tsx";
 
@@ -40,22 +42,22 @@ function LLMDialog({ projectId }: LLMDialogProps) {
       },
       1: {
         [LLMJobType.DOCUMENT_TAGGING]: <DocumentTagSelectionStep projectId={projectId} />,
-        [LLMJobType.METADATA_EXTRACTION]: <>Welcome to Metadata Extraction!</>,
+        [LLMJobType.METADATA_EXTRACTION]: <ProjectMetadataSelectionStep projectId={projectId} />,
         [LLMJobType.ANNOTATION]: <>Welcome to Annotation!</>,
       },
       2: {
         [LLMJobType.DOCUMENT_TAGGING]: <PromptEditorStep projectId={projectId} />,
-        [LLMJobType.METADATA_EXTRACTION]: <>Welcome to Metadata Extraction!</>,
+        [LLMJobType.METADATA_EXTRACTION]: <PromptEditorStep projectId={projectId} />,
         [LLMJobType.ANNOTATION]: <>Welcome to Annotation!</>,
       },
       3: {
         [LLMJobType.DOCUMENT_TAGGING]: <StatusStep />,
-        [LLMJobType.METADATA_EXTRACTION]: <>Welcome to Metadata Extraction!</>,
+        [LLMJobType.METADATA_EXTRACTION]: <StatusStep />,
         [LLMJobType.ANNOTATION]: <>Welcome to Annotation!</>,
       },
       4: {
         [LLMJobType.DOCUMENT_TAGGING]: <DocumentTagResultStep projectId={projectId} />,
-        [LLMJobType.METADATA_EXTRACTION]: <>Welcome to Metadata Extraction!</>,
+        [LLMJobType.METADATA_EXTRACTION]: <MetadataExtractionResultStep />,
         [LLMJobType.ANNOTATION]: <>Welcome to Annotation!</>,
       },
     };

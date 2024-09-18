@@ -6,6 +6,7 @@ import { DocumentTagRead } from "../api/openapi/models/DocumentTagRead.ts";
 import { LLMJobResult } from "../api/openapi/models/LLMJobResult.ts";
 import { LLMJobType } from "../api/openapi/models/LLMJobType.ts";
 import { LLMPromptTemplates } from "../api/openapi/models/LLMPromptTemplates.ts";
+import { ProjectMetadataRead } from "../api/openapi/models/ProjectMetadataRead.ts";
 import { SnackbarEvent } from "../components/SnackbarDialog/SnackbarEvent.ts";
 import { CodeCreateSuccessHandler } from "./Code/CodeCreateDialog.tsx";
 import { LLMAssistanceEvent } from "./LLMDialog/LLMEvent.ts";
@@ -42,6 +43,7 @@ interface DialogState {
   llmDocumentIds: number[];
   llmStep: number;
   llmTags: DocumentTagRead[];
+  llmMetadata: ProjectMetadataRead[];
   llmPrompts: LLMPromptTemplates[];
   llmJobId?: string;
   llmJobResult: LLMJobResult | null | undefined;
@@ -83,6 +85,7 @@ const initialState: DialogState = {
   llmMethod: undefined,
   llmStep: 0,
   llmTags: [],
+  llmMetadata: [],
   llmPrompts: [],
   llmJobId: undefined,
   llmJobResult: undefined,
@@ -204,11 +207,16 @@ export const dialogSlice = createSlice({
     },
     llmDialogGoToPromptEditor: (
       state,
-      action: PayloadAction<{ prompts: LLMPromptTemplates[]; tags: DocumentTagRead[] }>,
+      action: PayloadAction<{
+        prompts: LLMPromptTemplates[];
+        tags: DocumentTagRead[];
+        metadata: ProjectMetadataRead[];
+      }>,
     ) => {
       state.llmStep = 2;
       state.llmPrompts = action.payload.prompts;
       state.llmTags = action.payload.tags;
+      state.llmMetadata = action.payload.metadata;
     },
     updateLLMPrompts: (
       state,

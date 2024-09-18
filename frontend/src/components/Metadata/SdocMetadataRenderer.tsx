@@ -28,7 +28,7 @@ function SdocMetadataRenderer({ sdocId, projectMetadataId }: SdocMetadataRendere
   }
 }
 
-function SdocMetadataRendererWithData({ sdocMetadata }: { sdocMetadata: SourceDocumentMetadataReadResolved }) {
+export function SdocMetadataRendererWithData({ sdocMetadata }: { sdocMetadata: SourceDocumentMetadataReadResolved }) {
   switch (sdocMetadata.project_metadata.metatype) {
     case MetaType.STRING:
       return <>{sdocMetadata.str_value ? sdocMetadata.str_value : <i>empty</i>}</>;
