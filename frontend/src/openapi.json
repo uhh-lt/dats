@@ -7812,10 +7812,21 @@
       "MetadataExtractionResult": {
         "properties": {
           "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
-          "data": { "type": "string", "title": "Data", "description": "data" }
+          "current_metadata": {
+            "items": { "$ref": "#/components/schemas/SourceDocumentMetadataReadResolved" },
+            "type": "array",
+            "title": "Current Metadata",
+            "description": "Current metadata"
+          },
+          "suggested_metadata": {
+            "items": { "$ref": "#/components/schemas/SourceDocumentMetadataReadResolved" },
+            "type": "array",
+            "title": "Suggested Metadata",
+            "description": "Suggested metadata"
+          }
         },
         "type": "object",
-        "required": ["sdoc_id", "data"],
+        "required": ["sdoc_id", "current_metadata", "suggested_metadata"],
         "title": "MetadataExtractionResult"
       },
       "NumberOperator": {

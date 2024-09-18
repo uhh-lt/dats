@@ -2,13 +2,18 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { SourceDocumentMetadataReadResolved } from "./SourceDocumentMetadataReadResolved";
 export type MetadataExtractionResult = {
   /**
    * ID of the source document
    */
   sdoc_id: number;
   /**
-   * data
+   * Current metadata
    */
-  data: string;
+  current_metadata: Array<SourceDocumentMetadataReadResolved>;
+  /**
+   * Suggested metadata
+   */
+  suggested_metadata: Array<SourceDocumentMetadataReadResolved>;
 };
