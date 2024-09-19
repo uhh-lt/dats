@@ -1,6 +1,6 @@
 {
   "openapi": "3.1.0",
-  "info": { "title": "Discourse Analysis Tool Suite API", "version": "1.0.3" },
+  "info": { "title": "Discourse Analysis Tool Suite API", "version": "1.0.5" },
   "paths": {
     "/heartbeat": {
       "get": {
@@ -112,6 +112,28 @@
               "application/json": { "schema": { "$ref": "#/components/schemas/UserAuthorizationHeaderData" } }
             }
           },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/authentication/content": {
+      "get": {
+        "tags": ["authentication"],
+        "summary": "Returns success if the user can access the content",
+        "operationId": "auth_content",
+        "parameters": [
+          {
+            "name": "x-original-uri",
+            "in": "header",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "X-Original-Uri" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } },
           "422": {
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
