@@ -3611,6 +3611,44 @@
         }
       }
     },
+    "/sdocmeta/bulk/update": {
+      "patch": {
+        "tags": ["sdocMetadata"],
+        "summary": "Updates multiple metadata objects at once.",
+        "operationId": "update_bulk",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": { "$ref": "#/components/schemas/SourceDocumentMetadataBulkUpdate" },
+                "type": "array",
+                "title": "Metadatas"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/SourceDocumentMetadataRead" },
+                  "type": "array",
+                  "title": "Response Sdocmetadata-Update Bulk"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/feedback": {
       "get": {
         "tags": ["feedback"],
@@ -8485,6 +8523,39 @@
         "type": "object",
         "required": ["source_document_ids", "document_tag_ids"],
         "title": "SourceDocumentDocumentTagMultiLink"
+      },
+      "SourceDocumentMetadataBulkUpdate": {
+        "properties": {
+          "int_value": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Int Value",
+            "description": "Int Value of the SourceDocumentMetadata"
+          },
+          "str_value": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Str Value",
+            "description": "String Value of the SourceDocumentMetadata"
+          },
+          "boolean_value": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "title": "Boolean Value",
+            "description": "Boolean Value of the SourceDocumentMetadata"
+          },
+          "date_value": {
+            "anyOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }],
+            "title": "Date Value",
+            "description": "Date Value of the SourceDocumentMetadata"
+          },
+          "list_value": {
+            "anyOf": [{ "items": { "type": "string" }, "type": "array" }, { "type": "null" }],
+            "title": "List Value",
+            "description": "List Value of the SourceDocumentMetadata"
+          },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the SourceDocumentMetadata" }
+        },
+        "type": "object",
+        "required": ["int_value", "str_value", "boolean_value", "date_value", "list_value", "id"],
+        "title": "SourceDocumentMetadataBulkUpdate"
       },
       "SourceDocumentMetadataCreate": {
         "properties": {
