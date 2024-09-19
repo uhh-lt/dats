@@ -12,4 +12,5 @@ const packageLockJson = JSON.parse(readFileSync("package-lock.json"));
 packageLockJson.version = version;
 writeFileSync("package-lock.json", JSON.stringify(packageLockJson));
 
-execSync(`npx prettier --write package.json`);
+execSync(`npx prettier package.json --write`);
+execSync(`npx prettier package-lock.json --write`);
