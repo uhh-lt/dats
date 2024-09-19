@@ -44,6 +44,7 @@ interface DialogState {
   llmStep: number;
   llmTags: DocumentTagRead[];
   llmMetadata: ProjectMetadataRead[];
+  llmCodes: CodeRead[];
   llmPrompts: LLMPromptTemplates[];
   llmJobId?: string;
   llmJobResult: LLMJobResult | null | undefined;
@@ -86,6 +87,7 @@ const initialState: DialogState = {
   llmStep: 0,
   llmTags: [],
   llmMetadata: [],
+  llmCodes: [],
   llmPrompts: [],
   llmJobId: undefined,
   llmJobResult: undefined,
@@ -211,12 +213,14 @@ export const dialogSlice = createSlice({
         prompts: LLMPromptTemplates[];
         tags: DocumentTagRead[];
         metadata: ProjectMetadataRead[];
+        codes: CodeRead[];
       }>,
     ) => {
       state.llmStep = 2;
       state.llmPrompts = action.payload.prompts;
       state.llmTags = action.payload.tags;
       state.llmMetadata = action.payload.metadata;
+      state.llmCodes = action.payload.codes;
     },
     updateLLMPrompts: (
       state,

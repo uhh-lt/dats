@@ -6,8 +6,8 @@ import { AnnotationLLMJobResult } from "../../../../api/openapi/models/Annotatio
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 import { CRUDDialogActions } from "../../../dialogSlice.ts";
 import SdocRenderer from "../../../SourceDocument/SdocRenderer.tsx";
-import SpanAnnotationRenderer from "../../../SpanAnnotation/SpanAnnotationRenderer.tsx";
 import LLMUtterance from "../LLMUtterance.tsx";
+import AnnotationResultStepDocument from "./AnnotationResultStepDocument.tsx";
 
 function AnnotationResultStep() {
   // get the job
@@ -64,9 +64,7 @@ function AnnotationResultStep() {
             </Box>
             {(llmJob.data.result.specific_llm_job_result as AnnotationLLMJobResult).results.map((annotationResult) => (
               <TabPanel key={annotationResult.sdoc_id} value={annotationResult.sdoc_id.toString()} sx={{ px: 0 }}>
-                {annotationResult.suggested_annotations.map((annotation, idx) => (
-                  <SpanAnnotationRenderer key={idx} spanAnnotation={annotation} />
-                ))}
+                <AnnotationResultStepDocument annotationResult={annotationResult} />
               </TabPanel>
             ))}
           </TabContext>
