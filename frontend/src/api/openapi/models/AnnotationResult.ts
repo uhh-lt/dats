@@ -2,13 +2,14 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { SpanAnnotationReadResolved } from "./SpanAnnotationReadResolved";
 export type AnnotationResult = {
   /**
    * ID of the source document
    */
   sdoc_id: number;
   /**
-   * data
+   * Suggested annotations
    */
-  data: string;
+  suggested_annotations: Array<SpanAnnotationReadResolved>;
 };

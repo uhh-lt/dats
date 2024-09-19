@@ -5991,10 +5991,15 @@
       "AnnotationResult": {
         "properties": {
           "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
-          "data": { "type": "string", "title": "Data", "description": "data" }
+          "suggested_annotations": {
+            "items": { "$ref": "#/components/schemas/SpanAnnotationReadResolved" },
+            "type": "array",
+            "title": "Suggested Annotations",
+            "description": "Suggested annotations"
+          }
         },
         "type": "object",
-        "required": ["sdoc_id", "data"],
+        "required": ["sdoc_id", "suggested_annotations"],
         "title": "AnnotationResult"
       },
       "AnnotationTableRow": {
