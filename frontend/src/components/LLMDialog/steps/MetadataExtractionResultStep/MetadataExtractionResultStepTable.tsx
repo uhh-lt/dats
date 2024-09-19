@@ -13,6 +13,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { MetadataExtractionResult } from "../../../../api/openapi/models/MetadataExtractionResult.ts";
 import { ProjectMetadataRead } from "../../../../api/openapi/models/ProjectMetadataRead.ts";
+import { SourceDocumentMetadataBulkUpdate } from "../../../../api/openapi/models/SourceDocumentMetadataBulkUpdate.ts";
 import { SourceDocumentMetadataReadResolved } from "../../../../api/openapi/models/SourceDocumentMetadataReadResolved.ts";
 import SdocMetadataHooks from "../../../../api/SdocMetadataHooks.ts";
 import { useAppDispatch } from "../../../../plugins/ReduxHooks.ts";
@@ -161,9 +162,36 @@ function MetadataExtractionResultStepTable({ data }: { data: MetadataExtractionR
     dispatch(CRUDDialogActions.closeLLMDialog());
   };
 
-  const updateMetadataMutation = SdocMetadataHooks.useUpdateMetadata();
-  const handleUpdateMetadata = () => {
-    console.log("TODO");
+  const updateBulkMetadataMutation = SdocMetadataHooks.useUpdateBulkMetadata();
+  const handleUpdateBulkMetadata = () => {
+    // find all the metadata where the useSuggested flag is true
+    const metadataToUpdate: SourceDocumentMetadataBulkUpdate[] = theRows.reduce((acc, row) => {
+      for (const metadata of Object.values(row.metadataDict)) {
+        if (metadata.useSuggested && metadata.suggestedValue) {
+          acc.push({
+            id: metadata.suggestedValue.id,
+            boolean_value: metadata.suggestedValue.boolean_value,
+            date_value: metadata.suggestedValue.date_value,
+            int_value: metadata.suggestedValue.int_value,
+            list_value: metadata.suggestedValue.list_value,
+            str_value: metadata.suggestedValue.str_value,
+          });
+        }
+      }
+      return acc;
+    }, [] as SourceDocumentMetadataBulkUpdate[]);
+
+    // update the metadata
+    updateBulkMetadataMutation.mutate(
+      {
+        requestBody: metadataToUpdate,
+      },
+      {
+        onSuccess() {
+          dispatch(CRUDDialogActions.closeLLMDialog());
+        },
+      },
+    );
   };
 
   // columns
@@ -296,8 +324,8 @@ function MetadataExtractionResultStepTable({ data }: { data: MetadataExtractionR
         <LoadingButton
           variant="contained"
           startIcon={<LabelIcon />}
-          onClick={handleUpdateMetadata}
-          loading={updateMetadataMutation.isPending}
+          onClick={handleUpdateBulkMetadata}
+          loading={updateBulkMetadataMutation.isPending}
           loadingPosition="start"
         >
           Update metadata
