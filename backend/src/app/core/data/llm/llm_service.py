@@ -429,6 +429,7 @@ class LLMService(metaclass=SingletonMeta):
         sdoc_datas = crud_sdoc.read_with_data_batch(db=db, ids=sdoc_ids)
 
         # automatic annotation
+        annotation_id = 0
         result: List[AnnotationResult] = []
         for idx, sdoc_data in enumerate(sdoc_datas):
             # get language
@@ -499,7 +500,7 @@ class LLMService(metaclass=SingletonMeta):
                 # create the suggested annotation
                 suggested_annotations.append(
                     SpanAnnotationReadResolved(
-                        id=-1,
+                        id=annotation_id,
                         annotation_document_id=-1,
                         sdoc_id=sdoc_data.id,
                         user_id=SYSTEM_USER_ID,
@@ -513,6 +514,7 @@ class LLMService(metaclass=SingletonMeta):
                         updated=datetime.now(),
                     )
                 )
+                annotation_id += 1
             logger.info(
                 f"Parsed the response! suggested annotations={suggested_annotations}"
             )
