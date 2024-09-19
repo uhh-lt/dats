@@ -161,7 +161,6 @@ services:
       - postgres
       - redis
       - rabbitmq
-      - ray
     networks:
       - dats_demo_network
     profiles:
@@ -205,8 +204,8 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: [ "0" ]
-              capabilities: [ gpu ]
+              device_ids: ["0"]
+              capabilities: [gpu]
     profiles:
       - ray
 
@@ -266,7 +265,6 @@ services:
       - rabbitmq
       - redis
       - weaviate
-      - ray
     ports:
       - "${API_EXPOSED:-5500}:${API_PORT}"
       - "${JUPYTER_API_EXPOSED:-8888}:8888"
@@ -278,7 +276,6 @@ services:
       - celery-background-jobs-worker
       - elasticsearch
       - weaviate
-      - ray
     networks:
       - dats_demo_network
     profiles:
