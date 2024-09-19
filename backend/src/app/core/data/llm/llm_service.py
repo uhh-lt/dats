@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Callable, Dict, List, Type, Union
 
 from loguru import logger
@@ -5,9 +6,12 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
+from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.background_job_base import BackgroundJobStatus
+from app.core.data.dto.code import CodeRead
 from app.core.data.dto.llm_job import (
     AnnotationLLMJobResult,
+    AnnotationResult,
     DocumentTaggingLLMJobResult,
     DocumentTaggingResult,
     LLMJobCreate,
@@ -23,7 +27,9 @@ from app.core.data.dto.llm_job import (
 from app.core.data.dto.source_document_metadata import (
     SourceDocumentMetadataReadResolved,
 )
+from app.core.data.dto.span_annotation import SpanAnnotationReadResolved
 from app.core.data.llm.ollama_service import OllamaService
+from app.core.data.llm.prompts.annotation_prompt_builder import AnnotationPromptBuilder
 from app.core.data.llm.prompts.metadata_prompt_builder import MetadataPromptBuilder
 from app.core.data.llm.prompts.prompt_builder import PromptBuilder
 from app.core.data.llm.prompts.tagging_prompt_builder import TaggingPromptBuilder
@@ -71,7 +77,7 @@ class LLMService(metaclass=SingletonMeta):
         cls.llm_prompt_builder_for_job_type: Dict[LLMJobType, Type[PromptBuilder]] = {
             LLMJobType.DOCUMENT_TAGGING: TaggingPromptBuilder,
             LLMJobType.METADATA_EXTRACTION: MetadataPromptBuilder,
-            LLMJobType.ANNOTATION: TaggingPromptBuilder,
+            LLMJobType.ANNOTATION: AnnotationPromptBuilder,
         }
 
         return super(LLMService, cls).__new__(cls)
@@ -407,12 +413,124 @@ class LLMService(metaclass=SingletonMeta):
         prompts: List[LLMPromptTemplates],
         project_id: int,
         sdoc_ids: List[int],
-        project_metadata_ids: List[int],
+        code_ids: List[int],
     ) -> LLMJobResult:
-        # TODO implement the annotation
+        logger.info(f"Starting LLMJob - Annotation, num docs: {len(sdoc_ids)}")
+
+        prompt_builder = AnnotationPromptBuilder(db=db, project_id=project_id)
+        project_codes = prompt_builder.codeids2code_dict
+
+        # build prompt dict (to validate and access prompts by language and system / user)
+        prompt_dict = self.construct_prompt_dict(
+            prompts=prompts, prompt_builder=prompt_builder
+        )
+
+        # read sdocs
+        sdoc_datas = crud_sdoc.read_with_data_batch(db=db, ids=sdoc_ids)
+
+        # automatic annotation
+        result: List[AnnotationResult] = []
+        for idx, sdoc_data in enumerate(sdoc_datas):
+            # get language
+            language = crud_sdoc_meta.read_by_sdoc_and_key(
+                db=db, sdoc_id=sdoc_data.id, key="language"
+            ).str_value
+            logger.info(f"Processing SDOC id={sdoc_data.id}, lang={language}")
+            if language is None or language not in prompt_builder.supported_languages:
+                result.append(
+                    AnnotationResult(sdoc_id=sdoc_data.id, suggested_annotations=[])
+                )
+                self._update_llm_job(
+                    llm_job_id=llm_job_id,
+                    update=LLMJobUpdate(num_steps_finished=idx + 1),
+                )
+                continue
+
+            # construct prompts
+            system_prompt = prompt_builder.build_system_prompt(
+                system_prompt_template=prompt_dict[language]["system_prompt"]
+            )
+            user_prompt = prompt_builder.build_user_prompt(
+                user_prompt_template=prompt_dict[language]["user_prompt"],
+                document=sdoc_data.content,
+            )
+
+            # prompt the model
+            response = self.ollamas.chat(
+                system_prompt=system_prompt, user_prompt=user_prompt
+            )
+            logger.info(f"Got chat response! Response={response}")
+
+            # parse the response
+            parsed_response = prompt_builder.parse_response(
+                language=language, response=response
+            )
+
+            # validate the response and create the suggested annotation
+            suggested_annotations: List[SpanAnnotationReadResolved] = []
+            for code_id, span_text in parsed_response:
+                # check if the code_id is valid
+                if code_id not in project_codes:
+                    continue
+
+                document_text = sdoc_data.content.lower()
+                annotation_text = span_text.lower()
+
+                # find start and end character of the annotation_text in the document_text
+                start = document_text.find(annotation_text)
+                end = start + len(annotation_text)
+                if start == -1:
+                    continue
+
+                # find start and end token of the annotation_text in the document_tokens
+                # create a map of character offsets to token ids
+                document_token_map = {}  # character offset -> token id
+                last_character_offset = 0
+                for token_id, token_end in enumerate(sdoc_data.token_ends):
+                    for i in range(last_character_offset, token_end):
+                        document_token_map[i] = token_id
+                    last_character_offset = token_end
+
+                begin_token = document_token_map.get(start, -1)
+                end_token = document_token_map.get(end, -1)
+                if begin_token == -1 or end_token == -1:
+                    continue
+
+                # create the suggested annotation
+                suggested_annotations.append(
+                    SpanAnnotationReadResolved(
+                        id=-1,
+                        annotation_document_id=-1,
+                        sdoc_id=sdoc_data.id,
+                        user_id=SYSTEM_USER_ID,
+                        begin=start,
+                        end=end,
+                        begin_token=begin_token,
+                        end_token=end_token,
+                        span_text=span_text,
+                        code=CodeRead.model_validate(project_codes.get(code_id)),
+                        created=datetime.now(),
+                        updated=datetime.now(),
+                    )
+                )
+            logger.info(
+                f"Parsed the response! suggested annotations={suggested_annotations}"
+            )
+
+            result.append(
+                AnnotationResult(
+                    sdoc_id=sdoc_data.id,
+                    suggested_annotations=suggested_annotations,
+                )
+            )
+            self._update_llm_job(
+                llm_job_id=llm_job_id,
+                update=LLMJobUpdate(num_steps_finished=idx + 1),
+            )
+
         return LLMJobResult(
             llm_job_type=LLMJobType.ANNOTATION,
             specific_llm_job_result=AnnotationLLMJobResult(
-                llm_job_type=LLMJobType.ANNOTATION, results=[]
+                llm_job_type=LLMJobType.ANNOTATION, results=result
             ),
         )

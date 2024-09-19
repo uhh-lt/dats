@@ -9,6 +9,7 @@ from app.core.data.dto.dto_base import UpdateDTOBase
 from app.core.data.dto.source_document_metadata import (
     SourceDocumentMetadataReadResolved,
 )
+from app.core.data.dto.span_annotation import SpanAnnotationReadResolved
 
 
 class LLMJobType(str, Enum):
@@ -110,7 +111,9 @@ class MetadataExtractionLLMJobResult(BaseModel):
 
 class AnnotationResult(BaseModel):
     sdoc_id: int = Field(description="ID of the source document")
-    data: str = Field(description="data")
+    suggested_annotations: List[SpanAnnotationReadResolved] = Field(
+        description="Suggested annotations"
+    )
 
 
 class AnnotationLLMJobResult(BaseModel):
