@@ -4,14 +4,14 @@ import { Box, Button, DialogActions, DialogContent, Typography } from "@mui/mate
 import { MRT_RowSelectionState } from "material-react-table";
 import { useState } from "react";
 import LLMHooks from "../../../api/LLMHooks.ts";
-import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
+import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { LLMJobType } from "../../../api/openapi/models/LLMJobType.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import TagTable from "../../Tag/TagTable.tsx";
+import CodeTable from "../../Code/CodeTable.tsx";
 import { CRUDDialogActions } from "../../dialogSlice.ts";
 import LLMUtterance from "./LLMUtterance.tsx";
 
-function DocumentTagSelectionStep({ projectId }: { projectId: number }) {
+function CodeSelectionStep({ projectId }: { projectId: number }) {
   // local state
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
 
@@ -21,23 +21,25 @@ function DocumentTagSelectionStep({ projectId }: { projectId: number }) {
 
   // initiate next step (get the generated prompts)
   const createPromptTemplatesMutation = LLMHooks.useCreatePromptTemplates();
-  const handleNext = (tags: DocumentTagRead[]) => () => {
+  const handleNext = (codes: CodeRead[]) => () => {
     createPromptTemplatesMutation.mutate(
       {
         requestBody: {
-          llm_job_type: LLMJobType.DOCUMENT_TAGGING,
+          llm_job_type: LLMJobType.ANNOTATION,
           project_id: projectId,
           prompts: [],
           specific_llm_job_parameters: {
-            llm_job_type: LLMJobType.DOCUMENT_TAGGING,
-            tag_ids: tags.map((tag) => tag.id),
+            llm_job_type: LLMJobType.ANNOTATION,
+            code_ids: codes.map((code) => code.id),
             sdoc_ids: selectedDocuments,
           },
         },
       },
       {
         onSuccess(data) {
-          dispatch(CRUDDialogActions.llmDialogGoToPromptEditor({ prompts: data, tags: tags, metadata: [], codes: [] }));
+          dispatch(
+            CRUDDialogActions.llmDialogGoToPromptEditor({ prompts: data, tags: [], metadata: [], codes: codes }),
+          );
         },
       },
     );
@@ -48,12 +50,12 @@ function DocumentTagSelectionStep({ projectId }: { projectId: number }) {
       <DialogContent>
         <LLMUtterance>
           <Typography>
-            You selected {selectedDocuments.length} document(s) for automatic document tagging. Please select all tags
-            that I should use to classify the documents.
+            You selected {selectedDocuments.length} document(s) for automatic annotation. Please select all codes that I
+            should use to annotate text passages.
           </Typography>
         </LLMUtterance>
       </DialogContent>
-      <TagTable
+      <CodeTable
         projectId={projectId}
         rowSelectionModel={rowSelectionModel}
         onRowSelectionChange={setRowSelectionModel}
@@ -71,8 +73,8 @@ function DocumentTagSelectionStep({ projectId }: { projectId: number }) {
               startIcon={<PlayCircleIcon />}
               loading={createPromptTemplatesMutation.isPending}
               loadingPosition="start"
-              disabled={props.selectedTags.length === 0}
-              onClick={handleNext(props.selectedTags)}
+              disabled={props.selectedCodes.length === 0}
+              onClick={handleNext(props.selectedCodes)}
             >
               Next!
             </LoadingButton>
@@ -83,4 +85,4 @@ function DocumentTagSelectionStep({ projectId }: { projectId: number }) {
   );
 }
 
-export default DocumentTagSelectionStep;
+export default CodeSelectionStep;

@@ -20,6 +20,7 @@ function PromptEditorStep({ projectId }: { projectId: number }) {
   // global state
   const tags = useAppSelector((state) => state.dialog.llmTags);
   const metadata = useAppSelector((state) => state.dialog.llmMetadata);
+  const codes = useAppSelector((state) => state.dialog.llmCodes);
   const method = useAppSelector((state) => state.dialog.llmMethod);
   const sdocIds = useAppSelector((state) => state.dialog.llmDocumentIds);
   const prompts = useAppSelector((state) => state.dialog.llmPrompts);
@@ -58,6 +59,7 @@ function PromptEditorStep({ projectId }: { projectId: number }) {
             sdoc_ids: sdocIds,
             tag_ids: tags.map((tag) => tag.id),
             project_metadata_ids: metadata.map((m) => m.id),
+            code_ids: codes.map((code) => code.id),
           },
         },
       },

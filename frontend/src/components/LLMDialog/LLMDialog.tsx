@@ -2,6 +2,8 @@ import { ButtonProps, Dialog, DialogContent, DialogTitle, Step, StepLabel, Stepp
 import { useMemo } from "react";
 import { LLMJobType } from "../../api/openapi/models/LLMJobType.ts";
 import { useAppSelector } from "../../plugins/ReduxHooks.ts";
+import AnnotationResultStep from "./steps/AnnotationResultStep/AnnotationResultStep.tsx";
+import CodeSelectionStep from "./steps/CodeSelectionStep.tsx";
 import DocumentTagResultStep from "./steps/DocumentTaggingResultStep/DocumentTagResultStep.tsx";
 import DocumentTagSelectionStep from "./steps/DocumentTagSelectionStep.tsx";
 import MetadataExtractionResultStep from "./steps/MetadataExtractionResultStep/MetadataExtractionResultStep.tsx";
@@ -43,22 +45,22 @@ function LLMDialog({ projectId }: LLMDialogProps) {
       1: {
         [LLMJobType.DOCUMENT_TAGGING]: <DocumentTagSelectionStep projectId={projectId} />,
         [LLMJobType.METADATA_EXTRACTION]: <ProjectMetadataSelectionStep projectId={projectId} />,
-        [LLMJobType.ANNOTATION]: <>Welcome to Annotation!</>,
+        [LLMJobType.ANNOTATION]: <CodeSelectionStep projectId={projectId} />,
       },
       2: {
         [LLMJobType.DOCUMENT_TAGGING]: <PromptEditorStep projectId={projectId} />,
         [LLMJobType.METADATA_EXTRACTION]: <PromptEditorStep projectId={projectId} />,
-        [LLMJobType.ANNOTATION]: <>Welcome to Annotation!</>,
+        [LLMJobType.ANNOTATION]: <PromptEditorStep projectId={projectId} />,
       },
       3: {
         [LLMJobType.DOCUMENT_TAGGING]: <StatusStep />,
         [LLMJobType.METADATA_EXTRACTION]: <StatusStep />,
-        [LLMJobType.ANNOTATION]: <>Welcome to Annotation!</>,
+        [LLMJobType.ANNOTATION]: <StatusStep />,
       },
       4: {
         [LLMJobType.DOCUMENT_TAGGING]: <DocumentTagResultStep projectId={projectId} />,
         [LLMJobType.METADATA_EXTRACTION]: <MetadataExtractionResultStep />,
-        [LLMJobType.ANNOTATION]: <>Welcome to Annotation!</>,
+        [LLMJobType.ANNOTATION]: <AnnotationResultStep />,
       },
     };
   }, [projectId]);

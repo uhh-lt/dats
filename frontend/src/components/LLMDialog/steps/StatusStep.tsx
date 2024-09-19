@@ -48,7 +48,9 @@ function StatusStep() {
 
           {llmJob.isSuccess && llmJob.data.status === BackgroundJobStatus.FINISHED && (
             <LLMUtterance>
-              <Typography>I am done with document tagging. You can view the results now!</Typography>
+              <Typography>
+                I am done with {llmJob.data.parameters.llm_job_type.toLowerCase()}. You can view the results now!
+              </Typography>
             </LLMUtterance>
           )}
 

@@ -46,7 +46,14 @@ function ProjectMetadataSelectionStep({ projectId }: { projectId: number }) {
       },
       {
         onSuccess(data) {
-          dispatch(CRUDDialogActions.llmDialogGoToPromptEditor({ prompts: data, tags: [], metadata: projectMetadata }));
+          dispatch(
+            CRUDDialogActions.llmDialogGoToPromptEditor({
+              prompts: data,
+              tags: [],
+              metadata: projectMetadata,
+              codes: [],
+            }),
+          );
         },
       },
     );
@@ -58,7 +65,7 @@ function ProjectMetadataSelectionStep({ projectId }: { projectId: number }) {
         <LLMUtterance>
           <Typography>
             You selected {selectedDocuments.length} document(s) for automatic metadata extraction. Please select all
-            metadata that I should use to classify the documents.
+            metadata that I should try to extract from the documents.
           </Typography>
         </LLMUtterance>
       </DialogContent>
