@@ -8,6 +8,7 @@ from app.core.data.dto.action import ActionType
 from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.dto.source_document_metadata import (
     SourceDocumentMetadataBaseDTO,
+    SourceDocumentMetadataBulkUpdate,
     SourceDocumentMetadataCreate,
     SourceDocumentMetadataUpdate,
 )
@@ -123,6 +124,21 @@ class CRUDSourceDocumentMetadata(
             )
 
             return metadata_orm
+
+    def update_bulk(
+        self, db: Session, *, update_dtos: List[SourceDocumentMetadataBulkUpdate]
+    ) -> List[SourceDocumentMetadataORM]:
+        db_objs = []
+        for update_dto in update_dtos:
+            db_obj = self.update(
+                db=db,
+                metadata_id=update_dto.id,
+                update_dto=SourceDocumentMetadataUpdate(
+                    **update_dto.model_dump(exclude={"id"})
+                ),
+            )
+            db_objs.append(db_obj)
+        return db_objs
 
     def read_by_project(
         self,

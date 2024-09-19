@@ -111,6 +111,10 @@ class SourceDocumentMetadataUpdate(SourceDocumentMetadataBaseDTO, UpdateDTOBase)
     pass
 
 
+class SourceDocumentMetadataBulkUpdate(SourceDocumentMetadataBaseDTO, UpdateDTOBase):
+    id: int = Field(description="ID of the SourceDocumentMetadata")
+
+
 # Properties for reading (as in ORM)
 class SourceDocumentMetadataRead(SourceDocumentMetadataBaseDTO):
     id: int = Field(description="ID of the SourceDocumentMetadata")
