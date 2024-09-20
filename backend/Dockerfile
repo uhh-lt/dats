@@ -1,5 +1,5 @@
-# docker build -f Dockerfile -t uhhlt/dats_backend:latest .
-# docker push uhhlt/dats_backend:latest
+# docker build -f Dockerfile -t uhhlt/dats_backend:<version> .
+# docker push uhhlt/dats_backend:<version>
 
 FROM ubuntu:jammy-20221020 as ubuntu
 CMD ["/bin/bash"]

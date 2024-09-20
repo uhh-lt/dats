@@ -1,5 +1,5 @@
-# docker build -t uhhlt/dats_ray:latest .
-# docker push uhhlt/dats_ray:latest
+# docker build -t uhhlt/dats_ray:<version> .
+# docker push uhhlt/dats_ray:<version>
 
 FROM rayproject/ray:latest-py311-cu117 as ray
 
