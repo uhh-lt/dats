@@ -24,6 +24,25 @@ class CRUDAnnotationDocument(
             update_dto=AnnotationDocumentUpdate(updated=datetime.datetime.now()),
         )
 
+    def exists_or_create(
+        self, db: Session, *, user_id: int, sdoc_id: int
+    ) -> AnnotationDocumentORM:
+        db_obj = (
+            db.query(self.model)
+            .filter(
+                self.model.user_id == user_id, self.model.source_document_id == sdoc_id
+            )
+            .first()
+        )
+        if db_obj is None:
+            return self.create(
+                db=db,
+                create_dto=AnnotationDocumentCreate(
+                    user_id=user_id, source_document_id=sdoc_id
+                ),
+            )
+        return db_obj
+
     def read_by_user(self, db: Session, *, user_id: int) -> List[AnnotationDocumentORM]:
         return db.query(self.model).filter(self.model.user_id == user_id).all()
 

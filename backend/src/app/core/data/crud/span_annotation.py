@@ -1,10 +1,11 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import srsly
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.annotation_document import crud_adoc
+from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.span_group import crud_span_group
 from app.core.data.crud.span_text import crud_span_text
@@ -12,6 +13,7 @@ from app.core.data.dto.action import ActionType
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.span_annotation import (
     SpanAnnotationCreate,
+    SpanAnnotationCreateBulkWithCodeId,
     SpanAnnotationCreateWithCodeId,
     SpanAnnotationRead,
     SpanAnnotationReadResolved,
@@ -112,6 +114,52 @@ class CRUDSpanAnnotation(
         # we do not create actions manually here: why?
 
         return db_objs
+
+    def create_bulk(
+        self, db: Session, *, create_dtos: List[SpanAnnotationCreateBulkWithCodeId]
+    ) -> List[SpanAnnotationORM]:
+        # group by user and sdoc_id
+        # identify codes
+        annotations_by_user_sdoc = {
+            (create_dto.user_id, create_dto.sdoc_id): [] for create_dto in create_dtos
+        }
+        for create_dto in create_dtos:
+            annotations_by_user_sdoc[(create_dto.user_id, create_dto.sdoc_id)].append(
+                create_dto
+            )
+
+        # find or create annotation documents for each user and sdoc_id
+        adoc_id_by_user_sdoc = {}
+        for user_id, sdoc_id in annotations_by_user_sdoc.keys():
+            adoc_id_by_user_sdoc[(user_id, sdoc_id)] = crud_adoc.exists_or_create(
+                db=db, user_id=user_id, sdoc_id=sdoc_id
+            ).id
+
+        # find all codes
+        code_ids = list(set([create_dto.code_id for create_dto in create_dtos]))
+        db_codes = crud_code.read_by_ids(db=db, ids=code_ids)
+        cid2ccid: Dict[int, int] = {}
+        for db_code in db_codes:
+            cid2ccid[db_code.id] = db_code.current_code.id
+
+        # create the annotations
+        return self.create_multi(
+            db=db,
+            create_dtos=[
+                SpanAnnotationCreate(
+                    begin=create_dto.begin,
+                    end=create_dto.end,
+                    span_text=create_dto.span_text,
+                    begin_token=create_dto.begin_token,
+                    end_token=create_dto.end_token,
+                    current_code_id=cid2ccid[create_dto.code_id],
+                    annotation_document_id=adoc_id_by_user_sdoc[
+                        (create_dto.user_id, create_dto.sdoc_id)
+                    ],
+                )
+                for create_dto in create_dtos
+            ],
+        )
 
     def read_by_adoc(
         self, db: Session, *, adoc_id: int, skip: int = 0, limit: int = 1000

@@ -31,6 +31,13 @@ class SpanAnnotationCreateWithCodeId(SpanAnnotationBaseDTO):
     )
 
 
+class SpanAnnotationCreateBulkWithCodeId(SpanAnnotationBaseDTO):
+    span_text: str = Field(description="The SpanText the SpanAnnotation spans.")
+    code_id: int = Field(description="Code the SpanAnnotation refers to")
+    sdoc_id: int = Field(description="SourceDocument the SpanAnnotation refers to")
+    user_id: int = Field(description="User the SpanAnnotation belongs to")
+
+
 # Properties for updating
 class SpanAnnotationUpdate(BaseModel, UpdateDTOBase):
     current_code_id: int = Field(description="CurrentCode the SpanAnnotation refers to")
