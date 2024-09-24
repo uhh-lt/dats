@@ -114,20 +114,18 @@ function AnnotationResultStep() {
       <DialogContent>
         <LLMUtterance>
           <Typography>
-            Here are the results! You can find my suggestions in the columns marked with <i>(suggested)</i>. Now, you
-            decide what to do with them:
+            Here are the results! My suggestions are highlighted in the documents. Now, you can decide what to do with
+            them. You can click on an annotation and either:
           </Typography>
           <ul style={{ margin: 0 }}>
-            <li>Use your current metadata values (discarding my suggestions)</li>
-            <li>Use my suggested metadata values (discarding the current value)</li>
+            <li>Delete my suggestion</li>
+            <li>Change the code of my annotated text passage</li>
           </ul>
-          <Typography>
-            Of course, you can decided individually for each document. Just click on the value you want to use.
-          </Typography>
+          <Typography>Remember to look through all the documents.</Typography>
         </LLMUtterance>
         {llmJob.isSuccess && llmJob.data.result && tab && annotations && (
           <TabContext value={tab}>
-            <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+            <Box sx={{ mt: 3, borderBottom: 1, borderColor: "divider" }}>
               <TabList onChange={handleChangeTab}>
                 {Object.keys(annotations).map((sdocId) => (
                   <Tab key={sdocId} label={<SdocRenderer sdoc={parseInt(sdocId)} renderFilename />} value={sdocId} />
@@ -137,7 +135,7 @@ function AnnotationResultStep() {
             {Object.entries(annotations).map(([sdocIdStr, annotations]) => {
               const sdocId = parseInt(sdocIdStr);
               return (
-                <TabPanel key={sdocId} value={sdocIdStr} sx={{ px: 0 }}>
+                <TabPanel key={sdocId} value={sdocIdStr} sx={{ px: 0, py: 1 }}>
                   <TextAnnotationValidator
                     sdocId={sdocId}
                     codesForSelection={codesForSelection}
