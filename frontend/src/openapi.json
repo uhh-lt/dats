@@ -2067,6 +2067,60 @@
         }
       }
     },
+    "/span/bulk/create": {
+      "put": {
+        "tags": ["spanAnnotation"],
+        "summary": "Creates a SpanAnnotations in Bulk",
+        "operationId": "add_span_annotations_bulk",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "resolve",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "title": "Resolve Code",
+              "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
+              "default": true
+            },
+            "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/SpanAnnotationCreateBulkWithCodeId" },
+                "title": "Spans"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    { "type": "array", "items": { "$ref": "#/components/schemas/SpanAnnotationRead" } },
+                    { "type": "array", "items": { "$ref": "#/components/schemas/SpanAnnotationReadResolved" } }
+                  ],
+                  "title": "Response Spanannotation-Add Span Annotations Bulk"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/span/{span_id}": {
       "get": {
         "tags": ["spanAnnotation"],
@@ -8928,6 +8982,37 @@
           "updated"
         ],
         "title": "SourceDocumentWithDataRead"
+      },
+      "SpanAnnotationCreateBulkWithCodeId": {
+        "properties": {
+          "begin": { "type": "integer", "title": "Begin", "description": "Begin of the SpanAnnotation in characters" },
+          "end": { "type": "integer", "title": "End", "description": "End of the SpanAnnotation in characters" },
+          "begin_token": {
+            "type": "integer",
+            "title": "Begin Token",
+            "description": "Begin of the SpanAnnotation in tokens"
+          },
+          "end_token": {
+            "type": "integer",
+            "title": "End Token",
+            "description": "End of the SpanAnnotation in tokens"
+          },
+          "span_text": {
+            "type": "string",
+            "title": "Span Text",
+            "description": "The SpanText the SpanAnnotation spans."
+          },
+          "code_id": { "type": "integer", "title": "Code Id", "description": "Code the SpanAnnotation refers to" },
+          "sdoc_id": {
+            "type": "integer",
+            "title": "Sdoc Id",
+            "description": "SourceDocument the SpanAnnotation refers to"
+          },
+          "user_id": { "type": "integer", "title": "User Id", "description": "User the SpanAnnotation belongs to" }
+        },
+        "type": "object",
+        "required": ["begin", "end", "begin_token", "end_token", "span_text", "code_id", "sdoc_id", "user_id"],
+        "title": "SpanAnnotationCreateBulkWithCodeId"
       },
       "SpanAnnotationCreateWithCodeId": {
         "properties": {
