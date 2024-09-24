@@ -1,6 +1,6 @@
 import random
 import re
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 from sqlalchemy.orm import Session
 
@@ -65,14 +65,14 @@ class AnnotationPromptBuilder(PromptBuilder):
         self.codeids2code_dict = {code.id: code for code in self.codes}
 
         # get one example annotation per code
-        examples: Dict[int, Optional[str]] = {}
+        examples: Dict[int, str] = {}
         for code in project.codes:
             # get all annotations for the code
             annotations = code.current_code.span_annotations
             if len(annotations) == 0:
                 continue
             random_annotation = random.choice(annotations)
-            examples[code.id] = random_annotation.span_text.text
+            examples[code.id] = f"{code.name}: {random_annotation.span_text.text}"
         self.examples = examples
 
     def _build_example(self, language: str, code_ids: List[int]) -> str:
@@ -80,16 +80,11 @@ class AnnotationPromptBuilder(PromptBuilder):
         for code_id in code_ids:
             if code_id not in self.examples:
                 continue
-            examples.append(
-                f"{self.codeids2code_dict[code_id].name}: {self.examples[code_id]}"
-            )
+            examples.append(self.examples[code_id])
 
         if len(examples) == 0:
             # choose 3 random examples
-            for code_id in random.sample(list(self.codeids2code_dict.keys()), 3):
-                examples.append(
-                    f"{self.codeids2code_dict[code_id].name}: {self.examples[code_id]}"
-                )
+            examples.extend(random.sample(list(self.examples.values()), 3))
 
         return "\n".join(examples)
 
