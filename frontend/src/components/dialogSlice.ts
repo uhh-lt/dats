@@ -179,35 +179,19 @@ export const dialogSlice = createSlice({
     closeProjectSettings: (state) => {
       state.isProjectSettingsOpen = false;
     },
+    // Step 0: Select documents & open the dialog
     openLLMDialog: (state, action: PayloadAction<{ event: LLMAssistanceEvent }>) => {
       state.isLLMDialogOpen = true;
       state.llmDocumentIds = action.payload.event.selectedDocumentIds;
       state.llmMethod = action.payload.event.method;
       state.llmStep = action.payload.event.method === undefined ? 0 : 1;
     },
-    resumeLLMDialog: (state, action: PayloadAction<{ jobId: string; method: LLMJobType }>) => {
-      state.isLLMDialogOpen = true;
-      state.llmStep = 3;
-      state.llmJobId = action.payload.jobId;
-      state.llmMethod = action.payload.method;
-    },
-    llmDialogSelectMethod: (state, action: PayloadAction<{ method: LLMJobType }>) => {
+    // Step 1: Select method
+    llmDialogGoToDataSelection: (state, action: PayloadAction<{ method: LLMJobType }>) => {
       state.llmMethod = action.payload.method;
       state.llmStep = 1;
     },
-    llmDialogSelectTags: (state, action: PayloadAction<{ tags: DocumentTagRead[] }>) => {
-      state.llmMethod = LLMJobType.DOCUMENT_TAGGING;
-      state.llmStep = 2;
-      state.llmTags = action.payload.tags;
-    },
-    llmDialogGoToWaiting: (state, action: PayloadAction<{ jobId: string }>) => {
-      state.llmJobId = action.payload.jobId;
-      state.llmStep = 3;
-    },
-    llmDialogGoToResult: (state, action: PayloadAction<{ result: LLMJobResult }>) => {
-      state.llmJobResult = action.payload.result;
-      state.llmStep = 4;
-    },
+    // Step 2: Select tags, metadata, or codes
     llmDialogGoToPromptEditor: (
       state,
       action: PayloadAction<{
@@ -223,6 +207,7 @@ export const dialogSlice = createSlice({
       state.llmMetadata = action.payload.metadata;
       state.llmCodes = action.payload.codes;
     },
+    // Step 3: Edit the prompts
     updateLLMPrompts: (
       state,
       action: PayloadAction<{ language: string; systemPrompt: string; userPrompt: string }>,
@@ -239,27 +224,45 @@ export const dialogSlice = createSlice({
       });
       state.llmPrompts = updatedPrompts.slice();
     },
-    nextLLMDialogStep: (state) => {
-      state.llmStep += 1;
-      if (state.llmStep >= 4) {
-        state.llmStep = 4;
-      }
+    llmDialogGoToWaiting: (state, action: PayloadAction<{ jobId: string; method: LLMJobType }>) => {
+      state.isLLMDialogOpen = true;
+      state.llmStep = 3;
+      state.llmJobId = action.payload.jobId;
+      state.llmMethod = action.payload.method;
     },
-    backToMethodSelectionLLMDialogStep: (state) => {
-      state.llmStep = 0;
+    // Step 4: Wait for the job to finish
+    llmDialogGoToResult: (state, action: PayloadAction<{ result: LLMJobResult }>) => {
+      state.llmJobResult = action.payload.result;
+      state.llmStep = 4;
+    },
+    // close the dialog & reset
+    closeLLMDialog: (state) => {
+      state.isLLMDialogOpen = initialState.isLLMDialogOpen;
+      state.llmDocumentIds = initialState.llmDocumentIds;
       state.llmMethod = initialState.llmMethod;
+      state.llmStep = initialState.llmStep;
+      state.llmTags = initialState.llmTags;
+      state.llmMetadata = initialState.llmMetadata;
+      state.llmCodes = initialState.llmCodes;
+      state.llmPrompts = initialState.llmPrompts;
+      state.llmJobId = initialState.llmJobId;
+      state.llmJobResult = initialState.llmJobResult;
     },
     previousLLMDialogStep: (state) => {
       state.llmStep -= 1;
       if (state.llmStep < 0) {
         state.llmStep = 0;
       }
-    },
-    closeLLMDialog: (state) => {
-      state.isLLMDialogOpen = initialState.isLLMDialogOpen;
-      state.llmDocumentIds = initialState.llmDocumentIds;
-      state.llmMethod = initialState.llmMethod;
-      state.llmStep = initialState.llmStep;
+      // user just selected the method, reset method selection
+      if (state.llmStep === 0) {
+        state.llmMethod = initialState.llmMethod;
+        // user just selected the data, reset data selection
+      } else if (state.llmStep === 1) {
+        state.llmPrompts = initialState.llmPrompts;
+        state.llmTags = initialState.llmTags;
+        state.llmMetadata = initialState.llmMetadata;
+        state.llmCodes = initialState.llmCodes;
+      }
     },
   },
 });

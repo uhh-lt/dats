@@ -37,7 +37,7 @@ function LLMJobListItem({ initialLLMJob }: LLMJobListItemProps) {
   const handleViewResults = () => {
     dispatch(CRUDDialogActions.closeProjectSettings());
     dispatch(
-      CRUDDialogActions.resumeLLMDialog({
+      CRUDDialogActions.llmDialogGoToWaiting({
         jobId: initialLLMJob.id,
         method: initialLLMJob.parameters.llm_job_type,
       }),

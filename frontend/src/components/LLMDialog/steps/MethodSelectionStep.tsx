@@ -16,7 +16,7 @@ import LLMUtterance from "./LLMUtterance.tsx";
 function MethodSelectionStep() {
   const dispatch = useAppDispatch();
   const selectMethod = (method: LLMJobType) => () => {
-    dispatch(CRUDDialogActions.llmDialogSelectMethod({ method }));
+    dispatch(CRUDDialogActions.llmDialogGoToDataSelection({ method }));
   };
   const handleClose = () => {
     dispatch(CRUDDialogActions.closeLLMDialog());

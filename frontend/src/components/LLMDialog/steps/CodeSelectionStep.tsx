@@ -64,7 +64,7 @@ function CodeSelectionStep({ projectId }: { projectId: number }) {
             <Box flexGrow={1} />
             <Button
               disabled={createPromptTemplatesMutation.isPending}
-              onClick={() => dispatch(CRUDDialogActions.backToMethodSelectionLLMDialogStep())}
+              onClick={() => dispatch(CRUDDialogActions.previousLLMDialogStep())}
             >
               Back
             </Button>

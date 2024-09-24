@@ -33,7 +33,7 @@ function PromptEditorStep({ projectId }: { projectId: number }) {
   };
 
   // react form handlers
-  const handleSubmitPrompt = (language: string) => (formData: PromptEditorValues) => {
+  const handleChangePrompt = (language: string) => (formData: PromptEditorValues) => {
     dispatch(
       CRUDDialogActions.updateLLMPrompts({
         language: language,
@@ -68,6 +68,7 @@ function PromptEditorStep({ projectId }: { projectId: number }) {
           dispatch(
             CRUDDialogActions.llmDialogGoToWaiting({
               jobId: data.id,
+              method: data.parameters.llm_job_type,
             }),
           );
         },
@@ -84,7 +85,7 @@ function PromptEditorStep({ projectId }: { projectId: number }) {
           </Typography>
         </LLMUtterance>
         <TabContext value={tab}>
-          <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+          <Box sx={{ mt: 3, borderBottom: 1, borderColor: "divider" }}>
             <TabList onChange={handleChangeTab}>
               {prompts.map((prompt) => (
                 <Tab key={prompt.language} label={prompt.language} value={prompt.language} />
@@ -93,7 +94,7 @@ function PromptEditorStep({ projectId }: { projectId: number }) {
           </Box>
           {prompts.map((prompt) => (
             <TabPanel key={prompt.language} value={prompt.language} sx={{ px: 0 }}>
-              <PromptEditorStepForm prompt={prompt} handleSavePrompt={handleSubmitPrompt(prompt.language)} />
+              <PromptEditorStepForm prompt={prompt} handleSavePrompt={handleChangePrompt(prompt.language)} />
             </TabPanel>
           ))}
         </TabContext>
