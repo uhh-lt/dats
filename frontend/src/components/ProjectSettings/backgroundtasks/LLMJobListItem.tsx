@@ -39,6 +39,7 @@ function LLMJobListItem({ initialLLMJob }: LLMJobListItemProps) {
     dispatch(
       CRUDDialogActions.resumeLLMDialog({
         jobId: initialLLMJob.id,
+        method: initialLLMJob.parameters.llm_job_type,
       }),
     );
   };
