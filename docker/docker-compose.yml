@@ -108,6 +108,71 @@ services:
     profiles:
       - dev_frontend
 
+  ollama:
+    image: ollama/ollama:0.3.4
+    ports:
+      - ${OLLAMA_EXPOSED:-19290}:11434
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+    tty: true
+    restart: unless-stopped
+    volumes:
+      - ./ollama_cache:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["0"]
+              capabilities: [gpu]
+    networks:
+      - dats_demo_network
+    profiles:
+      - ollama
+
+  ray:
+    image: uhhlt/dats_ray:${DATS_RAY_DOCKER_VERSION:-debian_dev_latest}
+    command: /dats_code_ray/ray_model_worker_entrypoint.sh
+    user: ${UID:-1000}:${GID:-1000}
+    environment:
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATS_BACKEND_CONFIG: ${DATS_BACKEND_CONFIG:-/dats_code/src/configs/default.yaml}
+      HUGGINGFACE_HUB_CACHE: /models_cache
+      TRANSFORMERS_CACHE: /models_cache
+      TORCH_HOME: /models_cache
+      RAY_PROCESSING_DEVICE_SPACY: ${RAY_PROCESSING_DEVICE_SPACY:-cpu}
+      RAY_PROCESSING_DEVICE_WHISPER: ${RAY_PROCESSING_DEVICE_WHISPER:-cuda}
+      RAY_PROCESSING_DEVICE_DETR: ${RAY_PROCESSING_DEVICE_DETR:-cuda}
+      RAY_PROCESSING_DEVICE_VIT_GPT2: ${RAY_PROCESSING_DEVICE_VIT_GPT2:-cuda}
+      RAY_PROCESSING_DEVICE_BLIP2: ${RAY_PROCESSING_DEVICE_BLIP2:-cuda}
+      RAY_PROCESSING_DEVICE_CLIP: ${RAY_PROCESSING_DEVICE_CLIP:-cuda}
+      RAY_PROCESSING_DEVICE_COTA: ${RAY_PROCESSING_DEVICE_COTA:-cuda}
+      RAY_BLIP2_PRECISION_BIT: ${RAY_BLIP2_PRECISION_BIT:-32}
+      SHARED_REPO_ROOT: ${SHARED_REPO_ROOT:-/tmp/dats}
+      NUMBA_CACHE_DIR: /numba_cache
+    volumes:
+      - ../backend/src/app/preprocessing/ray_model_worker:/dats_code_ray
+      - ./spacy_models:/spacy_models
+      - ./backend_repo:${SHARED_REPO_ROOT:-/tmp/dats}
+      - ./models_cache:/models_cache
+      - ./numba_cache:/numba_cache
+    ports:
+      - "${RAY_API_EXPOSED:-8000}:8000"
+      - "${RAY_DASHBOARD_EXPOSED:-8265}:8265"
+    restart: always
+    shm_size: 12gb
+    networks:
+      - dats_demo_network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["0"]
+              capabilities: [gpu]
+    profiles:
+      - ray
+
   celery-background-jobs-worker:
     image: uhhlt/dats_backend:${DATS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
     command: /dats_code/src/celery_background_jobs_worker_entrypoint.sh
@@ -165,71 +230,6 @@ services:
       - dats_demo_network
     profiles:
       - background
-
-  ray:
-    image: uhhlt/dats_ray:${DATS_RAY_DOCKER_VERSION:-debian_dev_latest}
-    command: /dats_code_ray/ray_model_worker_entrypoint.sh
-    user: ${UID:-1000}:${GID:-1000}
-    environment:
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-      DATS_BACKEND_CONFIG: ${DATS_BACKEND_CONFIG:-/dats_code/src/configs/default.yaml}
-      HUGGINGFACE_HUB_CACHE: /models_cache
-      TRANSFORMERS_CACHE: /models_cache
-      TORCH_HOME: /models_cache
-      RAY_PROCESSING_DEVICE_SPACY: ${RAY_PROCESSING_DEVICE_SPACY:-cpu}
-      RAY_PROCESSING_DEVICE_WHISPER: ${RAY_PROCESSING_DEVICE_WHISPER:-cuda}
-      RAY_PROCESSING_DEVICE_DETR: ${RAY_PROCESSING_DEVICE_DETR:-cuda}
-      RAY_PROCESSING_DEVICE_VIT_GPT2: ${RAY_PROCESSING_DEVICE_VIT_GPT2:-cuda}
-      RAY_PROCESSING_DEVICE_BLIP2: ${RAY_PROCESSING_DEVICE_BLIP2:-cuda}
-      RAY_PROCESSING_DEVICE_CLIP: ${RAY_PROCESSING_DEVICE_CLIP:-cuda}
-      RAY_PROCESSING_DEVICE_COTA: ${RAY_PROCESSING_DEVICE_COTA:-cuda}
-      RAY_BLIP2_PRECISION_BIT: ${RAY_BLIP2_PRECISION_BIT:-32}
-      SHARED_REPO_ROOT: ${SHARED_REPO_ROOT:-/tmp/dats}
-      NUMBA_CACHE_DIR: /numba_cache
-    volumes:
-      - ../backend/src/app/preprocessing/ray_model_worker:/dats_code_ray
-      - ./spacy_models:/spacy_models
-      - ./backend_repo:${SHARED_REPO_ROOT:-/tmp/dats}
-      - ./models_cache:/models_cache
-      - ./numba_cache:/numba_cache
-    ports:
-      - "${RAY_API_EXPOSED:-8000}:8000"
-      - "${RAY_DASHBOARD_EXPOSED:-8265}:8265"
-    restart: always
-    shm_size: 12gb
-    networks:
-      - dats_demo_network
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              device_ids: ["0"]
-              capabilities: [gpu]
-    profiles:
-      - ray
-
-  ollama:
-    image: ollama/ollama:0.3.4
-    ports:
-      - ${OLLAMA_EXPOSED:-19290}:11434
-    environment:
-      - OLLAMA_KEEP_ALIVE=24h
-    tty: true
-    restart: unless-stopped
-    volumes:
-      - ./ollama_cache:/root/.ollama
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              device_ids: ["0"]
-              capabilities: [gpu]
-    networks:
-      - dats_demo_network
-    profiles:
-      - ollama
 
   dats-backend-api:
     image: uhhlt/dats_backend:${DATS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
