@@ -1,7 +1,7 @@
 """remove word frequencies from sdocdata
 
 Revision ID: 53ec37ba68dd
-Revises: 2b91203d1bb6
+Revises: 45549c9c4ff2
 Create Date: 2024-09-17 11:13:19.039284
 
 """
@@ -9,12 +9,11 @@ Create Date: 2024-09-17 11:13:19.039284
 from typing import Sequence, Union
 
 import sqlalchemy as sa
-
 from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "53ec37ba68dd"
-down_revision: Union[str, None] = "2b91203d1bb6"
+down_revision: Union[str, None] = "45549c9c4ff2"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
