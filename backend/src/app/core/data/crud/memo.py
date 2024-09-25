@@ -1,21 +1,13 @@
 from typing import List, Optional
 
 import srsly
-from fastapi.encoders import jsonable_encoder
-from sqlalchemy import and_
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.action import ActionType
-from app.core.data.dto.memo import (
-    AttachedObjectType,
-    MemoCreate,
-    MemoInDB,
-    MemoRead,
-    MemoUpdate,
-)
+from app.core.data.dto.memo import (AttachedObjectType, MemoCreate, MemoInDB,
+                                    MemoRead, MemoUpdate)
 from app.core.data.dto.object_handle import ObjectHandleCreate
-from app.core.data.dto.search import ElasticSearchMemoCreate, ElasticSearchMemoUpdate
+from app.core.data.dto.search import (ElasticSearchMemoCreate,
+                                      ElasticSearchMemoUpdate)
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM
@@ -28,6 +20,9 @@ from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_group import SpanGroupORM
 from app.core.db.sql_service import SQLService
 from app.core.search.elasticsearch_service import ElasticSearchService
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy import and_
+from sqlalchemy.orm import Session
 
 
 class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
@@ -245,24 +240,6 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
         )
         return db_obj
 
-    def create_for_adoc(
-        self, db: Session, adoc_id: int, create_dto: MemoCreate
-    ) -> MemoORM:
-        # Flo: this is necessary to avoid circular imports.
-        from app.core.data.crud.object_handle import crud_object_handle
-
-        # create an ObjectHandle for the AnnotationDocument
-        oh_db_obj = crud_object_handle.create(
-            db=db, create_dto=ObjectHandleCreate(annotation_document_id=adoc_id)
-        )
-        db_obj = self.__create_memo(create_dto, db, oh_db_obj)
-        self.__add_memo_to_elasticsearch(
-            memo_orm=db_obj,
-            attached_object_id=adoc_id,
-            attached_object_type=AttachedObjectType.annotation_document,
-        )
-        return db_obj
-
     def create_for_span_annotation(
         self, db: Session, span_anno_id: int, create_dto: MemoCreate
     ) -> MemoORM:
@@ -370,12 +347,6 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
                 **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
                 attached_object_id=attached_to.id,
                 attached_object_type=AttachedObjectType.bbox_annotation,
-            )
-        elif isinstance(attached_to, AnnotationDocumentORM):
-            return MemoRead(
-                **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
-                attached_object_id=attached_to.id,
-                attached_object_type=AttachedObjectType.annotation_document,
             )
         elif isinstance(attached_to, SourceDocumentORM):
             return MemoRead(

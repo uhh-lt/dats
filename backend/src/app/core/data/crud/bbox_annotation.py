@@ -1,36 +1,44 @@
 from typing import List, Optional
 
 import srsly
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.action import ActionType
-from app.core.data.dto.bbox_annotation import (
-    BBoxAnnotationCreate,
-    BBoxAnnotationCreateWithCodeId,
-    BBoxAnnotationRead,
-    BBoxAnnotationReadResolvedCode,
-    BBoxAnnotationUpdate,
-    BBoxAnnotationUpdateWithCodeId,
-)
+from app.core.data.dto.bbox_annotation import (BBoxAnnotationCreate,
+                                               BBoxAnnotationCreateIntern,
+                                               BBoxAnnotationCreateWithCodeId,
+                                               BBoxAnnotationRead,
+                                               BBoxAnnotationReadResolvedCode,
+                                               BBoxAnnotationUpdate,
+                                               BBoxAnnotationUpdateWithCodeId)
 from app.core.data.dto.code import CodeRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
+from sqlalchemy.orm import Session
 
 
 class CRUDBBoxAnnotation(
-    CRUDBase[BBoxAnnotationORM, BBoxAnnotationCreate, BBoxAnnotationUpdate]
+    CRUDBase[BBoxAnnotationORM, BBoxAnnotationCreateIntern, BBoxAnnotationUpdate]
 ):
     def create(
         self, db: Session, *, create_dto: BBoxAnnotationCreate
-    ) -> BBoxAnnotationORM:
+    ) -> BBoxAnnotationORM:       
+        # get or create the annotation document
+        adoc = crud_adoc.exists_or_create(db=db, user_id=create_dto.user_id, sdoc_id=create_dto.sdoc_id)
+
         # create the BboxAnnotation
-        db_obj = super().create(db=db, create_dto=create_dto)
+        db_obj = super().create(db=db, create_dto=BBoxAnnotationCreateIntern(
+            x_min=create_dto.x_min,
+            x_max=create_dto.x_max,
+            y_min=create_dto.y_min,
+            y_max=create_dto.y_max,
+            current_code_id=create_dto.current_code_id,
+            adoc_id=adoc.id
+        ))
 
         # update the annotation document's timestamp
-        crud_adoc.update_timestamp(db=db, id=create_dto.annotation_document_id)
+        crud_adoc.update_timestamp(db=db, id=adoc.id)
 
         return db_obj
 
@@ -48,7 +56,8 @@ class CRUDBBoxAnnotation(
             y_min=create_dto.y_min,
             y_max=create_dto.y_max,
             current_code_id=ccid,
-            annotation_document_id=create_dto.annotation_document_id,
+            user_id=create_dto.user_id,
+            sdoc_id=create_dto.sdoc_id,
         )
 
         return self.create(db=db, create_dto=create_dto_with_ccid)
@@ -63,6 +72,32 @@ class CRUDBBoxAnnotation(
             .limit(limit)
             .all()
         )
+
+    def read_by_user(
+        self, db: Session, *, user_id: int, skip: int = 0, limit: int = 1000
+    ) -> List[BBoxAnnotationORM]:
+        query = (
+            db.query(self.model)
+            .join(self.model.annotation_document)
+            .where(AnnotationDocumentORM.user_id == user_id)
+            .offset(skip)
+            .limit(limit)
+        )
+
+        return query.all()
+
+    def read_by_user_and_sdoc(
+        self, db: Session, *, user_id: int, sdoc_id: int, skip: int = 0, limit: int = 1000
+    ) -> List[BBoxAnnotationORM]:
+        query = (
+            db.query(self.model)
+            .join(self.model.annotation_document)
+            .where(AnnotationDocumentORM.user_id == user_id, AnnotationDocumentORM.source_document_id == sdoc_id)
+            .offset(skip)
+            .limit(limit)
+        )
+
+        return query.all()
 
     def read_by_code_and_user(
         self, db: Session, *, code_id: int, user_id: int
@@ -79,7 +114,7 @@ class CRUDBBoxAnnotation(
 
     def update(
         self, db: Session, *, id: int, update_dto: BBoxAnnotationUpdate
-    ) -> Optional[BBoxAnnotationORM]:
+    ) -> BBoxAnnotationORM:
         bbox_anno = super().update(db, id=id, update_dto=update_dto)
         # update the annotation document's timestamp
         crud_adoc.update_timestamp(db=db, id=bbox_anno.annotation_document_id)

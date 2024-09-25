@@ -1,9 +1,5 @@
 import traceback
 
-from loguru import logger
-from psycopg2 import OperationalError
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import NoSuchElementError
@@ -21,8 +17,9 @@ from app.core.data.dto.code import CodeCreate
 from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.source_document_data import SourceDocumentDataCreate
-from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
-from app.core.data.dto.span_annotation import SpanAnnotationCreate
+from app.core.data.dto.source_document_metadata import \
+    SourceDocumentMetadataCreate
+from app.core.data.dto.span_annotation import SpanAnnotationCreateIntern
 from app.core.data.dto.word_frequency import WordFrequencyCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.source_document import SourceDocumentORM
@@ -31,6 +28,9 @@ from app.core.db.sql_service import SQLService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from app.util.color import get_next_color
+from loguru import logger
+from psycopg2 import OperationalError
+from sqlalchemy.orm import Session
 
 repo: RepoService = RepoService()
 sql: SQLService = SQLService()
@@ -167,11 +167,11 @@ def _persist_span_annotations(
         ccid = db_code.current_code.id
 
         create_dtos = [
-            SpanAnnotationCreate(
+            SpanAnnotationCreateIntern(
                 begin=aspan.start,
                 end=aspan.end,
                 current_code_id=ccid,
-                annotation_document_id=adoc_db_obj.id,
+                adoc_id=adoc_db_obj.id,
                 span_text=aspan.text,
                 begin_token=aspan.start_token,
                 end_token=aspan.end_token,

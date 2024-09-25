@@ -1,9 +1,5 @@
 from typing import List
 
-from loguru import logger
-from psycopg2 import OperationalError
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.code import crud_code
@@ -11,15 +7,20 @@ from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.annotation_document import AnnotationDocumentCreate
-from app.core.data.dto.bbox_annotation import BBoxAnnotationCreate
+from app.core.data.dto.bbox_annotation import (BBoxAnnotationCreate,
+                                               BBoxAnnotationCreateIntern)
 from app.core.data.dto.code import CodeCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
-from app.preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
+from app.preprocessing.pipeline.model.image.preproimagedoc import \
+    PreProImageDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.util.color import get_next_color
+from loguru import logger
+from psycopg2 import OperationalError
+from sqlalchemy.orm import Session
 
 repo: RepoService = RepoService()
 sql: SQLService = SQLService()
@@ -59,7 +60,7 @@ def _persist_bbox__annotations(
     db: Session, adoc_db_obj: AnnotationDocumentORM, ppid: PreProImageDoc
 ) -> None:
     # convert AutoBBoxes to BBoxAnnotationCreate
-    create_dtos: List[BBoxAnnotationCreate] = []
+    create_dtos: List[BBoxAnnotationCreateIntern] = []
     for bbox in ppid.bboxes:
         db_code = crud_code.read_by_name_and_user_and_project(
             db,
@@ -82,13 +83,13 @@ def _persist_bbox__annotations(
 
         ccid = db_code.current_code.id
 
-        create_dto = BBoxAnnotationCreate(
+        create_dto = BBoxAnnotationCreateIntern(
             x_min=bbox.x_min,
             x_max=bbox.x_max,
             y_min=bbox.y_min,
             y_max=bbox.y_max,
             current_code_id=ccid,
-            annotation_document_id=adoc_db_obj.id,
+            adoc_id=adoc_db_obj.id,
         )
 
         create_dtos.append(create_dto)

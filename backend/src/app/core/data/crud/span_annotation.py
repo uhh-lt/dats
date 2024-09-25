@@ -1,9 +1,6 @@
 from typing import Dict, List, Optional
 
 import srsly
-from fastapi.encoders import jsonable_encoder
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import CRUDBase
@@ -12,33 +9,42 @@ from app.core.data.crud.span_text import crud_span_text
 from app.core.data.dto.action import ActionType
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.span_annotation import (
-    SpanAnnotationCreate,
-    SpanAnnotationCreateBulkWithCodeId,
-    SpanAnnotationCreateWithCodeId,
-    SpanAnnotationRead,
-    SpanAnnotationReadResolved,
-    SpanAnnotationUpdate,
-    SpanAnnotationUpdateWithCodeId,
-)
+    SpanAnnotationCreate, SpanAnnotationCreateBulkWithCodeId,
+    SpanAnnotationCreateIntern, SpanAnnotationCreateWithCodeId,
+    SpanAnnotationRead, SpanAnnotationReadResolved, SpanAnnotationUpdate,
+    SpanAnnotationUpdateWithCodeId)
 from app.core.data.dto.span_text import SpanTextCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy.orm import Session
 
 
 class CRUDSpanAnnotation(
-    CRUDBase[SpanAnnotationORM, SpanAnnotationCreate, SpanAnnotationUpdate]
+    CRUDBase[SpanAnnotationORM, SpanAnnotationCreateIntern, SpanAnnotationUpdate]
 ):
     def create(
         self, db: Session, *, create_dto: SpanAnnotationCreate
     ) -> SpanAnnotationORM:
+        # get or create the annotation document
+        adoc = crud_adoc.exists_or_create(db=db, user_id=create_dto.user_id, sdoc_id=create_dto.sdoc_id)
+
         # first create the SpanText
         span_text_orm = crud_span_text.create(
             db=db, create_dto=SpanTextCreate(text=create_dto.span_text)
         )
 
         # create the SpanAnnotation (and link the SpanText via FK)
-        dto_obj_data = jsonable_encoder(create_dto.model_dump(exclude={"span_text"}))
+        dto_obj_data = jsonable_encoder(SpanAnnotationCreateIntern(
+            adoc_id=adoc.id,
+            begin=create_dto.begin,
+            end=create_dto.end,
+            begin_token=create_dto.begin_token,
+            end_token=create_dto.end_token,
+            current_code_id=create_dto.current_code_id,
+            span_text=create_dto.span_text,
+        ).model_dump(exclude={"span_text"}))
         # noinspection PyArgumentList
         db_obj = self.model(**dto_obj_data)
         db_obj.span_text_id = span_text_orm.id
@@ -50,7 +56,7 @@ class CRUDSpanAnnotation(
         after_state = self._get_action_state_from_orm(db_obj=db_obj)
 
         # update the annotation document's timestamp
-        crud_adoc.update_timestamp(db=db, id=create_dto.annotation_document_id)
+        crud_adoc.update_timestamp(db=db, id=adoc.id)
 
         # create action manually because we're not using crud base create
         self._create_action(
@@ -76,13 +82,14 @@ class CRUDSpanAnnotation(
             begin_token=create_dto.begin_token,
             end_token=create_dto.end_token,
             current_code_id=ccid,
-            annotation_document_id=create_dto.annotation_document_id,
+            user_id=create_dto.user_id,
+            sdoc_id=create_dto.sdoc_id,
         )
 
         return self.create(db=db, create_dto=create_dto_with_ccid)
 
     def create_multi(
-        self, db: Session, *, create_dtos: List[SpanAnnotationCreate]
+        self, db: Session, *, create_dtos: List[SpanAnnotationCreateIntern]
     ) -> List[SpanAnnotationORM]:
         # first create the SpanText
         span_texts_orm = crud_span_text.create_multi(
@@ -106,7 +113,7 @@ class CRUDSpanAnnotation(
 
         # update all affected annotation documents' timestamp
         adoc_ids = list(
-            set([create_dto.annotation_document_id for create_dto in create_dtos])
+            set([create_dto.adoc_id for create_dto in create_dtos])
         )
         for adoc_id in adoc_ids:
             crud_adoc.update_timestamp(db=db, id=adoc_id)
@@ -146,14 +153,14 @@ class CRUDSpanAnnotation(
         return self.create_multi(
             db=db,
             create_dtos=[
-                SpanAnnotationCreate(
+                SpanAnnotationCreateIntern(
                     begin=create_dto.begin,
                     end=create_dto.end,
                     span_text=create_dto.span_text,
                     begin_token=create_dto.begin_token,
                     end_token=create_dto.end_token,
                     current_code_id=cid2ccid[create_dto.code_id],
-                    annotation_document_id=adoc_id_by_user_sdoc[
+                    adoc_id=adoc_id_by_user_sdoc[
                         (create_dto.user_id, create_dto.sdoc_id)
                     ],
                 )
@@ -167,6 +174,32 @@ class CRUDSpanAnnotation(
         query = (
             db.query(self.model)
             .where(self.model.annotation_document_id == adoc_id)
+            .offset(skip)
+            .limit(limit)
+        )
+
+        return query.all()
+
+    def read_by_user(
+        self, db: Session, *, user_id: int, skip: int = 0, limit: int = 1000
+    ) -> List[SpanAnnotationORM]:
+        query = (
+            db.query(self.model)
+            .join(self.model.annotation_document)
+            .where(AnnotationDocumentORM.user_id == user_id)
+            .offset(skip)
+            .limit(limit)
+        )
+
+        return query.all()
+
+    def read_by_user_and_sdoc(
+        self, db: Session, *, user_id: int, sdoc_id: int, skip: int = 0, limit: int = 1000
+    ) -> List[SpanAnnotationORM]:
+        query = (
+            db.query(self.model)
+            .join(self.model.annotation_document)
+            .where(AnnotationDocumentORM.user_id == user_id, AnnotationDocumentORM.source_document_id == sdoc_id)
             .offset(skip)
             .limit(limit)
         )

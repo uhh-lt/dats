@@ -1,34 +1,35 @@
-from typing import List
+from typing import Dict, List, Union
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
-from api.dependencies import get_current_user, get_db_session
+from api.dependencies import (get_current_user, get_db_session,
+                              resolve_code_param, skip_limit_params)
 from api.util import get_object_memo_for_user, get_object_memos
 from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
-from app.core.data.crud.annotation_document import crud_adoc
-from app.core.data.crud.crud_base import NoSuchElementError
+from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
-from app.core.data.dto.annotation_document import (
-    AnnotationDocumentCreate,
-    AnnotationDocumentRead,
-)
+from app.core.data.crud.span_annotation import crud_span_anno
+from app.core.data.crud.span_group import crud_span_group
+from app.core.data.dto.bbox_annotation import (BBoxAnnotationRead,
+                                               BBoxAnnotationReadResolvedCode)
+from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
-from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
-from app.core.data.dto.source_document import (
-    SourceDocumentRead,
-    SourceDocumentUpdate,
-    SourceDocumentWithDataRead,
-)
-from app.core.data.dto.source_document_metadata import (
-    SourceDocumentMetadataReadResolved,
-)
+from app.core.data.dto.memo import (AttachedObjectType, MemoCreate, MemoInDB,
+                                    MemoRead)
+from app.core.data.dto.source_document import (SourceDocumentRead,
+                                               SourceDocumentUpdate,
+                                               SourceDocumentWithDataRead)
+from app.core.data.dto.source_document_metadata import \
+    SourceDocumentMetadataReadResolved
+from app.core.data.dto.span_annotation import (SpanAnnotationRead,
+                                               SpanAnnotationReadResolved)
+from app.core.data.dto.span_group import SpanGroupRead
 from app.core.data.dto.word_frequency import WordFrequencyRead
 from app.core.data.repo.repo_service import RepoService
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/sdoc", dependencies=[Depends(get_current_user)], tags=["sourceDocument"]
@@ -173,60 +174,11 @@ def read_metadata_by_key(
 
 
 @router.get(
-    "/{sdoc_id}/adoc/{user_id}",
-    response_model=AnnotationDocumentRead,
-    summary="Returns the AnnotationDocument for the SourceDocument of the User or create the AnnotationDocument for the User if it does not exist.",
-)
-def get_adoc_of_user(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    user_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> AnnotationDocumentRead:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
-
-    try:
-        db_obj = crud_adoc.read_by_sdoc_and_user(
-            db=db, sdoc_id=sdoc_id, user_id=user_id
-        )
-    except NoSuchElementError:
-        db_obj = crud_adoc.create(
-            db=db,
-            create_dto=AnnotationDocumentCreate(
-                source_document_id=sdoc_id,
-                user_id=user_id,
-            ),
-        )
-
-    return AnnotationDocumentRead.model_validate(db_obj)
-
-
-@router.get(
-    "/{sdoc_id}/adoc",
-    response_model=List[AnnotationDocumentRead],
-    summary="Returns all AnnotationDocuments for the SourceDocument.",
-)
-def get_all_adocs(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> List[AnnotationDocumentRead]:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
-
-    return [
-        AnnotationDocumentRead.model_validate(adoc)
-        for adoc in crud_sdoc.read(db=db, id=sdoc_id).annotation_documents
-    ]
-
-
-@router.delete(
-    "/{sdoc_id}/adoc",
+    "/{sdoc_id}/annotators",
     response_model=List[int],
-    summary="Removes all AnnotationDocuments for the SourceDocument.",
+    summary="Returns IDs of users that annotated that SourceDocument.",
 )
-def remove_all_adocs(
+def get_annotators(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
@@ -234,7 +186,10 @@ def remove_all_adocs(
 ) -> List[int]:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
-    return crud_adoc.remove_by_sdoc(db=db, sdoc_id=sdoc_id)
+    return [
+        adoc.user_id
+        for adoc in crud_sdoc.read(db=db, id=sdoc_id).annotation_documents
+    ]
 
 
 @router.get(
@@ -362,3 +317,90 @@ def get_word_frequencies(
 
     sdoc = crud_sdoc.read(db=db, id=sdoc_id)
     return [WordFrequencyRead.model_validate(wf) for wf in sdoc.word_frequencies]
+
+
+@router.get(
+    "/{sdoc_id}/user/{user_id}/span_annotations",
+    response_model=Union[List[SpanAnnotationRead], List[SpanAnnotationReadResolved]],
+    summary="Returns all SpanAnnotations of the User with the given ID if it exists",
+)
+def get_all_span_annotations(
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    user_id: int,
+    skip_limit: Dict[str, int] = Depends(skip_limit_params),
+    resolve_code: bool = Depends(resolve_code_param),
+    authz_user: AuthzUser = Depends(),
+) -> Union[List[SpanAnnotationRead], List[SpanAnnotationReadResolved]]:
+    authz_user.assert_in_same_project_as(Crud.USER, user_id)
+
+    spans = crud_span_anno.read_by_user_and_sdoc(db=db, user_id=user_id, sdoc_id=sdoc_id, **skip_limit)
+    span_read_dtos = [SpanAnnotationRead.model_validate(span) for span in spans]
+    if resolve_code:
+        return [
+            SpanAnnotationReadResolved(
+                **span_dto.model_dump(exclude={"current_code_id", "span_text_id"}),
+                code=CodeRead.model_validate(span_orm.current_code.code),
+                span_text=span_orm.span_text.text,
+                user_id=span_orm.annotation_document.user_id,
+                sdoc_id=span_orm.annotation_document.source_document_id,
+            )
+            for span_orm, span_dto in zip(spans, span_read_dtos)
+        ]
+    else:
+        return span_read_dtos
+
+
+@router.get(
+    "{sdoc_id}/user/{user_id}/bbox_annotations",
+    response_model=Union[
+        List[BBoxAnnotationRead], List[BBoxAnnotationReadResolvedCode]
+    ],
+    summary="Returns all BBoxAnnotations of the User with the given ID if it exists",
+)
+def get_all_bbox_annotations(
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    user_id: int,
+    skip_limit: Dict[str, int] = Depends(skip_limit_params),
+    resolve_code: bool = Depends(resolve_code_param),
+    authz_user: AuthzUser = Depends(),
+) -> Union[List[BBoxAnnotationRead], List[BBoxAnnotationReadResolvedCode]]:
+    authz_user.assert_in_same_project_as(Crud.USER, user_id)
+
+    bboxes = crud_bbox_anno.read_by_user_and_sdoc(db=db, user_id=user_id, sdoc_id=sdoc_id, **skip_limit)
+    bbox_read_dtos = [BBoxAnnotationRead.model_validate(bbox) for bbox in bboxes]
+    if resolve_code:
+        return [
+            BBoxAnnotationReadResolvedCode(
+                **bbox_dto.model_dump(exclude={"current_code_id"}),
+                code=CodeRead.model_validate(bbox_orm.current_code.code),
+                user_id=bbox_orm.annotation_document.user_id,
+                sdoc_id=bbox_orm.annotation_document.source_document_id,
+            )
+            for bbox_orm, bbox_dto in zip(bboxes, bbox_read_dtos)
+        ]
+    else:
+        return bbox_read_dtos
+
+
+@router.get(
+    "/{user_id}/span_groups",
+    response_model=List[SpanGroupRead],
+    summary="Returns all SpanGroups of the User with the given ID if it exists",
+)
+def get_all_span_groups(
+    *,
+    db: Session = Depends(get_db_session),
+    user_id: int,
+    skip_limit: Dict[str, int] = Depends(skip_limit_params),
+    authz_user: AuthzUser = Depends(),
+) -> List[SpanGroupRead]:
+    authz_user.assert_in_same_project_as(Crud.USER, user_id)
+
+    return [
+        SpanGroupRead.model_validate(group)
+        for group in crud_span_group.read_by_user(db=db, user_id=user_id, **skip_limit)
+    ]

@@ -1,14 +1,13 @@
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import CheckConstraint, ForeignKey, Index, Integer, UniqueConstraint
+from app.core.data.orm.orm_base import ORMBase
+from sqlalchemy import (CheckConstraint, ForeignKey, Index, Integer,
+                        UniqueConstraint)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.functions import coalesce
 
-from app.core.data.orm.orm_base import ORMBase
-
 if TYPE_CHECKING:
     from app.core.data.orm.action import ActionORM
-    from app.core.data.orm.annotation_document import AnnotationDocumentORM
     from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
     from app.core.data.orm.code import CodeORM, CurrentCodeORM
     from app.core.data.orm.document_tag import DocumentTagORM
@@ -68,13 +67,6 @@ class ObjectHandleORM(ORMBase):
     )
     source_document: Mapped["SourceDocumentORM"] = relationship(
         "SourceDocumentORM", back_populates="object_handle"
-    )
-
-    annotation_document_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("annotationdocument.id", ondelete="CASCADE"), index=True
-    )
-    annotation_document: Mapped["AnnotationDocumentORM"] = relationship(
-        "AnnotationDocumentORM", back_populates="object_handle"
     )
 
     span_annotation_id: Mapped[Optional[int]] = mapped_column(
@@ -142,7 +134,6 @@ class ObjectHandleORM(ORMBase):
                         + CASE WHEN memo_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN current_code_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN source_document_id IS NULL THEN 0 ELSE 1 END
-                        + CASE WHEN annotation_document_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN span_annotation_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN bbox_annotation_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN span_group_id IS NULL THEN 0 ELSE 1 END
@@ -158,7 +149,6 @@ class ObjectHandleORM(ORMBase):
             "code_id",
             "current_code_id",
             "source_document_id",
-            "annotation_document_id",
             "span_annotation_id",
             "span_group_id",
             "document_tag_id",

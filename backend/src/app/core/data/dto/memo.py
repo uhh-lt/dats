@@ -56,12 +56,6 @@ class MemoInDB(MemoReadBaseDTO):
     model_config = ConfigDict(from_attributes=True)
 
 
-class MemoReadAnnotationDocument(MemoReadBaseDTO):
-    attached_annotation_document_id: int = Field(
-        description="AnnotationDocument the Memo is attached to"
-    )
-
-
 class MemoReadSourceDocument(MemoReadBaseDTO):
     attached_source_document_id: int = Field(
         description="SourceDocument the Memo is attached to"
@@ -89,7 +83,6 @@ class MemoReadDocumentTag(MemoReadBaseDTO):
 
 
 class AttachedObjectType(str, Enum):
-    annotation_document = "annotation_document"
     source_document = "source_document"
     code = "code"
     span_annotation = "span_annotation"

@@ -15,19 +15,33 @@ class SpanAnnotationBaseDTO(BaseModel):
 
 
 # Properties for creation
+class SpanAnnotationCreateIntern(SpanAnnotationBaseDTO):
+    span_text: str = Field(description="The SpanText the SpanAnnotation spans.")
+    current_code_id: int = Field(description="CurrentCode the SpanAnnotation refers to")
+    adoc_id: int = Field(
+        description="AnnotationDocument the SpanAnnotation refers to"
+    )
+
+
 class SpanAnnotationCreate(SpanAnnotationBaseDTO):
     span_text: str = Field(description="The SpanText the SpanAnnotation spans.")
     current_code_id: int = Field(description="CurrentCode the SpanAnnotation refers to")
-    annotation_document_id: int = Field(
-        description="AnnotationDocument the SpanAnnotation refers to"
+    user_id: int = Field(
+        description="User that created the SpanAnnotation"
+    )
+    sdoc_id: int = Field(
+        description="SourceDocument the SpanAnnotation refers to"
     )
 
 
 class SpanAnnotationCreateWithCodeId(SpanAnnotationBaseDTO):
     span_text: str = Field(description="The SpanText the SpanAnnotation spans.")
     code_id: int = Field(description="Code the SpanAnnotation refers to")
-    annotation_document_id: int = Field(
-        description="AnnotationDocument the SpanAnnotation refers to"
+    user_id: int = Field(
+        description="User that created the SpanAnnotation"
+    )
+    sdoc_id: int = Field(
+        description="SourceDocument the SpanAnnotation refers to"
     )
 
 
@@ -53,9 +67,6 @@ class SpanAnnotationRead(SpanAnnotationBaseDTO):
     id: int = Field(description="ID of the SpanAnnotation")
     span_text_id: int = Field(description="The SpanText the SpanAnnotation spans.")
     current_code_id: int = Field(description="CurrentCode the SpanAnnotation refers to")
-    annotation_document_id: int = Field(
-        description="AnnotationDocument the SpanAnnotation refers to"
-    )
     created: datetime = Field(description="Created timestamp of the SpanAnnotation")
     updated: datetime = Field(description="Updated timestamp of the SpanAnnotation")
     model_config = ConfigDict(from_attributes=True)
@@ -65,9 +76,6 @@ class SpanAnnotationReadResolved(SpanAnnotationBaseDTO):
     id: int = Field(description="ID of the SpanAnnotation")
     span_text: str = Field(description="The SpanText the SpanAnnotation spans.")
     code: CodeRead = Field(description="Code the SpanAnnotation refers to")
-    annotation_document_id: int = Field(
-        description="AnnotationDocument the SpanAnnotation refers to"
-    )
     user_id: int = Field(description="User the SpanAnnotation belongs to")
     sdoc_id: int = Field(description="SourceDocument the SpanAnnotation refers to")
     created: datetime = Field(description="Created timestamp of the SpanAnnotation")

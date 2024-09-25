@@ -1,8 +1,7 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
-
 from app.core.data.dto.dto_base import UpdateDTOBase
+from pydantic import BaseModel, Field
 
 
 # Properties shared across all DTOs
@@ -21,11 +20,3 @@ class AnnotationDocumentCreate(AnnotationDocumentBaseDTO):
 # Properties for updating
 class AnnotationDocumentUpdate(BaseModel, UpdateDTOBase):
     updated: datetime = Field(description="Updated timestamp of the AnnotationDocument")
-
-
-# Properties for reading (as in ORM)
-class AnnotationDocumentRead(AnnotationDocumentBaseDTO):
-    id: int = Field(description="ID of the AnnotationDocument")
-    created: datetime = Field(description="Created timestamp of the AnnotationDocument")
-    updated: datetime = Field(description="Updated timestamp of the AnnotationDocument")
-    model_config = ConfigDict(from_attributes=True)

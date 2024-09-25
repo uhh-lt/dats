@@ -3,9 +3,6 @@ from pathlib import Path
 from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import pandas as pd
-from loguru import logger
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.document_tag import crud_document_tag
@@ -14,31 +11,20 @@ from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.user import crud_user
-from app.core.data.dto.annotation_document import AnnotationDocumentRead
 from app.core.data.dto.background_job_base import BackgroundJobStatus
-from app.core.data.dto.bbox_annotation import (
-    BBoxAnnotationRead,
-    BBoxAnnotationReadResolvedCode,
-)
+from app.core.data.dto.bbox_annotation import (BBoxAnnotationRead,
+                                               BBoxAnnotationReadResolvedCode)
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
-from app.core.data.dto.export_job import (
-    ExportFormat,
-    ExportJobCreate,
-    ExportJobParameters,
-    ExportJobRead,
-    ExportJobType,
-    ExportJobUpdate,
-)
+from app.core.data.dto.export_job import (ExportFormat, ExportJobCreate,
+                                          ExportJobParameters, ExportJobRead,
+                                          ExportJobType, ExportJobUpdate)
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.source_document import SourceDocumentRead
-from app.core.data.dto.source_document_metadata import (
-    SourceDocumentMetadataReadResolved,
-)
-from app.core.data.dto.span_annotation import (
-    SpanAnnotationRead,
-    SpanAnnotationReadResolved,
-)
+from app.core.data.dto.source_document_metadata import \
+    SourceDocumentMetadataReadResolved
+from app.core.data.dto.span_annotation import (SpanAnnotationRead,
+                                               SpanAnnotationReadResolved)
 from app.core.data.dto.span_group import SpanGroupRead
 from app.core.data.dto.user import UserRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
@@ -54,6 +40,8 @@ from app.core.data.repo.repo_service import RepoService
 from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
 from app.util.singleton_meta import SingletonMeta
+from loguru import logger
+from sqlalchemy.orm import Session
 
 
 class NoDataToExportError(Exception):
@@ -350,12 +338,6 @@ class ExportService(metaclass=SingletonMeta):
             dto = SpanGroupRead.model_validate(attached_to)
             data["span_group_name"] = [dto.name]
             data["span_group_id"] = [dto.id]
-
-        elif isinstance(attached_to, AnnotationDocumentORM):
-            dto = AnnotationDocumentRead.model_validate(attached_to)
-            sdoc_dto = SourceDocumentRead.model_validate(attached_to.source_document)
-            data["sdoc_name"] = [sdoc_dto.filename]
-            data["adoc_id"] = [dto.id]
 
         elif isinstance(attached_to, SourceDocumentORM):
             dto = SourceDocumentRead.model_validate(attached_to)

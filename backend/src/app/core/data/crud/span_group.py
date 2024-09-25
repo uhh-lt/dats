@@ -1,10 +1,10 @@
 from typing import List
 
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.span_group import SpanGroupCreate, SpanGroupUpdate
+from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.span_group import SpanGroupORM
+from sqlalchemy.orm import Session
 
 
 class CRUDSpanGroup(CRUDBase[SpanGroupORM, SpanGroupCreate, SpanGroupUpdate]):
@@ -18,6 +18,19 @@ class CRUDSpanGroup(CRUDBase[SpanGroupORM, SpanGroupCreate, SpanGroupUpdate]):
             .limit(limit)
             .all()
         )
+
+    def read_by_user(
+        self, db: Session, *, user_id: int, skip: int = 0, limit: int = 1000
+    ) -> List[SpanGroupORM]:
+        query = (
+            db.query(self.model)
+            .join(self.model.annotation_document)
+            .where(AnnotationDocumentORM.user_id == user_id)
+            .offset(skip)
+            .limit(limit)
+        )
+
+        return query.all()
 
 
 crud_span_group = CRUDSpanGroup(SpanGroupORM)
