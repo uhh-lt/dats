@@ -161,10 +161,6 @@ services:
       - "${JUPYTER_BACKGROUND_JOBS_EXPOSED:-8880}:8888"
       - "${CELERY_DEBUG_PORT:-45678}:6900"
     restart: always
-    links:
-      - postgres
-      - redis
-      - rabbitmq
     networks:
       - dats_demo_network
     profiles:
@@ -289,6 +285,7 @@ services:
       - ../backend/src:/dats_code/src
       - ./backend_repo:${SHARED_REPO_ROOT:-/tmp/dats}
     depends_on:
+      - celery-background-jobs-worker
       - elasticsearch
       - postgres
       - rabbitmq
@@ -298,13 +295,6 @@ services:
       - "${API_EXPOSED:-5500}:${API_PORT}"
       - "${JUPYTER_API_EXPOSED:-8888}:8888"
     restart: always
-    links:
-      - postgres
-      - redis
-      - rabbitmq
-      - celery-background-jobs-worker
-      - elasticsearch
-      - weaviate
     networks:
       - dats_demo_network
     profiles:
