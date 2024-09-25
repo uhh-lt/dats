@@ -18,6 +18,9 @@ pip install python-magic
 ## Usage
 
 ```
+# import klimaallgemein
+python importer/dats_importer.py --input_dir /ltstorage/shares/projects/dwts/backend/src/dev_notebooks/data/KlimaAllgemein/json2 --backend_url http://localhost:19002/ --project_id 84 --tag_name klima --tag_description klima --is_json --filter_duplicate_files_before_upload --metadata_keys paper paper_db headline date --metadata_types STRING STRING STRING DATE --doctype text --content_key html --mime_type text/html 
+
 # import cnn
 python importer/dats_importer.py --input_dir /home/tfischer/Development/dats/data/cnn_crawl_fixed --backend_url http://localhost:10220/ --project_id 1 --tag_name cnn --tag_description cnn --is_json --filter_duplicate_files_before_upload --metadata_keys author published_date visited_date origin --metadata_types STRING DATE DATE STRING --doctype text --content_key text
 

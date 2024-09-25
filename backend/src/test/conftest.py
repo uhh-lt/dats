@@ -7,12 +7,6 @@ import string
 from typing import Callable, Generator
 
 import pytest
-from fastapi import Request
-from fastapi.datastructures import Headers
-from loguru import logger
-from pytest import FixtureRequest
-from sqlalchemy.orm import Session
-
 from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.orm.code import CodeORM
@@ -21,8 +15,14 @@ from app.core.data.orm.user import UserORM
 from app.core.db.sql_service import SQLService
 from app.core.startup import startup
 from config import conf
+from fastapi import Request
+from fastapi.datastructures import Headers
+from loguru import logger
+from pytest import FixtureRequest
+from sqlalchemy.orm import Session
 
 os.environ["RAY_ENABLED"] = "False"
+os.environ["OLLAMA_ENABLED"] = "False"
 
 # Flo: just do it once. We have to check because if we start the main function, unvicorn will import this
 # file once more manually, so it would be executed twice.

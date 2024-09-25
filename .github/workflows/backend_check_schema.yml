@@ -16,6 +16,7 @@ jobs:
     env:
       API_PRODUCTION_WORKERS: 1
       RAY_ENABLED: False
+      OLLAMA_ENABLED: False
       COMPOSE_PROFILES: "background"
     steps:
       - uses: actions/checkout@v3

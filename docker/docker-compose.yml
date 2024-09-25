@@ -209,6 +209,7 @@ services:
       TORCH_HOME: /models_cache
       NUMBA_CACHE_DIR: /numba_cache
       SHARED_REPO_ROOT: ${SHARED_REPO_ROOT:-/tmp/dats}
+      OLLAMA_ENABLED: ${OLLAMA_ENABLED:-True}
       OLLAMA_HOST: ${OLLAMA_HOST:-ollama}
       OLLAMA_PORT: ${OLLAMA_PORT:-11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma2:9b-instruct-fp16}
@@ -272,6 +273,7 @@ services:
       SYSTEM_USER_EMAIL: ${SYSTEM_USER_EMAIL}
       SYSTEM_USER_PASSWORD: ${SYSTEM_USER_PASSWORD}
       SHARED_REPO_ROOT: ${SHARED_REPO_ROOT:-/tmp/dats}
+      OLLAMA_ENABLED: ${OLLAMA_ENABLED:-True}
       OLLAMA_HOST: ${OLLAMA_HOST:-ollama}
       OLLAMA_PORT: ${OLLAMA_PORT:-11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma2:9b-instruct-fp16}
