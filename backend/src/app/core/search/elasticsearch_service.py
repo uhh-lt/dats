@@ -8,7 +8,6 @@ from loguru import logger
 from app.core.data.dto.search import (
     ElasticSearchDocumentCreate,
     ElasticSearchDocumentHit,
-    ElasticSearchDocumentRead,
     ElasticSearchMemoCreate,
     ElasticSearchMemoRead,
     ElasticSearchMemoUpdate,
@@ -16,16 +15,6 @@ from app.core.data.dto.search import (
 )
 from app.util.singleton_meta import SingletonMeta
 from config import conf
-
-
-class NoSuchSourceDocumentInElasticSearchError(Exception):
-    def __init__(self, proj_id: int, sdoc_id: int):
-        super().__init__(
-            (
-                f"There exists no SourceDocument with ID={sdoc_id} in Project {proj_id}"
-                " in the respective ElasticSearch Index!"
-            )
-        )
 
 
 class NoSuchMemoInElasticSearchError(Exception):
@@ -202,77 +191,6 @@ class ElasticSearchService(metaclass=SingletonMeta):
             )
         )
         return res["_id"]
-
-    def bulk_add_documents_to_index(
-        self, *, proj_id: int, esdocs: List[ElasticSearchDocumentCreate]
-    ) -> int:
-        idx_name = self.__get_index_name(proj_id=proj_id, index_type="doc")
-
-        def generate_actions_for_bulk_index():
-            for esdoc in esdocs:
-                doc = {
-                    "_index": idx_name,
-                    "_id": esdoc.sdoc_id,
-                    "_source": esdoc.model_dump(),
-                }
-                yield doc
-
-        num_indexed, num_errors = helpers.bulk(
-            client=self.__client,
-            actions=generate_actions_for_bulk_index(),
-            stats_only=True,
-        )
-        logger.debug(
-            f"Added {num_indexed} Documents to ElasticSearch Index {idx_name} with {num_errors} Errors!"
-        )
-        return num_indexed
-
-    def get_esdocs_by_sdoc_ids(
-        self, *, proj_id: int, sdoc_ids: Set[int], fields: Set[str]
-    ) -> List[ElasticSearchDocumentRead]:
-        if not fields.union(self.doc_index_fields):
-            raise NoSuchFieldInIndexError(
-                index=self.__get_index_name(proj_id=proj_id, index_type="doc"),
-                fields=fields,
-                index_fields=self.doc_index_fields,
-            )
-        results = self.__client.mget(
-            index=self.__get_index_name(proj_id=proj_id, index_type="doc"),
-            _source=list(fields),
-            body={"ids": list(sdoc_ids)},
-        )
-
-        esdocs = []
-        for res in results["docs"]:
-            if not res["found"]:
-                raise NoSuchSourceDocumentInElasticSearchError(
-                    proj_id=proj_id, sdoc_id=res["_id"]
-                )
-            esdocs.append(
-                ElasticSearchDocumentRead(sdoc_id=res["_id"], **res["_source"])
-            )
-
-        return esdocs
-
-    def get_esdoc_by_sdoc_id(
-        self, *, proj_id: int, sdoc_id: int, fields: Set[str]
-    ) -> Optional[ElasticSearchDocumentRead]:
-        if not fields.union(self.doc_index_fields):
-            raise NoSuchFieldInIndexError(
-                index=self.__get_index_name(proj_id=proj_id, index_type="doc"),
-                fields=fields,
-                index_fields=self.doc_index_fields,
-            )
-        res = self.__client.get(
-            index=self.__get_index_name(proj_id=proj_id, index_type="doc"),
-            id=str(sdoc_id),
-            _source=list(fields),
-        )
-        if not res["found"]:
-            raise NoSuchSourceDocumentInElasticSearchError(
-                proj_id=proj_id, sdoc_id=sdoc_id
-            )
-        return ElasticSearchDocumentRead(**res["_source"])
 
     def delete_document_from_index(self, proj_id: int, sdoc_id: int) -> None:
         self.__client.delete(

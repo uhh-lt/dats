@@ -1,6 +1,5 @@
 from app.core.data.dto.search import (
     ElasticSearchDocumentCreate,
-    ElasticSearchIntegerRange,
 )
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
@@ -18,17 +17,6 @@ def store_document_in_elasticsearch(cargo: PipelineCargo) -> PipelineCargo:
     esdoc = ElasticSearchDocumentCreate(
         filename=pptd.filename,
         content=pptd.text,
-        html=pptd.html,
-        tokens=pptd.tokens,
-        token_character_offsets=[
-            ElasticSearchIntegerRange(gte=o[0], lt=o[1])
-            for o in pptd.token_character_offsets
-        ],
-        sentences=[s.text for s in pptd.sentences],
-        sentence_character_offsets=[
-            ElasticSearchIntegerRange(gte=s.start, lt=s.end) for s in pptd.sentences
-        ],
-        keywords=pptd.keywords,
         sdoc_id=sdoc_id,
         project_id=pptd.project_id,
     )

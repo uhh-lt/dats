@@ -87,7 +87,6 @@ from app.core.data.repo.repo_service import (
 )
 from app.core.search.elasticsearch_service import (
     NoSuchMemoInElasticSearchError,
-    NoSuchSourceDocumentInElasticSearchError,
 )
 from config import conf
 
@@ -195,13 +194,6 @@ async def no_such_export_format_handler(_, exc: NoSuchExportFormatError):
 
 @app.exception_handler(ExportJobPreparationError)
 async def export_job_preparation_error_handler(_, exc: ExportJobPreparationError):
-    return PlainTextResponse(str(exc), status_code=500)
-
-
-@app.exception_handler(NoSuchSourceDocumentInElasticSearchError)
-async def no_such_sdoc_in_es_error_handler(
-    _, exc: NoSuchSourceDocumentInElasticSearchError
-):
     return PlainTextResponse(str(exc), status_code=500)
 
 
