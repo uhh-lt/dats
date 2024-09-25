@@ -1,7 +1,8 @@
-from app.util.singleton_meta import SingletonMeta
-from config import conf
 from loguru import logger
 from ollama import Client
+
+from app.util.singleton_meta import SingletonMeta
+from config import conf
 
 
 class OllamaService(metaclass=SingletonMeta):
