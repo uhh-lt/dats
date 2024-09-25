@@ -178,6 +178,7 @@ def __create_or_get_project_metadata_keywords(
                 read_only=True,
                 doctype=doctype,
                 project_id=project_id,
+                description="Keywords extracted from the document.",
             ),
         ).id
 
@@ -358,6 +359,7 @@ def __migrate_add_default_metadata(db: Session):
                 metatype=project_metadata["metatype"],
                 read_only=project_metadata["read_only"],
                 doctype=project_metadata["doctype"],
+                description=project_metadata["description"],
             )
             __create_project_metadata_if_not_exists(db, create_dto)
 

@@ -51,3 +51,26 @@ code {
 .fixAlertBanner .MuiAlert-message {
   max-width: 100% !important;
 }
+
+.speech-bubble {
+  position: relative;
+  border: 2px solid #1976d2;
+  border-radius: 0.4em;
+  margin-left: 48px;
+  padding: 16px;
+}
+
+.speech-bubble:after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 0;
+  height: 0;
+  border: 1.469em solid transparent;
+  border-right-color: #1976d2;
+  border-left: 0;
+  border-top: 0;
+  margin-top: -0.737em;
+  margin-left: -1.469em;
+}

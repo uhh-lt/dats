@@ -16,6 +16,7 @@ import { PaginatedElasticSearchDocumentHits } from "../../../api/openapi/models/
 import { SearchColumns } from "../../../api/openapi/models/SearchColumns.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import ReduxFilterDialog from "../../../components/FilterDialog/ReduxFilterDialog.tsx";
+import LLMAssistanceButton from "../../../components/LLMDialog/LLMAssistanceButton.tsx";
 import SdocMetadataRenderer from "../../../components/Metadata/SdocMetadataRenderer.tsx";
 import DeleteSdocsButton from "../../../components/SourceDocument/DeleteSdocsButton.tsx";
 import DownloadSdocsButton from "../../../components/SourceDocument/DownloadSdocsButton.tsx";
@@ -261,6 +262,7 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
             />
             <DeleteSdocsButton sdocIds={selectedDocumentIds} navigateTo="../search" />
             <DownloadSdocsButton sdocIds={selectedDocumentIds} />
+            <LLMAssistanceButton sdocIds={selectedDocumentIds} />
           </>
         )}
         <Box sx={{ flexGrow: 1 }} />

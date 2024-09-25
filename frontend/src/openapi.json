@@ -1490,6 +1490,40 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
+    "/doctag/bulk/set": {
+      "patch": {
+        "tags": ["documentTag"],
+        "summary": "Sets SourceDocuments' tags to the provided tags",
+        "operationId": "set_document_tags_batch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": { "$ref": "#/components/schemas/SourceDocumentDocumentTagLinks" },
+                "type": "array",
+                "title": "Links"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "integer", "title": "Response Documenttag-Set Document Tags Batch" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/doctag/{tag_id}": {
       "get": {
         "tags": ["documentTag"],
@@ -2022,6 +2056,60 @@
                     { "$ref": "#/components/schemas/SpanAnnotationReadResolved" }
                   ],
                   "title": "Response Spanannotation-Add Span Annotation"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/span/bulk/create": {
+      "put": {
+        "tags": ["spanAnnotation"],
+        "summary": "Creates a SpanAnnotations in Bulk",
+        "operationId": "add_span_annotations_bulk",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "resolve",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "title": "Resolve Code",
+              "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
+              "default": true
+            },
+            "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/SpanAnnotationCreateBulkWithCodeId" },
+                "title": "Spans"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    { "type": "array", "items": { "$ref": "#/components/schemas/SpanAnnotationRead" } },
+                    { "type": "array", "items": { "$ref": "#/components/schemas/SpanAnnotationReadResolved" } }
+                  ],
+                  "title": "Response Spanannotation-Add Span Annotations Bulk"
                 }
               }
             }
@@ -3575,6 +3663,44 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         }
+      }
+    },
+    "/sdocmeta/bulk/update": {
+      "patch": {
+        "tags": ["sdocMetadata"],
+        "summary": "Updates multiple metadata objects at once.",
+        "operationId": "update_bulk",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": { "$ref": "#/components/schemas/SourceDocumentMetadataBulkUpdate" },
+                "type": "array",
+                "title": "Metadatas"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/SourceDocumentMetadataRead" },
+                  "type": "array",
+                  "title": "Response Sdocmetadata-Update Bulk"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/feedback": {
@@ -5503,6 +5629,118 @@
           }
         }
       }
+    },
+    "/llm": {
+      "post": {
+        "tags": ["llm"],
+        "summary": "Returns the LLMJob for the given Parameters",
+        "operationId": "start_llm_job",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobParameters" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/llm/{llm_job_id}": {
+      "get": {
+        "tags": ["llm"],
+        "summary": "Returns the LLMJob for the given ID if it exists",
+        "operationId": "get_llm_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "llm_job_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "title": "Llm Job Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/llm/project/{project_id}": {
+      "get": {
+        "tags": ["llm"],
+        "summary": "Returns all LLMJobRead for the given project ID if it exists",
+        "operationId": "get_all_llm_jobs",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/LLMJobRead" },
+                  "title": "Response Llm-Get All Llm Jobs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/llm/create_prompt_templates": {
+      "post": {
+        "tags": ["llm"],
+        "summary": "Returns the system and user prompt templates for the given llm task in all supported languages",
+        "operationId": "create_prompt_templates",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobParameters" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/LLMPromptTemplates" },
+                  "type": "array",
+                  "title": "Response Llm-Create Prompt Templates"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
     }
   },
   "components": {
@@ -5750,6 +5988,39 @@
         "required": ["source_document_id", "user_id", "id", "created", "updated"],
         "title": "AnnotationDocumentRead"
       },
+      "AnnotationLLMJobParams": {
+        "properties": {
+          "llm_job_type": { "const": "ANNOTATION", "title": "Llm Job Type" },
+          "sdoc_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sdoc Ids",
+            "description": "IDs of the source documents to analyse"
+          },
+          "code_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Code Ids",
+            "description": "IDs of the codes to use for the annotation"
+          }
+        },
+        "type": "object",
+        "required": ["llm_job_type", "sdoc_ids", "code_ids"],
+        "title": "AnnotationLLMJobParams"
+      },
+      "AnnotationLLMJobResult": {
+        "properties": {
+          "llm_job_type": { "const": "ANNOTATION", "title": "Llm Job Type" },
+          "results": {
+            "items": { "$ref": "#/components/schemas/AnnotationResult" },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": ["llm_job_type", "results"],
+        "title": "AnnotationLLMJobResult"
+      },
       "AnnotationOccurrence": {
         "properties": {
           "annotation": {
@@ -5770,6 +6041,20 @@
         "type": "object",
         "required": ["annotation", "code", "sdoc", "text"],
         "title": "AnnotationOccurrence"
+      },
+      "AnnotationResult": {
+        "properties": {
+          "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
+          "suggested_annotations": {
+            "items": { "$ref": "#/components/schemas/SpanAnnotationReadResolved" },
+            "type": "array",
+            "title": "Suggested Annotations",
+            "description": "Suggested annotations"
+          }
+        },
+        "type": "object",
+        "required": ["sdoc_id", "suggested_annotations"],
+        "title": "AnnotationResult"
       },
       "AnnotationTableRow": {
         "properties": {
@@ -6814,6 +7099,60 @@
         "type": "object",
         "title": "DocumentTagUpdate"
       },
+      "DocumentTaggingLLMJobParams": {
+        "properties": {
+          "llm_job_type": { "const": "DOCUMENT_TAGGING", "title": "Llm Job Type" },
+          "sdoc_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sdoc Ids",
+            "description": "IDs of the source documents to analyse"
+          },
+          "tag_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Tag Ids",
+            "description": "IDs of the tags to use for the document tagging"
+          }
+        },
+        "type": "object",
+        "required": ["llm_job_type", "sdoc_ids", "tag_ids"],
+        "title": "DocumentTaggingLLMJobParams"
+      },
+      "DocumentTaggingLLMJobResult": {
+        "properties": {
+          "llm_job_type": { "const": "DOCUMENT_TAGGING", "title": "Llm Job Type" },
+          "results": {
+            "items": { "$ref": "#/components/schemas/DocumentTaggingResult" },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": ["llm_job_type", "results"],
+        "title": "DocumentTaggingLLMJobResult"
+      },
+      "DocumentTaggingResult": {
+        "properties": {
+          "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
+          "current_tag_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Current Tag Ids",
+            "description": "IDs of the tags currently assigned to the document"
+          },
+          "suggested_tag_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Suggested Tag Ids",
+            "description": "IDs of the tags suggested by the LLM to assign to the document"
+          },
+          "reasoning": { "type": "string", "title": "Reasoning", "description": "Reasoning for the tagging" }
+        },
+        "type": "object",
+        "required": ["sdoc_id", "current_tag_ids", "suggested_tag_ids", "reasoning"],
+        "title": "DocumentTaggingResult"
+      },
       "ElasticSearchDocumentHit": {
         "properties": {
           "document_id": { "type": "integer", "title": "Document Id", "description": "The ID of the Document" },
@@ -7313,6 +7652,131 @@
         "required": ["keyword", "filtered_count", "global_count"],
         "title": "KeywordStat"
       },
+      "LLMJobParameters": {
+        "properties": {
+          "llm_job_type": {
+            "allOf": [{ "$ref": "#/components/schemas/LLMJobType" }],
+            "description": "The type of the LLMJob (what to llm)"
+          },
+          "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project to analyse" },
+          "prompts": {
+            "items": { "$ref": "#/components/schemas/LLMPromptTemplates" },
+            "type": "array",
+            "title": "Prompts",
+            "description": "The prompt templates to use for the job"
+          },
+          "specific_llm_job_parameters": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/DocumentTaggingLLMJobParams" },
+              { "$ref": "#/components/schemas/MetadataExtractionLLMJobParams" },
+              { "$ref": "#/components/schemas/AnnotationLLMJobParams" }
+            ],
+            "title": "Specific Llm Job Parameters",
+            "description": "Specific parameters for the LLMJob w.r.t it's type",
+            "discriminator": {
+              "propertyName": "llm_job_type",
+              "mapping": {
+                "ANNOTATION": "#/components/schemas/AnnotationLLMJobParams",
+                "DOCUMENT_TAGGING": "#/components/schemas/DocumentTaggingLLMJobParams",
+                "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionLLMJobParams"
+              }
+            }
+          }
+        },
+        "type": "object",
+        "required": ["llm_job_type", "project_id", "prompts", "specific_llm_job_parameters"],
+        "title": "LLMJobParameters"
+      },
+      "LLMJobRead": {
+        "properties": {
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
+            "description": "Status of the LLMJob",
+            "default": "Waiting"
+          },
+          "num_steps_finished": {
+            "type": "integer",
+            "title": "Num Steps Finished",
+            "description": "Number of steps LLMJob has completed."
+          },
+          "num_steps_total": { "type": "integer", "title": "Num Steps Total", "description": "Number of total steps." },
+          "result": {
+            "anyOf": [{ "$ref": "#/components/schemas/LLMJobResult" }, { "type": "null" }],
+            "description": "Results of hte LLMJob."
+          },
+          "id": { "type": "string", "title": "Id", "description": "ID of the LLMJob" },
+          "parameters": {
+            "allOf": [{ "$ref": "#/components/schemas/LLMJobParameters" }],
+            "description": "The parameters of the LLMJob that defines what to llm!"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the LLMJob"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated",
+            "description": "Updated timestamp of the LLMJob"
+          }
+        },
+        "type": "object",
+        "required": ["num_steps_finished", "num_steps_total", "id", "parameters", "created", "updated"],
+        "title": "LLMJobRead"
+      },
+      "LLMJobResult": {
+        "properties": {
+          "llm_job_type": {
+            "allOf": [{ "$ref": "#/components/schemas/LLMJobType" }],
+            "description": "The type of the LLMJob (what to llm)"
+          },
+          "specific_llm_job_result": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/DocumentTaggingLLMJobResult" },
+              { "$ref": "#/components/schemas/MetadataExtractionLLMJobResult" },
+              { "$ref": "#/components/schemas/AnnotationLLMJobResult" }
+            ],
+            "title": "Specific Llm Job Result",
+            "description": "Specific result for the LLMJob w.r.t it's type",
+            "discriminator": {
+              "propertyName": "llm_job_type",
+              "mapping": {
+                "ANNOTATION": "#/components/schemas/AnnotationLLMJobResult",
+                "DOCUMENT_TAGGING": "#/components/schemas/DocumentTaggingLLMJobResult",
+                "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionLLMJobResult"
+              }
+            }
+          }
+        },
+        "type": "object",
+        "required": ["llm_job_type", "specific_llm_job_result"],
+        "title": "LLMJobResult"
+      },
+      "LLMJobType": {
+        "type": "string",
+        "enum": ["DOCUMENT_TAGGING", "METADATA_EXTRACTION", "ANNOTATION"],
+        "title": "LLMJobType"
+      },
+      "LLMPromptTemplates": {
+        "properties": {
+          "language": { "type": "string", "title": "Language", "description": "The language of the prompt template" },
+          "system_prompt": {
+            "type": "string",
+            "title": "System Prompt",
+            "description": "The system prompt to use for the job"
+          },
+          "user_prompt": {
+            "type": "string",
+            "title": "User Prompt",
+            "description": "The user prompt to use for the job"
+          }
+        },
+        "type": "object",
+        "required": ["language", "system_prompt", "user_prompt"],
+        "title": "LLMPromptTemplates"
+      },
       "ListOperator": { "type": "string", "enum": ["LIST_CONTAINS", "LIST_NOT_CONTAINS"], "title": "ListOperator" },
       "LogicalOperator": {
         "type": "string",
@@ -7409,6 +7873,59 @@
         "title": "MemoUpdate"
       },
       "MetaType": { "type": "string", "enum": ["STRING", "NUMBER", "DATE", "BOOLEAN", "LIST"], "title": "MetaType" },
+      "MetadataExtractionLLMJobParams": {
+        "properties": {
+          "llm_job_type": { "const": "METADATA_EXTRACTION", "title": "Llm Job Type" },
+          "sdoc_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sdoc Ids",
+            "description": "IDs of the source documents to analyse"
+          },
+          "project_metadata_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Project Metadata Ids",
+            "description": "IDs of the project metadata to use for the metadata extraction"
+          }
+        },
+        "type": "object",
+        "required": ["llm_job_type", "sdoc_ids", "project_metadata_ids"],
+        "title": "MetadataExtractionLLMJobParams"
+      },
+      "MetadataExtractionLLMJobResult": {
+        "properties": {
+          "llm_job_type": { "const": "METADATA_EXTRACTION", "title": "Llm Job Type" },
+          "results": {
+            "items": { "$ref": "#/components/schemas/MetadataExtractionResult" },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": ["llm_job_type", "results"],
+        "title": "MetadataExtractionLLMJobResult"
+      },
+      "MetadataExtractionResult": {
+        "properties": {
+          "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
+          "current_metadata": {
+            "items": { "$ref": "#/components/schemas/SourceDocumentMetadataReadResolved" },
+            "type": "array",
+            "title": "Current Metadata",
+            "description": "Current metadata"
+          },
+          "suggested_metadata": {
+            "items": { "$ref": "#/components/schemas/SourceDocumentMetadataReadResolved" },
+            "type": "array",
+            "title": "Suggested Metadata",
+            "description": "Suggested metadata"
+          }
+        },
+        "type": "object",
+        "required": ["sdoc_id", "current_metadata", "suggested_metadata"],
+        "title": "MetadataExtractionResult"
+      },
       "NumberOperator": {
         "type": "string",
         "enum": ["NUMBER_EQUALS", "NUMBER_NOT_EQUALS", "NUMBER_GT", "NUMBER_LT", "NUMBER_GTE", "NUMBER_LTE"],
@@ -7583,6 +8100,11 @@
             "allOf": [{ "$ref": "#/components/schemas/DocType" }],
             "description": "DOCTYPE of the SourceDocument this metadata refers to"
           },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Description of the ProjectMetadata"
+          },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
@@ -7590,7 +8112,7 @@
           }
         },
         "type": "object",
-        "required": ["key", "metatype", "doctype", "project_id"],
+        "required": ["key", "metatype", "doctype", "description", "project_id"],
         "title": "ProjectMetadataCreate"
       },
       "ProjectMetadataRead": {
@@ -7610,6 +8132,11 @@
             "allOf": [{ "$ref": "#/components/schemas/DocType" }],
             "description": "DOCTYPE of the SourceDocument this metadata refers to"
           },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Description of the ProjectMetadata"
+          },
           "id": { "type": "integer", "title": "Id", "description": "ID of the ProjectMetadata" },
           "project_id": {
             "type": "integer",
@@ -7618,7 +8145,7 @@
           }
         },
         "type": "object",
-        "required": ["key", "metatype", "doctype", "id", "project_id"],
+        "required": ["key", "metatype", "doctype", "description", "id", "project_id"],
         "title": "ProjectMetadataRead"
       },
       "ProjectMetadataUpdate": {
@@ -7631,10 +8158,14 @@
           "metatype": {
             "anyOf": [{ "$ref": "#/components/schemas/MetaType" }, { "type": "null" }],
             "description": "Type of the ProjectMetadata"
+          },
+          "description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Description",
+            "description": "Description of the ProjectMetadata"
           }
         },
         "type": "object",
-        "required": ["metatype"],
         "title": "ProjectMetadataUpdate"
       },
       "ProjectRead": {
@@ -8015,6 +8546,24 @@
         "required": ["column", "direction"],
         "title": "Sort[WordFrequencyColumns]"
       },
+      "SourceDocumentDocumentTagLinks": {
+        "properties": {
+          "source_document_id": {
+            "type": "integer",
+            "title": "Source Document Id",
+            "description": "ID of SourceDocument"
+          },
+          "document_tag_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Document Tag Ids",
+            "description": "List of IDs of DocumentTags"
+          }
+        },
+        "type": "object",
+        "required": ["source_document_id", "document_tag_ids"],
+        "title": "SourceDocumentDocumentTagLinks"
+      },
       "SourceDocumentDocumentTagMultiLink": {
         "properties": {
           "source_document_ids": {
@@ -8033,6 +8582,39 @@
         "type": "object",
         "required": ["source_document_ids", "document_tag_ids"],
         "title": "SourceDocumentDocumentTagMultiLink"
+      },
+      "SourceDocumentMetadataBulkUpdate": {
+        "properties": {
+          "int_value": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Int Value",
+            "description": "Int Value of the SourceDocumentMetadata"
+          },
+          "str_value": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Str Value",
+            "description": "String Value of the SourceDocumentMetadata"
+          },
+          "boolean_value": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "title": "Boolean Value",
+            "description": "Boolean Value of the SourceDocumentMetadata"
+          },
+          "date_value": {
+            "anyOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }],
+            "title": "Date Value",
+            "description": "Date Value of the SourceDocumentMetadata"
+          },
+          "list_value": {
+            "anyOf": [{ "items": { "type": "string" }, "type": "array" }, { "type": "null" }],
+            "title": "List Value",
+            "description": "List Value of the SourceDocumentMetadata"
+          },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the SourceDocumentMetadata" }
+        },
+        "type": "object",
+        "required": ["int_value", "str_value", "boolean_value", "date_value", "list_value", "id"],
+        "title": "SourceDocumentMetadataBulkUpdate"
       },
       "SourceDocumentMetadataCreate": {
         "properties": {
@@ -8400,6 +8982,37 @@
           "updated"
         ],
         "title": "SourceDocumentWithDataRead"
+      },
+      "SpanAnnotationCreateBulkWithCodeId": {
+        "properties": {
+          "begin": { "type": "integer", "title": "Begin", "description": "Begin of the SpanAnnotation in characters" },
+          "end": { "type": "integer", "title": "End", "description": "End of the SpanAnnotation in characters" },
+          "begin_token": {
+            "type": "integer",
+            "title": "Begin Token",
+            "description": "Begin of the SpanAnnotation in tokens"
+          },
+          "end_token": {
+            "type": "integer",
+            "title": "End Token",
+            "description": "End of the SpanAnnotation in tokens"
+          },
+          "span_text": {
+            "type": "string",
+            "title": "Span Text",
+            "description": "The SpanText the SpanAnnotation spans."
+          },
+          "code_id": { "type": "integer", "title": "Code Id", "description": "Code the SpanAnnotation refers to" },
+          "sdoc_id": {
+            "type": "integer",
+            "title": "Sdoc Id",
+            "description": "SourceDocument the SpanAnnotation refers to"
+          },
+          "user_id": { "type": "integer", "title": "User Id", "description": "User the SpanAnnotation belongs to" }
+        },
+        "type": "object",
+        "required": ["begin", "end", "begin_token", "end_token", "span_text", "code_id", "sdoc_id", "user_id"],
+        "title": "SpanAnnotationCreateBulkWithCodeId"
       },
       "SpanAnnotationCreateWithCodeId": {
         "properties": {

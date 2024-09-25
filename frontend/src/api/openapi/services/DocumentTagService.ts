@@ -7,6 +7,7 @@ import type { DocumentTagRead } from "../models/DocumentTagRead";
 import type { DocumentTagUpdate } from "../models/DocumentTagUpdate";
 import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
+import type { SourceDocumentDocumentTagLinks } from "../models/SourceDocumentDocumentTagLinks";
 import type { SourceDocumentDocumentTagMultiLink } from "../models/SourceDocumentDocumentTagMultiLink";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -65,6 +66,26 @@ export class DocumentTagService {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/doctag/bulk/unlink",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Sets SourceDocuments' tags to the provided tags
+   * @returns number Successful Response
+   * @throws ApiError
+   */
+  public static setDocumentTagsBatch({
+    requestBody,
+  }: {
+    requestBody: Array<SourceDocumentDocumentTagLinks>;
+  }): CancelablePromise<number> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/doctag/bulk/set",
       body: requestBody,
       mediaType: "application/json",
       errors: {

@@ -108,63 +108,27 @@ services:
     profiles:
       - dev_frontend
 
-  celery-background-jobs-worker:
-    image: uhhlt/dats_backend:${DATS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
-    command: /dats_code/src/celery_background_jobs_worker_entrypoint.sh
-    user: ${UID:-1000}:${GID:-1000}
-    environment:
-      REDIS_HOST: ${REDIS_HOST:-redis}
-      REDIS_PORT: ${REDIS_PORT:-6379}
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-dats123}
-      RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
-      RABBITMQ_PORT: ${RABBITMQ_PORT:-5672}
-      RABBITMQ_USER: ${RABBITMQ_USER:-datsuser}
-      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-dats123}
-      POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
-      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
-      POSTGRES_DB: ${POSTGRES_DB:-dats}
-      POSTGRES_USER: ${POSTGRES_USER:-datsuser}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dats123}
-      ES_HOST: ${ES_HOST:-elasticsearch}
-      ES_PORT: ${ES_PORT:-9200}
-      ES_MIN_HEALTH: ${ES_MIN_HEALTH:-75}
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-      RAY_HOST: ${RAY_HOST:-ray}
-      RAY_PORT: ${RAY_PORT:-8000}
-      RAY_PROTOCOL: ${RAY_PROTOCOL:-http}
-      WEAVIATE_HOST: ${WEAVIATE_HOST:-weaviate}
-      WEAVIATE_PORT: ${WEAVIATE_PORT:-8080}
-      INSTALL_JUPYTER: ${INSTALL_JUPYTER:-false}
-      API_PORT: ${API_PORT:-5500}
-      CELERY_BACKGROUND_JOBS_WORKER_CONCURRENCY: ${CELERY_BACKGROUND_JOBS_WORKER_CONCURRENCY:-1}
-      CELERY_DEBUG_MODE: ${CELERY_DEBUG_MODE:-0}
-      DATS_BACKEND_CONFIG: ${DATS_BACKEND_CONFIG:-/dats_code/src/configs/default.yaml}
-      HUGGINGFACE_HUB_CACHE: /models_cache
-      TRANSFORMERS_CACHE: /models_cache
-      TORCH_HOME: /models_cache
-      NUMBA_CACHE_DIR: /numba_cache
-      SHARED_REPO_ROOT: ${SHARED_REPO_ROOT:-/tmp/dats}
-    volumes:
-      - ../backend/src:/dats_code/src
-      - ./backend_repo:${SHARED_REPO_ROOT:-/tmp/dats}
-      - ./models_cache:/models_cache
-      - ./numba_cache:/numba_cache
-    depends_on:
-      - rabbitmq
-      - redis
-      - postgres
+  ollama:
+    image: ollama/ollama:0.3.4
     ports:
-      - "${JUPYTER_BACKGROUND_JOBS_EXPOSED:-8880}:8888"
-      - "${CELERY_DEBUG_PORT:-45678}:6900"
-    restart: always
-    links:
-      - postgres
-      - redis
-      - rabbitmq
+      - ${OLLAMA_EXPOSED:-19290}:11434
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+    tty: true
+    restart: unless-stopped
+    volumes:
+      - ./ollama_cache:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["0"]
+              capabilities: [gpu]
     networks:
       - dats_demo_network
     profiles:
-      - background
+      - ollama
 
   ray:
     image: uhhlt/dats_ray:${DATS_RAY_DOCKER_VERSION:-debian_dev_latest}
@@ -209,6 +173,65 @@ services:
     profiles:
       - ray
 
+  celery-background-jobs-worker:
+    image: uhhlt/dats_backend:${DATS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
+    command: /dats_code/src/celery_background_jobs_worker_entrypoint.sh
+    user: ${UID:-1000}:${GID:-1000}
+    environment:
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-dats123}
+      RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
+      RABBITMQ_PORT: ${RABBITMQ_PORT:-5672}
+      RABBITMQ_USER: ${RABBITMQ_USER:-datsuser}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-dats123}
+      POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_DB: ${POSTGRES_DB:-dats}
+      POSTGRES_USER: ${POSTGRES_USER:-datsuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dats123}
+      ES_HOST: ${ES_HOST:-elasticsearch}
+      ES_PORT: ${ES_PORT:-9200}
+      ES_MIN_HEALTH: ${ES_MIN_HEALTH:-75}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      RAY_HOST: ${RAY_HOST:-ray}
+      RAY_PORT: ${RAY_PORT:-8000}
+      RAY_PROTOCOL: ${RAY_PROTOCOL:-http}
+      WEAVIATE_HOST: ${WEAVIATE_HOST:-weaviate}
+      WEAVIATE_PORT: ${WEAVIATE_PORT:-8080}
+      INSTALL_JUPYTER: ${INSTALL_JUPYTER:-false}
+      API_PORT: ${API_PORT:-5500}
+      CELERY_BACKGROUND_JOBS_WORKER_CONCURRENCY: ${CELERY_BACKGROUND_JOBS_WORKER_CONCURRENCY:-1}
+      CELERY_DEBUG_MODE: ${CELERY_DEBUG_MODE:-0}
+      DATS_BACKEND_CONFIG: ${DATS_BACKEND_CONFIG:-/dats_code/src/configs/default.yaml}
+      HUGGINGFACE_HUB_CACHE: /models_cache
+      TRANSFORMERS_CACHE: /models_cache
+      TORCH_HOME: /models_cache
+      NUMBA_CACHE_DIR: /numba_cache
+      SHARED_REPO_ROOT: ${SHARED_REPO_ROOT:-/tmp/dats}
+      OLLAMA_ENABLED: ${OLLAMA_ENABLED:-True}
+      OLLAMA_HOST: ${OLLAMA_HOST:-ollama}
+      OLLAMA_PORT: ${OLLAMA_PORT:-11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma2:9b-instruct-fp16}
+    volumes:
+      - ../backend/src:/dats_code/src
+      - ./backend_repo:${SHARED_REPO_ROOT:-/tmp/dats}
+      - ./models_cache:/models_cache
+      - ./numba_cache:/numba_cache
+    depends_on:
+      - rabbitmq
+      - redis
+      - postgres
+      - ollama
+    ports:
+      - "${JUPYTER_BACKGROUND_JOBS_EXPOSED:-8880}:8888"
+      - "${CELERY_DEBUG_PORT:-45678}:6900"
+    restart: always
+    networks:
+      - dats_demo_network
+    profiles:
+      - background
+
   dats-backend-api:
     image: uhhlt/dats_backend:${DATS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
     command: /dats_code/src/backend_api_entrypoint.sh
@@ -250,6 +273,10 @@ services:
       SYSTEM_USER_EMAIL: ${SYSTEM_USER_EMAIL}
       SYSTEM_USER_PASSWORD: ${SYSTEM_USER_PASSWORD}
       SHARED_REPO_ROOT: ${SHARED_REPO_ROOT:-/tmp/dats}
+      OLLAMA_ENABLED: ${OLLAMA_ENABLED:-True}
+      OLLAMA_HOST: ${OLLAMA_HOST:-ollama}
+      OLLAMA_PORT: ${OLLAMA_PORT:-11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma2:9b-instruct-fp16}
     healthcheck:
       test: curl --fail "http://localhost:${API_PORT}" || exit 1
       interval: 60s
@@ -260,6 +287,7 @@ services:
       - ../backend/src:/dats_code/src
       - ./backend_repo:${SHARED_REPO_ROOT:-/tmp/dats}
     depends_on:
+      - celery-background-jobs-worker
       - elasticsearch
       - postgres
       - rabbitmq
@@ -269,13 +297,6 @@ services:
       - "${API_EXPOSED:-5500}:${API_PORT}"
       - "${JUPYTER_API_EXPOSED:-8888}:8888"
     restart: always
-    links:
-      - postgres
-      - redis
-      - rabbitmq
-      - celery-background-jobs-worker
-      - elasticsearch
-      - weaviate
     networks:
       - dats_demo_network
     profiles:

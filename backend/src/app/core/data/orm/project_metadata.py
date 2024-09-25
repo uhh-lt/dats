@@ -16,6 +16,7 @@ class ProjectMetadataORM(ORMBase):
     metatype: Mapped[str] = mapped_column(String, nullable=False, index=False)
     read_only: Mapped[bool] = mapped_column(Boolean, nullable=False, index=False)
     doctype: Mapped[str] = mapped_column(String, nullable=False, index=False)
+    description: Mapped[str] = mapped_column(String, nullable=False, index=False)
 
     # one to many
     sdoc_metadata: Mapped[List["SourceDocumentMetadataORM"]] = relationship(

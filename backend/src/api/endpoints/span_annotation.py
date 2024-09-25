@@ -13,6 +13,7 @@ from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
 from app.core.data.dto.span_annotation import (
+    SpanAnnotationCreateBulkWithCodeId,
     SpanAnnotationCreateWithCodeId,
     SpanAnnotationRead,
     SpanAnnotationReadResolved,
@@ -64,6 +65,46 @@ def add_span_annotation(
         )
     else:
         return span_dto
+
+
+@router.put(
+    "/bulk/create",
+    response_model=Union[List[SpanAnnotationRead], List[SpanAnnotationReadResolved]],
+    summary="Creates a SpanAnnotations in Bulk",
+)
+def add_span_annotations_bulk(
+    *,
+    db: Session = Depends(get_db_session),
+    spans: List[SpanAnnotationCreateBulkWithCodeId],
+    resolve_code: bool = Depends(resolve_code_param),
+    authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
+) -> Union[List[SpanAnnotationRead], List[SpanAnnotationReadResolved]]:
+    for span in spans:
+        authz_user.assert_in_same_project_as(Crud.CODE, span.code_id)
+        authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, span.sdoc_id)
+        validate.validate_objects_in_same_project(
+            [
+                (Crud.CODE, span.code_id),
+                (Crud.SOURCE_DOCUMENT, span.sdoc_id),
+            ]
+        )
+
+    db_objs = crud_span_anno.create_bulk(db=db, create_dtos=spans)
+    span_dtos = [SpanAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+    if resolve_code:
+        return [
+            SpanAnnotationReadResolved(
+                **span_dto.model_dump(exclude={"current_code_id", "span_text_id"}),
+                code=CodeRead.model_validate(db_obj.current_code.code),
+                span_text=db_obj.span_text.text,
+                user_id=db_obj.annotation_document.user_id,
+                sdoc_id=db_obj.annotation_document.source_document_id,
+            )
+            for span_dto, db_obj in zip(span_dtos, db_objs)
+        ]
+    else:
+        return span_dtos
 
 
 @router.get(

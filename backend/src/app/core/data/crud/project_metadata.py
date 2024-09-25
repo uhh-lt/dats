@@ -135,6 +135,7 @@ class CRUDProjectMetadata(
                 metatype=project_metadata["metatype"],
                 read_only=project_metadata["read_only"],
                 doctype=project_metadata["doctype"],
+                description=project_metadata["description"],
             )
             db_obj = self.create(db=db, create_dto=create_dto)
             created.append(db_obj)

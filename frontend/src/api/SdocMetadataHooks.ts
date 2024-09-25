@@ -11,8 +11,19 @@ const useUpdateMetadata = () =>
     },
   });
 
+const useUpdateBulkMetadata = () =>
+  useMutation({
+    mutationFn: SdocMetadataService.updateBulk,
+    onSuccess: (metadatas) => {
+      metadatas.forEach((metadata) => {
+        queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATAS, metadata.source_document_id] });
+      });
+    },
+  });
+
 const SdocMetadataHooks = {
   useUpdateMetadata,
+  useUpdateBulkMetadata,
 };
 
 export default SdocMetadataHooks;

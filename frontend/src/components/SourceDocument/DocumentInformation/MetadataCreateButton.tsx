@@ -45,6 +45,7 @@ function MetadataCreateButton({ sdocId }: MetadataCreateButtonProps) {
             key: `${metaType.toLowerCase()} (new)`,
             project_id: projectId,
             read_only: false,
+            description: "Placeholder description",
           },
         },
         {

@@ -1,7 +1,7 @@
 # docker build -f Dockerfile -t uhhlt/dats_backend:<version> .
 # docker push uhhlt/dats_backend:<version>
 
-FROM ubuntu:jammy-20221020 as ubuntu
+FROM ubuntu:jammy-20221020 AS ubuntu
 CMD ["/bin/bash"]
 
 # makes CUDA devices visible to the container by default

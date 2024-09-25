@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { SourceDocumentMetadataBulkUpdate } from "../models/SourceDocumentMetadataBulkUpdate";
 import type { SourceDocumentMetadataCreate } from "../models/SourceDocumentMetadataCreate";
 import type { SourceDocumentMetadataRead } from "../models/SourceDocumentMetadataRead";
 import type { SourceDocumentMetadataReadResolved } from "../models/SourceDocumentMetadataReadResolved";
@@ -84,6 +85,26 @@ export class SdocMetadataService {
       path: {
         metadata_id: metadataId,
       },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Updates multiple metadata objects at once.
+   * @returns SourceDocumentMetadataRead Successful Response
+   * @throws ApiError
+   */
+  public static updateBulk({
+    requestBody,
+  }: {
+    requestBody: Array<SourceDocumentMetadataBulkUpdate>;
+  }): CancelablePromise<Array<SourceDocumentMetadataRead>> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/sdocmeta/bulk/update",
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },

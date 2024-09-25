@@ -23,6 +23,7 @@ from app.core.startup import startup
 from config import conf
 
 os.environ["RAY_ENABLED"] = "False"
+os.environ["OLLAMA_ENABLED"] = "False"
 
 # Flo: just do it once. We have to check because if we start the main function, unvicorn will import this
 # file once more manually, so it would be executed twice.

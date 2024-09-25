@@ -5,6 +5,7 @@
 import type { CodeRead } from "../models/CodeRead";
 import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
+import type { SpanAnnotationCreateBulkWithCodeId } from "../models/SpanAnnotationCreateBulkWithCodeId";
 import type { SpanAnnotationCreateWithCodeId } from "../models/SpanAnnotationCreateWithCodeId";
 import type { SpanAnnotationRead } from "../models/SpanAnnotationRead";
 import type { SpanAnnotationReadResolved } from "../models/SpanAnnotationReadResolved";
@@ -32,6 +33,34 @@ export class SpanAnnotationService {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/span",
+      query: {
+        resolve: resolve,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Creates a SpanAnnotations in Bulk
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static addSpanAnnotationsBulk({
+    requestBody,
+    resolve = true,
+  }: {
+    requestBody: Array<SpanAnnotationCreateBulkWithCodeId>;
+    /**
+     * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
+     */
+    resolve?: boolean;
+  }): CancelablePromise<Array<SpanAnnotationRead> | Array<SpanAnnotationReadResolved>> {
+    return __request(OpenAPI, {
+      method: "PUT",
+      url: "/span/bulk/create",
       query: {
         resolve: resolve,
       },

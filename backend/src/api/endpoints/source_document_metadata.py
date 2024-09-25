@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -7,6 +9,7 @@ from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.dto.source_document_metadata import (
+    SourceDocumentMetadataBulkUpdate,
     SourceDocumentMetadataCreate,
     SourceDocumentMetadataRead,
     SourceDocumentMetadataReadResolved,
@@ -80,6 +83,27 @@ def update_by_id(
 
     db_obj = crud_sdoc_meta.update(db=db, metadata_id=metadata_id, update_dto=metadata)
     return SourceDocumentMetadataRead.model_validate(db_obj)
+
+
+@router.patch(
+    "/bulk/update",
+    response_model=List[SourceDocumentMetadataRead],
+    summary="Updates multiple metadata objects at once.",
+)
+def update_bulk(
+    *,
+    db: Session = Depends(get_db_session),
+    metadatas: List[SourceDocumentMetadataBulkUpdate],
+    authz_user: AuthzUser = Depends(),
+) -> List[SourceDocumentMetadataRead]:
+    authz_user.assert_in_same_project_as_many(
+        Crud.SOURCE_DOCUMENT_METADATA, [m.id for m in metadatas]
+    )
+
+    print("HI!")
+
+    db_objs = crud_sdoc_meta.update_bulk(db=db, update_dtos=metadatas)
+    return [SourceDocumentMetadataRead.model_validate(db_obj) for db_obj in db_objs]
 
 
 @router.delete(

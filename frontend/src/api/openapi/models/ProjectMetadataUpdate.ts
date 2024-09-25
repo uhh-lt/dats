@@ -11,5 +11,9 @@ export type ProjectMetadataUpdate = {
   /**
    * Type of the ProjectMetadata
    */
-  metatype: MetaType | null;
+  metatype?: MetaType | null;
+  /**
+   * Description of the ProjectMetadata
+   */
+  description?: string | null;
 };

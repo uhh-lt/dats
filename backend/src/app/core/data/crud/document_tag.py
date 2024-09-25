@@ -156,6 +156,45 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
 
         return len(del_rows)
 
+    def set_document_tags(
+        self, db: Session, *, sdoc_id: int, tag_ids: List[int]
+    ) -> int:
+        """
+        Link/Unlink DocTags so that sdoc has exactly the tags
+        """
+        # current state
+        from app.core.data.crud.source_document import crud_sdoc
+
+        current_tag_ids = [
+            tag.id for tag in crud_sdoc.read(db, id=sdoc_id).document_tags
+        ]
+
+        # find tags to be added and removed
+        add_tag_ids = list(set(tag_ids) - set(current_tag_ids))
+        del_tag_ids = list(set(current_tag_ids) - set(tag_ids))
+
+        modifications = 0
+        if len(del_tag_ids) > 0:
+            modifications += self.unlink_multiple_document_tags(
+                db, sdoc_ids=[sdoc_id], tag_ids=del_tag_ids
+            )
+        if len(add_tag_ids) > 0:
+            modifications += self.link_multiple_document_tags(
+                db, sdoc_ids=[sdoc_id], tag_ids=add_tag_ids
+            )
+
+        return modifications
+
+    def set_document_tags_batch(
+        self, db: Session, *, links: Dict[int, List[int]]
+    ) -> int:
+        modifications = 0
+        for sdoc_id, tag_ids in links.items():
+            modifications += self.set_document_tags(
+                db, sdoc_id=sdoc_id, tag_ids=tag_ids
+            )
+        return modifications
+
     # Return a dictionary in the following format:
     # tag id => count of documents that have this tag
     # for all tags in the database

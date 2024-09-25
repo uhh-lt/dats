@@ -81,6 +81,11 @@ const useCreateAnnotation = () =>
     },
   });
 
+const useCreateBulkAnnotations = () =>
+  useMutation({
+    mutationFn: SpanAnnotationService.addSpanAnnotationsBulk,
+  });
+
 const useGetAnnotation = (spanId: number | null | undefined) =>
   useQuery<SpanAnnotationReadResolved, Error>({
     queryKey: [QueryKey.SPAN_ANNOTATION, spanId],
@@ -279,6 +284,7 @@ const useCreateMemo = () =>
 
 const SpanAnnotationHooks = {
   useCreateAnnotation,
+  useCreateBulkAnnotations,
   useGetAnnotation,
   useGetByCodeAndUser,
   useUpdateSpan,

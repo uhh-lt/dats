@@ -148,6 +148,16 @@ def __init_services__(
 
     SimSearchService(flush=reset_weaviate)
 
+    # import and init OllamaService
+    from app.core.data.llm.ollama_service import OllamaService
+
+    OllamaService()
+
+    # import and init LLMService
+    from app.core.data.llm.llm_service import LLMService
+
+    LLMService()
+
 
 def __create_system_user__() -> None:
     from app.core.data.crud.user import crud_user

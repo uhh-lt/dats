@@ -10,7 +10,9 @@ import {
   ListItemText,
   Popover,
   PopoverPosition,
+  Stack,
   TextField,
+  Tooltip,
 } from "@mui/material";
 import React, { useCallback, useState } from "react";
 import ProjectMetadataHooks from "../../../api/ProjectMetadataHooks.ts";
@@ -36,10 +38,16 @@ function MetadataEditMenu({ metadata }: MetadataEditMenuProps) {
     });
   };
 
-  // rename
+  // metadata name
   const [name, setName] = useState(metadata.project_metadata.key);
   const handleChangeName = (event: React.ChangeEvent<HTMLInputElement>) => {
     setName(event.target.value);
+  };
+
+  // metadata description
+  const [description, setDescription] = useState(metadata.project_metadata.description);
+  const handleChangeDescription = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setDescription(event.target.value);
   };
 
   // change type
@@ -56,7 +64,11 @@ function MetadataEditMenu({ metadata }: MetadataEditMenuProps) {
     setPosition(undefined);
 
     // only update if data has changed!
-    if (metadata.project_metadata.metatype !== metatype || metadata.project_metadata.key !== name) {
+    if (
+      metadata.project_metadata.metatype !== metatype ||
+      metadata.project_metadata.key !== name ||
+      metadata.project_metadata.description !== description
+    ) {
       const mutation = updateMutation.mutate;
       const actuallyMutate = () =>
         mutation({
@@ -64,6 +76,7 @@ function MetadataEditMenu({ metadata }: MetadataEditMenuProps) {
           requestBody: {
             metatype: metatype,
             key: name,
+            description: description,
           },
         });
       if (metadata.project_metadata.metatype !== metatype) {
@@ -107,15 +120,18 @@ function MetadataEditMenu({ metadata }: MetadataEditMenuProps) {
 
   return (
     <>
-      <Button
-        onClick={handleClick}
-        color="inherit"
-        startIcon={metaTypeToIcon[metadata.project_metadata.metatype]}
-        disabled={metadata.project_metadata.read_only}
-        sx={{ flexGrow: 1, flexBasis: 1, justifyContent: "start" }}
-      >
-        {metadata.project_metadata.key}
-      </Button>
+      <Tooltip title={metadata.project_metadata.description} placement="left">
+        <span style={{ flexGrow: 1, flexBasis: 1, justifyContent: "start" }}>
+          <Button
+            onClick={handleClick}
+            color="inherit"
+            startIcon={metaTypeToIcon[metadata.project_metadata.metatype]}
+            disabled={metadata.project_metadata.read_only}
+          >
+            {metadata.project_metadata.key}
+          </Button>
+        </span>
+      </Tooltip>
       <Popover
         open={Boolean(position)}
         onClose={handleClose}
@@ -130,8 +146,18 @@ function MetadataEditMenu({ metadata }: MetadataEditMenuProps) {
           horizontal: "left",
         }}
         elevation={2}
+        slotProps={{ paper: { sx: { width: 240 } } }}
       >
-        <TextField autoFocus fullWidth size="small" sx={{ p: 1 }} value={name} onChange={handleChangeName} />
+        <Stack gap={2} p={1}>
+          <TextField fullWidth size="small" value={name} onChange={handleChangeName} label="Name" />
+          <TextField
+            fullWidth
+            size="small"
+            value={description}
+            onChange={handleChangeDescription}
+            label="Description"
+          />
+        </Stack>
         <ListItem disablePadding>
           <ListItemButton onClick={() => setIsTypeMenuOpen(true)}>
             <ListItemText>Type</ListItemText>

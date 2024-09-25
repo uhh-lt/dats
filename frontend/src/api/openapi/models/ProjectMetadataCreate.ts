@@ -22,6 +22,10 @@ export type ProjectMetadataCreate = {
    */
   doctype: DocType;
   /**
+   * Description of the ProjectMetadata
+   */
+  description: string;
+  /**
    * Project the ProjectMetadata belongs to
    */
   project_id: number;
