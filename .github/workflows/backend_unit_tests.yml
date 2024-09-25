@@ -52,6 +52,7 @@ jobs:
       # disable backend and frontend
       COMPOSE_PROFILES: "background"
       RAY_ENABLED: False
+      OLLAMA_ENABLED: False
       POSTGRES_DB: dats-test
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
     steps:
