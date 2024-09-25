@@ -1,8 +1,11 @@
 import traceback
 
+from loguru import logger
+from psycopg2 import OperationalError
+from sqlalchemy.orm import Session
+
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.code import crud_code
-from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_data import crud_sdoc_data
@@ -12,13 +15,11 @@ from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.crud.word_frequency import crud_word_frequency
 from app.core.data.doc_type import DocType
-from app.core.data.dto.annotation_document import AnnotationDocumentCreate
 from app.core.data.dto.code import CodeCreate
 from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.source_document_data import SourceDocumentDataCreate
-from app.core.data.dto.source_document_metadata import \
-    SourceDocumentMetadataCreate
+from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.data.dto.span_annotation import SpanAnnotationCreateIntern
 from app.core.data.dto.word_frequency import WordFrequencyCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
@@ -28,9 +29,6 @@ from app.core.db.sql_service import SQLService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from app.util.color import get_next_color
-from loguru import logger
-from psycopg2 import OperationalError
-from sqlalchemy.orm import Session
 
 repo: RepoService = RepoService()
 sql: SQLService = SQLService()
@@ -120,20 +118,9 @@ def _create_adoc_for_system_user(
     db: Session, pptd: PreProTextDoc, sdoc_db_obj: SourceDocumentORM
 ) -> AnnotationDocumentORM:
     logger.info(f"Creating AnnotationDocument for {pptd.filename}...")
-    sdoc_id = sdoc_db_obj.id
-    try:
-        adoc_db = crud_adoc.read_by_sdoc_and_user(
-            db=db, sdoc_id=sdoc_id, user_id=SYSTEM_USER_ID
-        )
-    except NoSuchElementError:
-        adoc_db = None
-
-    if not adoc_db:
-        adoc_create = AnnotationDocumentCreate(
-            source_document_id=sdoc_id, user_id=SYSTEM_USER_ID
-        )
-        adoc_db = crud_adoc.create(db=db, create_dto=adoc_create)
-    return adoc_db
+    return crud_adoc.exists_or_create(
+        db=db, sdoc_id=sdoc_db_obj.id, user_id=SYSTEM_USER_ID
+    )
 
 
 def _persist_span_annotations(

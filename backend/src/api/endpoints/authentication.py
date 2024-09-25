@@ -143,7 +143,7 @@ async def auth_content(
     # returns None on purpose
     token = request.cookies[AUTHORIZATION]
     a = AuthzUser(request, get_current_user(db, token), db)
-    if not x_original_uri.startswith(CONTENT_PREFIX):
+    if x_original_uri is None or not x_original_uri.startswith(CONTENT_PREFIX):
         return
 
     index = x_original_uri.find("/", len(CONTENT_PREFIX))

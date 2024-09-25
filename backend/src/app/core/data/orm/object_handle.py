@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING, List, Optional
 
-from app.core.data.orm.orm_base import ORMBase
-from sqlalchemy import (CheckConstraint, ForeignKey, Index, Integer,
-                        UniqueConstraint)
+from sqlalchemy import CheckConstraint, ForeignKey, Index, Integer, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.functions import coalesce
+
+from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from app.core.data.orm.action import ActionORM
@@ -114,7 +114,6 @@ class ObjectHandleORM(ORMBase):
         coalesce(code_id, 0),
         coalesce(current_code_id, 0),
         coalesce(source_document_id, 0),
-        coalesce(annotation_document_id, 0),
         coalesce(span_annotation_id, 0),
         coalesce(bbox_annotation_id, 0),
         coalesce(span_group_id, 0),

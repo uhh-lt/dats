@@ -40,12 +40,8 @@ def add_bbox_annotation(
     resolve_code: bool = Depends(resolve_code_param),
     authz_user: AuthzUser = Depends(),
 ) -> Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]:
-    authz_user.assert_object_has_same_user_id(
-        Crud.ANNOTATION_DOCUMENT, bbox.annotation_document_id
-    )
-    authz_user.assert_in_same_project_as(
-        Crud.ANNOTATION_DOCUMENT, bbox.annotation_document_id
-    )
+    authz_user.assert_is_same_user(bbox.user_id)
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, bbox.sdoc_id)
     authz_user.assert_in_same_project_as(Crud.CODE, bbox.code_id)
 
     db_obj = crud_bbox_anno.create_with_code_id(db=db, create_dto=bbox)

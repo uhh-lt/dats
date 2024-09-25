@@ -1,11 +1,10 @@
-from typing import Optional, Union
+from typing import Union
 
 from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.action import crud_action
-from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
@@ -19,7 +18,6 @@ from app.core.data.crud.span_group import crud_span_group
 from app.core.data.crud.user import crud_user
 from app.core.data.dto.object_handle import ObjectHandleCreate
 from app.core.data.orm.action import ActionORM
-from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
@@ -35,7 +33,6 @@ from app.core.db.sql_service import SQLService
 
 class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
     __obj_id_crud_map = {
-        "annotation_document_id": crud_adoc,
         "code_id": crud_code,
         "current_code_id": crud_current_code,
         "document_tag_id": crud_document_tag,
@@ -50,7 +47,6 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
     }
 
     __obj_id_orm_type_map = {
-        "annotation_document_id": AnnotationDocumentORM,
         "code_id": CodeORM,
         "current_code_id": CurrentCodeORM,
         "document_tag_id": DocumentTagORM,
@@ -83,7 +79,7 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
 
     def read_by_attached_object_id(
         self, db: Session, obj_id_key: str, obj_id_val: int
-    ) -> Optional[ObjectHandleORM]:
+    ) -> ObjectHandleORM:
         if obj_id_key not in self.__obj_id_orm_type_map.keys():
             raise ValueError("Unknown Object ID!")
 
@@ -101,7 +97,6 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
     def resolve_handled_object(
         self, db: Session, handle: ObjectHandleORM
     ) -> Union[
-        AnnotationDocumentORM,
         CodeORM,
         CurrentCodeORM,
         DocumentTagORM,

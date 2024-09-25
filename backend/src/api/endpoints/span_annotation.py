@@ -39,17 +39,13 @@ def add_span_annotation(
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
 ) -> Union[SpanAnnotationRead, SpanAnnotationReadResolved]:
-    authz_user.assert_object_has_same_user_id(
-        Crud.ANNOTATION_DOCUMENT, span.annotation_document_id
-    )
+    authz_user.assert_is_same_user(span.user_id)
     authz_user.assert_in_same_project_as(Crud.CODE, span.code_id)
-    authz_user.assert_in_same_project_as(
-        Crud.ANNOTATION_DOCUMENT, span.annotation_document_id
-    )
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, span.sdoc_id)
     validate.validate_objects_in_same_project(
         [
             (Crud.CODE, span.code_id),
-            (Crud.ANNOTATION_DOCUMENT, span.annotation_document_id),
+            (Crud.SOURCE_DOCUMENT, span.sdoc_id),
         ]
     )
 

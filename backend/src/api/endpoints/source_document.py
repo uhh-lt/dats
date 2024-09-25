@@ -1,7 +1,14 @@
 from typing import Dict, List, Union
 
-from api.dependencies import (get_current_user, get_db_session,
-                              resolve_code_param, skip_limit_params)
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from api.dependencies import (
+    get_current_user,
+    get_db_session,
+    resolve_code_param,
+    skip_limit_params,
+)
 from api.util import get_object_memo_for_user, get_object_memos
 from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
@@ -12,24 +19,28 @@ from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.span_group import crud_span_group
-from app.core.data.dto.bbox_annotation import (BBoxAnnotationRead,
-                                               BBoxAnnotationReadResolvedCode)
+from app.core.data.dto.bbox_annotation import (
+    BBoxAnnotationRead,
+    BBoxAnnotationReadResolvedCode,
+)
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
-from app.core.data.dto.memo import (AttachedObjectType, MemoCreate, MemoInDB,
-                                    MemoRead)
-from app.core.data.dto.source_document import (SourceDocumentRead,
-                                               SourceDocumentUpdate,
-                                               SourceDocumentWithDataRead)
-from app.core.data.dto.source_document_metadata import \
-    SourceDocumentMetadataReadResolved
-from app.core.data.dto.span_annotation import (SpanAnnotationRead,
-                                               SpanAnnotationReadResolved)
+from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
+from app.core.data.dto.source_document import (
+    SourceDocumentRead,
+    SourceDocumentUpdate,
+    SourceDocumentWithDataRead,
+)
+from app.core.data.dto.source_document_metadata import (
+    SourceDocumentMetadataReadResolved,
+)
+from app.core.data.dto.span_annotation import (
+    SpanAnnotationRead,
+    SpanAnnotationReadResolved,
+)
 from app.core.data.dto.span_group import SpanGroupRead
 from app.core.data.dto.word_frequency import WordFrequencyRead
 from app.core.data.repo.repo_service import RepoService
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/sdoc", dependencies=[Depends(get_current_user)], tags=["sourceDocument"]
@@ -187,8 +198,7 @@ def get_annotators(
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
     return [
-        adoc.user_id
-        for adoc in crud_sdoc.read(db=db, id=sdoc_id).annotation_documents
+        adoc.user_id for adoc in crud_sdoc.read(db=db, id=sdoc_id).annotation_documents
     ]
 
 
@@ -335,7 +345,9 @@ def get_all_span_annotations(
 ) -> Union[List[SpanAnnotationRead], List[SpanAnnotationReadResolved]]:
     authz_user.assert_in_same_project_as(Crud.USER, user_id)
 
-    spans = crud_span_anno.read_by_user_and_sdoc(db=db, user_id=user_id, sdoc_id=sdoc_id, **skip_limit)
+    spans = crud_span_anno.read_by_user_and_sdoc(
+        db=db, user_id=user_id, sdoc_id=sdoc_id, **skip_limit
+    )
     span_read_dtos = [SpanAnnotationRead.model_validate(span) for span in spans]
     if resolve_code:
         return [
@@ -370,7 +382,9 @@ def get_all_bbox_annotations(
 ) -> Union[List[BBoxAnnotationRead], List[BBoxAnnotationReadResolvedCode]]:
     authz_user.assert_in_same_project_as(Crud.USER, user_id)
 
-    bboxes = crud_bbox_anno.read_by_user_and_sdoc(db=db, user_id=user_id, sdoc_id=sdoc_id, **skip_limit)
+    bboxes = crud_bbox_anno.read_by_user_and_sdoc(
+        db=db, user_id=user_id, sdoc_id=sdoc_id, **skip_limit
+    )
     bbox_read_dtos = [BBoxAnnotationRead.model_validate(bbox) for bbox in bboxes]
     if resolve_code:
         return [
@@ -387,13 +401,14 @@ def get_all_bbox_annotations(
 
 
 @router.get(
-    "/{user_id}/span_groups",
+    "{sdoc_id}/user/{user_id}/span_groups",
     response_model=List[SpanGroupRead],
     summary="Returns all SpanGroups of the User with the given ID if it exists",
 )
 def get_all_span_groups(
     *,
     db: Session = Depends(get_db_session),
+    sdoc_id: int,
     user_id: int,
     skip_limit: Dict[str, int] = Depends(skip_limit_params),
     authz_user: AuthzUser = Depends(),
@@ -402,5 +417,7 @@ def get_all_span_groups(
 
     return [
         SpanGroupRead.model_validate(group)
-        for group in crud_span_group.read_by_user(db=db, user_id=user_id, **skip_limit)
+        for group in crud_span_group.read_by_user_and_sdoc(
+            db=db, user_id=user_id, sdoc_id=sdoc_id, **skip_limit
+        )
     ]

@@ -1,21 +1,24 @@
 from typing import List, Optional
 
 import srsly
+from sqlalchemy.orm import Session
+
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.action import ActionType
-from app.core.data.dto.bbox_annotation import (BBoxAnnotationCreate,
-                                               BBoxAnnotationCreateIntern,
-                                               BBoxAnnotationCreateWithCodeId,
-                                               BBoxAnnotationRead,
-                                               BBoxAnnotationReadResolvedCode,
-                                               BBoxAnnotationUpdate,
-                                               BBoxAnnotationUpdateWithCodeId)
+from app.core.data.dto.bbox_annotation import (
+    BBoxAnnotationCreate,
+    BBoxAnnotationCreateIntern,
+    BBoxAnnotationCreateWithCodeId,
+    BBoxAnnotationRead,
+    BBoxAnnotationReadResolvedCode,
+    BBoxAnnotationUpdate,
+    BBoxAnnotationUpdateWithCodeId,
+)
 from app.core.data.dto.code import CodeRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
-from sqlalchemy.orm import Session
 
 
 class CRUDBBoxAnnotation(
@@ -23,19 +26,24 @@ class CRUDBBoxAnnotation(
 ):
     def create(
         self, db: Session, *, create_dto: BBoxAnnotationCreate
-    ) -> BBoxAnnotationORM:       
+    ) -> BBoxAnnotationORM:
         # get or create the annotation document
-        adoc = crud_adoc.exists_or_create(db=db, user_id=create_dto.user_id, sdoc_id=create_dto.sdoc_id)
+        adoc = crud_adoc.exists_or_create(
+            db=db, user_id=create_dto.user_id, sdoc_id=create_dto.sdoc_id
+        )
 
         # create the BboxAnnotation
-        db_obj = super().create(db=db, create_dto=BBoxAnnotationCreateIntern(
-            x_min=create_dto.x_min,
-            x_max=create_dto.x_max,
-            y_min=create_dto.y_min,
-            y_max=create_dto.y_max,
-            current_code_id=create_dto.current_code_id,
-            adoc_id=adoc.id
-        ))
+        db_obj = super().create(
+            db=db,
+            create_dto=BBoxAnnotationCreateIntern(
+                x_min=create_dto.x_min,
+                x_max=create_dto.x_max,
+                y_min=create_dto.y_min,
+                y_max=create_dto.y_max,
+                current_code_id=create_dto.current_code_id,
+                adoc_id=adoc.id,
+            ),
+        )
 
         # update the annotation document's timestamp
         crud_adoc.update_timestamp(db=db, id=adoc.id)
@@ -62,37 +70,22 @@ class CRUDBBoxAnnotation(
 
         return self.create(db=db, create_dto=create_dto_with_ccid)
 
-    def read_by_adoc(
-        self, db: Session, *, adoc_id: int, skip: int = 0, limit: int = 100
-    ) -> List[BBoxAnnotationORM]:
-        return (
-            db.query(self.model)
-            .where(self.model.annotation_document_id == adoc_id)
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
-
-    def read_by_user(
-        self, db: Session, *, user_id: int, skip: int = 0, limit: int = 1000
-    ) -> List[BBoxAnnotationORM]:
-        query = (
-            db.query(self.model)
-            .join(self.model.annotation_document)
-            .where(AnnotationDocumentORM.user_id == user_id)
-            .offset(skip)
-            .limit(limit)
-        )
-
-        return query.all()
-
     def read_by_user_and_sdoc(
-        self, db: Session, *, user_id: int, sdoc_id: int, skip: int = 0, limit: int = 1000
+        self,
+        db: Session,
+        *,
+        user_id: int,
+        sdoc_id: int,
+        skip: int = 0,
+        limit: int = 1000,
     ) -> List[BBoxAnnotationORM]:
         query = (
             db.query(self.model)
             .join(self.model.annotation_document)
-            .where(AnnotationDocumentORM.user_id == user_id, AnnotationDocumentORM.source_document_id == sdoc_id)
+            .where(
+                AnnotationDocumentORM.user_id == user_id,
+                AnnotationDocumentORM.source_document_id == sdoc_id,
+            )
             .offset(skip)
             .limit(limit)
         )

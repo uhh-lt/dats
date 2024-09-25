@@ -290,7 +290,7 @@ class CRUDSourceDocument(
                     SourceDocumentLinkORM.parent_source_document_id == sdoc_id,
                     SourceDocumentLinkORM.linked_source_document_id == sdoc_id,
                 ),
-                SourceDocumentLinkORM.linked_source_document_id is not None,
+                SourceDocumentLinkORM.linked_source_document_id.is_not(None),
             )
         )
         query = query.order_by(desc(SourceDocumentLinkORM.parent_source_document_id))

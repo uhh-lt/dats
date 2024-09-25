@@ -1,6 +1,9 @@
 from typing import Dict, List, Optional
 
 import srsly
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy.orm import Session
+
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import CRUDBase
@@ -9,16 +12,19 @@ from app.core.data.crud.span_text import crud_span_text
 from app.core.data.dto.action import ActionType
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.span_annotation import (
-    SpanAnnotationCreate, SpanAnnotationCreateBulkWithCodeId,
-    SpanAnnotationCreateIntern, SpanAnnotationCreateWithCodeId,
-    SpanAnnotationRead, SpanAnnotationReadResolved, SpanAnnotationUpdate,
-    SpanAnnotationUpdateWithCodeId)
+    SpanAnnotationCreate,
+    SpanAnnotationCreateBulkWithCodeId,
+    SpanAnnotationCreateIntern,
+    SpanAnnotationCreateWithCodeId,
+    SpanAnnotationRead,
+    SpanAnnotationReadResolved,
+    SpanAnnotationUpdate,
+    SpanAnnotationUpdateWithCodeId,
+)
 from app.core.data.dto.span_text import SpanTextCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
-from fastapi.encoders import jsonable_encoder
-from sqlalchemy.orm import Session
 
 
 class CRUDSpanAnnotation(
@@ -28,7 +34,9 @@ class CRUDSpanAnnotation(
         self, db: Session, *, create_dto: SpanAnnotationCreate
     ) -> SpanAnnotationORM:
         # get or create the annotation document
-        adoc = crud_adoc.exists_or_create(db=db, user_id=create_dto.user_id, sdoc_id=create_dto.sdoc_id)
+        adoc = crud_adoc.exists_or_create(
+            db=db, user_id=create_dto.user_id, sdoc_id=create_dto.sdoc_id
+        )
 
         # first create the SpanText
         span_text_orm = crud_span_text.create(
@@ -36,15 +44,17 @@ class CRUDSpanAnnotation(
         )
 
         # create the SpanAnnotation (and link the SpanText via FK)
-        dto_obj_data = jsonable_encoder(SpanAnnotationCreateIntern(
-            adoc_id=adoc.id,
-            begin=create_dto.begin,
-            end=create_dto.end,
-            begin_token=create_dto.begin_token,
-            end_token=create_dto.end_token,
-            current_code_id=create_dto.current_code_id,
-            span_text=create_dto.span_text,
-        ).model_dump(exclude={"span_text"}))
+        dto_obj_data = jsonable_encoder(
+            SpanAnnotationCreateIntern(
+                adoc_id=adoc.id,
+                begin=create_dto.begin,
+                end=create_dto.end,
+                begin_token=create_dto.begin_token,
+                end_token=create_dto.end_token,
+                current_code_id=create_dto.current_code_id,
+                span_text=create_dto.span_text,
+            ).model_dump(exclude={"span_text"})
+        )
         # noinspection PyArgumentList
         db_obj = self.model(**dto_obj_data)
         db_obj.span_text_id = span_text_orm.id
@@ -112,9 +122,7 @@ class CRUDSpanAnnotation(
         db.commit()
 
         # update all affected annotation documents' timestamp
-        adoc_ids = list(
-            set([create_dto.adoc_id for create_dto in create_dtos])
-        )
+        adoc_ids = list(set([create_dto.adoc_id for create_dto in create_dtos]))
         for adoc_id in adoc_ids:
             crud_adoc.update_timestamp(db=db, id=adoc_id)
 
@@ -168,38 +176,22 @@ class CRUDSpanAnnotation(
             ],
         )
 
-    def read_by_adoc(
-        self, db: Session, *, adoc_id: int, skip: int = 0, limit: int = 1000
-    ) -> List[SpanAnnotationORM]:
-        query = (
-            db.query(self.model)
-            .where(self.model.annotation_document_id == adoc_id)
-            .offset(skip)
-            .limit(limit)
-        )
-
-        return query.all()
-
-    def read_by_user(
-        self, db: Session, *, user_id: int, skip: int = 0, limit: int = 1000
-    ) -> List[SpanAnnotationORM]:
-        query = (
-            db.query(self.model)
-            .join(self.model.annotation_document)
-            .where(AnnotationDocumentORM.user_id == user_id)
-            .offset(skip)
-            .limit(limit)
-        )
-
-        return query.all()
-
     def read_by_user_and_sdoc(
-        self, db: Session, *, user_id: int, sdoc_id: int, skip: int = 0, limit: int = 1000
+        self,
+        db: Session,
+        *,
+        user_id: int,
+        sdoc_id: int,
+        skip: int = 0,
+        limit: int = 1000,
     ) -> List[SpanAnnotationORM]:
         query = (
             db.query(self.model)
             .join(self.model.annotation_document)
-            .where(AnnotationDocumentORM.user_id == user_id, AnnotationDocumentORM.source_document_id == sdoc_id)
+            .where(
+                AnnotationDocumentORM.user_id == user_id,
+                AnnotationDocumentORM.source_document_id == sdoc_id,
+            )
             .offset(skip)
             .limit(limit)
         )

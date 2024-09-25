@@ -23,7 +23,7 @@ class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, None]):
         self, db: Session, *, create_dtos: List[SpanTextCreate]
     ) -> List[SpanTextORM]:
         # Only create when not already present
-        span_texts: List[SpanTextORM] = []
+        span_texts: List[Optional[SpanTextORM]] = []
         to_create: List[SpanTextCreate] = []
         to_create_idx: List[int] = []
 
@@ -43,10 +43,7 @@ class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, None]):
         return span_texts  # type: ignore
 
     def read_by_text(self, db: Session, *, text: str) -> Optional[SpanTextORM]:
-        return db.query(self.model.id).filter(self.model.text == text).first()
-
-    def read_all_by_text(self, db: Session, *, texts: List[str]) -> List[SpanTextORM]:
-        return db.query(self.model.id).filter(self.model.text in texts)
+        return db.query(self.model).filter(self.model.text == text).first()
 
 
 crud_span_text = CRUDSpanText(SpanTextORM)
