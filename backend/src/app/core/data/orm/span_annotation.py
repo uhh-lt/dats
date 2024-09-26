@@ -8,7 +8,7 @@ from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from app.core.data.orm.annotation_document import AnnotationDocumentORM
-    from app.core.data.orm.code import CurrentCodeORM
+    from app.core.data.orm.code import CodeORM
     from app.core.data.orm.object_handle import ObjectHandleORM
     from app.core.data.orm.span_group import SpanGroupORM
     from app.core.data.orm.span_text import SpanTextORM
@@ -36,15 +36,13 @@ class SpanAnnotationORM(ORMBase):
     )
 
     # many to one
-    current_code_id: Mapped[int] = mapped_column(
+    code_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("currentcode.id", ondelete="CASCADE"),
+        ForeignKey("code.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    current_code: Mapped["CurrentCodeORM"] = relationship(
-        "CurrentCodeORM", back_populates="span_annotations"
-    )
+    code: Mapped["CodeORM"] = relationship("CodeORM", back_populates="span_annotations")
 
     annotation_document_id: Mapped[int] = mapped_column(
         Integer,
@@ -76,10 +74,6 @@ class SpanAnnotationORM(ORMBase):
     @property
     def text(self) -> str:
         return self.span_text.text
-
-    @property
-    def code(self):
-        return self.current_code.code
 
     @property
     def user_id(self):

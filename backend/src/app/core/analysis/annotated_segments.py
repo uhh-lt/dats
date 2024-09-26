@@ -14,7 +14,7 @@ from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
-from app.core.data.orm.code import CodeORM, CurrentCodeORM
+from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.memo import MemoORM
 from app.core.data.orm.object_handle import ObjectHandleORM
@@ -178,8 +178,7 @@ def find_annotated_segments(
             # join Source Document with Document Tag
             .join(SourceDocumentORM.document_tags, isouter=True)
             # join Span Annotation with Code
-            .join(SpanAnnotationORM.current_code)
-            .join(CurrentCodeORM.code)
+            .join(SpanAnnotationORM.code)
             # join Span Annotation with Text
             .join(SpanAnnotationORM.span_text)
             # join Span Annotation with my Memo
@@ -229,7 +228,7 @@ def find_annotated_segments(
                 AnnotationTableRow(
                     id=row[0].id,
                     span_text=row[0].span_text.text,
-                    code=CodeRead.model_validate(row[0].current_code.code),
+                    code=CodeRead.model_validate(row[0].code),
                     user_id=row[0].annotation_document.user_id,
                     sdoc=SourceDocumentRead.model_validate(
                         row[0].annotation_document.source_document

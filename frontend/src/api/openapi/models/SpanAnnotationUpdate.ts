@@ -2,9 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type BBoxAnnotationUpdateWithCodeId = {
+export type SpanAnnotationUpdate = {
   /**
-   * Code the BBoxAnnotation refers to
+   * Code the SpanAnnotation refers to
    */
   code_id: number;
 };

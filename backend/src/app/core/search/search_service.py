@@ -17,7 +17,7 @@ from app.core.data.dto.search import (
 )
 from app.core.data.dto.search_stats import KeywordStat, SpanEntityStat, TagStat
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
-from app.core.data.orm.code import CodeORM, CurrentCodeORM
+from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import (
     DocumentTagORM,
     SourceDocumentDocumentTagLinkTable,
@@ -153,8 +153,7 @@ class SearchService(metaclass=SingletonMeta):
             # isouter=True is important, otherwise we will only get sdocs with annotations
             .join(AnnotationDocumentORM.span_annotations, isouter=True)
             .join(SpanAnnotationORM.span_text, isouter=True)
-            .join(SpanAnnotationORM.current_code, isouter=True)
-            .join(CurrentCodeORM.code, isouter=True)
+            .join(SpanAnnotationORM.code, isouter=True)
             .join(SourceDocumentORM.metadata_)
             .join(SourceDocumentMetadataORM.project_metadata)
             .group_by(SourceDocumentORM.id)
@@ -316,8 +315,7 @@ class SearchService(metaclass=SingletonMeta):
                 )
                 .join(SpanTextORM.span_annotations)
                 .join(SpanAnnotationORM.annotation_document)
-                .join(SpanAnnotationORM.current_code)
-                .join(CurrentCodeORM.code)
+                .join(SpanAnnotationORM.code)
                 .group_by(SpanTextORM.id)
                 .filter(
                     CodeORM.id == code_id,
@@ -342,8 +340,7 @@ class SearchService(metaclass=SingletonMeta):
                 )
                 .join(SpanTextORM.span_annotations)
                 .join(SpanAnnotationORM.annotation_document)
-                .join(SpanAnnotationORM.current_code)
-                .join(CurrentCodeORM.code)
+                .join(SpanAnnotationORM.code)
                 .group_by(SpanTextORM.id)
                 .filter(
                     CodeORM.id == code_id,

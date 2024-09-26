@@ -101,7 +101,7 @@ export class SpanGroupService {
   }: {
     spanGroupId: number;
     /**
-     * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
+     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */
     resolve?: boolean;
   }): CancelablePromise<Array<SpanAnnotationRead | SpanAnnotationReadResolved>> {

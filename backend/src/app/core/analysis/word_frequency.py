@@ -7,7 +7,7 @@ from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.doc_type import DocType
 from app.core.data.dto.analysis import WordFrequencyResult, WordFrequencyStat
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
-from app.core.data.orm.code import CodeORM, CurrentCodeORM
+from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
@@ -205,8 +205,7 @@ def word_frequency(
             .join(AnnotationDocumentORM.user)
             .join(AnnotationDocumentORM.span_annotations)
             .join(SpanAnnotationORM.span_text)
-            .join(SpanAnnotationORM.current_code)
-            .join(CurrentCodeORM.code)
+            .join(SpanAnnotationORM.code)
             .join(SourceDocumentORM.metadata_)
             .filter(
                 SourceDocumentORM.project_id == project_id,

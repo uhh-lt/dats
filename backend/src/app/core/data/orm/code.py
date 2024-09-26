@@ -27,10 +27,6 @@ class CodeORM(ORMBase):
     )
 
     # one to one
-    current_code: Mapped["CurrentCodeORM"] = relationship(
-        "CurrentCodeORM", uselist=False, back_populates="code", passive_deletes=True
-    )
-
     object_handle: Mapped["ObjectHandleORM"] = relationship(
         "ObjectHandleORM", uselist=False, back_populates="code", passive_deletes=True
     )
@@ -49,6 +45,16 @@ class CodeORM(ORMBase):
     )
     project: Mapped["ProjectORM"] = relationship("ProjectORM", back_populates="codes")
 
+    # one to many
+    span_annotations: Mapped[List["SpanAnnotationORM"]] = relationship(
+        "SpanAnnotationORM", back_populates="code", passive_deletes=True
+    )
+
+    # one to many
+    bbox_annotations: Mapped[List["BBoxAnnotationORM"]] = relationship(
+        "BBoxAnnotationORM", back_populates="code", passive_deletes=True
+    )
+
     # hierarchy reference
     parent_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("code.id", ondelete="CASCADE")
@@ -63,31 +69,4 @@ class CodeORM(ORMBase):
             "parent_id",
             name="UC_name_unique_per_user_parent_and_project",
         ),
-    )
-
-
-class CurrentCodeORM(ORMBase):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-
-    # one to one
-    object_handle: Mapped["ObjectHandleORM"] = relationship(
-        "ObjectHandleORM",
-        uselist=False,
-        back_populates="current_code",
-        passive_deletes=True,
-    )
-
-    code_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("code.id", ondelete="CASCADE"), nullable=False, index=True
-    )
-    code: Mapped["CodeORM"] = relationship("CodeORM", back_populates="current_code")
-
-    # one to many
-    span_annotations: Mapped[List["SpanAnnotationORM"]] = relationship(
-        "SpanAnnotationORM", back_populates="current_code", passive_deletes=True
-    )
-
-    # one to many
-    bbox_annotations: Mapped[List["BBoxAnnotationORM"]] = relationship(
-        "BBoxAnnotationORM", back_populates="current_code", passive_deletes=True
     )

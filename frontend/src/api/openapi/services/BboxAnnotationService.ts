@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { BBoxAnnotationCreateWithCodeId } from "../models/BBoxAnnotationCreateWithCodeId";
+import type { BBoxAnnotationCreate } from "../models/BBoxAnnotationCreate";
 import type { BBoxAnnotationRead } from "../models/BBoxAnnotationRead";
 import type { BBoxAnnotationReadResolved } from "../models/BBoxAnnotationReadResolved";
-import type { BBoxAnnotationUpdateWithCodeId } from "../models/BBoxAnnotationUpdateWithCodeId";
+import type { BBoxAnnotationUpdate } from "../models/BBoxAnnotationUpdate";
 import type { CodeRead } from "../models/CodeRead";
 import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
@@ -22,9 +22,9 @@ export class BboxAnnotationService {
     requestBody,
     resolve = true,
   }: {
-    requestBody: BBoxAnnotationCreateWithCodeId;
+    requestBody: BBoxAnnotationCreate;
     /**
-     * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
+     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */
     resolve?: boolean;
   }): CancelablePromise<BBoxAnnotationRead | BBoxAnnotationReadResolved> {
@@ -52,7 +52,7 @@ export class BboxAnnotationService {
   }: {
     bboxId: number;
     /**
-     * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
+     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */
     resolve?: boolean;
   }): CancelablePromise<BBoxAnnotationRead | BBoxAnnotationReadResolved> {
@@ -81,9 +81,9 @@ export class BboxAnnotationService {
     resolve = true,
   }: {
     bboxId: number;
-    requestBody: BBoxAnnotationUpdateWithCodeId;
+    requestBody: BBoxAnnotationUpdate;
     /**
-     * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
+     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */
     resolve?: boolean;
   }): CancelablePromise<BBoxAnnotationRead | BBoxAnnotationReadResolved> {

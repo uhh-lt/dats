@@ -69,14 +69,12 @@ def _persist_bbox__annotations(
             )
             db_code = crud_code.create(db, create_dto=create_dto)
 
-        ccid = db_code.current_code.id
-
         create_dto = BBoxAnnotationCreateIntern(
             x_min=bbox.x_min,
             x_max=bbox.x_max,
             y_min=bbox.y_min,
             y_max=bbox.y_max,
-            current_code_id=ccid,
+            code_id=db_code.id,
             annotation_document_id=adoc_db_obj.id,
         )
 

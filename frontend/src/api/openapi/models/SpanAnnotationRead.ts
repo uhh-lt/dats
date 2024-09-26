@@ -28,9 +28,9 @@ export type SpanAnnotationRead = {
    */
   span_text_id: number;
   /**
-   * CurrentCode the SpanAnnotation refers to
+   * Code the SpanAnnotation refers to
    */
-  current_code_id: number;
+  code_id: number;
   /**
    * User the SpanAnnotation belongs to
    */

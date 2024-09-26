@@ -68,7 +68,7 @@ class AnnotationPromptBuilder(PromptBuilder):
         examples: Dict[int, str] = {}
         for code in project.codes:
             # get all annotations for the code
-            annotations = code.current_code.span_annotations
+            annotations = code.span_annotations
             if len(annotations) == 0:
                 continue
             random_annotation = random.choice(annotations)

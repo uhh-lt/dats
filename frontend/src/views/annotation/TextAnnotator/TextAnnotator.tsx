@@ -6,7 +6,7 @@ import { FAKE_ANNOTATION_ID } from "../../../api/SpanAnnotationHooks.ts";
 import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
-import { SpanAnnotationCreateWithCodeId } from "../../../api/openapi/models/SpanAnnotationCreateWithCodeId.ts";
+import { SpanAnnotationCreate } from "../../../api/openapi/models/SpanAnnotationCreate.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
@@ -32,7 +32,7 @@ function TextAnnotator({ sdoc }: AnnotatorRemasteredProps) {
 
   // local state
   const spanMenuRef = useRef<CodeSelectorHandle>(null);
-  const [fakeAnnotation, setFakeAnnotation] = useState<SpanAnnotationCreateWithCodeId | undefined>(undefined);
+  const [fakeAnnotation, setFakeAnnotation] = useState<SpanAnnotationCreate | undefined>(undefined);
 
   // global client state (redux)
   const visibleUserIds = useAppSelector((state) => state.annotations.visibleUserIds);
@@ -139,7 +139,7 @@ function TextAnnotator({ sdoc }: AnnotatorRemasteredProps) {
       .map((t) => t.text)
       .join(" ");
 
-    const requestBody: SpanAnnotationCreateWithCodeId = {
+    const requestBody: SpanAnnotationCreate = {
       code_id: codes[0].id,
       user_id: user.id,
       sdoc_id: sdoc.id,

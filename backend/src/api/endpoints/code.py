@@ -9,7 +9,6 @@ from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.code import crud_code
-from app.core.data.crud.current_code import crud_current_code
 from app.core.data.crud.memo import crud_memo
 from app.core.data.dto.code import CodeCreate, CodeRead, CodeUpdate
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
@@ -37,23 +36,6 @@ def create_new_code(
 
     db_code = crud_code.create(db=db, create_dto=code)
     return CodeRead.model_validate(db_code)
-
-
-@router.get(
-    "/current/{current_code_id}",
-    response_model=CodeRead,
-    summary="Returns the Code linked by the CurrentCode with the given ID.",
-)
-def get_code_by_current_code_id(
-    *,
-    db: Session = Depends(get_db_session),
-    current_code_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> CodeRead:
-    authz_user.assert_in_same_project_as(Crud.CURRENT_CODE, current_code_id)
-
-    cc_db_obj = crud_current_code.read(db=db, id=current_code_id)
-    return CodeRead.model_validate(cc_db_obj.code)
 
 
 @router.get(

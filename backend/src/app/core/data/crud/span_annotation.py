@@ -1,27 +1,22 @@
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 import srsly
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.annotation_document import crud_adoc
-from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.span_group import crud_span_group
 from app.core.data.crud.span_text import crud_span_text
 from app.core.data.dto.action import ActionType
 from app.core.data.dto.span_annotation import (
     SpanAnnotationCreate,
-    SpanAnnotationCreateBulkWithCodeId,
     SpanAnnotationCreateIntern,
-    SpanAnnotationCreateWithCodeId,
     SpanAnnotationReadResolved,
     SpanAnnotationUpdate,
-    SpanAnnotationUpdateWithCodeId,
 )
 from app.core.data.dto.span_text import SpanTextCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
-from app.core.data.orm.code import CodeORM, CurrentCodeORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 
 
@@ -49,7 +44,7 @@ class CRUDSpanAnnotation(
                 end=create_dto.end,
                 begin_token=create_dto.begin_token,
                 end_token=create_dto.end_token,
-                current_code_id=create_dto.current_code_id,
+                code_id=create_dto.code_id,
                 span_text=create_dto.span_text,
             ).model_dump(exclude={"span_text"})
         )
@@ -74,27 +69,6 @@ class CRUDSpanAnnotation(
         )
 
         return db_obj
-
-    def create_with_code_id(
-        self, db: Session, *, create_dto: SpanAnnotationCreateWithCodeId
-    ) -> SpanAnnotationORM:
-        from app.core.data.crud.code import crud_code
-
-        db_code = crud_code.read(db=db, id=create_dto.code_id)
-        ccid = db_code.current_code.id
-
-        create_dto_with_ccid = SpanAnnotationCreate(
-            begin=create_dto.begin,
-            end=create_dto.end,
-            span_text=create_dto.span_text,
-            begin_token=create_dto.begin_token,
-            end_token=create_dto.end_token,
-            current_code_id=ccid,
-            user_id=create_dto.user_id,
-            sdoc_id=create_dto.sdoc_id,
-        )
-
-        return self.create(db=db, create_dto=create_dto_with_ccid)
 
     def create_multi(
         self, db: Session, *, create_dtos: List[SpanAnnotationCreateIntern]
@@ -131,7 +105,7 @@ class CRUDSpanAnnotation(
         return db_objs
 
     def create_bulk(
-        self, db: Session, *, create_dtos: List[SpanAnnotationCreateBulkWithCodeId]
+        self, db: Session, *, create_dtos: List[SpanAnnotationCreate]
     ) -> List[SpanAnnotationORM]:
         # group by user and sdoc_id
         # identify codes
@@ -150,13 +124,6 @@ class CRUDSpanAnnotation(
                 db=db, user_id=user_id, sdoc_id=sdoc_id
             ).id
 
-        # find all codes
-        code_ids = list(set([create_dto.code_id for create_dto in create_dtos]))
-        db_codes = crud_code.read_by_ids(db=db, ids=code_ids)
-        cid2ccid: Dict[int, int] = {}
-        for db_code in db_codes:
-            cid2ccid[db_code.id] = db_code.current_code.id
-
         # create the annotations
         return self.create_multi(
             db=db,
@@ -167,7 +134,7 @@ class CRUDSpanAnnotation(
                     span_text=create_dto.span_text,
                     begin_token=create_dto.begin_token,
                     end_token=create_dto.end_token,
-                    current_code_id=cid2ccid[create_dto.code_id],
+                    code_id=create_dto.code_id,
                     annotation_document_id=adoc_id_by_user_sdoc[
                         (create_dto.user_id, create_dto.sdoc_id)
                     ],
@@ -217,10 +184,10 @@ class CRUDSpanAnnotation(
     ) -> List[SpanAnnotationORM]:
         query = (
             db.query(self.model)
-            .join(AnnotationDocumentORM)
-            .join(CurrentCodeORM)
-            .join(CodeORM)
-            .filter(CodeORM.id == code_id, AnnotationDocumentORM.user_id == user_id)
+            .join(self.model.annotation_document)
+            .filter(
+                self.model.code_id == code_id, AnnotationDocumentORM.user_id == user_id
+            )
         )
 
         return query.all()
@@ -234,20 +201,6 @@ class CRUDSpanAnnotation(
         crud_adoc.update_timestamp(db=db, id=span_anno.annotation_document_id)
 
         return span_anno
-
-    def update_with_code_id(
-        self, db: Session, *, id: int, update_dto: SpanAnnotationUpdateWithCodeId
-    ) -> SpanAnnotationORM:
-        from app.core.data.crud.code import crud_code
-
-        db_code = crud_code.read(db=db, id=update_dto.code_id)
-        ccid = db_code.current_code.id
-
-        update_dto_with_ccid = SpanAnnotationUpdate(
-            current_code_id=ccid,
-        )
-
-        return self.update(db=db, id=id, update_dto=update_dto_with_ccid)
 
     def remove(self, db: Session, *, id: int) -> SpanAnnotationORM:
         span_anno = super().remove(db, id=id)

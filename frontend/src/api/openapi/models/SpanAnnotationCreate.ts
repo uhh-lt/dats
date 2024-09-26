@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type SpanAnnotationCreateBulkWithCodeId = {
+export type SpanAnnotationCreate = {
   /**
    * Begin of the SpanAnnotation in characters
    */
@@ -28,11 +28,11 @@ export type SpanAnnotationCreateBulkWithCodeId = {
    */
   code_id: number;
   /**
+   * User that created the SpanAnnotation
+   */
+  user_id: number;
+  /**
    * SourceDocument the SpanAnnotation refers to
    */
   sdoc_id: number;
-  /**
-   * User the SpanAnnotation belongs to
-   */
-  user_id: number;
 };

@@ -24,9 +24,9 @@ export type BBoxAnnotationRead = {
    */
   id: number;
   /**
-   * CurrentCode the BBoxAnnotation refers to
+   * Code the BBoxAnnotation refers to
    */
-  current_code_id: number;
+  code_id: number;
   /**
    * User that created the BBoxAnnotation
    */

@@ -5,11 +5,10 @@
 import type { CodeRead } from "../models/CodeRead";
 import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
-import type { SpanAnnotationCreateBulkWithCodeId } from "../models/SpanAnnotationCreateBulkWithCodeId";
-import type { SpanAnnotationCreateWithCodeId } from "../models/SpanAnnotationCreateWithCodeId";
+import type { SpanAnnotationCreate } from "../models/SpanAnnotationCreate";
 import type { SpanAnnotationRead } from "../models/SpanAnnotationRead";
 import type { SpanAnnotationReadResolved } from "../models/SpanAnnotationReadResolved";
-import type { SpanAnnotationUpdateWithCodeId } from "../models/SpanAnnotationUpdateWithCodeId";
+import type { SpanAnnotationUpdate } from "../models/SpanAnnotationUpdate";
 import type { SpanGroupRead } from "../models/SpanGroupRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -24,9 +23,9 @@ export class SpanAnnotationService {
     requestBody,
     resolve = true,
   }: {
-    requestBody: SpanAnnotationCreateWithCodeId;
+    requestBody: SpanAnnotationCreate;
     /**
-     * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
+     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */
     resolve?: boolean;
   }): CancelablePromise<SpanAnnotationRead | SpanAnnotationReadResolved> {
@@ -52,9 +51,9 @@ export class SpanAnnotationService {
     requestBody,
     resolve = true,
   }: {
-    requestBody: Array<SpanAnnotationCreateBulkWithCodeId>;
+    requestBody: Array<SpanAnnotationCreate>;
     /**
-     * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
+     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */
     resolve?: boolean;
   }): CancelablePromise<Array<SpanAnnotationRead> | Array<SpanAnnotationReadResolved>> {
@@ -82,7 +81,7 @@ export class SpanAnnotationService {
   }: {
     spanId: number;
     /**
-     * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
+     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */
     resolve?: boolean;
   }): CancelablePromise<SpanAnnotationRead | SpanAnnotationReadResolved> {
@@ -111,9 +110,9 @@ export class SpanAnnotationService {
     resolve = true,
   }: {
     spanId: number;
-    requestBody: SpanAnnotationUpdateWithCodeId;
+    requestBody: SpanAnnotationUpdate;
     /**
-     * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
+     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */
     resolve?: boolean;
   }): CancelablePromise<SpanAnnotationRead | SpanAnnotationReadResolved> {

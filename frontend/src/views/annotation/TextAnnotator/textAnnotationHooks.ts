@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { SpanAnnotationRead } from "../../../api/openapi/models/SpanAnnotationRead.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
-import { SpanAnnotationUpdateWithCodeId } from "../../../api/openapi/models/SpanAnnotationUpdateWithCodeId.ts";
+import { SpanAnnotationUpdate } from "../../../api/openapi/models/SpanAnnotationUpdate.ts";
 import { SpanAnnotationService } from "../../../api/openapi/services/SpanAnnotationService.ts";
 import { QueryKey } from "../../../api/QueryKey.ts";
 import { FAKE_ANNOTATION_ID } from "../../../api/SpanAnnotationHooks.ts";
@@ -87,7 +87,7 @@ export const useUpdateSpanAnnotation = (visibleUserIds: number[]) =>
   useMutation({
     mutationFn: (variables: {
       spanAnnotationToUpdate: SpanAnnotationRead | SpanAnnotationReadResolved;
-      requestBody: SpanAnnotationUpdateWithCodeId;
+      requestBody: SpanAnnotationUpdate;
       resolve?: boolean | undefined;
     }) =>
       SpanAnnotationService.updateById({

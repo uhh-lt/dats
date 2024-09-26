@@ -1375,10 +1375,10 @@
             "schema": {
               "type": "boolean",
               "title": "Resolve Code",
-              "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
+              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
               "default": true
             },
-            "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
+            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
           }
         ],
         "responses": {
@@ -1424,10 +1424,10 @@
             "schema": {
               "type": "boolean",
               "title": "Resolve Code",
-              "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
+              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
               "default": true
             },
-            "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
+            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
           }
         ],
         "responses": {
@@ -1490,10 +1490,10 @@
             "schema": {
               "type": "boolean",
               "title": "Resolve Code",
-              "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
+              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
               "default": true
             },
-            "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
+            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
           }
         ],
         "responses": {
@@ -1561,10 +1561,10 @@
             "schema": {
               "type": "boolean",
               "title": "Resolve Code",
-              "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
+              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
               "default": true
             },
-            "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
+            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
           }
         ],
         "responses": {
@@ -1965,17 +1965,15 @@
             "schema": {
               "type": "boolean",
               "title": "Resolve Code",
-              "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
+              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
               "default": true
             },
-            "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
+            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
           }
         ],
         "requestBody": {
           "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationCreateWithCodeId" } }
-          }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationCreate" } } }
         },
         "responses": {
           "200": {
@@ -2013,10 +2011,10 @@
             "schema": {
               "type": "boolean",
               "title": "Resolve Code",
-              "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
+              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
               "default": true
             },
-            "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
+            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
           }
         ],
         "requestBody": {
@@ -2025,7 +2023,7 @@
             "application/json": {
               "schema": {
                 "type": "array",
-                "items": { "$ref": "#/components/schemas/SpanAnnotationCreateBulkWithCodeId" },
+                "items": { "$ref": "#/components/schemas/SpanAnnotationCreate" },
                 "title": "Spans"
               }
             }
@@ -2068,10 +2066,10 @@
             "schema": {
               "type": "boolean",
               "title": "Resolve Code",
-              "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
+              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
               "default": true
             },
-            "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
+            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
           }
         ],
         "responses": {
@@ -2109,17 +2107,15 @@
             "schema": {
               "type": "boolean",
               "title": "Resolve Code",
-              "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
+              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
               "default": true
             },
-            "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
+            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
           }
         ],
         "requestBody": {
           "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationUpdateWithCodeId" } }
-          }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationUpdate" } } }
         },
         "responses": {
           "200": {
@@ -2535,10 +2531,10 @@
             "schema": {
               "type": "boolean",
               "title": "Resolve Code",
-              "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
+              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
               "default": true
             },
-            "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
+            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
           }
         ],
         "responses": {
@@ -2580,17 +2576,15 @@
             "schema": {
               "type": "boolean",
               "title": "Resolve Code",
-              "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
+              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
               "default": true
             },
-            "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
+            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
           }
         ],
         "requestBody": {
           "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/BBoxAnnotationCreateWithCodeId" } }
-          }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BBoxAnnotationCreate" } } }
         },
         "responses": {
           "200": {
@@ -2629,10 +2623,10 @@
             "schema": {
               "type": "boolean",
               "title": "Resolve Code",
-              "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
+              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
               "default": true
             },
-            "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
+            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
           }
         ],
         "responses": {
@@ -2670,17 +2664,15 @@
             "schema": {
               "type": "boolean",
               "title": "Resolve Code",
-              "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
+              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
               "default": true
             },
-            "description": "If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
+            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
           }
         ],
         "requestBody": {
           "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/BBoxAnnotationUpdateWithCodeId" } }
-          }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BBoxAnnotationUpdate" } } }
         },
         "responses": {
           "200": {
@@ -2878,32 +2870,6 @@
           }
         },
         "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/code/current/{current_code_id}": {
-      "get": {
-        "tags": ["code"],
-        "summary": "Returns the Code linked by the CurrentCode with the given ID.",
-        "operationId": "get_code_by_current_code_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "current_code_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Current Code Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
       }
     },
     "/code/{code_id}": {
@@ -5994,7 +5960,7 @@
         ],
         "title": "AttachedObjectType"
       },
-      "BBoxAnnotationCreateWithCodeId": {
+      "BBoxAnnotationCreate": {
         "properties": {
           "x_min": {
             "type": "integer",
@@ -6026,7 +5992,7 @@
         },
         "type": "object",
         "required": ["x_min", "x_max", "y_min", "y_max", "code_id", "user_id", "sdoc_id"],
-        "title": "BBoxAnnotationCreateWithCodeId"
+        "title": "BBoxAnnotationCreate"
       },
       "BBoxAnnotationRead": {
         "properties": {
@@ -6051,11 +6017,7 @@
             "description": "Absolute y_max coordinate of the BBoxAnnotation"
           },
           "id": { "type": "integer", "title": "Id", "description": "ID of the BBoxAnnotation" },
-          "current_code_id": {
-            "type": "integer",
-            "title": "Current Code Id",
-            "description": "CurrentCode the BBoxAnnotation refers to"
-          },
+          "code_id": { "type": "integer", "title": "Code Id", "description": "Code the BBoxAnnotation refers to" },
           "user_id": { "type": "integer", "title": "User Id", "description": "User that created the BBoxAnnotation" },
           "sdoc_id": {
             "type": "integer",
@@ -6076,18 +6038,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "x_min",
-          "x_max",
-          "y_min",
-          "y_max",
-          "id",
-          "current_code_id",
-          "user_id",
-          "sdoc_id",
-          "created",
-          "updated"
-        ],
+        "required": ["x_min", "x_max", "y_min", "y_max", "id", "code_id", "user_id", "sdoc_id", "created", "updated"],
         "title": "BBoxAnnotationRead"
       },
       "BBoxAnnotationReadResolved": {
@@ -6172,13 +6123,13 @@
         "required": ["id", "x", "y", "width", "height", "url", "code", "user_id", "sdoc", "tags", "memo"],
         "title": "BBoxAnnotationTableRow"
       },
-      "BBoxAnnotationUpdateWithCodeId": {
+      "BBoxAnnotationUpdate": {
         "properties": {
           "code_id": { "type": "integer", "title": "Code Id", "description": "Code the BBoxAnnotation refers to" }
         },
         "type": "object",
         "required": ["code_id"],
-        "title": "BBoxAnnotationUpdateWithCodeId"
+        "title": "BBoxAnnotationUpdate"
       },
       "BackgroundJobStatus": {
         "type": "string",
@@ -8838,38 +8789,7 @@
         ],
         "title": "SourceDocumentWithDataRead"
       },
-      "SpanAnnotationCreateBulkWithCodeId": {
-        "properties": {
-          "begin": { "type": "integer", "title": "Begin", "description": "Begin of the SpanAnnotation in characters" },
-          "end": { "type": "integer", "title": "End", "description": "End of the SpanAnnotation in characters" },
-          "begin_token": {
-            "type": "integer",
-            "title": "Begin Token",
-            "description": "Begin of the SpanAnnotation in tokens"
-          },
-          "end_token": {
-            "type": "integer",
-            "title": "End Token",
-            "description": "End of the SpanAnnotation in tokens"
-          },
-          "span_text": {
-            "type": "string",
-            "title": "Span Text",
-            "description": "The SpanText the SpanAnnotation spans."
-          },
-          "code_id": { "type": "integer", "title": "Code Id", "description": "Code the SpanAnnotation refers to" },
-          "sdoc_id": {
-            "type": "integer",
-            "title": "Sdoc Id",
-            "description": "SourceDocument the SpanAnnotation refers to"
-          },
-          "user_id": { "type": "integer", "title": "User Id", "description": "User the SpanAnnotation belongs to" }
-        },
-        "type": "object",
-        "required": ["begin", "end", "begin_token", "end_token", "span_text", "code_id", "sdoc_id", "user_id"],
-        "title": "SpanAnnotationCreateBulkWithCodeId"
-      },
-      "SpanAnnotationCreateWithCodeId": {
+      "SpanAnnotationCreate": {
         "properties": {
           "begin": { "type": "integer", "title": "Begin", "description": "Begin of the SpanAnnotation in characters" },
           "end": { "type": "integer", "title": "End", "description": "End of the SpanAnnotation in characters" },
@@ -8898,7 +8818,7 @@
         },
         "type": "object",
         "required": ["begin", "end", "begin_token", "end_token", "span_text", "code_id", "user_id", "sdoc_id"],
-        "title": "SpanAnnotationCreateWithCodeId"
+        "title": "SpanAnnotationCreate"
       },
       "SpanAnnotationRead": {
         "properties": {
@@ -8920,11 +8840,7 @@
             "title": "Span Text Id",
             "description": "The SpanText the SpanAnnotation spans."
           },
-          "current_code_id": {
-            "type": "integer",
-            "title": "Current Code Id",
-            "description": "CurrentCode the SpanAnnotation refers to"
-          },
+          "code_id": { "type": "integer", "title": "Code Id", "description": "Code the SpanAnnotation refers to" },
           "user_id": { "type": "integer", "title": "User Id", "description": "User the SpanAnnotation belongs to" },
           "sdoc_id": {
             "type": "integer",
@@ -8952,7 +8868,7 @@
           "end_token",
           "id",
           "span_text_id",
-          "current_code_id",
+          "code_id",
           "user_id",
           "sdoc_id",
           "created",
@@ -9015,13 +8931,13 @@
         ],
         "title": "SpanAnnotationReadResolved"
       },
-      "SpanAnnotationUpdateWithCodeId": {
+      "SpanAnnotationUpdate": {
         "properties": {
           "code_id": { "type": "integer", "title": "Code Id", "description": "Code the SpanAnnotation refers to" }
         },
         "type": "object",
         "required": ["code_id"],
-        "title": "SpanAnnotationUpdateWithCodeId"
+        "title": "SpanAnnotationUpdate"
       },
       "SpanEntityStat": {
         "properties": {
