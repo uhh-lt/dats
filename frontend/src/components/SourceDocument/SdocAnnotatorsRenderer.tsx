@@ -25,10 +25,10 @@ function SdocAnnotatorsRenderer({ sdocId, annotators, ...props }: SdocAnnotators
 }
 
 function SdocAnnotatorsRendererWithoutData({ sdocId, ...props }: { sdocId: number }) {
-  const annotators = SdocHooks.useGetAllAnnotationDocuments(sdocId);
+  const annotators = SdocHooks.useGetAnnotators(sdocId);
 
   if (annotators.isSuccess) {
-    return <SdocAnnotatorsRendererWithData annotators={annotators.data.map((adoc) => adoc.user_id)} {...props} />;
+    return <SdocAnnotatorsRendererWithData annotators={annotators.data} {...props} />;
   } else if (annotators.isError) {
     return <div>{annotators.error.message}</div>;
   } else {

@@ -186,7 +186,7 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
                 before_state=before_state,
             )
 
-        # delete the adocs
+        # delete the codes
         query.delete()
         db.commit()
 
@@ -207,7 +207,7 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
                 before_state=before_state,
             )
 
-        # delete the adocs
+        # delete the codes
         query.delete()
         db.commit()
 

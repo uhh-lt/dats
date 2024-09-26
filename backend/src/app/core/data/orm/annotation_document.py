@@ -8,7 +8,6 @@ from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
-    from app.core.data.orm.object_handle import ObjectHandleORM
     from app.core.data.orm.source_document import SourceDocumentORM
     from app.core.data.orm.span_annotation import SpanAnnotationORM
     from app.core.data.orm.span_group import SpanGroupORM
@@ -30,14 +29,6 @@ class AnnotationDocumentORM(ORMBase):
     )
     updated: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.current_timestamp()
-    )
-
-    # one to one
-    object_handle: Mapped["ObjectHandleORM"] = relationship(
-        "ObjectHandleORM",
-        uselist=False,
-        back_populates="annotation_document",
-        passive_deletes=True,
     )
 
     # one to many

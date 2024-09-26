@@ -9,7 +9,7 @@ export interface AnnoState {
   selectedCodeId: number | undefined;
   expandedCodeIds: string[];
   hiddenCodeIds: number[];
-  visibleAdocIds: number[];
+  visibleUserIds: number[];
   tagStyle: "inline" | "above";
   disabledCodeIds: number[];
 }
@@ -21,7 +21,7 @@ const initialState: AnnoState = {
   selectedCodeId: undefined,
   expandedCodeIds: [],
   hiddenCodeIds: [],
-  visibleAdocIds: [],
+  visibleUserIds: [],
   tagStyle: "inline",
   disabledCodeIds: [],
 };
@@ -76,8 +76,8 @@ export const annoSlice = createSlice({
     setSelectedDocumentTagId: (state, action: PayloadAction<number | undefined>) => {
       state.selectedDocumentTagId = action.payload;
     },
-    setVisibleAdocIds: (state, action: PayloadAction<number[]>) => {
-      state.visibleAdocIds = action.payload;
+    setVisibleUserIds: (state, action: PayloadAction<number[]>) => {
+      state.visibleUserIds = action.payload;
     },
     moveCodeToTop: (state, action: PayloadAction<CodeRead>) => {
       // makes most recently used order

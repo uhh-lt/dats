@@ -20,10 +20,6 @@ export type AnnotationTableRow = {
    */
   code: CodeRead;
   /**
-   * AnnotationDocument the SpanAnnotation refers to
-   */
-  annotation_document_id: number;
-  /**
    * User the SpanAnnotation belongs to
    */
   user_id: number;

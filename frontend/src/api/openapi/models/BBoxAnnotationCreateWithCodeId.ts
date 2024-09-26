@@ -24,7 +24,11 @@ export type BBoxAnnotationCreateWithCodeId = {
    */
   code_id: number;
   /**
-   * AnnotationDocument the BBoxAnnotation refers to
+   * User that created the BBoxAnnotation
    */
-  annotation_document_id: number;
+  user_id: number;
+  /**
+   * SourceDocument the BBoxAnnotation refers to
+   */
+  sdoc_id: number;
 };

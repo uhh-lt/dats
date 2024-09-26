@@ -11,6 +11,5 @@ export const attachedObjectTypeToIcon: Record<AttachedObjectType, React.ReactEle
   [AttachedObjectType.CODE]: <SquareIcon />,
   [AttachedObjectType.SPAN_ANNOTATION]: <NotesIcon />,
   [AttachedObjectType.BBOX_ANNOTATION]: <ArticleIcon />,
-  [AttachedObjectType.ANNOTATION_DOCUMENT]: <></>,
   [AttachedObjectType.SPAN_GROUP]: <></>,
 };

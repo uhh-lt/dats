@@ -1,8 +1,8 @@
 import { CardProps } from "@mui/material";
-import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 
-type AnnotationReadResolved = SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode;
+type AnnotationReadResolved = SpanAnnotationReadResolved | BBoxAnnotationReadResolved;
 
 export interface AnnotationCardProps<T extends AnnotationReadResolved> {
   annotation: T;

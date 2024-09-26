@@ -3,7 +3,7 @@ import { Box, Link, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks.ts";
 import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
-import { BBoxAnnotationReadResolvedCode } from "../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { BBoxAnnotationReadResolved } from "../../api/openapi/models/BBoxAnnotationReadResolved.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
 import { SourceDocumentRead } from "../../api/openapi/models/SourceDocumentRead.ts";
@@ -16,7 +16,7 @@ interface AttachedObjectLinkProps {
     | DocumentTagRead
     | CodeRead
     | SpanAnnotationReadResolved
-    | BBoxAnnotationReadResolvedCode;
+    | BBoxAnnotationReadResolved;
 }
 
 export default function AttachedObjectLink({ attachedObjectType, attachedObject }: AttachedObjectLinkProps) {
@@ -31,7 +31,7 @@ export default function AttachedObjectLink({ attachedObjectType, attachedObject 
       ) : attachedObjectType === AttachedObjectType.SPAN_ANNOTATION ? (
         <SpanAnnotationLink spanAnnotation={attachedObject as SpanAnnotationReadResolved} />
       ) : attachedObjectType === AttachedObjectType.BBOX_ANNOTATION ? (
-        <BBoxAnnotationLink bboxAnnotation={attachedObject as BBoxAnnotationReadResolvedCode} />
+        <BBoxAnnotationLink bboxAnnotation={attachedObject as BBoxAnnotationReadResolved} />
       ) : (
         <>Not supported!</>
       )}
@@ -74,7 +74,7 @@ function TagLink({ tag }: { tag: DocumentTagRead }) {
 
 function SpanAnnotationLink({ spanAnnotation }: { spanAnnotation: SpanAnnotationReadResolved }) {
   // query
-  const sdoc = SdocHooks.useGetDocumentByAdocId(spanAnnotation.annotation_document_id);
+  const sdoc = SdocHooks.useGetDocument(spanAnnotation.sdoc_id);
 
   if (sdoc.isSuccess) {
     return (
@@ -94,7 +94,7 @@ function SpanAnnotationLink({ spanAnnotation }: { spanAnnotation: SpanAnnotation
                 backgroundColor: spanAnnotation.code.color,
               }}
             >
-              [{spanAnnotation.code.name}] {spanAnnotation.span_text}
+              [{spanAnnotation.code.name}] {spanAnnotation.text}
             </span>
           </Link>{" "}
           of{" "}
@@ -112,14 +112,14 @@ function SpanAnnotationLink({ spanAnnotation }: { spanAnnotation: SpanAnnotation
 
   return (
     <>
-      {spanAnnotation.span_text} ({spanAnnotation.code.name})
+      {spanAnnotation.text} ({spanAnnotation.code.name})
     </>
   );
 }
 
-function BBoxAnnotationLink({ bboxAnnotation }: { bboxAnnotation: BBoxAnnotationReadResolvedCode }) {
+function BBoxAnnotationLink({ bboxAnnotation }: { bboxAnnotation: BBoxAnnotationReadResolved }) {
   // query
-  const sdoc = SdocHooks.useGetDocumentByAdocId(bboxAnnotation.annotation_document_id);
+  const sdoc = SdocHooks.useGetDocument(bboxAnnotation.sdoc_id);
 
   if (sdoc.isSuccess) {
     return (

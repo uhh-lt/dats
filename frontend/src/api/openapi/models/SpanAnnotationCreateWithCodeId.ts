@@ -28,7 +28,11 @@ export type SpanAnnotationCreateWithCodeId = {
    */
   code_id: number;
   /**
-   * AnnotationDocument the SpanAnnotation refers to
+   * User that created the SpanAnnotation
    */
-  annotation_document_id: number;
+  user_id: number;
+  /**
+   * SourceDocument the SpanAnnotation refers to
+   */
+  sdoc_id: number;
 };

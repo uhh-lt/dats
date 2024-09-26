@@ -36,10 +36,6 @@ export type BBoxAnnotationTableRow = {
    */
   code: CodeRead;
   /**
-   * AnnotationDocument the BBoxAnnotation refers to
-   */
-  annotation_document_id: number;
-  /**
    * User the BBoxAnnotation belongs to
    */
   user_id: number;

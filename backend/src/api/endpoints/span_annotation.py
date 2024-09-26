@@ -39,32 +39,21 @@ def add_span_annotation(
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
 ) -> Union[SpanAnnotationRead, SpanAnnotationReadResolved]:
-    authz_user.assert_object_has_same_user_id(
-        Crud.ANNOTATION_DOCUMENT, span.annotation_document_id
-    )
+    authz_user.assert_is_same_user(span.user_id)
     authz_user.assert_in_same_project_as(Crud.CODE, span.code_id)
-    authz_user.assert_in_same_project_as(
-        Crud.ANNOTATION_DOCUMENT, span.annotation_document_id
-    )
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, span.sdoc_id)
     validate.validate_objects_in_same_project(
         [
             (Crud.CODE, span.code_id),
-            (Crud.ANNOTATION_DOCUMENT, span.annotation_document_id),
+            (Crud.SOURCE_DOCUMENT, span.sdoc_id),
         ]
     )
 
     db_obj = crud_span_anno.create_with_code_id(db=db, create_dto=span)
-    span_dto = SpanAnnotationRead.model_validate(db_obj)
     if resolve_code:
-        return SpanAnnotationReadResolved(
-            **span_dto.model_dump(exclude={"current_code_id", "span_text_id"}),
-            code=CodeRead.model_validate(db_obj.current_code.code),
-            span_text=db_obj.span_text.text,
-            user_id=db_obj.annotation_document.user_id,
-            sdoc_id=db_obj.annotation_document.source_document_id,
-        )
+        return SpanAnnotationReadResolved.model_validate(db_obj)
     else:
-        return span_dto
+        return SpanAnnotationRead.model_validate(db_obj)
 
 
 @router.put(
@@ -91,20 +80,10 @@ def add_span_annotations_bulk(
         )
 
     db_objs = crud_span_anno.create_bulk(db=db, create_dtos=spans)
-    span_dtos = [SpanAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
     if resolve_code:
-        return [
-            SpanAnnotationReadResolved(
-                **span_dto.model_dump(exclude={"current_code_id", "span_text_id"}),
-                code=CodeRead.model_validate(db_obj.current_code.code),
-                span_text=db_obj.span_text.text,
-                user_id=db_obj.annotation_document.user_id,
-                sdoc_id=db_obj.annotation_document.source_document_id,
-            )
-            for span_dto, db_obj in zip(span_dtos, db_objs)
-        ]
+        return [SpanAnnotationReadResolved.model_validate(db_obj) for db_obj in db_objs]
     else:
-        return span_dtos
+        return [SpanAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
 
 
 @router.get(
@@ -122,17 +101,10 @@ def get_by_id(
     authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
 
     db_obj = crud_span_anno.read(db=db, id=span_id)
-    span_dto = SpanAnnotationRead.model_validate(db_obj)
     if resolve_code:
-        return SpanAnnotationReadResolved(
-            **span_dto.model_dump(exclude={"current_code_id", "span_text_id"}),
-            code=CodeRead.model_validate(db_obj.current_code.code),
-            span_text=db_obj.span_text.text,
-            user_id=db_obj.annotation_document.user_id,
-            sdoc_id=db_obj.annotation_document.source_document_id,
-        )
+        return SpanAnnotationReadResolved.model_validate(db_obj)
     else:
-        return span_dto
+        return SpanAnnotationRead.model_validate(db_obj)
 
 
 @router.patch(
@@ -156,17 +128,10 @@ def update_by_id(
     )
 
     db_obj = crud_span_anno.update_with_code_id(db=db, id=span_id, update_dto=span_anno)
-    span_dto = SpanAnnotationRead.model_validate(db_obj)
     if resolve_code:
-        return SpanAnnotationReadResolved(
-            **span_dto.model_dump(exclude={"current_code_id", "span_text_id"}),
-            code=CodeRead.model_validate(db_obj.current_code.code),
-            span_text=db_obj.span_text.text,
-            user_id=db_obj.annotation_document.user_id,
-            sdoc_id=db_obj.annotation_document.source_document_id,
-        )
+        return SpanAnnotationReadResolved.model_validate(db_obj)
     else:
-        return span_dto
+        return SpanAnnotationRead.model_validate(db_obj)
 
 
 @router.delete(
@@ -373,15 +338,4 @@ def get_by_user_code(
     db_objs = crud_span_anno.read_by_code_and_user(
         db=db, code_id=code_id, user_id=user_id
     )
-    return [
-        SpanAnnotationReadResolved(
-            **SpanAnnotationRead.model_validate(db_obj).model_dump(
-                exclude={"current_code_id", "span_text_id"}
-            ),
-            code=CodeRead.model_validate(db_obj.current_code.code),
-            span_text=db_obj.span_text.text,
-            user_id=db_obj.annotation_document.user_id,
-            sdoc_id=db_obj.annotation_document.source_document_id,
-        )
-        for db_obj in db_objs
-    ]
+    return [SpanAnnotationReadResolved.model_validate(db_obj) for db_obj in db_objs]

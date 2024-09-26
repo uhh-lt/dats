@@ -48,6 +48,14 @@ class SpanGroupORM(ORMBase):
         back_populates="span_groups",
     )
 
+    @property
+    def user_id(self):
+        return self.annotation_document.user_id
+
+    @property
+    def sdoc_id(self):
+        return self.annotation_document.source_document_id
+
 
 class SpanAnnotationSpanGroupLinkTable(ORMBase):
     span_annotation_id: Mapped[int] = mapped_column(

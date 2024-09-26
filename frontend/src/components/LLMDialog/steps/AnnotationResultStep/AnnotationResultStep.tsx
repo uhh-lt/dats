@@ -94,7 +94,7 @@ function AnnotationResultStep() {
               end: annotation.end,
               begin_token: annotation.begin_token,
               end_token: annotation.end_token,
-              span_text: annotation.span_text,
+              span_text: annotation.text,
               user_id: user.id,
             });
           }

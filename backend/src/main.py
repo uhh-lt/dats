@@ -35,7 +35,6 @@ if not STARTUP_DONE:
 from api.endpoints import (
     analysis,
     analysis_table,
-    annotation_document,
     authentication,
     bbox_annotation,
     code,
@@ -256,7 +255,6 @@ app.include_router(user.router)
 app.include_router(project.router)
 app.include_router(source_document.router)
 app.include_router(document_tag.router)
-app.include_router(annotation_document.router)
 app.include_router(span_annotation.router)
 app.include_router(span_group.router)
 app.include_router(bbox_annotation.router)

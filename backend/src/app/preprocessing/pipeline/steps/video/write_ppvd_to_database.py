@@ -2,14 +2,12 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.annotation_document import crud_adoc
-from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_link import crud_sdoc_link
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.doc_type import DocType
-from app.core.data.dto.annotation_document import AnnotationDocumentCreate
 from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
@@ -74,18 +72,7 @@ def _persist_sdoc_metadata(
 
 
 def _create_adoc_for_system_user(db: Session, sdoc_db_obj: SourceDocumentORM) -> None:
-    sdoc_id = sdoc_db_obj.id
-    try:
-        adoc_db = crud_adoc.read_by_sdoc_and_user(
-            db=db, sdoc_id=sdoc_id, user_id=SYSTEM_USER_ID
-        )
-    except NoSuchElementError:
-        adoc_db = None
-    if not adoc_db:
-        adoc_create = AnnotationDocumentCreate(
-            source_document_id=sdoc_id, user_id=SYSTEM_USER_ID
-        )
-        adoc_db = crud_adoc.create(db=db, create_dto=adoc_create)
+    crud_adoc.exists_or_create(db=db, sdoc_id=sdoc_db_obj.id, user_id=SYSTEM_USER_ID)
 
 
 def _create_sdoc_link_for_audio_stream(

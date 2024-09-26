@@ -2,16 +2,17 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 
 import queryClient from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
-import { AnnotationDocumentRead } from "./openapi/models/AnnotationDocumentRead.ts";
+import { BBoxAnnotationReadResolved } from "./openapi/models/BBoxAnnotationReadResolved.ts";
 import { DocType } from "./openapi/models/DocType.ts";
 import { DocumentTagRead } from "./openapi/models/DocumentTagRead.ts";
 import { MemoRead } from "./openapi/models/MemoRead.ts";
 import { SourceDocumentMetadataReadResolved } from "./openapi/models/SourceDocumentMetadataReadResolved.ts";
 import { SourceDocumentWithDataRead } from "./openapi/models/SourceDocumentWithDataRead.ts";
-import { AnnotationDocumentService } from "./openapi/services/AnnotationDocumentService.ts";
+import { SpanAnnotationReadResolved } from "./openapi/models/SpanAnnotationReadResolved.ts";
 import { DocumentTagService } from "./openapi/services/DocumentTagService.ts";
 import { ProjectService } from "./openapi/services/ProjectService.ts";
 import { SourceDocumentService } from "./openapi/services/SourceDocumentService.ts";
+import { useSelectEnabledBboxAnnotations, useSelectEnabledSpanAnnotations } from "./utils.ts";
 
 // sdoc
 const fetchSdoc = async (sdocId: number) => {
@@ -63,18 +64,6 @@ const useGetDocumentIdByFilename = (filename: string | undefined, projectId: num
     staleTime: Infinity,
   });
 
-const useGetDocumentByAdocId = (adocId: number | null | undefined) =>
-  useQuery<SourceDocumentWithDataRead, Error>({
-    queryKey: [QueryKey.SDOC_BY_ADOC, adocId],
-    queryFn: async () => {
-      const adoc = await AnnotationDocumentService.getByAdocId({
-        adocId: adocId!,
-      });
-      return await fetchSdoc(adoc.source_document_id);
-    },
-    enabled: !!adocId,
-  });
-
 const useGetLinkedSdocIds = (sdocId: number | null | undefined) =>
   useQuery<number[], Error>({
     queryKey: [QueryKey.SDOC_LINKS, sdocId],
@@ -122,30 +111,6 @@ const useGetAllDocumentTags = (sdocId: number | null | undefined) =>
       }),
     enabled: !!sdocId,
   });
-
-// adoc
-const useGetAllAnnotationDocuments = (sdocId: number | null | undefined) => {
-  return useQuery<AnnotationDocumentRead[], Error>({
-    queryKey: [QueryKey.SDOC_ADOCS, sdocId],
-    queryFn: () =>
-      SourceDocumentService.getAllAdocs({
-        sdocId: sdocId!,
-      }),
-    enabled: !!sdocId,
-  });
-};
-
-const useGetOrCreateAdocOfUser = (sdocId: number | null | undefined, userId: number | null | undefined) => {
-  return useQuery<AnnotationDocumentRead, Error>({
-    queryKey: [QueryKey.SDOC_ADOC_USER, sdocId, userId],
-    queryFn: () =>
-      SourceDocumentService.getAdocOfUser({
-        sdocId: sdocId!,
-        userId: userId!,
-      }),
-    enabled: !!sdocId && !!userId,
-  });
-};
 
 // memo
 const useGetMemos = (sdocId: number | null | undefined) =>
@@ -289,19 +254,96 @@ const useGetWordLevelTranscriptions = (sdocId: number | null | undefined) =>
     enabled: !!sdocId,
   });
 
+// annotations
+const useGetAnnotators = (sdocId: number | null | undefined) =>
+  useQuery<number[], Error>({
+    queryKey: [QueryKey.SDOC_ANNOTATORS, sdocId],
+    queryFn: () =>
+      SourceDocumentService.getAnnotators({
+        sdocId: sdocId!,
+      }),
+    enabled: !!sdocId,
+  });
+
+const useGetSpanAnnotations = (sdocId: number | null | undefined, userId: number | null | undefined) => {
+  // filter out all disabled code ids
+  const selectEnabledAnnotations = useSelectEnabledSpanAnnotations();
+  return useQuery<SpanAnnotationReadResolved[], Error>({
+    queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, sdocId, userId],
+    queryFn: () =>
+      SourceDocumentService.getAllSpanAnnotations({
+        sdocId: sdocId!,
+        userId: userId!,
+        resolve: true,
+      }) as Promise<SpanAnnotationReadResolved[]>,
+    enabled: !!sdocId && !!userId,
+    select: selectEnabledAnnotations,
+  });
+};
+
+const useGetSpanAnnotationsBatch = (sdocId: number | null | undefined, userIds: number[] | null | undefined) => {
+  // filter out all disabled code ids
+  const selectEnabledAnnotations = useSelectEnabledSpanAnnotations();
+  return useQuery<SpanAnnotationReadResolved[], Error>({
+    queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, sdocId, userIds],
+    queryFn: () =>
+      SourceDocumentService.getAllSpanAnnotationsBulk({
+        sdocId: sdocId!,
+        userId: userIds!,
+        resolve: true,
+      }) as Promise<SpanAnnotationReadResolved[]>,
+    enabled: !!sdocId && !!userIds && userIds.length > 0,
+    select: selectEnabledAnnotations,
+  });
+};
+
+const useGetBBoxAnnotations = (sdocId: number | null | undefined, userId: number | null | undefined) => {
+  // filter out all disabled code ids
+  const selectEnabledAnnotations = useSelectEnabledBboxAnnotations();
+  return useQuery<BBoxAnnotationReadResolved[], Error>({
+    queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS, sdocId, userId],
+    queryFn: () =>
+      SourceDocumentService.getAllBboxAnnotations({
+        sdocId: sdocId!,
+        userId: userId!,
+        resolve: true,
+      }) as Promise<BBoxAnnotationReadResolved[]>,
+    enabled: !!sdocId && !!userId,
+    select: selectEnabledAnnotations,
+  });
+};
+
+const useGetBBoxAnnotationsBatch = (sdocId: number | null | undefined, userIds: number[] | null | undefined) => {
+  // filter out all disabled code ids
+  const selectEnabledAnnotations = useSelectEnabledBboxAnnotations();
+  return useQuery<BBoxAnnotationReadResolved[], Error>({
+    queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS, sdocId, userIds],
+    queryFn: () =>
+      SourceDocumentService.getAllBboxAnnotationsBulk({
+        sdocId: sdocId!,
+        userId: userIds!,
+        resolve: true,
+      }) as Promise<BBoxAnnotationReadResolved[]>,
+    enabled: !!sdocId && !!userIds && userIds.length > 0,
+    select: selectEnabledAnnotations,
+  });
+};
+
 const SdocHooks = {
   // sdoc
   useGetDocument,
-  useGetDocumentByAdocId,
   useGetLinkedSdocIds,
   useDeleteDocuments,
   useGetDocumentIdByFilename,
   // tags
   useGetByTagId,
   useGetAllDocumentTags,
-  // adoc
-  useGetAllAnnotationDocuments,
-  useGetOrCreateAdocOfUser,
+  // annotations
+  useGetAnnotators,
+  useGetSpanAnnotations,
+  useGetSpanAnnotationsBatch,
+  useGetBBoxAnnotations,
+  useGetBBoxAnnotationsBatch,
   // memo
   useGetMemos,
   useGetMemo,

@@ -3,9 +3,8 @@ import { Box, Button } from "@mui/material";
 import * as d3 from "d3";
 import { useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import AdocHooks from "../../../api/AdocHooks.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
-import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
 import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { ImageSearchActions } from "../../search/ImageSearch/imageSearchSlice.ts";
@@ -43,22 +42,15 @@ function ImageViewerWithData({ sdoc, height, width }: ImageViewerProps & { heigh
   const imgContainerHeight = 500;
 
   // global client state (redux)
-  const visibleAdocIds = useAppSelector((state) => state.annotations.visibleAdocIds);
+  const visibleUserIds = useAppSelector((state) => state.annotations.visibleUserIds);
   const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
 
   // global server state (react query)
-  const annotationsBatch = AdocHooks.useGetAllBboxAnnotationsBatch(visibleAdocIds);
-
-  // computed
-  const annotations = useMemo(() => {
-    const annotationsIsUndefined = annotationsBatch.some((a) => !a.data);
-    if (annotationsIsUndefined) return undefined;
-    return annotationsBatch.map((a) => a.data!).flat();
-  }, [annotationsBatch]);
+  const annotations = SdocHooks.useGetBBoxAnnotationsBatch(sdoc.id, visibleUserIds);
 
   const annotationData = useMemo(() => {
-    return (annotations || []).filter((bbox) => !hiddenCodeIds.includes(bbox.code.id));
-  }, [annotations, hiddenCodeIds]);
+    return (annotations.data || []).filter((bbox) => !hiddenCodeIds.includes(bbox.code.id));
+  }, [annotations.data, hiddenCodeIds]);
 
   // ui events
   const handleZoom = (e: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
@@ -74,8 +66,8 @@ function ImageViewerWithData({ sdoc, height, width }: ImageViewerProps & { heigh
   }, [zoom]);
 
   useEffect(() => {
-    const rect = d3.select(bboxRef.current).selectAll<SVGRectElement, BBoxAnnotationReadResolvedCode>("rect");
-    const text = d3.select(textRef.current).selectAll<SVGTextElement, BBoxAnnotationReadResolvedCode>("text");
+    const rect = d3.select(bboxRef.current).selectAll<SVGRectElement, BBoxAnnotationReadResolved>("rect");
+    const text = d3.select(textRef.current).selectAll<SVGTextElement, BBoxAnnotationReadResolved>("text");
     const scaledRatio = imgContainerHeight / height;
 
     const portWidth: number = svgRef.current!.clientWidth;

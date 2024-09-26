@@ -8,7 +8,7 @@ import useGetMemosAttachedObject from "../../../components/Memo/useGetMemosAttac
 import { useReactFlowService } from "../hooks/ReactFlowService.ts";
 
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
@@ -135,7 +135,7 @@ const createAttachedObjectNodes = (
     | DocumentTagRead
     | CodeRead
     | SpanAnnotationReadResolved
-    | BBoxAnnotationReadResolvedCode
+    | BBoxAnnotationReadResolved
     | SourceDocumentRead,
   position: XYPosition,
 ): Node<DATSNodeData>[] => {
@@ -161,7 +161,7 @@ const createAttachedObjectNodes = (
       });
     case AttachedObjectType.BBOX_ANNOTATION:
       return createBBoxAnnotationNodes({
-        bboxAnnotations: [attachedObject as BBoxAnnotationReadResolvedCode],
+        bboxAnnotations: [attachedObject as BBoxAnnotationReadResolved],
         position,
       });
     default:
@@ -177,7 +177,6 @@ const attachedObjectType2Label: Record<AttachedObjectType, string> = {
   [AttachedObjectType.BBOX_ANNOTATION]: "Image Annotation",
   [AttachedObjectType.PROJECT]: "Project",
   [AttachedObjectType.SPAN_GROUP]: "Span Group",
-  [AttachedObjectType.ANNOTATION_DOCUMENT]: "Annotation Document",
 };
 
 function MemoNode(props: NodeProps<MemoNodeData>) {

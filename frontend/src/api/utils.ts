@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useAppSelector } from "../plugins/ReduxHooks.ts";
 import { RootState } from "../store/store.ts";
-import { BBoxAnnotationReadResolvedCode } from "./openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { BBoxAnnotationReadResolved } from "./openapi/models/BBoxAnnotationReadResolved.ts";
 import { CodeRead } from "./openapi/models/CodeRead.ts";
 import { SpanAnnotationReadResolved } from "./openapi/models/SpanAnnotationReadResolved.ts";
 
@@ -17,7 +17,7 @@ export const useSelectEnabledSpanAnnotations = () => {
 export const useSelectEnabledBboxAnnotations = () => {
   const disabledCodeIds = useAppSelector((state: RootState) => state.annotations.disabledCodeIds);
   return useCallback(
-    (data: BBoxAnnotationReadResolvedCode[]) =>
+    (data: BBoxAnnotationReadResolved[]) =>
       data.filter((bboxAnnotation) => disabledCodeIds.indexOf(bboxAnnotation.code.id) === -1),
     [disabledCodeIds],
   );

@@ -153,7 +153,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
                 before_state=before_state,
             )
 
-        # delete the adocs
+        # delete the memos
         query.delete()
         db.commit()
 
@@ -242,24 +242,6 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
             memo_orm=db_obj,
             attached_object_id=sdoc_id,
             attached_object_type=AttachedObjectType.source_document,
-        )
-        return db_obj
-
-    def create_for_adoc(
-        self, db: Session, adoc_id: int, create_dto: MemoCreate
-    ) -> MemoORM:
-        # Flo: this is necessary to avoid circular imports.
-        from app.core.data.crud.object_handle import crud_object_handle
-
-        # create an ObjectHandle for the AnnotationDocument
-        oh_db_obj = crud_object_handle.create(
-            db=db, create_dto=ObjectHandleCreate(annotation_document_id=adoc_id)
-        )
-        db_obj = self.__create_memo(create_dto, db, oh_db_obj)
-        self.__add_memo_to_elasticsearch(
-            memo_orm=db_obj,
-            attached_object_id=adoc_id,
-            attached_object_type=AttachedObjectType.annotation_document,
         )
         return db_obj
 
@@ -370,12 +352,6 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
                 **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
                 attached_object_id=attached_to.id,
                 attached_object_type=AttachedObjectType.bbox_annotation,
-            )
-        elif isinstance(attached_to, AnnotationDocumentORM):
-            return MemoRead(
-                **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
-                attached_object_id=attached_to.id,
-                attached_object_type=AttachedObjectType.annotation_document,
             )
         elif isinstance(attached_to, SourceDocumentORM):
             return MemoRead(

@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 export enum AttachedObjectType {
-  ANNOTATION_DOCUMENT = "annotation_document",
   SOURCE_DOCUMENT = "source_document",
   CODE = "code",
   SPAN_ANNOTATION = "span_annotation",

@@ -1,14 +1,12 @@
 import { Button, ButtonGroup, Toolbar, Typography } from "@mui/material";
 import * as d3 from "d3";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import AdocHooks from "../../../api/AdocHooks.ts";
-import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks.ts";
 
 import SdocHooks from "../../../api/SdocHooks.ts";
-import { AnnotationDocumentRead } from "../../../api/openapi/models/AnnotationDocumentRead.ts";
-import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
 import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import { useAuth } from "../../../auth/useAuth.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
@@ -16,17 +14,17 @@ import AnnotationMenu, { CodeSelectorHandle } from "../AnnotationMenu.tsx";
 import { ICode } from "../ICode.ts";
 import SVGBBox from "./SVGBBox.tsx";
 import SVGBBoxText from "./SVGBBoxText.tsx";
+import { useCreateBBoxAnnotation, useDeleteBBoxAnnotation, useUpdateBBoxAnnotation } from "./imageAnnotationHooks.ts";
 
 interface ImageAnnotatorProps {
   sdoc: SourceDocumentWithDataRead;
-  adoc: AnnotationDocumentRead | null;
 }
 
 function ImageAnnotator(props: ImageAnnotatorProps) {
   const heightMetadata = SdocHooks.useGetMetadataByKey(props.sdoc.id, "height");
 
   if (heightMetadata.isSuccess) {
-    return <ImageAnnotatorWithHeight sdoc={props.sdoc} adoc={props.adoc} height={heightMetadata.data.int_value!} />;
+    return <ImageAnnotatorWithHeight sdoc={props.sdoc} height={heightMetadata.data.int_value!} />;
   } else if (heightMetadata.isError) {
     return <div>{heightMetadata.error.message}</div>;
   } else if (heightMetadata.isLoading) {
@@ -36,7 +34,7 @@ function ImageAnnotator(props: ImageAnnotatorProps) {
   }
 }
 
-function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & { height: number }) {
+function ImageAnnotatorWithHeight({ sdoc, height }: ImageAnnotatorProps & { height: number }) {
   // references to svg elements
   const svgRef = useRef<SVGSVGElement>(null);
   const gZoomRef = useRef<SVGGElement>(null);
@@ -46,40 +44,35 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
   const codeSelectorRef = useRef<CodeSelectorHandle>(null);
 
   // global client state (redux)
-  const visibleAdocIds = useAppSelector((state) => state.annotations.visibleAdocIds);
+  const visibleUserIds = useAppSelector((state) => state.annotations.visibleUserIds);
   const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
 
   // global server state (react query)
-  const annotationsBatch = AdocHooks.useGetAllBboxAnnotationsBatch(visibleAdocIds);
+  const user = useAuth().user!;
+  const annotations = SdocHooks.useGetBBoxAnnotationsBatch(sdoc.id, visibleUserIds);
 
   // snackbar
   const openSnackbar = useOpenSnackbar();
 
-  // computed
-  const annotations = useMemo(() => {
-    const annotationsIsUndefined = annotationsBatch.some((a) => !a.data);
-    if (annotationsIsUndefined) return undefined;
-    return annotationsBatch.map((a) => a.data!).flat();
-  }, [annotationsBatch]);
-
+  // computed (filter hidden code ids)
   const data = useMemo(() => {
-    return (annotations || []).filter((bbox) => !hiddenCodeIds.includes(bbox.code.id));
-  }, [annotations, hiddenCodeIds]);
+    return (annotations.data || []).filter((bbox) => !hiddenCodeIds.includes(bbox.code.id));
+  }, [annotations.data, hiddenCodeIds]);
 
   // local client state
   const [isZooming, setIsZooming] = useState(true);
-  const [selectedBbox, setSelectedBbox] = useState<BBoxAnnotationReadResolvedCode | null>(null);
+  const [selectedBbox, setSelectedBbox] = useState<BBoxAnnotationReadResolved | null>(null);
 
   // mutations for create, update, delete
-  const createMutation = BboxAnnotationHooks.useCreateAnnotation();
-  const updateMutation = BboxAnnotationHooks.useUpdateBBox();
-  const deleteMutation = BboxAnnotationHooks.useDeleteBBox();
+  const createMutation = useCreateBBoxAnnotation(visibleUserIds);
+  const updateMutation = useUpdateBBoxAnnotation(visibleUserIds);
+  const deleteMutation = useDeleteBBoxAnnotation(visibleUserIds);
 
   // click handling
   const handleClick = useCallback(
     (
       event: React.MouseEvent<SVGRectElement, MouseEvent> | React.MouseEvent<SVGTextElement, MouseEvent>,
-      bbox: BBoxAnnotationReadResolvedCode,
+      bbox: BBoxAnnotationReadResolved,
     ) => {
       event.preventDefault();
       const rect = event.currentTarget.getBoundingClientRect();
@@ -216,41 +209,36 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
 
   // code selector events
   const onCodeSelectorAddCode = (code: ICode) => {
-    if (adoc) {
-      const myRect = d3.select(rectRef.current);
-      const x = parseInt(myRect.attr("x"));
-      const y = parseInt(myRect.attr("y"));
-      const width = parseInt(myRect.attr("width"));
-      const height = parseInt(myRect.attr("height"));
-      createMutation.mutate(
-        {
-          requestBody: {
-            code_id: code.id,
-            annotation_document_id: adoc.id,
-            x_min: x,
-            x_max: x + width,
-            y_min: y,
-            y_max: y + height,
-          },
+    const myRect = d3.select(rectRef.current);
+    const x = parseInt(myRect.attr("x"));
+    const y = parseInt(myRect.attr("y"));
+    const width = parseInt(myRect.attr("width"));
+    const height = parseInt(myRect.attr("height"));
+    createMutation.mutate(
+      {
+        requestBody: {
+          code_id: code.id,
+          user_id: user.id,
+          sdoc_id: sdoc.id,
+          x_min: x,
+          x_max: x + width,
+          y_min: y,
+          y_max: y + height,
         },
-        {
-          onSuccess: (bboxAnnotation) => {
-            openSnackbar({
-              text: `Created Bounding Box Annotation ${bboxAnnotation.id}`,
-              severity: "success",
-            });
-          },
+      },
+      {
+        onSuccess: (bboxAnnotation) => {
+          openSnackbar({
+            text: `Created Bounding Box Annotation ${bboxAnnotation.id}`,
+            severity: "success",
+          });
         },
-      );
-      // console.log("Add", code);
-      // console.log(`drag end: {x: ${x}, y: ${y}, width: ${width}, height: ${height}}`);
-    } else {
-      console.error("This should never happen! (onCodeSelectorAddCode)");
-    }
+      },
+    );
   };
 
   const onCodeSelectorEditCode = (
-    _annotationToEdit: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode,
+    _annotationToEdit: SpanAnnotationReadResolved | BBoxAnnotationReadResolved,
     code: ICode,
   ) => {
     if (selectedBbox) {

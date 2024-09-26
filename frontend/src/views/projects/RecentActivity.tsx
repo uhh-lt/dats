@@ -5,13 +5,12 @@ import ProjectHooks from "../../api/ProjectHooks.ts";
 import SdocHooks from "../../api/SdocHooks.ts";
 import UserHooks from "../../api/UserHooks.ts";
 import { useAuth } from "../../auth/useAuth.ts";
-import { dateToLocaleString } from "../../utils/DateUtils.ts";
 
 function RecentActivity() {
   const { user } = useAuth();
 
   // global server stat - react query
-  const recentAdocs = UserHooks.useGetRecentActivity(user?.id, 5);
+  const recentSdocIds = UserHooks.useGetRecentActivity(user?.id, 5);
 
   return (
     <>
@@ -21,12 +20,12 @@ function RecentActivity() {
           <InfoIcon sx={{ ml: 1 }} />
         </Tooltip>
       </Toolbar>
-      {recentAdocs.isLoading && <div>Loading!</div>}
-      {recentAdocs.isError && <div>Error: {recentAdocs.error.message}</div>}
-      {recentAdocs.isSuccess && (
+      {recentSdocIds.isLoading && <div>Loading!</div>}
+      {recentSdocIds.isError && <div>Error: {recentSdocIds.error.message}</div>}
+      {recentSdocIds.isSuccess && (
         <Stack rowGap={1}>
-          {recentAdocs.data.map((adoc) => (
-            <RecentActivityCard key={adoc.id} sdocId={adoc.source_document_id} updateTS={new Date(adoc.updated)} />
+          {recentSdocIds.data.map((sdocId) => (
+            <RecentActivityCard key={sdocId} sdocId={sdocId} />
           ))}
         </Stack>
       )}
@@ -36,10 +35,9 @@ function RecentActivity() {
 
 interface RecentActivityButtonProps {
   sdocId: number;
-  updateTS: Date;
 }
 
-function RecentActivityCard({ sdocId, updateTS }: RecentActivityButtonProps) {
+function RecentActivityCard({ sdocId }: RecentActivityButtonProps) {
   // router
   const navigate = useNavigate();
 
@@ -60,9 +58,6 @@ function RecentActivityCard({ sdocId, updateTS }: RecentActivityButtonProps) {
               </Typography>
               <Typography variant="h5" component="div">
                 {sdoc.data.filename}
-              </Typography>
-              <Typography sx={{ fontSize: 14 }} color="text.secondary">
-                {`${dateToLocaleString(updateTS)}`}
               </Typography>
             </CardContent>
           </CardActionArea>

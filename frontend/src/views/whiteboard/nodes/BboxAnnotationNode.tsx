@@ -45,7 +45,7 @@ function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
   // global server state (react-query)
   const annotation = BboxAnnotationHooks.useGetAnnotation(props.data.bboxAnnotationId);
   const code = CodeHooks.useGetCode(annotation.data?.code.id);
-  const sdoc = SdocHooks.useGetDocumentByAdocId(annotation.data?.annotation_document_id);
+  const sdoc = SdocHooks.useGetDocument(annotation.data?.sdoc_id);
   const memo = BboxAnnotationHooks.useGetMemo(props.data.bboxAnnotationId, userId);
 
   // effects
@@ -74,8 +74,8 @@ function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
   }, [props.data.bboxAnnotationId, reactFlowInstance, code.data]);
 
   useEffect(() => {
-    if (!sdoc.data) return;
-    const sdocId = sdoc.data.id;
+    if (!annotation.data) return;
+    const sdocId = annotation.data.sdoc_id;
 
     // check which edges are already in the graph and removes edges to non-existing sdocs
     const edgesToDelete = reactFlowInstance
@@ -95,7 +95,7 @@ function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
         createSdocBBoxAnnotationEdge({ sdocId, bboxAnnotationId: props.data.bboxAnnotationId }),
       ]);
     }
-  }, [props.data.bboxAnnotationId, reactFlowInstance, sdoc.data]);
+  }, [props.data.bboxAnnotationId, reactFlowInstance, annotation.data]);
 
   useEffect(() => {
     if (!memo.data) return;
@@ -131,10 +131,10 @@ function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
 
   // context menu actions
   const handleContextMenuExpandDocument = () => {
-    if (!sdoc.data) return;
+    if (!annotation.data) return;
 
     reactFlowService.addNodes(
-      createSdocNodes({ sdocs: [sdoc.data.id], position: { x: props.xPos, y: props.yPos - 200 } }),
+      createSdocNodes({ sdocs: [annotation.data.sdoc_id], position: { x: props.xPos, y: props.yPos - 200 } }),
     );
     contextMenuRef.current?.close();
   };

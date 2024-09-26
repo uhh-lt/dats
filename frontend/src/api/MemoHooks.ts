@@ -44,9 +44,6 @@ const updateInvalidation = (data: MemoRead) => {
       });
       queryClient.setQueryData([QueryKey.MEMO_BBOX_ANNOTATION, data.attached_object_id, data.user_id], data);
       break;
-    case AttachedObjectType.ANNOTATION_DOCUMENT:
-      console.error("Annotation document memo update not implemented");
-      break;
     case AttachedObjectType.SPAN_GROUP:
       console.error("Span group memo update not implemented");
       break;
@@ -103,9 +100,6 @@ const deleteInvalidation = (data: MemoRead) => {
         queryKey: [QueryKey.MEMO_BBOX_ANNOTATION, data.attached_object_id, data.user_id],
       });
       queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED, data.user_id] }); // todo: this is not optimal
-      break;
-    case AttachedObjectType.ANNOTATION_DOCUMENT:
-      console.error("Annotation document memo update not implemented");
       break;
     case AttachedObjectType.SPAN_GROUP:
       console.error("Span group memo update not implemented");

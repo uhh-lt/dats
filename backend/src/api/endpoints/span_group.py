@@ -7,7 +7,6 @@ from api.dependencies import get_current_user, get_db_session, resolve_code_para
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.span_group import crud_span_group
-from app.core.data.dto.code import CodeRead
 from app.core.data.dto.span_annotation import (
     SpanAnnotationRead,
     SpanAnnotationReadResolved,
@@ -30,9 +29,8 @@ def create_new_span_group(
     span_group: SpanGroupCreate,
     authz_user: AuthzUser = Depends(),
 ) -> Optional[SpanGroupRead]:
-    authz_user.assert_in_same_project_as(
-        Crud.ANNOTATION_DOCUMENT, span_group.annotation_document_id
-    )
+    authz_user.assert_is_same_user(span_group.user_id)
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, span_group.sdoc_id)
 
     db_obj = crud_span_group.create(db=db, create_dto=span_group)
     return SpanGroupRead.model_validate(db_obj)
@@ -106,17 +104,7 @@ def get_all_annotations(
 
     span_group_db_obj = crud_span_group.read(db=db, id=span_group_id)
     spans = span_group_db_obj.span_annotations
-    span_read_dtos = [SpanAnnotationRead.model_validate(span) for span in spans]
     if resolve_code:
-        return [
-            SpanAnnotationReadResolved(
-                **span_dto.model_dump(exclude={"current_code_id", "span_text_id"}),
-                code=CodeRead.model_validate(span_orm.current_code.code),
-                span_text=span_orm.span_text.text,
-                user_id=span_orm.annotation_document.user_id,
-                sdoc_id=span_orm.annotation_document.source_document_id,
-            )
-            for span_orm, span_dto in zip(spans, span_read_dtos)
-        ]
+        return [SpanAnnotationReadResolved.model_validate(span) for span in spans]
     else:
-        return span_read_dtos
+        return [SpanAnnotationRead.model_validate(span) for span in spans]

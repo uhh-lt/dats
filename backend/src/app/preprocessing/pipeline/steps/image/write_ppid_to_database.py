@@ -7,11 +7,11 @@ from sqlalchemy.orm import Session
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.code import crud_code
-from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.user import SYSTEM_USER_ID
-from app.core.data.dto.annotation_document import AnnotationDocumentCreate
-from app.core.data.dto.bbox_annotation import BBoxAnnotationCreate
+from app.core.data.dto.bbox_annotation import (
+    BBoxAnnotationCreateIntern,
+)
 from app.core.data.dto.code import CodeCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.source_document import SourceDocumentORM
@@ -39,27 +39,16 @@ def _create_and_persist_sdoc(db: Session, ppid: PreProImageDoc) -> SourceDocumen
 def _create_adoc_for_system_user(
     db: Session, ppid: PreProImageDoc, sdoc_db_obj: SourceDocumentORM
 ) -> AnnotationDocumentORM:
-    sdoc_id = sdoc_db_obj.id
-    try:
-        adoc_db = crud_adoc.read_by_sdoc_and_user(
-            db=db, sdoc_id=sdoc_id, user_id=SYSTEM_USER_ID
-        )
-    except NoSuchElementError:
-        adoc_db = None
-
-    if not adoc_db:
-        adoc_create = AnnotationDocumentCreate(
-            source_document_id=sdoc_id, user_id=SYSTEM_USER_ID
-        )
-        adoc_db = crud_adoc.create(db=db, create_dto=adoc_create)
-    return adoc_db
+    return crud_adoc.exists_or_create(
+        db=db, sdoc_id=sdoc_db_obj.id, user_id=SYSTEM_USER_ID
+    )
 
 
 def _persist_bbox__annotations(
     db: Session, adoc_db_obj: AnnotationDocumentORM, ppid: PreProImageDoc
 ) -> None:
     # convert AutoBBoxes to BBoxAnnotationCreate
-    create_dtos: List[BBoxAnnotationCreate] = []
+    create_dtos: List[BBoxAnnotationCreateIntern] = []
     for bbox in ppid.bboxes:
         db_code = crud_code.read_by_name_and_user_and_project(
             db,
@@ -82,7 +71,7 @@ def _persist_bbox__annotations(
 
         ccid = db_code.current_code.id
 
-        create_dto = BBoxAnnotationCreate(
+        create_dto = BBoxAnnotationCreateIntern(
             x_min=bbox.x_min,
             x_max=bbox.x_max,
             y_min=bbox.y_min,

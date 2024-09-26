@@ -30,9 +30,7 @@ export const QueryKey = {
   USER_CODES: "userCodes",
   // all memos of a user (by user id, by project id)
   USER_MEMOS: "userMemos",
-  // all annotation documents of a user (by user id)
-  USER_ADOCS: "userAdocs",
-  // recently modified adocs of a user (by user id)
+  // recently annotated sdocs of a user (by user id)
   USER_ACTIVITY: "userActivity",
 
   // a memo (by memo id)
@@ -63,16 +61,16 @@ export const QueryKey = {
 
   // a single document (by document id)
   SDOC: "sdoc",
-  // a single document (by adoc id)
-  SDOC_BY_ADOC: "sdocByAdoc",
   // all tags of a document (by document id)
   SDOC_TAGS: "sdocTags",
   // Count how many source documents each tag has
   TAG_SDOC_COUNT: "sdocTagCount",
-  // all adocs of a document (by document id)
-  SDOC_ADOCS: "sdocAdocs",
-  // adoc of a document (by document id, user id)
-  SDOC_ADOC_USER: "sdocAdocUser",
+  // annotators (user ids) of a document (by document id)
+  SDOC_ANNOTATORS: "sdocAnnotators",
+  // span annotations of a document (by document id, user id)
+  SDOC_SPAN_ANNOTATIONS: "sdocSpanAnnotations",
+  // bbox annotations of a document (by document id, user id)
+  SDOC_BBOX_ANNOTATIONS: "sdocBBoxAnnotations",
   // all metadata of a document (by document id)
   SDOC_METADATAS: "sdocMetadatas",
   // keywords of a document (by document id)
@@ -99,13 +97,6 @@ export const QueryKey = {
   SDOCS_BY_TAG_ID: "sdocsByTagId",
   // the name of a single SourceDocument (by project id and filename)
   SDOC_NAME_BY_PROJECT_AND_FILENAME: "sdocNameByProjectAndFilename",
-
-  // adoc (by adoc id)
-  ADOC: "adoc",
-  // all spans annotations of a adoc (by adoc id)
-  ADOC_SPAN_ANNOTATIONS: "adocSpanAnnotations",
-  // all bbox annotations of a adoc (by adoc id)
-  ADOC_BBOX_ANNOTATIONS: "adocBboxAnnotations",
 
   // a single code (by code id)
   CODE: "code",

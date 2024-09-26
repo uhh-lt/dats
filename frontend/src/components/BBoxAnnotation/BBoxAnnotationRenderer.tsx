@@ -1,10 +1,10 @@
 import { Stack } from "@mui/material";
 import BboxAnnotationHooks from "../../api/BboxAnnotationHooks.ts";
-import { BBoxAnnotationReadResolvedCode } from "../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { BBoxAnnotationReadResolved } from "../../api/openapi/models/BBoxAnnotationReadResolved.ts";
 import CodeRenderer from "../Code/CodeRenderer.tsx";
 
 interface BBoxAnnotationRendererProps {
-  bboxAnnotation: number | BBoxAnnotationReadResolvedCode;
+  bboxAnnotation: number | BBoxAnnotationReadResolved;
 }
 
 function BBoxAnnotationRenderer({ bboxAnnotation }: BBoxAnnotationRendererProps) {
@@ -27,7 +27,7 @@ function BBoxAnnotationRendererWithoutData({ bboxAnnotationId }: { bboxAnnotatio
   }
 }
 
-function BBoxAnnotationRendererWithData({ bboxAnnotation }: { bboxAnnotation: BBoxAnnotationReadResolvedCode }) {
+function BBoxAnnotationRendererWithData({ bboxAnnotation }: { bboxAnnotation: BBoxAnnotationReadResolved }) {
   return (
     <Stack direction="row" alignItems="center">
       <CodeRenderer code={bboxAnnotation.code.id} />

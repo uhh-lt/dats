@@ -3,15 +3,10 @@ from typing import Dict, List
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from api.dependencies import (
-    get_current_user,
-    get_db_session,
-    skip_limit_params,
-)
+from api.dependencies import get_current_user, get_db_session, skip_limit_params
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.user import SYSTEM_USER_ID, crud_user
-from app.core.data.dto.annotation_document import AnnotationDocumentRead
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.user import PublicUserRead, UserRead, UserUpdate
 from app.core.data.orm.user import UserORM
@@ -110,7 +105,7 @@ def get_user_projects(
 
 @router.get(
     "/{user_id}/recent_activity",
-    response_model=List[AnnotationDocumentRead],
+    response_model=List[int],
     summary="Returns the top k sdoc ids that the User recently modified (annotated)",
 )
 def recent_activity(
@@ -119,17 +114,14 @@ def recent_activity(
     k: int,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
-) -> List[AnnotationDocumentRead]:
+) -> List[int]:
     authz_user.assert_is_same_user(user_id)
 
     # get all adocs of a user
-    user_adocs = [
-        AnnotationDocumentRead.model_validate(db_obj)
-        for db_obj in crud_adoc.read_by_user(db=db, user_id=user_id)
-    ]
+    user_adocs = crud_adoc.read_by_user(db=db, user_id=user_id)
 
     # sort by updated (desc)
     user_adocs.sort(key=lambda adoc: adoc.updated, reverse=True)
 
     # get the topk k sdocs associated with the adocs
-    return [adoc for adoc in user_adocs[:k]]
+    return [adoc.source_document_id for adoc in user_adocs[:k]]

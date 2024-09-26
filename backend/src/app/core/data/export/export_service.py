@@ -14,11 +14,9 @@ from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.user import crud_user
-from app.core.data.dto.annotation_document import AnnotationDocumentRead
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.bbox_annotation import (
-    BBoxAnnotationRead,
-    BBoxAnnotationReadResolvedCode,
+    BBoxAnnotationReadResolved,
 )
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
@@ -36,7 +34,6 @@ from app.core.data.dto.source_document_metadata import (
     SourceDocumentMetadataReadResolved,
 )
 from app.core.data.dto.span_annotation import (
-    SpanAnnotationRead,
     SpanAnnotationReadResolved,
 )
 from app.core.data.dto.span_group import SpanGroupRead
@@ -199,27 +196,14 @@ class ExportService(metaclass=SingletonMeta):
 
         # span annos
         spans = adoc.span_annotations
-        span_read_dtos = [SpanAnnotationRead.model_validate(span) for span in spans]
         span_read_resolved_dtos = [
-            SpanAnnotationReadResolved(
-                **span_dto.model_dump(exclude={"current_code_id", "span_text_id"}),
-                code=CodeRead.model_validate(span_orm.current_code.code),
-                span_text=span_orm.span_text.text,
-                user_id=span_orm.annotation_document.user_id,
-                sdoc_id=span_orm.annotation_document.source_document_id,
-            )
-            for span_orm, span_dto in zip(spans, span_read_dtos)
+            SpanAnnotationReadResolved.model_validate(span) for span in spans
         ]
 
         # bbox annos
         bboxes = adoc.bbox_annotations
-        bbox_read_dtos = [BBoxAnnotationRead.model_validate(bbox) for bbox in bboxes]
         bbox_read_resolved_dtos = [
-            BBoxAnnotationReadResolvedCode(
-                **bbox_dto.model_dump(exclude={"current_code_id"}),
-                code=CodeRead.model_validate(bbox_orm.current_code.code),
-            )
-            for bbox_orm, bbox_dto in zip(bboxes, bbox_read_dtos)
+            BBoxAnnotationReadResolved.model_validate(bbox) for bbox in bboxes
         ]
 
         # fill the DataFrame
@@ -256,7 +240,7 @@ class ExportService(metaclass=SingletonMeta):
             data["code_name"].append(span.code.name)
             data["code_id"].append(span.code.id)
             data["created"].append(span.created)
-            data["text"].append(span.span_text)
+            data["text"].append(span.text)
             data["text_begin_char"].append(span.begin)
             data["text_end_char"].append(span.end)
 
@@ -351,12 +335,6 @@ class ExportService(metaclass=SingletonMeta):
             data["span_group_name"] = [dto.name]
             data["span_group_id"] = [dto.id]
 
-        elif isinstance(attached_to, AnnotationDocumentORM):
-            dto = AnnotationDocumentRead.model_validate(attached_to)
-            sdoc_dto = SourceDocumentRead.model_validate(attached_to.source_document)
-            data["sdoc_name"] = [sdoc_dto.filename]
-            data["adoc_id"] = [dto.id]
-
         elif isinstance(attached_to, SourceDocumentORM):
             dto = SourceDocumentRead.model_validate(attached_to)
             data["sdoc_name"] = [dto.filename]
@@ -368,28 +346,21 @@ class ExportService(metaclass=SingletonMeta):
             data["tag_id"] = [dto.id]
 
         elif isinstance(attached_to, SpanAnnotationORM):
-            span_read_dto = SpanAnnotationRead.model_validate(attached_to)
-            span_read_resolved_dto = SpanAnnotationReadResolved(
-                **span_read_dto.model_dump(exclude={"current_code_id", "span_text_id"}),
-                code=CodeRead.model_validate(attached_to.current_code.code),
-                span_text=attached_to.span_text.text,
-                user_id=attached_to.annotation_document.user_id,
-                sdoc_id=attached_to.annotation_document.source_document_id,
+            span_read_resolved_dto = SpanAnnotationReadResolved.model_validate(
+                attached_to
             )
 
-            data["span_anno_id"] = [span_read_dto.id]
-            data["span_anno_text"] = [span_read_resolved_dto.span_text]
+            data["span_anno_id"] = [span_read_resolved_dto.id]
+            data["span_anno_text"] = [span_read_resolved_dto.text]
             data["code_id"] = [span_read_resolved_dto.code.id]
             data["code_name"] = [span_read_resolved_dto.code.name]
 
         elif isinstance(attached_to, BBoxAnnotationORM):
-            bbox_read_dto = BBoxAnnotationRead.model_validate(attached_to)
-            bbox_read_resolved_dto = BBoxAnnotationReadResolvedCode(
-                **bbox_read_dto.model_dump(exclude={"current_code_id"}),
-                code=CodeRead.model_validate(attached_to.current_code.code),
+            bbox_read_resolved_dto = BBoxAnnotationReadResolved.model_validate(
+                attached_to
             )
 
-            data["bbox_anno_id"] = [bbox_read_dto.id]
+            data["bbox_anno_id"] = [bbox_read_resolved_dto.id]
             data["code_id"] = [bbox_read_resolved_dto.code.id]
             data["code_name"] = [bbox_read_resolved_dto.code.name]
 

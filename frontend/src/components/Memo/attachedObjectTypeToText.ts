@@ -7,6 +7,5 @@ export const attachedObjectTypeToText: Record<AttachedObjectType, string> = {
   [AttachedObjectType.CODE]: "Code",
   [AttachedObjectType.SPAN_ANNOTATION]: "Text Annotation",
   [AttachedObjectType.BBOX_ANNOTATION]: "Image Annotation",
-  [AttachedObjectType.ANNOTATION_DOCUMENT]: "Annotation Document",
   [AttachedObjectType.SPAN_GROUP]: "Project",
 };

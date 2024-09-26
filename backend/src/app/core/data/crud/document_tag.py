@@ -54,7 +54,7 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
                 before_state=before_state,
             )
 
-        # delete the adocs
+        # delete the tags
         query.delete()
         db.commit()
 

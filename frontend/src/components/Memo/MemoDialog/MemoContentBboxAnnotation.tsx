@@ -1,7 +1,7 @@
 import { SubmitHandler } from "react-hook-form";
 import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks.ts";
 import MemoHooks from "../../../api/MemoHooks.ts";
-import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
 import { MemoRead } from "../../../api/openapi/models/MemoRead.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
@@ -16,7 +16,7 @@ export interface MemoContentProps {
 }
 
 interface MemoContentBboxAnnotationProps {
-  bboxAnnotation: BBoxAnnotationReadResolvedCode;
+  bboxAnnotation: BBoxAnnotationReadResolved;
 }
 
 export function MemoContentBboxAnnotation({

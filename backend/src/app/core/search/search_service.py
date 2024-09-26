@@ -28,9 +28,7 @@ from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.data.orm.user import UserORM
 from app.core.db.sql_service import SQLService
-from app.core.filters.columns import (
-    ColumnInfo,
-)
+from app.core.filters.columns import ColumnInfo
 from app.core.filters.filtering import Filter, apply_filtering
 from app.core.filters.pagination import apply_pagination
 from app.core.filters.sorting import Sort, apply_sorting
@@ -308,8 +306,6 @@ class SearchService(metaclass=SingletonMeta):
         limit: Optional[int] = None,
     ) -> List[SpanEntityStat]:
         with self.sqls.db_session() as db:
-            # we always want ADocs from the SYSTEM_USER
-
             # code statistics for the sdoc_ids
             count = func.count().label("count")
             query = (

@@ -8,29 +8,43 @@ from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.action import ActionType
 from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationCreate,
+    BBoxAnnotationCreateIntern,
     BBoxAnnotationCreateWithCodeId,
-    BBoxAnnotationRead,
-    BBoxAnnotationReadResolvedCode,
+    BBoxAnnotationReadResolved,
     BBoxAnnotationUpdate,
     BBoxAnnotationUpdateWithCodeId,
 )
-from app.core.data.dto.code import CodeRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
 
 
 class CRUDBBoxAnnotation(
-    CRUDBase[BBoxAnnotationORM, BBoxAnnotationCreate, BBoxAnnotationUpdate]
+    CRUDBase[BBoxAnnotationORM, BBoxAnnotationCreateIntern, BBoxAnnotationUpdate]
 ):
     def create(
         self, db: Session, *, create_dto: BBoxAnnotationCreate
     ) -> BBoxAnnotationORM:
+        # get or create the annotation document
+        adoc = crud_adoc.exists_or_create(
+            db=db, user_id=create_dto.user_id, sdoc_id=create_dto.sdoc_id
+        )
+
         # create the BboxAnnotation
-        db_obj = super().create(db=db, create_dto=create_dto)
+        db_obj = super().create(
+            db=db,
+            create_dto=BBoxAnnotationCreateIntern(
+                x_min=create_dto.x_min,
+                x_max=create_dto.x_max,
+                y_min=create_dto.y_min,
+                y_max=create_dto.y_max,
+                current_code_id=create_dto.current_code_id,
+                annotation_document_id=adoc.id,
+            ),
+        )
 
         # update the annotation document's timestamp
-        crud_adoc.update_timestamp(db=db, id=create_dto.annotation_document_id)
+        crud_adoc.update_timestamp(db=db, id=adoc.id)
 
         return db_obj
 
@@ -48,21 +62,47 @@ class CRUDBBoxAnnotation(
             y_min=create_dto.y_min,
             y_max=create_dto.y_max,
             current_code_id=ccid,
-            annotation_document_id=create_dto.annotation_document_id,
+            user_id=create_dto.user_id,
+            sdoc_id=create_dto.sdoc_id,
         )
 
         return self.create(db=db, create_dto=create_dto_with_ccid)
 
-    def read_by_adoc(
-        self, db: Session, *, adoc_id: int, skip: int = 0, limit: int = 100
+    def read_by_user_and_sdoc(
+        self,
+        db: Session,
+        *,
+        user_id: int,
+        sdoc_id: int,
     ) -> List[BBoxAnnotationORM]:
-        return (
+        query = (
             db.query(self.model)
-            .where(self.model.annotation_document_id == adoc_id)
-            .offset(skip)
-            .limit(limit)
-            .all()
+            .join(self.model.annotation_document)
+            .where(
+                AnnotationDocumentORM.user_id == user_id,
+                AnnotationDocumentORM.source_document_id == sdoc_id,
+            )
         )
+
+        return query.all()
+
+    def read_by_users_and_sdoc(
+        self,
+        db: Session,
+        *,
+        user_ids: List[int],
+        sdoc_id: int,
+    ) -> List[BBoxAnnotationORM]:
+        query = (
+            db.query(self.model)
+            .join(self.model.annotation_document)
+            .where(
+                AnnotationDocumentORM.user_id.in_(user_ids),
+                AnnotationDocumentORM.source_document_id == sdoc_id,
+            )
+        )
+
+        return query.all()
 
     def read_by_code_and_user(
         self, db: Session, *, code_id: int, user_id: int
@@ -79,7 +119,7 @@ class CRUDBBoxAnnotation(
 
     def update(
         self, db: Session, *, id: int, update_dto: BBoxAnnotationUpdate
-    ) -> Optional[BBoxAnnotationORM]:
+    ) -> BBoxAnnotationORM:
         bbox_anno = super().update(db, id=id, update_dto=update_dto)
         # update the annotation document's timestamp
         crud_adoc.update_timestamp(db=db, id=bbox_anno.annotation_document_id)
@@ -140,14 +180,7 @@ class CRUDBBoxAnnotation(
 
     def _get_action_state_from_orm(self, db_obj: BBoxAnnotationORM) -> Optional[str]:
         return srsly.json_dumps(
-            BBoxAnnotationReadResolvedCode(
-                **BBoxAnnotationRead.model_validate(db_obj).model_dump(
-                    exclude={"current_code_id"}
-                ),
-                code=CodeRead.model_validate(db_obj.current_code.code),
-                user_id=db_obj.annotation_document.user_id,
-                sdoc_id=db_obj.annotation_document.source_document_id,
-            ).model_dump()
+            BBoxAnnotationReadResolved.model_validate(db_obj).model_dump()
         )
 
 

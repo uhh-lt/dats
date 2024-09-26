@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { CodeRead } from "./CodeRead";
-export type BBoxAnnotationReadResolvedCode = {
+export type BBoxAnnotationReadResolved = {
   /**
    * Absolute x_min coordinate of the BBoxAnnotation
    */
@@ -28,10 +28,6 @@ export type BBoxAnnotationReadResolvedCode = {
    * Code the BBoxAnnotation refers to
    */
   code: CodeRead;
-  /**
-   * AnnotationDocument the BBoxAnnotation refers to
-   */
-  annotation_document_id: number;
   /**
    * User the SpanAnnotation belongs to
    */

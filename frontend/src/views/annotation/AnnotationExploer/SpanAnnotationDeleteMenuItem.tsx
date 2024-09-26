@@ -15,7 +15,7 @@ function SpanAnnotationDeleteMenuItem({
   onClick,
   ...props
 }: SpanAnnotationDeleteMenuItemProps & MenuItemProps) {
-  const deleteMutation = SpanAnnotationHooks.useDelete();
+  const deleteMutation = SpanAnnotationHooks.useDeleteSpan();
 
   // snackbar
   const openSnackbar = useOpenSnackbar();

@@ -501,14 +501,13 @@ class LLMService(metaclass=SingletonMeta):
                 suggested_annotations.append(
                     SpanAnnotationReadResolved(
                         id=annotation_id,
-                        annotation_document_id=-1,
                         sdoc_id=sdoc_data.id,
                         user_id=SYSTEM_USER_ID,
                         begin=start,
                         end=end,
                         begin_token=begin_token,
                         end_token=end_token,
-                        span_text=span_text,
+                        text=span_text,
                         code=CodeRead.model_validate(project_codes.get(code_id)),
                         created=datetime.now(),
                         updated=datetime.now(),

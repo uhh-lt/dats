@@ -32,9 +32,13 @@ export type SpanAnnotationRead = {
    */
   current_code_id: number;
   /**
-   * AnnotationDocument the SpanAnnotation refers to
+   * User the SpanAnnotation belongs to
    */
-  annotation_document_id: number;
+  user_id: number;
+  /**
+   * SourceDocument the SpanAnnotation refers to
+   */
+  sdoc_id: number;
   /**
    * Created timestamp of the SpanAnnotation
    */

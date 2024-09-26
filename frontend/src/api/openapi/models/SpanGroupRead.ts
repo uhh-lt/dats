@@ -12,9 +12,13 @@ export type SpanGroupRead = {
    */
   id: number;
   /**
-   * The ID of the AnnotationDocument the SpanGroup belongs to
+   * User that created the SpanGroup
    */
-  annotation_document_id: number;
+  user_id: number;
+  /**
+   * SourceDocument the SpanGroup refers to
+   */
+  sdoc_id: number;
   /**
    * Created timestamp of the SpanGroup
    */

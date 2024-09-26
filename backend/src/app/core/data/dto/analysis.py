@@ -64,9 +64,6 @@ class AnnotationTableRow(BaseModel):
     id: int = Field(description="ID of the SpanAnnotation")
     span_text: str = Field(description="The SpanText the SpanAnnotation spans.")
     code: CodeRead = Field(description="Code the SpanAnnotation refers to")
-    annotation_document_id: int = Field(
-        description="AnnotationDocument the SpanAnnotation refers to"
-    )
     user_id: int = Field(description="User the SpanAnnotation belongs to")
     sdoc: SourceDocumentRead = Field(
         description="SourceDocument the SpanAnnotation refers to"
@@ -92,9 +89,6 @@ class BBoxAnnotationTableRow(BaseModel):
     height: int = Field(description="The height of the BBoxAnnotation.")
     url: str = Field(description="The url to the Image of the BBoxAnnotation.")
     code: CodeRead = Field(description="Code the BBoxAnnotation refers to")
-    annotation_document_id: int = Field(
-        description="AnnotationDocument the BBoxAnnotation refers to"
-    )
     user_id: int = Field(description="User the BBoxAnnotation belongs to")
     sdoc: SourceDocumentRead = Field(
         description="SourceDocument the BBoxAnnotation refers to"

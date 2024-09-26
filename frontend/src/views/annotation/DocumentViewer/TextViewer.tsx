@@ -17,13 +17,13 @@ function TextViewer({ sdoc }: AnnotationVisualizerProps) {
   const sentenceMenuRef = useRef<SentenceMenuHandle>(null);
 
   // global client state (redux)
-  const visibleAdocIds = useAppSelector((state) => state.annotations.visibleAdocIds);
+  const visibleUserIds = useAppSelector((state) => state.annotations.visibleUserIds);
 
   // global server state (react-query)
   const sentences = sdoc.sentences;
   const { tokenData, annotationsPerToken, annotationMap } = useComputeTokenData({
     sdocId: sdoc.id,
-    annotationDocumentIds: visibleAdocIds,
+    userIds: visibleUserIds,
   });
 
   // ui events

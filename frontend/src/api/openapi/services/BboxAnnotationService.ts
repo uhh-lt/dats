@@ -4,7 +4,7 @@
 /* eslint-disable */
 import type { BBoxAnnotationCreateWithCodeId } from "../models/BBoxAnnotationCreateWithCodeId";
 import type { BBoxAnnotationRead } from "../models/BBoxAnnotationRead";
-import type { BBoxAnnotationReadResolvedCode } from "../models/BBoxAnnotationReadResolvedCode";
+import type { BBoxAnnotationReadResolved } from "../models/BBoxAnnotationReadResolved";
 import type { BBoxAnnotationUpdateWithCodeId } from "../models/BBoxAnnotationUpdateWithCodeId";
 import type { CodeRead } from "../models/CodeRead";
 import type { MemoCreate } from "../models/MemoCreate";
@@ -27,7 +27,7 @@ export class BboxAnnotationService {
      * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */
     resolve?: boolean;
-  }): CancelablePromise<BBoxAnnotationRead | BBoxAnnotationReadResolvedCode> {
+  }): CancelablePromise<BBoxAnnotationRead | BBoxAnnotationReadResolved> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/bbox",
@@ -55,7 +55,7 @@ export class BboxAnnotationService {
      * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */
     resolve?: boolean;
-  }): CancelablePromise<BBoxAnnotationRead | BBoxAnnotationReadResolvedCode> {
+  }): CancelablePromise<BBoxAnnotationRead | BBoxAnnotationReadResolved> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/bbox/{bbox_id}",
@@ -86,7 +86,7 @@ export class BboxAnnotationService {
      * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */
     resolve?: boolean;
-  }): CancelablePromise<BBoxAnnotationRead | BBoxAnnotationReadResolvedCode> {
+  }): CancelablePromise<BBoxAnnotationRead | BBoxAnnotationReadResolved> {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/bbox/{bbox_id}",
@@ -112,7 +112,7 @@ export class BboxAnnotationService {
     bboxId,
   }: {
     bboxId: number;
-  }): CancelablePromise<BBoxAnnotationRead | BBoxAnnotationReadResolvedCode> {
+  }): CancelablePromise<BBoxAnnotationRead | BBoxAnnotationReadResolved> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/bbox/{bbox_id}",

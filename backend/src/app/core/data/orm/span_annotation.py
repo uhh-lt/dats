@@ -72,3 +72,19 @@ class SpanAnnotationORM(ORMBase):
         secondary="SpanAnnotationSpanGroupLinkTable".lower(),
         back_populates="span_annotations",
     )
+
+    @property
+    def text(self) -> str:
+        return self.span_text.text
+
+    @property
+    def code(self):
+        return self.current_code.code
+
+    @property
+    def user_id(self):
+        return self.annotation_document.user_id
+
+    @property
+    def sdoc_id(self):
+        return self.annotation_document.source_document_id

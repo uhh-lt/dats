@@ -12,10 +12,15 @@ class SpanGroupBaseDTO(BaseModel):
 
 
 # Properties for creation
-class SpanGroupCreate(SpanGroupBaseDTO):
+class SpanGroupCreateIntern(SpanGroupBaseDTO):
     annotation_document_id: int = Field(
         description="The ID of the AnnotationDocument the SpanGroup belongs to"
     )
+
+
+class SpanGroupCreate(SpanGroupBaseDTO):
+    user_id: int = Field(description="User that created the SpanGroup")
+    sdoc_id: int = Field(description="SourceDocument the SpanGroup refers to")
 
 
 # Properties for updating
@@ -26,9 +31,8 @@ class SpanGroupUpdate(BaseModel, UpdateDTOBase):
 # Properties for reading (as in ORM)
 class SpanGroupRead(SpanGroupBaseDTO):
     id: int = Field(description="ID of the SpanGroup")
-    annotation_document_id: int = Field(
-        description="The ID of the AnnotationDocument the SpanGroup belongs to"
-    )
+    user_id: int = Field(description="User that created the SpanGroup")
+    sdoc_id: int = Field(description="SourceDocument the SpanGroup refers to")
     created: datetime = Field(description="Created timestamp of the SpanGroup")
     updated: datetime = Field(description="Updated timestamp of the SpanGroup")
     model_config = ConfigDict(from_attributes=True)

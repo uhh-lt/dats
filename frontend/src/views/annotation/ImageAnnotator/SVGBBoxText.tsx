@@ -1,6 +1,6 @@
 import React from "react";
 import CodeHooks from "../../../api/CodeHooks.ts";
-import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
 
 type CustomTextProps = Omit<
   React.SVGTextElementAttributes<SVGTextElement>,
@@ -8,7 +8,7 @@ type CustomTextProps = Omit<
 >;
 
 interface SVGBBoxTextProps {
-  bbox: BBoxAnnotationReadResolvedCode;
+  bbox: BBoxAnnotationReadResolved;
 }
 
 function SVGBBoxText({ bbox, ...props }: SVGBBoxTextProps & CustomTextProps) {
