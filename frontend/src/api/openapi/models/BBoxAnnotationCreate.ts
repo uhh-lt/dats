@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type BBoxAnnotationCreateWithCodeId = {
+export type BBoxAnnotationCreate = {
   /**
    * Absolute x_min coordinate of the BBoxAnnotation
    */

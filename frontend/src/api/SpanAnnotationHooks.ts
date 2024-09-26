@@ -3,7 +3,7 @@ import queryClient from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { MemoRead } from "./openapi/models/MemoRead.ts";
 import { SpanAnnotationReadResolved } from "./openapi/models/SpanAnnotationReadResolved.ts";
-import { SpanAnnotationUpdateWithCodeId } from "./openapi/models/SpanAnnotationUpdateWithCodeId.ts";
+import { SpanAnnotationUpdate } from "./openapi/models/SpanAnnotationUpdate.ts";
 import { SpanAnnotationService } from "./openapi/services/SpanAnnotationService.ts";
 
 export const FAKE_ANNOTATION_ID = -1;
@@ -39,7 +39,7 @@ const useUpdateSpan = () =>
   useMutation({
     mutationFn: (variables: {
       spanAnnotationId: number;
-      requestBody: SpanAnnotationUpdateWithCodeId;
+      requestBody: SpanAnnotationUpdate;
       resolve?: boolean | undefined;
     }) =>
       SpanAnnotationService.updateById({

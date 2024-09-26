@@ -329,7 +329,7 @@ export class SourceDocumentService {
     sdocId: number;
     userId: number;
     /**
-     * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
+     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */
     resolve?: boolean;
   }): CancelablePromise<Array<SpanAnnotationRead> | Array<SpanAnnotationReadResolved>> {
@@ -361,7 +361,7 @@ export class SourceDocumentService {
     sdocId: number;
     userId: Array<number>;
     /**
-     * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
+     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */
     resolve?: boolean;
   }): CancelablePromise<Array<SpanAnnotationRead> | Array<SpanAnnotationReadResolved>> {
@@ -403,7 +403,7 @@ export class SourceDocumentService {
      */
     limit?: number | null;
     /**
-     * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
+     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */
     resolve?: boolean;
   }): CancelablePromise<Array<BBoxAnnotationRead> | Array<BBoxAnnotationReadResolved>> {
@@ -447,7 +447,7 @@ export class SourceDocumentService {
      */
     limit?: number | null;
     /**
-     * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
+     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */
     resolve?: boolean;
   }): CancelablePromise<Array<BBoxAnnotationRead> | Array<BBoxAnnotationReadResolved>> {

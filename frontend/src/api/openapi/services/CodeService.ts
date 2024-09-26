@@ -28,23 +28,6 @@ export class CodeService {
     });
   }
   /**
-   * Returns the Code linked by the CurrentCode with the given ID.
-   * @returns CodeRead Successful Response
-   * @throws ApiError
-   */
-  public static getCodeByCurrentCodeId({ currentCodeId }: { currentCodeId: number }): CancelablePromise<CodeRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/code/current/{current_code_id}",
-      path: {
-        current_code_id: currentCodeId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Returns the Code with the given ID.
    * @returns CodeRead Successful Response
    * @throws ApiError
