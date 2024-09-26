@@ -15,7 +15,7 @@ from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
-from app.core.data.orm.code import CodeORM, CurrentCodeORM
+from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.memo import MemoORM
 from app.core.data.orm.object_handle import ObjectHandleORM
@@ -168,8 +168,7 @@ def find_annotated_images(
             # join Source Document with Document Tag
             .join(SourceDocumentORM.document_tags, isouter=True)
             # join BBox Annotation with Code
-            .join(BBoxAnnotationORM.current_code)
-            .join(CurrentCodeORM.code)
+            .join(BBoxAnnotationORM.code)
             # join BBox Annotation with my Memo
             .join(
                 memo_subquery,
@@ -227,7 +226,7 @@ def find_annotated_images(
                         webp=True,
                         thumbnail=False,
                     ),
-                    code=CodeRead.model_validate(row[0].current_code.code),
+                    code=CodeRead.model_validate(row[0].code),
                     user_id=row[0].annotation_document.user_id,
                     sdoc=SourceDocumentRead.model_validate(
                         row[0].annotation_document.source_document

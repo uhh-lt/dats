@@ -6,7 +6,6 @@ from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.concept_over_time_analysis import crud_cota
-from app.core.data.crud.current_code import crud_current_code
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.object_handle import crud_object_handle
@@ -32,7 +31,6 @@ class Crud(Enum):
     ANNOTATION_DOCUMENT = crud_adoc
     BBOX_ANNOTATION = crud_bbox_anno
     CODE = crud_code
-    CURRENT_CODE = crud_current_code
     DOCUMENT_TAG = crud_document_tag
     MEMO = crud_memo
     OBJECT_HANDLE = crud_object_handle

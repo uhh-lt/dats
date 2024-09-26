@@ -18,7 +18,7 @@ from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.span_annotation import SpanAnnotationRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
-from app.core.data.orm.code import CodeORM, CurrentCodeORM
+from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
@@ -71,48 +71,32 @@ class AnalysisService(metaclass=SingletonMeta):
 
             # 2. query all span annotation occurrences of the codes of interest
             codes_of_interest = [code_id for group in result for code_id in group]
-            query = (
-                db.query(
-                    CurrentCodeORM.code_id,
-                    SpanAnnotationORM.id,
-                )
-                .join(
-                    SpanAnnotationORM,
-                    SpanAnnotationORM.current_code_id == CurrentCodeORM.id,
-                )
-                .join(
-                    AnnotationDocumentORM,
-                    AnnotationDocumentORM.id
-                    == SpanAnnotationORM.annotation_document_id,
-                )
+            query = db.query(
+                SpanAnnotationORM.code_id,
+                SpanAnnotationORM.id,
+            ).join(
+                AnnotationDocumentORM,
+                AnnotationDocumentORM.id == SpanAnnotationORM.annotation_document_id,
             )
             # noinspection PyUnresolvedReferences
             query = query.filter(
                 AnnotationDocumentORM.user_id.in_(user_ids),
-                CurrentCodeORM.code_id.in_(codes_of_interest),
+                SpanAnnotationORM.code_id.in_(codes_of_interest),
             )
             span_res = query.all()
 
             # 3. query all bbox annotation occurrences of the codes of interest
-            query = (
-                db.query(
-                    CurrentCodeORM.code_id,
-                    BBoxAnnotationORM.id,
-                )
-                .join(
-                    BBoxAnnotationORM,
-                    BBoxAnnotationORM.current_code_id == CurrentCodeORM.id,
-                )
-                .join(
-                    AnnotationDocumentORM,
-                    AnnotationDocumentORM.id
-                    == BBoxAnnotationORM.annotation_document_id,
-                )
+            query = db.query(
+                BBoxAnnotationORM.code_id,
+                BBoxAnnotationORM.id,
+            ).join(
+                AnnotationDocumentORM,
+                AnnotationDocumentORM.id == BBoxAnnotationORM.annotation_document_id,
             )
             # noinspection PyUnresolvedReferences
             query = query.filter(
                 AnnotationDocumentORM.user_id.in_(user_ids),
-                CurrentCodeORM.code_id.in_(codes_of_interest),
+                BBoxAnnotationORM.code_id.in_(codes_of_interest),
             )
             bbox_res = query.all()
 
@@ -147,11 +131,7 @@ class AnalysisService(metaclass=SingletonMeta):
                     SpanAnnotationORM.annotation_document_id
                     == AnnotationDocumentORM.id,
                 )
-                .join(
-                    CurrentCodeORM,
-                    CurrentCodeORM.id == SpanAnnotationORM.current_code_id,
-                )
-                .join(CodeORM, CodeORM.id == CurrentCodeORM.code_id)
+                .join(CodeORM, CodeORM.id == SpanAnnotationORM.code_id)
                 .join(SpanTextORM, SpanTextORM.id == SpanAnnotationORM.span_text_id)
             )
             # noinspection PyUnresolvedReferences
@@ -159,7 +139,7 @@ class AnalysisService(metaclass=SingletonMeta):
                 and_(
                     SourceDocumentORM.project_id == project_id,
                     AnnotationDocumentORM.user_id.in_(user_ids),
-                    CurrentCodeORM.code_id == code_id,
+                    CodeORM.id == code_id,
                 )
             )
             query = query.group_by(SourceDocumentORM, CodeORM, SpanTextORM.text)
@@ -191,18 +171,14 @@ class AnalysisService(metaclass=SingletonMeta):
                     BBoxAnnotationORM.annotation_document_id
                     == AnnotationDocumentORM.id,
                 )
-                .join(
-                    CurrentCodeORM,
-                    CurrentCodeORM.id == BBoxAnnotationORM.current_code_id,
-                )
-                .join(CodeORM, CodeORM.id == CurrentCodeORM.code_id)
+                .join(CodeORM, CodeORM.id == BBoxAnnotationORM.code_id)
             )
             # noinspection PyUnresolvedReferences
             query = query.filter(
                 and_(
                     SourceDocumentORM.project_id == project_id,
                     AnnotationDocumentORM.user_id.in_(user_ids),
-                    CurrentCodeORM.code_id == code_id,
+                    CodeORM.id == code_id,
                 )
             )
             query = query.group_by(
@@ -244,11 +220,7 @@ class AnalysisService(metaclass=SingletonMeta):
                     SpanAnnotationORM.annotation_document_id
                     == AnnotationDocumentORM.id,
                 )
-                .join(
-                    CurrentCodeORM,
-                    CurrentCodeORM.id == SpanAnnotationORM.current_code_id,
-                )
-                .join(CodeORM, CodeORM.id == CurrentCodeORM.code_id)
+                .join(CodeORM, CodeORM.id == SpanAnnotationORM.code_id)
                 .join(SpanTextORM, SpanTextORM.id == SpanAnnotationORM.span_text_id)
             )
             # noinspection PyUnresolvedReferences
@@ -256,7 +228,7 @@ class AnalysisService(metaclass=SingletonMeta):
                 and_(
                     SourceDocumentORM.project_id == project_id,
                     AnnotationDocumentORM.user_id.in_(user_ids),
-                    CurrentCodeORM.code_id == code_id,
+                    CodeORM.id == code_id,
                 )
             )
             res = query.all()
@@ -286,18 +258,14 @@ class AnalysisService(metaclass=SingletonMeta):
                     BBoxAnnotationORM.annotation_document_id
                     == AnnotationDocumentORM.id,
                 )
-                .join(
-                    CurrentCodeORM,
-                    CurrentCodeORM.id == BBoxAnnotationORM.current_code_id,
-                )
-                .join(CodeORM, CodeORM.id == CurrentCodeORM.code_id)
+                .join(CodeORM, CodeORM.id == BBoxAnnotationORM.code_id)
             )
             # noinspection PyUnresolvedReferences
             query = query.filter(
                 and_(
                     SourceDocumentORM.project_id == project_id,
                     AnnotationDocumentORM.user_id.in_(user_ids),
-                    CurrentCodeORM.code_id == code_id,
+                    CodeORM.id == code_id,
                 )
             )
             res = query.all()

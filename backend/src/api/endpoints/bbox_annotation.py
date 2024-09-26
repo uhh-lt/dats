@@ -15,10 +15,10 @@ from app.core.data.crud import Crud
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.memo import crud_memo
 from app.core.data.dto.bbox_annotation import (
-    BBoxAnnotationCreateWithCodeId,
+    BBoxAnnotationCreate,
     BBoxAnnotationRead,
     BBoxAnnotationReadResolved,
-    BBoxAnnotationUpdateWithCodeId,
+    BBoxAnnotationUpdate,
 )
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
@@ -36,7 +36,7 @@ router = APIRouter(
 def add_bbox_annotation(
     *,
     db: Session = Depends(get_db_session),
-    bbox: BBoxAnnotationCreateWithCodeId,
+    bbox: BBoxAnnotationCreate,
     resolve_code: bool = Depends(resolve_code_param),
     authz_user: AuthzUser = Depends(),
 ) -> Union[BBoxAnnotationRead, BBoxAnnotationReadResolved]:
@@ -44,7 +44,7 @@ def add_bbox_annotation(
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, bbox.sdoc_id)
     authz_user.assert_in_same_project_as(Crud.CODE, bbox.code_id)
 
-    db_obj = crud_bbox_anno.create_with_code_id(db=db, create_dto=bbox)
+    db_obj = crud_bbox_anno.create(db=db, create_dto=bbox)
     if resolve_code:
         return BBoxAnnotationReadResolved.model_validate(db_obj)
     else:
@@ -81,14 +81,14 @@ def update_by_id(
     *,
     db: Session = Depends(get_db_session),
     bbox_id: int,
-    bbox_anno: BBoxAnnotationUpdateWithCodeId,
+    bbox_anno: BBoxAnnotationUpdate,
     resolve_code: bool = Depends(resolve_code_param),
     authz_user: AuthzUser = Depends(),
 ) -> Union[BBoxAnnotationRead, BBoxAnnotationReadResolved]:
     authz_user.assert_in_same_project_as(Crud.BBOX_ANNOTATION, bbox_id)
     authz_user.assert_in_same_project_as(Crud.CODE, bbox_anno.code_id)
 
-    db_obj = crud_bbox_anno.update_with_code_id(db=db, id=bbox_id, update_dto=bbox_anno)
+    db_obj = crud_bbox_anno.update(db=db, id=bbox_id, update_dto=bbox_anno)
     if resolve_code:
         return BBoxAnnotationReadResolved.model_validate(db_obj)
     else:
@@ -126,8 +126,7 @@ def get_code(
     authz_user.assert_in_same_project_as(Crud.BBOX_ANNOTATION, bbox_id)
 
     bbox_db_obj = crud_bbox_anno.read(db=db, id=bbox_id)
-
-    return CodeRead.model_validate(bbox_db_obj.current_code.code)
+    return CodeRead.model_validate(bbox_db_obj.code)
 
 
 @router.put(

@@ -9,7 +9,7 @@ from app.core.data.orm.orm_base import ORMBase
 if TYPE_CHECKING:
     from app.core.data.orm.action import ActionORM
     from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
-    from app.core.data.orm.code import CodeORM, CurrentCodeORM
+    from app.core.data.orm.code import CodeORM
     from app.core.data.orm.document_tag import DocumentTagORM
     from app.core.data.orm.memo import MemoORM
     from app.core.data.orm.project import ProjectORM
@@ -54,13 +54,6 @@ class ObjectHandleORM(ORMBase):
         Integer, ForeignKey("code.id", ondelete="CASCADE"), index=True
     )
     code: Mapped["CodeORM"] = relationship("CodeORM", back_populates="object_handle")
-
-    current_code_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("currentcode.id", ondelete="CASCADE"), index=True
-    )
-    current_code: Mapped["CurrentCodeORM"] = relationship(
-        "CurrentCodeORM", back_populates="object_handle"
-    )
 
     source_document_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("sourcedocument.id", ondelete="CASCADE"), index=True
@@ -112,7 +105,6 @@ class ObjectHandleORM(ORMBase):
         coalesce(user_id, 0),
         coalesce(project_id, 0),
         coalesce(code_id, 0),
-        coalesce(current_code_id, 0),
         coalesce(source_document_id, 0),
         coalesce(span_annotation_id, 0),
         coalesce(bbox_annotation_id, 0),
@@ -131,7 +123,6 @@ class ObjectHandleORM(ORMBase):
                         + CASE WHEN project_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN code_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN memo_id IS NULL THEN 0 ELSE 1 END
-                        + CASE WHEN current_code_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN source_document_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN span_annotation_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN bbox_annotation_id IS NULL THEN 0 ELSE 1 END
@@ -146,7 +137,6 @@ class ObjectHandleORM(ORMBase):
             "user_id",
             "project_id",
             "code_id",
-            "current_code_id",
             "source_document_id",
             "span_annotation_id",
             "span_group_id",

@@ -13,11 +13,10 @@ from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
 from app.core.data.dto.span_annotation import (
-    SpanAnnotationCreateBulkWithCodeId,
-    SpanAnnotationCreateWithCodeId,
+    SpanAnnotationCreate,
     SpanAnnotationRead,
     SpanAnnotationReadResolved,
-    SpanAnnotationUpdateWithCodeId,
+    SpanAnnotationUpdate,
 )
 from app.core.data.dto.span_group import SpanGroupRead
 
@@ -34,7 +33,7 @@ router = APIRouter(
 def add_span_annotation(
     *,
     db: Session = Depends(get_db_session),
-    span: SpanAnnotationCreateWithCodeId,
+    span: SpanAnnotationCreate,
     resolve_code: bool = Depends(resolve_code_param),
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
@@ -49,7 +48,7 @@ def add_span_annotation(
         ]
     )
 
-    db_obj = crud_span_anno.create_with_code_id(db=db, create_dto=span)
+    db_obj = crud_span_anno.create(db=db, create_dto=span)
     if resolve_code:
         return SpanAnnotationReadResolved.model_validate(db_obj)
     else:
@@ -64,7 +63,7 @@ def add_span_annotation(
 def add_span_annotations_bulk(
     *,
     db: Session = Depends(get_db_session),
-    spans: List[SpanAnnotationCreateBulkWithCodeId],
+    spans: List[SpanAnnotationCreate],
     resolve_code: bool = Depends(resolve_code_param),
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
@@ -116,7 +115,7 @@ def update_by_id(
     *,
     db: Session = Depends(get_db_session),
     span_id: int,
-    span_anno: SpanAnnotationUpdateWithCodeId,
+    span_anno: SpanAnnotationUpdate,
     resolve_code: bool = Depends(resolve_code_param),
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
@@ -127,7 +126,7 @@ def update_by_id(
         [(Crud.SPAN_ANNOTATION, span_id), (Crud.CODE, span_anno.code_id)]
     )
 
-    db_obj = crud_span_anno.update_with_code_id(db=db, id=span_id, update_dto=span_anno)
+    db_obj = crud_span_anno.update(db=db, id=span_id, update_dto=span_anno)
     if resolve_code:
         return SpanAnnotationReadResolved.model_validate(db_obj)
     else:
@@ -165,7 +164,7 @@ def get_code(
     authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
 
     span_db_obj = crud_span_anno.read(db=db, id=span_id)
-    return CodeRead.model_validate(span_db_obj.current_code.code)
+    return CodeRead.model_validate(span_db_obj.code)
 
 
 @router.get(

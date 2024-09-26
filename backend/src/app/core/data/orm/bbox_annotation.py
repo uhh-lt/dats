@@ -4,11 +4,11 @@ from typing import TYPE_CHECKING
 from sqlalchemy import DateTime, ForeignKey, Integer, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.core.data.orm.code import CodeORM
 from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from app.core.data.orm.annotation_document import AnnotationDocumentORM
-    from app.core.data.orm.code import CurrentCodeORM
     from app.core.data.orm.object_handle import ObjectHandleORM
 
 
@@ -34,15 +34,13 @@ class BBoxAnnotationORM(ORMBase):
     )
 
     # many to one
-    current_code_id: Mapped[int] = mapped_column(
+    code_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("currentcode.id", ondelete="CASCADE"),
+        ForeignKey("code.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    current_code: Mapped["CurrentCodeORM"] = relationship(
-        "CurrentCodeORM", back_populates="bbox_annotations"
-    )
+    code: Mapped["CodeORM"] = relationship("CodeORM", back_populates="bbox_annotations")
 
     annotation_document_id: Mapped[int] = mapped_column(
         Integer,
@@ -53,10 +51,6 @@ class BBoxAnnotationORM(ORMBase):
     annotation_document: Mapped["AnnotationDocumentORM"] = relationship(
         "AnnotationDocumentORM", back_populates="bbox_annotations"
     )
-
-    @property
-    def code(self):
-        return self.current_code.code
 
     @property
     def user_id(self):

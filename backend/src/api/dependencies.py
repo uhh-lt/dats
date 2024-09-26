@@ -45,7 +45,7 @@ async def skip_limit_params(
 async def resolve_code_param(
     resolve: bool = Query(
         title="Resolve Code",
-        description="If true, the current_code_id of the"
+        description="If true, the code_id of the"
         " SpanAnnotation gets resolved and replaced"
         " by the respective Code entity",
         default=True,

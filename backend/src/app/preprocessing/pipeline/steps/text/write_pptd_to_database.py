@@ -151,13 +151,11 @@ def _persist_span_annotations(
             )
             db_code = crud_code.create(db, create_dto=create_dto)
 
-        ccid = db_code.current_code.id
-
         create_dtos = [
             SpanAnnotationCreateIntern(
                 begin=aspan.start,
                 end=aspan.end,
-                current_code_id=ccid,
+                code_id=db_code.id,
                 annotation_document_id=adoc_db_obj.id,
                 span_text=aspan.text,
                 begin_token=aspan.start_token,

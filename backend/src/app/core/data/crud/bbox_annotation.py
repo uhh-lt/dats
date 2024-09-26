@@ -9,14 +9,11 @@ from app.core.data.dto.action import ActionType
 from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationCreate,
     BBoxAnnotationCreateIntern,
-    BBoxAnnotationCreateWithCodeId,
     BBoxAnnotationReadResolved,
     BBoxAnnotationUpdate,
-    BBoxAnnotationUpdateWithCodeId,
 )
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
-from app.core.data.orm.code import CodeORM, CurrentCodeORM
 
 
 class CRUDBBoxAnnotation(
@@ -38,7 +35,7 @@ class CRUDBBoxAnnotation(
                 x_max=create_dto.x_max,
                 y_min=create_dto.y_min,
                 y_max=create_dto.y_max,
-                current_code_id=create_dto.current_code_id,
+                code_id=create_dto.code_id,
                 annotation_document_id=adoc.id,
             ),
         )
@@ -47,26 +44,6 @@ class CRUDBBoxAnnotation(
         crud_adoc.update_timestamp(db=db, id=adoc.id)
 
         return db_obj
-
-    def create_with_code_id(
-        self, db: Session, *, create_dto: BBoxAnnotationCreateWithCodeId
-    ) -> BBoxAnnotationORM:
-        from app.core.data.crud.code import crud_code
-
-        db_code = crud_code.read(db=db, id=create_dto.code_id)
-        ccid = db_code.current_code.id
-
-        create_dto_with_ccid = BBoxAnnotationCreate(
-            x_min=create_dto.x_min,
-            x_max=create_dto.x_max,
-            y_min=create_dto.y_min,
-            y_max=create_dto.y_max,
-            current_code_id=ccid,
-            user_id=create_dto.user_id,
-            sdoc_id=create_dto.sdoc_id,
-        )
-
-        return self.create(db=db, create_dto=create_dto_with_ccid)
 
     def read_by_user_and_sdoc(
         self,
@@ -109,10 +86,10 @@ class CRUDBBoxAnnotation(
     ) -> List[BBoxAnnotationORM]:
         query = (
             db.query(self.model)
-            .join(AnnotationDocumentORM)
-            .join(CurrentCodeORM)
-            .join(CodeORM)
-            .filter(CodeORM.id == code_id, AnnotationDocumentORM.user_id == user_id)
+            .join(self.model.annotation_document)
+            .filter(
+                self.model.code_id == code_id, AnnotationDocumentORM.user_id == user_id
+            )
         )
 
         return query.all()
@@ -125,20 +102,6 @@ class CRUDBBoxAnnotation(
         crud_adoc.update_timestamp(db=db, id=bbox_anno.annotation_document_id)
 
         return bbox_anno
-
-    def update_with_code_id(
-        self, db: Session, *, id: int, update_dto: BBoxAnnotationUpdateWithCodeId
-    ) -> BBoxAnnotationORM:
-        from app.core.data.crud.code import crud_code
-
-        db_code = crud_code.read(db=db, id=update_dto.code_id)
-        ccid = db_code.current_code.id
-
-        update_dto_with_ccid = BBoxAnnotationUpdate(
-            current_code_id=ccid,
-        )
-
-        return self.update(db=db, id=id, update_dto=update_dto_with_ccid)
 
     def remove(self, db: Session, *, id: int) -> Optional[BBoxAnnotationORM]:
         bbox_anno = super().remove(db, id=id)

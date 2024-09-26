@@ -17,7 +17,7 @@ class SpanAnnotationBaseDTO(BaseModel):
 # Properties for creation
 class SpanAnnotationCreateIntern(SpanAnnotationBaseDTO):
     span_text: str = Field(description="The SpanText the SpanAnnotation spans.")
-    current_code_id: int = Field(description="CurrentCode the SpanAnnotation refers to")
+    code_id: int = Field(description="Code the SpanAnnotation refers to")
     annotation_document_id: int = Field(
         description="AnnotationDocument the SpanAnnotation refers to"
     )
@@ -25,32 +25,13 @@ class SpanAnnotationCreateIntern(SpanAnnotationBaseDTO):
 
 class SpanAnnotationCreate(SpanAnnotationBaseDTO):
     span_text: str = Field(description="The SpanText the SpanAnnotation spans.")
-    current_code_id: int = Field(description="CurrentCode the SpanAnnotation refers to")
-    user_id: int = Field(description="User that created the SpanAnnotation")
-    sdoc_id: int = Field(description="SourceDocument the SpanAnnotation refers to")
-
-
-class SpanAnnotationCreateWithCodeId(SpanAnnotationBaseDTO):
-    span_text: str = Field(description="The SpanText the SpanAnnotation spans.")
     code_id: int = Field(description="Code the SpanAnnotation refers to")
     user_id: int = Field(description="User that created the SpanAnnotation")
     sdoc_id: int = Field(description="SourceDocument the SpanAnnotation refers to")
-
-
-class SpanAnnotationCreateBulkWithCodeId(SpanAnnotationBaseDTO):
-    span_text: str = Field(description="The SpanText the SpanAnnotation spans.")
-    code_id: int = Field(description="Code the SpanAnnotation refers to")
-    sdoc_id: int = Field(description="SourceDocument the SpanAnnotation refers to")
-    user_id: int = Field(description="User the SpanAnnotation belongs to")
 
 
 # Properties for updating
 class SpanAnnotationUpdate(BaseModel, UpdateDTOBase):
-    current_code_id: int = Field(description="CurrentCode the SpanAnnotation refers to")
-
-
-# Properties for updating
-class SpanAnnotationUpdateWithCodeId(BaseModel, UpdateDTOBase):
     code_id: int = Field(description="Code the SpanAnnotation refers to")
 
 
@@ -58,7 +39,7 @@ class SpanAnnotationUpdateWithCodeId(BaseModel, UpdateDTOBase):
 class SpanAnnotationRead(SpanAnnotationBaseDTO):
     id: int = Field(description="ID of the SpanAnnotation")
     span_text_id: int = Field(description="The SpanText the SpanAnnotation spans.")
-    current_code_id: int = Field(description="CurrentCode the SpanAnnotation refers to")
+    code_id: int = Field(description="Code the SpanAnnotation refers to")
     user_id: int = Field(description="User the SpanAnnotation belongs to")
     sdoc_id: int = Field(description="SourceDocument the SpanAnnotation refers to")
     created: datetime = Field(description="Created timestamp of the SpanAnnotation")

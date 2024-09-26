@@ -8,7 +8,6 @@ from app.core.data.crud.action import crud_action
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
-from app.core.data.crud.current_code import crud_current_code
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
@@ -19,7 +18,7 @@ from app.core.data.crud.user import crud_user
 from app.core.data.dto.object_handle import ObjectHandleCreate
 from app.core.data.orm.action import ActionORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
-from app.core.data.orm.code import CodeORM, CurrentCodeORM
+from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.memo import MemoORM
 from app.core.data.orm.object_handle import ObjectHandleORM
@@ -34,7 +33,6 @@ from app.core.db.sql_service import SQLService
 class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
     __obj_id_crud_map = {
         "code_id": crud_code,
-        "current_code_id": crud_current_code,
         "document_tag_id": crud_document_tag,
         "project_id": crud_project,
         "source_document_id": crud_sdoc,
@@ -48,7 +46,6 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
 
     __obj_id_orm_type_map = {
         "code_id": CodeORM,
-        "current_code_id": CurrentCodeORM,
         "document_tag_id": DocumentTagORM,
         "project_id": ProjectORM,
         "source_document_id": SourceDocumentORM,
@@ -98,7 +95,6 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
         self, db: Session, handle: ObjectHandleORM
     ) -> Union[
         CodeORM,
-        CurrentCodeORM,
         DocumentTagORM,
         ProjectORM,
         SourceDocumentORM,

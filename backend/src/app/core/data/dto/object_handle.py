@@ -8,7 +8,6 @@ class ObjectHandleBaseDTO(BaseModel):
     user_id: Optional[int] = None
     project_id: Optional[int] = None
     code_id: Optional[int] = None
-    current_code_id: Optional[int] = None
     source_document_id: Optional[int] = None
     span_annotation_id: Optional[int] = None
     span_group_id: Optional[int] = None
