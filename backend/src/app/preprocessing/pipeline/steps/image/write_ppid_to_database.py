@@ -77,7 +77,7 @@ def _persist_bbox__annotations(
             y_min=bbox.y_min,
             y_max=bbox.y_max,
             current_code_id=ccid,
-            adoc_id=adoc_db_obj.id,
+            annotation_document_id=adoc_db_obj.id,
         )
 
         create_dtos.append(create_dto)

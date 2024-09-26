@@ -17,7 +17,7 @@ from app.core.data.crud.memo import crud_memo
 from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationCreateWithCodeId,
     BBoxAnnotationRead,
-    BBoxAnnotationReadResolvedCode,
+    BBoxAnnotationReadResolved,
     BBoxAnnotationUpdateWithCodeId,
 )
 from app.core.data.dto.code import CodeRead
@@ -30,7 +30,7 @@ router = APIRouter(
 
 @router.put(
     "",
-    response_model=Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode],
+    response_model=Union[BBoxAnnotationRead, BBoxAnnotationReadResolved],
     summary="Creates a BBoxAnnotation",
 )
 def add_bbox_annotation(
@@ -39,27 +39,21 @@ def add_bbox_annotation(
     bbox: BBoxAnnotationCreateWithCodeId,
     resolve_code: bool = Depends(resolve_code_param),
     authz_user: AuthzUser = Depends(),
-) -> Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]:
+) -> Union[BBoxAnnotationRead, BBoxAnnotationReadResolved]:
     authz_user.assert_is_same_user(bbox.user_id)
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, bbox.sdoc_id)
     authz_user.assert_in_same_project_as(Crud.CODE, bbox.code_id)
 
     db_obj = crud_bbox_anno.create_with_code_id(db=db, create_dto=bbox)
-    bbox_dto = BBoxAnnotationRead.model_validate(db_obj)
     if resolve_code:
-        return BBoxAnnotationReadResolvedCode(
-            **bbox_dto.model_dump(exclude={"current_code_id"}),
-            code=CodeRead.model_validate(db_obj.current_code.code),
-            user_id=db_obj.annotation_document.user_id,
-            sdoc_id=db_obj.annotation_document.source_document_id,
-        )
+        return BBoxAnnotationReadResolved.model_validate(db_obj)
     else:
-        return bbox_dto
+        return BBoxAnnotationRead.model_validate(db_obj)
 
 
 @router.get(
     "/{bbox_id}",
-    response_model=Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode],
+    response_model=Union[BBoxAnnotationRead, BBoxAnnotationReadResolved],
     summary="Returns the BBoxAnnotation with the given ID.",
 )
 def get_by_id(
@@ -68,25 +62,19 @@ def get_by_id(
     bbox_id: int,
     resolve_code: bool = Depends(resolve_code_param),
     authz_user: AuthzUser = Depends(),
-) -> Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]:
+) -> Union[BBoxAnnotationRead, BBoxAnnotationReadResolved]:
     authz_user.assert_in_same_project_as(Crud.BBOX_ANNOTATION, bbox_id)
 
     db_obj = crud_bbox_anno.read(db=db, id=bbox_id)
-    bbox_dto = BBoxAnnotationRead.model_validate(db_obj)
     if resolve_code:
-        return BBoxAnnotationReadResolvedCode(
-            **bbox_dto.model_dump(exclude={"current_code_id"}),
-            code=CodeRead.model_validate(db_obj.current_code.code),
-            user_id=db_obj.annotation_document.user_id,
-            sdoc_id=db_obj.annotation_document.source_document_id,
-        )
+        return BBoxAnnotationReadResolved.model_validate(db_obj)
     else:
-        return bbox_dto
+        return BBoxAnnotationRead.model_validate(db_obj)
 
 
 @router.patch(
     "/{bbox_id}",
-    response_model=Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode],
+    response_model=Union[BBoxAnnotationRead, BBoxAnnotationReadResolved],
     summary="Updates the BBoxAnnotation with the given ID.",
 )
 def update_by_id(
@@ -96,26 +84,20 @@ def update_by_id(
     bbox_anno: BBoxAnnotationUpdateWithCodeId,
     resolve_code: bool = Depends(resolve_code_param),
     authz_user: AuthzUser = Depends(),
-) -> Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]:
+) -> Union[BBoxAnnotationRead, BBoxAnnotationReadResolved]:
     authz_user.assert_in_same_project_as(Crud.BBOX_ANNOTATION, bbox_id)
     authz_user.assert_in_same_project_as(Crud.CODE, bbox_anno.code_id)
 
     db_obj = crud_bbox_anno.update_with_code_id(db=db, id=bbox_id, update_dto=bbox_anno)
-    bbox_dto = BBoxAnnotationRead.model_validate(db_obj)
     if resolve_code:
-        return BBoxAnnotationReadResolvedCode(
-            **bbox_dto.model_dump(exclude={"current_code_id"}),
-            code=CodeRead.model_validate(db_obj.current_code.code),
-            user_id=db_obj.annotation_document.user_id,
-            sdoc_id=db_obj.annotation_document.source_document_id,
-        )
+        return BBoxAnnotationReadResolved.model_validate(db_obj)
     else:
-        return bbox_dto
+        return BBoxAnnotationRead.model_validate(db_obj)
 
 
 @router.delete(
     "/{bbox_id}",
-    response_model=Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode],
+    response_model=Union[BBoxAnnotationRead, BBoxAnnotationReadResolved],
     summary="Deletes the BBoxAnnotation with the given ID.",
 )
 def delete_by_id(
@@ -123,7 +105,7 @@ def delete_by_id(
     db: Session = Depends(get_db_session),
     bbox_id: int,
     authz_user: AuthzUser = Depends(),
-) -> Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]:
+) -> Union[BBoxAnnotationRead, BBoxAnnotationReadResolved]:
     authz_user.assert_in_same_project_as(Crud.BBOX_ANNOTATION, bbox_id)
 
     db_obj = crud_bbox_anno.remove(db=db, id=bbox_id)

@@ -230,7 +230,6 @@ def find_annotated_segments(
                     id=row[0].id,
                     span_text=row[0].span_text.text,
                     code=CodeRead.model_validate(row[0].current_code.code),
-                    annotation_document_id=row[0].annotation_document_id,
                     user_id=row[0].annotation_document.user_id,
                     sdoc=SourceDocumentRead.model_validate(
                         row[0].annotation_document.source_document

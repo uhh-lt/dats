@@ -158,7 +158,7 @@ def _persist_span_annotations(
                 begin=aspan.start,
                 end=aspan.end,
                 current_code_id=ccid,
-                adoc_id=adoc_db_obj.id,
+                annotation_document_id=adoc_db_obj.id,
                 span_text=aspan.text,
                 begin_token=aspan.start_token,
                 end_token=aspan.end_token,

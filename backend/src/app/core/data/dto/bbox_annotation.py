@@ -17,29 +17,21 @@ class BBoxAnnotationBaseDTO(BaseModel):
 # Properties for creation
 class BBoxAnnotationCreateIntern(BBoxAnnotationBaseDTO):
     current_code_id: int = Field(description="CurrentCode the BBoxAnnotation refers to")
-    adoc_id: int = Field(
+    annotation_document_id: int = Field(
         description="AnnotationDocument the BBoxAnnotation refers to"
     )
 
 
 class BBoxAnnotationCreate(BBoxAnnotationBaseDTO):
     current_code_id: int = Field(description="CurrentCode the BBoxAnnotation refers to")
-    user_id: int = Field(
-        description="User that created the BBoxAnnotation"
-    )
-    sdoc_id: int = Field(
-        description="SourceDocument the BBoxAnnotation refers to"
-    )
+    user_id: int = Field(description="User that created the BBoxAnnotation")
+    sdoc_id: int = Field(description="SourceDocument the BBoxAnnotation refers to")
 
 
 class BBoxAnnotationCreateWithCodeId(BBoxAnnotationBaseDTO):
     code_id: int = Field(description="Code the BBoxAnnotation refers to")
-    user_id: int = Field(
-        description="User that created the BBoxAnnotation"
-    )
-    sdoc_id: int = Field(
-        description="SourceDocument the BBoxAnnotation refers to"
-    )
+    user_id: int = Field(description="User that created the BBoxAnnotation")
+    sdoc_id: int = Field(description="SourceDocument the BBoxAnnotation refers to")
 
 
 # Properties for updating
@@ -56,21 +48,18 @@ class BBoxAnnotationUpdateWithCodeId(BaseModel, UpdateDTOBase):
 class BBoxAnnotationRead(BBoxAnnotationBaseDTO):
     id: int = Field(description="ID of the BBoxAnnotation")
     current_code_id: int = Field(description="CurrentCode the BBoxAnnotation refers to")
-    user_id: int = Field(
-        description="User that created the BBoxAnnotation"
-    )
-    sdoc_id: int = Field(
-        description="SourceDocument the BBoxAnnotation refers to"
-    )
+    user_id: int = Field(description="User that created the BBoxAnnotation")
+    sdoc_id: int = Field(description="SourceDocument the BBoxAnnotation refers to")
     created: datetime = Field(description="Created timestamp of the BBoxAnnotation")
     updated: datetime = Field(description="Updated timestamp of the BBoxAnnotation")
     model_config = ConfigDict(from_attributes=True)
 
 
-class BBoxAnnotationReadResolvedCode(BBoxAnnotationBaseDTO):
+class BBoxAnnotationReadResolved(BBoxAnnotationBaseDTO):
     id: int = Field(description="ID of the BBoxAnnotation")
     code: CodeRead = Field(description="Code the BBoxAnnotation refers to")
     user_id: int = Field(description="User the SpanAnnotation belongs to")
     sdoc_id: int = Field(description="SourceDocument the SpanAnnotation refers to")
     created: datetime = Field(description="Created timestamp of the BBoxAnnotation")
     updated: datetime = Field(description="Updated timestamp of the BBoxAnnotation")
+    model_config = ConfigDict(from_attributes=True)

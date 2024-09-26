@@ -10,12 +10,10 @@ from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationCreate,
     BBoxAnnotationCreateIntern,
     BBoxAnnotationCreateWithCodeId,
-    BBoxAnnotationRead,
-    BBoxAnnotationReadResolvedCode,
+    BBoxAnnotationReadResolved,
     BBoxAnnotationUpdate,
     BBoxAnnotationUpdateWithCodeId,
 )
-from app.core.data.dto.code import CodeRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
@@ -41,7 +39,7 @@ class CRUDBBoxAnnotation(
                 y_min=create_dto.y_min,
                 y_max=create_dto.y_max,
                 current_code_id=create_dto.current_code_id,
-                adoc_id=adoc.id,
+                annotation_document_id=adoc.id,
             ),
         )
 
@@ -76,8 +74,6 @@ class CRUDBBoxAnnotation(
         *,
         user_id: int,
         sdoc_id: int,
-        skip: int = 0,
-        limit: int = 1000,
     ) -> List[BBoxAnnotationORM]:
         query = (
             db.query(self.model)
@@ -86,8 +82,24 @@ class CRUDBBoxAnnotation(
                 AnnotationDocumentORM.user_id == user_id,
                 AnnotationDocumentORM.source_document_id == sdoc_id,
             )
-            .offset(skip)
-            .limit(limit)
+        )
+
+        return query.all()
+
+    def read_by_users_and_sdoc(
+        self,
+        db: Session,
+        *,
+        user_ids: List[int],
+        sdoc_id: int,
+    ) -> List[BBoxAnnotationORM]:
+        query = (
+            db.query(self.model)
+            .join(self.model.annotation_document)
+            .where(
+                AnnotationDocumentORM.user_id.in_(user_ids),
+                AnnotationDocumentORM.source_document_id == sdoc_id,
+            )
         )
 
         return query.all()
@@ -168,14 +180,7 @@ class CRUDBBoxAnnotation(
 
     def _get_action_state_from_orm(self, db_obj: BBoxAnnotationORM) -> Optional[str]:
         return srsly.json_dumps(
-            BBoxAnnotationReadResolvedCode(
-                **BBoxAnnotationRead.model_validate(db_obj).model_dump(
-                    exclude={"current_code_id"}
-                ),
-                code=CodeRead.model_validate(db_obj.current_code.code),
-                user_id=db_obj.annotation_document.user_id,
-                sdoc_id=db_obj.annotation_document.source_document_id,
-            ).model_dump()
+            BBoxAnnotationReadResolved.model_validate(db_obj).model_dump()
         )
 
 

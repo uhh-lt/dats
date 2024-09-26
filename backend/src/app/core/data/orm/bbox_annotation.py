@@ -53,3 +53,15 @@ class BBoxAnnotationORM(ORMBase):
     annotation_document: Mapped["AnnotationDocumentORM"] = relationship(
         "AnnotationDocumentORM", back_populates="bbox_annotations"
     )
+
+    @property
+    def code(self):
+        return self.current_code.code
+
+    @property
+    def user_id(self):
+        return self.annotation_document.user_id
+
+    @property
+    def sdoc_id(self):
+        return self.annotation_document.source_document_id

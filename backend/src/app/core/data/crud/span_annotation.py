@@ -10,13 +10,11 @@ from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.span_group import crud_span_group
 from app.core.data.crud.span_text import crud_span_text
 from app.core.data.dto.action import ActionType
-from app.core.data.dto.code import CodeRead
 from app.core.data.dto.span_annotation import (
     SpanAnnotationCreate,
     SpanAnnotationCreateBulkWithCodeId,
     SpanAnnotationCreateIntern,
     SpanAnnotationCreateWithCodeId,
-    SpanAnnotationRead,
     SpanAnnotationReadResolved,
     SpanAnnotationUpdate,
     SpanAnnotationUpdateWithCodeId,
@@ -46,7 +44,7 @@ class CRUDSpanAnnotation(
         # create the SpanAnnotation (and link the SpanText via FK)
         dto_obj_data = jsonable_encoder(
             SpanAnnotationCreateIntern(
-                adoc_id=adoc.id,
+                annotation_document_id=adoc.id,
                 begin=create_dto.begin,
                 end=create_dto.end,
                 begin_token=create_dto.begin_token,
@@ -122,7 +120,9 @@ class CRUDSpanAnnotation(
         db.commit()
 
         # update all affected annotation documents' timestamp
-        adoc_ids = list(set([create_dto.adoc_id for create_dto in create_dtos]))
+        adoc_ids = list(
+            set([create_dto.annotation_document_id for create_dto in create_dtos])
+        )
         for adoc_id in adoc_ids:
             crud_adoc.update_timestamp(db=db, id=adoc_id)
 
@@ -168,7 +168,7 @@ class CRUDSpanAnnotation(
                     begin_token=create_dto.begin_token,
                     end_token=create_dto.end_token,
                     current_code_id=cid2ccid[create_dto.code_id],
-                    adoc_id=adoc_id_by_user_sdoc[
+                    annotation_document_id=adoc_id_by_user_sdoc[
                         (create_dto.user_id, create_dto.sdoc_id)
                     ],
                 )
@@ -182,8 +182,6 @@ class CRUDSpanAnnotation(
         *,
         user_id: int,
         sdoc_id: int,
-        skip: int = 0,
-        limit: int = 1000,
     ) -> List[SpanAnnotationORM]:
         query = (
             db.query(self.model)
@@ -192,8 +190,24 @@ class CRUDSpanAnnotation(
                 AnnotationDocumentORM.user_id == user_id,
                 AnnotationDocumentORM.source_document_id == sdoc_id,
             )
-            .offset(skip)
-            .limit(limit)
+        )
+
+        return query.all()
+
+    def read_by_users_and_sdoc(
+        self,
+        db: Session,
+        *,
+        user_ids: List[int],
+        sdoc_id: int,
+    ) -> List[SpanAnnotationORM]:
+        query = (
+            db.query(self.model)
+            .join(self.model.annotation_document)
+            .where(
+                AnnotationDocumentORM.user_id.in_(user_ids),
+                AnnotationDocumentORM.source_document_id == sdoc_id,
+            )
         )
 
         return query.all()
@@ -304,15 +318,7 @@ class CRUDSpanAnnotation(
 
     def _get_action_state_from_orm(self, db_obj: SpanAnnotationORM) -> Optional[str]:
         return srsly.json_dumps(
-            SpanAnnotationReadResolved(
-                **SpanAnnotationRead.model_validate(db_obj).model_dump(
-                    exclude={"current_code_id", "span_text_id"}
-                ),
-                code=CodeRead.model_validate(db_obj.current_code.code),
-                span_text=db_obj.span_text.text,
-                user_id=db_obj.annotation_document.user_id,
-                sdoc_id=db_obj.annotation_document.source_document_id,
-            ).model_dump()
+            SpanAnnotationReadResolved.model_validate(db_obj).model_dump()
         )
 
 

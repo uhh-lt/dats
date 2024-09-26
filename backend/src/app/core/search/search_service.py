@@ -1,20 +1,29 @@
 from collections import Counter
 from typing import Dict, List, Optional, Set, Tuple
 
+from sqlalchemy import Integer, String, cast, func
+from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg
+from sqlalchemy.orm import InstrumentedAttribute, Session
+
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.doc_type import DocType
-from app.core.data.dto.search import (ElasticSearchDocumentHit,
-                                      PaginatedElasticSearchDocumentHits,
-                                      SearchColumns, SimSearchImageHit,
-                                      SimSearchQuery, SimSearchSentenceHit)
+from app.core.data.dto.search import (
+    ElasticSearchDocumentHit,
+    PaginatedElasticSearchDocumentHits,
+    SearchColumns,
+    SimSearchImageHit,
+    SimSearchQuery,
+    SimSearchSentenceHit,
+)
 from app.core.data.dto.search_stats import KeywordStat, SpanEntityStat, TagStat
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
-from app.core.data.orm.document_tag import (DocumentTagORM,
-                                            SourceDocumentDocumentTagLinkTable)
+from app.core.data.orm.document_tag import (
+    DocumentTagORM,
+    SourceDocumentDocumentTagLinkTable,
+)
 from app.core.data.orm.source_document import SourceDocumentORM
-from app.core.data.orm.source_document_metadata import \
-    SourceDocumentMetadataORM
+from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.data.orm.user import UserORM
@@ -26,9 +35,6 @@ from app.core.filters.sorting import Sort, apply_sorting
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.core.search.simsearch_service import SimSearchService
 from app.util.singleton_meta import SingletonMeta
-from sqlalchemy import Integer, String, cast, func
-from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg
-from sqlalchemy.orm import InstrumentedAttribute, Session
 
 
 def aggregate_ids(column: InstrumentedAttribute, label: str):
