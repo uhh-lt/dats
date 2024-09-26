@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { FAKE_BBOX_ID } from "../../../api/BboxAnnotationHooks.ts";
 import { BBoxAnnotationRead } from "../../../api/openapi/models/BBoxAnnotationRead.ts";
 import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
-import { BBoxAnnotationUpdateWithCodeId } from "../../../api/openapi/models/BBoxAnnotationUpdateWithCodeId.ts";
+import { BBoxAnnotationUpdate } from "../../../api/openapi/models/BBoxAnnotationUpdate.ts";
 import { BboxAnnotationService } from "../../../api/openapi/services/BboxAnnotationService.ts";
 import { QueryKey } from "../../../api/QueryKey.ts";
 import queryClient from "../../../plugins/ReactQueryClient.ts";
@@ -66,7 +66,7 @@ export const useUpdateBBoxAnnotation = (visibleUserIds: number[]) =>
   useMutation({
     mutationFn: (variables: {
       bboxToUpdate: BBoxAnnotationRead | BBoxAnnotationReadResolved;
-      requestBody: BBoxAnnotationUpdateWithCodeId;
+      requestBody: BBoxAnnotationUpdate;
       resolve?: boolean | undefined;
     }) =>
       BboxAnnotationService.updateById({

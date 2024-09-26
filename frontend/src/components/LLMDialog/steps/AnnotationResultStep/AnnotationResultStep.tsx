@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import LLMHooks from "../../../../api/LLMHooks.ts";
 import { AnnotationLLMJobResult } from "../../../../api/openapi/models/AnnotationLLMJobResult.ts";
 import { CodeRead } from "../../../../api/openapi/models/CodeRead.ts";
-import { SpanAnnotationCreateBulkWithCodeId } from "../../../../api/openapi/models/SpanAnnotationCreateBulkWithCodeId.ts";
+import { SpanAnnotationCreate } from "../../../../api/openapi/models/SpanAnnotationCreate.ts";
 import { SpanAnnotationReadResolved } from "../../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import SpanAnnotationHooks from "../../../../api/SpanAnnotationHooks.ts";
 import { useAuth } from "../../../../auth/useAuth.ts";
@@ -99,7 +99,7 @@ function AnnotationResultStep() {
             });
           }
           return acc;
-        }, [] as SpanAnnotationCreateBulkWithCodeId[]),
+        }, [] as SpanAnnotationCreate[]),
       },
       {
         onSuccess: () => {
