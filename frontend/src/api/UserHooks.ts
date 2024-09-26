@@ -1,7 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import queryClient from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
-import { AnnotationDocumentRead } from "./openapi/models/AnnotationDocumentRead.ts";
 import { ProjectRead } from "./openapi/models/ProjectRead.ts";
 import { PublicUserRead } from "./openapi/models/PublicUserRead.ts";
 import { AuthenticationService } from "./openapi/services/AuthenticationService.ts";
@@ -34,7 +33,7 @@ const useGetAll = () =>
   useQuery<PublicUserRead[], Error>({ queryKey: [QueryKey.USERS], queryFn: () => UserService.getAll({}) });
 
 const useGetRecentActivity = (userId: number | null | undefined, k: number) => {
-  return useQuery<AnnotationDocumentRead[], Error>({
+  return useQuery<number[], Error>({
     queryKey: [QueryKey.USER_ACTIVITY, userId, k],
     queryFn: () => UserService.recentActivity({ userId: userId!, k: k }),
     enabled: !!userId,

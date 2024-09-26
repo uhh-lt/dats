@@ -27,15 +27,11 @@ export type SpanAnnotationReadResolved = {
   /**
    * The SpanText the SpanAnnotation spans.
    */
-  span_text: string;
+  text: string;
   /**
    * Code the SpanAnnotation refers to
    */
   code: CodeRead;
-  /**
-   * AnnotationDocument the SpanAnnotation refers to
-   */
-  annotation_document_id: number;
   /**
    * User the SpanAnnotation belongs to
    */

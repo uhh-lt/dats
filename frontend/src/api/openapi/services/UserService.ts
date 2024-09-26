@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AnnotationDocumentRead } from "../models/AnnotationDocumentRead";
 import type { ProjectRead } from "../models/ProjectRead";
 import type { PublicUserRead } from "../models/PublicUserRead";
 import type { UserRead } from "../models/UserRead";
@@ -130,16 +129,10 @@ export class UserService {
   }
   /**
    * Returns the top k sdoc ids that the User recently modified (annotated)
-   * @returns AnnotationDocumentRead Successful Response
+   * @returns number Successful Response
    * @throws ApiError
    */
-  public static recentActivity({
-    userId,
-    k,
-  }: {
-    userId: number;
-    k: number;
-  }): CancelablePromise<Array<AnnotationDocumentRead>> {
+  public static recentActivity({ userId, k }: { userId: number; k: number }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/user/{user_id}/recent_activity",
