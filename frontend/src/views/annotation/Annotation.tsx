@@ -22,7 +22,6 @@ import { useContext, useState } from "react";
 import { useParams } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
-import { useAuth } from "../../auth/useAuth.ts";
 import CodeExplorer from "../../components/Code/CodeExplorer/CodeExplorer.tsx";
 import EditableTypography from "../../components/EditableTypography.tsx";
 import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
@@ -30,9 +29,9 @@ import DocumentInformation from "../../components/SourceDocument/DocumentInforma
 import { AppBarContext } from "../../layouts/TwoBarLayout.tsx";
 import TwoSidebarsLayout from "../../layouts/TwoSidebarsLayout.tsx";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
-import { AnnotationDocumentSelector } from "./AnnotationDocumentSelector.tsx";
 import BBoxAnnotationExplorer from "./AnnotationExploer/BBoxAnnotationExplorer.tsx";
 import SpanAnnotationExplorer from "./AnnotationExploer/SpanAnnotationExplorer.tsx";
+import { AnnotatorSelector } from "./AnnotatorSelector.tsx";
 import AudioVideoViewer from "./DocumentViewer/AudioVideoViewer.tsx";
 import ImageViewer from "./DocumentViewer/ImageViewer.tsx";
 import TextViewer from "./DocumentViewer/TextViewer.tsx";
@@ -44,7 +43,6 @@ function Annotation() {
   // global client state (URL)
   const params = useParams() as { projectId: string; sdocId: string };
   const sdocId = parseInt(params.sdocId);
-  const { user } = useAuth();
 
   // global client state (context)
   const appBarContainerRef = useContext(AppBarContext);
@@ -56,7 +54,6 @@ function Annotation() {
 
   // global server state (react query)
   const sdoc = SdocHooks.useGetDocument(sdocId);
-  const annotationDocument = SdocHooks.useGetOrCreateAdocOfUser(sdocId, user?.id);
 
   // rename document
   const openSnackbar = useOpenSnackbar();
@@ -112,12 +109,12 @@ function Annotation() {
                 <TabPanel value="code" style={{ padding: 0 }} className="h100">
                   <CodeExplorer className="h100" />
                 </TabPanel>
-                {annotationDocument.isSuccess && sdoc.isSuccess && (
+                {sdoc.isSuccess && (
                   <TabPanel value="Annotation" style={{ padding: 0 }} className="h100">
                     {sdoc.data.doctype === DocType.TEXT ? (
-                      <SpanAnnotationExplorer />
+                      <SpanAnnotationExplorer sdocId={sdoc.data.id} />
                     ) : sdoc.data.doctype === DocType.IMAGE ? (
-                      <BBoxAnnotationExplorer />
+                      <BBoxAnnotationExplorer sdocId={sdoc.data.id} />
                     ) : (
                       <>Not supported (yet)!</>
                     )}
@@ -159,7 +156,7 @@ function Annotation() {
                   </ToggleButton>
                 </Tooltip>
               </ToggleButtonGroup>
-              {annotationDocument.isSuccess && <AnnotationDocumentSelector sdocId={sdocId} />}
+              <AnnotatorSelector sdocId={sdocId} />
               {sdoc.data?.doctype === DocType.TEXT && (
                 <ToggleButtonGroup
                   value={tagStyle}
@@ -187,7 +184,7 @@ function Annotation() {
                   <CardContent>
                     {sdocId ? (
                       <>
-                        {sdoc.isSuccess && annotationDocument.isSuccess ? (
+                        {sdoc.isSuccess ? (
                           <Stack spacing={2}>
                             <div style={{ display: "flex", alignItems: "center" }}>
                               <EditableTypography
@@ -203,13 +200,13 @@ function Annotation() {
                             </div>
                             {sdoc.data.doctype === DocType.IMAGE ? (
                               isAnnotationMode ? (
-                                <ImageAnnotator sdoc={sdoc.data} adoc={annotationDocument.data} />
+                                <ImageAnnotator sdoc={sdoc.data} />
                               ) : (
                                 <ImageViewer sdoc={sdoc.data} />
                               )
                             ) : sdoc.data.doctype === DocType.TEXT ? (
                               isAnnotationMode ? (
-                                <TextAnnotator sdoc={sdoc.data} adoc={annotationDocument.data} />
+                                <TextAnnotator sdoc={sdoc.data} />
                               ) : (
                                 <TextViewer sdoc={sdoc.data} />
                               )
@@ -217,24 +214,13 @@ function Annotation() {
                               isAnnotationMode ? (
                                 <div>Annotation is not (yet) supported for Audio Documents.</div>
                               ) : (
-                                <AudioVideoViewer
-                                  sdoc={sdoc.data}
-                                  adoc={annotationDocument.data}
-                                  showEntities={true}
-                                  height={200}
-                                />
+                                <AudioVideoViewer sdoc={sdoc.data} showEntities={true} height={200} />
                               )
                             ) : sdoc.data.doctype === DocType.VIDEO ? (
                               isAnnotationMode ? (
                                 <div>Annotation is not (yet) supported for Video Documents.</div>
                               ) : (
-                                <AudioVideoViewer
-                                  sdoc={sdoc.data}
-                                  adoc={annotationDocument.data}
-                                  showEntities={true}
-                                  width={800}
-                                  height={600}
-                                />
+                                <AudioVideoViewer sdoc={sdoc.data} showEntities={true} width={800} height={600} />
                               )
                             ) : (
                               <div>ERROR! This DocType is not (yet) supported!</div>

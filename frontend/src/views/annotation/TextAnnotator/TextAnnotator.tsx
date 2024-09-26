@@ -1,14 +1,14 @@
 import { useQueryClient } from "@tanstack/react-query";
 import React, { MouseEvent, useRef, useState } from "react";
 import { QueryKey } from "../../../api/QueryKey.ts";
-import SpanAnnotationHooks, { FAKE_ANNOTATION_ID } from "../../../api/SpanAnnotationHooks.ts";
+import { FAKE_ANNOTATION_ID } from "../../../api/SpanAnnotationHooks.ts";
 
-import { AnnotationDocumentRead } from "../../../api/openapi/models/AnnotationDocumentRead.ts";
-import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
 import { SpanAnnotationCreateWithCodeId } from "../../../api/openapi/models/SpanAnnotationCreateWithCodeId.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import { useAuth } from "../../../auth/useAuth.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
@@ -17,6 +17,7 @@ import DocumentRenderer from "../DocumentRenderer/DocumentRenderer.tsx";
 import useComputeTokenData from "../DocumentRenderer/useComputeTokenData.ts";
 import { ICode } from "../ICode.ts";
 import { AnnoActions } from "../annoSlice.ts";
+import { useCreateSpanAnnotation, useDeleteSpanAnnotation, useUpdateSpanAnnotation } from "./textAnnotationHooks.ts";
 
 const selectionIsEmpty = (selection: Selection): boolean => {
   return selection.toString().trim().length === 0;
@@ -24,16 +25,17 @@ const selectionIsEmpty = (selection: Selection): boolean => {
 
 interface AnnotatorRemasteredProps {
   sdoc: SourceDocumentWithDataRead;
-  adoc: AnnotationDocumentRead;
 }
 
-function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
+function TextAnnotator({ sdoc }: AnnotatorRemasteredProps) {
+  const user = useAuth().user!;
+
   // local state
   const spanMenuRef = useRef<CodeSelectorHandle>(null);
   const [fakeAnnotation, setFakeAnnotation] = useState<SpanAnnotationCreateWithCodeId | undefined>(undefined);
 
   // global client state (redux)
-  const visibleAdocIds = useAppSelector((state) => state.annotations.visibleAdocIds);
+  const visibleUserIds = useAppSelector((state) => state.annotations.visibleUserIds);
   const codes = useAppSelector((state) => state.annotations.codesForSelection);
   const dispatch = useAppDispatch();
 
@@ -43,14 +45,14 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
   // computed / custom hooks
   const { tokenData, annotationsPerToken, annotationMap } = useComputeTokenData({
     sdocId: sdoc.id,
-    annotationDocumentIds: visibleAdocIds,
+    userIds: visibleUserIds,
   });
 
   // mutations for create, update, delete
   const queryClient = useQueryClient();
-  const createMutation = SpanAnnotationHooks.useCreateAnnotation();
-  const updateMutation = SpanAnnotationHooks.useOptimisticUpdateSpan();
-  const deleteMutation = SpanAnnotationHooks.useDeleteSpan();
+  const createMutation = useCreateSpanAnnotation(visibleUserIds);
+  const updateMutation = useUpdateSpanAnnotation(visibleUserIds);
+  const deleteMutation = useDeleteSpanAnnotation(visibleUserIds);
 
   // handle ui events
   const handleMenu = (event: React.MouseEvent) => {
@@ -139,7 +141,8 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
 
     const requestBody: SpanAnnotationCreateWithCodeId = {
       code_id: codes[0].id,
-      annotation_document_id: adoc.id,
+      user_id: user.id,
+      sdoc_id: sdoc.id,
       begin: tokenData[begin_token].beginChar,
       end: tokenData[end_token].endChar,
       begin_token: begin_token,
@@ -150,9 +153,9 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
     // create a fake annotation
     setFakeAnnotation(requestBody);
 
-    // when we create a new span annotation, we add a new annotation to a certain annotation document
+    // when we create a new span annotation, we add a new annotation to a certain document
     // thus, we only affect the annotation document that we are adding to
-    const affectedQueryKey = [QueryKey.ADOC_SPAN_ANNOTATIONS, requestBody.annotation_document_id];
+    const affectedQueryKey = [QueryKey.SDOC_SPAN_ANNOTATIONS, requestBody.sdoc_id, visibleUserIds];
 
     // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
     await queryClient.cancelQueries({ queryKey: affectedQueryKey });
@@ -199,9 +202,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
   };
 
   // handle code selector events
-  const handleCodeSelectorDeleteAnnotation = (
-    annotation: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode,
-  ) => {
+  const handleCodeSelectorDeleteAnnotation = (annotation: SpanAnnotationReadResolved | BBoxAnnotationReadResolved) => {
     ConfirmationAPI.openConfirmationDialog({
       text: `Do you really want to remove the SpanAnnotation ${annotation.id}? You can reassign it later!`,
       onAccept: () => {
@@ -220,7 +221,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
     });
   };
   const handleCodeSelectorEditCode = (
-    annotation: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode,
+    annotation: SpanAnnotationReadResolved | BBoxAnnotationReadResolved,
     code: ICode,
   ) => {
     updateMutation.mutate(
@@ -285,7 +286,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       if (reason === "escapeKeyDown") {
         // delete the fake annotation (that always has id -1)
         queryClient.setQueryData(
-          [QueryKey.ADOC_SPAN_ANNOTATIONS, fakeAnnotation.annotation_document_id],
+          [QueryKey.SDOC_SPAN_ANNOTATIONS, fakeAnnotation.sdoc_id, visibleUserIds],
           (old: SpanAnnotationReadResolved[] | undefined) => {
             if (old === undefined) {
               return undefined;

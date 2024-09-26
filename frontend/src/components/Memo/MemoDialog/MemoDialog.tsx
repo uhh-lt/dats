@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import eventBus from "../../../EventBus.ts";
 
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
@@ -104,7 +104,7 @@ export default function MemoDialog() {
           ) : memoEventData.attachedObjectType === AttachedObjectType.BBOX_ANNOTATION ? (
             <MemoContentBboxAnnotation
               memo={memo.data}
-              bboxAnnotation={attachedObject.data as BBoxAnnotationReadResolvedCode}
+              bboxAnnotation={attachedObject.data as BBoxAnnotationReadResolved}
               closeDialog={handleClose}
               onMemoCreateSuccess={memoEventData.onCreateSuccess}
             />

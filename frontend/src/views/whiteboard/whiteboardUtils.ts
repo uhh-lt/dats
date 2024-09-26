@@ -1,7 +1,7 @@
 import { DefaultEdgeOptions, Edge, MarkerType, Node, XYPosition, getRectOfNodes } from "reactflow";
 import { v4 as uuidv4 } from "uuid";
 import { BBoxAnnotationRead } from "../../api/openapi/models/BBoxAnnotationRead.ts";
-import { BBoxAnnotationReadResolvedCode } from "../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { BBoxAnnotationReadResolved } from "../../api/openapi/models/BBoxAnnotationReadResolved.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
 import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
@@ -233,7 +233,7 @@ export const createBBoxAnnotationNodes = ({
   bboxAnnotations,
   position,
 }: {
-  bboxAnnotations: number[] | BBoxAnnotationReadResolvedCode[] | BBoxAnnotationRead[];
+  bboxAnnotations: number[] | BBoxAnnotationReadResolved[] | BBoxAnnotationRead[];
   position?: XYPosition;
 }): Node<BBoxAnnotationNodeData>[] => {
   const bboxAnnotationIds = bboxAnnotations.map((bbox) => (typeof bbox === "number" ? bbox : bbox.id));

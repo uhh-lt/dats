@@ -3,12 +3,10 @@ import { useMemo, useRef, useState } from "react";
 import ReactPlayer from "react-player";
 import type { OnProgressProps } from "react-player/base.d.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
-import { AnnotationDocumentRead } from "../../../api/openapi/models/AnnotationDocumentRead.ts";
 import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
 
 interface AudioVideoViewerProps {
   sdoc: SourceDocumentWithDataRead;
-  adoc: AnnotationDocumentRead | null;
   showEntities: boolean;
   width?: number;
   height?: number;

@@ -15,7 +15,7 @@ function BBoxAnnotationDeleteMenuItem({
   onClick,
   ...props
 }: BBoxAnnotationDeleteMenuItemProps & MenuItemProps) {
-  const deleteMutation = BboxAnnotationHooks.useDelete();
+  const deleteMutation = BboxAnnotationHooks.useDeleteBBox();
 
   // snackbar
   const openSnackbar = useOpenSnackbar();

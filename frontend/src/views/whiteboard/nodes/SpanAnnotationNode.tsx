@@ -1,7 +1,6 @@
 import { Box, CardContent, CardHeader, Divider, MenuItem, Stack, Typography } from "@mui/material";
 import { useEffect, useRef } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
-import AdocHooks from "../../../api/AdocHooks.ts";
 import CodeHooks from "../../../api/CodeHooks.ts";
 import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
@@ -44,7 +43,6 @@ function SpanAnnotationNode(props: NodeProps<SpanAnnotationNodeData>) {
   // global server state (react-query)
   const annotation = SpanAnnotationHooks.useGetAnnotation(props.data.spanAnnotationId);
   const code = CodeHooks.useGetCode(annotation.data?.code.id);
-  const adoc = AdocHooks.useGetAdoc(annotation.data?.annotation_document_id);
   const memo = SpanAnnotationHooks.useGetMemo(props.data.spanAnnotationId, userId);
 
   // effects
@@ -73,8 +71,8 @@ function SpanAnnotationNode(props: NodeProps<SpanAnnotationNodeData>) {
   }, [props.data.spanAnnotationId, reactFlowInstance, code.data]);
 
   useEffect(() => {
-    if (!adoc.data) return;
-    const sdocId = adoc.data.source_document_id;
+    if (!annotation.data) return;
+    const sdocId = annotation.data.sdoc_id;
 
     // check which edges are already in the graph and removes edges to non-existing sdocs
     const edgesToDelete = reactFlowInstance
@@ -94,7 +92,7 @@ function SpanAnnotationNode(props: NodeProps<SpanAnnotationNodeData>) {
         createSdocSpanAnnotationEdge({ sdocId, spanAnnotationId: props.data.spanAnnotationId }),
       ]);
     }
-  }, [props.data.spanAnnotationId, reactFlowInstance, adoc.data]);
+  }, [props.data.spanAnnotationId, reactFlowInstance, annotation.data]);
 
   useEffect(() => {
     if (!memo.data) return;
@@ -130,10 +128,10 @@ function SpanAnnotationNode(props: NodeProps<SpanAnnotationNodeData>) {
 
   // context menu actions
   const handleContextMenuExpandDocument = () => {
-    if (!adoc.data) return;
+    if (!annotation.data) return;
 
     reactFlowService.addNodes(
-      createSdocNodes({ sdocs: [adoc.data.source_document_id], position: { x: props.xPos, y: props.yPos - 200 } }),
+      createSdocNodes({ sdocs: [annotation.data.sdoc_id], position: { x: props.xPos, y: props.yPos - 200 } }),
     );
     contextMenuRef.current?.close();
   };
@@ -199,7 +197,7 @@ function SpanAnnotationNode(props: NodeProps<SpanAnnotationNodeData>) {
               }
             />
             <CardContent>
-              <Typography>{annotation.data.span_text}</Typography>
+              <Typography>{annotation.data.text}</Typography>
             </CardContent>
           </>
         ) : annotation.isError ? (

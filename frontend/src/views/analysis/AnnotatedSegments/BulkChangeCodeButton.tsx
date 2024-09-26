@@ -1,22 +1,9 @@
 import { Button, Stack } from "@mui/material";
-import { useParams } from "react-router-dom";
-import { AnnotatedSegmentsColumns } from "../../../api/openapi/models/AnnotatedSegmentsColumns.ts";
-import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
-import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 import { SATToolbarProps } from "../../../components/SpanAnnotation/SpanAnnotationTable/SATToolbar.tsx";
 import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 
-function BulkChangeCodeButton({
-  selectedAnnotations,
-  selectedUserId,
-  filterName,
-}: SATToolbarProps & { filterName: string }) {
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
-
-  // global client state
-  const filter = useAppSelector((state) => state.satFilter.filter[filterName]);
-
+function BulkChangeCodeButton({ selectedAnnotations }: SATToolbarProps & { filterName: string }) {
   // global client state (redux)
   const dispatch = useAppDispatch();
 
@@ -26,30 +13,12 @@ function BulkChangeCodeButton({
       CRUDDialogActions.openSpanAnnotationEditDialog({ spanAnnotationIds: selectedAnnotations.map((row) => row.id) }),
     );
   };
-  const handleChangeAllCodesClick = () => {
-    AnalysisService.annotatedSegments({
-      projectId: projectId!,
-      userId: selectedUserId,
-      requestBody: {
-        filter: filter as MyFilter<AnnotatedSegmentsColumns>,
-        sorts: [],
-      },
-      page: 0,
-      pageSize: 1000,
-    }).then((data) => {
-      dispatch(CRUDDialogActions.openSpanAnnotationEditDialog({ spanAnnotationIds: data.data.map((row) => row.id) }));
-    });
-  };
 
   return (
     <Stack direction={"row"} spacing={1} alignItems="center" p={0.5} height={48}>
-      {selectedAnnotations.length > 0 ? (
+      {selectedAnnotations.length > 0 && (
         <Button size="small" onClick={handleChangeCodeClick}>
           Change code of {selectedAnnotations.length} annotated segments
-        </Button>
-      ) : (
-        <Button size="small" onClick={handleChangeAllCodesClick}>
-          Change code of all annotated segments
         </Button>
       )}
     </Stack>

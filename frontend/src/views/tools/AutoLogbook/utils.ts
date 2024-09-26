@@ -1,8 +1,7 @@
 import { ActionRead } from "../../../api/openapi/models/ActionRead.ts";
 import { ActionTargetObjectType } from "../../../api/openapi/models/ActionTargetObjectType.ts";
 import { ActionType } from "../../../api/openapi/models/ActionType.ts";
-import { AnnotationDocumentRead } from "../../../api/openapi/models/AnnotationDocumentRead.ts";
-import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import { MemoRead } from "../../../api/openapi/models/MemoRead.ts";
@@ -61,16 +60,16 @@ export const action2TargetTitle = (action: ActionRead): string | null | undefine
         return (parsedObject as SourceDocumentRead).filename;
       case ActionTargetObjectType.SPAN_ANNOTATION: {
         const spanAnno = parsedObject as SpanAnnotationReadResolved;
-        return `${spanAnno.span_text} (${spanAnno.code.name})`;
+        return `${spanAnno.text} (${spanAnno.code.name})`;
       }
       case ActionTargetObjectType.BBOX_ANNOTATION: {
-        const bboxAnno = parsedObject as BBoxAnnotationReadResolvedCode;
+        const bboxAnno = parsedObject as BBoxAnnotationReadResolved;
         return `Code: ${bboxAnno.code.name} Coordinates: ${bboxAnno.x_min}, ${bboxAnno.y_min}, ${bboxAnno.x_max}, ${bboxAnno.y_max}`;
       }
       case ActionTargetObjectType.CODE:
         return (parsedObject as CodeRead).name;
       case ActionTargetObjectType.ANNOTATION_DOCUMENT:
-        return `Document #${(parsedObject as AnnotationDocumentRead).source_document_id}`;
+        return `Annotation Document`;
       default:
         return undefined;
     }

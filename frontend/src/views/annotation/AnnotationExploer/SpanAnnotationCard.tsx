@@ -37,7 +37,7 @@ function SpanAnnotationCard({ annotation, onClick, cardProps }: AnnotationCardPr
               pl: 1,
             }}
           >
-            {annotation.span_text}
+            {annotation.text}
           </Typography>
         </CardContent>
       </CardActionArea>

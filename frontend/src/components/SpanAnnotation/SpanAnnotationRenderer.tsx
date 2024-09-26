@@ -79,7 +79,7 @@ function SpanAnnotationRendererWithData({
       )}
       {showCode && <CodeRenderer code={spanAnnotation.code} />}
       {showCode && showSpanText && ": "}
-      {showSpanText && spanAnnotation.span_text}
+      {showSpanText && spanAnnotation.text}
     </Stack>
   );
 }

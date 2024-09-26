@@ -17,7 +17,7 @@ import {
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from "react";
 import CodeHooks from "../../api/CodeHooks.ts";
 import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
-import { BBoxAnnotationReadResolvedCode } from "../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { BBoxAnnotationReadResolved } from "../../api/openapi/models/BBoxAnnotationReadResolved.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import { CRUDDialogActions } from "../../components/dialogSlice.ts";
@@ -34,14 +34,14 @@ const filter = createFilterOptions<ICodeFilter>();
 interface CodeSelectorProps {
   onClose?: (reason?: "backdropClick" | "escapeKeyDown") => void;
   onAdd?: (code: CodeRead, isNewCode: boolean) => void;
-  onEdit?: (annotationToEdit: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode, newCode: ICode) => void;
-  onDelete?: (annotationToDelete: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode) => void;
+  onEdit?: (annotationToEdit: SpanAnnotationReadResolved | BBoxAnnotationReadResolved, newCode: ICode) => void;
+  onDelete?: (annotationToDelete: SpanAnnotationReadResolved | BBoxAnnotationReadResolved) => void;
 }
 
 export interface CodeSelectorHandle {
   open: (
     position: PopoverPosition,
-    annotations?: SpanAnnotationReadResolved[] | BBoxAnnotationReadResolvedCode[] | undefined,
+    annotations?: SpanAnnotationReadResolved[] | BBoxAnnotationReadResolved[] | undefined,
   ) => void;
 }
 
@@ -57,10 +57,10 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
     const [showCodeSelection, setShowCodeSelection] = useState(false);
     const [isAutoCompleteOpen, setIsAutoCompleteOpen] = useState(false);
     const [annotationsToEdit, setAnnotationsToEdit] = useState<
-      SpanAnnotationReadResolved[] | BBoxAnnotationReadResolvedCode[] | undefined
+      SpanAnnotationReadResolved[] | BBoxAnnotationReadResolved[] | undefined
     >(undefined);
     const [editingAnnotation, setEditingAnnotation] = useState<
-      SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode | undefined
+      SpanAnnotationReadResolved | BBoxAnnotationReadResolved | undefined
     >(undefined);
     const [autoCompleteValue, setAutoCompleteValue] = useState<ICodeFilter | null>(null);
 
@@ -82,7 +82,7 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
     // methods
     const openCodeSelector = (
       position: PopoverPosition,
-      annotations: SpanAnnotationReadResolved[] | BBoxAnnotationReadResolvedCode[] | undefined = undefined,
+      annotations: SpanAnnotationReadResolved[] | BBoxAnnotationReadResolved[] | undefined = undefined,
     ) => {
       setEditingAnnotation(undefined);
       setAnnotationsToEdit(annotations);
@@ -129,16 +129,13 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
       submit(newValue, false);
     };
 
-    const handleEdit = (
-      annotationToEdit: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode,
-      code: CodeRead,
-    ) => {
+    const handleEdit = (annotationToEdit: SpanAnnotationReadResolved | BBoxAnnotationReadResolved, code: CodeRead) => {
       setEditingAnnotation(annotationToEdit);
       setAutoCompleteValue({ ...code, title: code.name });
       setShowCodeSelection(true);
     };
 
-    const handleDelete = (annotation: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode) => {
+    const handleDelete = (annotation: SpanAnnotationReadResolved | BBoxAnnotationReadResolved) => {
       if (onDelete) onDelete(annotation);
       closeCodeSelector();
     };
@@ -245,19 +242,16 @@ export default AnnotationMenu;
 
 interface CodeSelectorListItemProps {
   codeId: number;
-  annotation: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode;
+  annotation: SpanAnnotationReadResolved | BBoxAnnotationReadResolved;
   handleOpenMemo: () => void;
-  handleDelete: (annotationToDelete: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode) => void;
-  handleEdit: (
-    annotationToEdit: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode,
-    newCode: CodeRead,
-  ) => void;
+  handleDelete: (annotationToDelete: SpanAnnotationReadResolved | BBoxAnnotationReadResolved) => void;
+  handleEdit: (annotationToEdit: SpanAnnotationReadResolved | BBoxAnnotationReadResolved, newCode: CodeRead) => void;
 }
 
 const isBboxAnnotation = (
-  annotation: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode,
-): annotation is BBoxAnnotationReadResolvedCode => {
-  return (annotation as BBoxAnnotationReadResolvedCode).x_min !== undefined;
+  annotation: SpanAnnotationReadResolved | BBoxAnnotationReadResolved,
+): annotation is BBoxAnnotationReadResolved => {
+  return (annotation as BBoxAnnotationReadResolved).x_min !== undefined;
 };
 
 function CodeSelectorListItem({

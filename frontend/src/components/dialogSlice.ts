@@ -1,6 +1,6 @@
 import { AlertProps } from "@mui/material";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
-import { BBoxAnnotationReadResolvedCode } from "../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { BBoxAnnotationReadResolved } from "../api/openapi/models/BBoxAnnotationReadResolved.ts";
 import { CodeRead } from "../api/openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "../api/openapi/models/DocumentTagRead.ts";
 import { LLMJobResult } from "../api/openapi/models/LLMJobResult.ts";
@@ -31,7 +31,7 @@ interface DialogState {
   // bbox
   isBBoxAnnotationEditDialogOpen: boolean;
   isBBoxAnnotationCreateDialogOpen: boolean;
-  bboxAnnotation?: BBoxAnnotationReadResolvedCode;
+  bboxAnnotation?: BBoxAnnotationReadResolved;
   // snackbar
   isSnackbarOpen: boolean;
   snackbarData: SnackbarEvent;
@@ -148,7 +148,7 @@ export const dialogSlice = createSlice({
       state.isCodeEditDialogOpen = false;
       state.code = undefined;
     },
-    openBBoxAnnotationEditDialog: (state, action: PayloadAction<{ annotation: BBoxAnnotationReadResolvedCode }>) => {
+    openBBoxAnnotationEditDialog: (state, action: PayloadAction<{ annotation: BBoxAnnotationReadResolved }>) => {
       state.isBBoxAnnotationEditDialogOpen = true;
       state.bboxAnnotation = action.payload.annotation;
     },

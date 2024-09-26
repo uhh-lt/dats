@@ -85,7 +85,7 @@ const SentenceMenu = forwardRef<SentenceMenuHandle, SentenceMenuProps>(({}, ref)
     dispatch(
       SearchFilterActions.onAddSpanAnnotationFilter({
         codeId: anno.code.id,
-        spanText: anno.span_text,
+        spanText: anno.text,
         filterName: "root",
       }),
     );
@@ -137,7 +137,7 @@ const SentenceMenu = forwardRef<SentenceMenuHandle, SentenceMenuProps>(({}, ref)
                   <Box
                     style={{ width: 20, height: 20, backgroundColor: anno.code.color, marginRight: 8, marginLeft: 16 }}
                   />
-                  <ListItemText primary={`${anno.code.name}: ${anno.span_text}`} />
+                  <ListItemText primary={`${anno.code.name}: ${anno.text}`} />
                 </ListItemButton>
               </ListItem>
               <MemoListItemButton
@@ -150,7 +150,7 @@ const SentenceMenu = forwardRef<SentenceMenuHandle, SentenceMenuProps>(({}, ref)
                     <Box
                       style={{ width: 20, height: 20, backgroundColor: anno.code.color, marginRight: 8, marginLeft: 8 }}
                     />
-                    <ListItemText primary={`${anno.code.name}: ${anno.span_text}`} />
+                    <ListItemText primary={`${anno.code.name}: ${anno.text}`} />
                   </>
                 }
               />

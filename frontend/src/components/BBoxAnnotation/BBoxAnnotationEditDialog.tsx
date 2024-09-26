@@ -42,7 +42,7 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
 
     updateAnnotationMutation.mutate(
       {
-        bboxToUpdate: annotation,
+        bboxId: annotation.id,
         requestBody: {
           code_id: selectedCodeId,
         },

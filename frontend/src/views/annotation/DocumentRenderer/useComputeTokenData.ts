@@ -1,13 +1,12 @@
 import { useMemo } from "react";
-import AdocHooks from "../../../api/AdocHooks.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import { IToken } from "./IToken.ts";
 
-function useComputeTokenData({ sdocId, annotationDocumentIds }: { sdocId: number; annotationDocumentIds: number[] }) {
+function useComputeTokenData({ sdocId, userIds }: { sdocId: number; userIds: number[] }) {
   // global server state (react query)
   const sdoc = SdocHooks.useGetDocument(sdocId);
-  const annotations = AdocHooks.useGetAllSpanAnnotationsBatch(annotationDocumentIds);
+  const annotations = SdocHooks.useGetSpanAnnotationsBatch(sdocId, userIds);
 
   // computed
   // todo: maybe implement with selector?
@@ -28,34 +27,23 @@ function useComputeTokenData({ sdocId, annotationDocumentIds }: { sdocId: number
     return result;
   }, [sdoc.data]);
 
-  // todo: maybe implement with selector?
-  // this map stores annotationId -> SpanAnnotationReadResolved
-  const annotationMap = useMemo(() => {
-    const annotationsIsUndefined = annotations.some((a) => !a.data);
-    if (annotationsIsUndefined) return undefined;
+  // annotationMap stores annotationId -> SpanAnnotationReadResolved
+  // annotationsPerToken map stores tokenId -> spanAnnotationId[]
+  const { annotationMap, annotationsPerToken } = useMemo(() => {
+    if (!annotations.data) return { annotationMap: undefined, annotationsPerToken: undefined };
 
-    const annotationsList = annotations.map((a) => a.data!).flat();
-    const result = new Map<number, SpanAnnotationReadResolved>();
-    annotationsList.forEach((a) => result.set(a.id, a));
-    return result;
-  }, [annotations]);
-
-  // this map stores tokenId -> spanAnnotationId[]
-  const annotationsPerToken = useMemo(() => {
-    const annotationsIsUndefined = annotations.some((a) => !a.data);
-    if (annotationsIsUndefined) return undefined;
-
-    const annotationsList = annotations.map((a) => a.data!).flat();
-    const result = new Map<number, number[]>();
-    annotationsList.forEach((annotation) => {
+    const annotationMap = new Map<number, SpanAnnotationReadResolved>();
+    const annotationsPerToken = new Map<number, number[]>();
+    annotations.data.forEach((annotation) => {
       for (let i = annotation.begin_token; i <= annotation.end_token - 1; i++) {
-        const tokenAnnotations = result.get(i) || [];
+        const tokenAnnotations = annotationsPerToken.get(i) || [];
         tokenAnnotations.push(annotation.id);
-        result.set(i, tokenAnnotations);
+        annotationsPerToken.set(i, tokenAnnotations);
       }
+      annotationMap.set(annotation.id, annotation);
     });
-    return result;
-  }, [annotations]);
+    return { annotationMap, annotationsPerToken };
+  }, [annotations.data]);
 
   return { tokenData, annotationsPerToken, annotationMap };
 }

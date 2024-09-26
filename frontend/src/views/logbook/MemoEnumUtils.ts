@@ -2,7 +2,6 @@ import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.
 
 export const MemoColors: Record<AttachedObjectType, string> = {
   [AttachedObjectType.CODE]: "orange",
-  [AttachedObjectType.ANNOTATION_DOCUMENT]: "purple",
   [AttachedObjectType.DOCUMENT_TAG]: "brown",
   [AttachedObjectType.PROJECT]: "blue",
   [AttachedObjectType.SPAN_ANNOTATION]: "red",
@@ -13,7 +12,6 @@ export const MemoColors: Record<AttachedObjectType, string> = {
 
 export const MemoShortnames: Record<AttachedObjectType, string> = {
   [AttachedObjectType.CODE]: "C",
-  [AttachedObjectType.ANNOTATION_DOCUMENT]: "AD",
   [AttachedObjectType.DOCUMENT_TAG]: "T",
   [AttachedObjectType.PROJECT]: "P",
   [AttachedObjectType.SPAN_ANNOTATION]: "A",
@@ -24,7 +22,6 @@ export const MemoShortnames: Record<AttachedObjectType, string> = {
 
 export const MemoNames: Record<AttachedObjectType, string> = {
   [AttachedObjectType.CODE]: "Code",
-  [AttachedObjectType.ANNOTATION_DOCUMENT]: "ADocument",
   [AttachedObjectType.DOCUMENT_TAG]: "Tag",
   [AttachedObjectType.PROJECT]: "Project",
   [AttachedObjectType.SPAN_ANNOTATION]: "Annotation",

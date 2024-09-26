@@ -1,6 +1,6 @@
 import React from "react";
 import CodeHooks from "../../../api/CodeHooks.ts";
-import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
 
 type CustomSVGProps = Omit<
   React.SVGProps<SVGRectElement>,
@@ -8,7 +8,7 @@ type CustomSVGProps = Omit<
 >;
 
 interface SVGBBoxProps {
-  bbox: BBoxAnnotationReadResolvedCode;
+  bbox: BBoxAnnotationReadResolved;
 }
 
 function SVGBBox({ bbox, ...props }: SVGBBoxProps & CustomSVGProps) {
