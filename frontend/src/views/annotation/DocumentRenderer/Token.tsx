@@ -1,3 +1,4 @@
+import { Tooltip, Typography } from "@mui/material";
 import { range } from "lodash";
 import { useMemo } from "react";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
@@ -51,14 +52,31 @@ function Token({ token, spanAnnotations }: TokenProps) {
 
   return (
     <>
-      <span className={`tok ${spans.map((s) => `span-${s.id}`).join(" ")}`} data-tokenid={token.index}>
-        {spanGroups}
-        <span id={"token" + token.index} className={"text"}>
-          {token.text}
+      <Tooltip
+        title={
+          spans.length > 0 && (
+            <>
+              {spans.map((span) => (
+                <Typography fontSize="small">
+                  {span.code.name}: {span.code.description}
+                </Typography>
+              ))}
+            </>
+          )
+        }
+        followCursor
+        placement="top"
+        enterDelay={500}
+      >
+        <span className={`tok ${spans.map((s) => `span-${s.id}`).join(" ")}`} data-tokenid={token.index}>
+          {spanGroups}
+          <span id={"token" + token.index} className={"text"}>
+            {token.text}
+          </span>
+          {token.whitespace && " "}
+          {marks}
         </span>
-        {token.whitespace && " "}
-        {marks}
-      </span>
+      </Tooltip>
       {token.newLine > 0 && range(token.newLine).map((i) => <br key={i}></br>)}
     </>
   );

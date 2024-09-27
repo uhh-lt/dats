@@ -5,6 +5,7 @@ import bboxFilterReducer from "../components/BBoxAnnotation/BBoxAnnotationTable/
 import documentTableFilterReducer from "../components/SourceDocument/SdocTable/documentTableFilterSlice.ts";
 import satFilterReducer from "../components/SpanAnnotation/SpanAnnotationTable/satFilterSlice.ts";
 import dialogReducer from "../components/dialogSlice.ts";
+import layoutReducer from "../layouts/layoutSlice.ts";
 import annotatedSegmentsReducer from "../views/analysis/AnnotatedSegments/annotatedSegmentsSlice.ts";
 import cotaReducer from "../views/analysis/ConceptsOverTime/cotaSlice.ts";
 import timelineAnalysisReducer from "../views/analysis/TimelineAnalysis/timelineAnalysisSlice.ts";
@@ -44,6 +45,7 @@ export const store = configureStore({
     cota: cotaReducer,
     dialog: dialogReducer,
     documentSampler: documentSamplerReducer,
+    layout: layoutReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

@@ -10,7 +10,7 @@ import {
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
 import { AnnotatedSegmentResult } from "../../../api/openapi/models/AnnotatedSegmentResult.ts";
 import { AnnotatedSegmentsColumns } from "../../../api/openapi/models/AnnotatedSegmentsColumns.ts";
 import { AnnotationTableRow } from "../../../api/openapi/models/AnnotationTableRow.ts";
@@ -24,7 +24,7 @@ import { MyFilter, createEmptyFilter } from "../../FilterDialog/filterUtils.ts";
 import MemoRenderer2 from "../../Memo/MemoRenderer2.tsx";
 import SdocMetadataRenderer from "../../Metadata/SdocMetadataRenderer.tsx";
 import SdocTagsRenderer from "../../SourceDocument/SdocTagRenderer.tsx";
-import UserSelectorSingle from "../../User/UserSelectorSingle.tsx";
+import UserRenderer from "../../User/UserRenderer.tsx";
 import SATToolbar, { SATToolbarProps } from "./SATToolbar.tsx";
 import { useInitSATFilterSlice } from "./useInitSATFilterSlice.ts";
 
@@ -69,9 +69,7 @@ function SpanAnnotationTable({
 }: SpanAnnotationTableProps) {
   // global client state (react router)
   const { user } = useAuth();
-
-  // user id selector
-  const [selectedUserId, setSelectedUserId] = useState<number>(user?.id || 1);
+  const userId = user?.id;
 
   // filtering
   const filter = useAppSelector((state) => state.satFilter.filter[filterName]) || createEmptyFilter(filterName);
@@ -109,6 +107,12 @@ function SpanAnnotationTable({
             ...colDef,
             accessorFn: (row) => row.code,
             Cell: ({ row }) => <CodeRenderer code={row.original.code} />,
+          } as MRT_ColumnDef<AnnotationTableRow>;
+        case AnnotatedSegmentsColumns.ASC_USER_ID:
+          return {
+            ...colDef,
+            accessorFn: (row) => row.user_id,
+            Cell: ({ row }) => <UserRenderer user={row.original.user_id} />,
           } as MRT_ColumnDef<AnnotationTableRow>;
         case AnnotatedSegmentsColumns.ASC_MEMO_CONTENT:
           return {
@@ -158,14 +162,14 @@ function SpanAnnotationTable({
     queryKey: [
       "annotation-table-data",
       projectId,
-      selectedUserId,
+      userId,
       filter, //refetch when columnFilters changes
       sortingModel, //refetch when sorting changes
     ],
     queryFn: ({ pageParam }) =>
       AnalysisService.annotatedSegments({
         projectId: projectId!,
-        userId: selectedUserId,
+        userId: userId!,
         requestBody: {
           filter: filter as MyFilter<AnnotatedSegmentsColumns>,
           sorts: sortingModel.map((sort) => ({
@@ -177,6 +181,7 @@ function SpanAnnotationTable({
         pageSize: fetchSize,
       }),
     initialPageParam: 0,
+    enabled: !!projectId && !!userId,
     getNextPageParam: (_lastGroup, groups) => {
       return groups.length;
     },
@@ -208,7 +213,7 @@ function SpanAnnotationTable({
     } catch (error) {
       console.error(error);
     }
-  }, [projectId, selectedUserId, sortingModel]);
+  }, [projectId, sortingModel]);
   // a check on mount to see if the table is already scrolled to the bottom and immediately needs to fetch more data
   useEffect(() => {
     fetchMoreOnBottomReached(tableContainerRef.current);
@@ -269,7 +274,6 @@ function SpanAnnotationTable({
             table: props.table,
             filterName,
             anchor: tableContainerRef,
-            selectedUserId: selectedUserId,
             selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
           })
       : undefined,
@@ -278,7 +282,6 @@ function SpanAnnotationTable({
         table: props.table,
         filterName,
         anchor: tableContainerRef,
-        selectedUserId: selectedUserId,
         selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
       }),
     renderBottomToolbarCustomActions: (props) => (
@@ -291,7 +294,6 @@ function SpanAnnotationTable({
             table: props.table,
             filterName,
             anchor: tableContainerRef,
-            selectedUserId: selectedUserId,
             selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
           })}
       </Stack>
@@ -300,17 +302,7 @@ function SpanAnnotationTable({
 
   return (
     <Card className="myFlexContainer" {...cardProps}>
-      <CardHeader
-        title={title}
-        action={
-          <UserSelectorSingle
-            title="Annotations"
-            projectId={projectId}
-            userId={selectedUserId}
-            onUserIdChange={setSelectedUserId}
-          />
-        }
-      />
+      <CardHeader title={title} />
       <CardContent className="myFlexFillAllContainer" style={{ padding: 0 }}>
         <MaterialReactTable table={table} />
       </CardContent>

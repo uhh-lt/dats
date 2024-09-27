@@ -13,6 +13,7 @@ from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
+from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.user import crud_user
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.bbox_annotation import (
@@ -100,7 +101,9 @@ class ExportService(metaclass=SingletonMeta):
         cls.export_method_for_job_type: Dict[ExportJobType, Callable[..., str]] = {
             ExportJobType.SINGLE_PROJECT_ALL_DATA: cls._export_all_data_from_proj,
             ExportJobType.SINGLE_PROJECT_ALL_TAGS: cls._export_all_tags_from_proj,
+            ExportJobType.SINGLE_PROJECT_ALL_CODES: cls._export_all_codes_from_proj,
             ExportJobType.SINGLE_PROJECT_SELECTED_SDOCS: cls._export_selected_sdocs_from_proj,
+            ExportJobType.SINGLE_PROJECT_SELECTED_SPAN_ANNOTATIONS: cls._export_selected_span_annotations_from_proj,
             ExportJobType.SINGLE_USER_ALL_DATA: cls._export_user_data_from_proj,
             ExportJobType.SINGLE_USER_ALL_MEMOS: cls._export_user_memos_from_proj,
             ExportJobType.SINGLE_USER_LOGBOOK: cls._export_user_logbook_from_proj,
@@ -268,6 +271,40 @@ class ExportService(metaclass=SingletonMeta):
             data["text"].append(None)
             data["text_begin_char"].append(None)
             data["text_end_char"].append(None)
+
+        df = pd.DataFrame(data=data)
+        return df
+
+    def __generate_export_df_for_span_annotations(
+        self,
+        db: Session,
+        span_annotations: List[SpanAnnotationORM],
+    ) -> pd.DataFrame:
+        logger.info(f"Exporting {len(span_annotations)} Annotations ...")
+
+        # fill the DataFrame
+        data = {
+            "sdoc_name": [],
+            "user_first_name": [],
+            "user_last_name": [],
+            "code_name": [],
+            "created": [],
+            "text": [],
+            "text_begin_char": [],
+            "text_end_char": [],
+        }
+
+        for span in span_annotations:
+            sdoc = span.annotation_document.source_document
+            user = span.annotation_document.user
+            data["sdoc_name"].append(sdoc.filename)
+            data["user_first_name"].append(user.first_name)
+            data["user_last_name"].append(user.last_name)
+            data["code_name"].append(span.code.name)
+            data["created"].append(span.created)
+            data["text"].append(span.text)
+            data["text_begin_char"].append(span.begin)
+            data["text_end_char"].append(span.end)
 
         df = pd.DataFrame(data=data)
         return df
@@ -894,6 +931,30 @@ class ExportService(metaclass=SingletonMeta):
         logger.error(msg)
         raise NoDataToExportError(msg)
 
+    def _export_all_codes_from_proj(
+        self,
+        db: Session,
+        project_id: int,
+        export_format: ExportFormat = ExportFormat.CSV,
+    ) -> str:
+        ex_codes = self.__generate_export_dfs_for_all_codes_in_project(
+            db=db, project_id=project_id
+        )
+
+        # one file for all tags
+        if len(ex_codes) > 0:
+            export_data = pd.concat(ex_codes)
+            export_file = self.__write_export_data_to_temp_file(
+                data=export_data,
+                export_format=export_format,
+                fn=f"project_{project_id}_codes",
+            )
+            export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
+            return export_url
+        msg = f"No Codes to export in Project {project_id}"
+        logger.error(msg)
+        raise NoDataToExportError(msg)
+
     def _export_selected_sdocs_from_proj(
         self, db: Session, project_id: int, sdoc_ids: List[int]
     ) -> str:
@@ -903,6 +964,22 @@ class ExportService(metaclass=SingletonMeta):
         )
 
         return self.repo.get_temp_file_url(zip.name, relative=True)
+
+    def _export_selected_span_annotations_from_proj(
+        self, db: Session, project_id: int, span_annotation_ids: List[int]
+    ) -> str:
+        # get the annotations
+        span_annotations = crud_span_anno.read_by_ids(db=db, ids=span_annotation_ids)
+
+        export_data = self.__generate_export_df_for_span_annotations(
+            db=db, span_annotations=span_annotations
+        )
+        export_file = self.__write_export_data_to_temp_file(
+            data=export_data,
+            export_format=ExportFormat.CSV,
+            fn=f"project_{project_id}_selected_annotations_export",
+        )
+        return self.repo.get_temp_file_url(export_file.name, relative=True)
 
     def _assert_all_requested_data_exists(
         self, export_params: ExportJobParameters

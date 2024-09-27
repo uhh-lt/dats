@@ -16,10 +16,13 @@ class ExportFormat(str, Enum):
 class ExportJobType(str, Enum):
     SINGLE_PROJECT_ALL_DATA = "SINGLE_PROJECT_ALL_DATA"
     SINGLE_PROJECT_ALL_TAGS = "SINGLE_PROJECT_ALL_TAGS"
+    SINGLE_PROJECT_ALL_CODES = "SINGLE_PROJECT_ALL_CODES"
     SINGLE_PROJECT_SELECTED_SDOCS = "SINGLE_PROJECT_SELECTED_SDOCS"
+    SINGLE_PROJECT_SELECTED_SPAN_ANNOTATIONS = (
+        "SINGLE_PROJECT_SELECTED_SPAN_ANNOTATIONS"
+    )
 
     SINGLE_USER_ALL_DATA = "SINGLE_USER_ALL_DATA"
-    SINGLE_USER_ALL_CODES = "SINGLE_USER_ALL_CODES"
     SINGLE_USER_ALL_MEMOS = "SINGLE_USER_ALL_MEMOS"
     SINGLE_USER_LOGBOOK = "SINGLE_USER_LOGBOOK"
 
@@ -42,18 +45,24 @@ class SingleProjectAllTagsExportJobParams(SpecificExportJobParameters):
     export_job_type: Literal[ExportJobType.SINGLE_PROJECT_ALL_TAGS]
 
 
+class SingleProjectAllCodesExportJobParams(SpecificExportJobParameters):
+    export_job_type: Literal[ExportJobType.SINGLE_PROJECT_ALL_CODES]
+
+
 class SingleProjectSelectedSdocsParams(SpecificExportJobParameters):
     export_job_type: Literal[ExportJobType.SINGLE_PROJECT_SELECTED_SDOCS]
     sdoc_ids: List[int] = Field(description="IDs of the source documents to export")
 
 
+class SingleProjectSelectedSpanAnnotationsParams(SpecificExportJobParameters):
+    export_job_type: Literal[ExportJobType.SINGLE_PROJECT_SELECTED_SPAN_ANNOTATIONS]
+    span_annotation_ids: List[int] = Field(
+        description="IDs of the span annotations to export"
+    )
+
+
 class SingleUserAllDataExportJobParams(SpecificExportJobParameters):
     export_job_type: Literal[ExportJobType.SINGLE_USER_ALL_DATA]
-    user_id: int = Field(description="The ID of the User to get the data from.")
-
-
-class SingleUserAllCodesExportJobParams(SpecificExportJobParameters):
-    export_job_type: Literal[ExportJobType.SINGLE_USER_ALL_CODES]
     user_id: int = Field(description="The ID of the User to get the data from.")
 
 
@@ -89,9 +98,10 @@ class ExportJobParameters(BaseModel):
     specific_export_job_parameters: Union[
         SingleProjectAllDataExportJobParams,
         SingleProjectAllTagsExportJobParams,
+        SingleProjectAllCodesExportJobParams,
         SingleProjectSelectedSdocsParams,
+        SingleProjectSelectedSpanAnnotationsParams,
         SingleUserAllDataExportJobParams,
-        SingleUserAllCodesExportJobParams,
         SingleUserAllMemosExportJobParams,
         SingleUserLogbookExportJobParams,
         SingleDocAllUserAnnotationsExportJobParams,

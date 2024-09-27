@@ -12,7 +12,6 @@ export interface SATToolbarProps {
   filterName: string;
   table: MRT_TableInstance<AnnotationTableRow>;
   anchor: React.RefObject<HTMLElement>;
-  selectedUserId: number;
   selectedAnnotations: AnnotationTableRow[];
 }
 
