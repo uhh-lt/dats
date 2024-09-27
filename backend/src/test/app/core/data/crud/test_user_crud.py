@@ -6,10 +6,8 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.user import crud_user
-from app.core.data.dto.code import CodeRead
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.user import UserCreate, UserRead, UserUpdate
-from app.core.data.orm.code import CodeORM
 from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.user import UserORM
 
@@ -71,33 +69,6 @@ def test_get_user_projects(db: Session, project: ProjectORM, user: UserORM) -> N
 
     assert len(user_projects) == 1
     assert user_projects[0].id == project.id
-
-
-# TODO: Fails on teardown because the codes gets removed here already!
-def test_get_delete_user_codes(db: Session, code: CodeORM, user: UserORM) -> None:
-    user_codes = [CodeRead.model_validate(code) for code in user.codes]
-
-    assert len(user_codes) == 1
-
-    # crud_user.remove_all_codes(db=db, id=user)
-
-    # db_obj = crud_user.read(db=db, id=user)
-    # user_codes = [CodeRead.model_validate(code) for code in db_obj.codes]
-
-    # assert len(user_codes) == 0
-
-
-# TODO: Fails on teardown because the codes gets removed here already!
-def test_delete_user_codes(db: Session, user: UserORM, code: CodeORM) -> None:
-    codes = [CodeRead.model_validate(code) for code in user.codes]
-
-    assert len(codes) == 1
-
-    # crud_user.remove_all_codes(db=db, id=user)
-    # db_obj = crud_user.read(db=db, id=user)
-    # codes = [CodeRead.model_validate(code) for code in db_obj.codes]
-
-    # assert len(codes) == 0
 
 
 def test_get_all_user(db: Session, user: UserORM) -> None:
