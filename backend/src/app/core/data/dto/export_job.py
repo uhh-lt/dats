@@ -52,11 +52,6 @@ class SingleUserAllDataExportJobParams(SpecificExportJobParameters):
     user_id: int = Field(description="The ID of the User to get the data from.")
 
 
-class SingleUserAllCodesExportJobParams(SpecificExportJobParameters):
-    export_job_type: Literal[ExportJobType.SINGLE_USER_ALL_CODES]
-    user_id: int = Field(description="The ID of the User to get the data from.")
-
-
 class SingleUserAllMemosExportJobParams(SpecificExportJobParameters):
     export_job_type: Literal[ExportJobType.SINGLE_USER_ALL_MEMOS]
     user_id: int = Field(description="The ID of the User to get the data from.")
@@ -91,7 +86,6 @@ class ExportJobParameters(BaseModel):
         SingleProjectAllTagsExportJobParams,
         SingleProjectSelectedSdocsParams,
         SingleUserAllDataExportJobParams,
-        SingleUserAllCodesExportJobParams,
         SingleUserAllMemosExportJobParams,
         SingleUserLogbookExportJobParams,
         SingleDocAllUserAnnotationsExportJobParams,
