@@ -6943,6 +6943,7 @@
               { "$ref": "#/components/schemas/SingleProjectAllTagsExportJobParams" },
               { "$ref": "#/components/schemas/SingleProjectAllCodesExportJobParams" },
               { "$ref": "#/components/schemas/SingleProjectSelectedSdocsParams" },
+              { "$ref": "#/components/schemas/SingleProjectSelectedSpanAnnotationsParams" },
               { "$ref": "#/components/schemas/SingleUserAllDataExportJobParams" },
               { "$ref": "#/components/schemas/SingleUserAllMemosExportJobParams" },
               { "$ref": "#/components/schemas/SingleUserLogbookExportJobParams" },
@@ -6960,6 +6961,7 @@
                 "SINGLE_PROJECT_ALL_DATA": "#/components/schemas/SingleProjectAllDataExportJobParams",
                 "SINGLE_PROJECT_ALL_TAGS": "#/components/schemas/SingleProjectAllTagsExportJobParams",
                 "SINGLE_PROJECT_SELECTED_SDOCS": "#/components/schemas/SingleProjectSelectedSdocsParams",
+                "SINGLE_PROJECT_SELECTED_SPAN_ANNOTATIONS": "#/components/schemas/SingleProjectSelectedSpanAnnotationsParams",
                 "SINGLE_USER_ALL_DATA": "#/components/schemas/SingleUserAllDataExportJobParams",
                 "SINGLE_USER_ALL_MEMOS": "#/components/schemas/SingleUserAllMemosExportJobParams",
                 "SINGLE_USER_LOGBOOK": "#/components/schemas/SingleUserLogbookExportJobParams"
@@ -7006,6 +7008,7 @@
           "SINGLE_PROJECT_ALL_TAGS",
           "SINGLE_PROJECT_ALL_CODES",
           "SINGLE_PROJECT_SELECTED_SDOCS",
+          "SINGLE_PROJECT_SELECTED_SPAN_ANNOTATIONS",
           "SINGLE_USER_ALL_DATA",
           "SINGLE_USER_ALL_MEMOS",
           "SINGLE_USER_LOGBOOK",
@@ -8177,6 +8180,25 @@
         "type": "object",
         "required": ["project_id", "export_job_type", "sdoc_ids"],
         "title": "SingleProjectSelectedSdocsParams"
+      },
+      "SingleProjectSelectedSpanAnnotationsParams": {
+        "properties": {
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "The ID of the Project to export from"
+          },
+          "export_job_type": { "const": "SINGLE_PROJECT_SELECTED_SPAN_ANNOTATIONS", "title": "Export Job Type" },
+          "span_annotation_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Span Annotation Ids",
+            "description": "IDs of the span annotations to export"
+          }
+        },
+        "type": "object",
+        "required": ["project_id", "export_job_type", "span_annotation_ids"],
+        "title": "SingleProjectSelectedSpanAnnotationsParams"
       },
       "SingleUserAllDataExportJobParams": {
         "properties": {

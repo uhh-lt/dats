@@ -10,6 +10,7 @@ import type { SingleProjectAllCodesExportJobParams } from "./SingleProjectAllCod
 import type { SingleProjectAllDataExportJobParams } from "./SingleProjectAllDataExportJobParams";
 import type { SingleProjectAllTagsExportJobParams } from "./SingleProjectAllTagsExportJobParams";
 import type { SingleProjectSelectedSdocsParams } from "./SingleProjectSelectedSdocsParams";
+import type { SingleProjectSelectedSpanAnnotationsParams } from "./SingleProjectSelectedSpanAnnotationsParams";
 import type { SingleUserAllDataExportJobParams } from "./SingleUserAllDataExportJobParams";
 import type { SingleUserAllMemosExportJobParams } from "./SingleUserAllMemosExportJobParams";
 import type { SingleUserLogbookExportJobParams } from "./SingleUserLogbookExportJobParams";
@@ -30,6 +31,7 @@ export type ExportJobParameters = {
     | SingleProjectAllTagsExportJobParams
     | SingleProjectAllCodesExportJobParams
     | SingleProjectSelectedSdocsParams
+    | SingleProjectSelectedSpanAnnotationsParams
     | SingleUserAllDataExportJobParams
     | SingleUserAllMemosExportJobParams
     | SingleUserLogbookExportJobParams
