@@ -100,6 +100,7 @@ class ExportService(metaclass=SingletonMeta):
         cls.export_method_for_job_type: Dict[ExportJobType, Callable[..., str]] = {
             ExportJobType.SINGLE_PROJECT_ALL_DATA: cls._export_all_data_from_proj,
             ExportJobType.SINGLE_PROJECT_ALL_TAGS: cls._export_all_tags_from_proj,
+            ExportJobType.SINGLE_PROJECT_ALL_CODES: cls._export_all_codes_from_proj,
             ExportJobType.SINGLE_PROJECT_SELECTED_SDOCS: cls._export_selected_sdocs_from_proj,
             ExportJobType.SINGLE_USER_ALL_DATA: cls._export_user_data_from_proj,
             ExportJobType.SINGLE_USER_ALL_MEMOS: cls._export_user_memos_from_proj,
@@ -891,6 +892,30 @@ class ExportService(metaclass=SingletonMeta):
             export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
             return export_url
         msg = f"No DocumentTags to export in Project {project_id}"
+        logger.error(msg)
+        raise NoDataToExportError(msg)
+
+    def _export_all_codes_from_proj(
+        self,
+        db: Session,
+        project_id: int,
+        export_format: ExportFormat = ExportFormat.CSV,
+    ) -> str:
+        ex_codes = self.__generate_export_dfs_for_all_codes_in_project(
+            db=db, project_id=project_id
+        )
+
+        # one file for all tags
+        if len(ex_codes) > 0:
+            export_data = pd.concat(ex_codes)
+            export_file = self.__write_export_data_to_temp_file(
+                data=export_data,
+                export_format=export_format,
+                fn=f"project_{project_id}_codes",
+            )
+            export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
+            return export_url
+        msg = f"No Codes to export in Project {project_id}"
         logger.error(msg)
         raise NoDataToExportError(msg)
 

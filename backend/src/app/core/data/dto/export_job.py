@@ -16,10 +16,10 @@ class ExportFormat(str, Enum):
 class ExportJobType(str, Enum):
     SINGLE_PROJECT_ALL_DATA = "SINGLE_PROJECT_ALL_DATA"
     SINGLE_PROJECT_ALL_TAGS = "SINGLE_PROJECT_ALL_TAGS"
+    SINGLE_PROJECT_ALL_CODES = "SINGLE_PROJECT_ALL_CODES"
     SINGLE_PROJECT_SELECTED_SDOCS = "SINGLE_PROJECT_SELECTED_SDOCS"
 
     SINGLE_USER_ALL_DATA = "SINGLE_USER_ALL_DATA"
-    SINGLE_USER_ALL_CODES = "SINGLE_USER_ALL_CODES"
     SINGLE_USER_ALL_MEMOS = "SINGLE_USER_ALL_MEMOS"
     SINGLE_USER_LOGBOOK = "SINGLE_USER_LOGBOOK"
 
@@ -40,6 +40,10 @@ class SingleProjectAllDataExportJobParams(SpecificExportJobParameters):
 
 class SingleProjectAllTagsExportJobParams(SpecificExportJobParameters):
     export_job_type: Literal[ExportJobType.SINGLE_PROJECT_ALL_TAGS]
+
+
+class SingleProjectAllCodesExportJobParams(SpecificExportJobParameters):
+    export_job_type: Literal[ExportJobType.SINGLE_PROJECT_ALL_CODES]
 
 
 class SingleProjectSelectedSdocsParams(SpecificExportJobParameters):
@@ -84,6 +88,7 @@ class ExportJobParameters(BaseModel):
     specific_export_job_parameters: Union[
         SingleProjectAllDataExportJobParams,
         SingleProjectAllTagsExportJobParams,
+        SingleProjectAllCodesExportJobParams,
         SingleProjectSelectedSdocsParams,
         SingleUserAllDataExportJobParams,
         SingleUserAllMemosExportJobParams,
