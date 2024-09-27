@@ -29,9 +29,9 @@ import { ExportJobParameters } from "../../api/openapi/models/ExportJobParameter
 import { ExportJobType } from "../../api/openapi/models/ExportJobType.ts";
 import { SingleDocAllUserAnnotationsExportJobParams } from "../../api/openapi/models/SingleDocAllUserAnnotationsExportJobParams.ts";
 import { SingleDocSingleUserAnnotationsExportJobParams } from "../../api/openapi/models/SingleDocSingleUserAnnotationsExportJobParams.ts";
+import { SingleProjectAllCodesExportJobParams } from "../../api/openapi/models/SingleProjectAllCodesExportJobParams.ts";
 import { SingleProjectAllDataExportJobParams } from "../../api/openapi/models/SingleProjectAllDataExportJobParams.ts";
 import { SingleProjectAllTagsExportJobParams } from "../../api/openapi/models/SingleProjectAllTagsExportJobParams.ts";
-import { SingleUserAllCodesExportJobParams } from "../../api/openapi/models/SingleUserAllCodesExportJobParams.ts";
 import { SingleUserAllMemosExportJobParams } from "../../api/openapi/models/SingleUserAllMemosExportJobParams.ts";
 import { SingleUserLogbookExportJobParams } from "../../api/openapi/models/SingleUserLogbookExportJobParams.ts";
 import { useAuth } from "../../auth/useAuth.ts";
@@ -44,7 +44,7 @@ const enabledComponentsPerType = new Map<string, string[]>(
   Object.entries({
     Project: [],
     Tagset: [],
-    Codeset: ["users"],
+    Codeset: [],
     Memos: ["users"],
     Logbook: ["users"],
     Annotations: ["singleUser"],
@@ -93,12 +93,11 @@ const exporterInfoToExporterJobParameters = (exporterData: ExporterInfo, project
       };
     case "Codeset":
       return {
-        export_job_type: ExportJobType.SINGLE_USER_ALL_CODES,
+        export_job_type: ExportJobType.SINGLE_PROJECT_ALL_CODES,
         specific_export_job_parameters: {
           project_id: projectId,
-          export_job_type: ExportJobType.SINGLE_USER_ALL_CODES,
-          user_id: exporterData.users[0],
-        } as SingleUserAllCodesExportJobParams,
+          export_job_type: ExportJobType.SINGLE_PROJECT_ALL_CODES,
+        } as SingleProjectAllCodesExportJobParams,
         export_format: ExportFormat.CSV,
       };
     case "Memos":

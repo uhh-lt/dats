@@ -6941,9 +6941,9 @@
             "oneOf": [
               { "$ref": "#/components/schemas/SingleProjectAllDataExportJobParams" },
               { "$ref": "#/components/schemas/SingleProjectAllTagsExportJobParams" },
+              { "$ref": "#/components/schemas/SingleProjectAllCodesExportJobParams" },
               { "$ref": "#/components/schemas/SingleProjectSelectedSdocsParams" },
               { "$ref": "#/components/schemas/SingleUserAllDataExportJobParams" },
-              { "$ref": "#/components/schemas/SingleUserAllCodesExportJobParams" },
               { "$ref": "#/components/schemas/SingleUserAllMemosExportJobParams" },
               { "$ref": "#/components/schemas/SingleUserLogbookExportJobParams" },
               { "$ref": "#/components/schemas/SingleDocAllUserAnnotationsExportJobParams" },
@@ -6956,10 +6956,10 @@
               "mapping": {
                 "SINGLE_DOC_ALL_USER_ANNOTATIONS": "#/components/schemas/SingleDocAllUserAnnotationsExportJobParams",
                 "SINGLE_DOC_SINGLE_USER_ANNOTATIONS": "#/components/schemas/SingleDocSingleUserAnnotationsExportJobParams",
+                "SINGLE_PROJECT_ALL_CODES": "#/components/schemas/SingleProjectAllCodesExportJobParams",
                 "SINGLE_PROJECT_ALL_DATA": "#/components/schemas/SingleProjectAllDataExportJobParams",
                 "SINGLE_PROJECT_ALL_TAGS": "#/components/schemas/SingleProjectAllTagsExportJobParams",
                 "SINGLE_PROJECT_SELECTED_SDOCS": "#/components/schemas/SingleProjectSelectedSdocsParams",
-                "SINGLE_USER_ALL_CODES": "#/components/schemas/SingleUserAllCodesExportJobParams",
                 "SINGLE_USER_ALL_DATA": "#/components/schemas/SingleUserAllDataExportJobParams",
                 "SINGLE_USER_ALL_MEMOS": "#/components/schemas/SingleUserAllMemosExportJobParams",
                 "SINGLE_USER_LOGBOOK": "#/components/schemas/SingleUserLogbookExportJobParams"
@@ -7004,9 +7004,9 @@
         "enum": [
           "SINGLE_PROJECT_ALL_DATA",
           "SINGLE_PROJECT_ALL_TAGS",
+          "SINGLE_PROJECT_ALL_CODES",
           "SINGLE_PROJECT_SELECTED_SDOCS",
           "SINGLE_USER_ALL_DATA",
-          "SINGLE_USER_ALL_CODES",
           "SINGLE_USER_ALL_MEMOS",
           "SINGLE_USER_LOGBOOK",
           "SINGLE_DOC_ALL_USER_ANNOTATIONS",
@@ -8120,6 +8120,19 @@
         "required": ["project_id", "export_job_type", "sdoc_id", "user_id"],
         "title": "SingleDocSingleUserAnnotationsExportJobParams"
       },
+      "SingleProjectAllCodesExportJobParams": {
+        "properties": {
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "The ID of the Project to export from"
+          },
+          "export_job_type": { "const": "SINGLE_PROJECT_ALL_CODES", "title": "Export Job Type" }
+        },
+        "type": "object",
+        "required": ["project_id", "export_job_type"],
+        "title": "SingleProjectAllCodesExportJobParams"
+      },
       "SingleProjectAllDataExportJobParams": {
         "properties": {
           "project_id": {
@@ -8164,24 +8177,6 @@
         "type": "object",
         "required": ["project_id", "export_job_type", "sdoc_ids"],
         "title": "SingleProjectSelectedSdocsParams"
-      },
-      "SingleUserAllCodesExportJobParams": {
-        "properties": {
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "The ID of the Project to export from"
-          },
-          "export_job_type": { "const": "SINGLE_USER_ALL_CODES", "title": "Export Job Type" },
-          "user_id": {
-            "type": "integer",
-            "title": "User Id",
-            "description": "The ID of the User to get the data from."
-          }
-        },
-        "type": "object",
-        "required": ["project_id", "export_job_type", "user_id"],
-        "title": "SingleUserAllCodesExportJobParams"
       },
       "SingleUserAllDataExportJobParams": {
         "properties": {
