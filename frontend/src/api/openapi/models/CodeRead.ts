@@ -28,10 +28,6 @@ export type CodeRead = {
    */
   project_id: number;
   /**
-   * User the Code belongs to
-   */
-  user_id: number;
-  /**
    * Created timestamp of the Code
    */
   created: string;
@@ -39,4 +35,8 @@ export type CodeRead = {
    * Updated timestamp of the Code
    */
   updated: string;
+  /**
+   * Is the Code a system code
+   */
+  is_system: boolean;
 };

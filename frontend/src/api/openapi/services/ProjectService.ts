@@ -270,54 +270,6 @@ export class ProjectService {
     });
   }
   /**
-   * Returns all Codes of the Project from a User
-   * @returns CodeRead Successful Response
-   * @throws ApiError
-   */
-  public static getUserCodesOfProject({
-    projId,
-    userId,
-  }: {
-    projId: number;
-    userId: number;
-  }): CancelablePromise<Array<CodeRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/project/{proj_id}/user/{user_id}/code",
-      path: {
-        proj_id: projId,
-        user_id: userId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Removes all Codes of the Project from a User. Returns the number of removed Codes.
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static removeUserCodesOfProject({
-    projId,
-    userId,
-  }: {
-    projId: number;
-    userId: number;
-  }): CancelablePromise<number> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/project/{proj_id}/user/{user_id}/code",
-      path: {
-        proj_id: projId,
-        user_id: userId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Returns all Memos of the Project from a User
    * @returns MemoRead Successful Response
    * @throws ApiError

@@ -44,9 +44,8 @@ const useGetCode = (codeId: number | null | undefined) =>
 const useCreateCode = () =>
   useMutation({
     mutationFn: CodeService.createNewCode,
-    onSuccess: (newCode, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CODES, variables.requestBody.project_id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.USER_CODES, newCode.user_id] });
     },
   });
 
@@ -65,7 +64,6 @@ const useDeleteCode = () =>
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.CODE, data.id] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CODES, data.project_id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.USER_CODES, data.user_id] });
     },
   });
 
