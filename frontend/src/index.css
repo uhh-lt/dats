@@ -10,6 +10,34 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
+.toggle-on-hover .toggle-content {
+  display: none;
+}
+
+.toggle-on-hover:hover .toggle-content {
+  display: flex;
+}
+
+.toggle-on-hover-left:hover:after {
+  position: absolute;
+  content: "";
+  top: 48px;
+  bottom: 0;
+  left: 8px;
+  border: 1px solid rgb(25, 118, 210);
+  z-index: 0;
+}
+
+.toggle-on-hover-right:hover:after {
+  position: absolute;
+  content: "";
+  top: 48px;
+  bottom: 0;
+  left: 10px;
+  border: 1px solid rgb(25, 118, 210);
+  z-index: 0;
+}
+
 .hide-button {
   position: absolute;
   top: 0;
