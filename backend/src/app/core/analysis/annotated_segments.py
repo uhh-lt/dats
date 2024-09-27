@@ -21,6 +21,7 @@ from app.core.data.orm.object_handle import ObjectHandleORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
+from app.core.data.orm.user import UserORM
 from app.core.db.sql_service import SQLService
 from app.core.filters.columns import (
     AbstractColumns,
@@ -43,6 +44,7 @@ def aggregate_ids(column: InstrumentedAttribute, label: str):
 class AnnotatedSegmentsColumns(str, AbstractColumns):
     SPAN_TEXT = "ASC_SPAN_TEXT"
     CODE_ID = "ASC_CODE_ID"
+    USER_ID = "ASC_USER_ID"
     MEMO_CONTENT = "ASC_MEMO_CONTENT"
     SOURCE_DOCUMENT_FILENAME = "ASC_SOURCE_SOURCE_DOCUMENT_FILENAME"
     DOCUMENT_TAG_ID_LIST = "ASC_DOCUMENT_DOCUMENT_TAG_ID_LIST"
@@ -59,6 +61,8 @@ class AnnotatedSegmentsColumns(str, AbstractColumns):
                 return SpanTextORM.text
             case AnnotatedSegmentsColumns.MEMO_CONTENT:
                 return MemoORM.content
+            case AnnotatedSegmentsColumns.USER_ID:
+                return UserORM.id
 
     def get_filter_operator(self) -> FilterOperator:
         match self:
@@ -72,6 +76,8 @@ class AnnotatedSegmentsColumns(str, AbstractColumns):
                 return FilterOperator.STRING
             case AnnotatedSegmentsColumns.MEMO_CONTENT:
                 return FilterOperator.STRING
+            case AnnotatedSegmentsColumns.USER_ID:
+                return FilterOperator.ID
 
     def get_filter_value_type(self) -> FilterValueType:
         match self:
@@ -85,6 +91,8 @@ class AnnotatedSegmentsColumns(str, AbstractColumns):
                 return FilterValueType.INFER_FROM_OPERATOR
             case AnnotatedSegmentsColumns.MEMO_CONTENT:
                 return FilterValueType.INFER_FROM_OPERATOR
+            case AnnotatedSegmentsColumns.USER_ID:
+                return FilterValueType.USER_ID
 
     def get_sort_column(self, **kwargs):
         match self:
@@ -98,6 +106,8 @@ class AnnotatedSegmentsColumns(str, AbstractColumns):
                 return SpanTextORM.text
             case AnnotatedSegmentsColumns.MEMO_CONTENT:
                 return MemoORM.content
+            case AnnotatedSegmentsColumns.USER_ID:
+                return UserORM.last_name
 
     def get_label(self) -> str:
         match self:
@@ -111,6 +121,8 @@ class AnnotatedSegmentsColumns(str, AbstractColumns):
                 return "Annotated text"
             case AnnotatedSegmentsColumns.MEMO_CONTENT:
                 return "Memo content"
+            case AnnotatedSegmentsColumns.USER_ID:
+                return "User"
 
 
 def find_annotated_segments_info(
@@ -152,7 +164,6 @@ def find_annotated_segments(
             .filter(
                 MemoORM.project_id == project_id,  # memo is in the correct project
                 MemoORM.user_id == user_id,  # i own the memo
-                AnnotationDocumentORM.user_id == user_id,  # i own the annotation
             )
             .subquery()
         )
@@ -174,6 +185,11 @@ def find_annotated_segments(
             .join(
                 SourceDocumentORM,
                 SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+            )
+            # join with User
+            .join(
+                UserORM,
+                UserORM.id == AnnotationDocumentORM.user_id,
             )
             # join Source Document with Document Tag
             .join(SourceDocumentORM.document_tags, isouter=True)
@@ -200,7 +216,6 @@ def find_annotated_segments(
                 MemoORM.content,
             )
             .filter(
-                AnnotationDocumentORM.user_id == user_id,
                 SourceDocumentORM.project_id == project_id,
             )
         )
