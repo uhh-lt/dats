@@ -13,7 +13,6 @@ import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../compone
 import MemoDialogAPI from "../../../components/Memo/MemoDialog/MemoDialogAPI.ts";
 import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
-import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants.ts";
 import { useReactFlowService } from "../hooks/ReactFlowService.ts";
 import { DATSNodeData } from "../types/DATSNodeData.ts";
 import { CodeNodeData } from "../types/dbnodes/CodeNodeData.ts";
@@ -258,7 +257,7 @@ function CodeNode(props: NodeProps<CodeNodeData>) {
           Expand parent code
         </MenuItem>
         <MenuItem onClick={handleContextMenuExpandChildCodes}>Expand child codes</MenuItem>
-        <MenuItem onClick={handleContextMenuCreateChildCode} disabled={code.data?.user_id === SYSTEM_USER_ID}>
+        <MenuItem onClick={handleContextMenuCreateChildCode} disabled={code.data?.is_system}>
           Create child code
         </MenuItem>
         <Divider />

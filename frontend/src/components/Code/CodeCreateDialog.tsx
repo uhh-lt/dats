@@ -11,7 +11,6 @@ import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { useAuth } from "../../auth/useAuth.ts";
 import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
-import { SYSTEM_USER_ID } from "../../utils/GlobalConstants.ts";
 import { contrastiveColors } from "../../utils/colors.ts";
 import { AnnoActions } from "../../views/annotation/annoSlice.ts";
 import FormColorPicker from "../FormInputs/FormColorPicker.tsx";
@@ -39,7 +38,7 @@ function CodeCreateDialog() {
   const codes = ProjectHooks.useGetAllCodes(parseInt(projectId));
 
   // computed
-  const parentCodes = useMemo(() => codes.data?.filter((code) => code.user_id !== SYSTEM_USER_ID) || [], [codes.data]);
+  const parentCodes = useMemo(() => codes.data?.filter((code) => !code.is_system) || [], [codes.data]);
 
   // global client state (redux)
   const onSuccessHandler = useAppSelector((state) => state.dialog.codeCreateSuccessHandler);
@@ -102,8 +101,8 @@ function CodeCreateDialog() {
             description: data.description,
             color: data.color,
             project_id: parseInt(projectId),
-            user_id: user.id,
             parent_id: pcid,
+            is_system: false,
           },
         },
         {
