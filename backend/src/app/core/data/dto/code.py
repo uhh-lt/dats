@@ -19,8 +19,8 @@ class CodeBaseDTO(BaseModel):
 # Properties for creation
 class CodeCreate(CodeBaseDTO):
     project_id: int = Field(description="Project the Code belongs to")
-    user_id: int = Field(description="User the Code belongs to")
     color: str = Field(description="Color of the Code", default_factory=get_next_color)
+    is_system: bool = Field(description="Is the Code a system code")
 
 
 # Properties for updating
@@ -37,7 +37,7 @@ class CodeUpdate(BaseModel, UpdateDTOBase):
 class CodeRead(CodeBaseDTO):
     id: int = Field(description="ID of the Code")
     project_id: int = Field(description="Project the Code belongs to")
-    user_id: int = Field(description="User the Code belongs to")
     created: datetime = Field(description="Created timestamp of the Code")
     updated: datetime = Field(description="Updated timestamp of the Code")
+    is_system: bool = Field(description="Is the Code a system code")
     model_config = ConfigDict(from_attributes=True)

@@ -11,7 +11,6 @@ if TYPE_CHECKING:
     from app.core.data.orm.action import ActionORM
     from app.core.data.orm.analysis_table import AnalysisTableORM
     from app.core.data.orm.annotation_document import AnnotationDocumentORM
-    from app.core.data.orm.code import CodeORM
     from app.core.data.orm.concept_over_time_analysis import ConceptOverTimeAnalysisORM
     from app.core.data.orm.memo import MemoORM
     from app.core.data.orm.object_handle import ObjectHandleORM
@@ -39,10 +38,6 @@ class UserORM(ORMBase):
     )
 
     # one to many
-    codes: Mapped[List["CodeORM"]] = relationship(
-        "CodeORM", back_populates="user", passive_deletes=True
-    )
-
     annotation_documents: Mapped[List["AnnotationDocumentORM"]] = relationship(
         "AnnotationDocumentORM", back_populates="user", passive_deletes=True
     )

@@ -41,31 +41,6 @@ def test_assert_is_same_user(
         authz_user.assert_is_same_user(new_user.id)
 
 
-def test_assert_object_has_same_user_id(
-    authz_user: AuthzUser,
-    code: CodeORM,
-    db: Session,
-    make_user: Callable[[], UserRead],
-):
-    # TODO test this function for other ORMs
-    authz_user.assert_object_has_same_user_id(Crud.CODE, code.id)
-
-    new_user = make_user()
-    code_orm = crud_code.read(db, code.id)
-    previous_user = code_orm.user
-    code_orm.user_id = new_user.id
-    db.commit()
-
-    with pytest.raises(ForbiddenError):
-        authz_user.assert_object_has_same_user_id(Crud.CODE, code.id)
-
-    # Without this, the code cleanup will fail
-    # due to the user cleanup removing the code through
-    # a cascade
-    code_orm.user_id = previous_user.id
-    db.commit()
-
-
 def test_assert_in_same_project_as(
     authz_user: AuthzUser,
     code: CodeORM,

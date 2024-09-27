@@ -76,7 +76,7 @@ def make_code(
             color=color,
             description=description,
             project_id=project.id,
-            user_id=user.id,
+            is_system=False,
         )
 
         db_code = crud_code.create(db=db, create_dto=code)

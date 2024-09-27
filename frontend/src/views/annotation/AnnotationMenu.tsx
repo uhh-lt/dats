@@ -201,7 +201,7 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
                     updated: "",
                     description: "",
                     project_id: -1,
-                    user_id: -1,
+                    is_system: false,
                   });
                 }
 

@@ -1,7 +1,15 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.data.orm.orm_base import ORMBase
@@ -11,12 +19,14 @@ if TYPE_CHECKING:
     from app.core.data.orm.object_handle import ObjectHandleORM
     from app.core.data.orm.project import ProjectORM
     from app.core.data.orm.span_annotation import SpanAnnotationORM
-    from app.core.data.orm.user import UserORM
 
 
 class CodeORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    is_system: Mapped[Optional[str]] = mapped_column(
+        Boolean, index=False, nullable=False
+    )
     description: Mapped[Optional[str]] = mapped_column(String, index=False)
     color: Mapped[Optional[str]] = mapped_column(String, index=False)
     created: Mapped[Optional[datetime]] = mapped_column(
@@ -30,12 +40,6 @@ class CodeORM(ORMBase):
     object_handle: Mapped["ObjectHandleORM"] = relationship(
         "ObjectHandleORM", uselist=False, back_populates="code", passive_deletes=True
     )
-
-    # many to one
-    user_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("user.id", ondelete="CASCADE"), index=True
-    )
-    user: Mapped["UserORM"] = relationship("UserORM", back_populates="codes")
 
     project_id: Mapped[int] = mapped_column(
         Integer,
@@ -63,10 +67,8 @@ class CodeORM(ORMBase):
 
     __table_args__ = (
         UniqueConstraint(
-            "user_id",
             "project_id",
             "name",
-            "parent_id",
-            name="UC_name_unique_per_user_parent_and_project",
+            name="UC_name_unique_per_project",
         ),
     )

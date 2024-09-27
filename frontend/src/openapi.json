@@ -645,60 +645,6 @@
         }
       }
     },
-    "/project/{proj_id}/user/{user_id}/code": {
-      "get": {
-        "tags": ["project"],
-        "summary": "Returns all Codes of the Project from a User",
-        "operationId": "get_user_codes_of_project",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/CodeRead" },
-                  "title": "Response Project-Get User Codes Of Project"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      },
-      "delete": {
-        "tags": ["project"],
-        "summary": "Removes all Codes of the Project from a User. Returns the number of removed Codes.",
-        "operationId": "remove_user_codes_of_project",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": { "type": "integer", "title": "Response Project-Remove User Codes Of Project" }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/project/{proj_id}/user/{user_id}/memo": {
       "get": {
         "tags": ["project"],
@@ -6549,10 +6495,10 @@
             "description": "Parent of the Code"
           },
           "project_id": { "type": "integer", "title": "Project Id", "description": "Project the Code belongs to" },
-          "user_id": { "type": "integer", "title": "User Id", "description": "User the Code belongs to" }
+          "is_system": { "type": "boolean", "title": "Is System", "description": "Is the Code a system code" }
         },
         "type": "object",
-        "required": ["name", "description", "project_id", "user_id"],
+        "required": ["name", "description", "project_id", "is_system"],
         "title": "CodeCreate"
       },
       "CodeFrequency": {
@@ -6598,7 +6544,6 @@
           },
           "id": { "type": "integer", "title": "Id", "description": "ID of the Code" },
           "project_id": { "type": "integer", "title": "Project Id", "description": "Project the Code belongs to" },
-          "user_id": { "type": "integer", "title": "User Id", "description": "User the Code belongs to" },
           "created": {
             "type": "string",
             "format": "date-time",
@@ -6610,10 +6555,11 @@
             "format": "date-time",
             "title": "Updated",
             "description": "Updated timestamp of the Code"
-          }
+          },
+          "is_system": { "type": "boolean", "title": "Is System", "description": "Is the Code a system code" }
         },
         "type": "object",
-        "required": ["name", "color", "description", "id", "project_id", "user_id", "created", "updated"],
+        "required": ["name", "color", "description", "id", "project_id", "created", "updated", "is_system"],
         "title": "CodeRead"
       },
       "CodeUpdate": {

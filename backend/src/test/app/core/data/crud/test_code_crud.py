@@ -26,7 +26,7 @@ def test_create_get_delete_code(
         color=color,
         description=description,
         project_id=project.id,
-        user_id=user.id,
+        is_system=False,
     )
 
     # create code

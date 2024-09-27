@@ -24,7 +24,7 @@ export type CodeCreate = {
    */
   project_id: number;
   /**
-   * User the Code belongs to
+   * Is the Code a system code
    */
-  user_id: number;
+  is_system: boolean;
 };

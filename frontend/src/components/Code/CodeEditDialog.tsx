@@ -11,7 +11,6 @@ import { CodeUpdate } from "../../api/openapi/models/CodeUpdate.ts";
 import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import ColorUtils from "../../utils/ColorUtils.ts";
-import { SYSTEM_USER_ID } from "../../utils/GlobalConstants.ts";
 import { AnnoActions } from "../../views/annotation/annoSlice.ts";
 import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI.ts";
 import { CRUDDialogActions } from "../dialogSlice.ts";
@@ -57,7 +56,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
         color: data.color,
       };
 
-      if (code.user_id !== SYSTEM_USER_ID) {
+      if (!code.is_system) {
         requestBody = {
           ...requestBody,
           name: data.name,
@@ -101,7 +100,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
   const handleError: SubmitErrorHandler<CodeEditValues> = (data) => console.error(data);
   const handleCodeDelete = () => {
     // disallow deleting of SYSTEM CODES
-    if (code && code.user_id !== SYSTEM_USER_ID) {
+    if (code && !code.is_system) {
       ConfirmationAPI.openConfirmationDialog({
         text: `Do you really want to delete the code "${code.name}"? This action cannot be undone!`,
         onAccept: () => {
@@ -182,11 +181,11 @@ function CodeEditDialogContent({
   });
 
   // computed
-  const parentCodes = useMemo(() => codes.filter((code) => code.user_id !== SYSTEM_USER_ID), [codes]);
+  const parentCodes = useMemo(() => codes.filter((code) => !code.is_system), [codes]);
 
   // render
   let menuItems: React.ReactNode[];
-  if (!code || code.user_id === SYSTEM_USER_ID) {
+  if (!code || code.is_system) {
     menuItems = codes
       .filter((c) => c.id !== code?.id)
       .map((code) => (
@@ -218,7 +217,7 @@ function CodeEditDialogContent({
                 error: Boolean(errors.parentCodeId),
                 helperText: <ErrorMessage errors={errors} name="parentCodeId" />,
                 variant: "filled",
-                disabled: code.user_id === SYSTEM_USER_ID,
+                disabled: code.is_system,
               }}
             >
               <MenuItem key={-1} value={-1}>
@@ -235,7 +234,7 @@ function CodeEditDialogContent({
                 error: Boolean(errors.name),
                 helperText: <ErrorMessage errors={errors} name="name" />,
                 variant: "standard",
-                disabled: code.user_id === SYSTEM_USER_ID,
+                disabled: code.is_system,
               }}
             />
             <FormColorPicker
@@ -260,7 +259,7 @@ function CodeEditDialogContent({
                 error: Boolean(errors.description),
                 helperText: <ErrorMessage errors={errors} name="description" />,
                 variant: "standard",
-                disabled: code.user_id === SYSTEM_USER_ID,
+                disabled: code.is_system,
               }}
             />
           </Stack>
@@ -274,7 +273,7 @@ function CodeEditDialogContent({
             loadingPosition="start"
             onClick={handleCodeDelete}
             sx={{ flexShrink: 0 }}
-            disabled={!code || code.user_id === SYSTEM_USER_ID}
+            disabled={!code || code.is_system}
           >
             Delete Code
           </LoadingButton>

@@ -29,7 +29,6 @@ def create_new_code(
     code: CodeCreate,
     authz_user: AuthzUser = Depends(),
 ) -> CodeRead:
-    authz_user.assert_is_same_user(code.user_id)
     authz_user.assert_in_project(code.project_id)
     if code.parent_id is not None and code.parent_id != -1:
         authz_user.assert_in_same_project_as(Crud.CODE, code.parent_id)

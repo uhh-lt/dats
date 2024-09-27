@@ -26,8 +26,6 @@ export const QueryKey = {
   USER: "user",
   // all projects of a user (by user id)
   USER_PROJECTS: "userProjects",
-  // all codes of a user (by user id)
-  USER_CODES: "userCodes",
   // all memos of a user (by user id, by project id)
   USER_MEMOS: "userMemos",
   // recently annotated sdocs of a user (by user id)

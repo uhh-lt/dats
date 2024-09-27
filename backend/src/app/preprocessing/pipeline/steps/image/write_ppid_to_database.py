@@ -50,10 +50,9 @@ def _persist_bbox__annotations(
     # convert AutoBBoxes to BBoxAnnotationCreate
     create_dtos: List[BBoxAnnotationCreateIntern] = []
     for bbox in ppid.bboxes:
-        db_code = crud_code.read_by_name_and_user_and_project(
+        db_code = crud_code.read_by_name_and_project(
             db,
             code_name=bbox.code,
-            user_id=SYSTEM_USER_ID,
             proj_id=ppid.project_id,
         )
 
@@ -65,7 +64,7 @@ def _persist_bbox__annotations(
                 color=get_next_color(),
                 description=bbox.code,
                 project_id=ppid.project_id,
-                user_id=SYSTEM_USER_ID,
+                is_system=True,
             )
             db_code = crud_code.create(db, create_dto=create_dto)
 
