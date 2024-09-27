@@ -18,6 +18,9 @@ class ExportJobType(str, Enum):
     SINGLE_PROJECT_ALL_TAGS = "SINGLE_PROJECT_ALL_TAGS"
     SINGLE_PROJECT_ALL_CODES = "SINGLE_PROJECT_ALL_CODES"
     SINGLE_PROJECT_SELECTED_SDOCS = "SINGLE_PROJECT_SELECTED_SDOCS"
+    SINGLE_PROJECT_SELECTED_SPAN_ANNOTATIONS = (
+        "SINGLE_PROJECT_SELECTED_SPAN_ANNOTATIONS"
+    )
 
     SINGLE_USER_ALL_DATA = "SINGLE_USER_ALL_DATA"
     SINGLE_USER_ALL_MEMOS = "SINGLE_USER_ALL_MEMOS"
@@ -49,6 +52,13 @@ class SingleProjectAllCodesExportJobParams(SpecificExportJobParameters):
 class SingleProjectSelectedSdocsParams(SpecificExportJobParameters):
     export_job_type: Literal[ExportJobType.SINGLE_PROJECT_SELECTED_SDOCS]
     sdoc_ids: List[int] = Field(description="IDs of the source documents to export")
+
+
+class SingleProjectSelectedSpanAnnotationsParams(SpecificExportJobParameters):
+    export_job_type: Literal[ExportJobType.SINGLE_PROJECT_SELECTED_SPAN_ANNOTATIONS]
+    span_annotation_ids: List[int] = Field(
+        description="IDs of the span annotations to export"
+    )
 
 
 class SingleUserAllDataExportJobParams(SpecificExportJobParameters):
@@ -90,6 +100,7 @@ class ExportJobParameters(BaseModel):
         SingleProjectAllTagsExportJobParams,
         SingleProjectAllCodesExportJobParams,
         SingleProjectSelectedSdocsParams,
+        SingleProjectSelectedSpanAnnotationsParams,
         SingleUserAllDataExportJobParams,
         SingleUserAllMemosExportJobParams,
         SingleUserLogbookExportJobParams,
