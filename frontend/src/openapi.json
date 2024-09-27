@@ -5787,6 +5787,7 @@
         "enum": [
           "ASC_SPAN_TEXT",
           "ASC_CODE_ID",
+          "ASC_USER_ID",
           "ASC_MEMO_CONTENT",
           "ASC_SOURCE_SOURCE_DOCUMENT_FILENAME",
           "ASC_DOCUMENT_DOCUMENT_TAG_ID_LIST"
