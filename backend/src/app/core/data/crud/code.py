@@ -5,7 +5,6 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
-from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.action import ActionType
 from app.core.data.dto.code import CodeCreate, CodeRead, CodeUpdate
 from app.core.data.orm.code import CodeORM
@@ -49,15 +48,14 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
                     color=get_next_color(),
                     description=code_dict[code_name]["desc"],
                     project_id=proj_id,
-                    user_id=SYSTEM_USER_ID,
                     parent_id=parent_code_id,
+                    is_system=True,
                 )
 
-                if not self.exists_by_name_and_user_and_project(
+                if not self.exists_by_name_and_project(
                     db,
                     code_name=create_dto.name,
                     proj_id=create_dto.project_id,
-                    user_id=create_dto.user_id,
                 ):
                     db_code = self.create(db=db, create_dto=create_dto)
                     created.append(db_code)
@@ -76,41 +74,10 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
 
     def read_by_name_and_project(
         self, db: Session, code_name: str, proj_id: int
-    ) -> List[CodeORM]:
-        return (
-            db.query(self.model)
-            .filter(self.model.name == code_name, self.model.project_id == proj_id)
-            .all()
-        )
-
-    def read_by_user_and_project(
-        self, db: Session, user_id: int, proj_id: int
-    ) -> List[CodeORM]:
-        return (
-            db.query(self.model)
-            .filter(self.model.user_id == user_id, self.model.project_id == proj_id)
-            .all()
-        )
-
-    def read_by_name_and_user(
-        self, db: Session, code_name: str, user_id: int
-    ) -> List[CodeORM]:
-        return (
-            db.query(self.model)
-            .filter(self.model.name == code_name, self.model.user_id == user_id)
-            .all()
-        )
-
-    def read_by_name_and_user_and_project(
-        self, db: Session, code_name: str, user_id: int, proj_id: int
     ) -> Optional[CodeORM]:
         return (
             db.query(self.model)
-            .filter(
-                self.model.name == code_name,
-                self.model.user_id == user_id,
-                self.model.project_id == proj_id,
-            )
+            .filter(self.model.name == code_name, self.model.project_id == proj_id)
             .first()
         )
 
@@ -130,59 +97,10 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
             is not None
         )
 
-    def exists_by_name_and_user(
-        self, db: Session, *, code_name: str, user_id: int
-    ) -> bool:
-        return (
-            db.query(self.model.id)
-            .filter(self.model.name == code_name, self.model.user_id == user_id)
-            .first()
-            is not None
-        )
-
-    def exists_by_name_and_user_and_project(
-        self, db: Session, *, code_name: str, user_id: int, proj_id: int
-    ) -> bool:
-        return (
-            db.query(self.model.id)
-            .filter(
-                self.model.name == code_name,
-                self.model.user_id == user_id,
-                self.model.project_id == proj_id,
-            )
-            .first()
-            is not None
-        )
-
     def update(self, db: Session, *, id: int, update_dto: CodeUpdate) -> CodeORM | None:
         if update_dto.parent_id == -1:
             update_dto.parent_id = None
         return super().update(db, id=id, update_dto=update_dto)
-
-    def remove_by_user_and_project(
-        self, db: Session, user_id: int, proj_id: int
-    ) -> List[int]:
-        # find all codes to be removed
-        query = db.query(self.model).filter(
-            self.model.user_id == user_id, self.model.project_id == proj_id
-        )
-        removed_orms = query.all()
-        ids = [removed_orm.id for removed_orm in removed_orms]
-
-        # create actions
-        for removed_orm in removed_orms:
-            before_state = self._get_action_state_from_orm(removed_orm)
-            self._create_action(
-                db_obj=removed_orm,
-                action_type=ActionType.DELETE,
-                before_state=before_state,
-            )
-
-        # delete the codes
-        query.delete()
-        db.commit()
-
-        return ids
 
     def remove_by_project(self, db: Session, *, proj_id: int) -> List[int]:
         # find all codes to be removed
@@ -204,9 +122,6 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         db.commit()
 
         return ids
-
-    def _get_action_user_id_from_orm(self, db_obj: CodeORM) -> Optional[int]:
-        return db_obj.user_id
 
     def _get_action_state_from_orm(self, db_obj: CodeORM) -> Optional[str]:
         return srsly.json_dumps(

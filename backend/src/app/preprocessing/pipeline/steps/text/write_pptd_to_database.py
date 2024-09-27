@@ -133,10 +133,9 @@ def _persist_span_annotations(
         # FIXME Flo: hacky solution for German NER model, which only contains ('LOC', 'MISC', 'ORG', 'PER')
         if code_name == "PER":
             code_name = "PERSON"
-        db_code = crud_code.read_by_name_and_user_and_project(
+        db_code = crud_code.read_by_name_and_project(
             db,
             code_name=code_name,
-            user_id=SYSTEM_USER_ID,
             proj_id=pptd.project_id,
         )
         if not db_code:
@@ -147,7 +146,7 @@ def _persist_span_annotations(
                 color=get_next_color(),
                 description=code_name,
                 project_id=pptd.project_id,
-                user_id=SYSTEM_USER_ID,
+                is_system=True,
             )
             db_code = crud_code.create(db, create_dto=create_dto)
 

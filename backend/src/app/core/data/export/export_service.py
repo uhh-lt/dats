@@ -102,7 +102,6 @@ class ExportService(metaclass=SingletonMeta):
             ExportJobType.SINGLE_PROJECT_ALL_TAGS: cls._export_all_tags_from_proj,
             ExportJobType.SINGLE_PROJECT_SELECTED_SDOCS: cls._export_selected_sdocs_from_proj,
             ExportJobType.SINGLE_USER_ALL_DATA: cls._export_user_data_from_proj,
-            ExportJobType.SINGLE_USER_ALL_CODES: cls._export_user_codes_from_proj,
             ExportJobType.SINGLE_USER_ALL_MEMOS: cls._export_user_memos_from_proj,
             ExportJobType.SINGLE_USER_LOGBOOK: cls._export_user_logbook_from_proj,
             ExportJobType.SINGLE_DOC_ALL_USER_ANNOTATIONS: cls._export_all_user_annotations_from_sdoc,
@@ -409,7 +408,7 @@ class ExportService(metaclass=SingletonMeta):
 
         return metadata_dfs
 
-    def __generate_export_df_for_document_tags(
+    def __generate_export_df_for_document_tag(
         self, db: Session, tag_id: int
     ) -> pd.DataFrame:
         logger.info(f"Exporting DocumentTag {tag_id} ...")
@@ -458,13 +457,23 @@ class ExportService(metaclass=SingletonMeta):
 
         return logbook_dto.content
 
+    def __generate_export_dfs_for_all_codes_in_project(
+        self, db: Session, project_id: int
+    ) -> List[pd.DataFrame]:
+        codes = crud_project.read(db=db, id=project_id).codes
+        exported_codes: List[pd.DataFrame] = []
+        for code in codes:
+            export_data = self.__generate_export_df_for_code(db=db, code_id=code.id)
+            exported_codes.append(export_data)
+        return exported_codes
+
     def __generate_export_dfs_for_all_document_tags_in_project(
         self, db: Session, project_id: int
     ) -> List[pd.DataFrame]:
         tags = crud_project.read(db=db, id=project_id).document_tags
         exported_tags: List[pd.DataFrame] = []
         for tag in tags:
-            export_data = self.__generate_export_df_for_document_tags(
+            export_data = self.__generate_export_df_for_document_tag(
                 db=db, tag_id=tag.id
             )
             exported_tags.append(export_data)
@@ -474,7 +483,6 @@ class ExportService(metaclass=SingletonMeta):
         logger.info(f"Exporting Code {code_id} ...")
 
         code = crud_code.read(db=db, id=code_id)
-        user_dto = UserRead.model_validate(code.user)
         code_dto = CodeRead.model_validate(code)
         parent_code_id = code_dto.parent_id
         parent_code_name = None
@@ -489,9 +497,6 @@ class ExportService(metaclass=SingletonMeta):
             "created": [code_dto.created],
             "parent_code_id": [parent_code_id],
             "parent_code_name": [parent_code_name],
-            "created_by_user_id": [user_dto.id],
-            "created_by_user_first_name": [user_dto.first_name],
-            "created_by_user_last_name": [user_dto.last_name],
         }
 
         df = pd.DataFrame(data=data)
@@ -502,7 +507,7 @@ class ExportService(metaclass=SingletonMeta):
         db: Session,
         user_id: int,
         project_id: int,
-    ) -> Tuple[List[pd.DataFrame], List[pd.DataFrame], List[pd.DataFrame]]:
+    ) -> Tuple[List[pd.DataFrame], List[pd.DataFrame]]:
         logger.info(f"Exporting data of User {user_id} in Project {project_id} ...")
         user = crud_user.read(db=db, id=user_id)
 
@@ -522,15 +527,7 @@ class ExportService(metaclass=SingletonMeta):
                 export_data = self.__generate_export_df_for_memo(db=db, memo_id=memo.id)
                 exported_memos.append(export_data)
 
-        # all Codes
-        codes = user.codes
-        exported_codes: List[pd.DataFrame] = []
-        for code in codes:
-            if code.project_id == project_id:
-                export_data = self.__generate_export_df_for_code(db=db, code_id=code.id)
-                exported_codes.append(export_data)
-
-        return exported_adocs, exported_memos, exported_codes
+        return exported_adocs, exported_memos
 
     def _export_user_annotations_from_sdoc(
         self,
@@ -662,26 +659,6 @@ class ExportService(metaclass=SingletonMeta):
         logger.error(msg)
         raise NoDataToExportError(msg)
 
-    def _export_user_codes_from_proj(
-        self,
-        db: Session,
-        user_id: int,
-        project_id: int,
-        export_format: ExportFormat = ExportFormat.CSV,
-    ) -> str:
-        user = crud_user.read(db=db, id=user_id)
-        code_dfs = [
-            self.__generate_export_df_for_code(db=db, code_id=code.id)
-            for code in user.codes
-            if code.project_id == project_id
-        ]
-        codes = pd.concat(code_dfs)
-        export_file = self.__write_export_data_to_temp_file(
-            codes, export_format=export_format, fn=f"user_{user_id}_codes"
-        )
-        export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
-        return export_url
-
     def _export_user_data_from_proj(
         self,
         db: Session,
@@ -692,7 +669,6 @@ class ExportService(metaclass=SingletonMeta):
         (
             exported_adocs,
             exported_memos,
-            exported_codes,
         ) = self.__generate_export_dfs_for_user_data_in_project(
             db=db, user_id=user_id, project_id=project_id
         )
@@ -726,19 +702,6 @@ class ExportService(metaclass=SingletonMeta):
             exported_files.append(export_file)
         else:
             msg = f"No Memos to export for User {user_id} in Project {project_id}"
-            logger.warning(msg)
-
-        # one file for all codes
-        if len(exported_codes) > 0:
-            exported_code_df = pd.concat(exported_codes)
-            export_file = self.__write_export_data_to_temp_file(
-                data=exported_code_df,
-                export_format=export_format,
-                fn=f"user_{user_id}_code_export",
-            )
-            exported_files.append(export_file)
-        else:
-            msg = f"No Codes to export for User {user_id} in Project {project_id}"
             logger.warning(msg)
 
         # one file for all tags
@@ -779,14 +742,12 @@ class ExportService(metaclass=SingletonMeta):
 
         exported_adocs: Dict[int, List[pd.DataFrame]] = dict()
         exported_memos: List[pd.DataFrame] = []
-        exported_codes: List[pd.DataFrame] = []
         exported_logbooks: List[Tuple[int, str]] = []
 
         for user in users:
             (
                 ex_adocs,
                 ex_memos,
-                ex_codes,
             ) = self.__generate_export_dfs_for_user_data_in_project(
                 db=db, user_id=user.id, project_id=project_id
             )
@@ -804,10 +765,6 @@ class ExportService(metaclass=SingletonMeta):
                     ),
                 )
             )
-
-            # one code df per user
-            if len(ex_codes) > 0:
-                exported_codes.append(pd.concat(ex_codes))
 
             # group  the adocs by sdoc id and merge them later
             for adoc_df in ex_adocs:
@@ -847,12 +804,16 @@ class ExportService(metaclass=SingletonMeta):
             logbook_file.write_text(logbook_content)
             exported_files.append(logbook_file)
 
-        # write codes to files
-        for code_df in exported_codes:
+        # write all tags to one file
+        exported_tags = self.__generate_export_dfs_for_all_codes_in_project(
+            db=db, project_id=project_id
+        )
+        if len(exported_tags) > 0:
+            exported_tag_df = pd.concat(exported_tags)
             export_file = self.__write_export_data_to_temp_file(
-                data=code_df,
+                data=exported_tag_df,
                 export_format=export_format,
-                fn=f"user_{code_df.iloc[0].created_by_user_id}_code_export",
+                fn=f"project_{project_id}_codes_export",
             )
             exported_files.append(export_file)
 

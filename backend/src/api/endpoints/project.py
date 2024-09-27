@@ -290,45 +290,6 @@ def delete_project_tags(
 
 
 @router.get(
-    "/{proj_id}/user/{user_id}/code",
-    response_model=List[CodeRead],
-    summary="Returns all Codes of the Project from a User",
-)
-def get_user_codes_of_project(
-    *,
-    proj_id: int,
-    user_id: int,
-    db: Session = Depends(get_db_session),
-    authz_user: AuthzUser = Depends(),
-) -> List[CodeRead]:
-    authz_user.assert_in_project(proj_id)
-
-    return [
-        CodeRead.model_validate(code_db_obj)
-        for code_db_obj in crud_code.read_by_user_and_project(
-            db=db, user_id=user_id, proj_id=proj_id
-        )
-    ]
-
-
-@router.delete(
-    "/{proj_id}/user/{user_id}/code",
-    response_model=int,
-    summary="Removes all Codes of the Project from a User. Returns the number of removed Codes.",
-)
-def remove_user_codes_of_project(
-    *,
-    proj_id: int,
-    user_id: int,
-    db: Session = Depends(get_db_session),
-    authz_user: AuthzUser = Depends(),
-) -> List[int]:
-    authz_user.assert_in_project(proj_id)
-
-    return crud_code.remove_by_user_and_project(db=db, user_id=user_id, proj_id=proj_id)
-
-
-@router.get(
     "/{proj_id}/user/{user_id}/memo",
     response_model=List[MemoRead],
     summary="Returns all Memos of the Project from a User",
