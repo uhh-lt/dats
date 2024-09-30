@@ -2114,6 +2114,60 @@
         }
       }
     },
+    "/span/bulk/update": {
+      "patch": {
+        "tags": ["spanAnnotation"],
+        "summary": "Updates SpanAnnotations in Bulk",
+        "operationId": "update_span_annotations_bulk",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "resolve",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "title": "Resolve Code",
+              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
+              "default": true
+            },
+            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/SpanAnnotationUpdateBulk" },
+                "title": "Spans"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    { "type": "array", "items": { "$ref": "#/components/schemas/SpanAnnotationRead" } },
+                    { "type": "array", "items": { "$ref": "#/components/schemas/SpanAnnotationReadResolved" } }
+                  ],
+                  "title": "Response Spanannotation-Update Span Annotations Bulk"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/span/{span_id}/code": {
       "get": {
         "tags": ["spanAnnotation"],
@@ -8902,6 +8956,19 @@
         "type": "object",
         "required": ["code_id"],
         "title": "SpanAnnotationUpdate"
+      },
+      "SpanAnnotationUpdateBulk": {
+        "properties": {
+          "span_annotation_id": {
+            "type": "integer",
+            "title": "Span Annotation Id",
+            "description": "ID of the SpanAnnotation"
+          },
+          "code_id": { "type": "integer", "title": "Code Id", "description": "Code the SpanAnnotation refers to" }
+        },
+        "type": "object",
+        "required": ["span_annotation_id", "code_id"],
+        "title": "SpanAnnotationUpdateBulk"
       },
       "SpanEntityStat": {
         "properties": {
