@@ -1,11 +1,13 @@
 import { Card, CardHeader, Grid, Portal, Stack, Typography } from "@mui/material";
 import { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { DocType } from "../../../api/openapi/models/DocType.ts";
 import useComputeCodeTree from "../../../components/Code/CodeExplorer/useComputeCodeTree.ts";
 import UserSelectorMulti from "../../../components/User/UserSelectorMulti.tsx";
 import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
 import CodeFrequencyView from "./CodeFrequencyView.tsx";
 import CodeOccurrenceTable from "./CodeOccurrenceTable.tsx";
+import DocTypeSelectorMulti from "./DocTypeSelectorMulti.tsx";
 
 function CodeFrequencyAnalysis() {
   const appBarContainerRef = useContext(AppBarContext);
@@ -14,13 +16,14 @@ function CodeFrequencyAnalysis() {
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // global client state (react-redux)
-  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
 
   // custom hook
   const { codeTree, allCodes } = useComputeCodeTree();
 
   // local state
   const [selectedCode, setSelectedCode] = useState<number>();
+  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+  const [selectedDocTypes, setSelectedDocTypes] = useState<DocType[]>([]);
 
   // effects
   // reset selected code when selectedUserIds change
@@ -39,23 +42,33 @@ function CodeFrequencyAnalysis() {
           </Portal>
           <Grid item xs={6} className="h100" sx={{ overflowY: "auto", pr: 1, py: 1 }}>
             <Stack spacing={2}>
-              <UserSelectorMulti
-                projectId={projectId}
-                userIds={selectedUserIds}
-                onUserIdChange={setSelectedUserIds}
-                title="User(s)"
-                fullWidth
-                sx={{ bgcolor: "background.paper" }}
-              />
-              {selectedUserIds.length === 0 ? (
+              <Stack direction="row" gap={2}>
+                <UserSelectorMulti
+                  projectId={projectId}
+                  userIds={selectedUserIds}
+                  onUserIdChange={setSelectedUserIds}
+                  title="User(s)"
+                  fullWidth
+                  sx={{ bgcolor: "background.paper" }}
+                />
+                <DocTypeSelectorMulti
+                  docTypes={selectedDocTypes}
+                  onDocTypeChange={setSelectedDocTypes}
+                  title="Modalities"
+                  fullWidth
+                  sx={{ bgcolor: "background.paper" }}
+                />
+              </Stack>
+              {selectedUserIds.length === 0 || selectedDocTypes.length === 0 ? (
                 <Card variant="outlined">
-                  <CardHeader title={`Select user(s) above!`} />
+                  <CardHeader title={`Select user(s) and modalities above!`} />
                 </Card>
               ) : (
                 <CodeFrequencyView
                   key={selectedUserIds.join(",")} // re-render when selectedUserIds change
                   projectId={projectId}
                   userIds={selectedUserIds}
+                  docTypes={selectedDocTypes}
                   data={codeTree}
                   setSelectedCode={setSelectedCode}
                 />

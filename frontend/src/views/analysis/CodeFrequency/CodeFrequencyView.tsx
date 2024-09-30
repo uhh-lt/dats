@@ -19,6 +19,7 @@ import { Node } from "ts-tree-structure";
 import AnalysisHooks from "../../../api/AnalysisHooks.ts";
 import { CodeFrequency } from "../../../api/openapi/models/CodeFrequency.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
+import { DocType } from "../../../api/openapi/models/DocType.ts";
 import { IDataTree } from "../../../components/TreeExplorer/IDataTree.ts";
 
 const renderCustomizedLabel = (data: { value: string; percent: number }) => {
@@ -28,11 +29,12 @@ const renderCustomizedLabel = (data: { value: string; percent: number }) => {
 interface CodeFrequencyViewProps {
   projectId: number;
   userIds: number[];
+  docTypes: DocType[];
   setSelectedCode: Dispatch<SetStateAction<number | undefined>>;
   data: Node<IDataTree>;
 }
 
-function CodeFrequencyView({ projectId, userIds, data, setSelectedCode }: CodeFrequencyViewProps) {
+function CodeFrequencyView({ projectId, userIds, docTypes, data, setSelectedCode }: CodeFrequencyViewProps) {
   // local state
   const [selectedData, setSelectedData] = useState<Node<IDataTree>>();
   const [showPieChart, toggleShowPieChart] = React.useReducer((previous) => !previous, false);
@@ -42,6 +44,7 @@ function CodeFrequencyView({ projectId, userIds, data, setSelectedCode }: CodeFr
     projectId,
     userIds,
     data.children.map((node) => node.model.data.id) || [],
+    docTypes,
   );
 
   // computed
@@ -154,6 +157,7 @@ function CodeFrequencyView({ projectId, userIds, data, setSelectedCode }: CodeFr
         <CodeFrequencyView
           projectId={projectId}
           userIds={userIds}
+          docTypes={docTypes}
           data={selectedData}
           setSelectedCode={setSelectedCode}
         />
