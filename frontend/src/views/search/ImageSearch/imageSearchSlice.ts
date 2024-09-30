@@ -1,21 +1,26 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
+import { ProjectActions } from "../../../components/Project/projectSlice.ts";
 
 interface ImageSearchState {
+  // project state:
   searchQuery: string | number;
-  threshold: number;
-  topK: number;
   selectedDocumentIds: number[];
   selectedDocumentId: number | undefined;
+  // app state:
+  threshold: number;
+  topK: number;
 }
 
 const initialState: ImageSearchState = {
+  // project state:
   searchQuery: "",
-  threshold: 0.0,
-  topK: 10,
   selectedDocumentIds: [],
   selectedDocumentId: undefined,
+  // app state:
+  threshold: 0.0,
+  topK: 10,
 };
 
 export const imageSearchSlice = createSlice({
@@ -79,6 +84,14 @@ export const imageSearchSlice = createSlice({
     onChangeTopK: (state, action: PayloadAction<number>) => {
       state.topK = action.payload;
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(ProjectActions.changeProject, (state) => {
+      console.log("Project changed! Resetting 'imageSearch' state.");
+      state.searchQuery = initialState.searchQuery;
+      state.selectedDocumentIds = initialState.selectedDocumentIds;
+      state.selectedDocumentId = initialState.selectedDocumentId;
+    });
   },
 });
 

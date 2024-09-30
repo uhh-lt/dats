@@ -15,15 +15,16 @@ import {
   UseAutocompleteProps,
 } from "@mui/material";
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from "react";
-import CodeHooks from "../../api/CodeHooks.ts";
-import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
-import { BBoxAnnotationReadResolved } from "../../api/openapi/models/BBoxAnnotationReadResolved.ts";
-import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
-import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
-import { CRUDDialogActions } from "../../components/dialogSlice.ts";
-import MemoButton from "../../components/Memo/MemoButton.tsx";
-import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
-import { ICode } from "./ICode.ts";
+import CodeHooks from "../../../api/CodeHooks.ts";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
+import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
+import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
+import MemoButton from "../../../components/Memo/MemoButton.tsx";
+import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
+import { ICode } from "../ICode.ts";
+import { useComputeCodesForSelection } from "./useComputeCodesForSelection.ts";
 
 interface ICodeFilter extends CodeRead {
   title: string;
@@ -48,7 +49,7 @@ export interface CodeSelectorHandle {
 const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
   ({ onClose, onAdd, onEdit, onDelete }, ref) => {
     // global client state (redux)
-    const codes = useAppSelector((state) => state.annotations.codesForSelection);
+    const codes = useComputeCodesForSelection();
     const dispatch = useAppDispatch();
 
     // local client state

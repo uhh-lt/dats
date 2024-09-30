@@ -9,7 +9,7 @@ import {
 } from "material-react-table";
 
 export interface TableState {
-  searchQuery: string;
+  searchQuery?: string;
   rowSelectionModel: MRT_RowSelectionState;
   paginationModel: MRT_PaginationState;
   sortingModel: MRT_SortingState;
@@ -19,6 +19,7 @@ export interface TableState {
 }
 
 export const initialTableState: TableState = {
+  // project state:
   searchQuery: "",
   rowSelectionModel: {},
   paginationModel: {
@@ -28,12 +29,13 @@ export const initialTableState: TableState = {
   sortingModel: [],
   columnVisibilityModel: {},
   columnSizingModel: {},
+  // app state:
   gridDensityModel: "comfortable",
 };
 
 export const tableReducer = {
   // query
-  onSearchQueryChange: (state: Draft<TableState>, action: PayloadAction<string>) => {
+  onSearchQueryChange: (state: Draft<TableState>, action: PayloadAction<string | undefined>) => {
     state.searchQuery = action.payload;
   },
   // selection
@@ -63,6 +65,16 @@ export const tableReducer = {
   onGridDensityChange: (state: Draft<TableState>, action: PayloadAction<MRT_DensityState>) => {
     state.gridDensityModel = action.payload;
   },
+};
+
+// reset table state
+export const resetProjectTableState = (state: Draft<TableState>) => {
+  state.searchQuery = initialTableState.searchQuery;
+  state.rowSelectionModel = initialTableState.rowSelectionModel;
+  state.paginationModel = initialTableState.paginationModel;
+  state.sortingModel = initialTableState.sortingModel;
+  state.columnVisibilityModel = initialTableState.columnVisibilityModel;
+  state.columnSizingModel = initialTableState.columnSizingModel;
 };
 
 // selectors

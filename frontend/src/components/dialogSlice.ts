@@ -171,7 +171,6 @@ export const dialogSlice = createSlice({
     },
     closeSnackbar: (state) => {
       state.isSnackbarOpen = false;
-      state.snackbarData = initialState.snackbarData;
     },
     openProjectSettings: (state) => {
       state.isProjectSettingsOpen = true;

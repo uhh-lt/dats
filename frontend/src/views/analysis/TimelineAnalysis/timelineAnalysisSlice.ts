@@ -5,7 +5,14 @@ import { LogicalOperator } from "../../../api/openapi/models/LogicalOperator.ts"
 import { StringOperator } from "../../../api/openapi/models/StringOperator.ts";
 import { TimelineAnalysisColumns } from "../../../api/openapi/models/TimelineAnalysisColumns.ts";
 import { TimelineAnalysisConcept_Output } from "../../../api/openapi/models/TimelineAnalysisConcept_Output.ts";
-import { createInitialFilterState, filterReducer, FilterState } from "../../../components/FilterDialog/filterSlice.ts";
+import {
+  createInitialFilterState,
+  filterReducer,
+  FilterState,
+  resetProjectFilterState,
+} from "../../../components/FilterDialog/filterSlice.ts";
+import { MyFilterExpression } from "../../../components/FilterDialog/filterUtils.ts";
+import { ProjectActions } from "../../../components/Project/projectSlice.ts";
 
 export interface TimelineAnalysisConceptOLD {
   id: string;
@@ -17,6 +24,7 @@ export interface TimelineAnalysisConceptOLD {
 }
 
 export interface TimelineAnalysisState {
+  // project state:
   selectedUserIds: number[] | undefined;
   groupBy: DateGroupBy;
   projectMetadataId: number;
@@ -30,13 +38,16 @@ export interface TimelineAnalysisState {
   isBarPlot: boolean;
 }
 
+const defaultFilterExpression: MyFilterExpression = {
+  id: uuidv4(),
+  column: TimelineAnalysisColumns.TA_SOURCE_DOCUMENT_FILENAME,
+  operator: StringOperator.STRING_CONTAINS,
+  value: "",
+};
+
 const initialState: FilterState & TimelineAnalysisState = {
-  ...createInitialFilterState({
-    id: uuidv4(),
-    column: TimelineAnalysisColumns.TA_SOURCE_DOCUMENT_FILENAME,
-    operator: StringOperator.STRING_CONTAINS,
-    value: "",
-  }),
+  ...createInitialFilterState(defaultFilterExpression),
+  // project state:
   selectedUserIds: undefined,
   groupBy: DateGroupBy.YEAR,
   projectMetadataId: -1,
@@ -140,6 +151,23 @@ export const timelineAnalysisSlice = createSlice({
     onTogglePlotType: (state) => {
       state.isBarPlot = !state.isBarPlot;
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(ProjectActions.changeProject, (state) => {
+      console.log("Project changed! Resetting 'timelineAnalysis' state.");
+      resetProjectFilterState(state, defaultFilterExpression);
+      state.selectedUserIds = initialState.selectedUserIds;
+      state.groupBy = initialState.groupBy;
+      state.projectMetadataId = initialState.projectMetadataId;
+      state.metadataCheckerOpen = initialState.metadataCheckerOpen;
+      state.conceptEditorOpen = initialState.conceptEditorOpen;
+      state.currentConcept = initialState.currentConcept;
+      state.concepts = initialState.concepts;
+      state.provenanceDate = initialState.provenanceDate;
+      state.provenanceConcept = initialState.provenanceConcept;
+      state.resultType = initialState.resultType;
+      state.isBarPlot = initialState.isBarPlot;
+    });
   },
 });
 

@@ -88,7 +88,7 @@ function SentenceSimilaritySearch() {
         requestBody: {
           filter: filter as MyFilter<SearchColumns>,
           proj_id: projectId,
-          query: searchQuery,
+          query: searchQuery || "",
           threshold: threshold,
           top_k: topK,
         },

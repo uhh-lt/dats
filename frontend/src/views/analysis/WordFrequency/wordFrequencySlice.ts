@@ -2,17 +2,27 @@ import { createSlice } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
 import { StringOperator } from "../../../api/openapi/models/StringOperator.ts";
 import { WordFrequencyColumns } from "../../../api/openapi/models/WordFrequencyColumns.ts";
-import { FilterState, createInitialFilterState, filterReducer } from "../../../components/FilterDialog/filterSlice.ts";
-import { TableState, initialTableState, tableReducer } from "../../../components/tableSlice.ts";
+import {
+  FilterState,
+  createInitialFilterState,
+  filterReducer,
+  resetProjectFilterState,
+} from "../../../components/FilterDialog/filterSlice.ts";
+import { MyFilterExpression } from "../../../components/FilterDialog/filterUtils.ts";
+import { ProjectActions } from "../../../components/Project/projectSlice.ts";
+import { TableState, initialTableState, resetProjectTableState, tableReducer } from "../../../components/tableSlice.ts";
+
+const defaultFilterExpression: MyFilterExpression = {
+  id: uuidv4(),
+  column: WordFrequencyColumns.WF_SOURCE_DOCUMENT_FILENAME,
+  operator: StringOperator.STRING_CONTAINS,
+  value: "",
+};
 
 const initialState: FilterState & TableState = {
-  ...createInitialFilterState({
-    id: uuidv4(),
-    column: WordFrequencyColumns.WF_SOURCE_DOCUMENT_FILENAME,
-    operator: StringOperator.STRING_CONTAINS,
-    value: "",
-  }),
+  ...createInitialFilterState(defaultFilterExpression),
   ...initialTableState,
+  // project state:
   // override initial table state
   sortingModel: [
     {
@@ -31,6 +41,12 @@ export const WordFrequencySlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(ProjectActions.changeProject, (state) => {
+        console.log("Project changed! Resetting 'wordFrequency' state.");
+        resetProjectFilterState(state, defaultFilterExpression);
+        resetProjectTableState(state);
+        state.sortingModel = initialState.sortingModel;
+      })
       .addCase(WordFrequencyActions.init, (state, action) => {
         state.columnVisibilityModel = Object.values(action.payload.columnInfoMap).reduce((acc, column) => {
           if (!column.column) return acc;

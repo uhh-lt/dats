@@ -196,7 +196,7 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
     onColumnSizingChange: setColumnSizingModel,
     // detail (highlights)
     renderDetailPanel:
-      searchQuery.trim().length > 0
+      searchQuery && searchQuery.trim().length > 0 && hits.length > 0
         ? ({ row }) =>
             row.original.highlights ? (
               <Box className="search-result-highlight">
