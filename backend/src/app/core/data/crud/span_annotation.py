@@ -14,6 +14,7 @@ from app.core.data.dto.span_annotation import (
     SpanAnnotationCreateIntern,
     SpanAnnotationReadResolved,
     SpanAnnotationUpdate,
+    SpanAnnotationUpdateBulk,
 )
 from app.core.data.dto.span_text import SpanTextCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
@@ -201,6 +202,18 @@ class CRUDSpanAnnotation(
         crud_adoc.update_timestamp(db=db, id=span_anno.annotation_document_id)
 
         return span_anno
+
+    def update_bulk(
+        self, db: Session, *, update_dtos: List[SpanAnnotationUpdateBulk]
+    ) -> List[SpanAnnotationORM]:
+        return [
+            self.update(
+                db,
+                id=update_dto.span_annotation_id,
+                update_dto=SpanAnnotationUpdate(code_id=update_dto.code_id),
+            )
+            for update_dto in update_dtos
+        ]
 
     def remove(self, db: Session, *, id: int) -> SpanAnnotationORM:
         span_anno = super().remove(db, id=id)

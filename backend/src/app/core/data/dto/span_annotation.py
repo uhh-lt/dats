@@ -35,6 +35,11 @@ class SpanAnnotationUpdate(BaseModel, UpdateDTOBase):
     code_id: int = Field(description="Code the SpanAnnotation refers to")
 
 
+class SpanAnnotationUpdateBulk(BaseModel, UpdateDTOBase):
+    span_annotation_id: int = Field(description="ID of the SpanAnnotation")
+    code_id: int = Field(description="Code the SpanAnnotation refers to")
+
+
 # Properties for reading (as in ORM)
 class SpanAnnotationRead(SpanAnnotationBaseDTO):
     id: int = Field(description="ID of the SpanAnnotation")
