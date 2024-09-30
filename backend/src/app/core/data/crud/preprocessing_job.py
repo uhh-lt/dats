@@ -62,20 +62,22 @@ class CRUDPreprocessingJob(
         # SELECT COUNT(ppjp)
         #  FROM preprocessingjob ppj
         #  JOIN preprocessingjobpayload ppjp ON ppj.id = ppjp.prepro_job_id
-        #  WHERE ppj.status = 'Running' OR ppj.status = 'Waiting'
+        #  WHERE ppjp.status = 'Running' OR ppjp.status = 'Waiting'
 
         query = (
-            db.query(func.count(self.model.id))
+            db.query(func.count(PreprocessingJobPayloadORM.id))
             .join(
-                PreprocessingJobPayloadORM,
+                self.model,
                 self.model.id == PreprocessingJobPayloadORM.prepro_job_id,
             )
             .filter(
                 and_(
                     self.model.id == uuid,
                     or_(
-                        self.model.status == BackgroundJobStatus.RUNNING.value,
-                        self.model.status == BackgroundJobStatus.WAITING.value,
+                        PreprocessingJobPayloadORM.status
+                        == BackgroundJobStatus.RUNNING.value,
+                        PreprocessingJobPayloadORM.status
+                        == BackgroundJobStatus.WAITING.value,
                     ),
                 )
             )
