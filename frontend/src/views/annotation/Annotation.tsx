@@ -1,5 +1,6 @@
 import BorderColorIcon from "@mui/icons-material/BorderColor";
 import ChromeReaderModeIcon from "@mui/icons-material/ChromeReaderMode";
+import DoNotDisturbIcon from "@mui/icons-material/DoNotDisturb";
 import FormatOverlineIcon from "@mui/icons-material/FormatOverline";
 import FormatStrikethroughIcon from "@mui/icons-material/FormatStrikethrough";
 import { TabContext, TabPanel } from "@mui/lab";
@@ -37,7 +38,7 @@ import ImageViewer from "./DocumentViewer/ImageViewer.tsx";
 import TextViewer from "./DocumentViewer/TextViewer.tsx";
 import ImageAnnotator from "./ImageAnnotator/ImageAnnotator.tsx";
 import TextAnnotator from "./TextAnnotator/TextAnnotator.tsx";
-import { AnnoActions } from "./annoSlice.ts";
+import { AnnoActions, TagStyle } from "./annoSlice.ts";
 
 function Annotation() {
   // global client state (URL)
@@ -161,17 +162,22 @@ function Annotation() {
                 <ToggleButtonGroup
                   value={tagStyle}
                   exclusive
-                  onChange={() => dispatch(AnnoActions.onToggleAnnotatorTagStyle())}
+                  onChange={(_, value) => dispatch(AnnoActions.onSetAnnotatorTagStyle(value))}
                   size="small"
                   color="primary"
                 >
+                  <Tooltip title="None" placement="bottom">
+                    <ToggleButton value={TagStyle.None} sx={{ fontSize: 12 }}>
+                      <DoNotDisturbIcon />
+                    </ToggleButton>
+                  </Tooltip>
                   <Tooltip title="Inline" placement="bottom">
-                    <ToggleButton value={"inline"} sx={{ fontSize: 12 }}>
+                    <ToggleButton value={TagStyle.Inline} sx={{ fontSize: 12 }}>
                       <FormatStrikethroughIcon />
                     </ToggleButton>
                   </Tooltip>
                   <Tooltip title="Above" placement="bottom">
-                    <ToggleButton value={"above"} sx={{ fontSize: 12 }}>
+                    <ToggleButton value={TagStyle.Above} sx={{ fontSize: 12 }}>
                       <FormatOverlineIcon />
                     </ToggleButton>
                   </Tooltip>

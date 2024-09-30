@@ -3,6 +3,7 @@ import { range } from "lodash";
 import { useMemo } from "react";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { TagStyle } from "../annoSlice.ts";
 import { IToken } from "./IToken.ts";
 import Mark from "./Mark.tsx";
 import Tag from "./Tag.tsx";
@@ -41,7 +42,7 @@ function Token({ token, spanAnnotations }: TokenProps) {
 
   const spanGroups = useMemo(() => {
     const startingSpans = spans.filter((spanAnnotation) => spanAnnotation.begin_token === token.index);
-    return startingSpans.length > 0 ? (
+    return startingSpans.length > 0 && tagStyle !== TagStyle.None ? (
       <span className={`spangroup ${tagStyle}`}>
         {startingSpans.map((spanAnnotation) => (
           <Tag key={spanAnnotation.id} codeId={spanAnnotation.code.id} />

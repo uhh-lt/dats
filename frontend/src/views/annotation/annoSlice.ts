@@ -5,6 +5,11 @@ import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { ProjectActions } from "../../components/Project/projectSlice.ts";
 import { RootState } from "../../store/store.ts";
 
+export enum TagStyle {
+  Inline = "inline",
+  Above = "above",
+  None = "none",
+}
 export interface AnnoState {
   // project state:
   selectedCodeId: number | undefined; // the code selected in the code explorer, used to compute which codes are shown in the annotation menu.
@@ -15,7 +20,7 @@ export interface AnnoState {
   // app state:
   disabledCodeIds: number[]; // the code ids of the disabled codes. Disabled codes are neither shown in the CodeExplorer nor in the Annotator.
   isAnnotationMode: boolean; // whether the Annotator is in annotation mode or in reader mode.
-  tagStyle: "inline" | "above"; // position of the tag in the Annotator.
+  tagStyle: TagStyle; // position of the tag in the Annotator.
 }
 
 const initialState: AnnoState = {
@@ -28,7 +33,7 @@ const initialState: AnnoState = {
   // app state:
   disabledCodeIds: [],
   isAnnotationMode: false,
-  tagStyle: "inline",
+  tagStyle: TagStyle.Inline,
 };
 
 export const annoSlice = createSlice({
@@ -81,8 +86,10 @@ export const annoSlice = createSlice({
     moveCodeToTop: (state, action: PayloadAction<CodeRead>) => {
       state.mostRecentCodeId = action.payload.id;
     },
-    onToggleAnnotatorTagStyle: (state) => {
-      state.tagStyle = state.tagStyle === "inline" ? "above" : "inline";
+    onSetAnnotatorTagStyle: (state, action: PayloadAction<TagStyle>) => {
+      if (action.payload !== undefined && action.payload !== null) {
+        state.tagStyle = action.payload;
+      }
     },
     // code enable / disable
     disableCode: (state, action: PayloadAction<number>) => {

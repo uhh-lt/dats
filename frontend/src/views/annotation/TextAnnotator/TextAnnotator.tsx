@@ -16,7 +16,7 @@ import AnnotationMenu, { CodeSelectorHandle } from "../AnnotationMenu/Annotation
 import DocumentRenderer from "../DocumentRenderer/DocumentRenderer.tsx";
 import useComputeTokenData from "../DocumentRenderer/useComputeTokenData.ts";
 import { ICode } from "../ICode.ts";
-import { AnnoActions } from "../annoSlice.ts";
+import { AnnoActions, TagStyle } from "../annoSlice.ts";
 import { useCreateSpanAnnotation, useDeleteSpanAnnotation, useUpdateSpanAnnotation } from "./textAnnotationHooks.ts";
 
 const selectionIsEmpty = (selection: Selection): boolean => {
@@ -37,6 +37,7 @@ function TextAnnotator({ sdoc }: AnnotatorRemasteredProps) {
   // global client state (redux)
   const visibleUserIds = useAppSelector((state) => state.annotations.visibleUserIds);
   const mostRecentCodeId = useAppSelector((state) => state.annotations.mostRecentCodeId);
+  const tagStyle = useAppSelector((state) => state.annotations.tagStyle);
   const dispatch = useAppDispatch();
 
   // snackbar
@@ -317,7 +318,13 @@ function TextAnnotator({ sdoc }: AnnotatorRemasteredProps) {
         annotationMap={annotationMap}
         isViewer={false}
         projectId={sdoc.project_id}
-        style={{ zIndex: 1, overflowY: "auto" }}
+        style={{
+          zIndex: 1,
+          overflowY: "auto",
+          ...(tagStyle === TagStyle.Above && {
+            lineHeight: "2.1rem",
+          }),
+        }}
       />
     </>
   );

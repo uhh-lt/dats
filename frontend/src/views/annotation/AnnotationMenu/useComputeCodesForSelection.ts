@@ -27,9 +27,11 @@ export const useComputeCodesForSelection = () => {
 
     // add the most recent code to the top of the list
     const idx = codesForSelection.findIndex((t) => t.id === mostRecentCodeId);
-    const code = codesForSelection[idx];
-    codesForSelection.splice(idx, 1);
-    codesForSelection.unshift(code);
+    if (idx !== -1) {
+      const code = codesForSelection[idx];
+      codesForSelection.splice(idx, 1);
+      codesForSelection.unshift(code);
+    }
 
     return codesForSelection;
   }, [codeTree, mostRecentCodeId, selectedCodeId]);
