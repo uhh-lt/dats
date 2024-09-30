@@ -16,6 +16,12 @@ system_user:
   email: ${oc.env:SYSTEM_USER_EMAIL, "SYSTEM@dats.org"}
   password: ${oc.env:SYSTEM_USER_PASSWORD, "SYSTEM"}
 
+demo_user:
+  first_name: ${oc.env:DEMO_USER_FIRST_NAME, "Demo"}
+  last_name: ${oc.env:DEMO_USER_LAST_NAME, "User"}
+  email: ${oc.env:DEMO_USER_EMAIL, "demo@example.org"}
+  password: ${oc.env:DEMO_USER_PASSWORD, "demo"}
+
 ray:
   enabled: ${oc.env:RAY_ENABLED, True}
   protocol: ${oc.env:RAY_PROTOCOL, http}

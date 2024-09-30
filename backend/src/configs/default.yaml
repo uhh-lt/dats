@@ -1,9 +1,3 @@
-system_user:
-  first_name: ${oc.env:SYSTEM_USER_FIRST_NAME, "SYSTEM"}
-  last_name: ${oc.env:SYSTEM_USER_LAST_NAME, "USER"}
-  email: ${oc.env:SYSTEM_USER_EMAIL, "SYSTEM@dats.org"}
-  password: ${oc.env:SYSTEM_USER_PASSWORD, "SYSTEM"}
-
 api:
   port: ${oc.env:API_PORT, 5000}
   max_upload_file_size: 104857600 # 100 MB in bytes
@@ -15,6 +9,18 @@ api:
       refresh_ttl: ${oc.env:JWT_REFRESH_TTL, 2592000} # 30 days in seconds
       algo: ${oc.env:JWT_ALGO, HS256}
       secret: ${oc.env:JWT_SECRET, ""}
+
+system_user:
+  first_name: ${oc.env:SYSTEM_USER_FIRST_NAME, "SYSTEM"}
+  last_name: ${oc.env:SYSTEM_USER_LAST_NAME, "USER"}
+  email: ${oc.env:SYSTEM_USER_EMAIL, "SYSTEM@dats.org"}
+  password: ${oc.env:SYSTEM_USER_PASSWORD, "SYSTEM"}
+
+demo_user:
+  first_name: ${oc.env:DEMO_USER_FIRST_NAME, "Demo"}
+  last_name: ${oc.env:DEMO_USER_LAST_NAME, "User"}
+  email: ${oc.env:DEMO_USER_EMAIL, "demo@example.org"}
+  password: ${oc.env:DEMO_USER_PASSWORD, "demo"}
 
 ray:
   enabled: ${oc.env:RAY_ENABLED, True}
