@@ -21,6 +21,7 @@ from app.core.analysis.word_frequency import (
     word_frequency_info,
 )
 from app.core.authorization.authz_user import AuthzUser
+from app.core.data.doc_type import DocType
 from app.core.data.dto.analysis import (
     AnnotatedImageResult,
     AnnotatedSegmentResult,
@@ -49,12 +50,13 @@ def code_frequencies(
     project_id: int,
     code_ids: List[int],
     user_ids: List[int],
+    doctypes: List[DocType],
     authz_user: AuthzUser = Depends(),
 ) -> List[CodeFrequency]:
     authz_user.assert_in_project(project_id)
 
     return AnalysisService().compute_code_frequency(
-        project_id=project_id, code_ids=code_ids, user_ids=user_ids
+        project_id=project_id, code_ids=code_ids, user_ids=user_ids, doctypes=doctypes
     )
 
 

@@ -6,6 +6,7 @@ from sqlalchemy.dialects.postgresql import ARRAY, array_agg
 from sqlalchemy.orm import InstrumentedAttribute
 
 from app.core.data.crud.project import crud_project
+from app.core.data.doc_type import DocType
 from app.core.data.dto.analysis import (
     AnnotationOccurrence,
     CodeFrequency,
@@ -42,7 +43,11 @@ class AnalysisService(metaclass=SingletonMeta):
         return super(AnalysisService, cls).__new__(cls)
 
     def compute_code_frequency(
-        self, project_id: int, user_ids: List[int], code_ids: List[int]
+        self,
+        project_id: int,
+        user_ids: List[int],
+        code_ids: List[int],
+        doctypes: List[DocType],
     ) -> List[CodeFrequency]:
         with self.sqls.db_session() as db:
             # 1. find all codes of interest (that is the given code_ids and all their childrens code_ids)
@@ -71,32 +76,50 @@ class AnalysisService(metaclass=SingletonMeta):
 
             # 2. query all span annotation occurrences of the codes of interest
             codes_of_interest = [code_id for group in result for code_id in group]
-            query = db.query(
-                SpanAnnotationORM.code_id,
-                SpanAnnotationORM.id,
-            ).join(
-                AnnotationDocumentORM,
-                AnnotationDocumentORM.id == SpanAnnotationORM.annotation_document_id,
+            query = (
+                db.query(
+                    SpanAnnotationORM.code_id,
+                    SpanAnnotationORM.id,
+                )
+                .join(
+                    AnnotationDocumentORM,
+                    AnnotationDocumentORM.id
+                    == SpanAnnotationORM.annotation_document_id,
+                )
+                .join(
+                    SourceDocumentORM,
+                    SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+                )
             )
             # noinspection PyUnresolvedReferences
             query = query.filter(
                 AnnotationDocumentORM.user_id.in_(user_ids),
                 SpanAnnotationORM.code_id.in_(codes_of_interest),
+                SourceDocumentORM.doctype.in_(doctypes),
             )
             span_res = query.all()
 
             # 3. query all bbox annotation occurrences of the codes of interest
-            query = db.query(
-                BBoxAnnotationORM.code_id,
-                BBoxAnnotationORM.id,
-            ).join(
-                AnnotationDocumentORM,
-                AnnotationDocumentORM.id == BBoxAnnotationORM.annotation_document_id,
+            query = (
+                db.query(
+                    BBoxAnnotationORM.code_id,
+                    BBoxAnnotationORM.id,
+                )
+                .join(
+                    AnnotationDocumentORM,
+                    AnnotationDocumentORM.id
+                    == BBoxAnnotationORM.annotation_document_id,
+                )
+                .join(
+                    SourceDocumentORM,
+                    SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+                )
             )
             # noinspection PyUnresolvedReferences
             query = query.filter(
                 AnnotationDocumentORM.user_id.in_(user_ids),
                 BBoxAnnotationORM.code_id.in_(codes_of_interest),
+                SourceDocumentORM.doctype.in_(doctypes),
             )
             bbox_res = query.all()
 
