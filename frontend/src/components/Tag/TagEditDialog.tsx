@@ -57,7 +57,7 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
             name: data.name,
             description: data.description,
             color: data.color,
-            parent_id: data.parent_id,
+            parent_id: data.parent_id === -1 ? null : data.parent_id,
           },
           tagId: tag.data.id,
         },

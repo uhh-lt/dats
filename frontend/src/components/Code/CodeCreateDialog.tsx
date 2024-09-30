@@ -55,7 +55,7 @@ function CodeCreateDialog() {
     control,
   } = useForm<CodeCreateValues>({
     defaultValues: {
-      parentCodeId: -1,
+      parentCodeId: undefined,
       name: "",
       color: "#000000",
       description: "",
@@ -101,7 +101,7 @@ function CodeCreateDialog() {
             description: data.description,
             color: data.color,
             project_id: parseInt(projectId),
-            parent_id: pcid,
+            parent_id: pcid === -1 ? null : pcid,
             is_system: false,
           },
         },

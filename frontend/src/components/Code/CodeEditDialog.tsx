@@ -61,7 +61,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
           ...requestBody,
           name: data.name,
           description: data.description,
-          parent_id: data.parentCodeId,
+          parent_id: data.parentCodeId === -1 ? null : data.parentCodeId,
         };
       }
 
