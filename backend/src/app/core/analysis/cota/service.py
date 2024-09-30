@@ -205,8 +205,8 @@ class COTAService(metaclass=SingletonMeta):
         cota = self.read_by_id(db=db, cota_id=cota_id)
 
         # make sure there is at least one concept
-        if len(cota.concepts) == 0:
-            raise ValueError("Concepts missing")
+        if len(cota.concepts) < 2:
+            raise ValueError("At least two concepts are required for refinement!")
 
         if hyperparams is None:
             hyperparams = COTARefinementHyperparameters()
