@@ -9,7 +9,7 @@ import {
 } from "material-react-table";
 
 export interface TableState {
-  searchQuery: string;
+  searchQuery?: string;
   rowSelectionModel: MRT_RowSelectionState;
   paginationModel: MRT_PaginationState;
   sortingModel: MRT_SortingState;
@@ -35,7 +35,7 @@ export const initialTableState: TableState = {
 
 export const tableReducer = {
   // query
-  onSearchQueryChange: (state: Draft<TableState>, action: PayloadAction<string>) => {
+  onSearchQueryChange: (state: Draft<TableState>, action: PayloadAction<string | undefined>) => {
     state.searchQuery = action.payload;
   },
   // selection
