@@ -15,6 +15,8 @@ _Please also have a look at our [Wiki](https://github.com/uhh-lt/dats/wiki) for 
 - host it on your own machine with `docker compose`
   - clone this repository: `git clone https://github.com/uhh-lt/dats.git`
   - navigate to the docker directory: `cd dats/docker`
+  - create a copy of the .env.example file: `cp .env.example .env`
+  - edit the .env example file and put in correct values for `UID`, `GID`, and `JWT_SECRET`
   - run `docker compose up -d`
   - visit [http://localhost:3000/](http://localhost:3000/) in your browser
 
