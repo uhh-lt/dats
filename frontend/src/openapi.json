@@ -6166,10 +6166,11 @@
       "Body_analysis-code_frequencies": {
         "properties": {
           "code_ids": { "items": { "type": "integer" }, "type": "array", "title": "Code Ids" },
-          "user_ids": { "items": { "type": "integer" }, "type": "array", "title": "User Ids" }
+          "user_ids": { "items": { "type": "integer" }, "type": "array", "title": "User Ids" },
+          "doctypes": { "items": { "$ref": "#/components/schemas/DocType" }, "type": "array", "title": "Doctypes" }
         },
         "type": "object",
-        "required": ["code_ids", "user_ids"],
+        "required": ["code_ids", "user_ids", "doctypes"],
         "title": "Body_analysis-code_frequencies"
       },
       "Body_analysis-word_frequency_analysis": {

@@ -3,17 +3,19 @@ import { QueryKey } from "./QueryKey.ts";
 import { AnnotationOccurrence } from "./openapi/models/AnnotationOccurrence.ts";
 import { CodeFrequency } from "./openapi/models/CodeFrequency.ts";
 import { CodeOccurrence } from "./openapi/models/CodeOccurrence.ts";
+import { DocType } from "./openapi/models/DocType.ts";
 import { AnalysisService } from "./openapi/services/AnalysisService.ts";
 
-const useCodeFrequencies = (projectId: number, userIds: number[], codeIds: number[]) =>
+const useCodeFrequencies = (projectId: number, userIds: number[], codeIds: number[], docTypes: DocType[]) =>
   useQuery<CodeFrequency[], Error>({
-    queryKey: [QueryKey.ANALYSIS_CODE_FREQUENCIES, projectId, userIds, codeIds],
+    queryKey: [QueryKey.ANALYSIS_CODE_FREQUENCIES, projectId, userIds, codeIds, docTypes],
     queryFn: () =>
       AnalysisService.codeFrequencies({
         projectId,
         requestBody: {
           user_ids: userIds,
           code_ids: codeIds,
+          doctypes: docTypes,
         },
       }),
   });
