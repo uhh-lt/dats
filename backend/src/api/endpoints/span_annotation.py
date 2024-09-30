@@ -17,6 +17,7 @@ from app.core.data.dto.span_annotation import (
     SpanAnnotationRead,
     SpanAnnotationReadResolved,
     SpanAnnotationUpdate,
+    SpanAnnotationUpdateBulk,
 )
 from app.core.data.dto.span_group import SpanGroupRead
 
@@ -131,6 +132,38 @@ def update_by_id(
         return SpanAnnotationReadResolved.model_validate(db_obj)
     else:
         return SpanAnnotationRead.model_validate(db_obj)
+
+
+@router.patch(
+    "/bulk/update",
+    response_model=Union[List[SpanAnnotationRead], List[SpanAnnotationReadResolved]],
+    summary="Updates SpanAnnotations in Bulk",
+)
+def update_span_annotations_bulk(
+    *,
+    db: Session = Depends(get_db_session),
+    spans: List[SpanAnnotationUpdateBulk],
+    resolve_code: bool = Depends(resolve_code_param),
+    authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
+) -> Union[List[SpanAnnotationRead], List[SpanAnnotationReadResolved]]:
+    for span in spans:
+        authz_user.assert_in_same_project_as(Crud.CODE, span.code_id)
+        authz_user.assert_in_same_project_as(
+            Crud.SPAN_ANNOTATION, span.span_annotation_id
+        )
+        validate.validate_objects_in_same_project(
+            [
+                (Crud.CODE, span.code_id),
+                (Crud.SPAN_ANNOTATION, span.span_annotation_id),
+            ]
+        )
+
+    db_objs = crud_span_anno.update_bulk(db=db, update_dtos=spans)
+    if resolve_code:
+        return [SpanAnnotationReadResolved.model_validate(db_obj) for db_obj in db_objs]
+    else:
+        return [SpanAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
 
 
 @router.delete(

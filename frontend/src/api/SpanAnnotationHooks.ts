@@ -55,6 +55,21 @@ const useUpdateSpan = () =>
     },
   });
 
+const useUpdateBulkSpan = () =>
+  useMutation({
+    mutationFn: SpanAnnotationService.updateSpanAnnotationsBulk,
+    onSuccess(data) {
+      queryClient.invalidateQueries({ queryKey: ["annotation-table-data"] }); // TODO: This is not optimal, shoudl be projectId, selectedUserId... We do this because of SpanAnnotationTable
+      data.forEach((annotation) => {
+        queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATION, annotation.id] });
+        queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, annotation.sdoc_id] });
+        queryClient.invalidateQueries({
+          queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, annotation.sdoc_id, annotation.user_id],
+        });
+      });
+    },
+  });
+
 const useDeleteSpan = () =>
   useMutation({
     mutationFn: SpanAnnotationService.deleteById,
@@ -99,6 +114,7 @@ const SpanAnnotationHooks = {
   useGetAnnotation,
   useGetByCodeAndUser,
   useUpdateSpan,
+  useUpdateBulkSpan,
   useDeleteSpan,
   // memo
   useGetMemos,

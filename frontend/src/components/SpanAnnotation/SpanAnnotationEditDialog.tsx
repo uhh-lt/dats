@@ -27,7 +27,7 @@ function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) 
   const dispatch = useAppDispatch();
 
   // mutations
-  const updateAnnotationMutation = SpanAnnotationHooks.useUpdateSpan();
+  const updateAnnotationBulkMutation = SpanAnnotationHooks.useUpdateBulkSpan();
 
   // snackbar
   const openSnackbar = useOpenSnackbar();
@@ -41,26 +41,23 @@ function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) 
   const handleUpdateAnnotations = () => {
     if (!selectedCodeId || annotationIds.length === 0) return;
 
-    // TODO: We need bulk update for annotations
-    annotationIds.forEach((annotation) => {
-      updateAnnotationMutation.mutate(
-        {
-          spanAnnotationId: annotation,
-          requestBody: {
-            code_id: selectedCodeId,
-          },
+    updateAnnotationBulkMutation.mutate(
+      {
+        requestBody: annotationIds.map((annotation) => ({
+          span_annotation_id: annotation,
+          code_id: selectedCodeId,
+        })),
+      },
+      {
+        onSuccess: () => {
+          handleClose();
+          openSnackbar({
+            text: `Updated annotation!`,
+            severity: "success",
+          });
         },
-        {
-          onSuccess: () => {
-            handleClose();
-            openSnackbar({
-              text: `Updated annotation!`,
-              severity: "success",
-            });
-          },
-        },
-      );
-    });
+      },
+    );
   };
 
   return (
@@ -106,7 +103,7 @@ function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) 
           fullWidth
           onClick={handleUpdateAnnotations}
           disabled={!selectedCodeId}
-          loading={updateAnnotationMutation.isPending}
+          loading={updateAnnotationBulkMutation.isPending}
           loadingPosition="start"
         >
           Update Annotation

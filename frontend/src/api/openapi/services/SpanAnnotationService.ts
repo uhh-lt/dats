@@ -9,6 +9,7 @@ import type { SpanAnnotationCreate } from "../models/SpanAnnotationCreate";
 import type { SpanAnnotationRead } from "../models/SpanAnnotationRead";
 import type { SpanAnnotationReadResolved } from "../models/SpanAnnotationReadResolved";
 import type { SpanAnnotationUpdate } from "../models/SpanAnnotationUpdate";
+import type { SpanAnnotationUpdateBulk } from "../models/SpanAnnotationUpdateBulk";
 import type { SpanGroupRead } from "../models/SpanGroupRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -148,6 +149,34 @@ export class SpanAnnotationService {
       path: {
         span_id: spanId,
       },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Updates SpanAnnotations in Bulk
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static updateSpanAnnotationsBulk({
+    requestBody,
+    resolve = true,
+  }: {
+    requestBody: Array<SpanAnnotationUpdateBulk>;
+    /**
+     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
+     */
+    resolve?: boolean;
+  }): CancelablePromise<Array<SpanAnnotationRead> | Array<SpanAnnotationReadResolved>> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/span/bulk/update",
+      query: {
+        resolve: resolve,
+      },
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },
