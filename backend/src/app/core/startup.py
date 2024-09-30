@@ -84,6 +84,7 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
 
         if not startup_in_progress:
             __create_system_user__()
+            __create_demo_user__()
 
     except Exception as e:
         msg = f"Error while booting the Discourse Analysis Tool Suite Backend! Exception: {str(e)}"
@@ -173,5 +174,22 @@ def __create_system_user__() -> None:
                 first_name=str(conf.system_user.first_name),
                 last_name=str(conf.system_user.last_name),
                 password=str(conf.system_user.password),
+            )
+            crud_user.create(db=db_session, create_dto=create_dto)
+
+
+def __create_demo_user__() -> None:
+    from app.core.data.crud.user import crud_user
+    from app.core.data.dto.user import UserCreate
+    from app.core.db.sql_service import SQLService
+    from config import conf
+
+    with SQLService().db_session() as db_session:
+        if not crud_user.exists(db=db_session, id=2):
+            create_dto = UserCreate(
+                email=str(conf.demo_user.email),
+                first_name=str(conf.demo_user.first_name),
+                last_name=str(conf.demo_user.last_name),
+                password=str(conf.demo_user.password),
             )
             crud_user.create(db=db_session, create_dto=create_dto)
