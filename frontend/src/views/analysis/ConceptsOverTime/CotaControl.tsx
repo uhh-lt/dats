@@ -34,6 +34,7 @@ import {
   conceptsWithUnsufficientAnnotations,
   hasConceptsWithDescription,
   hasEnoughAnnotations,
+  hasEnoughConcepts,
 } from "./cotaUtils.ts";
 
 interface CotaControlProps {
@@ -172,7 +173,10 @@ function CotaControl({ cota }: CotaControlProps) {
                 }
                 disablePadding
               >
-                <ListItemButton onClick={handleRefineCota} disabled={!hasEnoughAnnotations(cota)}>
+                <ListItemButton
+                  onClick={handleRefineCota}
+                  disabled={!hasEnoughAnnotations(cota) || !hasEnoughConcepts(cota)}
+                >
                   <ListItemIcon>
                     <FastForwardIcon />
                   </ListItemIcon>

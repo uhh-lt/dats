@@ -26,6 +26,10 @@ export const hasEnoughAnnotations = (cota: COTARead) => {
   return Object.values(annotations).every((count) => count >= MIN_ANNOTATIONS_PER_CONCEPT);
 };
 
+export const hasEnoughConcepts = (cota: COTARead) => {
+  return cota.concepts.length >= 2;
+};
+
 export const countAnnotations = (cota: COTARead) => {
   // returns a map of concept ids to the number of sentences that were annotated with that concept
 
