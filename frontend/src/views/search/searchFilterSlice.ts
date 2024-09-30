@@ -11,20 +11,24 @@ import {
   createInitialFilterState,
   filterReducer,
   getOrCreateFilter,
+  resetProjectFilterState,
 } from "../../components/FilterDialog/filterSlice.ts";
 import {
   MyFilterExpression,
   filterOperator2FilterOperatorType,
   getDefaultOperator,
 } from "../../components/FilterDialog/filterUtils.ts";
+import { ProjectActions } from "../../components/Project/projectSlice.ts";
 import { getValue } from "./metadataUtils.ts";
 
-const initialState = createInitialFilterState({
+const defaultFilterExpression: MyFilterExpression = {
   id: uuidv4(),
   column: SearchColumns.SC_SOURCE_DOCUMENT_FILENAME,
   operator: StringOperator.STRING_CONTAINS,
   value: "",
-});
+};
+
+const initialState = createInitialFilterState(defaultFilterExpression);
 
 const searchFilterSlice = createSlice({
   name: "searchFilter",
@@ -101,6 +105,12 @@ const searchFilterSlice = createSlice({
         },
       ];
     },
+  },
+  extraReducers(builder) {
+    builder.addCase(ProjectActions.changeProject, (state) => {
+      console.log("Project changed! Resetting 'searchFilter' state.");
+      resetProjectFilterState(state, defaultFilterExpression);
+    });
   },
 });
 

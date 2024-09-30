@@ -6,6 +6,7 @@ import ConfirmationDialog from "../components/ConfirmationDialog/ConfirmationDia
 import ExporterDialog from "../components/Exporter/ExporterDialog.tsx";
 import LLMDialog from "../components/LLMDialog/LLMDialog.tsx";
 import MemoDialog from "../components/Memo/MemoDialog/MemoDialog.tsx";
+import ProjectIdUpdater from "../components/Project/ProjectIdUpdater.tsx";
 import ProjectSettingsDialog from "../components/ProjectSettings/ProjectSettingsDialog.tsx";
 import SnackbarDialog from "../components/SnackbarDialog/SnackbarDialog.tsx";
 import TagCreateDialog from "../components/Tag/TagCreateDialog.tsx";
@@ -33,6 +34,7 @@ function TwoBarLayout() {
           </Box>
           <BottomBar sx={{ flex: "0 1 0" }} />
         </Box>
+        <ProjectIdUpdater />
         <DialMenu />
         <MemoDialog />
         <SnackbarDialog />

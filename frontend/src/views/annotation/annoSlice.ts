@@ -1,29 +1,34 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { persistReducer } from "redux-persist";
+import storage from "redux-persist/lib/storage";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
+import { ProjectActions } from "../../components/Project/projectSlice.ts";
 import { RootState } from "../../store/store.ts";
 
 export interface AnnoState {
-  isAnnotationMode: boolean;
-  codesForSelection: CodeRead[];
-  selectedDocumentTagId: number | undefined;
-  selectedCodeId: number | undefined;
-  expandedCodeIds: string[];
-  hiddenCodeIds: number[];
-  visibleUserIds: number[];
-  tagStyle: "inline" | "above";
-  disabledCodeIds: number[];
+  // project state:
+  selectedCodeId: number | undefined; // the code selected in the code explorer, used to compute which codes are shown in the annotation menu.
+  mostRecentCodeId: number | undefined; // the most recently applied code, it is always at the top of the annotation menu and the default code for new annotations.
+  expandedCodeIds: string[]; // the code ids of the expanded codes in the code explorer.
+  hiddenCodeIds: number[]; // the code ids of the hidden codes. Hidden codes are shown in the CodeExplorer, but are not rendered in the Annotator.
+  visibleUserIds: number[]; // the user ids of the users whose annotations are shown in the Annotator.
+  // app state:
+  disabledCodeIds: number[]; // the code ids of the disabled codes. Disabled codes are neither shown in the CodeExplorer nor in the Annotator.
+  isAnnotationMode: boolean; // whether the Annotator is in annotation mode or in reader mode.
+  tagStyle: "inline" | "above"; // position of the tag in the Annotator.
 }
 
 const initialState: AnnoState = {
-  isAnnotationMode: false,
-  codesForSelection: [],
-  selectedDocumentTagId: undefined,
+  // project state:
   selectedCodeId: undefined,
+  mostRecentCodeId: undefined,
   expandedCodeIds: [],
   hiddenCodeIds: [],
   visibleUserIds: [],
-  tagStyle: "inline",
+  // app state:
   disabledCodeIds: [],
+  isAnnotationMode: false,
+  tagStyle: "inline",
 };
 
 export const annoSlice = createSlice({
@@ -32,9 +37,6 @@ export const annoSlice = createSlice({
   reducers: {
     onToggleAnnotationMode: (state) => {
       state.isAnnotationMode = !state.isAnnotationMode;
-    },
-    setCodesForSelection: (state, action: PayloadAction<CodeRead[]>) => {
-      state.codesForSelection = action.payload;
     },
     toggleCodeVisibility: (state, action: PayloadAction<number[]>) => {
       if (action.payload.length === 0) {
@@ -73,19 +75,11 @@ export const annoSlice = createSlice({
         }
       }
     },
-    setSelectedDocumentTagId: (state, action: PayloadAction<number | undefined>) => {
-      state.selectedDocumentTagId = action.payload;
-    },
     setVisibleUserIds: (state, action: PayloadAction<number[]>) => {
       state.visibleUserIds = action.payload;
     },
     moveCodeToTop: (state, action: PayloadAction<CodeRead>) => {
-      // makes most recently used order
-      const codeId = action.payload.id;
-      const idx = state.codesForSelection.findIndex((t) => t.id === codeId);
-      const code = state.codesForSelection[idx];
-      state.codesForSelection.splice(idx, 1);
-      state.codesForSelection.unshift(code);
+      state.mostRecentCodeId = action.payload.id;
     },
     onToggleAnnotatorTagStyle: (state) => {
       state.tagStyle = state.tagStyle === "inline" ? "above" : "inline";
@@ -124,6 +118,16 @@ export const annoSlice = createSlice({
       state.disabledCodeIds = disabledCodeIds;
     },
   },
+  extraReducers: (builder) => {
+    builder.addCase(ProjectActions.changeProject, (state) => {
+      console.log("Project changed! Resetting 'anno' state.");
+      state.selectedCodeId = initialState.selectedCodeId;
+      state.mostRecentCodeId = initialState.mostRecentCodeId;
+      state.expandedCodeIds = initialState.expandedCodeIds;
+      state.hiddenCodeIds = initialState.hiddenCodeIds;
+      state.visibleUserIds = initialState.visibleUserIds;
+    });
+  },
 });
 
 export const AnnoActions = annoSlice.actions;
@@ -131,4 +135,10 @@ export const AnnoActions = annoSlice.actions;
 export const isHiddenCodeId = (codeId: number) => (state: RootState) =>
   state.annotations.hiddenCodeIds.indexOf(codeId) !== -1;
 
-export default annoSlice.reducer;
+export default persistReducer(
+  {
+    key: "anno",
+    storage,
+  },
+  annoSlice.reducer,
+);

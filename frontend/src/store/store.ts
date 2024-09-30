@@ -1,7 +1,7 @@
 import { Action, ThunkAction, configureStore } from "@reduxjs/toolkit";
-import { FLUSH, PAUSE, PERSIST, PURGE, REGISTER, REHYDRATE, persistReducer } from "redux-persist";
-import storage from "redux-persist/lib/storage";
+import { FLUSH, PAUSE, PERSIST, PURGE, REGISTER, REHYDRATE } from "redux-persist";
 import bboxFilterReducer from "../components/BBoxAnnotation/BBoxAnnotationTable/bboxFilterSlice.ts";
+import projectReducer from "../components/Project/projectSlice.ts";
 import documentTableFilterReducer from "../components/SourceDocument/SdocTable/documentTableFilterSlice.ts";
 import satFilterReducer from "../components/SpanAnnotation/SpanAnnotationTable/satFilterSlice.ts";
 import dialogReducer from "../components/dialogSlice.ts";
@@ -19,20 +19,16 @@ import searchFilterReducer from "../views/search/searchFilterSlice.ts";
 import autologbookReducer from "../views/tools/AutoLogbook/autologbookSlice.ts";
 import documentSamplerReducer from "../views/tools/DocumentSampler/documentSamplerSlice.ts";
 
-const persistConfig = {
-  key: "root",
-  storage: storage,
-};
-
-// store slices in local storage
-const persistedAnnoReducer = persistReducer(persistConfig, annoReducer);
-
 export const store = configureStore({
   reducer: {
-    annotations: persistedAnnoReducer,
+    // persited reducers
+    annotations: annoReducer,
     search: searchReducer,
     imageSearch: imageSearchReducer,
     sentenceSearch: sentenceSearchReducer,
+    layout: layoutReducer,
+    project: projectReducer,
+    // non-persisted reducers
     logbook: logbookReducer,
     autologbook: autologbookReducer,
     annotatedSegments: annotatedSegmentsReducer,
@@ -45,7 +41,6 @@ export const store = configureStore({
     cota: cotaReducer,
     dialog: dialogReducer,
     documentSampler: documentSamplerReducer,
-    layout: layoutReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

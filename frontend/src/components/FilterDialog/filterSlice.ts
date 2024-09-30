@@ -17,10 +17,12 @@ import {
 } from "./filterUtils.ts";
 
 export interface FilterState {
+  // project state:
   filter: Record<string, MyFilter>;
   editableFilter: MyFilter;
   defaultFilterExpression: MyFilterExpression;
   column2Info: Record<string, ColumnInfo>;
+  // app state:
   expertMode: boolean;
 }
 
@@ -42,6 +44,15 @@ export const createInitialFilterState = (defaultFilterExpression: MyFilterExpres
     column2Info: {},
     expertMode: false,
   };
+};
+
+export const resetProjectFilterState = (state: Draft<FilterState>, defaultFilterExpression: MyFilterExpression) => {
+  const initialState = createInitialFilterState(defaultFilterExpression);
+  state.filter = initialState.filter;
+  state.editableFilter = initialState.editableFilter;
+  state.defaultFilterExpression = initialState.defaultFilterExpression;
+  state.column2Info = initialState.column2Info;
+  state.expertMode = initialState.expertMode;
 };
 
 export const getOrCreateFilter = (state: FilterState, filterId: string, filter?: MyFilter): MyFilter => {

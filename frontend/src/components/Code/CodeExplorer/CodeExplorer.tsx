@@ -1,13 +1,11 @@
 import SquareIcon from "@mui/icons-material/Square";
 import { Box, BoxProps } from "@mui/material";
 import * as React from "react";
-import { useCallback, useEffect, useState } from "react";
-import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
+import { useCallback, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { AnnoActions } from "../../../views/annotation/annoSlice.ts";
 import ExporterButton from "../../Exporter/ExporterButton.tsx";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
-import { flatTreeWithRoot } from "../../TreeExplorer/TreeUtils.ts";
 import CodeCreateListItemButton from "../CodeCreateListItemButton.tsx";
 import CodeEditDialog from "../CodeEditDialog.tsx";
 import CodeExplorerMenu from "./CodeExplorerMenu.tsx";
@@ -23,26 +21,6 @@ function CodeExplorer(props: BoxProps) {
   const dispatch = useAppDispatch();
 
   const [codeFilter, setCodeFilter] = useState<string>("");
-
-  // effects
-  // update global client state when selection changes
-  // we tell the annotator which codes are available for selection in the combobox
-  useEffect(() => {
-    if (selectedCodeId && codeTree) {
-      const parentCode = codeTree.first((node) => node.model.data.id === selectedCodeId);
-      if (parentCode && parentCode.model) {
-        // the selected code was found -> we update the codes for selection
-        dispatch(AnnoActions.setCodesForSelection(flatTreeWithRoot(parentCode.model) as CodeRead[]));
-      } else {
-        // the selected code was not found -> the selected code was invalid (probabily because of local storage / project change...)
-        dispatch(AnnoActions.setSelectedCodeId(undefined));
-      }
-    } else if (allCodes.data) {
-      dispatch(AnnoActions.setCodesForSelection(allCodes.data));
-    } else {
-      dispatch(AnnoActions.setCodesForSelection([]));
-    }
-  }, [dispatch, selectedCodeId, allCodes.data, codeTree]);
 
   // handle ui events
   const handleExpandedDataIdsChange = useCallback(

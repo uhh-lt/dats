@@ -19,6 +19,7 @@ export interface TableState {
 }
 
 export const initialTableState: TableState = {
+  // project state:
   searchQuery: "",
   rowSelectionModel: {},
   paginationModel: {
@@ -28,6 +29,7 @@ export const initialTableState: TableState = {
   sortingModel: [],
   columnVisibilityModel: {},
   columnSizingModel: {},
+  // app state:
   gridDensityModel: "comfortable",
 };
 
@@ -63,6 +65,16 @@ export const tableReducer = {
   onGridDensityChange: (state: Draft<TableState>, action: PayloadAction<MRT_DensityState>) => {
     state.gridDensityModel = action.payload;
   },
+};
+
+// reset table state
+export const resetProjectTableState = (state: Draft<TableState>) => {
+  state.searchQuery = initialTableState.searchQuery;
+  state.rowSelectionModel = initialTableState.rowSelectionModel;
+  state.paginationModel = initialTableState.paginationModel;
+  state.sortingModel = initialTableState.sortingModel;
+  state.columnVisibilityModel = initialTableState.columnVisibilityModel;
+  state.columnSizingModel = initialTableState.columnSizingModel;
 };
 
 // selectors

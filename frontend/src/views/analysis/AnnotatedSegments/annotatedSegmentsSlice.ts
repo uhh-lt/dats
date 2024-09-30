@@ -1,14 +1,17 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { ProjectActions } from "../../../components/Project/projectSlice.ts";
 import { SATFilterActions } from "../../../components/SpanAnnotation/SpanAnnotationTable/satFilterSlice.ts";
-import { initialTableState, tableReducer, TableState } from "../../../components/tableSlice.ts";
+import { initialTableState, resetProjectTableState, tableReducer, TableState } from "../../../components/tableSlice.ts";
 
 interface AnnotatedSegmentsState {
+  // app state:
   isSplitView: boolean;
   contextSize: number;
 }
 
 const initialState: TableState & AnnotatedSegmentsState = {
   ...initialTableState,
+  // app state:
   isSplitView: false,
   contextSize: 100,
 };
@@ -27,6 +30,10 @@ export const AnnotatedSegmentsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(ProjectActions.changeProject, (state) => {
+        console.log("Project changed! Resetting 'annotatedSegments' state.");
+        resetProjectTableState(state);
+      })
       .addCase(SATFilterActions.init, (state, action) => {
         state.columnVisibilityModel = Object.values(action.payload.columnInfoMap).reduce((acc, column) => {
           if (!column.column) return acc;

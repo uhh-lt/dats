@@ -1,20 +1,25 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
-import { TableState, initialTableState, tableReducer } from "../../../components/tableSlice.ts";
+import { ProjectActions } from "../../../components/Project/projectSlice.ts";
+import { TableState, initialTableState, resetProjectTableState, tableReducer } from "../../../components/tableSlice.ts";
 import { SearchFilterActions } from "../searchFilterSlice.ts";
 
 interface SentenceSearchState {
+  // project state:
+  selectedDocumentId: number | undefined;
+  // app state:
   threshold: number;
   topK: number;
-  selectedDocumentId: number | undefined;
 }
 
 const initialState: TableState & SentenceSearchState = {
   ...initialTableState,
+  // project state:
+  selectedDocumentId: undefined,
+  // app state:
   threshold: 0.0,
   topK: 10,
-  selectedDocumentId: undefined,
 };
 
 export const sentenceSearchSlice = createSlice({
@@ -49,21 +54,27 @@ export const sentenceSearchSlice = createSlice({
     },
   },
   extraReducers(builder) {
-    builder.addCase(SearchFilterActions.init, (state, action) => {
-      state.columnVisibilityModel = Object.values(action.payload.columnInfoMap).reduce((acc, column) => {
-        if (!column.column) return acc;
-        // this is a normal column
-        if (isNaN(parseInt(column.column))) {
-          return acc;
-          // this is a metadata column
-        } else {
-          return {
-            ...acc,
-            [column.column]: false,
-          };
-        }
-      }, {});
-    });
+    builder
+      .addCase(ProjectActions.changeProject, (state) => {
+        console.log("Project changed! Resetting 'sentenceSearch' state.");
+        state.selectedDocumentId = initialState.selectedDocumentId;
+        resetProjectTableState(state);
+      })
+      .addCase(SearchFilterActions.init, (state, action) => {
+        state.columnVisibilityModel = Object.values(action.payload.columnInfoMap).reduce((acc, column) => {
+          if (!column.column) return acc;
+          // this is a normal column
+          if (isNaN(parseInt(column.column))) {
+            return acc;
+            // this is a metadata column
+          } else {
+            return {
+              ...acc,
+              [column.column]: false,
+            };
+          }
+        }, {});
+      });
   },
 });
 

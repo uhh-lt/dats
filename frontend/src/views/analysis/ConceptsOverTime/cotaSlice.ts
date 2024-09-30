@@ -3,8 +3,10 @@ import { MRT_RowSelectionState } from "material-react-table";
 import { COTAConcept } from "../../../api/openapi/models/COTAConcept.ts";
 import { COTATrainingSettings } from "../../../api/openapi/models/COTATrainingSettings.ts";
 import { DimensionalityReductionAlgorithm } from "../../../api/openapi/models/DimensionalityReductionAlgorithm.ts";
+import { ProjectActions } from "../../../components/Project/projectSlice.ts";
 
 export interface CotaState {
+  // project state:
   conceptEditorOpen: boolean;
   currentConcept: COTAConcept;
   selectedDate: string | undefined;
@@ -12,12 +14,13 @@ export interface CotaState {
   provenanceConcept: string | undefined;
   selectedConceptId: string | undefined;
   isTimelineView: boolean;
-  // COTATrainingSettings.tsx
-  trainingSettings: COTATrainingSettings;
   trainingSettingsOpen: boolean;
+  // app state:
+  trainingSettings: COTATrainingSettings;
 }
 
 const initialState: CotaState = {
+  // project state:
   conceptEditorOpen: false,
   currentConcept: {
     id: "1",
@@ -31,7 +34,8 @@ const initialState: CotaState = {
   rowSelectionModel: {},
   provenanceConcept: undefined,
   isTimelineView: false,
-  // COTATrainingSettings.tsx
+  trainingSettingsOpen: false,
+  // app state:
   trainingSettings: {
     dimensionality_reduction_algorithm: DimensionalityReductionAlgorithm.UMAP,
     dimensions: 64,
@@ -41,7 +45,6 @@ const initialState: CotaState = {
     search_space_threshold: 0.8,
     search_space_topk: 1000,
   },
-  trainingSettingsOpen: false,
 };
 
 export const cotaSlice = createSlice({
@@ -106,6 +109,19 @@ export const cotaSlice = createSlice({
       state.selectedConceptId = action.payload.conceptId;
       state.rowSelectionModel = {};
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(ProjectActions.changeProject, (state) => {
+      console.log("Project changed! Resetting 'cota' state.");
+      state.conceptEditorOpen = initialState.conceptEditorOpen;
+      state.currentConcept = initialState.currentConcept;
+      state.selectedConceptId = initialState.selectedConceptId;
+      state.selectedDate = initialState.selectedDate;
+      state.rowSelectionModel = initialState.rowSelectionModel;
+      state.provenanceConcept = initialState.provenanceConcept;
+      state.isTimelineView = initialState.isTimelineView;
+      state.trainingSettingsOpen = initialState.trainingSettingsOpen;
+    });
   },
 });
 

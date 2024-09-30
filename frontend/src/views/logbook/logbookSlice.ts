@@ -2,21 +2,32 @@ import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
 import { MemoColumns } from "../../api/openapi/models/MemoColumns.ts";
 import { StringOperator } from "../../api/openapi/models/StringOperator.ts";
-import { FilterState, createInitialFilterState, filterReducer } from "../../components/FilterDialog/filterSlice.ts";
-import { TableState, initialTableState, tableReducer } from "../../components/tableSlice.ts";
+import {
+  FilterState,
+  createInitialFilterState,
+  filterReducer,
+  resetProjectFilterState,
+} from "../../components/FilterDialog/filterSlice.ts";
+import { MyFilterExpression } from "../../components/FilterDialog/filterUtils.ts";
+import { ProjectActions } from "../../components/Project/projectSlice.ts";
+import { TableState, initialTableState, resetProjectTableState, tableReducer } from "../../components/tableSlice.ts";
 
 interface MemoSearchState {
-  isSearchContent: boolean;
+  // app state:
+  isSearchContent: boolean; // whether to search in the content or the title of the memos.
 }
 
+const defaultFilterExpression: MyFilterExpression = {
+  id: uuidv4(),
+  column: MemoColumns.M_CONTENT,
+  operator: StringOperator.STRING_CONTAINS,
+  value: "",
+};
+
 const initialState: FilterState & TableState & MemoSearchState = {
-  ...createInitialFilterState({
-    id: uuidv4(),
-    column: MemoColumns.M_CONTENT,
-    operator: StringOperator.STRING_CONTAINS,
-    value: "",
-  }),
+  ...createInitialFilterState(defaultFilterExpression),
   ...initialTableState,
+  // app state:
   isSearchContent: false,
 };
 
@@ -30,6 +41,13 @@ const logbookSlice = createSlice({
     onChangeIsSearchContent: (state, action: PayloadAction<boolean>) => {
       state.isSearchContent = action.payload;
     },
+  },
+  extraReducers(builder) {
+    builder.addCase(ProjectActions.changeProject, (state) => {
+      console.log("Project changed! Resetting 'logbook' state.");
+      resetProjectFilterState(state, defaultFilterExpression);
+      resetProjectTableState(state);
+    });
   },
 });
 

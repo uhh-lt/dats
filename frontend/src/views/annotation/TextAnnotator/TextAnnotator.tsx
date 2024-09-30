@@ -12,7 +12,7 @@ import { useAuth } from "../../../auth/useAuth.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import AnnotationMenu, { CodeSelectorHandle } from "../AnnotationMenu.tsx";
+import AnnotationMenu, { CodeSelectorHandle } from "../AnnotationMenu/AnnotationMenu.tsx";
 import DocumentRenderer from "../DocumentRenderer/DocumentRenderer.tsx";
 import useComputeTokenData from "../DocumentRenderer/useComputeTokenData.ts";
 import { ICode } from "../ICode.ts";
@@ -36,7 +36,7 @@ function TextAnnotator({ sdoc }: AnnotatorRemasteredProps) {
 
   // global client state (redux)
   const visibleUserIds = useAppSelector((state) => state.annotations.visibleUserIds);
-  const codes = useAppSelector((state) => state.annotations.codesForSelection);
+  const mostRecentCodeId = useAppSelector((state) => state.annotations.mostRecentCodeId);
   const dispatch = useAppDispatch();
 
   // snackbar
@@ -140,7 +140,7 @@ function TextAnnotator({ sdoc }: AnnotatorRemasteredProps) {
       .join(" ");
 
     const requestBody: SpanAnnotationCreate = {
-      code_id: codes[0].id,
+      code_id: mostRecentCodeId || -1,
       user_id: user.id,
       sdoc_id: sdoc.id,
       begin: tokenData[begin_token].beginChar,

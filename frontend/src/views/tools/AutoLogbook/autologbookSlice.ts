@@ -1,14 +1,17 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ActionTargetObjectType } from "../../../api/openapi/models/ActionTargetObjectType.ts";
 import { ActionType } from "../../../api/openapi/models/ActionType.ts";
+import { ProjectActions } from "../../../components/Project/projectSlice.ts";
 
 interface AutologbookState {
-  visibleDays: number;
+  // project state:
   userIds: number[];
-  actionTypes: ActionType[];
-  actionTargets: ActionTargetObjectType[];
   timestampFrom: number;
   timestampTo: number;
+  // app state:
+  actionTypes: ActionType[];
+  actionTargets: ActionTargetObjectType[];
+  visibleDays: number;
 }
 
 const initState: () => AutologbookState = () => {
@@ -16,12 +19,14 @@ const initState: () => AutologbookState = () => {
   const from = new Date();
   from.setDate(from.getDate() - 6);
   return {
-    visibleDays: 7,
+    // project state:
     userIds: [],
-    actionTypes: [ActionType.CREATE, ActionType.UPDATE, ActionType.DELETE],
-    actionTargets: Object.values(ActionTargetObjectType),
     timestampFrom: from.getTime(),
     timestampTo: to.getTime(),
+    // app state
+    actionTypes: [ActionType.CREATE, ActionType.UPDATE, ActionType.DELETE],
+    actionTargets: Object.values(ActionTargetObjectType),
+    visibleDays: 7,
   };
 };
 
@@ -82,6 +87,14 @@ export const autologbookSlice = createSlice({
       state.timestampFrom = state.timestampTo + 24 * 60 * 60 * 1000;
       state.timestampTo = state.timestampFrom + (state.visibleDays - 1) * 24 * 60 * 60 * 1000;
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(ProjectActions.changeProject, (state) => {
+      console.log("Project changed! Resetting 'autologbook' state.");
+      state.userIds = initialState.userIds;
+      state.timestampFrom = initialState.timestampFrom;
+      state.timestampTo = initialState.timestampTo;
+    });
   },
 });
 
