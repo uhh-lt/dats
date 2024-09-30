@@ -19,26 +19,6 @@ from app.core.data.orm.source_document import SourceDocumentORM
 
 
 class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpdate]):
-    def create(self, db: Session, *, create_dto: DocumentTagCreate) -> DocumentTagORM:
-        if create_dto.parent_id == -1:
-            create_dto.parent_id = None
-        return super().create(db, create_dto=create_dto)
-
-    def create_multi(
-        self, db: Session, *, create_dtos: List[DocumentTagCreate]
-    ) -> List[DocumentTagORM]:
-        for create_dto in create_dtos:
-            if create_dto.parent_id == -1:
-                create_dto.parent_id = None
-        return super().create_multi(db, create_dtos=create_dtos)
-
-    def update(
-        self, db: Session, *, id: int, update_dto: DocumentTagUpdate
-    ) -> DocumentTagORM:
-        if update_dto.parent_id == -1:
-            update_dto.parent_id = None
-        return super().update(db, id=id, update_dto=update_dto)
-
     def remove_by_project(self, db: Session, *, proj_id: int) -> List[int]:
         # find all document tags to be removed
         query = db.query(self.model).filter(self.model.project_id == proj_id)

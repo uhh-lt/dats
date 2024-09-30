@@ -30,7 +30,7 @@ def create_new_code(
     authz_user: AuthzUser = Depends(),
 ) -> CodeRead:
     authz_user.assert_in_project(code.project_id)
-    if code.parent_id is not None and code.parent_id != -1:
+    if code.parent_id is not None:
         authz_user.assert_in_same_project_as(Crud.CODE, code.parent_id)
 
     db_code = crud_code.create(db=db, create_dto=code)

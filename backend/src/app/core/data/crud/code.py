@@ -14,9 +14,6 @@ from config import conf
 
 class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
     def create(self, db: Session, *, create_dto: CodeCreate) -> CodeORM:
-        if create_dto.parent_id == -1:
-            create_dto.parent_id = None
-
         dto_obj_data = jsonable_encoder(create_dto)
         # first create the code
         # noinspection PyArgumentList
@@ -96,11 +93,6 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
             .first()
             is not None
         )
-
-    def update(self, db: Session, *, id: int, update_dto: CodeUpdate) -> CodeORM | None:
-        if update_dto.parent_id == -1:
-            update_dto.parent_id = None
-        return super().update(db, id=id, update_dto=update_dto)
 
     def remove_by_project(self, db: Session, *, proj_id: int) -> List[int]:
         # find all codes to be removed

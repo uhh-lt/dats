@@ -38,7 +38,7 @@ def create_new_doc_tag(
 ) -> DocumentTagRead:
     authz_user.assert_in_project(doc_tag.project_id)
 
-    if doc_tag.parent_id is not None and doc_tag.parent_id != -1:
+    if doc_tag.parent_id is not None:
         authz_user.assert_in_same_project_as(Crud.DOCUMENT_TAG, doc_tag.parent_id)
 
         parent_tag = crud_document_tag.read(db, doc_tag.parent_id)
