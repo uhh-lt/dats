@@ -19,7 +19,8 @@ services:
               device_ids: ["0"]
               capabilities: [gpu]
     networks:
-      - dats_demo_network
+      - ollama_network
 
 networks:
-  dats_demo_network:
+  ollama_network:
+    name: ollama_network
