@@ -1,4 +1,4 @@
-# docker compose -f docker-compose-ollama-only.yml up -d
+# docker compose -f docker-compose-ollama.yml up -d
 
 services:
   ollama:
