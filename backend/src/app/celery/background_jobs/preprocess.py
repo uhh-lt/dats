@@ -20,8 +20,10 @@ def import_uploaded_archive_(archive_file_path: Path, project_id: int) -> None:
     )
 
 
-def execute_text_preprocessing_pipeline_(cargo: PipelineCargo) -> None:
-    pipeline = prepro.get_text_pipeline()
+def execute_text_preprocessing_pipeline_(
+    cargo: PipelineCargo, is_init: bool = True
+) -> None:
+    pipeline = prepro.get_text_pipeline(is_init)
     logger.debug(
         f"Executing text Preprocessing Pipeline\n\t{pipeline}\n\t for cargo"
         f" {cargo.ppj_payload.filename}!"
