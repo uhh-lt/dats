@@ -4,7 +4,7 @@
 # STAGE 1: BUILD REACT APP
 
 # pull image
-FROM node:lts-alpine as build
+FROM node:20-alpine AS build
 
 # Add a work directory
 WORKDIR /app
