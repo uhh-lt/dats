@@ -18,6 +18,9 @@ pip install python-magic
 ## Usage
 
 ```
+# import klimaallgemein metadata
+python importer/dats_importer_metadata.py --input_dir /ltstorage/shares/projects/dwts/backend/src/dev_notebooks/data/KlimaAllgemein/json2 --backend_url http://localhost:19002/ --project_id 84 --metadata_keys paper paper_db headline date --metadata_types STRING STRING STRING DATE --doctype text --username SYSTEM@dwts.org
+
 # import klimaallgemein
 python importer/dats_importer.py --input_dir /ltstorage/shares/projects/dwts/backend/src/dev_notebooks/data/KlimaAllgemein/json2 --backend_url http://localhost:19002/ --project_id 84 --tag_name klima --tag_description klima --is_json --filter_duplicate_files_before_upload --metadata_keys paper paper_db headline date --metadata_types STRING STRING STRING DATE --doctype text --content_key html --mime_type text/html
 
