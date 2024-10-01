@@ -37,7 +37,7 @@
       "name": "Python: Test",
       "type": "node-terminal",
       "request": "launch",
-      "command": "pytest",
+      "command": "micromamba activate dats && pytest",
       "cwd": "${workspaceFolder}/backend/src",
       "envFile": "${workspaceFolder}/backend/.env",
       "env": {
