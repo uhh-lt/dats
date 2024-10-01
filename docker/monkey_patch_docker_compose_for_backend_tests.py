@@ -17,7 +17,11 @@ if disable_ray:
     data["services"].pop("ray", None)
 
 if disable_ollama:
-    # remove ray as it's too resource-intensive for CI
+    # remove ollama as it's too resource-intensive for CI
+    data["services"]["celery-background-jobs-worker"]["networks"].pop(
+        "ollama_network", None
+    )
+    data["services"]["dats-backend-api"]["networks"].pop("ollama_network", None)
     data["networks"].pop("ollama_network", None)
 
 for a in data["services"]:
