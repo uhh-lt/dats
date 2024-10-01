@@ -5,6 +5,7 @@ cupy-cuda11x==12.2.0
 datasets
 faster-whisper==0.8.0
 ffmpeg-python==0.2.0
+huggingface_hub==0.23.5
 omegaconf==2.3.0
 online_triplet_loss==0.0.6
 peft==0.5.0
