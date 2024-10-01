@@ -28,6 +28,7 @@ from app.core.data.dto.preprocessing_job import (
 from app.core.data.dto.preprocessing_job_payload import (
     PreprocessingJobPayloadCreateWithoutPreproJobId,
 )
+from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
 from app.core.data.repo.repo_service import (
     FileNotFoundInRepositoryError,
     RepoService,
@@ -35,6 +36,7 @@ from app.core.data.repo.repo_service import (
 )
 from app.core.db.sql_service import SQLService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
+from app.preprocessing.pipeline.model.text.autospan import AutoSpan
 from app.preprocessing.pipeline.preprocessing_pipeline import PreprocessingPipeline
 from app.util.singleton_meta import SingletonMeta
 
@@ -198,6 +200,47 @@ class PreprocessingService(metaclass=SingletonMeta):
                 )
         return cargos
 
+    def _create_pipeline_cargos_from_preprocessing_job_with_data(
+        self,
+        ppj: PreprocessingJobRead,
+        metadatas: Dict[DocType, List[Dict]],
+        annotations: Dict[DocType, List[List[AutoSpan]]],
+        sdoc_links: Dict[DocType, List[List[SourceDocumentLinkCreate]]],
+        tags: Dict[DocType, List[List[int]]],
+    ) -> Dict[DocType, List[PipelineCargo]]:
+        # create the PipelineCargos for the different DocTypes
+        cargos: Dict[DocType, List[PipelineCargo]] = dict()
+        # init them with empty lists
+        for doc_type in DocType:
+            cargos[doc_type] = []
+
+        # append cargo for each payload and respective metadata/annotations
+        for payload in ppj.payloads:
+            # generate cargo with one payload
+            cargos[payload.doc_type].append(
+                PipelineCargo(ppj_payload=payload, ppj_id=ppj.id)
+            )
+
+            # the last position inside the respective doc_type group
+            doc_type_offset = len(cargos[payload.doc_type]) - 1
+
+            # assign them to the respective cargo
+            cargos[payload.doc_type][-1].data["metadata"] = metadatas[payload.doc_type][
+                doc_type_offset
+            ]
+            cargos[payload.doc_type][-1].data["annotations"] = annotations[
+                payload.doc_type
+            ][doc_type_offset]
+            cargos[payload.doc_type][-1].data["sdoc_link"] = sdoc_links[
+                payload.doc_type
+            ][doc_type_offset]
+            cargos[payload.doc_type][-1].data["tags"] = tags[payload.doc_type][
+                doc_type_offset
+            ]
+
+            logger.info(f"Generated cargos for import are {cargos}")
+        return cargos
+
     def abort_preprocessing_job(self, ppj_id: str) -> PreprocessingJobRead:
         logger.info(f"Aborting PreprocessingJob {ppj_id}...")
         with self.sqls.db_session() as db:
@@ -315,11 +358,11 @@ class PreprocessingService(metaclass=SingletonMeta):
             self._pipelines[doc_type] = PreprocessingPipeline(doc_type=doc_type)
         return self._pipelines[doc_type]
 
-    def get_text_pipeline(self) -> PreprocessingPipeline:
+    def get_text_pipeline(self, is_init: bool = True) -> PreprocessingPipeline:
         from app.preprocessing.pipeline import build_text_pipeline
 
         if DocType.text not in self._pipelines:
-            pipeline = build_text_pipeline()
+            pipeline = build_text_pipeline(is_init)
             self._pipelines[DocType.text] = pipeline
         return self._pipelines[DocType.text]
 

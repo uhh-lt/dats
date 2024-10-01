@@ -59,8 +59,10 @@ from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
 from app.util.singleton_meta import SingletonMeta
 
-PROJECT_USERS_EXPORT_NAMING_TEMPLATE = "project_{project_id}_users_export"
-PROJECT_METADATA_EXPORT_NAMING_TEMPLATE = "project_{project_id}_metadata_export"
+PROJECT_USERS_EXPORT_NAMING_TEMPLATE = "project_{project_id}_users"
+PROJECT_METADATA_EXPORT_NAMING_TEMPLATE = "project_{project_id}_metadata"
+PROJECT_SDOC_LINKS_EXPORT_NAMING_TEMPLATE = "project_{project_id}_sdoc_links"
+SCHEMA_JSON_EXPORT_NAME = "schema.json"
 
 
 class NoDataToExportError(Exception):
@@ -143,11 +145,14 @@ class ExportService(metaclass=SingletonMeta):
         data: pd.DataFrame,
         export_format: ExportFormat,
         fn: Optional[str] = None,
+        append_suffix: bool = False,
     ) -> Path:
         temp_file = self.repo.create_temp_file(fn=fn)
-        temp_file = temp_file.replace(
-            temp_file.with_suffix(f".{str(export_format.value).lower()}")
-        )
+        suffix = f".{str(export_format.value).lower()}"
+        if not append_suffix:
+            temp_file = temp_file.replace(temp_file.with_suffix(suffix))
+        else:
+            temp_file = temp_file.parent / (temp_file.name + suffix)
 
         logger.info(f"Writing export data to {temp_file} !")
         if export_format == ExportFormat.CSV:
@@ -163,7 +168,7 @@ class ExportService(metaclass=SingletonMeta):
         fn: Optional[str] = None,
     ) -> Path:
         temp_file = self.repo.create_temp_file(fn=fn)
-        temp_file = temp_file.replace(temp_file.with_suffix(".json"))
+        temp_file = temp_file.parent / (temp_file.name + ".json")
 
         logger.info(f"Writing export data to {temp_file} !")
         with open(temp_file, "w") as f:
@@ -231,6 +236,7 @@ class ExportService(metaclass=SingletonMeta):
                     "tags_verbose": [tag.name for tag in sdoc_tags],
                 }
             )
+
         return exported_sdocs_metadata
 
     def __get_all_raw_sdocs_files_in_project_for_export(
@@ -288,7 +294,6 @@ class ExportService(metaclass=SingletonMeta):
         bbox_read_resolved_dtos = [
             BBoxAnnotationReadResolved.model_validate(bbox) for bbox in bboxes
         ]
-
         # fill the DataFrame
         data = {
             "adoc_id": [],
@@ -305,6 +310,8 @@ class ExportService(metaclass=SingletonMeta):
             "text": [],
             "text_begin_char": [],
             "text_end_char": [],
+            "text_begin_token": [],
+            "text_end_token": [],
             "bbox_x_min": [],
             "bbox_x_max": [],
             "bbox_y_min": [],
@@ -326,6 +333,8 @@ class ExportService(metaclass=SingletonMeta):
             data["text"].append(span.text)
             data["text_begin_char"].append(span.begin)
             data["text_end_char"].append(span.end)
+            data["text_begin_token"].append(span.begin_token)
+            data["text_end_token"].append(span.end_token)
 
             data["bbox_x_min"].append(None)
             data["bbox_x_max"].append(None)
@@ -352,6 +361,8 @@ class ExportService(metaclass=SingletonMeta):
             data["text"].append(None)
             data["text_begin_char"].append(None)
             data["text_end_char"].append(None)
+            data["text_begin_token"].append(None)
+            data["text_end_token"].append(None)
 
         df = pd.DataFrame(data=data)
         return df
@@ -701,8 +712,6 @@ class ExportService(metaclass=SingletonMeta):
         return exported_tags
 
     def __generate_export_df_for_code(self, db: Session, code_id: int) -> pd.DataFrame:
-        logger.info(f"Exporting Code {code_id} ...")
-
         code = crud_code.read(db=db, id=code_id)
         code_dto = CodeRead.model_validate(code)
         parent_code_id = code_dto.parent_id
@@ -764,7 +773,7 @@ class ExportService(metaclass=SingletonMeta):
         export_file = self.__write_export_data_to_temp_file(
             data=export_data,
             export_format=export_format,
-            fn=f"project_{project_id}_sdoc_{sdoc_id}_adoc_{adoc.id}_export",
+            fn=f"project_{project_id}_sdoc_{sdoc_id}_adoc_{adoc.id}",
         )
         export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
         return export_url
@@ -795,7 +804,8 @@ class ExportService(metaclass=SingletonMeta):
         export_file = self.__write_export_data_to_temp_file(
             data=export_data,
             export_format=export_format,
-            fn=f"sdoc_{Path(str(sdoc.filename)).stem}_annotations_export",
+            fn=sdoc.filename,
+            append_suffix=True,
         )
         export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
         return export_url
@@ -812,7 +822,7 @@ class ExportService(metaclass=SingletonMeta):
             export_file = self.__write_export_data_to_temp_file(
                 data=df,
                 export_format=export_format,
-                fn=f"adoc_{adoc_id}_export",
+                fn=f"adoc_{adoc_id}",
             )
             exported_files.append(export_file)
 
@@ -847,7 +857,7 @@ class ExportService(metaclass=SingletonMeta):
         export_file = self.__write_export_data_to_temp_file(
             data=export_data,
             export_format=export_format,
-            fn=f"user_{user_id}_memos_export",
+            fn=f"user_{user_id}_memos",
         )
         export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
         return export_url
@@ -859,6 +869,7 @@ class ExportService(metaclass=SingletonMeta):
         export_format: ExportFormat = ExportFormat.CSV,
     ) -> Path:
         proj = crud_project.read(db=db, id=project_id)
+        logger.info(f"Exporting Codes of project {project_id} ...")
         code_dfs = [
             self.__generate_export_df_for_code(db=db, code_id=code.id)
             for code in proj.codes
@@ -903,7 +914,7 @@ class ExportService(metaclass=SingletonMeta):
                 export_file = self.__write_export_data_to_temp_file(
                     data=adoc_df,
                     export_format=export_format,
-                    fn=f"adoc_{adoc_df.iloc[0].adoc_id}_export",
+                    fn=f"adoc_{adoc_df.iloc[0].adoc_id}",
                 )
                 exported_files.append(export_file)
 
@@ -913,7 +924,7 @@ class ExportService(metaclass=SingletonMeta):
             export_file = self.__write_export_data_to_temp_file(
                 data=exported_memo_df,
                 export_format=export_format,
-                fn=f"user_{user_id}_memo_export",
+                fn=f"user_{user_id}_memo",
             )
             exported_files.append(export_file)
         else:
@@ -926,7 +937,7 @@ class ExportService(metaclass=SingletonMeta):
             export_file = self.__write_export_data_to_temp_file(
                 data=exported_tag_df,
                 export_format=export_format,
-                fn=f"project_{project_id}_tags_export",
+                fn=f"project_{project_id}_tags",
             )
             exported_files.append(export_file)
         else:
@@ -945,6 +956,28 @@ class ExportService(metaclass=SingletonMeta):
         )
 
         return self.repo.get_temp_file_url(export_zip.name, relative=True)
+
+    def __generate_export_dict_for_sdoc_links(
+        self, db: Session, project_id: int
+    ) -> pd.DataFrame:
+        data = {
+            "sdoc_id": [],
+            "sdoc_filename": [],
+            "parent_source_document_id": [],
+            "linked_source_document_filename": [],
+            "linked_source_document_id": [],
+        }
+        sdocs = crud_sdoc.read_by_project(db=db, proj_id=project_id)
+        for sdoc in sdocs:
+            for link in sdoc.source_document_links:
+                data["sdoc_id"].append(sdoc.id)
+                data["sdoc_filename"].append(sdoc.filename)
+                data["parent_source_document_id"].append(link.parent_source_document_id)
+                data["linked_source_document_filename"].append(
+                    link.linked_source_document_filename
+                )
+                data["linked_source_document_id"].append(link.linked_source_document_id)
+        return pd.DataFrame(data)
 
     def _export_all_data_from_proj(
         self,
@@ -1009,11 +1042,10 @@ class ExportService(metaclass=SingletonMeta):
                     if sdoc_id not in exported_adocs:
                         exported_adocs[sdoc_id] = []
                     exported_adocs[sdoc_id].append(adoc_df)
-
         # merge adocs
         merged_exported_adocs: List[pd.DataFrame] = []
-        for adoc_id in exported_adocs.keys():
-            merged_exported_adocs.append(pd.concat(exported_adocs[adoc_id]))
+        for sdoc_id in exported_adocs.keys():
+            merged_exported_adocs.append(pd.concat(exported_adocs[sdoc_id]))
 
         # write users to files
         users_file = self.__write_export_data_to_temp_file(
@@ -1028,7 +1060,8 @@ class ExportService(metaclass=SingletonMeta):
             export_file = self.__write_export_data_to_temp_file(
                 data=adoc_df,
                 export_format=export_format,
-                fn=f"sdoc_{Path(str(adoc_df.iloc[0].sdoc_name)).stem}_annotations_export",
+                fn=adoc_df.iloc[0].sdoc_name,
+                append_suffix=True,
             )
             exported_files.append(export_file)
 
@@ -1037,7 +1070,7 @@ class ExportService(metaclass=SingletonMeta):
             export_file = self.__write_export_data_to_temp_file(
                 data=memo_df,
                 export_format=export_format,
-                fn=f"user_{memo_df.iloc[0].user_id}_memo_export",
+                fn=f"user_{memo_df.iloc[0].user_id}_memo",
             )
             exported_files.append(export_file)
 
@@ -1063,7 +1096,7 @@ class ExportService(metaclass=SingletonMeta):
             export_file = self.__write_export_data_to_temp_file(
                 data=exported_tag_df,
                 export_format=export_format,
-                fn=f"project_{project_id}_tags_export",
+                fn=f"project_{project_id}_tags",
             )
             exported_files.append(export_file)
 
@@ -1077,7 +1110,7 @@ class ExportService(metaclass=SingletonMeta):
             export_file = self.__write_export_data_to_temp_file(
                 data=exported_project_metadata,
                 export_format=export_format,
-                fn=f"project_{project_id}_project_metadata_export",
+                fn=f"project_{project_id}_sdoc_metadatas",
             )
             exported_files.append(export_file)
 
@@ -1092,19 +1125,26 @@ class ExportService(metaclass=SingletonMeta):
         exported_sdocs_metadata = self.__get_all_sdoc_metadatas_in_project_for_export(
             db=db, project_id=project_id
         )
-        exported_files.extend(
-            [
-                self.__write_exported_json_to_temp_file(
-                    exported_file=exported_sdoc_metadata,
-                    fn=Path(str(exported_sdoc_metadata["filename"])).stem,
-                )
-                for exported_sdoc_metadata in exported_sdocs_metadata
-            ]
+        for exported_sdoc_metadata in exported_sdocs_metadata:
+            exported_file = self.__write_exported_json_to_temp_file(
+                exported_file=exported_sdoc_metadata,
+                fn=exported_sdoc_metadata["filename"],
+            )
+            exported_files.append(exported_file)
+
+        exported_sdoc_links = self.__generate_export_dict_for_sdoc_links(
+            db=db, project_id=project_id
         )
+        exported_file = self.__write_export_data_to_temp_file(
+            data=exported_sdoc_links,
+            export_format=export_format,
+            fn=PROJECT_SDOC_LINKS_EXPORT_NAMING_TEMPLATE.format(project_id=project_id),
+        )
+        exported_files.append(exported_file)
 
         # ZIP all files
         export_zip = self.__create_export_zip(
-            f"user_data_project_{project_id}_export.zip", exported_files
+            f"project_{project_id}_export.zip", exported_files
         )
 
         return self.repo.get_temp_file_url(export_zip.name, relative=True)
@@ -1256,13 +1296,14 @@ class ExportService(metaclass=SingletonMeta):
         ]
 
         sdocs_metadata = self.__get_sdocs_metadata_for_export(db=db, sdocs=sdocs)
-        files = [
-            self.__write_exported_json_to_temp_file(
-                exported_file=sdoc_metadata,
-                fn=Path(str(sdoc_metadata["filename"])).stem,
+        files = []
+        for sdoc_metadata in sdocs_metadata:
+            files.append(
+                self.__write_exported_json_to_temp_file(
+                    exported_file=sdoc_metadata,
+                    fn=sdoc_metadata["filename"],
+                )
             )
-            for sdoc_metadata in sdocs_metadata
-        ]
         project_metadata = self.__generate_export_dfs_for_all_sdoc_metadata_in_proj(
             db=db, project_id=project_id
         )
@@ -1281,7 +1322,7 @@ class ExportService(metaclass=SingletonMeta):
                 self.__write_export_data_to_temp_file(
                     project_metadata,
                     export_format=export_format,
-                    fn=f"project_{project_id}_metadata_export",
+                    fn=f"project_{project_id}_metadata",
                 )
             )
         return files
@@ -1290,6 +1331,7 @@ class ExportService(metaclass=SingletonMeta):
         self, export_params: ExportJobParameters
     ) -> None:
         # TODO check all job type specific parameters
+        assert export_params.export_format is not None
         if export_params.export_format.value not in set(i.value for i in ExportFormat):
             raise NoSuchExportFormatError(
                 export_format=export_params.export_format.value

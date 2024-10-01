@@ -1,8 +1,8 @@
 from loguru import logger
 
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
-from app.preprocessing.pipeline.model.text.autospan import AutoSpan
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
+from app.preprocessing.pipeline.model.text.sentence import Sentence
 
 
 def generate_sentence_annotations(cargo: PipelineCargo) -> PipelineCargo:
@@ -18,14 +18,11 @@ def generate_sentence_annotations(cargo: PipelineCargo) -> PipelineCargo:
 
     pptd.sentences = list()
     for s in out.sents:
-        auto = AutoSpan(
-            code="SENTENCE",
+        sent = Sentence(
             start=s.start_char,
             end=s.end_char,
             text=s.text,
-            start_token=s.start_token,
-            end_token=s.end_token,
         )
-        pptd.sentences.append(auto)
+        pptd.sentences.append(sent)
 
     return cargo
