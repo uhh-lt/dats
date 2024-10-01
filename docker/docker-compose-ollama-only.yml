@@ -1,3 +1,5 @@
+# docker compose -f docker-compose-ollama-only.yml up -d
+
 services:
   ollama:
     image: ollama/ollama:0.3.4
