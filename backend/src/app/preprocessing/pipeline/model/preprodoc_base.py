@@ -3,6 +3,8 @@ from typing import Dict, List, Union
 
 from pydantic import BaseModel, Field
 
+from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
+
 
 class PreProDocBase(BaseModel):
     filename: str = Field(
@@ -33,4 +35,14 @@ class PreProDocBase(BaseModel):
             "that will be persisted in the database."
         ),
         default_factory=dict,
+    )
+
+    sdoc_link_create_dtos: List[SourceDocumentLinkCreate] = Field(
+        description="A list of sdoc link create dtos that is used by every import pipeline to import sdoc links.",
+        default_factory=list,
+    )
+
+    tags: List[int] = Field(
+        description="A list of tag ids that is used by every import pipeline to import tags on sdocs.",
+        default_factory=list,
     )

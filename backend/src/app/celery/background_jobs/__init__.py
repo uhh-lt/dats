@@ -1,6 +1,9 @@
 from pathlib import Path
 from typing import Any, List
 
+from celery import group
+from celery.result import GroupResult
+
 from app.core.data.crawler.crawler_service import CrawlerService
 from app.core.data.dto.crawler_job import CrawlerJobParameters, CrawlerJobRead
 from app.core.data.dto.export_job import ExportJobParameters, ExportJobRead
@@ -105,13 +108,15 @@ def prepare_and_start_llm_job_async(
 
 def execute_text_preprocessing_pipeline_apply_async(
     cargos: List[PipelineCargo],
-) -> None:
+) -> GroupResult:
     from app.celery.background_jobs.tasks import (
         execute_text_preprocessing_pipeline_task,
     )
 
+    tasks = []
     for cargo in cargos:
-        execute_text_preprocessing_pipeline_task.apply_async(kwargs={"cargo": cargo})
+        tasks.append(execute_text_preprocessing_pipeline_task.s(cargo=cargo))
+    return group(tasks).apply_async()
 
 
 def execute_image_preprocessing_pipeline_apply_async(
