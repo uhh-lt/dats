@@ -222,7 +222,6 @@ services:
       - rabbitmq
       - redis
       - postgres
-      - ollama
     ports:
       - "${JUPYTER_BACKGROUND_JOBS_EXPOSED:-8880}:8888"
       - "${CELERY_DEBUG_PORT:-45678}:6900"
