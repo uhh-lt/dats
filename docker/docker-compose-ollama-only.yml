@@ -1,0 +1,23 @@
+services:
+  ollama:
+    image: ollama/ollama:0.3.4
+    ports:
+      - ${OLLAMA_EXPOSED:-19290}:11434
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+    tty: true
+    restart: unless-stopped
+    volumes:
+      - ./ollama_cache:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["0"]
+              capabilities: [gpu]
+    networks:
+      - dats_demo_network
+
+networks:
+  dats_demo_network:
