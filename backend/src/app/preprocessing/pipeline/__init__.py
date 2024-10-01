@@ -100,11 +100,11 @@ def build_text_pipeline(
         func=extract_text_from_html_and_create_source_mapping,
         required_data=["pptd"],
     )
-    if is_init:
-        pipeline.register_step(
-            func=detect_content_language,
-            required_data=["pptd"],
-        )
+
+    pipeline.register_step(
+        func=detect_content_language,
+        required_data=["pptd"],
+    )
 
     pipeline.register_step(
         func=run_spacy_pipeline,
@@ -152,10 +152,10 @@ def build_text_pipeline(
         func=write_pptd_to_database,
         required_data=["pptd"],
     )
-    if is_init:
-        pipeline.register_step(
-            func=resolve_sdoc_links,
-        )
+
+    pipeline.register_step(
+        func=resolve_sdoc_links,
+    )
 
     pipeline.register_step(
         func=store_document_in_elasticsearch,

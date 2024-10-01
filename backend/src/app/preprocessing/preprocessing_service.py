@@ -35,6 +35,7 @@ from app.core.data.repo.repo_service import (
     UnsupportedDocTypeForSourceDocument,
 )
 from app.core.db.sql_service import SQLService
+from app.preprocessing.pipeline.model.image.autobbox import AutoBBox
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.autospan import AutoSpan
 from app.preprocessing.pipeline.preprocessing_pipeline import PreprocessingPipeline
@@ -204,7 +205,8 @@ class PreprocessingService(metaclass=SingletonMeta):
         self,
         ppj: PreprocessingJobRead,
         metadatas: Dict[DocType, List[Dict]],
-        annotations: Dict[DocType, List[List[AutoSpan]]],
+        annotations: List[List[AutoSpan]],
+        bboxes: List[List[AutoBBox]],
         sdoc_links: Dict[DocType, List[List[SourceDocumentLinkCreate]]],
         tags: Dict[DocType, List[List[int]]],
     ) -> Dict[DocType, List[PipelineCargo]]:
@@ -228,15 +230,19 @@ class PreprocessingService(metaclass=SingletonMeta):
             cargos[payload.doc_type][-1].data["metadata"] = metadatas[payload.doc_type][
                 doc_type_offset
             ]
-            cargos[payload.doc_type][-1].data["annotations"] = annotations[
-                payload.doc_type
-            ][doc_type_offset]
             cargos[payload.doc_type][-1].data["sdoc_link"] = sdoc_links[
                 payload.doc_type
             ][doc_type_offset]
             cargos[payload.doc_type][-1].data["tags"] = tags[payload.doc_type][
                 doc_type_offset
             ]
+
+            if payload.doc_type == DocType.text:
+                cargos[payload.doc_type][-1].data["annotations"] = annotations[
+                    doc_type_offset
+                ]
+            elif payload.doc_type == DocType.image:
+                cargos[payload.doc_type][-1].data["bboxes"] = bboxes[doc_type_offset]
 
             logger.info(f"Generated cargos for import are {cargos}")
         return cargos

@@ -58,7 +58,8 @@ from app.core.db.sql_service import SQLService
 from app.util.singleton_meta import SingletonMeta
 
 PROJECT_USERS_EXPORT_NAMING_TEMPLATE = "project_{project_id}_users"
-PROJECT_METADATA_EXPORT_NAMING_TEMPLATE = "project_{project_id}_metadata"
+PROJECT_SDOC_METADATAS_EXPORT_NAMING_TEMPLATE = "project_{project_id}_metadatas"
+PROJECT_DETAILS_EXPORT_NAMING_TEMPLATE = "project_{project_id}_details"
 PROJECT_SDOC_LINKS_EXPORT_NAMING_TEMPLATE = "project_{project_id}_sdoc_links"
 SCHEMA_JSON_EXPORT_NAME = "schema.json"
 
@@ -565,6 +566,7 @@ class ExportService(metaclass=SingletonMeta):
                     "key": project_metadata.key,
                     "metatype": project_metadata.metatype,
                     "doctype": project_metadata.doctype,
+                    "description": project_metadata.description,
                 }
             )
         exported_project_metadata = pd.DataFrame(exported_project_metadata)
@@ -947,10 +949,10 @@ class ExportService(metaclass=SingletonMeta):
         exported_project_metadata = self.__generate_export_dict_for_project_metadata(
             db=db, project_id=project_id
         )
-        # write project metadata to files
+        # write project details to files
         project_file = self.__write_exported_json_to_temp_file(
             exported_file=exported_project_metadata,
-            fn=PROJECT_METADATA_EXPORT_NAMING_TEMPLATE.format(project_id=project_id),
+            fn=PROJECT_DETAILS_EXPORT_NAMING_TEMPLATE.format(project_id=project_id),
         )
         exported_files.append(project_file)
 
@@ -1052,7 +1054,9 @@ class ExportService(metaclass=SingletonMeta):
             export_file = self.__write_export_data_to_temp_file(
                 data=exported_project_metadata,
                 export_format=export_format,
-                fn=f"project_{project_id}_sdoc_metadatas",
+                fn=PROJECT_SDOC_METADATAS_EXPORT_NAMING_TEMPLATE.format(
+                    project_id=project_id
+                ),
             )
             exported_files.append(export_file)
 
@@ -1246,7 +1250,9 @@ class ExportService(metaclass=SingletonMeta):
                 self.__write_export_data_to_temp_file(
                     project_metadata,
                     export_format=export_format,
-                    fn=f"project_{project_id}_metadata",
+                    fn=PROJECT_SDOC_METADATAS_EXPORT_NAMING_TEMPLATE.format(
+                        project_id=project_id
+                    ),
                 )
             )
         return files
