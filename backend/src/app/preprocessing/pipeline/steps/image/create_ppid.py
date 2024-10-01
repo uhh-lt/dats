@@ -39,6 +39,7 @@ def create_ppid_with_metadata(cargo: PipelineCargo) -> PipelineCargo:
         metadata=cargo.data["metadata"],
         sdoc_link_create_dtos=cargo.data["sdoc_link"],
         tags=cargo.data["tags"],
+        bboxes=cargo.data["bboxes"],
     )
 
     cargo.data["ppid"] = ppid

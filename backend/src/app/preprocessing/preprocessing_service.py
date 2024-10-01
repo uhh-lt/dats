@@ -35,6 +35,7 @@ from app.core.data.repo.repo_service import (
     UnsupportedDocTypeForSourceDocument,
 )
 from app.core.db.sql_service import SQLService
+from app.preprocessing.pipeline.model.image.autobbox import AutoBBox
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.autospan import AutoSpan
 from app.preprocessing.pipeline.preprocessing_pipeline import PreprocessingPipeline
@@ -55,6 +56,9 @@ class PreprocessingService(metaclass=SingletonMeta):
         payloads: List[PreprocessingJobPayloadCreateWithoutPreproJobId] = []
         for uploaded_file in uploaded_files:
             mime_type = uploaded_file.content_type
+            assert (
+                mime_type
+            ), f"Expected uploaded file to be of known mime type but got {mime_type}"
             if not mime_type_supported(mime_type=mime_type):
                 raise HTTPException(
                     detail=f"Document with MIME type {mime_type} not supported!",
@@ -76,6 +80,7 @@ class PreprocessingService(metaclass=SingletonMeta):
                 continue
 
             doc_type = get_doc_type(mime_type=mime_type)
+            assert doc_type, f"Expected to find fitting doc_type based on the mime_type {mime_type}, but got {doc_type} instead."
 
             payloads.append(
                 PreprocessingJobPayloadCreateWithoutPreproJobId(
@@ -105,6 +110,7 @@ class PreprocessingService(metaclass=SingletonMeta):
             try:
                 mime_type = magic.from_file(file_path, mime=True)
                 doc_type = get_doc_type(mime_type=mime_type)
+                assert doc_type, f"Expected to find fitting doc_type based on the mime_type {mime_type}, but got {doc_type} instead."
 
                 payloads.append(
                     PreprocessingJobPayloadCreateWithoutPreproJobId(
@@ -183,7 +189,8 @@ class PreprocessingService(metaclass=SingletonMeta):
         self,
         ppj: PreprocessingJobRead,
         metadatas: Dict[DocType, List[Dict]],
-        annotations: Dict[DocType, List[List[AutoSpan]]],
+        annotations: List[List[AutoSpan]],
+        bboxes: List[List[AutoBBox]],
         sdoc_links: Dict[DocType, List[List[SourceDocumentLinkCreate]]],
         tags: Dict[DocType, List[List[int]]],
     ) -> Dict[DocType, List[PipelineCargo]]:
@@ -207,15 +214,19 @@ class PreprocessingService(metaclass=SingletonMeta):
             cargos[payload.doc_type][-1].data["metadata"] = metadatas[payload.doc_type][
                 doc_type_offset
             ]
-            cargos[payload.doc_type][-1].data["annotations"] = annotations[
-                payload.doc_type
-            ][doc_type_offset]
             cargos[payload.doc_type][-1].data["sdoc_link"] = sdoc_links[
                 payload.doc_type
             ][doc_type_offset]
             cargos[payload.doc_type][-1].data["tags"] = tags[payload.doc_type][
                 doc_type_offset
             ]
+
+            if payload.doc_type == DocType.text:
+                cargos[payload.doc_type][-1].data["annotations"] = annotations[
+                    doc_type_offset
+                ]
+            elif payload.doc_type == DocType.image:
+                cargos[payload.doc_type][-1].data["bboxes"] = bboxes[doc_type_offset]
 
             logger.info(f"Generated cargos for import are {cargos}")
         return cargos
@@ -334,9 +345,7 @@ class PreprocessingService(metaclass=SingletonMeta):
 
     def _get_pipeline(self, doc_type: DocType) -> PreprocessingPipeline:
         if doc_type not in self._pipelines:
-            self._pipelines[doc_type] = PreprocessingPipeline(
-                doc_type=doc_type, num_workers=1, force_sequential=True
-            )
+            self._pipelines[doc_type] = PreprocessingPipeline(doc_type=doc_type)
         return self._pipelines[doc_type]
 
     def get_text_pipeline(self, is_init: bool = True) -> PreprocessingPipeline:
