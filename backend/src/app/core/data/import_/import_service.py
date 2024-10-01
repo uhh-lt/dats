@@ -12,7 +12,6 @@ from loguru import logger
 from pandas import Series
 from sqlalchemy.orm import Session
 
-from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.document_tag import crud_document_tag
@@ -25,9 +24,8 @@ from app.core.data.doc_type import (
     get_mime_type_from_file,
     mime_type_supported,
 )
-from app.core.data.dto.annotation_document import AnnotationDocumentCreate
 from app.core.data.dto.background_job_base import BackgroundJobStatus
-from app.core.data.dto.bbox_annotation import BBoxAnnotationCreateWithCodeId
+from app.core.data.dto.bbox_annotation import BBoxAnnotationCreate
 from app.core.data.dto.code import CodeCreate
 from app.core.data.dto.document_tag import DocumentTagCreate
 from app.core.data.dto.import_job import (
@@ -46,13 +44,14 @@ from app.core.data.dto.project_metadata import (
     ProjectMetadataRead,
 )
 from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
-from app.core.data.dto.span_annotation import SpanAnnotationCreateWithCodeId
+from app.core.data.dto.span_annotation import SpanAnnotationCreate
 from app.core.data.orm.project import ProjectORM
 from app.core.data.repo.repo_service import (
     RepoService,
 )
 from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
+from app.preprocessing.pipeline.model.image.autobbox import AutoBBox
 from app.preprocessing.pipeline.model.text.autospan import AutoSpan
 from app.preprocessing.ray_model_service import RayModelService
 from app.util.singleton_meta import SingletonMeta
@@ -60,8 +59,8 @@ from app.util.singleton_meta import SingletonMeta
 TEMPORARY_DESCRIPTION = "temporary description"
 
 FILETYPE_REGEX = [
-    (r"project_\d+_metadata.json", "project_metadata", True),
-    (r"project_\d+_sdoc_metadatas.csv", "metadatas", True),
+    (r"project_\d+_details.json", "project_details", True),
+    (r"project_\d+_metadatas.csv", "project_metadatas", True),
     (r"project_\d+_codes.csv", "codes", True),
     (r"project_\d+_sdoc_links.csv", "sdoc_links", True),
     (r"project_\d+_tags.csv", "tags", True),
@@ -156,7 +155,7 @@ class ImportService(metaclass=SingletonMeta):
             ImportJobType.SINGLE_PROJECT_ALL_TAGS: cls._import_all_tags_to_proj,
             # ImportJobType.SINGLE_PROJECT_SELECTED_SDOCS: cls._import_selected_sdocs_to_proj,
             # ImportJobType.SINGLE_USER_ALL_DATA: cls._import_user_data_to_proj,
-            ImportJobType.SINGLE_USER_ALL_CODES: cls._import_user_codes_to_proj,
+            ImportJobType.SINGLE_USER_ALL_CODES: cls._import_codes_to_proj,
             ImportJobType.SINGLE_PROJECT: cls._import_project,
             ImportJobType.SINGLE_PROJECT_ALL_METADATA: cls._import_all_project_metadata,
             ImportJobType.SINGLE_PROJECT_ALL_PROJECT_PROJECT_METADATA: cls._import_sdoc_metadatas_to_project,
@@ -237,7 +236,6 @@ class ImportService(metaclass=SingletonMeta):
         self,
         row: Series,
         db: Session,
-        user_id: int,
         proj_id: int,
         code_id_mapping: dict[int, int],
     ) -> Series:
@@ -246,28 +244,22 @@ class ImportService(metaclass=SingletonMeta):
         description = row["description"]
         color = row["color"]
         parent_code_id = row["parent_code_id"]
-        created_by_user_first_name = row["created_by_user_first_name"]
-        created_by_user_last_name = row["created_by_user_last_name"]
-        if not (
-            created_by_user_first_name == "SYSTEM"
-            and created_by_user_last_name == "USER"
-        ):  # is this ok, or can we update / append to system codes? NO! TODO: think how to solve this.
-            if pd.isna(parent_code_id):
-                parent_code_id = None
-            else:
-                parent_code_id = code_id_mapping.get(parent_code_id, None)
+        if pd.isna(parent_code_id):
+            parent_code_id = None
+        else:
+            parent_code_id = code_id_mapping.get(parent_code_id, None)
 
-            create_code = CodeCreate(
-                name=code_name,
-                description=description,
-                parent_id=parent_code_id,
-                project_id=proj_id,
-                user_id=user_id,
-                **({"color": color} if pd.notna(color) else {}),
-            )
-            code = crud_code.create(db=db, create_dto=create_code)
-            code_id_mapping[code_id] = code.id
-            logger.info(f"create code {code}")
+        create_code = CodeCreate(
+            name=code_name,
+            description=description,
+            parent_id=parent_code_id,
+            project_id=proj_id,
+            is_system=False,
+            **({"color": color} if pd.notna(color) else {}),
+        )
+        code = crud_code.create(db=db, create_dto=create_code)
+        code_id_mapping[code_id] = code.id
+        logger.info(f"create code {code}")
         return row
 
     def __create_tag(
@@ -359,24 +351,23 @@ class ImportService(metaclass=SingletonMeta):
         df.apply(has_missing_value, axis=1)
 
     def __check_code_root_clashes(
-        self, df: pd.DataFrame, user_id: int, project_id: int, db: Session
-    ) -> None:
-        df = df[
-            df["parent_code_id"].isna()
-        ]  # We only have to check if one of the roots already exists, because child codes are always in another namespace.
-        mask = df["code_name"].apply(
-            lambda code_name: crud_code.exists_by_name_and_user_and_project_and_parent(
-                db=db,
-                code_name=code_name,
-                user_id=user_id,
-                proj_id=project_id,
-                parent_id=None,
+        self, df: pd.DataFrame, project_id: int, db: Session
+    ) -> pd.DataFrame:
+        skip_code_mask = []
+        for code_name in df["code_name"]:
+            exsting_code = crud_code.read_by_name_and_project(
+                db=db, code_name=code_name, proj_id=project_id
             )
-        )
-        if mask.any():
-            raise ValueError(
-                f"Some root codenames already exist for user {user_id} in project {project_id}"
-            )
+            if exsting_code:
+                if not exsting_code.is_system:
+                    raise ValueError(
+                        f"Some root codenames already with codename {code_name} exist in project {project_id}"
+                    )
+                else:
+                    skip_code_mask.append(False)  # skip because its system user code
+            else:
+                skip_code_mask.append(True)  # don't skip
+        return df.loc[skip_code_mask]
 
     def __check_tag_root_clashes(
         self, df: pd.DataFrame, project_id: int, db: Session
@@ -416,9 +407,11 @@ class ImportService(metaclass=SingletonMeta):
         return layers
 
     def __import_project_metadata(self, row: Series, db: Session, proj_id: int) -> None:
+        logger.info(f"row is {row}")
         key = row["key"]
         metatype = row["metatype"]
         doctype = row["doctype"]
+        description = row["description"]
         exists = crud_project_meta.exists_by_project_and_key_and_metatype_and_doctype(
             db=db, project_id=proj_id, key=key, metatype=metatype, doctype=doctype
         )
@@ -426,7 +419,11 @@ class ImportService(metaclass=SingletonMeta):
             crud_create = crud_project_meta.create(
                 db=db,
                 create_dto=ProjectMetadataCreate(
-                    key=key, metatype=metatype, doctype=doctype, project_id=proj_id
+                    key=key,
+                    metatype=metatype,
+                    doctype=doctype,
+                    project_id=proj_id,
+                    description=description,
                 ),
             )
             metadata_read = ProjectMetadataRead.model_validate(crud_create)
@@ -459,7 +456,7 @@ class ImportService(metaclass=SingletonMeta):
         logger.info(f"updated project {project_update}")
         return crud_project.update(db=db, id=project_id, update_dto=project_update)
 
-    def _import_user_codes_to_proj(
+    def _import_codes_to_proj(
         self,
         db: Session,
         imj_parameters: ImportJobParameters,
@@ -469,11 +466,11 @@ class ImportService(metaclass=SingletonMeta):
         user_id = imj_parameters.user_id
         path_to_file = self.repo._get_dst_path_for_temp_file(filename)
         df = pd.read_csv(path_to_file)
-        self.__import_user_codes_to_proj(
+        self.__import_codes_to_proj(
             db=db, df=df, user_id=user_id, project_id=project_id
         )
 
-    def __import_user_codes_to_proj(
+    def __import_codes_to_proj(
         self,
         db: Session,
         df: pd.DataFrame,
@@ -487,9 +484,7 @@ class ImportService(metaclass=SingletonMeta):
         )
         self.__check_code_missing_values(df)
         self.__check_code_parents_defined(df)
-        self.__check_code_root_clashes(
-            df=df, user_id=user_id, project_id=project_id, db=db
-        )
+        df = self.__check_code_root_clashes(df=df, project_id=project_id, db=db)
         sorted_dfs = self.__code_breadth_search_sort(
             df
         )  # split the df into layers of codes starting with root codes.
@@ -501,7 +496,6 @@ class ImportService(metaclass=SingletonMeta):
                 lambda row: self.__create_code(
                     row,
                     db,
-                    user_id,
                     project_id,
                     code_id_mapping=code_id_mapping,
                 ),
@@ -569,8 +563,8 @@ class ImportService(metaclass=SingletonMeta):
             )
             """
                 expected_files = {
-                    "project_metadata": project_metadata.json
-                    "metadatas": metadata.csv
+                    "project_details": project_details.json
+                    "project_metadatas": project_metadatas.csv
                     "codes": project_codes.csv
                     "sdoc_links": project_sdoc_links.csv
                     "tags": project_tags.csv
@@ -596,7 +590,7 @@ class ImportService(metaclass=SingletonMeta):
             # logger.info(json.dumps(sdoc_filepaths, indent=4))
             logger.info(sdoc_filepaths)
             # import project details
-            with open(expected_file_paths["project_metadata"], "r") as f:
+            with open(expected_file_paths["project_details"], "r") as f:
                 project_details = json.load(f)
             self.__update_project_details(
                 db=db,
@@ -605,13 +599,13 @@ class ImportService(metaclass=SingletonMeta):
                 user_id=user_id,
             )
             # import project metadata
-            metadata_mapping_df = pd.read_csv(expected_file_paths["metadatas"])
+            metadata_mapping_df = pd.read_csv(expected_file_paths["project_metadatas"])
             for _, row in metadata_mapping_df.iterrows():
                 self.__import_project_metadata(row, db=db, proj_id=proj_id)
 
             # import codes
             codes_df = pd.read_csv(expected_file_paths["codes"])
-            codes_id_mapping = self.__import_user_codes_to_proj(
+            codes_id_mapping = self.__import_codes_to_proj(
                 db=db, df=codes_df, user_id=user_id, project_id=proj_id
             )
 
@@ -628,12 +622,12 @@ class ImportService(metaclass=SingletonMeta):
 
             # all of following sdoc specific objects need to go into a dict that maps from doc_type to the list of objects.
             # The order in which they come, will be similar as the order in which the cargs are generated from the payloads.
-            annotations: Dict[DocType, List[List[AutoSpan]]] = dict()
+            annotations: List[List[AutoSpan]] = []
+            bboxes: List[List[AutoBBox]] = []
             metadatas: Dict[DocType, List[Dict]] = dict()
             tags: Dict[DocType, List[List[int]]] = dict()
             link_dtos: Dict[DocType, List[List[SourceDocumentLinkCreate]]] = dict()
             for doc_type in DocType:
-                annotations[doc_type] = []
                 metadatas[doc_type] = []
                 link_dtos[doc_type] = []
                 tags[doc_type] = []
@@ -695,20 +689,35 @@ class ImportService(metaclass=SingletonMeta):
                 sdoc_annotations_df = sdoc_annotations_df[
                     sdoc_annotations_df["code_id"].isin(codes_id_mapping)
                 ]
-                # create AutoSpans for NER
-                annotations_for_sdoc: List[AutoSpan] = []
-                for _, row in sdoc_annotations_df.iterrows():
-                    auto = AutoSpan(
-                        code=row["code_name"],
-                        start=row["text_begin_char"],
-                        end=row["text_end_char"],
-                        text=row["text"],
-                        start_token=row["text_begin_token"],
-                        end_token=row["text_end_token"],
-                    )
-                    annotations_for_sdoc.append(auto)
-                annotations[sdoc_doctype].append(annotations_for_sdoc)
-                logger.info(f"Generate sdoc annotations {annotations_for_sdoc}")
+                if doc_type == DocType.text:
+                    # create AutoSpans for NER
+                    annotations_for_sdoc: List[AutoSpan] = []
+                    for _, row in sdoc_annotations_df.iterrows():
+                        auto = AutoSpan(
+                            code=row["code_name"],
+                            start=row["text_begin_char"],
+                            end=row["text_end_char"],
+                            text=row["text"],
+                            start_token=row["text_begin_token"],
+                            end_token=row["text_end_token"],
+                        )
+                        annotations_for_sdoc.append(auto)
+                    annotations.append(annotations_for_sdoc)
+                    logger.info(f"Generate sdoc annotations {annotations_for_sdoc}")
+
+                elif doc_type == DocType.image:
+                    # create boundig boxes for object detection
+                    bboxes_for_sdoc: List[AutoBBox] = []
+                    for _, row in sdoc_annotations_df.iterrows():
+                        bbox = AutoBBox(
+                            code=row["code_name"],
+                            x_min=row["bbox_x_min"],
+                            y_min=row["bbox_y_min"],
+                            x_max=row["bbox_x_max"],
+                            y_max=row["bbox_x_max"],
+                        )
+                        bboxes_for_sdoc.append(bbox)
+                    bboxes.append(bboxes_for_sdoc)
 
                 # create sdoc link create dtos
                 link_dtos_for_sdoc: List[SourceDocumentLinkCreate] = []
@@ -739,6 +748,7 @@ class ImportService(metaclass=SingletonMeta):
                 ppj=ppj,
                 metadatas=metadatas,
                 annotations=annotations,
+                bboxes=bboxes,
                 sdoc_links=link_dtos,
                 tags=tags,
             )
@@ -759,8 +769,8 @@ class ImportService(metaclass=SingletonMeta):
             #     for cargo in cargos[DocType.image]
             # ]
 
+            # combine all tasks in one group
             tasks = text_tasks
-
             gr = group(tasks)()
             logger.info(f"-------------{gr}")
 
@@ -820,9 +830,7 @@ class ImportService(metaclass=SingletonMeta):
         sdoc_annotations: pd.DataFrame,
         codes_id_mapping: Dict[int, int],
     ) -> None:
-        adoc_dto = AnnotationDocumentCreate(source_document_id=sdoc_id, user_id=user_id)
-        adoc_id = crud_adoc.create(db, create_dto=adoc_dto).id
-        for index, row in sdoc_annotations.iterrows():
+        for _, row in sdoc_annotations.iterrows():
             code_id = row["code_id"]
             if code_id not in codes_id_mapping:
                 raise ImportAdocInvalidCodeIdException(code_id)
@@ -839,18 +847,17 @@ class ImportService(metaclass=SingletonMeta):
                     text_begin_token,
                     text_end_token,
                 )
-                span_annotation_create_dto = SpanAnnotationCreateWithCodeId(
+                span_annotation_create_dto = SpanAnnotationCreate(
                     begin=text_begin_char,
                     end=text_end_char,
                     begin_token=text_begin_token,
                     end_token=text_end_token,
                     span_text=text,
                     code_id=codes_id_mapping[code_id],
-                    annotation_document_id=adoc_id,
+                    user_id=user_id,
+                    sdoc_id=sdoc_id,
                 )
-                crud_span_anno.create_with_code_id(
-                    db=db, create_dto=span_annotation_create_dto
-                )
+                crud_span_anno.create(db=db, create_dto=span_annotation_create_dto)
             bbox_x_min = row["bbox_x_min"]
             if pd.notna(bbox_x_min):
                 bbox_x_max = row["bbox_x_max"]
@@ -859,17 +866,16 @@ class ImportService(metaclass=SingletonMeta):
                 self.__bbox_import_preconditions_met(
                     bbox_x_min, bbox_x_max, bbox_y_min, bbox_y_max
                 )
-                bbox_annotation_create_dto = BBoxAnnotationCreateWithCodeId(
+                bbox_annotation_create_dto = BBoxAnnotationCreate(
                     x_min=bbox_x_min,
                     x_max=bbox_x_max,
                     y_min=bbox_x_min,
                     y_max=bbox_y_max,
                     code_id=code_id,
-                    annotation_document_id=adoc_id,
+                    user_id=user_id,
+                    sdoc_id=sdoc_id,
                 )
-                crud_bbox_anno.create_with_code_id(
-                    db=db, create_dto=bbox_annotation_create_dto
-                )
+                crud_bbox_anno.create(db=db, create_dto=bbox_annotation_create_dto)
 
     def _import_all_project_metadata(
         self,
@@ -883,9 +889,10 @@ class ImportService(metaclass=SingletonMeta):
             path_to_project_metadata_file = self.repo._get_dst_path_for_temp_file(
                 archfile_filename
             )
+            project_details = json.load(open(path_to_project_metadata_file, "r"))
             self.__update_project_details(
                 db=db,
-                path_to_metadata=path_to_project_metadata_file,
+                project_details=project_details,
                 project_id=proj_id,
                 user_id=user_id,
             )
@@ -902,16 +909,14 @@ class ImportService(metaclass=SingletonMeta):
         filename = imj_parameters.filename
         path_to_file = self.repo._get_dst_path_for_temp_file(filename)
         df = pd.read_csv(path_to_file)
-        df.apply(
-            lambda row: self.__import_project_metadata(row, db=db, proj_id=proj_id),
-            axis=1,
-        )
+        for _, row in df.iterrows():
+            self.__import_project_metadata(row, db=db, proj_id=proj_id)
 
     def __read_import_project_files(self, temp_proj_path: Path) -> Tuple[Dict, Dict]:
         """
         expected_files = {
-            "project_metadata": project_metadata.json
-            "metadatas": metadata.csv
+            "project_details": project_details.json
+            "project_metadatas": project_metadatas.csv
             "codes": project_codes.csv
             "sdoc_links": project_sdoc_links.csv
             "tags": project_tags.csv

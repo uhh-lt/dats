@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.code import crud_code
-from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
@@ -153,7 +152,7 @@ def _persist_span_annotations(
             code_name=code_name,
             proj_id=pptd.project_id,
         )
-        if len(db_code) < 1:
+        if not db_code:
             logger.warning(f"No Code <{code_name}> found! Creating it on the fly...")
             # create code on the fly for system user
             create_dto = CodeCreate(
@@ -163,7 +162,7 @@ def _persist_span_annotations(
                 project_id=pptd.project_id,
                 is_system=True,
             )
-            db_code = [crud_code.create(db, create_dto=create_dto)]
+            db_code = crud_code.create(db, create_dto=create_dto)
 
         create_dtos = [
             SpanAnnotationCreateIntern(
