@@ -23,14 +23,18 @@ def apply_html_source_mapping_with_custom_html_tags(
         except IndexError as e:
             logger.error(f"'${pptd.filename}' seems to be corrupted! {e}")
             raise e
-
         new_html += pptd.html[current_position:html_start]
-
-        if sentences[current_sentence_idx].end_token == token_id:
+        if (
+            len(sentences) > current_sentence_idx
+            and sentences[current_sentence_idx].end == text_end
+        ):
             new_html += "</sent>"
             current_sentence_idx += 1
 
-        if sentences[current_sentence_idx].start_token == token_id:
+        if (
+            len(sentences) > current_sentence_idx
+            and sentences[current_sentence_idx].start == text_start
+        ):
             new_html += f"<sent id={current_sentence_idx}>"
 
         new_html += f"<t id={token_id}>"
@@ -38,7 +42,7 @@ def apply_html_source_mapping_with_custom_html_tags(
         new_html += "</t>"
 
         current_position = html_end
-
+    logger.info(f"outer {len(pptd.html)} {current_position}")
     new_html += pptd.html[current_position:]
 
     pptd.html = new_html.build()

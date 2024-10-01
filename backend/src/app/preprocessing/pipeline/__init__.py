@@ -5,7 +5,9 @@ from app.preprocessing.pipeline.preprocessing_pipeline import PreprocessingPipel
 
 
 @lru_cache(maxsize=1)
-def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
+def build_text_pipeline(
+    is_init: bool = True,
+) -> PreprocessingPipeline:
     from app.preprocessing.pipeline.steps.common.remove_erroneous_sdoc import (
         remove_erroneous_or_unfinished_sdocs,
     )
@@ -22,7 +24,10 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     from app.preprocessing.pipeline.steps.text.create_ppj_from_extracted_images import (
         create_ppj_from_extracted_images,
     )
-    from app.preprocessing.pipeline.steps.text.create_pptd import create_pptd
+    from app.preprocessing.pipeline.steps.text.create_pptd import (
+        create_pptd,
+        create_pptd_with_metadata,
+    )
     from app.preprocessing.pipeline.steps.text.detect_content_language import (
         detect_content_language,
     )
@@ -65,10 +70,16 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
 
     pipeline = PreprocessingPipeline(doc_type=DocType.text)
 
-    pipeline.register_step(
-        func=create_pptd,
-        required_data=[],
-    )
+    if is_init:
+        pipeline.register_step(
+            func=create_pptd,
+            required_data=[],
+        )
+    else:
+        pipeline.register_step(
+            func=create_pptd_with_metadata,
+            required_data=[],
+        )
 
     pipeline.register_step(
         required_data=["pptd"],
@@ -89,11 +100,11 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
         func=extract_text_from_html_and_create_source_mapping,
         required_data=["pptd"],
     )
-
-    pipeline.register_step(
-        func=detect_content_language,
-        required_data=["pptd"],
-    )
+    if is_init:
+        pipeline.register_step(
+            func=detect_content_language,
+            required_data=["pptd"],
+        )
 
     pipeline.register_step(
         func=run_spacy_pipeline,
@@ -124,27 +135,27 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
         func=apply_html_source_mapping_with_custom_html_tags,
         required_data=["pptd"],
     )
+    if is_init:
+        pipeline.register_step(
+            func=extract_sdoc_links_from_html_of_mixed_documents,
+            required_data=["pptd"],
+        )
 
-    pipeline.register_step(
-        func=extract_sdoc_links_from_html_of_mixed_documents,
-        required_data=["pptd"],
-    )
-
-    pipeline.register_step(
-        # this method should be called before writing a document to the database.
-        # So in case the document is already in the database but not finished
-        # or erroneous, we remove it to make the preprocessing idempotent.
-        func=remove_erroneous_or_unfinished_sdocs,
-    )
+        pipeline.register_step(
+            # this method should be called before writing a document to the database.
+            # So in case the document is already in the database but not finished
+            # or erroneous, we remove it to make the preprocessing idempotent.
+            func=remove_erroneous_or_unfinished_sdocs,
+        )
 
     pipeline.register_step(
         func=write_pptd_to_database,
         required_data=["pptd"],
     )
-
-    pipeline.register_step(
-        func=resolve_sdoc_links,
-    )
+    if is_init:
+        pipeline.register_step(
+            func=resolve_sdoc_links,
+        )
 
     pipeline.register_step(
         func=store_document_in_elasticsearch,
@@ -160,11 +171,11 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
         func=update_sdoc_status_to_finish,
         required_data=["pptd", "sdoc_id"],
     )
-
-    pipeline.register_step(
-        func=create_ppj_from_extracted_images,
-        required_data=["pptd"],
-    )
+    if is_init:
+        pipeline.register_step(
+            func=create_ppj_from_extracted_images,
+            required_data=["pptd"],
+        )
 
     pipeline.freeze()
 
@@ -172,7 +183,9 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
 
 
 @lru_cache(maxsize=1)
-def build_image_pipeline(foo: str = "bar") -> PreprocessingPipeline:
+def build_image_pipeline(
+    is_init: bool = True,
+) -> PreprocessingPipeline:
     from app.preprocessing.pipeline.steps.common.remove_erroneous_sdoc import (
         remove_erroneous_or_unfinished_sdocs,
     )
@@ -188,7 +201,10 @@ def build_image_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     from app.preprocessing.pipeline.steps.image.create_image_metadata import (
         create_image_metadata,
     )
-    from app.preprocessing.pipeline.steps.image.create_ppid import create_ppid
+    from app.preprocessing.pipeline.steps.image.create_ppid import (
+        create_ppid,
+        create_ppid_with_metadata,
+    )
     from app.preprocessing.pipeline.steps.image.create_pptd_from_caption import (
         create_pptd_from_caption,
     )
@@ -225,10 +241,16 @@ def build_image_pipeline(foo: str = "bar") -> PreprocessingPipeline:
 
     pipeline = PreprocessingPipeline(doc_type=DocType.image)
 
-    pipeline.register_step(
-        func=create_ppid,
-        required_data=[],
-    )
+    if is_init:
+        pipeline.register_step(
+            func=create_ppid,
+            required_data=[],
+        )
+    else:
+        pipeline.register_step(
+            func=create_ppid_with_metadata,
+            required_data=[],
+        )
 
     pipeline.register_step(
         func=create_image_metadata,

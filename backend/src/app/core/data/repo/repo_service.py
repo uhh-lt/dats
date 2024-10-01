@@ -203,6 +203,18 @@ class RepoService(metaclass=SingletonMeta):
             else:
                 return filename.name
 
+    def restore_sdoc_metadata_filename(self, metadata_filename: str | Path) -> str:
+        """
+        This method restores the name: [MY_SDOC_FILE_BASENAME]_[MY_SDOC_FILE_EXTENSION].[MY_METADATA_FILE_EXTENSION]
+        to [MY_SDOC_FILE_BASENAME].[MY_METADATA_FILE_EXTENSION]
+        """
+        if isinstance(metadata_filename, str):
+            metadata_filename = Path(metadata_filename)
+        metadata_filename_split = metadata_filename.stem.split("_")
+        extension = metadata_filename_split[-1]
+        basename = "".join(metadata_filename_split[:-1])
+        return f"{basename}.{extension}"
+
     def get_path_to_sdoc_file(
         self,
         sdoc: SourceDocumentRead,
@@ -430,9 +442,6 @@ class RepoService(metaclass=SingletonMeta):
         )
 
         # move the file
-        logger.info(
-            f"Moving {src_file} to Project {proj_id} SDoc files at {in_project_dst}!"
-        )
         src_file.rename(in_project_dst)
         return in_project_dst
 
