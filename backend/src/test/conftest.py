@@ -10,6 +10,7 @@ import pytest
 import requests
 from fastapi import Request
 from fastapi.datastructures import Headers
+from fastapi.testclient import TestClient
 from loguru import logger
 from pytest import FixtureRequest
 from sqlalchemy.orm import Session
@@ -20,11 +21,11 @@ from app.core.data.orm.code import CodeORM
 from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.user import UserORM
 from app.core.db.sql_service import SQLService
-from app.core.startup import startup
 from config import conf
 
 os.environ["RAY_ENABLED"] = "False"
 os.environ["OLLAMA_ENABLED"] = "False"
+os.environ["RESET_DATA"] = "1"
 
 # Flo: just do it once. We have to check because if we start the main function, unvicorn will import this
 # file once more manually, so it would be executed twice.
@@ -37,11 +38,6 @@ if not STARTUP_DONE:
         )
         exit(1)
 
-    startup(reset_data=True)
-    os.environ["STARTUP_DONE"] = "1"
-
-from fastapi.testclient import TestClient
-
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.user import SYSTEM_USER_ID, crud_user
@@ -49,11 +45,6 @@ from app.core.data.dto.code import CodeCreate
 from app.core.data.dto.project import ProjectCreate
 from app.core.data.dto.user import UserCreate, UserRead
 from main import app
-
-
-def pytest_sessionfinish():
-    # Make sure the next test session starts with a clean database
-    SQLService().drop_database()
 
 
 # Always use the asyncio backend for async tests
@@ -251,9 +242,9 @@ def api_user(client: TestClient):
             self.userList[first_name] = credentials
             return credentials
 
-        def __del__(self):
-            for user in self.userList.values():
-                client.delete(f"/user/{user['id']}", headers=user["AuthHeader"])
+        # def __del__(self):
+        #     for user in self.userList.values():
+        #         client.delete(f"/user/{user['id']}", headers=user["AuthHeader"])
 
     return UserFactory()
 
@@ -278,17 +269,17 @@ def api_project(
             self.projectList[title] = project
             return project
 
-        def __del__(self):
-            # TODO: Prevent user deletion before project deletion or use SYSTEM user
-            # FIXME: Using the standard SYSTEM@dwts.org user
-            # login with system user to remove all projects
-            superuser = {"username": "SYSTEM@dwts.org", "password": "SYSTEM"}
-            login = client.post("authentication/login", data=superuser).json()
-            superuser_authheader = {
-                "Authorization": f"{login['token_type']} {login['access_token']}"
-            }
-            for project in self.projectList.values():
-                client.delete(f"/project/{project['id']}", headers=superuser_authheader)
+        # def __del__(self):
+        #     # TODO: Prevent user deletion before project deletion or use SYSTEM user
+        #     # FIXME: Using the standard SYSTEM@dwts.org user
+        #     # login with system user to remove all projects
+        #     superuser = {"username": "SYSTEM@dwts.org", "password": "SYSTEM"}
+        #     login = client.post("authentication/login", data=superuser).json()
+        #     superuser_authheader = {
+        #         "Authorization": f"{login['token_type']} {login['access_token']}"
+        #     }
+        #     for project in self.projectList.values():
+        #         client.delete(f"/project/{project['id']}", headers=superuser_authheader)
 
     return ProjectFactory()
 
@@ -302,14 +293,13 @@ def api_code(client: TestClient):
         def create(self, name: string, user: dict, project: dict):
             headers = user["AuthHeader"]
             project_id = project["id"]
-            user_id = user["id"]
             code = {
                 "name": name,
                 "color": "string",
                 "description": "string",
-                "parent_code_id": None,
+                "parent_id": None,
                 "project_id": project_id,
-                "user_id": user_id,
+                "is_system": False,
             }
             response = client.put("/code", headers=headers, json=code).json()
             code["id"] = response["id"]

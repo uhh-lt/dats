@@ -26,10 +26,11 @@ from uvicorn.main import uvicorn
 # Flo: just do it once. We have to check because if we start the main function,
 #  unvicorn will import this file once more manually, so it would be executed twice.
 STARTUP_DONE = bool(int(os.environ.get("STARTUP_DONE", "0")))
+RESET_DATA = bool(int(os.environ.get("RESET_DATA", "0")))
 if not STARTUP_DONE:
     from app.core.startup import startup  # isort: skip
 
-    startup(reset_data=False, sql_echo=False)
+    startup(reset_data=RESET_DATA, sql_echo=False)
     os.environ["STARTUP_DONE"] = "1"
 
 from api.endpoints import (
