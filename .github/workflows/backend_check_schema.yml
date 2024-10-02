@@ -34,7 +34,7 @@ jobs:
       - name: Migrate database
         working-directory: docker
         run: |
-          docker compose -f compose-test.yml run dats-backend-api /opt/envs/dats/bin/python run_migrations.py
+          docker compose -f compose-test.yml run dats-backend-api /opt/envs/dats/bin/python migrations/run_migrations.py
       - name: Check that database schema is up-to-date
         working-directory: docker
         run: |

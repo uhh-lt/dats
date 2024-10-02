@@ -26,7 +26,7 @@ run:
 migrate:
 	ENV_NAME=dats source _activate_current_env.sh
 	cd src
-	python run_migrations.py
+	python migration/run_migrations.py
 
 # For running specific tests, use the following style:
 # make test pytest_args=test/app/core/data/crud/test_user_crud.py::test_create_delete_user

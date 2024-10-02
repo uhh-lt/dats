@@ -76,11 +76,11 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
         )
 
         if not startup_in_progress:
-            from migration.migrate import run_required_migrations
+            from migration.run_migrations import run_migrations
 
             # If we're the first uvicorn worker to start,
             # run database migrations
-            run_required_migrations()
+            run_migrations()
 
         if not startup_in_progress:
             __create_system_user__()

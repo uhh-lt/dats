@@ -48,7 +48,7 @@
       "name": "Python: run_migrations.py",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/backend/src/run_migrations.py",
+      "program": "${workspaceFolder}/backend/src/migration/run_migrations.py",
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}/backend/src",
       "justMyCode": true,
