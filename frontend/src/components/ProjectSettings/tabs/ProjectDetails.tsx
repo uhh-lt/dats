@@ -1,7 +1,7 @@
 import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
-import { Box, CardActions, CardContent, Divider, Stack, TextField } from "@mui/material";
+import { Box, CardActions, CardContent, Divider, Stack } from "@mui/material";
 import { useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
@@ -74,20 +74,6 @@ function ProjectDetails({ project }: ProjectProps) {
               error: Boolean(errors.description),
               helperText: <ErrorMessage errors={errors} name="description" />,
             }}
-          />
-          <TextField
-            label="Method"
-            placeholder="Which method(s) are you using in your project?"
-            variant="outlined"
-            fullWidth
-            disabled
-          />
-          <TextField
-            label="Materials"
-            placeholder="What kind of materials are you using in your project?"
-            variant="outlined"
-            fullWidth
-            disabled
           />
         </Stack>
       </CardContent>

@@ -1,7 +1,7 @@
 import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
-import { Box, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle, Stack } from "@mui/material";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks.ts";
@@ -73,20 +73,6 @@ function ProjectCreationDialog({ open, onClose }: ProjectCreationDialogProps) {
                 error: Boolean(errors.description),
                 helperText: <ErrorMessage errors={errors} name="description" />,
               }}
-            />
-            <TextField
-              label="Method"
-              placeholder="Which method(s) are you using in your project?"
-              variant="outlined"
-              fullWidth
-              disabled
-            />
-            <TextField
-              label="Materials"
-              placeholder="What kind of materials are you using in your project?"
-              variant="outlined"
-              fullWidth
-              disabled
             />
           </Stack>
         </DialogContent>
