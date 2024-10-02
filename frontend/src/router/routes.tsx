@@ -10,7 +10,6 @@ import NotFound from "../views/NotFound.tsx";
 import Analysis from "../views/analysis/Analysis.tsx";
 import AnnotatedSegments from "../views/analysis/AnnotatedSegments/AnnotatedSegments.tsx";
 import CodeFrequencyAnalysis from "../views/analysis/CodeFrequency/CodeFrequencyAnalysis.tsx";
-import CodeGraph from "../views/analysis/CodeGraph/CodeGraph.tsx";
 import CotaDashboard from "../views/analysis/ConceptsOverTime/CotaDashboard.tsx";
 import CotaView from "../views/analysis/ConceptsOverTime/CotaView.tsx";
 import TableDashboard from "../views/analysis/Table/TableDashboard.tsx";
@@ -134,10 +133,6 @@ const router = createBrowserRouter([
       {
         path: "/project/:projectId/analysis/frequency",
         element: <CodeFrequencyAnalysis />,
-      },
-      {
-        path: "/project/:projectId/analysis/code-graph",
-        element: <CodeGraph />,
       },
       {
         path: "/project/:projectId/analysis/timeline",

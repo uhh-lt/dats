@@ -24,13 +24,6 @@ function Analysis() {
         />
 
         <AnalysisCard
-          to={"code-graph"}
-          title={"Code Graph"}
-          description={"Tree view of all the codes in the project."}
-          color={"#77dd77"}
-        />
-
-        <AnalysisCard
           to={"timeline"}
           title={"Timeline Analysis"}
           description={"Analyse the occurrence of concepts over time."}

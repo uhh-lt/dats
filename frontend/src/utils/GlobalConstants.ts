@@ -16,7 +16,6 @@ export const USER_GUIDE_ROUTE_MAP = {
     route: "frequency-analysis",
     description: "This page presents frequency of all codes in this project as a graph",
   },
-  "code-graph": { route: "code-graph", description: "This page presents a tree view of all codes in this project" },
   timeline: { route: "timeline-analysis", description: "This page presents occurrence of concepts over time" },
   table: { route: "table", description: "This page provides tools to work with tabular views" },
   whiteboard: {
