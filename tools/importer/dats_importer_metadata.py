@@ -109,7 +109,9 @@ if directory.is_file():
 json_data: Dict[int, Any] = dict()
 sdoc_ids = []
 files_in_dir = list(directory.glob("**/*.json"))
-for idx, file in enumerate(tqdm(files_in_dir, f"Reading and checking files from {directory}!")):
+for idx, file in enumerate(
+    tqdm(files_in_dir, f"Reading and checking files from {directory}!")
+):
     # refresh login every 1000 files
     if idx % 1000 == 0:
         api.refresh_login()
@@ -133,9 +135,9 @@ for idx, file in enumerate(tqdm(files_in_dir, f"Reading and checking files from 
         print(f"Error with file: {filename} --> {e}")
 
 # apply sdoc metadata
-for idx, (sdoc_id, data) in enumerate(tqdm(
-    json_data.items(), total=len(json_data), desc="Applying metadata to sdocs... "
-)):
+for idx, (sdoc_id, data) in enumerate(
+    tqdm(json_data.items(), total=len(json_data), desc="Applying metadata to sdocs... ")
+):
     # refresh login every 1000 files
     if idx % 1000 == 0:
         api.refresh_login()
