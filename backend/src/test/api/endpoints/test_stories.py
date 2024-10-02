@@ -222,10 +222,10 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
     assert code1_read_response["name"] == code1["name"]
     assert code1_read_response["color"] == code1["color"]
     assert code1_read_response["description"] == code1["description"]
-    assert code1_read_response["parent_code_id"] == code1["parent_code_id"]
+    assert code1_read_response["parent_id"] == code1["parent_id"]
     assert code1_read_response["id"] == code1["id"]
     assert code1_read_response["project_id"] == code1["project_id"]
-    assert code1_read_response["user_id"] == code1["user_id"]
+    # assert code1_read_response["user_id"] == code1["user_id"]
 
     codes_project1_after_response = client.get(
         f"/project/{project1['id']}/code", headers=alice["AuthHeader"]
@@ -251,10 +251,10 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
     assert code6_read_response["name"] == code6["name"]
     assert code6_read_response["color"] == code6["color"]
     assert code6_read_response["description"] == code6["description"]
-    assert code6_read_response["parent_code_id"] == code6["parent_code_id"]
+    assert code6_read_response["parent_id"] == code6["parent_id"]
     assert code6_read_response["id"] == code6["id"]
     assert code6_read_response["project_id"] == code6["project_id"]
-    assert code6_read_response["user_id"] == code6["user_id"]
+    # assert code6_read_response["user_id"] == code6["user_id"]
 
     codes_project2_after = client.get(
         f"/project/{project2['id']}/code", headers=alice["AuthHeader"]
@@ -284,7 +284,7 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
     assert code1_memo_read_response["content"] == code1_memo["content"]
     assert code1_memo_read_response["id"] == code1_memo["id"]
     assert code1_memo_read_response["starred"] == code1_memo["starred"]
-    assert code1_memo_read_response["user_id"] == code1_memo["user_id"]
+    # assert code1_memo_read_response["user_id"] == code1_memo["user_id"]
     assert code1_memo_read_response["project_id"] == code1_memo["project_id"]
     assert code1_memo_read_response["attached_object_id"] == code1["id"]
     assert code1_memo_read_response["attached_object_type"] == "code"
@@ -371,7 +371,7 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
     while video1_propro_status == "Running" or video2_prepro_status == "Running":
         video1_propro_status = api_document.prepro_status(video1_prepro_job_id, alice)
         video2_prepro_status = api_document.prepro_status(video2_prepro_job_id, alice)
-        time.sleep(1)
+        time.sleep(2)
     assert video1_propro_status == "Finished"
     assert video2_prepro_status == "Finished"
 
@@ -459,7 +459,7 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
     while video3_prepro_status == "Running" or video4_prepro_status == "Running":
         video3_prepro_status = api_document.prepro_status(video3_prepro_job_id, bob)
         video4_prepro_status = api_document.prepro_status(video4_prepro_job_id, bob)
-        time.sleep(1)
+        time.sleep(2)
     assert video3_prepro_status == "Finished"
     assert video4_prepro_status == "Finished"
 
@@ -547,16 +547,7 @@ def test_project_memos(client, api_user, api_project) -> None:
 def test_span_annotation_and_memo(client, api_user, api_document) -> None:
     alice = api_user.userList["alice"]
     project_text_doc1 = api_document.documentList[text_doc1[1]]
-    adoc1_create = {
-        "source_document_id": project_text_doc1[
-            "sdoc_id"
-        ],  # FIXME https://github.com/uhh-lt/dats/issues/367
-        "user_id": alice["id"],
-    }
-    adoc1_create_response = client.put(
-        "adoc", headers=alice["AuthHeader"], json=adoc1_create
-    ).json()
-    adoc1_id = adoc1_create_response["id"]
+
     # Alice creates two annotations for Textdoc1
     span1_annotation = {
         "begin": 0,
@@ -565,7 +556,8 @@ def test_span_annotation_and_memo(client, api_user, api_document) -> None:
         "end_token": 4,
         "span_text": "test",
         "code_id": 5,
-        "annotation_document_id": adoc1_id,
+        "sdoc_id": project_text_doc1["sdoc_id"],
+        "user_id": alice["id"],
     }
     span1_create_response = client.put(
         "span", headers=alice["AuthHeader"], json=span1_annotation
@@ -581,9 +573,10 @@ def test_span_annotation_and_memo(client, api_user, api_document) -> None:
     assert span1_read_response["begin_token"] == span1_annotation["begin_token"]
     assert span1_read_response["end_token"] == span1_annotation["end_token"]
     assert span1_read_response["id"] == span1_id
-    assert span1_read_response["span_text"] == span1_annotation["span_text"]
+    assert span1_read_response["text"] == span1_annotation["span_text"] # TODO Inconsistent naming
     assert span1_read_response["code"]["id"] == span1_annotation["code_id"]
-    assert span1_read_response["annotation_document_id"] == adoc1_id
+    assert span1_read_response["sdoc_id"] == span1_annotation["sdoc_id"]
+    assert span1_read_response["user_id"] == span1_annotation["user_id"]
 
     span2_annotation = {
         "begin": 5,
@@ -592,7 +585,8 @@ def test_span_annotation_and_memo(client, api_user, api_document) -> None:
         "end_token": 10,
         "span_text": "new test",
         "code_id": 6,
-        "annotation_document_id": adoc1_id,
+        "sdoc_id": project_text_doc1["sdoc_id"],
+        "user_id": alice["id"],
     }
     span2_create_response = client.put(
         "span", headers=alice["AuthHeader"], json=span2_annotation
@@ -608,14 +602,10 @@ def test_span_annotation_and_memo(client, api_user, api_document) -> None:
     assert span2_read_response["begin_token"] == span2_annotation["begin_token"]
     assert span2_read_response["end_token"] == span2_annotation["end_token"]
     assert span2_read_response["id"] == span2_id
-    assert span2_read_response["span_text"] == span2_annotation["span_text"]
+    assert span2_read_response["text"] == span2_annotation["span_text"]
     assert span2_read_response["code"]["id"] == span2_annotation["code_id"]
-    assert span2_read_response["annotation_document_id"] == adoc1_id
-
-    span_annos1 = client.get(
-        f"adoc/{adoc1_id}/span_annotations", headers=alice["AuthHeader"]
-    ).json()
-    assert len(span_annos1) == 2
+    assert span2_read_response["sdoc_id"] == span2_annotation["sdoc_id"]
+    assert span2_read_response["user_id"] == span2_annotation["user_id"]
 
     # Alice creates a memo on span annotation 1
     span1_memo1 = {
@@ -638,23 +628,23 @@ def test_span_annotation_and_memo(client, api_user, api_document) -> None:
     assert span1_memo1_read_response["content"] == span1_memo1["content"]
     assert span1_memo1_read_response["id"] == span1_memo1_id
     assert span1_memo1_read_response["starred"] == span1_memo1["starred"]
-    assert span1_memo1_read_response["user_id"] == alice["id"]
+    assert span1_memo1_read_response["user_id"] == span1_memo1["user_id"]
     assert span1_memo1_read_response["project_id"] == project_text_doc1["project_id"]
     assert span1_memo1_read_response["attached_object_id"] == span1_id
     assert span1_memo1_read_response["attached_object_type"] == "span_annotation"
 
     # Alice creates an annotation for Textdoc2
     project_text_doc2 = api_document.documentList[text_doc2[1]]
-    adoc_create2 = {
-        "source_document_id": project_text_doc2[
-            "sdoc_id"
-        ],  # FIXME https://github.com/uhh-lt/dats/issues/367
-        "user_id": alice["id"],
-    }
-    adoc2_create_response = client.put(
-        "adoc", headers=alice["AuthHeader"], json=adoc_create2
-    ).json()
-    adoc2_id = adoc2_create_response["id"]
+    # adoc_create2 = {
+    #     "source_document_id": project_text_doc2[
+    #         "sdoc_id"
+    #     ],  # FIXME https://github.com/uhh-lt/dats/issues/367
+    #     "user_id": alice["id"],
+    # }
+    # adoc2_create_response = client.put(
+    #     "adoc", headers=alice["AuthHeader"], json=adoc_create2
+    # ).json()
+    # adoc2_id = adoc2_create_response["id"]
     span3_annotation = {
         "begin": 20,
         "end": 40,
@@ -662,7 +652,9 @@ def test_span_annotation_and_memo(client, api_user, api_document) -> None:
         "end_token": 9,
         "span_text": "new test",
         "code_id": 6,
-        "annotation_document_id": adoc2_id,
+        "sdoc_id": project_text_doc2["sdoc_id"],
+        "user_id": alice["id"],
+        # "annotation_document_id": adoc2_id,
     }
     span3_create_response = client.put(
         "span", headers=alice["AuthHeader"], json=span3_annotation
@@ -677,19 +669,13 @@ def test_span_annotation_and_memo(client, api_user, api_document) -> None:
     assert span3_read_response["end"] == span3_annotation["end"]
     assert span3_read_response["begin_token"] == span3_annotation["begin_token"]
     assert span3_read_response["end_token"] == span3_annotation["end_token"]
-    assert span3_read_response["id"] == span3_id
-    assert span3_read_response["span_text"] == span3_annotation["span_text"]
+    assert span3_read_response["text"] == span3_annotation["span_text"]
     assert span3_read_response["code"]["id"] == span3_annotation["code_id"]
-    assert span3_read_response["annotation_document_id"] == adoc2_id
+    assert span3_read_response["sdoc_id"] == span3_annotation["sdoc_id"]
+    assert span3_read_response["user_id"] == span3_annotation["user_id"]
+    assert span3_read_response["id"] == span3_id
 
-    span_annos2 = client.get(
-        f"adoc/{adoc2_id}/span_annotations",
-        headers=alice["AuthHeader"],
-    ).json()
-    assert len(span_annos2) == 1
-
-    # Bob creates one annotation for adoc1 - failure
-    bob = api_user.userList["bob"]
+    # Alice creates two annotations for Textdoc1
     span4_annotation = {
         "begin": 0,
         "end": 10,
@@ -697,37 +683,39 @@ def test_span_annotation_and_memo(client, api_user, api_document) -> None:
         "end_token": 2,
         "span_text": "test Span",
         "code_id": 2,
-        "annotation_document_id": adoc1_id,
+        "sdoc_id": project_text_doc1["sdoc_id"],
+        "user_id": alice["id"],
     }
-    span4_response_failure = client.put(
-        "span", headers=bob["AuthHeader"], json=span4_annotation
-    )
-    assert span4_response_failure.status_code == 200
 
-    # Alice creates two annotations for adoc1 -success
-    span4_response = client.put(
+    span4_create_response = client.put(
         "span", headers=alice["AuthHeader"], json=span4_annotation
     )
-    assert span4_response.status_code == 200
-    span4_response = span4_response.json()
-    assert span4_annotation["begin"] == span4_response["begin"]
-    assert span4_annotation["end"] == span4_response["end"]
-    assert span4_annotation["begin_token"] == span4_response["begin_token"]
-    assert span4_annotation["end_token"] == span4_response["end_token"]
-    assert (
-        span4_annotation["annotation_document_id"]
-        == span4_response["annotation_document_id"]
-    )
-    assert project_text_doc1["sdoc_id"] == span4_response["sdoc_id"]
+    assert span4_create_response.status_code == 200
+    span4_id = span4_create_response.json()["id"]
+
+    span4_read_response = client.get(
+        f"span/{span4_id}", headers=alice["AuthHeader"]
+    ).json()
+
+    assert span4_read_response["begin"] == span4_annotation["begin"]
+    assert span4_read_response["end"] == span4_annotation["end"]
+    assert span4_read_response["begin_token"] == span4_annotation["begin_token"]
+    assert span4_read_response["end_token"] == span4_annotation["end_token"]
+    assert span4_read_response["text"] == span4_annotation["span_text"]
+    assert span4_read_response["code"]["id"] == span4_annotation["code_id"]
+    assert span4_read_response["sdoc_id"] == span4_annotation["sdoc_id"]
+    assert span4_read_response["user_id"] == span4_annotation["user_id"]
+    assert span4_read_response["id"] == span4_id
 
     span5_annotation = {
         "begin": 15,
         "end": 40,
         "begin_token": 10,
         "end_token": 15,
-        "span_text": "fith annotation",
+        "span_text": "fifth annotation",
         "code_id": 10,
-        "annotation_document_id": adoc1_id,
+        "sdoc_id": project_text_doc1["sdoc_id"],
+        "user_id": alice["id"],
     }
     span5_create_response = client.put(
         "span", headers=alice["AuthHeader"], json=span5_annotation
@@ -736,23 +724,20 @@ def test_span_annotation_and_memo(client, api_user, api_document) -> None:
     span5_id = span5_create_response.json()["id"]
 
     span5_read_response = client.get(
-        f"span/{span5_id}", headers=bob["AuthHeader"]
+        f"span/{span5_id}", headers=alice["AuthHeader"]
     ).json()
     assert span5_read_response["begin"] == span5_annotation["begin"]
     assert span5_read_response["end"] == span5_annotation["end"]
     assert span5_read_response["begin_token"] == span5_annotation["begin_token"]
     assert span5_read_response["end_token"] == span5_annotation["end_token"]
-    assert span5_read_response["id"] == span5_id
-    assert span5_read_response["span_text"] == span5_annotation["span_text"]
+    assert span5_read_response["text"] == span5_annotation["span_text"]
     assert span5_read_response["code"]["id"] == span5_annotation["code_id"]
-    assert span5_read_response["annotation_document_id"] == adoc1_id
-
-    span_annos1 = client.get(
-        f"adoc/{adoc1_id}/span_annotations", headers=bob["AuthHeader"]
-    ).json()
-    assert len(span_annos1) == 5
+    assert span5_read_response["sdoc_id"] == span5_annotation["sdoc_id"]
+    assert span5_read_response["user_id"] == span5_annotation["user_id"]
+    assert span5_read_response["id"] == span5_id
 
     # Bob creates an annotation for Textdoc2
+    bob = api_user.userList["bob"]
     span6_annotation = {
         "begin": 3,
         "end": 30,
@@ -760,10 +745,11 @@ def test_span_annotation_and_memo(client, api_user, api_document) -> None:
         "end_token": 20,
         "span_text": "last annotation",
         "code_id": 1,
-        "annotation_document_id": adoc2_id,
+        "sdoc_id": project_text_doc2["sdoc_id"],
+        "user_id": bob["id"],
     }
     span6_create_response = client.put(
-        "span", headers=alice["AuthHeader"], json=span6_annotation
+        "span", headers=bob["AuthHeader"], json=span6_annotation
     )
     assert span6_create_response.status_code == 200
     span6_id = span6_create_response.json()["id"]
@@ -775,46 +761,18 @@ def test_span_annotation_and_memo(client, api_user, api_document) -> None:
     assert span6_read_response["end"] == span6_annotation["end"]
     assert span6_read_response["begin_token"] == span6_annotation["begin_token"]
     assert span6_read_response["end_token"] == span6_annotation["end_token"]
-    assert span6_read_response["id"] == span6_id
-    assert span6_read_response["span_text"] == span6_annotation["span_text"]
+    assert span6_read_response["text"] == span6_annotation["span_text"]
     assert span6_read_response["code"]["id"] == span6_annotation["code_id"]
-    assert span6_read_response["annotation_document_id"] == adoc2_id
-    # assert bob["id"] == span6_response["user_id"] # FIXME https://github.com/uhh-lt/dwts/issues/362
-
-    span_annos2 = client.get(
-        f"adoc/{adoc2_id}/span_annotations",
-        headers=bob["AuthHeader"],
-    ).json()
-    assert len(span_annos2) == 2
-
-    # Bob removes the span annotations for Textdoc2
-    textdoc2_spananno_clear = client.delete(
-        f"adoc/{adoc2_id}/span_annotations",
-        headers=bob["AuthHeader"],
-    )
-    assert textdoc2_spananno_clear.status_code == 200
-
-    textdoc2_spananno_clear = client.get(
-        f"adoc/{adoc2_id}/span_annotations",
-        headers=bob["AuthHeader"],
-    ).json()
-    assert len(textdoc2_spananno_clear) == 0
+    assert span6_read_response["sdoc_id"] == span6_annotation["sdoc_id"]
+    assert span6_read_response["user_id"] == span6_annotation["user_id"]
+    assert span6_read_response["id"] == span6_id
 
 
 @pytest.mark.order(after="test_upload_documents")
 def test_bbox_annotatation_and_memo(client, api_user, api_document) -> None:
     alice = api_user.userList["alice"]
     project_image_doc1 = api_document.documentList[image_doc1[1]]
-    # Alice creates an annotation document
-    adoc1 = {
-        "source_document_id": project_image_doc1[
-            "sdoc_id"
-        ],  # FIXME https://github.com/uhh-lt/dats/issues/367
-        "user_id": alice["id"],
-    }
-    adoc_response1 = client.put("adoc", headers=alice["AuthHeader"], json=adoc1).json()
 
-    adoc1_id = adoc_response1["id"]
     # Alice creates two image annotations for Imagedoc1
     bbox_annotation1 = {
         "x_min": 0,
@@ -822,7 +780,8 @@ def test_bbox_annotatation_and_memo(client, api_user, api_document) -> None:
         "y_min": 0,
         "y_max": 25,
         "code_id": 4,
-        "annotation_document_id": adoc1_id,
+        "sdoc_id": project_image_doc1["sdoc_id"],
+        "user_id": alice["id"],
     }
     bbox_create_response1 = client.put(
         "bbox", headers=alice["AuthHeader"], json=bbox_annotation1
@@ -835,10 +794,8 @@ def test_bbox_annotatation_and_memo(client, api_user, api_document) -> None:
     assert bbox_response1["y_min"] == bbox_annotation1["y_min"]
     assert bbox_response1["y_max"] == bbox_annotation1["y_max"]
     assert bbox_response1["code"]["id"] == bbox_annotation1["code_id"]
-    assert (
-        bbox_response1["annotation_document_id"]
-        == bbox_annotation1["annotation_document_id"]
-    )
+    assert bbox_response1["sdoc_id"] == bbox_annotation1["sdoc_id"]
+    assert bbox_response1["user_id"] == bbox_annotation1["user_id"]
 
     bbox_annotation2 = {
         "x_min": 30,
@@ -846,7 +803,8 @@ def test_bbox_annotatation_and_memo(client, api_user, api_document) -> None:
         "y_min": 20,
         "y_max": 50,
         "code_id": 2,
-        "annotation_document_id": adoc1_id,
+        "sdoc_id": project_image_doc1["sdoc_id"],
+        "user_id": alice["id"],
     }
     bbox_create_response2 = client.put(
         "bbox", headers=alice["AuthHeader"], json=bbox_annotation2
@@ -859,15 +817,8 @@ def test_bbox_annotatation_and_memo(client, api_user, api_document) -> None:
     assert bbox_response2["y_min"] == bbox_annotation2["y_min"]
     assert bbox_response2["y_max"] == bbox_annotation2["y_max"]
     assert bbox_response2["code"]["id"] == bbox_annotation2["code_id"]
-    assert (
-        bbox_response2["annotation_document_id"]
-        == bbox_annotation2["annotation_document_id"]
-    )
-
-    bbox_annos1 = client.get(
-        f"adoc/{adoc1_id}/bbox_annotations", headers=alice["AuthHeader"]
-    ).json()
-    assert len(bbox_annos1) == 2
+    assert bbox_response2["sdoc_id"] == bbox_annotation2["sdoc_id"]
+    assert bbox_response2["user_id"] == bbox_annotation2["user_id"]
 
     # Bob creates an image annotation for Imagedoc1
     bob = api_user.userList["bob"]
@@ -878,7 +829,8 @@ def test_bbox_annotatation_and_memo(client, api_user, api_document) -> None:
         "y_min": 7,
         "y_max": 700,
         "code_id": 6,
-        "annotation_document_id": adoc1_id,
+        "sdoc_id": project_image_doc1["sdoc_id"],
+        "user_id": bob["id"],
     }
     bbox_create_response3 = client.put(
         "bbox", headers=bob["AuthHeader"], json=bbox_annotation3
@@ -892,17 +844,10 @@ def test_bbox_annotatation_and_memo(client, api_user, api_document) -> None:
     assert bbox_response3["y_min"] == bbox_annotation3["y_min"]
     assert bbox_response3["y_max"] == bbox_annotation3["y_max"]
     assert bbox_response3["code"]["id"] == bbox_annotation3["code_id"]
-    assert (
-        bbox_response3["annotation_document_id"]
-        == bbox_annotation3["annotation_document_id"]
-    )
+    assert bbox_response3["sdoc_id"] == bbox_annotation3["sdoc_id"]
+    assert bbox_response3["user_id"] == bbox_annotation3["user_id"]
 
-    bbox_annos1 = client.get(
-        f"adoc/{adoc1_id}/bbox_annotations", headers=bob["AuthHeader"]
-    ).json()
-    assert len(bbox_annos1) == 3
-
-    # Alice creates, updates and removes a memo for bbox1 in annotation document 1
+    # Alice creates, updates and removes a memo for bbox1
     bbox1_memo = {
         "title": "This is an important memo",
         "content": "I like this image",
@@ -925,31 +870,22 @@ def test_bbox_annotatation_and_memo(client, api_user, api_document) -> None:
     assert bbox1_memo1_read_response["content"] == bbox1_memo["content"]
     assert bbox1_memo1_read_response["id"] == bbox1_memo_id
     assert bbox1_memo1_read_response["starred"] == bbox1_memo["starred"]
-    assert bbox1_memo1_read_response["user_id"] == alice["id"]
+    assert bbox1_memo1_read_response["user_id"] == bbox1_memo["user_id"]
     assert bbox1_memo1_read_response["project_id"] == bbox1_memo["project_id"]
     assert bbox1_memo1_read_response["attached_object_id"] == bbox1_id
     assert bbox1_memo1_read_response["attached_object_type"] == "bbox_annotation"
 
-    # Bob creates an annotation document for Imagedoc2
-    project_image_doc2 = api_document.documentList[image_doc2[1]]
-    adoc_create2 = {
-        "source_document_id": project_image_doc2[
-            "sdoc_id"
-        ],  # FIXME https://github.com/uhh-lt/dats/issues/367
-        "user_id": alice["id"],
-    }
-    adoc_response2 = client.put(
-        "adoc", headers=alice["AuthHeader"], json=adoc_create2
-    ).json()
-
     # Bob creates two image annotations for Imagedoc2
+    project_image_doc2 = api_document.documentList[image_doc2[1]]
+
     bbox_annotation4 = {
         "x_min": 39,
         "x_max": 390,
         "y_min": 700,
         "y_max": 701,
         "code_id": 9,
-        "annotation_document_id": adoc_response2["id"],
+        "sdoc_id": project_image_doc2["sdoc_id"],
+        "user_id": bob["id"],
     }
     bbox_create_response4 = client.put(
         "bbox", headers=bob["AuthHeader"], json=bbox_annotation4
@@ -963,10 +899,8 @@ def test_bbox_annotatation_and_memo(client, api_user, api_document) -> None:
     assert bbox_response4["y_min"] == bbox_annotation4["y_min"]
     assert bbox_response4["y_max"] == bbox_annotation4["y_max"]
     assert bbox_response4["code"]["id"] == bbox_annotation4["code_id"]
-    assert (
-        bbox_response4["annotation_document_id"]
-        == bbox_annotation4["annotation_document_id"]
-    )
+    assert bbox_response4["sdoc_id"] == bbox_annotation4["sdoc_id"]
+    assert bbox_response4["user_id"] == bbox_annotation4["user_id"]
 
     bbox_annotation5 = {
         "x_min": 390,
@@ -974,7 +908,8 @@ def test_bbox_annotatation_and_memo(client, api_user, api_document) -> None:
         "y_min": 250,
         "y_max": 500,
         "code_id": 8,
-        "annotation_document_id": adoc_response2["id"],
+        "sdoc_id": project_image_doc2["sdoc_id"],
+        "user_id": bob["id"],
     }
     bbox_create_response5 = client.put(
         "bbox", headers=bob["AuthHeader"], json=bbox_annotation5
@@ -988,38 +923,14 @@ def test_bbox_annotatation_and_memo(client, api_user, api_document) -> None:
     assert bbox_response5["y_min"] == bbox_annotation5["y_min"]
     assert bbox_response5["y_max"] == bbox_annotation5["y_max"]
     assert bbox_response5["code"]["id"] == bbox_annotation5["code_id"]
-    assert (
-        bbox_response5["annotation_document_id"]
-        == bbox_annotation5["annotation_document_id"]
-    )
-
-    bbox_annos2 = client.get(
-        f"adoc/{adoc_response2['id']}/bbox_annotations", headers=bob["AuthHeader"]
-    ).json()
-    assert len(bbox_annos2) == 2
-
-    # Bob removes the image annotations for Imagedoc2
-    adoc2_remove_response = client.delete(
-        f"adoc/{adoc_response2['id']}/bbox_annotations", headers=bob["AuthHeader"]
-    )
-    assert adoc2_remove_response.status_code == 200
-
-    # Alice removes the image annotations for Imagedoc1
-    adoc1_remove_response = client.delete(
-        f"adoc/{adoc_response1['id']}/bbox_annotations", headers=alice["AuthHeader"]
-    )
-    assert adoc1_remove_response.status_code == 200
+    assert bbox_response5["sdoc_id"] == bbox_annotation5["sdoc_id"]
+    assert bbox_response5["user_id"] == bbox_annotation5["user_id"]
 
     # Alice removes bbox1
     bbox1_remove_response = client.delete(
         f"bbox/{bbox1_id}", headers=alice["AuthHeader"]
     )
     assert bbox1_remove_response.status_code == 200
-
-    bbox_annos2_clear = client.get(
-        f"adoc/{adoc_response2['id']}/bbox_annotations", headers=bob["AuthHeader"]
-    ).json()
-    assert len(bbox_annos2_clear) == 0
 
 
 @pytest.mark.order(after="test_project_add_user")
@@ -1046,6 +957,7 @@ def test_project_metadata(client, api_user, api_project) -> None:
         "read_only": False,
         "doctype": "text",
         "project_id": project1["id"],
+        "description": "Magic meta",
     }
     response_create = client.put("projmeta", headers=alice["AuthHeader"], json=meta)
     assert response_create.status_code == 200
@@ -1083,7 +995,7 @@ def test_documentTag_and_memo(client, api_user, api_document, api_project) -> No
     alice = api_user.userList["alice"]
     project1 = api_project.projectList["project1"]
     doctag1 = {
-        "title": "This is a tag",
+        "name": "This is a name",
         "color": "blue",
         "description": "This is the description",
         "project_id": project1["id"],
@@ -1097,11 +1009,11 @@ def test_documentTag_and_memo(client, api_user, api_document, api_project) -> No
     doctag1_read_response = client.get(
         f"doctag/{doctag1['id']}", headers=alice["AuthHeader"]
     ).json()
-
-    assert doctag1_read_response["title"] == doctag1["title"]
+    # print(doctag1_read_response)
+    assert doctag1_read_response["name"] == doctag1["name"]
     assert doctag1_read_response["color"] == doctag1["color"]
     assert doctag1_read_response["description"] == doctag1["description"]
-    assert doctag1_read_response["parent_tag_id"] is None
+    assert doctag1_read_response["parent_id"] is None
     assert doctag1_read_response["id"] == doctag1["id"]
     assert doctag1_read_response["project_id"] == doctag1["project_id"]
 
