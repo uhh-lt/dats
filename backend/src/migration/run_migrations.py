@@ -7,7 +7,7 @@ def run_migrations():
     SQLService().create_database_if_not_exists()
     config = Config("alembic.ini")
     upgrade(config, "head")
-    print("Alembic Migration Successfull!")
+    print("Alembic Migration Successful!")
 
 
 if __name__ == "__main__":
