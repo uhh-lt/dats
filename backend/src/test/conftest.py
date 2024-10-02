@@ -47,6 +47,10 @@ from app.core.data.dto.user import UserCreate, UserRead
 from main import app
 
 
+def pytest_sessionfinish():
+    # Make sure the next test session starts with a clean database
+    SQLService().drop_database()
+
 # Always use the asyncio backend for async tests
 @pytest.fixture
 def anyio_backend():
@@ -75,9 +79,9 @@ def make_code(
         )
 
         db_code = crud_code.create(db=db, create_dto=code)
-        code_id = db_code.id
+        # code_id = db_code.id
 
-        request.addfinalizer(lambda: crud_code.remove(db=db, id=code_id))
+        # request.addfinalizer(lambda: crud_code.remove(db=db, id=code_id))
 
         return db_code
 
@@ -123,9 +127,9 @@ def make_project(
         )
         crud_project.associate_user(db=db, proj_id=project.id, user_id=user.id)
 
-        project_id = project.id
+        # project_id = project.id
 
-        request.addfinalizer(lambda: crud_project.remove(db, id=project_id))
+        # request.addfinalizer(lambda: crud_project.remove(db, id=project_id))
 
         return project
 
@@ -153,9 +157,9 @@ def make_user(db: Session, request: FixtureRequest) -> Callable[[], UserORM]:
 
         # create user
         db_user = crud_user.create(db=db, create_dto=user)
-        user_id = db_user.id
+        # user_id = db_user.id
 
-        request.addfinalizer(lambda: crud_user.remove(db=db, id=user_id))
+        # request.addfinalizer(lambda: crud_user.remove(db=db, id=user_id))
 
         return db_user
 

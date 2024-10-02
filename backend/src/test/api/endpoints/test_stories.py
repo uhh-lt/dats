@@ -337,7 +337,7 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
     while text1_prepro_status == "Running" or text2_prepro_status == "Running":
         text1_prepro_status = api_document.prepro_status(text1_prepro_job_id, alice)
         text2_prepro_status = api_document.prepro_status(text2_prepro_job_id, alice)
-        time.sleep(2)
+        time.sleep(3)
     assert text1_prepro_status == "Finished"
     assert text2_prepro_status == "Finished"
 
@@ -354,7 +354,7 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
     while image1_prepro_status == "Running" or image2_prepro_status == "Running":
         image1_prepro_status = api_document.prepro_status(image1_prepro_job_id, alice)
         image2_prepro_status = api_document.prepro_status(image2_prepro_job_id, alice)
-        time.sleep(2)
+        time.sleep(3)
     assert image1_prepro_status == "Finished"
     assert image2_prepro_status == "Finished"
 
@@ -371,7 +371,7 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
     while video1_propro_status == "Running" or video2_prepro_status == "Running":
         video1_propro_status = api_document.prepro_status(video1_prepro_job_id, alice)
         video2_prepro_status = api_document.prepro_status(video2_prepro_job_id, alice)
-        time.sleep(2)
+        time.sleep(3)
     assert video1_propro_status == "Finished"
     assert video2_prepro_status == "Finished"
 
@@ -388,7 +388,7 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
     while audio1_prepro_status == "Running" or audio2_prepro_status == "Running":
         audio1_prepro_status = api_document.prepro_status(audio1_prepro_job_id, alice)
         audio2_prepro_status = api_document.prepro_status(audio2_prepro_job_id, alice)
-        time.sleep(2)
+        time.sleep(3)
 
     assert audio1_prepro_status == "Finished"
     assert audio2_prepro_status == "Finished"
@@ -410,7 +410,7 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
     while text3_prepro_status == "Running" or text4_prepro_status == "Running":
         text3_prepro_status = api_document.prepro_status(text3_prepro_job_id, bob)
         text4_prepro_status = api_document.prepro_status(text4_prepro_job_id, bob)
-        time.sleep(2)
+        time.sleep(3)
     assert text3_prepro_status == "Finished"
     assert text4_prepro_status == "Finished"
 
@@ -442,7 +442,7 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
     while image3_prepro_status == "Running" or image4_prepro_status == "Running":
         image3_prepro_status = api_document.prepro_status(image3_prepro_job_id, bob)
         image4_prepro_status = api_document.prepro_status(image4_prepro_job_id, bob)
-        time.sleep(2)
+        time.sleep(3)
     assert image3_prepro_status == "Finished"
     assert image4_prepro_status == "Finished"
 
@@ -459,7 +459,7 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
     while video3_prepro_status == "Running" or video4_prepro_status == "Running":
         video3_prepro_status = api_document.prepro_status(video3_prepro_job_id, bob)
         video4_prepro_status = api_document.prepro_status(video4_prepro_job_id, bob)
-        time.sleep(2)
+        time.sleep(3)
     assert video3_prepro_status == "Finished"
     assert video4_prepro_status == "Finished"
 
@@ -476,7 +476,7 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
     while audio3_prepro_status == "Running" or audio4_prepro_status == "Running":
         audio3_prepro_status = api_document.prepro_status(audio3_prepro_job_id, bob)
         audio4_prepro_status = api_document.prepro_status(audio4_prepro_job_id, bob)
-        time.sleep(2)
+        time.sleep(3)
     assert audio3_prepro_status == "Finished"
     assert audio4_prepro_status == "Finished"
 
@@ -543,11 +543,11 @@ def test_project_memos(client, api_user, api_project) -> None:
     assert memo_get["project_id"] == project_memo["project_id"]
 
 
-@pytest.mark.order(after="test_upload_documents")
-def test_span_annotation_and_memo(client, api_user, api_document) -> None:
+@pytest.mark.order(after=["test_upload_documents", "test_codes_create"])
+def test_span_annotation_and_memo(client, api_code, api_user, api_document) -> None:
     alice = api_user.userList["alice"]
     project_text_doc1 = api_document.documentList[text_doc1[1]]
-
+    code1 = api_code.codeList["code1"]
     # Alice creates two annotations for Textdoc1
     span1_annotation = {
         "begin": 0,
@@ -555,9 +555,9 @@ def test_span_annotation_and_memo(client, api_user, api_document) -> None:
         "begin_token": 0,
         "end_token": 4,
         "span_text": "test",
-        "code_id": 5,
-        "sdoc_id": project_text_doc1["sdoc_id"],
+        "code_id": code1["id"],
         "user_id": alice["id"],
+        "sdoc_id": project_text_doc1["sdoc_id"],
     }
     span1_create_response = client.put(
         "span", headers=alice["AuthHeader"], json=span1_annotation
@@ -575,16 +575,17 @@ def test_span_annotation_and_memo(client, api_user, api_document) -> None:
     assert span1_read_response["id"] == span1_id
     assert span1_read_response["text"] == span1_annotation["span_text"] # TODO Inconsistent naming
     assert span1_read_response["code"]["id"] == span1_annotation["code_id"]
-    assert span1_read_response["sdoc_id"] == span1_annotation["sdoc_id"]
     assert span1_read_response["user_id"] == span1_annotation["user_id"]
+    assert span1_read_response["sdoc_id"] == span1_annotation["sdoc_id"]
 
+    code2 = api_code.codeList["code2"]
     span2_annotation = {
         "begin": 5,
         "end": 25,
         "begin_token": 3,
         "end_token": 10,
         "span_text": "new test",
-        "code_id": 6,
+        "code_id": code2["id"],
         "sdoc_id": project_text_doc1["sdoc_id"],
         "user_id": alice["id"],
     }
@@ -635,26 +636,16 @@ def test_span_annotation_and_memo(client, api_user, api_document) -> None:
 
     # Alice creates an annotation for Textdoc2
     project_text_doc2 = api_document.documentList[text_doc2[1]]
-    # adoc_create2 = {
-    #     "source_document_id": project_text_doc2[
-    #         "sdoc_id"
-    #     ],  # FIXME https://github.com/uhh-lt/dats/issues/367
-    #     "user_id": alice["id"],
-    # }
-    # adoc2_create_response = client.put(
-    #     "adoc", headers=alice["AuthHeader"], json=adoc_create2
-    # ).json()
-    # adoc2_id = adoc2_create_response["id"]
+    code3 = api_code.codeList["code3"]
     span3_annotation = {
         "begin": 20,
         "end": 40,
         "begin_token": 2,
         "end_token": 9,
         "span_text": "new test",
-        "code_id": 6,
+        "code_id": code3["id"],
         "sdoc_id": project_text_doc2["sdoc_id"],
         "user_id": alice["id"],
-        # "annotation_document_id": adoc2_id,
     }
     span3_create_response = client.put(
         "span", headers=alice["AuthHeader"], json=span3_annotation
@@ -682,7 +673,7 @@ def test_span_annotation_and_memo(client, api_user, api_document) -> None:
         "begin_token": 0,
         "end_token": 2,
         "span_text": "test Span",
-        "code_id": 2,
+        "code_id": code1["id"],
         "sdoc_id": project_text_doc1["sdoc_id"],
         "user_id": alice["id"],
     }
@@ -713,7 +704,7 @@ def test_span_annotation_and_memo(client, api_user, api_document) -> None:
         "begin_token": 10,
         "end_token": 15,
         "span_text": "fifth annotation",
-        "code_id": 10,
+        "code_id": code2["id"],
         "sdoc_id": project_text_doc1["sdoc_id"],
         "user_id": alice["id"],
     }
@@ -744,7 +735,7 @@ def test_span_annotation_and_memo(client, api_user, api_document) -> None:
         "begin_token": 2,
         "end_token": 20,
         "span_text": "last annotation",
-        "code_id": 1,
+        "code_id": code3["id"],
         "sdoc_id": project_text_doc2["sdoc_id"],
         "user_id": bob["id"],
     }
@@ -768,10 +759,11 @@ def test_span_annotation_and_memo(client, api_user, api_document) -> None:
     assert span6_read_response["id"] == span6_id
 
 
-@pytest.mark.order(after="test_upload_documents")
-def test_bbox_annotatation_and_memo(client, api_user, api_document) -> None:
+@pytest.mark.order(after=["test_upload_documents", "test_codes_create"])
+def test_bbox_annotatation_and_memo(client, api_code, api_user, api_document) -> None:
     alice = api_user.userList["alice"]
     project_image_doc1 = api_document.documentList[image_doc1[1]]
+    code1 = api_code.codeList["code1"]
 
     # Alice creates two image annotations for Imagedoc1
     bbox_annotation1 = {
@@ -779,7 +771,7 @@ def test_bbox_annotatation_and_memo(client, api_user, api_document) -> None:
         "x_max": 10,
         "y_min": 0,
         "y_max": 25,
-        "code_id": 4,
+        "code_id": code1["id"],
         "sdoc_id": project_image_doc1["sdoc_id"],
         "user_id": alice["id"],
     }
@@ -788,21 +780,23 @@ def test_bbox_annotatation_and_memo(client, api_user, api_document) -> None:
     )
     assert bbox_create_response1.status_code == 200
     bbox1_id = bbox_create_response1.json()["id"]
-    bbox_response1 = client.get(f"bbox/{bbox1_id}", headers=alice["AuthHeader"]).json()
-    assert bbox_response1["x_min"] == bbox_annotation1["x_min"]
-    assert bbox_response1["x_max"] == bbox_annotation1["x_max"]
-    assert bbox_response1["y_min"] == bbox_annotation1["y_min"]
-    assert bbox_response1["y_max"] == bbox_annotation1["y_max"]
-    assert bbox_response1["code"]["id"] == bbox_annotation1["code_id"]
-    assert bbox_response1["sdoc_id"] == bbox_annotation1["sdoc_id"]
-    assert bbox_response1["user_id"] == bbox_annotation1["user_id"]
+    bbox_read_response1 = client.get(f"bbox/{bbox1_id}", headers=alice["AuthHeader"]).json()
+    assert bbox_read_response1["x_min"] == bbox_annotation1["x_min"]
+    assert bbox_read_response1["x_max"] == bbox_annotation1["x_max"]
+    assert bbox_read_response1["y_min"] == bbox_annotation1["y_min"]
+    assert bbox_read_response1["y_max"] == bbox_annotation1["y_max"]
+    assert bbox_read_response1["code"]["id"] == bbox_annotation1["code_id"]
+    assert bbox_read_response1["sdoc_id"] == bbox_annotation1["sdoc_id"]
+    assert bbox_read_response1["user_id"] == bbox_annotation1["user_id"]
+    assert bbox_read_response1["id"] == bbox1_id
 
+    code2 = api_code.codeList["code2"]
     bbox_annotation2 = {
         "x_min": 30,
         "x_max": 90,
         "y_min": 20,
         "y_max": 50,
-        "code_id": 2,
+        "code_id": code2["id"],
         "sdoc_id": project_image_doc1["sdoc_id"],
         "user_id": alice["id"],
     }
@@ -811,24 +805,26 @@ def test_bbox_annotatation_and_memo(client, api_user, api_document) -> None:
     )
     assert bbox_create_response2.status_code == 200
     bbox2_id = bbox_create_response2.json()["id"]
-    bbox_response2 = client.get(f"bbox/{bbox2_id}", headers=alice["AuthHeader"]).json()
-    assert bbox_response2["x_min"] == bbox_annotation2["x_min"]
-    assert bbox_response2["x_max"] == bbox_annotation2["x_max"]
-    assert bbox_response2["y_min"] == bbox_annotation2["y_min"]
-    assert bbox_response2["y_max"] == bbox_annotation2["y_max"]
-    assert bbox_response2["code"]["id"] == bbox_annotation2["code_id"]
-    assert bbox_response2["sdoc_id"] == bbox_annotation2["sdoc_id"]
-    assert bbox_response2["user_id"] == bbox_annotation2["user_id"]
+    bbox_read_response2 = client.get(f"bbox/{bbox2_id}", headers=alice["AuthHeader"]).json()
+    assert bbox_read_response2["x_min"] == bbox_annotation2["x_min"]
+    assert bbox_read_response2["x_max"] == bbox_annotation2["x_max"]
+    assert bbox_read_response2["y_min"] == bbox_annotation2["y_min"]
+    assert bbox_read_response2["y_max"] == bbox_annotation2["y_max"]
+    assert bbox_read_response2["code"]["id"] == bbox_annotation2["code_id"]
+    assert bbox_read_response2["sdoc_id"] == bbox_annotation2["sdoc_id"]
+    assert bbox_read_response2["user_id"] == bbox_annotation2["user_id"]
+    assert bbox_read_response2["id"] == bbox2_id
 
     # Bob creates an image annotation for Imagedoc1
     bob = api_user.userList["bob"]
+    code3 = api_code.codeList["code3"]
 
     bbox_annotation3 = {
         "x_min": 12,
         "x_max": 22,
         "y_min": 7,
         "y_max": 700,
-        "code_id": 6,
+        "code_id": code3["id"],
         "sdoc_id": project_image_doc1["sdoc_id"],
         "user_id": bob["id"],
     }
@@ -837,15 +833,16 @@ def test_bbox_annotatation_and_memo(client, api_user, api_document) -> None:
     )
     assert bbox_create_response3.status_code == 200
     bbox3_id = bbox_create_response3.json()["id"]
-    bbox_response3 = client.get(f"bbox/{bbox3_id}", headers=bob["AuthHeader"]).json()
+    bbox_read_response3 = client.get(f"bbox/{bbox3_id}", headers=bob["AuthHeader"]).json()
 
-    assert bbox_response3["x_min"] == bbox_annotation3["x_min"]
-    assert bbox_response3["x_max"] == bbox_annotation3["x_max"]
-    assert bbox_response3["y_min"] == bbox_annotation3["y_min"]
-    assert bbox_response3["y_max"] == bbox_annotation3["y_max"]
-    assert bbox_response3["code"]["id"] == bbox_annotation3["code_id"]
-    assert bbox_response3["sdoc_id"] == bbox_annotation3["sdoc_id"]
-    assert bbox_response3["user_id"] == bbox_annotation3["user_id"]
+    assert bbox_read_response3["x_min"] == bbox_annotation3["x_min"]
+    assert bbox_read_response3["x_max"] == bbox_annotation3["x_max"]
+    assert bbox_read_response3["y_min"] == bbox_annotation3["y_min"]
+    assert bbox_read_response3["y_max"] == bbox_annotation3["y_max"]
+    assert bbox_read_response3["code"]["id"] == bbox_annotation3["code_id"]
+    assert bbox_read_response3["sdoc_id"] == bbox_annotation3["sdoc_id"]
+    assert bbox_read_response3["user_id"] == bbox_annotation3["user_id"]
+    assert bbox_read_response3["id"] == bbox3_id
 
     # Alice creates, updates and removes a memo for bbox1
     bbox1_memo = {
@@ -883,7 +880,7 @@ def test_bbox_annotatation_and_memo(client, api_user, api_document) -> None:
         "x_max": 390,
         "y_min": 700,
         "y_max": 701,
-        "code_id": 9,
+        "code_id": code1["id"],
         "sdoc_id": project_image_doc2["sdoc_id"],
         "user_id": bob["id"],
     }
@@ -907,7 +904,7 @@ def test_bbox_annotatation_and_memo(client, api_user, api_document) -> None:
         "x_max": 600,
         "y_min": 250,
         "y_max": 500,
-        "code_id": 8,
+        "code_id": code2["id"],
         "sdoc_id": project_image_doc2["sdoc_id"],
         "user_id": bob["id"],
     }
@@ -1009,7 +1006,6 @@ def test_documentTag_and_memo(client, api_user, api_document, api_project) -> No
     doctag1_read_response = client.get(
         f"doctag/{doctag1['id']}", headers=alice["AuthHeader"]
     ).json()
-    # print(doctag1_read_response)
     assert doctag1_read_response["name"] == doctag1["name"]
     assert doctag1_read_response["color"] == doctag1["color"]
     assert doctag1_read_response["description"] == doctag1["description"]

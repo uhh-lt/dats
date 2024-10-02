@@ -192,31 +192,19 @@ def test_get_project_tags(db: Session, project: ProjectORM) -> None:
     assert len(s) == 0
 
 
-# user codes
+# project codes!
 
 
-def test_get_remove_project_system_user_codes(db: Session, project: ProjectORM) -> None:
-    s = [
-        CodeRead.model_validate(code_db_obj)
-        for code_db_obj in crud_code.read_by_user_and_project(
-            db=db, user_id=SYSTEM_USER_ID, proj_id=project.id
-        )
-    ]
+def test_get_remove_all_project_codes(db: Session, project: ProjectORM) -> None:
 
-    assert len(s) == get_number_of_system_codes()
+    assert len(project.codes) == get_number_of_system_codes()
 
-    # remove user codes
-    crud_code.remove_by_user_and_project(
-        db=db, user_id=SYSTEM_USER_ID, proj_id=project.id
+    # remove project codes
+    crud_code.remove_by_project(
+        db=db, proj_id=project.id
     )
-    s = [
-        CodeRead.model_validate(code_db_obj)
-        for code_db_obj in crud_code.read_by_user_and_project(
-            db=db, user_id=SYSTEM_USER_ID, proj_id=project.id
-        )
-    ]
 
-    assert len(s) == 0
+    assert len(project.codes) == 0
 
 
 # user memos
