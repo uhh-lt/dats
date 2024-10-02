@@ -20,11 +20,11 @@ class CRUDBBoxAnnotation(
     CRUDBase[BBoxAnnotationORM, BBoxAnnotationCreateIntern, BBoxAnnotationUpdate]
 ):
     def create(
-        self, db: Session, *, create_dto: BBoxAnnotationCreate
+        self, db: Session, *, user_id: int, create_dto: BBoxAnnotationCreate
     ) -> BBoxAnnotationORM:
         # get or create the annotation document
         adoc = crud_adoc.exists_or_create(
-            db=db, user_id=create_dto.user_id, sdoc_id=create_dto.sdoc_id
+            db=db, user_id=user_id, sdoc_id=create_dto.sdoc_id
         )
 
         # create the BboxAnnotation

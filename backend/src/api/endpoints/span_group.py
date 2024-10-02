@@ -11,7 +11,11 @@ from app.core.data.dto.span_annotation import (
     SpanAnnotationRead,
     SpanAnnotationReadResolved,
 )
-from app.core.data.dto.span_group import SpanGroupCreate, SpanGroupRead, SpanGroupUpdate
+from app.core.data.dto.span_group import (
+    SpanGroupCreate,
+    SpanGroupRead,
+    SpanGroupUpdate,
+)
 
 router = APIRouter(
     prefix="/spangroup", dependencies=[Depends(get_current_user)], tags=["spanGroup"]
@@ -29,10 +33,11 @@ def create_new_span_group(
     span_group: SpanGroupCreate,
     authz_user: AuthzUser = Depends(),
 ) -> Optional[SpanGroupRead]:
-    authz_user.assert_is_same_user(span_group.user_id)
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, span_group.sdoc_id)
 
-    db_obj = crud_span_group.create(db=db, create_dto=span_group)
+    db_obj = crud_span_group.create(
+        db=db, user_id=authz_user.user.id, create_dto=span_group
+    )
     return SpanGroupRead.model_validate(db_obj)
 
 

@@ -7,7 +7,7 @@ from app.core.analysis.cota.pipeline.cargo import Cargo
 from app.core.data.crud.concept_over_time_analysis import crud_cota
 from app.core.data.dto.concept_over_time_analysis import (
     COTASentence,
-    COTAUpdateAsInDB,
+    COTAUpdateIntern,
 )
 from app.core.db.sql_service import SQLService
 
@@ -24,7 +24,7 @@ def store_in_db(cargo: Cargo) -> Cargo:
         crud_cota.update(
             db=db,
             id=cargo.job.cota.id,
-            update_dto=COTAUpdateAsInDB(search_space=search_space_str),
+            update_dto=COTAUpdateIntern(search_space=search_space_str),
         )
 
     return cargo

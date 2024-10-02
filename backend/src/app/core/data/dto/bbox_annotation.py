@@ -24,7 +24,6 @@ class BBoxAnnotationCreateIntern(BBoxAnnotationBaseDTO):
 
 class BBoxAnnotationCreate(BBoxAnnotationBaseDTO):
     code_id: int = Field(description="Code the BBoxAnnotation refers to")
-    user_id: int = Field(description="User that created the BBoxAnnotation")
     sdoc_id: int = Field(description="SourceDocument the BBoxAnnotation refers to")
 
 

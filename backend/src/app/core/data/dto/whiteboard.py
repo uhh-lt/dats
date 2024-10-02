@@ -14,10 +14,10 @@ class WhiteboardBaseDTO(BaseModel):
 # Properties for creation
 class WhiteboardCreate(WhiteboardBaseDTO):
     project_id: int = Field(description="Project the Whiteboard belongs to")
+
+
+class WhiteboardCreateIntern(WhiteboardCreate):
     user_id: int = Field(description="User the Whiteboard belongs to")
-
-
-class WhiteboardCreateAsInDB(WhiteboardCreate):
     content: Optional[str] = Field(
         description="Content of the Whiteboard", default=None
     )

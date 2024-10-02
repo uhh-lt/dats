@@ -13,7 +13,7 @@ from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.doc_type import DocType
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.concept_over_time_analysis import (
-    COTACreate,
+    COTACreateIntern,
     COTARead,
     COTARefinementHyperparameters,
     COTARefinementJobCreate,
@@ -22,7 +22,7 @@ from app.core.data.dto.concept_over_time_analysis import (
     COTASentenceID,
     COTATimelineSettings,
     COTAUpdate,
-    COTAUpdateAsInDB,
+    COTAUpdateIntern,
 )
 from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.meta_type import MetaType
@@ -75,7 +75,7 @@ class COTAService(metaclass=SingletonMeta):
         cota.search_space = sentence_search_space
         return cota
 
-    def create(self, db: Session, cota_create: COTACreate) -> COTARead:
+    def create(self, db: Session, cota_create: COTACreateIntern) -> COTARead:
         db_obj = crud_cota.create(db=db, create_dto=cota_create)
 
         # initialize the date metadata if possible
@@ -129,7 +129,7 @@ class COTAService(metaclass=SingletonMeta):
         # make sure that cota with cota_id exists
         self.read_by_id(db=db, cota_id=cota_id)
 
-        update_dto_as_in_db = COTAUpdateAsInDB(
+        update_dto_as_in_db = COTAUpdateIntern(
             **cota_update.model_dump(
                 exclude={
                     "concepts",
@@ -182,7 +182,7 @@ class COTAService(metaclass=SingletonMeta):
         # delete the refinement jobs
         self.redis.delete_all_cota_job_by_cota_id(cota_id=cota.id)
         # reset the search space
-        update_dto_as_in_db = COTAUpdateAsInDB(
+        update_dto_as_in_db = COTAUpdateIntern(
             search_space=srsly.json_dumps(jsonable_encoder([]))
         )
         # update the cota in db
@@ -275,7 +275,7 @@ class COTAService(metaclass=SingletonMeta):
         db_obj = crud_cota.update(
             db=db,
             id=cota_id,
-            update_dto=COTAUpdateAsInDB(
+            update_dto=COTAUpdateIntern(
                 search_space=search_space_str,
             ),
         )
@@ -313,7 +313,7 @@ class COTAService(metaclass=SingletonMeta):
         db_obj = crud_cota.update(
             db=db,
             id=cota_id,
-            update_dto=COTAUpdateAsInDB(
+            update_dto=COTAUpdateIntern(
                 search_space=search_space_str,
             ),
         )

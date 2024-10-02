@@ -9,7 +9,7 @@ from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.action import ActionType
 from app.core.data.dto.memo import (
     AttachedObjectType,
-    MemoCreate,
+    MemoCreateIntern,
     MemoInDB,
     MemoRead,
     MemoUpdate,
@@ -30,8 +30,8 @@ from app.core.db.sql_service import SQLService
 from app.core.search.elasticsearch_service import ElasticSearchService
 
 
-class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
-    def create(self, db: Session, *, create_dto: MemoCreate) -> MemoORM:
+class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
+    def create(self, db: Session, *, create_dto: MemoCreateIntern) -> MemoORM:
         raise NotImplementedError()
 
     def update(self, db: Session, *, id: int, update_dto: MemoUpdate) -> MemoORM:
@@ -173,7 +173,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
         )
 
     def __create_memo(
-        self, create_dto: MemoCreate, db: Session, oh_db_obj: ObjectHandleORM
+        self, create_dto: MemoCreateIntern, db: Session, oh_db_obj: ObjectHandleORM
     ):
         # create the Memo
         dto_obj_data = jsonable_encoder(create_dto)
@@ -192,7 +192,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
         return db_obj
 
     def create_for_code(
-        self, db: Session, code_id: int, create_dto: MemoCreate
+        self, db: Session, code_id: int, create_dto: MemoCreateIntern
     ) -> MemoORM:
         # Flo: this is necessary to avoid circular imports.
         from app.core.data.crud.object_handle import crud_object_handle
@@ -210,7 +210,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
         return db_obj
 
     def create_for_project(
-        self, db: Session, project_id: int, create_dto: MemoCreate
+        self, db: Session, project_id: int, create_dto: MemoCreateIntern
     ) -> MemoORM:
         # Flo: this is necessary to avoid circular imports.
         from app.core.data.crud.object_handle import crud_object_handle
@@ -228,7 +228,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
         return db_obj
 
     def create_for_sdoc(
-        self, db: Session, sdoc_id: int, create_dto: MemoCreate
+        self, db: Session, sdoc_id: int, create_dto: MemoCreateIntern
     ) -> MemoORM:
         # Flo: this is necessary to avoid circular imports.
         from app.core.data.crud.object_handle import crud_object_handle
@@ -246,7 +246,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
         return db_obj
 
     def create_for_span_annotation(
-        self, db: Session, span_anno_id: int, create_dto: MemoCreate
+        self, db: Session, span_anno_id: int, create_dto: MemoCreateIntern
     ) -> MemoORM:
         # Flo: this is necessary to avoid circular imports.
         from app.core.data.crud.object_handle import crud_object_handle
@@ -265,7 +265,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
         return db_obj
 
     def create_for_span_group(
-        self, db: Session, span_group_id: int, create_dto: MemoCreate
+        self, db: Session, span_group_id: int, create_dto: MemoCreateIntern
     ) -> MemoORM:
         # Flo: this is necessary to avoid circular imports.
         from app.core.data.crud.object_handle import crud_object_handle
@@ -283,7 +283,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
         return db_obj
 
     def create_for_bbox_annotation(
-        self, db: Session, bbox_anno_id: int, create_dto: MemoCreate
+        self, db: Session, bbox_anno_id: int, create_dto: MemoCreateIntern
     ) -> MemoORM:
         # Flo: this is necessary to avoid circular imports.
         from app.core.data.crud.object_handle import crud_object_handle
@@ -302,7 +302,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
         return db_obj
 
     def create_for_document_tag(
-        self, db: Session, doc_tag_id: int, create_dto: MemoCreate
+        self, db: Session, doc_tag_id: int, create_dto: MemoCreateIntern
     ) -> MemoORM:
         # Flo: this is necessary to avoid circular imports.
         from app.core.data.crud.object_handle import crud_object_handle

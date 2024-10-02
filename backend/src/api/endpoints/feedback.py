@@ -6,7 +6,11 @@ from sqlalchemy.orm import Session
 from api.dependencies import get_current_user, get_db_session
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud.user import SYSTEM_USER_ID, crud_user
-from app.core.data.dto.feedback import FeedbackCreate, FeedbackRead
+from app.core.data.dto.feedback import (
+    FeedbackCreate,
+    FeedbackCreateIntern,
+    FeedbackRead,
+)
 from app.core.data.dto.user import UserRead
 from app.core.db.redis_service import RedisService
 from app.core.mail.mail_service import MailService
@@ -27,13 +31,15 @@ async def create_feedback(
     feedback: FeedbackCreate,
     authz_user: AuthzUser = Depends(),
 ) -> FeedbackRead:
-    authz_user.assert_is_same_user(feedback.user_id)
+    fb = RedisService().store_feedback(
+        feedback=FeedbackCreateIntern(
+            **feedback.model_dump(),
+            user_id=authz_user.user.id,
+        )
+    )
 
-    fb = RedisService().store_feedback(feedback=feedback)
-
-    user = crud_user.read(db=db, id=feedback.user_id)
     await MailService().send_feedback_received_mail(
-        user=UserRead.model_validate(user),
+        user=UserRead.model_validate(authz_user.user),
         feedback=fb,
     )
     return fb
@@ -66,17 +72,12 @@ def get_all(authz_user: AuthzUser = Depends()) -> List[FeedbackRead]:
 
 
 @router.get(
-    "/user/{user_id}",
+    "/user",
     response_model=List[FeedbackRead],
-    summary="Returns the Feedback of the User with the given ID.",
+    summary="Returns the Feedback of the logged-in User.",
 )
-def get_all_by_user(
-    *, user_id: int, authz_user: AuthzUser = Depends()
-) -> List[FeedbackRead]:
-    authz_user.assert_true(
-        authz_user.user.id == SYSTEM_USER_ID or authz_user.user.id == user_id
-    )
-    return RedisService().get_all_feedbacks_of_user(user_id)
+def get_all_by_user(*, authz_user: AuthzUser = Depends()) -> List[FeedbackRead]:
+    return RedisService().get_all_feedbacks_of_user(authz_user.user.id)
 
 
 @router.post(
@@ -92,7 +93,7 @@ async def reply_to(
     authz_user: AuthzUser = Depends(),
 ) -> str:
     authz_user.assert_is_same_user(SYSTEM_USER_ID)
-    # todo: load_feedback should raise exception, if it does not exist!
+    # TODO: load_feedback should raise exception, if it does not exist!
     feedback: FeedbackRead = RedisService().load_feedback(key=feedback_id)
 
     user = crud_user.read(db=db, id=feedback.user_id)

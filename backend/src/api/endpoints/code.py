@@ -11,7 +11,13 @@ from app.core.data.crud import Crud
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.memo import crud_memo
 from app.core.data.dto.code import CodeCreate, CodeRead, CodeUpdate
-from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
+from app.core.data.dto.memo import (
+    AttachedObjectType,
+    MemoCreate,
+    MemoCreateIntern,
+    MemoInDB,
+    MemoRead,
+)
 
 router = APIRouter(
     prefix="/code", dependencies=[Depends(get_current_user)], tags=["code"]
@@ -103,7 +109,6 @@ def add_memo(
     validate: Validate = Depends(),
 ) -> MemoRead:
     code = crud_code.read(db, code_id)
-    authz_user.assert_is_same_user(memo.user_id)
     authz_user.assert_in_project(code.project_id)
     authz_user.assert_in_project(memo.project_id)
 
@@ -111,7 +116,11 @@ def add_memo(
         code.project_id == memo.project_id, "Memo project needs to match code project"
     )
 
-    db_obj = crud_memo.create_for_code(db=db, code_id=code_id, create_dto=memo)
+    db_obj = crud_memo.create_for_code(
+        db=db,
+        code_id=code_id,
+        create_dto=MemoCreateIntern(**memo.model_dump(), user_id=authz_user.user.id),
+    )
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     return MemoRead(
         **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
@@ -138,21 +147,19 @@ def get_memos(
 
 
 @router.get(
-    "/{code_id}/memo/{user_id}",
+    "/{code_id}/memo/user",
     response_model=MemoRead,
     summary=(
-        "Returns the Memo attached to the SpanAnnotation with the given ID of the User with the"
-        " given ID if it exists."
+        "Returns the Memo attached to the Code with the given ID of the logged-in User if it exists."
     ),
 )
 def get_user_memo(
     *,
     db: Session = Depends(get_db_session),
     code_id: int,
-    user_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> MemoRead:
     authz_user.assert_in_same_project_as(Crud.CODE, code_id)
 
     db_obj = crud_code.read(db=db, id=code_id)
-    return get_object_memo_for_user(db_obj=db_obj, user_id=user_id)
+    return get_object_memo_for_user(db_obj=db_obj, user_id=authz_user.user.id)

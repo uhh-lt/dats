@@ -25,11 +25,11 @@ class CRUDSpanAnnotation(
     CRUDBase[SpanAnnotationORM, SpanAnnotationCreateIntern, SpanAnnotationUpdate]
 ):
     def create(
-        self, db: Session, *, create_dto: SpanAnnotationCreate
+        self, db: Session, *, user_id: int, create_dto: SpanAnnotationCreate
     ) -> SpanAnnotationORM:
         # get or create the annotation document
         adoc = crud_adoc.exists_or_create(
-            db=db, user_id=create_dto.user_id, sdoc_id=create_dto.sdoc_id
+            db=db, user_id=user_id, sdoc_id=create_dto.sdoc_id
         )
 
         # first create the SpanText
@@ -106,17 +106,15 @@ class CRUDSpanAnnotation(
         return db_objs
 
     def create_bulk(
-        self, db: Session, *, create_dtos: List[SpanAnnotationCreate]
+        self, db: Session, *, user_id: int, create_dtos: List[SpanAnnotationCreate]
     ) -> List[SpanAnnotationORM]:
         # group by user and sdoc_id
         # identify codes
         annotations_by_user_sdoc = {
-            (create_dto.user_id, create_dto.sdoc_id): [] for create_dto in create_dtos
+            (user_id, create_dto.sdoc_id): [] for create_dto in create_dtos
         }
         for create_dto in create_dtos:
-            annotations_by_user_sdoc[(create_dto.user_id, create_dto.sdoc_id)].append(
-                create_dto
-            )
+            annotations_by_user_sdoc[(user_id, create_dto.sdoc_id)].append(create_dto)
 
         # find or create annotation documents for each user and sdoc_id
         adoc_id_by_user_sdoc = {}
@@ -137,7 +135,7 @@ class CRUDSpanAnnotation(
                     end_token=create_dto.end_token,
                     code_id=create_dto.code_id,
                     annotation_document_id=adoc_id_by_user_sdoc[
-                        (create_dto.user_id, create_dto.sdoc_id)
+                        (user_id, create_dto.sdoc_id)
                     ],
                 )
                 for create_dto in create_dtos

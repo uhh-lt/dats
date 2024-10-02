@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from api.dependencies import get_current_user, get_db_session, skip_limit_params
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud.annotation_document import crud_adoc
-from app.core.data.crud.user import SYSTEM_USER_ID, crud_user
+from app.core.data.crud.user import crud_user
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.user import PublicUserRead, UserRead, UserUpdate
 from app.core.data.orm.user import UserORM
@@ -50,75 +50,61 @@ def get_all(
 
 
 @router.patch(
-    "/{user_id}",
+    "/",
     response_model=UserRead,
-    summary="Updates the User with the given ID if it exists",
+    summary="Updates the logged-in User",
 )
-def update_by_id(
+def update_me(
     *,
     db: Session = Depends(get_db_session),
-    user_id: int,
     user: UserUpdate,
     authz_user: AuthzUser = Depends(),
 ) -> UserRead:
-    if authz_user.user.id != SYSTEM_USER_ID:
-        authz_user.assert_is_same_user(user_id)
-
-    db_user = crud_user.update(db=db, id=user_id, update_dto=user)
+    db_user = crud_user.update(db=db, id=authz_user.user.id, update_dto=user)
     return UserRead.model_validate(db_user)
 
 
 @router.delete(
-    "/{user_id}",
+    "/",
     response_model=UserRead,
-    summary="Removes the User with the given ID if it exists",
+    summary="Removes the logged-in User",
 )
-def delete_by_id(
+def delete_me(
     *,
     db: Session = Depends(get_db_session),
-    user_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> UserRead:
-    if authz_user.user.id != SYSTEM_USER_ID:
-        authz_user.assert_is_same_user(user_id)
-
-    db_user = crud_user.remove(db=db, id=user_id)
+    db_user = crud_user.remove(db=db, id=authz_user.user.id)
     return UserRead.model_validate(db_user)
 
 
 @router.get(
-    "/{user_id}/project",
+    "/project",
     response_model=List[ProjectRead],
-    summary="Returns all Projects of the User with the given ID",
+    summary="Returns all Projects of the logged-in User",
 )
 def get_user_projects(
     *,
-    user_id: int,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
 ) -> List[ProjectRead]:
-    authz_user.assert_is_same_user(user_id)
-
-    db_obj = crud_user.read(db=db, id=user_id)
+    db_obj = crud_user.read(db=db, id=authz_user.user.id)
     return [ProjectRead.model_validate(proj) for proj in db_obj.projects]
 
 
 @router.get(
-    "/{user_id}/recent_activity",
+    "/recent_activity",
     response_model=List[int],
-    summary="Returns the top k sdoc ids that the User recently modified (annotated)",
+    summary="Returns the top k sdoc ids that the logged-in User recently modified (annotated)",
 )
 def recent_activity(
     *,
-    user_id: int,
     k: int,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
 ) -> List[int]:
-    authz_user.assert_is_same_user(user_id)
-
     # get all adocs of a user
-    user_adocs = crud_adoc.read_by_user(db=db, user_id=user_id)
+    user_adocs = crud_adoc.read_by_user(db=db, user_id=authz_user.user.id)
 
     # sort by updated (desc)
     user_adocs.sort(key=lambda adoc: adoc.updated, reverse=True)

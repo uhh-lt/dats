@@ -3,13 +3,16 @@ from typing import List
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
-from app.core.data.dto.analysis_table import AnalysisTableCreate, AnalysisTableUpdate
+from app.core.data.dto.analysis_table import (
+    AnalysisTableCreateIntern,
+    AnalysisTableUpdate,
+)
 from app.core.data.orm.analysis_table import AnalysisTableORM
 from app.core.data.table_type import TableType
 
 
 class CRUDAnalysisTable(
-    CRUDBase[AnalysisTableORM, AnalysisTableCreate, AnalysisTableUpdate]
+    CRUDBase[AnalysisTableORM, AnalysisTableCreateIntern, AnalysisTableUpdate]
 ):
     def read_by_project_and_user(
         self, db: Session, *, project_id: int, user_id: int
@@ -30,7 +33,7 @@ class CRUDAnalysisTable(
         db_obj = self.read(db, id=analysis_table_id)
         return self.create(
             db,
-            create_dto=AnalysisTableCreate(
+            create_dto=AnalysisTableCreateIntern(
                 project_id=db_obj.project_id,
                 user_id=user_id,
                 title=db_obj.title + " (Copy)",

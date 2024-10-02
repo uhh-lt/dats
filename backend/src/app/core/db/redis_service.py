@@ -19,7 +19,10 @@ from app.core.data.dto.crawler_job import (
     CrawlerJobUpdate,
 )
 from app.core.data.dto.export_job import ExportJobCreate, ExportJobRead, ExportJobUpdate
-from app.core.data.dto.feedback import FeedbackCreate, FeedbackRead
+from app.core.data.dto.feedback import (
+    FeedbackCreateIntern,
+    FeedbackRead,
+)
 from app.core.data.dto.llm_job import LLMJobCreate, LLMJobRead, LLMJobUpdate
 from app.core.data.dto.trainer_job import (
     TrainerJobCreate,
@@ -381,7 +384,7 @@ class RedisService(metaclass=SingletonMeta):
         else:
             return sorted(all_cota_jobs_by_cota_id, key=lambda x: x.updated)[-1]
 
-    def store_feedback(self, feedback: FeedbackCreate) -> FeedbackRead:
+    def store_feedback(self, feedback: FeedbackCreateIntern) -> FeedbackRead:
         client = self._get_client("feedback")
         key = self._generate_random_key()
         fb = FeedbackRead(

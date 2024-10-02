@@ -10,6 +10,7 @@ from app.core.data.crud import Crud
 from app.core.data.crud.concept_over_time_analysis import crud_cota
 from app.core.data.dto.concept_over_time_analysis import (
     COTACreate,
+    COTACreateIntern,
     COTARead,
     COTARefinementHyperparameters,
     COTARefinementJobRead,
@@ -41,9 +42,15 @@ async def create(
     authz_user: AuthzUser = Depends(),
 ) -> COTARead:
     authz_user.assert_in_project(cota.project_id)
-    authz_user.assert_is_same_user(cota.user_id)
 
-    return cotas.create(db=db, cota_create=cota)
+    return cotas.create(
+        db=db,
+        cota_create=COTACreateIntern(
+            name=cota.name,
+            project_id=cota.project_id,
+            user_id=authz_user.user.id,
+        ),
+    )
 
 
 @router.get(
@@ -65,25 +72,21 @@ async def get_by_id(
 
 
 @router.get(
-    "/{project_id}/user/{user_id}",
+    "/{project_id}/user",
     response_model=List[COTARead],
     summary="Returns COTAs of the Project of the User",
-    description="Returns the COTA of the Project with the given ID and the User with the given ID if it exists",
+    description="Returns the COTA of the Project with the given ID and the logged-in User if it exists",
 )
 async def get_by_project_and_user(
     *,
     db: Session = Depends(get_db_session),
     project_id: int,
-    user_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> List[COTARead]:
-    # No need to authorize against the user:
-    # all users can see all cota analysis in the project
-    # at the moment.
     authz_user.assert_in_project(project_id)
 
     db_objs = crud_cota.read_by_project_and_user(
-        db=db, project_id=project_id, user_id=user_id, raise_error=False
+        db=db, project_id=project_id, user_id=authz_user.user.id, raise_error=False
     )
     return [COTARead.model_validate(db_obj) for db_obj in db_objs]
 

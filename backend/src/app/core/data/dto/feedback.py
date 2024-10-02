@@ -10,6 +10,10 @@ class FeedbackBaseDTO(BaseModel):
 
 # Properties to create
 class FeedbackCreate(FeedbackBaseDTO):
+    pass
+
+
+class FeedbackCreateIntern(FeedbackBaseDTO):
     user_id: int = Field(description="User who created the Feedback")
 
 

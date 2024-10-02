@@ -17,7 +17,13 @@ from app.core.data.dto.document_tag import (
     SourceDocumentDocumentTagLinks,
     SourceDocumentDocumentTagMultiLink,
 )
-from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
+from app.core.data.dto.memo import (
+    AttachedObjectType,
+    MemoCreate,
+    MemoCreateIntern,
+    MemoInDB,
+    MemoRead,
+)
 
 router = APIRouter(
     prefix="/doctag", dependencies=[Depends(get_current_user)], tags=["documentTag"]
@@ -206,7 +212,6 @@ def add_memo(
     validate: Validate = Depends(),
 ) -> MemoRead:
     tag = crud_document_tag.read(db, tag_id)
-    authz_user.assert_is_same_user(memo.user_id)
     authz_user.assert_in_project(tag.project_id)
     authz_user.assert_in_project(memo.project_id)
     validate.validate_condition(
@@ -214,7 +219,9 @@ def add_memo(
     )
 
     db_obj = crud_memo.create_for_document_tag(
-        db=db, doc_tag_id=tag_id, create_dto=memo
+        db=db,
+        doc_tag_id=tag_id,
+        create_dto=MemoCreateIntern(**memo.model_dump(), user_id=authz_user.user.id),
     )
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     return MemoRead(
@@ -242,24 +249,22 @@ def get_memos(
 
 
 @router.get(
-    "/{tag_id}/memo/{user_id}",
+    "/{tag_id}/memo/user",
     response_model=MemoRead,
     summary=(
-        "Returns the Memo attached to the document tag with the given ID of the User with the"
-        " given ID if it exists."
+        "Returns the Memo attached to the document tag with the given ID of the logged-in User if it exists."
     ),
 )
 def get_user_memo(
     *,
     db: Session = Depends(get_db_session),
     tag_id: int,
-    user_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> MemoRead:
     authz_user.assert_in_same_project_as(Crud.DOCUMENT_TAG, tag_id)
 
     db_obj = crud_document_tag.read(db=db, id=tag_id)
-    return get_object_memo_for_user(db_obj=db_obj, user_id=user_id)
+    return get_object_memo_for_user(db_obj=db_obj, user_id=authz_user.user.id)
 
 
 @router.get(
