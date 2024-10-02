@@ -155,7 +155,7 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/user/{user_id}": {
+    "/user/by_id/{user_id}": {
       "get": {
         "tags": ["user"],
         "summary": "Returns the User with the given ID if it exists",
@@ -176,7 +176,7 @@
         }
       }
     },
-    "/user": {
+    "/user/all": {
       "get": {
         "tags": ["user"],
         "summary": "Returns all Users that exist in the system",

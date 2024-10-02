@@ -29,7 +29,7 @@ export class UserService {
   public static getById({ userId }: { userId: number }): CancelablePromise<PublicUserRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/user/{user_id}",
+      url: "/user/by_id/{user_id}",
       path: {
         user_id: userId,
       },
@@ -58,7 +58,7 @@ export class UserService {
   }): CancelablePromise<Array<PublicUserRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/user",
+      url: "/user/all",
       query: {
         skip: skip,
         limit: limit,
