@@ -26,7 +26,7 @@ def get_me(*, user: UserORM = Depends(get_current_user)) -> UserRead:
 
 
 @router.get(
-    "/{user_id}",
+    "/by_id/{user_id}",
     response_model=PublicUserRead,
     summary="Returns the User with the given ID if it exists",
 )
@@ -36,7 +36,7 @@ def get_by_id(*, db: Session = Depends(get_db_session), user_id: int) -> PublicU
 
 
 @router.get(
-    "",
+    "/all",
     response_model=List[PublicUserRead],
     summary="Returns all Users that exist in the system",
 )
