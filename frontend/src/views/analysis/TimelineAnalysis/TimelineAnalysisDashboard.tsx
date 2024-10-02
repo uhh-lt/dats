@@ -2,7 +2,6 @@ import { MRT_Row, MRT_TableOptions } from "material-react-table";
 import { useMemo } from "react";
 import { useParams } from "react-router";
 import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
-import { useAuth } from "../../../auth/useAuth.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import AnalysisDashboard from "../AnalysisDashboard/AnalysisDashboard.tsx";
@@ -14,7 +13,6 @@ import {
 
 function TimelineAnalysisDashboard() {
   // global client state
-  const { user } = useAuth();
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // global server state
@@ -23,7 +21,7 @@ function TimelineAnalysisDashboard() {
     isLoading: isLoadingAnalysis,
     isFetching: isFetchingAnalysis,
     isError: isLoadingAnalysisError,
-  } = TimelineAnalysisHooks.useGetUserTimelineAnalysiss(projectId, user?.id);
+  } = TimelineAnalysisHooks.useGetUserTimelineAnalysiss(projectId);
   const userAnalysisTableData: AnaylsisDashboardRow[] = useMemo(
     () =>
       userAnalysis?.map((analysis) => ({
@@ -58,12 +56,10 @@ function TimelineAnalysisDashboard() {
   const handleCreateAnalysis: HandleCreateAnalysis =
     () =>
     ({ values, table }) => {
-      if (!user?.id) return;
       createTimelineAnalysis(
         {
           requestBody: {
             project_id: projectId,
-            user_id: user.id,
             name: values.title,
           },
         },

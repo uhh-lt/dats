@@ -2,7 +2,6 @@ import { MRT_Row, MRT_TableOptions } from "material-react-table";
 import { useMemo } from "react";
 import { useParams } from "react-router";
 import CotaHooks from "../../../api/CotaHooks.ts";
-import { useAuth } from "../../../auth/useAuth.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import AnalysisDashboard from "../AnalysisDashboard/AnalysisDashboard.tsx";
@@ -14,7 +13,6 @@ import {
 
 function CotaDashboard() {
   // global client state
-  const { user } = useAuth();
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // global server state
@@ -23,7 +21,7 @@ function CotaDashboard() {
     isLoading: isLoadingAnalysis,
     isFetching: isFetchingAnalysis,
     isError: isLoadingAnalysisError,
-  } = CotaHooks.useGetUserCotas(projectId, user?.id);
+  } = CotaHooks.useGetUserCotas(projectId);
   const userAnalysisTableData: AnaylsisDashboardRow[] = useMemo(
     () =>
       userAnalysis?.map((analysis) => ({
@@ -52,12 +50,10 @@ function CotaDashboard() {
   const handleCreateAnalysis: HandleCreateAnalysis =
     () =>
     ({ values, table }) => {
-      if (!user?.id) return;
       createCota(
         {
           requestBody: {
             project_id: projectId,
-            user_id: user.id,
             name: values.title,
           },
         },

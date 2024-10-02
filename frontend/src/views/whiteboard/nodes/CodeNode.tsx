@@ -7,7 +7,6 @@ import CodeHooks from "../../../api/CodeHooks.ts";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
 import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { useAuth } from "../../../auth/useAuth.ts";
 import CodeRenderer from "../../../components/Code/CodeRenderer.tsx";
 import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../components/GenericPositionMenu.tsx";
 import MemoDialogAPI from "../../../components/Memo/MemoDialog/MemoDialogAPI.ts";
@@ -31,7 +30,6 @@ import BaseCardNode from "./BaseCardNode.tsx";
 
 function CodeNode(props: NodeProps<CodeNodeData>) {
   // global client state
-  const userId = useAuth().user!.id;
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
   const dispatch = useAppDispatch();
 
@@ -45,10 +43,10 @@ function CodeNode(props: NodeProps<CodeNodeData>) {
 
   // global server state (react-query)
   const code = CodeHooks.useGetCode(props.data.codeId);
-  const bboxAnnotations = BboxAnnotationHooks.useGetByCodeAndUser(props.data.codeId, userId);
-  const spanAnnotations = SpanAnnotationHooks.useGetByCodeAndUser(props.data.codeId, userId);
+  const bboxAnnotations = BboxAnnotationHooks.useGetByCodeAndUser(props.data.codeId);
+  const spanAnnotations = SpanAnnotationHooks.useGetByCodeAndUser(props.data.codeId);
   const parentCode = CodeHooks.useGetCode(code.data?.parent_id);
-  const memo = CodeHooks.useGetMemo(props.data.codeId, userId);
+  const memo = CodeHooks.useGetUserMemo(props.data.codeId);
 
   // TODO: This is not optimal!
   // we need a new route to get all child codes

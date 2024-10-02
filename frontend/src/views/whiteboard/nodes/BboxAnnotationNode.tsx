@@ -5,7 +5,6 @@ import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks.ts";
 import CodeHooks from "../../../api/CodeHooks.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { useAuth } from "../../../auth/useAuth.ts";
 import CodeRenderer from "../../../components/Code/CodeRenderer.tsx";
 import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../components/GenericPositionMenu.tsx";
 import MemoDialogAPI from "../../../components/Memo/MemoDialog/MemoDialogAPI.ts";
@@ -31,7 +30,6 @@ import ImageCropper from "./ImageCropper.tsx";
 
 function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
   // global client state
-  const userId = useAuth().user!.id;
   const dispatch = useAppDispatch();
 
   // whiteboard state (react-flow)
@@ -46,7 +44,7 @@ function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
   const annotation = BboxAnnotationHooks.useGetAnnotation(props.data.bboxAnnotationId);
   const code = CodeHooks.useGetCode(annotation.data?.code.id);
   const sdoc = SdocHooks.useGetDocument(annotation.data?.sdoc_id);
-  const memo = BboxAnnotationHooks.useGetMemo(props.data.bboxAnnotationId, userId);
+  const memo = BboxAnnotationHooks.useGetUserMemo(props.data.bboxAnnotationId);
 
   // effects
   useEffect(() => {

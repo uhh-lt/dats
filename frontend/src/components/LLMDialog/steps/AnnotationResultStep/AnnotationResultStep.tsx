@@ -8,7 +8,6 @@ import { CodeRead } from "../../../../api/openapi/models/CodeRead.ts";
 import { SpanAnnotationCreate } from "../../../../api/openapi/models/SpanAnnotationCreate.ts";
 import { SpanAnnotationReadResolved } from "../../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import SpanAnnotationHooks from "../../../../api/SpanAnnotationHooks.ts";
-import { useAuth } from "../../../../auth/useAuth.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 import { CRUDDialogActions } from "../../../dialogSlice.ts";
 import SdocRenderer from "../../../SourceDocument/SdocRenderer.tsx";
@@ -16,9 +15,6 @@ import LLMUtterance from "../LLMUtterance.tsx";
 import TextAnnotationValidator from "./TextAnnotationValidator.tsx";
 
 function AnnotationResultStep() {
-  // get user
-  const { user } = useAuth();
-
   // get the job
   const llmJobId = useAppSelector((state) => state.dialog.llmJobId);
   const llmJob = LLMHooks.usePollLLMJob(llmJobId, undefined);
@@ -80,7 +76,7 @@ function AnnotationResultStep() {
 
   const createBulkAnnotationsMutation = SpanAnnotationHooks.useCreateBulkAnnotations();
   const handleApplySuggestedAnnotations = () => {
-    if (!annotations || !user) return;
+    if (!annotations) return;
 
     createBulkAnnotationsMutation.mutate(
       {
@@ -95,7 +91,6 @@ function AnnotationResultStep() {
               begin_token: annotation.begin_token,
               end_token: annotation.end_token,
               span_text: annotation.text,
-              user_id: user.id,
             });
           }
           return acc;

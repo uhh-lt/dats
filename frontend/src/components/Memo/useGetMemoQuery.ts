@@ -11,13 +11,13 @@ export const useGetMemoQuery = (type: AttachedObjectType | undefined) => {
     case AttachedObjectType.DOCUMENT_TAG:
       return TagHooks.useGetMemo;
     case AttachedObjectType.CODE:
-      return CodeHooks.useGetMemo;
+      return CodeHooks.useGetUserMemo;
     case AttachedObjectType.SOURCE_DOCUMENT:
       return SdocHooks.useGetMemo;
     case AttachedObjectType.SPAN_ANNOTATION:
-      return SpanAnnotationHooks.useGetMemo;
+      return SpanAnnotationHooks.useGetUserMemo;
     case AttachedObjectType.BBOX_ANNOTATION:
-      return BboxAnnotationHooks.useGetMemo;
+      return BboxAnnotationHooks.useGetUserMemo;
     default:
       return MemoHooks.useGetMemo;
   }

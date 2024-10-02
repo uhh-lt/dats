@@ -5,7 +5,6 @@ import { DialogActions, DialogContent, DialogTitle, Stack } from "@mui/material"
 import React from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import FeedbackHooks from "../../api/FeedbackHooks.ts";
-import { UserRead } from "../../api/openapi/models/UserRead.ts";
 import FormTextMultiline from "../../components/FormInputs/FormTextMultiline.tsx";
 import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 
@@ -15,11 +14,10 @@ interface FeedbackFormValues {
 
 interface FeedbackDialogProps {
   setIsFeedbackDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  user: UserRead;
   locPathName: string;
 }
 
-function FeedbackDialog({ setIsFeedbackDialogOpen, user, locPathName }: FeedbackDialogProps) {
+function FeedbackDialog({ setIsFeedbackDialogOpen, locPathName }: FeedbackDialogProps) {
   // react form
   const {
     handleSubmit,
@@ -43,7 +41,6 @@ function FeedbackDialog({ setIsFeedbackDialogOpen, user, locPathName }: Feedback
     createMutation.mutate(
       {
         requestBody: {
-          user_id: user?.id,
           user_content: `URL: ${locPathName}\n${data.content}`,
         },
       },
@@ -61,44 +58,40 @@ function FeedbackDialog({ setIsFeedbackDialogOpen, user, locPathName }: Feedback
   const handleError: SubmitErrorHandler<FeedbackFormValues> = (data) => console.error(data);
 
   return (
-    <>
-      {user ? (
-        <form onSubmit={handleSubmit(handleSubmitFeedback, handleError)}>
-          <DialogTitle>Submit your feedback</DialogTitle>
-          <DialogContent>
-            <Stack spacing={3}>
-              <FormTextMultiline
-                name="content"
-                control={control}
-                rules={{
-                  required: "Content is required",
-                }}
-                textFieldProps={{
-                  label: "Feedback",
-                  variant: "standard",
-                  fullWidth: true,
-                  error: Boolean(errors.content),
-                  helperText: <ErrorMessage errors={errors} name="content" />,
-                }}
-              />
-            </Stack>
-          </DialogContent>
-          <DialogActions>
-            <LoadingButton
-              variant="contained"
-              color="success"
-              startIcon={<SaveIcon />}
-              fullWidth
-              type="submit"
-              loading={createMutation.isPending}
-              loadingPosition="start"
-            >
-              Submit Feedback
-            </LoadingButton>
-          </DialogActions>
-        </form>
-      ) : null}
-    </>
+    <form onSubmit={handleSubmit(handleSubmitFeedback, handleError)}>
+      <DialogTitle>Submit your feedback</DialogTitle>
+      <DialogContent>
+        <Stack spacing={3}>
+          <FormTextMultiline
+            name="content"
+            control={control}
+            rules={{
+              required: "Content is required",
+            }}
+            textFieldProps={{
+              label: "Feedback",
+              variant: "standard",
+              fullWidth: true,
+              error: Boolean(errors.content),
+              helperText: <ErrorMessage errors={errors} name="content" />,
+            }}
+          />
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <LoadingButton
+          variant="contained"
+          color="success"
+          startIcon={<SaveIcon />}
+          fullWidth
+          type="submit"
+          loading={createMutation.isPending}
+          loadingPosition="start"
+        >
+          Submit Feedback
+        </LoadingButton>
+      </DialogActions>
+    </form>
   );
 }
 

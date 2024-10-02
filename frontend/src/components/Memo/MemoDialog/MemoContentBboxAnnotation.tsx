@@ -3,7 +3,6 @@ import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks.ts";
 import MemoHooks from "../../../api/MemoHooks.ts";
 import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
 import { MemoRead } from "../../../api/openapi/models/MemoRead.ts";
-import { useAuth } from "../../../auth/useAuth.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import ConfirmationAPI from "../../ConfirmationDialog/ConfirmationAPI.ts";
 import { MemoCreateSuccessHandler } from "./MemoDialogAPI.ts";
@@ -25,8 +24,6 @@ export function MemoContentBboxAnnotation({
   closeDialog,
   onMemoCreateSuccess,
 }: MemoContentBboxAnnotationProps & MemoContentProps) {
-  const { user } = useAuth();
-
   // mutations
   const createMutation = BboxAnnotationHooks.useCreateMemo();
   const updateMutation = MemoHooks.useUpdateMemo();
@@ -37,8 +34,6 @@ export function MemoContentBboxAnnotation({
 
   // form handling
   const handleCreateOrUpdateBboxAnnotationMemo: SubmitHandler<MemoFormValues> = (data) => {
-    if (!user) return;
-
     if (memo) {
       updateMutation.mutate(
         {
@@ -63,7 +58,6 @@ export function MemoContentBboxAnnotation({
         {
           bboxId: bboxAnnotation.id,
           requestBody: {
-            user_id: user.id,
             project_id: bboxAnnotation.code.project_id,
             title: data.title,
             content: data.content,

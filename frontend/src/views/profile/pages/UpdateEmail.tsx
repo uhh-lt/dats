@@ -34,7 +34,6 @@ export default function UpdateEmail({ user }: UpdateEmailProps) {
   const handleUpdate: SubmitHandler<UpdateEmailValues> = (data) => {
     updateUserMutation.mutate(
       {
-        userId: user.id,
         requestBody: {
           email: data.newemail,
         },

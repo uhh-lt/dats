@@ -8,7 +8,6 @@ import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
 import { SpanAnnotationCreate } from "../../../api/openapi/models/SpanAnnotationCreate.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
-import { useAuth } from "../../../auth/useAuth.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
@@ -28,8 +27,6 @@ interface AnnotatorRemasteredProps {
 }
 
 function TextAnnotator({ sdoc }: AnnotatorRemasteredProps) {
-  const user = useAuth().user!;
-
   // local state
   const spanMenuRef = useRef<CodeSelectorHandle>(null);
   const [fakeAnnotation, setFakeAnnotation] = useState<SpanAnnotationCreate | undefined>(undefined);
@@ -142,7 +139,6 @@ function TextAnnotator({ sdoc }: AnnotatorRemasteredProps) {
 
     const requestBody: SpanAnnotationCreate = {
       code_id: mostRecentCodeId || -1,
-      user_id: user.id,
       sdoc_id: sdoc.id,
       begin: tokenData[begin_token].beginChar,
       end: tokenData[end_token].endChar,

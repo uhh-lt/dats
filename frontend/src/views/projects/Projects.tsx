@@ -1,14 +1,12 @@
 import { Box, Card, CardActionArea, CardContent, Container, Grid, Toolbar, Typography } from "@mui/material";
 import { useState } from "react";
 import UserHooks from "../../api/UserHooks.ts";
-import { useAuth } from "../../auth/useAuth.ts";
 import { ProjectCard } from "./ProjectCard.tsx";
 import ProjectCreationDialog from "./ProjectCreationDialog.tsx";
 import RecentActivity from "./RecentActivity.tsx";
 
 function Projects() {
-  const { user } = useAuth();
-  const projects = UserHooks.useGetProjects(user?.id);
+  const projects = UserHooks.useGetUserProjects();
   const [isOpen, setIsOpen] = useState(false);
 
   return (

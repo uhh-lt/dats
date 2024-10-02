@@ -3,7 +3,6 @@ import { useParams } from "react-router";
 import { v4 as uuidv4 } from "uuid";
 import TableHooks from "../../../api/TableHooks.ts";
 import { TableType } from "../../../api/openapi/models/TableType.ts";
-import { useAuth } from "../../../auth/useAuth.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import AnalysisDashboard from "../AnalysisDashboard/AnalysisDashboard.tsx";
@@ -16,7 +15,6 @@ import { TableType2Template } from "./templates.ts";
 
 function TableDashboard() {
   // global client state
-  const { user } = useAuth();
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // global server state
@@ -25,7 +23,7 @@ function TableDashboard() {
     isLoading: isLoadingTables,
     isFetching: isFetchingTables,
     isError: isLoadingTablesError,
-  } = TableHooks.useGetUserTables(projectId, user?.id);
+  } = TableHooks.useGetUserTables(projectId);
 
   // mutations
   const { mutate: createTable, isPending: isCreatingTable } = TableHooks.useCreateTable();
@@ -44,7 +42,7 @@ function TableDashboard() {
   const handleCreateAnalysis: HandleCreateAnalysis =
     (createOption) =>
     ({ values, table }) => {
-      if (!user?.id || !createOption) return;
+      if (!createOption) return;
 
       const tableType = createOption.option as TableType;
       const content = [{ id: uuidv4(), name: `Table sheet 1`, content: TableType2Template[tableType] }];
@@ -52,7 +50,6 @@ function TableDashboard() {
         {
           requestBody: {
             project_id: projectId,
-            user_id: user.id,
             title: values.title,
             content: JSON.stringify(content),
             table_type: tableType,

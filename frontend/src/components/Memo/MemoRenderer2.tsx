@@ -12,13 +12,12 @@ interface MemoRenderer2Props {
 function MemoRenderer2({
   attachedObjectType,
   attachedObjectId,
-  userId,
   showIcon: icon = true,
   showTitle: title = true,
   showContent: content = false,
   ...props
 }: MemoRenderer2Props & MemoRendererSharedProps & StackProps) {
-  const memo = useGetMemoQuery(attachedObjectType)(attachedObjectId, userId);
+  const memo = useGetMemoQuery(attachedObjectType)(attachedObjectId);
 
   if (memo.isSuccess && memo.data !== null && memo.data !== undefined) {
     return <MemoRendererWithData memo={memo.data} showIcon={icon} showTitle={title} showContent={content} {...props} />;

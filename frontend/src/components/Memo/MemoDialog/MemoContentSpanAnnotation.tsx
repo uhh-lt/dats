@@ -2,7 +2,6 @@ import { SubmitHandler } from "react-hook-form";
 import MemoHooks from "../../../api/MemoHooks.ts";
 import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
-import { useAuth } from "../../../auth/useAuth.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import ConfirmationAPI from "../../ConfirmationDialog/ConfirmationAPI.ts";
 import { MemoContentProps } from "./MemoContentBboxAnnotation.tsx";
@@ -18,8 +17,6 @@ export function MemoContentSpanAnnotation({
   closeDialog,
   onMemoCreateSuccess,
 }: MemoContentSpanAnnotationProps & MemoContentProps) {
-  const { user } = useAuth();
-
   // mutations
   const createMutation = SpanAnnotationHooks.useCreateMemo();
   const updateMutation = MemoHooks.useUpdateMemo();
@@ -30,8 +27,6 @@ export function MemoContentSpanAnnotation({
 
   // form handling
   const handleCreateOrUpdateSpanAnnotationMemo: SubmitHandler<MemoFormValues> = (data) => {
-    if (!user) return;
-
     if (memo) {
       updateMutation.mutate(
         {
@@ -56,7 +51,6 @@ export function MemoContentSpanAnnotation({
         {
           spanId: spanAnnotation.id,
           requestBody: {
-            user_id: user.id,
             project_id: spanAnnotation.code.project_id,
             title: data.title,
             content: data.content,
