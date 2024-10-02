@@ -7,11 +7,10 @@ import { AuthenticationService } from "./openapi/services/AuthenticationService.
 import { UserService } from "./openapi/services/UserService.ts";
 
 // project
-const useGetProjects = (userId: number | null | undefined) =>
+const useGetUserProjects = () =>
   useQuery<ProjectRead[], Error>({
-    queryKey: [QueryKey.USER_PROJECTS, userId],
-    queryFn: () => UserService.getUserProjects({ userId: userId! }),
-    enabled: !!userId,
+    queryKey: [QueryKey.USER_PROJECTS],
+    queryFn: () => UserService.getUserProjects(),
   });
 
 const useGetUser = (userId: number | null | undefined) =>
@@ -32,17 +31,16 @@ const useRegister = () =>
 const useGetAll = () =>
   useQuery<PublicUserRead[], Error>({ queryKey: [QueryKey.USERS], queryFn: () => UserService.getAll({}) });
 
-const useGetRecentActivity = (userId: number | null | undefined, k: number) => {
+const useGetRecentActivity = (k: number) => {
   return useQuery<number[], Error>({
-    queryKey: [QueryKey.USER_ACTIVITY, userId, k],
-    queryFn: () => UserService.recentActivity({ userId: userId!, k: k }),
-    enabled: !!userId,
+    queryKey: [QueryKey.USER_ACTIVITY, k],
+    queryFn: () => UserService.recentActivity({ k: k }),
   });
 };
 
 const useUpdate = () =>
   useMutation({
-    mutationFn: UserService.updateById,
+    mutationFn: UserService.updateMe,
     onSuccess: (user) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.USERS] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.USER, user.id] });
@@ -50,7 +48,7 @@ const useUpdate = () =>
   });
 
 const UserHooks = {
-  useGetProjects,
+  useGetUserProjects,
   useGetUser,
   useGetAll,
   useRegister,

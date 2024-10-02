@@ -24,10 +24,6 @@ export type BBoxAnnotationCreate = {
    */
   code_id: number;
   /**
-   * User that created the BBoxAnnotation
-   */
-  user_id: number;
-  /**
    * SourceDocument the BBoxAnnotation refers to
    */
   sdoc_id: number;

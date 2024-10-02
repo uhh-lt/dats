@@ -129,17 +129,16 @@ export class CodeService {
     });
   }
   /**
-   * Returns the Memo attached to the SpanAnnotation with the given ID of the User with the given ID if it exists.
+   * Returns the Memo attached to the Code with the given ID of the logged-in User if it exists.
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getUserMemo({ codeId, userId }: { codeId: number; userId: number }): CancelablePromise<MemoRead> {
+  public static getUserMemo({ codeId }: { codeId: number }): CancelablePromise<MemoRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/code/{code_id}/memo/{user_id}",
+      url: "/code/{code_id}/memo/user",
       path: {
         code_id: codeId,
-        user_id: userId,
       },
       errors: {
         422: `Validation Error`,

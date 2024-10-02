@@ -15,14 +15,14 @@ const useGetTimelineAnalysis = (timelineAnalysisId: number | null | undefined) =
     select: (data) => data,
   });
 
-const useGetUserTimelineAnalysiss = (projectId: number | null | undefined, userId: number | null | undefined) =>
+const useGetUserTimelineAnalysis = (projectId: number | null | undefined) =>
   useQuery<TimelineAnalysisRead[], Error>({
-    queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, projectId, userId],
+    queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, projectId],
     queryFn: async () => {
-      return await TimelineAnalysisService.getByProjectAndUser({ projectId: projectId!, userId: userId! });
+      return await TimelineAnalysisService.getByProjectAndUser({ projectId: projectId! });
     },
     retry: false,
-    enabled: !!projectId && !!userId,
+    enabled: !!projectId,
   });
 
 const useCreateTimelineAnalysis = () =>
@@ -31,7 +31,7 @@ const useCreateTimelineAnalysis = () =>
     onSuccess(data) {
       if (data) {
         queryClient.setQueryData(
-          [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
+          [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id],
           (prevTimelineAnalysis: TimelineAnalysisRead[]) =>
             [
               ...prevTimelineAnalysis,
@@ -42,7 +42,7 @@ const useCreateTimelineAnalysis = () =>
         );
         queryClient.invalidateQueries({ queryKey: [QueryKey.TIMELINE_ANALYSIS, data.id] });
         queryClient.invalidateQueries({
-          queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
+          queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id],
         });
       }
     },
@@ -54,7 +54,7 @@ const useUpdateTimelineAnalysis = () =>
     onSettled(data, _error, variables) {
       if (data) {
         queryClient.setQueryData(
-          [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
+          [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id],
           (prevTimelineAnalysis: TimelineAnalysisRead[]) => {
             const index = prevTimelineAnalysis.findIndex((timelineAnalysis) => timelineAnalysis.id === data.id);
             if (index === -1) {
@@ -65,7 +65,7 @@ const useUpdateTimelineAnalysis = () =>
         );
 
         queryClient.invalidateQueries({
-          queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
+          queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id],
         });
       }
       queryClient.invalidateQueries({ queryKey: [QueryKey.TIMELINE_ANALYSIS, variables.timelineAnalysisId] });
@@ -78,11 +78,11 @@ const useDuplicateTimelineAnalysis = () =>
     onSettled(data) {
       if (data) {
         queryClient.setQueryData(
-          [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
+          [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id],
           (prevTimelineAnalysis: TimelineAnalysisRead[]) => [...prevTimelineAnalysis, data],
         );
         queryClient.invalidateQueries({
-          queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
+          queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id],
         });
       }
     },
@@ -94,12 +94,12 @@ const useDeleteTimelineAnalysis = () =>
     onSettled(data, _error, variables) {
       if (data) {
         queryClient.setQueryData(
-          [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
+          [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id],
           (prevTimelineAnalysis: TimelineAnalysisRead[]) =>
             prevTimelineAnalysis.filter((timelineAnalysis) => timelineAnalysis.id !== data.id),
         );
         queryClient.invalidateQueries({
-          queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
+          queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id],
         });
       }
       queryClient.invalidateQueries({ queryKey: [QueryKey.TIMELINE_ANALYSIS, variables.timelineAnalysisId] });
@@ -108,7 +108,7 @@ const useDeleteTimelineAnalysis = () =>
 
 const TimelineAnalysisHooks = {
   useGetTimelineAnalysis,
-  useGetUserTimelineAnalysiss,
+  useGetUserTimelineAnalysiss: useGetUserTimelineAnalysis,
   useCreateTimelineAnalysis,
   useUpdateTimelineAnalysis,
   useDuplicateTimelineAnalysis,

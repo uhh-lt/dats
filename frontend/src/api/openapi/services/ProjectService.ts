@@ -270,17 +270,15 @@ export class ProjectService {
     });
   }
   /**
-   * Returns all Memos of the Project from a User
+   * Returns all Memos of the Project from the logged-in User
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
   public static getUserMemosOfProject({
     projId,
-    userId,
     onlyStarred,
   }: {
     projId: number;
-    userId: number;
     /**
      * If true only starred Memos are returned
      */
@@ -288,10 +286,9 @@ export class ProjectService {
   }): CancelablePromise<Array<MemoRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/project/{proj_id}/user/{user_id}/memo",
+      url: "/project/{proj_id}/user/memo",
       path: {
         proj_id: projId,
-        user_id: userId,
       },
       query: {
         only_starred: onlyStarred,
@@ -388,17 +385,16 @@ export class ProjectService {
     });
   }
   /**
-   * Returns the Memo attached to the Project with the given ID of the User with the given ID if it exists.
+   * Returns the Memo attached to the Project with the given ID of the logged-in User if it exists.
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getUserMemo({ projId, userId }: { projId: number; userId: number }): CancelablePromise<MemoRead> {
+  public static getUserMemo({ projId }: { projId: number }): CancelablePromise<MemoRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/project/{proj_id}/memo/{user_id}",
+      url: "/project/{proj_id}/memo/user",
       path: {
         proj_id: projId,
-        user_id: userId,
       },
       errors: {
         422: `Validation Error`,

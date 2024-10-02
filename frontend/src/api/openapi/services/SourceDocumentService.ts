@@ -258,17 +258,16 @@ export class SourceDocumentService {
     });
   }
   /**
-   * Returns the Memo attached to the SourceDocument with the given ID of the User with the given ID if it exists.
+   * Returns the Memo attached to the SourceDocument with the given ID of the logged-in User if it exists.
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getUserMemo({ sdocId, userId }: { sdocId: number; userId: number }): CancelablePromise<MemoRead> {
+  public static getUserMemo({ sdocId }: { sdocId: number }): CancelablePromise<MemoRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdoc/{sdoc_id}/memo/{user_id}",
+      url: "/sdoc/{sdoc_id}/memo/user",
       path: {
         sdoc_id: sdocId,
-        user_id: userId,
       },
       errors: {
         422: `Validation Error`,
@@ -276,23 +275,16 @@ export class SourceDocumentService {
     });
   }
   /**
-   * Returns the Memo attached to the SourceDocument of the User with the given ID and all memos attached to its annotations.
+   * Returns the Memo attached to the SourceDocument of the logged-in User and all memos attached to its annotations.
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getRelatedUserMemos({
-    sdocId,
-    userId,
-  }: {
-    sdocId: number;
-    userId: number;
-  }): CancelablePromise<Array<MemoRead>> {
+  public static getRelatedUserMemos({ sdocId }: { sdocId: number }): CancelablePromise<Array<MemoRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdoc/{sdoc_id}/relatedmemos/{user_id}",
+      url: "/sdoc/{sdoc_id}/relatedmemos/user",
       path: {
         sdoc_id: sdocId,
-        user_id: userId,
       },
       errors: {
         422: `Validation Error`,
@@ -317,17 +309,15 @@ export class SourceDocumentService {
     });
   }
   /**
-   * Returns all SpanAnnotations of the User with the given ID if it exists
+   * Returns all SpanAnnotations of the logged-in User if it exists
    * @returns any Successful Response
    * @throws ApiError
    */
   public static getAllSpanAnnotations({
     sdocId,
-    userId,
     resolve = true,
   }: {
     sdocId: number;
-    userId: number;
     /**
      * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */
@@ -335,10 +325,9 @@ export class SourceDocumentService {
   }): CancelablePromise<Array<SpanAnnotationRead> | Array<SpanAnnotationReadResolved>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdoc/{sdoc_id}/user/{user_id}/span_annotations",
+      url: "/sdoc/{sdoc_id}/user/span_annotations",
       path: {
         sdoc_id: sdocId,
-        user_id: userId,
       },
       query: {
         resolve: resolve,
@@ -381,19 +370,17 @@ export class SourceDocumentService {
     });
   }
   /**
-   * Returns all BBoxAnnotations of the User with the given ID if it exists
+   * Returns all BBoxAnnotations of the logged-in User if it exists
    * @returns any Successful Response
    * @throws ApiError
    */
   public static getAllBboxAnnotations({
     sdocId,
-    userId,
     skip,
     limit,
     resolve = true,
   }: {
     sdocId: number;
-    userId: number;
     /**
      * The number of elements to skip (offset)
      */
@@ -409,10 +396,9 @@ export class SourceDocumentService {
   }): CancelablePromise<Array<BBoxAnnotationRead> | Array<BBoxAnnotationReadResolved>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdoc{sdoc_id}/user/{user_id}/bbox_annotations",
+      url: "/sdoc{sdoc_id}/user/bbox_annotations",
       path: {
         sdoc_id: sdocId,
-        user_id: userId,
       },
       query: {
         skip: skip,
@@ -469,18 +455,16 @@ export class SourceDocumentService {
     });
   }
   /**
-   * Returns all SpanGroups of the User with the given ID if it exists
+   * Returns all SpanGroups of the logged-in User if it exists
    * @returns SpanGroupRead Successful Response
    * @throws ApiError
    */
   public static getAllSpanGroups({
     sdocId,
-    userId,
     skip,
     limit,
   }: {
     sdocId: number;
-    userId: number;
     /**
      * The number of elements to skip (offset)
      */
@@ -492,10 +476,9 @@ export class SourceDocumentService {
   }): CancelablePromise<Array<SpanGroupRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdoc{sdoc_id}/user/{user_id}/span_groups",
+      url: "/sdoc{sdoc_id}/user/span_groups",
       path: {
         sdoc_id: sdocId,
-        user_id: userId,
       },
       query: {
         skip: skip,

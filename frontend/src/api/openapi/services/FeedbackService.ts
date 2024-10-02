@@ -53,20 +53,14 @@ export class FeedbackService {
     });
   }
   /**
-   * Returns the Feedback of the User with the given ID.
+   * Returns the Feedback of the logged-in User.
    * @returns FeedbackRead Successful Response
    * @throws ApiError
    */
-  public static getAllByUser({ userId }: { userId: number }): CancelablePromise<Array<FeedbackRead>> {
+  public static getAllByUser(): CancelablePromise<Array<FeedbackRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/feedback/user/{user_id}",
-      path: {
-        user_id: userId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
+      url: "/feedback/user",
     });
   }
   /**

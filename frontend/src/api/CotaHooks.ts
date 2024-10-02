@@ -18,15 +18,15 @@ const useGetCota = (cotaId: number | null | undefined) =>
     select: (data) => data,
   });
 
-const useGetUserCotas = (projectId: number | null | undefined, userId: number | null | undefined) =>
+const useGetUserCotas = (projectId: number | null | undefined) =>
   useQuery<COTARead[], Error>({
-    queryKey: [QueryKey.COTAS_PROJECT_USER, projectId, userId],
+    queryKey: [QueryKey.COTAS_PROJECT_USER, projectId],
     queryFn: async () => {
-      const data = await ConceptOverTimeAnalysisService.getByProjectAndUser({ projectId: projectId!, userId: userId! });
+      const data = await ConceptOverTimeAnalysisService.getByProjectAndUser({ projectId: projectId! });
       return data;
     },
     retry: false,
-    enabled: !!projectId && !!userId,
+    enabled: !!projectId,
   });
 
 const useCreateCota = () =>
@@ -34,7 +34,7 @@ const useCreateCota = () =>
     mutationFn: ConceptOverTimeAnalysisService.create,
     onSuccess: (cota) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.COTA, cota.id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.COTAS_PROJECT_USER, cota.project_id, cota.user_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.COTAS_PROJECT_USER, cota.project_id] });
     },
   });
 
@@ -43,7 +43,7 @@ const useUpdateCota = () =>
     mutationFn: ConceptOverTimeAnalysisService.updateById,
     onSuccess: (cota) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.COTA, cota.id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.COTAS_PROJECT_USER, cota.project_id, cota.user_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.COTAS_PROJECT_USER, cota.project_id] });
     },
   });
 
@@ -52,12 +52,12 @@ const useDuplicateCota = () =>
     mutationFn: ConceptOverTimeAnalysisService.duplicateById,
     onSettled(data) {
       if (data) {
-        queryClient.setQueryData(
-          [QueryKey.COTAS_PROJECT_USER, data.project_id, data.user_id],
-          (prevCota: COTARead[]) => [...prevCota, data],
-        );
+        queryClient.setQueryData([QueryKey.COTAS_PROJECT_USER, data.project_id], (prevCota: COTARead[]) => [
+          ...prevCota,
+          data,
+        ]);
         queryClient.invalidateQueries({
-          queryKey: [QueryKey.COTAS_PROJECT_USER, data.project_id, data.user_id],
+          queryKey: [QueryKey.COTAS_PROJECT_USER, data.project_id],
         });
       }
     },
@@ -68,7 +68,7 @@ const useDeleteCota = () =>
     mutationFn: ConceptOverTimeAnalysisService.deleteById,
     onSuccess: (cota) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.COTA, cota.id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.COTAS_PROJECT_USER, cota.project_id, cota.user_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.COTAS_PROJECT_USER, cota.project_id] });
     },
   });
 
@@ -96,7 +96,7 @@ const useResetCota = () =>
     mutationFn: ConceptOverTimeAnalysisService.resetCota,
     onSuccess: (cota) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.COTA, cota.id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.COTAS_PROJECT_USER, cota.project_id, cota.user_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.COTAS_PROJECT_USER, cota.project_id] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.COTA_MOST_RECENT_REFINEMENT_JOB, cota.id] });
     },
   });
@@ -130,7 +130,7 @@ const useAnnotateCotaSentences = () =>
     mutationFn: ConceptOverTimeAnalysisService.annotateCotaSentence,
     onSuccess: (cota) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.COTA, cota.id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.COTAS_PROJECT_USER, cota.project_id, cota.user_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.COTAS_PROJECT_USER, cota.project_id] });
     },
   });
 
@@ -139,7 +139,7 @@ const useRemoveCotaSentences = () =>
     mutationFn: ConceptOverTimeAnalysisService.removeCotaSentence,
     onSuccess: (cota) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.COTA, cota.id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.COTAS_PROJECT_USER, cota.project_id, cota.user_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.COTAS_PROJECT_USER, cota.project_id] });
     },
   });
 

@@ -7,8 +7,6 @@ export const QueryKey = {
   PROJECT_USERS: "projectUsers",
   // all documents of a project (by project id)
   PROJECT_SDOCS: "projectDocuments",
-  // all documents of a project (by project id) for infinite scrolling
-  PROJECT_SDOCS_INFINITE: "projectDocumentsInfinite",
   // all codes of a project (by project id)
   PROJECT_CODES: "projectCodes",
   // all tags of a project (by project id)
@@ -24,77 +22,63 @@ export const QueryKey = {
   USERS: "users",
   // a single user (by user id)
   USER: "user",
-  // all projects of a user (by user id)
+  // all projects of the logged-in user
   USER_PROJECTS: "userProjects",
-  // all memos of a user (by user id, by project id)
+  // all memos of a user (by project id)
   USER_MEMOS: "userMemos",
-  // recently annotated sdocs of a user (by user id)
+  // recently k annotated sdocs of the logged-in user (by k)
   USER_ACTIVITY: "userActivity",
 
   // a memo (by memo id)
   MEMO: "memo",
-  // all memos attached to a code (by code id) or a user's memo (by code id, user id)
+  // the logged-in user's memo (by code id)
   MEMO_CODE: "codeMemo",
-  // all memos attached to a tag (by tag id) or a user's memo (by tag id, user id)
+  // the logged-in user's memo (by tag id)
   MEMO_TAG: "tagMemo",
-  // all memos attached to a document (by document id) or a user's memo (by document id, user id)
+  // the logged-in user's memo (by sdoc id)
   MEMO_SDOC: "sdocMemo",
-  // all memos of a user attached to a document and its annotations (span, bbox) (by user id, document id)
+  // the logged-in user's memos (by sdoc id) attached to a document and its annotations (span, bbox)
   MEMO_SDOC_RELATED: "sdocRelatedMemos",
-  // all memos attached to a span (by span id) or a user's memo (by span id, user id)
+  // the logged-in user's memo (by span id)
   MEMO_SPAN_ANNOTATION: "spanAnnotationMemo",
-  // all memos attached to a bbox (by bbox id) or a user's memo (by bbox id, user id)
+  // the logged-in user's memo (by bbox id)
   MEMO_BBOX_ANNOTATION: "bboxAnnotationMemo",
-  // all memos attached to a project (by project id) or a user's memo (by project id, user id)
+  // the logged-in user's memo (by project id)
   MEMO_PROJECT: "projectMemo",
-  // all memos which content matches the query (by query string)
-  MEMOS_BY_CONTENT_SEARCH: "memosByContentSearch",
-  // all memos which title matches the query (by query string)
-  MEMOS_BY_TITLE_SEARCH: "memosByContentSearch",
 
   // all actions of a project from a user (by project id, user id)
   ACTION: "action",
   // all actions of a project by query parameters
   ACTIONS_QUERY: "actionsQuery",
 
-  // a single document (by document id)
+  // a single document (by sdoc id)
   SDOC: "sdoc",
-  // all tags of a document (by document id)
+  // all tags of a document (by sdoc id)
   SDOC_TAGS: "sdocTags",
   // Count how many source documents each tag has
   TAG_SDOC_COUNT: "sdocTagCount",
-  // annotators (user ids) of a document (by document id)
+  // annotators (user ids) of a document (by sdoc id)
   SDOC_ANNOTATORS: "sdocAnnotators",
-  // span annotations of a document (by document id, user id)
+  // span annotations of a document (by sdoc id, user ids)
   SDOC_SPAN_ANNOTATIONS: "sdocSpanAnnotations",
-  // bbox annotations of a document (by document id, user id)
+  // bbox annotations of a document (by sdoc id, user ids)
   SDOC_BBOX_ANNOTATIONS: "sdocBBoxAnnotations",
-  // all metadata of a document (by document id)
+  // all metadata of a document (by sdoc id)
   SDOC_METADATAS: "sdocMetadatas",
-  // keywords of a document (by document id)
-  SDOC_KEYWORDS: "sdocKeywords",
-  // word frequencies of a document (by document id)
-  SDOC_WORD_FREQUENCIES: "sdocFrequencies",
-  // word frequencies of a document (by document id)
+  // word frequencies of a document (by sdoc id)
   SDOC_WORD_LEVEL_TRANSCRIPTIONS: "sdocTranscriptions",
-  // metadata with given key of a document (by document id, metadata key)
+  // metadata with given key of a document (by sdoc id, metadata key)
   SDOC_METADATA_BY_KEY: "sdocMetadataByKey",
-  // url of a document (by document id)
+  // url of a document (by sdoc id)
   SDOC_URL: "sdocURL",
-  // thumbnail url of a document (by document id)
+  // thumbnail url of a document (by sdoc id)
   SDOC_THUMBNAIL_URL: "sdocThumbnailURL",
-  // linked sdoc ids of a document (by document id)
+  // linked sdoc ids of a document (by sdoc id)
   SDOC_LINKS: "sdocLinks",
   // id of a single SourceDocument (by project id and filename)
   SDOC_ID: "sdocId",
-  // all sdocs which are in the project (by project id) and tagged with given tag (by tag id)
-  SDOCS_BY_PROJECT_AND_TAG_SEARCH: "sdocsByProjectAndTagSearch",
-  // all sdocs which are in the project (by project id) and suffice the given filters (by filter list)
-  SDOCS_BY_PROJECT_AND_FILTERS_SEARCH: "searchResults",
   // all sdocs that are tagged with the given tag (by tag id)
   SDOCS_BY_TAG_ID: "sdocsByTagId",
-  // the name of a single SourceDocument (by project id and filename)
-  SDOC_NAME_BY_PROJECT_AND_FILENAME: "sdocNameByProjectAndFilename",
 
   // a single code (by code id)
   CODE: "code",
@@ -104,11 +88,11 @@ export const QueryKey = {
 
   // a single span annotation (by span annotation id)
   SPAN_ANNOTATION: "annotation",
-  // multiple span annotations (by user id and code id)
+  // span annotations of a code of the logged-in user (by code id)
   SPAN_ANNOTATIONS_USER_CODE: "annotationsUserCode",
   // a single bbox annotation (by bbox annotation id)
   BBOX_ANNOTATION: "bboxAnnotation",
-  // multiple bbox annotations (by user id and code id)
+  // bbox annotations of a code of the logged-in user (by code id)
   BBOX_ANNOTATIONS_USER_CODE: "bboxAnnotationsUserCode",
 
   // project metadata (by project id)
@@ -116,23 +100,23 @@ export const QueryKey = {
 
   // a single feedback (by feedback id)
   FEEDBACK: "feedback",
-  // all feedbacks
+  // all feedback
   FEEDBACKS: "feedbacks",
-  // all user feedbacks (by user id)
+  // all logged-in user's feedbacks
   FEEDBACKS_USER: "feedbacksUser",
 
   // a single TABLE (by TABLE id)
   TABLE: "table",
-  // all project, user TABLEs (by user id and project id)
+  // all tables of the project of the logged-in user (by project id)
   TABLES_PROJECT_USER: "tablesProjectUser",
   // A single timeline analysis (by id)
   TIMELINE_ANALYSIS: "timelineAnalysis",
-  // All analyses from a single user in a given project
+  // All analyses from the logged-in user in a given project (by project id)
   TIMELINE_ANALYSIS_PROJECT_USER: "timelineAnalysisProjectUser",
 
   // a single COTA (by COTA id)
   COTA: "cota",
-  // all project, user COTAs (by user id and project id)
+  // all cotas of a project of the logged-in user (by project id)
   COTAS_PROJECT_USER: "cotasProjectUser",
   // a single COTARefinementJob (by refinement job id)
   COTA_REFINEMENT_JOB: "cotaRefinementJob",
@@ -151,10 +135,6 @@ export const QueryKey = {
   ANALYSIS_CODE_FREQUENCIES: "analysisCodeFrequencies",
   ANALYSIS_CODE_OCCURRENCES: "analysisCodeOccurrences",
   ANALYSIS_ANNOTATION_OCCURRENCES: "analysisAnnotationOccurrences",
-  ANALYSIS_ANNOTATED_SEGMENTS: "analysisAnnotatedSegments",
-  ANALYSIS_TIMELINE: "anaylsisTimeline",
-  ANALYSIS_WORD_FREQUENCY: "analysisWordFrequency",
-  ANALYSIS_AGGREGATED_SDOCS_BY_TAGS: "analysisAggregatedSdocsByTags",
 
   // preprocessing status of the project (by project id)
   PREPRO_PROJECT_STATUS: "preproProjectStatus",

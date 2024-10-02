@@ -184,17 +184,16 @@ export class BboxAnnotationService {
     });
   }
   /**
-   * Returns the Memo attached to the BBoxAnnotation with the given ID of the User with the given ID if it exists.
+   * Returns the Memo attached to the BBoxAnnotation with the given ID of the logged-in User if it exists.
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getUserMemo({ bboxId, userId }: { bboxId: number; userId: number }): CancelablePromise<MemoRead> {
+  public static getUserMemo({ bboxId }: { bboxId: number }): CancelablePromise<MemoRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/bbox/{bbox_id}/memo/{user_id}",
+      url: "/bbox/{bbox_id}/memo/user",
       path: {
         bbox_id: bboxId,
-        user_id: userId,
       },
       errors: {
         422: `Validation Error`,
@@ -202,23 +201,16 @@ export class BboxAnnotationService {
     });
   }
   /**
-   * Returns BBoxAnnotations with the given Code of the User with the given ID
+   * Returns BBoxAnnotations with the given Code of the logged-in User
    * @returns BBoxAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static getByUserCode({
-    codeId,
-    userId,
-  }: {
-    codeId: number;
-    userId: number;
-  }): CancelablePromise<Array<BBoxAnnotationRead>> {
+  public static getByUserCode({ codeId }: { codeId: number }): CancelablePromise<Array<BBoxAnnotationRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/bbox/code/{code_id}/user/{user_id}",
+      url: "/bbox/code/{code_id}/user",
       path: {
         code_id: codeId,
-        user_id: userId,
       },
       errors: {
         422: `Validation Error`,

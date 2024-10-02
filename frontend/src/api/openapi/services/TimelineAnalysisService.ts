@@ -101,23 +101,20 @@ export class TimelineAnalysisService {
     });
   }
   /**
-   * Returns the TimelineAnalysis of the Project with the given ID and the User with the given ID if it exists
+   * Returns the TimelineAnalysis of the Project with the given ID and the logged-in User if it exists
    * @returns TimelineAnalysisRead Successful Response
    * @throws ApiError
    */
   public static getByProjectAndUser({
     projectId,
-    userId,
   }: {
     projectId: number;
-    userId: number;
   }): CancelablePromise<Array<TimelineAnalysisRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/timelineAnalysis/project/{project_id}/user/{user_id}",
+      url: "/timelineAnalysis/project/{project_id}/user",
       path: {
         project_id: projectId,
-        user_id: userId,
       },
       errors: {
         422: `Validation Error`,

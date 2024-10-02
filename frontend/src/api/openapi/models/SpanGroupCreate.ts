@@ -8,10 +8,6 @@ export type SpanGroupCreate = {
    */
   name: string;
   /**
-   * User that created the SpanGroup
-   */
-  user_id: number;
-  /**
    * SourceDocument the SpanGroup refers to
    */
   sdoc_id: number;

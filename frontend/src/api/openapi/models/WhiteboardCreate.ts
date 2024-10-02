@@ -11,8 +11,4 @@ export type WhiteboardCreate = {
    * Project the Whiteboard belongs to
    */
   project_id: number;
-  /**
-   * User the Whiteboard belongs to
-   */
-  user_id: number;
 };
