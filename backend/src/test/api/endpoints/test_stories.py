@@ -573,7 +573,9 @@ def test_span_annotation_and_memo(client, api_code, api_user, api_document) -> N
     assert span1_read_response["begin_token"] == span1_annotation["begin_token"]
     assert span1_read_response["end_token"] == span1_annotation["end_token"]
     assert span1_read_response["id"] == span1_id
-    assert span1_read_response["text"] == span1_annotation["span_text"] # TODO Inconsistent naming
+    assert (
+        span1_read_response["text"] == span1_annotation["span_text"]
+    )  # TODO Inconsistent naming
     assert span1_read_response["code"]["id"] == span1_annotation["code_id"]
     assert span1_read_response["user_id"] == span1_annotation["user_id"]
     assert span1_read_response["sdoc_id"] == span1_annotation["sdoc_id"]
@@ -780,7 +782,9 @@ def test_bbox_annotatation_and_memo(client, api_code, api_user, api_document) ->
     )
     assert bbox_create_response1.status_code == 200
     bbox1_id = bbox_create_response1.json()["id"]
-    bbox_read_response1 = client.get(f"bbox/{bbox1_id}", headers=alice["AuthHeader"]).json()
+    bbox_read_response1 = client.get(
+        f"bbox/{bbox1_id}", headers=alice["AuthHeader"]
+    ).json()
     assert bbox_read_response1["x_min"] == bbox_annotation1["x_min"]
     assert bbox_read_response1["x_max"] == bbox_annotation1["x_max"]
     assert bbox_read_response1["y_min"] == bbox_annotation1["y_min"]
@@ -805,7 +809,9 @@ def test_bbox_annotatation_and_memo(client, api_code, api_user, api_document) ->
     )
     assert bbox_create_response2.status_code == 200
     bbox2_id = bbox_create_response2.json()["id"]
-    bbox_read_response2 = client.get(f"bbox/{bbox2_id}", headers=alice["AuthHeader"]).json()
+    bbox_read_response2 = client.get(
+        f"bbox/{bbox2_id}", headers=alice["AuthHeader"]
+    ).json()
     assert bbox_read_response2["x_min"] == bbox_annotation2["x_min"]
     assert bbox_read_response2["x_max"] == bbox_annotation2["x_max"]
     assert bbox_read_response2["y_min"] == bbox_annotation2["y_min"]
@@ -833,7 +839,9 @@ def test_bbox_annotatation_and_memo(client, api_code, api_user, api_document) ->
     )
     assert bbox_create_response3.status_code == 200
     bbox3_id = bbox_create_response3.json()["id"]
-    bbox_read_response3 = client.get(f"bbox/{bbox3_id}", headers=bob["AuthHeader"]).json()
+    bbox_read_response3 = client.get(
+        f"bbox/{bbox3_id}", headers=bob["AuthHeader"]
+    ).json()
 
     assert bbox_read_response3["x_min"] == bbox_annotation3["x_min"]
     assert bbox_read_response3["x_max"] == bbox_annotation3["x_max"]

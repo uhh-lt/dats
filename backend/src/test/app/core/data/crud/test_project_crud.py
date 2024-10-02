@@ -196,13 +196,10 @@ def test_get_project_tags(db: Session, project: ProjectORM) -> None:
 
 
 def test_get_remove_all_project_codes(db: Session, project: ProjectORM) -> None:
-
     assert len(project.codes) == get_number_of_system_codes()
 
     # remove project codes
-    crud_code.remove_by_project(
-        db=db, proj_id=project.id
-    )
+    crud_code.remove_by_project(db=db, proj_id=project.id)
 
     assert len(project.codes) == 0
 
