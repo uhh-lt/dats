@@ -1025,7 +1025,6 @@ def test_documentTag_and_memo(client, api_user, api_document, api_project) -> No
     doctag1_update = {
         "name": "This is an updated tag",
         "color": "azureblue with a touch of yellow",
-        "parent_id": 1,
         "project_id": project1["id"],
     }
     doctag1_update_response = client.patch(
@@ -1040,7 +1039,6 @@ def test_documentTag_and_memo(client, api_user, api_document, api_project) -> No
     assert doctag1_update_read_response["name"] == doctag1_update["name"]
     assert doctag1_update_read_response["color"] == doctag1_update["color"]
     assert doctag1_read_response["description"] == doctag1["description"]
-    assert doctag1_update_read_response["parent_id"] == doctag1_update["parent_id"]
     assert doctag1_update_read_response["id"] == doctag1["id"]
     assert doctag1_update_read_response["project_id"] == doctag1_update["project_id"]
 
@@ -1112,12 +1110,9 @@ def test_documentTag_and_memo(client, api_user, api_document, api_project) -> No
     assert doctag1_memo_read_response["attached_object_id"] == doctag1["id"]
     assert doctag1_memo_read_response["attached_object_type"] == "document_tag"
 
-    # # Alice removes the documentTag # FIXME: https://github.com/uhh-lt/dats/issues/368
-    # doctag1_delete_response = client.delete(
-    #     f"doctag/{doctag1['id']}", headers=alice["AuthHeader"]
-    # )
+    # Alice removes the documentTag
+    doctag1_delete_response = client.delete(
+        f"doctag/{doctag1['id']}", headers=alice["AuthHeader"]
+    )
 
-    # assert doctag1_delete_response.status_code == 200
-    # doctag1_delete_read_response = doctag1_memo_read_response = client.get(
-    #     f"doctag/{doctag1['id']}/memo", headers=alice["AuthHeader"]
-    # )
+    assert doctag1_delete_response.status_code == 200
