@@ -324,17 +324,16 @@ export class SpanAnnotationService {
     });
   }
   /**
-   * Returns the Memo attached to the SpanAnnotation with the given ID of the User with the given ID if it exists.
+   * Returns the Memo attached to the SpanAnnotation with the given ID of the logged-in User if it exists.
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getUserMemo({ spanId, userId }: { spanId: number; userId: number }): CancelablePromise<MemoRead> {
+  public static getUserMemo({ spanId }: { spanId: number }): CancelablePromise<MemoRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/span/{span_id}/memo/{user_id}",
+      url: "/span/{span_id}/memo/user",
       path: {
         span_id: spanId,
-        user_id: userId,
       },
       errors: {
         422: `Validation Error`,
@@ -342,23 +341,16 @@ export class SpanAnnotationService {
     });
   }
   /**
-   * Returns SpanAnnotations with the given Code of the User with the given ID
+   * Returns SpanAnnotations with the given Code of the logged-in User
    * @returns SpanAnnotationReadResolved Successful Response
    * @throws ApiError
    */
-  public static getByUserCode({
-    codeId,
-    userId,
-  }: {
-    codeId: number;
-    userId: number;
-  }): CancelablePromise<Array<SpanAnnotationReadResolved>> {
+  public static getByUserCode({ codeId }: { codeId: number }): CancelablePromise<Array<SpanAnnotationReadResolved>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/span/code/{code_id}/user/{user_id}",
+      url: "/span/code/{code_id}/user",
       path: {
         code_id: codeId,
-        user_id: userId,
       },
       errors: {
         422: `Validation Error`,

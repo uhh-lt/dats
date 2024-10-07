@@ -93,23 +93,16 @@ export class ConceptOverTimeAnalysisService {
   }
   /**
    * Returns COTAs of the Project of the User
-   * Returns the COTA of the Project with the given ID and the User with the given ID if it exists
+   * Returns the COTA of the Project with the given ID and the logged-in User if it exists
    * @returns COTARead Successful Response
    * @throws ApiError
    */
-  public static getByProjectAndUser({
-    projectId,
-    userId,
-  }: {
-    projectId: number;
-    userId: number;
-  }): CancelablePromise<Array<COTARead>> {
+  public static getByProjectAndUser({ projectId }: { projectId: number }): CancelablePromise<Array<COTARead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/cota/{project_id}/user/{user_id}",
+      url: "/cota/{project_id}/user",
       path: {
         project_id: projectId,
-        user_id: userId,
       },
       errors: {
         422: `Validation Error`,

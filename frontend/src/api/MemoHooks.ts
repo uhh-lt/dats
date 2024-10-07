@@ -17,32 +17,32 @@ const updateInvalidation = (data: MemoRead) => {
   queryClient.setQueryData([QueryKey.MEMO, data.id], data);
   switch (data.attached_object_type) {
     case AttachedObjectType.PROJECT:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_PROJECT, data.attached_object_id, data.user_id] });
-      queryClient.setQueryData([QueryKey.MEMO_PROJECT, data.attached_object_id, data.user_id], data);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_PROJECT, data.attached_object_id] });
+      queryClient.setQueryData([QueryKey.MEMO_PROJECT, data.attached_object_id], data);
       break;
     case AttachedObjectType.SOURCE_DOCUMENT:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC, data.attached_object_id, data.user_id] });
-      queryClient.setQueryData([QueryKey.MEMO_SDOC, data.attached_object_id, data.user_id], data);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC, data.attached_object_id] });
+      queryClient.setQueryData([QueryKey.MEMO_SDOC, data.attached_object_id], data);
       break;
     case AttachedObjectType.DOCUMENT_TAG:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_TAG, data.attached_object_id, data.user_id] });
-      queryClient.setQueryData([QueryKey.MEMO_TAG, data.attached_object_id, data.user_id], data);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_TAG, data.attached_object_id] });
+      queryClient.setQueryData([QueryKey.MEMO_TAG, data.attached_object_id], data);
       break;
     case AttachedObjectType.CODE:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_CODE, data.attached_object_id, data.user_id] });
-      queryClient.setQueryData([QueryKey.MEMO_CODE, data.attached_object_id, data.user_id], data);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_CODE, data.attached_object_id] });
+      queryClient.setQueryData([QueryKey.MEMO_CODE, data.attached_object_id], data);
       break;
     case AttachedObjectType.SPAN_ANNOTATION:
       queryClient.invalidateQueries({
-        queryKey: [QueryKey.MEMO_SPAN_ANNOTATION, data.attached_object_id, data.user_id],
+        queryKey: [QueryKey.MEMO_SPAN_ANNOTATION, data.attached_object_id],
       });
-      queryClient.setQueryData([QueryKey.MEMO_SPAN_ANNOTATION, data.attached_object_id, data.user_id], data);
+      queryClient.setQueryData([QueryKey.MEMO_SPAN_ANNOTATION, data.attached_object_id], data);
       break;
     case AttachedObjectType.BBOX_ANNOTATION:
       queryClient.invalidateQueries({
-        queryKey: [QueryKey.MEMO_BBOX_ANNOTATION, data.attached_object_id, data.user_id],
+        queryKey: [QueryKey.MEMO_BBOX_ANNOTATION, data.attached_object_id],
       });
-      queryClient.setQueryData([QueryKey.MEMO_BBOX_ANNOTATION, data.attached_object_id, data.user_id], data);
+      queryClient.setQueryData([QueryKey.MEMO_BBOX_ANNOTATION, data.attached_object_id], data);
       break;
     case AttachedObjectType.SPAN_GROUP:
       console.error("Span group memo update not implemented");
@@ -73,33 +73,33 @@ const useStarMemos = () =>
   });
 
 const deleteInvalidation = (data: MemoRead) => {
-  queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMOS, data.user_id] });
+  queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMOS, data.project_id] });
   switch (data.attached_object_type) {
     case AttachedObjectType.PROJECT:
       break;
     case AttachedObjectType.SOURCE_DOCUMENT:
-      queryClient.removeQueries({ queryKey: [QueryKey.MEMO_SDOC, data.attached_object_id, data.user_id] });
+      queryClient.removeQueries({ queryKey: [QueryKey.MEMO_SDOC, data.attached_object_id] });
       queryClient.invalidateQueries({
-        queryKey: [QueryKey.MEMO_SDOC_RELATED, data.user_id, data.attached_object_id],
+        queryKey: [QueryKey.MEMO_SDOC_RELATED, data.attached_object_id],
       });
       break;
     case AttachedObjectType.DOCUMENT_TAG:
-      queryClient.removeQueries({ queryKey: [QueryKey.MEMO_TAG, data.attached_object_id, data.user_id] });
+      queryClient.removeQueries({ queryKey: [QueryKey.MEMO_TAG, data.attached_object_id] });
       break;
     case AttachedObjectType.CODE:
-      queryClient.removeQueries({ queryKey: [QueryKey.MEMO_CODE, data.attached_object_id, data.user_id] });
+      queryClient.removeQueries({ queryKey: [QueryKey.MEMO_CODE, data.attached_object_id] });
       break;
     case AttachedObjectType.SPAN_ANNOTATION:
       queryClient.removeQueries({
-        queryKey: [QueryKey.MEMO_SPAN_ANNOTATION, data.attached_object_id, data.user_id],
+        queryKey: [QueryKey.MEMO_SPAN_ANNOTATION, data.attached_object_id],
       });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED, data.user_id] }); // todo: this is not optimal
+      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED] }); // todo: this is not optimal
       break;
     case AttachedObjectType.BBOX_ANNOTATION:
       queryClient.removeQueries({
-        queryKey: [QueryKey.MEMO_BBOX_ANNOTATION, data.attached_object_id, data.user_id],
+        queryKey: [QueryKey.MEMO_BBOX_ANNOTATION, data.attached_object_id],
       });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED, data.user_id] }); // todo: this is not optimal
+      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED] }); // todo: this is not optimal
       break;
     case AttachedObjectType.SPAN_GROUP:
       console.error("Span group memo update not implemented");

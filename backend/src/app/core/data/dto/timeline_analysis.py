@@ -54,10 +54,10 @@ class TimelineAnalysisBaseDTO(BaseModel):
 
 class TimelineAnalysisCreate(TimelineAnalysisBaseDTO):
     project_id: int = Field(description="Project the TimelineAnalysis belongs to")
+
+
+class TimelineAnalysisCreateIntern(TimelineAnalysisCreate, UpdateDTOBase):
     user_id: int = Field(description="User the TimelineAnalysis belongs to")
-
-
-class TimelineAnalysisCreateAsInDB(TimelineAnalysisCreate, UpdateDTOBase):
     settings: Optional[str] = Field(
         description="JSON Representation of the Timeline Settings of the TimelineAnalysis.",
         default=None,
@@ -86,7 +86,7 @@ class TimelineAnalysisUpdate(BaseModel, UpdateDTOBase):
     )
 
 
-class TimelineAnalysisUpdateAsInDB(BaseModel, UpdateDTOBase):
+class TimelineAnalysisUpdateIntern(BaseModel, UpdateDTOBase):
     name: Optional[str] = Field(
         description="Name of the TimelineAnalysis",
         default=None,

@@ -6,7 +6,6 @@ import SdocHooks from "../../../api/SdocHooks.ts";
 import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
 import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
-import { useAuth } from "../../../auth/useAuth.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
@@ -48,7 +47,6 @@ function ImageAnnotatorWithHeight({ sdoc, height }: ImageAnnotatorProps & { heig
   const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
 
   // global server state (react query)
-  const user = useAuth().user!;
   const annotations = SdocHooks.useGetBBoxAnnotationsBatch(sdoc.id, visibleUserIds);
 
   // snackbar
@@ -218,7 +216,6 @@ function ImageAnnotatorWithHeight({ sdoc, height }: ImageAnnotatorProps & { heig
       {
         requestBody: {
           code_id: code.id,
-          user_id: user.id,
           sdoc_id: sdoc.id,
           x_min: x,
           x_max: x + width,

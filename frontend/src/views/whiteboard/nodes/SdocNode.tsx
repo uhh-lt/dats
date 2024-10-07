@@ -6,7 +6,6 @@ import SdocHooks from "../../../api/SdocHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
 import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
-import { useAuth } from "../../../auth/useAuth.ts";
 import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../components/GenericPositionMenu.tsx";
 import MemoDialogAPI from "../../../components/Memo/MemoDialog/MemoDialogAPI.ts";
 import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
@@ -25,9 +24,6 @@ import {
 import BaseCardNode from "./BaseCardNode.tsx";
 
 function SdocNode(props: NodeProps<SdocNodeData>) {
-  // global client state
-  const userId = useAuth().user?.id;
-
   // whiteboard state (react-flow)
   const reactFlowInstance = useReactFlow<DATSNodeData>();
   const reactFlowService = useReactFlowService(reactFlowInstance);
@@ -39,7 +35,7 @@ function SdocNode(props: NodeProps<SdocNodeData>) {
   // global server state (react-query)
   const sdoc = SdocHooks.useGetDocument(props.data.sdocId);
   const tags = SdocHooks.useGetAllDocumentTags(props.data.sdocId);
-  const memo = SdocHooks.useGetMemo(props.data.sdocId, userId);
+  const memo = SdocHooks.useGetMemo(props.data.sdocId);
 
   const docType = sdoc.data?.doctype;
 

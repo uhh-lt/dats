@@ -8,7 +8,6 @@ import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
-import { useAuth } from "../../../auth/useAuth.ts";
 import { useGetMemoQuery } from "../useGetMemoQuery.ts";
 import useGetMemosAttachedObject from "../useGetMemosAttachedObject.ts";
 import { MemoContentBboxAnnotation } from "./MemoContentBboxAnnotation.tsx";
@@ -19,8 +18,6 @@ import { MemoContentTag } from "./MemoContentTag.tsx";
 import { MemoEvent } from "./MemoDialogAPI.ts";
 
 export default function MemoDialog() {
-  const { user } = useAuth();
-
   // state
   const [open, setOpen] = useState(false);
   const [memoEventData, setMemoEventData] = useState<MemoEvent>();
@@ -32,7 +29,6 @@ export default function MemoDialog() {
   // 3. memoId is set, attachedObjectId is not set
   const memo = useGetMemoQuery(memoEventData?.memoId ? undefined : memoEventData?.attachedObjectType)(
     memoEventData?.memoId ? memoEventData.memoId : memoEventData?.attachedObjectId,
-    user?.id,
   );
   const attachedObject = useGetMemosAttachedObject(memoEventData?.attachedObjectType)(memoEventData?.attachedObjectId);
 

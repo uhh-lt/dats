@@ -29,49 +29,7 @@ export class UserService {
   public static getById({ userId }: { userId: number }): CancelablePromise<PublicUserRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/user/{user_id}",
-      path: {
-        user_id: userId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Updates the User with the given ID if it exists
-   * @returns UserRead Successful Response
-   * @throws ApiError
-   */
-  public static updateById({
-    userId,
-    requestBody,
-  }: {
-    userId: number;
-    requestBody: UserUpdate;
-  }): CancelablePromise<UserRead> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/user/{user_id}",
-      path: {
-        user_id: userId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Removes the User with the given ID if it exists
-   * @returns UserRead Successful Response
-   * @throws ApiError
-   */
-  public static deleteById({ userId }: { userId: number }): CancelablePromise<UserRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/user/{user_id}",
+      url: "/user/by_id/{user_id}",
       path: {
         user_id: userId,
       },
@@ -100,7 +58,7 @@ export class UserService {
   }): CancelablePromise<Array<PublicUserRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/user",
+      url: "/user/all",
       query: {
         skip: skip,
         limit: limit,
@@ -111,34 +69,52 @@ export class UserService {
     });
   }
   /**
-   * Returns all Projects of the User with the given ID
-   * @returns ProjectRead Successful Response
+   * Removes the logged-in User
+   * @returns UserRead Successful Response
    * @throws ApiError
    */
-  public static getUserProjects({ userId }: { userId: number }): CancelablePromise<Array<ProjectRead>> {
+  public static deleteMe(): CancelablePromise<UserRead> {
     return __request(OpenAPI, {
-      method: "GET",
-      url: "/user/{user_id}/project",
-      path: {
-        user_id: userId,
-      },
+      method: "DELETE",
+      url: "/user/",
+    });
+  }
+  /**
+   * Updates the logged-in User
+   * @returns UserRead Successful Response
+   * @throws ApiError
+   */
+  public static updateMe({ requestBody }: { requestBody: UserUpdate }): CancelablePromise<UserRead> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/user/",
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },
     });
   }
   /**
-   * Returns the top k sdoc ids that the User recently modified (annotated)
+   * Returns all Projects of the logged-in User
+   * @returns ProjectRead Successful Response
+   * @throws ApiError
+   */
+  public static getUserProjects(): CancelablePromise<Array<ProjectRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/user/project",
+    });
+  }
+  /**
+   * Returns the top k sdoc ids that the logged-in User recently modified (annotated)
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static recentActivity({ userId, k }: { userId: number; k: number }): CancelablePromise<Array<number>> {
+  public static recentActivity({ k }: { k: number }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/user/{user_id}/recent_activity",
-      path: {
-        user_id: userId,
-      },
+      url: "/user/recent_activity",
       query: {
         k: k,
       },

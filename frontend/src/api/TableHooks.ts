@@ -25,18 +25,18 @@ const useGetTable = (tableId: number | null | undefined) =>
     select: (data) => data,
   });
 
-const useGetUserTables = (projectId: number | null | undefined, userId: number | null | undefined) =>
+const useGetUserTables = (projectId: number | null | undefined) =>
   useQuery<TableRead[], Error>({
-    queryKey: [QueryKey.TABLES_PROJECT_USER, projectId, userId],
+    queryKey: [QueryKey.TABLES_PROJECT_USER, projectId],
     queryFn: async () => {
-      const data = await AnalysisTableService.getByProjectAndUser({ projectId: projectId!, userId: userId! });
+      const data = await AnalysisTableService.getByProjectAndUser({ projectId: projectId! });
       return data.map((table) => {
         const content = JSON.parse(table.content) as TablePage[];
         return { ...table, content };
       });
     },
     retry: false,
-    enabled: !!projectId && !!userId,
+    enabled: !!projectId,
   });
 
 const useCreateTable = () =>
@@ -45,7 +45,7 @@ const useCreateTable = () =>
     onSettled(data, _error, variables) {
       if (data) {
         queryClient.setQueryData(
-          [QueryKey.TABLES_PROJECT_USER, data.project_id, data.user_id],
+          [QueryKey.TABLES_PROJECT_USER, data.project_id],
           (prevTables: TableRead[]) =>
             [
               ...prevTables,
@@ -58,7 +58,7 @@ const useCreateTable = () =>
         queryClient.invalidateQueries({ queryKey: [QueryKey.TABLE, data.id] });
       }
       queryClient.invalidateQueries({
-        queryKey: [QueryKey.TABLES_PROJECT_USER, variables.requestBody.project_id, variables.requestBody.user_id],
+        queryKey: [QueryKey.TABLES_PROJECT_USER, variables.requestBody.project_id],
       });
     },
   });
@@ -68,17 +68,14 @@ const useUpdateTable = () =>
     mutationFn: AnalysisTableService.updateById,
     onSettled(data, _error, variables) {
       if (data) {
-        queryClient.setQueryData(
-          [QueryKey.TABLES_PROJECT_USER, data.project_id, data.user_id],
-          (prevTables: TableRead[]) => {
-            const index = prevTables.findIndex((table) => table.id === data.id);
-            if (index === -1) {
-              return prevTables;
-            }
-            return [...prevTables.slice(0, index), data, ...prevTables.slice(index + 1)];
-          },
-        );
-        queryClient.invalidateQueries({ queryKey: [QueryKey.TABLES_PROJECT_USER, data.project_id, data.user_id] });
+        queryClient.setQueryData([QueryKey.TABLES_PROJECT_USER, data.project_id], (prevTables: TableRead[]) => {
+          const index = prevTables.findIndex((table) => table.id === data.id);
+          if (index === -1) {
+            return prevTables;
+          }
+          return [...prevTables.slice(0, index), data, ...prevTables.slice(index + 1)];
+        });
+        queryClient.invalidateQueries({ queryKey: [QueryKey.TABLES_PROJECT_USER, data.project_id] });
       }
       queryClient.invalidateQueries({ queryKey: [QueryKey.TABLE, variables.analysisTableId] });
     },
@@ -88,11 +85,11 @@ const useDuplicateTable = () =>
   useMutation({
     mutationFn: AnalysisTableService.duplicateById,
     onSuccess(data) {
-      queryClient.setQueryData(
-        [QueryKey.TABLES_PROJECT_USER, data.project_id, data.user_id],
-        (prevTables: TableRead[]) => [...prevTables, data],
-      );
-      queryClient.invalidateQueries({ queryKey: [QueryKey.TABLES_PROJECT_USER, data.project_id, data.user_id] });
+      queryClient.setQueryData([QueryKey.TABLES_PROJECT_USER, data.project_id], (prevTables: TableRead[]) => [
+        ...prevTables,
+        data,
+      ]);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.TABLES_PROJECT_USER, data.project_id] });
     },
   });
 
@@ -101,11 +98,10 @@ const useDeleteTable = () =>
     mutationFn: AnalysisTableService.deleteById,
     onSettled(data, _error, variables) {
       if (data) {
-        queryClient.setQueryData(
-          [QueryKey.TABLES_PROJECT_USER, data.project_id, data.user_id],
-          (prevTables: TableRead[]) => prevTables.filter((table) => table.id !== data.id),
+        queryClient.setQueryData([QueryKey.TABLES_PROJECT_USER, data.project_id], (prevTables: TableRead[]) =>
+          prevTables.filter((table) => table.id !== data.id),
         );
-        queryClient.invalidateQueries({ queryKey: [QueryKey.TABLES_PROJECT_USER, data.project_id, data.user_id] });
+        queryClient.invalidateQueries({ queryKey: [QueryKey.TABLES_PROJECT_USER, data.project_id] });
       }
       queryClient.invalidateQueries({ queryKey: [QueryKey.TABLE, variables.analysisTableId] });
     },

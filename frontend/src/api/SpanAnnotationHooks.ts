@@ -24,15 +24,14 @@ const useGetAnnotation = (spanId: number | null | undefined) =>
     enabled: !!spanId,
   });
 
-const useGetByCodeAndUser = (codeId: number | null | undefined, userId: number | null | undefined) =>
+const useGetByCodeAndUser = (codeId: number | null | undefined) =>
   useQuery<SpanAnnotationReadResolved[], Error>({
-    queryKey: [QueryKey.SPAN_ANNOTATIONS_USER_CODE, userId, codeId],
+    queryKey: [QueryKey.SPAN_ANNOTATIONS_USER_CODE, codeId],
     queryFn: () =>
       SpanAnnotationService.getByUserCode({
-        userId: userId!,
         codeId: codeId!,
       }),
-    enabled: !!userId && !!codeId,
+    enabled: !!codeId,
   });
 
 const useUpdateSpan = () =>
@@ -51,7 +50,6 @@ const useUpdateSpan = () =>
       queryClient.invalidateQueries({ queryKey: ["annotation-table-data"] }); // TODO: This is not optimal, shoudl be projectId, selectedUserId... We do this because of SpanAnnotationTable
       queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATION, data.id] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, data.sdoc_id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, data.sdoc_id, data.user_id] });
     },
   });
 
@@ -63,9 +61,6 @@ const useUpdateBulkSpan = () =>
       data.forEach((annotation) => {
         queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATION, annotation.id] });
         queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, annotation.sdoc_id] });
-        queryClient.invalidateQueries({
-          queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, annotation.sdoc_id, annotation.user_id],
-        });
       });
     },
   });
@@ -74,26 +69,17 @@ const useDeleteSpan = () =>
   useMutation({
     mutationFn: SpanAnnotationService.deleteById,
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED] }); // todo: this is not optimal
+      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED, data.sdoc_id] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, data.sdoc_id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, data.sdoc_id, data.user_id] });
     },
   });
 
 // memo
-const useGetMemos = (spanId: number | null | undefined) =>
-  useQuery<MemoRead[], Error>({
-    queryKey: [QueryKey.MEMO_SPAN_ANNOTATION, spanId],
-    queryFn: () => SpanAnnotationService.getMemos({ spanId: spanId! }),
-    enabled: !!spanId,
-    retry: false,
-  });
-
-const useGetMemo = (spanId: number | null | undefined, userId: number | null | undefined) =>
+const useGetUserMemo = (spanId: number | null | undefined) =>
   useQuery<MemoRead, Error>({
-    queryKey: [QueryKey.MEMO_SPAN_ANNOTATION, spanId, userId],
-    queryFn: () => SpanAnnotationService.getUserMemo({ spanId: spanId!, userId: userId! }),
-    enabled: !!spanId && !!userId,
+    queryKey: [QueryKey.MEMO_SPAN_ANNOTATION, spanId],
+    queryFn: () => SpanAnnotationService.getUserMemo({ spanId: spanId! }),
+    enabled: !!spanId,
     retry: false,
   });
 
@@ -101,11 +87,11 @@ const useCreateMemo = () =>
   useMutation({
     mutationFn: SpanAnnotationService.addMemo,
     onSuccess: (memo) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMOS, memo.user_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMOS, memo.project_id] });
       queryClient.invalidateQueries({
-        queryKey: [QueryKey.MEMO_SPAN_ANNOTATION, memo.attached_object_id, memo.user_id],
+        queryKey: [QueryKey.MEMO_SPAN_ANNOTATION, memo.attached_object_id],
       });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED, memo.user_id] }); // todo: this is not optimal
+      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED] }); // todo: this is not optimal
     },
   });
 
@@ -117,8 +103,7 @@ const SpanAnnotationHooks = {
   useUpdateBulkSpan,
   useDeleteSpan,
   // memo
-  useGetMemos,
-  useGetMemo,
+  useGetUserMemo,
   useCreateMemo,
 };
 

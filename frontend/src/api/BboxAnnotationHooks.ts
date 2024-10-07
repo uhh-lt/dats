@@ -20,22 +20,20 @@ const useGetAnnotation = (bboxId: number | undefined) =>
     enabled: !!bboxId,
   });
 
-const useGetByCodeAndUser = (codeId: number | undefined, userId: number | undefined) =>
+const useGetByCodeAndUser = (codeId: number | undefined) =>
   useQuery<BBoxAnnotationRead[], Error>({
-    queryKey: [QueryKey.BBOX_ANNOTATIONS_USER_CODE, userId, codeId],
+    queryKey: [QueryKey.BBOX_ANNOTATIONS_USER_CODE, codeId],
     queryFn: () =>
       BboxAnnotationService.getByUserCode({
-        userId: userId!,
         codeId: codeId!,
       }),
-    enabled: !!userId && !!codeId,
+    enabled: !!codeId,
   });
 
 const useUpdateBBox = () =>
   useMutation({
     mutationFn: BboxAnnotationService.updateById,
     onSuccess(data) {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS, data.sdoc_id, data.user_id] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS, data.sdoc_id] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_ANNOTATION, data.id] });
     },
@@ -45,26 +43,17 @@ const useDeleteBBox = () =>
   useMutation({
     mutationFn: BboxAnnotationService.deleteById,
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS, data.sdoc_id, data.user_id] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS, data.sdoc_id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED] }); // todo: this is not optimal
+      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED, data.sdoc_id] });
     },
   });
 
 // memo
-const useGetMemos = (bboxId: number | undefined) =>
-  useQuery<MemoRead[], Error>({
-    queryKey: [QueryKey.MEMO_BBOX_ANNOTATION, bboxId],
-    queryFn: () => BboxAnnotationService.getMemos({ bboxId: bboxId! }),
-    enabled: !!bboxId,
-    retry: false,
-  });
-
-const useGetMemo = (bboxId: number | undefined, userId: number | undefined) =>
+const useGetUserMemo = (bboxId: number | undefined) =>
   useQuery<MemoRead, Error>({
-    queryKey: [QueryKey.MEMO_BBOX_ANNOTATION, bboxId, userId],
-    queryFn: () => BboxAnnotationService.getUserMemo({ bboxId: bboxId!, userId: userId! }),
-    enabled: !!bboxId && !!userId,
+    queryKey: [QueryKey.MEMO_BBOX_ANNOTATION, bboxId],
+    queryFn: () => BboxAnnotationService.getUserMemo({ bboxId: bboxId! }),
+    enabled: !!bboxId,
     retry: false,
   });
 
@@ -74,9 +63,9 @@ const useCreateMemo = () =>
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMOS, data.user_id] });
       queryClient.invalidateQueries({
-        queryKey: [QueryKey.MEMO_BBOX_ANNOTATION, data.attached_object_id, data.user_id],
+        queryKey: [QueryKey.MEMO_BBOX_ANNOTATION, data.attached_object_id],
       });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED, data.user_id] }); // todo: this is not optimal
+      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED] }); // todo: this is not optimal
     },
   });
 
@@ -86,8 +75,7 @@ const BboxAnnotationHooks = {
   useUpdateBBox,
   useDeleteBBox,
   // memo
-  useGetMemo,
-  useGetMemos,
+  useGetUserMemo,
   useCreateMemo,
 };
 

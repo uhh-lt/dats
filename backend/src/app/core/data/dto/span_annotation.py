@@ -26,7 +26,6 @@ class SpanAnnotationCreateIntern(SpanAnnotationBaseDTO):
 class SpanAnnotationCreate(SpanAnnotationBaseDTO):
     span_text: str = Field(description="The SpanText the SpanAnnotation spans.")
     code_id: int = Field(description="Code the SpanAnnotation refers to")
-    user_id: int = Field(description="User that created the SpanAnnotation")
     sdoc_id: int = Field(description="SourceDocument the SpanAnnotation refers to")
 
 

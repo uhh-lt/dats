@@ -9,6 +9,7 @@ from app.core.data.crud import Crud
 from app.core.data.crud.analysis_table import crud_analysis_table
 from app.core.data.dto.analysis_table import (
     AnalysisTableCreate,
+    AnalysisTableCreateIntern,
     AnalysisTableRead,
     AnalysisTableUpdate,
 )
@@ -32,10 +33,14 @@ def create(
     authz_user: AuthzUser = Depends(),
 ) -> AnalysisTableRead:
     authz_user.assert_in_project(analysis_table.project_id)
-    authz_user.assert_is_same_user(analysis_table.user_id)
 
     return AnalysisTableRead.model_validate(
-        crud_analysis_table.create(db=db, create_dto=analysis_table)
+        crud_analysis_table.create(
+            db=db,
+            create_dto=AnalysisTableCreateIntern(
+                **analysis_table.model_dump(), user_id=authz_user.user.id
+            ),
+        )
     )
 
 
@@ -57,15 +62,14 @@ def get_by_id(
 
 
 @router.get(
-    "/project/{project_id}/user/{user_id}",
+    "/project/{project_id}/user",
     response_model=List[AnalysisTableRead],
-    summary="Returns the AnalysisTable of the Project with the given ID and the User with the given ID if it exists",
+    summary="Returns the AnalysisTable of the Project with the given ID and the logged-in User if it exists",
 )
 def get_by_project_and_user(
     *,
     db: Session = Depends(get_db_session),
     project_id: int,
-    user_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> List[AnalysisTableRead]:
     # No need to authorize against the user:
@@ -74,7 +78,7 @@ def get_by_project_and_user(
     authz_user.assert_in_project(project_id)
 
     db_objs = crud_analysis_table.read_by_project_and_user(
-        db=db, project_id=project_id, user_id=user_id
+        db=db, project_id=project_id, user_id=authz_user.user.id
     )
     return [AnalysisTableRead.model_validate(db_obj) for db_obj in db_objs]
 

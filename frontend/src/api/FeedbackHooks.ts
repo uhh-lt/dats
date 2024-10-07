@@ -1,8 +1,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { QueryKey } from "./QueryKey.ts";
 import queryClient from "../plugins/ReactQueryClient.ts";
 import { FeedbackRead } from "./openapi/models/FeedbackRead.ts";
 import { FeedbackService } from "./openapi/services/FeedbackService.ts";
+import { QueryKey } from "./QueryKey.ts";
 
 const useCreateFeedback = () =>
   useMutation({
@@ -22,11 +22,10 @@ const useGetFeedback = (feedbackId: string) =>
 const useGetAllFeedback = () =>
   useQuery<FeedbackRead[], Error>({ queryKey: [QueryKey.FEEDBACKS], queryFn: () => FeedbackService.getAll() });
 
-const useGetUserFeedback = (userId: number | null | undefined) =>
+const useGetUserFeedback = () =>
   useQuery<FeedbackRead[], Error>({
-    queryKey: [QueryKey.FEEDBACKS_USER, userId],
-    queryFn: () => FeedbackService.getAllByUser({ userId: userId! }),
-    enabled: !!userId,
+    queryKey: [QueryKey.FEEDBACKS_USER],
+    queryFn: () => FeedbackService.getAllByUser(),
   });
 
 const useReplyTo = () => useMutation({ mutationFn: FeedbackService.replyTo });

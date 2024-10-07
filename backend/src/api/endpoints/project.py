@@ -22,7 +22,13 @@ from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.action import ActionQueryParameters, ActionRead
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
-from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
+from app.core.data.dto.memo import (
+    AttachedObjectType,
+    MemoCreate,
+    MemoCreateIntern,
+    MemoInDB,
+    MemoRead,
+)
 from app.core.data.dto.preprocessing_job import PreprocessingJobRead
 from app.core.data.dto.project import ProjectCreate, ProjectRead, ProjectUpdate
 from app.core.data.dto.project_metadata import ProjectMetadataRead
@@ -290,14 +296,13 @@ def delete_project_tags(
 
 
 @router.get(
-    "/{proj_id}/user/{user_id}/memo",
+    "/{proj_id}/user/memo",
     response_model=List[MemoRead],
-    summary="Returns all Memos of the Project from a User",
+    summary="Returns all Memos of the Project from the logged-in User",
 )
 def get_user_memos_of_project(
     *,
     proj_id: int,
-    user_id: int,
     only_starred: Optional[bool] = Query(
         title="Only Starred",
         description="If true only starred Memos are returned",
@@ -309,7 +314,7 @@ def get_user_memos_of_project(
     authz_user.assert_in_project(proj_id)
 
     db_objs = crud_memo.read_by_user_and_project(
-        db=db, user_id=user_id, proj_id=proj_id, only_starred=only_starred
+        db=db, user_id=authz_user.user.id, proj_id=proj_id, only_starred=only_starred
     )
     return [
         crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj) for db_obj in db_objs
@@ -378,12 +383,15 @@ def add_memo(
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
 ) -> MemoRead:
-    authz_user.assert_is_same_user(memo.user_id)
     authz_user.assert_in_project(proj_id)
     authz_user.assert_in_project(memo.project_id)
     validate.validate_condition(proj_id == memo.project_id)
 
-    db_obj = crud_memo.create_for_project(db=db, project_id=proj_id, create_dto=memo)
+    db_obj = crud_memo.create_for_project(
+        db=db,
+        project_id=proj_id,
+        create_dto=MemoCreateIntern(**memo.model_dump(), user_id=authz_user.user.id),
+    )
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     return MemoRead(
         **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
@@ -410,24 +418,22 @@ def get_memos(
 
 
 @router.get(
-    "/{proj_id}/memo/{user_id}",
+    "/{proj_id}/memo/user",
     response_model=MemoRead,
     summary=(
-        "Returns the Memo attached to the Project with the given ID of the User with the"
-        " given ID if it exists."
+        "Returns the Memo attached to the Project with the given ID of the logged-in User if it exists."
     ),
 )
 def get_user_memo(
     *,
     db: Session = Depends(get_db_session),
     proj_id: int,
-    user_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> MemoRead:
     authz_user.assert_in_project(proj_id)
 
     db_obj = crud_project.read(db=db, id=proj_id)
-    return get_object_memo_for_user(db_obj=db_obj, user_id=user_id)
+    return get_object_memo_for_user(db_obj=db_obj, user_id=authz_user.user.id)
 
 
 @router.get(

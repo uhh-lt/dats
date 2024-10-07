@@ -19,7 +19,6 @@ class SpanGroupCreateIntern(SpanGroupBaseDTO):
 
 
 class SpanGroupCreate(SpanGroupBaseDTO):
-    user_id: int = Field(description="User that created the SpanGroup")
     sdoc_id: int = Field(description="SourceDocument the SpanGroup refers to")
 
 

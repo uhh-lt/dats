@@ -11,7 +11,13 @@ from app.core.data.crud import Crud
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.dto.code import CodeRead
-from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
+from app.core.data.dto.memo import (
+    AttachedObjectType,
+    MemoCreate,
+    MemoCreateIntern,
+    MemoInDB,
+    MemoRead,
+)
 from app.core.data.dto.span_annotation import (
     SpanAnnotationCreate,
     SpanAnnotationRead,
@@ -39,7 +45,6 @@ def add_span_annotation(
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
 ) -> Union[SpanAnnotationRead, SpanAnnotationReadResolved]:
-    authz_user.assert_is_same_user(span.user_id)
     authz_user.assert_in_same_project_as(Crud.CODE, span.code_id)
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, span.sdoc_id)
     validate.validate_objects_in_same_project(
@@ -49,7 +54,7 @@ def add_span_annotation(
         ]
     )
 
-    db_obj = crud_span_anno.create(db=db, create_dto=span)
+    db_obj = crud_span_anno.create(db=db, user_id=authz_user.user.id, create_dto=span)
     if resolve_code:
         return SpanAnnotationReadResolved.model_validate(db_obj)
     else:
@@ -79,7 +84,9 @@ def add_span_annotations_bulk(
             ]
         )
 
-    db_objs = crud_span_anno.create_bulk(db=db, create_dtos=spans)
+    db_objs = crud_span_anno.create_bulk(
+        db=db, user_id=authz_user.user.id, create_dtos=spans
+    )
     if resolve_code:
         return [SpanAnnotationReadResolved.model_validate(db_obj) for db_obj in db_objs]
     else:
@@ -293,7 +300,6 @@ def add_memo(
     validate: Validate = Depends(),
 ) -> MemoRead:
     span_anno = crud_span_anno.read(db, span_id)
-    authz_user.assert_is_same_user(memo.user_id)
     authz_user.assert_in_project(
         span_anno.annotation_document.source_document.project_id
     )
@@ -303,7 +309,9 @@ def add_memo(
     )
 
     db_obj = crud_memo.create_for_span_annotation(
-        db=db, span_anno_id=span_id, create_dto=memo
+        db=db,
+        span_anno_id=span_id,
+        create_dto=MemoCreateIntern(**memo.model_dump(), user_id=authz_user.user.id),
     )
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     return MemoRead(
@@ -331,43 +339,38 @@ def get_memos(
 
 
 @router.get(
-    "/{span_id}/memo/{user_id}",
+    "/{span_id}/memo/user",
     response_model=MemoRead,
     summary=(
-        "Returns the Memo attached to the SpanAnnotation with the given ID of the User with the"
-        " given ID if it exists."
+        "Returns the Memo attached to the SpanAnnotation with the given ID of the logged-in User if it exists."
     ),
 )
 def get_user_memo(
     *,
     db: Session = Depends(get_db_session),
     span_id: int,
-    user_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> MemoRead:
     authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
 
     db_obj = crud_span_anno.read(db=db, id=span_id)
-    return get_object_memo_for_user(db_obj=db_obj, user_id=user_id)
+    return get_object_memo_for_user(db_obj=db_obj, user_id=authz_user.user.id)
 
 
 @router.get(
-    "/code/{code_id}/user/{user_id}",
+    "/code/{code_id}/user",
     response_model=List[SpanAnnotationReadResolved],
-    summary=(
-        "Returns SpanAnnotations with the given Code of the User with the given ID"
-    ),
+    summary=("Returns SpanAnnotations with the given Code of the logged-in User"),
 )
 def get_by_user_code(
     *,
     db: Session = Depends(get_db_session),
     code_id: int,
-    user_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> List[SpanAnnotationReadResolved]:
     authz_user.assert_in_same_project_as(Crud.CODE, code_id)
 
     db_objs = crud_span_anno.read_by_code_and_user(
-        db=db, code_id=code_id, user_id=user_id
+        db=db, code_id=code_id, user_id=authz_user.user.id
     )
     return [SpanAnnotationReadResolved.model_validate(db_obj) for db_obj in db_objs]

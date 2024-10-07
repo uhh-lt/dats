@@ -11,20 +11,6 @@ from app.core.filters.filtering import Filter
 from app.core.filters.filtering_operators import FilterOperator, FilterValueType
 
 
-class MemoQueryBase(BaseModel):
-    proj_id: int = Field(
-        description="The ID of the Project the Memo have to belong to."
-    )
-    user_id: int = Field(description="The ID of the User the Memo have to belong to.")
-    starred: Optional[bool] = Field(
-        description=(
-            "If set (i.e. not NULL / NONE), only returns Memo that have the "
-            "given starred status"
-        ),
-        default=None,
-    )
-
-
 class ElasticSearchDocumentCreate(BaseModel):
     filename: str = Field(description="The filename of the SourceDocument")
     content: str = Field(description="The raw text of the SourceDocument")

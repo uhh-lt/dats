@@ -107,10 +107,10 @@ class COTACreate(ConceptOverTimeAnalysisBaseDTO):
     project_id: int = Field(
         description="Project the ConceptOverTimeAnalysis belongs to"
     )
+
+
+class COTACreateIntern(COTACreate, UpdateDTOBase):
     user_id: int = Field(description="User the ConceptOverTimeAnalysis belongs to")
-
-
-class COTACreateAsInDB(COTACreate, UpdateDTOBase):
     timeline_settings: Optional[str] = Field(
         description="JSON Representation of the Timeline Settings of the ConceptOverTimeAnalysis.",
         default=None,
@@ -148,7 +148,7 @@ class COTAUpdate(BaseModel, UpdateDTOBase):
     # search_space is missing intentionally: we do not allow to update search space directly
 
 
-class COTAUpdateAsInDB(BaseModel, UpdateDTOBase):
+class COTAUpdateIntern(BaseModel, UpdateDTOBase):
     name: Optional[str] = Field(
         description="Name of the ConceptOverTimeAnalysis",
         default=None,

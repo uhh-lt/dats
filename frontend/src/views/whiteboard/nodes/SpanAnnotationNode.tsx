@@ -4,7 +4,6 @@ import { NodeProps, useReactFlow } from "reactflow";
 import CodeHooks from "../../../api/CodeHooks.ts";
 import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { useAuth } from "../../../auth/useAuth.ts";
 import CodeRenderer from "../../../components/Code/CodeRenderer.tsx";
 import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../components/GenericPositionMenu.tsx";
 import MemoDialogAPI from "../../../components/Memo/MemoDialog/MemoDialogAPI.ts";
@@ -29,7 +28,6 @@ import BaseCardNode from "./BaseCardNode.tsx";
 
 function SpanAnnotationNode(props: NodeProps<SpanAnnotationNodeData>) {
   // global client state
-  const userId = useAuth().user!.id;
   const dispatch = useAppDispatch();
 
   // whiteboard state (react-flow)
@@ -43,7 +41,7 @@ function SpanAnnotationNode(props: NodeProps<SpanAnnotationNodeData>) {
   // global server state (react-query)
   const annotation = SpanAnnotationHooks.useGetAnnotation(props.data.spanAnnotationId);
   const code = CodeHooks.useGetCode(annotation.data?.code.id);
-  const memo = SpanAnnotationHooks.useGetMemo(props.data.spanAnnotationId, userId);
+  const memo = SpanAnnotationHooks.useGetUserMemo(props.data.spanAnnotationId);
 
   // effects
   useEffect(() => {

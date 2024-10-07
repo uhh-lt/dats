@@ -24,7 +24,13 @@ from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationReadResolved,
 )
 from app.core.data.dto.document_tag import DocumentTagRead
-from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
+from app.core.data.dto.memo import (
+    AttachedObjectType,
+    MemoCreate,
+    MemoCreateIntern,
+    MemoInDB,
+    MemoRead,
+)
 from app.core.data.dto.source_document import (
     SourceDocumentRead,
     SourceDocumentUpdate,
@@ -235,12 +241,15 @@ def add_memo(
     validate: Validate = Depends(),
 ) -> MemoRead:
     sdoc = crud_sdoc.read(db, sdoc_id)
-    authz_user.assert_is_same_user(memo.user_id)
     authz_user.assert_in_project(sdoc.project_id)
     authz_user.assert_in_project(memo.project_id)
     validate.validate_condition(sdoc.project_id == memo.project_id)
 
-    db_obj = crud_memo.create_for_sdoc(db=db, sdoc_id=sdoc_id, create_dto=memo)
+    db_obj = crud_memo.create_for_sdoc(
+        db=db,
+        sdoc_id=sdoc_id,
+        create_dto=MemoCreateIntern(**memo.model_dump(), user_id=authz_user.user.id),
+    )
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     return MemoRead(
         **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
@@ -267,44 +276,42 @@ def get_memos(
 
 
 @router.get(
-    "/{sdoc_id}/memo/{user_id}",
+    "/{sdoc_id}/memo/user",
     response_model=MemoRead,
     summary=(
-        "Returns the Memo attached to the SourceDocument with the given ID of the User with the"
-        " given ID if it exists."
+        "Returns the Memo attached to the SourceDocument with the given ID of the logged-in User if it exists."
     ),
 )
 def get_user_memo(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
-    user_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> MemoRead:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
     db_obj = crud_sdoc.read(db=db, id=sdoc_id)
-    return get_object_memo_for_user(db_obj=db_obj, user_id=user_id)
+    return get_object_memo_for_user(db_obj=db_obj, user_id=authz_user.user.id)
 
 
 @router.get(
-    "/{sdoc_id}/relatedmemos/{user_id}",
+    "/{sdoc_id}/relatedmemos/user",
     response_model=List[MemoRead],
     summary=(
-        "Returns the Memo attached to the SourceDocument of the User with the given ID and all memos"
-        " attached to its annotations."
+        "Returns the Memo attached to the SourceDocument of the logged-in User and all memos attached to its annotations."
     ),
 )
 def get_related_user_memos(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
-    user_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> List[MemoRead]:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
-    db_objs = crud_memo.read_by_user_and_sdoc(db=db, user_id=user_id, sdoc_id=sdoc_id)
+    db_objs = crud_memo.read_by_user_and_sdoc(
+        db=db, user_id=authz_user.user.id, sdoc_id=sdoc_id
+    )
     memos = [
         crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj) for db_obj in db_objs
     ]
@@ -329,22 +336,19 @@ def get_word_frequencies(
 
 
 @router.get(
-    "/{sdoc_id}/user/{user_id}/span_annotations",
+    "/{sdoc_id}/user/span_annotations",
     response_model=Union[List[SpanAnnotationRead], List[SpanAnnotationReadResolved]],
-    summary="Returns all SpanAnnotations of the User with the given ID if it exists",
+    summary="Returns all SpanAnnotations of the logged-in User if it exists",
 )
 def get_all_span_annotations(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
-    user_id: int,
     resolve_code: bool = Depends(resolve_code_param),
     authz_user: AuthzUser = Depends(),
 ) -> Union[List[SpanAnnotationRead], List[SpanAnnotationReadResolved]]:
-    authz_user.assert_true(authz_user.user.id == user_id)
-
     spans = crud_span_anno.read_by_user_and_sdoc(
-        db=db, user_id=user_id, sdoc_id=sdoc_id
+        db=db, user_id=authz_user.user.id, sdoc_id=sdoc_id
     )
     if resolve_code:
         return [SpanAnnotationReadResolved.model_validate(span) for span in spans]
@@ -377,23 +381,20 @@ def get_all_span_annotations_bulk(
 
 
 @router.get(
-    "{sdoc_id}/user/{user_id}/bbox_annotations",
+    "{sdoc_id}/user/bbox_annotations",
     response_model=Union[List[BBoxAnnotationRead], List[BBoxAnnotationReadResolved]],
-    summary="Returns all BBoxAnnotations of the User with the given ID if it exists",
+    summary="Returns all BBoxAnnotations of the logged-in User if it exists",
 )
 def get_all_bbox_annotations(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
-    user_id: int,
     skip_limit: Dict[str, int] = Depends(skip_limit_params),
     resolve_code: bool = Depends(resolve_code_param),
     authz_user: AuthzUser = Depends(),
 ) -> Union[List[BBoxAnnotationRead], List[BBoxAnnotationReadResolved]]:
-    authz_user.assert_in_same_project_as(Crud.USER, user_id)
-
     bboxes = crud_bbox_anno.read_by_user_and_sdoc(
-        db=db, user_id=user_id, sdoc_id=sdoc_id, **skip_limit
+        db=db, user_id=authz_user.user.id, sdoc_id=sdoc_id, **skip_limit
     )
     if resolve_code:
         return [BBoxAnnotationReadResolved.model_validate(bbox) for bbox in bboxes]
@@ -427,23 +428,20 @@ def get_all_bbox_annotations_bulk(
 
 
 @router.get(
-    "{sdoc_id}/user/{user_id}/span_groups",
+    "{sdoc_id}/user/span_groups",
     response_model=List[SpanGroupRead],
-    summary="Returns all SpanGroups of the User with the given ID if it exists",
+    summary="Returns all SpanGroups of the logged-in User if it exists",
 )
 def get_all_span_groups(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
-    user_id: int,
     skip_limit: Dict[str, int] = Depends(skip_limit_params),
     authz_user: AuthzUser = Depends(),
 ) -> List[SpanGroupRead]:
-    authz_user.assert_in_same_project_as(Crud.USER, user_id)
-
     return [
         SpanGroupRead.model_validate(group)
         for group in crud_span_group.read_by_user_and_sdoc(
-            db=db, user_id=user_id, sdoc_id=sdoc_id, **skip_limit
+            db=db, user_id=authz_user.user.id, sdoc_id=sdoc_id, **skip_limit
         )
     ]

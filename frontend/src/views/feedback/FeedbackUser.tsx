@@ -1,12 +1,8 @@
-import { useParams } from "react-router-dom";
 import FeedbackHooks from "../../api/FeedbackHooks.ts";
 import FeedbackCards from "./FeedbackCards.tsx";
 
 function FeedbackUser() {
-  // global client state (react-router)
-  const userId = parseInt((useParams() as { userId: string }).userId);
-
-  const feedback = FeedbackHooks.useGetUserFeedback(userId);
+  const feedback = FeedbackHooks.useGetUserFeedback();
 
   return (
     <>

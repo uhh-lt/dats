@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { TagStyle } from "../annoSlice.ts";
 import DocumentRenderer from "../DocumentRenderer/DocumentRenderer.tsx";
 import useComputeTokenData from "../DocumentRenderer/useComputeTokenData.ts";
 import SentenceMenu, { SentenceMenuHandle } from "./SentenceMenu.tsx";
@@ -18,6 +19,7 @@ function TextViewer({ sdoc }: AnnotationVisualizerProps) {
 
   // global client state (redux)
   const visibleUserIds = useAppSelector((state) => state.annotations.visibleUserIds);
+  const tagStyle = useAppSelector((state) => state.annotations.tagStyle);
 
   // global server state (react-query)
   const sentences = sdoc.sentences;
@@ -107,7 +109,13 @@ function TextViewer({ sdoc }: AnnotationVisualizerProps) {
         isViewer={true}
         html={sdoc.html}
         projectId={sdoc.project_id}
-        style={{ zIndex: 1, overflowY: "auto" }}
+        style={{
+          zIndex: 1,
+          overflowY: "auto",
+          ...(tagStyle === TagStyle.Above && {
+            lineHeight: "2.1rem",
+          }),
+        }}
         className="h100"
       />
       <SentenceMenu ref={sentenceMenuRef} />

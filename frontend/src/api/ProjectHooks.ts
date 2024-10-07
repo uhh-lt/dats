@@ -47,7 +47,6 @@ const useUploadDocument = () =>
     mutationFn: ProjectService.uploadProjectSdoc,
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_SDOCS, variables.projId] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_SDOCS_INFINITE, variables.projId] });
     },
     meta: {
       successMessage: (data: PreprocessingJobRead) =>
@@ -148,35 +147,33 @@ const useGetAllCodes = (projectId: number, returnAll: boolean = false) => {
 };
 
 // memo
-const useGetMemo = (projectId: number | null | undefined, userId: number | null | undefined) =>
+const useGetMemo = (projectId: number | null | undefined) =>
   useQuery<MemoRead, Error>({
-    queryKey: [QueryKey.MEMO_PROJECT, projectId, userId],
+    queryKey: [QueryKey.MEMO_PROJECT, projectId],
     queryFn: () =>
       ProjectService.getUserMemo({
         projId: projectId!,
-        userId: userId!,
       }),
     retry: false,
-    enabled: !!projectId && !!userId,
+    enabled: !!projectId,
   });
 
-const useGetAllUserMemos = (projectId: number | null | undefined, userId: number | null | undefined) =>
+const useGetAllUserMemos = (projectId: number | null | undefined) =>
   useQuery<MemoRead[], Error>({
-    queryKey: [QueryKey.USER_MEMOS, projectId, userId],
+    queryKey: [QueryKey.USER_MEMOS, projectId],
     queryFn: () =>
       ProjectService.getUserMemosOfProject({
         projId: projectId!,
-        userId: userId!,
       }),
     retry: false,
-    enabled: !!projectId && !!userId,
+    enabled: !!projectId,
   });
 
 const useCreateMemo = () =>
   useMutation({
     mutationFn: ProjectService.addMemo,
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_PROJECT, data.project_id, data.user_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_PROJECT, data.project_id] });
     },
   });
 

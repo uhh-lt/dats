@@ -15,6 +15,7 @@ from app.core.data.crud.timeline_analysis import crud_timeline_analysis
 from app.core.data.dto.analysis import DateGroupBy, TimelineAnalysisResult
 from app.core.data.dto.timeline_analysis import (
     TimelineAnalysisCreate,
+    TimelineAnalysisCreateIntern,
     TimelineAnalysisRead,
     TimelineAnalysisUpdate,
 )
@@ -40,10 +41,14 @@ def create(
     authz_user: AuthzUser = Depends(),
 ) -> TimelineAnalysisRead:
     authz_user.assert_in_project(timeline_analysis.project_id)
-    authz_user.assert_is_same_user(timeline_analysis.user_id)
 
     return TimelineAnalysisRead.model_validate(
-        crud_timeline_analysis.create(db=db, create_dto=timeline_analysis)
+        crud_timeline_analysis.create(
+            db=db,
+            create_dto=TimelineAnalysisCreateIntern(
+                **timeline_analysis.model_dump(), user_id=authz_user.user.id
+            ),
+        )
     )
 
 
@@ -65,24 +70,20 @@ def get_by_id(
 
 
 @router.get(
-    "/project/{project_id}/user/{user_id}",
+    "/project/{project_id}/user",
     response_model=List[TimelineAnalysisRead],
-    summary="Returns the TimelineAnalysis of the Project with the given ID and the User with the given ID if it exists",
+    summary="Returns the TimelineAnalysis of the Project with the given ID and the logged-in User if it exists",
 )
 def get_by_project_and_user(
     *,
     db: Session = Depends(get_db_session),
     project_id: int,
-    user_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> List[TimelineAnalysisRead]:
-    # No need to authorize against the user:
-    # all users can see all timeline analysis in the project
-    # at the moment.
     authz_user.assert_in_project(project_id)
 
     db_objs = crud_timeline_analysis.read_by_project_and_user(
-        db=db, project_id=project_id, user_id=user_id
+        db=db, project_id=project_id, user_id=authz_user.user.id
     )
     return [TimelineAnalysisRead.model_validate(db_obj) for db_obj in db_objs]
 

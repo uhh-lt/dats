@@ -12,10 +12,6 @@ export type MemoCreate = {
    */
   content: string;
   /**
-   * User the Memo belongs to
-   */
-  user_id: number;
-  /**
    * Project the Memo belongs to
    */
   project_id: number;

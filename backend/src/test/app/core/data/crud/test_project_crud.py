@@ -13,7 +13,12 @@ from app.core.data.crud.project import crud_project
 from app.core.data.crud.user import SYSTEM_USER_ID, crud_user
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
-from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
+from app.core.data.dto.memo import (
+    AttachedObjectType,
+    MemoCreateIntern,
+    MemoInDB,
+    MemoRead,
+)
 from app.core.data.dto.project import ProjectCreate, ProjectRead, ProjectUpdate
 from app.core.data.dto.user import UserCreate, UserRead
 from app.core.data.orm.project import ProjectORM
@@ -223,7 +228,7 @@ def test_get_add_remove_memos_project(
     title1 = "".join(random.choices(string.ascii_letters, k=30))
     content1 = "".join(random.choices(string.ascii_letters, k=30))
     starred1 = False
-    memo1 = MemoCreate(
+    memo1 = MemoCreateIntern(
         title=title1,
         content=content1,
         user_id=user.id,
@@ -249,7 +254,7 @@ def test_get_add_remove_memos_project(
     title2 = "".join(random.choices(string.ascii_letters, k=30))
     content2 = "".join(random.choices(string.ascii_letters, k=30))
     starred2 = True
-    memo2 = MemoCreate(
+    memo2 = MemoCreateIntern(
         title=title2,
         content=content2,
         user_id=user.id,

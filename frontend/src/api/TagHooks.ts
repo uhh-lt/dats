@@ -51,7 +51,6 @@ const useBulkSetDocumentTags = () =>
       variables.requestBody.forEach((links) => {
         queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_TAGS, links.source_document_id] });
       });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TAG_STATISTICS] }); // todo: zu unspezifisch!
       // Invalidate cache of tag statistics query
       queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
@@ -67,7 +66,6 @@ const useBulkLinkDocumentTags = () =>
       variables.requestBody.source_document_ids.forEach((sdocId) => {
         queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_TAGS, sdocId] });
       });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, variables.projectId] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TAG_STATISTICS] }); // todo: zu unspezifisch!
       // Invalidate cache of tag statistics query
       queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
@@ -83,7 +81,6 @@ const useBulkUnlinkDocumentTags = () =>
       variables.requestBody.source_document_ids.forEach((sdocId) => {
         queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_TAGS, sdocId] });
       });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, variables.projectId] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TAG_STATISTICS] }); // todo: zu unspezifisch!
       // Invalidate cache of tag statistics query
       queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
@@ -140,7 +137,6 @@ const useBulkUpdateDocumentTags = () =>
       variables.sourceDocumentIds.forEach((sdocId) => {
         queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_TAGS, sdocId] });
       });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, variables.projectId] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TAG_STATISTICS] }); // todo: zu unspezifisch!
       // Invalidate cache of tag statistics query
       queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
@@ -148,28 +144,20 @@ const useBulkUpdateDocumentTags = () =>
   });
 
 // memos
-const useGetMemos = (tagId: number | null | undefined) =>
-  useQuery<MemoRead[], Error>({
+const useGetMemo = (tagId: number | null | undefined) =>
+  useQuery<MemoRead, Error>({
     queryKey: [QueryKey.MEMO_TAG, tagId],
-    queryFn: () => DocumentTagService.getMemos({ tagId: tagId! }),
+    queryFn: () => DocumentTagService.getUserMemo({ tagId: tagId! }),
     retry: false,
     enabled: !!tagId,
-  });
-
-const useGetMemo = (tagId: number | null | undefined, userId: number | null | undefined) =>
-  useQuery<MemoRead, Error>({
-    queryKey: [QueryKey.MEMO_TAG, tagId, userId],
-    queryFn: () => DocumentTagService.getUserMemo({ tagId: tagId!, userId: userId! }),
-    retry: false,
-    enabled: !!tagId && !!userId,
   });
 
 const useCreateMemo = () =>
   useMutation({
     mutationFn: DocumentTagService.addMemo,
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMOS, data.user_id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_TAG, data.attached_object_id, data.user_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMOS, data.project_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_TAG, data.attached_object_id] });
     },
   });
 
@@ -193,7 +181,6 @@ const TagHooks = {
   useBulkUnlinkDocumentTags,
   useGetTagDocumentCounts,
   //memos
-  useGetMemos,
   useGetMemo,
   useCreateMemo,
 };

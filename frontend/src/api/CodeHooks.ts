@@ -10,27 +10,19 @@ const useCreateMemo = () =>
   useMutation({
     mutationFn: CodeService.addMemo,
     onSuccess: (createdMemo) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMOS, createdMemo.user_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMOS, createdMemo.project_id] });
       queryClient.invalidateQueries({
-        queryKey: [QueryKey.MEMO_CODE, createdMemo.attached_object_id, createdMemo.user_id],
+        queryKey: [QueryKey.MEMO_CODE, createdMemo.attached_object_id],
       });
     },
   });
 
-const useGetMemos = (codeId: number | null | undefined) =>
-  useQuery<MemoRead[], Error>({
+const useGetUserMemo = (codeId: number | null | undefined) =>
+  useQuery<MemoRead, Error>({
     queryKey: [QueryKey.MEMO_CODE, codeId],
-    queryFn: () => CodeService.getMemos({ codeId: codeId! }),
+    queryFn: () => CodeService.getUserMemo({ codeId: codeId! }),
     retry: false,
     enabled: !!codeId,
-  });
-
-const useGetMemo = (codeId: number | null | undefined, userId: number | null | undefined) =>
-  useQuery<MemoRead, Error>({
-    queryKey: [QueryKey.MEMO_CODE, codeId, userId],
-    queryFn: () => CodeService.getUserMemo({ codeId: codeId!, userId: userId! }),
-    retry: false,
-    enabled: !!codeId && !!userId,
   });
 
 // code
@@ -69,8 +61,7 @@ const useDeleteCode = () =>
 
 const CodeHooks = {
   useCreateMemo,
-  useGetMemo,
-  useGetMemos,
+  useGetUserMemo,
   useGetCode,
   useCreateCode,
   useUpdateCode,

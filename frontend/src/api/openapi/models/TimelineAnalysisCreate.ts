@@ -11,8 +11,4 @@ export type TimelineAnalysisCreate = {
    * Project the TimelineAnalysis belongs to
    */
   project_id: number;
-  /**
-   * User the TimelineAnalysis belongs to
-   */
-  user_id: number;
 };

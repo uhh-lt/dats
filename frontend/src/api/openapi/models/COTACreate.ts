@@ -11,8 +11,4 @@ export type COTACreate = {
    * Project the ConceptOverTimeAnalysis belongs to
    */
   project_id: number;
-  /**
-   * User the ConceptOverTimeAnalysis belongs to
-   */
-  user_id: number;
 };

@@ -16,6 +16,9 @@ class AnalysisTableBaseDTO(BaseModel):
 # Properties for creation
 class AnalysisTableCreate(AnalysisTableBaseDTO):
     project_id: int = Field(description="Project the AnalysisTable belongs to")
+
+
+class AnalysisTableCreateIntern(AnalysisTableCreate):
     user_id: int = Field(description="User the AnalysisTable belongs to")
 
 

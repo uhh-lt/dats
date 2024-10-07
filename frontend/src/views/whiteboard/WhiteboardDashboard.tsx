@@ -1,7 +1,6 @@
 import { MRT_Row, MRT_TableOptions } from "material-react-table";
 import { useParams } from "react-router";
 import WhiteboardHooks from "../../api/WhiteboardHooks.ts";
-import { useAuth } from "../../auth/useAuth.ts";
 import ConfirmationAPI from "../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import AnalysisDashboard from "../analysis/AnalysisDashboard/AnalysisDashboard.tsx";
@@ -13,7 +12,6 @@ import {
 
 function WhiteboardDashboard() {
   // global client state
-  const { user } = useAuth();
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // global server state
@@ -82,12 +80,10 @@ function WhiteboardDashboard() {
   const handleCreateWhiteboard: HandleCreateAnalysis =
     () =>
     ({ values, table }) => {
-      if (!user?.id) return;
       createWhiteboard(
         {
           requestBody: {
             project_id: projectId,
-            user_id: user.id,
             title: values.title,
           },
         },

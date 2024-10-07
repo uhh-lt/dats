@@ -4,12 +4,10 @@ import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import { Dialog, SpeedDial, SpeedDialAction } from "@mui/material";
 import { useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { useAuth } from "../../auth/useAuth.ts";
 import { HELP_MESSAGE_SUFFIX, USER_GUIDE_BASE_URL, USER_GUIDE_ROUTE_MAP } from "../../utils/GlobalConstants.ts";
 import FeedbackDialog from "./FeedbackDialog.tsx";
 
 function DialMenu() {
-  const { user } = useAuth();
   const location = useLocation();
 
   // local state
@@ -43,40 +41,32 @@ function DialMenu() {
 
   return (
     <>
-      {user && (
-        <>
-          <SpeedDial
-            ariaLabel="DialMenu"
-            icon={<SupportAgentIcon />}
-            sx={{ position: "absolute", bottom: 16, right: 16, zIndex: (theme) => theme.zIndex.appBar + 1 }}
-          >
-            <SpeedDialAction
-              key="help"
-              icon={<HelpIcon />}
-              tooltipTitle={
-                <>
-                  Hint: {wikiTargetRoute.description}
-                  {location.pathname.includes("imprint") ? "Imprint" : ". " + HELP_MESSAGE_SUFFIX}
-                </>
-              }
-              onClick={handleRedirect}
-            />
-            <SpeedDialAction
-              key="feedback"
-              icon={<FeedbackIcon />}
-              tooltipTitle={"Send Feedback"}
-              onClick={openFeedbackDialog}
-            />
-          </SpeedDial>
-          <Dialog open={isFeedbackDialogOpen} onClose={closeFeedbackDialog} maxWidth="md" fullWidth>
-            <FeedbackDialog
-              setIsFeedbackDialogOpen={setIsFeedbackDialogOpen}
-              user={user}
-              locPathName={location.pathname}
-            />
-          </Dialog>
-        </>
-      )}
+      <SpeedDial
+        ariaLabel="DialMenu"
+        icon={<SupportAgentIcon />}
+        sx={{ position: "absolute", bottom: 16, right: 16, zIndex: (theme) => theme.zIndex.appBar + 1 }}
+      >
+        <SpeedDialAction
+          key="help"
+          icon={<HelpIcon />}
+          tooltipTitle={
+            <>
+              Hint: {wikiTargetRoute.description}
+              {location.pathname.includes("imprint") ? "Imprint" : ". " + HELP_MESSAGE_SUFFIX}
+            </>
+          }
+          onClick={handleRedirect}
+        />
+        <SpeedDialAction
+          key="feedback"
+          icon={<FeedbackIcon />}
+          tooltipTitle={"Send Feedback"}
+          onClick={openFeedbackDialog}
+        />
+      </SpeedDial>
+      <Dialog open={isFeedbackDialogOpen} onClose={closeFeedbackDialog} maxWidth="md" fullWidth>
+        <FeedbackDialog setIsFeedbackDialogOpen={setIsFeedbackDialogOpen} locPathName={location.pathname} />
+      </Dialog>
     </>
   );
 }

@@ -5,7 +5,6 @@ import { NodeProps, useReactFlow } from "reactflow";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import TagHooks from "../../../api/TagHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { useAuth } from "../../../auth/useAuth.ts";
 import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../components/GenericPositionMenu.tsx";
 import MemoDialogAPI from "../../../components/Memo/MemoDialog/MemoDialogAPI.ts";
 import TagRenderer from "../../../components/Tag/TagRenderer.tsx";
@@ -27,7 +26,6 @@ import BaseCardNode from "./BaseCardNode.tsx";
 
 function TagNode(props: NodeProps<TagNodeData>) {
   // global client state
-  const userId = useAuth().user?.id;
   const dispatch = useAppDispatch();
 
   // whiteboard state (react-flow)
@@ -41,7 +39,7 @@ function TagNode(props: NodeProps<TagNodeData>) {
   // global server state (react-query)
   const tag = TagHooks.useGetTag(props.data.tagId);
   const sdocIds = SdocHooks.useGetByTagId(props.data.tagId);
-  const memo = TagHooks.useGetMemo(props.data.tagId, userId);
+  const memo = TagHooks.useGetMemo(props.data.tagId);
 
   // effects
   useEffect(() => {

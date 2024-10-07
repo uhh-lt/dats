@@ -2,7 +2,6 @@ import { SubmitHandler } from "react-hook-form";
 import MemoHooks from "../../../api/MemoHooks.ts";
 import TagHooks from "../../../api/TagHooks.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
-import { useAuth } from "../../../auth/useAuth.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import ConfirmationAPI from "../../ConfirmationDialog/ConfirmationAPI.ts";
 import { MemoContentProps } from "./MemoContentBboxAnnotation.tsx";
@@ -18,8 +17,6 @@ export function MemoContentTag({
   closeDialog,
   onMemoCreateSuccess,
 }: MemoContentTagProps & MemoContentProps) {
-  const { user } = useAuth();
-
   // mutations
   const createMutation = TagHooks.useCreateMemo();
   const updateMutation = MemoHooks.useUpdateMemo();
@@ -30,8 +27,6 @@ export function MemoContentTag({
 
   // form handling
   const handleCreateOrUpdateCodeMemo: SubmitHandler<MemoFormValues> = (data) => {
-    if (!user) return;
-
     if (memo) {
       updateMutation.mutate(
         {
@@ -56,7 +51,6 @@ export function MemoContentTag({
         {
           tagId: tag.id,
           requestBody: {
-            user_id: user.id,
             project_id: tag.project_id,
             title: data.title,
             content: data.content,

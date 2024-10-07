@@ -9,6 +9,7 @@ from app.core.data.crud import Crud
 from app.core.data.crud.whiteboard import crud_whiteboard
 from app.core.data.dto.whiteboard import (
     WhiteboardCreate,
+    WhiteboardCreateIntern,
     WhiteboardRead,
     WhiteboardUpdate,
 )
@@ -30,10 +31,14 @@ def create(
     authz_user: AuthzUser = Depends(),
 ) -> WhiteboardRead:
     authz_user.assert_in_project(whiteboard.project_id)
-    authz_user.assert_is_same_user(whiteboard.user_id)
 
     return WhiteboardRead.model_validate(
-        crud_whiteboard.create(db=db, create_dto=whiteboard)
+        crud_whiteboard.create(
+            db=db,
+            create_dto=WhiteboardCreateIntern(
+                **whiteboard.model_dump(), user_id=authz_user.user.id
+            ),
+        )
     )
 
 
@@ -72,21 +77,20 @@ def get_by_project(
 
 
 @router.get(
-    "/project/{project_id}/user/{user_id}",
+    "/project/{project_id}/user",
     response_model=List[WhiteboardRead],
-    summary="Returns the Whiteboard of the Project with the given ID and the User with the given ID if it exists",
+    summary="Returns the Whiteboard of the Project with the given ID and the logged-in User if it exists",
 )
 def get_by_project_and_user(
     *,
     db: Session = Depends(get_db_session),
     project_id: int,
-    user_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> List[WhiteboardRead]:
     authz_user.assert_in_project(project_id)
 
     db_objs = crud_whiteboard.read_by_project_and_user(
-        db=db, project_id=project_id, user_id=user_id
+        db=db, project_id=project_id, user_id=authz_user.user.id
     )
     return [WhiteboardRead.model_validate(db_obj) for db_obj in db_objs]
 

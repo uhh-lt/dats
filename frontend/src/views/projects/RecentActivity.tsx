@@ -4,13 +4,10 @@ import { useNavigate } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import SdocHooks from "../../api/SdocHooks.ts";
 import UserHooks from "../../api/UserHooks.ts";
-import { useAuth } from "../../auth/useAuth.ts";
 
 function RecentActivity() {
-  const { user } = useAuth();
-
   // global server stat - react query
-  const recentSdocIds = UserHooks.useGetRecentActivity(user?.id, 5);
+  const recentSdocIds = UserHooks.useGetRecentActivity(5);
 
   return (
     <>

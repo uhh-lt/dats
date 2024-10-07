@@ -9,7 +9,6 @@ import {
 import { useMemo } from "react";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
-import { useAuth } from "../../auth/useAuth.ts";
 import AttachedObjectRenderer from "./AttachedObjectRenderer.tsx";
 import { attachedObjectTypeToText } from "./attachedObjectTypeToText.ts";
 
@@ -75,11 +74,8 @@ function MemoTable({
   renderTopToolbarCustomActions,
   renderBottomToolbarCustomActions,
 }: MemoTableProps) {
-  // global client state (react router)
-  const { user } = useAuth();
-
   // global server state
-  const userMemos = ProjectHooks.useGetAllUserMemos(projectId, user?.id);
+  const userMemos = ProjectHooks.useGetAllUserMemos(projectId);
 
   // computed
   const { userMemosMap, userMemoRows } = useMemo(() => {

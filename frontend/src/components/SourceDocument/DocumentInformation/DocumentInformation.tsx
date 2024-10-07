@@ -5,7 +5,6 @@ import { useState } from "react";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
-import { useAuth } from "../../../auth/useAuth.ts";
 import MemoCard from "../../Memo/MemoCard/MemoCard.tsx";
 import MemoDialogAPI from "../../Memo/MemoDialog/MemoDialogAPI.ts";
 import TagMenuButton from "../../Tag/TagMenu/TagMenuButton.tsx";
@@ -26,14 +25,11 @@ export default function DocumentInformation({
   filterName,
   ...props
 }: DocumentInformationProps & BoxProps) {
-  // global client state (context)
-  const { user } = useAuth();
-
   // global server state (react-query)
   const metadata = SdocHooks.useGetMetadata(sdocId);
   const documentTags = SdocHooks.useGetAllDocumentTags(sdocId);
   const linkedSdocIds = SdocHooks.useGetLinkedSdocIds(sdocId);
-  const memos = SdocHooks.useGetRelatedMemos(sdocId, user?.id);
+  const memos = SdocHooks.useGetRelatedMemos(sdocId);
 
   // tabs
   const [tab, setTab] = useState("info");

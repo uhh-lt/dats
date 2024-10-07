@@ -195,17 +195,16 @@ export class DocumentTagService {
     });
   }
   /**
-   * Returns the Memo attached to the document tag with the given ID of the User with the given ID if it exists.
+   * Returns the Memo attached to the document tag with the given ID of the logged-in User if it exists.
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getUserMemo({ tagId, userId }: { tagId: number; userId: number }): CancelablePromise<MemoRead> {
+  public static getUserMemo({ tagId }: { tagId: number }): CancelablePromise<MemoRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/doctag/{tag_id}/memo/{user_id}",
+      url: "/doctag/{tag_id}/memo/user",
       path: {
         tag_id: tagId,
-        user_id: userId,
       },
       errors: {
         422: `Validation Error`,

@@ -155,7 +155,7 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/user/{user_id}": {
+    "/user/by_id/{user_id}": {
       "get": {
         "tags": ["user"],
         "summary": "Returns the User with the given ID if it exists",
@@ -174,51 +174,9 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         }
-      },
-      "patch": {
-        "tags": ["user"],
-        "summary": "Updates the User with the given ID if it exists",
-        "operationId": "update_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserUpdate" } } }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      },
-      "delete": {
-        "tags": ["user"],
-        "summary": "Removes the User with the given ID if it exists",
-        "operationId": "delete_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
       }
     },
-    "/user": {
+    "/user/all": {
       "get": {
         "tags": ["user"],
         "summary": "Returns all Users that exist in the system",
@@ -268,45 +226,69 @@
         }
       }
     },
-    "/user/{user_id}/project": {
+    "/user/": {
+      "delete": {
+        "tags": ["user"],
+        "summary": "Removes the logged-in User",
+        "operationId": "delete_me",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      },
+      "patch": {
+        "tags": ["user"],
+        "summary": "Updates the logged-in User",
+        "operationId": "update_me",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserUpdate" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/user/project": {
       "get": {
         "tags": ["user"],
-        "summary": "Returns all Projects of the User with the given ID",
+        "summary": "Returns all Projects of the logged-in User",
         "operationId": "get_user_projects",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
-        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
                   "items": { "$ref": "#/components/schemas/ProjectRead" },
+                  "type": "array",
                   "title": "Response User-Get User Projects"
                 }
               }
             }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/user/{user_id}/recent_activity": {
+    "/user/recent_activity": {
       "get": {
         "tags": ["user"],
-        "summary": "Returns the top k sdoc ids that the User recently modified (annotated)",
+        "summary": "Returns the top k sdoc ids that the logged-in User recently modified (annotated)",
         "operationId": "recent_activity",
         "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } },
-          { "name": "k", "in": "query", "required": true, "schema": { "type": "integer", "title": "K" } }
-        ],
+        "parameters": [{ "name": "k", "in": "query", "required": true, "schema": { "type": "integer", "title": "K" } }],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -645,15 +627,14 @@
         }
       }
     },
-    "/project/{proj_id}/user/{user_id}/memo": {
+    "/project/{proj_id}/user/memo": {
       "get": {
         "tags": ["project"],
-        "summary": "Returns all Memos of the Project from a User",
+        "summary": "Returns all Memos of the Project from the logged-in User",
         "operationId": "get_user_memos_of_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } },
           {
             "name": "only_starred",
             "in": "query",
@@ -799,15 +780,14 @@
         }
       }
     },
-    "/project/{proj_id}/memo/{user_id}": {
+    "/project/{proj_id}/memo/user": {
       "get": {
         "tags": ["project"],
-        "summary": "Returns the Memo attached to the Project with the given ID of the User with the given ID if it exists.",
+        "summary": "Returns the Memo attached to the Project with the given ID of the logged-in User if it exists.",
         "operationId": "get_user_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
         ],
         "responses": {
           "200": {
@@ -1224,15 +1204,14 @@
         }
       }
     },
-    "/sdoc/{sdoc_id}/memo/{user_id}": {
+    "/sdoc/{sdoc_id}/memo/user": {
       "get": {
         "tags": ["sourceDocument"],
-        "summary": "Returns the Memo attached to the SourceDocument with the given ID of the User with the given ID if it exists.",
+        "summary": "Returns the Memo attached to the SourceDocument with the given ID of the logged-in User if it exists.",
         "operationId": "get_user_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
         ],
         "responses": {
           "200": {
@@ -1246,15 +1225,14 @@
         }
       }
     },
-    "/sdoc/{sdoc_id}/relatedmemos/{user_id}": {
+    "/sdoc/{sdoc_id}/relatedmemos/user": {
       "get": {
         "tags": ["sourceDocument"],
-        "summary": "Returns the Memo attached to the SourceDocument of the User with the given ID and all memos attached to its annotations.",
+        "summary": "Returns the Memo attached to the SourceDocument of the logged-in User and all memos attached to its annotations.",
         "operationId": "get_related_user_memos",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
         ],
         "responses": {
           "200": {
@@ -1305,15 +1283,14 @@
         }
       }
     },
-    "/sdoc/{sdoc_id}/user/{user_id}/span_annotations": {
+    "/sdoc/{sdoc_id}/user/span_annotations": {
       "get": {
         "tags": ["sourceDocument"],
-        "summary": "Returns all SpanAnnotations of the User with the given ID if it exists",
+        "summary": "Returns all SpanAnnotations of the logged-in User if it exists",
         "operationId": "get_all_span_annotations",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } },
           {
             "name": "resolve",
             "in": "query",
@@ -1398,15 +1375,14 @@
         }
       }
     },
-    "/sdoc{sdoc_id}/user/{user_id}/bbox_annotations": {
+    "/sdoc{sdoc_id}/user/bbox_annotations": {
       "get": {
         "tags": ["sourceDocument"],
-        "summary": "Returns all BBoxAnnotations of the User with the given ID if it exists",
+        "summary": "Returns all BBoxAnnotations of the logged-in User if it exists",
         "operationId": "get_all_bbox_annotations",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } },
           {
             "name": "skip",
             "in": "query",
@@ -1535,15 +1511,14 @@
         }
       }
     },
-    "/sdoc{sdoc_id}/user/{user_id}/span_groups": {
+    "/sdoc{sdoc_id}/user/span_groups": {
       "get": {
         "tags": ["sourceDocument"],
-        "summary": "Returns all SpanGroups of the User with the given ID if it exists",
+        "summary": "Returns all SpanGroups of the logged-in User if it exists",
         "operationId": "get_all_span_groups",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } },
           {
             "name": "skip",
             "in": "query",
@@ -1814,15 +1789,14 @@
         }
       }
     },
-    "/doctag/{tag_id}/memo/{user_id}": {
+    "/doctag/{tag_id}/memo/user": {
       "get": {
         "tags": ["documentTag"],
-        "summary": "Returns the Memo attached to the document tag with the given ID of the User with the given ID if it exists.",
+        "summary": "Returns the Memo attached to the document tag with the given ID of the logged-in User if it exists.",
         "operationId": "get_user_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "tag_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Tag Id" } },
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+          { "name": "tag_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Tag Id" } }
         ],
         "responses": {
           "200": {
@@ -2331,15 +2305,14 @@
         }
       }
     },
-    "/span/{span_id}/memo/{user_id}": {
+    "/span/{span_id}/memo/user": {
       "get": {
         "tags": ["spanAnnotation"],
-        "summary": "Returns the Memo attached to the SpanAnnotation with the given ID of the User with the given ID if it exists.",
+        "summary": "Returns the Memo attached to the SpanAnnotation with the given ID of the logged-in User if it exists.",
         "operationId": "get_user_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "span_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Span Id" } },
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+          { "name": "span_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Span Id" } }
         ],
         "responses": {
           "200": {
@@ -2353,15 +2326,14 @@
         }
       }
     },
-    "/span/code/{code_id}/user/{user_id}": {
+    "/span/code/{code_id}/user": {
       "get": {
         "tags": ["spanAnnotation"],
-        "summary": "Returns SpanAnnotations with the given Code of the User with the given ID",
+        "summary": "Returns SpanAnnotations with the given Code of the logged-in User",
         "operationId": "get_by_user_code",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "code_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Code Id" } },
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+          { "name": "code_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Code Id" } }
         ],
         "responses": {
           "200": {
@@ -2798,15 +2770,14 @@
         }
       }
     },
-    "/bbox/{bbox_id}/memo/{user_id}": {
+    "/bbox/{bbox_id}/memo/user": {
       "get": {
         "tags": ["bboxAnnotation"],
-        "summary": "Returns the Memo attached to the BBoxAnnotation with the given ID of the User with the given ID if it exists.",
+        "summary": "Returns the Memo attached to the BBoxAnnotation with the given ID of the logged-in User if it exists.",
         "operationId": "get_user_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "bbox_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Bbox Id" } },
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+          { "name": "bbox_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Bbox Id" } }
         ],
         "responses": {
           "200": {
@@ -2820,15 +2791,14 @@
         }
       }
     },
-    "/bbox/code/{code_id}/user/{user_id}": {
+    "/bbox/code/{code_id}/user": {
       "get": {
         "tags": ["bboxAnnotation"],
-        "summary": "Returns BBoxAnnotations with the given Code of the User with the given ID",
+        "summary": "Returns BBoxAnnotations with the given Code of the logged-in User",
         "operationId": "get_by_user_code",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "code_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Code Id" } },
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+          { "name": "code_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Code Id" } }
         ],
         "responses": {
           "200": {
@@ -2987,15 +2957,14 @@
         }
       }
     },
-    "/code/{code_id}/memo/{user_id}": {
+    "/code/{code_id}/memo/user": {
       "get": {
         "tags": ["code"],
-        "summary": "Returns the Memo attached to the SpanAnnotation with the given ID of the User with the given ID if it exists.",
+        "summary": "Returns the Memo attached to the Code with the given ID of the logged-in User if it exists.",
         "operationId": "get_user_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "code_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Code Id" } },
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+          { "name": "code_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Code Id" } }
         ],
         "responses": {
           "200": {
@@ -3669,33 +3638,26 @@
         }
       }
     },
-    "/feedback/user/{user_id}": {
+    "/feedback/user": {
       "get": {
         "tags": ["feedback"],
-        "summary": "Returns the Feedback of the User with the given ID.",
+        "summary": "Returns the Feedback of the logged-in User.",
         "operationId": "get_all_by_user",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
-        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
                   "items": { "$ref": "#/components/schemas/FeedbackRead" },
+                  "type": "array",
                   "title": "Response Feedback-Get All By User"
                 }
               }
             }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/feedback/reply_to/{feedback_id}": {
@@ -4505,10 +4467,10 @@
         }
       }
     },
-    "/analysisTable/project/{project_id}/user/{user_id}": {
+    "/analysisTable/project/{project_id}/user": {
       "get": {
         "tags": ["analysisTable"],
-        "summary": "Returns the AnalysisTable of the Project with the given ID and the User with the given ID if it exists",
+        "summary": "Returns the AnalysisTable of the Project with the given ID and the logged-in User if it exists",
         "operationId": "get_by_project_and_user",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4517,8 +4479,7 @@
             "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
-          },
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+          }
         ],
         "responses": {
           "200": {
@@ -4700,10 +4661,10 @@
         }
       }
     },
-    "/whiteboard/project/{project_id}/user/{user_id}": {
+    "/whiteboard/project/{project_id}/user": {
       "get": {
         "tags": ["whiteboard"],
-        "summary": "Returns the Whiteboard of the Project with the given ID and the User with the given ID if it exists",
+        "summary": "Returns the Whiteboard of the Project with the given ID and the logged-in User if it exists",
         "operationId": "get_by_project_and_user",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4712,8 +4673,7 @@
             "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
-          },
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+          }
         ],
         "responses": {
           "200": {
@@ -5042,11 +5002,11 @@
         }
       }
     },
-    "/cota/{project_id}/user/{user_id}": {
+    "/cota/{project_id}/user": {
       "get": {
         "tags": ["conceptOverTimeAnalysis"],
         "summary": "Returns COTAs of the Project of the User",
-        "description": "Returns the COTA of the Project with the given ID and the User with the given ID if it exists",
+        "description": "Returns the COTA of the Project with the given ID and the logged-in User if it exists",
         "operationId": "get_by_project_and_user",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -5055,8 +5015,7 @@
             "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
-          },
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+          }
         ],
         "responses": {
           "200": {
@@ -5381,10 +5340,10 @@
         }
       }
     },
-    "/timelineAnalysis/project/{project_id}/user/{user_id}": {
+    "/timelineAnalysis/project/{project_id}/user": {
       "get": {
         "tags": ["timelineAnalysis"],
-        "summary": "Returns the TimelineAnalysis of the Project with the given ID and the User with the given ID if it exists",
+        "summary": "Returns the TimelineAnalysis of the Project with the given ID and the logged-in User if it exists",
         "operationId": "get_by_project_and_user",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -5393,8 +5352,7 @@
             "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
-          },
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+          }
         ],
         "responses": {
           "200": {
@@ -5738,11 +5696,10 @@
             "type": "integer",
             "title": "Project Id",
             "description": "Project the AnalysisTable belongs to"
-          },
-          "user_id": { "type": "integer", "title": "User Id", "description": "User the AnalysisTable belongs to" }
+          }
         },
         "type": "object",
-        "required": ["title", "content", "table_type", "project_id", "user_id"],
+        "required": ["title", "content", "table_type", "project_id"],
         "title": "AnalysisTableCreate"
       },
       "AnalysisTableRead": {
@@ -5984,7 +5941,6 @@
             "description": "Absolute y_max coordinate of the BBoxAnnotation"
           },
           "code_id": { "type": "integer", "title": "Code Id", "description": "Code the BBoxAnnotation refers to" },
-          "user_id": { "type": "integer", "title": "User Id", "description": "User that created the BBoxAnnotation" },
           "sdoc_id": {
             "type": "integer",
             "title": "Sdoc Id",
@@ -5992,7 +5948,7 @@
           }
         },
         "type": "object",
-        "required": ["x_min", "x_max", "y_min", "y_max", "code_id", "user_id", "sdoc_id"],
+        "required": ["x_min", "x_max", "y_min", "y_max", "code_id", "sdoc_id"],
         "title": "BBoxAnnotationCreate"
       },
       "BBoxAnnotationRead": {
@@ -6261,15 +6217,10 @@
             "type": "integer",
             "title": "Project Id",
             "description": "Project the ConceptOverTimeAnalysis belongs to"
-          },
-          "user_id": {
-            "type": "integer",
-            "title": "User Id",
-            "description": "User the ConceptOverTimeAnalysis belongs to"
           }
         },
         "type": "object",
-        "required": ["name", "project_id", "user_id"],
+        "required": ["name", "project_id"],
         "title": "COTACreate"
       },
       "COTARead": {
@@ -7075,11 +7026,10 @@
       },
       "FeedbackCreate": {
         "properties": {
-          "user_content": { "type": "string", "title": "User Content", "description": "User message of the Feedback" },
-          "user_id": { "type": "integer", "title": "User Id", "description": "User who created the Feedback" }
+          "user_content": { "type": "string", "title": "User Content", "description": "User message of the Feedback" }
         },
         "type": "object",
-        "required": ["user_content", "user_id"],
+        "required": ["user_content"],
         "title": "FeedbackCreate"
       },
       "FeedbackRead": {
@@ -7604,7 +7554,6 @@
         "properties": {
           "title": { "type": "string", "title": "Title", "description": "Title of the Memo" },
           "content": { "type": "string", "title": "Content", "description": "Content of the Memo" },
-          "user_id": { "type": "integer", "title": "User Id", "description": "User the Memo belongs to" },
           "project_id": { "type": "integer", "title": "Project Id", "description": "Project the Memo belongs to" },
           "starred": {
             "anyOf": [{ "type": "boolean" }, { "type": "null" }],
@@ -7614,7 +7563,7 @@
           }
         },
         "type": "object",
-        "required": ["title", "content", "user_id", "project_id"],
+        "required": ["title", "content", "project_id"],
         "title": "MemoCreate"
       },
       "MemoRead": {
@@ -8828,7 +8777,6 @@
             "description": "The SpanText the SpanAnnotation spans."
           },
           "code_id": { "type": "integer", "title": "Code Id", "description": "Code the SpanAnnotation refers to" },
-          "user_id": { "type": "integer", "title": "User Id", "description": "User that created the SpanAnnotation" },
           "sdoc_id": {
             "type": "integer",
             "title": "Sdoc Id",
@@ -8836,7 +8784,7 @@
           }
         },
         "type": "object",
-        "required": ["begin", "end", "begin_token", "end_token", "span_text", "code_id", "user_id", "sdoc_id"],
+        "required": ["begin", "end", "begin_token", "end_token", "span_text", "code_id", "sdoc_id"],
         "title": "SpanAnnotationCreate"
       },
       "SpanAnnotationRead": {
@@ -9001,11 +8949,10 @@
       "SpanGroupCreate": {
         "properties": {
           "name": { "type": "string", "title": "Name", "description": "Name of the SpanGroup" },
-          "user_id": { "type": "integer", "title": "User Id", "description": "User that created the SpanGroup" },
           "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "SourceDocument the SpanGroup refers to" }
         },
         "type": "object",
-        "required": ["name", "user_id", "sdoc_id"],
+        "required": ["name", "sdoc_id"],
         "title": "SpanGroupCreate"
       },
       "SpanGroupRead": {
@@ -9123,11 +9070,10 @@
             "type": "integer",
             "title": "Project Id",
             "description": "Project the TimelineAnalysis belongs to"
-          },
-          "user_id": { "type": "integer", "title": "User Id", "description": "User the TimelineAnalysis belongs to" }
+          }
         },
         "type": "object",
-        "required": ["name", "project_id", "user_id"],
+        "required": ["name", "project_id"],
         "title": "TimelineAnalysisCreate"
       },
       "TimelineAnalysisRead": {
@@ -9372,15 +9318,10 @@
       "WhiteboardCreate": {
         "properties": {
           "title": { "type": "string", "title": "Title", "description": "Title of the Whiteboard" },
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "Project the Whiteboard belongs to"
-          },
-          "user_id": { "type": "integer", "title": "User Id", "description": "User the Whiteboard belongs to" }
+          "project_id": { "type": "integer", "title": "Project Id", "description": "Project the Whiteboard belongs to" }
         },
         "type": "object",
-        "required": ["title", "project_id", "user_id"],
+        "required": ["title", "project_id"],
         "title": "WhiteboardCreate"
       },
       "WhiteboardRead": {

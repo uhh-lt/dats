@@ -84,9 +84,6 @@ const useDeleteDocuments = () =>
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
       sdocs.forEach((sdoc) => {
         queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_SDOCS, sdoc.project_id] });
-        queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_SDOCS_INFINITE, sdoc.project_id] });
-        queryClient.invalidateQueries({ queryKey: [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, sdoc.project_id] });
-        queryClient.invalidateQueries({ queryKey: [QueryKey.SDOCS_BY_PROJECT_AND_TAG_SEARCH, sdoc.project_id] });
       });
     },
   });
@@ -113,48 +110,35 @@ const useGetAllDocumentTags = (sdocId: number | null | undefined) =>
   });
 
 // memo
-const useGetMemos = (sdocId: number | null | undefined) =>
-  useQuery<MemoRead[], Error>({
+const useGetMemo = (sdocId: number | null | undefined) =>
+  useQuery<MemoRead, Error>({
     queryKey: [QueryKey.MEMO_SDOC, sdocId],
     queryFn: () =>
-      SourceDocumentService.getMemos({
+      SourceDocumentService.getUserMemo({
         sdocId: sdocId!,
       }),
     retry: false,
     enabled: !!sdocId,
   });
 
-const useGetMemo = (sdocId: number | null | undefined, userId: number | null | undefined) =>
-  useQuery<MemoRead, Error>({
-    queryKey: [QueryKey.MEMO_SDOC, sdocId, userId],
-    queryFn: () =>
-      SourceDocumentService.getUserMemo({
-        sdocId: sdocId!,
-        userId: userId!,
-      }),
-    retry: false,
-    enabled: !!sdocId && !!userId,
-  });
-
-const useGetRelatedMemos = (sdocId: number | null | undefined, userId: number | null | undefined) =>
+const useGetRelatedMemos = (sdocId: number | null | undefined) =>
   useQuery<MemoRead[], Error>({
-    queryKey: [QueryKey.MEMO_SDOC_RELATED, userId, sdocId],
+    queryKey: [QueryKey.MEMO_SDOC_RELATED, sdocId],
     queryFn: () =>
       SourceDocumentService.getRelatedUserMemos({
         sdocId: sdocId!,
-        userId: userId!,
       }),
     retry: false,
-    enabled: !!sdocId && !!userId,
+    enabled: !!sdocId,
   });
 
 const useCreateMemo = () =>
   useMutation({
     mutationFn: SourceDocumentService.addMemo,
     onSuccess: (memo) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMOS, memo.user_id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC, memo.attached_object_id, memo.user_id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED, memo.user_id, memo.attached_object_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMOS, memo.project_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC, memo.attached_object_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED, memo.attached_object_id] });
     },
   });
 
@@ -206,24 +190,6 @@ const useGetMetadata = (sdocId: number | null | undefined) =>
     enabled: !!sdocId,
   });
 
-const useGetWordFrequencies = (sdocId: number | null | undefined) =>
-  useQuery<{ text: string; value: number }[], Error>({
-    queryKey: [QueryKey.SDOC_WORD_FREQUENCIES, sdocId],
-    queryFn: async () => {
-      const wordFrequencies = await SourceDocumentService.getWordFrequencies({
-        sdocId: sdocId!,
-      });
-
-      const entries: [string, number][] = wordFrequencies.map((wf) => [wf.word, wf.count]);
-      entries.sort((a, b) => b[1] - a[1]); // sort array descending
-      return entries.slice(0, 20).map((e) => {
-        return { text: e[0], value: e[1] };
-      });
-    },
-    enabled: !!sdocId,
-    staleTime: Infinity,
-  });
-
 const useGetMetadataByKey = (sdocId: number | null | undefined, key: string) =>
   useQuery<SourceDocumentMetadataReadResolved, Error>({
     queryKey: [QueryKey.SDOC_METADATA_BY_KEY, sdocId, key],
@@ -265,22 +231,6 @@ const useGetAnnotators = (sdocId: number | null | undefined) =>
     enabled: !!sdocId,
   });
 
-const useGetSpanAnnotations = (sdocId: number | null | undefined, userId: number | null | undefined) => {
-  // filter out all disabled code ids
-  const selectEnabledAnnotations = useSelectEnabledSpanAnnotations();
-  return useQuery<SpanAnnotationReadResolved[], Error>({
-    queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, sdocId, userId],
-    queryFn: () =>
-      SourceDocumentService.getAllSpanAnnotations({
-        sdocId: sdocId!,
-        userId: userId!,
-        resolve: true,
-      }) as Promise<SpanAnnotationReadResolved[]>,
-    enabled: !!sdocId && !!userId,
-    select: selectEnabledAnnotations,
-  });
-};
-
 const useGetSpanAnnotationsBatch = (sdocId: number | null | undefined, userIds: number[] | null | undefined) => {
   // filter out all disabled code ids
   const selectEnabledAnnotations = useSelectEnabledSpanAnnotations();
@@ -293,22 +243,6 @@ const useGetSpanAnnotationsBatch = (sdocId: number | null | undefined, userIds: 
         resolve: true,
       }) as Promise<SpanAnnotationReadResolved[]>,
     enabled: !!sdocId && !!userIds && userIds.length > 0,
-    select: selectEnabledAnnotations,
-  });
-};
-
-const useGetBBoxAnnotations = (sdocId: number | null | undefined, userId: number | null | undefined) => {
-  // filter out all disabled code ids
-  const selectEnabledAnnotations = useSelectEnabledBboxAnnotations();
-  return useQuery<BBoxAnnotationReadResolved[], Error>({
-    queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS, sdocId, userId],
-    queryFn: () =>
-      SourceDocumentService.getAllBboxAnnotations({
-        sdocId: sdocId!,
-        userId: userId!,
-        resolve: true,
-      }) as Promise<BBoxAnnotationReadResolved[]>,
-    enabled: !!sdocId && !!userId,
     select: selectEnabledAnnotations,
   });
 };
@@ -340,12 +274,9 @@ const SdocHooks = {
   useGetAllDocumentTags,
   // annotations
   useGetAnnotators,
-  useGetSpanAnnotations,
   useGetSpanAnnotationsBatch,
-  useGetBBoxAnnotations,
   useGetBBoxAnnotationsBatch,
   // memo
-  useGetMemos,
   useGetMemo,
   useGetRelatedMemos,
   useCreateMemo,
@@ -355,7 +286,6 @@ const SdocHooks = {
   useGetURL,
   useGetThumbnailURL,
   useGetMetadata,
-  useGetWordFrequencies,
   useGetWordLevelTranscriptions,
   useGetMetadataByKey,
 };

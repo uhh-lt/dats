@@ -9,7 +9,12 @@ from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.memo import crud_memo
 from app.core.data.dto.code import CodeCreate, CodeRead, CodeUpdate
-from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
+from app.core.data.dto.memo import (
+    AttachedObjectType,
+    MemoCreateIntern,
+    MemoInDB,
+    MemoRead,
+)
 from app.core.data.orm.code import CodeORM
 from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.user import UserORM
@@ -84,7 +89,7 @@ def test_add_get_memo(
     content = "".join(random.choices(string.ascii_letters, k=30))
     starred = False
 
-    memo = MemoCreate(
+    memo = MemoCreateIntern(
         title=title,
         content=content,
         user_id=user.id,

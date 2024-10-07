@@ -21,7 +21,13 @@ from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationUpdate,
 )
 from app.core.data.dto.code import CodeRead
-from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
+from app.core.data.dto.memo import (
+    AttachedObjectType,
+    MemoCreate,
+    MemoCreateIntern,
+    MemoInDB,
+    MemoRead,
+)
 
 router = APIRouter(
     prefix="/bbox", dependencies=[Depends(get_current_user)], tags=["bboxAnnotation"]
@@ -40,11 +46,10 @@ def add_bbox_annotation(
     resolve_code: bool = Depends(resolve_code_param),
     authz_user: AuthzUser = Depends(),
 ) -> Union[BBoxAnnotationRead, BBoxAnnotationReadResolved]:
-    authz_user.assert_is_same_user(bbox.user_id)
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, bbox.sdoc_id)
     authz_user.assert_in_same_project_as(Crud.CODE, bbox.code_id)
 
-    db_obj = crud_bbox_anno.create(db=db, create_dto=bbox)
+    db_obj = crud_bbox_anno.create(db=db, user_id=authz_user.user.id, create_dto=bbox)
     if resolve_code:
         return BBoxAnnotationReadResolved.model_validate(db_obj)
     else:
@@ -143,7 +148,6 @@ def add_memo(
     validate: Validate = Depends(),
 ) -> MemoRead:
     bbox_anno = crud_bbox_anno.read(db, bbox_id)
-    authz_user.assert_is_same_user(memo.user_id)
     authz_user.assert_in_project(memo.project_id)
     authz_user.assert_in_project(
         bbox_anno.annotation_document.source_document.project_id
@@ -154,7 +158,9 @@ def add_memo(
     )
 
     db_obj = crud_memo.create_for_bbox_annotation(
-        db=db, bbox_anno_id=bbox_id, create_dto=memo
+        db=db,
+        bbox_anno_id=bbox_id,
+        create_dto=MemoCreateIntern(**memo.model_dump(), user_id=authz_user.user.id),
     )
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     return MemoRead(
@@ -183,48 +189,38 @@ def get_memos(
 
 
 @router.get(
-    "/{bbox_id}/memo/{user_id}",
+    "/{bbox_id}/memo/user",
     response_model=MemoRead,
     summary=(
-        "Returns the Memo attached to the BBoxAnnotation with the given ID of the User with the"
-        " given ID if it exists."
+        "Returns the Memo attached to the BBoxAnnotation with the given ID of the logged-in User if it exists."
     ),
 )
 def get_user_memo(
     *,
     db: Session = Depends(get_db_session),
     bbox_id: int,
-    user_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> MemoRead:
     authz_user.assert_in_same_project_as(Crud.BBOX_ANNOTATION, bbox_id)
-    # no authorization for user id, any user can read
-    # all memos as long as they're in the same project
-    # as the annotation
 
     db_obj = crud_bbox_anno.read(db=db, id=bbox_id)
-    return get_object_memo_for_user(db_obj=db_obj, user_id=user_id)
+    return get_object_memo_for_user(db_obj=db_obj, user_id=authz_user.user.id)
 
 
 @router.get(
-    "/code/{code_id}/user/{user_id}",
+    "/code/{code_id}/user",
     response_model=List[BBoxAnnotationRead],
-    summary=(
-        "Returns BBoxAnnotations with the given Code of the User with the given ID"
-    ),
+    summary=("Returns BBoxAnnotations with the given Code of the logged-in User"),
 )
 def get_by_user_code(
     *,
     db: Session = Depends(get_db_session),
     code_id: int,
-    user_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> List[BBoxAnnotationRead]:
     authz_user.assert_in_same_project_as(Crud.CODE, code_id)
-    # no authorization for user id, any user can read
-    # all annotations as long as they're in the same project
 
     db_objs = crud_bbox_anno.read_by_code_and_user(
-        db=db, code_id=code_id, user_id=user_id
+        db=db, code_id=code_id, user_id=authz_user.user.id
     )
     return [BBoxAnnotationRead.model_validate(db_obj) for db_obj in db_objs]

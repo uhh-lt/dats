@@ -20,8 +20,4 @@ export type AnalysisTableCreate = {
    * Project the AnalysisTable belongs to
    */
   project_id: number;
-  /**
-   * User the AnalysisTable belongs to
-   */
-  user_id: number;
 };
