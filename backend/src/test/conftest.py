@@ -265,7 +265,7 @@ def api_code(client: TestClient):
         def __init__(self):
             self.codeList = {}
 
-        def create(self, name: string, user: dict, project: dict):
+        def create(self, name: str, user: dict, project: dict):
             headers = user["AuthHeader"]
             project_id = project["id"]
             code = {
