@@ -4,7 +4,7 @@ services:
   ollama:
     image: ollama/ollama:0.3.4
     ports:
-      - ${OLLAMA_EXPOSED:-19290}:11434
+      - ${OLLAMA_EXPOSED:-13133}:11434
     environment:
       - OLLAMA_KEEP_ALIVE=24h
     tty: true
