@@ -1040,9 +1040,7 @@ def test_documentTag_and_memo(client, api_user, api_document, api_project) -> No
     assert doctag1_update_read_response["name"] == doctag1_update["name"]
     assert doctag1_update_read_response["color"] == doctag1_update["color"]
     assert doctag1_read_response["description"] == doctag1["description"]
-    assert (
-        doctag1_update_read_response["parent_id"] == doctag1_update["parent_id"]
-    )
+    assert doctag1_update_read_response["parent_id"] == doctag1_update["parent_id"]
     assert doctag1_update_read_response["id"] == doctag1["id"]
     assert doctag1_update_read_response["project_id"] == doctag1_update["project_id"]
 
