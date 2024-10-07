@@ -1,4 +1,4 @@
-repo_root: ${oc.env:SHARED_REPO_ROOT, /tmp/dats} #the root to the backend repo where files are shared across services.
+repo_root: /tmp/dats #the root to the backend repo where files are shared across services.
 
 spacy:
   # note that the spacy models have to be installed in the env to use it! (docker!)
@@ -14,7 +14,6 @@ spacy:
   deployment:
     ray_actor_options:
       num_gpus: 0.
-      # num_cpus: 1
     autoscaling_config:
       min_replicas: 1
       max_replicas: 5
@@ -30,7 +29,6 @@ whisper:
   deployment:
     ray_actor_options:
       num_gpus: .165
-      # num_cpus: 1
     autoscaling_config:
       min_replicas: 1
       max_replicas: 5

@@ -88,7 +88,7 @@ jobs:
           export RAY_CONFIG="./config_test_no_gpu.yaml"
           docker compose -f compose-test.yml up -d
           echo Waiting for containers to start...
-          # RAY_HOST=localhost RAY_PORT=13134 ../backend/src/test_ray.sh
+          # RAY_HOST=localhost RAY_PORT=13130 ../backend/src/test_ray.sh
           sleep 240
           docker compose -f compose-test.yml logs
           cd ..

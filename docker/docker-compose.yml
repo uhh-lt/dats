@@ -5,7 +5,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-datsuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dats123}
     ports:
-      - "${POSTGRES_EXPOSED:-5432}:5432"
+      - "${POSTGRES_EXPOSED:-13122}:5432"
     volumes:
       - "postgres_data_demo:/var/lib/postgresql/data"
     networks:
@@ -17,7 +17,7 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-datsuser}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-dats123}
     ports:
-      - "${RABBIT_EXPOSED:-5672}:5672"
+      - "${RABBIT_EXPOSED:-13123}:5672"
     volumes:
       - "rabbitmq_data_demo:/var/lib/rabbitmq/data"
     networks:
@@ -28,7 +28,7 @@ services:
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-dats123}
     ports:
-      - "${REDIS_EXPOSED:-6379}:6379"
+      - "${REDIS_EXPOSED:-13124}:6379"
     volumes:
       - "redis_data_demo:/var/lib/redis/data"
     command: redis-server --requirepass "${REDIS_PASSWORD:-dats123}" --save 60 1
@@ -45,7 +45,7 @@ services:
       - http
     image: semitechnologies/weaviate:1.21.3
     ports:
-      - "${WEAVIATE_EXPOSED:-8080}:8080"
+      - "${WEAVIATE_EXPOSED:-13132}:8080"
     volumes:
       - "weaviate_data_demo:/var/lib/weaviate"
     restart: on-failure:0
@@ -80,14 +80,14 @@ services:
       - elasticsearch_data_demo:/usr/share/elasticsearch/data
       - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
     ports:
-      - "${ELASTICSEARCH_EXPOSED:-9200}:9200"
+      - "${ELASTICSEARCH_EXPOSED:-13125}:9200"
     networks:
       - dats_demo_network
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.11.1
     ports:
-      - "${KIBANA_EXPOSED:-5601}:5601"
+      - "${KIBANA_EXPOSED:-13126}:5601"
     environment:
       ELASTICSEARCH_URL: http://elasticsearch:9200
       ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
@@ -101,7 +101,7 @@ services:
     volumes:
       - ./backend_repo:/var/www/localhost/htdocs
     ports:
-      - "${CONTENT_SERVER_EXPOSED:-12345}:80"
+      - "${CONTENT_SERVER_EXPOSED:-13121}:80"
     tty: true
     networks:
       - dats_demo_network
@@ -113,11 +113,8 @@ services:
     command: /dats_code_ray/ray_model_worker_entrypoint.sh
     user: ${UID:-1000}:${GID:-1000}
     environment:
+      DATS_BACKEND_CONFIG: /dats_code/src/configs/production.yaml
       LOG_LEVEL: ${LOG_LEVEL:-info}
-      DATS_BACKEND_CONFIG: ${DATS_BACKEND_CONFIG:-/dats_code/src/configs/default.yaml}
-      HUGGINGFACE_HUB_CACHE: /models_cache
-      TRANSFORMERS_CACHE: /models_cache
-      TORCH_HOME: /models_cache
       RAY_PROCESSING_DEVICE_SPACY: ${RAY_PROCESSING_DEVICE_SPACY:-cpu}
       RAY_PROCESSING_DEVICE_WHISPER: ${RAY_PROCESSING_DEVICE_WHISPER:-cuda}
       RAY_PROCESSING_DEVICE_DETR: ${RAY_PROCESSING_DEVICE_DETR:-cuda}
@@ -126,17 +123,19 @@ services:
       RAY_PROCESSING_DEVICE_CLIP: ${RAY_PROCESSING_DEVICE_CLIP:-cuda}
       RAY_PROCESSING_DEVICE_COTA: ${RAY_PROCESSING_DEVICE_COTA:-cuda}
       RAY_BLIP2_PRECISION_BIT: ${RAY_BLIP2_PRECISION_BIT:-32}
-      SHARED_REPO_ROOT: ${SHARED_REPO_ROOT:-/tmp/dats}
+      HUGGINGFACE_HUB_CACHE: /models_cache
+      TRANSFORMERS_CACHE: /models_cache
+      TORCH_HOME: /models_cache
       NUMBA_CACHE_DIR: /numba_cache
     volumes:
       - ../backend/src/app/preprocessing/ray_model_worker:/dats_code_ray
       - ./spacy_models:/spacy_models
-      - ./backend_repo:${SHARED_REPO_ROOT:-/tmp/dats}
+      - ./backend_repo:/tmp/dats
       - ./models_cache:/models_cache
       - ./numba_cache:/numba_cache
     ports:
-      - "${RAY_API_EXPOSED:-8000}:8000"
-      - "${RAY_DASHBOARD_EXPOSED:-8265}:8265"
+      - "${RAY_API_EXPOSED:-13130}:8000"
+      - "${RAY_DASHBOARD_EXPOSED:-13131}:8265"
     restart: always
     shm_size: 12gb
     networks:
@@ -156,44 +155,33 @@ services:
     command: /dats_code/src/celery_background_jobs_worker_entrypoint.sh
     user: ${UID:-1000}:${GID:-1000}
     environment:
-      REDIS_HOST: ${REDIS_HOST:-redis}
-      REDIS_PORT: ${REDIS_PORT:-6379}
+      DATS_BACKEND_CONFIG: /dats_code/src/configs/production.yaml
+      LOG_LEVEL: ${CELERY_LOG_LEVEL:-info}
+      INSTALL_JUPYTER: ${CELERY_INSTALL_JUPYTER:-false}
+      CELERY_BACKGROUND_JOBS_WORKER_CONCURRENCY: ${CELERY_BACKGROUND_JOBS_WORKER_CONCURRENCY:-1}
+      CELERY_DEBUG_MODE: ${CELERY_DEBUG_MODE:-0}
       REDIS_PASSWORD: ${REDIS_PASSWORD:-dats123}
-      RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
-      RABBITMQ_PORT: ${RABBITMQ_PORT:-5672}
       RABBITMQ_USER: ${RABBITMQ_USER:-datsuser}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-dats123}
-      POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
-      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
       POSTGRES_DB: ${POSTGRES_DB:-dats}
       POSTGRES_USER: ${POSTGRES_USER:-datsuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dats123}
-      ES_HOST: ${ES_HOST:-elasticsearch}
-      ES_PORT: ${ES_PORT:-9200}
       ES_MIN_HEALTH: ${ES_MIN_HEALTH:-75}
-      LOG_LEVEL: ${LOG_LEVEL:-info}
+      RAY_ENABLED: ${RAY_ENABLED:-True}
       RAY_HOST: ${RAY_HOST:-ray}
       RAY_PORT: ${RAY_PORT:-8000}
       RAY_PROTOCOL: ${RAY_PROTOCOL:-http}
-      WEAVIATE_HOST: ${WEAVIATE_HOST:-weaviate}
-      WEAVIATE_PORT: ${WEAVIATE_PORT:-8080}
-      INSTALL_JUPYTER: ${INSTALL_JUPYTER:-false}
-      API_PORT: ${API_PORT:-5500}
-      CELERY_BACKGROUND_JOBS_WORKER_CONCURRENCY: ${CELERY_BACKGROUND_JOBS_WORKER_CONCURRENCY:-1}
-      CELERY_DEBUG_MODE: ${CELERY_DEBUG_MODE:-0}
-      DATS_BACKEND_CONFIG: ${DATS_BACKEND_CONFIG:-/dats_code/src/configs/default.yaml}
-      HUGGINGFACE_HUB_CACHE: /models_cache
-      TRANSFORMERS_CACHE: /models_cache
-      TORCH_HOME: /models_cache
-      NUMBA_CACHE_DIR: /numba_cache
-      SHARED_REPO_ROOT: ${SHARED_REPO_ROOT:-/tmp/dats}
       OLLAMA_ENABLED: ${OLLAMA_ENABLED:-True}
       OLLAMA_HOST: ${OLLAMA_HOST:-ollama}
       OLLAMA_PORT: ${OLLAMA_PORT:-11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma2:9b-instruct-fp16}
+      HUGGINGFACE_HUB_CACHE: /models_cache
+      TRANSFORMERS_CACHE: /models_cache
+      TORCH_HOME: /models_cache
+      NUMBA_CACHE_DIR: /numba_cache
     volumes:
       - ../backend/src:/dats_code/src
-      - ./backend_repo:${SHARED_REPO_ROOT:-/tmp/dats}
+      - ./backend_repo:/tmp/dats
       - ./models_cache:/models_cache
       - ./numba_cache:/numba_cache
     depends_on:
@@ -201,7 +189,7 @@ services:
       - redis
       - postgres
     ports:
-      - "${JUPYTER_BACKGROUND_JOBS_EXPOSED:-8880}:8888"
+      - "${JUPYTER_CELERY_EXPOSED:-13129}:8888"
       - "${CELERY_DEBUG_PORT:-45678}:6900"
     restart: always
     networks:
@@ -215,55 +203,40 @@ services:
     command: /dats_code/src/backend_api_entrypoint.sh
     user: ${UID:-1000}:${GID:-1000}
     environment:
-      REDIS_HOST: ${REDIS_HOST:-redis}
-      REDIS_PORT: ${REDIS_PORT:-6379}
+      DATS_BACKEND_CONFIG: /dats_code/src/configs/production.yaml
+      LOG_LEVEL: ${API_LOG_LEVEL:-info}
+      INSTALL_JUPYTER: ${API_INSTALL_JUPYTER:-false}
+      API_PRODUCTION_MODE: ${API_PRODUCTION_MODE:-0}
+      API_PRODUCTION_WORKERS: ${API_PRODUCTION_WORKERS:-10}
+      JWT_SECRET: ${JWT_SECRET:-""}
+      SYSTEM_USER_EMAIL: ${SYSTEM_USER_EMAIL}
+      SYSTEM_USER_PASSWORD: ${SYSTEM_USER_PASSWORD}
+      CONTENT_SERVER_HOST: ${CONTENT_SERVER_HOST:-lighttpd}
+      CONTENT_SERVER_PORT: ${CONTENT_SERVER_PORT:-80}
       REDIS_PASSWORD: ${REDIS_PASSWORD:-dats123}
-      RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
-      RABBITMQ_PORT: ${RABBITMQ_PORT:-5672}
       RABBITMQ_USER: ${RABBITMQ_USER:-datsuser}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-dats123}
-      POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
-      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
       POSTGRES_DB: ${POSTGRES_DB:-dats}
       POSTGRES_USER: ${POSTGRES_USER:-datsuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dats123}
-      ES_HOST: ${ES_HOST:-elasticsearch}
-      ES_PORT: ${ES_PORT:-9200}
       ES_MIN_HEALTH: ${ES_MIN_HEALTH:-75}
       RAY_ENABLED: ${RAY_ENABLED:-True}
       RAY_HOST: ${RAY_HOST:-ray}
       RAY_PORT: ${RAY_PORT:-8000}
       RAY_PROTOCOL: ${RAY_PROTOCOL:-http}
-      WEAVIATE_HOST: ${WEAVIATE_HOST:-weaviate}
-      WEAVIATE_PORT: ${WEAVIATE_PORT:-8080}
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-      INSTALL_JUPYTER: ${INSTALL_JUPYTER:-false}
-      API_PORT: ${API_PORT:-5500}
-      CONTENT_SERVER_PORT: ${CONTENT_SERVER_PORT:-80}
-      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-3600} # 1 hour in seconds
-      JWT_REFRESH_TTL: ${JWT_REFRESH_TTL:-2592000} # 30 days in seconds
-      JWT_SECRET: ${JWT_SECRET:-""}
-      DATS_BACKEND_CONFIG: ${DATS_BACKEND_CONFIG:-/dats_code/src/configs/default.yaml}
-      API_PRODUCTION_MODE: ${API_PRODUCTION_MODE:-0}
-      API_PRODUCTION_WORKERS: ${API_PRODUCTION_WORKERS:-10}
-      SYSTEM_USER_FIRST_NAME: ${SYSTEM_USER_FIRST_NAME}
-      SYSTEM_USER_LAST_NAME: ${SYSTEM_USER_LAST_NAME}
-      SYSTEM_USER_EMAIL: ${SYSTEM_USER_EMAIL}
-      SYSTEM_USER_PASSWORD: ${SYSTEM_USER_PASSWORD}
-      SHARED_REPO_ROOT: ${SHARED_REPO_ROOT:-/tmp/dats}
       OLLAMA_ENABLED: ${OLLAMA_ENABLED:-True}
       OLLAMA_HOST: ${OLLAMA_HOST:-ollama}
       OLLAMA_PORT: ${OLLAMA_PORT:-11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma2:9b-instruct-fp16}
     healthcheck:
-      test: curl --fail "http://localhost:${API_PORT}" || exit 1
+      test: curl --fail "http://localhost:5500" || exit 1
       interval: 60s
       retries: 5
       start_period: 30s
       timeout: 10s
     volumes:
       - ../backend/src:/dats_code/src
-      - ./backend_repo:${SHARED_REPO_ROOT:-/tmp/dats}
+      - ./backend_repo:/tmp/dats
     depends_on:
       - celery-background-jobs-worker
       - elasticsearch
@@ -272,8 +245,8 @@ services:
       - redis
       - weaviate
     ports:
-      - "${API_EXPOSED:-5500}:${API_PORT}"
-      - "${JUPYTER_API_EXPOSED:-8888}:8888"
+      - "${API_EXPOSED:-13120}:5500"
+      - "${JUPYTER_API_EXPOSED:-13127}:8888"
     restart: always
     networks:
       - dats_demo_network
@@ -289,7 +262,7 @@ services:
     depends_on:
       - dats-backend-api
     ports:
-      - "${FRONTEND_EXPOSED:-3000}:3000"
+      - "${FRONTEND_EXPOSED:-13100}:3000"
     networks:
       - dats_demo_network
     profiles:
