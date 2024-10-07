@@ -225,7 +225,6 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
     assert code1_read_response["parent_id"] == code1["parent_id"]
     assert code1_read_response["id"] == code1["id"]
     assert code1_read_response["project_id"] == code1["project_id"]
-    # assert code1_read_response["user_id"] == code1["user_id"]
 
     codes_project1_after_response = client.get(
         f"/project/{project1['id']}/code", headers=alice["AuthHeader"]
@@ -254,7 +253,6 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
     assert code6_read_response["parent_id"] == code6["parent_id"]
     assert code6_read_response["id"] == code6["id"]
     assert code6_read_response["project_id"] == code6["project_id"]
-    # assert code6_read_response["user_id"] == code6["user_id"]
 
     codes_project2_after = client.get(
         f"/project/{project2['id']}/code", headers=alice["AuthHeader"]
@@ -284,7 +282,6 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
     assert code1_memo_read_response["content"] == code1_memo["content"]
     assert code1_memo_read_response["id"] == code1_memo["id"]
     assert code1_memo_read_response["starred"] == code1_memo["starred"]
-    # assert code1_memo_read_response["user_id"] == code1_memo["user_id"]
     assert code1_memo_read_response["project_id"] == code1_memo["project_id"]
     assert code1_memo_read_response["attached_object_id"] == code1["id"]
     assert code1_memo_read_response["attached_object_type"] == "code"
