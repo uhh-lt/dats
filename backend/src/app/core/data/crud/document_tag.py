@@ -19,6 +19,15 @@ from app.core.data.orm.source_document import SourceDocumentORM
 
 
 class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpdate]):
+    def update(
+        self, db: Session, *, id: int, update_dto: DocumentTagUpdate
+    ) -> DocumentTagORM:
+        # check that the parent tag is not being set to itself
+        if update_dto.parent_id == id:
+            raise ValueError("A tag cannot be its own parent")
+
+        return super().update(db, id=id, update_dto=update_dto)
+
     def remove_by_project(self, db: Session, *, proj_id: int) -> List[int]:
         # find all document tags to be removed
         query = db.query(self.model).filter(self.model.project_id == proj_id)
