@@ -6,7 +6,7 @@ services:
     user: ${UID:-1004}:${GID:-1004}
     environment:
       LOG_LEVEL: ${LOG_LEVEL:-info}
-      DATS_BACKEND_CONFIG: ${DATS_BACKEND_CONFIG:-/dats_code/src/configs/default.yaml}
+      DATS_BACKEND_CONFIG: ${DATS_BACKEND_CONFIG:-/dats_code/src/configs/production.yaml}
       HUGGINGFACE_HUB_CACHE: /models_cache
       TRANSFORMERS_CACHE: /models_cache
       TORCH_HOME: /models_cache
@@ -18,12 +18,11 @@ services:
       RAY_PROCESSING_DEVICE_CLIP: ${RAY_PROCESSING_DEVICE_CLIP}
       RAY_PROCESSING_DEVICE_COTA: ${RAY_PROCESSING_DEVICE_COTA}
       RAY_BLIP2_PRECISION_BIT: ${RAY_BLIP2_PRECISION_BIT:-32}
-      SHARED_REPO_ROOT: ${SHARED_REPO_ROOT:-/tmp/dats}
       NUMBA_CACHE_DIR: /numba_cache
     volumes:
       #      - ../backend/src/app/preprocessing/ray_model_worker:/dats_code_ray
       - ./spacy_models:/spacy_models
-      - ./backend_repo:${SHARED_REPO_ROOT:-/tmp/dats}
+      - ./backend_repo:/tmp/dats
       - ./models_cache:/models_cache
       - ./numba_cache:/numba_cache
     ports:
