@@ -51,7 +51,6 @@ def pytest_sessionfinish():
     # Make sure the next test session starts with a clean database
     SQLService().drop_database()
 
-
 # Always use the asyncio backend for async tests
 @pytest.fixture
 def anyio_backend():
@@ -78,12 +77,7 @@ def make_code(
             project_id=project.id,
             is_system=False,
         )
-
         db_code = crud_code.create(db=db, create_dto=code)
-        # code_id = db_code.id
-
-        # request.addfinalizer(lambda: crud_code.remove(db=db, id=code_id))
-
         return db_code
 
     return factory
@@ -127,11 +121,6 @@ def make_project(
             creating_user=system_user,
         )
         crud_project.associate_user(db=db, proj_id=project.id, user_id=user.id)
-
-        # project_id = project.id
-
-        # request.addfinalizer(lambda: crud_project.remove(db, id=project_id))
-
         return project
 
     return factory
@@ -158,10 +147,6 @@ def make_user(db: Session, request: FixtureRequest) -> Callable[[], UserORM]:
 
         # create user
         db_user = crud_user.create(db=db, create_dto=user)
-        # user_id = db_user.id
-
-        # request.addfinalizer(lambda: crud_user.remove(db=db, id=user_id))
-
         return db_user
 
     return factory
@@ -247,10 +232,6 @@ def api_user(client: TestClient):
             self.userList[first_name] = credentials
             return credentials
 
-        # def __del__(self):
-        #     for user in self.userList.values():
-        #         client.delete(f"/user/{user['id']}", headers=user["AuthHeader"])
-
     return UserFactory()
 
 
@@ -273,18 +254,6 @@ def api_project(
             project["id"] = response["id"]
             self.projectList[title] = project
             return project
-
-        # def __del__(self):
-        #     # TODO: Prevent user deletion before project deletion or use SYSTEM user
-        #     # FIXME: Using the standard SYSTEM@dwts.org user
-        #     # login with system user to remove all projects
-        #     superuser = {"username": "SYSTEM@dwts.org", "password": "SYSTEM"}
-        #     login = client.post("authentication/login", data=superuser).json()
-        #     superuser_authheader = {
-        #         "Authorization": f"{login['token_type']} {login['access_token']}"
-        #     }
-        #     for project in self.projectList.values():
-        #         client.delete(f"/project/{project['id']}", headers=superuser_authheader)
 
     return ProjectFactory()
 
