@@ -139,14 +139,14 @@ def test_project_update_remove(client: TestClient, api_user, api_project) -> Non
     response_update_p1 = client.patch(
         f"/project/{project1['id']}", headers=alice["AuthHeader"], json=change_p1
     )
-    response_update_p1.status_code == 200
+    assert response_update_p1.status_code == 200
 
     # Bob changes title and description of project2
     change_p2 = {"title": "You know the rules", "description": "and so do I"}
     response_update_p2 = client.patch(
         f"/project/{project2['id']}", headers=bob["AuthHeader"], json=change_p2
     )
-    response_update_p2.status_code == 200
+    assert response_update_p2.status_code == 200
 
     # Bob updates project3 and removes it
     project3 = api_project.create(bob, "project3")
@@ -154,11 +154,11 @@ def test_project_update_remove(client: TestClient, api_user, api_project) -> Non
     response_update_p3 = client.patch(
         f"/project/{project3['id']}", headers=bob["AuthHeader"], json=change_p3
     )
-    response_update_p3.status_code == 200
+    assert response_update_p3.status_code == 200
     response_remove_p3 = client.delete(
         f"/project/{project3['id']}", headers=bob["AuthHeader"]
     )
-    response_remove_p3.status_code == 200
+    assert response_remove_p3.status_code == 200
 
 
 def test_user_update_remove(client: TestClient, api_user) -> None:
