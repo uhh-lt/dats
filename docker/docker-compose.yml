@@ -5,7 +5,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-datsuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dats123}
     ports:
-      - "${POSTGRES_EXPOSED:-5432}:5432"
+      - "${POSTGRES_EXPOSED:-13122}:5432"
     volumes:
       - "postgres_data_demo:/var/lib/postgresql/data"
     networks:
@@ -17,7 +17,7 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-datsuser}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-dats123}
     ports:
-      - "${RABBIT_EXPOSED:-5672}:5672"
+      - "${RABBIT_EXPOSED:-13123}:5672"
     volumes:
       - "rabbitmq_data_demo:/var/lib/rabbitmq/data"
     networks:
@@ -28,7 +28,7 @@ services:
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-dats123}
     ports:
-      - "${REDIS_EXPOSED:-6379}:6379"
+      - "${REDIS_EXPOSED:-13124}:6379"
     volumes:
       - "redis_data_demo:/var/lib/redis/data"
     command: redis-server --requirepass "${REDIS_PASSWORD:-dats123}" --save 60 1
@@ -45,7 +45,7 @@ services:
       - http
     image: semitechnologies/weaviate:1.21.3
     ports:
-      - "${WEAVIATE_EXPOSED:-8080}:8080"
+      - "${WEAVIATE_EXPOSED:-13132}:8080"
     volumes:
       - "weaviate_data_demo:/var/lib/weaviate"
     restart: on-failure:0
@@ -80,14 +80,14 @@ services:
       - elasticsearch_data_demo:/usr/share/elasticsearch/data
       - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
     ports:
-      - "${ELASTICSEARCH_EXPOSED:-9200}:9200"
+      - "${ELASTICSEARCH_EXPOSED:-13125}:9200"
     networks:
       - dats_demo_network
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.11.1
     ports:
-      - "${KIBANA_EXPOSED:-5601}:5601"
+      - "${KIBANA_EXPOSED:-13126}:5601"
     environment:
       ELASTICSEARCH_URL: http://elasticsearch:9200
       ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
@@ -101,7 +101,7 @@ services:
     volumes:
       - ./backend_repo:/var/www/localhost/htdocs
     ports:
-      - "${CONTENT_SERVER_EXPOSED:-12345}:80"
+      - "${CONTENT_SERVER_EXPOSED:-13121}:80"
     tty: true
     networks:
       - dats_demo_network
@@ -134,8 +134,8 @@ services:
       - ./models_cache:/models_cache
       - ./numba_cache:/numba_cache
     ports:
-      - "${RAY_API_EXPOSED:-8000}:8000"
-      - "${RAY_DASHBOARD_EXPOSED:-8265}:8265"
+      - "${RAY_API_EXPOSED:-13130}:8000"
+      - "${RAY_DASHBOARD_EXPOSED:-13131}:8265"
     restart: always
     shm_size: 12gb
     networks:
@@ -189,7 +189,7 @@ services:
       - redis
       - postgres
     ports:
-      - "${JUPYTER_CELERY_EXPOSED:-8880}:8888"
+      - "${JUPYTER_CELERY_EXPOSED:-13129}:8888"
       - "${CELERY_DEBUG_PORT:-45678}:6900"
     restart: always
     networks:
@@ -245,8 +245,8 @@ services:
       - redis
       - weaviate
     ports:
-      - "${API_EXPOSED:-5500}:5500"
-      - "${JUPYTER_API_EXPOSED:-8888}:8888"
+      - "${API_EXPOSED:-13120}:5500"
+      - "${JUPYTER_API_EXPOSED:-13127}:8888"
     restart: always
     networks:
       - dats_demo_network
@@ -262,7 +262,7 @@ services:
     depends_on:
       - dats-backend-api
     ports:
-      - "${FRONTEND_EXPOSED:-3000}:3000"
+      - "${FRONTEND_EXPOSED:-13100}:3000"
     networks:
       - dats_demo_network
     profiles:
