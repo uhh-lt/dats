@@ -116,10 +116,10 @@ def test_project_add_user(client: TestClient, api_user, api_project) -> None:
 
 @pytest.mark.order(after="test_project_add_user")
 def test_project_update_remove(client: TestClient, api_user, api_project) -> None:
-    alice = api_user.userList["alice"]
-    bob = api_user.userList["bob"]
-    project1 = api_project.projectList["project1"]
-    project2 = api_project.projectList["project2"]
+    alice = api_user.user_list["alice"]
+    bob = api_user.user_list["bob"]
+    project1 = api_project.project_list["project1"]
+    project2 = api_project.project_list["project2"]
 
     # Bob adds Alice to project2
     response_add_p2_alice = client.patch(
@@ -203,8 +203,8 @@ def test_user_update_remove(client: TestClient, api_user) -> None:
 
 @pytest.mark.order(after="test_project_add_user")
 def test_codes_create(client: TestClient, api_user, api_project, api_code) -> None:
-    project1 = api_project.projectList["project1"]
-    alice = api_user.userList["alice"]
+    project1 = api_project.project_list["project1"]
+    alice = api_user.user_list["alice"]
 
     # Alice creates three codes in project1
     codes_project1_before_response = client.get(
@@ -234,8 +234,8 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
     assert codes_project1_after == codes_project1_before + 3
 
     # Bob creates three codes in project2
-    bob = api_user.userList["bob"]
-    project2 = api_project.projectList["project2"]
+    bob = api_user.user_list["bob"]
+    project2 = api_project.project_list["project2"]
     codes_project2_before_response = client.get(
         f"/project/{project2['id']}/code", headers=bob["AuthHeader"]
     ).json()
@@ -320,8 +320,8 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
 def test_upload_documents(client, api_user, api_project, api_document) -> None:
     import time
 
-    alice = api_user.userList["alice"]
-    project1 = api_project.projectList["project1"]
+    alice = api_user.user_list["alice"]
+    project1 = api_project.project_list["project1"]
 
     # Alice uploads two text documents to project1
     text_response12 = api_document.create([text_doc1, text_doc2], alice, project1)
@@ -394,8 +394,8 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
     api_document.get_sdoc_id(audio_doc2[1], alice)
 
     # Bob uploads two text documents to project2
-    bob = api_user.userList["bob"]
-    project2 = api_project.projectList["project2"]
+    bob = api_user.user_list["bob"]
+    project2 = api_project.project_list["project2"]
 
     text_response34 = api_document.create([text_doc3, text_doc4], bob, project2)
 
@@ -415,7 +415,7 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
     api_document.get_sdoc_id(text_doc4[1], bob)
 
     # Bob updates textdoc3 and removes it
-    text_doc3_rem = api_document.documentList[text_doc3[1]]
+    text_doc3_rem = api_document.document_list[text_doc3[1]]
     text_doc3_update = {"name": "new me"}
     text_doc3_update_response = client.patch(
         f"sdoc/{text_doc3_rem['sdoc_id']}",
@@ -481,7 +481,7 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
     api_document.get_sdoc_id(audio_doc4[1], bob)
 
     # Alice creates a memo for text_doc1
-    project_text_doc1 = api_document.documentList[text_doc1[1]]
+    project_text_doc1 = api_document.document_list[text_doc1[1]]
     text_doc1_memo = {
         "title": "Read this",
         "content": "This could help you",
@@ -515,8 +515,8 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
 
 @pytest.mark.order(after="test_project_add_user")
 def test_project_memos(client, api_user, api_project) -> None:
-    alice = api_user.userList["alice"]
-    project1 = api_project.projectList["project1"]
+    alice = api_user.user_list["alice"]
+    project1 = api_project.project_list["project1"]
     project_memo = {
         "title": "This is a memo",
         "content": "containing informations",
@@ -542,9 +542,9 @@ def test_project_memos(client, api_user, api_project) -> None:
 
 @pytest.mark.order(after=["test_upload_documents", "test_codes_create"])
 def test_span_annotation_and_memo(client, api_code, api_user, api_document) -> None:
-    alice = api_user.userList["alice"]
-    project_text_doc1 = api_document.documentList[text_doc1[1]]
-    code1 = api_code.codeList["code1"]
+    alice = api_user.user_list["alice"]
+    project_text_doc1 = api_document.document_list[text_doc1[1]]
+    code1 = api_code.code_list["code1"]
     # Alice creates two annotations for Textdoc1
     span1_annotation = {
         "begin": 0,
@@ -577,7 +577,7 @@ def test_span_annotation_and_memo(client, api_code, api_user, api_document) -> N
     assert span1_read_response["user_id"] == span1_annotation["user_id"]
     assert span1_read_response["sdoc_id"] == span1_annotation["sdoc_id"]
 
-    code2 = api_code.codeList["code2"]
+    code2 = api_code.code_list["code2"]
     span2_annotation = {
         "begin": 5,
         "end": 25,
@@ -634,8 +634,8 @@ def test_span_annotation_and_memo(client, api_code, api_user, api_document) -> N
     assert span1_memo1_read_response["attached_object_type"] == "span_annotation"
 
     # Alice creates an annotation for Textdoc2
-    project_text_doc2 = api_document.documentList[text_doc2[1]]
-    code3 = api_code.codeList["code3"]
+    project_text_doc2 = api_document.document_list[text_doc2[1]]
+    code3 = api_code.code_list["code3"]
     span3_annotation = {
         "begin": 20,
         "end": 40,
@@ -727,7 +727,7 @@ def test_span_annotation_and_memo(client, api_code, api_user, api_document) -> N
     assert span5_read_response["id"] == span5_id
 
     # Bob creates an annotation for Textdoc2
-    bob = api_user.userList["bob"]
+    bob = api_user.user_list["bob"]
     span6_annotation = {
         "begin": 3,
         "end": 30,
@@ -760,9 +760,9 @@ def test_span_annotation_and_memo(client, api_code, api_user, api_document) -> N
 
 @pytest.mark.order(after=["test_upload_documents", "test_codes_create"])
 def test_bbox_annotatation_and_memo(client, api_code, api_user, api_document) -> None:
-    alice = api_user.userList["alice"]
-    project_image_doc1 = api_document.documentList[image_doc1[1]]
-    code1 = api_code.codeList["code1"]
+    alice = api_user.user_list["alice"]
+    project_image_doc1 = api_document.document_list[image_doc1[1]]
+    code1 = api_code.code_list["code1"]
 
     # Alice creates two image annotations for Imagedoc1
     bbox_annotation1 = {
@@ -791,7 +791,7 @@ def test_bbox_annotatation_and_memo(client, api_code, api_user, api_document) ->
     assert bbox_read_response1["user_id"] == bbox_annotation1["user_id"]
     assert bbox_read_response1["id"] == bbox1_id
 
-    code2 = api_code.codeList["code2"]
+    code2 = api_code.code_list["code2"]
     bbox_annotation2 = {
         "x_min": 30,
         "x_max": 90,
@@ -819,8 +819,8 @@ def test_bbox_annotatation_and_memo(client, api_code, api_user, api_document) ->
     assert bbox_read_response2["id"] == bbox2_id
 
     # Bob creates an image annotation for Imagedoc1
-    bob = api_user.userList["bob"]
-    code3 = api_code.codeList["code3"]
+    bob = api_user.user_list["bob"]
+    code3 = api_code.code_list["code3"]
 
     bbox_annotation3 = {
         "x_min": 12,
@@ -878,7 +878,7 @@ def test_bbox_annotatation_and_memo(client, api_code, api_user, api_document) ->
     assert bbox1_memo1_read_response["attached_object_type"] == "bbox_annotation"
 
     # Bob creates two image annotations for Imagedoc2
-    project_image_doc2 = api_document.documentList[image_doc2[1]]
+    project_image_doc2 = api_document.document_list[image_doc2[1]]
 
     bbox_annotation4 = {
         "x_min": 39,
@@ -937,8 +937,8 @@ def test_bbox_annotatation_and_memo(client, api_code, api_user, api_document) ->
 
 @pytest.mark.order(after="test_project_add_user")
 def test_feedback(client, api_user) -> None:
-    alice = api_user.userList["alice"]
-    bob = api_user.userList["bob"]
+    alice = api_user.user_list["alice"]
+    bob = api_user.user_list["bob"]
     feedback = {"user_content": "I really love this app!", "user_id": bob["id"]}
     # Alice creates feedback with bobs user id - fail
     response_fail = client.put("feedback", headers=alice["AuthHeader"], json=feedback)
@@ -950,8 +950,8 @@ def test_feedback(client, api_user) -> None:
 
 @pytest.mark.order(after="test_project_add_user")
 def test_project_metadata(client, api_user, api_project) -> None:
-    alice = api_user.userList["alice"]
-    project1 = api_project.projectList["project1"]
+    alice = api_user.user_list["alice"]
+    project1 = api_project.project_list["project1"]
     # Alice creates project metadata for project1
     meta = {
         "key": "magic",
@@ -972,7 +972,7 @@ def test_project_metadata(client, api_user, api_project) -> None:
     assert meta["project_id"] == response_meta["project_id"]
 
     # Bob updates project metadata for project1
-    bob = api_user.userList["bob"]
+    bob = api_user.user_list["bob"]
     meta_update = {"key": "reality", "metatype": "STRING"}
     response_update = client.patch(
         f"projmeta/{id}", headers=bob["AuthHeader"], json=meta_update
@@ -994,8 +994,8 @@ def test_project_metadata(client, api_user, api_project) -> None:
 @pytest.mark.order(after="test_upload_documents")
 def test_documentTag_and_memo(client, api_user, api_document, api_project) -> None:
     # Alice creates a documentTag
-    alice = api_user.userList["alice"]
-    project1 = api_project.projectList["project1"]
+    alice = api_user.user_list["alice"]
+    project1 = api_project.project_list["project1"]
     doctag1 = {
         "name": "This is a name",
         "color": "blue",
@@ -1040,9 +1040,9 @@ def test_documentTag_and_memo(client, api_user, api_document, api_project) -> No
     assert doctag1_update_read_response["project_id"] == doctag1_update["project_id"]
 
     # Alice links three sdoc to a doctag and unlinks one afterwards
-    project1_textdoc1 = api_document.documentList[text_doc1[1]]
-    project1_textdoc2 = api_document.documentList[text_doc2[1]]
-    project1_imagedoc1 = api_document.documentList[image_doc1[1]]
+    project1_textdoc1 = api_document.document_list[text_doc1[1]]
+    project1_textdoc2 = api_document.document_list[text_doc2[1]]
+    project1_imagedoc1 = api_document.document_list[image_doc1[1]]
 
     doctag1_link = {
         "source_document_ids": [

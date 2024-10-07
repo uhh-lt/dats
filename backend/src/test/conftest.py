@@ -194,7 +194,7 @@ def client() -> TestClient:
 def api_user(client: TestClient):
     class UserFactory:
         def __init__(self):
-            self.userList = {}
+            self.user_list = {}
 
         def create(self, first_name):
             # Create
@@ -230,7 +230,7 @@ def api_user(client: TestClient):
                 "Authorization": f"{login['token_type']} {login['access_token']}"
             }
 
-            self.userList[first_name] = credentials
+            self.user_list[first_name] = credentials
             return credentials
 
     return UserFactory()
@@ -242,7 +242,7 @@ def api_project(
 ):
     class ProjectFactory:
         def __init__(self):
-            self.projectList = {}
+            self.project_list = {}
 
         def create(self, user, title):
             headers = user["AuthHeader"]
@@ -253,7 +253,7 @@ def api_project(
             }
             response = client.put("/project", headers=headers, json=project).json()
             project["id"] = response["id"]
-            self.projectList[title] = project
+            self.project_list[title] = project
             return project
 
     return ProjectFactory()
@@ -263,7 +263,7 @@ def api_project(
 def api_code(client: TestClient):
     class CodeFactory:
         def __init__(self):
-            self.codeList = {}
+            self.code_list = {}
 
         def create(self, name: str, user: dict, project: dict):
             headers = user["AuthHeader"]
@@ -278,7 +278,7 @@ def api_code(client: TestClient):
             }
             response = client.put("/code", headers=headers, json=code).json()
             code["id"] = response["id"]
-            self.codeList[name] = code
+            self.code_list[name] = code
             return code
 
     return CodeFactory()
@@ -288,15 +288,15 @@ def api_code(client: TestClient):
 def api_document(client: TestClient):
     class DocumentFactory:
         def __init__(self):
-            self.documentList = {}
+            self.document_list = {}
 
-        def create(self, uploadList: list, user: dict, project: dict):
+        def create(self, upload_list: list, user: dict, project: dict):
             user_headers = user["AuthHeader"]
             files = []
             download_headers = {
                 "User-Agent": "MauiBot/420.0 (https://github.com/uhh-lt/dwts/; maui@bot.org)"
             }
-            for filename in uploadList:
+            for filename in upload_list:
                 request_download = requests.get(filename[0], headers=download_headers)
                 files.append(
                     ("uploaded_files", (filename[1], request_download.content))
@@ -315,7 +315,7 @@ def api_document(client: TestClient):
                     "prepro_job_id": file["prepro_job_id"],
                 }
                 docs[document["filename"]] = document
-            self.documentList.update(docs)
+            self.document_list.update(docs)
             return docs
 
         def prepro_status(self, prepro_id, user):
@@ -324,7 +324,7 @@ def api_document(client: TestClient):
             ]
 
         def get_sdoc_id(self, filename, user):
-            doc = self.documentList[filename]
+            doc = self.document_list[filename]
             project_id = doc["project_id"]
             doc["sdoc_id"] = client.get(
                 f"project/{project_id}/resolve_filename/{filename}",
