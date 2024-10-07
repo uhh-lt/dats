@@ -1,5 +1,4 @@
 from logging.config import fileConfig
-from os import environ
 
 from sqlalchemy import engine_from_config, pool
 
@@ -9,6 +8,7 @@ from sqlalchemy import engine_from_config, pool
 import app.core.db.import_all_orms  # noqa: F401
 from alembic import context
 from app.core.data.orm.orm_base import ORMBase
+from config import conf
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -29,11 +29,12 @@ target_metadata = ORMBase.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
-host = environ.get("POSTGRES_HOST")
-port = environ.get("POSTGRES_PORT")
-db = environ.get("POSTGRES_DB")
-user = environ.get("POSTGRES_USER")
-password = environ.get("POSTGRES_PASSWORD")
+
+host = conf.postgres.host
+port = int(conf.postgres.port)
+db = conf.postgres.db
+user = conf.postgres.user
+password = conf.postgres.password
 url = f"postgresql://{user}:{password}@{host}:{port}/{db}"
 config.set_main_option("sqlalchemy.url", url)
 
