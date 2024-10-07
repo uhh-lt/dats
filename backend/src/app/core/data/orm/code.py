@@ -69,6 +69,6 @@ class CodeORM(ORMBase):
         UniqueConstraint(
             "project_id",
             "name",
-            name="UC_name_unique_per_project",
+            name="UC_code_name_unique_per_project",
         ),
     )

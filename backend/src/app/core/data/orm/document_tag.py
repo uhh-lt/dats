@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, func
+from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.data.orm.orm_base import ORMBase
@@ -56,6 +56,14 @@ class DocumentTagORM(ORMBase):
         Integer, ForeignKey("documenttag.id", ondelete="CASCADE")
     )
     parent: Mapped["DocumentTagORM"] = relationship("DocumentTagORM", remote_side=[id])
+
+    __table_args__ = (
+        UniqueConstraint(
+            "project_id",
+            "name",
+            name="UC_tag_name_unique_per_project",
+        ),
+    )
 
 
 class SourceDocumentDocumentTagLinkTable(ORMBase):
