@@ -61,6 +61,15 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
                 is not None
             )
 
+    def read_by_name_and_project(
+        self, db: Session, name: str, project_id: int
+    ) -> Optional[DocumentTagORM]:
+        return (
+            db.query(self.model)
+            .filter(self.model.name == name, self.model.project_id == project_id)
+            .first()
+        )
+
     def link_multiple_document_tags(
         self, db: Session, *, sdoc_ids: List[int], tag_ids: List[int]
     ) -> int:

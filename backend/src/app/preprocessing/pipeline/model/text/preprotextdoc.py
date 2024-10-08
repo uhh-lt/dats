@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 from pydantic import Field
 
@@ -22,6 +22,6 @@ class PreProTextDoc(PreProDocBase):
     stopwords: List[bool] = Field(default_factory=list)
     keywords: List[str] = Field(default_factory=list)
     word_freqs: Dict[str, int] = Field(default_factory=dict)
-    spans: Dict[str, List[AutoSpan]] = Field(default_factory=dict)
+    spans: Dict[str, Set[AutoSpan]] = Field(default_factory=dict)
     sentences: List[Sentence] = Field(default_factory=list)
     extracted_images: List[Path] = Field(default_factory=list)

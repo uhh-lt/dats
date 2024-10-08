@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 
-class AutoBBox(BaseModel):
+class AutoBBox(BaseModel, frozen=True):
     code: str
     x_min: int
     y_min: int

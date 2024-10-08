@@ -1,4 +1,4 @@
-from typing import List
+from typing import Set
 
 from pydantic import Field
 
@@ -7,4 +7,4 @@ from app.preprocessing.pipeline.model.preprodoc_base import PreProDocBase
 
 
 class PreProImageDoc(PreProDocBase):
-    bboxes: List[AutoBBox] = Field(default_factory=list)
+    bboxes: Set[AutoBBox] = Field(default_factory=list)
