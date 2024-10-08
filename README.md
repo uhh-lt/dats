@@ -17,8 +17,9 @@ _Please also have a look at our [Wiki](https://github.com/uhh-lt/dats/wiki) for 
   - navigate to the docker directory: `cd dats/docker`
   - create a copy of the .env.example file: `cp .env.example .env`
   - edit the .env example file and put in correct values for `UID`, `GID`, and `JWT_SECRET`
-  - run `docker compose up -d`
-  - visit [http://localhost:3000/](http://localhost:3000/) in your browser
+  - run `docker compose -f docker-compose-ollama.yml up -d` to start Ollama
+  - run `docker compose up -d` to start the Tool Suite
+  - visit [http://localhost:13100/](http://localhost:13100/) in your browser
 
 ## Tech Stack
 
