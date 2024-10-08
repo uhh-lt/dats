@@ -1,6 +1,9 @@
 import { Stack } from "@mui/material";
+import { Link } from "react-router-dom";
 import SpanAnnotationHooks from "../../api/SpanAnnotationHooks.ts";
 import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { AnnoActions } from "../../views/annotation/annoSlice.ts";
 import CodeRenderer from "../Code/CodeRenderer.tsx";
 import SdocMetadataRenderer from "../Metadata/SdocMetadataRenderer.tsx";
 import SdocRenderer, { SdocRendererSharedProps } from "../SourceDocument/SdocRenderer.tsx";
@@ -13,6 +16,7 @@ interface SpanAnnotationRendererSharedProps {
   showSdocTags?: boolean;
   showSdocProjectMetadataId?: number;
   sdocRendererProps?: SdocRendererSharedProps;
+  link?: boolean;
 }
 
 interface SpanAnnotationRendererProps {
@@ -69,8 +73,14 @@ function SpanAnnotationRendererWithData({
   showSdocTags,
   showSdocProjectMetadataId,
   sdocRendererProps,
+  link,
 }: { spanAnnotation: SpanAnnotationReadResolved } & SpanAnnotationRendererSharedProps) {
-  return (
+  const dispatch = useAppDispatch();
+  const handleClick = () => {
+    dispatch(AnnoActions.setSelectedAnnotationId(spanAnnotation.id));
+    dispatch(AnnoActions.addVisibleUserIds([spanAnnotation.user_id]));
+  };
+  const content = (
     <Stack direction="row" alignItems="center">
       {showSdoc && <SdocRenderer sdoc={spanAnnotation.sdoc_id} {...sdocRendererProps} />}
       {showSdocTags && <SdocTagsRenderer sdocId={spanAnnotation.sdoc_id} />}
@@ -82,6 +92,14 @@ function SpanAnnotationRendererWithData({
       {showSpanText && spanAnnotation.text}
     </Stack>
   );
+  if (link) {
+    return (
+      <Link to={`../annotation/${spanAnnotation.sdoc_id}`} onClick={handleClick}>
+        {content}
+      </Link>
+    );
+  }
+  return content;
 }
 
 export default SpanAnnotationRenderer;

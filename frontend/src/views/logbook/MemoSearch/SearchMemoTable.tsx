@@ -119,7 +119,7 @@ function SearchMemoTable({ projectId }: SearchMemoTableProps) {
       header: "Attached To",
       enableSorting: false,
       accessorFn: () => null,
-      Cell: ({ row }) => <MemoRenderer memo={row.original.document_id} showAttachedObject />,
+      Cell: ({ row }) => <MemoRenderer memo={row.original.document_id} showAttachedObject attachedObjectLink />,
     } as MRT_ColumnDef<ElasticSearchDocumentHit>;
 
     // unwanted columns are set to null, so we filter those out
