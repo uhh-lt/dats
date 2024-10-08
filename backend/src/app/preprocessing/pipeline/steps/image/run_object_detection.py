@@ -21,6 +21,6 @@ def run_object_detection(cargo: PipelineCargo) -> PipelineCargo:
             x_max=box.x_max,
             y_max=box.y_max,
         )
-        ppid.bboxes.append(bbox)
+        ppid.bboxes.add(bbox)
 
     return cargo

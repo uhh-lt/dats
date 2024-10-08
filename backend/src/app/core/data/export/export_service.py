@@ -33,7 +33,6 @@ from app.core.data.dto.export_job import (
     ExportJobType,
     ExportJobUpdate,
 )
-from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.source_document_metadata import (
     SourceDocumentMetadataReadResolved,
@@ -221,17 +220,14 @@ class ExportService(metaclass=SingletonMeta):
             for metadata in sdoc_metadata_dtos:
                 metadata_dict[metadata.project_metadata.key] = {
                     "value": metadata.get_value(),
-                    "id": metadata.id,
                 }
             exported_sdocs_metadata.append(
                 {
                     "name": sdoc.name if sdoc.name else "",
-                    "id": sdoc.id,
                     "filename": sdoc.filename,
                     "doctype": sdoc.doctype,
                     "metadata": metadata_dict,
-                    "tags": [tag.id for tag in sdoc_tags],
-                    "tags_verbose": [tag.name for tag in sdoc_tags],
+                    "tags": [tag.name for tag in sdoc_tags],
                 }
             )
 
@@ -277,9 +273,6 @@ class ExportService(metaclass=SingletonMeta):
         # get the adoc, proj, sdoc, user, and all annos
         user_dto = UserRead.model_validate(adoc.user)
         sdoc_dto = SourceDocumentRead.model_validate(adoc.source_document)
-        proj_dto = ProjectRead.model_validate(
-            crud_project.read(db=db, id=sdoc_dto.project_id)
-        )
 
         # span annos
         spans = adoc.span_annotations
@@ -294,16 +287,10 @@ class ExportService(metaclass=SingletonMeta):
         ]
         # fill the DataFrame
         data = {
-            "adoc_id": [],
-            "proj_name": [],
-            "project_id": [],
             "sdoc_name": [],
-            "sdoc_id": [],
             "user_first_name": [],
             "user_last_name": [],
-            "user_id": [],
             "code_name": [],
-            "code_id": [],
             "created": [],
             "text": [],
             "text_begin_char": [],
@@ -317,16 +304,10 @@ class ExportService(metaclass=SingletonMeta):
         }
 
         for span in span_read_resolved_dtos:
-            data["proj_name"].append(proj_dto.title)
-            data["project_id"].append(proj_dto.id)
             data["sdoc_name"].append(sdoc_dto.filename)
-            data["sdoc_id"].append(sdoc_dto.id)
-            data["adoc_id"].append(adoc_id)
             data["user_first_name"].append(user_dto.first_name)
             data["user_last_name"].append(user_dto.last_name)
-            data["user_id"].append(user_dto.id)
             data["code_name"].append(span.code.name)
-            data["code_id"].append(span.code.id)
             data["created"].append(span.created)
             data["text"].append(span.text)
             data["text_begin_char"].append(span.begin)
@@ -340,16 +321,10 @@ class ExportService(metaclass=SingletonMeta):
             data["bbox_y_max"].append(None)
 
         for bbox in bbox_read_resolved_dtos:
-            data["proj_name"].append(proj_dto.title)
-            data["project_id"].append(proj_dto.id)
             data["sdoc_name"].append(sdoc_dto.filename)
-            data["sdoc_id"].append(sdoc_dto.id)
-            data["adoc_id"].append(adoc_id)
             data["user_first_name"].append(user_dto.first_name)
             data["user_last_name"].append(user_dto.last_name)
-            data["user_id"].append(user_dto.id)
             data["code_name"].append(bbox.code.name)
-            data["code_id"].append(bbox.code.id)
             data["created"].append(bbox.created)
             data["bbox_x_min"].append(bbox.x_min)
             data["bbox_x_max"].append(bbox.x_max)
@@ -414,7 +389,6 @@ class ExportService(metaclass=SingletonMeta):
         memo_dto = crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=memo)
 
         user_dto = UserRead.model_validate(memo.user)
-        proj_dto = ProjectRead.model_validate(memo.project)
 
         # get attached object
         # avoid circular imports
@@ -428,58 +402,42 @@ class ExportService(metaclass=SingletonMeta):
         # common data
         data = {
             "memo_id": [memo_id],
-            "proj_name": [proj_dto.title],
-            "project_id": [proj_dto.id],
             "user_first_name": [user_dto.first_name],
             "user_last_name": [user_dto.last_name],
-            "user_id": [user_dto.id],
             "created": [memo_dto.created],
             "updated": [memo_dto.updated],
             "starred": [memo_dto.starred],
             "attached_to": [memo_dto.attached_object_type],
             "content": [memo_dto.content],
-            "adoc_id": [None],
             "sdoc_name": [None],
-            "sdoc_id": [None],
             "tag_name": [None],
-            "tag_id": [None],
             "span_group_name": [None],
-            "span_group_id": [None],
             "code_name": [None],
-            "code_id": [None],
-            "span_anno_id": [None],
             "span_anno_text": [None],
-            "bbox_anno_id": [None],
         }
 
         if isinstance(attached_to, CodeORM):
             dto = CodeRead.model_validate(attached_to)
             data["code_name"] = [dto.name]
-            data["code_id"] = [dto.id]
 
         elif isinstance(attached_to, SpanGroupORM):
             dto = SpanGroupRead.model_validate(attached_to)
             data["span_group_name"] = [dto.name]
-            data["span_group_id"] = [dto.id]
 
         elif isinstance(attached_to, SourceDocumentORM):
             dto = SourceDocumentRead.model_validate(attached_to)
             data["sdoc_name"] = [dto.filename]
-            data["sdoc_id"] = [dto.id]
 
         elif isinstance(attached_to, DocumentTagORM):
             dto = DocumentTagRead.model_validate(attached_to)
             data["tag_name"] = [dto.name]
-            data["tag_id"] = [dto.id]
 
         elif isinstance(attached_to, SpanAnnotationORM):
             span_read_resolved_dto = SpanAnnotationReadResolved.model_validate(
                 attached_to
             )
 
-            data["span_anno_id"] = [span_read_resolved_dto.id]
             data["span_anno_text"] = [span_read_resolved_dto.text]
-            data["code_id"] = [span_read_resolved_dto.code.id]
             data["code_name"] = [span_read_resolved_dto.code.name]
 
         elif isinstance(attached_to, BBoxAnnotationORM):
@@ -487,36 +445,11 @@ class ExportService(metaclass=SingletonMeta):
                 attached_to
             )
 
-            data["bbox_anno_id"] = [bbox_read_resolved_dto.id]
-            data["code_id"] = [bbox_read_resolved_dto.code.id]
             data["code_name"] = [bbox_read_resolved_dto.code.name]
 
         elif isinstance(attached_to, ProjectORM):
             logger.warning("LogBook Export still todo!")
             pass
-
-        df = pd.DataFrame(data=data)
-        return df
-
-    def __generate_export_df_for_sdoc_metadata(
-        self,
-        db: Session,
-        metadata_id: Optional[int] = None,
-        metadata_dto: Optional[SourceDocumentMetadataReadResolved] = None,
-    ) -> pd.DataFrame:
-        if metadata_dto is None:
-            if metadata_id is None:
-                raise ValueError("Either Metadata ID or DTO must be not None")
-            metadata = crud_sdoc_meta.read(db=db, id=metadata_id)
-            metadata_dto = SourceDocumentMetadataReadResolved.model_validate(metadata)
-
-        logger.info(f"Exporting SourceDocumentMetadata {metadata_dto.id} ...")
-        data = {
-            "metadata_id": [metadata_dto.id],
-            "applied_to_sdoc_id": [metadata_dto.source_document_id],
-            "key": [metadata_dto.project_metadata.key],
-            "value": [metadata_dto.get_value()],
-        }
 
         df = pd.DataFrame(data=data)
         return df
@@ -527,7 +460,6 @@ class ExportService(metaclass=SingletonMeta):
         users_data = crud_project.read(db=db, id=project_id).users
         data = [
             {
-                "id": user_data.id,
                 "email": user_data.email,
                 "first_name": user_data.first_name,
                 "last_name": user_data.last_name,
@@ -561,8 +493,6 @@ class ExportService(metaclass=SingletonMeta):
         for project_metadata in project_metadatas:
             exported_project_metadata.append(
                 {
-                    "project_id": project_id,
-                    "id": project_metadata.id,
                     "key": project_metadata.key,
                     "metatype": project_metadata.metatype,
                     "doctype": project_metadata.doctype,
@@ -580,25 +510,19 @@ class ExportService(metaclass=SingletonMeta):
 
         tag = crud_document_tag.read(db=db, id=tag_id)
         tag_dto = DocumentTagRead.model_validate(tag)
-        applied_to_sdoc_ids = [sdoc.id for sdoc in tag.source_documents]
         applied_to_sdoc_filenames = [sdoc.filename for sdoc in tag.source_documents]
         data = {
-            "tag_id": [tag_dto.id],
             "tag_name": [tag_dto.name],
             "description": [tag_dto.description],
             "color": [tag_dto.color],
             "created": [tag_dto.created],
-            "parent_tag_id": [None],
             "parent_tag_name": [None],
-            "applied_to_sdoc_ids": [applied_to_sdoc_ids],
             "applied_to_sdoc_filenames": [applied_to_sdoc_filenames],
         }
         if tag_dto.parent_id:
-            parent_id = tag_dto.parent_id
-            data["parent_tag_id"] = [parent_id]
             data["parent_tag_name"] = [
                 DocumentTagRead.model_validate(
-                    crud_document_tag.read(db=db, id=parent_id)
+                    crud_document_tag.read(db=db, id=tag_dto.parent_id)
                 ).name
             ]
 
@@ -664,12 +588,10 @@ class ExportService(metaclass=SingletonMeta):
             parent_code_name = CodeRead.model_validate(code.parent).name
 
         data = {
-            "code_id": [code_dto.id],
             "code_name": [code_dto.name],
             "description": [code_dto.description],
             "color": [code_dto.color],
             "created": [code_dto.created],
-            "parent_code_id": [parent_code_id],
             "parent_code_name": [parent_code_name],
         }
 
@@ -905,22 +827,16 @@ class ExportService(metaclass=SingletonMeta):
         self, db: Session, project_id: int
     ) -> pd.DataFrame:
         data = {
-            "sdoc_id": [],
             "sdoc_filename": [],
-            "parent_source_document_id": [],
             "linked_source_document_filename": [],
-            "linked_source_document_id": [],
         }
         sdocs = crud_sdoc.read_by_project(db=db, proj_id=project_id)
         for sdoc in sdocs:
             for link in sdoc.source_document_links:
-                data["sdoc_id"].append(sdoc.id)
                 data["sdoc_filename"].append(sdoc.filename)
-                data["parent_source_document_id"].append(link.parent_source_document_id)
                 data["linked_source_document_filename"].append(
                     link.linked_source_document_filename
                 )
-                data["linked_source_document_id"].append(link.linked_source_document_id)
         return pd.DataFrame(data)
 
     def _export_all_data_from_proj(
@@ -979,17 +895,17 @@ class ExportService(metaclass=SingletonMeta):
                 )
             )
 
-            # group  the adocs by sdoc id and merge them later
+            # group  the adocs by sdoc name and merge them later
             for adoc_df in ex_adocs:
                 if len(adoc_df) > 0:  # for adocs with 0 annos:
-                    sdoc_id = adoc_df.iloc[0].sdoc_id
-                    if sdoc_id not in exported_adocs:
-                        exported_adocs[sdoc_id] = []
-                    exported_adocs[sdoc_id].append(adoc_df)
+                    sdoc_name = adoc_df.iloc[0].sdoc_name
+                    if sdoc_name not in exported_adocs:
+                        exported_adocs[sdoc_name] = []
+                    exported_adocs[sdoc_name].append(adoc_df)
         # merge adocs
         merged_exported_adocs: List[pd.DataFrame] = []
-        for sdoc_id in exported_adocs.keys():
-            merged_exported_adocs.append(pd.concat(exported_adocs[sdoc_id]))
+        for sdoc_name in exported_adocs.keys():
+            merged_exported_adocs.append(pd.concat(exported_adocs[sdoc_name]))
 
         # write users to files
         users_file = self.__write_export_data_to_temp_file(
@@ -1160,7 +1076,7 @@ class ExportService(metaclass=SingletonMeta):
             db=db, project_id=project_id
         )
 
-        # one file for all tags
+        # one file for all codes
         if len(ex_codes) > 0:
             export_data = pd.concat(ex_codes)
             export_file = self.__write_export_data_to_temp_file(

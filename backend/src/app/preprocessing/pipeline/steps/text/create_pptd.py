@@ -15,6 +15,7 @@ def create_pptd(cargo: PipelineCargo) -> PipelineCargo:
     if not filepath.exists():
         raise FileNotFoundError(f"File {filepath} not found in repository!")
 
+    # TODO: Ask Florian about cargo if its actually needed.
     additional_parameters = dict()
     if "metadata" in cargo.data:
         additional_parameters["metadata"] = cargo.data["metadata"]
@@ -32,8 +33,8 @@ def create_pptd(cargo: PipelineCargo) -> PipelineCargo:
     if "annotations" in cargo.data:
         for auto in cargo.data["annotations"]:
             if auto.code not in pptd.spans:
-                pptd.spans[auto.code] = list()
-            pptd.spans[auto.code].append(auto)
+                pptd.spans[auto.code] = set()
+            pptd.spans[auto.code].add(auto)
 
     cargo.data["pptd"] = pptd
 

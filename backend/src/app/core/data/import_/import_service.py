@@ -4,7 +4,7 @@ import zipfile
 from os import listdir
 from os.path import isfile, join
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Set, Tuple
 
 import pandas as pd
 from celery import group
@@ -12,12 +12,10 @@ from loguru import logger
 from pandas import Series
 from sqlalchemy.orm import Session
 
-from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.project_metadata import crud_project_meta
-from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.doc_type import (
     DocType,
     get_doc_type,
@@ -25,7 +23,6 @@ from app.core.data.doc_type import (
     mime_type_supported,
 )
 from app.core.data.dto.background_job_base import BackgroundJobStatus
-from app.core.data.dto.bbox_annotation import BBoxAnnotationCreate
 from app.core.data.dto.code import CodeCreate
 from app.core.data.dto.document_tag import DocumentTagCreate
 from app.core.data.dto.import_job import (
@@ -44,7 +41,6 @@ from app.core.data.dto.project_metadata import (
     ProjectMetadataRead,
 )
 from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
-from app.core.data.dto.span_annotation import SpanAnnotationCreate
 from app.core.data.orm.project import ProjectORM
 from app.core.data.repo.repo_service import (
     RepoService,
@@ -112,7 +108,7 @@ class ImportSDocFileUnsupportedMimeTypeException(Exception):
         )
 
 
-class ImportAdocEmptyException(Exception):
+class ImportAnnotationsEmptyException(Exception):
     def __init__(self, filename) -> None:
         super().__init__(f"The uploaded annotation file {filename} is empty.")
 
@@ -232,67 +228,96 @@ class ImportService(metaclass=SingletonMeta):
 
         return imj
 
-    def __create_code(
+    def __create_code_if_not_exists(
         self,
         row: Series,
         db: Session,
         proj_id: int,
-        code_id_mapping: dict[int, int],
+        code_id_mapping: dict[str, int],
     ) -> Series:
-        code_id = row["code_id"]
-        code_name = row["code_name"]
+        parent_code_name = row["parent_code_name"]
         description = row["description"]
         color = row["color"]
-        parent_code_id = row["parent_code_id"]
-        if pd.isna(parent_code_id):
-            parent_code_id = None
-        else:
-            parent_code_id = code_id_mapping.get(parent_code_id, None)
-
-        create_code = CodeCreate(
-            name=code_name,
-            description=description,
-            parent_id=parent_code_id,
-            project_id=proj_id,
-            is_system=False,
-            **({"color": color} if pd.notna(color) else {}),
+        parent_code_id = (
+            code_id_mapping[parent_code_name] if pd.notna(parent_code_name) else None
         )
-        code = crud_code.create(db=db, create_dto=create_code)
-        code_id_mapping[code_id] = code.id
+        code_read = crud_code.read_by_name_and_project(
+            db=db, code_name=row["code_name"], proj_id=proj_id
+        )
+        if code_read:
+            if not (code_read.parent_id == parent_code_id):
+                raise ValueError(
+                    f"Trying to map imported code on already existing code, and expected parent id to be {code_read.parent_id}, but got {parent_code_id} instead."
+                )
+            if not (code_read.description == description):
+                raise ValueError(
+                    f"Trying to map imported code on already existing code, and expected description to be {code_read.description}, but got {description} instead."
+                )
+            # if not (code_read.color == color):
+            #     raise ValueError(
+            #         f"Trying to map imported tag on already existing tag, and expected color to be {code_read.color}, but got {color} instead."
+            #     ) TODO: To discuss
+            code = code_read
+        else:
+            create_code = CodeCreate(
+                name=row["code_name"],
+                description=description,
+                parent_id=parent_code_id,
+                project_id=proj_id,
+                is_system=False,
+                **({"color": color} if pd.notna(color) else {}),
+            )
+            code = crud_code.create(db=db, create_dto=create_code)
+        code_id_mapping[row["code_name"]] = code.id
         logger.info(f"create code {code.as_dict()}")
         return row
 
-    def __create_tag(
+    def __create_tag_if_not_exists(
         self,
         row: Series,
         db: Session,
         proj_id: int,
-        tag_id_mapping: dict[int, int],
+        tag_id_mapping: dict[str, int],
     ) -> Series:
-        tag_id = row["tag_id"]
         tag_name = row["tag_name"]
         description = row["description"]
         color = row["color"]
-        parent_tag_id = row["parent_tag_id"]
+        parent_tag_name = row["parent_tag_name"]
 
-        # either set parent_tag_id on python None or on the mapped new id of the tag
+        # either set parent_tag_name on python None or on the mapped new id of the tag
         parent_tag_id = (
-            None if pd.isna(parent_tag_id) else tag_id_mapping[parent_tag_id]
+            tag_id_mapping[parent_tag_name] if pd.notna(parent_tag_name) else None
         )
-
-        # Generate DocumentTagCreate dto either with color or without
-        kwargs = {
-            "name": tag_name,
-            "description": description,
-            "parent_id": parent_tag_id,
-            "project_id": proj_id,
-        }
-        if pd.notna(color):
-            kwargs["color"] = color
-        create_tag = DocumentTagCreate(**kwargs)
-
-        tag = crud_document_tag.create(db=db, create_dto=create_tag)
-        tag_id_mapping[tag_id] = tag.id
+        tag_read = crud_document_tag.read_by_name_and_project(
+            db=db, name=tag_name, project_id=proj_id
+        )
+        if tag_read:
+            if not (tag_read.parent_id == parent_tag_id):
+                raise ValueError(
+                    f"Trying to map imported tag on already existing tag, and expected parent id to be {tag_read.parent_id}, but got {parent_tag_id} instead."
+                )
+            if not (tag_read.description == description):
+                raise ValueError(
+                    f"Trying to map imported tag on already existing tag, and expected description to be {tag_read.description}, but got {description} instead."
+                )
+            # if not (tag_read.color == color):
+            #     raise ValueError(
+            #         f"Trying to map imported tag on already existing tag, and expected color to be {tag_read.description}, but got {color} instead."
+            #     ) TODO: To discuss if we should not check for color, because the system inits them randomly
+            tag = tag_read
+        else:
+            # Generate DocumentTagCreate dto either with color or without
+            kwargs = {
+                "name": tag_name,
+                "description": description,
+                "parent_id": parent_tag_id,
+                "project_id": proj_id,
+            }
+            if pd.notna(color):
+                kwargs["color"] = color
+            create_tag = DocumentTagCreate(**kwargs)
+            tag = crud_document_tag.create(db=db, create_dto=create_tag)
+        tag_id_mapping[tag_name] = tag.id
         logger.info(f"import tag {tag.as_dict()}")
         return row
 
@@ -316,90 +341,56 @@ class ImportService(metaclass=SingletonMeta):
 
     def __check_code_parents_defined(self, df: pd.DataFrame) -> None:
         if (
-            not df[df["parent_code_id"].notna()]["parent_code_id"]
-            .isin(df["code_id"])
+            not df[df["parent_code_name"].notna()]["parent_code_name"]
+            .isin(df["code_name"])
             .all()
         ):
             raise ValueError("Not all parent code ids are present in the code ids.")
 
     def __check_tag_parents_defined(self, df: pd.DataFrame) -> None:
         if (
-            not df[df["parent_tag_id"].notna()]["parent_tag_id"]
-            .isin(df["tag_id"])
+            not df[df["parent_tag_name"].notna()]["parent_tag_name"]
+            .isin(df["tag_name"])
             .all()
         ):
             raise ValueError("Not all parent tag ids are present in the tag ids.")
 
     def __check_code_missing_values(self, df: pd.DataFrame) -> None:
-        if df["code_id"].isna().any():
-            raise ValueError(f"Missing code_id on rows: {df[df['code_id'].isna()]}")
         if df["code_name"].isna().any():
             raise ValueError(f"Missing code_name on rows: {df[df['code_name'].isna()]}")
 
     def __check_tag_missing_values(self, df: pd.DataFrame) -> None:
-        if df["tag_id"].isna().any():
-            raise ValueError(f"Missing tag_id on rows: {df[df['tag_id'].isna()]}")
         if df["tag_name"].isna().any():
             raise ValueError(f"Missing tag_name on rows: {df[df['tag_name'].isna()]}")
 
-    def __check_code_clashes(
-        self, df: pd.DataFrame, project_id: int, db: Session
-    ) -> pd.DataFrame:
+    def __check_code_duplicates(self, df: pd.DataFrame):
         if df["code_name"].duplicated().any():
             raise ValueError(
                 f"Some codenames are duplicated: {df['code_name'][df['code_name'].duplicated()].unique()}"
             )
 
-        skip_code_mask = []
-        for code_name in df["code_name"]:
-            exsting_code = crud_code.read_by_name_and_project(
-                db=db, code_name=code_name, proj_id=project_id
-            )
-            if exsting_code:
-                if not exsting_code.is_system:
-                    raise ValueError(
-                        f"Some root codenames already with codename {code_name} exist in project {project_id}"
-                    )
-                else:
-                    skip_code_mask.append(False)  # skip because its system user code
-            else:
-                skip_code_mask.append(True)  # don't skip
-        return df.loc[skip_code_mask]
-
-    def __check_tag_clashes(
-        self, df: pd.DataFrame, project_id: int, db: Session
-    ) -> None:
+    def __check_tag_duplicates(self, df: pd.DataFrame) -> None:
         if df["tag_name"].duplicated().any():
             raise ValueError(
                 f"Some tag_names are duplicated: {df['tag_name'][df['tag_name'].duplicated()].unique()}"
             )
-        for tag_name in df["tag_name"]:
-            if crud_document_tag.exists_by_project_and_tag_name_and_parent_id(
-                db=db,
-                tag_name=tag_name,
-                project_id=project_id,
-                parent_id=None,
-            ):
-                raise ValueError(
-                    f"Tag: {tag_name} alread exists for project {project_id}"
-                )
 
     def __code_breadth_search_sort(self, df: pd.DataFrame) -> list[pd.DataFrame]:
         layers: list[pd.DataFrame] = []
-        mask = df["parent_code_id"].isna()
+        mask = df["parent_code_name"].isna()
         while mask.any() and len(df) > 0:
             layers.append(df[mask])
             df = df[~mask]
-            mask = df["parent_code_id"].isin(layers[-1]["code_id"])
+            mask = df["parent_code_name"].isin(layers[-1]["code_name"])
         return layers
 
     def __tag_breadth_search_sort(self, df: pd.DataFrame) -> list[pd.DataFrame]:
         layers: list[pd.DataFrame] = []
-        mask = df["parent_tag_id"].isna()
+        mask = df["parent_tag_name"].isna()
         while mask.any() and len(df) > 0:
             layers.append(df[mask])
             df = df[~mask]
-            mask = df["parent_tag_id"].isin(layers[-1]["tag_id"])
+            mask = df["parent_tag_name"].isin(layers[-1]["tag_name"])
         return layers
 
     def __import_project_metadata(self, row: Series, db: Session, proj_id: int) -> None:
@@ -467,24 +458,24 @@ class ImportService(metaclass=SingletonMeta):
         db: Session,
         df: pd.DataFrame,
         project_id: int,
-    ) -> Dict[int, int]:
-        df = df.fillna(
+    ):
+        df = df.fillna(  # TODO: This field should not be optional and should be empty string on default...
             value={
                 "description": "",
             }
         )
         self.__check_code_missing_values(df)
         self.__check_code_parents_defined(df)
-        df = self.__check_code_clashes(df=df, project_id=project_id, db=db)
+        self.__check_code_duplicates(df)
         sorted_dfs = self.__code_breadth_search_sort(
             df
         )  # split the df into layers of codes starting with root codes.
 
-        code_id_mapping: dict[int, int] = dict()
+        code_id_mapping: dict[str, int] = dict()
         logger.info(f"Importing codes sorted by depth {sorted_dfs} ...")
         for layer in sorted_dfs:
             for _, row in layer.iterrows():
-                self.__create_code(
+                self.__create_code_if_not_exists(
                     row,
                     db,
                     project_id,
@@ -506,16 +497,16 @@ class ImportService(metaclass=SingletonMeta):
 
     def __import_tags_to_proj(
         self, db: Session, df: pd.DataFrame, proj_id: int
-    ) -> Dict[int, int]:
-        tag_id_mapping: Dict[int, int] = dict()
-        df = df.fillna(
+    ) -> Dict[str, int]:
+        tag_id_mapping: Dict[str, int] = dict()
+        df = df.fillna(  # TODO: This field should not be optional and should be empty string on default...
             value={
                 "description": "",
             }
         )
         self.__check_tag_missing_values(df)
         self.__check_tag_parents_defined(df)
-        self.__check_tag_clashes(df=df, project_id=proj_id, db=db)
+        self.__check_tag_duplicates(df)
         sorted_dfs = self.__tag_breadth_search_sort(
             df
         )  # split the df into layers of tags starting with root tags.
@@ -523,7 +514,7 @@ class ImportService(metaclass=SingletonMeta):
         logger.info(f"Importing Tags sorted by depth {sorted_dfs} ...")
         for layer in sorted_dfs:
             for _, row in layer.iterrows():
-                self.__create_tag(
+                self.__create_tag_if_not_exists(
                     row,
                     db,
                     proj_id,
@@ -593,9 +584,7 @@ class ImportService(metaclass=SingletonMeta):
 
             # import codes
             codes_df = pd.read_csv(expected_file_paths["codes"])
-            codes_id_mapping = self.__import_codes_to_proj(
-                db=db, df=codes_df, project_id=proj_id
-            )
+            self.__import_codes_to_proj(db=db, df=codes_df, project_id=proj_id)
 
             # import tags
             tags_df = pd.read_csv(expected_file_paths["tags"])
@@ -603,22 +592,24 @@ class ImportService(metaclass=SingletonMeta):
                 db=db, df=tags_df, proj_id=proj_id
             )
 
-            # import sdoc links
+            # read sdoc links
             sdoc_links = pd.read_csv(expected_file_paths["sdoc_links"])
 
             payloads: List[PreprocessingJobPayloadCreateWithoutPreproJobId] = []
 
             # all of following sdoc specific objects need to go into a dict that maps from doc_type to the list of objects.
             # The order in which they come, will be similar as the order in which the cargs are generated from the payloads.
-            annotations: List[List[AutoSpan]] = []
-            bboxes: List[List[AutoBBox]] = []
-            metadatas: Dict[DocType, List[Dict]] = dict()
-            tags: Dict[DocType, List[List[int]]] = dict()
-            link_dtos: Dict[DocType, List[List[SourceDocumentLinkCreate]]] = dict()
-            for doc_type in DocType:
-                metadatas[doc_type] = []
-                link_dtos[doc_type] = []
-                tags[doc_type] = []
+            annotations: List[Set[AutoSpan]] = []
+            bboxes: List[Set[AutoBBox]] = []
+            metadatas: Dict[DocType, List[Dict]] = {
+                doc_type: [] for doc_type in DocType
+            }
+            tags: Dict[DocType, List[List[int]]] = {
+                doc_type: [] for doc_type in DocType
+            }
+            link_dtos: Dict[DocType, List[List[SourceDocumentLinkCreate]]] = {
+                doc_type: [] for doc_type in DocType
+            }
 
             # 1 import sdoc annotations, tags, metadata and sdoc links and create payloads
             for sdoc_name, sdoc_package in sdoc_filepaths.items():
@@ -672,15 +663,10 @@ class ImportService(metaclass=SingletonMeta):
                 # import sdoc annotations
                 sdoc_annotations_filepath = sdoc_package["sdoc_annotations"]
                 sdoc_annotations_df = pd.read_csv(sdoc_annotations_filepath)
-                if len(sdoc_annotations_df) == 0:
-                    raise ImportAdocEmptyException(Path(sdoc_annotations_filepath).name)
-                sdoc_annotations_df = sdoc_annotations_df[
-                    sdoc_annotations_df["code_id"].isin(codes_id_mapping)
-                ]
                 logger.info(f"The doctype is {sdoc_doctype}")
                 if sdoc_doctype == DocType.text:
                     # create AutoSpans for NER
-                    annotations_for_sdoc: List[AutoSpan] = []
+                    annotations_for_sdoc: set[AutoSpan] = set()
                     for _, row in sdoc_annotations_df.iterrows():
                         auto = AutoSpan(
                             code=row["code_name"],
@@ -690,13 +676,13 @@ class ImportService(metaclass=SingletonMeta):
                             start_token=row["text_begin_token"],
                             end_token=row["text_end_token"],
                         )
-                        annotations_for_sdoc.append(auto)
+                        annotations_for_sdoc.add(auto)
                     annotations.append(annotations_for_sdoc)
                     logger.info(f"Generate sdoc annotations {annotations_for_sdoc}")
 
                 elif sdoc_doctype == DocType.image:
                     # create boundig boxes for object detection
-                    bboxes_for_sdoc: List[AutoBBox] = []
+                    bboxes_for_sdoc: Set[AutoBBox] = set()
                     for _, row in sdoc_annotations_df.iterrows():
                         bbox = AutoBBox(
                             code=row["code_name"],
@@ -705,7 +691,7 @@ class ImportService(metaclass=SingletonMeta):
                             x_max=row["bbox_x_max"],
                             y_max=row["bbox_x_max"],
                         )
-                        bboxes_for_sdoc.append(bbox)
+                        bboxes_for_sdoc.add(bbox)
                     bboxes.append(bboxes_for_sdoc)
 
                 # create sdoc link create dtos
@@ -792,81 +778,6 @@ class ImportService(metaclass=SingletonMeta):
             raise ImportAdocSpanInvalidValueException(
                 "text_begin_token: text_end_token", (text_begin_token, text_end_token)
             )
-
-    def __bbox_import_preconditions_met(
-        self, bbox_x_min, bbox_x_max, bbox_y_min, bbox_y_max
-    ):
-        if not isinstance(bbox_x_min, int):
-            raise ImportAdocBBoxInvalidValueException("bbox_x_min", bbox_x_min)
-        if not isinstance(bbox_x_max, int):
-            raise ImportAdocBBoxInvalidValueException("bbox_x_max", bbox_x_max)
-        if bbox_x_max <= bbox_x_min:
-            raise ImportAdocBBoxInvalidValueException(
-                "bbox_x_min: bbox_x_max", (bbox_x_min, bbox_x_max)
-            )
-        if not isinstance(bbox_y_max, int):
-            raise ImportAdocBBoxInvalidValueException("bbox_y_max", bbox_y_max)
-        if bbox_y_max <= bbox_y_min:
-            raise ImportAdocBBoxInvalidValueException(
-                "bbox_y_min: bbox_y_max", (bbox_y_min, bbox_y_max)
-            )
-
-    def __import_annotions_to_sdoc(
-        self,
-        db: Session,
-        sdoc_id: int,
-        user_id: int,
-        sdoc_annotations: pd.DataFrame,
-        codes_id_mapping: Dict[int, int],
-    ) -> None:
-        for _, row in sdoc_annotations.iterrows():
-            code_id = row["code_id"]
-            if code_id not in codes_id_mapping:
-                raise ImportAdocInvalidCodeIdException(code_id)
-            text_begin_char = row["text_begin_char"]
-            if pd.notna(text_begin_char):
-                text_end_char = row["text_end_char"]
-                text_begin_token = row["text_begin_token"]
-                text_end_token = row["text_end_token"]
-                text = row["text"]
-                self.__span_import_preconditions_met(
-                    text,
-                    text_begin_char,
-                    text_end_char,
-                    text_begin_token,
-                    text_end_token,
-                )
-                span_annotation_create_dto = SpanAnnotationCreate(
-                    begin=text_begin_char,
-                    end=text_end_char,
-                    begin_token=text_begin_token,
-                    end_token=text_end_token,
-                    span_text=text,
-                    code_id=codes_id_mapping[code_id],
-                    sdoc_id=sdoc_id,
-                )
-                crud_span_anno.create(
-                    db=db, create_dto=span_annotation_create_dto, user_id=user_id
-                )
-            bbox_x_min = row["bbox_x_min"]
-            if pd.notna(bbox_x_min):
-                bbox_x_max = row["bbox_x_max"]
-                bbox_y_min = row["bbox_y_min"]
-                bbox_y_max = row["bbox_y_max"]
-                self.__bbox_import_preconditions_met(
-                    bbox_x_min, bbox_x_max, bbox_y_min, bbox_y_max
-                )
-                bbox_annotation_create_dto = BBoxAnnotationCreate(
-                    x_min=bbox_x_min,
-                    x_max=bbox_x_max,
-                    y_min=bbox_x_min,
-                    y_max=bbox_y_max,
-                    code_id=code_id,
-                    sdoc_id=sdoc_id,
-                )
-                crud_bbox_anno.create(
-                    db=db, create_dto=bbox_annotation_create_dto, user_id=user_id
-                )
 
     def _import_all_project_metadata(
         self,
@@ -964,7 +875,3 @@ class ImportService(metaclass=SingletonMeta):
             if match:
                 return regex[1], regex[2]
         return "sdoc", False
-
-    def __read_json_file(self, file_path: str | Path) -> Dict:
-        with open(file_path, "r") as f:
-            return json.load(f)
