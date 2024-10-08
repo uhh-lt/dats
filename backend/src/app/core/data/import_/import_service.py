@@ -259,7 +259,7 @@ class ImportService(metaclass=SingletonMeta):
         )
         code = crud_code.create(db=db, create_dto=create_code)
         code_id_mapping[code_id] = code.id
-        logger.info(f"create code {code}")
+        logger.info(f"create code {code.as_dict()}")
         return row
 
     def __create_tag(
@@ -331,28 +331,25 @@ class ImportService(metaclass=SingletonMeta):
             raise ValueError("Not all parent tag ids are present in the tag ids.")
 
     def __check_code_missing_values(self, df: pd.DataFrame) -> None:
-        def has_missing_value(row: pd.Series) -> pd.Series:
-            if pd.isna(row["code_id"]):
-                raise ValueError(f"Missing code id on row {row}")
-            if pd.isna(row["code_name"]):
-                raise ValueError(f"Missing code name on code id {row['code_id']}")
-            return row
-
-        df.apply(has_missing_value, axis=1)
+        if df["code_id"].isna().any():
+            raise ValueError(f"Missing code_id on rows: {df[df['code_id'].isna()]}")
+        if df["code_name"].isna().any():
+            raise ValueError(f"Missing code_name on rows: {df[df['code_name'].isna()]}")
 
     def __check_tag_missing_values(self, df: pd.DataFrame) -> None:
-        def has_missing_value(row: pd.Series) -> pd.Series:
-            if pd.isna(row["tag_id"]):
-                raise ValueError(f"Missing tag id on row {row}")
-            if pd.isna(row["tag_name"]):
-                raise ValueError(f"Missing tag name on tag id {row['tag_id']}")
-            return row
+        if df["tag_id"].isna().any():
+            raise ValueError(f"Missing tag_id on rows: {df[df['tag_id'].isna()]}")
+        if df["tag_name"].isna().any():
+            raise ValueError(f"Missing tag_name on rows: {df[df['tag_name'].isna()]}")
 
-        df.apply(has_missing_value, axis=1)
-
-    def __check_code_root_clashes(
+    def __check_code_clashes(
         self, df: pd.DataFrame, project_id: int, db: Session
     ) -> pd.DataFrame:
+        if df["code_name"].duplicated().any():
+            raise ValueError(
+                f"Some codenames are duplicated: {df['code_name'][df['code_name'].duplicated()].unique()}"
+            )
+
         skip_code_mask = []
         for code_name in df["code_name"]:
             exsting_code = crud_code.read_by_name_and_project(
@@ -369,24 +366,23 @@ class ImportService(metaclass=SingletonMeta):
                 skip_code_mask.append(True)  # don't skip
         return df.loc[skip_code_mask]
 
-    def __check_tag_root_clashes(
+    def __check_tag_clashes(
         self, df: pd.DataFrame, project_id: int, db: Session
     ) -> None:
-        df = df[
-            df["parent_tag_id"].isna()
-        ]  # We only have to check if one of the roots already exists, because child tags are always in another namespace.
-        mask = df["tag_name"].apply(
-            lambda tag_name: crud_document_tag.exists_by_project_and_tag_name_and_parent_id(
+        if df["tag_name"].duplicated().any():
+            raise ValueError(
+                f"Some tag_names are duplicated: {df['tag_name'][df['tag_name'].duplicated()].unique()}"
+            )
+        for tag_name in df["tag_name"]:
+            if crud_document_tag.exists_by_project_and_tag_name_and_parent_id(
                 db=db,
                 tag_name=tag_name,
                 project_id=project_id,
                 parent_id=None,
-            )
-        )
-        if mask.any():
-            raise ValueError(
-                f"Some root tagnames already exist for project {project_id}"
-            )
+            ):
+                raise ValueError(
+                    f"Tag: {tag_name} alread exists for project {project_id}"
+                )
 
     def __code_breadth_search_sort(self, df: pd.DataFrame) -> list[pd.DataFrame]:
         layers: list[pd.DataFrame] = []
@@ -463,18 +459,14 @@ class ImportService(metaclass=SingletonMeta):
     ) -> None:
         project_id = imj_parameters.proj_id
         filename = imj_parameters.filename
-        user_id = imj_parameters.user_id
         path_to_file = self.repo._get_dst_path_for_temp_file(filename)
         df = pd.read_csv(path_to_file)
-        self.__import_codes_to_proj(
-            db=db, df=df, user_id=user_id, project_id=project_id
-        )
+        self.__import_codes_to_proj(db=db, df=df, project_id=project_id)
 
     def __import_codes_to_proj(
         self,
         db: Session,
         df: pd.DataFrame,
-        user_id: int,
         project_id: int,
     ) -> Dict[int, int]:
         df = df.fillna(
@@ -484,23 +476,22 @@ class ImportService(metaclass=SingletonMeta):
         )
         self.__check_code_missing_values(df)
         self.__check_code_parents_defined(df)
-        df = self.__check_code_root_clashes(df=df, project_id=project_id, db=db)
+        df = self.__check_code_clashes(df=df, project_id=project_id, db=db)
         sorted_dfs = self.__code_breadth_search_sort(
             df
         )  # split the df into layers of codes starting with root codes.
 
         code_id_mapping: dict[int, int] = dict()
-        logger.info("Importing Codes ...")
+        logger.info(f"Importing codes sorted by depth {sorted_dfs} ...")
         for layer in sorted_dfs:
-            layer.apply(
-                lambda row: self.__create_code(
+            for _, row in layer.iterrows():
+                self.__create_code(
                     row,
                     db,
                     project_id,
                     code_id_mapping=code_id_mapping,
-                ),
-                axis=1,
-            )
+                )
+        logger.info(f"Generated code id mapping {code_id_mapping}")
         return code_id_mapping
 
     def _import_all_tags_to_proj(
@@ -525,22 +516,20 @@ class ImportService(metaclass=SingletonMeta):
         )
         self.__check_tag_missing_values(df)
         self.__check_tag_parents_defined(df)
-        self.__check_tag_root_clashes(df=df, project_id=proj_id, db=db)
+        self.__check_tag_clashes(df=df, project_id=proj_id, db=db)
         sorted_dfs = self.__tag_breadth_search_sort(
             df
         )  # split the df into layers of tags starting with root tags.
 
         logger.info(f"Importing Tags sorted by depth {sorted_dfs} ...")
         for layer in sorted_dfs:
-            layer.apply(
-                lambda row: self.__create_tag(
+            for _, row in layer.iterrows():
+                self.__create_tag(
                     row,
                     db,
                     proj_id,
                     tag_id_mapping=tag_id_mapping,
-                ),
-                axis=1,
-            )
+                )
 
         logger.info(f"Generated tag id mapping {tag_id_mapping}")
         return tag_id_mapping
@@ -606,7 +595,7 @@ class ImportService(metaclass=SingletonMeta):
             # import codes
             codes_df = pd.read_csv(expected_file_paths["codes"])
             codes_id_mapping = self.__import_codes_to_proj(
-                db=db, df=codes_df, user_id=user_id, project_id=proj_id
+                db=db, df=codes_df, project_id=proj_id
             )
 
             # import tags
@@ -689,7 +678,8 @@ class ImportService(metaclass=SingletonMeta):
                 sdoc_annotations_df = sdoc_annotations_df[
                     sdoc_annotations_df["code_id"].isin(codes_id_mapping)
                 ]
-                if doc_type == DocType.text:
+                logger.info(f"The doctype is {sdoc_doctype}")
+                if sdoc_doctype == DocType.text:
                     # create AutoSpans for NER
                     annotations_for_sdoc: List[AutoSpan] = []
                     for _, row in sdoc_annotations_df.iterrows():
@@ -705,7 +695,7 @@ class ImportService(metaclass=SingletonMeta):
                     annotations.append(annotations_for_sdoc)
                     logger.info(f"Generate sdoc annotations {annotations_for_sdoc}")
 
-                elif doc_type == DocType.image:
+                elif sdoc_doctype == DocType.image:
                     # create boundig boxes for object detection
                     bboxes_for_sdoc: List[AutoBBox] = []
                     for _, row in sdoc_annotations_df.iterrows():
@@ -854,10 +844,11 @@ class ImportService(metaclass=SingletonMeta):
                     end_token=text_end_token,
                     span_text=text,
                     code_id=codes_id_mapping[code_id],
-                    user_id=user_id,
                     sdoc_id=sdoc_id,
                 )
-                crud_span_anno.create(db=db, create_dto=span_annotation_create_dto)
+                crud_span_anno.create(
+                    db=db, create_dto=span_annotation_create_dto, user_id=user_id
+                )
             bbox_x_min = row["bbox_x_min"]
             if pd.notna(bbox_x_min):
                 bbox_x_max = row["bbox_x_max"]
@@ -872,10 +863,11 @@ class ImportService(metaclass=SingletonMeta):
                     y_min=bbox_x_min,
                     y_max=bbox_y_max,
                     code_id=code_id,
-                    user_id=user_id,
                     sdoc_id=sdoc_id,
                 )
-                crud_bbox_anno.create(db=db, create_dto=bbox_annotation_create_dto)
+                crud_bbox_anno.create(
+                    db=db, create_dto=bbox_annotation_create_dto, user_id=user_id
+                )
 
     def _import_all_project_metadata(
         self,
