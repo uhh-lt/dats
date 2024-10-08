@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set
 
 import magic
 from fastapi import HTTPException, UploadFile
@@ -205,8 +205,8 @@ class PreprocessingService(metaclass=SingletonMeta):
         self,
         ppj: PreprocessingJobRead,
         metadatas: Dict[DocType, List[Dict]],
-        annotations: List[List[AutoSpan]],
-        bboxes: List[List[AutoBBox]],
+        annotations: List[Set[AutoSpan]],
+        bboxes: List[Set[AutoBBox]],
         sdoc_links: Dict[DocType, List[List[SourceDocumentLinkCreate]]],
         tags: Dict[DocType, List[List[int]]],
     ) -> Dict[DocType, List[PipelineCargo]]:
@@ -218,13 +218,13 @@ class PreprocessingService(metaclass=SingletonMeta):
 
         # append cargo for each payload and respective metadata/annotations
         for payload in ppj.payloads:
+            # the last position inside the respective doc_type group
+            doc_type_offset = len(cargos[payload.doc_type])
+
             # generate cargo with one payload
             cargos[payload.doc_type].append(
                 PipelineCargo(ppj_payload=payload, ppj_id=ppj.id)
             )
-
-            # the last position inside the respective doc_type group
-            doc_type_offset = len(cargos[payload.doc_type]) - 1
 
             # assign them to the respective cargo
             cargos[payload.doc_type][-1].data["metadata"] = metadatas[payload.doc_type][
