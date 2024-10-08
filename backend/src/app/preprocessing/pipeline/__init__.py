@@ -26,7 +26,6 @@ def build_text_pipeline(
     )
     from app.preprocessing.pipeline.steps.text.create_pptd import (
         create_pptd,
-        create_pptd_with_metadata,
     )
     from app.preprocessing.pipeline.steps.text.detect_content_language import (
         detect_content_language,
@@ -70,16 +69,10 @@ def build_text_pipeline(
 
     pipeline = PreprocessingPipeline(doc_type=DocType.text)
 
-    if is_init:
-        pipeline.register_step(
-            func=create_pptd,
-            required_data=[],
-        )
-    else:
-        pipeline.register_step(
-            func=create_pptd_with_metadata,
-            required_data=[],
-        )
+    pipeline.register_step(
+        func=create_pptd,
+        required_data=[],
+    )
 
     pipeline.register_step(
         required_data=["pptd"],
@@ -141,12 +134,12 @@ def build_text_pipeline(
             required_data=["pptd"],
         )
 
-        pipeline.register_step(
-            # this method should be called before writing a document to the database.
-            # So in case the document is already in the database but not finished
-            # or erroneous, we remove it to make the preprocessing idempotent.
-            func=remove_erroneous_or_unfinished_sdocs,
-        )
+    pipeline.register_step(
+        # this method should be called before writing a document to the database.
+        # So in case the document is already in the database but not finished
+        # or erroneous, we remove it to make the preprocessing idempotent.
+        func=remove_erroneous_or_unfinished_sdocs,
+    )
 
     pipeline.register_step(
         func=write_pptd_to_database,
