@@ -1,5 +1,6 @@
 import { Box, CardContent, CardHeader, Divider, MenuItem, Stack, Typography } from "@mui/material";
 import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { NodeProps, useReactFlow } from "reactflow";
 import CodeHooks from "../../../api/CodeHooks.ts";
 import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
@@ -9,6 +10,7 @@ import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../compone
 import MemoDialogAPI from "../../../components/Memo/MemoDialog/MemoDialogAPI.ts";
 import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
+import { AnnoActions } from "../../annotation/annoSlice.ts";
 import { useReactFlowService } from "../hooks/ReactFlowService.ts";
 import { DATSNodeData } from "../types/DATSNodeData.ts";
 import { SpanAnnotationNodeData } from "../types/dbnodes/SpanAnnotationNodeData.ts";
@@ -125,6 +127,17 @@ function SpanAnnotationNode(props: NodeProps<SpanAnnotationNodeData>) {
   };
 
   // context menu actions
+  const navigate = useNavigate();
+  const handleContextMenuGoToDocument = () => {
+    if (!annotation.data) return;
+
+    dispatch(AnnoActions.setSelectedAnnotationId(annotation.data.id));
+    dispatch(AnnoActions.addVisibleUserIds([annotation.data.user_id]));
+    navigate(`../annotation/${annotation.data.sdoc_id}`);
+
+    contextMenuRef.current?.close();
+  };
+
   const handleContextMenuExpandDocument = () => {
     if (!annotation.data) return;
 
@@ -205,6 +218,7 @@ function SpanAnnotationNode(props: NodeProps<SpanAnnotationNodeData>) {
         )}
       </BaseCardNode>
       <GenericPositionMenu ref={contextMenuRef}>
+        <MenuItem onClick={handleContextMenuGoToDocument}>Go to document</MenuItem>
         <MenuItem onClick={handleContextMenuExpandDocument}>Expand document</MenuItem>
         <Divider />
         <MenuItem onClick={handleContextMenuExpandCode}>Expand code</MenuItem>
