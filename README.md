@@ -4,7 +4,7 @@
 
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/uhh-lt/dats/mwp_v1.svg)](https://results.pre-commit.ci/latest/github/uhh-lt/dats/mwp_v1)
 
-This is the repository for the Discourse Analysis Tool Suite (dats) - an outcome of
+This is the repository for the Discourse Analysis Tool Suite (DATS) - an outcome of
 the [D-WISE Project](https://www.dwise.uni-hamburg.de/)
 
 _Please also have a look at our [Wiki](https://github.com/uhh-lt/dats/wiki) for more information and How-To's_
