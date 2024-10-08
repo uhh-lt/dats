@@ -293,7 +293,7 @@ class ImportService(metaclass=SingletonMeta):
 
         tag = crud_document_tag.create(db=db, create_dto=create_tag)
         tag_id_mapping[tag_id] = tag.id
-        logger.info(f"import tag {tag}")
+        logger.info(f"import tag {tag.as_dict()}")
         return row
 
     def _update_import_job(
@@ -403,7 +403,6 @@ class ImportService(metaclass=SingletonMeta):
         return layers
 
     def __import_project_metadata(self, row: Series, db: Session, proj_id: int) -> None:
-        logger.info(f"row is {row}")
         key = row["key"]
         metatype = row["metatype"]
         doctype = row["doctype"]
