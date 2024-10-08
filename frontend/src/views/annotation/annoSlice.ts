@@ -12,6 +12,7 @@ export enum TagStyle {
 }
 export interface AnnoState {
   // project state:
+  selectedAnnotationId: number | undefined; // the annotation selected in the annotation explorer.
   selectedCodeId: number | undefined; // the code selected in the code explorer, used to compute which codes are shown in the annotation menu.
   mostRecentCodeId: number | undefined; // the most recently applied code, it is always at the top of the annotation menu and the default code for new annotations.
   expandedCodeIds: string[]; // the code ids of the expanded codes in the code explorer.
@@ -25,6 +26,7 @@ export interface AnnoState {
 
 const initialState: AnnoState = {
   // project state:
+  selectedAnnotationId: undefined,
   selectedCodeId: undefined,
   mostRecentCodeId: undefined,
   expandedCodeIds: [],
@@ -66,6 +68,9 @@ export const annoSlice = createSlice({
         });
       }
       state.hiddenCodeIds = hiddenCodeIds;
+    },
+    setSelectedAnnotationId: (state, action: PayloadAction<number | undefined>) => {
+      state.selectedAnnotationId = action.payload;
     },
     setSelectedCodeId: (state, action: PayloadAction<number | undefined>) => {
       state.selectedCodeId = action.payload;
@@ -128,6 +133,7 @@ export const annoSlice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(ProjectActions.changeProject, (state) => {
       console.log("Project changed! Resetting 'anno' state.");
+      state.selectedAnnotationId = initialState.selectedAnnotationId;
       state.selectedCodeId = initialState.selectedCodeId;
       state.mostRecentCodeId = initialState.mostRecentCodeId;
       state.expandedCodeIds = initialState.expandedCodeIds;

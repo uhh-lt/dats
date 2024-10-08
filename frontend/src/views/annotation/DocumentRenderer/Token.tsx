@@ -15,6 +15,7 @@ interface TokenProps {
 
 function Token({ token, spanAnnotations }: TokenProps) {
   // global client state (redux)
+  const selectedAnnotationId = useAppSelector((state) => state.annotations.selectedAnnotationId);
   const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
   const tagStyle = useAppSelector((state) => state.annotations.tagStyle);
 
@@ -45,11 +46,16 @@ function Token({ token, spanAnnotations }: TokenProps) {
     return startingSpans.length > 0 && tagStyle !== TagStyle.None ? (
       <span className={`spangroup ${tagStyle}`}>
         {startingSpans.map((spanAnnotation) => (
-          <Tag key={spanAnnotation.id} codeId={spanAnnotation.code.id} />
+          <Tag
+            key={spanAnnotation.id}
+            codeId={spanAnnotation.code.id}
+            annotationId={spanAnnotation.id}
+            isSelected={selectedAnnotationId === spanAnnotation.id}
+          />
         ))}{" "}
       </span>
     ) : null;
-  }, [tagStyle, token, spans]);
+  }, [tagStyle, token, spans, selectedAnnotationId]);
 
   return (
     <>

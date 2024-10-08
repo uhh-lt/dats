@@ -6,7 +6,9 @@ import { useMemo, useRef, useState } from "react";
 import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { useDebounce } from "../../../utils/useDebounce.ts";
+import { AnnoActions } from "../annoSlice.ts";
 import { AnnotationCardProps } from "./AnnotationCardProps.ts";
 
 type AnnotationReadResolved = SpanAnnotationReadResolved | BBoxAnnotationReadResolved;
@@ -59,12 +61,13 @@ function AnnotationExplorer<T extends AnnotationReadResolved>({
   }, [annotations, filter, filterCodeIds, filterByText]);
 
   // annotation selection
-  const [selectedAnnotationId, setSelectedAnnotationId] = useState<number | undefined>(undefined);
+  const selectedAnnotationId = useAppSelector((state) => state.annotations.selectedAnnotationId);
+  const dispatch = useAppDispatch();
   const toggleSelectedAnnotationId = (annotationId: number) => {
     if (selectedAnnotationId === annotationId) {
-      setSelectedAnnotationId(undefined);
+      dispatch(AnnoActions.setSelectedAnnotationId(undefined));
     } else {
-      setSelectedAnnotationId(annotationId);
+      dispatch(AnnoActions.setSelectedAnnotationId(annotationId));
     }
   };
 
