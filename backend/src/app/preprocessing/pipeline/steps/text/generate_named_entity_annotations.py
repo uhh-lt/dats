@@ -26,7 +26,8 @@ def generate_named_entity_annotations(cargo: PipelineCargo) -> PipelineCargo:
             end_token=ne.end_token,
         )
         if auto.code not in pptd.spans:
-            pptd.spans[auto.code] = list()
-        pptd.spans[auto.code].append(auto)
+            pptd.spans[auto.code] = set()
+        logger.info(auto in pptd.spans[auto.code])
+        pptd.spans[auto.code].add(auto)
 
     return cargo

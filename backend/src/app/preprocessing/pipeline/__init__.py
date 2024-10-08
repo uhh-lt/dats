@@ -196,7 +196,6 @@ def build_image_pipeline(
     )
     from app.preprocessing.pipeline.steps.image.create_ppid import (
         create_ppid,
-        create_ppid_with_metadata,
     )
     from app.preprocessing.pipeline.steps.image.create_pptd_from_caption import (
         create_pptd_from_caption,
@@ -234,16 +233,10 @@ def build_image_pipeline(
 
     pipeline = PreprocessingPipeline(doc_type=DocType.image)
 
-    if is_init:
-        pipeline.register_step(
-            func=create_ppid,
-            required_data=[],
-        )
-    else:
-        pipeline.register_step(
-            func=create_ppid_with_metadata,
-            required_data=[],
-        )
+    pipeline.register_step(
+        func=create_ppid,
+        required_data=[],
+    )
 
     pipeline.register_step(
         func=create_image_metadata,
