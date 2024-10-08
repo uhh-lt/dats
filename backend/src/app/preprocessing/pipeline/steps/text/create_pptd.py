@@ -29,6 +29,11 @@ def create_pptd(cargo: PipelineCargo) -> PipelineCargo:
         filepath=filepath,
         **additional_parameters,
     )
+    if "annotations" in cargo.data:
+        for auto in cargo.data["annotations"]:
+            if auto.code not in pptd.spans:
+                pptd.spans[auto.code] = list()
+            pptd.spans[auto.code].append(auto)
 
     cargo.data["pptd"] = pptd
 
