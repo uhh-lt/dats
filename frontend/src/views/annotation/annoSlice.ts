@@ -85,6 +85,13 @@ export const annoSlice = createSlice({
         }
       }
     },
+    addVisibleUserIds: (state, action: PayloadAction<number[]>) => {
+      action.payload.forEach((userId) => {
+        if (state.visibleUserIds.indexOf(userId) === -1) {
+          state.visibleUserIds.push(userId);
+        }
+      });
+    },
     setVisibleUserIds: (state, action: PayloadAction<number[]>) => {
       state.visibleUserIds = action.payload;
     },

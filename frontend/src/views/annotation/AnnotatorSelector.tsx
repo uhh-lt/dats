@@ -37,7 +37,7 @@ export function AnnotatorSelector({ sdocId }: AnnotatorSelector) {
   useEffect(() => {
     if (user && annotatorUserIds.data) {
       // always add the current user to the visible users
-      dispatch(AnnoActions.setVisibleUserIds([user.id]));
+      dispatch(AnnoActions.addVisibleUserIds([user.id]));
     }
   }, [dispatch, user, annotatorUserIds.data]);
 

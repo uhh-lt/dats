@@ -26,6 +26,7 @@ import SdocMetadataRenderer from "../../Metadata/SdocMetadataRenderer.tsx";
 import SdocTagsRenderer from "../../SourceDocument/SdocTagRenderer.tsx";
 import UserRenderer from "../../User/UserRenderer.tsx";
 import SATToolbar, { SATToolbarProps } from "./SATToolbar.tsx";
+import SdocAnnotationLink from "./SdocAnnotationLink.tsx";
 import { useInitSATFilterSlice } from "./useInitSATFilterSlice.ts";
 
 const fetchSize = 20;
@@ -95,6 +96,7 @@ function SpanAnnotationTable({
           return {
             ...colDef,
             accessorFn: (row) => row.sdoc.filename,
+            Cell: ({ row }) => <SdocAnnotationLink sdoc={row.original.sdoc} annotation={row.original} />,
           } as MRT_ColumnDef<AnnotationTableRow>;
         case AnnotatedSegmentsColumns.ASC_DOCUMENT_DOCUMENT_TAG_ID_LIST:
           return {

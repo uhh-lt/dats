@@ -52,9 +52,20 @@ function DocumentRenderer({
   // jump to annotations
   const selectedAnnotationId = useAppSelector((state) => state.annotations.selectedAnnotationId);
   useEffect(() => {
-    const annotation = document.getElementById("span-annotation-" + selectedAnnotationId);
-    if (annotation) {
-      annotation.scrollIntoView({ behavior: "smooth" });
+    const scrollIntoView = () => {
+      const annotation = document.getElementById("span-annotation-" + selectedAnnotationId);
+      if (annotation) {
+        annotation.scrollIntoView({ behavior: "smooth" });
+        return true;
+      }
+      return false;
+    };
+    if (!scrollIntoView()) {
+      const intervalHandle = setInterval(() => {
+        if (scrollIntoView()) {
+          clearInterval(intervalHandle);
+        }
+      }, 500);
     }
   }, [selectedAnnotationId]);
 
