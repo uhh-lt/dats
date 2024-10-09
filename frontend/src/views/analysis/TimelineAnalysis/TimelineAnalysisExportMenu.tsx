@@ -5,6 +5,7 @@ import { IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Tooltip } from 
 import { useMemo, useState } from "react";
 import CsvDownloader from "react-csv-downloader";
 import { Datas } from "react-csv-downloader/dist/esm/lib/csv";
+import { downloadFile } from "../../../utils/fileDownload.ts";
 import { TimelineAnalysisCount } from "./useTimelineAnalysis.ts";
 
 interface TimelineAnalysisExportMenuProps {
@@ -57,10 +58,7 @@ function TimelineAnalysisExportMenu({ chartData, chartName }: TimelineAnalysisEx
         context.drawImage(image, 0, 0, context.canvas.width, context.canvas.height);
         const png = canvas.toDataURL("image/png", 1.0);
 
-        const a = document.createElement("a");
-        a.setAttribute("download", "timeline-analysis.png");
-        a.setAttribute("href", png);
-        a.click();
+        downloadFile(png, "timeline-analysis.png");
       }
     };
 

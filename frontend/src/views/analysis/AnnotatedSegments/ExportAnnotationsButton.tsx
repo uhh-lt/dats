@@ -6,6 +6,7 @@ import ExporterHooks from "../../../api/ExporterHooks.ts";
 import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobStatus.ts";
 import { ExportJobType } from "../../../api/openapi/models/ExportJobType.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
+import { downloadFile } from "../../../utils/fileDownload.ts";
 
 interface ExportAnnotationsButtonProps {
   spanAnnotationIds: number[];
@@ -38,7 +39,12 @@ export default function ExportAnnotationsButton({ spanAnnotationIds }: ExportAnn
     if (!exportJob.data) return;
     if (exportJob.data.status) {
       if (exportJob.data.status === BackgroundJobStatus.FINISHED) {
-        window.open(import.meta.env.VITE_APP_CONTENT + "/" + exportJob.data.results_url, "_blank");
+        if (exportJob.data.results_url) {
+          downloadFile(
+            import.meta.env.VITE_APP_CONTENT + "/" + exportJob.data.results_url,
+            exportJob.data.results_url.split("/").pop() || "error.csv",
+          );
+        }
         // Make sure the download doesn't start again on a re-render
         startExport.reset();
       } else if (exportJob.data.status === BackgroundJobStatus.ERRORNEOUS) {
