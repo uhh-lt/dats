@@ -295,7 +295,7 @@ function ExporterDialog() {
         <Accordion elevation={0} variant="outlined">
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography sx={{ width: "33%", flexShrink: 0 }}>Type</Typography>
-            <Typography sx={{ color: "text.secondary" }}>
+            <Typography sx={{ color: (theme) => theme.palette.text.secondary }}>
               You want to export the {exporterData.type}
               {enabledComponentsPerType.get(exporterData.type)!.length > 0 ? "..." : "."}
             </Typography>
@@ -318,7 +318,7 @@ function ExporterDialog() {
           <Accordion elevation={0} variant="outlined">
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography sx={{ width: "33%", flexShrink: 0 }}>User</Typography>
-              <Typography sx={{ color: "text.secondary" }}>
+              <Typography sx={{ color: (theme) => theme.palette.text.secondary }}>
                 ... of {exporterData.users.length > 0 ? <UserName userId={exporterData.users[0]} /> : "no user"}.
               </Typography>
             </AccordionSummary>
@@ -344,7 +344,7 @@ function ExporterDialog() {
           <Accordion elevation={0} variant="outlined">
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography sx={{ width: "33%", flexShrink: 0 }}>User</Typography>
-              <Typography sx={{ color: "text.secondary" }}>
+              <Typography sx={{ color: (theme) => theme.palette.text.secondary }}>
                 ... of {exporterData.singleUser ? <UserName userId={exporterData.users[0]} /> : "all users"}.
               </Typography>
             </AccordionSummary>

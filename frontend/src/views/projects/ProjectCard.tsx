@@ -13,13 +13,13 @@ export function ProjectCard({ project }: ProjectCardProps) {
       <Card>
         <CardActionArea component={Link} to={`/project/${project.id}/search`}>
           <CardContent sx={{ padding: "0px !important" }}>
-            <Typography variant="body2" color="text.primary" bgcolor="lightgray" p={2} height={100}>
+            <Typography variant="body2" color="textPrimary" bgcolor="lightgray" p={2} height={100}>
               {project.description}
             </Typography>
           </CardContent>
           {preProStatus.isSuccess && (
             <CardContent sx={{ padding: "0px !important" }}>
-              <Typography variant="body2" color="text.primary" bgcolor="lightgray" p={2} height={100}>
+              <Typography variant="body2" color="textPrimary" bgcolor="lightgray" p={2} height={100}>
                 Number of Documents: {preProStatus.data.num_sdocs_finished}
                 <br />
                 {preProStatus.data.num_active_prepro_job_payloads > 0 && (

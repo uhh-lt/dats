@@ -13,7 +13,7 @@ function AnalysisCard({ to, title, description, color }: AnalysisCardProps) {
     <Card sx={{ width: 360, flexShrink: 0 }}>
       <CardActionArea component={Link} to={to}>
         <CardContent sx={{ padding: "0px !important" }}>
-          <Typography variant="body2" color="text.primary" bgcolor={color || "lightgrey"} p={2} height={200}>
+          <Typography variant="body2" color="textPrimary" bgcolor={color || "lightgrey"} p={2} height={200}>
             {description}
           </Typography>
         </CardContent>

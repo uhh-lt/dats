@@ -59,7 +59,7 @@ export function ActionFilters({ projectId }: ActionFiltersProps) {
             Filters:
           </Typography>
 
-          <Typography fontSize={18} color="inherit" component="div" sx={{ mr: 1 }}>
+          <Typography fontSize={18} component="div" sx={{ mr: 1 }}>
             Users:
           </Typography>
           <Select
@@ -91,7 +91,7 @@ export function ActionFilters({ projectId }: ActionFiltersProps) {
             ))}
           </Select>
 
-          <Typography fontSize={18} color="inherit" component="div" sx={{ mr: 1 }}>
+          <Typography fontSize={18} component="div" sx={{ mr: 1 }}>
             Actions:
           </Typography>
           <ButtonGroup sx={{ backgroundColor: "white", mr: 1, border: "1px solid grey" }}>
@@ -118,7 +118,7 @@ export function ActionFilters({ projectId }: ActionFiltersProps) {
             </Tooltip>
           </ButtonGroup>
 
-          <Typography fontSize={18} color="inherit" component="div" sx={{ mr: 1 }}>
+          <Typography fontSize={18} component="div" sx={{ mr: 1 }}>
             Entities:
           </Typography>
           <Select

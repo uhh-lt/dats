@@ -93,7 +93,7 @@ function ProjectDocuments({ project }: ProjectProps) {
   return (
     <Box display="flex" className="myFlexContainer h100">
       <Toolbar variant="dense" className="myFlexFitContentContainer">
-        <Typography variant="h6" color="inherit" component="div">
+        <Typography variant="h6" component="div">
           Import data{" "}
         </Typography>
         <Tooltip
@@ -104,12 +104,7 @@ function ProjectDocuments({ project }: ProjectProps) {
           <InfoIcon sx={{ ml: 0.5 }} fontSize="small" />
         </Tooltip>
         {import.meta.env.VITE_APP_STABILITY === "UNSTABLE" && (
-          <Typography
-            variant="body1"
-            color="inherit"
-            component="div"
-            sx={{ ml: 1, fontWeight: "bold", textDecoration: "underline" }}
-          >
+          <Typography variant="body1" component="div" sx={{ ml: 1, fontWeight: "bold", textDecoration: "underline" }}>
             (no sensitive data!)
           </Typography>
         )}

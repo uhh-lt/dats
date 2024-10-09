@@ -36,7 +36,7 @@ function CrawlerJobListItem({ initialCrawlerJob }: CrawlerJobListItemProps) {
                 <WebIcon />
               </ListItemIcon>
               <ListItemText>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="textSecondary">
                   {url}
                 </Typography>
               </ListItemText>

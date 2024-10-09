@@ -80,7 +80,7 @@ function ProjectUsers({ project }: ProjectProps) {
       <Toolbar variant="dense" className="myFlexFitContentContainer">
         <Stack direction="row" spacing={2} sx={{ width: "100%", alignItems: "center" }}>
           <Box sx={{ flex: "1 1 0", display: "flex", alignItems: "center" }}>
-            <Typography variant="h6" color="inherit" component="div">
+            <Typography variant="h6" component="div">
               Add user
             </Typography>
             {allUsers.isError ? (

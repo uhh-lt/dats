@@ -18,7 +18,7 @@ export default function AnalysisDashboard(props: AnalysisDashboardProps) {
   return (
     <NoSidebarLayout>
       <Portal container={appBarContainerRef?.current}>
-        <Typography variant="h6" color="inherit" component="div">
+        <Typography variant="h6" component="div">
           {props.pageTitle}
         </Typography>
       </Portal>

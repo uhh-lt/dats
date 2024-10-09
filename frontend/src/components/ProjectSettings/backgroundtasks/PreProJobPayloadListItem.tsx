@@ -41,7 +41,7 @@ function PreProJobPayloadListItem({ ppj }: PreProJobPayloadListItemProps) {
             )}
           </ListItemIcon>
           <ListItemText>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="textSecondary">
               {ppj.filename}
             </Typography>
           </ListItemText>
@@ -54,7 +54,7 @@ function PreProJobPayloadListItem({ ppj }: PreProJobPayloadListItemProps) {
           <Grid item md={3}>
             <Stack direction="row" sx={{ alignItems: "center" }}>
               <InfoOutlinedIcon fontSize="small" color="info" sx={{ mr: 1 }} />
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="textSecondary">
                 Status
               </Typography>
             </Stack>
@@ -70,13 +70,13 @@ function PreProJobPayloadListItem({ ppj }: PreProJobPayloadListItemProps) {
               <Grid item md={3}>
                 <Stack direction="row" sx={{ alignItems: "center" }}>
                   <InfoOutlinedIcon fontSize="small" color="info" sx={{ mr: 1 }} />
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="textSecondary">
                     Current Pipeline Step
                   </Typography>
                 </Stack>
               </Grid>
               <Grid item md={9}>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="textSecondary">
                   {ppj.current_pipeline_step}
                 </Typography>
               </Grid>
@@ -88,13 +88,13 @@ function PreProJobPayloadListItem({ ppj }: PreProJobPayloadListItemProps) {
               <Grid item md={3}>
                 <Stack direction="row" sx={{ alignItems: "center" }}>
                   <InfoOutlinedIcon fontSize="small" color="info" sx={{ mr: 1 }} />
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="textSecondary">
                     Error Message
                   </Typography>
                 </Stack>
               </Grid>
               <Grid item md={9}>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="textSecondary">
                   {ppj.error_message}
                 </Typography>
               </Grid>
@@ -104,13 +104,13 @@ function PreProJobPayloadListItem({ ppj }: PreProJobPayloadListItemProps) {
           <Grid item md={3}>
             <Stack direction="row" sx={{ alignItems: "center" }}>
               <InfoOutlinedIcon fontSize="small" color="info" sx={{ mr: 1 }} />
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="textSecondary">
                 MIME Type
               </Typography>
             </Stack>
           </Grid>
           <Grid item md={9}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="textSecondary">
               {ppj.mime_type}
             </Typography>
           </Grid>
@@ -118,13 +118,13 @@ function PreProJobPayloadListItem({ ppj }: PreProJobPayloadListItemProps) {
           <Grid item md={3}>
             <Stack direction="row" sx={{ alignItems: "center" }}>
               <InfoOutlinedIcon fontSize="small" color="info" sx={{ mr: 1 }} />
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="textSecondary">
                 DocType
               </Typography>
             </Stack>
           </Grid>
           <Grid item md={9}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="textSecondary">
               {ppj.doc_type}
             </Typography>
           </Grid>

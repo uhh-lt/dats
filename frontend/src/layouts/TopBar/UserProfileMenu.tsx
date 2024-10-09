@@ -71,7 +71,7 @@ function UserProfileMenu({ handleLogout, user }: UserProfileMenuProps) {
               <Typography align="center" variant="h6">
                 {user.first_name} {user.last_name}
               </Typography>
-              <Typography align="center" variant="body1" color="slategrey">
+              <Typography align="center" variant="body1" style={{ color: "slategrey" }}>
                 {user.email}
               </Typography>
             </Stack>

@@ -50,7 +50,7 @@ function RecentActivityCard({ sdocId }: RecentActivityButtonProps) {
         <Card variant="outlined">
           <CardActionArea onClick={() => navigate(`../project/${sdoc.data.project_id}/annotation/${sdocId}`)}>
             <CardContent>
-              <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
+              <Typography sx={{ fontSize: 14 }} color="textSecondary" gutterBottom>
                 {project.data.title}
               </Typography>
               <Typography variant="h5" component="div">

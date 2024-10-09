@@ -20,7 +20,7 @@ function LLMJobDetailListItem({ detailKey, detailValue }: LLMJobdetailListItemPr
       <Tooltip title="Click to view details" followCursor={true} enterDelay={1000}>
         <ListItemButton onClick={handleExpandClick}>
           <ListItemText>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="textSecondary">
               {detailKey}
             </Typography>
           </ListItemText>
@@ -29,7 +29,7 @@ function LLMJobDetailListItem({ detailKey, detailValue }: LLMJobdetailListItemPr
       </Tooltip>
 
       <Collapse in={expanded} timeout="auto" unmountOnExit>
-        <Typography pl={3} variant="body2" color="text.primary">
+        <Typography pl={3} variant="body2" color="textPrimary">
           {detailValue}
         </Typography>
       </Collapse>

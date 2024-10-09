@@ -37,7 +37,7 @@ function AnnotatedSegments() {
   return (
     <Box bgcolor={"grey.200"} className="h100">
       <Portal container={appBarContainerRef?.current}>
-        <Typography variant="h6" color="inherit" component="div">
+        <Typography variant="h6" component="div">
           Annotated Segments
         </Typography>
       </Portal>

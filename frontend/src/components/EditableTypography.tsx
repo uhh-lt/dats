@@ -1,17 +1,17 @@
+import EditIcon from "@mui/icons-material/Edit";
 import {
   IconButton,
   OutlinedInput,
   Stack,
+  StackProps,
   Typography,
   TypographyProps,
   outlinedInputClasses,
   styled,
   useTheme,
-  StackProps,
 } from "@mui/material";
 import { Variant } from "@mui/material/styles/createTypography";
 import { FocusEventHandler, KeyboardEventHandler, useCallback, useRef, useState } from "react";
-import EditIcon from "@mui/icons-material/Edit";
 
 const CustomOutlinedInput = styled(OutlinedInput)(`
   background-color: white;
@@ -97,7 +97,7 @@ function EditableTypography({
         />
       ) : (
         <>
-          <Typography {...props} color="inherit" component="div" onClick={handleClick}>
+          <Typography {...props} component="div" onClick={handleClick}>
             {value}
           </Typography>
           <IconButton onClick={() => setIsEditing(true)} sx={{ ml: 1, color: whiteColor ? "white" : null }}>

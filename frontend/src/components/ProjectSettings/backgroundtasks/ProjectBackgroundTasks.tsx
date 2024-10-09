@@ -97,7 +97,7 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
       {crawlerJobs.isSuccess && preProJobs.isSuccess && llmJobs.isSuccess && (
         <>
           <Toolbar variant="dense">
-            <Typography variant="h6" color="inherit" component="div">
+            <Typography variant="h6" component="div">
               Waiting
             </Typography>
             <Box sx={{ flexGrow: 1 }} />
@@ -105,7 +105,7 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
           <Divider />
           <List>{renderBackgroundJobs(BackgroundJobStatus.WAITING)}</List>
           <Toolbar variant="dense">
-            <Typography variant="h6" color="inherit" component="div">
+            <Typography variant="h6" component="div">
               Running
             </Typography>
             <Box sx={{ flexGrow: 1 }} />
@@ -113,7 +113,7 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
           <Divider />
           <List>{renderBackgroundJobs(BackgroundJobStatus.RUNNING)}</List>
           <Toolbar variant="dense">
-            <Typography variant="h6" color="inherit" component="div">
+            <Typography variant="h6" component="div">
               Finished
             </Typography>
             <Box sx={{ flexGrow: 1 }} />
@@ -121,7 +121,7 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
           <Divider />
           <List>{renderBackgroundJobs(BackgroundJobStatus.FINISHED)}</List>
           <Toolbar variant="dense">
-            <Typography variant="h6" color="inherit" component="div">
+            <Typography variant="h6" component="div">
               Aborted
             </Typography>
             <Box sx={{ flexGrow: 1 }} />
@@ -129,7 +129,7 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
           <Divider />
           <List>{renderBackgroundJobs(BackgroundJobStatus.ABORTED)}</List>
           <Toolbar variant="dense">
-            <Typography variant="h6" color="inherit" component="div">
+            <Typography variant="h6" component="div">
               Failed
             </Typography>
             <Box sx={{ flexGrow: 1 }} />

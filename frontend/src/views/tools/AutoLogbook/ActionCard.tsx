@@ -34,7 +34,7 @@ function ActionCard({ action }: ActionCardProps) {
   return (
     <Card variant="outlined" sx={{ width: "100%", backgroundColor: actionType2Color[action.action_type] }}>
       <CardContent sx={{ pb: 0 }}>
-        <Typography sx={{ fontSize: 12 }} color="text.secondary" gutterBottom>
+        <Typography sx={{ fontSize: 12 }} color="textSecondary" gutterBottom>
           User: <UserName userId={action.user_id} />
           <span style={{ float: "right" }}>{action.action_type.valueOf()}</span>
         </Typography>

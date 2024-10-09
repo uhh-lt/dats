@@ -39,7 +39,7 @@ function Projects() {
                             justifyContent: "center",
                           }}
                         >
-                          <Typography variant="h5" fontWeight={700} color="text.secondary" mb={5}>
+                          <Typography variant="h5" fontWeight={700} color="textSecondary" mb={5}>
                             CREATE NEW PROJECT
                           </Typography>
                         </CardContent>

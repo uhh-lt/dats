@@ -109,7 +109,7 @@ function TreeExplorer({
       {toolbarTitle && (
         <AppBar position="relative" color="secondary" className="myFlexFitContentContainer">
           <Toolbar variant="dense" sx={{ paddingRight: 0 }}>
-            <Typography variant="h6" color="inherit" component="div">
+            <Typography variant="h6" component="div">
               {toolbarTitle}
             </Typography>
           </Toolbar>

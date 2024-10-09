@@ -44,7 +44,7 @@ function SpanAnnotationCardList({ spanAnnotationIds }: SpanAnnotationCardListPro
             </div>
           ))
         ) : (
-          <Typography variant="body1" color="inherit" component="div">
+          <Typography variant="body1" component="div">
             No segment selected. Click on a row to view a segment.
           </Typography>
         )}
