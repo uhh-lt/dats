@@ -1,4 +1,5 @@
-import { Link, Stack } from "@mui/material";
+import { Stack } from "@mui/material";
+import { Link } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks.ts";
 import { SourceDocumentRead } from "../../api/openapi/models/SourceDocumentRead.ts";
 import { docTypeToIcon } from "../../utils/docTypeToIcon.tsx";
@@ -47,7 +48,7 @@ function SdocRendererWithData({
   );
 
   if (link) {
-    return <Link href={`/project/${sdoc.project_id}/annotation/${sdoc.id}`}>{content}</Link>;
+    return <Link to={`/project/${sdoc.project_id}/annotation/${sdoc.id}`}>{content}</Link>;
   }
   return content;
 }

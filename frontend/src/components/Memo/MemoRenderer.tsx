@@ -14,6 +14,7 @@ export interface MemoRendererSharedProps {
   showUser?: boolean;
   showStar?: boolean;
   showAttachedObject?: boolean;
+  attachedObjectLink?: boolean;
 }
 
 interface MemoRendererProps {
@@ -28,6 +29,7 @@ function MemoRenderer({
   showUser = false,
   showStar = false,
   showAttachedObject = false,
+  attachedObjectLink = false,
   ...props
 }: MemoRendererProps & MemoRendererSharedProps & StackProps) {
   if (typeof memo === "number") {
@@ -40,6 +42,7 @@ function MemoRenderer({
         showUser={showUser}
         showStar={showStar}
         showAttachedObject={showAttachedObject}
+        attachedObjectLink={attachedObjectLink}
         {...props}
       />
     );
@@ -53,6 +56,7 @@ function MemoRenderer({
         showUser={showUser}
         showStar={showStar}
         showAttachedObject={showAttachedObject}
+        attachedObjectLink={attachedObjectLink}
         {...props}
       />
     );
@@ -79,6 +83,7 @@ export function MemoRendererWithData({
   showUser,
   showStar,
   showAttachedObject,
+  attachedObjectLink,
   ...props
 }: { memo: MemoRead } & MemoRendererSharedProps & StackProps) {
   return (
@@ -92,6 +97,7 @@ export function MemoRendererWithData({
         <AttachedObjectRenderer
           attachedObjectId={memo.attached_object_id}
           attachedObjectType={memo.attached_object_type}
+          link={attachedObjectLink}
         />
       )}
     </Stack>

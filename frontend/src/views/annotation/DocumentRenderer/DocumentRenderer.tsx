@@ -1,10 +1,11 @@
 import { Box, BoxProps } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import React, { useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import "./DocumentRenderer.css";
 
 import { DOMNode, Element, HTMLReactParserOptions, domToReact } from "html-react-parser";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import DocumentPage from "./DocumentPage.tsx";
 import { IToken } from "./IToken.ts";
 import SdocAudioLink from "./SdocAudioLink.tsx";
@@ -47,6 +48,26 @@ function DocumentRenderer({
     return splitted;
   }, [html]);
   const numPages = htmlPages.length;
+
+  // jump to annotations
+  const selectedAnnotationId = useAppSelector((state) => state.annotations.selectedAnnotationId);
+  useEffect(() => {
+    const scrollIntoView = () => {
+      const annotation = document.getElementById("span-annotation-" + selectedAnnotationId);
+      if (annotation) {
+        annotation.scrollIntoView({ behavior: "smooth" });
+        return true;
+      }
+      return false;
+    };
+    if (!scrollIntoView()) {
+      const intervalHandle = setInterval(() => {
+        if (scrollIntoView()) {
+          clearInterval(intervalHandle);
+        }
+      }, 500);
+    }
+  }, [selectedAnnotationId]);
 
   // virtualization
   const listRef: React.MutableRefObject<HTMLDivElement | null> = useRef(null);
