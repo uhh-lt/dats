@@ -3,7 +3,8 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ClearIcon from "@mui/icons-material/Clear";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Box, Button, IconButton, MenuItem, Stack, TextField, Tooltip } from "@mui/material";
-import { TreeItem, TreeView } from "@mui/x-tree-view";
+import { TreeItem } from "@mui/x-tree-view";
+import { SimpleTreeView } from "@mui/x-tree-view/SimpleTreeView";
 import { LogicalOperator } from "../../api/openapi/models/LogicalOperator.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
 import FilterExpressionRenderer from "./FilterExpressionRenderer.tsx";
@@ -55,7 +56,7 @@ function FilterRenderer({ editableFilter, filterActions, column2Info }: FilterRe
     return (
       <TreeItem
         key={filter.id}
-        nodeId={filter.id}
+        itemId={filter.id}
         label={
           <Stack direction="row" alignItems="end" py={1}>
             <Tooltip title="Delete Filter Group">
@@ -95,7 +96,7 @@ function FilterRenderer({ editableFilter, filterActions, column2Info }: FilterRe
       >
         <TreeItem
           key={`${filter.id}-add`}
-          nodeId={`${filter.id}-add`}
+          itemId={`${filter.id}-add`}
           label={
             <Box sx={{ pl: 4 }}>
               <Button startIcon={<AddIcon />} onClick={() => handleAddFilter(filter.id)}>
@@ -132,15 +133,17 @@ function FilterRenderer({ editableFilter, filterActions, column2Info }: FilterRe
   };
 
   return (
-    <TreeView
+    <SimpleTreeView
       className="filterTree"
-      defaultCollapseIcon={<ExpandMoreIcon />}
-      defaultExpanded={[editableFilter.id]}
-      defaultExpandIcon={<ChevronRightIcon />}
+      slots={{
+        collapseIcon: ExpandMoreIcon,
+        expandIcon: ChevronRightIcon,
+      }}
+      defaultExpandedItems={[editableFilter.id]}
       disableSelection
     >
       {renderFilter(editableFilter, true)}
-    </TreeView>
+    </SimpleTreeView>
   );
 }
 

@@ -20,19 +20,24 @@ function CodeExplorer(props: BoxProps) {
   const expandedCodeIds = useAppSelector((state) => state.annotations.expandedCodeIds);
   const dispatch = useAppDispatch();
 
+  // local client state
   const [codeFilter, setCodeFilter] = useState<string>("");
 
   // handle ui events
-  const handleExpandedDataIdsChange = useCallback(
+  const handleExpandedCodeIdsChange = useCallback(
     (newCodeIds: string[]) => {
       dispatch(AnnoActions.setExpandedCodeIds(newCodeIds));
     },
     [dispatch],
   );
 
-  const handleSelectCode = (_event: React.SyntheticEvent, nodeIds: string[] | string) => {
-    const id = parseInt(Array.isArray(nodeIds) ? nodeIds[0] : nodeIds);
-    dispatch(AnnoActions.setSelectedCodeId(selectedCodeId === id ? undefined : id));
+  const handleSelectedCodeChange = (_event: React.SyntheticEvent, nodeIds: string[] | string | null) => {
+    if (nodeIds === null) {
+      dispatch(AnnoActions.setSelectedCodeId(undefined));
+    } else {
+      const id = parseInt(Array.isArray(nodeIds) ? nodeIds[0] : nodeIds);
+      dispatch(AnnoActions.setSelectedCodeId(selectedCodeId === id ? undefined : id));
+    }
   };
 
   return (
@@ -43,18 +48,17 @@ function CodeExplorer(props: BoxProps) {
             sx={{ pt: 0 }}
             dataIcon={SquareIcon}
             // data
-            allData={allCodes.data}
             dataTree={codeTree}
             // filter
             showFilter
             dataFilter={codeFilter}
             onDataFilterChange={setCodeFilter}
             // expansion
-            expandedDataIds={expandedCodeIds}
-            onExpandedDataIdsChange={handleExpandedDataIdsChange}
+            expandedItems={expandedCodeIds}
+            onExpandedItemsChange={handleExpandedCodeIdsChange}
             // selection
-            selectedDataId={selectedCodeId}
-            onSelectedDataIdChange={handleSelectCode}
+            selectedItems={selectedCodeId}
+            onSelectedItemsChange={handleSelectedCodeChange}
             // actions
             renderActions={(node) => <CodeExplorerMenu code={node} />}
             renderListActions={() => (

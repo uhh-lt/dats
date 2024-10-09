@@ -24,15 +24,14 @@ function ProjectTags() {
             sx={{ pt: 0 }}
             dataIcon={LabelIcon}
             // data
-            allData={allTags.data}
             dataTree={tagTree}
             // filter
             showFilter
             dataFilter={tagFilter}
             onDataFilterChange={setTagFilter}
             // expansion
-            expandedDataIds={expandedTagIds}
-            onExpandedDataIdsChange={setExpandedTagIds}
+            expandedItems={expandedTagIds}
+            onExpandedItemsChange={setExpandedTagIds}
             // actions
             renderActions={(node) => (
               <>

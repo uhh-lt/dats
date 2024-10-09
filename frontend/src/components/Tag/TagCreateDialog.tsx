@@ -12,6 +12,7 @@ import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
 import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { contrastiveColors } from "../../utils/colors.ts";
+import { SearchActions } from "../../views/search/DocumentSearch/searchSlice.ts";
 import FormColorPicker from "../FormInputs/FormColorPicker.tsx";
 import FormMenu from "../FormInputs/FormMenu.tsx";
 import FormText from "../FormInputs/FormText.tsx";
@@ -77,6 +78,18 @@ function TagCreateDialog() {
             text: `Added tag ${data.name}`,
             severity: "success",
           });
+
+          // if we add a new tag successfully, we want to show the tag in the tag explorer
+          // this means, we have to expand the parent tags, so the new tag is visible
+          const tagsToExpand = [];
+          let parentTagId = data.parent_id;
+          while (parentTagId) {
+            const currentParentTagId = parentTagId;
+
+            tagsToExpand.push(parentTagId);
+            parentTagId = tags.data?.find((tag) => tag.id === currentParentTagId)?.parent_id;
+          }
+          dispatch(SearchActions.expandTags(tagsToExpand.map((id) => id.toString())));
 
           handleClose();
         },

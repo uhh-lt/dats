@@ -24,7 +24,7 @@ function FilterExpressionRenderer({
   return (
     <TreeItem
       key={filterExpression.id}
-      nodeId={filterExpression.id}
+      itemId={filterExpression.id}
       onClick={(event) => {
         event.preventDefault();
         event.stopPropagation();

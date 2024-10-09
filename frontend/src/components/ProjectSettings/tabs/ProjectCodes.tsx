@@ -27,15 +27,14 @@ function ProjectCodes() {
             sx={{ pt: 0 }}
             dataIcon={SquareIcon}
             // data
-            allData={allCodes.data}
             dataTree={codeTree}
             // filter
             showFilter
             dataFilter={codeFilter}
             onDataFilterChange={setCodeFilter}
             // expansion
-            expandedDataIds={expandedCodeIds}
-            onExpandedDataIdsChange={setExpandedCodeIds}
+            expandedItems={expandedCodeIds}
+            onExpandedItemsChange={setExpandedCodeIds}
             // actions
             renderActions={(node) => (
               <>
