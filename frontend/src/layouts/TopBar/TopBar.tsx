@@ -1,6 +1,6 @@
-import { AppBar, AppBarProps, Box, Button, Grid2, Link, Stack, Toolbar, Typography } from "@mui/material";
+import { AppBar, AppBarProps, Box, Button, Grid2, Stack, Toolbar, Typography } from "@mui/material";
 import { useContext } from "react";
-import { Link as RouterLink, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import { LoginStatus } from "../../auth/LoginStatus.ts";
 import { useAuth } from "../../auth/useAuth.ts";
@@ -27,7 +27,13 @@ function TopBar(props: AppBarProps) {
               <TemporaryDrawer />
               <Typography variant="h6" noWrap sx={{ display: { xs: "none", sm: "block" } }}>
                 {loginStatus === LoginStatus.LOGGED_IN ? (
-                  <Link href="/projects" color="inherit" underline="none">
+                  <Link
+                    to="/projects"
+                    style={{
+                      color: "inherit",
+                      textDecoration: "none",
+                    }}
+                  >
                     DATS
                   </Link>
                 ) : (
@@ -49,7 +55,7 @@ function TopBar(props: AppBarProps) {
                 </Typography>
               )}
               {loginStatus === LoginStatus.LOGGED_OUT ? (
-                <Button color="inherit" component={RouterLink} to="/login">
+                <Button color="inherit" component={Link} to="/login">
                   Login
                 </Button>
               ) : (
