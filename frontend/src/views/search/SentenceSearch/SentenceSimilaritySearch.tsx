@@ -9,7 +9,7 @@ import { SpanEntityStat } from "../../../api/openapi/models/SpanEntityStat.ts";
 import { SearchService } from "../../../api/openapi/services/SearchService.ts";
 import { MyFilter, createEmptyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 import DocumentInformation from "../../../components/SourceDocument/DocumentInformation/DocumentInformation.tsx";
-import TagExplorerNew from "../../../components/Tag/TagExplorer/TagExplorer.tsx";
+import TagExplorer from "../../../components/Tag/TagExplorer/TagExplorer.tsx";
 import TwoSidebarsLayout from "../../../layouts/TwoSidebarsLayout.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { AnnoActions } from "../../annotation/annoSlice.ts";
@@ -101,7 +101,7 @@ function SentenceSimilaritySearch() {
     <TwoSidebarsLayout
       leftSidebar={
         <>
-          <TagExplorerNew sx={{ height: "50%", pt: 0 }} onTagClick={handleAddTagFilter} />
+          <TagExplorer sx={{ height: "50%", pt: 0 }} onTagClick={handleAddTagFilter} />
           <Divider />
           <SearchStatistics
             sx={{ height: "50%" }}

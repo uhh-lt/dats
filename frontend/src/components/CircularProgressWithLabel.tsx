@@ -1,4 +1,4 @@
-import { CircularProgressProps, Box, CircularProgress, Typography, Tooltip } from "@mui/material";
+import { Box, CircularProgress, CircularProgressProps, Tooltip, Typography } from "@mui/material";
 import React from "react";
 
 interface CircularProgressWithLabelProps extends Omit<CircularProgressProps, "value" | "variant"> {
@@ -26,7 +26,7 @@ function CircularProgressWithLabel({ current, max, tooltip, ...props }: Circular
         }}
       >
         <Tooltip title={tooltip}>
-          <Typography variant="caption" component="div" color="text.secondary">
+          <Typography variant="caption" component="div" color="textSecondary">
             {`${value}%`}
           </Typography>
         </Tooltip>

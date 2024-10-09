@@ -1,4 +1,4 @@
-import { Grid, Link, Typography } from "@mui/material";
+import { Grid2, Link, Typography } from "@mui/material";
 import { SUPPORT_EMAIL } from "../../../utils/GlobalConstants.ts";
 
 export default function DataPrivacy() {
@@ -8,8 +8,8 @@ export default function DataPrivacy() {
         Data and Privacy
       </Typography>
 
-      <Grid container spacing={1} sx={{ borderTop: 1, borderColor: "divider" }}>
-        <Grid item xs={12} sx={{ mt: 1, height: "100%", overflow: "auto" }}>
+      <Grid2 container spacing={1} sx={{ borderTop: 1, borderColor: "divider" }}>
+        <Grid2 size={{ xs: 12 }} sx={{ mt: 1, height: "100%", overflow: "auto" }}>
           <Typography variant={"body1"} gutterBottom>
             This section outlines how we collect, use, and protect your data.
             <br />
@@ -74,8 +74,8 @@ export default function DataPrivacy() {
             To exercise these rights, please contact us at <Link href={"mailto:" + SUPPORT_EMAIL}>{SUPPORT_EMAIL}</Link>
             .
           </Typography>
-        </Grid>
-      </Grid>
+        </Grid2>
+      </Grid2>
     </>
   );
 }

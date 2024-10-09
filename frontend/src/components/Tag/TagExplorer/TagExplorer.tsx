@@ -1,6 +1,8 @@
 import LabelIcon from "@mui/icons-material/Label";
 import { Box, BoxProps } from "@mui/material";
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { SearchActions } from "../../../views/search/DocumentSearch/searchSlice.ts";
 import ExporterButton from "../../Exporter/ExporterButton.tsx";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
 import TagEditDialog from "../TagEditDialog.tsx";
@@ -12,12 +14,21 @@ interface TagExplorerNewProps {
   onTagClick?: (tagId: number) => void;
 }
 
-function TagExplorerNew({ onTagClick, ...props }: TagExplorerNewProps & BoxProps) {
+function TagExplorer({ onTagClick, ...props }: TagExplorerNewProps & BoxProps) {
   // custom hooks
   const { tagTree, allTags } = useComputeTagTree();
 
+  // tag expansion
+  const dispatch = useAppDispatch();
+  const expandedTagIds = useAppSelector((state) => state.search.expandedTagIds);
+  const handleExpandedTagIdsChange = useCallback(
+    (tagIds: string[]) => {
+      dispatch(SearchActions.setExpandedTagIds(tagIds));
+    },
+    [dispatch],
+  );
+
   // local client state
-  const [expandedTagIds, setExpandedTagIds] = useState<string[]>([]);
   const [tagFilter, setTagFilter] = useState<string>("");
 
   return (
@@ -28,17 +39,16 @@ function TagExplorerNew({ onTagClick, ...props }: TagExplorerNewProps & BoxProps
             sx={{ pt: 0 }}
             dataIcon={LabelIcon}
             // data
-            allData={allTags.data}
             dataTree={tagTree}
             // filter
             showFilter
             dataFilter={tagFilter}
             onDataFilterChange={setTagFilter}
             // expansion
-            expandedDataIds={expandedTagIds}
-            onExpandedDataIdsChange={setExpandedTagIds}
+            expandedItems={expandedTagIds}
+            onExpandedItemsChange={handleExpandedTagIdsChange}
             // actions
-            onDataClick={onTagClick}
+            onItemClick={onTagClick ? (_, tagId) => onTagClick(parseInt(tagId)) : undefined}
             renderActions={(node) => <TagExplorerMenu tag={node} />}
             renderListActions={() => (
               <>
@@ -58,4 +68,4 @@ function TagExplorerNew({ onTagClick, ...props }: TagExplorerNewProps & BoxProps
   );
 }
 
-export default TagExplorerNew;
+export default TagExplorer;

@@ -39,11 +39,11 @@ function SpanAnnotationCard({ annotationId, ...props }: SpanAnnotationCardProps 
     <Card elevation={2} {...props}>
       <CardContent sx={{ pb: "8px !important" }}>
         {annotationId === undefined ? (
-          <Typography variant="body1" color="inherit" component="div" sx={{ mt: 2 }}>
+          <Typography variant="body1" component="div" sx={{ mt: 2 }}>
             <i>Select an annotation to view it & it's context :)</i>
           </Typography>
         ) : spanAnnotation.isSuccess && sdoc.isSuccess ? (
-          <Typography variant="body1" color="inherit" component="div" sx={{ mt: 2 }}>
+          <Typography variant="body1" component="div" sx={{ mt: 2 }}>
             {sdoc.data.content.substring(spanAnnotation.data.begin - contextSize, spanAnnotation.data.begin)}
             <b>{sdoc.data.content.substring(spanAnnotation.data.begin, spanAnnotation.data.end)}</b>
             {sdoc.data.content.substring(spanAnnotation.data.end, spanAnnotation.data.end + contextSize)}
@@ -51,7 +51,7 @@ function SpanAnnotationCard({ annotationId, ...props }: SpanAnnotationCardProps 
         ) : spanAnnotation.isLoading || sdoc.isLoading ? (
           <CircularProgress />
         ) : (
-          <Typography variant="body1" color="inherit" component="div">
+          <Typography variant="body1" component="div">
             {spanAnnotation.error?.message}
             {sdoc.error?.message}
           </Typography>
@@ -65,7 +65,7 @@ function SpanAnnotationCard({ annotationId, ...props }: SpanAnnotationCardProps 
         />
         <Tooltip title={"Change code"}>
           <span>
-            <IconButton disabled={spanAnnotation.data === undefined} color="inherit" onClick={handleChangeCodeClick}>
+            <IconButton disabled={spanAnnotation.data === undefined} onClick={handleChangeCodeClick}>
               <EditIcon />
             </IconButton>
           </span>

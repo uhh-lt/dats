@@ -1,4 +1,4 @@
-import { Grid } from "@mui/material";
+import { Grid2 } from "@mui/material";
 import { ReactNode } from "react";
 import { useAppDispatch, useAppSelector } from "../plugins/ReduxHooks.ts";
 import LayoutManipulationButtons from "./LayoutManipulationButtons.tsx";
@@ -18,11 +18,10 @@ function TwoSidebarsLayout({
   const dispatch = useAppDispatch();
 
   return (
-    <Grid container className="h100">
+    <Grid2 container className="h100">
       {leftSidebarSize > 0 && (
-        <Grid
-          item
-          md={leftSidebarSize}
+        <Grid2
+          size={{ md: leftSidebarSize }}
           className="h100"
           sx={{
             zIndex: (theme) => theme.zIndex.appBar,
@@ -32,11 +31,10 @@ function TwoSidebarsLayout({
           }}
         >
           {leftSidebar}
-        </Grid>
+        </Grid2>
       )}
-      <Grid
-        item
-        md={contentSize}
+      <Grid2
+        size={{ md: contentSize }}
         className="myFlexContainer h100"
         sx={{
           bgcolor: (theme) => theme.palette.grey[200],
@@ -56,11 +54,10 @@ function TwoSidebarsLayout({
           isLeft={false}
         />
         {content}
-      </Grid>
+      </Grid2>
       {rightSidebarSize > 0 && (
-        <Grid
-          item
-          md={rightSidebarSize}
+        <Grid2
+          size={{ md: rightSidebarSize }}
           className="h100"
           sx={{
             zIndex: (theme) => theme.zIndex.appBar,
@@ -70,9 +67,9 @@ function TwoSidebarsLayout({
           }}
         >
           {rightSidebar}
-        </Grid>
+        </Grid2>
       )}
-    </Grid>
+    </Grid2>
   );
 }
 

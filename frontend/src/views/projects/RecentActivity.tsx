@@ -1,5 +1,5 @@
 import InfoIcon from "@mui/icons-material/Info";
-import { Card, CardActionArea, CardContent, Stack, Toolbar, Tooltip, Typography } from "@mui/material";
+import { Card, CardActionArea, CardContent, Stack, Tooltip, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import SdocHooks from "../../api/SdocHooks.ts";
@@ -11,12 +11,12 @@ function RecentActivity() {
 
   return (
     <>
-      <Toolbar sx={{ p: "0px !important" }}>
+      <Stack direction="row" alignItems="center" my={2}>
         <Typography variant="h6">Recent Activity</Typography>
         <Tooltip title="Recently annotated documents">
           <InfoIcon sx={{ ml: 1 }} />
         </Tooltip>
-      </Toolbar>
+      </Stack>
       {recentSdocIds.isLoading && <div>Loading!</div>}
       {recentSdocIds.isError && <div>Error: {recentSdocIds.error.message}</div>}
       {recentSdocIds.isSuccess && (
@@ -50,7 +50,7 @@ function RecentActivityCard({ sdocId }: RecentActivityButtonProps) {
         <Card variant="outlined">
           <CardActionArea onClick={() => navigate(`../project/${sdoc.data.project_id}/annotation/${sdocId}`)}>
             <CardContent>
-              <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
+              <Typography sx={{ fontSize: 14 }} color="textSecondary" gutterBottom>
                 {project.data.title}
               </Typography>
               <Typography variant="h5" component="div">

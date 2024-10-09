@@ -90,7 +90,7 @@ function MemoCardWithContent({ memo, onMouseEnter, onMouseLeave }: MemoCardShare
         }
         action={<MemoCardActionsMenu memo={memo} />}
         subheader={
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" color="textSecondary">
             {attachedObject.isSuccess ? (
               <AttachedObjectLink attachedObject={attachedObject.data} attachedObjectType={memo.attached_object_type} />
             ) : (
@@ -114,7 +114,7 @@ function MemoCardWithContent({ memo, onMouseEnter, onMouseLeave }: MemoCardShare
         >
           {memo.content}
         </Typography>
-        <Typography variant="subtitle2" color="text.secondary" fontWeight={600} fontSize={11} mt={1}>
+        <Typography variant="subtitle2" color="textSecondary" fontWeight={600} fontSize={11} mt={1}>
           {"Last modified: " +
             dateToLocaleString(memo.updated).substring(0, dateToLocaleString(memo.updated).indexOf(","))}
         </Typography>

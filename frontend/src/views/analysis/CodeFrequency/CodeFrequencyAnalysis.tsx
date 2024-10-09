@@ -1,4 +1,4 @@
-import { Card, CardHeader, Grid, Portal, Stack, Typography } from "@mui/material";
+import { Card, CardHeader, Grid2, Portal, Stack, Typography } from "@mui/material";
 import { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
@@ -32,15 +32,15 @@ function CodeFrequencyAnalysis() {
   }, [selectedUserIds]);
 
   return (
-    <Grid container columnSpacing={1} className="h100" px={2} pt={2} bgcolor="grey.200">
+    <Grid2 container columnSpacing={1} className="h100" px={2} pt={2} bgcolor="grey.200">
       {codeTree ? (
         <>
           <Portal container={appBarContainerRef?.current}>
-            <Typography variant="h6" color="inherit" component="div">
+            <Typography variant="h6" component="div">
               Frequency Analysis
             </Typography>
           </Portal>
-          <Grid item xs={6} className="h100" sx={{ overflowY: "auto", pr: 1, py: 1 }}>
+          <Grid2 size={{ xs: 6 }} className="h100" sx={{ overflowY: "auto", pr: 1, py: 1 }}>
             <Stack spacing={2}>
               <Stack direction="row" gap={2}>
                 <UserSelectorMulti
@@ -74,8 +74,8 @@ function CodeFrequencyAnalysis() {
                 />
               )}
             </Stack>
-          </Grid>
-          <Grid item xs={6} className="h100" sx={{ py: 1 }}>
+          </Grid2>
+          <Grid2 size={{ xs: 6 }} className="h100" sx={{ py: 1 }}>
             {selectedCode ? (
               <CodeOccurrenceTable projectId={projectId} codeId={selectedCode} userIds={selectedUserIds} />
             ) : (
@@ -83,18 +83,14 @@ function CodeFrequencyAnalysis() {
                 <CardHeader title={`Click on a bar / slice to see occurrences!`} />
               </Card>
             )}
-          </Grid>
+          </Grid2>
         </>
       ) : allCodes.isError ? (
-        <Grid item xs={12}>
-          ERROR: {allCodes.error.message}
-        </Grid>
+        <Grid2 size={{ xs: 12 }}>ERROR: {allCodes.error.message}</Grid2>
       ) : (
-        <Grid item xs={12}>
-          Loading...
-        </Grid>
+        <Grid2 size={{ xs: 12 }}>Loading...</Grid2>
       )}
-    </Grid>
+    </Grid2>
   );
 }
 

@@ -334,7 +334,7 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
       </Stack>
     ),
     renderEmptyRowsFallback: () => (
-      <Typography pt={4} align="center" color="grey" fontStyle="italic">
+      <Typography pt={4} align="center" color="textDisabled" fontStyle="italic">
         No sentences to display. Select a concept from the Concept List.
       </Typography>
     ),

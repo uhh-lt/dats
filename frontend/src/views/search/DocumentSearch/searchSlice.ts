@@ -8,6 +8,7 @@ import { SearchFilterActions } from "../searchFilterSlice.ts";
 interface SearchState {
   // project state:
   selectedDocumentId: number | undefined; // the id of the selected document. Used to highlight the selected document in the table, and to show the document information (tags, metadata etc.).
+  expandedTagIds: string[]; // the ids of the tags that are expanded in the tag tree.
   // app state:
   expertSearchMode: boolean; // whether the expert search mode is enabled.
   sortStatsByGlobal: boolean; // whether the search statistics are sorted by the global frequency or the "local" ().
@@ -17,6 +18,7 @@ const initialState: TableState & SearchState = {
   ...initialTableState,
   // project state:
   selectedDocumentId: undefined,
+  expandedTagIds: [],
   // app state:
   expertSearchMode: false,
   sortStatsByGlobal: false,
@@ -41,6 +43,16 @@ export const searchSlice = createSlice({
         delete state.rowSelectionModel[`${sdocId}`];
       }
     },
+    setExpandedTagIds: (state, action: PayloadAction<string[]>) => {
+      state.expandedTagIds = action.payload;
+    },
+    expandTags: (state, action: PayloadAction<string[]>) => {
+      for (const tagId of action.payload) {
+        if (state.expandedTagIds.indexOf(tagId) === -1) {
+          state.expandedTagIds.push(tagId);
+        }
+      }
+    },
     // search statistics
     onToggleSortStatsByGlobal: (state) => {
       state.sortStatsByGlobal = !state.sortStatsByGlobal;
@@ -55,6 +67,7 @@ export const searchSlice = createSlice({
       .addCase(ProjectActions.changeProject, (state) => {
         console.log("Project changed! Resetting 'search' state.");
         state.selectedDocumentId = initialState.selectedDocumentId;
+        state.expandedTagIds = initialState.expandedTagIds;
         resetProjectTableState(state);
       })
       .addCase(SearchFilterActions.init, (state, action) => {

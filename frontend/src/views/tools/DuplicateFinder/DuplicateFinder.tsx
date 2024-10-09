@@ -181,7 +181,7 @@ function ProjectDuplicateDocuments() {
   return (
     <NoSidebarLayout>
       <Portal container={appBarContainerRef?.current}>
-        <Typography variant="h6" color="inherit" component="div">
+        <Typography variant="h6" component="div">
           Tools
         </Typography>
       </Portal>

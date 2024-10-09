@@ -92,7 +92,7 @@ function Annotation() {
   return (
     <>
       <Portal container={appBarContainerRef?.current}>
-        <Typography variant="h6" color="inherit" component="div">
+        <Typography variant="h6" component="div">
           {sdoc.isSuccess ? `Annotator: ${sdoc.data.filename}` : "Annotator"}
         </Typography>
       </Portal>

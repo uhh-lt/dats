@@ -59,7 +59,7 @@ function ImageSimilaritySearchToolbar({ searchResultDocumentIds }: ImageSimilari
       />
       {selectedDocumentIds.length > 0 && (
         <>
-          <Typography color="inherit" variant="subtitle1" component="div">
+          <Typography variant="subtitle1" component="div">
             {selectedDocumentIds.length} selected
           </Typography>
           <TagMenuButton

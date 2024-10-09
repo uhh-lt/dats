@@ -1,4 +1,4 @@
-import { Grid } from "@mui/material";
+import { Grid2 } from "@mui/material";
 import Portal from "@mui/material/Portal";
 import { useContext } from "react";
 import { useParams } from "react-router-dom";
@@ -13,14 +13,14 @@ function Logbook() {
   return (
     <>
       <Portal container={appBarContainerRef?.current}>Logbook</Portal>
-      <Grid container spacing={2} className="h100" bgcolor={"grey.200"} p={2}>
-        <Grid item md={6} className="h100">
+      <Grid2 container spacing={2} className="h100" bgcolor={"grey.200"} p={2}>
+        <Grid2 size={{ md: 6 }} className="h100">
           <SearchMemoTable projectId={projectId} />
-        </Grid>
-        <Grid item md={6} className="h100">
+        </Grid2>
+        <Grid2 size={{ md: 6 }} className="h100">
           <div>Editor currently not supported</div>
-        </Grid>
-      </Grid>
+        </Grid2>
+      </Grid2>
     </>
   );
 }

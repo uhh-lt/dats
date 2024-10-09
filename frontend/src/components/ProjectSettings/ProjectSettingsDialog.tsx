@@ -79,7 +79,7 @@ function ProjectSettingsDialog() {
       <TabContext value={tab}>
         <AppBar position="relative" color="primary" className="myFlexFitContentContainer">
           <Stack direction="row" sx={{ px: 2, pt: 2 }}>
-            <Typography variant="h6" color="inherit" component="div">
+            <Typography variant="h6" component="div">
               {project.isSuccess ? project.data.title : "Project name"} - Settings
             </Typography>
           </Stack>

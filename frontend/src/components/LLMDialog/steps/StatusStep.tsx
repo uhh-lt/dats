@@ -54,7 +54,7 @@ function StatusStep() {
             </LLMUtterance>
           )}
 
-          <Typography mt={4} fontSize="0.9em" color="text.secondary">
+          <Typography mt={4} fontSize="0.9em" color="textSecondary">
             This may take a while. You can close the dialog and come back later. You can find all active LLM jobs in
             Project Settings &gt; Background Tasks.
           </Typography>

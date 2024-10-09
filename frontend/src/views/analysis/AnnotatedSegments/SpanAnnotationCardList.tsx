@@ -1,4 +1,4 @@
-import { Grid, Typography } from "@mui/material";
+import { Grid2, Typography } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useRef } from "react";
 import SpanAnnotationCard from "./SpanAnnotationCard.tsx";
@@ -18,7 +18,7 @@ function SpanAnnotationCardList({ spanAnnotationIds }: SpanAnnotationCardListPro
   });
 
   return (
-    <Grid ref={listRef} item md={6} className="h100WithScroll">
+    <Grid2 size={{ md: 6 }} ref={listRef} className="h100WithScroll">
       <div
         style={{
           height: `${virtualizer.getTotalSize()}px`,
@@ -44,12 +44,12 @@ function SpanAnnotationCardList({ spanAnnotationIds }: SpanAnnotationCardListPro
             </div>
           ))
         ) : (
-          <Typography variant="body1" color="inherit" component="div">
+          <Typography variant="body1" component="div">
             No segment selected. Click on a row to view a segment.
           </Typography>
         )}
       </div>
-    </Grid>
+    </Grid2>
   );
 }
 

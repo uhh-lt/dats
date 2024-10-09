@@ -1,12 +1,11 @@
-import { Grid } from "@mui/material";
+import { Grid2 } from "@mui/material";
 import { ReactNode } from "react";
 
 function OneSidebarLayout({ leftSidebar, content }: { leftSidebar: ReactNode; content: ReactNode }) {
   return (
-    <Grid container className="h100">
-      <Grid
-        item
-        md={3}
+    <Grid2 container className="h100">
+      <Grid2
+        size={{ md: 3 }}
         className="h100"
         sx={{
           zIndex: (theme) => theme.zIndex.appBar,
@@ -16,11 +15,15 @@ function OneSidebarLayout({ leftSidebar, content }: { leftSidebar: ReactNode; co
         }}
       >
         {leftSidebar}
-      </Grid>
-      <Grid item md={9} className="h100" sx={{ backgroundColor: (theme) => theme.palette.grey[200], overflow: "auto" }}>
+      </Grid2>
+      <Grid2
+        size={{ md: 9 }}
+        className="h100"
+        sx={{ backgroundColor: (theme) => theme.palette.grey[200], overflow: "auto" }}
+      >
         {content}
-      </Grid>
-    </Grid>
+      </Grid2>
+    </Grid2>
   );
 }
 

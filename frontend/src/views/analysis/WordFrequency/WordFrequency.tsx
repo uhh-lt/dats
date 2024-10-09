@@ -1,4 +1,4 @@
-import { Box, Grid, Portal, Typography } from "@mui/material";
+import { Box, Grid2, Portal, Typography } from "@mui/material";
 import { useContext } from "react";
 import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
 import WordFrequencyTable from "./WordFrequencyTable.tsx";
@@ -13,11 +13,11 @@ function WordFrequency() {
           Word Frequencies
         </Typography>
       </Portal>
-      <Grid container className="h100" columnSpacing={2} padding={2} bgcolor={"grey.200"}>
-        <Grid item md={12} className="myFlexContainer h100">
+      <Grid2 container className="h100" columnSpacing={2} padding={2} bgcolor={"grey.200"}>
+        <Grid2 size={{ md: 12 }} className="myFlexContainer h100">
           <WordFrequencyTable />
-        </Grid>
-      </Grid>
+        </Grid2>
+      </Grid2>
     </Box>
   );
 }
