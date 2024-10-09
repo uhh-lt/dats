@@ -1,5 +1,5 @@
 import { AccountBox, Email, Help, Lock, Visibility } from "@mui/icons-material";
-import { Container, Grid, Typography } from "@mui/material";
+import { Container, Grid2, Typography } from "@mui/material";
 import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
@@ -66,7 +66,7 @@ function Profile() {
         {user ? (
           <>
             {/* Grid container for creating vertical layout of tabs and tabpanel */}
-            <Grid
+            <Grid2
               container
               sx={{
                 height: "90%",
@@ -77,7 +77,7 @@ function Profile() {
               }}
             >
               {/* Grid item tabs */}
-              <Grid item xs={3} sx={{ bgcolor: "#f5f5f5", height: "100%", borderRadius: 2 }}>
+              <Grid2 size={{ xs: 3 }} sx={{ bgcolor: "#f5f5f5", height: "100%", borderRadius: 2 }}>
                 <Tabs
                   orientation="vertical"
                   variant="scrollable"
@@ -151,10 +151,10 @@ function Profile() {
                     }}
                   />
                 </Tabs>
-              </Grid>
+              </Grid2>
 
               {/* Grid item tabpanels */}
-              <Grid item xs={9}>
+              <Grid2 size={{ xs: 9 }}>
                 <TabPanel value={value} index={0}>
                   <ProfileHome user={user} />
                 </TabPanel>
@@ -170,8 +170,8 @@ function Profile() {
                 <TabPanel value={value} index={4}>
                   <Support />
                 </TabPanel>
-              </Grid>
-            </Grid>
+              </Grid2>
+            </Grid2>
           </>
         ) : (
           <Typography variant={"body1"} gutterBottom mt={3}>

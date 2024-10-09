@@ -1,6 +1,17 @@
 import ReorderIcon from "@mui/icons-material/Reorder";
 import VerticalSplitIcon from "@mui/icons-material/VerticalSplit";
-import { Box, Card, CardContent, Grid, IconButton, Portal, Stack, TextField, Tooltip, Typography } from "@mui/material";
+import {
+  Box,
+  Card,
+  CardContent,
+  Grid2,
+  IconButton,
+  Portal,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import { useContext, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import SpanAnnotationEditDialog from "../../../components/SpanAnnotation/SpanAnnotationEditDialog.tsx";
@@ -41,8 +52,8 @@ function AnnotatedSegments() {
           Annotated Segments
         </Typography>
       </Portal>
-      <Grid container className="h100" columnSpacing={2} padding={2} bgcolor={"grey.200"}>
-        <Grid item md={isSplitView ? 6 : 12} className="myFlexContainer h100">
+      <Grid2 container className="h100" columnSpacing={2} padding={2} bgcolor={"grey.200"}>
+        <Grid2 size={{ md: isSplitView ? 6 : 12 }} className="myFlexContainer h100">
           <Card sx={{ mb: 2, flexShrink: 0 }} elevation={2}>
             <CardContent sx={{ p: 1, pb: "8px !important" }}>
               <Stack direction="row" alignItems="center">
@@ -76,9 +87,9 @@ function AnnotatedSegments() {
           )}
 
           <AnnotatedSegmentsTable cardProps={{ elevation: 2, className: "myFlexFillAllContainer myFlexContainer" }} />
-        </Grid>
+        </Grid2>
         {isSplitView && <SpanAnnotationCardList spanAnnotationIds={selectedAnnotationIds} />}
-      </Grid>
+      </Grid2>
       <SpanAnnotationEditDialog projectId={projectId} />
     </Box>
   );

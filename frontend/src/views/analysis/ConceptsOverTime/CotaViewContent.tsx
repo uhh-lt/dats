@@ -1,4 +1,4 @@
-import { Box, Grid } from "@mui/material";
+import { Box, Grid2 } from "@mui/material";
 import { COTARead } from "../../../api/openapi/models/COTARead.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import CotaConceptList from "./CotaConceptList.tsx";
@@ -17,24 +17,24 @@ function CotaViewContent({ cota }: CotaViewContentProps) {
   const isTimelineView = useAppSelector((state) => state.cota.isTimelineView);
 
   return (
-    <Grid container className="h100" columnSpacing={2} padding={2} bgcolor={"grey.200"}>
-      <Grid item md={3} className="myFlexContainer h100">
+    <Grid2 container className="h100" columnSpacing={2} padding={2} bgcolor={"grey.200"}>
+      <Grid2 size={{ md: 3 }} className="myFlexContainer h100">
         <Box className="myFlexFitContentContainer" sx={{ mb: 2 }}>
           {isTimelineView ? <CotaTimelineSettings cota={cota} /> : <CotaControl cota={cota} />}
         </Box>
         <Box className="myFlexFillAllContainerNoScroll">
           <CotaConceptList cota={cota} />
         </Box>
-      </Grid>
-      <Grid item md={9} className="h100">
+      </Grid2>
+      <Grid2 size={{ md: 9 }} className="h100">
         <Box style={{ height: "50%" }} sx={{ pb: 1 }}>
           {isTimelineView ? <CotaTimelinePlot cota={cota} /> : <CotaScatterPlotly cota={cota} />}
         </Box>
         <Box style={{ height: "50%" }} sx={{ pt: 1 }}>
           <CotaSentenceAnnotator2 cota={cota} />
         </Box>
-      </Grid>
-    </Grid>
+      </Grid2>
+    </Grid2>
   );
 }
 

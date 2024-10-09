@@ -1,5 +1,5 @@
 import { ErrorMessage } from "@hookform/error-message";
-import { Button, Grid, TextField, Typography } from "@mui/material";
+import { Button, Grid2, TextField, Typography } from "@mui/material";
 import { useRef } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import UserHooks from "../../../api/UserHooks.ts";
@@ -63,13 +63,13 @@ export default function UpdateEmail({ user }: UpdateEmailProps) {
         Update Email
       </Typography>
       <form onSubmit={handleSubmit(handleUpdate, handleError)}>
-        <Grid container spacing={1} sx={{ borderTop: 1, borderColor: "divider" }}>
-          <Grid item xs={12}>
+        <Grid2 container spacing={1} sx={{ borderTop: 1, borderColor: "divider" }}>
+          <Grid2 size={{ xs: 12 }}>
             <Typography variant={"body1"} gutterBottom>
               <b> Current e-mail</b>
             </Typography>
-          </Grid>
-          <Grid item xs={12}>
+          </Grid2>
+          <Grid2 size={{ xs: 12 }}>
             <TextField
               value={user.email}
               disabled
@@ -83,13 +83,13 @@ export default function UpdateEmail({ user }: UpdateEmailProps) {
               }}
               size="small"
             />
-          </Grid>
-          <Grid item xs={12}>
+          </Grid2>
+          <Grid2 size={{ xs: 12 }}>
             <Typography variant={"body1"} gutterBottom>
               <b> New e-mail</b>
             </Typography>
-          </Grid>
-          <Grid item xs={12}>
+          </Grid2>
+          <Grid2 size={{ xs: 12 }}>
             <FormEmail
               name="newemail"
               control={control}
@@ -108,13 +108,13 @@ export default function UpdateEmail({ user }: UpdateEmailProps) {
                 helperText: <ErrorMessage errors={errors} name="newemail" />,
               }}
             />
-          </Grid>
-          <Grid item xs={12}>
+          </Grid2>
+          <Grid2 size={{ xs: 12 }}>
             <Button aria-label="Update Email" variant="contained" size="small" type="submit">
               Update
             </Button>
-          </Grid>
-        </Grid>
+          </Grid2>
+        </Grid2>
       </form>
     </>
   );

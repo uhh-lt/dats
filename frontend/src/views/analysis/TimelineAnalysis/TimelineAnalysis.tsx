@@ -1,4 +1,4 @@
-import { Box, CircularProgress, Grid, Portal, Typography } from "@mui/material";
+import { Box, CircularProgress, Grid2, Portal, Typography } from "@mui/material";
 import { useContext } from "react";
 import { useParams } from "react-router-dom";
 import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
@@ -47,16 +47,16 @@ function TimelineAnalysisContent({ timelineAnalysis }: TimelineAnalysisContentPr
   const anaylsisResults = useTimelineAnalysis(timelineAnalysis);
 
   return (
-    <Grid container className="h100" columnSpacing={2} padding={2} bgcolor={"grey.200"}>
-      <Grid item md={3} className="myFlexContainer h100">
+    <Grid2 container className="h100" columnSpacing={2} padding={2} bgcolor={"grey.200"}>
+      <Grid2 size={{ md: 3 }} className="myFlexContainer h100">
         <Box className="myFlexFitContentContainer" sx={{ mb: 2 }}>
           <TimelineAnalysisSettings timelineAnalysis={timelineAnalysis} />
         </Box>
         <Box className="myFlexFillAllContainerNoScroll">
           <ConceptList timelineAnalysis={timelineAnalysis} />
         </Box>
-      </Grid>
-      <Grid item md={9} className="h100">
+      </Grid2>
+      <Grid2 size={{ md: 9 }} className="h100">
         <Box style={{ height: "50%" }} sx={{ pb: 1 }}>
           <TimelineAnalysisViz
             chartData={anaylsisResults.isSuccess ? anaylsisResults.counts : undefined}
@@ -66,8 +66,8 @@ function TimelineAnalysisContent({ timelineAnalysis }: TimelineAnalysisContentPr
         <Box style={{ height: "50%" }} sx={{ pt: 1 }}>
           <TimeAnalysisProvenance provenanceData={anaylsisResults.date2concept2ids} />
         </Box>
-      </Grid>
-    </Grid>
+      </Grid2>
+    </Grid2>
   );
 }
 

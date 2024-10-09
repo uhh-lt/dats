@@ -1,4 +1,4 @@
-import { AppBar, AppBarProps, Box, Button, Grid, Link, Stack, Toolbar, Typography } from "@mui/material";
+import { AppBar, AppBarProps, Box, Button, Grid2, Link, Stack, Toolbar, Typography } from "@mui/material";
 import { useContext } from "react";
 import { Link as RouterLink, useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks.ts";
@@ -21,8 +21,8 @@ function TopBar(props: AppBarProps) {
   return (
     <AppBar position="static" sx={{ zIndex: (theme) => theme.zIndex.appBar }} {...props}>
       <Toolbar disableGutters>
-        <Grid container>
-          <Grid item xs={2} sx={{ pl: 3 }}>
+        <Grid2 container width="100%">
+          <Grid2 size={{ xs: 2 }} sx={{ pl: 3 }}>
             <Stack direction="row" sx={{ alignItems: "center", height: "100%" }}>
               <TemporaryDrawer />
               <Typography variant="h6" noWrap sx={{ display: { xs: "none", sm: "block" } }}>
@@ -35,8 +35,8 @@ function TopBar(props: AppBarProps) {
                 )}
               </Typography>
             </Stack>
-          </Grid>
-          <Grid item xs={10} sx={{ pr: 3 }}>
+          </Grid2>
+          <Grid2 size={{ xs: 10 }} sx={{ pr: 3 }}>
             <Stack direction="row" sx={{ alignItems: "center", height: "48px" }}>
               {appBarContainerRef ? (
                 <Box sx={{ flexGrow: 1 }} ref={appBarContainerRef} />
@@ -56,8 +56,8 @@ function TopBar(props: AppBarProps) {
                 <UserProfileMenu handleLogout={logout} user={user} />
               )}
             </Stack>
-          </Grid>
-        </Grid>
+          </Grid2>
+        </Grid2>
       </Toolbar>
     </AppBar>
   );

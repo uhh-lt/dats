@@ -1,4 +1,4 @@
-import { Box, Card, CardActionArea, CardContent, Container, Grid, Toolbar, Typography } from "@mui/material";
+import { Box, Card, CardActionArea, CardContent, Container, Grid2, Typography } from "@mui/material";
 import { useState } from "react";
 import UserHooks from "../../api/UserHooks.ts";
 import { ProjectCard } from "./ProjectCard.tsx";
@@ -16,46 +16,45 @@ function Projects() {
         {projects.isError && <div>Error: {projects.error.message}</div>}
         {projects.isSuccess && (
           <>
-            <Grid container spacing={2}>
-              <Grid item sm={9}>
-                <Toolbar sx={{ p: "0px !important" }}>
-                  <Typography variant="h6">All Projects</Typography>
-                </Toolbar>
+            <Grid2 container spacing={2}>
+              <Grid2 container size={{ sm: 9 }}>
+                <Grid2 size={{ sm: 12 }}>
+                  <Typography variant="h6" mt={2}>
+                    All Projects
+                  </Typography>
+                </Grid2>
+                <Grid2 size={{ sm: 4 }}>
+                  <Card
+                    sx={{
+                      border: "3px dashed lightgray",
+                      boxShadow: 0,
+                    }}
+                  >
+                    <CardActionArea onClick={() => setIsOpen(true)}>
+                      <CardContent
+                        sx={{
+                          height: 240,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Typography variant="h5" fontWeight={700} color="textSecondary" mb={5}>
+                          CREATE NEW PROJECT
+                        </Typography>
+                      </CardContent>
+                    </CardActionArea>
+                  </Card>
+                </Grid2>
+                {projects.data.map((project) => (
+                  <ProjectCard key={project.id} project={project} />
+                ))}
+              </Grid2>
 
-                <Grid container spacing={2}>
-                  <Grid item sm={4}>
-                    <Card
-                      sx={{
-                        border: "3px dashed lightgray",
-                        boxShadow: 0,
-                      }}
-                    >
-                      <CardActionArea onClick={() => setIsOpen(true)}>
-                        <CardContent
-                          sx={{
-                            height: 240,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <Typography variant="h5" fontWeight={700} color="textSecondary" mb={5}>
-                            CREATE NEW PROJECT
-                          </Typography>
-                        </CardContent>
-                      </CardActionArea>
-                    </Card>
-                  </Grid>
-                  {projects.data.map((project) => (
-                    <ProjectCard key={project.id} project={project} />
-                  ))}
-                </Grid>
-              </Grid>
-
-              <Grid item sm={3}>
+              <Grid2 size={{ sm: 3 }}>
                 <RecentActivity />
-              </Grid>
-            </Grid>
+              </Grid2>
+            </Grid2>
           </>
         )}
       </Container>

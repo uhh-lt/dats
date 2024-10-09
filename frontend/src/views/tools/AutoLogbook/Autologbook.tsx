@@ -1,4 +1,4 @@
-import { Box, Grid, Portal, Toolbar, Typography } from "@mui/material";
+import { Box, Grid2, Portal, Toolbar, Typography } from "@mui/material";
 import { useContext, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
@@ -83,13 +83,13 @@ function Autologbook() {
             <ActionDateFunctions />
           </Toolbar>
         </Box>
-        <Grid container className="myFlexFillAllContainer" columnSpacing={2}>
+        <Grid2 container className="myFlexFillAllContainer" columnSpacing={2}>
           {Object.entries(actionsPerDay).map(([day, actions]) => (
-            <Grid key={day} item xs={12 / visibleDays} className="h100">
+            <Grid2 key={day} size={{ xs: 12 / visibleDays }} className="h100">
               <ActionCardWeekView actions={actions} day={day} />
-            </Grid>
+            </Grid2>
           ))}
-        </Grid>
+        </Grid2>
       </div>
     </>
   );

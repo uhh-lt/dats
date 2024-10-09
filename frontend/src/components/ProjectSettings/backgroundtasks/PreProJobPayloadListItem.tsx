@@ -4,7 +4,7 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import {
   CircularProgress,
   Collapse,
-  Grid,
+  Grid2,
   ListItemButton,
   ListItemIcon,
   ListItemText,
@@ -50,85 +50,85 @@ function PreProJobPayloadListItem({ ppj }: PreProJobPayloadListItemProps) {
       </Tooltip>
 
       <Collapse in={expanded} timeout="auto" unmountOnExit>
-        <Grid container rowSpacing={2} columnSpacing={1} paddingLeft={15.5}>
-          <Grid item md={3}>
+        <Grid2 container rowSpacing={2} columnSpacing={1} paddingLeft={15.5}>
+          <Grid2 size={{ md: 3 }}>
             <Stack direction="row" sx={{ alignItems: "center" }}>
               <InfoOutlinedIcon fontSize="small" color="info" sx={{ mr: 1 }} />
               <Typography variant="body2" color="textSecondary">
                 Status
               </Typography>
             </Stack>
-          </Grid>
-          <Grid item md={9}>
+          </Grid2>
+          <Grid2 size={{ md: 9 }}>
             <Typography variant="body2" color={`${statusToTypographyColor[ppj.status!]}`}>
               {ppj.status}
             </Typography>
-          </Grid>
+          </Grid2>
 
           {ppj.current_pipeline_step && (
             <>
-              <Grid item md={3}>
+              <Grid2 size={{ md: 3 }}>
                 <Stack direction="row" sx={{ alignItems: "center" }}>
                   <InfoOutlinedIcon fontSize="small" color="info" sx={{ mr: 1 }} />
                   <Typography variant="body2" color="textSecondary">
                     Current Pipeline Step
                   </Typography>
                 </Stack>
-              </Grid>
-              <Grid item md={9}>
+              </Grid2>
+              <Grid2 size={{ md: 9 }}>
                 <Typography variant="body2" color="textSecondary">
                   {ppj.current_pipeline_step}
                 </Typography>
-              </Grid>
+              </Grid2>
             </>
           )}
 
           {ppj.status === BackgroundJobStatus.ERRORNEOUS && (
             <>
-              <Grid item md={3}>
+              <Grid2 size={{ md: 3 }}>
                 <Stack direction="row" sx={{ alignItems: "center" }}>
                   <InfoOutlinedIcon fontSize="small" color="info" sx={{ mr: 1 }} />
                   <Typography variant="body2" color="textSecondary">
                     Error Message
                   </Typography>
                 </Stack>
-              </Grid>
-              <Grid item md={9}>
+              </Grid2>
+              <Grid2 size={{ md: 9 }}>
                 <Typography variant="body2" color="textSecondary">
                   {ppj.error_message}
                 </Typography>
-              </Grid>
+              </Grid2>
             </>
           )}
 
-          <Grid item md={3}>
+          <Grid2 size={{ md: 3 }}>
             <Stack direction="row" sx={{ alignItems: "center" }}>
               <InfoOutlinedIcon fontSize="small" color="info" sx={{ mr: 1 }} />
               <Typography variant="body2" color="textSecondary">
                 MIME Type
               </Typography>
             </Stack>
-          </Grid>
-          <Grid item md={9}>
+          </Grid2>
+          <Grid2 size={{ md: 9 }}>
             <Typography variant="body2" color="textSecondary">
               {ppj.mime_type}
             </Typography>
-          </Grid>
+          </Grid2>
 
-          <Grid item md={3}>
+          <Grid2 size={{ md: 3 }}>
             <Stack direction="row" sx={{ alignItems: "center" }}>
               <InfoOutlinedIcon fontSize="small" color="info" sx={{ mr: 1 }} />
               <Typography variant="body2" color="textSecondary">
                 DocType
               </Typography>
             </Stack>
-          </Grid>
-          <Grid item md={9}>
+          </Grid2>
+          <Grid2 size={{ md: 9 }}>
             <Typography variant="body2" color="textSecondary">
               {ppj.doc_type}
             </Typography>
-          </Grid>
-        </Grid>
+          </Grid2>
+        </Grid2>
       </Collapse>
     </>
   );
