@@ -33,7 +33,7 @@ function TimeAnalysisProvenance({ provenanceData }: TimeAnalysisProvenanceProps)
             <InfoIcon />
           </IconButton>
         }
-        title={`Provenance for ${concept} in ${date}`}
+        title={concept && date ? `Provenance for ${concept} in ${date}` : "Provenance"}
         subheader="Investigate the Timeline Analysis."
       />
       <CardContent className="myFlexFillAllContainer" style={{ padding: 0 }}>

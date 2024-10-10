@@ -47,6 +47,7 @@ export interface UseAnaylsisDashboardTableProps {
   isDuplicatingAnalysis: boolean;
   deletingAnalysisId?: number;
   duplicatingAnalysisId?: number;
+  onOpenAnalysis: (analysisId: number) => void;
   handleDuplicateAnalysis: (row: MRT_Row<AnaylsisDashboardRow>) => void;
   handleDeleteAnalysis: (row: MRT_Row<AnaylsisDashboardRow>) => void;
   handleCreateAnalysis: HandleCreateAnalysis;
@@ -131,7 +132,10 @@ export const useAnalysisDashboardTable = (props: UseAnaylsisDashboardTableProps)
         onClick:
           tableState.editingRow || tableState.creatingRow || props.deletingAnalysisId === row.original.id
             ? undefined
-            : () => navigate(`./${row.original.id}`),
+            : () => {
+                props.onOpenAnalysis(row.original.id);
+                navigate(`./${row.original.id}`);
+              },
       };
     },
     // create analysis inline

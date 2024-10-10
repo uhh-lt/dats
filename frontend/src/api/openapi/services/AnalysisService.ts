@@ -9,6 +9,7 @@ import type { Body_analysis_annotated_images } from "../models/Body_analysis_ann
 import type { Body_analysis_annotated_segments } from "../models/Body_analysis_annotated_segments";
 import type { Body_analysis_code_frequencies } from "../models/Body_analysis_code_frequencies";
 import type { Body_analysis_word_frequency_analysis } from "../models/Body_analysis_word_frequency_analysis";
+import type { Body_analysis_word_frequency_analysis_export } from "../models/Body_analysis_word_frequency_analysis_export";
 import type { CodeFrequency } from "../models/CodeFrequency";
 import type { CodeOccurrence } from "../models/CodeOccurrence";
 import type { ColumnInfo_AnnotatedImagesColumns_ } from "../models/ColumnInfo_AnnotatedImagesColumns_";
@@ -279,6 +280,31 @@ export class AnalysisService {
         project_id: projectId,
         page: page,
         page_size: pageSize,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Export the word frequency analysis.
+   * @returns string Successful Response
+   * @throws ApiError
+   */
+  public static wordFrequencyAnalysisExport({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: Body_analysis_word_frequency_analysis_export;
+  }): CancelablePromise<string> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/analysis/word_frequency_analysis_export",
+      query: {
+        project_id: projectId,
       },
       body: requestBody,
       mediaType: "application/json",

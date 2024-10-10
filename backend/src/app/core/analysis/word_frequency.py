@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy import String, cast, distinct, func
 from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg
@@ -6,6 +6,7 @@ from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.doc_type import DocType
 from app.core.data.dto.analysis import WordFrequencyResult, WordFrequencyStat
+from app.core.data.export.export_service import ExportService
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
@@ -172,12 +173,10 @@ def word_frequency_info(
 def word_frequency(
     project_id: int,
     filter: Filter[WordFrequencyColumns],
-    page: int,
-    page_size: int,
     sorts: List[Sort[WordFrequencyColumns]],
+    page: Optional[int] = None,
+    page_size: Optional[int] = None,
 ) -> WordFrequencyResult:
-    # project_metadata_id has to refer to a DATE metadata
-
     with SQLService().db_session() as db:
         tag_ids_agg = aggregate_ids(
             DocumentTagORM.id, label=WordFrequencyColumns.DOCUMENT_TAG_ID_LIST
@@ -274,9 +273,15 @@ def word_frequency(
         else:
             query = apply_sorting(query=query, sorts=sorts, db=db)
 
-        query, pagination = apply_pagination(
-            query=query, page_number=page + 1, page_size=page_size
-        )
+        if page is not None and page_size is not None:
+            query, pagination = apply_pagination(
+                query=query, page_number=page + 1, page_size=page_size
+            )
+            total_results = pagination.total_results
+            result = query.all()
+        else:
+            result = query.all()
+            total_results = len(result)
 
         word_frequency_stats = [
             WordFrequencyStat(
@@ -286,12 +291,24 @@ def word_frequency(
                 sdocs=row[3],
                 sdocs_percent=row[4],
             )
-            for row in query.all()
+            for row in result
         ]
 
         return WordFrequencyResult(
-            total_results=pagination.total_results,
+            total_results=total_results,
             sdocs_total=global_sdoc_count,
             words_total=global_word_count,
             word_frequencies=word_frequency_stats,
         )
+
+
+def word_frequency_export(
+    project_id: int,
+    filter: Filter[WordFrequencyColumns],
+) -> str:
+    export_service = ExportService()
+
+    wf_result = word_frequency(project_id=project_id, filter=filter, sorts=[])
+    return export_service.export_word_frequencies(
+        project_id=project_id, wf_result=wf_result
+    )

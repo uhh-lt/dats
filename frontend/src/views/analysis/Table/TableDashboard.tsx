@@ -104,14 +104,12 @@ function TableDashboard() {
     });
   };
 
-  const handleEditAnalysis: MRT_TableOptions<AnaylsisDashboardRow>["onEditingRowSave"] = ({ values, table }) => {
+  const handleEditAnalysis: MRT_TableOptions<AnaylsisDashboardRow>["onEditingRowSave"] = ({ values, table, row }) => {
     updateTable(
       {
-        analysisTableId: values.id,
+        analysisTableId: row.original.id,
         requestBody: {
           title: values.title,
-          content: JSON.stringify(values.content),
-          table_type: values.table_type,
         },
       },
       {
@@ -139,6 +137,7 @@ function TableDashboard() {
     isUpdatingAnalysis: isUpdatingTable,
     deletingAnalysisId: deletingVariables?.analysisTableId,
     duplicatingAnalysisId: duplicatingVariables?.analysisTableId,
+    onOpenAnalysis: (analysisId) => console.log("Opening Table " + analysisId),
     handleCreateAnalysis,
     handleEditAnalysis,
     handleDeleteAnalysis,

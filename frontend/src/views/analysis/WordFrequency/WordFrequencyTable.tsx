@@ -1,5 +1,4 @@
-import SaveAltIcon from "@mui/icons-material/SaveAlt";
-import { IconButton, Stack, Tooltip, Typography } from "@mui/material";
+import { Stack, Typography } from "@mui/material";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   MRT_ColumnDef,
@@ -22,6 +21,7 @@ import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
 import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
+import ExportWordFrequencyButton from "./ExportWordFrequencyButton.tsx";
 import { useInitWordFrequencyFilterSlice } from "./useInitWordFrequencyFilterSlice.ts";
 import { WordFrequencyActions } from "./wordFrequencySlice.ts";
 
@@ -244,13 +244,7 @@ function WordFrequencyTable() {
       <Stack direction={"row"} spacing={1} alignItems="center" height={48}>
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleDensePaddingButton table={table} />
-        <Tooltip title={"Export word frequencies"}>
-          <span>
-            <IconButton disabled>
-              <SaveAltIcon />
-            </IconButton>
-          </span>
-        </Tooltip>
+        <ExportWordFrequencyButton filter={filter as MyFilter<WordFrequencyColumns>} />
       </Stack>
     ),
   });

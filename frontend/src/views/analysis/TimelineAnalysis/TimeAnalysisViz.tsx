@@ -46,6 +46,15 @@ function TimelineAnalysisViz({ chartData, timelineAnalysis }: TimelineAnalysisVi
     content = (
       <Typography>Please add a concept to start the analysis (or make at least one concept visible).</Typography>
     );
+  } else if (
+    timelineAnalysis.settings.date_metadata_id === undefined ||
+    timelineAnalysis.settings.date_metadata_id === null
+  ) {
+    content = (
+      <Typography>
+        Please specify the <i>Date metadata</i> to be used in the analysis.
+      </Typography>
+    );
   } else if (!chartData) {
     content = (
       <Box height="100%" alignItems="center" justifyContent="center" display="flex">
@@ -126,7 +135,10 @@ function TimelineAnalysisViz({ chartData, timelineAnalysis }: TimelineAnalysisVi
         className="myFlexFitContentContainer"
         action={
           <>
-            <TimelineAnalysisExportMenu chartData={chartData} chartName={timelineAnalysis.name} />
+            <TimelineAnalysisExportMenu
+              chartData={chartData}
+              chartName={(isBarPlot ? "barchart-" : "linechart-") + timelineAnalysis.name}
+            />
             <Tooltip title={isBarPlot ? "View as Line Chart" : "View as Bar Chart"}>
               <IconButton onClick={() => dispatch(TimelineAnalysisActions.onTogglePlotType())}>
                 {isBarPlot ? <TimelineIcon /> : <BarChartIcon />}

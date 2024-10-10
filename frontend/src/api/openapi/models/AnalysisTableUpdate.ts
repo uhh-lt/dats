@@ -7,13 +7,13 @@ export type AnalysisTableUpdate = {
   /**
    * Title of the AnalysisTable
    */
-  title: string;
+  title?: string | null;
   /**
    * Content of the AnalysisTable
    */
-  content: string;
+  content?: string | null;
   /**
    * TABLETYPE of the AnalysisTable
    */
-  table_type: TableType;
+  table_type?: TableType | null;
 };

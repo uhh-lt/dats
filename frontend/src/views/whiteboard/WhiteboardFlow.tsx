@@ -1,4 +1,5 @@
 import SaveIcon from "@mui/icons-material/Save";
+import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import { LoadingButton } from "@mui/lab";
 import { Box, Paper, Stack, Typography } from "@mui/material";
 import { toPng } from "html-to-image";
@@ -40,6 +41,7 @@ import CodeEditDialog from "../../components/Code/CodeEditDialog.tsx";
 import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import SpanAnnotationEditDialog from "../../components/SpanAnnotation/SpanAnnotationEditDialog.tsx";
 import TagEditDialog from "../../components/Tag/TagEditDialog.tsx";
+import { downloadFile } from "../../utils/ExportUtils.ts";
 import StraightConnectionLine from "./connectionlines/StraightConnectionLine.tsx";
 import CustomEdge from "./edges/CustomEdge.tsx";
 import FloatingEdge from "./edges/FloatingEdge.tsx";
@@ -540,14 +542,16 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
                         node?.classList?.contains("react-flow__panel")
                       ),
                   }).then((dataUrl) => {
-                    const a = document.createElement("a");
-                    a.setAttribute("download", "reactflow.png");
-                    a.setAttribute("href", dataUrl);
-                    a.click();
+                    downloadFile(dataUrl, `whiteboard-${whiteboard.title}.png`);
                   });
                 }}
               >
-                <img src="assets/export.png" alt="Export" width="16px" height="16px" />
+                <SaveAltIcon
+                  style={{
+                    maxWidth: "16px",
+                    maxHeight: "24px",
+                  }}
+                />
               </ControlButton>
             </Controls>
             <MiniMap />

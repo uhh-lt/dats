@@ -217,7 +217,7 @@ function CotaScatterPlotly({ cota }: CotaScatterPlotlyProps) {
         layout={figure.layout}
         frames={figure.frames || undefined}
         useResizeHandler={true}
-        config={{ displayModeBar: true }}
+        config={{ displayModeBar: true, toImageButtonOptions: { filename: `cota-scatter-plot-${cota.name}` } }}
         style={{ width: "100%", height: "100%" }}
         onHover={handleHover}
         onUnhover={handleUnhover}

@@ -36,6 +36,7 @@ import { SingleUserAllMemosExportJobParams } from "../../api/openapi/models/Sing
 import { SingleUserLogbookExportJobParams } from "../../api/openapi/models/SingleUserLogbookExportJobParams.ts";
 import { useAuth } from "../../auth/useAuth.ts";
 import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
+import { downloadFile } from "../../utils/ExportUtils.ts";
 import UserName from "../User/UserName.tsx";
 import ExporterItemSelectList from "./ExporterItemSelectList.tsx";
 
@@ -56,13 +57,6 @@ const componentIsDisabled = (type: string, component: string): boolean => {
   }
   return true;
 };
-
-// const attachObjects = [
-//   { id: 0, name: "Document" },
-//   { id: 1, name: "Code" },
-//   { id: 2, name: "Tag" },
-//   { id: 3, name: "Annotations" },
-// ];
 
 export interface ExporterInfo {
   type: "Project" | "Tagset" | "Codeset" | "Memos" | "Logbook" | "Annotations";
@@ -151,7 +145,6 @@ function ExporterDialog() {
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // local state
-  const [exportJobId, setExportJobId] = useState<string | undefined>(undefined);
   const [open, setOpen] = useState(false);
   const [exporterData, setExporterData] = useState<ExporterInfo>({
     type: "Project",
@@ -160,15 +153,18 @@ function ExporterDialog() {
     sdocId: -1,
   });
 
-  // mutations (react-query)
-  const createJobMutation = ExporterHooks.useStartExportJob();
+  // global state (react-query)
+  const startExport = ExporterHooks.useStartExportJob();
+  const exportJob = ExporterHooks.useGetExportJob(startExport.data?.id);
+  const { user } = useAuth();
+  const projectUsers = ProjectHooks.useGetAllUsers(projectId);
 
   // snackbar
   const openSnackbar = useOpenSnackbar();
 
   const handleClick = () => {
     const requestBody = exporterInfoToExporterJobParameters(exporterData, projectId);
-    createJobMutation.mutate(
+    startExport.mutate(
       {
         requestBody,
       },
@@ -178,24 +174,10 @@ function ExporterDialog() {
             text: `Created new export job ${exportJobRead.id}`,
             severity: "success",
           });
-          setExportJobId(exportJobRead.id);
         },
       },
     );
   };
-
-  // global state (react-query)
-  const exportJob = ExporterHooks.useGetExportJob(exportJobId);
-  const { user } = useAuth();
-
-  const projectUsers = ProjectHooks.useGetAllUsers(projectId);
-  // const projectDocuments = ProjectHooks.useGetProjectDocumentsInfinite(projectId);
-  // const projectTags = ProjectHooks.useGetAllTags(projectId);
-  // const projectCodes = ProjectHooks.useGetAllCodes(projectId, true);
-  // const projectCodeTree = useMemo(
-  //   () => (projectCodes.data ? codesToTree(projectCodes.data) : undefined),
-  //   [projectCodes.data]
-  // );
 
   // listen to open-memo event and open the dialog
   const openModal = useCallback(
@@ -214,17 +196,19 @@ function ExporterDialog() {
     if (!exportJob.data) return;
     if (exportJob.data.status) {
       if (exportJob.data.status === BackgroundJobStatus.FINISHED) {
-        window.open(import.meta.env.VITE_APP_CONTENT + "/" + exportJob.data.results_url, "_blank");
-        setExportJobId(undefined);
+        if (exportJob.data.results_url) {
+          downloadFile(import.meta.env.VITE_APP_CONTENT + "/" + exportJob.data.results_url);
+        }
+        // Make sure the download doesn't start again on a re-render
+        startExport.reset();
       } else if (exportJob.data.status === BackgroundJobStatus.ERRORNEOUS) {
         openSnackbar({
           text: `Export job ${exportJob.data.id} failed`,
           severity: "error",
         });
-        setExportJobId(undefined);
       }
     }
-  }, [exportJob.data, openSnackbar]);
+  }, [startExport, exportJob.data, openSnackbar]);
 
   useEffect(() => {
     eventBus.on("open-exporter", openModal);
@@ -235,7 +219,6 @@ function ExporterDialog() {
 
   const handleClose = () => {
     setOpen(false);
-    // setExporterData(undefined);
   };
 
   const handleTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -264,29 +247,6 @@ function ExporterDialog() {
       return { ...oldData, singleUser: !oldData.singleUser };
     });
   };
-
-  // const handleTagsChange = (selectedItems: number[]) => {
-  //   setExporterData((oldData) => {
-  //     return { ...oldData, tags: selectedItems };
-  //   });
-  // };
-
-  // const handleCodesChange = (selectedItems: number[]) => {
-  //   setExporterData((oldData) => {
-  //     return { ...oldData, codes: selectedItems };
-  //   });
-  // };
-
-  // const toggleAttachedTo = (selectedItem: number) => {
-  //   setExporterData((oldData) => {
-  //     const idx = oldData.attached_to.indexOf(selectedItem);
-  //     if (idx === -1) {
-  //       return { ...oldData, attached_to: [...oldData.attached_to, selectedItem] };
-  //     }
-  //     oldData.attached_to.splice(idx, 1);
-  //     return { ...oldData, attached_to: oldData.attached_to };
-  //   });
-  // };
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
@@ -381,7 +341,7 @@ function ExporterDialog() {
       <DialogActions>
         <Button onClick={handleClose}>Close</Button>
         <LoadingButton
-          loading={exportJobId !== undefined}
+          loading={startExport.isPending || exportJob.data?.status === BackgroundJobStatus.WAITING}
           loadingPosition="start"
           startIcon={<SaveIcon />}
           variant="outlined"

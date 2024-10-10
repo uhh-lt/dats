@@ -15,6 +15,7 @@ from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.user import crud_user
+from app.core.data.dto.analysis import WordFrequencyResult
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationReadResolved,
@@ -108,6 +109,7 @@ class ExportService(metaclass=SingletonMeta):
             ExportJobType.SINGLE_USER_ALL_MEMOS: cls._export_user_memos_from_proj,
             ExportJobType.SINGLE_USER_LOGBOOK: cls._export_user_logbook_from_proj,
             ExportJobType.SINGLE_DOC_ALL_USER_ANNOTATIONS: cls._export_all_user_annotations_from_sdoc,
+            ExportJobType.SINGLE_DOC_SINGLE_USER_ANNOTATIONS: cls._export_user_annotations_from_sdoc,
             ExportJobType.SINGLE_DOC_SINGLE_USER_ANNOTATIONS: cls._export_user_annotations_from_sdoc,
         }
 
@@ -1073,3 +1075,34 @@ class ExportService(metaclass=SingletonMeta):
             )
 
         return exj
+
+    def export_word_frequencies(
+        self,
+        project_id: int,
+        wf_result: WordFrequencyResult,
+        export_format: ExportFormat = ExportFormat.CSV,
+    ) -> str:
+        # construct data frame
+        data = {
+            "word": [],
+            "word_percent": [],
+            "count": [],
+            "sdocs": [],
+            "sdocs_percent": [],
+        }
+        for wf in wf_result.word_frequencies:
+            data["word"].append(wf.word)
+            data["word_percent"].append(wf.word_percent)
+            data["count"].append(wf.count)
+            data["sdocs"].append(wf.sdocs)
+            data["sdocs_percent"].append(wf.sdocs_percent)
+        df = pd.DataFrame(data=data)
+
+        # export the data frame
+        export_file = self.__write_export_data_to_temp_file(
+            data=df,
+            export_format=export_format,
+            fn=f"project_{project_id}_word_frequency_export",
+        )
+        export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
+        return export_url

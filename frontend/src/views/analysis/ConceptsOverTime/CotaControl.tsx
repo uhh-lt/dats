@@ -147,6 +147,10 @@ function CotaControl({ cota }: CotaControlProps) {
             <Alert variant="outlined" severity="warning">
               There are no concepts. To start the analysis, please add some concepts first.
             </Alert>
+          ) : cota.concepts.length < 2 ? (
+            <Alert variant="outlined" severity="warning">
+              At least two concepts are required. To start the analysis, please add some concepts first.
+            </Alert>
           ) : !hasConceptsWithDescription(cota) ? (
             <Alert variant="outlined" severity="warning">
               There are concepts without a description. To start the analysis, please add a description to all concepts.

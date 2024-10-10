@@ -15,6 +15,7 @@ import { PaginatedElasticSearchDocumentHits } from "../../../api/openapi/models/
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { MemoService } from "../../../api/openapi/services/MemoService.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
+import ExporterButton from "../../../components/Exporter/ExporterButton.tsx";
 import ReduxFilterDialog from "../../../components/FilterDialog/ReduxFilterDialog.tsx";
 import { MyFilter, createEmptyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 import MemoDeleteButton from "../../../components/Memo/MemoDeleteButton.tsx";
@@ -278,6 +279,10 @@ function SearchMemoTable({ projectId }: SearchMemoTableProps) {
         <SearchMemoOptionsMenu />
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleDensePaddingButton table={table} />
+        <ExporterButton
+          tooltip="Export memos"
+          exporterInfo={{ type: "Memos", singleUser: true, users: [], sdocId: -1 }}
+        />
       </Stack>
     ),
     renderBottomToolbarCustomActions: () => (
