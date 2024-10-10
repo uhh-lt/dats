@@ -4,12 +4,14 @@ import { useParams } from "react-router";
 import CotaHooks from "../../../api/CotaHooks.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
+import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import AnalysisDashboard from "../AnalysisDashboard/AnalysisDashboard.tsx";
 import {
   AnaylsisDashboardRow,
   HandleCreateAnalysis,
   useAnalysisDashboardTable,
 } from "../AnalysisDashboard/useAnalysisDashboardTable.tsx";
+import { CotaActions } from "./cotaSlice.ts";
 
 function CotaDashboard() {
   // global client state
@@ -45,6 +47,8 @@ function CotaDashboard() {
 
   // snackbar
   const openSnackbar = useOpenSnackbar();
+
+  const dispatch = useAppDispatch();
 
   // CRUD actions
   const handleCreateAnalysis: HandleCreateAnalysis =
@@ -139,6 +143,7 @@ function CotaDashboard() {
     isDeletingAnalysis: isDeletingCota,
     deletingAnalysisId: deletingVariables?.cotaId,
     duplicatingAnalysisId: duplicatingVariables?.cotaId,
+    onOpenAnalysis: (analysisId) => dispatch(CotaActions.onOpenCota({ analysisId })),
     handleCreateAnalysis,
     handleEditAnalysis,
     handleDeleteAnalysis,

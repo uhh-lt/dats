@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
 import { LogicalOperator } from "../../../api/openapi/models/LogicalOperator.ts";
 import { StringOperator } from "../../../api/openapi/models/StringOperator.ts";
@@ -15,6 +15,7 @@ import { ProjectActions } from "../../../components/Project/projectSlice.ts";
 
 export interface TimelineAnalysisState {
   // project state:
+  lastOpenedTimelineAnalysisId: number | undefined;
   metadataCheckerOpen: boolean;
   conceptEditorOpen: boolean;
   currentConcept: TimelineAnalysisConcept_Output;
@@ -33,6 +34,7 @@ const defaultFilterExpression: MyFilterExpression = {
 const initialState: FilterState & TimelineAnalysisState = {
   ...createInitialFilterState(defaultFilterExpression),
   // project state:
+  lastOpenedTimelineAnalysisId: undefined,
   metadataCheckerOpen: false,
   conceptEditorOpen: false,
   currentConcept: {
@@ -49,6 +51,17 @@ const initialState: FilterState & TimelineAnalysisState = {
   provenanceDate: undefined,
   provenanceConcept: undefined,
   isBarPlot: false,
+};
+
+const resetTimelineAnalysisState = (state: Draft<FilterState & TimelineAnalysisState>) => {
+  resetProjectFilterState(state, defaultFilterExpression);
+  state.lastOpenedTimelineAnalysisId = initialState.lastOpenedTimelineAnalysisId;
+  state.metadataCheckerOpen = initialState.metadataCheckerOpen;
+  state.conceptEditorOpen = initialState.conceptEditorOpen;
+  state.currentConcept = initialState.currentConcept;
+  state.provenanceDate = initialState.provenanceDate;
+  state.provenanceConcept = initialState.provenanceConcept;
+  state.isBarPlot = initialState.isBarPlot;
 };
 
 export const timelineAnalysisSlice = createSlice({
@@ -86,17 +99,18 @@ export const timelineAnalysisSlice = createSlice({
     onTogglePlotType: (state) => {
       state.isBarPlot = !state.isBarPlot;
     },
+    onOpenTimelineAnalysis: (state, action: PayloadAction<{ analysisId: number }>) => {
+      if (state.lastOpenedTimelineAnalysisId !== action.payload.analysisId) {
+        console.log("Timeline Analysis changed! Resetting 'timelineAnalysis' state.");
+        resetTimelineAnalysisState(state);
+      }
+      state.lastOpenedTimelineAnalysisId = action.payload.analysisId;
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(ProjectActions.changeProject, (state) => {
       console.log("Project changed! Resetting 'timelineAnalysis' state.");
-      resetProjectFilterState(state, defaultFilterExpression);
-      state.metadataCheckerOpen = initialState.metadataCheckerOpen;
-      state.conceptEditorOpen = initialState.conceptEditorOpen;
-      state.currentConcept = initialState.currentConcept;
-      state.provenanceDate = initialState.provenanceDate;
-      state.provenanceConcept = initialState.provenanceConcept;
-      state.isBarPlot = initialState.isBarPlot;
+      resetTimelineAnalysisState(state);
     });
   },
 });

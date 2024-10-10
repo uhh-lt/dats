@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
 import { MRT_RowSelectionState } from "material-react-table";
 import { COTAConcept } from "../../../api/openapi/models/COTAConcept.ts";
 import { COTATrainingSettings } from "../../../api/openapi/models/COTATrainingSettings.ts";
@@ -7,6 +7,7 @@ import { ProjectActions } from "../../../components/Project/projectSlice.ts";
 
 export interface CotaState {
   // project state:
+  lastOpenedCotaId: number | undefined;
   conceptEditorOpen: boolean;
   currentConcept: COTAConcept;
   selectedDate: string | undefined;
@@ -21,6 +22,7 @@ export interface CotaState {
 
 const initialState: CotaState = {
   // project state:
+  lastOpenedCotaId: undefined,
   conceptEditorOpen: false,
   currentConcept: {
     id: "1",
@@ -45,6 +47,18 @@ const initialState: CotaState = {
     search_space_threshold: 0.8,
     search_space_topk: 1000,
   },
+};
+
+const resetCotaState = (state: Draft<CotaState>) => {
+  state.lastOpenedCotaId = initialState.lastOpenedCotaId;
+  state.conceptEditorOpen = initialState.conceptEditorOpen;
+  state.currentConcept = initialState.currentConcept;
+  state.selectedConceptId = initialState.selectedConceptId;
+  state.selectedDate = initialState.selectedDate;
+  state.rowSelectionModel = initialState.rowSelectionModel;
+  state.provenanceConcept = initialState.provenanceConcept;
+  state.isTimelineView = initialState.isTimelineView;
+  state.trainingSettingsOpen = initialState.trainingSettingsOpen;
 };
 
 export const cotaSlice = createSlice({
@@ -109,18 +123,18 @@ export const cotaSlice = createSlice({
       state.selectedConceptId = action.payload.conceptId;
       state.rowSelectionModel = {};
     },
+    onOpenCota: (state, action: PayloadAction<{ analysisId: number }>) => {
+      if (state.lastOpenedCotaId !== action.payload.analysisId) {
+        console.log("COTA changed! Resetting 'cota' state.");
+        resetCotaState(state);
+      }
+      state.lastOpenedCotaId = action.payload.analysisId;
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(ProjectActions.changeProject, (state) => {
       console.log("Project changed! Resetting 'cota' state.");
-      state.conceptEditorOpen = initialState.conceptEditorOpen;
-      state.currentConcept = initialState.currentConcept;
-      state.selectedConceptId = initialState.selectedConceptId;
-      state.selectedDate = initialState.selectedDate;
-      state.rowSelectionModel = initialState.rowSelectionModel;
-      state.provenanceConcept = initialState.provenanceConcept;
-      state.isTimelineView = initialState.isTimelineView;
-      state.trainingSettingsOpen = initialState.trainingSettingsOpen;
+      resetCotaState(state);
     });
   },
 });

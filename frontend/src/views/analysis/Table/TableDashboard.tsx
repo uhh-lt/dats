@@ -139,6 +139,7 @@ function TableDashboard() {
     isUpdatingAnalysis: isUpdatingTable,
     deletingAnalysisId: deletingVariables?.analysisTableId,
     duplicatingAnalysisId: duplicatingVariables?.analysisTableId,
+    onOpenAnalysis: (analysisId) => console.log("Opening Table " + analysisId),
     handleCreateAnalysis,
     handleEditAnalysis,
     handleDeleteAnalysis,

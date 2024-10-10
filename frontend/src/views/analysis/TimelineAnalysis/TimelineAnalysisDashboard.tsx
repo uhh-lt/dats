@@ -4,12 +4,14 @@ import { useParams } from "react-router";
 import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
+import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import AnalysisDashboard from "../AnalysisDashboard/AnalysisDashboard.tsx";
 import {
   AnaylsisDashboardRow,
   HandleCreateAnalysis,
   useAnalysisDashboardTable,
 } from "../AnalysisDashboard/useAnalysisDashboardTable.tsx";
+import { TimelineAnalysisActions } from "./timelineAnalysisSlice.ts";
 
 function TimelineAnalysisDashboard() {
   // global client state
@@ -33,8 +35,6 @@ function TimelineAnalysisDashboard() {
     [userAnalysis],
   );
 
-  console.log(userAnalysisTableData);
-
   // snackbar
   const openSnackbar = useOpenSnackbar();
 
@@ -53,6 +53,8 @@ function TimelineAnalysisDashboard() {
     isPending: isDuplicatingTimelineAnalysis,
     variables: duplicatingVariables,
   } = TimelineAnalysisHooks.useDuplicateTimelineAnalysis();
+
+  const dispatch = useAppDispatch();
 
   // CRUD actions
   const handleCreateAnalysis: HandleCreateAnalysis =
@@ -147,6 +149,7 @@ function TimelineAnalysisDashboard() {
     isDeletingAnalysis: isDeletingTimelineAnalysis,
     deletingAnalysisId: deletingVariables?.timelineAnalysisId,
     duplicatingAnalysisId: duplicatingVariables?.timelineAnalysisId,
+    onOpenAnalysis: (analysisId) => dispatch(TimelineAnalysisActions.onOpenTimelineAnalysis({ analysisId })),
     handleCreateAnalysis,
     handleEditAnalysis,
     handleDeleteAnalysis,

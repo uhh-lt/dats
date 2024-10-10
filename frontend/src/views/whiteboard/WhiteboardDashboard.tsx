@@ -139,6 +139,7 @@ function WhiteboardDashboard() {
     isUpdatingAnalysis: isUpdatingWhiteboard,
     deletingAnalysisId: deletingVariables?.whiteboardId,
     duplicatingAnalysisId: duplicatingVariables?.whiteboardId,
+    onOpenAnalysis: (analysisId) => console.log("Opening Whiteboard " + analysisId),
     handleCreateAnalysis: handleCreateWhiteboard,
     handleEditAnalysis: handleUpdateWhiteboard,
     handleDeleteAnalysis: handleDeleteClick,
