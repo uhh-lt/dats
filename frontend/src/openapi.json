@@ -5774,15 +5774,22 @@
       },
       "AnalysisTableUpdate": {
         "properties": {
-          "title": { "type": "string", "title": "Title", "description": "Title of the AnalysisTable" },
-          "content": { "type": "string", "title": "Content", "description": "Content of the AnalysisTable" },
+          "title": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Title",
+            "description": "Title of the AnalysisTable"
+          },
+          "content": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Content",
+            "description": "Content of the AnalysisTable"
+          },
           "table_type": {
-            "allOf": [{ "$ref": "#/components/schemas/TableType" }],
+            "anyOf": [{ "$ref": "#/components/schemas/TableType" }, { "type": "null" }],
             "description": "TABLETYPE of the AnalysisTable"
           }
         },
         "type": "object",
-        "required": ["title", "content", "table_type"],
         "title": "AnalysisTableUpdate"
       },
       "AnnotatedImageResult": {

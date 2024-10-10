@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -24,7 +25,13 @@ class AnalysisTableCreateIntern(AnalysisTableCreate):
 
 # Properties for updating
 class AnalysisTableUpdate(AnalysisTableBaseDTO, UpdateDTOBase):
-    pass
+    title: Optional[str] = Field(description="Title of the AnalysisTable", default=None)
+    content: Optional[str] = Field(
+        description="Content of the AnalysisTable", default=None
+    )
+    table_type: Optional[TableType] = Field(
+        description="TABLETYPE of the AnalysisTable", default=None
+    )
 
 
 # Properties for reading (as in ORM)

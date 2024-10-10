@@ -110,8 +110,6 @@ function TableDashboard() {
         analysisTableId: row.original.id,
         requestBody: {
           title: values.title,
-          content: JSON.stringify(values.content),
-          table_type: values.table_type,
         },
       },
       {
