@@ -209,8 +209,10 @@ function TagMenu({ forceSdocId, selectedSdocIds, anchorEl, setAnchorEl, popoverO
       anchorEl={anchorEl}
       onClose={handleClose}
       anchorOrigin={popoverOrigin}
-      PaperProps={{
-        elevation: 1,
+      slotProps={{
+        paper: {
+          elevation: 1,
+        },
       }}
     >
       <List>

@@ -67,9 +67,11 @@ function ImageSimilaritySearchOptionsMenu() {
           vertical: "top",
           horizontal: "right",
         }}
-        PaperProps={{
-          sx: {
-            p: 2,
+        slotProps={{
+          paper: {
+            sx: {
+              p: 2,
+            },
           },
         }}
       >
