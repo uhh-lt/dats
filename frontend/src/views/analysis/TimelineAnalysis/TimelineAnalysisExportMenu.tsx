@@ -20,7 +20,6 @@ function TimelineAnalysisExportMenu({ chartData, chartName }: TimelineAnalysisEx
 
   const columns = useMemo(() => {
     if (chartData === undefined || chartData === null || chartData.length === 0) return [];
-    console.log("chartData", chartData);
     const keys = Object.keys(chartData[0]);
     return keys.map((key) => ({ id: key, displayName: key }));
   }, [chartData]);
@@ -58,7 +57,7 @@ function TimelineAnalysisExportMenu({ chartData, chartName }: TimelineAnalysisEx
         context.drawImage(image, 0, 0, context.canvas.width, context.canvas.height);
         const png = canvas.toDataURL("image/png", 1.0);
 
-        downloadFile(png, "timeline-analysis.png");
+        downloadFile(png, `timeline-analysis-${chartName}.png`);
       }
     };
 
@@ -69,10 +68,12 @@ function TimelineAnalysisExportMenu({ chartData, chartName }: TimelineAnalysisEx
   // render
   return (
     <>
-      <Tooltip title={"Export chart"}>
-        <IconButton onClick={handleClick}>
-          <SaveAltIcon />
-        </IconButton>
+      <Tooltip title={"Export timeline analysis"}>
+        <span>
+          <IconButton onClick={handleClick} disabled={chartData === undefined}>
+            <SaveAltIcon />
+          </IconButton>
+        </span>
       </Tooltip>
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
         <MenuItem onClick={handleExportChartPNG}>
@@ -81,8 +82,13 @@ function TimelineAnalysisExportMenu({ chartData, chartName }: TimelineAnalysisEx
           </ListItemIcon>
           <ListItemText>PNG</ListItemText>
         </MenuItem>
-        <CsvDownloader datas={(chartData as Datas) || []} columns={columns} filename={chartName} separator=";">
-          <MenuItem disabled={chartData === undefined} onClick={handleClose}>
+        <CsvDownloader
+          datas={(chartData as Datas) || []}
+          columns={columns}
+          filename={`timeline-analysis-${chartName}`}
+          separator=";"
+        >
+          <MenuItem onClick={handleClose}>
             <ListItemIcon>
               <TextSnippetIcon fontSize="small" />
             </ListItemIcon>

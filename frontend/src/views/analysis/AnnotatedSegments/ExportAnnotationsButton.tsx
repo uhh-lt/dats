@@ -22,7 +22,7 @@ export default function ExportAnnotationsButton({ spanAnnotationIds }: ExportAnn
   // snackbar
   const openSnackbar = useOpenSnackbar();
 
-  const onClick = () => {
+  const handleClick = () => {
     startExport.mutate({
       requestBody: {
         export_job_type: ExportJobType.SINGLE_PROJECT_SELECTED_SPAN_ANNOTATIONS,
@@ -40,10 +40,7 @@ export default function ExportAnnotationsButton({ spanAnnotationIds }: ExportAnn
     if (exportJob.data.status) {
       if (exportJob.data.status === BackgroundJobStatus.FINISHED) {
         if (exportJob.data.results_url) {
-          downloadFile(
-            import.meta.env.VITE_APP_CONTENT + "/" + exportJob.data.results_url,
-            exportJob.data.results_url.split("/").pop() || "error.csv",
-          );
+          downloadFile(import.meta.env.VITE_APP_CONTENT + "/" + exportJob.data.results_url);
         }
         // Make sure the download doesn't start again on a re-render
         startExport.reset();
@@ -62,7 +59,7 @@ export default function ExportAnnotationsButton({ spanAnnotationIds }: ExportAnn
     return (
       <Tooltip title={spanAnnotationIds.length === 0 ? "Select annotations to export!" : "Export selected annotations"}>
         <span>
-          <IconButton onClick={onClick} disabled={spanAnnotationIds.length === 0}>
+          <IconButton onClick={handleClick} disabled={spanAnnotationIds.length === 0}>
             <SaveAltIcon />
           </IconButton>
         </span>
