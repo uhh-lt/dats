@@ -1,6 +1,7 @@
 import ClearIcon from "@mui/icons-material/Clear";
 import { IconButton, Stack, Tooltip } from "@mui/material";
 import { TreeItem2 } from "@mui/x-tree-view";
+import { forwardRef } from "react";
 import FilterColumnSelector from "./FilterColumnSelector.tsx";
 import FilterOperatorSelector from "./FilterOperatorSelector.tsx";
 import FilterValueSelector from "./FilterValueSelector.tsx";
@@ -15,41 +16,40 @@ interface FilterExpressionRendererProps {
   column2Info: Record<string, ColumnInfo>;
 }
 
-function CustomContent({
-  filterExpression,
-  onDeleteFilter,
-  onChangeColumn,
-  onChangeOperator,
-  onChangeValue,
-  column2Info,
-}: FilterExpressionRendererProps) {
-  return (
-    <Stack direction="row" alignItems="end" py={1} pl={4} pr={1}>
-      <Tooltip title="Delete Filter Expression">
-        <span>
-          <IconButton size="small" onClick={() => onDeleteFilter(filterExpression.id)} sx={{ color: "inherit", mr: 1 }}>
-            <ClearIcon />
-          </IconButton>
-        </span>
-      </Tooltip>
-      <FilterColumnSelector
-        filterExpression={filterExpression}
-        column2Info={column2Info}
-        onChangeColumn={onChangeColumn}
-      />
-      <FilterOperatorSelector
-        filterExpression={filterExpression}
-        onChangeOperator={onChangeOperator}
-        column2Info={column2Info}
-      />
-      <FilterValueSelector
-        filterExpression={filterExpression}
-        onChangeValue={onChangeValue}
-        column2Info={column2Info}
-      />
-    </Stack>
-  );
-}
+const CustomContent = forwardRef<HTMLDivElement, FilterExpressionRendererProps>(
+  ({ filterExpression, onDeleteFilter, onChangeColumn, onChangeOperator, onChangeValue, column2Info }, ref) => {
+    return (
+      <Stack direction="row" alignItems="end" py={1} pl={4} pr={1} ref={ref}>
+        <Tooltip title="Delete Filter Expression">
+          <span>
+            <IconButton
+              size="small"
+              onClick={() => onDeleteFilter(filterExpression.id)}
+              sx={{ color: "inherit", mr: 1 }}
+            >
+              <ClearIcon />
+            </IconButton>
+          </span>
+        </Tooltip>
+        <FilterColumnSelector
+          filterExpression={filterExpression}
+          column2Info={column2Info}
+          onChangeColumn={onChangeColumn}
+        />
+        <FilterOperatorSelector
+          filterExpression={filterExpression}
+          onChangeOperator={onChangeOperator}
+          column2Info={column2Info}
+        />
+        <FilterValueSelector
+          filterExpression={filterExpression}
+          onChangeValue={onChangeValue}
+          column2Info={column2Info}
+        />
+      </Stack>
+    );
+  },
+);
 
 function FilterExpressionRenderer(props: FilterExpressionRendererProps) {
   return (
