@@ -20,6 +20,7 @@ import AnalysisHooks from "../../../api/AnalysisHooks.ts";
 import { CodeFrequency } from "../../../api/openapi/models/CodeFrequency.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
+import ExportChartButton from "../../../components/ExportChartButton.tsx";
 import { IDataTree } from "../../../components/TreeExplorer/IDataTree.ts";
 
 const renderCustomizedLabel = (data: { value: string; percent: number }) => {
@@ -73,9 +74,17 @@ function CodeFrequencyView({ projectId, userIds, docTypes, data, setSelectedCode
       <Card variant="outlined">
         <CardHeader
           action={
-            <Tooltip title={showPieChart ? "View as Bar Chart" : "View as Pie Chart"}>
-              <IconButton onClick={toggleShowPieChart}>{showPieChart ? <BarChartIcon /> : <PieChartIcon />}</IconButton>
-            </Tooltip>
+            <>
+              <Tooltip title={showPieChart ? "View as Bar Chart" : "View as Pie Chart"}>
+                <IconButton onClick={toggleShowPieChart}>
+                  {showPieChart ? <BarChartIcon /> : <PieChartIcon />}
+                </IconButton>
+              </Tooltip>
+              <ExportChartButton
+                chartName={"code-frequency-" + (showPieChart ? "pie-chart-" : "bar-chart-") + data.model.data.name}
+                chartIdentifier={`code-frequency-chart-${data.model.data.name}`}
+              />
+            </>
           }
           title={data.model.data.name === "root" ? "Top-level codes" : data.model.data.name}
           subheader={
@@ -88,7 +97,7 @@ function CodeFrequencyView({ projectId, userIds, docTypes, data, setSelectedCode
           {chartData.isSuccess && chartData.data.length > 0 ? (
             <ResponsiveContainer width="100%" height={400}>
               {showPieChart ? (
-                <PieChart>
+                <PieChart className={`code-frequency-chart-${data.model.data.name}`}>
                   <ChartTooltip />
                   <Pie
                     data={chartData.data}
@@ -113,7 +122,7 @@ function CodeFrequencyView({ projectId, userIds, docTypes, data, setSelectedCode
                   <Legend />
                 </PieChart>
               ) : (
-                <BarChart data={chartData.data}>
+                <BarChart data={chartData.data} className={`code-frequency-chart-${data.model.data.name}`}>
                   <XAxis
                     dataKey={(codeFrequency) => codeId2Code.get(codeFrequency.code_id)?.name || "Error: Code not found"}
                     interval={0}
