@@ -1,6 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
-import { DateGroupBy } from "../../../api/openapi/models/DateGroupBy.ts";
 import { LogicalOperator } from "../../../api/openapi/models/LogicalOperator.ts";
 import { StringOperator } from "../../../api/openapi/models/StringOperator.ts";
 import { TimelineAnalysisColumns } from "../../../api/openapi/models/TimelineAnalysisColumns.ts";
@@ -14,27 +13,13 @@ import {
 import { MyFilterExpression } from "../../../components/FilterDialog/filterUtils.ts";
 import { ProjectActions } from "../../../components/Project/projectSlice.ts";
 
-export interface TimelineAnalysisConceptOLD {
-  id: string;
-  name: string;
-  color: string;
-  visible: boolean;
-  type: "filter";
-  data: string; // if type === "filter", data is the root filter id
-}
-
 export interface TimelineAnalysisState {
   // project state:
-  selectedUserIds: number[] | undefined;
-  groupBy: DateGroupBy;
-  projectMetadataId: number;
   metadataCheckerOpen: boolean;
   conceptEditorOpen: boolean;
   currentConcept: TimelineAnalysisConcept_Output;
-  concepts: TimelineAnalysisConceptOLD[];
   provenanceDate: string | undefined;
   provenanceConcept: string | undefined;
-  resultType: string;
   isBarPlot: boolean;
 }
 
@@ -48,9 +33,6 @@ const defaultFilterExpression: MyFilterExpression = {
 const initialState: FilterState & TimelineAnalysisState = {
   ...createInitialFilterState(defaultFilterExpression),
   // project state:
-  selectedUserIds: undefined,
-  groupBy: DateGroupBy.YEAR,
-  projectMetadataId: -1,
   metadataCheckerOpen: false,
   conceptEditorOpen: false,
   currentConcept: {
@@ -64,10 +46,8 @@ const initialState: FilterState & TimelineAnalysisState = {
       logic_operator: LogicalOperator.AND,
     },
   },
-  concepts: [],
   provenanceDate: undefined,
   provenanceConcept: undefined,
-  resultType: "document",
   isBarPlot: false,
 };
 
@@ -76,15 +56,6 @@ export const timelineAnalysisSlice = createSlice({
   initialState,
   reducers: {
     ...filterReducer,
-    setSelectedUserIds: (state, action: PayloadAction<number[]>) => {
-      state.selectedUserIds = action.payload;
-    },
-    setGroupBy: (state, action: PayloadAction<DateGroupBy>) => {
-      state.groupBy = action.payload;
-    },
-    setProjectMetadataKey: (state, action: PayloadAction<number>) => {
-      state.projectMetadataId = action.payload;
-    },
     setMetadataCheckerOpen: (state, action: PayloadAction<boolean>) => {
       state.metadataCheckerOpen = action.payload;
     },
@@ -94,47 +65,11 @@ export const timelineAnalysisSlice = createSlice({
     resetCurrentConcept: (state) => {
       state.currentConcept = initialState.currentConcept;
     },
-    setConcepts: (state, action: PayloadAction<TimelineAnalysisConceptOLD[]>) => {
-      state.concepts = action.payload.slice();
-    },
-    toggleConceptVisibility: (state, action: PayloadAction<TimelineAnalysisConceptOLD>) => {
-      const concept = state.concepts.find((c) => c.name === action.payload.name);
-      if (concept) {
-        concept.visible = !concept.visible;
-      }
-      state.concepts = state.concepts.slice();
-    },
-    deleteConcept: (state, action: PayloadAction<{ concept: TimelineAnalysisConceptOLD }>) => {
-      const index = state.concepts.findIndex((c) => c.name === action.payload.concept.name);
-      if (index !== -1) {
-        state.concepts.splice(index, 1);
-      }
-    },
     setProvenanceDate: (state, action: PayloadAction<string | undefined>) => {
       state.provenanceDate = action.payload;
     },
     setProvenanceConcept: (state, action: PayloadAction<string | undefined>) => {
       state.provenanceConcept = action.payload;
-    },
-    setResultType: (state, action: PayloadAction<string>) => {
-      state.resultType = action.payload;
-    },
-    onCreateNewConcept: (state, action: PayloadAction<{ conceptData: string }>) => {
-      const name = "New Concept";
-      let conceptIndex = 1;
-
-      while (state.concepts.find((c) => c.name === `${name} (${conceptIndex})`)) {
-        conceptIndex++;
-      }
-
-      state.concepts.push({
-        id: uuidv4(),
-        name: `${name} (${conceptIndex})`,
-        color: "#ff0000",
-        visible: true,
-        type: "filter",
-        data: action.payload.conceptData,
-      });
     },
     onStartConceptEdit: (state, action: PayloadAction<{ concept: TimelineAnalysisConcept_Output }>) => {
       state.conceptEditorOpen = true;
@@ -156,16 +91,11 @@ export const timelineAnalysisSlice = createSlice({
     builder.addCase(ProjectActions.changeProject, (state) => {
       console.log("Project changed! Resetting 'timelineAnalysis' state.");
       resetProjectFilterState(state, defaultFilterExpression);
-      state.selectedUserIds = initialState.selectedUserIds;
-      state.groupBy = initialState.groupBy;
-      state.projectMetadataId = initialState.projectMetadataId;
       state.metadataCheckerOpen = initialState.metadataCheckerOpen;
       state.conceptEditorOpen = initialState.conceptEditorOpen;
       state.currentConcept = initialState.currentConcept;
-      state.concepts = initialState.concepts;
       state.provenanceDate = initialState.provenanceDate;
       state.provenanceConcept = initialState.provenanceConcept;
-      state.resultType = initialState.resultType;
       state.isBarPlot = initialState.isBarPlot;
     });
   },
