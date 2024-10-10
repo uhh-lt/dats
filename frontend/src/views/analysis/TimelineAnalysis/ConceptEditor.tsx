@@ -66,7 +66,9 @@ function ConceptEditor({ onUpdate, onCancel }: ConceptEditorProps) {
                 fullWidth: true,
                 error: Boolean(errors.name),
                 helperText: <ErrorMessage errors={errors} name="name" />,
-                InputLabelProps: { shrink: true },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                },
               }}
             />
             <FormColorPicker
@@ -81,7 +83,9 @@ function ConceptEditor({ onUpdate, onCancel }: ConceptEditorProps) {
                 fullWidth: true,
                 error: Boolean(errors.color),
                 helperText: <ErrorMessage errors={errors} name="color" />,
-                InputLabelProps: { shrink: true },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                },
                 InputProps: {
                   readOnly: true,
                 },

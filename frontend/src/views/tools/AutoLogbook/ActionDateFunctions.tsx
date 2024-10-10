@@ -60,8 +60,8 @@ function ActionDateFunctions() {
         size="small"
         onChange={handleDateChange}
         sx={{ marginLeft: 1.7, marginRight: 2, width: 160 }}
-        InputLabelProps={{
-          shrink: true,
+        slotProps={{
+          inputLabel: { shrink: true },
         }}
       />
       <FormControl>

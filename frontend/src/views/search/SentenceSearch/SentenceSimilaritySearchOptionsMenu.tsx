@@ -86,7 +86,9 @@ function SentenceSimilaritySearchOptionsMenu() {
               fullWidth: true,
               error: Boolean(errors.topK),
               helperText: <ErrorMessage errors={errors} name="topK" />,
-              InputLabelProps: { shrink: true },
+              slotProps: {
+                inputLabel: { shrink: true },
+              },
               inputProps: {
                 min: 1,
                 max: Infinity,
@@ -106,7 +108,9 @@ function SentenceSimilaritySearchOptionsMenu() {
               fullWidth: true,
               error: Boolean(errors.threshold),
               helperText: <ErrorMessage errors={errors} name="threshold" />,
-              InputLabelProps: { shrink: true },
+              slotProps: {
+                inputLabel: { shrink: true },
+              },
               inputProps: {
                 min: 0,
                 max: 1,

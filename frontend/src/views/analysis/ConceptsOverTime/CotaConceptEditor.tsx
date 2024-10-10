@@ -66,7 +66,9 @@ function CotaConceptEditor({ onUpdate, onCancel, isDescriptionEditable }: CotaCo
                 fullWidth: true,
                 error: Boolean(errors.name),
                 helperText: <ErrorMessage errors={errors} name="name" />,
-                InputLabelProps: { shrink: true },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                },
               }}
             />
             <FormText
@@ -85,7 +87,9 @@ function CotaConceptEditor({ onUpdate, onCancel, isDescriptionEditable }: CotaCo
                 ) : (
                   "Please reset the analysis to edit the concept description."
                 ),
-                InputLabelProps: { shrink: true },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                },
                 disabled: !isDescriptionEditable,
               }}
             />
@@ -101,7 +105,9 @@ function CotaConceptEditor({ onUpdate, onCancel, isDescriptionEditable }: CotaCo
                 fullWidth: true,
                 error: Boolean(errors.color),
                 helperText: <ErrorMessage errors={errors} name="color" />,
-                InputLabelProps: { shrink: true },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                },
                 InputProps: {
                   readOnly: true,
                 },

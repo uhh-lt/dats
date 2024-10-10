@@ -63,7 +63,9 @@ function CotaTrainingSettings({ onUpdate, onCancel }: CotaTrainingSettingsProps)
                 fullWidth: true,
                 error: Boolean(errors.search_space_topk),
                 helperText: <ErrorMessage errors={errors} name="search_space_topk" />,
-                InputLabelProps: { shrink: true },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                },
                 inputProps: {
                   min: 10,
                   max: 10000,
@@ -83,7 +85,9 @@ function CotaTrainingSettings({ onUpdate, onCancel }: CotaTrainingSettingsProps)
                 fullWidth: true,
                 error: Boolean(errors.search_space_threshold),
                 helperText: <ErrorMessage errors={errors} name="search_space_threshold" />,
-                InputLabelProps: { shrink: true },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                },
                 inputProps: {
                   min: 0.01,
                   max: 1,
@@ -106,7 +110,9 @@ function CotaTrainingSettings({ onUpdate, onCancel }: CotaTrainingSettingsProps)
                 fullWidth: true,
                 error: Boolean(errors.layers),
                 helperText: <ErrorMessage errors={errors} name="layers" />,
-                InputLabelProps: { shrink: true },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                },
                 inputProps: {
                   min: 1,
                   max: 10000,
@@ -127,7 +133,9 @@ function CotaTrainingSettings({ onUpdate, onCancel }: CotaTrainingSettingsProps)
                 fullWidth: true,
                 error: Boolean(errors.dimensions),
                 helperText: <ErrorMessage errors={errors} name="dimensions" />,
-                InputLabelProps: { shrink: true },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                },
                 inputProps: {
                   min: 1,
                   max: 10000,
@@ -150,7 +158,9 @@ function CotaTrainingSettings({ onUpdate, onCancel }: CotaTrainingSettingsProps)
                 fullWidth: true,
                 error: Boolean(errors.epochs),
                 helperText: <ErrorMessage errors={errors} name="epochs" />,
-                InputLabelProps: { shrink: true },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                },
                 inputProps: {
                   min: 1,
                   max: 100,
@@ -171,7 +181,9 @@ function CotaTrainingSettings({ onUpdate, onCancel }: CotaTrainingSettingsProps)
                 fullWidth: true,
                 error: Boolean(errors.min_required_annotations_per_concept),
                 helperText: <ErrorMessage errors={errors} name="min_required_annotations_per_concept" />,
-                InputLabelProps: { shrink: true },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                },
                 inputProps: {
                   min: 1,
                   max: 10000,
@@ -191,7 +203,9 @@ function CotaTrainingSettings({ onUpdate, onCancel }: CotaTrainingSettingsProps)
                 helperText: <ErrorMessage errors={errors} name="dimensionality_reduction_algorithm" />,
                 variant: "outlined",
                 fullWidth: true,
-                InputLabelProps: { shrink: true },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                },
               }}
             >
               {Object.values(DimensionalityReductionAlgorithm).map((value) => (

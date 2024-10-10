@@ -178,7 +178,9 @@ function CotaSettings({ cota }: CotaSettingsProps) {
               max: 1,
               step: 0.1,
             }}
-            InputLabelProps={{ shrink: true }}
+            slotProps={{
+              inputLabel: { shrink: true },
+            }}
           />
         </Stack>
       </CardContent>
