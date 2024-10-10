@@ -106,10 +106,10 @@ function CotaDashboard() {
     });
   };
 
-  const handleEditAnalysis: MRT_TableOptions<AnaylsisDashboardRow>["onEditingRowSave"] = ({ values, table }) => {
+  const handleEditAnalysis: MRT_TableOptions<AnaylsisDashboardRow>["onEditingRowSave"] = ({ values, table, row }) => {
     updateCota(
       {
-        cotaId: values.id,
+        cotaId: row.original.id,
         requestBody: {
           name: values.name,
         },

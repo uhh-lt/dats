@@ -104,10 +104,10 @@ function TableDashboard() {
     });
   };
 
-  const handleEditAnalysis: MRT_TableOptions<AnaylsisDashboardRow>["onEditingRowSave"] = ({ values, table }) => {
+  const handleEditAnalysis: MRT_TableOptions<AnaylsisDashboardRow>["onEditingRowSave"] = ({ values, table, row }) => {
     updateTable(
       {
-        analysisTableId: values.id,
+        analysisTableId: row.original.id,
         requestBody: {
           title: values.title,
           content: JSON.stringify(values.content),

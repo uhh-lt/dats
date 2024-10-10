@@ -33,6 +33,8 @@ function TimelineAnalysisDashboard() {
     [userAnalysis],
   );
 
+  console.log(userAnalysisTableData);
+
   // snackbar
   const openSnackbar = useOpenSnackbar();
 
@@ -112,10 +114,10 @@ function TimelineAnalysisDashboard() {
     });
   };
 
-  const handleEditAnalysis: MRT_TableOptions<AnaylsisDashboardRow>["onEditingRowSave"] = ({ values, table }) => {
+  const handleEditAnalysis: MRT_TableOptions<AnaylsisDashboardRow>["onEditingRowSave"] = ({ values, table, row }) => {
     updateTimelineAnalysis(
       {
-        timelineAnalysisId: values.id,
+        timelineAnalysisId: row.original.id,
         requestBody: {
           name: values.name,
         },
