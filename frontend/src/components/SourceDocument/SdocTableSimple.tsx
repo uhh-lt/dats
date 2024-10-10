@@ -50,7 +50,6 @@ function SdocTableSimple({ sdocIds }: { sdocIds: number[] }) {
             <MemoRenderer2
               attachedObjectType={AttachedObjectType.SOURCE_DOCUMENT}
               attachedObjectId={row.original.sdocId}
-              userId={user.id}
               showTitle={false}
               showContent
               showIcon={false}

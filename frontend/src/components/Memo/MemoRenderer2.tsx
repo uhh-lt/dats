@@ -6,7 +6,6 @@ import { useGetMemoQuery } from "./useGetMemoQuery.ts";
 interface MemoRenderer2Props {
   attachedObjectType: AttachedObjectType;
   attachedObjectId: number;
-  userId: number;
 }
 
 function MemoRenderer2({

@@ -117,7 +117,6 @@ function BBoxAnnotationTable({
                 <MemoRenderer2
                   attachedObjectType={AttachedObjectType.BBOX_ANNOTATION}
                   attachedObjectId={row.original.id}
-                  userId={user.id}
                   showTitle={false}
                   showContent
                   showIcon={false}
