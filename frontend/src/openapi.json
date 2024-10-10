@@ -4082,6 +4082,44 @@
         }
       }
     },
+    "/analysis/word_frequency_analysis_export": {
+      "post": {
+        "tags": ["analysis"],
+        "summary": "Export the word frequency analysis.",
+        "operationId": "word_frequency_analysis_export",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Body_analysis-word_frequency_analysis_export" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "string", "title": "Response Analysis-Word Frequency Analysis Export" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/analysis/sample_sdocs_by_tags": {
       "post": {
         "tags": ["analysis"],
@@ -6141,6 +6179,19 @@
         "type": "object",
         "required": ["filter", "sorts"],
         "title": "Body_analysis-word_frequency_analysis"
+      },
+      "Body_analysis-word_frequency_analysis_export": {
+        "properties": {
+          "filter": { "$ref": "#/components/schemas/Filter_WordFrequencyColumns_" },
+          "sorts": {
+            "items": { "$ref": "#/components/schemas/Sort_WordFrequencyColumns_" },
+            "type": "array",
+            "title": "Sorts"
+          }
+        },
+        "type": "object",
+        "required": ["filter", "sorts"],
+        "title": "Body_analysis-word_frequency_analysis_export"
       },
       "Body_authentication-login": {
         "properties": {
