@@ -41,7 +41,7 @@ import CodeEditDialog from "../../components/Code/CodeEditDialog.tsx";
 import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import SpanAnnotationEditDialog from "../../components/SpanAnnotation/SpanAnnotationEditDialog.tsx";
 import TagEditDialog from "../../components/Tag/TagEditDialog.tsx";
-import { downloadFile } from "../../utils/fileDownload.ts";
+import { downloadFile } from "../../utils/ExportUtils.ts";
 import StraightConnectionLine from "./connectionlines/StraightConnectionLine.tsx";
 import CustomEdge from "./edges/CustomEdge.tsx";
 import FloatingEdge from "./edges/FloatingEdge.tsx";

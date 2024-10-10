@@ -135,7 +135,10 @@ function TimelineAnalysisViz({ chartData, timelineAnalysis }: TimelineAnalysisVi
         className="myFlexFitContentContainer"
         action={
           <>
-            <TimelineAnalysisExportMenu chartData={chartData} chartName={timelineAnalysis.name} />
+            <TimelineAnalysisExportMenu
+              chartData={chartData}
+              chartName={(isBarPlot ? "barchart-" : "linechart-") + timelineAnalysis.name}
+            />
             <Tooltip title={isBarPlot ? "View as Line Chart" : "View as Bar Chart"}>
               <IconButton onClick={() => dispatch(TimelineAnalysisActions.onTogglePlotType())}>
                 {isBarPlot ? <TimelineIcon /> : <BarChartIcon />}

@@ -15,6 +15,7 @@ import {
 } from "recharts";
 import { COTARead } from "../../../api/openapi/models/COTARead.ts";
 import { DateGroupBy } from "../../../api/openapi/models/DateGroupBy.ts";
+import ExportChartButton from "../../../components/ExportChartButton.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { dateToLocaleDate } from "../../../utils/DateUtils.ts";
 import CotaPlotToggleButton from "./CotaPlotToggleButton.tsx";
@@ -100,7 +101,7 @@ function CotaTimelinePlot({ cota }: CotaTimelinePlotProps) {
   } else {
     content = (
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData}>
+        <LineChart data={chartData} className="cota-timeline-chart">
           <XAxis dataKey={"date"} />
           <YAxis />
           <CartesianGrid stroke="#eee" />
@@ -138,7 +139,16 @@ function CotaTimelinePlot({ cota }: CotaTimelinePlotProps) {
     <Card className="myFlexContainer h100">
       <CardHeader
         className="myFlexFitContentContainer"
-        action={<CotaPlotToggleButton />}
+        action={
+          <>
+            <CotaPlotToggleButton />
+            <ExportChartButton
+              chartName={`cota-timeline-${cota.name}`}
+              chartIdentifier="cota-timeline-chart"
+              disabled={chartData.length === 0}
+            />
+          </>
+        }
         title={"Timeline Analysis"}
         subheader={`Click on a dot to see more information.`}
       />
