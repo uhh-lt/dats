@@ -18,6 +18,7 @@ from app.core.analysis.annotated_segments import (
 from app.core.analysis.word_frequency import (
     WordFrequencyColumns,
     word_frequency,
+    word_frequency_export,
     word_frequency_info,
 )
 from app.core.authorization.authz_user import AuthzUser
@@ -243,6 +244,27 @@ def word_frequency_analysis(
         page=page,
         page_size=page_size,
         sorts=sorts,
+    )
+
+
+@router.post(
+    "/word_frequency_analysis_export",
+    response_model=str,
+    summary="Export the word frequency analysis.",
+)
+def word_frequency_analysis_export(
+    *,
+    db: Session = Depends(get_db_session),
+    project_id: int,
+    filter: Filter[WordFrequencyColumns],
+    sorts: List[Sort[WordFrequencyColumns]],
+    authz_user: AuthzUser = Depends(),
+) -> str:
+    authz_user.assert_in_project(project_id)
+
+    return word_frequency_export(
+        project_id=project_id,
+        filter=filter,
     )
 
 
