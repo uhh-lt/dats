@@ -53,9 +53,13 @@ const useUpdateTimelineAnalysis = () =>
     mutationFn: TimelineAnalysisService.updateById,
     onSettled(data, _error, variables) {
       if (data) {
+        // optimistic update of TIMELINE_ANALYSIS_PROJECT_USER
         queryClient.setQueryData(
           [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id],
-          (prevTimelineAnalysis: TimelineAnalysisRead[]) => {
+          (prevTimelineAnalysis: TimelineAnalysisRead[] | undefined | null) => {
+            if (!prevTimelineAnalysis) {
+              return [data];
+            }
             const index = prevTimelineAnalysis.findIndex((timelineAnalysis) => timelineAnalysis.id === data.id);
             if (index === -1) {
               return prevTimelineAnalysis;
@@ -63,10 +67,12 @@ const useUpdateTimelineAnalysis = () =>
             return [...prevTimelineAnalysis.slice(0, index), data, ...prevTimelineAnalysis.slice(index + 1)];
           },
         );
-
         queryClient.invalidateQueries({
           queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id],
         });
+
+        // optimistic update of TIMELINE_ANALYSIS
+        queryClient.setQueryData([QueryKey.TIMELINE_ANALYSIS, data.id], data);
       }
       queryClient.invalidateQueries({ queryKey: [QueryKey.TIMELINE_ANALYSIS, variables.timelineAnalysisId] });
     },
