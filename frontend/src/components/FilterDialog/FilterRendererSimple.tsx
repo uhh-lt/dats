@@ -5,6 +5,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Box, Button, IconButton, MenuItem, Stack, TextField, Tooltip } from "@mui/material";
 import { TreeItem } from "@mui/x-tree-view";
 import { SimpleTreeView } from "@mui/x-tree-view/SimpleTreeView";
+import { useCallback } from "react";
 import { LogicalOperator } from "../../api/openapi/models/LogicalOperator.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
 import FilterExpressionRenderer from "./FilterExpressionRenderer.tsx";
@@ -30,29 +31,47 @@ function FilterRendererSimple({ editableFilter, filterActions, column2Info }: Fi
 
   // actions
 
-  const handleAddFilterExpression = (filterId: string) => {
-    dispatch(filterActions.addDefaultFilterExpression({ filterId, addEnd: true }));
-  };
+  const handleAddFilterExpression = useCallback(
+    (filterId: string) => {
+      dispatch(filterActions.addDefaultFilterExpression({ filterId, addEnd: true }));
+    },
+    [dispatch, filterActions],
+  );
 
-  const handleDeleteFilter = (filterId: string) => {
-    dispatch(filterActions.deleteFilter({ filterId }));
-  };
+  const handleDeleteFilter = useCallback(
+    (filterId: string) => {
+      dispatch(filterActions.deleteFilter({ filterId }));
+    },
+    [dispatch, filterActions],
+  );
 
-  const handleLogicalOperatorChange = (filterId: string, operator: LogicalOperator) => {
-    dispatch(filterActions.changeLogicalOperator({ filterId, operator }));
-  };
+  const handleLogicalOperatorChange = useCallback(
+    (filterId: string, operator: LogicalOperator) => {
+      dispatch(filterActions.changeLogicalOperator({ filterId, operator }));
+    },
+    [dispatch, filterActions],
+  );
 
-  const handleColumnChange = (filterId: string, columnValue: string) => {
-    dispatch(filterActions.changeColumn({ filterId, columnValue }));
-  };
+  const handleColumnChange = useCallback(
+    (filterId: string, columnValue: string) => {
+      dispatch(filterActions.changeColumn({ filterId, columnValue }));
+    },
+    [dispatch, filterActions],
+  );
 
-  const handleOperatorChange = (filterId: string, operator: FilterOperators) => {
-    dispatch(filterActions.changeOperator({ filterId, operator }));
-  };
+  const handleOperatorChange = useCallback(
+    (filterId: string, operator: FilterOperators) => {
+      dispatch(filterActions.changeOperator({ filterId, operator }));
+    },
+    [dispatch, filterActions],
+  );
 
-  const handleValueChange = (filterId: string, value: string | number | boolean | string[]) => {
-    dispatch(filterActions.changeValue({ filterId, value }));
-  };
+  const handleValueChange = useCallback(
+    (filterId: string, value: string | number | boolean | string[]) => {
+      dispatch(filterActions.changeValue({ filterId, value }));
+    },
+    [dispatch, filterActions],
+  );
 
   // rendering
   const renderFilters = (filters: (MyFilter | MyFilterExpression)[]) => {

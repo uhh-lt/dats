@@ -23,7 +23,6 @@ interface FilterValueSelectorProps extends SharedFilterValueSelectorProps {
 
 function FilterValueSelector({ filterExpression, onChangeValue, column2Info }: FilterValueSelectorProps) {
   const filterInfo = column2Info[filterExpression.column];
-
   switch (filterInfo.value) {
     case FilterValueType.TAG_ID:
       return <TagIdValueSelector filterExpression={filterExpression} onChangeValue={onChangeValue} />;
@@ -47,6 +46,9 @@ function FilterValueSelector({ filterExpression, onChangeValue, column2Info }: F
               label="Value"
               variant="standard"
               fullWidth
+              onKeyDown={(event) => {
+                event.stopPropagation();
+              }}
             />
           );
         case FilterOperator.STRING:
@@ -58,6 +60,9 @@ function FilterValueSelector({ filterExpression, onChangeValue, column2Info }: F
               label="Value"
               variant="standard"
               fullWidth
+              onKeyDown={(event) => {
+                event.stopPropagation();
+              }}
             />
           );
         case FilterOperator.ID_LIST:
@@ -85,6 +90,9 @@ function FilterValueSelector({ filterExpression, onChangeValue, column2Info }: F
                 ))
               }
               renderInput={(params) => <TextField {...params} fullWidth variant="standard" />}
+              onKeyDown={(event) => {
+                event.stopPropagation();
+              }}
             />
           );
         case FilterOperator.DATE:
@@ -98,6 +106,9 @@ function FilterValueSelector({ filterExpression, onChangeValue, column2Info }: F
                   : new Date()
               }
               onChange={(e) => onChangeValue(filterExpression.id, e.target.value)}
+              onKeyDown={(event) => {
+                event.stopPropagation();
+              }}
             />
           );
         case FilterOperator.BOOLEAN: {
@@ -144,7 +155,9 @@ function TagIdValueSelector({ filterExpression, onChangeValue }: SharedFilterVal
         typeof filterExpression.value === "string" ? parseInt(filterExpression.value) || -1 : filterExpression.value
       }
       onChange={(event) => onChangeValue(filterExpression.id, parseInt(event.target.value))}
-      InputLabelProps={{ shrink: true }}
+      slotProps={{
+        inputLabel: { shrink: true },
+      }}
     >
       <MenuItem key={-1} value={-1}>
         <i>None</i>
@@ -176,7 +189,9 @@ function CodeIdValueSelector({ filterExpression, onChangeValue }: SharedFilterVa
         typeof filterExpression.value === "string" ? parseInt(filterExpression.value) || -1 : filterExpression.value
       }
       onChange={(event) => onChangeValue(filterExpression.id, parseInt(event.target.value))}
-      InputLabelProps={{ shrink: true }}
+      slotProps={{
+        inputLabel: { shrink: true },
+      }}
     >
       <MenuItem key={-1} value={-1}>
         <i>None</i>
@@ -208,7 +223,9 @@ function UserIdValueSelector({ filterExpression, onChangeValue }: SharedFilterVa
         typeof filterExpression.value === "string" ? parseInt(filterExpression.value) || -1 : filterExpression.value
       }
       onChange={(event) => onChangeValue(filterExpression.id, parseInt(event.target.value))}
-      InputLabelProps={{ shrink: true }}
+      slotProps={{
+        inputLabel: { shrink: true },
+      }}
     >
       <MenuItem key={-1} value={-1}>
         <i>None</i>
@@ -259,7 +276,9 @@ function SpanAnnotationValueSelector({ filterExpression, onChangeValue }: Shared
         variant="filled"
         value={value[0]}
         onChange={(event) => handleCodeValueChange(event.target.value)}
-        InputLabelProps={{ shrink: true }}
+        slotProps={{
+          inputLabel: { shrink: true },
+        }}
       >
         <MenuItem key={"-1"} value={"-1"}>
           <i>None</i>
@@ -292,8 +311,12 @@ function DocTypeValueSelector({ filterExpression, onChangeValue }: SharedFilterV
       variant="filled"
       value={filterExpression.value === "" ? "none" : filterExpression.value}
       onChange={(event) => onChangeValue(filterExpression.id, event.target.value)}
-      InputLabelProps={{ shrink: true }}
-      inputProps={{ sx: { display: "flex", flexDirection: "row", alignItems: "center" } }}
+      slotProps={{
+        inputLabel: { shrink: true },
+        htmlInput: {
+          style: { display: "flex", flexDirection: "row", alignItems: "center" },
+        },
+      }}
     >
       <MenuItem key={"none"} value={"none"}>
         <i>None</i>
