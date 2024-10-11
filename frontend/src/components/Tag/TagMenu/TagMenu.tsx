@@ -219,12 +219,14 @@ function TagMenuContent({
             variant="standard"
             fullWidth
             placeholder="Add tag..."
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              },
             }}
           />
         </ListItem>
