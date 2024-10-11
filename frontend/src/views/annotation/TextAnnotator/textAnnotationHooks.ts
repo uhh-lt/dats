@@ -12,10 +12,6 @@ export const useCreateSpanAnnotation = (visibleUserIds: number[]) =>
     mutationFn: SpanAnnotationService.addSpanAnnotation,
     // optimistic updates
     onMutate: async (newSpanAnnotation) => {
-      if (visibleUserIds.length == 0) {
-        return;
-      }
-
       // when we create a new span annotation, we add a new annotation to a certain annotation document
       // thus, we only affect the annotation document that we are adding to
       const affectedQueryKey = [QueryKey.SDOC_SPAN_ANNOTATIONS, newSpanAnnotation.requestBody.sdoc_id, visibleUserIds];
@@ -56,7 +52,6 @@ export const useCreateSpanAnnotation = (visibleUserIds: number[]) =>
             description: "",
             id: newSpanAnnotation.requestBody.code_id,
             project_id: 0,
-            user_id: 0,
             created: "",
             updated: "",
           },

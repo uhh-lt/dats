@@ -12,10 +12,6 @@ export const useCreateBBoxAnnotation = (visibleUserIds: number[]) =>
     mutationFn: BboxAnnotationService.addBboxAnnotation,
     // optimistic updates
     onMutate: async (newBbox) => {
-      if (visibleUserIds.length == 0) {
-        return;
-      }
-
       // when we create a new bbox annotation, we add a new bbox to a certain document
       // thus, we only affect the document that we are adding to
       const affectedQueryKey = [QueryKey.SDOC_BBOX_ANNOTATIONS, newBbox.requestBody.sdoc_id, visibleUserIds];
@@ -37,7 +33,6 @@ export const useCreateBBoxAnnotation = (visibleUserIds: number[]) =>
             description: "",
             id: newBbox.requestBody.code_id,
             project_id: 0,
-            user_id: 0,
             created: "",
             updated: "",
           },

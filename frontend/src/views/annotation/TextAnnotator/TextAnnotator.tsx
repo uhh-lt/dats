@@ -168,7 +168,6 @@ function TextAnnotator({ sdoc }: AnnotatorRemasteredProps) {
           description: "",
           id: requestBody.code_id,
           project_id: 0,
-          user_id: 0,
           created: "",
           updated: "",
         },

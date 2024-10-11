@@ -138,8 +138,13 @@ function DocumentRenderer({
             if (basicResult) {
               return basicResult;
               // tokens
-            } else if (domNode.name === "t") {
-              return <span>{domToReact(domNode.children as DOMNode[], options)}</span>;
+            } else if (domNode.name === "t" && domNode.attribs.id) {
+              const tokenId = parseInt(domNode.attribs.id);
+              return (
+                <span data-tokenid={tokenId} className="tok">
+                  {domToReact(domNode.children as DOMNode[], options)}
+                </span>
+              );
               // fallback case
             } else {
               return domToReact(domNode.children as DOMNode[], options);
