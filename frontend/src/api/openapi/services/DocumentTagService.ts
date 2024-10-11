@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { Body_documentTag_update_document_tags_batch } from "../models/Body_documentTag_update_document_tags_batch";
 import type { DocumentTagCreate } from "../models/DocumentTagCreate";
 import type { DocumentTagRead } from "../models/DocumentTagRead";
 import type { DocumentTagUpdate } from "../models/DocumentTagUpdate";
@@ -86,6 +87,26 @@ export class DocumentTagService {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/doctag/bulk/set",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Updates SourceDocuments' tags
+   * @returns number Successful Response
+   * @throws ApiError
+   */
+  public static updateDocumentTagsBatch({
+    requestBody,
+  }: {
+    requestBody: Body_documentTag_update_document_tags_batch;
+  }): CancelablePromise<number> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/doctag/bulk/update",
       body: requestBody,
       mediaType: "application/json",
       errors: {

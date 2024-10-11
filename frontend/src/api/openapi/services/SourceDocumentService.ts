@@ -348,7 +348,7 @@ export class SourceDocumentService {
     resolve = true,
   }: {
     sdocId: number;
-    userId: Array<number>;
+    userId?: Array<number>;
     /**
      * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */
@@ -423,7 +423,7 @@ export class SourceDocumentService {
     resolve = true,
   }: {
     sdocId: number;
-    userId: Array<number>;
+    userId?: Array<number>;
     /**
      * The number of elements to skip (offset)
      */

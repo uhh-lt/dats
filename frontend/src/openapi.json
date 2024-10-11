@@ -1337,7 +1337,7 @@
           {
             "name": "user_id",
             "in": "query",
-            "required": true,
+            "required": false,
             "schema": { "type": "array", "items": { "type": "integer" }, "title": "User Id" }
           },
           {
@@ -1451,7 +1451,7 @@
           {
             "name": "user_id",
             "in": "query",
-            "required": true,
+            "required": false,
             "schema": { "type": "array", "items": { "type": "integer" }, "title": "User Id" }
           },
           {
@@ -1663,6 +1663,36 @@
             "content": {
               "application/json": {
                 "schema": { "type": "integer", "title": "Response Documenttag-Set Document Tags Batch" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/doctag/bulk/update": {
+      "patch": {
+        "tags": ["documentTag"],
+        "summary": "Updates SourceDocuments' tags",
+        "operationId": "update_document_tags_batch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Body_documentTag-update_document_tags_batch" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "integer", "title": "Response Documenttag-Update Document Tags Batch" }
               }
             }
           },
@@ -6215,6 +6245,16 @@
         "type": "object",
         "required": ["username", "password"],
         "title": "Body_authentication-login"
+      },
+      "Body_documentTag-update_document_tags_batch": {
+        "properties": {
+          "sdoc_ids": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" },
+          "unlink_tag_ids": { "items": { "type": "integer" }, "type": "array", "title": "Unlink Tag Ids" },
+          "link_tag_ids": { "items": { "type": "integer" }, "type": "array", "title": "Link Tag Ids" }
+        },
+        "type": "object",
+        "required": ["sdoc_ids", "unlink_tag_ids", "link_tag_ids"],
+        "title": "Body_documentTag-update_document_tags_batch"
       },
       "Body_memo-search_memos": {
         "properties": {

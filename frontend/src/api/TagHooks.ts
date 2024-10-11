@@ -1,10 +1,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { CheckboxState } from "../components/Tag/TagMenu/CheckboxState.ts";
 import queryClient from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { DocumentTagRead } from "./openapi/models/DocumentTagRead.ts";
 import { MemoRead } from "./openapi/models/MemoRead.ts";
-import { SourceDocumentDocumentTagMultiLink } from "./openapi/models/SourceDocumentDocumentTagMultiLink.ts";
 import { DocumentTagService } from "./openapi/services/DocumentTagService.ts";
 
 // tags
@@ -59,8 +57,7 @@ const useBulkSetDocumentTags = () =>
 
 const useBulkLinkDocumentTags = () =>
   useMutation({
-    mutationFn: (variables: { projectId: number; requestBody: SourceDocumentDocumentTagMultiLink }) =>
-      DocumentTagService.linkMultipleTags({ requestBody: variables.requestBody }),
+    mutationFn: DocumentTagService.linkMultipleTags,
     onSuccess: (_data, variables) => {
       // we need to invalidate the document tags for every document that we updated
       variables.requestBody.source_document_ids.forEach((sdocId) => {
@@ -74,8 +71,7 @@ const useBulkLinkDocumentTags = () =>
 
 const useBulkUnlinkDocumentTags = () =>
   useMutation({
-    mutationFn: (variables: { projectId: number; requestBody: SourceDocumentDocumentTagMultiLink }) =>
-      DocumentTagService.unlinkMultipleTags({ requestBody: variables.requestBody }),
+    mutationFn: DocumentTagService.unlinkMultipleTags,
     onSuccess: (_data, variables) => {
       // we need to invalidate the document tags for every document that we updated
       variables.requestBody.source_document_ids.forEach((sdocId) => {
@@ -89,52 +85,10 @@ const useBulkUnlinkDocumentTags = () =>
 
 const useBulkUpdateDocumentTags = () =>
   useMutation({
-    mutationFn: async (variables: {
-      projectId: number;
-      sourceDocumentIds: number[];
-      initialState: Map<number, CheckboxState>;
-      newState: Map<number, CheckboxState>;
-    }) => {
-      const addTags: number[] = [];
-      const removeTags: number[] = [];
-
-      variables.initialState.forEach((value, key) => {
-        const newValue = variables.newState.get(key);
-        if (value === CheckboxState.CHECKED && newValue === CheckboxState.NOT_CHECKED) {
-          removeTags.push(key);
-        } else if (value === CheckboxState.NOT_CHECKED && newValue === CheckboxState.CHECKED) {
-          addTags.push(key);
-        } else if (value === CheckboxState.INDETERMINATE && newValue === CheckboxState.CHECKED) {
-          addTags.push(key);
-        } else if (value === CheckboxState.INDETERMINATE && newValue === CheckboxState.NOT_CHECKED) {
-          removeTags.push(key);
-        }
-      });
-
-      const calls = [];
-      if (addTags.length > 0) {
-        calls.push(
-          DocumentTagService.linkMultipleTags({
-            requestBody: {
-              source_document_ids: variables.sourceDocumentIds,
-              document_tag_ids: addTags,
-            },
-          }),
-        );
-      }
-      if (removeTags.length > 0) {
-        DocumentTagService.unlinkMultipleTags({
-          requestBody: {
-            source_document_ids: variables.sourceDocumentIds,
-            document_tag_ids: removeTags,
-          },
-        });
-      }
-      return await Promise.all(calls);
-    },
+    mutationFn: DocumentTagService.updateDocumentTagsBatch,
     onSuccess: (_data, variables) => {
       // we need to invalidate the document tags for every document that we updated
-      variables.sourceDocumentIds.forEach((sdocId) => {
+      variables.requestBody.sdoc_ids.forEach((sdocId) => {
         queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_TAGS, sdocId] });
       });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TAG_STATISTICS] }); // todo: zu unspezifisch!
