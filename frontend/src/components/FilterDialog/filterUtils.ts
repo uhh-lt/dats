@@ -91,6 +91,17 @@ export const filterOperator2FilterOperatorType: Record<FilterOperator, FilterOpe
   [FilterOperator.DATE]: DateOperator,
 };
 
+// this has to align with FilterValueSelector.tsx
+export const filterValueType2defaultValue: Record<FilterValueType, boolean | string | number | string[]> = {
+  [FilterValueType.CODE_ID]: -1,
+  [FilterValueType.DOC_TYPE]: "none",
+  [FilterValueType.SDOC_ID]: 0,
+  [FilterValueType.SPAN_ANNOTATION]: ["-1", ""],
+  [FilterValueType.TAG_ID]: -1,
+  [FilterValueType.USER_ID]: -1,
+  [FilterValueType.INFER_FROM_OPERATOR]: false,
+};
+
 export const operator2HumanReadable: Record<FilterOperators, string> = {
   [IDOperator.ID_EQUALS]: "=",
   [IDOperator.ID_NOT_EQUALS]: "!=",
@@ -119,6 +130,13 @@ export const operator2HumanReadable: Record<FilterOperators, string> = {
 };
 
 // METHODS
+export const getDefaultValue = (valueType: FilterValueType, operator: FilterOperator) => {
+  if (valueType === FilterValueType.INFER_FROM_OPERATOR) {
+    return filterOperator2defaultValue[operator];
+  } else {
+    return filterValueType2defaultValue[valueType];
+  }
+};
 
 export const getDefaultOperator = (operator: FilterOperatorType): FilterOperators => {
   return Object.values(operator)[0];

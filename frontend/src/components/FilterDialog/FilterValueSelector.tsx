@@ -1,4 +1,4 @@
-import { Autocomplete, Button, ButtonGroup, Chip, MenuItem, TextField } from "@mui/material";
+import { Autocomplete, Button, ButtonGroup, Chip, MenuItem, Stack, TextField } from "@mui/material";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks.ts";
@@ -311,13 +311,10 @@ function DocTypeValueSelector({ filterExpression, onChangeValue }: SharedFilterV
       select
       label="Value"
       variant="filled"
-      value={filterExpression.value === "" ? "none" : filterExpression.value}
+      value={filterExpression.value}
       onChange={(event) => onChangeValue(filterExpression.id, event.target.value)}
       slotProps={{
         inputLabel: { shrink: true },
-        htmlInput: {
-          style: { display: "flex", flexDirection: "row", alignItems: "center" },
-        },
       }}
     >
       <MenuItem key={"none"} value={"none"}>
@@ -325,8 +322,10 @@ function DocTypeValueSelector({ filterExpression, onChangeValue }: SharedFilterV
       </MenuItem>
       {Object.values(DocType).map((docType) => (
         <MenuItem key={docType} value={docType}>
-          {docTypeToIcon[docType]}
-          {docType}
+          <Stack direction="row" alignItems="center">
+            {docTypeToIcon[docType]}
+            {docType}
+          </Stack>
         </MenuItem>
       ))}
     </TextField>

@@ -9,9 +9,9 @@ import {
   createEmptyFilter,
   deleteInFilter,
   filterOperator2FilterOperatorType,
-  filterOperator2defaultValue,
   findInFilter,
   getDefaultOperator,
+  getDefaultValue,
   isFilter,
   isFilterExpression,
 } from "./filterUtils.ts";
@@ -153,11 +153,11 @@ export const filterReducer = {
         filterItem.column = action.payload.columnValue;
       }
 
-      const filterOperator = state.column2Info[action.payload.columnValue].operator;
-      const filterOperatorType = filterOperator2FilterOperatorType[filterOperator];
+      const columnInfo = state.column2Info[action.payload.columnValue];
+      const filterOperatorType = filterOperator2FilterOperatorType[columnInfo.operator];
 
       filterItem.operator = getDefaultOperator(filterOperatorType);
-      filterItem.value = filterOperator2defaultValue[filterOperator];
+      filterItem.value = getDefaultValue(columnInfo.value, columnInfo.operator);
     }
   },
   changeOperator: (
