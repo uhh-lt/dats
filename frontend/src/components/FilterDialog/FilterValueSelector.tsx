@@ -5,7 +5,7 @@ import ProjectHooks from "../../api/ProjectHooks.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
 import { FilterOperator } from "../../api/openapi/models/FilterOperator.ts";
 import { FilterValueType } from "../../api/openapi/models/FilterValueType.ts";
-import { isValidDateString } from "../../utils/DateUtils.ts";
+import { dateToLocaleYYYYMMDDString, isValidDateString } from "../../utils/DateUtils.ts";
 import { docTypeToIcon } from "../../utils/docTypeToIcon.tsx";
 import CodeRenderer from "../Code/CodeRenderer.tsx";
 import TagRenderer from "../Tag/TagRenderer.tsx";
@@ -104,9 +104,10 @@ function FilterValueSelector({ filterExpression, onChangeValue, column2Info }: F
               value={
                 typeof filterExpression.value === "string" && isValidDateString(filterExpression.value)
                   ? filterExpression.value
-                  : new Date()
+                  : dateToLocaleYYYYMMDDString(new Date())
               }
               onChange={(e) => onChangeValue(filterExpression.id, e.target.value)}
+              fullWidth
               onKeyDown={(event) => {
                 event.stopPropagation();
               }}

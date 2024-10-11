@@ -8,6 +8,7 @@ import { ListOperator } from "../../api/openapi/models/ListOperator.ts";
 import { LogicalOperator } from "../../api/openapi/models/LogicalOperator.ts";
 import { NumberOperator } from "../../api/openapi/models/NumberOperator.ts";
 import { StringOperator } from "../../api/openapi/models/StringOperator.ts";
+import { dateToLocaleYYYYMMDDString } from "../../utils/DateUtils.ts";
 
 // TYPES
 
@@ -77,7 +78,7 @@ export const filterOperator2defaultValue: Record<FilterOperator, boolean | strin
   [FilterOperator.NUMBER]: 0,
   [FilterOperator.ID_LIST]: [],
   [FilterOperator.LIST]: [],
-  [FilterOperator.DATE]: new Date().toISOString(),
+  [FilterOperator.DATE]: dateToLocaleYYYYMMDDString(new Date()),
 };
 
 export const filterOperator2FilterOperatorType: Record<FilterOperator, FilterOperatorType> = {
