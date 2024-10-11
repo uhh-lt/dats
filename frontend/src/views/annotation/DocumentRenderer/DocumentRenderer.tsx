@@ -81,13 +81,19 @@ function DocumentRenderer({
   // the order they're defined
   const processingInstructions: HTMLReactParserOptions = useMemo(() => {
     if (!annotationsPerToken || !tokenData || !annotationMap) {
-      return {
+      const options: HTMLReactParserOptions = {
         replace(domNode) {
           if (domNode instanceof Element) {
-            return domToReact(domNode.children as DOMNode[], {});
+            // sentences & tokens
+            if (domNode.name === "sent" || domNode.name === "t") {
+              return <span>{domToReact(domNode.children as DOMNode[], options)}</span>;
+            } else {
+              return domToReact(domNode.children as DOMNode[], options);
+            }
           }
         },
       };
+      return options;
     } else {
       const options: HTMLReactParserOptions = {
         replace(domNode) {
