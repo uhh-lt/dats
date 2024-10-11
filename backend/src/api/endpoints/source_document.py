@@ -365,7 +365,7 @@ def get_all_span_annotations_bulk(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
-    user_id: Annotated[list[int], Query()],
+    user_id: Annotated[List[int], Query(default_factory=list)],
     resolve_code: bool = Depends(resolve_code_param),
     authz_user: AuthzUser = Depends(),
 ) -> Union[List[SpanAnnotationRead], List[SpanAnnotationReadResolved]]:
@@ -411,7 +411,7 @@ def get_all_bbox_annotations_bulk(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
-    user_id: Annotated[list[int], Query()],
+    user_id: Annotated[List[int], Query(default_factory=list)],
     skip_limit: Dict[str, int] = Depends(skip_limit_params),
     resolve_code: bool = Depends(resolve_code_param),
     authz_user: AuthzUser = Depends(),
