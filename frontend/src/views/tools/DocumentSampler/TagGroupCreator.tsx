@@ -94,7 +94,7 @@ function TagGroupCreator({ tags, aggregationGroups, cardProps = {} }: TagGroupCr
               getOptionLabel={(option) => option.name}
               getOptionDisabled={(option) => selectedTagIds.includes(option.id)}
               renderTags={(tagValue, getTagProps) =>
-                tagValue.map((option, index) => <Chip label={option.name} {...getTagProps({ index })} />)
+                tagValue.map((option, index) => <Chip {...getTagProps({ index })} key={index} label={option.name} />)
               }
               style={{ flexGrow: 2, width: "100%" }}
               sx={{ mr: 1 }}

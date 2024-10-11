@@ -82,10 +82,11 @@ function FilterValueSelector({ filterExpression, onChangeValue, column2Info }: F
               renderTags={(value: readonly string[], getTagProps) =>
                 value.map((option: string, index: number) => (
                   <Chip
+                    {...getTagProps({ index })}
+                    key={index}
                     style={{ borderRadius: "4px", height: "100%" }}
                     variant="filled"
                     label={option}
-                    {...getTagProps({ index })}
                   />
                 ))
               }
