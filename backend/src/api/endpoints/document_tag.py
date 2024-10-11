@@ -151,6 +151,41 @@ def set_document_tags_batch(
     )
 
 
+@router.patch(
+    "/bulk/update",
+    response_model=int,
+    summary="Updates SourceDocuments' tags",
+)
+def update_document_tags_batch(
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_ids: List[int],
+    unlink_tag_ids: List[int],
+    link_tag_ids: List[int],
+    authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
+) -> int:
+    authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
+    authz_user.assert_in_same_project_as_many(Crud.DOCUMENT_TAG, link_tag_ids)
+
+    validate.validate_objects_in_same_project(
+        [(Crud.SOURCE_DOCUMENT, sdoc_id) for sdoc_id in sdoc_ids]
+        + [(Crud.DOCUMENT_TAG, tag_id) for tag_id in link_tag_ids]
+    )
+
+    modifications = crud_document_tag.link_multiple_document_tags(
+        db=db,
+        sdoc_ids=sdoc_ids,
+        tag_ids=link_tag_ids,
+    )
+    modifications += crud_document_tag.unlink_multiple_document_tags(
+        db=db,
+        sdoc_ids=sdoc_ids,
+        tag_ids=unlink_tag_ids,
+    )
+    return modifications
+
+
 @router.get(
     "/{tag_id}",
     response_model=DocumentTagRead,
