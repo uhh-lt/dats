@@ -20,7 +20,6 @@ function TagUnlinkButton({ sdocId, tag, ...props }: IconButtonProps & { sdocId: 
       onAccept: () => {
         removeTagMutation(
           {
-            projectId: tag.project_id,
             requestBody: {
               source_document_ids: [sdocId],
               document_tag_ids: [tag.id],
