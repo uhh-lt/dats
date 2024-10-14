@@ -30,7 +30,6 @@ function FilterRendererSimple({ editableFilter, filterActions, column2Info }: Fi
   const dispatch = useAppDispatch();
 
   // actions
-
   const handleAddFilterExpression = useCallback(
     (filterId: string) => {
       dispatch(filterActions.addDefaultFilterExpression({ filterId, addEnd: true }));
@@ -147,6 +146,7 @@ function FilterRendererSimple({ editableFilter, filterActions, column2Info }: Fi
 
   return (
     <SimpleTreeView
+      key={editableFilter.id}
       className="filterTree"
       defaultExpandedItems={[editableFilter.id]}
       disableSelection
