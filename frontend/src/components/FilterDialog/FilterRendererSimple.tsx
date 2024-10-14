@@ -150,9 +150,9 @@ function FilterRendererSimple({ editableFilter, filterActions, column2Info }: Fi
       className="filterTree"
       defaultExpandedItems={[editableFilter.id]}
       disableSelection
-      slotProps={{
-        expandIcon: <ChevronRightIcon />,
-        collapseIcon: <ExpandMoreIcon />,
+      slots={{
+        expandIcon: ChevronRightIcon,
+        collapseIcon: ExpandMoreIcon,
       }}
     >
       {renderFilters(editableFilter.items)}
