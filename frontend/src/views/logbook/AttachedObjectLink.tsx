@@ -1,6 +1,6 @@
 import LabelIcon from "@mui/icons-material/Label";
-import { Box, Link, Stack, Typography } from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
+import { Box, Stack } from "@mui/material";
+import { Link } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks.ts";
 import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
 import { BBoxAnnotationReadResolved } from "../../api/openapi/models/BBoxAnnotationReadResolved.ts";
@@ -8,6 +8,8 @@ import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
 import { SourceDocumentRead } from "../../api/openapi/models/SourceDocumentRead.ts";
 import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { AnnoActions } from "../annotation/annoSlice.ts";
 
 interface AttachedObjectLinkProps {
   attachedObjectType: AttachedObjectType;
@@ -56,7 +58,7 @@ function SdocLink({ sdoc }: { sdoc: SourceDocumentRead }) {
   return (
     <>
       attached to{" "}
-      <Link component={RouterLink} to={`../annotation/${sdoc.id}`} color="inherit">
+      <Link to={`../annotation/${sdoc.id}`} color="inherit">
         {sdoc.filename}
       </Link>
     </>
@@ -76,32 +78,26 @@ function SpanAnnotationLink({ spanAnnotation }: { spanAnnotation: SpanAnnotation
   // query
   const sdoc = SdocHooks.useGetDocument(spanAnnotation.sdoc_id);
 
+  const dispatch = useAppDispatch();
+  const handleClick = () => {
+    dispatch(AnnoActions.setSelectedAnnotationId(spanAnnotation.id));
+    dispatch(AnnoActions.addVisibleUserIds([spanAnnotation.user_id]));
+  };
+
   if (sdoc.isSuccess) {
     return (
       <>
-        <Typography
-          variant="subtitle1"
-          fontSize={12}
-          fontWeight={600}
-          borderLeft={4}
-          borderColor={spanAnnotation.code.color}
-          paddingLeft={1}
-        >
-          attached to{" "}
-          <Link component={RouterLink} to={`../annotation/${sdoc.data.id}`} color="inherit">
-            <span
-              style={{
-                backgroundColor: spanAnnotation.code.color,
-              }}
-            >
-              [{spanAnnotation.code.name}] {spanAnnotation.text}
-            </span>
-          </Link>{" "}
-          of{" "}
-          <Link component={RouterLink} to={`../annotation/${sdoc.data.id}`} color="inherit">
-            {sdoc.data.filename}
-          </Link>
-        </Typography>
+        attached to{" "}
+        <Link to={`../annotation/${spanAnnotation.sdoc_id}`} color="inherit" onClick={handleClick}>
+          <span
+            style={{
+              backgroundColor: spanAnnotation.code.color,
+            }}
+          >
+            [{spanAnnotation.code.name}] {spanAnnotation.text}
+          </span>{" "}
+          of {sdoc.data.filename}
+        </Link>
       </>
     );
   }
@@ -125,11 +121,11 @@ function BBoxAnnotationLink({ bboxAnnotation }: { bboxAnnotation: BBoxAnnotation
     return (
       <>
         attached to{" "}
-        <Link component={RouterLink} to={`../annotation/${sdoc.data.id}`} color="inherit">
+        <Link to={`../annotation/${sdoc.data.id}`} color="inherit">
           Bounding Box ({bboxAnnotation.code.name})
         </Link>
         of{" "}
-        <Link component={RouterLink} to={`../annotation/${sdoc.data.id}`} color="inherit">
+        <Link to={`../annotation/${sdoc.data.id}`} color="inherit">
           {sdoc.data.filename}
         </Link>
       </>
