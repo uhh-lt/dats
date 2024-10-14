@@ -20,10 +20,10 @@ export const useCreateSpanAnnotation = (visibleUserIds: number[]) =>
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
 
       // Snapshot the previous value
-      const previousSpanAnnotations = queryClient.getQueryData(affectedQueryKey);
+      const previousSpanAnnotations = queryClient.getQueryData<SpanAnnotationReadResolved[]>(affectedQueryKey);
 
       // Optimistically update to the new value
-      queryClient.setQueryData(affectedQueryKey, (old: SpanAnnotationReadResolved[] | undefined) => {
+      queryClient.setQueryData<SpanAnnotationReadResolved[]>(affectedQueryKey, (old) => {
         const fakeAnnotationIndex = old?.findIndex((a) => a.id === FAKE_ANNOTATION_ID);
         if (fakeAnnotationIndex !== undefined && fakeAnnotationIndex !== -1) {
           const fakeAnnotation = old![fakeAnnotationIndex];
@@ -45,6 +45,7 @@ export const useCreateSpanAnnotation = (visibleUserIds: number[]) =>
         // we have not created a fake annotation yet
         const spanAnnotation = {
           ...newSpanAnnotation.requestBody,
+          text: newSpanAnnotation.requestBody.span_text,
           id: FAKE_ANNOTATION_ID,
           code: {
             name: "",
@@ -54,27 +55,27 @@ export const useCreateSpanAnnotation = (visibleUserIds: number[]) =>
             project_id: 0,
             created: "",
             updated: "",
+            is_system: false,
           },
           created: "",
           updated: "",
-          sdoc_id: 0,
           user_id: 0,
         };
         return old === undefined ? [spanAnnotation] : [...old, spanAnnotation];
       });
 
       // Return a context object with the snapshotted value
-      return { previousSpanAnnotations, myCustomQueryKey: affectedQueryKey };
+      return { previousSpanAnnotations, affectedQueryKey };
     },
     onError: (_error: Error, _newSpanAnnotation, context) => {
       if (!context) return;
       // If the mutation fails, use the context returned from onMutate to roll back
-      queryClient.setQueryData(context.myCustomQueryKey, context.previousSpanAnnotations);
+      queryClient.setQueryData<SpanAnnotationReadResolved[]>(context.affectedQueryKey, context.previousSpanAnnotations);
     },
     // Always re-fetch after error or success:
     onSettled: (_data, _error, _variables, context) => {
       if (!context) return;
-      queryClient.invalidateQueries({ queryKey: context.myCustomQueryKey });
+      queryClient.invalidateQueries({ queryKey: context.affectedQueryKey });
     },
   });
 
@@ -105,10 +106,10 @@ export const useUpdateSpanAnnotation = (visibleUserIds: number[]) =>
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
 
       // Snapshot the previous value
-      const previousAnnos = queryClient.getQueryData(affectedQueryKey);
+      const previousAnnos = queryClient.getQueryData<SpanAnnotationReadResolved[]>(affectedQueryKey);
 
       // Optimistically update to the new value
-      queryClient.setQueryData(affectedQueryKey, (old: SpanAnnotationReadResolved[] | undefined) => {
+      queryClient.setQueryData<SpanAnnotationReadResolved[]>(affectedQueryKey, (old) => {
         if (!old) {
           return undefined;
         }
@@ -130,12 +131,12 @@ export const useUpdateSpanAnnotation = (visibleUserIds: number[]) =>
       });
 
       // Return a context object with the snapshotted value
-      return { previousAnnos, myCustomQueryKey: affectedQueryKey };
+      return { previousAnnos, affectedQueryKey };
     },
     onError: (_error: Error, _updatedSpanAnnotation, context) => {
       if (!context) return;
       // If the mutation fails, use the context returned from onMutate to roll back
-      queryClient.setQueryData(context.myCustomQueryKey, context.previousAnnos);
+      queryClient.setQueryData<SpanAnnotationReadResolved[]>(context.affectedQueryKey, context.previousAnnos);
     },
     // Always re-fetch after error or success:
     onSettled: (updatedSpanAnnotation, _error, _variables, context) => {
@@ -143,7 +144,7 @@ export const useUpdateSpanAnnotation = (visibleUserIds: number[]) =>
       if (updatedSpanAnnotation) {
         queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATION, updatedSpanAnnotation.id] });
       }
-      queryClient.invalidateQueries({ queryKey: context.myCustomQueryKey });
+      queryClient.invalidateQueries({ queryKey: context.affectedQueryKey });
     },
   });
 
@@ -161,10 +162,10 @@ export const useDeleteSpanAnnotation = (visibleUserIds: number[]) =>
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
 
       // Snapshot the previous value
-      const previousSpanAnnotations = queryClient.getQueryData(affectedQueryKey);
+      const previousSpanAnnotations = queryClient.getQueryData<SpanAnnotationReadResolved[]>(affectedQueryKey);
 
       // Optimistically update to the new value
-      queryClient.setQueryData(affectedQueryKey, (old: SpanAnnotationReadResolved[] | undefined) => {
+      queryClient.setQueryData<SpanAnnotationReadResolved[]>(affectedQueryKey, (old) => {
         if (old === undefined) {
           return undefined;
         }
@@ -173,17 +174,17 @@ export const useDeleteSpanAnnotation = (visibleUserIds: number[]) =>
       });
 
       // Return a context object with the snapshotted value
-      return { previousSpanAnnotations, myCustomQueryKey: affectedQueryKey };
+      return { previousSpanAnnotations, affectedQueryKey };
     },
     onError: (_error: Error, _spanAnnotationToDelete, context) => {
       if (!context) return;
       // If the mutation fails, use the context returned from onMutate to roll back
-      queryClient.setQueryData(context.myCustomQueryKey, context.previousSpanAnnotations);
+      queryClient.setQueryData<SpanAnnotationReadResolved[]>(context.affectedQueryKey, context.previousSpanAnnotations);
     },
     // Always re-fetch after error or success:
     onSettled: (_data, _error, _variables, context) => {
       if (!context) return;
-      queryClient.invalidateQueries({ queryKey: context.myCustomQueryKey });
+      queryClient.invalidateQueries({ queryKey: context.affectedQueryKey });
       queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED] }); // todo: this is not optimal
     },
   });

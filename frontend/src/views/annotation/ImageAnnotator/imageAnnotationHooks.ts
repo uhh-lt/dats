@@ -20,10 +20,10 @@ export const useCreateBBoxAnnotation = (visibleUserIds: number[]) =>
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
 
       // Snapshot the previous value
-      const previousBboxes = queryClient.getQueryData(affectedQueryKey);
+      const previousBboxes = queryClient.getQueryData<BBoxAnnotationReadResolved[]>(affectedQueryKey);
 
       // Optimistically update to the new value
-      queryClient.setQueryData(affectedQueryKey, (old: BBoxAnnotationReadResolved[] | undefined) => {
+      queryClient.setQueryData<BBoxAnnotationReadResolved[]>(affectedQueryKey, (old) => {
         const bbox = {
           ...newBbox.requestBody,
           id: FAKE_BBOX_ID,
@@ -35,25 +35,27 @@ export const useCreateBBoxAnnotation = (visibleUserIds: number[]) =>
             project_id: 0,
             created: "",
             updated: "",
+            is_system: false,
           },
           created: "",
           updated: "",
+          user_id: 0,
         };
         return old === undefined ? [bbox] : [...old, bbox];
       });
 
       // Return a context object with the snapshotted value
-      return { previousBboxes, myCustomQueryKey: affectedQueryKey };
+      return { previousBboxes, affectedQueryKey };
     },
     onError: (_error: Error, _newBbox, context) => {
       // If the mutation fails, use the context returned from onMutate to roll back
       if (!context) return;
-      queryClient.setQueryData(context.myCustomQueryKey, context.previousBboxes);
+      queryClient.setQueryData<BBoxAnnotationReadResolved[]>(context.affectedQueryKey, context.previousBboxes);
     },
     // Always re-fetch after error or success:
     onSettled: (_data, _error, _variables, context) => {
       if (!context) return;
-      queryClient.invalidateQueries({ queryKey: context.myCustomQueryKey });
+      queryClient.invalidateQueries({ queryKey: context.affectedQueryKey });
     },
   });
 
@@ -80,10 +82,10 @@ export const useUpdateBBoxAnnotation = (visibleUserIds: number[]) =>
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
 
       // Snapshot the previous value
-      const previousBboxes = queryClient.getQueryData(affectedQueryKey);
+      const previousBboxes = queryClient.getQueryData<BBoxAnnotationReadResolved[]>(affectedQueryKey);
 
       // Optimistically update to the new value
-      queryClient.setQueryData(affectedQueryKey, (old: BBoxAnnotationReadResolved[] | undefined) => {
+      queryClient.setQueryData<BBoxAnnotationReadResolved[]>(affectedQueryKey, (old) => {
         if (!old) {
           return undefined;
         }
@@ -105,12 +107,12 @@ export const useUpdateBBoxAnnotation = (visibleUserIds: number[]) =>
       });
 
       // Return a context object with the snapshotted value
-      return { previousBboxes, myCustomQueryKey: affectedQueryKey };
+      return { previousBboxes, affectedQueryKey };
     },
     onError: (_error: Error, _updatedBboxAnnotation, context) => {
       if (!context) return;
       // If the mutation fails, use the context returned from onMutate to roll back
-      queryClient.setQueryData(context.myCustomQueryKey, context.previousBboxes);
+      queryClient.setQueryData<BBoxAnnotationReadResolved[]>(context.affectedQueryKey, context.previousBboxes);
     },
     // Always re-fetch after error or success:
     onSettled: (updatedBboxAnnotation, _error, _variables, context) => {
@@ -118,7 +120,7 @@ export const useUpdateBBoxAnnotation = (visibleUserIds: number[]) =>
       if (updatedBboxAnnotation) {
         queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_ANNOTATION, updatedBboxAnnotation.id] });
       }
-      queryClient.invalidateQueries({ queryKey: context.myCustomQueryKey });
+      queryClient.invalidateQueries({ queryKey: context.affectedQueryKey });
     },
   });
 
@@ -136,29 +138,26 @@ export const useDeleteBBoxAnnotation = (visibleUserIds: number[]) =>
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
 
       // Snapshot the previous value
-      const previousBboxes = queryClient.getQueryData(affectedQueryKey);
+      const previousBboxes = queryClient.getQueryData<BBoxAnnotationReadResolved[]>(affectedQueryKey);
 
       // Optimistically update to the new value
-      queryClient.setQueryData(affectedQueryKey, (old: BBoxAnnotationReadResolved[] | undefined) => {
-        if (old === undefined) {
-          return undefined;
-        }
-
+      queryClient.setQueryData<BBoxAnnotationReadResolved[]>(affectedQueryKey, (old) => {
+        if (old === undefined) return old;
         return old.filter((bbox) => bbox.id !== bboxToDelete.id);
       });
 
       // Return a context object with the snapshotted value
-      return { previousBboxes, myCustomQueryKey: affectedQueryKey };
+      return { previousBboxes, affectedQueryKey };
     },
     onError: (_error: Error, _newBbox, context) => {
       if (!context) return;
       // If the mutation fails, use the context returned from onMutate to roll back
-      queryClient.setQueryData(context.myCustomQueryKey, context.previousBboxes);
+      queryClient.setQueryData<BBoxAnnotationReadResolved[]>(context.affectedQueryKey, context.previousBboxes);
     },
     // Always re-fetch after error or success:
     onSettled: (_data, _error, _variables, context) => {
       if (!context) return;
-      queryClient.invalidateQueries({ queryKey: context.myCustomQueryKey });
+      queryClient.invalidateQueries({ queryKey: context.affectedQueryKey });
       queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED] }); // todo: this is not optimal
     },
   });

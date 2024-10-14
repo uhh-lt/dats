@@ -30,15 +30,12 @@ const useCreateTimelineAnalysis = () =>
     mutationFn: TimelineAnalysisService.create,
     onSuccess(data) {
       if (data) {
-        queryClient.setQueryData(
+        queryClient.setQueryData<TimelineAnalysisRead[]>(
           [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id],
-          (prevTimelineAnalysis: TimelineAnalysisRead[]) =>
-            [
-              ...prevTimelineAnalysis,
-              {
-                ...data,
-              },
-            ] as TimelineAnalysisRead[],
+          (prevTimelineAnalysis) => {
+            if (!prevTimelineAnalysis) return [data];
+            return [...prevTimelineAnalysis, data];
+          },
         );
         queryClient.invalidateQueries({ queryKey: [QueryKey.TIMELINE_ANALYSIS, data.id] });
         queryClient.invalidateQueries({
@@ -54,12 +51,10 @@ const useUpdateTimelineAnalysis = () =>
     onSettled(data, _error, variables) {
       if (data) {
         // optimistic update of TIMELINE_ANALYSIS_PROJECT_USER
-        queryClient.setQueryData(
+        queryClient.setQueryData<TimelineAnalysisRead[]>(
           [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id],
-          (prevTimelineAnalysis: TimelineAnalysisRead[] | undefined | null) => {
-            if (!prevTimelineAnalysis) {
-              return [data];
-            }
+          (prevTimelineAnalysis) => {
+            if (!prevTimelineAnalysis) return [data];
             const index = prevTimelineAnalysis.findIndex((timelineAnalysis) => timelineAnalysis.id === data.id);
             if (index === -1) {
               return prevTimelineAnalysis;
@@ -72,7 +67,7 @@ const useUpdateTimelineAnalysis = () =>
         });
 
         // optimistic update of TIMELINE_ANALYSIS
-        queryClient.setQueryData([QueryKey.TIMELINE_ANALYSIS, data.id], data);
+        queryClient.setQueryData<TimelineAnalysisRead>([QueryKey.TIMELINE_ANALYSIS, data.id], data);
       }
       queryClient.invalidateQueries({ queryKey: [QueryKey.TIMELINE_ANALYSIS, variables.timelineAnalysisId] });
     },
@@ -83,9 +78,12 @@ const useDuplicateTimelineAnalysis = () =>
     mutationFn: TimelineAnalysisService.duplicateById,
     onSettled(data) {
       if (data) {
-        queryClient.setQueryData(
+        queryClient.setQueryData<TimelineAnalysisRead[]>(
           [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id],
-          (prevTimelineAnalysis: TimelineAnalysisRead[]) => [...prevTimelineAnalysis, data],
+          (prevTimelineAnalysis) => {
+            if (!prevTimelineAnalysis) return [data];
+            return [...prevTimelineAnalysis, data];
+          },
         );
         queryClient.invalidateQueries({
           queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id],
@@ -99,10 +97,12 @@ const useDeleteTimelineAnalysis = () =>
     mutationFn: TimelineAnalysisService.deleteById,
     onSettled(data, _error, variables) {
       if (data) {
-        queryClient.setQueryData(
+        queryClient.setQueryData<TimelineAnalysisRead[]>(
           [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id],
-          (prevTimelineAnalysis: TimelineAnalysisRead[]) =>
-            prevTimelineAnalysis.filter((timelineAnalysis) => timelineAnalysis.id !== data.id),
+          (prevTimelineAnalysis) => {
+            if (!prevTimelineAnalysis) return [];
+            return prevTimelineAnalysis.filter((timelineAnalysis) => timelineAnalysis.id !== data.id);
+          },
         );
         queryClient.invalidateQueries({
           queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id],

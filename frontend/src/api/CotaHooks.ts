@@ -52,10 +52,13 @@ const useDuplicateCota = () =>
     mutationFn: ConceptOverTimeAnalysisService.duplicateById,
     onSettled(data) {
       if (data) {
-        queryClient.setQueryData([QueryKey.COTAS_PROJECT_USER, data.project_id], (prevCota: COTARead[]) => [
-          ...prevCota,
-          data,
-        ]);
+        queryClient.setQueryData<COTARead[]>([QueryKey.COTAS_PROJECT_USER, data.project_id], (prevCota) => {
+          if (prevCota) {
+            return [...prevCota, data];
+          } else {
+            return [data];
+          }
+        });
         queryClient.invalidateQueries({
           queryKey: [QueryKey.COTAS_PROJECT_USER, data.project_id],
         });

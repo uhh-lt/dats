@@ -45,17 +45,11 @@ const useCreateWhiteboard = () =>
     mutationFn: WhiteboardService.create,
     onSettled(data, _error, variables) {
       if (data) {
-        queryClient.setQueryData(
-          [QueryKey.WHITEBOARDS_PROJECT, data.project_id],
-          (prevWhiteboards: Whiteboard[]) =>
-            [
-              ...prevWhiteboards,
-              {
-                ...data,
-                content: { nodes: [], edges: [] },
-              },
-            ] as Whiteboard[],
-        );
+        queryClient.setQueryData<Whiteboard[]>([QueryKey.WHITEBOARDS_PROJECT, data.project_id], (prevWhiteboards) => {
+          const newWhiteboard = { ...data, content: { nodes: [], edges: [] } };
+          if (!prevWhiteboards) return [newWhiteboard];
+          return [...prevWhiteboards, newWhiteboard];
+        });
         queryClient.invalidateQueries({ queryKey: [QueryKey.WHITEBOARD, data.id] });
       }
       queryClient.invalidateQueries({ queryKey: [QueryKey.WHITEBOARDS_PROJECT, variables.requestBody.project_id] });
@@ -67,19 +61,14 @@ const useUpdateWhiteboard = () =>
     mutationFn: WhiteboardService.updateById,
     onSettled(data, _error, variables) {
       if (data) {
-        queryClient.setQueryData([QueryKey.WHITEBOARDS_PROJECT, data.project_id], (prevWhiteboards: Whiteboard[]) => {
+        queryClient.setQueryData<Whiteboard[]>([QueryKey.WHITEBOARDS_PROJECT, data.project_id], (prevWhiteboards) => {
+          const updatedWhiteboard = { ...data, content: JSON.parse(data.content) as WhiteboardGraph };
+          if (!prevWhiteboards) return [updatedWhiteboard];
           const index = prevWhiteboards.findIndex((whiteboard) => whiteboard.id === data.id);
           if (index === -1) {
             return prevWhiteboards;
           }
-          return [
-            ...prevWhiteboards.slice(0, index),
-            {
-              ...data,
-              content: JSON.parse(data.content) as WhiteboardGraph,
-            },
-            ...prevWhiteboards.slice(index + 1),
-          ];
+          return [...prevWhiteboards.slice(0, index), updatedWhiteboard, ...prevWhiteboards.slice(index + 1)];
         });
         queryClient.invalidateQueries({ queryKey: [QueryKey.WHITEBOARDS_PROJECT, data.project_id] });
       }
@@ -93,17 +82,11 @@ const useDuplicateWhiteboard = () => {
     mutationFn: WhiteboardService.duplicateById,
     onSettled(data) {
       if (data) {
-        queryClient.setQueryData(
-          [QueryKey.WHITEBOARDS_PROJECT, projectId],
-          (prevWhiteboards: Whiteboard[]) =>
-            [
-              ...prevWhiteboards,
-              {
-                ...data,
-                content: JSON.parse(data.content) as WhiteboardGraph,
-              },
-            ] as Whiteboard[],
-        );
+        queryClient.setQueryData<Whiteboard[]>([QueryKey.WHITEBOARDS_PROJECT, projectId], (prevWhiteboards) => {
+          const duplicatedWhiteboard = { ...data, content: JSON.parse(data.content) as WhiteboardGraph };
+          if (!prevWhiteboards) return [duplicatedWhiteboard];
+          return [...prevWhiteboards, duplicatedWhiteboard];
+        });
       }
       queryClient.invalidateQueries({ queryKey: [QueryKey.WHITEBOARDS_PROJECT, projectId] });
     },
@@ -116,9 +99,10 @@ const useDeleteWhiteboard = () => {
     mutationFn: WhiteboardService.deleteById,
     onSettled(data, _error, variables) {
       if (data) {
-        queryClient.setQueryData([QueryKey.WHITEBOARDS_PROJECT, projectId], (prevWhiteboards: Whiteboard[]) =>
-          prevWhiteboards.filter((whiteboard) => whiteboard.id !== data.id),
-        );
+        queryClient.setQueryData<Whiteboard[]>([QueryKey.WHITEBOARDS_PROJECT, projectId], (prevWhiteboards) => {
+          if (!prevWhiteboards) return [];
+          return prevWhiteboards.filter((whiteboard) => whiteboard.id !== data.id);
+        });
       }
       queryClient.invalidateQueries({ queryKey: [QueryKey.WHITEBOARD, variables.whiteboardId] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.WHITEBOARDS_PROJECT, projectId] });
