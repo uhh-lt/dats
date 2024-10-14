@@ -157,7 +157,6 @@ api = DATSAPI(
 api.login()
 api.me()
 
-# create new project if it does not exist
 # if project_id is set, use that
 if args.project_id != -1:
     project = api.get_proj_by_id(args.project_id)
@@ -165,6 +164,7 @@ if args.project_id != -1:
         print(f"Project with ID {args.project_id} does not exist!")
         exit()
 else:
+    # create new project if it does not exist
     title = args.project_name
     project = api.get_proj_by_title(title)
     if project is None:
@@ -180,7 +180,7 @@ project_metadata_map = {meta["key"]: meta for meta in project_metadatas}
 for key, metatype in zip(args.metadata_keys, args.metadata_types):
     if key not in project_metadata_map:
         project_metadata = api.create_project_metadata(
-            proj_id=project["id"], key=key, metatype=metatype, doctype=args.doctype
+            proj_id=project["id"], key=key, metatype=metatype, doctype=args.doctype, description=key
         )
         project_metadata_map[key] = project_metadata
 
@@ -211,20 +211,12 @@ for file in tqdm(files_in_dir, f"Reading and checking files from {directory}!"):
             if data[args.content_key] == "":
                 print(f"Skipping file {file.name} because {args.content_key} is empty!")
                 continue
-            json_data[filename] = data
             if args.mime_type is None:
                 mime = magic.from_buffer(data[args.content_key], mime=True)
             else:
                 mime = args.mime_type
-            sdoc_id = api.resolve_sdoc_id_from_proj_and_filename(
-                proj_id=project["id"], filename=filename
-            )
-            if sdoc_id is not None:
-                print(
-                    f"Skipping file {filename} because it already exists in the project!"
-                )
-                continue
 
+            json_data[filename] = data
             content = str(data[args.content_key])
             files.append(("uploaded_files", (filename, content.encode("utf-8"), mime)))
         except Exception as e:
@@ -237,7 +229,7 @@ for file in tqdm(files_in_dir, f"Reading and checking files from {directory}!"):
             mime = args.mime_type
         files.append(("uploaded_files", (filename, file_bytes, mime)))
 
-# remove duplicate files
+# remove duplicate files by name
 temp = {upload_file[1][0]: upload_file for upload_file in files}
 files = list(temp.values())
 
@@ -305,6 +297,7 @@ for i in tqdm(
 
 
 # create new tag if it does not exist
+api.refresh_login()
 tag = api.get_tag_by_name(proj_id=project["id"], name=args.tag_name)
 if tag is None:
     tag = api.create_tag(
@@ -323,9 +316,15 @@ api.bulk_apply_tags(sdoc_ids=list(untagged_sdoc_ids), tag_ids=[tag["id"]])
 
 # apply sdoc metadata
 applied = set()
+idx = 0
 for filename, data in tqdm(
     json_data.items(), total=len(json_data), desc="Applying metadata to sdocs... "
 ):
+    # refresh login
+    if idx % 1000 == 0:
+        api.refresh_login()
+    idx += 1
+
     sdoc_id = api.resolve_sdoc_id_from_proj_and_filename(
         proj_id=project["id"], filename=filename
     )
@@ -336,29 +335,5 @@ for filename, data in tqdm(
                     sdoc_id=sdoc_id, key=metakey, metatype=metatype, value=data[metakey]
                 )
         applied.add(sdoc_id)
-
-    # TODO: what about this?
-    # for image_name in data["image_names"]:
-    #     if image_name:
-    #         sdoc_id = api.resolve_sdoc_id_from_proj_and_filename(
-    #             proj_id=project["id"], filename=filename
-    #         )
-    #         if sdoc_id not in applied and sdoc_id is not None:
-    #             api.create_metadata(sdoc_id=sdoc_id, key="origin", value=data["url"])
-    #             if "published_date" in data and data["published_date"] != "":
-    #                 api.create_metadata(
-    #                     sdoc_id=sdoc_id,
-    #                     key="published_date",
-    #                     value=data["published_date"],
-    #                 )
-    #             if "visited_date" in data and data["visited_date"] != "":
-    #                 api.create_metadata(
-    #                     sdoc_id=sdoc_id, key="visited_date", value=data["visited_date"]
-    #                 )
-    #             if "author" in data and data["author"] != "":
-    #                 api.create_metadata(
-    #                     sdoc_id=sdoc_id, key="author", value=data["author"]
-    #                 )
-    #             applied.add(sdoc_id)
 
 print("(: FINISHED :)")

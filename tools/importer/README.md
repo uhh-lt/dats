@@ -18,6 +18,9 @@ pip install python-magic
 ## Usage
 
 ```
+# import klimawirtschaft
+python importer/dats_importer.py --input_dir /ltstorage/shares/projects/dwts/backend/src/dev_notebooks/data/KlimaWirtschaft/json --backend_url http://localhost:19002/ --project_id 86 --tag_name wirtschaft --tag_description wirtschaft --is_json --metadata_keys Newspaper Date Length Section Author Headline --metadata_types STRING DATE NUMBER STRING STRING STRING --doctype text --content_key Article --mime_type text/html --username SYSTEM@dwts.org
+
 # import klimaallgemein metadata
 python importer/dats_importer_metadata.py --input_dir /ltstorage/shares/projects/dwts/backend/src/dev_notebooks/data/KlimaAllgemein/json2 --backend_url http://localhost:19002/ --project_id 84 --metadata_keys paper paper_db headline date --metadata_types STRING STRING STRING DATE --doctype text --username SYSTEM@dwts.org
 

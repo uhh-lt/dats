@@ -268,7 +268,7 @@ class DATSAPI:
 
     # METADATA
     def create_project_metadata(
-        self, proj_id: int, key: str, metatype: str, doctype: str
+        self, proj_id: int, key: str, metatype: str, doctype: str, description: str
     ):
         # metatype is STRING DATE BOOLEAN NUMBER LIST
         # doctype is text image video audio
@@ -280,6 +280,7 @@ class DATSAPI:
                     "metatype": metatype,
                     "read_only": False,
                     "doctype": doctype,
+                    "description": description,
                     "project_id": proj_id,
                 }
             ),
@@ -343,6 +344,7 @@ if __name__ == "__main__":
 
     # get project
     project = dats.get_proj_by_title(title="test")
+    assert project is not None
     print("got project by title", project)
 
     # get project
@@ -365,6 +367,7 @@ if __name__ == "__main__":
 
     # get tag
     tag = dats.get_tag_by_name(proj_id=project["id"], name="test tag")
+    assert tag is not None
     print("got tag", tag)
 
     # get tags
@@ -417,10 +420,10 @@ if __name__ == "__main__":
 
     # create project metadata
     project_metadata = dats.create_project_metadata(
-        proj_id=project["id"], key="sdoc_id", metatype="STRING", doctype="text"
+        proj_id=project["id"], key="sdoc_id", metatype="STRING", doctype="text", description="sdoc_id"
     )
     project_metadata = dats.create_project_metadata(
-        proj_id=project["id"], key="sdoc_id", metatype="STRING", doctype="image"
+        proj_id=project["id"], key="sdoc_id", metatype="STRING", doctype="image", description="sdoc_id"
     )
     print("created project metadata", project_metadata)
 
