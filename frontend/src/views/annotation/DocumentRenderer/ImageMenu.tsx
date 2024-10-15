@@ -7,15 +7,13 @@ import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnack
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { ImageSearchActions } from "../../search/ImageSearch/imageSearchSlice.ts";
 
-interface ImageMenuProps {}
-
 export interface ImageMenuHandle {
   open: (position: PopoverPosition, image: number | null | undefined) => void;
   close: () => void;
 }
 
 // eslint-disable-next-line no-empty-pattern
-const ImageMenu = forwardRef<ImageMenuHandle, ImageMenuProps>(({}, ref) => {
+const ImageMenu = forwardRef<ImageMenuHandle>((_, ref) => {
   const navigate = useNavigate();
 
   // local state

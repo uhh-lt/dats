@@ -1,9 +1,9 @@
 import { CircularProgress, Portal, Typography } from "@mui/material";
 import { useContext } from "react";
 import { useParams } from "react-router-dom";
-import CotaHooks from "../../../api/CotaHooks";
-import { AppBarContext } from "../../../layouts/TwoBarLayout";
-import CotaViewContent from "./CotaViewContent";
+import CotaHooks from "../../../api/CotaHooks.ts";
+import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
+import CotaViewContent from "./CotaViewContent.tsx";
 
 function CotaView() {
   // global client state

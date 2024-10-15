@@ -74,6 +74,7 @@ export const action2TargetTitle = (action: ActionRead): string | null | undefine
         return undefined;
     }
   } catch (e) {
+    console.error(e);
     return undefined;
   }
 };
@@ -94,6 +95,7 @@ export const parseActionState = (input: string | null | undefined | null) => {
   try {
     return JSON.parse(input);
   } catch (e) {
+    console.error(e);
     throw new Error("Could not parse state as JSON (json is invalid)!");
   }
 };

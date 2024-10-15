@@ -9,7 +9,9 @@ interface ColorToolProps {
 function ColorTool({ caption, color, onColorChange }: ColorToolProps) {
   let timeout: NodeJS.Timeout | undefined;
   const handleColorChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
-    timeout && clearTimeout(timeout);
+    if (timeout) {
+      clearTimeout(timeout);
+    }
     timeout = setTimeout(() => {
       const color = event.target.value;
       onColorChange(color);

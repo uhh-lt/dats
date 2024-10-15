@@ -21,14 +21,12 @@ import SliderTool from "./tools/SliderTool.tsx";
 import SolidDashedDottedTool from "./tools/SolidDashedDottedTool.tsx";
 import TypographyVariantTool from "./tools/TypographyVariantTool.tsx";
 
-interface NodeEditMenuProps {}
-
 export interface NodeEditMenuHandle {
   open: (nodes: Node[]) => void;
   close: () => void;
 }
 
-const NodeEditMenu = forwardRef<NodeEditMenuHandle, NodeEditMenuProps>((_, ref) => {
+const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
   const reactFlowInstance = useReactFlow<BackgroundColorData | TextData | BorderData>();
   const [nodes, setNodes] = useState<Node<BackgroundColorData | TextData | BorderData>[]>([]);
 

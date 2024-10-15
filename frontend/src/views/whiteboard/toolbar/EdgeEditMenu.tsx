@@ -29,8 +29,6 @@ import SliderTool from "./tools/SliderTool.tsx";
 import SolidDashedDottedTool from "./tools/SolidDashedDottedTool.tsx";
 import TypographyVariantTool from "./tools/TypographyVariantTool.tsx";
 
-interface EdgeEditMenuProps {}
-
 const arrow2icon: Record<string, React.ReactElement> = {
   noarrow: <HorizontalRuleIcon />,
   arrow: <KeyboardArrowRightIcon />,
@@ -55,7 +53,7 @@ export interface EdgeEditMenuHandle {
   close: () => void;
 }
 
-const EdgeEditMenu = forwardRef<EdgeEditMenuHandle, EdgeEditMenuProps>((_, ref) => {
+const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
   const reactFlowInstance = useReactFlow<DATSNodeData, CustomEdgeData>();
   const [edges, setEdges] = useState<Edge<CustomEdgeData>[]>([]);
 

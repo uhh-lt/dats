@@ -10,7 +10,9 @@ interface NumberToolProps {
 function NumberTool({ value, onValueChange, min, max }: NumberToolProps) {
   let timeout: NodeJS.Timeout | undefined;
   const handleStrokeWidthChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
-    timeout && clearTimeout(timeout);
+    if (timeout) {
+      clearTimeout(timeout);
+    }
     timeout = setTimeout(() => {
       onValueChange(parseInt(event.target.value));
     }, 333);

@@ -3,7 +3,8 @@ export const isValidHttpUrl = (string: string) => {
 
   try {
     url = new URL(string);
-  } catch (_) {
+  } catch (e) {
+    console.error(e);
     return false;
   }
 
