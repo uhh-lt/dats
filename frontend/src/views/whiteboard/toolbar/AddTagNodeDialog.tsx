@@ -54,7 +54,7 @@ function AddTagNodeDialog({ projectId, buttonProps, onClick }: AddTagNodeDialogP
                 onClick={() => handleConfirmSelection(props.selectedTags)}
                 disabled={props.selectedTags.length === 0}
               >
-                Add {props.selectedTags.length > 0 ? props.selectedTags.length : null} Codes
+                Add {props.selectedTags.length > 0 ? props.selectedTags.length : null} Tags
               </Button>
             </Stack>
           )}
