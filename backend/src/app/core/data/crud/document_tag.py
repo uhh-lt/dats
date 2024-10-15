@@ -55,6 +55,8 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
         """
         Links all SDocs with all DocTags
         """
+        if len(sdoc_ids) == 0 or len(tag_ids) == 0:
+            return 0
 
         # create before state
         from app.core.data.crud.source_document import crud_sdoc
@@ -107,6 +109,9 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
         """
         Unlinks all DocTags with all SDocs
         """
+        if len(sdoc_ids) == 0 or len(tag_ids) == 0:
+            return 0
+
         # create before state
         from app.core.data.crud.source_document import crud_sdoc
 
@@ -162,15 +167,12 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
         add_tag_ids = list(set(tag_ids) - set(current_tag_ids))
         del_tag_ids = list(set(current_tag_ids) - set(tag_ids))
 
-        modifications = 0
-        if len(del_tag_ids) > 0:
-            modifications += self.unlink_multiple_document_tags(
-                db, sdoc_ids=[sdoc_id], tag_ids=del_tag_ids
-            )
-        if len(add_tag_ids) > 0:
-            modifications += self.link_multiple_document_tags(
-                db, sdoc_ids=[sdoc_id], tag_ids=add_tag_ids
-            )
+        modifications = self.unlink_multiple_document_tags(
+            db, sdoc_ids=[sdoc_id], tag_ids=del_tag_ids
+        )
+        modifications += self.link_multiple_document_tags(
+            db, sdoc_ids=[sdoc_id], tag_ids=add_tag_ids
+        )
 
         return modifications
 

@@ -1,5 +1,5 @@
 import InfoIcon from "@mui/icons-material/Info";
-import { MenuItem, Stack, TextField } from "@mui/material";
+import { CircularProgress, MenuItem, Stack, TextField } from "@mui/material";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
@@ -11,6 +11,7 @@ import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
 import { DateGroupBy } from "../../../api/openapi/models/DateGroupBy.ts";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
 import { MetaType } from "../../../api/openapi/models/MetaType.ts";
+import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
 import SdocsWithDateCounter from "../../../components/Metadata/SdocsWithDateCounter/SdocsWithDateCounter.tsx";
 
@@ -27,6 +28,40 @@ function TimelineAnalysisSettings({ timelineAnalysis }: TimelineAnalysisSettings
     (metadata) => metadata.doctype === DocType.TEXT && metadata.metatype === MetaType.DATE,
   );
 
+  return (
+    <Card className="myFlexContainer h100">
+      <CardHeader
+        className="myFlexFitContentContainer"
+        action={
+          <IconButton aria-label="info">
+            <InfoIcon />
+          </IconButton>
+        }
+        title="Settings"
+        subheader="Adjust the visualization settings"
+      />
+      <CardContent className="myFlexFillAllContainer">
+        {filteredProjectMetadata ? (
+          <TimelineAnalysisSettingsContent
+            timelineAnalysis={timelineAnalysis}
+            projectId={projectId}
+            projectMetadata={filteredProjectMetadata}
+          />
+        ) : projectMetadata.isLoading ? (
+          <CircularProgress />
+        ) : (
+          <div>Failed to load metadata</div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function TimelineAnalysisSettingsContent({
+  timelineAnalysis,
+  projectMetadata,
+  projectId,
+}: TimelineAnalysisSettingsProps & { projectId: number; projectMetadata: ProjectMetadataRead[] }) {
   // handlers (for ui)
   const updateTimelineAnalysisMutation = TimelineAnalysisHooks.useUpdateTimelineAnalysis();
   const handleGroupByChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,82 +99,68 @@ function TimelineAnalysisSettings({ timelineAnalysis }: TimelineAnalysisSettings
   };
 
   return (
-    <Card className="myFlexContainer h100">
-      <CardHeader
-        className="myFlexFitContentContainer"
-        action={
-          <IconButton aria-label="info">
-            <InfoIcon />
-          </IconButton>
+    <Stack spacing={3}>
+      <TextField
+        select
+        fullWidth
+        label={"Group by"}
+        variant="outlined"
+        value={timelineAnalysis.settings.group_by}
+        onChange={handleGroupByChange}
+        helperText="Specify the aggregation of the results."
+      >
+        {Object.values(DateGroupBy).map((value) => (
+          <MenuItem key={value} value={value}>
+            {value}
+          </MenuItem>
+        ))}
+      </TextField>
+
+      <TextField
+        select
+        fullWidth
+        label={"Date metadata"}
+        variant="outlined"
+        value={timelineAnalysis.settings.date_metadata_id || -1}
+        onChange={handleChangeMetadataId}
+        helperText={
+          <SdocsWithDateCounter
+            projectId={projectId}
+            dateMetadataId={timelineAnalysis.settings.date_metadata_id || -1}
+          />
         }
-        title="Settings"
-        subheader="Adjust the visualization settings"
-      />
-      <CardContent className="myFlexFillAllContainer">
-        <Stack spacing={3}>
-          <TextField
-            select
-            fullWidth
-            label={"Group by"}
-            variant="outlined"
-            value={timelineAnalysis.settings.group_by}
-            onChange={handleGroupByChange}
-            helperText="Specify the aggregation of the results."
-          >
-            {Object.values(DateGroupBy).map((value) => (
-              <MenuItem key={value} value={value}>
-                {value}
-              </MenuItem>
-            ))}
-          </TextField>
+        error={projectMetadata.length === 0}
+        disabled={projectMetadata.length === 0}
+      >
+        {projectMetadata.length === 0 ? (
+          <MenuItem key={-1} value={-1}>
+            <i>There is no DATE metadata for TEXT documents this project!</i>
+          </MenuItem>
+        ) : (
+          <MenuItem key={-1} value={-1}>
+            <i>None</i>
+          </MenuItem>
+        )}
+        {projectMetadata.map((metadata) => (
+          <MenuItem key={metadata.key} value={metadata.id}>
+            {metadata.key}
+          </MenuItem>
+        ))}
+      </TextField>
 
-          <TextField
-            select
-            fullWidth
-            label={"Date metadata"}
-            variant="outlined"
-            value={timelineAnalysis.settings.date_metadata_id || -1}
-            onChange={handleChangeMetadataId}
-            helperText={
-              <SdocsWithDateCounter
-                projectId={projectId}
-                dateMetadataId={timelineAnalysis.settings.date_metadata_id || -1}
-              />
-            }
-            error={filteredProjectMetadata?.length === 0}
-            disabled={filteredProjectMetadata?.length === 0}
-          >
-            {filteredProjectMetadata?.length === 0 ? (
-              <MenuItem key={-1} value={-1}>
-                <i>There is no DATE metadata for TEXT documents this project!</i>
-              </MenuItem>
-            ) : (
-              <MenuItem key={-1} value={-1}>
-                <i>None</i>
-              </MenuItem>
-            )}
-            {filteredProjectMetadata?.map((metadata) => (
-              <MenuItem key={metadata.key} value={metadata.id}>
-                {metadata.key}
-              </MenuItem>
-            ))}
-          </TextField>
-
-          <TextField
-            select
-            fullWidth
-            label={"Result type"}
-            variant="outlined"
-            value={timelineAnalysis.settings.result_type}
-            onChange={handleChangeResultType}
-            helperText="Specify the type of the results."
-            disabled
-          >
-            <MenuItem value={"document"}>Document</MenuItem>
-          </TextField>
-        </Stack>
-      </CardContent>
-    </Card>
+      <TextField
+        select
+        fullWidth
+        label={"Result type"}
+        variant="outlined"
+        value={timelineAnalysis.settings.result_type}
+        onChange={handleChangeResultType}
+        helperText="Specify the type of the results."
+        disabled
+      >
+        <MenuItem value={"document"}>Document</MenuItem>
+      </TextField>
+    </Stack>
   );
 }
 

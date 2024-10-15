@@ -1337,7 +1337,7 @@
           {
             "name": "user_id",
             "in": "query",
-            "required": true,
+            "required": false,
             "schema": { "type": "array", "items": { "type": "integer" }, "title": "User Id" }
           },
           {
@@ -1451,7 +1451,7 @@
           {
             "name": "user_id",
             "in": "query",
-            "required": true,
+            "required": false,
             "schema": { "type": "array", "items": { "type": "integer" }, "title": "User Id" }
           },
           {
@@ -1663,6 +1663,36 @@
             "content": {
               "application/json": {
                 "schema": { "type": "integer", "title": "Response Documenttag-Set Document Tags Batch" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/doctag/bulk/update": {
+      "patch": {
+        "tags": ["documentTag"],
+        "summary": "Updates SourceDocuments' tags",
+        "operationId": "update_document_tags_batch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Body_documentTag-update_document_tags_batch" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "integer", "title": "Response Documenttag-Update Document Tags Batch" }
               }
             }
           },
@@ -3571,26 +3601,6 @@
       }
     },
     "/feedback": {
-      "get": {
-        "tags": ["feedback"],
-        "summary": "Returns all Feedback items of the current user. If logged in as the system user, return feedback of all users.",
-        "operationId": "get_all",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": { "$ref": "#/components/schemas/FeedbackRead" },
-                  "type": "array",
-                  "title": "Response Feedback-Get All"
-                }
-              }
-            }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      },
       "put": {
         "tags": ["feedback"],
         "summary": "Creates a new Feedback and returns it with the generated ID.",
@@ -3612,7 +3622,7 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/feedback/{feedback_id}": {
+    "/feedback/by_id/{feedback_id}": {
       "get": {
         "tags": ["feedback"],
         "summary": "Returns the Feedback with the given ID.",
@@ -3638,11 +3648,11 @@
         }
       }
     },
-    "/feedback/user": {
+    "/feedback/all": {
       "get": {
         "tags": ["feedback"],
-        "summary": "Returns the Feedback of the logged-in User.",
-        "operationId": "get_all_by_user",
+        "summary": "Returns all Feedback items of the current user. If logged in as the system user, return feedback of all users.",
+        "operationId": "get_all",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -3651,7 +3661,7 @@
                 "schema": {
                   "items": { "$ref": "#/components/schemas/FeedbackRead" },
                   "type": "array",
-                  "title": "Response Feedback-Get All By User"
+                  "title": "Response Feedback-Get All"
                 }
               }
             }
@@ -6216,6 +6226,16 @@
         "required": ["username", "password"],
         "title": "Body_authentication-login"
       },
+      "Body_documentTag-update_document_tags_batch": {
+        "properties": {
+          "sdoc_ids": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" },
+          "unlink_tag_ids": { "items": { "type": "integer" }, "type": "array", "title": "Unlink Tag Ids" },
+          "link_tag_ids": { "items": { "type": "integer" }, "type": "array", "title": "Link Tag Ids" }
+        },
+        "type": "object",
+        "required": ["sdoc_ids", "unlink_tag_ids", "link_tag_ids"],
+        "title": "Body_documentTag-update_document_tags_batch"
+      },
       "Body_memo-search_memos": {
         "properties": {
           "filter": { "$ref": "#/components/schemas/Filter_MemoColumns_" },
@@ -7108,6 +7128,7 @@
       },
       "FilterExpression_AnnotatedImagesColumns_": {
         "properties": {
+          "id": { "type": "string", "title": "Id" },
           "column": {
             "anyOf": [{ "$ref": "#/components/schemas/AnnotatedImagesColumns" }, { "type": "integer" }],
             "title": "Column"
@@ -7136,11 +7157,12 @@
           }
         },
         "type": "object",
-        "required": ["column", "operator", "value"],
+        "required": ["id", "column", "operator", "value"],
         "title": "FilterExpression[AnnotatedImagesColumns]"
       },
       "FilterExpression_AnnotatedSegmentsColumns_": {
         "properties": {
+          "id": { "type": "string", "title": "Id" },
           "column": {
             "anyOf": [{ "$ref": "#/components/schemas/AnnotatedSegmentsColumns" }, { "type": "integer" }],
             "title": "Column"
@@ -7169,11 +7191,12 @@
           }
         },
         "type": "object",
-        "required": ["column", "operator", "value"],
+        "required": ["id", "column", "operator", "value"],
         "title": "FilterExpression[AnnotatedSegmentsColumns]"
       },
       "FilterExpression_MemoColumns_": {
         "properties": {
+          "id": { "type": "string", "title": "Id" },
           "column": {
             "anyOf": [{ "$ref": "#/components/schemas/MemoColumns" }, { "type": "integer" }],
             "title": "Column"
@@ -7202,11 +7225,12 @@
           }
         },
         "type": "object",
-        "required": ["column", "operator", "value"],
+        "required": ["id", "column", "operator", "value"],
         "title": "FilterExpression[MemoColumns]"
       },
       "FilterExpression_SearchColumns_": {
         "properties": {
+          "id": { "type": "string", "title": "Id" },
           "column": {
             "anyOf": [{ "$ref": "#/components/schemas/SearchColumns" }, { "type": "integer" }],
             "title": "Column"
@@ -7235,11 +7259,12 @@
           }
         },
         "type": "object",
-        "required": ["column", "operator", "value"],
+        "required": ["id", "column", "operator", "value"],
         "title": "FilterExpression[SearchColumns]"
       },
       "FilterExpression_TimelineAnalysisColumns_": {
         "properties": {
+          "id": { "type": "string", "title": "Id" },
           "column": {
             "anyOf": [{ "$ref": "#/components/schemas/TimelineAnalysisColumns" }, { "type": "integer" }],
             "title": "Column"
@@ -7268,11 +7293,12 @@
           }
         },
         "type": "object",
-        "required": ["column", "operator", "value"],
+        "required": ["id", "column", "operator", "value"],
         "title": "FilterExpression[TimelineAnalysisColumns]"
       },
       "FilterExpression_WordFrequencyColumns_": {
         "properties": {
+          "id": { "type": "string", "title": "Id" },
           "column": {
             "anyOf": [{ "$ref": "#/components/schemas/WordFrequencyColumns" }, { "type": "integer" }],
             "title": "Column"
@@ -7301,7 +7327,7 @@
           }
         },
         "type": "object",
-        "required": ["column", "operator", "value"],
+        "required": ["id", "column", "operator", "value"],
         "title": "FilterExpression[WordFrequencyColumns]"
       },
       "FilterOperator": {
@@ -7316,6 +7342,7 @@
       },
       "Filter_AnnotatedImagesColumns_": {
         "properties": {
+          "id": { "type": "string", "title": "Id" },
           "items": {
             "items": {
               "anyOf": [
@@ -7329,11 +7356,12 @@
           "logic_operator": { "$ref": "#/components/schemas/LogicalOperator" }
         },
         "type": "object",
-        "required": ["items", "logic_operator"],
+        "required": ["id", "items", "logic_operator"],
         "title": "Filter[AnnotatedImagesColumns]"
       },
       "Filter_AnnotatedSegmentsColumns_": {
         "properties": {
+          "id": { "type": "string", "title": "Id" },
           "items": {
             "items": {
               "anyOf": [
@@ -7347,11 +7375,12 @@
           "logic_operator": { "$ref": "#/components/schemas/LogicalOperator" }
         },
         "type": "object",
-        "required": ["items", "logic_operator"],
+        "required": ["id", "items", "logic_operator"],
         "title": "Filter[AnnotatedSegmentsColumns]"
       },
       "Filter_MemoColumns_": {
         "properties": {
+          "id": { "type": "string", "title": "Id" },
           "items": {
             "items": {
               "anyOf": [
@@ -7365,11 +7394,12 @@
           "logic_operator": { "$ref": "#/components/schemas/LogicalOperator" }
         },
         "type": "object",
-        "required": ["items", "logic_operator"],
+        "required": ["id", "items", "logic_operator"],
         "title": "Filter[MemoColumns]"
       },
       "Filter_SearchColumns_": {
         "properties": {
+          "id": { "type": "string", "title": "Id" },
           "items": {
             "items": {
               "anyOf": [
@@ -7383,11 +7413,12 @@
           "logic_operator": { "$ref": "#/components/schemas/LogicalOperator" }
         },
         "type": "object",
-        "required": ["items", "logic_operator"],
+        "required": ["id", "items", "logic_operator"],
         "title": "Filter[SearchColumns]"
       },
       "Filter_TimelineAnalysisColumns_-Input": {
         "properties": {
+          "id": { "type": "string", "title": "Id" },
           "items": {
             "items": {
               "anyOf": [
@@ -7401,11 +7432,12 @@
           "logic_operator": { "$ref": "#/components/schemas/LogicalOperator" }
         },
         "type": "object",
-        "required": ["items", "logic_operator"],
+        "required": ["id", "items", "logic_operator"],
         "title": "Filter[TimelineAnalysisColumns]"
       },
       "Filter_TimelineAnalysisColumns_-Output": {
         "properties": {
+          "id": { "type": "string", "title": "Id" },
           "items": {
             "items": {
               "anyOf": [
@@ -7419,11 +7451,12 @@
           "logic_operator": { "$ref": "#/components/schemas/LogicalOperator" }
         },
         "type": "object",
-        "required": ["items", "logic_operator"],
+        "required": ["id", "items", "logic_operator"],
         "title": "Filter[TimelineAnalysisColumns]"
       },
       "Filter_WordFrequencyColumns_": {
         "properties": {
+          "id": { "type": "string", "title": "Id" },
           "items": {
             "items": {
               "anyOf": [
@@ -7437,7 +7470,7 @@
           "logic_operator": { "$ref": "#/components/schemas/LogicalOperator" }
         },
         "type": "object",
-        "required": ["items", "logic_operator"],
+        "required": ["id", "items", "logic_operator"],
         "title": "Filter[WordFrequencyColumns]"
       },
       "HTTPValidationError": {

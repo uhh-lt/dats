@@ -9,9 +9,9 @@ import {
   createEmptyFilter,
   deleteInFilter,
   filterOperator2FilterOperatorType,
-  filterOperator2defaultValue,
   findInFilter,
   getDefaultOperator,
+  getDefaultValue,
   isFilter,
   isFilterExpression,
 } from "./filterUtils.ts";
@@ -68,18 +68,21 @@ export const getOrCreateFilter = (state: FilterState, filterId: string, filter?:
 
 export const filterReducer = {
   onStartFilterEdit: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string; filter?: MyFilter }>) => {
-    const currentFilter = getOrCreateFilter(state, action.payload.filterId, action.payload.filter);
-    state.editableFilter = JSON.parse(JSON.stringify(currentFilter));
+    const currentFilter = JSON.parse(
+      JSON.stringify(getOrCreateFilter(state, action.payload.filterId, action.payload.filter)),
+    );
 
     // add a default filter expression if the filter is empty
-    if (state.editableFilter.items.length === 0) {
-      state.editableFilter.items = [
+    if (currentFilter.items.length === 0) {
+      currentFilter.items = [
         {
           ...state.defaultFilterExpression,
           id: uuidv4(),
-        } as MyFilterExpression,
+        },
       ];
     }
+
+    state.editableFilter = currentFilter;
   },
   onFinishFilterEdit: (state: Draft<FilterState>) => {
     state.filter = {
@@ -153,11 +156,11 @@ export const filterReducer = {
         filterItem.column = action.payload.columnValue;
       }
 
-      const filterOperator = state.column2Info[action.payload.columnValue].operator;
-      const filterOperatorType = filterOperator2FilterOperatorType[filterOperator];
+      const columnInfo = state.column2Info[action.payload.columnValue];
+      const filterOperatorType = filterOperator2FilterOperatorType[columnInfo.operator];
 
       filterItem.operator = getDefaultOperator(filterOperatorType);
-      filterItem.value = filterOperator2defaultValue[filterOperator];
+      filterItem.value = getDefaultValue(columnInfo.value, columnInfo.operator);
     }
   },
   changeOperator: (

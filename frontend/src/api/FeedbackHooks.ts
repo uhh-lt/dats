@@ -25,7 +25,7 @@ const useGetAllFeedback = () =>
 const useGetUserFeedback = () =>
   useQuery<FeedbackRead[], Error>({
     queryKey: [QueryKey.FEEDBACKS_USER],
-    queryFn: () => FeedbackService.getAllByUser(),
+    queryFn: () => FeedbackService.getAll(),
   });
 
 const useReplyTo = () => useMutation({ mutationFn: FeedbackService.replyTo });

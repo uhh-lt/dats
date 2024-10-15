@@ -158,23 +158,23 @@ function TextAnnotator({ sdoc }: AnnotatorRemasteredProps) {
     await queryClient.cancelQueries({ queryKey: affectedQueryKey });
 
     // Add a fake annotation
-    queryClient.setQueryData(affectedQueryKey, (old: SpanAnnotationReadResolved[] | undefined) => {
+    queryClient.setQueryData<SpanAnnotationReadResolved[]>(affectedQueryKey, (old) => {
       const spanAnnotation = {
         ...requestBody,
         id: FAKE_ANNOTATION_ID,
+        text: requestBody.span_text,
         code: {
           name: "",
           color: "",
           description: "",
           id: requestBody.code_id,
           project_id: 0,
-          user_id: 0,
           created: "",
           updated: "",
+          is_system: false,
         },
         created: "",
         updated: "",
-        sdoc_id: 0,
         user_id: 0,
       };
       return old === undefined ? [spanAnnotation] : [...old, spanAnnotation];
@@ -282,9 +282,9 @@ function TextAnnotator({ sdoc }: AnnotatorRemasteredProps) {
       // i clicked escape because i want to cancel the annotation
       if (reason === "escapeKeyDown") {
         // delete the fake annotation (that always has id -1)
-        queryClient.setQueryData(
+        queryClient.setQueryData<SpanAnnotationReadResolved[]>(
           [QueryKey.SDOC_SPAN_ANNOTATIONS, fakeAnnotation.sdoc_id, visibleUserIds],
-          (old: SpanAnnotationReadResolved[] | undefined) => {
+          (old) => {
             if (old === undefined) {
               return undefined;
             }

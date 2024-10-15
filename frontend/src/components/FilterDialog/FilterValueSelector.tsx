@@ -1,11 +1,11 @@
-import { Autocomplete, Button, ButtonGroup, Chip, MenuItem, TextField } from "@mui/material";
+import { Autocomplete, Button, ButtonGroup, Chip, MenuItem, Stack, TextField } from "@mui/material";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
 import { FilterOperator } from "../../api/openapi/models/FilterOperator.ts";
 import { FilterValueType } from "../../api/openapi/models/FilterValueType.ts";
-import { isValidDateString } from "../../utils/DateUtils.ts";
+import { dateToLocaleYYYYMMDDString, isValidDateString } from "../../utils/DateUtils.ts";
 import { docTypeToIcon } from "../../utils/docTypeToIcon.tsx";
 import CodeRenderer from "../Code/CodeRenderer.tsx";
 import TagRenderer from "../Tag/TagRenderer.tsx";
@@ -23,7 +23,6 @@ interface FilterValueSelectorProps extends SharedFilterValueSelectorProps {
 
 function FilterValueSelector({ filterExpression, onChangeValue, column2Info }: FilterValueSelectorProps) {
   const filterInfo = column2Info[filterExpression.column];
-
   switch (filterInfo.value) {
     case FilterValueType.TAG_ID:
       return <TagIdValueSelector filterExpression={filterExpression} onChangeValue={onChangeValue} />;
@@ -47,6 +46,9 @@ function FilterValueSelector({ filterExpression, onChangeValue, column2Info }: F
               label="Value"
               variant="standard"
               fullWidth
+              onKeyDown={(event) => {
+                event.stopPropagation();
+              }}
             />
           );
         case FilterOperator.STRING:
@@ -58,6 +60,9 @@ function FilterValueSelector({ filterExpression, onChangeValue, column2Info }: F
               label="Value"
               variant="standard"
               fullWidth
+              onKeyDown={(event) => {
+                event.stopPropagation();
+              }}
             />
           );
         case FilterOperator.ID_LIST:
@@ -77,14 +82,18 @@ function FilterValueSelector({ filterExpression, onChangeValue, column2Info }: F
               renderTags={(value: readonly string[], getTagProps) =>
                 value.map((option: string, index: number) => (
                   <Chip
+                    {...getTagProps({ index })}
+                    key={index}
                     style={{ borderRadius: "4px", height: "100%" }}
                     variant="filled"
                     label={option}
-                    {...getTagProps({ index })}
                   />
                 ))
               }
               renderInput={(params) => <TextField {...params} fullWidth variant="standard" />}
+              onKeyDown={(event) => {
+                event.stopPropagation();
+              }}
             />
           );
         case FilterOperator.DATE:
@@ -95,9 +104,13 @@ function FilterValueSelector({ filterExpression, onChangeValue, column2Info }: F
               value={
                 typeof filterExpression.value === "string" && isValidDateString(filterExpression.value)
                   ? filterExpression.value
-                  : new Date()
+                  : dateToLocaleYYYYMMDDString(new Date())
               }
               onChange={(e) => onChangeValue(filterExpression.id, e.target.value)}
+              fullWidth
+              onKeyDown={(event) => {
+                event.stopPropagation();
+              }}
             />
           );
         case FilterOperator.BOOLEAN: {
@@ -144,7 +157,9 @@ function TagIdValueSelector({ filterExpression, onChangeValue }: SharedFilterVal
         typeof filterExpression.value === "string" ? parseInt(filterExpression.value) || -1 : filterExpression.value
       }
       onChange={(event) => onChangeValue(filterExpression.id, parseInt(event.target.value))}
-      InputLabelProps={{ shrink: true }}
+      slotProps={{
+        inputLabel: { shrink: true },
+      }}
     >
       <MenuItem key={-1} value={-1}>
         <i>None</i>
@@ -176,7 +191,9 @@ function CodeIdValueSelector({ filterExpression, onChangeValue }: SharedFilterVa
         typeof filterExpression.value === "string" ? parseInt(filterExpression.value) || -1 : filterExpression.value
       }
       onChange={(event) => onChangeValue(filterExpression.id, parseInt(event.target.value))}
-      InputLabelProps={{ shrink: true }}
+      slotProps={{
+        inputLabel: { shrink: true },
+      }}
     >
       <MenuItem key={-1} value={-1}>
         <i>None</i>
@@ -208,7 +225,9 @@ function UserIdValueSelector({ filterExpression, onChangeValue }: SharedFilterVa
         typeof filterExpression.value === "string" ? parseInt(filterExpression.value) || -1 : filterExpression.value
       }
       onChange={(event) => onChangeValue(filterExpression.id, parseInt(event.target.value))}
-      InputLabelProps={{ shrink: true }}
+      slotProps={{
+        inputLabel: { shrink: true },
+      }}
     >
       <MenuItem key={-1} value={-1}>
         <i>None</i>
@@ -259,7 +278,9 @@ function SpanAnnotationValueSelector({ filterExpression, onChangeValue }: Shared
         variant="filled"
         value={value[0]}
         onChange={(event) => handleCodeValueChange(event.target.value)}
-        InputLabelProps={{ shrink: true }}
+        slotProps={{
+          inputLabel: { shrink: true },
+        }}
       >
         <MenuItem key={"-1"} value={"-1"}>
           <i>None</i>
@@ -290,18 +311,21 @@ function DocTypeValueSelector({ filterExpression, onChangeValue }: SharedFilterV
       select
       label="Value"
       variant="filled"
-      value={filterExpression.value === "" ? "none" : filterExpression.value}
+      value={filterExpression.value}
       onChange={(event) => onChangeValue(filterExpression.id, event.target.value)}
-      InputLabelProps={{ shrink: true }}
-      inputProps={{ sx: { display: "flex", flexDirection: "row", alignItems: "center" } }}
+      slotProps={{
+        inputLabel: { shrink: true },
+      }}
     >
       <MenuItem key={"none"} value={"none"}>
         <i>None</i>
       </MenuItem>
       {Object.values(DocType).map((docType) => (
         <MenuItem key={docType} value={docType}>
-          {docTypeToIcon[docType]}
-          {docType}
+          <Stack direction="row" alignItems="center">
+            {docTypeToIcon[docType]}
+            {docType}
+          </Stack>
         </MenuItem>
       ))}
     </TextField>

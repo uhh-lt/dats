@@ -22,7 +22,11 @@ export default function UpdateEmail({ user }: UpdateEmailProps) {
     formState: { errors },
     watch,
     control,
-  } = useForm<UpdateEmailValues>();
+  } = useForm<UpdateEmailValues>({
+    defaultValues: {
+      newemail: "",
+    },
+  });
 
   //newemail
   const newemail = useRef("");

@@ -38,12 +38,13 @@ const initialState: FilterState & TimelineAnalysisState = {
   metadataCheckerOpen: false,
   conceptEditorOpen: false,
   currentConcept: {
-    id: "1",
+    id: uuidv4(),
     name: "",
     color: "#ff0000",
     visible: true,
     description: "",
     filter: {
+      id: uuidv4(),
       items: [],
       logic_operator: LogicalOperator.AND,
     },

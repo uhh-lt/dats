@@ -9,16 +9,12 @@ import { DATSNodeData } from "../types/DATSNodeData.ts";
 import { isCodeNode, isSdocNode, isTagNode } from "../types/typeGuards.ts";
 import { isCodeParentCodeEdgeArray, isTagSdocEdgeArray } from "../whiteboardUtils.ts";
 
-interface DatabaseEdgeEditMenuProps {
-  projectId: number;
-}
-
 export interface DatabaseEdgeEditMenuHandle {
   open: (edges: Edge[]) => void;
   close: () => void;
 }
 
-const DatabaseEdgeEditMenu = forwardRef<DatabaseEdgeEditMenuHandle, DatabaseEdgeEditMenuProps>(({ projectId }, ref) => {
+const DatabaseEdgeEditMenu = forwardRef<DatabaseEdgeEditMenuHandle>((_, ref) => {
   const reactFlowInstance = useReactFlow<DATSNodeData, CustomEdgeData>();
 
   const [edges, setEdges] = useState<Edge[]>([]);
@@ -55,7 +51,6 @@ const DatabaseEdgeEditMenu = forwardRef<DatabaseEdgeEditMenuHandle, DatabaseEdge
       if (isSdocNode(targetNode) && isTagNode(sourceNode)) {
         bulkUnlinkDocumentTagsMutation.mutate(
           {
-            projectId: projectId,
             requestBody: {
               document_tag_ids: [sourceNode.data.tagId],
               source_document_ids: [targetNode.data.sdocId],

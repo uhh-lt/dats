@@ -78,7 +78,9 @@ export function MemoForm({
                     value={dateToLocaleYYYYMMDDString(memo.created)}
                     type="date"
                     variant="standard"
-                    InputLabelProps={{ shrink: true }}
+                    slotProps={{
+                      inputLabel: { shrink: true },
+                    }}
                     disabled
                   />
                   <TextField
@@ -87,7 +89,9 @@ export function MemoForm({
                     value={dateToLocaleYYYYMMDDString(memo.updated)}
                     type="date"
                     variant="standard"
-                    InputLabelProps={{ shrink: true }}
+                    slotProps={{
+                      inputLabel: { shrink: true },
+                    }}
                     disabled
                   />
                 </Stack>
@@ -102,7 +106,9 @@ export function MemoForm({
                 error: Boolean(errors.title),
                 helperText: <ErrorMessage errors={errors} name="title" />,
                 variant: "standard",
-                InputLabelProps: { shrink: true },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                },
               }}
             />
             <FormTextMultiline
@@ -114,7 +120,9 @@ export function MemoForm({
                 error: Boolean(errors.content),
                 helperText: <ErrorMessage errors={errors} name="content" />,
                 variant: "standard",
-                InputLabelProps: { shrink: true },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                },
               }}
             />
           </Stack>

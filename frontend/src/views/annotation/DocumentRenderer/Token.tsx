@@ -64,7 +64,7 @@ function Token({ token, spanAnnotations }: TokenProps) {
           spans.length > 0 && (
             <>
               {spans.map((span) => (
-                <Typography fontSize="small">
+                <Typography key={span.id} fontSize="small">
                   {span.code.name}: {span.code.description}
                 </Typography>
               ))}

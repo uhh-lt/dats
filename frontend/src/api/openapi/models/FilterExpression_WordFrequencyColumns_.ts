@@ -11,6 +11,7 @@ import type { NumberOperator } from "./NumberOperator";
 import type { StringOperator } from "./StringOperator";
 import type { WordFrequencyColumns } from "./WordFrequencyColumns";
 export type FilterExpression_WordFrequencyColumns_ = {
+  id: string;
   column: WordFrequencyColumns | number;
   operator:
     | IDOperator

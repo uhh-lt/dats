@@ -18,7 +18,12 @@ function ProjectDetails({ project }: ProjectProps) {
     formState: { errors },
     setValue,
     control,
-  } = useForm<ProjectUpdate>();
+  } = useForm<ProjectUpdate>({
+    defaultValues: {
+      title: "",
+      description: "",
+    },
+  });
 
   // mutations
   const updateProjectMutation = ProjectHooks.useUpdateProject();

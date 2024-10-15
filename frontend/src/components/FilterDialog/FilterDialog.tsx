@@ -69,10 +69,12 @@ function FilterDialog({
         anchorEl={anchorEl}
         anchorOrigin={anchorOrigin}
         transformOrigin={transformOrigin}
-        PaperProps={{
-          sx: {
-            width: "50%",
-            p: 1,
+        slotProps={{
+          paper: {
+            sx: {
+              width: "50%",
+              p: 1,
+            },
           },
         }}
       >

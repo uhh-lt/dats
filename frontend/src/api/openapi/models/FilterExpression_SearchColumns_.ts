@@ -11,6 +11,7 @@ import type { NumberOperator } from "./NumberOperator";
 import type { SearchColumns } from "./SearchColumns";
 import type { StringOperator } from "./StringOperator";
 export type FilterExpression_SearchColumns_ = {
+  id: string;
   column: SearchColumns | number;
   operator:
     | IDOperator

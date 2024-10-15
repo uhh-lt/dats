@@ -11,6 +11,7 @@ import type { MemoColumns } from "./MemoColumns";
 import type { NumberOperator } from "./NumberOperator";
 import type { StringOperator } from "./StringOperator";
 export type FilterExpression_MemoColumns_ = {
+  id: string;
   column: MemoColumns | number;
   operator:
     | IDOperator

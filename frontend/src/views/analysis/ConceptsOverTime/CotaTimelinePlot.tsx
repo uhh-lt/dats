@@ -116,12 +116,14 @@ function CotaTimelinePlot({ cota }: CotaTimelinePlotProps) {
               dot={(props) => (
                 <CustomizedDot
                   {...props}
+                  key={props.key}
                   isSelected={selectedConceptId === concept.id && selectedDate === props.payload.date}
                 />
               )}
               activeDot={(props: any) => (
                 <CustomizedDot
                   {...props}
+                  key={props.key}
                   r={5}
                   stroke={concept.color}
                   isSelected={selectedConceptId === concept.id && selectedDate === props.payload.date}

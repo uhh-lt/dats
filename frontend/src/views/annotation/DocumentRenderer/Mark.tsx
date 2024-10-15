@@ -13,14 +13,14 @@ function Mark({ codeId, isStart, isEnd, height, top }: MarkProps) {
 
   if (code.isSuccess) {
     return (
-      <div
+      <span
         className={"mark" + (isStart ? " start" : "") + (isEnd ? " end" : "")}
         style={{ backgroundColor: code.data.color, height: height, top: top }}
       />
     );
   }
   return (
-    <div
+    <span
       className={"mark" + (isStart ? " start" : "") + (isEnd ? " end" : "")}
       style={{ backgroundColor: "lightgrey", height: height, top: top }}
     />

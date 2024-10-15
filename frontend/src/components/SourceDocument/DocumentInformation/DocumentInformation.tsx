@@ -74,7 +74,6 @@ export default function DocumentInformation({
               popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
               type={"addBtn"}
               selectedSdocIds={[sdocId]}
-              forceSdocId={sdocId}
             />
             <Stack direction="column" spacing={0.5}>
               {documentTags.isLoading && (

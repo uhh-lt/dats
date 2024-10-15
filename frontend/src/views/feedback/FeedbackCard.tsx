@@ -33,7 +33,11 @@ function FeedbackCard({ feedback, showReplyTo }: FeedbackCardProps) {
     formState: { errors },
     reset,
     control,
-  } = useForm<FeedbackReplyValues>();
+  } = useForm<FeedbackReplyValues>({
+    defaultValues: {
+      message: "",
+    },
+  });
 
   // mutations
   const replyToFeedbackMutation = FeedbackHooks.useReplyTo();

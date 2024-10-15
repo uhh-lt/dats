@@ -32,9 +32,11 @@ function SearchMemoOptionsMenu() {
           vertical: "top",
           horizontal: "left",
         }}
-        PaperProps={{
-          sx: {
-            p: 2,
+        slotProps={{
+          paper: {
+            sx: {
+              p: 2,
+            },
           },
         }}
       >

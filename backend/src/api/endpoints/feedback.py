@@ -46,7 +46,7 @@ async def create_feedback(
 
 
 @router.get(
-    "/{feedback_id}",
+    "/by_id/{feedback_id}",
     response_model=FeedbackRead,
     summary="Returns the Feedback with the given ID.",
 )
@@ -60,7 +60,7 @@ def get_by_id(*, feedback_id: str, authz_user: AuthzUser = Depends()) -> Feedbac
 
 
 @router.get(
-    "",
+    "/all",
     response_model=List[FeedbackRead],
     summary="Returns all Feedback items of the current user. If logged in as the system user, return feedback of all users.",
 )
@@ -69,15 +69,6 @@ def get_all(authz_user: AuthzUser = Depends()) -> List[FeedbackRead]:
         return RedisService().get_all_feedbacks()
     else:
         return RedisService().get_all_feedbacks_of_user(authz_user.user.id)
-
-
-@router.get(
-    "/user",
-    response_model=List[FeedbackRead],
-    summary="Returns the Feedback of the logged-in User.",
-)
-def get_all_by_user(*, authz_user: AuthzUser = Depends()) -> List[FeedbackRead]:
-    return RedisService().get_all_feedbacks_of_user(authz_user.user.id)
 
 
 @router.post(

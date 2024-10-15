@@ -6,7 +6,7 @@ import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 
 export const useComputeCodesForSelection = () => {
   // global server state
-  const { codeTree } = useComputeCodeTree();
+  const { codeTree, allCodes } = useComputeCodeTree();
 
   // global client state
   const selectedCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
@@ -14,16 +14,18 @@ export const useComputeCodesForSelection = () => {
 
   // computed
   const codesForSelection = useMemo(() => {
-    if (!codeTree) {
-      return [];
+    let codesForSelection: CodeRead[] = [];
+    if (!selectedCodeId) {
+      // if no code is selected, return all codes
+      codesForSelection = allCodes.data || [];
+    } else {
+      // if a code is selected, return itself and its children
+      const parentCode = codeTree?.first((node) => node.model.data.id === selectedCodeId);
+      if (!parentCode) {
+        return [];
+      }
+      codesForSelection = flatTreeWithRoot(parentCode.model) as CodeRead[];
     }
-
-    const parentCode = codeTree.first((node) => node.model.data.id === selectedCodeId);
-    if (!parentCode) {
-      return [];
-    }
-
-    const codesForSelection = flatTreeWithRoot(parentCode.model) as CodeRead[];
 
     // add the most recent code to the top of the list
     const idx = codesForSelection.findIndex((t) => t.id === mostRecentCodeId);
@@ -34,7 +36,7 @@ export const useComputeCodesForSelection = () => {
     }
 
     return codesForSelection;
-  }, [codeTree, mostRecentCodeId, selectedCodeId]);
+  }, [allCodes, codeTree, mostRecentCodeId, selectedCodeId]);
 
   return codesForSelection;
 };

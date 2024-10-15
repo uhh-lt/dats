@@ -1,4 +1,4 @@
-import { Grid2 } from "@mui/material";
+import { Grid2, Typography } from "@mui/material";
 import Portal from "@mui/material/Portal";
 import { useContext } from "react";
 import { useParams } from "react-router-dom";
@@ -12,7 +12,11 @@ function Logbook() {
 
   return (
     <>
-      <Portal container={appBarContainerRef?.current}>Logbook</Portal>
+      <Portal container={appBarContainerRef?.current}>
+        <Typography variant="h6" component="div">
+          Logbook
+        </Typography>
+      </Portal>
       <Grid2 container spacing={2} className="h100" bgcolor={"grey.200"} p={2}>
         <Grid2 size={{ md: 6 }} className="h100">
           <SearchMemoTable projectId={projectId} />

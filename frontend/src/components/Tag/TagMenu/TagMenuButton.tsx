@@ -8,14 +8,12 @@ import TagMenu from "./TagMenu.tsx";
 
 interface TagMenuButtonProps {
   popoverOrigin: PopoverOrigin | undefined;
-  forceSdocId?: number;
   type?: string;
   selectedSdocIds: number[];
 }
 
-function TagMenuButton({ forceSdocId, popoverOrigin, type, selectedSdocIds }: TagMenuButtonProps) {
+function TagMenuButton({ popoverOrigin, type, selectedSdocIds }: TagMenuButtonProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -33,13 +31,7 @@ function TagMenuButton({ forceSdocId, popoverOrigin, type, selectedSdocIds }: Ta
           Add Tags
         </Button>
       )}
-      <TagMenu
-        forceSdocId={forceSdocId}
-        selectedSdocIds={selectedSdocIds}
-        anchorEl={anchorEl}
-        setAnchorEl={setAnchorEl}
-        popoverOrigin={popoverOrigin}
-      />
+      <TagMenu sdocIds={selectedSdocIds} anchorEl={anchorEl} setAnchorEl={setAnchorEl} popoverOrigin={popoverOrigin} />
     </>
   );
 }

@@ -183,7 +183,9 @@ function TagEditDialogContent({
                 helperText: <ErrorMessage errors={errors} name="parent_id" />,
                 variant: "filled",
                 fullWidth: true,
-                InputLabelProps: { shrink: true },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                },
               }}
             >
               <MenuItem key={-1} value={-1}>
@@ -203,7 +205,9 @@ function TagEditDialogContent({
                 fullWidth: true,
                 error: Boolean(errors.name),
                 helperText: <ErrorMessage errors={errors} name="name" />,
-                InputLabelProps: { shrink: true },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                },
                 autoFocus: true,
               }}
             />
@@ -219,7 +223,9 @@ function TagEditDialogContent({
                 fullWidth: true,
                 error: Boolean(errors.color),
                 helperText: <ErrorMessage errors={errors} name="color" />,
-                InputLabelProps: { shrink: true },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                },
               }}
             />
             <FormTextMultiline
@@ -234,7 +240,9 @@ function TagEditDialogContent({
                 fullWidth: true,
                 error: Boolean(errors.description),
                 helperText: <ErrorMessage errors={errors} name="description" />,
-                InputLabelProps: { shrink: true },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                },
               }}
             />
           </Stack>

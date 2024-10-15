@@ -5,6 +5,7 @@
 import type { FilterExpression_AnnotatedImagesColumns_ } from "./FilterExpression_AnnotatedImagesColumns_";
 import type { LogicalOperator } from "./LogicalOperator";
 export type Filter_AnnotatedImagesColumns_ = {
+  id: string;
   items: Array<FilterExpression_AnnotatedImagesColumns_ | Filter_AnnotatedImagesColumns_>;
   logic_operator: LogicalOperator;
 };

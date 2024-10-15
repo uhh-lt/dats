@@ -54,7 +54,7 @@ function AddMemoNodeDialog({ projectId, buttonProps, onClick }: AddMemoNodeDialo
                 onClick={() => handleConfirmSelection(props.selectedMemos)}
                 disabled={props.selectedMemos.length === 0}
               >
-                Add {props.selectedMemos.length > 0 ? props.selectedMemos.length : null} Codes
+                Add {props.selectedMemos.length > 0 ? props.selectedMemos.length : null} Memos
               </Button>
             </Stack>
           )}

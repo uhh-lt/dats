@@ -242,7 +242,7 @@ const useGetSpanAnnotationsBatch = (sdocId: number | null | undefined, userIds: 
         userId: userIds!,
         resolve: true,
       }) as Promise<SpanAnnotationReadResolved[]>,
-    enabled: !!sdocId && !!userIds && userIds.length > 0,
+    enabled: !!sdocId && !!userIds,
     select: selectEnabledAnnotations,
   });
 };
@@ -258,7 +258,7 @@ const useGetBBoxAnnotationsBatch = (sdocId: number | null | undefined, userIds: 
         userId: userIds!,
         resolve: true,
       }) as Promise<BBoxAnnotationReadResolved[]>,
-    enabled: !!sdocId && !!userIds && userIds.length > 0,
+    enabled: !!sdocId && !!userIds,
     select: selectEnabledAnnotations,
   });
 };

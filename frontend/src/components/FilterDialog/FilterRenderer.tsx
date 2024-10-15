@@ -3,8 +3,9 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ClearIcon from "@mui/icons-material/Clear";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Box, Button, IconButton, MenuItem, Stack, TextField, Tooltip } from "@mui/material";
-import { TreeItem } from "@mui/x-tree-view";
+import { TreeItem2 } from "@mui/x-tree-view";
 import { SimpleTreeView } from "@mui/x-tree-view/SimpleTreeView";
+import { useCallback } from "react";
 import { LogicalOperator } from "../../api/openapi/models/LogicalOperator.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
 import FilterExpressionRenderer from "./FilterExpressionRenderer.tsx";
@@ -23,38 +24,59 @@ function FilterRenderer({ editableFilter, filterActions, column2Info }: FilterRe
   const dispatch = useAppDispatch();
 
   // actions
-  const handleAddFilter = (filterId: string) => {
-    dispatch(filterActions.addDefaultFilter({ filterId }));
-  };
+  const handleAddFilter = useCallback(
+    (filterId: string) => {
+      dispatch(filterActions.addDefaultFilter({ filterId }));
+    },
+    [dispatch, filterActions],
+  );
 
-  const handleAddFilterExpression = (filterId: string) => {
-    dispatch(filterActions.addDefaultFilterExpression({ filterId }));
-  };
+  const handleAddFilterExpression = useCallback(
+    (filterId: string) => {
+      dispatch(filterActions.addDefaultFilterExpression({ filterId }));
+    },
+    [dispatch, filterActions],
+  );
 
-  const handleDeleteFilter = (filterId: string) => {
-    dispatch(filterActions.deleteFilter({ filterId }));
-  };
+  const handleDeleteFilter = useCallback(
+    (filterId: string) => {
+      dispatch(filterActions.deleteFilter({ filterId }));
+    },
+    [dispatch, filterActions],
+  );
 
-  const handleLogicalOperatorChange = (filterId: string, operator: LogicalOperator) => {
-    dispatch(filterActions.changeLogicalOperator({ filterId, operator }));
-  };
+  const handleLogicalOperatorChange = useCallback(
+    (filterId: string, operator: LogicalOperator) => {
+      dispatch(filterActions.changeLogicalOperator({ filterId, operator }));
+    },
+    [dispatch, filterActions],
+  );
 
-  const handleColumnChange = (filterId: string, columnValue: string) => {
-    dispatch(filterActions.changeColumn({ filterId, columnValue }));
-  };
+  const handleColumnChange = useCallback(
+    (filterId: string, columnValue: string) => {
+      dispatch(filterActions.changeColumn({ filterId, columnValue }));
+    },
+    [dispatch, filterActions],
+  );
 
-  const handleOperatorChange = (filterId: string, operator: FilterOperators) => {
-    dispatch(filterActions.changeOperator({ filterId, operator }));
-  };
+  const handleOperatorChange = useCallback(
+    (filterId: string, operator: FilterOperators) => {
+      dispatch(filterActions.changeOperator({ filterId, operator }));
+    },
+    [dispatch, filterActions],
+  );
 
-  const handleValueChange = (filterId: string, value: string | number | boolean | string[]) => {
-    dispatch(filterActions.changeValue({ filterId, value }));
-  };
+  const handleValueChange = useCallback(
+    (filterId: string, value: string | number | boolean | string[]) => {
+      dispatch(filterActions.changeValue({ filterId, value }));
+    },
+    [dispatch, filterActions],
+  );
 
   // rendering
   const renderFilter = (filter: MyFilter, disableDeleteButton: boolean) => {
     return (
-      <TreeItem
+      <TreeItem2
         key={filter.id}
         itemId={filter.id}
         label={
@@ -94,7 +116,7 @@ function FilterRenderer({ editableFilter, filterActions, column2Info }: FilterRe
           </Stack>
         }
       >
-        <TreeItem
+        <TreeItem2
           key={`${filter.id}-add`}
           itemId={`${filter.id}-add`}
           label={
@@ -128,12 +150,13 @@ function FilterRenderer({ editableFilter, filterActions, column2Info }: FilterRe
             return null;
           }
         })}
-      </TreeItem>
+      </TreeItem2>
     );
   };
 
   return (
     <SimpleTreeView
+      key={editableFilter.id}
       className="filterTree"
       slots={{
         collapseIcon: ExpandMoreIcon,

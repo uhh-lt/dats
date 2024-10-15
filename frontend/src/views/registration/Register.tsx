@@ -37,7 +37,16 @@ function Register() {
     formState: { errors },
     watch,
     control,
-  } = useForm<RegisterFormValues>();
+  } = useForm<RegisterFormValues>({
+    defaultValues: {
+      first_name: "",
+      last_name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      confirmMail: "",
+    },
+  });
 
   // password
   const password = useRef<string>();

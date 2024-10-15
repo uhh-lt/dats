@@ -247,7 +247,9 @@ function CodeEditDialogContent({
                 helperText: <ErrorMessage errors={errors} name="color" />,
                 variant: "standard",
                 fullWidth: true,
-                InputLabelProps: { shrink: true },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                },
               }}
             />
             <FormTextMultiline

@@ -22,7 +22,12 @@ function ConceptEditor({ onUpdate, onCancel }: ConceptEditorProps) {
     reset,
     setValue,
     control,
-  } = useForm<TimelineAnalysisConcept_Output>();
+  } = useForm<TimelineAnalysisConcept_Output>({
+    defaultValues: {
+      name: "",
+      color: "",
+    },
+  });
 
   // redux
   const currentConcept = useAppSelector((state) => state.timelineAnalysis.currentConcept);
@@ -66,7 +71,9 @@ function ConceptEditor({ onUpdate, onCancel }: ConceptEditorProps) {
                 fullWidth: true,
                 error: Boolean(errors.name),
                 helperText: <ErrorMessage errors={errors} name="name" />,
-                InputLabelProps: { shrink: true },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                },
               }}
             />
             <FormColorPicker
@@ -81,7 +88,9 @@ function ConceptEditor({ onUpdate, onCancel }: ConceptEditorProps) {
                 fullWidth: true,
                 error: Boolean(errors.color),
                 helperText: <ErrorMessage errors={errors} name="color" />,
-                InputLabelProps: { shrink: true },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                },
                 InputProps: {
                   readOnly: true,
                 },

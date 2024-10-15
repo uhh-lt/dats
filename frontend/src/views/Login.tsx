@@ -24,7 +24,12 @@ function Login() {
     formState: { errors },
     setError,
     control,
-  } = useForm<LoginFormValues>();
+  } = useForm<LoginFormValues>({
+    defaultValues: {
+      user: "",
+      password: "",
+    },
+  });
   const location = useLocation();
   const { updateAuthData, loginStatus } = useAuth();
 

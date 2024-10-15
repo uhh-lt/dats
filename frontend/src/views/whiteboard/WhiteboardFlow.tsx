@@ -222,7 +222,6 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
           const mutation = bulkLinkDocumentTagsMutation.mutate;
           mutation(
             {
-              projectId: projectId,
               requestBody: {
                 document_tag_ids: [sourceNode.data.tagId],
                 source_document_ids: [targetNode.data.sdocId],
@@ -308,7 +307,6 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
     [
       reactFlowInstance,
       bulkLinkDocumentTagsMutation.mutate,
-      projectId,
       openSnackbar,
       updateCodeMutation.mutate,
       updateSpanAnnotationMutation.mutate,
@@ -505,7 +503,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
                   {pendingAction && <Paper sx={{ p: 1 }}>Click anywhere to add node(s)!</Paper>}
                   <NodeEditMenu ref={nodeEditMenuRef} />
                   <EdgeEditMenu ref={edgeEditMenuRef} />
-                  <DatabaseEdgeEditMenu projectId={projectId} ref={databaseEdgeEditMenuRef} />
+                  <DatabaseEdgeEditMenu ref={databaseEdgeEditMenuRef} />
                 </Panel>
                 <Panel position="top-right">
                   <Paper elevation={1}>

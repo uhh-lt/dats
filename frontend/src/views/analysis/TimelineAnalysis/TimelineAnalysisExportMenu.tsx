@@ -41,7 +41,7 @@ function TimelineAnalysisExportMenu({ chartData, chartName }: TimelineAnalysisEx
     <>
       <Tooltip title={"Export timeline analysis"}>
         <span>
-          <IconButton onClick={handleClick} disabled={chartData === undefined}>
+          <IconButton onClick={handleClick} disabled={chartData === undefined || chartData.length === 0}>
             <SaveAltIcon />
           </IconButton>
         </span>

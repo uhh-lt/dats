@@ -33,7 +33,6 @@ function BulkDocTagger() {
   const bulkTagDocuments = () => {
     linkDocumentTags(
       {
-        projectId,
         requestBody: {
           source_document_ids: chartData
             .map((x) => (isFixedSamplingStrategy ? x.fixedSampleSdocIds : x.relativeSampleSdocIds))

@@ -90,7 +90,15 @@ function MemoCardWithContent({ memo, onMouseEnter, onMouseLeave }: MemoCardShare
         }
         action={<MemoCardActionsMenu memo={memo} />}
         subheader={
-          <Typography variant="body2" color="textSecondary">
+          <Typography
+            variant="body2"
+            color="textSecondary"
+            fontSize={12}
+            fontWeight={600}
+            borderLeft={3}
+            marginLeft="3px"
+            paddingLeft={1}
+          >
             {attachedObject.isSuccess ? (
               <AttachedObjectLink attachedObject={attachedObject.data} attachedObjectType={memo.attached_object_type} />
             ) : (

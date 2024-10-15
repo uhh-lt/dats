@@ -8,6 +8,7 @@ import { ListOperator } from "../../api/openapi/models/ListOperator.ts";
 import { LogicalOperator } from "../../api/openapi/models/LogicalOperator.ts";
 import { NumberOperator } from "../../api/openapi/models/NumberOperator.ts";
 import { StringOperator } from "../../api/openapi/models/StringOperator.ts";
+import { dateToLocaleYYYYMMDDString } from "../../utils/DateUtils.ts";
 
 // TYPES
 
@@ -77,7 +78,7 @@ export const filterOperator2defaultValue: Record<FilterOperator, boolean | strin
   [FilterOperator.NUMBER]: 0,
   [FilterOperator.ID_LIST]: [],
   [FilterOperator.LIST]: [],
-  [FilterOperator.DATE]: new Date().toISOString(),
+  [FilterOperator.DATE]: dateToLocaleYYYYMMDDString(new Date()),
 };
 
 export const filterOperator2FilterOperatorType: Record<FilterOperator, FilterOperatorType> = {
@@ -88,6 +89,17 @@ export const filterOperator2FilterOperatorType: Record<FilterOperator, FilterOpe
   [FilterOperator.ID_LIST]: IDListOperator,
   [FilterOperator.LIST]: ListOperator,
   [FilterOperator.DATE]: DateOperator,
+};
+
+// this has to align with FilterValueSelector.tsx
+export const filterValueType2defaultValue: Record<FilterValueType, boolean | string | number | string[]> = {
+  [FilterValueType.CODE_ID]: -1,
+  [FilterValueType.DOC_TYPE]: "none",
+  [FilterValueType.SDOC_ID]: 0,
+  [FilterValueType.SPAN_ANNOTATION]: ["-1", ""],
+  [FilterValueType.TAG_ID]: -1,
+  [FilterValueType.USER_ID]: -1,
+  [FilterValueType.INFER_FROM_OPERATOR]: false,
 };
 
 export const operator2HumanReadable: Record<FilterOperators, string> = {
@@ -118,6 +130,13 @@ export const operator2HumanReadable: Record<FilterOperators, string> = {
 };
 
 // METHODS
+export const getDefaultValue = (valueType: FilterValueType, operator: FilterOperator) => {
+  if (valueType === FilterValueType.INFER_FROM_OPERATOR) {
+    return filterOperator2defaultValue[operator];
+  } else {
+    return filterValueType2defaultValue[valueType];
+  }
+};
 
 export const getDefaultOperator = (operator: FilterOperatorType): FilterOperators => {
   return Object.values(operator)[0];

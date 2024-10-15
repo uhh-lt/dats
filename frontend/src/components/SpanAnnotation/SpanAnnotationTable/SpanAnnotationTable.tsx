@@ -125,7 +125,6 @@ function SpanAnnotationTable({
                 <MemoRenderer2
                   attachedObjectType={AttachedObjectType.SPAN_ANNOTATION}
                   attachedObjectId={row.original.id}
-                  userId={user.id}
                   showTitle={false}
                   showContent
                   showIcon={false}

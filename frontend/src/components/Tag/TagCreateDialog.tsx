@@ -166,7 +166,9 @@ function TagCreateDialogContent({
                 fullWidth: true,
                 error: Boolean(errors.parent_id),
                 helperText: <ErrorMessage errors={errors} name="parent_id" />,
-                InputLabelProps: { shrink: true },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                },
               }}
             >
               <MenuItem value={-1}>No parent</MenuItem>
@@ -188,7 +190,9 @@ function TagCreateDialogContent({
                 fullWidth: true,
                 error: Boolean(errors.name),
                 helperText: <ErrorMessage errors={errors} name="name" />,
-                InputLabelProps: { shrink: true },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                },
                 autoFocus: true,
               }}
             />
@@ -204,7 +208,9 @@ function TagCreateDialogContent({
                 fullWidth: true,
                 error: Boolean(errors.color),
                 helperText: <ErrorMessage errors={errors} name="color" />,
-                InputLabelProps: { shrink: true },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                },
               }}
             />
             <FormTextMultiline
@@ -219,7 +225,9 @@ function TagCreateDialogContent({
                 fullWidth: true,
                 error: Boolean(errors.description),
                 helperText: <ErrorMessage errors={errors} name="description" />,
-                InputLabelProps: { shrink: true },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                },
               }}
             />
           </Stack>

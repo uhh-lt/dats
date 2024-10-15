@@ -5,6 +5,7 @@
 import type { FilterExpression_MemoColumns_ } from "./FilterExpression_MemoColumns_";
 import type { LogicalOperator } from "./LogicalOperator";
 export type Filter_MemoColumns_ = {
+  id: string;
   items: Array<FilterExpression_MemoColumns_ | Filter_MemoColumns_>;
   logic_operator: LogicalOperator;
 };
