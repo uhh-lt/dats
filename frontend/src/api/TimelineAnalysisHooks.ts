@@ -7,9 +7,7 @@ import { TimelineAnalysisService } from "./openapi/services/TimelineAnalysisServ
 const useGetTimelineAnalysis = (timelineAnalysisId: number | null | undefined) =>
   useQuery<TimelineAnalysisRead, Error>({
     queryKey: [QueryKey.TIMELINE_ANALYSIS, timelineAnalysisId],
-    queryFn: async () => {
-      return await TimelineAnalysisService.getById({ timelineAnalysisId: timelineAnalysisId! });
-    },
+    queryFn: () => TimelineAnalysisService.getById({ timelineAnalysisId: timelineAnalysisId! }),
     retry: false,
     enabled: !!timelineAnalysisId,
     select: (data) => data,
@@ -18,9 +16,7 @@ const useGetTimelineAnalysis = (timelineAnalysisId: number | null | undefined) =
 const useGetUserTimelineAnalysis = (projectId: number | null | undefined) =>
   useQuery<TimelineAnalysisRead[], Error>({
     queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, projectId],
-    queryFn: async () => {
-      return await TimelineAnalysisService.getByProjectAndUser({ projectId: projectId! });
-    },
+    queryFn: () => TimelineAnalysisService.getByProjectAndUser({ projectId: projectId! }),
     retry: false,
     enabled: !!projectId,
   });

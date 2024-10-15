@@ -11,6 +11,7 @@ import type { NumberOperator } from "./NumberOperator";
 import type { StringOperator } from "./StringOperator";
 import type { TimelineAnalysisColumns } from "./TimelineAnalysisColumns";
 export type FilterExpression_TimelineAnalysisColumns_ = {
+  id: string;
   column: TimelineAnalysisColumns | number;
   operator:
     | IDOperator

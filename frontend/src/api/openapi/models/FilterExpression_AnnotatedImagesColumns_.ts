@@ -11,6 +11,7 @@ import type { ListOperator } from "./ListOperator";
 import type { NumberOperator } from "./NumberOperator";
 import type { StringOperator } from "./StringOperator";
 export type FilterExpression_AnnotatedImagesColumns_ = {
+  id: string;
   column: AnnotatedImagesColumns | number;
   operator:
     | IDOperator

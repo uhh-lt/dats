@@ -5,6 +5,7 @@
 import type { FilterExpression_AnnotatedSegmentsColumns_ } from "./FilterExpression_AnnotatedSegmentsColumns_";
 import type { LogicalOperator } from "./LogicalOperator";
 export type Filter_AnnotatedSegmentsColumns_ = {
+  id: string;
   items: Array<FilterExpression_AnnotatedSegmentsColumns_ | Filter_AnnotatedSegmentsColumns_>;
   logic_operator: LogicalOperator;
 };
