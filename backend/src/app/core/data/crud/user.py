@@ -36,6 +36,15 @@ class CRUDUser(CRUDBase[UserORM, UserCreate, UserUpdate]):
             raise NoSuchElementError(self.model, email=email)
         return user
 
+    def read_by_email_if_exists(self, db: Session, *, email: str) -> Optional[UserORM]:
+        user = (
+            db.query(self.model)
+            .options(joinedload(self.model.projects))
+            .filter(self.model.email == email)
+            .first()
+        )
+        return user
+
     def authenticate(self, db: Session, user_login: UserLogin) -> Optional[UserORM]:
         try:
             user = self.read_by_email(db=db, email=user_login.username)

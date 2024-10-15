@@ -1,4 +1,5 @@
 import traceback
+from typing import Dict, Set
 
 from loguru import logger
 from psycopg2 import OperationalError
@@ -21,13 +22,14 @@ from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.source_document_data import SourceDocumentDataCreate
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
-from app.core.data.dto.span_annotation import SpanAnnotationCreateIntern
+from app.core.data.dto.span_annotation import SpanAnnotationCreate
 from app.core.data.dto.word_frequency import WordFrequencyCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
+from app.preprocessing.pipeline.model.text.autospan import AutoSpan
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from app.util.color import get_next_color
 
@@ -137,16 +139,11 @@ def _create_adoc_for_system_user(
     )
 
 
-def _persist_span_annotations(
-    db: Session, adoc_db_obj: AnnotationDocumentORM, pptd: PreProTextDoc
-) -> None:
+def _persist_span_annotations(db: Session, sdoc_id: int, pptd: PreProTextDoc) -> None:
     logger.info(f"Persisting SpanAnnotations for {pptd.filename}...")
+
     # convert AutoSpans to SpanAnnotations
-    for code in pptd.spans.keys():
-        code_name = code
-        # FIXME Flo: hacky solution for German NER model, which only contains ('LOC', 'MISC', 'ORG', 'PER')
-        if code_name == "PER":
-            code_name = "PERSON"
+    for code_name in pptd.spans.keys():
         db_code = crud_code.read_by_name_and_project(
             db,
             code_name=code_name,
@@ -164,26 +161,34 @@ def _persist_span_annotations(
             )
             db_code = crud_code.create(db, create_dto=create_dto)
 
-        create_dtos = [
-            SpanAnnotationCreateIntern(
-                begin=aspan.start,
-                end=aspan.end,
-                code_id=db_code.id,
-                annotation_document_id=adoc_db_obj.id,
-                span_text=aspan.text,
-                begin_token=aspan.start_token,
-                end_token=aspan.end_token,
-            )
-            for aspan in pptd.spans[code]
-        ]
-        try:
-            crud_span_anno.create_multi(db, create_dtos=create_dtos)
-        except OperationalError as e:
-            logger.error(
-                "Cannot store SpanAnnotations of "
-                f"SourceDocument {adoc_db_obj.source_document_id}: {e}"
-            )
-            raise e
+        # group by user
+        grouped_by_user_spans: Dict[int, Set[AutoSpan]] = dict()
+        for aspan in pptd.spans[code_name]:
+            if aspan.user_id not in grouped_by_user_spans:
+                grouped_by_user_spans[aspan.user_id] = set()
+            grouped_by_user_spans[aspan.user_id].add(aspan)
+
+        # for every user and for every code create bulk dtos.
+        for user_id, aspans in grouped_by_user_spans.items():
+            create_dtos = [
+                SpanAnnotationCreate(
+                    begin=aspan.start,
+                    end=aspan.end,
+                    code_id=db_code.id,
+                    span_text=aspan.text,
+                    begin_token=aspan.start_token,
+                    end_token=aspan.end_token,
+                    sdoc_id=sdoc_id,
+                )
+                for aspan in aspans
+            ]
+            try:
+                crud_span_anno.create_bulk(db, user_id=user_id, create_dtos=create_dtos)
+            except OperationalError as e:
+                logger.error(
+                    "Cannot store SpanAnnotations of " f"SourceDocument {sdoc_id}: {e}"
+                )
+                raise e
 
 
 def _persist_sdoc_word_frequencies(
@@ -226,13 +231,8 @@ def write_pptd_to_database(cargo: PipelineCargo) -> PipelineCargo:
             # persist SourceDocument Links
             _persist_sdoc_links(db=db, sdoc_db_obj=sdoc_db_obj, pptd=pptd)
 
-            # create AnnotationDocument for system user
-            adoc_db_obj = _create_adoc_for_system_user(
-                db=db, pptd=pptd, sdoc_db_obj=sdoc_db_obj
-            )
-
             # persist SpanAnnotations
-            _persist_span_annotations(db=db, adoc_db_obj=adoc_db_obj, pptd=pptd)
+            _persist_span_annotations(db=db, sdoc_id=sdoc_db_obj.id, pptd=pptd)
 
             # persist WordFrequencies
             _persist_sdoc_word_frequencies(db=db, sdoc_db_obj=sdoc_db_obj, pptd=pptd)

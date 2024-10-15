@@ -8,3 +8,4 @@ class AutoSpan(BaseModel, frozen=True):
     end: int
     start_token: int
     end_token: int
+    user_id: int

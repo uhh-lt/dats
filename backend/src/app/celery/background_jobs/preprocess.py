@@ -31,8 +31,10 @@ def execute_text_preprocessing_pipeline_(
     pipeline.execute(cargo=cargo)
 
 
-def execute_image_preprocessing_pipeline_(cargo: PipelineCargo) -> None:
-    pipeline = prepro.get_image_pipeline()
+def execute_image_preprocessing_pipeline_(
+    cargo: PipelineCargo, is_init: bool = True
+) -> None:
+    pipeline = prepro.get_image_pipeline(is_init=is_init)
     logger.debug(
         f"Executing image Preprocessing Pipeline\n\t{pipeline}\n\t for cargo"
         f" {cargo.ppj_payload.filename}!"
