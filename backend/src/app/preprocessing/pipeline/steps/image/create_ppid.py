@@ -1,3 +1,5 @@
+from loguru import logger
+
 from app.core.data.repo.repo_service import RepoService
 from app.preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
@@ -19,8 +21,9 @@ def create_ppid(cargo: PipelineCargo) -> PipelineCargo:
         additional_parameters["sdoc_link_create_dtos"] = cargo.data["sdoc_link"]
     if "tags" in cargo.data:
         additional_parameters["tags"] = cargo.data["tags"]
-    if "bboxes" in cargo.data:
-        additional_parameters["bboxes"] = cargo.data["bboxes"]
+    logger.info(
+        f"Adding additional parameters to the create PPID with {additional_parameters}"
+    )
 
     ppid = PreProImageDoc(
         filename=cargo.ppj_payload.filename,
@@ -29,6 +32,12 @@ def create_ppid(cargo: PipelineCargo) -> PipelineCargo:
         filepath=filepath,
         **additional_parameters,
     )
+
+    if "bboxes" in cargo.data:
+        for bbox in cargo.data["bboxes"]:
+            if bbox.code not in ppid.bboxes:
+                ppid.bboxes[bbox.code] = set()
+            ppid.bboxes[bbox.code].add(bbox)
 
     cargo.data["ppid"] = ppid
 
