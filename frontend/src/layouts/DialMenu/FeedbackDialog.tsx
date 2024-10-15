@@ -23,7 +23,11 @@ function FeedbackDialog({ setIsFeedbackDialogOpen, locPathName }: FeedbackDialog
     handleSubmit,
     formState: { errors },
     control,
-  } = useForm<FeedbackFormValues>();
+  } = useForm<FeedbackFormValues>({
+    defaultValues: {
+      content: "",
+    },
+  });
 
   // mutations
   const createMutation = FeedbackHooks.useCreateFeedback();

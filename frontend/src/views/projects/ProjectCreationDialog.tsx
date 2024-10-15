@@ -21,7 +21,12 @@ function ProjectCreationDialog({ open, onClose }: ProjectCreationDialogProps) {
     handleSubmit,
     formState: { errors },
     control,
-  } = useForm<ProjectCreate>();
+  } = useForm<ProjectCreate>({
+    defaultValues: {
+      title: "",
+      description: "",
+    },
+  });
   const createProjectMutation = ProjectHooks.useCreateProject();
   const handleProjectCreation: SubmitHandler<ProjectCreate> = (data) => {
     createProjectMutation.mutate(

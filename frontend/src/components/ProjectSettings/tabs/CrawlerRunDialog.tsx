@@ -20,7 +20,8 @@ function isValidHttpUrl(string: string): boolean {
 
   try {
     url = new URL(string);
-  } catch (_) {
+  } catch (e) {
+    console.error(e);
     return false;
   }
 
@@ -41,7 +42,11 @@ const CrawlerRunDialog = forwardRef<CrawlerRunDialogHandle, CrawlerRunDialogProp
     formState: { errors },
     reset,
     control,
-  } = useForm<CrawlerFormValues>();
+  } = useForm<CrawlerFormValues>({
+    defaultValues: {
+      urls: "",
+    },
+  });
 
   // exposed methods (via forward ref)
   useImperativeHandle(ref, () => ({

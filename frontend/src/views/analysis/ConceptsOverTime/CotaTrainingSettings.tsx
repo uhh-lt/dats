@@ -20,7 +20,17 @@ function CotaTrainingSettings({ onUpdate, onCancel }: CotaTrainingSettingsProps)
     formState: { errors },
     reset,
     control,
-  } = useForm<COTATrainingSettings>();
+  } = useForm<COTATrainingSettings>({
+    defaultValues: {
+      search_space_topk: 0,
+      search_space_threshold: 0,
+      layers: 0,
+      dimensions: 0,
+      epochs: 0,
+      min_required_annotations_per_concept: 0,
+      dimensionality_reduction_algorithm: DimensionalityReductionAlgorithm.PCA,
+    },
+  });
 
   // global server state (react-query)
   const trainingSettings = useAppSelector((state) => state.cota.trainingSettings);

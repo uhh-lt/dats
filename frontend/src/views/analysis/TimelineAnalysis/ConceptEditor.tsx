@@ -22,7 +22,12 @@ function ConceptEditor({ onUpdate, onCancel }: ConceptEditorProps) {
     reset,
     setValue,
     control,
-  } = useForm<TimelineAnalysisConcept_Output>();
+  } = useForm<TimelineAnalysisConcept_Output>({
+    defaultValues: {
+      name: "",
+      color: "",
+    },
+  });
 
   // redux
   const currentConcept = useAppSelector((state) => state.timelineAnalysis.currentConcept);
