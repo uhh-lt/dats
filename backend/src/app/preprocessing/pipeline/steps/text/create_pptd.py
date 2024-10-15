@@ -8,7 +8,7 @@ repo = RepoService()
 
 
 def create_pptd(cargo: PipelineCargo) -> PipelineCargo:
-    logger.info("create pptd")
+    logger.info(f"create pptd with ppj {cargo.ppj_id}")
     filepath = repo._get_dst_path_for_project_sdoc_file(
         proj_id=cargo.ppj_payload.project_id, filename=cargo.ppj_payload.filename
     )

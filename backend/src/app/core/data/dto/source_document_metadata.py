@@ -149,6 +149,22 @@ class SourceDocumentMetadataReadResolved(SourceDocumentMetadataBaseDTO):
                 return self.list_value
         return None
 
+    def get_value_serializable(self) -> Union[str, int, bool, List, None]:
+        match self.project_metadata.metatype:
+            case MetaType.STRING:
+                return self.str_value
+            case MetaType.NUMBER:
+                return self.int_value
+            case MetaType.DATE:
+                return (
+                    self.date_value.isoformat() if self.date_value else self.date_value
+                )
+            case MetaType.BOOLEAN:
+                return self.boolean_value
+            case MetaType.LIST:
+                return self.list_value
+        return None
+
     @staticmethod
     def with_value(
         sdoc_metadata_id: int,

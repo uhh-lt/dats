@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Union
 
@@ -29,7 +30,7 @@ class PreProDocBase(BaseModel):
         )
     )
 
-    metadata: Dict[str, Union[str, List[str]]] = Field(
+    metadata: Dict[str, Union[str, List[str], bool, int, datetime]] = Field(
         description=(
             "A container to store all metadata generated during the preprocessing "
             "that will be persisted in the database."

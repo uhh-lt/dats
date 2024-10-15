@@ -372,11 +372,11 @@ class PreprocessingService(metaclass=SingletonMeta):
             self._pipelines[DocType.text] = pipeline
         return self._pipelines[DocType.text]
 
-    def get_image_pipeline(self) -> PreprocessingPipeline:
+    def get_image_pipeline(self, is_init: bool) -> PreprocessingPipeline:
         from app.preprocessing.pipeline import build_image_pipeline
 
         if DocType.image not in self._pipelines:
-            pipeline = build_image_pipeline()
+            pipeline = build_image_pipeline(is_init=is_init)
             self._pipelines[DocType.image] = pipeline
         return self._pipelines[DocType.image]
 

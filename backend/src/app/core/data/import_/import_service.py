@@ -14,8 +14,10 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.document_tag import crud_document_tag
+from app.core.data.crud.preprocessing_job import crud_prepro_job
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.project_metadata import crud_project_meta
+from app.core.data.crud.user import SYSTEM_USER_ID, crud_user
 from app.core.data.doc_type import (
     DocType,
     get_doc_type,
@@ -32,6 +34,7 @@ from app.core.data.dto.import_job import (
     ImportJobType,
     ImportJobUpdate,
 )
+from app.core.data.dto.preprocessing_job import PreprocessingJobUpdate
 from app.core.data.dto.preprocessing_job_payload import (
     PreprocessingJobPayloadCreateWithoutPreproJobId,
 )
@@ -524,6 +527,23 @@ class ImportService(metaclass=SingletonMeta):
         logger.info(f"Generated tag id mapping {tag_id_mapping}")
         return tag_id_mapping
 
+    def __get_user_ids_for_emails_and_link_to_project(
+        self,
+        db: Session,
+        df: pd.DataFrame,
+        proj_id: int,
+    ) -> Dict[str, int]:
+        email_id_mapping: Dict[str, int] = dict()
+        for _, row in df.iterrows():
+            user_orm = crud_user.read_by_email_if_exists(db=db, email=row["email"])
+            if user_orm:
+                email_id_mapping[row["email"]] = user_orm.id
+                if user_orm.id != SYSTEM_USER_ID:
+                    crud_project.associate_user(
+                        db=db, proj_id=proj_id, user_id=user_orm.id
+                    )
+        return email_id_mapping
+
     def _import_project(
         self,
         db: Session,
@@ -547,6 +567,7 @@ class ImportService(metaclass=SingletonMeta):
                     "codes": project_codes.csv
                     "sdoc_links": project_sdoc_links.csv
                     "tags": project_tags.csv
+                    "users": project_users.csv
                 }
                 // das abrauchst du intern aufjeden fall
                 sdoc_filepaths = {
@@ -581,6 +602,14 @@ class ImportService(metaclass=SingletonMeta):
             metadata_mapping_df = pd.read_csv(expected_file_paths["project_metadatas"])
             for _, row in metadata_mapping_df.iterrows():
                 self.__import_project_metadata(row, db=db, proj_id=proj_id)
+
+            # import all users (link existing users to the new project)
+            user_data_df = pd.read_csv(expected_file_paths["users"])
+            user_email_id_mapping = self.__get_user_ids_for_emails_and_link_to_project(
+                db=db,
+                df=user_data_df,
+                proj_id=proj_id,
+            )
 
             # import codes
             codes_df = pd.read_csv(expected_file_paths["codes"])
@@ -668,15 +697,17 @@ class ImportService(metaclass=SingletonMeta):
                     # create AutoSpans for NER
                     annotations_for_sdoc: set[AutoSpan] = set()
                     for _, row in sdoc_annotations_df.iterrows():
-                        auto = AutoSpan(
-                            code=row["code_name"],
-                            start=row["text_begin_char"],
-                            end=row["text_end_char"],
-                            text=row["text"],
-                            start_token=row["text_begin_token"],
-                            end_token=row["text_end_token"],
-                        )
-                        annotations_for_sdoc.add(auto)
+                        if row["user_email"] in user_email_id_mapping:
+                            auto = AutoSpan(
+                                code=row["code_name"],
+                                start=row["text_begin_char"],
+                                end=row["text_end_char"],
+                                text=row["text"],
+                                start_token=row["text_begin_token"],
+                                end_token=row["text_end_token"],
+                                user_id=user_email_id_mapping[row["user_email"]],
+                            )
+                            annotations_for_sdoc.add(auto)
                     annotations.append(annotations_for_sdoc)
                     logger.info(f"Generate sdoc annotations {annotations_for_sdoc}")
 
@@ -690,6 +721,7 @@ class ImportService(metaclass=SingletonMeta):
                             y_min=row["bbox_y_min"],
                             x_max=row["bbox_x_max"],
                             y_max=row["bbox_x_max"],
+                            user_id=user_email_id_mapping[row["user_email"]],
                         )
                         bboxes_for_sdoc.add(bbox)
                     bboxes.append(bboxes_for_sdoc)
@@ -730,23 +762,28 @@ class ImportService(metaclass=SingletonMeta):
 
             # 4. init text piplines
             from app.celery.background_jobs.tasks import (
+                execute_image_preprocessing_pipeline_task,
                 execute_text_preprocessing_pipeline_task,
             )
 
-            text_tasks = [
+            tasks = [
                 execute_text_preprocessing_pipeline_task.s(cargo, is_init=False)
                 for cargo in cargos[DocType.text]
             ]
 
             # 5. init image pipelines
-            # image_tasks = [
-            #     execute_image_preprocessing_pipeline_task.s(cargo, is_init=False)
-            #     for cargo in cargos[DocType.image]
-            # ]
-
-            # combine all tasks in one group
-            tasks = text_tasks
-            gr = group(tasks)()
+            image_tasks = [
+                execute_image_preprocessing_pipeline_task.s(cargo, is_init=False)
+                for cargo in cargos[DocType.image]
+            ]
+            tasks.extend(image_tasks)
+            crud_prepro_job.update(
+                db=db,
+                uuid=ppj.id,
+                update_dto=PreprocessingJobUpdate(status=BackgroundJobStatus.RUNNING),
+            )
+            logger.info(f"Starting {len(tasks)} tasks on ppj {ppj.id}")
+            gr = group(*tasks)()
             logger.info(f"-------------{gr}")
 
         except Exception as e:
@@ -822,6 +859,7 @@ class ImportService(metaclass=SingletonMeta):
             "codes": project_codes.csv
             "sdoc_links": project_sdoc_links.csv
             "tags": project_tags.csv
+            "users": users.csv
         }
         sdocs = {
             "sdoc_filename":{

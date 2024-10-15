@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, Set
 
 from loguru import logger
 from psycopg2 import OperationalError
@@ -10,13 +10,14 @@ from app.core.data.crud.code import crud_code
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.bbox_annotation import (
-    BBoxAnnotationCreateIntern,
+    BBoxAnnotationCreate,
 )
 from app.core.data.dto.code import CodeCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
+from app.preprocessing.pipeline.model.image.autobbox import AutoBBox
 from app.preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.util.color import get_next_color
@@ -44,49 +45,54 @@ def _create_adoc_for_system_user(
     )
 
 
-def _persist_bbox__annotations(
-    db: Session, adoc_db_obj: AnnotationDocumentORM, ppid: PreProImageDoc
-) -> None:
+def _persist_bbox__annotations(db: Session, sdoc_id: int, ppid: PreProImageDoc) -> None:
     # convert AutoBBoxes to BBoxAnnotationCreate
-    create_dtos: List[BBoxAnnotationCreateIntern] = []
-    for bbox in ppid.bboxes:
+    for code_name in ppid.bboxes.keys():
         db_code = crud_code.read_by_name_and_project(
             db,
-            code_name=bbox.code,
+            code_name=code_name,
             proj_id=ppid.project_id,
         )
 
         if not db_code:
-            logger.warning(f"No Code <{bbox.code}> found! Creating it on the fly...")
+            logger.warning(f"No Code <{code_name}> found! Creating it on the fly...")
             # create code on the fly for system user
             create_dto = CodeCreate(
-                name=bbox.code,
+                name=code_name,
                 color=get_next_color(),
-                description=bbox.code,
+                description=code_name,
                 project_id=ppid.project_id,
                 is_system=True,
             )
             db_code = crud_code.create(db, create_dto=create_dto)
 
-        create_dto = BBoxAnnotationCreateIntern(
-            x_min=bbox.x_min,
-            x_max=bbox.x_max,
-            y_min=bbox.y_min,
-            y_max=bbox.y_max,
-            code_id=db_code.id,
-            annotation_document_id=adoc_db_obj.id,
-        )
+        # group by user
+        grouped_by_user_bboxes: Dict[int, Set[AutoBBox]] = dict()
+        for bbox in ppid.bboxes[code_name]:
+            if bbox.user_id not in grouped_by_user_bboxes:
+                grouped_by_user_bboxes[bbox.user_id] = set()
+            grouped_by_user_bboxes[bbox.user_id].add(bbox)
 
-        create_dtos.append(create_dto)
-
-    try:
-        crud_bbox_anno.create_multi(db, create_dtos=create_dtos)
-    except OperationalError as e:
-        logger.error(
-            "Cannot store SpanAnnotations of "
-            f"SourceDocument {adoc_db_obj.source_document_id}: {e}"
-        )
-        raise e
+        # for every user and for every code create bulk dtos.
+        for user_id, bboxes in grouped_by_user_bboxes.items():
+            create_dtos = [
+                BBoxAnnotationCreate(
+                    x_min=bbox.x_min,
+                    x_max=bbox.x_max,
+                    y_min=bbox.y_min,
+                    y_max=bbox.y_max,
+                    code_id=db_code.id,
+                    sdoc_id=sdoc_id,
+                )
+                for bbox in bboxes
+            ]
+            try:
+                crud_bbox_anno.create_bulk(db, user_id=user_id, create_dtos=create_dtos)
+            except OperationalError as e:
+                logger.error(
+                    f"Cannot store SpanAnnotations of SourceDocument {sdoc_id}: {e}"
+                )
+                raise e
 
 
 def write_ppid_to_database(cargo: PipelineCargo) -> PipelineCargo:
@@ -97,15 +103,10 @@ def write_ppid_to_database(cargo: PipelineCargo) -> PipelineCargo:
             # create and persist SourceDocument
             sdoc_db_obj = _create_and_persist_sdoc(db=db, ppid=ppid)
 
-            # create AnnotationDocument for system user
-            adoc_db_obj = _create_adoc_for_system_user(
-                db=db, ppid=ppid, sdoc_db_obj=sdoc_db_obj
-            )
-
             # persist BBoxAnnotations
             _persist_bbox__annotations(
                 db=db,
-                adoc_db_obj=adoc_db_obj,
+                sdoc_id=sdoc_db_obj.id,
                 ppid=ppid,
             )
 

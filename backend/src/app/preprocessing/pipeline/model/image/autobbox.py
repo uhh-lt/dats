@@ -7,3 +7,4 @@ class AutoBBox(BaseModel, frozen=True):
     y_min: int
     x_max: int
     y_max: int
+    user_id: int

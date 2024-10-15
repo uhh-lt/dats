@@ -62,6 +62,7 @@ PROJECT_USERS_EXPORT_NAMING_TEMPLATE = "project_{project_id}_users"
 PROJECT_SDOC_METADATAS_EXPORT_NAMING_TEMPLATE = "project_{project_id}_metadatas"
 PROJECT_DETAILS_EXPORT_NAMING_TEMPLATE = "project_{project_id}_details"
 PROJECT_SDOC_LINKS_EXPORT_NAMING_TEMPLATE = "project_{project_id}_sdoc_links"
+PROJECT_CODES_EXPORT_NAMING_TEMPLATE = "project_{project_id}_codes"
 SCHEMA_JSON_EXPORT_NAME = "schema.json"
 
 
@@ -222,7 +223,7 @@ class ExportService(metaclass=SingletonMeta):
             metadata_dict = dict()
             for metadata in sdoc_metadata_dtos:
                 metadata_dict[metadata.project_metadata.key] = {
-                    "value": metadata.get_value(),
+                    "value": metadata.get_value_serializable(),
                 }
             exported_sdocs_metadata.append(
                 {
@@ -291,6 +292,7 @@ class ExportService(metaclass=SingletonMeta):
         # fill the DataFrame
         data = {
             "sdoc_name": [],
+            "user_email": [],
             "user_first_name": [],
             "user_last_name": [],
             "code_name": [],
@@ -308,6 +310,7 @@ class ExportService(metaclass=SingletonMeta):
 
         for span in span_read_resolved_dtos:
             data["sdoc_name"].append(sdoc_dto.filename)
+            data["user_email"].append(user_dto.email)
             data["user_first_name"].append(user_dto.first_name)
             data["user_last_name"].append(user_dto.last_name)
             data["code_name"].append(span.code.name)
@@ -325,6 +328,7 @@ class ExportService(metaclass=SingletonMeta):
 
         for bbox in bbox_read_resolved_dtos:
             data["sdoc_name"].append(sdoc_dto.filename)
+            data["user_email"].append(user_dto.email)
             data["user_first_name"].append(user_dto.first_name)
             data["user_last_name"].append(user_dto.last_name)
             data["code_name"].append(bbox.code.name)
@@ -353,6 +357,7 @@ class ExportService(metaclass=SingletonMeta):
         # fill the DataFrame
         data = {
             "sdoc_name": [],
+            "user_email": [],
             "user_first_name": [],
             "user_last_name": [],
             "code_name": [],
@@ -366,6 +371,7 @@ class ExportService(metaclass=SingletonMeta):
             sdoc = span.annotation_document.source_document
             user = span.annotation_document.user
             data["sdoc_name"].append(sdoc.filename)
+            data["user_email"].append(user.email)
             data["user_first_name"].append(user.first_name)
             data["user_last_name"].append(user.last_name)
             data["code_name"].append(span.code.name)
@@ -529,7 +535,7 @@ class ExportService(metaclass=SingletonMeta):
         users_data_df = pd.DataFrame(data)
         return users_data_df
 
-    def __generate_export_dict_for_project_metadata(
+    def __generate_export_dict_for_project_details(
         self, db: Session, project_id: int
     ) -> Dict[str, Union[str, int, datetime]]:
         project_data = crud_project.read(db=db, id=project_id)
@@ -803,7 +809,7 @@ class ExportService(metaclass=SingletonMeta):
             export_file = self.__write_export_data_to_temp_file(
                 codes,
                 export_format=export_format,
-                fn=f"project_{project_id}_codes",
+                fn=PROJECT_CODES_EXPORT_NAMING_TEMPLATE.format(project_id=project_id),
             )
             return export_file
         msg = f"No Codes to export in Project {project_id}"
@@ -918,14 +924,14 @@ class ExportService(metaclass=SingletonMeta):
             db=db, project_id=project_id
         )
 
-        # generate project meta data
-        logger.info("exporting project meta data...")
-        exported_project_metadata = self.__generate_export_dict_for_project_metadata(
+        # generate project details
+        logger.info("exporting project details...")
+        exported_project_details = self.__generate_export_dict_for_project_details(
             db=db, project_id=project_id
         )
         # write project details to files
         project_file = self.__write_exported_json_to_temp_file(
-            exported_file=exported_project_metadata,
+            exported_file=exported_project_details,
             fn=PROJECT_DETAILS_EXPORT_NAMING_TEMPLATE.format(project_id=project_id),
         )
         exported_files.append(project_file)

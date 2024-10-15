@@ -1,3 +1,4 @@
+from app.core.data.crud.user import SYSTEM_USER_ID
 from app.preprocessing.pipeline.model.image.autobbox import AutoBBox
 from app.preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
@@ -12,15 +13,18 @@ def run_object_detection(cargo: PipelineCargo) -> PipelineCargo:
 
     input = DETRFilePathInput(image_fp=str(ppid.filepath))
     result = rms.detr_object_detection(input)
-
     for box in result.bboxes:
+        code_name = box.label
         bbox = AutoBBox(
-            code=box.label,
+            code=code_name,
             x_min=box.x_min,
             y_min=box.y_min,
             x_max=box.x_max,
             y_max=box.y_max,
+            user_id=SYSTEM_USER_ID,
         )
-        ppid.bboxes.add(bbox)
+        if code_name not in ppid.bboxes:
+            ppid.bboxes[code_name] = set()
+        ppid.bboxes[code_name].add(bbox)
 
     return cargo
