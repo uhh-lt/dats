@@ -19,7 +19,6 @@ import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { ImageSearchActions } from "../../search/ImageSearch/imageSearchSlice.ts";
 import { SentenceSearchActions } from "../../search/SentenceSearch/sentenceSearchSlice.ts";
 import { SearchFilterActions } from "../../search/searchFilterSlice.ts";
-interface SentenceMenuProps {}
 
 export interface SentenceMenuHandle {
   open: (
@@ -31,7 +30,7 @@ export interface SentenceMenuHandle {
 }
 
 // eslint-disable-next-line no-empty-pattern
-const SentenceMenu = forwardRef<SentenceMenuHandle, SentenceMenuProps>(({}, ref) => {
+const SentenceMenu = forwardRef<SentenceMenuHandle>((_, ref) => {
   const navigate = useNavigate();
 
   // local state
