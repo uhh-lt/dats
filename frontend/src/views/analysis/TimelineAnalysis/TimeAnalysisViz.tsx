@@ -108,6 +108,7 @@ function TimelineAnalysisViz({ chartData, timelineAnalysis }: TimelineAnalysisVi
                 dot={(props) => (
                   <CustomizedDot
                     {...props}
+                    key={props.key}
                     isSelected={provenanceConcept === concept.name && provenanceDate === props.payload.date}
                   />
                 )}
@@ -115,6 +116,7 @@ function TimelineAnalysisViz({ chartData, timelineAnalysis }: TimelineAnalysisVi
                 activeDot={(props: any) => (
                   <CustomizedDot
                     {...props}
+                    key={props.key}
                     r={5}
                     stroke={concept.color}
                     isSelected={provenanceConcept === concept.name && provenanceDate === props.payload.date}
