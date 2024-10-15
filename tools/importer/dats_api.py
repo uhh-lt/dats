@@ -420,10 +420,18 @@ if __name__ == "__main__":
 
     # create project metadata
     project_metadata = dats.create_project_metadata(
-        proj_id=project["id"], key="sdoc_id", metatype="STRING", doctype="text", description="sdoc_id"
+        proj_id=project["id"],
+        key="sdoc_id",
+        metatype="STRING",
+        doctype="text",
+        description="sdoc_id",
     )
     project_metadata = dats.create_project_metadata(
-        proj_id=project["id"], key="sdoc_id", metatype="STRING", doctype="image", description="sdoc_id"
+        proj_id=project["id"],
+        key="sdoc_id",
+        metatype="STRING",
+        doctype="image",
+        description="sdoc_id",
     )
     print("created project metadata", project_metadata)
 
