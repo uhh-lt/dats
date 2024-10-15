@@ -68,8 +68,9 @@ export const getOrCreateFilter = (state: FilterState, filterId: string, filter?:
 
 export const filterReducer = {
   onStartFilterEdit: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string; filter?: MyFilter }>) => {
-    const currentFilter = getOrCreateFilter(state, action.payload.filterId, action.payload.filter);
-    state.editableFilter = JSON.parse(JSON.stringify(currentFilter));
+    const currentFilter = JSON.parse(
+      JSON.stringify(getOrCreateFilter(state, action.payload.filterId, action.payload.filter)),
+    );
 
     // add a default filter expression if the filter is empty
     if (state.editableFilter.items.length === 0) {
@@ -77,9 +78,11 @@ export const filterReducer = {
         {
           ...state.defaultFilterExpression,
           id: uuidv4(),
-        } as MyFilterExpression,
+        },
       ];
     }
+
+    state.editableFilter = currentFilter;
   },
   onFinishFilterEdit: (state: Draft<FilterState>) => {
     state.filter = {

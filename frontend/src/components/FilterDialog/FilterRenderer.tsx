@@ -3,7 +3,7 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ClearIcon from "@mui/icons-material/Clear";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Box, Button, IconButton, MenuItem, Stack, TextField, Tooltip } from "@mui/material";
-import { TreeItem } from "@mui/x-tree-view";
+import { TreeItem2 } from "@mui/x-tree-view";
 import { SimpleTreeView } from "@mui/x-tree-view/SimpleTreeView";
 import { useCallback } from "react";
 import { LogicalOperator } from "../../api/openapi/models/LogicalOperator.ts";
@@ -76,7 +76,7 @@ function FilterRenderer({ editableFilter, filterActions, column2Info }: FilterRe
   // rendering
   const renderFilter = (filter: MyFilter, disableDeleteButton: boolean) => {
     return (
-      <TreeItem
+      <TreeItem2
         key={filter.id}
         itemId={filter.id}
         label={
@@ -116,7 +116,7 @@ function FilterRenderer({ editableFilter, filterActions, column2Info }: FilterRe
           </Stack>
         }
       >
-        <TreeItem
+        <TreeItem2
           key={`${filter.id}-add`}
           itemId={`${filter.id}-add`}
           label={
@@ -150,7 +150,7 @@ function FilterRenderer({ editableFilter, filterActions, column2Info }: FilterRe
             return null;
           }
         })}
-      </TreeItem>
+      </TreeItem2>
     );
   };
 

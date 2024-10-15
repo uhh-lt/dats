@@ -45,6 +45,7 @@ function ConceptList({ timelineAnalysis }: ConceptListProps) {
       color: "#000000",
       description: "",
       filter: {
+        id: uuidv4(),
         items: [],
         logic_operator: LogicalOperator.AND,
       },
@@ -64,7 +65,7 @@ function ConceptList({ timelineAnalysis }: ConceptListProps) {
       dispatch(
         TimelineAnalysisActions.onStartFilterEdit({
           filterId: conceptId,
-          filter: { ...concept.filter, id: conceptId } as MyFilter<TimelineAnalysisColumns>,
+          filter: { ...concept.filter, id: conceptId },
         }),
       );
     }
