@@ -38,6 +38,7 @@ T = TypeVar("T", bound=AbstractColumns)
 
 
 class FilterExpression(BaseModel, Generic[T]):
+    id: str
     column: Union[T, int]
     operator: Union[
         IDOperator,
@@ -81,6 +82,7 @@ class Filter(BaseModel, Generic[T]):
     """A tree of column expressions for filtering on many database columns using various
     comparisons."""
 
+    id: str
     items: List[Union[FilterExpression[T], "Filter[T]"]]
     logic_operator: LogicalOperator
 
