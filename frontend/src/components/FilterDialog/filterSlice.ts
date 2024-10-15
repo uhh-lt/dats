@@ -73,8 +73,8 @@ export const filterReducer = {
     );
 
     // add a default filter expression if the filter is empty
-    if (state.editableFilter.items.length === 0) {
-      state.editableFilter.items = [
+    if (currentFilter.items.length === 0) {
+      currentFilter.items = [
         {
           ...state.defaultFilterExpression,
           id: uuidv4(),
