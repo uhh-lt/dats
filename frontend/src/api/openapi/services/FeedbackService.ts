@@ -9,17 +9,6 @@ import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class FeedbackService {
   /**
-   * Returns all Feedback items of the current user. If logged in as the system user, return feedback of all users.
-   * @returns FeedbackRead Successful Response
-   * @throws ApiError
-   */
-  public static getAll(): CancelablePromise<Array<FeedbackRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/feedback",
-    });
-  }
-  /**
    * Creates a new Feedback and returns it with the generated ID.
    * @returns FeedbackRead Successful Response
    * @throws ApiError
@@ -43,7 +32,7 @@ export class FeedbackService {
   public static getById({ feedbackId }: { feedbackId: string }): CancelablePromise<FeedbackRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/feedback/{feedback_id}",
+      url: "/feedback/by_id/{feedback_id}",
       path: {
         feedback_id: feedbackId,
       },
@@ -53,14 +42,14 @@ export class FeedbackService {
     });
   }
   /**
-   * Returns the Feedback of the logged-in User.
+   * Returns all Feedback items of the current user. If logged in as the system user, return feedback of all users.
    * @returns FeedbackRead Successful Response
    * @throws ApiError
    */
-  public static getAllByUser(): CancelablePromise<Array<FeedbackRead>> {
+  public static getAll(): CancelablePromise<Array<FeedbackRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/feedback/user",
+      url: "/feedback/all",
     });
   }
   /**

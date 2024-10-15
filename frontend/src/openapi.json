@@ -3601,26 +3601,6 @@
       }
     },
     "/feedback": {
-      "get": {
-        "tags": ["feedback"],
-        "summary": "Returns all Feedback items of the current user. If logged in as the system user, return feedback of all users.",
-        "operationId": "get_all",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": { "$ref": "#/components/schemas/FeedbackRead" },
-                  "type": "array",
-                  "title": "Response Feedback-Get All"
-                }
-              }
-            }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      },
       "put": {
         "tags": ["feedback"],
         "summary": "Creates a new Feedback and returns it with the generated ID.",
@@ -3642,7 +3622,7 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/feedback/{feedback_id}": {
+    "/feedback/by_id/{feedback_id}": {
       "get": {
         "tags": ["feedback"],
         "summary": "Returns the Feedback with the given ID.",
@@ -3668,11 +3648,11 @@
         }
       }
     },
-    "/feedback/user": {
+    "/feedback/all": {
       "get": {
         "tags": ["feedback"],
-        "summary": "Returns the Feedback of the logged-in User.",
-        "operationId": "get_all_by_user",
+        "summary": "Returns all Feedback items of the current user. If logged in as the system user, return feedback of all users.",
+        "operationId": "get_all",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -3681,7 +3661,7 @@
                 "schema": {
                   "items": { "$ref": "#/components/schemas/FeedbackRead" },
                   "type": "array",
-                  "title": "Response Feedback-Get All By User"
+                  "title": "Response Feedback-Get All"
                 }
               }
             }
