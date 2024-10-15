@@ -1,3 +1,4 @@
+from loguru import logger
 from PIL import Image
 from PIL.ExifTags import TAGS
 
@@ -24,6 +25,7 @@ def create_image_metadata(cargo: PipelineCargo) -> PipelineCargo:
             if isinstance(data, bytes):
                 data = data.decode()
             if data is not None and data != "":
+                logger.info(f"create image metadata tag: {tag} data: {data}")
                 ppid.metadata[tag] = str(data)
 
     return cargo
