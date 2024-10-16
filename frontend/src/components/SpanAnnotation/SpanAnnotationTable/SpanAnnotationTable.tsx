@@ -10,7 +10,7 @@ import {
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { AnnotatedSegmentResult } from "../../../api/openapi/models/AnnotatedSegmentResult.ts";
 import { AnnotatedSegmentsColumns } from "../../../api/openapi/models/AnnotatedSegmentsColumns.ts";
 import { AnnotationTableRow } from "../../../api/openapi/models/AnnotationTableRow.ts";
@@ -19,6 +19,7 @@ import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { useTableInfiniteScroll } from "../../../utils/useTableInfiniteScroll.ts";
 import CodeRenderer from "../../Code/CodeRenderer.tsx";
 import { MyFilter, createEmptyFilter } from "../../FilterDialog/filterUtils.ts";
 import MemoRenderer2 from "../../Memo/MemoRenderer2.tsx";
@@ -30,6 +31,7 @@ import SdocAnnotationLink from "./SdocAnnotationLink.tsx";
 import { useInitSATFilterSlice } from "./useInitSATFilterSlice.ts";
 
 const fetchSize = 20;
+const flatMapData = (page: AnnotatedSegmentResult) => page.data;
 
 export interface SpanAnnotationTableProps {
   title?: string;
@@ -76,7 +78,6 @@ function SpanAnnotationTable({
   const filter = useAppSelector((state) => state.satFilter.filter[filterName]) || createEmptyFilter(filterName);
 
   // virtualization
-  const tableContainerRef = useRef<HTMLDivElement>(null);
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
 
   // table columns
@@ -188,26 +189,19 @@ function SpanAnnotationTable({
     },
     refetchOnWindowFocus: false,
   });
-  // create a flat array of data mapped from id to row
-  const flatData = useMemo(() => data?.pages.flatMap((page) => page.data) ?? [], [data]);
-  const totalDBRowCount = data?.pages?.[0]?.total_results ?? 0;
-  const totalFetched = flatData.length;
 
   // infinite scrolling
-  // called on scroll and possibly on mount to fetch more data as the user scrolls and reaches bottom of table
-  const fetchMoreOnBottomReached = useCallback(
-    (containerRefElement?: HTMLDivElement | null) => {
-      if (containerRefElement) {
-        const { scrollHeight, scrollTop, clientHeight } = containerRefElement;
-        // once the user has scrolled within 400px of the bottom of the table, fetch more data if we can
-        if (scrollHeight - scrollTop - clientHeight < 400 && !isFetching && totalFetched < totalDBRowCount) {
-          fetchNextPage();
-        }
-      }
-    },
-    [fetchNextPage, isFetching, totalFetched, totalDBRowCount],
-  );
-  // scroll to top of table when userId, sorting or filters change
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const { flatData, totalResults, totalFetched, fetchMoreOnScroll } = useTableInfiniteScroll({
+    tableContainerRef,
+    data,
+    isFetching,
+    fetchNextPage,
+    flatMapData,
+  });
+
+  // infinite scrolling reset:
+  // scroll to top of table when sorting changes
   useEffect(() => {
     try {
       rowVirtualizerInstanceRef.current?.scrollToIndex?.(0);
@@ -215,10 +209,6 @@ function SpanAnnotationTable({
       console.error(error);
     }
   }, [projectId, sortingModel]);
-  // a check on mount to see if the table is already scrolled to the bottom and immediately needs to fetch more data
-  useEffect(() => {
-    fetchMoreOnBottomReached(tableContainerRef.current);
-  }, [fetchMoreOnBottomReached]);
 
   // table
   const table = useMaterialReactTable<AnnotationTableRow>({
@@ -258,7 +248,7 @@ function SpanAnnotationTable({
     },
     muiTableContainerProps: {
       ref: tableContainerRef, //get access to the table container element
-      onScroll: (event: UIEvent<HTMLDivElement>) => fetchMoreOnBottomReached(event.target as HTMLDivElement), //add an event listener to the table container element
+      onScroll: (event) => fetchMoreOnScroll(event.target as HTMLDivElement), //add an event listener to the table container element
       style: { flexGrow: 1 },
     },
     muiToolbarAlertBannerProps: isError
@@ -288,7 +278,7 @@ function SpanAnnotationTable({
     renderBottomToolbarCustomActions: (props) => (
       <Stack direction={"row"} spacing={1} alignItems="center">
         <Typography>
-          Fetched {totalFetched} of {totalDBRowCount} total rows.
+          Fetched {totalFetched} of {totalResults} total rows.
         </Typography>
         {renderBottomToolbarCustomActions &&
           renderBottomToolbarCustomActions({
