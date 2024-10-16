@@ -15,12 +15,17 @@ import KeywordStats from "./KeywordStats.tsx";
 import SearchStatisticsMenu from "./SearchStatisticsMenu.tsx";
 
 interface SearchStatisticsProps {
-  sdocIds: number[];
+  sdocIds?: number[];
   handleKeywordClick: (keyword: string) => void;
   handleTagClick: (tagId: number) => void;
   handleCodeClick: (stat: SpanEntityStat) => void;
 }
 
+/**
+ * The search statistics component.
+ * If `sdocIds` is provided, it will filter the statistics by the given sdocIds.
+ * Otherwise, it will show the statistics based on search parameters,
+ */
 function SearchStatistics({
   sdocIds,
   handleCodeClick,
@@ -104,22 +109,25 @@ function SearchStatistics({
         <Box ref={parentRef} className="myFlexFillAllContainer" p={2}>
           <KeywordStats
             sdocIds={sdocIds}
+            projectId={projectId}
             handleClick={handleKeywordClick}
             parentRef={parentRef}
             filterBy={filterStatsBy}
           />
           <DocumentTagStats
             sdocIds={sdocIds}
+            projectId={projectId}
             handleClick={handleTagClick}
             parentRef={parentRef}
             filterBy={filterStatsBy}
           />
           {projectCodes.data?.map((code) => (
             <CodeStats
+              sdocIds={sdocIds}
               currentTab={tab}
               key={code.id}
               codeId={code.id}
-              sdocIds={sdocIds}
+              projectId={projectId}
               handleClick={handleCodeClick}
               parentRef={parentRef}
               filterBy={filterStatsBy}

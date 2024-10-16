@@ -8,7 +8,7 @@ import {
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
+import { useEffect, useMemo, useRef, type UIEvent } from "react";
 import { useParams } from "react-router-dom";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { WordFrequencyColumns } from "../../../api/openapi/models/WordFrequencyColumns.ts";
@@ -21,6 +21,7 @@ import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
 import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
+import { useTableInfiniteScroll } from "../../../utils/useTableInfiniteScroll.ts";
 import ExportWordFrequencyButton from "./ExportWordFrequencyButton.tsx";
 import { useInitWordFrequencyFilterSlice } from "./useInitWordFrequencyFilterSlice.ts";
 import { WordFrequencyActions } from "./wordFrequencySlice.ts";
@@ -28,6 +29,7 @@ import { WordFrequencyActions } from "./wordFrequencySlice.ts";
 const filterStateSelector = (state: RootState) => state.wordFrequency;
 const filterName = "root";
 const fetchSize = 20;
+const flatMapData = (page: WordFrequencyResult) => page.word_frequencies;
 
 function WordFrequencyTable() {
   const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
@@ -53,7 +55,6 @@ function WordFrequencyTable() {
   const filter = useAppSelector((state) => state.wordFrequency.filter["root"]);
 
   // virtualization
-  const tableContainerRef = useRef<HTMLDivElement>(null);
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
 
   // table columns
@@ -140,26 +141,19 @@ function WordFrequencyTable() {
     },
     refetchOnWindowFocus: false,
   });
-  // create a flat array of data mapped from id to row
-  const flatData = useMemo(() => data?.pages.flatMap((page) => page.word_frequencies) ?? [], [data]);
-  const totalDBRowCount = data?.pages?.[0]?.total_results ?? 0;
-  const totalFetched = flatData.length;
 
   // infinite scrolling
-  // called on scroll and possibly on mount to fetch more data as the user scrolls and reaches bottom of table
-  const fetchMoreOnBottomReached = useCallback(
-    (containerRefElement?: HTMLDivElement | null) => {
-      if (containerRefElement) {
-        const { scrollHeight, scrollTop, clientHeight } = containerRefElement;
-        // once the user has scrolled within 400px of the bottom of the table, fetch more data if we can
-        if (scrollHeight - scrollTop - clientHeight < 400 && !isFetching && totalFetched < totalDBRowCount) {
-          fetchNextPage();
-        }
-      }
-    },
-    [fetchNextPage, isFetching, totalFetched, totalDBRowCount],
-  );
-  // scroll to top of table when userId, sorting or filters change
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const { flatData, totalResults, totalFetched, fetchMoreOnScroll } = useTableInfiniteScroll({
+    tableContainerRef,
+    data,
+    isFetching,
+    fetchNextPage,
+    flatMapData,
+  });
+
+  // infinite scrolling reset:
+  // scroll to top of table when sorting changes
   useEffect(() => {
     try {
       rowVirtualizerInstanceRef.current?.scrollToIndex?.(0);
@@ -167,10 +161,6 @@ function WordFrequencyTable() {
       console.error(error);
     }
   }, [projectId, sortingModel]);
-  // a check on mount to see if the table is already scrolled to the bottom and immediately needs to fetch more data
-  useEffect(() => {
-    fetchMoreOnBottomReached(tableContainerRef.current);
-  }, [fetchMoreOnBottomReached]);
 
   // table
   const table = useMaterialReactTable<WordFrequencyStat>({
@@ -210,7 +200,7 @@ function WordFrequencyTable() {
     },
     muiTableContainerProps: {
       ref: tableContainerRef, //get access to the table container element
-      onScroll: (event: UIEvent<HTMLDivElement>) => fetchMoreOnBottomReached(event.target as HTMLDivElement), //add an event listener to the table container element
+      onScroll: (event: UIEvent<HTMLDivElement>) => fetchMoreOnScroll(event.target as HTMLDivElement), //add an event listener to the table container element
       style: { flexGrow: 1 },
     },
     muiToolbarAlertBannerProps: isError
@@ -224,7 +214,7 @@ function WordFrequencyTable() {
     renderBottomToolbarCustomActions: () => (
       <Stack direction={"row"} spacing={1} alignItems="center">
         <Typography>
-          Fetched {totalFetched} of {totalDBRowCount} unique words (from {data?.pages?.[0]?.sdocs_total ?? 0} documents
+          Fetched {totalFetched} of {totalResults} unique words (from {data?.pages?.[0]?.sdocs_total ?? 0} documents
           with {data?.pages?.[0]?.words_total ?? 0} words).
         </Typography>
       </Stack>

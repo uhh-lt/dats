@@ -8,7 +8,7 @@ import {
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
+import { useEffect, useMemo, useRef, type UIEvent } from "react";
 import { ElasticSearchDocumentHit } from "../../../api/openapi/models/ElasticSearchDocumentHit.ts";
 import { MemoColumns } from "../../../api/openapi/models/MemoColumns.ts";
 import { PaginatedElasticSearchDocumentHits } from "../../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
@@ -24,6 +24,7 @@ import MemoStarButton from "../../../components/Memo/MemoStarButton.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
 import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
+import { useTableInfiniteScroll } from "../../../utils/useTableInfiniteScroll.ts";
 import { LogbookActions } from "../logbookSlice.ts";
 import SearchMemoOptionsMenu from "./SearchMemoOptionsMenu.tsx";
 import { useInitMemoFilterSlice } from "./useInitMemoFilterSlice.ts";
@@ -31,6 +32,7 @@ import { useInitMemoFilterSlice } from "./useInitMemoFilterSlice.ts";
 const filterStateSelector = (state: RootState) => state.logbook;
 const filterName = "root";
 const fetchSize = 20;
+const flatMapData = (page: PaginatedElasticSearchDocumentHits) => page.hits;
 
 interface SearchMemoTableProps {
   projectId: number;
@@ -160,27 +162,19 @@ function SearchMemoTable({ projectId }: SearchMemoTableProps) {
     },
     refetchOnWindowFocus: false,
   });
-  // create a flat array of data mapped from id to row
-  const flatData = useMemo(() => data?.pages.flatMap((page) => page.hits) ?? [], [data]);
-  const totalDBRowCount = data?.pages?.[0]?.total_results ?? 0;
-  const totalFetched = flatData.length;
 
   // infinite scrolling
   const tableContainerRef = useRef<HTMLDivElement>(null);
-  // called on scroll and possibly on mount to fetch more data as the user scrolls and reaches bottom of table
-  const fetchMoreOnBottomReached = useCallback(
-    (containerRefElement?: HTMLDivElement | null) => {
-      if (containerRefElement) {
-        const { scrollHeight, scrollTop, clientHeight } = containerRefElement;
-        // once the user has scrolled within 400px of the bottom of the table, fetch more data if we can
-        if (scrollHeight - scrollTop - clientHeight < 400 && !isFetching && totalFetched < totalDBRowCount) {
-          fetchNextPage();
-        }
-      }
-    },
-    [fetchNextPage, isFetching, totalFetched, totalDBRowCount],
-  );
-  // scroll to top of table when sorting or filters change
+  const { flatData, totalResults, totalFetched, fetchMoreOnScroll } = useTableInfiniteScroll({
+    tableContainerRef,
+    data,
+    isFetching,
+    fetchNextPage,
+    flatMapData,
+  });
+
+  // infinite scrolling reset:
+  // scroll to top of table when sorting or filter change
   useEffect(() => {
     try {
       rowVirtualizerInstanceRef.current?.scrollToIndex?.(0);
@@ -188,10 +182,6 @@ function SearchMemoTable({ projectId }: SearchMemoTableProps) {
       console.error(error);
     }
   }, [projectId, sortingModel, filter]);
-  // a check on mount to see if the table is already scrolled to the bottom and immediately needs to fetch more data
-  useEffect(() => {
-    fetchMoreOnBottomReached(tableContainerRef.current);
-  }, [fetchMoreOnBottomReached]);
 
   // table
   const table = useMaterialReactTable<ElasticSearchDocumentHit>({
@@ -245,7 +235,7 @@ function SearchMemoTable({ projectId }: SearchMemoTableProps) {
     },
     muiTableContainerProps: {
       ref: tableContainerRef, //get access to the table container element
-      onScroll: (event: UIEvent<HTMLDivElement>) => fetchMoreOnBottomReached(event.target as HTMLDivElement), //add an event listener to the table container element
+      onScroll: (event: UIEvent<HTMLDivElement>) => fetchMoreOnScroll(event.target as HTMLDivElement), //add an event listener to the table container element
       style: { flexGrow: 1 },
     },
     muiToolbarAlertBannerProps: isError
@@ -288,7 +278,7 @@ function SearchMemoTable({ projectId }: SearchMemoTableProps) {
     renderBottomToolbarCustomActions: () => (
       <Stack direction={"row"} spacing={1} alignItems="center">
         <Typography>
-          Fetched {totalFetched} of {totalDBRowCount} total memos.
+          Fetched {totalFetched} of {totalResults} total memos.
         </Typography>
       </Stack>
     ),

@@ -12,7 +12,7 @@ import {
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type UIEvent } from "react";
 import { ElasticSearchDocumentHit } from "../../../api/openapi/models/ElasticSearchDocumentHit.ts";
 import { PaginatedElasticSearchDocumentHits } from "../../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
 import { SearchColumns } from "../../../api/openapi/models/SearchColumns.ts";
@@ -21,6 +21,7 @@ import { SearchService } from "../../../api/openapi/services/SearchService.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
+import { useTableInfiniteScroll } from "../../../utils/useTableInfiniteScroll.ts";
 import { FilterActions, FilterState } from "../../FilterDialog/filterSlice.ts";
 import { MyFilter, createEmptyFilter } from "../../FilterDialog/filterUtils.ts";
 import SdocMetadataRenderer from "../../Metadata/SdocMetadataRenderer.tsx";
@@ -32,6 +33,7 @@ import { DocumentTableFilterActions } from "./documentTableFilterSlice.ts";
 import { useInitDocumentTableFilterSlice } from "./useInitDocumentTableFilterSlice.ts";
 
 const fetchSize = 20;
+const flatMapData = (page: PaginatedElasticSearchDocumentHits) => page.hits;
 
 export interface DocumentTableActionProps {
   table: MRT_TableInstance<ElasticSearchDocumentHit>;
@@ -84,7 +86,6 @@ function SdocTable({
     useAppSelector((state) => filterStateSelector(state).filter[filterName]) || createEmptyFilter(filterName);
 
   // virtualization
-  const tableContainerRef = useRef<HTMLDivElement>(null);
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
 
   // table columns
@@ -215,26 +216,19 @@ function SdocTable({
     },
     refetchOnWindowFocus: false,
   });
-  // create a flat array of data mapped from id to row
-  const flatData = useMemo(() => data?.pages.flatMap((page) => page.hits) ?? [], [data]);
-  const totalDBRowCount = data?.pages?.[0]?.total_results ?? 0;
-  const totalFetched = flatData.length;
 
   // infinite scrolling
-  // called on scroll and possibly on mount to fetch more data as the user scrolls and reaches bottom of table
-  const fetchMoreOnBottomReached = useCallback(
-    (containerRefElement?: HTMLDivElement | null) => {
-      if (containerRefElement) {
-        const { scrollHeight, scrollTop, clientHeight } = containerRefElement;
-        // once the user has scrolled within 400px of the bottom of the table, fetch more data if we can
-        if (scrollHeight - scrollTop - clientHeight < 400 && !isFetching && totalFetched < totalDBRowCount) {
-          fetchNextPage();
-        }
-      }
-    },
-    [fetchNextPage, isFetching, totalFetched, totalDBRowCount],
-  );
-  // scroll to top of table when userId, sorting or filters change
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const { flatData, totalResults, totalFetched, fetchMoreOnScroll } = useTableInfiniteScroll({
+    tableContainerRef,
+    data,
+    isFetching,
+    fetchNextPage,
+    flatMapData,
+  });
+
+  // infinite scrolling reset:
+  // scroll to top of table when sorting or filters change
   useEffect(() => {
     try {
       rowVirtualizerInstanceRef.current?.scrollToIndex?.(0);
@@ -242,10 +236,6 @@ function SdocTable({
       console.error(error);
     }
   }, [projectId, sortingModel]);
-  // a check on mount to see if the table is already scrolled to the bottom and immediately needs to fetch more data
-  useEffect(() => {
-    fetchMoreOnBottomReached(tableContainerRef.current);
-  }, [fetchMoreOnBottomReached]);
 
   // table
   const table = useMaterialReactTable<ElasticSearchDocumentHit>({
@@ -302,7 +292,7 @@ function SdocTable({
     },
     muiTableContainerProps: {
       ref: tableContainerRef, //get access to the table container element
-      onScroll: (event: UIEvent<HTMLDivElement>) => fetchMoreOnBottomReached(event.target as HTMLDivElement), //add an event listener to the table container element
+      onScroll: (event: UIEvent<HTMLDivElement>) => fetchMoreOnScroll(event.target as HTMLDivElement), //add an event listener to the table container element
       style: { flexGrow: 1 },
     },
     muiToolbarAlertBannerProps: isError
@@ -338,7 +328,7 @@ function SdocTable({
     renderBottomToolbarCustomActions: (props) => (
       <Stack direction={"row"} spacing={1} alignItems="center">
         <Typography>
-          Fetched {totalFetched} of {totalDBRowCount} total documents.
+          Fetched {totalFetched} of {totalResults} total documents.
         </Typography>
         {renderBottomToolbarCustomActions &&
           renderBottomToolbarCustomActions({

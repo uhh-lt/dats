@@ -1,30 +1,36 @@
 import { TabPanel } from "@mui/lab";
 import { Box, CircularProgress } from "@mui/material";
+import { UseQueryResult } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useMemo } from "react";
 import SearchHooks from "../../../api/SearchHooks.ts";
 import { SpanEntityStat } from "../../../api/openapi/models/SpanEntityStat.ts";
-import { useAuth } from "../../../auth/useAuth.ts";
-import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import StatsDisplayButton from "./StatsDisplayButton.tsx";
 import { useFilterStats } from "./useFilterStats.ts";
 
 interface CodeStatsProps {
   currentTab: string;
+  projectId: number;
   codeId: number;
-  sdocIds: number[];
   handleClick: (stat: SpanEntityStat) => void;
   parentRef: React.RefObject<HTMLDivElement>;
   filterBy: string;
 }
 
-function CodeStats(props: CodeStatsProps) {
+/**
+ * The code statistics component.
+ * If `sdocIds` is provided, it will filter the code stats by the given sdocIds.
+ * Otherwise, it will show the code stats based on search parameters,
+ */
+function CodeStats({ sdocIds, ...props }: CodeStatsProps & { sdocIds?: number[] }) {
   // rendering
   let content: JSX.Element;
   if (props.currentTab !== `${props.codeId}`) {
     content = <></>;
+  } else if (sdocIds) {
+    content = <CodeStatsFilter sdocIds={sdocIds} {...props} />;
   } else {
-    content = <CodeStatsWithoutData {...props} />;
+    content = <CodeStatsSearch {...props} />;
   }
 
   return (
@@ -34,18 +40,19 @@ function CodeStats(props: CodeStatsProps) {
   );
 }
 
-function CodeStatsWithoutData(props: CodeStatsProps) {
-  // global client state
-  const { user } = useAuth();
-
-  // global client state (redux)
-  const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
-
+function CodeStatsFilter({ sdocIds, ...props }: CodeStatsProps & { sdocIds: number[] }) {
   // global server state (react-query)
-  // TODO does it make sense to only show code stats for the current user here?
-  // I think keyword and tag stats show counts for all users
-  const codeStats = SearchHooks.useSearchCodeStats(props.codeId, props.sdocIds, sortStatsByGlobal, !!user?.id);
+  const codeStats = SearchHooks.useFilterCodeStats(props.codeId, sdocIds);
+  return <CodeStatsLoader codeStats={codeStats} {...props} />;
+}
 
+function CodeStatsSearch(props: CodeStatsProps) {
+  // global server state (react-query)
+  const codeStats = SearchHooks.useSearchCodeStats(props.codeId, props.projectId);
+  return <CodeStatsLoader codeStats={codeStats} {...props} />;
+}
+
+function CodeStatsLoader({ codeStats, ...props }: CodeStatsProps & { codeStats: UseQueryResult<SpanEntityStat[]> }) {
   if (codeStats.isSuccess) {
     return <CodeStatsWithData codeStats={codeStats.data} {...props} />;
   } else if (codeStats.isLoading) {

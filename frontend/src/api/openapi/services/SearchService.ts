@@ -2,7 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { Body_search_search_code_stats } from "../models/Body_search_search_code_stats";
+import type { Body_search_search_keyword_stats } from "../models/Body_search_search_keyword_stats";
 import type { Body_search_search_sdocs } from "../models/Body_search_search_sdocs";
+import type { Body_search_search_tag_stats } from "../models/Body_search_search_tag_stats";
 import type { ColumnInfo_SearchColumns_ } from "../models/ColumnInfo_SearchColumns_";
 import type { KeywordStat } from "../models/KeywordStat";
 import type { PaginatedElasticSearchDocumentHits } from "../models/PaginatedElasticSearchDocumentHits";
@@ -42,16 +45,16 @@ export class SearchService {
    * @throws ApiError
    */
   public static searchSdocs({
-    searchQuery,
     projectId,
+    searchQuery,
     expertMode,
     highlight,
     requestBody,
     pageNumber,
     pageSize,
   }: {
-    searchQuery: string;
     projectId: number;
+    searchQuery: string;
     expertMode: boolean;
     highlight: boolean;
     requestBody: Body_search_search_sdocs;
@@ -62,8 +65,8 @@ export class SearchService {
       method: "POST",
       url: "/search/sdoc",
       query: {
-        search_query: searchQuery,
         project_id: projectId,
+        search_query: searchQuery,
         expert_mode: expertMode,
         highlight: highlight,
         page_number: pageNumber,
@@ -77,11 +80,48 @@ export class SearchService {
     });
   }
   /**
-   * Returns SpanEntityStats for the given SourceDocuments.
+   * Returns SpanEntityStats for the given search parameters.
    * @returns SpanEntityStat Successful Response
    * @throws ApiError
    */
   public static searchCodeStats({
+    codeId,
+    projectId,
+    searchQuery,
+    expertMode,
+    requestBody,
+    sortByGlobal = false,
+  }: {
+    codeId: number;
+    projectId: number;
+    searchQuery: string;
+    expertMode: boolean;
+    requestBody: Body_search_search_code_stats;
+    sortByGlobal?: boolean;
+  }): CancelablePromise<Array<SpanEntityStat>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/search/code_stats_by_search",
+      query: {
+        code_id: codeId,
+        sort_by_global: sortByGlobal,
+        project_id: projectId,
+        search_query: searchQuery,
+        expert_mode: expertMode,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns SpanEntityStats for the given SourceDocuments.
+   * @returns SpanEntityStat Successful Response
+   * @throws ApiError
+   */
+  public static filterCodeStats({
     codeId,
     requestBody,
     sortByGlobal = false,
@@ -92,10 +132,47 @@ export class SearchService {
   }): CancelablePromise<Array<SpanEntityStat>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/search/code_stats",
+      url: "/search/code_stats_by_sdocs",
       query: {
         code_id: codeId,
         sort_by_global: sortByGlobal,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns KeywordStats for the given seach parameters.
+   * @returns KeywordStat Successful Response
+   * @throws ApiError
+   */
+  public static searchKeywordStats({
+    projectId,
+    searchQuery,
+    expertMode,
+    requestBody,
+    sortByGlobal = false,
+    topK = 50,
+  }: {
+    projectId: number;
+    searchQuery: string;
+    expertMode: boolean;
+    requestBody: Body_search_search_keyword_stats;
+    sortByGlobal?: boolean;
+    topK?: number;
+  }): CancelablePromise<Array<KeywordStat>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/search/keyword_stats_by_search",
+      query: {
+        project_id: projectId,
+        sort_by_global: sortByGlobal,
+        top_k: topK,
+        search_query: searchQuery,
+        expert_mode: expertMode,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -109,7 +186,7 @@ export class SearchService {
    * @returns KeywordStat Successful Response
    * @throws ApiError
    */
-  public static searchKeywordStats({
+  public static filterKeywordStats({
     projectId,
     requestBody,
     sortByGlobal = false,
@@ -122,7 +199,7 @@ export class SearchService {
   }): CancelablePromise<Array<KeywordStat>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/search/keyword_stats",
+      url: "/search/keyword_stats_by_sdocs",
       query: {
         project_id: projectId,
         sort_by_global: sortByGlobal,
@@ -136,11 +213,45 @@ export class SearchService {
     });
   }
   /**
-   * Returns Stat for the given SourceDocuments.
+   * Returns Stat for the given search parameters.
    * @returns TagStat Successful Response
    * @throws ApiError
    */
   public static searchTagStats({
+    projectId,
+    searchQuery,
+    expertMode,
+    requestBody,
+    sortByGlobal = false,
+  }: {
+    projectId: number;
+    searchQuery: string;
+    expertMode: boolean;
+    requestBody: Body_search_search_tag_stats;
+    sortByGlobal?: boolean;
+  }): CancelablePromise<Array<TagStat>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/search/tag_stats_by_search",
+      query: {
+        sort_by_global: sortByGlobal,
+        project_id: projectId,
+        search_query: searchQuery,
+        expert_mode: expertMode,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns Stat for the given SourceDocuments.
+   * @returns TagStat Successful Response
+   * @throws ApiError
+   */
+  public static filterTagStats({
     requestBody,
     sortByGlobal = false,
   }: {
@@ -149,7 +260,7 @@ export class SearchService {
   }): CancelablePromise<Array<TagStat>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/search/tag_stats",
+      url: "/search/tag_stats_by_sdocs",
       query: {
         sort_by_global: sortByGlobal,
       },

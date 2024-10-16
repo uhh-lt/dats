@@ -1,20 +1,12 @@
 import { Divider, Typography } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
-import { QueryKey } from "../../../api/QueryKey.ts";
-import { PaginatedElasticSearchDocumentHits } from "../../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
-import { SearchColumns } from "../../../api/openapi/models/SearchColumns.ts";
-import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { SpanEntityStat } from "../../../api/openapi/models/SpanEntityStat.ts";
-import { SearchService } from "../../../api/openapi/services/SearchService.ts";
-import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 import DocumentInformation from "../../../components/SourceDocument/DocumentInformation/DocumentInformation.tsx";
 import TagExplorer from "../../../components/Tag/TagExplorer/TagExplorer.tsx";
 import TwoSidebarsLayout from "../../../layouts/TwoSidebarsLayout.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { AnnoActions } from "../../annotation/annoSlice.ts";
 import SearchStatistics from "../Statistics/SearchStatistics.tsx";
 import { SearchFilterActions } from "../searchFilterSlice.ts";
 import SearchDocumentTable from "./SearchDocumentTable.tsx";
@@ -60,48 +52,6 @@ function Search() {
     [dispatch],
   );
 
-  // hack to disable sentences
-  const projectCodes = ProjectHooks.useGetAllCodes(projectId, true);
-  useEffect(() => {
-    if (projectCodes.data) {
-      const sentence = projectCodes.data.find((code) => code.name === "SENTENCE");
-      if (sentence) {
-        dispatch(AnnoActions.disableCode(sentence.id));
-      }
-    }
-  }, [dispatch, projectCodes.data]);
-
-  // search
-  const filter = useAppSelector((state) => state.searchFilter.filter[filterName]);
-  const searchQuery = useAppSelector((state) => state.search.searchQuery);
-  const sortingModel = useAppSelector((state) => state.search.sortingModel);
-  const { data, isError, isFetching, isLoading } = useQuery<PaginatedElasticSearchDocumentHits>({
-    queryKey: [
-      QueryKey.SEARCH_TABLE,
-      projectId,
-      searchQuery, // refetch when searchQuery changes
-      filter, // refetch when columnFilters changes
-      sortingModel, // refetch when sorting changes
-    ],
-    queryFn: () =>
-      SearchService.searchSdocs({
-        searchQuery: searchQuery || "",
-        projectId: projectId!,
-        highlight: true,
-        expertMode: false,
-        requestBody: {
-          filter: filter as MyFilter<SearchColumns>,
-          sorts: sortingModel.map((sort) => ({
-            column: sort.id as SearchColumns,
-            direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
-          })),
-        },
-        pageNumber: undefined,
-        pageSize: undefined,
-      }),
-  });
-  const sdocIds = useMemo(() => data?.hits.map((hit) => hit.document_id) || [], [data]);
-
   // render
   return (
     <TwoSidebarsLayout
@@ -111,22 +61,13 @@ function Search() {
           <Divider />
           <SearchStatistics
             sx={{ height: "50%" }}
-            sdocIds={sdocIds}
             handleKeywordClick={handleAddKeywordFilter}
             handleTagClick={handleAddTagFilter}
             handleCodeClick={handleAddCodeFilter}
           />
         </>
       }
-      content={
-        <SearchDocumentTable
-          projectId={projectId}
-          data={data}
-          isLoading={isLoading}
-          isFetching={isFetching}
-          isError={isError}
-        />
-      }
+      content={<SearchDocumentTable projectId={projectId} />}
       rightSidebar={
         <DocumentInformation
           sdocId={selectedDocumentId}

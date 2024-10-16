@@ -1,4 +1,5 @@
 import { Box, Card, Toolbar, Typography } from "@mui/material";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import parse from "html-react-parser";
 import {
   MRT_ColumnDef,
@@ -9,13 +10,17 @@ import {
   MRT_ToggleDensePaddingButton,
   useMaterialReactTable,
 } from "material-react-table";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { QueryKey } from "../../../api/QueryKey.ts";
 import { ElasticSearchDocumentHit } from "../../../api/openapi/models/ElasticSearchDocumentHit.ts";
 import { PaginatedElasticSearchDocumentHits } from "../../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
 import { SearchColumns } from "../../../api/openapi/models/SearchColumns.ts";
+import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
+import { SearchService } from "../../../api/openapi/services/SearchService.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import ReduxFilterDialog from "../../../components/FilterDialog/ReduxFilterDialog.tsx";
+import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 import LLMAssistanceButton from "../../../components/LLMDialog/LLMAssistanceButton.tsx";
 import SdocMetadataRenderer from "../../../components/Metadata/SdocMetadataRenderer.tsx";
 import DeleteSdocsButton from "../../../components/SourceDocument/DeleteSdocsButton.tsx";
@@ -28,6 +33,7 @@ import { selectSelectedDocumentIds } from "../../../components/tableSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
 import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
+import { useTableInfiniteScroll } from "../../../utils/useTableInfiniteScroll.ts";
 import { SearchFilterActions } from "../searchFilterSlice.ts";
 import { useInitSearchFilterSlice } from "../useInitSearchFilterSlice.ts";
 import SearchOptionsMenu from "./SearchOptionsMenu.tsx";
@@ -36,16 +42,15 @@ import { SearchActions } from "./searchSlice.ts";
 // this has to match Search.tsx!
 const filterStateSelector = (state: RootState) => state.searchFilter;
 const filterName = "root";
+const fetchSize = 20;
+
+const flatMapData = (page: PaginatedElasticSearchDocumentHits) => page.hits;
 
 interface DocumentTableProps {
   projectId: number;
-  data: PaginatedElasticSearchDocumentHits | undefined;
-  isLoading: boolean;
-  isFetching: boolean;
-  isError: boolean;
 }
 
-function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }: DocumentTableProps) {
+function SearchDocumentTable({ projectId }: DocumentTableProps) {
   const navigate = useNavigate();
 
   // global client state (react router)
@@ -146,12 +151,62 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
     return result.filter((column) => column !== null) as MRT_ColumnDef<ElasticSearchDocumentHit>[];
   }, [tableInfo, user]);
 
-  // table data
-  const hits = data?.hits ?? [];
+  // search
+  const filter = useAppSelector((state) => state.searchFilter.filter[filterName]);
+  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchDocumentHits>({
+    queryKey: [
+      QueryKey.SEARCH_TABLE,
+      projectId,
+      searchQuery, // refetch when searchQuery changes
+      filter, // refetch when columnFilters changes
+      sortingModel, // refetch when sorting changes
+    ],
+    queryFn: ({ pageParam }) =>
+      SearchService.searchSdocs({
+        searchQuery: searchQuery || "",
+        projectId: projectId!,
+        highlight: true,
+        expertMode: false,
+        requestBody: {
+          filter: filter as MyFilter<SearchColumns>,
+          sorts: sortingModel.map((sort) => ({
+            column: sort.id as SearchColumns,
+            direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
+          })),
+        },
+        pageNumber: pageParam as number,
+        pageSize: fetchSize,
+      }),
+    initialPageParam: 0,
+    enabled: !!projectId,
+    getNextPageParam: (_lastGroup, groups) => {
+      return groups.length;
+    },
+    refetchOnWindowFocus: false,
+  });
+
+  // infinite scrolling
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const { flatData, fetchMoreOnScroll } = useTableInfiniteScroll({
+    tableContainerRef,
+    data,
+    isFetching,
+    fetchNextPage,
+    flatMapData,
+  });
+
+  // infinite scrolling reset
+  useEffect(() => {
+    try {
+      rowVirtualizerInstanceRef.current?.scrollToIndex?.(0);
+    } catch (error) {
+      console.error(error);
+    }
+  }, [projectId, searchQuery, filter, sortingModel]);
 
   // table
   const table = useMaterialReactTable<ElasticSearchDocumentHit>({
-    data: hits,
+    data: flatData,
     columns: columns,
     getRowId: (row) => `${row.document_id}`,
     // state
@@ -196,7 +251,7 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
     onColumnSizingChange: setColumnSizingModel,
     // detail (highlights)
     renderDetailPanel:
-      searchQuery && searchQuery.trim().length > 0 && hits.length > 0
+      searchQuery && searchQuery.trim().length > 0 && flatData.length > 0
         ? ({ row }) =>
             row.original.highlights ? (
               <Box className="search-result-highlight">
@@ -272,7 +327,12 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
         <MRT_ToggleDensePaddingButton table={table} />
       </Toolbar>
       <Card elevation={8} sx={{ height: "100%", display: "flex", flexDirection: "column", m: 2 }}>
-        <MRT_TableContainer table={table} style={{ flexGrow: 1 }} />
+        <MRT_TableContainer
+          table={table}
+          style={{ flexGrow: 1 }}
+          ref={tableContainerRef}
+          onScroll={(event) => fetchMoreOnScroll(event.target as HTMLDivElement)}
+        />
       </Card>
     </>
   );

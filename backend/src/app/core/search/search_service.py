@@ -96,10 +96,16 @@ class SearchService(metaclass=SingletonMeta):
                 total_results=total_results,
             )
         else:
-            with self.sqls.db_session() as db:
-                filtered_sdoc_ids, _ = self._get_filtered_sdoc_ids(
-                    db, project_id, filter, sorts
-                )
+            # special case: no filter, no sorting -> all sdocs are relevant
+            if len(filter.items) == 0 and (sorts is None or len(sorts) == 0):
+                filtered_sdoc_ids = None
+            else:
+                with self.sqls.db_session() as db:
+                    filtered_sdoc_ids, _ = self._get_filtered_sdoc_ids(
+                        db, project_id, filter, sorts
+                    )
+                    filtered_sdoc_ids = set(filtered_sdoc_ids)
+
             # use elasticseach for full text search
             if page_number is not None and page_size is not None:
                 skip = page_number * page_size
@@ -110,7 +116,7 @@ class SearchService(metaclass=SingletonMeta):
             return ElasticSearchService().search_sdocs_by_content_query(
                 proj_id=project_id,
                 query=search_query,
-                sdoc_ids=set(filtered_sdoc_ids),
+                sdoc_ids=filtered_sdoc_ids,
                 use_simple_query=not expert_mode,
                 highlight=highlight,
                 skip=skip,
@@ -126,62 +132,73 @@ class SearchService(metaclass=SingletonMeta):
         page_number: Optional[int] = None,
         page_size: Optional[int] = None,
     ) -> Tuple[List[int], int]:
-        tag_ids_agg = aggregate_ids(
-            DocumentTagORM.id, label=SearchColumns.DOCUMENT_TAG_ID_LIST
-        )
-        code_ids_agg = aggregate_ids(CodeORM.id, SearchColumns.CODE_ID_LIST)
-        user_ids_agg = aggregate_ids(UserORM.id, SearchColumns.USER_ID_LIST)
-        span_annotation_tuples_agg = cast(
-            array_agg(
-                func.distinct(array([cast(CodeORM.id, String), SpanTextORM.text])),
-            ),
-            ARRAY(String, dimensions=2),
-        ).label(SearchColumns.SPAN_ANNOTATIONS)
-
-        subquery = (
-            db.query(
-                SourceDocumentORM.id,
-                tag_ids_agg,
-                code_ids_agg,
-                user_ids_agg,
-                span_annotation_tuples_agg,
+        # no filter
+        if len(filter.items) == 0:
+            query = db.query(SourceDocumentORM.id).filter(
+                SourceDocumentORM.project_id == project_id
             )
-            # isouter=True is important, otherwise we will only get sdocs with tags
-            .join(SourceDocumentORM.document_tags, isouter=True)
-            .join(SourceDocumentORM.annotation_documents)
-            .join(AnnotationDocumentORM.user)
-            # isouter=True is important, otherwise we will only get sdocs with annotations
-            .join(AnnotationDocumentORM.span_annotations, isouter=True)
-            .join(SpanAnnotationORM.span_text, isouter=True)
-            .join(SpanAnnotationORM.code, isouter=True)
-            .join(SourceDocumentORM.metadata_)
-            .join(SourceDocumentMetadataORM.project_metadata)
-            .group_by(SourceDocumentORM.id)
-            .filter(SourceDocumentORM.project_id == project_id)
-            .subquery()
-        )
+        # with filter
+        else:
+            tag_ids_agg = aggregate_ids(
+                DocumentTagORM.id, label=SearchColumns.DOCUMENT_TAG_ID_LIST
+            )
+            code_ids_agg = aggregate_ids(CodeORM.id, SearchColumns.CODE_ID_LIST)
+            user_ids_agg = aggregate_ids(UserORM.id, SearchColumns.USER_ID_LIST)
+            span_annotation_tuples_agg = cast(
+                array_agg(
+                    func.distinct(array([cast(CodeORM.id, String), SpanTextORM.text])),
+                ),
+                ARRAY(String, dimensions=2),
+            ).label(SearchColumns.SPAN_ANNOTATIONS)
 
-        query = db.query(
-            SourceDocumentORM.id,
-        ).join(subquery, SourceDocumentORM.id == subquery.c.id)
+            subquery = (
+                db.query(
+                    SourceDocumentORM.id,
+                    tag_ids_agg,
+                    code_ids_agg,
+                    user_ids_agg,
+                    span_annotation_tuples_agg,
+                )
+                # isouter=True is important, otherwise we will only get sdocs with tags
+                .join(SourceDocumentORM.document_tags, isouter=True)
+                .join(SourceDocumentORM.annotation_documents)
+                .join(AnnotationDocumentORM.user)
+                # isouter=True is important, otherwise we will only get sdocs with annotations
+                .join(AnnotationDocumentORM.span_annotations, isouter=True)
+                .join(SpanAnnotationORM.span_text, isouter=True)
+                .join(SpanAnnotationORM.code, isouter=True)
+                .join(SourceDocumentORM.metadata_)
+                .join(SourceDocumentMetadataORM.project_metadata)
+                .group_by(SourceDocumentORM.id)
+                .filter(SourceDocumentORM.project_id == project_id)
+                .subquery()
+            )
 
-        query = apply_filtering(
-            query=query, filter=filter, db=db, subquery_dict=subquery.c
-        )
+            query = db.query(
+                SourceDocumentORM.id,
+            ).join(subquery, SourceDocumentORM.id == subquery.c.id)
 
+            query = apply_filtering(
+                query=query, filter=filter, db=db, subquery_dict=subquery.c
+            )
+
+        # no sorting
         if sorts is not None and len(sorts) > 0:
             query = apply_sorting(query=query, sorts=sorts, db=db)
+        # with sorting
         else:
             query = query.order_by(SourceDocumentORM.id.desc())
 
+        # no pagination
         if page_number is not None and page_size is not None:
             query, pagination = apply_pagination(
                 query=query, page_number=page_number + 1, page_size=page_size
             )
             total_results = pagination.total_results
-            sdoc_ids = [row[0] for row in query.all()]  # returns paginated results
+            sdoc_ids = [row[0] for row in query.all()]
+        # with pagination
         else:
-            sdoc_ids = [row[0] for row in query.all()]  #  returns all results
+            sdoc_ids = [row[0] for row in query.all()]
             total_results = len(sdoc_ids)
 
         return sdoc_ids, total_results

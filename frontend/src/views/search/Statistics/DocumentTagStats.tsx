@@ -1,36 +1,53 @@
 import { TabPanel } from "@mui/lab";
+import { UseQueryResult } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useMemo } from "react";
 import SearchHooks from "../../../api/SearchHooks.ts";
 import TagHooks from "../../../api/TagHooks.ts";
 import { TagStat } from "../../../api/openapi/models/TagStat.ts";
-import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import StatsDisplayButton, { StatsDisplayButtonProps } from "./StatsDisplayButton.tsx";
 import { useFilterStats } from "./useFilterStats.ts";
 
 interface DocumentTagStatsProps {
-  sdocIds: number[];
+  projectId: number;
   handleClick: (tagId: number) => void;
   parentRef: React.RefObject<HTMLDivElement>;
   filterBy: string;
 }
 
-function DocumentTagStats({ sdocIds, handleClick, parentRef, filterBy }: DocumentTagStatsProps) {
-  // global client state (redux)
-  const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
+/**
+ * The tag statistics component.
+ * If `sdocIds` is provided, it will filter the tag stats by the given sdocIds.
+ * Otherwise, it will show the tag stats based on search parameters,
+ */
+function DocumentTagStats({ sdocIds, ...props }: DocumentTagStatsProps & { sdocIds?: number[] }) {
+  if (sdocIds) {
+    return <DocumentTagStatsFilter sdocIds={sdocIds} {...props} />;
+  } else {
+    return <DocumentTagStatsSearch {...props} />;
+  }
+}
 
+function DocumentTagStatsFilter({ sdocIds, ...props }: DocumentTagStatsProps & { sdocIds: number[] }) {
   // global server state (react-query)
-  const tagStats = SearchHooks.useSearchTagStats(sdocIds, sortStatsByGlobal);
+  const tagStats = SearchHooks.useFilterTagStats(sdocIds);
+  return <DocumentTagStatsLoader tagStats={tagStats} {...props} />;
+}
 
+function DocumentTagStatsSearch(props: DocumentTagStatsProps) {
+  // global server state (react-query)
+  const tagStats = SearchHooks.useSearchTagStats(props.projectId);
+  return <DocumentTagStatsLoader tagStats={tagStats} {...props} />;
+}
+
+function DocumentTagStatsLoader({
+  tagStats,
+  ...props
+}: DocumentTagStatsProps & { tagStats: UseQueryResult<TagStat[]> }) {
   return (
     <>
       {tagStats.isSuccess ? (
-        <DocumentTagStatsContent
-          tagStats={tagStats.data}
-          handleClick={handleClick}
-          parentRef={parentRef}
-          filterBy={filterBy}
-        />
+        <DocumentTagStatsContent tagStats={tagStats.data} {...props} />
       ) : tagStats.isError ? (
         <TabPanel value="tags" style={{ padding: 0 }}>
           Error: {tagStats.error.message}
@@ -50,14 +67,12 @@ function DocumentTagStats({ sdocIds, handleClick, parentRef, filterBy }: Documen
 
 export default DocumentTagStats;
 
-interface DocumentTagStatsContentProps {
-  tagStats: TagStat[];
-  handleClick: (tagId: number) => void;
-  parentRef: React.RefObject<HTMLDivElement>;
-  filterBy: string;
-}
-
-function DocumentTagStatsContent({ tagStats, handleClick, parentRef, filterBy }: DocumentTagStatsContentProps) {
+function DocumentTagStatsContent({
+  tagStats,
+  handleClick,
+  parentRef,
+  filterBy,
+}: DocumentTagStatsProps & { tagStats: TagStat[] }) {
   const filteredTagStats = useFilterStats(tagStats, filterBy);
 
   // The virtualizer

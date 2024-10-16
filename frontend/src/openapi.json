@@ -3203,16 +3203,16 @@
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
-            "name": "search_query",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "string", "title": "Search Query" }
-          },
-          {
             "name": "project_id",
             "in": "query",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "search_query",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "title": "Search Query" }
           },
           {
             "name": "expert_mode",
@@ -3257,11 +3257,70 @@
         }
       }
     },
-    "/search/code_stats": {
+    "/search/code_stats_by_search": {
+      "post": {
+        "tags": ["search"],
+        "summary": "Returns SpanEntityStats for the given search parameters.",
+        "operationId": "search_code_stats",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "code_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Code Id" } },
+          {
+            "name": "sort_by_global",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": false, "title": "Sort By Global" }
+          },
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "search_query",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "title": "Search Query" }
+          },
+          {
+            "name": "expert_mode",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "boolean", "title": "Expert Mode" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_search-search_code_stats" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SpanEntityStat" },
+                  "title": "Response Search-Search Code Stats"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/search/code_stats_by_sdocs": {
       "post": {
         "tags": ["search"],
         "summary": "Returns SpanEntityStats for the given SourceDocuments.",
-        "operationId": "search_code_stats",
+        "operationId": "filter_code_stats",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "code_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Code Id" } },
@@ -3286,7 +3345,7 @@
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/SpanEntityStat" },
-                  "title": "Response Search-Search Code Stats"
+                  "title": "Response Search-Filter Code Stats"
                 }
               }
             }
@@ -3298,11 +3357,75 @@
         }
       }
     },
-    "/search/keyword_stats": {
+    "/search/keyword_stats_by_search": {
+      "post": {
+        "tags": ["search"],
+        "summary": "Returns KeywordStats for the given seach parameters.",
+        "operationId": "search_keyword_stats",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "sort_by_global",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": false, "title": "Sort By Global" }
+          },
+          {
+            "name": "top_k",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 50, "title": "Top K" }
+          },
+          {
+            "name": "search_query",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "title": "Search Query" }
+          },
+          {
+            "name": "expert_mode",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "boolean", "title": "Expert Mode" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_search-search_keyword_stats" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/KeywordStat" },
+                  "title": "Response Search-Search Keyword Stats"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/search/keyword_stats_by_sdocs": {
       "post": {
         "tags": ["search"],
         "summary": "Returns KeywordStats for the given SourceDocuments.",
-        "operationId": "search_keyword_stats",
+        "operationId": "filter_keyword_stats",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -3338,7 +3461,7 @@
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/KeywordStat" },
-                  "title": "Response Search-Search Keyword Stats"
+                  "title": "Response Search-Filter Keyword Stats"
                 }
               }
             }
@@ -3350,11 +3473,69 @@
         }
       }
     },
-    "/search/tag_stats": {
+    "/search/tag_stats_by_search": {
+      "post": {
+        "tags": ["search"],
+        "summary": "Returns Stat for the given search parameters.",
+        "operationId": "search_tag_stats",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "sort_by_global",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": false, "title": "Sort By Global" }
+          },
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "search_query",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "title": "Search Query" }
+          },
+          {
+            "name": "expert_mode",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "boolean", "title": "Expert Mode" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_search-search_tag_stats" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TagStat" },
+                  "title": "Response Search-Search Tag Stats"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/search/tag_stats_by_sdocs": {
       "post": {
         "tags": ["search"],
         "summary": "Returns Stat for the given SourceDocuments.",
-        "operationId": "search_tag_stats",
+        "operationId": "filter_tag_stats",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -3378,7 +3559,7 @@
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/TagStat" },
-                  "title": "Response Search-Search Tag Stats"
+                  "title": "Response Search-Filter Tag Stats"
                 }
               }
             }
@@ -6258,6 +6439,32 @@
         "required": ["uploaded_files"],
         "title": "Body_project-upload_project_sdoc"
       },
+      "Body_search-search_code_stats": {
+        "properties": {
+          "filter": { "$ref": "#/components/schemas/Filter_SearchColumns_" },
+          "sorts": {
+            "items": { "$ref": "#/components/schemas/Sort_SearchColumns_" },
+            "type": "array",
+            "title": "Sorts"
+          }
+        },
+        "type": "object",
+        "required": ["filter", "sorts"],
+        "title": "Body_search-search_code_stats"
+      },
+      "Body_search-search_keyword_stats": {
+        "properties": {
+          "filter": { "$ref": "#/components/schemas/Filter_SearchColumns_" },
+          "sorts": {
+            "items": { "$ref": "#/components/schemas/Sort_SearchColumns_" },
+            "type": "array",
+            "title": "Sorts"
+          }
+        },
+        "type": "object",
+        "required": ["filter", "sorts"],
+        "title": "Body_search-search_keyword_stats"
+      },
       "Body_search-search_sdocs": {
         "properties": {
           "filter": { "$ref": "#/components/schemas/Filter_SearchColumns_" },
@@ -6270,6 +6477,19 @@
         "type": "object",
         "required": ["filter", "sorts"],
         "title": "Body_search-search_sdocs"
+      },
+      "Body_search-search_tag_stats": {
+        "properties": {
+          "filter": { "$ref": "#/components/schemas/Filter_SearchColumns_" },
+          "sorts": {
+            "items": { "$ref": "#/components/schemas/Sort_SearchColumns_" },
+            "type": "array",
+            "title": "Sorts"
+          }
+        },
+        "type": "object",
+        "required": ["filter", "sorts"],
+        "title": "Body_search-search_tag_stats"
       },
       "BooleanOperator": {
         "type": "string",
