@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 class SpanTextORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     # FIXME: index row size X exceeds btree version 4 maximum 2704 for index ... (Problem with very large annotations)
-    text: Mapped[str] = mapped_column(String, index=True)
+    text: Mapped[str] = mapped_column(String, index=True, unique=True)
 
     # one to many
     span_annotations: Mapped[List["SpanAnnotationORM"]] = relationship(

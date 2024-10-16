@@ -3,7 +3,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 # Properties shared across all DTOs
 class SpanTextBaseDTO(BaseModel):
-    text: str = Field(description="Code of the SpanText", default=None)
+    text: str = Field(description="Text of the SpanText", default=None)
 
 
 # Properties for creation
