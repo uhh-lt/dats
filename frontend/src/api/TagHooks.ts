@@ -50,6 +50,7 @@ const useBulkSetDocumentTags = () =>
         queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_TAGS, links.source_document_id] });
       });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TAG_STATISTICS] }); // todo: zu unspezifisch!
+      queryClient.invalidateQueries({ queryKey: [QueryKey.FILTER_TAG_STATISTICS] }); // todo: zu unspezifisch!
       // Invalidate cache of tag statistics query
       queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
     },
@@ -64,6 +65,7 @@ const useBulkLinkDocumentTags = () =>
         queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_TAGS, sdocId] });
       });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TAG_STATISTICS] }); // todo: zu unspezifisch!
+      queryClient.invalidateQueries({ queryKey: [QueryKey.FILTER_TAG_STATISTICS] });
       // Invalidate cache of tag statistics query
       queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
     },
@@ -78,6 +80,7 @@ const useBulkUnlinkDocumentTags = () =>
         queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_TAGS, sdocId] });
       });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TAG_STATISTICS] }); // todo: zu unspezifisch!
+      queryClient.invalidateQueries({ queryKey: [QueryKey.FILTER_TAG_STATISTICS] });
       // Invalidate cache of tag statistics query
       queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
     },
@@ -92,6 +95,7 @@ const useBulkUpdateDocumentTags = () =>
         queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_TAGS, sdocId] });
       });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TAG_STATISTICS] }); // todo: zu unspezifisch!
+      queryClient.invalidateQueries({ queryKey: [QueryKey.FILTER_TAG_STATISTICS] });
       // Invalidate cache of tag statistics query
       queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
     },
