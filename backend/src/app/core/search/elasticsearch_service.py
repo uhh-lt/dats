@@ -405,7 +405,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
         self,
         *,
         proj_id: int,
-        sdoc_ids: Set[int],
+        sdoc_ids: Optional[Set[int]],
         query: str,
         use_simple_query: bool = True,
         highlight: bool = False,
@@ -425,9 +425,16 @@ class ElasticSearchService(metaclass=SingletonMeta):
 
         highlight_query = {"fields": {"content": {}}} if highlight else None
 
+        # the sdoc_ids parameter is for filtering the search results
+        # if it is None, all documents are searched
+        bool_must_query = [q]
+        if sdoc_ids is not None:
+            # the terms query has an allowed maximum of 65536 terms
+            bool_must_query.append({"terms": {"sdoc_id": list(sdoc_ids)[:65536]}})
+
         return self.__search_sdocs(
             proj_id=proj_id,
-            query={"bool": {"must": [{"terms": {"sdoc_id": list(sdoc_ids)}}, q]}},
+            query={"bool": {"must": bool_must_query}},
             limit=limit,
             skip=skip,
             highlight=highlight_query,
