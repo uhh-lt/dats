@@ -8,5 +8,6 @@
   "typescript.preferences.importModuleSpecifierEnding": "js",
   "editor.codeActionsOnSave": {
     "source.organizeImports": "explicit"
-  }
+  },
+  "python.analysis.diagnosticMode": "workspace"
 }
