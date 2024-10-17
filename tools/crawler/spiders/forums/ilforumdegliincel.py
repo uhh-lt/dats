@@ -29,8 +29,7 @@ class IlforumdegliincelSpider(SpiderBase):
 
         # extract thread id
         match = re.search(r"(\?t=)(\w*)", self.current_thread)
-        if match:
-            thread_id = match.group(2)
+        thread_id = match.group(2) if match else -1
 
         # find the number of pages of this thread
         pages_element = response.css(
