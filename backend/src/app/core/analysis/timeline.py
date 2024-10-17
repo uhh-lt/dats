@@ -166,7 +166,7 @@ def timeline_analysis(
 
         query = db.query(
             sdoc_ids_agg,
-            *group_by.apply(subquery.c[1]),  # type: ignore
+            *group_by.apply(subquery.c["date"]),  # type: ignore
         ).join(subquery, SourceDocumentORM.id == subquery.c.id)
 
         query = apply_filtering(
