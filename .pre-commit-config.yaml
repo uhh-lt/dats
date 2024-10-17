@@ -23,6 +23,8 @@ repos:
         name: "Pyright"
         entry: bash -c 'ENV_NAME=dats source backend/_activate_current_env.sh && pyright'
         language: system
+        # only run on local machine
+        condition: '[ "${CI:-false}" = "false" ]'
   - repo: https://github.com/pre-commit/mirrors-eslint
     rev: v9.11.0
     hooks:
