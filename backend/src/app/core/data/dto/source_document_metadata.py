@@ -184,7 +184,7 @@ class SourceDocumentMetadataReadResolved(SourceDocumentMetadataBaseDTO):
                     id=sdoc_metadata_id,
                     str_value=None,
                     boolean_value=None,
-                    date_value=value if value is not None else datetime.now(),
+                    date_value=datetime.fromisoformat(value),
                     int_value=None,
                     list_value=None,
                     source_document_id=source_document_id,

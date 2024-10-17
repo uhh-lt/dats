@@ -2,7 +2,6 @@ from contextlib import contextmanager
 from typing import Generator
 
 from loguru import logger
-from pydantic import PostgresDsn
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -16,17 +15,9 @@ from config import conf
 class SQLService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         try:
-            db_uri = PostgresDsn.build(
-                scheme="postgresql",
-                username=conf.postgres.user,
-                password=conf.postgres.password,
-                host=conf.postgres.host,
-                port=int(conf.postgres.port),
-                path=f"{conf.postgres.db}",
-            )
-
+            db_uri = f"postgresql://{conf.postgres.user}:{conf.postgres.password}@{conf.postgres.host}:{conf.postgres.port}/{conf.postgres.db}"
             engine = create_engine(
-                str(db_uri),
+                db_uri,
                 pool_pre_ping=True,
                 pool_size=conf.postgres.pool.pool_size,
                 max_overflow=conf.postgres.pool.max_overflow,

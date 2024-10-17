@@ -28,5 +28,4 @@ for a in data["services"]:
     data["services"][a].pop("deploy", None)
 
 with open("compose-test.yml", "w") as f:
-    dumpy = yaml.dump(data, f)
-    f.write = dumpy
+    yaml.dump(data, f)

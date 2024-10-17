@@ -21,10 +21,8 @@ SHARED_REPO_ROOT: Path = Path(conf.repo_root)
 
 logger = logging.getLogger("ray.serve")
 
-cota_conf: Dict = build_ray_model_deployment_config("cota")
 
-
-@serve.deployment(**cota_conf)
+@serve.deployment(**build_ray_model_deployment_config("cota"))
 class CotaModel:
     def finetune_apply_compute(self, input: RayCOTAJobInput) -> RayCOTAJobResponse:
         # 1 finetune

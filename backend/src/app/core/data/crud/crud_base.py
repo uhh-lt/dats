@@ -13,6 +13,10 @@ CreateDTOType = TypeVar("CreateDTOType", bound=BaseModel)
 UpdateDTOType = TypeVar("UpdateDTOType", bound=BaseModel)
 
 
+class UpdateNotAllowed(BaseModel):
+    pass
+
+
 class NoSuchElementError(Exception):
     def __init__(self, model: Type[ORMModelType], **kwargs):
         self.model = model

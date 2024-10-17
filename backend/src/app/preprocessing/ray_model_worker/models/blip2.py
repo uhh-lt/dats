@@ -48,14 +48,16 @@ class Blip2Model:
             f"Loading Blip2ForConditionalGeneration {MODEL} with {PRECISION_BIT} precision ..."
         )
 
-        captioning_model: Blip2ForConditionalGeneration = (
-            Blip2ForConditionalGeneration.from_pretrained(
-                MODEL,
-                load_in_8bit=load_in_8bit,
-                device_map=device_map,
-                torch_dtype=data_type,
-            )
+        captioning_model = Blip2ForConditionalGeneration.from_pretrained(
+            pretrained_model_name_or_path=MODEL,
+            load_in_8bit=load_in_8bit,
+            device_map=device_map,
+            torch_dtype=data_type,
         )
+        assert isinstance(
+            captioning_model, Blip2ForConditionalGeneration
+        ), "Failed to load captioning model"
+
         captioning_model.eval()
         self.data_type = data_type
         self.feature_extractor = image_processor

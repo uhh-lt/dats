@@ -8,13 +8,15 @@ from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 
 
 class CustomLineHTMLParser(HTMLParser):
+    result: List[Dict[str, Union[str, int]]]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.result = None
+        self.result = []
 
     def reset(self):
         super().reset()
-        self.result = None
+        self.result = []
 
     @property
     def current_index(self):
@@ -35,13 +37,21 @@ class HTMLTextMapper(CustomLineHTMLParser):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.result = []
-        self.text = None
+        self.text = {
+            "text": "",
+            "start": 0,
+            "end": 0,
+        }
         self.end_spaces = 0
 
     def reset(self):
         super().reset()
         self.result = []
-        self.text = None
+        self.text = {
+            "text": "",
+            "start": 0,
+            "end": 0,
+        }
 
     def handle_data(self, data: str):
         # only add text if it is not only whitespaces!
@@ -70,11 +80,14 @@ class HTMLTextMapper(CustomLineHTMLParser):
         self.text_end()
 
     def text_end(self):
-        if self.text:
-            self.text["end"] = self.current_index - self.end_spaces
-            self.result.append(self.text)
-            self.text = ""
-            self.end_spaces = 0
+        self.text["end"] = self.current_index - self.end_spaces
+        self.result.append(self.text)
+        self.text = {
+            "text": "",
+            "start": 0,
+            "end": 0,
+        }
+        self.end_spaces = 0
 
     def close(self):
         super().close()

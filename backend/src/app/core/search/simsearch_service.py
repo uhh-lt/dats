@@ -118,9 +118,7 @@ class SimSearchService(metaclass=SingletonMeta):
 
         return super(SimSearchService, cls).__new__(cls)
 
-    def _encode_text(
-        self, text: Union[str, List[str]], return_avg_emb: bool = False
-    ) -> np.ndarray:
+    def _encode_text(self, text: List[str], return_avg_emb: bool = False) -> np.ndarray:
         encoded_query = self.rms.clip_text_embedding(ClipTextEmbeddingInput(text=text))
         if len(encoded_query.embeddings) == 1:
             return encoded_query.numpy().squeeze()
@@ -196,7 +194,7 @@ class SimSearchService(metaclass=SingletonMeta):
                     "sdoc_id": sdoc_id,
                 },
                 class_name=self._image_class_name,
-                vector=image_emb,
+                vector=image_emb.tolist(),
             )
 
     def remove_sdoc_from_index(self, doctype: str, sdoc_id: int):

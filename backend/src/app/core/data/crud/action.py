@@ -4,12 +4,12 @@ from typing import List, Optional
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
-from app.core.data.crud.crud_base import CRUDBase
+from app.core.data.crud.crud_base import CRUDBase, UpdateNotAllowed
 from app.core.data.dto.action import ActionCreate, ActionTargetObjectType, ActionType
 from app.core.data.orm.action import ActionORM
 
 
-class CRUDAction(CRUDBase[ActionORM, ActionCreate, None]):
+class CRUDAction(CRUDBase[ActionORM, ActionCreate, UpdateNotAllowed]):
     def create(self, db: Session, *, create_dto: ActionCreate) -> ActionORM:
         # we have to override this to avoid recursion
         dto_obj_data = jsonable_encoder(create_dto)

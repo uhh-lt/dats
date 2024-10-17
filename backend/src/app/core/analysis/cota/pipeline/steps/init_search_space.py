@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 from typing import Dict, List, Optional
 
@@ -40,7 +41,7 @@ def init_search_space(cargo: Cargo) -> Cargo:
                 top_k=cota.training_settings.search_space_topk,
                 threshold=cota.training_settings.search_space_threshold,
                 filter=Filter[SearchColumns](
-                    items=[], logic_operator=LogicalOperator.and_
+                    id=str(uuid.uuid4()), items=[], logic_operator=LogicalOperator.and_
                 ),
             ),
         )

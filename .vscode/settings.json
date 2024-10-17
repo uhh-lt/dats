@@ -1,6 +1,5 @@
 {
   "python.envFile": "${workspaceFolder}/backend/.env",
-  "python.analysis.extraPaths": ["./backend/src"],
   "python.autoComplete.extraPaths": ["./backend/src"],
   "editor.formatOnSave": true,
   "prettier.configPath": "./frontend/package.json",
@@ -8,5 +7,6 @@
   "typescript.preferences.importModuleSpecifierEnding": "js",
   "editor.codeActionsOnSave": {
     "source.organizeImports": "explicit"
-  }
+  },
+  "python.analysis.diagnosticMode": "workspace"
 }

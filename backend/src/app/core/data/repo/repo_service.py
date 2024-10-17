@@ -66,6 +66,13 @@ class UnsupportedDocTypeForSourceDocument(Exception):
         )
 
 
+class UnsupportedDocTypeForMimeType(Exception):
+    def __init__(self, mime_type: str):
+        super().__init__(
+            f"Unsupported DocType! Cannot infer DocType from MimeType '{mime_type}'."
+        )
+
+
 class ErroneousArchiveException(Exception):
     def __init__(self, archive_path: Path):
         super().__init__(f"Error with Archive {archive_path}")

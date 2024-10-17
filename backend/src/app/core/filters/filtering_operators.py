@@ -1,7 +1,9 @@
 from enum import Enum
-from typing import List, Union
 
-from sqlalchemy import Column, not_
+from sqlalchemy import not_
+from sqlalchemy.orm import QueryableAttribute
+
+from app.core.filters.filtering import FilterValue
 
 
 class FilterValueType(Enum):
@@ -28,7 +30,7 @@ class BooleanOperator(Enum):
     EQUALS = "BOOLEAN_EQUALS"
     NOT_EQUALS = "BOOLEAN_NOT_EQUALS"
 
-    def apply(self, column: Column, value: bool):
+    def apply(self, column: QueryableAttribute, value: FilterValue):
         if not isinstance(value, bool):
             raise ValueError("Invalid value type for BooleanOperator (requires bool)!")
 
@@ -46,7 +48,7 @@ class StringOperator(Enum):
     STARTS_WITH = "STRING_STARTS_WITH"
     ENDS_WITH = "STRING_ENDS_WITH"
 
-    def apply(self, column: Column, value: str):
+    def apply(self, column: QueryableAttribute, value: FilterValue):
         if not isinstance(value, str):
             raise ValueError("Invalid value type for StringOperator (requires str)!")
 
@@ -67,7 +69,14 @@ class IDOperator(Enum):
     EQUALS = "ID_EQUALS"
     NOT_EQUALS = "ID_NOT_EQUALS"
 
-    def apply(self, column: Column, value: int | str):
+    def apply(
+        self,
+        column: QueryableAttribute,
+        value: FilterValue,
+    ):
+        if not isinstance(value, (int, str)):
+            raise ValueError("Invalid value type for IDOperator (requires int or str)!")
+
         match self:
             case IDOperator.EQUALS:
                 return column == value
@@ -83,7 +92,7 @@ class NumberOperator(Enum):
     GTE = "NUMBER_GTE"
     LTE = "NUMBER_LTE"
 
-    def apply(self, column: Column, value: int):
+    def apply(self, column: QueryableAttribute, value: FilterValue):
         if not isinstance(value, int):
             raise ValueError("Invalid value type for NumberOperator (requires int)!")
 
@@ -106,7 +115,17 @@ class IDListOperator(Enum):
     CONTAINS = "ID_LIST_CONTAINS"
     NOT_CONTAINS = "ID_LIST_NOT_CONTAINS"
 
-    def apply(self, column, value: Union[str, List[str]]):
+    def apply(self, column, value: FilterValue):
+        if not isinstance(value, (str, list)):
+            raise ValueError(
+                "Invalid value type for IDListOperator (requires str or list)!"
+            )
+        if len(value) > 0 and not isinstance(value[0], str):
+            raise ValueError(
+                "Invalid value type for ListOperator (requires List[str])!"
+            )
+
+        # value should be Union[str, List[str]]
         if isinstance(column, tuple):
             if isinstance(value, str) and (len(column) == 2):
                 # Column is tuple of ORMs, e.g. (SourceDocumentORM.document_tags, DocumentTagORM.id)
@@ -143,7 +162,7 @@ class ListOperator(Enum):
     CONTAINS = "LIST_CONTAINS"
     NOT_CONTAINS = "LIST_NOT_CONTAINS"
 
-    def apply(self, column, value: List[str]):
+    def apply(self, column: QueryableAttribute, value: FilterValue):
         if not isinstance(value, list):
             raise ValueError(
                 "Invalid value type for ListOperator (requires List[str])!"
@@ -167,7 +186,7 @@ class DateOperator(Enum):
     GTE = "DATE_GTE"
     LTE = "DATE_LTE"
 
-    def apply(self, column: Column, value: str):
+    def apply(self, column: QueryableAttribute, value: FilterValue):
         if not isinstance(value, str):
             raise ValueError("Invalid value type for DateOperator (requires str)!")
 

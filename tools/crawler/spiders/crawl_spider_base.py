@@ -54,14 +54,11 @@ class CrawlSpiderBase(scrapy.spiders.CrawlSpider):
             filename = self.generate_filename(response=response)
 
         filename_with_extension = f"{filename}.html"
-        try:
-            with open(
-                self.output_dir / filename_with_extension, "w", encoding="UTF-8"
-            ) as f:
-                f.write(response.body.decode(response.encoding))
-        except UnicodeDecodeError:
-            with open(self.output_dir / filename_with_extension, "wb") as f2:
-                f2.write(response.body)
+        with open(
+            self.output_dir / filename_with_extension, "w", encoding="UTF-8"
+        ) as f:
+            f.write(response.text)
+
         self.log(f"Saved raw html {filename_with_extension}")
 
     def _create_cookies_dict(self, cookie: str) -> Dict[str, str]:
@@ -95,10 +92,7 @@ class CrawlSpiderBase(scrapy.spiders.CrawlSpider):
             filename if filename else self.generate_filename(response=response)
         )
 
-        try:
-            item["raw_html"] = response.body.decode(response.encoding)
-        except UnicodeDecodeError:
-            item["raw_html"] = response.body
+        item["raw_html"] = response.text
 
         if html:
             item["extracted_html"] = html

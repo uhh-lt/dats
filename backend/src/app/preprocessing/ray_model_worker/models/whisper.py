@@ -1,7 +1,7 @@
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 import numpy as np
 import torch
@@ -57,9 +57,7 @@ class WhisperModel:
         )
 
         with torch.no_grad():
-            result: Tuple[Dict[str, Any], Any] = self.model.transcribe(
-                audio=audionp, **transcribe_options
-            )
+            result = self.model.transcribe(audio=audionp, **transcribe_options)
             transcriptions = list(result[0])
 
         segments: List[SegmentTranscription] = []
@@ -69,6 +67,9 @@ class WhisperModel:
                 start_ms=int(segment.start * 1000),
                 end_ms=int(segment.end * 1000),
             )
+            if segment.words is None:
+                continue
+
             for word in segment.words:
                 words.append(
                     WordTranscription(

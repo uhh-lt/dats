@@ -31,6 +31,7 @@ from app.core.data.dto.preprocessing_job_payload import (
 from app.core.data.repo.repo_service import (
     FileNotFoundInRepositoryError,
     RepoService,
+    UnsupportedDocTypeForMimeType,
     UnsupportedDocTypeForSourceDocument,
 )
 from app.core.db.sql_service import SQLService
@@ -53,6 +54,11 @@ class PreprocessingService(metaclass=SingletonMeta):
         payloads: List[PreprocessingJobPayloadCreateWithoutPreproJobId] = []
         for uploaded_file in uploaded_files:
             mime_type = uploaded_file.content_type
+            if mime_type is None:
+                raise HTTPException(
+                    detail="Could not determine MIME type of uploaded file!",
+                    status_code=406,
+                )
             if not mime_type_supported(mime_type=mime_type):
                 raise HTTPException(
                     detail=f"Document with MIME type {mime_type} not supported!",
@@ -74,6 +80,11 @@ class PreprocessingService(metaclass=SingletonMeta):
                 continue
 
             doc_type = get_doc_type(mime_type=mime_type)
+            if doc_type is None:
+                raise HTTPException(
+                    detail=f"Document with MIME type {mime_type} not supported!",
+                    status_code=406,
+                )
 
             payloads.append(
                 PreprocessingJobPayloadCreateWithoutPreproJobId(
@@ -103,6 +114,9 @@ class PreprocessingService(metaclass=SingletonMeta):
             try:
                 mime_type = magic.from_file(file_path, mime=True)
                 doc_type = get_doc_type(mime_type=mime_type)
+                if not doc_type:
+                    logger.error(f"Unsupported DocType (for MIME Type {mime_type})!")
+                    raise UnsupportedDocTypeForMimeType(mime_type=mime_type)
 
                 payloads.append(
                     PreprocessingJobPayloadCreateWithoutPreproJobId(
@@ -116,6 +130,7 @@ class PreprocessingService(metaclass=SingletonMeta):
             except (
                 FileNotFoundInRepositoryError,
                 UnsupportedDocTypeForSourceDocument,
+                UnsupportedDocTypeForMimeType,
                 Exception,
             ) as e:
                 logger.warning(
@@ -291,9 +306,7 @@ class PreprocessingService(metaclass=SingletonMeta):
 
     def _get_pipeline(self, doc_type: DocType) -> PreprocessingPipeline:
         if doc_type not in self._pipelines:
-            self._pipelines[doc_type] = PreprocessingPipeline(
-                doc_type=doc_type, num_workers=1, force_sequential=True
-            )
+            self._pipelines[doc_type] = PreprocessingPipeline(doc_type=doc_type)
         return self._pipelines[doc_type]
 
     def get_text_pipeline(self) -> PreprocessingPipeline:

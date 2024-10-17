@@ -2,18 +2,19 @@ from typing import Dict, List
 
 from sqlalchemy.orm import Session
 
-from app.core.data.crud.crud_base import CRUDBase, ORMModelType, UpdateDTOType
+from app.core.data.crud.crud_base import (
+    CRUDBase,
+    UpdateNotAllowed,
+)
 from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.source_document_link import SourceDocumentLinkORM
 
 
 class CRUDSourceDocumentLink(
-    CRUDBase[SourceDocumentLinkORM, SourceDocumentLinkCreate, None]
+    CRUDBase[SourceDocumentLinkORM, SourceDocumentLinkCreate, UpdateNotAllowed]
 ):
-    def update(
-        self, db: Session, *, id: int, update_dto: UpdateDTOType
-    ) -> ORMModelType:
+    def update(self, db: Session, *, id: int, update_dto):
         raise NotImplementedError()
 
     def resolve_filenames_to_sdoc_ids(
@@ -37,8 +38,7 @@ class CRUDSourceDocumentLink(
             ),
             SourceDocumentORM.project_id == proj_id,
         )
-        # noinspection PyTypeChecker
-        sdoc_fn_to_id: Dict[str, int] = dict(query2.all())
+        sdoc_fn_to_id: Dict[str, int] = {filename: id for filename, id in query2.all()}
 
         resolved_links: List[SourceDocumentLinkORM] = []
 

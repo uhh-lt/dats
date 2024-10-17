@@ -1,6 +1,6 @@
 import secrets
 from datetime import UTC, datetime, timedelta
-from typing import Dict, Optional, Tuple
+from typing import Dict, Tuple
 
 from jose import jwt
 from loguru import logger
@@ -38,7 +38,7 @@ def generate_jwt(user: UserORM) -> Tuple[str, datetime]:
     return (token, expire)
 
 
-def decode_jwt(token: str) -> Optional[Dict]:
+def decode_jwt(token: str) -> Dict:
     try:
         return jwt.decode(
             token, __jwt_secret, algorithms=__algo, options={"verify_aud": False}

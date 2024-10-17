@@ -238,10 +238,12 @@ temp = {upload_file[1][0]: upload_file for upload_file in files}
 files = list(temp.values())
 
 
-def upload_file_batch(file_batch: List[Tuple[str, Tuple[str, bytes, str]]]):
+def upload_file_batch(
+    project_id: int, file_batch: List[Tuple[str, Tuple[str, bytes, str]]]
+):
     # file upload
     preprocessing_job = api.upload_files(
-        proj_id=project["id"],
+        proj_id=project_id,
         files=file_batch,
         filter_duplicate_files_before_upload=args.filter_duplicate_files_before_upload,
     )
@@ -294,7 +296,9 @@ for i in tqdm(
     desc="Uploading batches... ",
     total=num_batches,
 ):
-    upload_file_batch(file_batch=files[i : i + args.batch_size])
+    upload_file_batch(
+        project_id=project["id"], file_batch=files[i : i + args.batch_size]
+    )
     api.refresh_login()
     if args.max_num_docs != -1 and (i + args.batch_size) >= args.max_num_docs:
         break

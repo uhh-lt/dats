@@ -26,14 +26,16 @@ logger = logging.getLogger("ray.serve")
 class ViTGPT2Model:
     def __init__(self):
         logger.debug(f"Loading ViTFeatureExtractor {MODEL} ...")
-        image_processor: ViTFeatureExtractor = ViTFeatureExtractor.from_pretrained(
-            MODEL
-        )
+        image_processor = ViTFeatureExtractor.from_pretrained(MODEL)
+        assert isinstance(
+            image_processor, ViTFeatureExtractor
+        ), "Failed to load feature extractor"
 
         logger.debug(f"Loading VisionEncoderDecoderModel {MODEL} ...")
-        captioning_model: VisionEncoderDecoderModel = (
-            VisionEncoderDecoderModel.from_pretrained(MODEL)
-        )
+        captioning_model = VisionEncoderDecoderModel.from_pretrained(MODEL)
+        assert isinstance(
+            captioning_model, VisionEncoderDecoderModel
+        ), "Failed to load captioning model"
         captioning_model.to(DEVICE)
         captioning_model.eval()
 

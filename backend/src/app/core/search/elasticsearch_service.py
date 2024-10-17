@@ -51,13 +51,22 @@ class ElasticSearchService(metaclass=SingletonMeta):
                     f"Cannot find ElasticSearch Document Index Mapping: {doc_mappings_path}"
                 )
 
-            memo_mappings = srsly.read_json(memo_mappings_path)
             doc_mappings = srsly.read_json(doc_mappings_path)
-
-            cls.doc_index_fields = set(doc_mappings["properties"].keys())
-            cls.memo_index_fields = set(memo_mappings["properties"].keys())
-
+            if isinstance(doc_mappings, dict) and "properties" in doc_mappings:
+                cls.doc_index_fields = set(doc_mappings["properties"].keys())
+            else:
+                raise ValueError(
+                    "Invalid doc_mappings format or 'properties' key missing"
+                )
             cls.doc_mappings = doc_mappings
+
+            memo_mappings = srsly.read_json(memo_mappings_path)
+            if isinstance(memo_mappings, dict) and "properties" in memo_mappings:
+                cls.memo_index_fields = set(memo_mappings["properties"].keys())
+            else:
+                raise ValueError(
+                    "Invalid doc_mappings format or 'properties' key missing"
+                )
             cls.memo_mappings = memo_mappings
 
             # ElasticSearch Connection
@@ -113,7 +122,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
         *,
         index: str,
         mappings: Dict[str, Any],
-        settings: Dict[str, Any] = None,
+        settings: Optional[Dict[str, Any]] = None,
         replace_if_exists: bool = False,
     ) -> None:
         if replace_if_exists and self.__client.indices.exists(index=index):
@@ -136,9 +145,14 @@ class ElasticSearchService(metaclass=SingletonMeta):
 
     def create_project_indices(self, *, proj_id: int) -> None:
         # create the ES Index for Documents
-        doc_settings = conf.elasticsearch.index_settings.docs
-        if doc_settings is not None:
-            doc_settings = srsly.read_json(doc_settings)
+        doc_settings_path = Path(conf.elasticsearch.index_settings.docs)
+        if not doc_settings_path.exists():
+            raise FileNotFoundError(
+                f"Cannot find ElasticSearch Doc Index Settings: {doc_settings_path}"
+            )
+        doc_settings = srsly.read_json(doc_settings_path)
+        if not isinstance(doc_settings, dict):
+            raise ValueError("Invalid doc_settings format.")
 
         self.__create_index(
             index=self.__get_index_name(proj_id=proj_id, index_type="doc"),
@@ -148,9 +162,15 @@ class ElasticSearchService(metaclass=SingletonMeta):
         )
 
         # create the ES Index for Memos
-        memo_settings = conf.elasticsearch.index_settings.memos
-        if memo_settings is not None:
-            memo_settings = srsly.read_json(memo_settings)
+        memo_settings_path = Path(conf.elasticsearch.index_settings.memos)
+        if not memo_settings_path.exists():
+            raise FileNotFoundError(
+                f"Cannot find ElasticSearch Memo Index Settings: {memo_settings_path}"
+            )
+        memo_settings = srsly.read_json(memo_settings_path)
+        if not isinstance(memo_settings, dict):
+            raise ValueError("Invalid memo_settings format.")
+
         self.__create_index(
             index=self.__get_index_name(proj_id=proj_id, index_type="memo"),
             mappings=self.memo_mappings,

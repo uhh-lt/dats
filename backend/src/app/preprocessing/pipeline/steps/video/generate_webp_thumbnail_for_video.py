@@ -14,8 +14,12 @@ repo = RepoService()
 def generate_webp_thumbnail_for_video(cargo: PipelineCargo) -> PipelineCargo:
     ppvd: PreProVideoDoc = cargo.data["ppvd"]
 
+    assert isinstance(ppvd.metadata["duration"], str), "Duration is not a string"
+    assert isinstance(ppvd.metadata["width"], str), "Width is not a string"
+
     half_time = float(ppvd.metadata["duration"]) // 2
     frame_width = int(ppvd.metadata["width"])
+
     try:
         # get the frame at half time of the video
         half_time_frame, err = (

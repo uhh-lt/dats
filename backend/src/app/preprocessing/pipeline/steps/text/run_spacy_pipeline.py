@@ -8,6 +8,8 @@ rms = RayModelService()
 
 def run_spacy_pipeline(cargo: PipelineCargo) -> PipelineCargo:
     pptd: PreProTextDoc = cargo.data["pptd"]
+
+    assert isinstance(pptd.metadata["language"], str), "Language is not a string"
     spacy_input: SpacyInput = SpacyInput(
         text=pptd.text,
         language=pptd.metadata["language"],
