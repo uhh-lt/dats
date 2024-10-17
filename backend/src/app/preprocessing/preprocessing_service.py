@@ -31,13 +31,19 @@ from app.core.data.dto.preprocessing_job_payload import (
 from app.core.data.repo.repo_service import (
     FileNotFoundInRepositoryError,
     RepoService,
-    UnsupportedDocTypeForMimeType,
     UnsupportedDocTypeForSourceDocument,
 )
 from app.core.db.sql_service import SQLService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.preprocessing_pipeline import PreprocessingPipeline
 from app.util.singleton_meta import SingletonMeta
+
+
+class UnsupportedDocTypeForMimeType(Exception):
+    def __init__(self, mime_type: str):
+        super().__init__(
+            f"Unsupported DocType! Cannot infer DocType from MimeType '{mime_type}'."
+        )
 
 
 class PreprocessingService(metaclass=SingletonMeta):

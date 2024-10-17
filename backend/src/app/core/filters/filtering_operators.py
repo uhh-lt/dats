@@ -3,7 +3,7 @@ from enum import Enum
 from sqlalchemy import not_
 from sqlalchemy.orm import QueryableAttribute
 
-from app.core.filters.filtering import FilterValue
+from app.core.filters.types import FilterValue
 
 
 class FilterValueType(Enum):
