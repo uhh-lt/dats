@@ -361,14 +361,14 @@ class AnalysisService(metaclass=SingletonMeta):
             sample_fixed = (
                 df.groupby(by=list(groups))
                 .sample(n=min(n, min_count))
-                .groupby(by=list(groups))["sdoc"]
+                .groupby(by=list(groups))["sdoc"]  # type: ignore
                 .apply(list)
                 .to_dict()
             )
             sample_relative = (
                 df.groupby(by=list(groups))
                 .sample(frac=frac)
-                .groupby(by=list(groups))["sdoc"]
+                .groupby(by=list(groups))["sdoc"]  # type: ignore
                 .apply(list)
                 .to_dict()
             )
