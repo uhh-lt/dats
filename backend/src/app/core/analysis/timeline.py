@@ -160,17 +160,19 @@ def timeline_analysis(
             .subquery()
         )
 
+        subquery.c
+
         sdoc_ids_agg = aggregate_ids(SourceDocumentORM.id, label="sdoc_ids")
 
         query = db.query(
             sdoc_ids_agg,
-            *group_by.apply(subquery.c["date"]),  # EXTRACT (WEEK FROM TIMESTAMP ...)
+            *group_by.apply(subquery.c[1]),  # type: ignore
         ).join(subquery, SourceDocumentORM.id == subquery.c.id)
 
         query = apply_filtering(
             query=query, filter=filter, db=db, subquery_dict=subquery.c
         )
-        query = query.group_by(*group_by.apply(column=subquery.c["date"]))
+        query = query.group_by(*group_by.apply(column=subquery.c["date"]))  # type: ignore
 
         result_rows = query.all()
 

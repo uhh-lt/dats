@@ -26,7 +26,7 @@ class HTMLCleanPipeline:
         cleaner = clean.Cleaner(
             safe_attrs_only=True, safe_attrs=safe_attrs, kill_tags=kill_tags
         )
-        html_content = cleaner.clean_html(html_content)
+        html_content = str(cleaner.clean_html(html_content))
 
         # manually remove tags
         html_content = html_content.replace("<div>", "")

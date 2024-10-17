@@ -2,8 +2,8 @@ from enum import Enum
 from typing import Generic, List, TypeVar, Union
 
 from pydantic import BaseModel
-from sqlalchemy import Column, asc, desc
-from sqlalchemy.orm import Session
+from sqlalchemy import asc, desc
+from sqlalchemy.orm import QueryableAttribute, Session
 
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.dto.project_metadata import ProjectMetadataRead
@@ -14,7 +14,7 @@ class SortDirection(str, Enum):
     ASC = "asc"
     DESC = "desc"
 
-    def apply(self, column: Column):
+    def apply(self, column: QueryableAttribute):
         match self:
             case SortDirection.ASC:
                 return asc(column).nulls_last()

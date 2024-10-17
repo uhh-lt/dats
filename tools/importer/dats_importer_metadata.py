@@ -92,7 +92,11 @@ project_metadata_map = {meta["key"]: meta for meta in project_metadatas}
 for key, metatype in zip(args.metadata_keys, args.metadata_types):
     if key not in project_metadata_map:
         project_metadata = api.create_project_metadata(
-            proj_id=project["id"], key=key, metatype=metatype, doctype=args.doctype
+            proj_id=project["id"],
+            key=key,
+            metatype=metatype,
+            doctype=args.doctype,
+            description=key,
         )
         project_metadata_map[key] = project_metadata
 

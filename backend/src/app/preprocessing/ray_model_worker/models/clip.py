@@ -6,6 +6,7 @@ from dto.clip import (
     ClipImageEmbeddingInput,
     ClipTextEmbeddingInput,
 )
+from numpy import ndarray
 from PIL import Image
 from ray import serve
 from ray_config import build_ray_model_deployment_config, conf
@@ -53,6 +54,7 @@ class ClipModel:
                 device=TEXT_DEVICE,
                 convert_to_numpy=True,
             )
+            assert isinstance(encoded_text, ndarray), "Failed to encode texts"
 
             return ClipEmbeddingOutput(embeddings=encoded_text.tolist())
 
@@ -61,13 +63,15 @@ class ClipModel:
 
         with torch.no_grad():
             encoded_images = self.image_encoder.encode(
-                sentences=images,
+                sentences=images,  # type: ignore
                 batch_size=IMAGE_BATCH_SIZE,
                 show_progress_bar=False,
                 normalize_embeddings=True,
                 device=IMAGE_DEVICE,
                 convert_to_numpy=True,
             )
+            assert isinstance(encoded_images, ndarray), "Failed to encode images"
+
             # close the images
             for img in images:
                 img.close()

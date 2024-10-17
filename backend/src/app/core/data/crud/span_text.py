@@ -2,14 +2,14 @@ from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.core.data.crud.crud_base import CRUDBase
+from app.core.data.crud.crud_base import CRUDBase, UpdateNotAllowed
 from app.core.data.dto.span_text import SpanTextCreate
 from app.core.data.orm.span_text import SpanTextORM
 
 
-class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, None]):
-    def update(self, db: Session, *, id: int, update_dto) -> SpanTextORM:
-        # Flo: We no not want to update SourceDocument
+class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
+    def update(self, db: Session, *, id: int, update_dto):
+        # Flo: We no not want to update SpanText
         raise NotImplementedError()
 
     def create(self, db: Session, *, create_dto: SpanTextCreate) -> SpanTextORM:

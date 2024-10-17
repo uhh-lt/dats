@@ -20,9 +20,12 @@ def get_all_apps(
     return apps
 
 
-def rename_app_names(generated_spec_fp: Path, spec_out_fp: Path) -> dict:
+def rename_app_names(generated_spec_fp: Path, spec_out_fp: Path):
     print("Renaming generated app names...")
     spec = srsly.read_yaml(generated_spec_fp)
+    if not isinstance(spec, dict) or "applications" not in spec:
+        raise ValueError("Invalid spec format: 'applications' key not found")
+
     for app in spec["applications"]:
         app["name"] = app["route_prefix"].split("/")[1]
 

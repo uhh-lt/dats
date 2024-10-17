@@ -23,8 +23,14 @@ class IlforumdegliincelSpider(SpiderBase):
 
     def parse(self, response, **kwargs):
         # set current thread
-        self.current_thread = re.search(r"(\?t=\w*)", response.url).group(1)
-        thread_id = re.search(r"(\?t=)(\w*)", self.current_thread).group(2)
+        match = re.search(r"(\?t=\w*)", response.url)
+        if match:
+            self.current_thread = match.group(1)
+
+        # extract thread id
+        match = re.search(r"(\?t=)(\w*)", self.current_thread)
+        if match:
+            thread_id = match.group(2)
 
         # find the number of pages of this thread
         pages_element = response.css(

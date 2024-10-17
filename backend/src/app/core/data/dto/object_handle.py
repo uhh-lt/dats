@@ -15,12 +15,13 @@ class ObjectHandleBaseDTO(BaseModel):
     document_tag_id: Optional[int] = None
     memo_id: Optional[int] = None
 
-    # noinspection PyMethodParameters
-    @model_validator(mode="before")  # TODO: Before == root?
-    def check_at_least_one_not_null(cls, values):
-        for val in values:
-            if val:
-                return values
+    @model_validator(mode="after")
+    def check_at_least_one_not_null(self):
+        # make sure that at least one of the fields is not null
+        values = self.model_dump()
+        for val in values.values():
+            if val is not None:
+                return self
         raise ValueError("At least one of the fields has to be not null!")
 
 

@@ -91,7 +91,7 @@ class ExportJobParameters(BaseModel):
     export_job_type: ExportJobType = Field(
         description="The type of the export job (what to export)"
     )
-    export_format: Optional[ExportFormat] = Field(
+    export_format: ExportFormat = Field(
         description="The format of the exported data.",
         default=ExportFormat.CSV,
     )

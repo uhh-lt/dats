@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Tuple
+from typing import Tuple
 
 from app.celery.background_jobs.cota import start_cota_refinement_job_
 from app.celery.background_jobs.crawl import start_crawler_job_
@@ -14,7 +14,6 @@ from app.celery.background_jobs.preprocess import (
 )
 from app.celery.background_jobs.trainer import (
     start_trainer_job_,
-    use_trainer_model_task_,
 )
 from app.celery.celery_worker import celery_worker
 from app.core.data.dto.crawler_job import CrawlerJobRead
@@ -39,15 +38,6 @@ def start_cota_refinement_job_task(cota_job_id: str) -> None:
 )
 def start_trainer_job_task(trainer_job_id: str) -> None:
     start_trainer_job_(trainer_job_id=trainer_job_id)
-
-
-@celery_worker.task(
-    acks_late=True,
-    autoretry_for=(Exception,),
-    retry_kwargs={"max_retries": 0, "countdown": 5},
-)
-def use_trainer_model_task(trainer_job_id: str) -> List[float]:
-    return use_trainer_model_task_(trainer_job_id=trainer_job_id)
 
 
 @celery_worker.task(acks_late=True)

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.data.crud.action import crud_action
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.code import crud_code
-from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
+from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError, UpdateNotAllowed
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
@@ -30,7 +30,7 @@ from app.core.data.orm.user import UserORM
 from app.core.db.sql_service import SQLService
 
 
-class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
+class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, UpdateNotAllowed]):
     __obj_id_crud_map = {
         "code_id": crud_code,
         "document_tag_id": crud_document_tag,
@@ -65,11 +65,18 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
             if isinstance(e.orig, UniqueViolation):
                 db.close()  # Flo: close the session because we have to start a new transaction
                 with SQLService().db_session() as sess:
-                    for obj_id_key, obj_id_val in create_dto.model_dump().items():
-                        if obj_id_val:
-                            return self.read_by_attached_object_id(
-                                db=sess, obj_id_key=obj_id_key, obj_id_val=obj_id_val
-                            )
+                    obj_id_key, obj_id_val = next(
+                        filter(
+                            lambda item: item[0] is not None and item[1] is not None,
+                            create_dto.model_dump().items(),
+                        ),
+                        (None, None),
+                    )
+                    if obj_id_key is not None and obj_id_val is not None:
+                        return self.read_by_attached_object_id(
+                            db=sess, obj_id_key=obj_id_key, obj_id_val=obj_id_val
+                        )
+                    raise e
             else:
                 # Flo: re-raise Exception since it's not a UC Violation
                 raise e

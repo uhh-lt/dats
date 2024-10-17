@@ -20,7 +20,6 @@ def run_object_detection(cargo: PipelineCargo) -> PipelineCargo:
             y_min=box.y_min,
             x_max=box.x_max,
             y_max=box.y_max,
-            confidence=box.confidence,
         )
         ppid.bboxes.append(bbox)
 

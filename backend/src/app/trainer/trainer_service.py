@@ -1,9 +1,7 @@
-from typing import List
-
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from app.celery.background_jobs import start_trainer_job_async, use_trainer_model_async
+from app.celery.background_jobs import start_trainer_job_async
 from app.core.data.crud.project import crud_project
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.trainer_job import (
@@ -37,13 +35,13 @@ class TrainerService(metaclass=SingletonMeta):
 
         return trainer_job_read
 
-    def use_trainer_model(self, *, db: Session, trainer_job_id: str) -> List[float]:
+    def use_trainer_model(self, *, db: Session, trainer_job_id: str):
         # make sure the trainer job exists!
         trainer_job = self.redis.load_trainer_job(trainer_job_id)
         # make sure the project exists!
         crud_project.read(db=db, id=trainer_job.parameters.project_id)
 
-        return use_trainer_model_async(trainer_job_id=trainer_job_id).get()
+        # return use_trainer_model_async(trainer_job_id=trainer_job_id).get()
 
     def _start_trainer_job_sync(self, trainer_job_id: str) -> TrainerJobRead:
         trainer_job = self.redis.load_trainer_job(trainer_job_id)

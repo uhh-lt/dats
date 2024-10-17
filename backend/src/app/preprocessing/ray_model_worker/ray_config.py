@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any, Dict
+from typing import Dict, TypedDict
 
 from omegaconf import DictConfig, OmegaConf
 
@@ -9,12 +9,17 @@ logger = logging.getLogger("ray.serve")
 # global config
 __conf_file__ = os.getenv("RAY_CONFIG", "./config.yaml")
 conf = OmegaConf.load(__conf_file__)
-assert isinstance(conf, DictConfig), f"Cannot load Ray Config from {__conf_file__}"
 
 logger.info(f"Loaded config '{__conf_file__}'")
 
 
-def build_ray_model_deployment_config(name: str) -> Dict[str, Dict[str, Any]]:
+class RayDeploymentConfig(TypedDict):
+    ray_actor_options: Dict
+    autoscaling_config: Dict
+
+
+def build_ray_model_deployment_config(name: str) -> RayDeploymentConfig:
+    assert isinstance(conf, DictConfig), f"Invalid Ray Config format ({__conf_file__})"
     cc = conf.get(name, None)
     if cc is None:
         raise KeyError(f"Cannot access {name} in {__conf_file__}")

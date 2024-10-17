@@ -5,7 +5,7 @@ import spacy
 from dto.spacy import SpacyInput, SpacyPipelineOutput, SpacySpan, SpacyToken
 from ray import serve
 from ray_config import build_ray_model_deployment_config, conf
-from spacy import Language
+from spacy.language import Language
 
 cc = conf.spacy
 
@@ -31,7 +31,7 @@ class SpacyModel:
                     if len(DEVICE) > 4 and ":" in DEVICE
                     else 0
                 )
-                spacy.require_gpu(gpu_id=device_id)
+                spacy.require_gpu(gpu_id=device_id)  # type: ignore
 
         nlp: Dict[str, Language] = dict()
 
@@ -65,7 +65,6 @@ class SpacyModel:
                 text=token.text,
                 start_char=token.idx,
                 end_char=token.idx + len(token.text),
-                label=token.ent_type_,
                 pos=token.pos_,
                 lemma=token.lemma_,
                 is_stopword=token.is_stop,

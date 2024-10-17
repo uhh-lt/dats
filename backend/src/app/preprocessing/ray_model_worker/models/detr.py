@@ -23,16 +23,21 @@ class DETRModel:
     def __init__(self):
         logger.debug(f"Loading DetrFeatureExtractor {MODEL} ...")
         feature_extractor = DetrFeatureExtractor.from_pretrained(MODEL, device=DEVICE)
+        assert isinstance(
+            feature_extractor, DetrFeatureExtractor
+        ), "Failed to load feature extractor"
 
         logger.debug(f"Loading DetrForObjectDetection {MODEL} ...")
-        object_detection_model: DetrForObjectDetection = (
-            DetrForObjectDetection.from_pretrained(MODEL)
-        )
+        object_detection_model = DetrForObjectDetection.from_pretrained(MODEL)
+        assert isinstance(
+            object_detection_model, DetrForObjectDetection
+        ), "Failed to load object detection model"
+
         object_detection_model.to(DEVICE)
         object_detection_model.eval()
 
-        self.feature_extractor: DetrFeatureExtractor = feature_extractor
-        self.object_detection_model: DetrForObjectDetection = object_detection_model
+        self.feature_extractor = feature_extractor
+        self.object_detection_model = object_detection_model
 
     def object_detection(self, input: DETRFilePathInput) -> DETRObjectDetectionOutput:
         with Image.open(input.image_fp) as img:

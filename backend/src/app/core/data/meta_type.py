@@ -1,6 +1,8 @@
+from datetime import datetime
 from enum import Enum
+from typing import List
 
-from sqlalchemy import Column
+from sqlalchemy.orm import QueryableAttribute
 
 from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.filters.filtering_operators import FilterOperator
@@ -13,8 +15,9 @@ class MetaType(str, Enum):
     BOOLEAN = "BOOLEAN"
     LIST = "LIST"
 
-    # TODO: was ist der richtige typ?
-    def get_metadata_column(self) -> Column:
+    def get_metadata_column(
+        self,
+    ) -> QueryableAttribute[str | int | bool | datetime | List[str] | None]:
         match self:
             case MetaType.STRING:
                 return SourceDocumentMetadataORM.str_value

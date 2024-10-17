@@ -5,7 +5,7 @@
 
 
 # useful for handling different item types with a single interface
-from readability.readability import Readability
+from readability.readability import Readability  # type: ignore
 
 from crawler.items import GenericWebsiteItem
 

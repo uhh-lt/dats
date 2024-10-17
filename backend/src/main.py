@@ -14,7 +14,7 @@ from fastapi.routing import APIRoute
 from loguru import logger
 from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
-from uvicorn.main import uvicorn
+from uvicorn.main import run
 
 #####################################################################################################################
 #                                               READ BEFORE CHANGING                                                #
@@ -286,7 +286,7 @@ def main() -> None:
 
     is_debug = conf.api.production_mode == "0"
 
-    uvicorn.run(
+    run(
         "main:app",
         host="0.0.0.0",
         port=port,

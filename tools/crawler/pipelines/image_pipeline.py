@@ -8,7 +8,7 @@ from crawler.spiders.utils import slugify
 
 
 class MyImagesPipeline(ImagesPipeline):
-    def file_path(self, request, response=None, info=None, *, item=None):
+    def file_path(self, request, response=None, info=None, *, item):
         # the name of the html page (without .html)
         file_name = item["file_name"]
 

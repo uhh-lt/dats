@@ -36,6 +36,8 @@ class LogicalOperator(str, Enum):
 
 T = TypeVar("T", bound=AbstractColumns)
 
+FilterValue = Union[bool, str, int, List[str], List[List[str]]]
+
 
 class FilterExpression(BaseModel, Generic[T]):
     id: str
@@ -49,7 +51,7 @@ class FilterExpression(BaseModel, Generic[T]):
         DateOperator,
         BooleanOperator,
     ]
-    value: Union[bool, str, int, List[str], List[List[str]]]
+    value: FilterValue
 
     def get_sqlalchemy_expression(self, **kwargs):
         if isinstance(self.column, int):

@@ -603,13 +603,10 @@ class ExportService(metaclass=SingletonMeta):
             )
 
         # export the data
-        export_data = None
+        export_data = pd.DataFrame()
         for adoc in all_adocs:
             adoc_data = self.__generate_export_df_for_adoc(db=db, adoc=adoc)
-            if export_data is None:
-                export_data = adoc_data
-            else:
-                export_data = pd.concat((export_data, adoc_data))
+            export_data = pd.concat((export_data, adoc_data))
 
         # write single file for all annos of that doc
         export_file = self.__write_export_data_to_temp_file(
@@ -656,15 +653,12 @@ class ExportService(metaclass=SingletonMeta):
                 f"There are no memos for User {user_id} in Project {project_id}!"
             )
 
-        export_data = None
+        export_data = pd.DataFrame()
         for memo in memos:
             memo_data = self.__generate_export_df_for_memo(
                 db=db, memo_id=memo.id, memo=memo
             )
-            if export_data is None:
-                export_data = memo_data
-            else:
-                export_data = pd.concat((export_data, memo_data))
+            export_data = pd.concat((export_data, memo_data))
 
         export_file = self.__write_export_data_to_temp_file(
             data=export_data,

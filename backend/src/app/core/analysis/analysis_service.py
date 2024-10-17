@@ -165,7 +165,7 @@ class AnalysisService(metaclass=SingletonMeta):
                     CodeORM.id == code_id,
                 )
             )
-            query = query.group_by(SourceDocumentORM, CodeORM, SpanTextORM.text)
+            query = query.group_by(SourceDocumentORM.id, CodeORM.id, SpanTextORM.text)
             res = query.all()
             span_code_occurrences = [
                 CodeOccurrence(
@@ -205,7 +205,9 @@ class AnalysisService(metaclass=SingletonMeta):
                 )
             )
             query = query.group_by(
-                SourceDocumentORM, CodeORM, BBoxAnnotationORM.annotation_document_id
+                SourceDocumentORM.id,
+                CodeORM.id,
+                BBoxAnnotationORM.annotation_document_id,
             )
             res = query.all()
             bbox_code_occurrences = [
