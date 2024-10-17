@@ -7238,7 +7238,7 @@
             "description": "The type of the export job (what to export)"
           },
           "export_format": {
-            "anyOf": [{ "$ref": "#/components/schemas/ExportFormat" }, { "type": "null" }],
+            "allOf": [{ "$ref": "#/components/schemas/ExportFormat" }],
             "description": "The format of the exported data.",
             "default": "CSV"
           },

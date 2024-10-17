@@ -18,6 +18,7 @@ from app.core.filters.filtering_operators import (
     NumberOperator,
     StringOperator,
 )
+from app.core.filters.types import FilterValue
 
 
 class LogicalOperator(str, Enum):
@@ -35,8 +36,6 @@ class LogicalOperator(str, Enum):
 
 
 T = TypeVar("T", bound=AbstractColumns)
-
-FilterValue = Union[bool, str, int, List[str], List[List[str]]]
 
 
 class FilterExpression(BaseModel, Generic[T]):

@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import Any, List
 
+from celery import Task
+
 from app.core.data.crawler.crawler_service import CrawlerService
 from app.core.data.dto.crawler_job import CrawlerJobParameters, CrawlerJobRead
 from app.core.data.dto.export_job import ExportJobParameters, ExportJobRead
@@ -15,6 +17,8 @@ def start_cota_refinement_job_async(
 ) -> None:
     from app.celery.background_jobs.tasks import start_cota_refinement_job_task
 
+    assert isinstance(start_cota_refinement_job_task, Task), "Not a Celery Task"
+
     start_cota_refinement_job_task.apply_async(kwargs={"cota_job_id": cota_job_id})
 
 
@@ -23,6 +27,8 @@ def start_trainer_job_async(
 ) -> None:
     from app.celery.background_jobs.tasks import start_trainer_job_task
 
+    assert isinstance(start_trainer_job_task, Task), "Not a Celery Task"
+
     start_trainer_job_task.apply_async(kwargs={"trainer_job_id": trainer_job_id})
 
 
@@ -30,6 +36,8 @@ def import_uploaded_archive_apply_async(
     archive_file_path: Path, project_id: int
 ) -> Any:
     from app.celery.background_jobs.tasks import import_uploaded_archive
+
+    assert isinstance(import_uploaded_archive, Task), "Not a Celery Task"
 
     return import_uploaded_archive.apply_async(
         kwargs={"archive_file_path_and_project_id": (archive_file_path, project_id)},
@@ -40,6 +48,8 @@ def prepare_and_start_export_job_async(
     export_params: ExportJobParameters,
 ) -> ExportJobRead:
     from app.celery.background_jobs.tasks import start_export_job
+
+    assert isinstance(start_export_job, Task), "Not a Celery Task"
 
     exs: ExportService = ExportService()
     ex_job = exs.prepare_export_job(export_params)
@@ -55,16 +65,19 @@ def prepare_and_start_crawling_job_async(
         start_crawler_job,
     )
 
+    assert isinstance(start_crawler_job, Task), "Not a Celery Task"
+    assert isinstance(import_uploaded_archive, Task), "Not a Celery Task"
+
     cs: CrawlerService = CrawlerService()
     cj = cs.prepare_crawler_job(crawler_params)
-    start_export_job_chain = (
-        # crawl the data via scrapy and zip the data
-        start_crawler_job.signature(kwargs={"crawler_job": cj})
-        |
-        # import the zip
-        # TODO create a PPJ for the import
-        import_uploaded_archive.signature()
-    )
+
+    job1 = start_crawler_job.signature(kwargs={"crawler_job": cj})
+    job2 = import_uploaded_archive.signature()
+
+    assert job1 is not None, "Job 1 is None"
+    assert job2 is not None, "Job 2 is None"
+
+    start_export_job_chain = job1 | job2
     start_export_job_chain.apply_async()
 
     return cj
@@ -74,6 +87,8 @@ def prepare_and_start_llm_job_async(
     llm_job_params: LLMJobParameters,
 ) -> LLMJobRead:
     from app.celery.background_jobs.tasks import start_llm_job
+
+    assert isinstance(start_llm_job, Task), "Not a Celery Task"
 
     llms: LLMService = LLMService()
     llm_job = llms.prepare_llm_job(llm_job_params)
@@ -88,6 +103,10 @@ def execute_text_preprocessing_pipeline_apply_async(
         execute_text_preprocessing_pipeline_task,
     )
 
+    assert isinstance(
+        execute_text_preprocessing_pipeline_task, Task
+    ), "Not a Celery Task"
+
     for cargo in cargos:
         execute_text_preprocessing_pipeline_task.apply_async(kwargs={"cargo": cargo})
 
@@ -98,6 +117,10 @@ def execute_image_preprocessing_pipeline_apply_async(
     from app.celery.background_jobs.tasks import (
         execute_image_preprocessing_pipeline_task,
     )
+
+    assert isinstance(
+        execute_image_preprocessing_pipeline_task, Task
+    ), "Not a Celery Task"
 
     for cargo in cargos:
         execute_image_preprocessing_pipeline_task.apply_async(kwargs={"cargo": cargo})
@@ -110,6 +133,10 @@ def execute_audio_preprocessing_pipeline_apply_async(
         execute_audio_preprocessing_pipeline_task,
     )
 
+    assert isinstance(
+        execute_audio_preprocessing_pipeline_task, Task
+    ), "Not a Celery Task"
+
     for cargo in cargos:
         execute_audio_preprocessing_pipeline_task.apply_async(kwargs={"cargo": cargo})
 
@@ -120,6 +147,10 @@ def execute_video_preprocessing_pipeline_apply_async(
     from app.celery.background_jobs.tasks import (
         execute_video_preprocessing_pipeline_task,
     )
+
+    assert isinstance(
+        execute_video_preprocessing_pipeline_task, Task
+    ), "Not a Celery Task"
 
     for cargo in cargos:
         execute_video_preprocessing_pipeline_task.apply_async(kwargs={"cargo": cargo})

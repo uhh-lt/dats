@@ -1,5 +1,5 @@
 ci:
-  skip: [eslint]
+  skip: [eslint, pyright]
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
@@ -17,6 +17,12 @@ repos:
         args: [--fix]
       # Run the formatter.
       - id: ruff-format
+  - repo: local
+    hooks:
+      - id: pyright
+        name: "Pyright"
+        entry: bash -c 'ENV_NAME=dats source backend/_activate_current_env.sh && pyright'
+        language: system
   - repo: https://github.com/pre-commit/mirrors-eslint
     rev: v9.11.0
     hooks:

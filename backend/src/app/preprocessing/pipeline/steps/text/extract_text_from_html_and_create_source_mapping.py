@@ -1,14 +1,20 @@
 import re
 from html.parser import HTMLParser
 from itertools import accumulate
-from typing import Dict, List, Union
+from typing import List, Optional, TypedDict
 
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 
 
+class Text(TypedDict):
+    text: str
+    start: int
+    end: int
+
+
 class CustomLineHTMLParser(HTMLParser):
-    result: List[Dict[str, Union[str, int]]]
+    result: List[Text]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -23,7 +29,7 @@ class CustomLineHTMLParser(HTMLParser):
         line, char = self.getpos()
         return self.line_lengths[line - 1] + char
 
-    def __call__(self, data: str) -> List[Dict[str, Union[str, int]]]:
+    def __call__(self, data: str) -> List[Text]:
         self.reset()
         self.line_lengths = [0] + list(
             accumulate(len(line) for line in data.splitlines(keepends=True))
@@ -37,21 +43,13 @@ class HTMLTextMapper(CustomLineHTMLParser):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.result = []
-        self.text = {
-            "text": "",
-            "start": 0,
-            "end": 0,
-        }
+        self.text: Optional[Text] = None
         self.end_spaces = 0
 
     def reset(self):
         super().reset()
         self.result = []
-        self.text = {
-            "text": "",
-            "start": 0,
-            "end": 0,
-        }
+        self.text = None
 
     def handle_data(self, data: str):
         # only add text if it is not only whitespaces!
@@ -68,6 +66,7 @@ class HTMLTextMapper(CustomLineHTMLParser):
             self.text = {
                 "text": data.strip(),
                 "start": self.current_index + start_spaces,
+                "end": -1,
             }
 
     def handle_starttag(self, tag, attrs):
@@ -80,14 +79,11 @@ class HTMLTextMapper(CustomLineHTMLParser):
         self.text_end()
 
     def text_end(self):
-        self.text["end"] = self.current_index - self.end_spaces
-        self.result.append(self.text)
-        self.text = {
-            "text": "",
-            "start": 0,
-            "end": 0,
-        }
-        self.end_spaces = 0
+        if self.text:
+            self.text["end"] = self.current_index - self.end_spaces
+            self.result.append(self.text)
+            self.text = None
+            self.end_spaces = 0
 
     def close(self):
         super().close()
