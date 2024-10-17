@@ -22,7 +22,7 @@ export type ExportJobParameters = {
   /**
    * The format of the exported data.
    */
-  export_format?: ExportFormat | null;
+  export_format?: ExportFormat;
   /**
    * Specific parameters for the export job w.r.t it's type
    */
