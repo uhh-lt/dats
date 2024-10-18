@@ -7,6 +7,7 @@ from app.preprocessing.pipeline.model.video.preprovideodoc import PreProVideoDoc
 
 def create_and_store_audio_stream_file(cargo: PipelineCargo) -> PipelineCargo:
     ppvd: PreProVideoDoc = cargo.data["ppvd"]
+    # TODO: Multiple periods in filename will cause issues
     audio_filepath = ppvd.filepath.with_suffix(".mp3")
 
     try:

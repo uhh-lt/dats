@@ -4,48 +4,48 @@ from fastapi.testclient import TestClient
 # The licence for the respective work is linked in the commentary
 # https://commons.wikimedia.org/wiki/File:Armstrong_Small_Step.ogg
 audio_doc1 = (
-    "https://upload.wikimedia.org/wikipedia/commons/d/dd/Armstrong_Small_Step.ogg",
+    "https://ltdata1.informatik.uni-hamburg.de/dats/Armstrong_Small_Step.ogg",
     "Armstrong_Small_Step.ogg",
 )
 
 # https://commons.wikimedia.org/wiki/File:Kennedy_berliner.ogg
 audio_doc2 = (
-    "https://upload.wikimedia.org/wikipedia/commons/4/41/Kennedy_berliner.ogg",
+    "https://ltdata1.informatik.uni-hamburg.de/dats/Kennedy_berliner.ogg",
     "Kennedy_berliner.ogg",
 )
 
-# https://librivox.org/coffee-break-collection-25-water-by-various/
+# https://commons.wikimedia.org/wiki/File:Alpine_specialty_by_George_P._Watson.mp3
 audio_doc3 = (
-    "https://ia903105.us.archive.org/34/items/cb025_1911_librivox/cb25_09_various_128kb.mp3",
-    "cb25_09_various_128kb.mp3",
+    "https://ltdata1.informatik.uni-hamburg.de/dats/Alpine_specialty_by_George_P._Watson.mp3",
+    "Alpine_specialty_by_George_P._Watson.mp3",
 )
 
-# https://ia803203.us.archive.org/0/items/sammlung_gedicht_012_librivox/deutschegedichte012_08_thule_lis.mp3
+# https://commons.wikimedia.org/wiki/File:Bluetooth.ogg
 audio_doc4 = (
-    "https://ia803203.us.archive.org/0/items/sammlung_gedicht_012_librivox/deutschegedichte012_08_thule_lis.mp3",
-    "deutschegedichte012_08_thule_lis.mp3",
+    "https://ltdata1.informatik.uni-hamburg.de/dats/Bluetooth.ogg",
+    "Bluetooth.ogg",
 )
 
 # https://commons.wikimedia.org/wiki/File:GG1949.png
 image_doc1 = (
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/GG1949.png/737px-GG1949.png",
+    "https://ltdata1.informatik.uni-hamburg.de/dats/737px-GG1949.png",
     "737px-GG1949.png",
 )
 
 # https://commons.wikimedia.org/wiki/File:Amanecer_desde_la_cima_del_Everest_por_Carlos_Pauner.JPG
 image_doc2 = (
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Amanecer_desde_la_cima_del_Everest_por_Carlos_Pauner.JPG/640px-Amanecer_desde_la_cima_del_Everest_por_Carlos_Pauner.JPG",
+    "https://ltdata1.informatik.uni-hamburg.de/dats/640px-Amanecer_desde_la_cima_del_Everest_por_Carlos_Pauner.JPG",
     "640px-Amanecer_desde_la_cima_del_Everest_por_Carlos_Pauner.JPG",
 )
 
 # https://commons.wikimedia.org/wiki/File:Space_Shuttle_Columbia_launching.jpg
 image_doc3 = (
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Space_Shuttle_Columbia_launching.jpg/1024px-Space_Shuttle_Columbia_launching.jpg",
+    "https://ltdata1.informatik.uni-hamburg.de/dats/1024px-Space_Shuttle_Columbia_launching.jpg",
     "Space_Shuttle_Columbia_launching.jpg",
 )
 # https://commons.wikimedia.org/wiki/File:Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg
 image_doc4 = (
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg/1280px-Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg",
+    "https://ltdata1.informatik.uni-hamburg.de/dats/1280px-Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg",
     "Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg",
 )
 
@@ -66,27 +66,27 @@ text_doc3 = (
 # https://de.wikipedia.org/wiki/Otter
 text_doc4 = ("https://de.wikipedia.org/wiki/Otter", "Otter – Wikipedia.html")
 
-# https://commons.wikimedia.org/wiki/File:Abertas_inscri%C3%A7%C3%B5es_para_pr%C3%AAmio_que_incentiva_projetos_ligados_a_arte_nas_ruas.webm
+# https://commons.wikimedia.org/wiki/File:Stephen_Amell_about_flashbacks_of_Arrow_at_NerdHQ_2014.webm
 video_doc1 = (
-    "https://upload.wikimedia.org/wikipedia/commons/d/d0/Abertas_inscri%C3%A7%C3%B5es_para_pr%C3%AAmio_que_incentiva_projetos_ligados_a_arte_nas_ruas.webm",
+    "https://ltdata1.informatik.uni-hamburg.de/dats/Abertas_inscri%C3%A7%C3%B5es_para_pr%C3%AAmio_que_incentiva_projetos_ligados_a_arte_nas_ruas.webm",
     "Abertas_inscrições_para_prêmio_que_incentiva_projetos_ligados_a_arte_nas_ruas.webm",
 )
 
 # https://commons.wikimedia.org/wiki/File:Google_translate_accent_differences.mpg
 video_doc2 = (
-    "https://upload.wikimedia.org/wikipedia/commons/transcoded/3/38/Google_translate_accent_differences.mpg/Google_translate_accent_differences.mpg.240p.vp9.webm",
+    "https://ltdata1.informatik.uni-hamburg.de/dats/Google_translate_accent_differences.mpg.240p.vp9.webm",
     "Google_translate_accent_differences.mpg.240p.vp9.webm",
 )
 
 # https://upload.wikimedia.org/wikipedia/commons/6/64/2012-07-18_Market_Street_-_San_Francisco.webm
 video_doc3 = (
-    "https://upload.wikimedia.org/wikipedia/commons/transcoded/6/64/2012-07-18_Market_Street_-_San_Francisco.webm/2012-07-18_Market_Street_-_San_Francisco.webm.480p.vp9.webm",
+    "https://ltdata1.informatik.uni-hamburg.de/dats/2012-07-18_Market_Street_-_San_Francisco.webm.480p.vp9.webm",
     "2012-07-18_Market_Street_-_San_Francisco.webm.480p.vp9.webm",
 )
 
 # https://commons.wikimedia.org/wiki/File:Schlossbergbahn.webm
 video_doc4 = (
-    "https://upload.wikimedia.org/wikipedia/commons/transcoded/8/87/Schlossbergbahn.webm/Schlossbergbahn.webm.360p.webm",
+    "https://ltdata1.informatik.uni-hamburg.de/dats/Schlossbergbahn.webm.360p.webm",
     "Schlossbergbahn.webm.360p.webm",
 )
 
