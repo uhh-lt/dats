@@ -53,6 +53,8 @@ export const QueryKey = {
 
   // a single document (by sdoc id)
   SDOC: "sdoc",
+  // a single document's data (by sdoc id)
+  SDOC_DATA: "sdocData",
   // all tags of a document (by sdoc id)
   SDOC_TAGS: "sdocTags",
   // Count how many source documents each tag has
