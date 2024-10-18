@@ -5,26 +5,38 @@ interface TableData {
   total_results: number;
 }
 
-interface UseTableInfiniteScrollProps<T, U> {
-  tableContainerRef: React.RefObject<HTMLDivElement>;
+interface UseTransformInfiniteDataProps<T, U> {
   data: InfiniteData<T> | undefined;
-  isFetching: boolean;
-  fetchNextPage: () => void;
   flatMapData: (page: T) => U[];
 }
 
-export const useTableInfiniteScroll = <T extends TableData, U>({
-  tableContainerRef,
+export const useTransformInfiniteData = <T extends TableData, U>({
   data,
-  isFetching,
-  fetchNextPage,
   flatMapData,
-}: UseTableInfiniteScrollProps<T, U>) => {
+}: UseTransformInfiniteDataProps<T, U>) => {
   // create a flat array of data mapped from id to row
   const flatData = useMemo(() => data?.pages.flatMap(flatMapData) ?? [], [flatMapData, data]);
   const totalResults = data?.pages?.[0]?.total_results ?? 0;
   const totalFetched = flatData.length;
 
+  return { flatData, totalResults, totalFetched };
+};
+
+interface UseTableFetchMoreOnScrollProps {
+  tableContainerRef: React.RefObject<HTMLDivElement>;
+  isFetching: boolean;
+  fetchNextPage: () => void;
+  totalFetched: number;
+  totalResults: number;
+}
+
+export const useTableFetchMoreOnScroll = ({
+  tableContainerRef,
+  isFetching,
+  fetchNextPage,
+  totalFetched,
+  totalResults,
+}: UseTableFetchMoreOnScrollProps) => {
   // infinite scrolling
   // called on scroll and possibly on mount to fetch more data as the user scrolls and reaches bottom of table
   const fetchMoreOnScroll = useCallback(
@@ -44,5 +56,31 @@ export const useTableInfiniteScroll = <T extends TableData, U>({
     fetchMoreOnScroll(tableContainerRef.current);
   }, [tableContainerRef, fetchMoreOnScroll]);
 
+  return fetchMoreOnScroll;
+};
+
+interface UseTableInfiniteScrollProps<T, U> {
+  tableContainerRef: React.RefObject<HTMLDivElement>;
+  data: InfiniteData<T> | undefined;
+  isFetching: boolean;
+  fetchNextPage: () => void;
+  flatMapData: (page: T) => U[];
+}
+
+export const useTableInfiniteScroll = <T extends TableData, U>({
+  tableContainerRef,
+  data,
+  isFetching,
+  fetchNextPage,
+  flatMapData,
+}: UseTableInfiniteScrollProps<T, U>) => {
+  const { flatData, totalResults, totalFetched } = useTransformInfiniteData({ data, flatMapData });
+  const fetchMoreOnScroll = useTableFetchMoreOnScroll({
+    tableContainerRef,
+    isFetching,
+    fetchNextPage,
+    totalFetched,
+    totalResults,
+  });
   return { fetchMoreOnScroll, flatData, totalResults, totalFetched };
 };

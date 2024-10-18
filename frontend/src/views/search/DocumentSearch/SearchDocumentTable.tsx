@@ -33,7 +33,7 @@ import { selectSelectedDocumentIds } from "../../../components/tableSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
 import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
-import { useTableInfiniteScroll } from "../../../utils/useTableInfiniteScroll.ts";
+import { useTableFetchMoreOnScroll, useTransformInfiniteData } from "../../../utils/useTableInfiniteScroll.ts";
 import { SearchFilterActions } from "../searchFilterSlice.ts";
 import { useInitSearchFilterSlice } from "../useInitSearchFilterSlice.ts";
 import SearchOptionsMenu from "./SearchOptionsMenu.tsx";
@@ -184,25 +184,10 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
     },
     refetchOnWindowFocus: false,
   });
-
-  // infinite scrolling
-  const tableContainerRef = useRef<HTMLDivElement>(null);
-  const { flatData, fetchMoreOnScroll } = useTableInfiniteScroll({
-    tableContainerRef,
+  const { flatData, totalFetched, totalResults } = useTransformInfiniteData({
     data,
-    isFetching,
-    fetchNextPage,
     flatMapData,
   });
-
-  // infinite scrolling reset
-  useEffect(() => {
-    try {
-      rowVirtualizerInstanceRef.current?.scrollToIndex?.(0);
-    } catch (error) {
-      console.error(error);
-    }
-  }, [projectId, searchQuery, filter, sortingModel]);
 
   // table
   const table = useMaterialReactTable<ElasticSearchDocumentHit>({
@@ -286,6 +271,24 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
     positionToolbarAlertBanner: "head-overlay",
   });
 
+  // infinite scrolling
+  // fetch more
+  const fetchMoreOnScroll = useTableFetchMoreOnScroll({
+    tableContainerRef: table.refs.tableContainerRef,
+    isFetching,
+    fetchNextPage,
+    totalFetched,
+    totalResults,
+  });
+  // reset
+  useEffect(() => {
+    try {
+      rowVirtualizerInstanceRef.current?.scrollToIndex?.(0);
+    } catch (error) {
+      console.error(error);
+    }
+  }, [projectId, searchQuery, filter, sortingModel]);
+
   return (
     <>
       <Toolbar
@@ -330,7 +333,6 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
         <MRT_TableContainer
           table={table}
           style={{ flexGrow: 1 }}
-          ref={tableContainerRef}
           onScroll={(event) => fetchMoreOnScroll(event.target as HTMLDivElement)}
         />
       </Card>
