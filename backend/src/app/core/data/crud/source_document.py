@@ -4,7 +4,7 @@ import srsly
 from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
 
-from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
+from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.dto.action import ActionType
 from app.core.data.dto.document_tag import DocumentTagRead
@@ -14,7 +14,6 @@ from app.core.data.dto.source_document import (
     SourceDocumentRead,
     SourceDocumentReadAction,
     SourceDocumentUpdate,
-    SourceDocumentWithDataRead,
 )
 from app.core.data.dto.source_document_data import SourceDocumentDataRead
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
@@ -57,78 +56,25 @@ class CRUDSourceDocument(
             raise SourceDocumentPreprocessingUnfinishedError(sdoc_id=sdoc_id)
         return status
 
-    def read_with_data(self, db: Session, *, id: int) -> SourceDocumentWithDataRead:
+    def read_data(self, db: Session, *, id: int) -> Optional[SourceDocumentDataRead]:
         db_obj = (
-            db.query(self.model, SourceDocumentDataORM)
-            .join(SourceDocumentDataORM, isouter=True)
-            .filter(self.model.id == id)
+            db.query(SourceDocumentDataORM)
+            .filter(SourceDocumentDataORM.id == id)
             .first()
         )
-        if not db_obj:
-            raise NoSuchElementError(self.model, id=id)
-        sdoc, data = db_obj.tuple()
-        sdoc_read = SourceDocumentRead.model_validate(sdoc)
+        return SourceDocumentDataRead.model_validate(db_obj) if db_obj else None
 
-        # sdoc data is None for audio and video documents
-        if data is None:
-            sdoc_data_read = SourceDocumentDataRead(
-                id=sdoc.id,
-                content="",
-                html="",
-                token_starts=[],
-                token_ends=[],
-                sentence_starts=[],
-                sentence_ends=[],
-                tokens=[],
-                token_character_offsets=[],
-                sentences=[],
-                sentence_character_offsets=[],
-            )
-        else:
-            sdoc_data_read = SourceDocumentDataRead.model_validate(data)
-        return SourceDocumentWithDataRead(
-            **(sdoc_read.model_dump() | sdoc_data_read.model_dump())
-        )
-
-    def read_with_data_batch(
+    def read_data_batch(
         self, db: Session, *, ids: List[int]
-    ) -> List[SourceDocumentWithDataRead]:
+    ) -> List[Optional[SourceDocumentDataORM]]:
         db_objs = (
-            db.query(SourceDocumentORM, SourceDocumentDataORM)
-            .join(SourceDocumentDataORM, isouter=True)
-            .filter(SourceDocumentORM.id.in_(ids))
+            db.query(SourceDocumentDataORM)
+            .filter(SourceDocumentDataORM.id.in_(ids))
             .all()
         )
-
-        results = []
-        for db_obj in db_objs:
-            sdoc, data = db_obj
-            sdoc_read = SourceDocumentRead.model_validate(sdoc)
-
-            if data is None:
-                sdoc_data_read = SourceDocumentDataRead(
-                    id=sdoc.id,
-                    content="",
-                    html="",
-                    token_starts=[],
-                    token_ends=[],
-                    sentence_starts=[],
-                    sentence_ends=[],
-                    tokens=[],
-                    token_character_offsets=[],
-                    sentences=[],
-                    sentence_character_offsets=[],
-                )
-            else:
-                sdoc_data_read = SourceDocumentDataRead.model_validate(data)
-
-            results.append(
-                SourceDocumentWithDataRead(
-                    **(sdoc_read.model_dump() | sdoc_data_read.model_dump())
-                )
-            )
-
-        return results
+        # create id, data map
+        id2data = {db_obj.id: db_obj for db_obj in db_objs}
+        return [id2data.get(id) for id in ids]
 
     def remove(self, db: Session, *, id: int) -> SourceDocumentORM:
         # Import SimSearchService here to prevent a cyclic dependency

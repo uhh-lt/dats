@@ -7,7 +7,6 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.core.data.doc_type import DocType
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.dto_base import UpdateDTOBase
-from app.core.data.dto.source_document_data import SourceDocumentDataRead
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
 
 SDOC_FILENAME_MAX_LENGTH = 200
@@ -56,8 +55,4 @@ class SourceDocumentReadAction(SourceDocumentRead):
 
 
 class SourceDocumentCreate(SourceDocumentBaseDTO):
-    pass
-
-
-class SourceDocumentWithDataRead(SourceDocumentRead, SourceDocumentDataRead):
     pass

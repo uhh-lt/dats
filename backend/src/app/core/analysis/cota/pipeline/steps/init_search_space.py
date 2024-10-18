@@ -8,8 +8,8 @@ from app.core.data.dto.concept_over_time_analysis import (
     COTASentence,
 )
 from app.core.data.dto.search import SearchColumns, SimSearchQuery
-from app.core.data.dto.source_document import SourceDocumentWithDataRead
 from app.core.data.orm.source_document import SourceDocumentORM
+from app.core.data.orm.source_document_data import SourceDocumentDataORM
 from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.db.sql_service import SQLService
 from app.core.filters.filtering import Filter, LogicalOperator
@@ -91,24 +91,26 @@ def add_sentences_to_search_space(
 
     # get the data from the database
     with sqls.db_session() as db:
-        sdoc_data = crud_sdoc.read_with_data_batch(db=db, ids=sdoc_ids)
+        sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=sdoc_ids)
 
     # map the data
-    sdoc_id2sdocreadwithdata: Dict[int, SourceDocumentWithDataRead] = {
-        sdoc_data_read.id: sdoc_data_read for sdoc_data_read in sdoc_data
+    sdoc_id2sdocdata: Dict[int, SourceDocumentDataORM] = {
+        sdoc_data_read.id: sdoc_data_read
+        for sdoc_data_read in sdoc_datas
+        if sdoc_data_read is not None
     }
 
     sentences = []
     for cota_sent in search_space:
-        if cota_sent.sdoc_id not in sdoc_id2sdocreadwithdata:
+        if cota_sent.sdoc_id not in sdoc_id2sdocdata:
             raise ValueError(
-                f"Could not find SourceDocumentWithDataRead for sdoc_id {cota_sent.sdoc_id}!"
+                f"Could not find SourceDocumentDataORM for sdoc_id {cota_sent.sdoc_id}!"
             )
-        sdoc_data_read = sdoc_id2sdocreadwithdata[cota_sent.sdoc_id]
+        sdoc_data_read = sdoc_id2sdocdata[cota_sent.sdoc_id]
 
         if cota_sent.sentence_id >= len(sdoc_data_read.sentences):
             raise ValueError(
-                f"Could not find sentence with id {cota_sent.sentence_id} in SourceDocumentWithDataRead with id {sdoc_data_read.id}!"
+                f"Could not find sentence with id {cota_sent.sentence_id} in SourceDocumentDataORM with id {sdoc_data_read.id}!"
             )
         sentences.append(sdoc_data_read.sentences[cota_sent.sentence_id])
 
