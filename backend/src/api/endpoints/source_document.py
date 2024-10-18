@@ -34,8 +34,8 @@ from app.core.data.dto.memo import (
 from app.core.data.dto.source_document import (
     SourceDocumentRead,
     SourceDocumentUpdate,
-    SourceDocumentWithDataRead,
 )
+from app.core.data.dto.source_document_data import SourceDocumentDataRead
 from app.core.data.dto.source_document_metadata import (
     SourceDocumentMetadataReadResolved,
 )
@@ -54,7 +54,7 @@ router = APIRouter(
 
 @router.get(
     "/{sdoc_id}",
-    response_model=SourceDocumentWithDataRead,
+    response_model=SourceDocumentRead,
     summary="Returns the SourceDocument with the given ID if it exists",
 )
 def get_by_id(
@@ -63,13 +63,53 @@ def get_by_id(
     sdoc_id: int,
     only_if_finished: bool = True,
     authz_user: AuthzUser = Depends(),
-) -> SourceDocumentWithDataRead:
+) -> SourceDocumentRead:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
     if not only_if_finished:
         crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
 
-    return crud_sdoc.read_with_data(db=db, id=sdoc_id)
+    return SourceDocumentRead.model_validate(crud_sdoc.read(db=db, id=sdoc_id))
+
+
+@router.get(
+    "/data/{sdoc_id}",
+    response_model=SourceDocumentDataRead,
+    summary="Returns the SourceDocumentData with the given ID if it exists",
+)
+def get_by_id_with_data(
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    only_if_finished: bool = True,
+    authz_user: AuthzUser = Depends(),
+) -> SourceDocumentDataRead:
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
+    if not only_if_finished:
+        crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
+
+    sdoc_data = crud_sdoc.read_data(db=db, id=sdoc_id)
+    if sdoc_data is None:
+        # if data is none, that means the document is not a text document
+        # instead of returning html, we return the URL to the image / video / audio file
+        sdoc = SourceDocumentRead.model_validate(crud_sdoc.read(db=db, id=sdoc_id))
+        url = RepoService().get_sdoc_url(
+            sdoc=sdoc,
+            relative=True,
+            webp=True,
+            thumbnail=False,
+        )
+        return SourceDocumentDataRead(
+            id=sdoc_id,
+            project_id=sdoc.project_id,
+            token_character_offsets=[],
+            tokens=[],
+            sentences=[],
+            html=url,
+        )
+    else:
+        return SourceDocumentDataRead.model_validate(sdoc_data)
 
 
 @router.delete(

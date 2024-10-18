@@ -21,16 +21,17 @@ class SourceDocumentDataBase(BaseModel):
     )
 
 
-class SourceDocumentDataRead(SourceDocumentDataBase):
+class SourceDocumentDataRead(BaseModel):
+    id: int = Field(description="ID of the SourceDocument")
+    project_id: int = Field(
+        description="ID of the Project the SourceDocument belongs to"
+    )
+    html: str = Field(description="Processed HTML of the SourceDocument")
     tokens: List[str] = Field(description="List of tokens in the SourceDocument")
     token_character_offsets: List[Tuple[int, int]] = Field(
         description="List of character offsets of each token"
     )
-
     sentences: List[str] = Field(description="List of sentences in the SourceDocument")
-    sentence_character_offsets: List[Tuple[int, int]] = Field(
-        description="List of character offsets of each sentence"
-    )
 
     model_config = ConfigDict(from_attributes=True)
 

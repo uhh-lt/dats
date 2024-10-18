@@ -15,6 +15,7 @@ import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectTy
 import MemoButton from "../../../components/Memo/MemoButton.tsx";
 import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import HighlightTokenRenderer from "./HighlightTokenRenderer.tsx";
 
 interface SpanAnnotationCardProps {
   annotationId: number | undefined;
@@ -23,7 +24,7 @@ interface SpanAnnotationCardProps {
 function SpanAnnotationCard({ annotationId, ...props }: SpanAnnotationCardProps & Omit<CardProps, "elevation">) {
   // global server state (react-query)
   const spanAnnotation = SpanAnnotationHooks.useGetAnnotation(annotationId);
-  const sdoc = SdocHooks.useGetDocument(spanAnnotation.data?.sdoc_id);
+  const sdocData = SdocHooks.useGetDocumentData(spanAnnotation.data?.sdoc_id);
 
   // global client state (redux)
   const contextSize = useAppSelector((state) => state.annotatedSegments.contextSize);
@@ -42,18 +43,21 @@ function SpanAnnotationCard({ annotationId, ...props }: SpanAnnotationCardProps 
           <Typography variant="body1" component="div" sx={{ mt: 2 }}>
             <i>Select an annotation to view it & it's context :)</i>
           </Typography>
-        ) : spanAnnotation.isSuccess && sdoc.isSuccess ? (
+        ) : spanAnnotation.isSuccess && sdocData.isSuccess ? (
           <Typography variant="body1" component="div" sx={{ mt: 2 }}>
-            {sdoc.data.content.substring(spanAnnotation.data.begin - contextSize, spanAnnotation.data.begin)}
-            <b>{sdoc.data.content.substring(spanAnnotation.data.begin, spanAnnotation.data.end)}</b>
-            {sdoc.data.content.substring(spanAnnotation.data.end, spanAnnotation.data.end + contextSize)}
+            <HighlightTokenRenderer
+              beginToken={spanAnnotation.data.begin_token}
+              endToken={spanAnnotation.data.end_token}
+              contextSize={contextSize}
+              sdocData={sdocData.data}
+            />
           </Typography>
-        ) : spanAnnotation.isLoading || sdoc.isLoading ? (
+        ) : spanAnnotation.isLoading || sdocData.isLoading ? (
           <CircularProgress />
         ) : (
           <Typography variant="body1" component="div">
             {spanAnnotation.error?.message}
-            {sdoc.error?.message}
+            {sdocData.error?.message}
           </Typography>
         )}
       </CardContent>

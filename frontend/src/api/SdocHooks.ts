@@ -3,11 +3,11 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import queryClient from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { BBoxAnnotationReadResolved } from "./openapi/models/BBoxAnnotationReadResolved.ts";
-import { DocType } from "./openapi/models/DocType.ts";
 import { DocumentTagRead } from "./openapi/models/DocumentTagRead.ts";
 import { MemoRead } from "./openapi/models/MemoRead.ts";
+import { SourceDocumentDataRead } from "./openapi/models/SourceDocumentDataRead.ts";
 import { SourceDocumentMetadataReadResolved } from "./openapi/models/SourceDocumentMetadataReadResolved.ts";
-import { SourceDocumentWithDataRead } from "./openapi/models/SourceDocumentWithDataRead.ts";
+import { SourceDocumentRead } from "./openapi/models/SourceDocumentRead.ts";
 import { SpanAnnotationReadResolved } from "./openapi/models/SpanAnnotationReadResolved.ts";
 import { DocumentTagService } from "./openapi/services/DocumentTagService.ts";
 import { ProjectService } from "./openapi/services/ProjectService.ts";
@@ -15,38 +15,19 @@ import { SourceDocumentService } from "./openapi/services/SourceDocumentService.
 import { useSelectEnabledBboxAnnotations, useSelectEnabledSpanAnnotations } from "./utils.ts";
 
 // sdoc
-const fetchSdoc = async (sdocId: number) => {
-  const sdoc = await SourceDocumentService.getById({
-    sdocId: sdocId!,
+const useGetDocument = (sdocId: number | null | undefined) =>
+  useQuery<SourceDocumentRead, Error>({
+    queryKey: [QueryKey.SDOC, sdocId],
+    queryFn: () => SourceDocumentService.getById({ sdocId: sdocId! }),
+    enabled: !!sdocId,
   });
 
-  switch (sdoc.doctype) {
-    case DocType.TEXT:
-      // dont do anything
-      break;
-    case DocType.IMAGE: {
-      const url = await SourceDocumentService.getFileUrl({
-        sdocId: sdocId,
-        webp: true,
-      });
-      sdoc.content = encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + url);
-      break;
-    }
-    case DocType.VIDEO:
-    case DocType.AUDIO: {
-      const url2 = await SourceDocumentService.getFileUrl({ sdocId: sdocId });
-      sdoc.content = encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + url2);
-      break;
-    }
-  }
+// encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + url2)
 
-  return sdoc;
-};
-
-const useGetDocument = (sdocId: number | null | undefined) =>
-  useQuery<SourceDocumentWithDataRead, Error>({
-    queryKey: [QueryKey.SDOC, sdocId],
-    queryFn: () => fetchSdoc(sdocId!),
+const useGetDocumentData = (sdocId: number | null | undefined) =>
+  useQuery<SourceDocumentDataRead, Error>({
+    queryKey: [QueryKey.SDOC_DATA, sdocId],
+    queryFn: () => SourceDocumentService.getByIdWithData({ sdocId: sdocId! }),
     enabled: !!sdocId,
     staleTime: Infinity,
   });
@@ -266,6 +247,7 @@ const useGetBBoxAnnotationsBatch = (sdocId: number | null | undefined, userIds: 
 const SdocHooks = {
   // sdoc
   useGetDocument,
+  useGetDocumentData,
   useGetLinkedSdocIds,
   useDeleteDocuments,
   useGetDocumentIdByFilename,

@@ -913,9 +913,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentWithDataRead" } }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -958,6 +956,33 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/sdoc/data/{sdoc_id}": {
+      "get": {
+        "tags": ["sourceDocument"],
+        "summary": "Returns the SourceDocumentData with the given ID if it exists",
+        "operationId": "get_by_id_with_data",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
+          {
+            "name": "only_if_finished",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": true, "title": "Only If Finished" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentDataRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -8631,6 +8656,43 @@
         "required": ["column", "direction"],
         "title": "Sort[WordFrequencyColumns]"
       },
+      "SourceDocumentDataRead": {
+        "properties": {
+          "id": { "type": "integer", "title": "Id", "description": "ID of the SourceDocument" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "ID of the Project the SourceDocument belongs to"
+          },
+          "html": { "type": "string", "title": "Html", "description": "Processed HTML of the SourceDocument" },
+          "tokens": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Tokens",
+            "description": "List of tokens in the SourceDocument"
+          },
+          "token_character_offsets": {
+            "items": {
+              "prefixItems": [{ "type": "integer" }, { "type": "integer" }],
+              "type": "array",
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "type": "array",
+            "title": "Token Character Offsets",
+            "description": "List of character offsets of each token"
+          },
+          "sentences": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Sentences",
+            "description": "List of sentences in the SourceDocument"
+          }
+        },
+        "type": "object",
+        "required": ["id", "project_id", "html", "tokens", "token_character_offsets", "sentences"],
+        "title": "SourceDocumentDataRead"
+      },
       "SourceDocumentDocumentTagLinks": {
         "properties": {
           "source_document_id": {
@@ -8941,132 +9003,6 @@
         "type": "object",
         "required": ["name"],
         "title": "SourceDocumentUpdate"
-      },
-      "SourceDocumentWithDataRead": {
-        "properties": {
-          "id": { "type": "integer", "title": "Id", "description": "ID of the SourceDocument" },
-          "content": {
-            "type": "string",
-            "title": "Content",
-            "description": "Raw,original content of the SourceDocument"
-          },
-          "html": { "type": "string", "title": "Html", "description": "Processed HTML of the SourceDocument" },
-          "token_starts": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Token Starts",
-            "description": "Start of each token in character offsets in content"
-          },
-          "token_ends": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Token Ends",
-            "description": "End of each token in character offsets in content"
-          },
-          "sentence_starts": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Sentence Starts",
-            "description": "Start of each sentence in character offsets in content"
-          },
-          "sentence_ends": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Sentence Ends",
-            "description": "End of each sentence in character offsets in content"
-          },
-          "tokens": {
-            "items": { "type": "string" },
-            "type": "array",
-            "title": "Tokens",
-            "description": "List of tokens in the SourceDocument"
-          },
-          "token_character_offsets": {
-            "items": {
-              "prefixItems": [{ "type": "integer" }, { "type": "integer" }],
-              "type": "array",
-              "maxItems": 2,
-              "minItems": 2
-            },
-            "type": "array",
-            "title": "Token Character Offsets",
-            "description": "List of character offsets of each token"
-          },
-          "sentences": {
-            "items": { "type": "string" },
-            "type": "array",
-            "title": "Sentences",
-            "description": "List of sentences in the SourceDocument"
-          },
-          "sentence_character_offsets": {
-            "items": {
-              "prefixItems": [{ "type": "integer" }, { "type": "integer" }],
-              "type": "array",
-              "maxItems": 2,
-              "minItems": 2
-            },
-            "type": "array",
-            "title": "Sentence Character Offsets",
-            "description": "List of character offsets of each sentence"
-          },
-          "filename": {
-            "type": "string",
-            "maxLength": 230,
-            "title": "Filename",
-            "description": "Filename of the SourceDocument"
-          },
-          "name": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Name",
-            "description": "User-defined name of the document"
-          },
-          "doctype": {
-            "allOf": [{ "$ref": "#/components/schemas/DocType" }],
-            "description": "DOCTYPE of the SourceDocument"
-          },
-          "status": {
-            "allOf": [{ "$ref": "#/components/schemas/SDocStatus" }],
-            "description": "Status of the SourceDocument"
-          },
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "Project the SourceDocument belongs to"
-          },
-          "created": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created",
-            "description": "The created timestamp of the SourceDocument"
-          },
-          "updated": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated",
-            "description": "Updated timestamp of the Memo"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "content",
-          "html",
-          "token_starts",
-          "token_ends",
-          "sentence_starts",
-          "sentence_ends",
-          "tokens",
-          "token_character_offsets",
-          "sentences",
-          "sentence_character_offsets",
-          "filename",
-          "doctype",
-          "status",
-          "project_id",
-          "created",
-          "updated"
-        ],
-        "title": "SourceDocumentWithDataRead"
       },
       "SpanAnnotationCreate": {
         "properties": {

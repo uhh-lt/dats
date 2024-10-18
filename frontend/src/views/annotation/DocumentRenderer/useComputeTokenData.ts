@@ -1,21 +1,21 @@
 import { useMemo } from "react";
 import SdocHooks from "../../../api/SdocHooks.ts";
+import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import { IToken } from "./IToken.ts";
 
-function useComputeTokenData({ sdocId, userIds }: { sdocId: number; userIds: number[] }) {
+function useComputeTokenData({ sdocData, userIds }: { sdocData: SourceDocumentDataRead; userIds: number[] }) {
   // global server state (react query)
-  const sdoc = SdocHooks.useGetDocument(sdocId);
-  const annotations = SdocHooks.useGetSpanAnnotationsBatch(sdocId, userIds);
+  const annotations = SdocHooks.useGetSpanAnnotationsBatch(sdocData.id, userIds);
 
   // computed
   // todo: maybe implement with selector?
   const tokenData: IToken[] | undefined = useMemo(() => {
-    if (!sdoc.data) return undefined;
-    if (!sdoc.data.token_character_offsets) return undefined;
+    if (!sdocData) return undefined;
+    if (!sdocData.token_character_offsets) return undefined;
 
-    const offsets = sdoc.data.token_character_offsets;
-    const texts = sdoc.data.tokens;
+    const offsets = sdocData.token_character_offsets;
+    const texts = sdocData.tokens;
     const result = texts.map((text, index) => ({
       beginChar: offsets[index][0],
       endChar: offsets[index][1],
@@ -25,7 +25,7 @@ function useComputeTokenData({ sdocId, userIds }: { sdocId: number; userIds: num
       newLine: text.split("\n").length - 1,
     }));
     return result;
-  }, [sdoc.data]);
+  }, [sdocData]);
 
   // annotationMap stores annotationId -> SpanAnnotationReadResolved
   // annotationsPerToken map stores tokenId -> spanAnnotationId[]

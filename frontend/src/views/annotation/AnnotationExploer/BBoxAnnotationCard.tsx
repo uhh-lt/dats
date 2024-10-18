@@ -9,7 +9,7 @@ import AnnotationCardActionsMenu from "./AnnotationCardActionMenu.tsx";
 import { AnnotationCardProps } from "./AnnotationCardProps.ts";
 
 function BBoxAnnotationCard({ annotation, onClick, cardProps }: AnnotationCardProps<BBoxAnnotationReadResolved>) {
-  const sdoc = SdocHooks.useGetDocument(annotation.sdoc_id);
+  const sdocData = SdocHooks.useGetDocumentData(annotation.sdoc_id);
 
   return (
     <Card {...cardProps}>
@@ -32,9 +32,9 @@ function BBoxAnnotationCard({ annotation, onClick, cardProps }: AnnotationCardPr
       />
       <CardActionArea onClick={onClick}>
         <CardContent sx={{ pt: 1, pb: "16px !important", textAlign: "center" }}>
-          {sdoc.isSuccess ? (
+          {sdocData.isSuccess ? (
             <ImageCropper
-              imageUrl={sdoc.data.content}
+              imageUrl={encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + sdocData.data.html)}
               x={annotation.x_min}
               y={annotation.y_min}
               width={annotation.x_max - annotation.x_min}

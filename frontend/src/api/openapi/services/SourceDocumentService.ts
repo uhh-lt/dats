@@ -7,10 +7,10 @@ import type { BBoxAnnotationReadResolved } from "../models/BBoxAnnotationReadRes
 import type { DocumentTagRead } from "../models/DocumentTagRead";
 import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
+import type { SourceDocumentDataRead } from "../models/SourceDocumentDataRead";
 import type { SourceDocumentMetadataReadResolved } from "../models/SourceDocumentMetadataReadResolved";
 import type { SourceDocumentRead } from "../models/SourceDocumentRead";
 import type { SourceDocumentUpdate } from "../models/SourceDocumentUpdate";
-import type { SourceDocumentWithDataRead } from "../models/SourceDocumentWithDataRead";
 import type { SpanAnnotationRead } from "../models/SpanAnnotationRead";
 import type { SpanAnnotationReadResolved } from "../models/SpanAnnotationReadResolved";
 import type { SpanGroupRead } from "../models/SpanGroupRead";
@@ -21,7 +21,7 @@ import { request as __request } from "../core/request";
 export class SourceDocumentService {
   /**
    * Returns the SourceDocument with the given ID if it exists
-   * @returns SourceDocumentWithDataRead Successful Response
+   * @returns SourceDocumentRead Successful Response
    * @throws ApiError
    */
   public static getById({
@@ -30,7 +30,7 @@ export class SourceDocumentService {
   }: {
     sdocId: number;
     onlyIfFinished?: boolean;
-  }): CancelablePromise<SourceDocumentWithDataRead> {
+  }): CancelablePromise<SourceDocumentRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}",
@@ -82,6 +82,32 @@ export class SourceDocumentService {
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the SourceDocumentData with the given ID if it exists
+   * @returns SourceDocumentDataRead Successful Response
+   * @throws ApiError
+   */
+  public static getByIdWithData({
+    sdocId,
+    onlyIfFinished = true,
+  }: {
+    sdocId: number;
+    onlyIfFinished?: boolean;
+  }): CancelablePromise<SourceDocumentDataRead> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/sdoc/data/{sdoc_id}",
+      path: {
+        sdoc_id: sdocId,
+      },
+      query: {
+        only_if_finished: onlyIfFinished,
+      },
       errors: {
         422: `Validation Error`,
       },

@@ -43,7 +43,7 @@ function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
   // global server state (react-query)
   const annotation = BboxAnnotationHooks.useGetAnnotation(props.data.bboxAnnotationId);
   const code = CodeHooks.useGetCode(annotation.data?.code.id);
-  const sdoc = SdocHooks.useGetDocument(annotation.data?.sdoc_id);
+  const sdocData = SdocHooks.useGetDocumentData(annotation.data?.sdoc_id);
   const memo = BboxAnnotationHooks.useGetUserMemo(props.data.bboxAnnotationId);
 
   // effects
@@ -198,9 +198,9 @@ function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
               }
             />
             <CardContent className="bbox-content" style={{ padding: 2, textAlign: "center" }}>
-              {annotation.isSuccess && sdoc.isSuccess ? (
+              {annotation.isSuccess && sdocData.isSuccess ? (
                 <ImageCropper
-                  imageUrl={sdoc.data.content}
+                  imageUrl={encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + sdocData.data?.html)}
                   x={annotation.data.x_min}
                   y={annotation.data.y_min}
                   width={annotation.data.x_max - annotation.data.x_min}
@@ -211,7 +211,7 @@ function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
                     border: "4px solid " + annotation.data.code.color,
                   }}
                 />
-              ) : annotation.isError || sdoc.isError ? (
+              ) : annotation.isError || sdocData.isError ? (
                 <Typography variant="body2">Error!</Typography>
               ) : (
                 <Typography variant="body2">Loading ...</Typography>

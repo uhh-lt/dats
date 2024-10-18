@@ -226,11 +226,16 @@ class LLMService(metaclass=SingletonMeta):
         )
 
         # read sdocs
-        sdoc_datas = crud_sdoc.read_with_data_batch(db=db, ids=sdoc_ids)
+        sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=sdoc_ids)
 
         # automatic document tagging
         result: List[DocumentTaggingResult] = []
-        for idx, sdoc_data in enumerate(sdoc_datas):
+        for idx, (sdoc_id, sdoc_data) in enumerate(zip(sdoc_ids, sdoc_datas)):
+            if sdoc_data is None:
+                raise ValueError(
+                    f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
+                )
+
             # get current tag ids
             current_tag_ids = [
                 tag.id for tag in crud_sdoc.read(db=db, id=sdoc_data.id).document_tags
@@ -316,10 +321,15 @@ class LLMService(metaclass=SingletonMeta):
         )
 
         # read sdocs
-        sdoc_datas = crud_sdoc.read_with_data_batch(db=db, ids=sdoc_ids)
+        sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=sdoc_ids)
         # automatic metadata extraction
         result: List[MetadataExtractionResult] = []
-        for idx, sdoc_data in enumerate(sdoc_datas):
+        for idx, (sdoc_id, sdoc_data) in enumerate(zip(sdoc_ids, sdoc_datas)):
+            if sdoc_data is None:
+                raise ValueError(
+                    f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
+                )
+
             # get current metadata values
             current_metadata = [
                 SourceDocumentMetadataReadResolved.model_validate(metadata)
@@ -426,12 +436,17 @@ class LLMService(metaclass=SingletonMeta):
         )
 
         # read sdocs
-        sdoc_datas = crud_sdoc.read_with_data_batch(db=db, ids=sdoc_ids)
+        sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=sdoc_ids)
 
         # automatic annotation
         annotation_id = 0
         result: List[AnnotationResult] = []
-        for idx, sdoc_data in enumerate(sdoc_datas):
+        for idx, (sdoc_id, sdoc_data) in enumerate(zip(sdoc_ids, sdoc_datas)):
+            if sdoc_data is None:
+                raise ValueError(
+                    f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
+                )
+
             # get language
             language = crud_sdoc_meta.read_by_sdoc_and_key(
                 db=db, sdoc_id=sdoc_data.id, key="language"

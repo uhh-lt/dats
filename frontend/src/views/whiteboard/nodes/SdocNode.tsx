@@ -1,11 +1,11 @@
-import { CardContent, CardHeader, CardMedia, Divider, MenuItem, Typography } from "@mui/material";
+import { CardContent, CardHeader, CardMedia, CircularProgress, Divider, MenuItem, Typography } from "@mui/material";
 import { intersection } from "lodash";
 import { useEffect, useRef } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
-import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
+import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
 import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../components/GenericPositionMenu.tsx";
 import MemoDialogAPI from "../../../components/Memo/MemoDialog/MemoDialogAPI.ts";
 import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
@@ -141,10 +141,8 @@ function SdocNode(props: NodeProps<SdocNodeData>) {
           {sdoc.isSuccess ? (
             <>
               {docType === DocType.IMAGE ? (
-                <CardMedia component="img" image={sdoc.data.content} alt="Thumbnail" />
-              ) : docType === DocType.TEXT ? (
-                <TextPreview sdoc={sdoc.data} />
-              ) : (
+                <SdocNodeImageContent sdoc={sdoc.data} />
+              ) : docType === DocType.TEXT ? null : (
                 <Typography fontSize={8} textAlign={"center"}>
                   DOC TYPE IS NOT SUPPORTED
                 </Typography>
@@ -172,8 +170,20 @@ function SdocNode(props: NodeProps<SdocNodeData>) {
   );
 }
 
-function TextPreview({ sdoc }: { sdoc: SourceDocumentWithDataRead }) {
-  return <Typography>{sdoc.content}</Typography>;
+function SdocNodeImageContent({ sdoc }: { sdoc: SourceDocumentRead }) {
+  const sdocData = SdocHooks.useGetDocumentData(sdoc.id);
+
+  if (!sdocData.isSuccess) {
+    return <CircularProgress />;
+  }
+
+  return (
+    <CardMedia
+      component="img"
+      image={encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + sdocData.data?.html)}
+      alt="Thumbnail"
+    />
+  );
 }
 
 export default SdocNode;

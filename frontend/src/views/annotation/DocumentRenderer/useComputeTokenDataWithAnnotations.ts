@@ -1,20 +1,20 @@
 import { useMemo } from "react";
-import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
+import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import { IToken } from "./IToken.ts";
 
 function useComputeTokenDataWithAnnotations({
-  sdoc,
+  sdocData,
   annotations,
 }: {
-  sdoc: SourceDocumentWithDataRead;
+  sdocData: SourceDocumentDataRead;
   annotations: SpanAnnotationReadResolved[];
 }) {
   // computed
   // todo: maybe implement with selector?
   const tokenData: IToken[] | undefined = useMemo(() => {
-    const offsets = sdoc.token_character_offsets;
-    const texts = sdoc.tokens;
+    const offsets = sdocData.token_character_offsets;
+    const texts = sdocData.tokens;
     const result = texts.map((text, index) => ({
       beginChar: offsets[index][0],
       endChar: offsets[index][1],
@@ -24,7 +24,7 @@ function useComputeTokenDataWithAnnotations({
       newLine: text.split("\n").length - 1,
     }));
     return result;
-  }, [sdoc]);
+  }, [sdocData]);
 
   // todo: maybe implement with selector?
   // this map stores annotationId -> SpanAnnotationReadResolved

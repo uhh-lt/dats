@@ -1,6 +1,6 @@
 import { MouseEventHandler, useRef } from "react";
 import { CodeRead } from "../../../../api/openapi/models/CodeRead.ts";
-import { SourceDocumentWithDataRead } from "../../../../api/openapi/models/SourceDocumentWithDataRead.ts";
+import { SourceDocumentDataRead } from "../../../../api/openapi/models/SourceDocumentDataRead.ts";
 import { SpanAnnotationReadResolved } from "../../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import SdocHooks from "../../../../api/SdocHooks.ts";
 import DocumentRenderer from "../../../../views/annotation/DocumentRenderer/DocumentRenderer.tsx";
@@ -27,12 +27,12 @@ function TextAnnotationValidator({
   annotations,
   handleChangeAnnotations,
 }: TextAnnotatorValidatorProps) {
-  const sdoc = SdocHooks.useGetDocument(sdocId);
+  const sdocData = SdocHooks.useGetDocumentData(sdocId);
 
-  if (sdoc.isSuccess) {
+  if (sdocData.isSuccess) {
     return (
       <TextAnnotationValidatorWithSdoc
-        sdoc={sdoc.data}
+        sdocData={sdocData.data}
         codesForSelection={codesForSelection}
         annotations={annotations}
         handleChangeAnnotations={handleChangeAnnotations}
@@ -43,11 +43,11 @@ function TextAnnotationValidator({
 }
 
 interface TextAnnotatorValidatorWithSdocProps extends TextAnnotatorValidatorSharedProps {
-  sdoc: SourceDocumentWithDataRead;
+  sdocData: SourceDocumentDataRead;
 }
 
 function TextAnnotationValidatorWithSdoc({
-  sdoc,
+  sdocData,
   codesForSelection,
   annotations,
   handleChangeAnnotations,
@@ -57,7 +57,7 @@ function TextAnnotationValidatorWithSdoc({
 
   // computed
   const { tokenData, annotationsPerToken, annotationMap } = useComputeTokenDataWithAnnotations({
-    sdoc: sdoc,
+    sdocData,
     annotations: annotations,
   });
 
@@ -136,12 +136,12 @@ function TextAnnotationValidatorWithSdoc({
       <DocumentRenderer
         className="myFlexFillAllContainer"
         onMouseUp={handleMouseUp}
-        html={sdoc.html}
+        html={sdocData.html}
         tokenData={tokenData}
         annotationsPerToken={annotationsPerToken}
         annotationMap={annotationMap}
         isViewer={false}
-        projectId={sdoc.project_id}
+        projectId={sdocData.project_id}
         style={{ zIndex: 1, overflowY: "auto" }}
       />
     </>

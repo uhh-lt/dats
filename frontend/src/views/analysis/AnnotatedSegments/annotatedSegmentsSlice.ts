@@ -13,7 +13,7 @@ const initialState: TableState & AnnotatedSegmentsState = {
   ...initialTableState,
   // app state:
   isSplitView: false,
-  contextSize: 100,
+  contextSize: 10,
 };
 
 export const AnnotatedSegmentsSlice = createSlice({

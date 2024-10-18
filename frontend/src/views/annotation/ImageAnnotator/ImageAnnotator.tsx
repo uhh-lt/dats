@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import SdocHooks from "../../../api/SdocHooks.ts";
 import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
-import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
+import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
@@ -16,14 +16,14 @@ import SVGBBoxText from "./SVGBBoxText.tsx";
 import { useCreateBBoxAnnotation, useDeleteBBoxAnnotation, useUpdateBBoxAnnotation } from "./imageAnnotationHooks.ts";
 
 interface ImageAnnotatorProps {
-  sdoc: SourceDocumentWithDataRead;
+  sdocData: SourceDocumentDataRead;
 }
 
 function ImageAnnotator(props: ImageAnnotatorProps) {
-  const heightMetadata = SdocHooks.useGetMetadataByKey(props.sdoc.id, "height");
+  const heightMetadata = SdocHooks.useGetMetadataByKey(props.sdocData.id, "height");
 
   if (heightMetadata.isSuccess) {
-    return <ImageAnnotatorWithHeight sdoc={props.sdoc} height={heightMetadata.data.int_value!} />;
+    return <ImageAnnotatorWithHeight sdocData={props.sdocData} height={heightMetadata.data.int_value!} />;
   } else if (heightMetadata.isError) {
     return <div>{heightMetadata.error.message}</div>;
   } else if (heightMetadata.isLoading) {
@@ -33,7 +33,7 @@ function ImageAnnotator(props: ImageAnnotatorProps) {
   }
 }
 
-function ImageAnnotatorWithHeight({ sdoc, height }: ImageAnnotatorProps & { height: number }) {
+function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { height: number }) {
   // references to svg elements
   const svgRef = useRef<SVGSVGElement>(null);
   const gZoomRef = useRef<SVGGElement>(null);
@@ -47,7 +47,7 @@ function ImageAnnotatorWithHeight({ sdoc, height }: ImageAnnotatorProps & { heig
   const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
 
   // global server state (react query)
-  const annotations = SdocHooks.useGetBBoxAnnotationsBatch(sdoc.id, visibleUserIds);
+  const annotations = SdocHooks.useGetBBoxAnnotationsBatch(sdocData.id, visibleUserIds);
 
   // snackbar
   const openSnackbar = useOpenSnackbar();
@@ -216,7 +216,7 @@ function ImageAnnotatorWithHeight({ sdoc, height }: ImageAnnotatorProps & { heig
       {
         requestBody: {
           code_id: code.id,
-          sdoc_id: sdoc.id,
+          sdoc_id: sdocData.id,
           x_min: x,
           x_max: x + width,
           y_min: y,
@@ -327,7 +327,11 @@ function ImageAnnotatorWithHeight({ sdoc, height }: ImageAnnotatorProps & { heig
       >
         <g ref={gZoomRef}>
           <g ref={gDragRef} style={{ cursor: isZooming ? "move" : "crosshair" }}>
-            <image ref={imgRef} href={sdoc.content} style={{ outline: "1px solid black" }} />
+            <image
+              ref={imgRef}
+              href={encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + sdocData.html)}
+              style={{ outline: "1px solid black" }}
+            />
             <rect
               ref={rectRef}
               x={0}
