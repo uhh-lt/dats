@@ -3,23 +3,23 @@ import { useMemo, useRef, useState } from "react";
 import ReactPlayer from "react-player";
 import type { OnProgressProps } from "react-player/base.d.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
-import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
+import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead.ts";
 
 interface AudioVideoViewerProps {
-  sdoc: SourceDocumentWithDataRead;
+  sdocData: SourceDocumentDataRead;
   showEntities: boolean;
   width?: number;
   height?: number;
 }
 
-function AudioVideoViewer({ sdoc, width, height }: AudioVideoViewerProps) {
+function AudioVideoViewer({ sdocData, width, height }: AudioVideoViewerProps) {
   // local client state
   const [highlightedWordId, setHighlightedWordId] = useState(-1);
   const playerRef = useRef<ReactPlayer>(null);
   const currentHighlightedWordSpanRef = useRef<HTMLSpanElement>(null);
 
   // global server state (react-query)
-  const transcriptWords = SdocHooks.useGetWordLevelTranscriptions(sdoc.id);
+  const transcriptWords = SdocHooks.useGetWordLevelTranscriptions(sdocData.id);
 
   // ui events
   const handleProgress = (state: OnProgressProps) => {
@@ -71,7 +71,7 @@ function AudioVideoViewer({ sdoc, width, height }: AudioVideoViewerProps) {
     <>
       <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
         <ReactPlayer
-          url={sdoc.content}
+          url={encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + sdocData.html)}
           controls={true}
           width={width ?? 640}
           height={height ?? 360}

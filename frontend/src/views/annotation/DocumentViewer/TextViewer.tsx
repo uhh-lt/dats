@@ -1,19 +1,19 @@
 import React, { useRef } from "react";
-import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
+import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { TagStyle } from "../annoSlice.ts";
 import DocumentRenderer from "../DocumentRenderer/DocumentRenderer.tsx";
 import useComputeTokenData from "../DocumentRenderer/useComputeTokenData.ts";
 import SentenceMenu, { SentenceMenuHandle } from "./SentenceMenu.tsx";
 
-interface AnnotationVisualizerProps {
-  sdoc: SourceDocumentWithDataRead;
+interface TextViewerProps {
+  sdocData: SourceDocumentDataRead;
 }
 
 /**
  * Super simple annotation rendering, does not work for overlapping annotations!!!
  */
-function TextViewer({ sdoc }: AnnotationVisualizerProps) {
+function TextViewer({ sdocData: sdocData }: TextViewerProps) {
   // local state
   const sentenceMenuRef = useRef<SentenceMenuHandle>(null);
 
@@ -22,9 +22,9 @@ function TextViewer({ sdoc }: AnnotationVisualizerProps) {
   const tagStyle = useAppSelector((state) => state.annotations.tagStyle);
 
   // global server state (react-query)
-  const sentences = sdoc.sentences;
+  const sentences = sdocData.sentences;
   const { tokenData, annotationsPerToken, annotationMap } = useComputeTokenData({
-    sdocId: sdoc.id,
+    sdocData,
     userIds: visibleUserIds,
   });
 
@@ -107,8 +107,8 @@ function TextViewer({ sdoc }: AnnotationVisualizerProps) {
         annotationMap={annotationMap}
         onClick={handleClick}
         isViewer={true}
-        html={sdoc.html}
-        projectId={sdoc.project_id}
+        html={sdocData.html}
+        projectId={sdocData.project_id}
         style={{
           zIndex: 1,
           overflowY: "auto",

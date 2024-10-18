@@ -55,6 +55,7 @@ function Annotation() {
 
   // global server state (react query)
   const sdoc = SdocHooks.useGetDocument(sdocId);
+  const sdocData = SdocHooks.useGetDocumentData(sdocId);
 
   // rename document
   const openSnackbar = useOpenSnackbar();
@@ -190,7 +191,7 @@ function Annotation() {
                   <CardContent>
                     {sdocId ? (
                       <>
-                        {sdoc.isSuccess ? (
+                        {sdoc.isSuccess && sdocData.isSuccess ? (
                           <Stack spacing={2}>
                             <div style={{ display: "flex", alignItems: "center" }}>
                               <EditableTypography
@@ -206,27 +207,32 @@ function Annotation() {
                             </div>
                             {sdoc.data.doctype === DocType.IMAGE ? (
                               isAnnotationMode ? (
-                                <ImageAnnotator sdoc={sdoc.data} />
+                                <ImageAnnotator sdocData={sdocData.data} />
                               ) : (
-                                <ImageViewer sdoc={sdoc.data} />
+                                <ImageViewer sdocData={sdocData.data} />
                               )
                             ) : sdoc.data.doctype === DocType.TEXT ? (
                               isAnnotationMode ? (
-                                <TextAnnotator sdoc={sdoc.data} />
+                                <TextAnnotator sdocData={sdocData.data} />
                               ) : (
-                                <TextViewer sdoc={sdoc.data} />
+                                <TextViewer sdocData={sdocData.data} />
                               )
                             ) : sdoc.data.doctype === DocType.AUDIO ? (
                               isAnnotationMode ? (
                                 <div>Annotation is not (yet) supported for Audio Documents.</div>
                               ) : (
-                                <AudioVideoViewer sdoc={sdoc.data} showEntities={true} height={200} />
+                                <AudioVideoViewer sdocData={sdocData.data} showEntities={true} height={200} />
                               )
                             ) : sdoc.data.doctype === DocType.VIDEO ? (
                               isAnnotationMode ? (
                                 <div>Annotation is not (yet) supported for Video Documents.</div>
                               ) : (
-                                <AudioVideoViewer sdoc={sdoc.data} showEntities={true} width={800} height={600} />
+                                <AudioVideoViewer
+                                  sdocData={sdocData.data}
+                                  showEntities={true}
+                                  width={800}
+                                  height={600}
+                                />
                               )
                             ) : (
                               <div>ERROR! This DocType is not (yet) supported!</div>

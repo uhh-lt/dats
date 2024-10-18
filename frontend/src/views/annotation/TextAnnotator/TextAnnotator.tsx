@@ -5,7 +5,7 @@ import { FAKE_ANNOTATION_ID } from "../../../api/SpanAnnotationHooks.ts";
 
 import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
+import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead.ts";
 import { SpanAnnotationCreate } from "../../../api/openapi/models/SpanAnnotationCreate.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
@@ -22,11 +22,11 @@ const selectionIsEmpty = (selection: Selection): boolean => {
   return selection.toString().trim().length === 0;
 };
 
-interface AnnotatorRemasteredProps {
-  sdoc: SourceDocumentWithDataRead;
+interface TextAnnotatorProps {
+  sdocData: SourceDocumentDataRead;
 }
 
-function TextAnnotator({ sdoc }: AnnotatorRemasteredProps) {
+function TextAnnotator({ sdocData }: TextAnnotatorProps) {
   // local state
   const spanMenuRef = useRef<CodeSelectorHandle>(null);
   const [fakeAnnotation, setFakeAnnotation] = useState<SpanAnnotationCreate | undefined>(undefined);
@@ -42,7 +42,7 @@ function TextAnnotator({ sdoc }: AnnotatorRemasteredProps) {
 
   // computed / custom hooks
   const { tokenData, annotationsPerToken, annotationMap } = useComputeTokenData({
-    sdocId: sdoc.id,
+    sdocData,
     userIds: visibleUserIds,
   });
 
@@ -139,7 +139,7 @@ function TextAnnotator({ sdoc }: AnnotatorRemasteredProps) {
 
     const requestBody: SpanAnnotationCreate = {
       code_id: mostRecentCodeId || -1,
-      sdoc_id: sdoc.id,
+      sdoc_id: sdocData.id,
       begin: tokenData[begin_token].beginChar,
       end: tokenData[end_token].endChar,
       begin_token: begin_token,
@@ -308,12 +308,12 @@ function TextAnnotator({ sdoc }: AnnotatorRemasteredProps) {
       <DocumentRenderer
         className="myFlexFillAllContainer"
         onMouseUp={handleMouseUp}
-        html={sdoc.html}
+        html={sdocData.html}
         tokenData={tokenData}
         annotationsPerToken={annotationsPerToken}
         annotationMap={annotationMap}
         isViewer={false}
-        projectId={sdoc.project_id}
+        projectId={sdocData.project_id}
         style={{
           zIndex: 1,
           overflowY: "auto",

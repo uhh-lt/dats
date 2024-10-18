@@ -5,17 +5,17 @@ import { useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
-import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
+import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { ImageSearchActions } from "../../search/ImageSearch/imageSearchSlice.ts";
 
 interface ImageViewerProps {
-  sdoc: SourceDocumentWithDataRead;
+  sdocData: SourceDocumentDataRead;
 }
 
 function ImageViewer(props: ImageViewerProps) {
-  const heightMetadata = SdocHooks.useGetMetadataByKey(props.sdoc.id, "height");
-  const widthMetadata = SdocHooks.useGetMetadataByKey(props.sdoc.id, "width");
+  const heightMetadata = SdocHooks.useGetMetadataByKey(props.sdocData.id, "height");
+  const widthMetadata = SdocHooks.useGetMetadataByKey(props.sdocData.id, "width");
 
   if (heightMetadata.isSuccess && widthMetadata.isSuccess) {
     return (
@@ -32,7 +32,7 @@ function ImageViewer(props: ImageViewerProps) {
   }
 }
 
-function ImageViewerWithData({ sdoc, height, width }: ImageViewerProps & { height: number; width: number }) {
+function ImageViewerWithData({ sdocData, height, width }: ImageViewerProps & { height: number; width: number }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const gRef = useRef<SVGGElement>(null);
   const bboxRef = useRef<SVGGElement>(null);
@@ -46,7 +46,7 @@ function ImageViewerWithData({ sdoc, height, width }: ImageViewerProps & { heigh
   const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
 
   // global server state (react query)
-  const annotations = SdocHooks.useGetBBoxAnnotationsBatch(sdoc.id, visibleUserIds);
+  const annotations = SdocHooks.useGetBBoxAnnotationsBatch(sdocData.id, visibleUserIds);
 
   const annotationData = useMemo(() => {
     return (annotations.data || []).filter((bbox) => !hiddenCodeIds.includes(bbox.code.id));
@@ -114,13 +114,13 @@ function ImageViewerWithData({ sdoc, height, width }: ImageViewerProps & { heigh
         (update) => update.attr("x", (d) => scaledRatio * (d.x_min + 3) + xCentering),
         (exit) => exit.remove(),
       );
-  }, [width, height, annotationData, sdoc.content]);
+  }, [width, height, annotationData, sdocData.html]);
 
   // find similar images
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const handleImageSimilaritySearch = () => {
-    dispatch(ImageSearchActions.onChangeSearchQuery(sdoc.id));
+    dispatch(ImageSearchActions.onChangeSearchQuery(sdocData.id));
     navigate("../imagesearch");
   };
 
@@ -131,7 +131,11 @@ function ImageViewerWithData({ sdoc, height, width }: ImageViewerProps & { heigh
       </Button>
       <svg ref={svgRef} width="100%" height={imgContainerHeight + "px"} style={{ cursor: "move" }}>
         <g ref={gRef}>
-          <image ref={imgRef} href={sdoc.content} height={imgContainerHeight} />
+          <image
+            ref={imgRef}
+            href={encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + sdocData.html)}
+            height={imgContainerHeight}
+          />
           <g ref={bboxRef}></g>
           <g ref={textRef}></g>
         </g>
