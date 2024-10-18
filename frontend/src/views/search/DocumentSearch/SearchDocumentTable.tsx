@@ -1,4 +1,4 @@
-import { Box, Card, Toolbar, Typography } from "@mui/material";
+import { Box, Button, Card, Divider, Stack, Toolbar, Typography } from "@mui/material";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import parse from "html-react-parser";
 import {
@@ -42,7 +42,6 @@ import { SearchActions } from "./searchSlice.ts";
 // this has to match Search.tsx!
 const filterStateSelector = (state: RootState) => state.searchFilter;
 const filterName = "root";
-const fetchSize = 20;
 
 const flatMapData = (page: PaginatedElasticSearchDocumentHits) => page.hits;
 
@@ -152,6 +151,7 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
   }, [tableInfo, user]);
 
   // search
+  const fetchSize = useAppSelector((state) => state.search.fetchSize);
   const filter = useAppSelector((state) => state.searchFilter.filter[filterName]);
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchDocumentHits>({
     queryKey: [
@@ -160,6 +160,7 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
       searchQuery, // refetch when searchQuery changes
       filter, // refetch when columnFilters changes
       sortingModel, // refetch when sorting changes
+      fetchSize,
     ],
     queryFn: ({ pageParam }) =>
       SearchService.searchSdocs({
@@ -335,6 +336,17 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
           style={{ flexGrow: 1 }}
           onScroll={(event) => fetchMoreOnScroll(event.target as HTMLDivElement)}
         />
+        <Box sx={{ p: 1 }}>
+          <Divider />
+          <Stack direction="row" alignItems="top" pt={0.5}>
+            <Typography variant="body2" color="textSecondary" pt={0.5} mr={1}>
+              Fetched {totalFetched} of {totalResults} documents
+            </Typography>
+            <Button size="small" onClick={() => dispatch(SearchActions.onFetchSizeChange(totalResults))}>
+              Fetch All
+            </Button>
+          </Stack>
+        </Box>
       </Card>
     </>
   );

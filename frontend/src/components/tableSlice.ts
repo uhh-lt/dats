@@ -2,7 +2,6 @@ import { Draft, PayloadAction, createSelector } from "@reduxjs/toolkit";
 import {
   MRT_ColumnSizingState,
   MRT_DensityState,
-  MRT_PaginationState,
   MRT_RowSelectionState,
   MRT_SortingState,
   MRT_VisibilityState,
@@ -11,24 +10,21 @@ import {
 export interface TableState {
   searchQuery?: string;
   rowSelectionModel: MRT_RowSelectionState;
-  paginationModel: MRT_PaginationState;
   sortingModel: MRT_SortingState;
   columnVisibilityModel: MRT_VisibilityState;
   columnSizingModel: MRT_ColumnSizingState;
   gridDensityModel: MRT_DensityState;
+  fetchSize: number;
 }
 
 export const initialTableState: TableState = {
   // project state:
   searchQuery: "",
   rowSelectionModel: {},
-  paginationModel: {
-    pageIndex: 0,
-    pageSize: 10,
-  },
   sortingModel: [],
   columnVisibilityModel: {},
   columnSizingModel: {},
+  fetchSize: 20,
   // app state:
   gridDensityModel: "comfortable",
 };
@@ -37,6 +33,7 @@ export const tableReducer = {
   // query
   onSearchQueryChange: (state: Draft<TableState>, action: PayloadAction<string | undefined>) => {
     state.searchQuery = action.payload;
+    state.fetchSize = initialTableState.fetchSize;
   },
   // selection
   onRowSelectionChange: (state: Draft<TableState>, action: PayloadAction<MRT_RowSelectionState>) => {
@@ -44,10 +41,6 @@ export const tableReducer = {
   },
   onClearRowSelection: (state: Draft<TableState>) => {
     state.rowSelectionModel = {};
-  },
-  // pagination
-  onPaginationChange: (state: Draft<TableState>, action: PayloadAction<MRT_PaginationState>) => {
-    state.paginationModel = action.payload;
   },
   // sorting
   onSortChange: (state: Draft<TableState>, action: PayloadAction<MRT_SortingState>) => {
@@ -65,16 +58,20 @@ export const tableReducer = {
   onGridDensityChange: (state: Draft<TableState>, action: PayloadAction<MRT_DensityState>) => {
     state.gridDensityModel = action.payload;
   },
+  // fetch sizse
+  onFetchSizeChange: (state: Draft<TableState>, action: PayloadAction<number>) => {
+    state.fetchSize = action.payload;
+  },
 };
 
 // reset table state
 export const resetProjectTableState = (state: Draft<TableState>) => {
   state.searchQuery = initialTableState.searchQuery;
   state.rowSelectionModel = initialTableState.rowSelectionModel;
-  state.paginationModel = initialTableState.paginationModel;
   state.sortingModel = initialTableState.sortingModel;
   state.columnVisibilityModel = initialTableState.columnVisibilityModel;
   state.columnSizingModel = initialTableState.columnSizingModel;
+  state.fetchSize = initialTableState.fetchSize;
 };
 
 // selectors

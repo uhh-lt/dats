@@ -84,7 +84,14 @@ export const searchSlice = createSlice({
             };
           }
         }, {});
-      });
+      })
+      .addMatcher(
+        (action) => action.type.startsWith("searchFilter"),
+        (state) => {
+          console.log("SearchFilterActions dispatched! Resetting fetchSize.");
+          state.fetchSize = initialTableState.fetchSize;
+        },
+      );
   },
 });
 
