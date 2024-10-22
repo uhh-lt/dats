@@ -720,7 +720,7 @@ class ImportService(metaclass=SingletonMeta):
                             x_min=row["bbox_x_min"],
                             y_min=row["bbox_y_min"],
                             x_max=row["bbox_x_max"],
-                            y_max=row["bbox_x_max"],
+                            y_max=row["bbox_y_max"],
                             user_id=user_email_id_mapping[row["user_email"]],
                         )
                         bboxes_for_sdoc.add(bbox)
