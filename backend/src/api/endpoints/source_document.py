@@ -281,14 +281,16 @@ def add_memo(
     validate: Validate = Depends(),
 ) -> MemoRead:
     sdoc = crud_sdoc.read(db, sdoc_id)
+    proj_id = sdoc.project_id
+
     authz_user.assert_in_project(sdoc.project_id)
-    authz_user.assert_in_project(memo.project_id)
-    validate.validate_condition(sdoc.project_id == memo.project_id)
 
     db_obj = crud_memo.create_for_sdoc(
         db=db,
         sdoc_id=sdoc_id,
-        create_dto=MemoCreateIntern(**memo.model_dump(), user_id=authz_user.user.id),
+        create_dto=MemoCreateIntern(
+            **memo.model_dump(), user_id=authz_user.user.id, project_id=proj_id
+        ),
     )
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     return MemoRead(

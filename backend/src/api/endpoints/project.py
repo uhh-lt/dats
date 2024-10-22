@@ -384,13 +384,13 @@ def add_memo(
     validate: Validate = Depends(),
 ) -> MemoRead:
     authz_user.assert_in_project(proj_id)
-    authz_user.assert_in_project(memo.project_id)
-    validate.validate_condition(proj_id == memo.project_id)
 
     db_obj = crud_memo.create_for_project(
         db=db,
         project_id=proj_id,
-        create_dto=MemoCreateIntern(**memo.model_dump(), user_id=authz_user.user.id),
+        create_dto=MemoCreateIntern(
+            **memo.model_dump(), user_id=authz_user.user.id, project_id=proj_id
+        ),
     )
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     return MemoRead(

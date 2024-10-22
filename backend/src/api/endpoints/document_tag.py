@@ -247,16 +247,16 @@ def add_memo(
     validate: Validate = Depends(),
 ) -> MemoRead:
     tag = crud_document_tag.read(db, tag_id)
+    proj_id = tag.project_id
+
     authz_user.assert_in_project(tag.project_id)
-    authz_user.assert_in_project(memo.project_id)
-    validate.validate_condition(
-        tag.project_id == memo.project_id, "Tag and memo project need to match"
-    )
 
     db_obj = crud_memo.create_for_document_tag(
         db=db,
         doc_tag_id=tag_id,
-        create_dto=MemoCreateIntern(**memo.model_dump(), user_id=authz_user.user.id),
+        create_dto=MemoCreateIntern(
+            **memo.model_dump(), user_id=authz_user.user.id, project_id=proj_id
+        ),
     )
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     return MemoRead(
