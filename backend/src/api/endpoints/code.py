@@ -109,17 +109,16 @@ def add_memo(
     validate: Validate = Depends(),
 ) -> MemoRead:
     code = crud_code.read(db, code_id)
-    authz_user.assert_in_project(code.project_id)
-    authz_user.assert_in_project(memo.project_id)
+    proj_id = code.project_id
 
-    validate.validate_condition(
-        code.project_id == memo.project_id, "Memo project needs to match code project"
-    )
+    authz_user.assert_in_project(code.project_id)
 
     db_obj = crud_memo.create_for_code(
         db=db,
         code_id=code_id,
-        create_dto=MemoCreateIntern(**memo.model_dump(), user_id=authz_user.user.id),
+        create_dto=MemoCreateIntern(
+            **memo.model_dump(), user_id=authz_user.user.id, project_id=proj_id
+        ),
     )
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     return MemoRead(

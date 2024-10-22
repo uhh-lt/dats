@@ -51,7 +51,6 @@ export function MemoContentSourceDocument({
         {
           sdocId: sdoc.id,
           requestBody: {
-            project_id: sdoc.project_id,
             title: data.title,
             content: data.content,
           },

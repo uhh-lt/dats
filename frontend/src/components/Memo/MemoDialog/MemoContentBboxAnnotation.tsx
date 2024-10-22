@@ -58,7 +58,6 @@ export function MemoContentBboxAnnotation({
         {
           bboxId: bboxAnnotation.id,
           requestBody: {
-            project_id: bboxAnnotation.code.project_id,
             title: data.title,
             content: data.content,
           },

@@ -33,13 +33,13 @@ class MemoUpdate(BaseModel, UpdateDTOBase):
 
 # Properties to create
 class MemoCreate(MemoBaseDTO):
-    project_id: int = Field(description="Project the Memo belongs to")
     starred: Optional[bool] = Field(
         description="Starred flag of the Memo", default=False
     )
 
 
 class MemoCreateIntern(MemoCreate):
+    project_id: int = Field(description="Project the Memo belongs to")
     user_id: int = Field(description="User the Memo belongs to")
 
 

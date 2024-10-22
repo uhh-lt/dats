@@ -300,18 +300,16 @@ def add_memo(
     validate: Validate = Depends(),
 ) -> MemoRead:
     span_anno = crud_span_anno.read(db, span_id)
-    authz_user.assert_in_project(
-        span_anno.annotation_document.source_document.project_id
-    )
-    authz_user.assert_in_project(memo.project_id)
-    validate.validate_condition(
-        span_anno.annotation_document.source_document.project_id == memo.project_id
-    )
+    proj_id = span_anno.annotation_document.source_document.project_id
+
+    authz_user.assert_in_project(project_id=proj_id)
 
     db_obj = crud_memo.create_for_span_annotation(
         db=db,
         span_anno_id=span_id,
-        create_dto=MemoCreateIntern(**memo.model_dump(), user_id=authz_user.user.id),
+        create_dto=MemoCreateIntern(
+            **memo.model_dump(), user_id=authz_user.user.id, project_id=proj_id
+        ),
     )
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     return MemoRead(
