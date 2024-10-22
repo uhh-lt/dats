@@ -79,7 +79,7 @@ class CRUDBBoxAnnotation(
                 BBoxAnnotationCreateIntern(
                     x_max=create_dto.x_max,
                     y_max=create_dto.y_max,
-                    x_min=create_dto.y_min,
+                    x_min=create_dto.x_min,
                     y_min=create_dto.y_min,
                     code_id=create_dto.code_id,
                     annotation_document_id=adoc_id_by_user_sdoc[
