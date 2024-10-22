@@ -51,7 +51,6 @@ export function MemoContentSpanAnnotation({
         {
           spanId: spanAnnotation.id,
           requestBody: {
-            project_id: spanAnnotation.code.project_id,
             title: data.title,
             content: data.content,
           },

@@ -51,7 +51,6 @@ export function MemoContentTag({
         {
           tagId: tag.id,
           requestBody: {
-            project_id: tag.project_id,
             title: data.title,
             content: data.content,
           },
