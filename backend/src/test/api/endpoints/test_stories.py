@@ -263,7 +263,6 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
     code1_memo = {
         "title": "You know the codes",
         "content": "and so do i",
-        "project_id": project1["id"],
         "starred": True,
     }
     code1_memo_create_response = client.put(
@@ -279,7 +278,7 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
     assert code1_memo_read_response["content"] == code1_memo["content"]
     assert code1_memo_read_response["id"] == code1_memo["id"]
     assert code1_memo_read_response["starred"] == code1_memo["starred"]
-    assert code1_memo_read_response["project_id"] == code1_memo["project_id"]
+    assert code1_memo_read_response["project_id"] == code1["project_id"]
     assert code1_memo_read_response["attached_object_id"] == code1["id"]
     assert code1_memo_read_response["attached_object_type"] == "code"
     assert code1_memo_read_response["user_id"] == alice["id"]
@@ -483,7 +482,6 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
     text_doc1_memo = {
         "title": "Read this",
         "content": "This could help you",
-        "project_id": project1["id"],
         "starred": False,
     }
     text_doc1_memo_create_response = client.put(
@@ -502,7 +500,7 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
     assert text_doc1_memo_read_response["id"] == text_doc1_memo["id"]
     assert text_doc1_memo_read_response["starred"] == text_doc1_memo["starred"]
     assert text_doc1_memo_read_response["user_id"] == alice["id"]
-    assert text_doc1_memo_read_response["project_id"] == text_doc1_memo["project_id"]
+    assert text_doc1_memo_read_response["project_id"] == project_text_doc1["project_id"]
     assert (
         text_doc1_memo_read_response["attached_object_id"]
         == project_text_doc1["sdoc_id"]
@@ -517,7 +515,6 @@ def test_project_memos(client, api_user, api_project) -> None:
     project_memo = {
         "title": "This is a memo",
         "content": "containing informations",
-        "project_id": project1["id"],
         "starred": True,
     }
     memo_response = client.put(
@@ -533,7 +530,7 @@ def test_project_memos(client, api_user, api_project) -> None:
     assert memo_get["id"] == memo_response.json()["id"]
     assert memo_get["starred"] == project_memo["starred"]
     assert memo_get["user_id"] == alice["id"]
-    assert memo_get["project_id"] == project_memo["project_id"]
+    assert memo_get["project_id"] == project1["id"]
 
 
 @pytest.mark.order(after=["test_upload_documents", "test_codes_create"])
@@ -605,7 +602,6 @@ def test_span_annotation_and_memo(client, api_code, api_user, api_document) -> N
     span1_memo1 = {
         "title": "This is urgent",
         "content": "This cat is really cute! Check that out",
-        "project_id": project_text_doc1["project_id"],
         "starred": True,
     }
     span1_memo1_create_response = client.put(
@@ -839,9 +835,6 @@ def test_bbox_annotatation_and_memo(client, api_code, api_user, api_document) ->
     bbox1_memo = {
         "title": "This is an important memo",
         "content": "I like this image",
-        "project_id": project_image_doc1[
-            "project_id"
-        ],  # FIXME https://github.com/uhh-lt/dats/issues/365
         "starred": True,
     }
     bbox1_memo1_create_response = client.put(
@@ -858,7 +851,7 @@ def test_bbox_annotatation_and_memo(client, api_code, api_user, api_document) ->
     assert bbox1_memo1_read_response["id"] == bbox1_memo_id
     assert bbox1_memo1_read_response["starred"] == bbox1_memo["starred"]
     assert bbox1_memo1_read_response["user_id"] == alice["id"]
-    assert bbox1_memo1_read_response["project_id"] == bbox1_memo["project_id"]
+    assert bbox1_memo1_read_response["project_id"] == project_image_doc1["project_id"]
     assert bbox1_memo1_read_response["attached_object_id"] == bbox1_id
     assert bbox1_memo1_read_response["attached_object_type"] == "bbox_annotation"
 
@@ -1001,7 +994,6 @@ def test_documentTag_and_memo(client, api_user, api_document, api_project) -> No
     doctag1_update = {
         "name": "This is an updated tag",
         "color": "azureblue with a touch of yellow",
-        "project_id": project1["id"],
     }
     doctag1_update_response = client.patch(
         f"doctag/{doctag1['id']}", headers=alice["AuthHeader"], json=doctag1_update
@@ -1016,7 +1008,7 @@ def test_documentTag_and_memo(client, api_user, api_document, api_project) -> No
     assert doctag1_update_read_response["color"] == doctag1_update["color"]
     assert doctag1_read_response["description"] == doctag1["description"]
     assert doctag1_update_read_response["id"] == doctag1["id"]
-    assert doctag1_update_read_response["project_id"] == doctag1_update["project_id"]
+    assert doctag1_update_read_response["project_id"] == doctag1["project_id"]
 
     # Alice links three sdoc to a doctag and unlinks one afterwards
     project1_textdoc1 = api_document.document_list[text_doc1[1]]
@@ -1064,7 +1056,6 @@ def test_documentTag_and_memo(client, api_user, api_document, api_project) -> No
     doctag1_memo = {
         "title": "This is a memo about...",
         "content": "a doctag!",
-        "project_id": doctag1["project_id"],
         "starred": False,
     }
     doctag1_memo_create_response = client.put(
@@ -1081,7 +1072,7 @@ def test_documentTag_and_memo(client, api_user, api_document, api_project) -> No
     assert doctag1_memo_read_response["id"] == doctag1_memo["id"]
     assert doctag1_memo_read_response["starred"] == doctag1_memo["starred"]
     assert doctag1_memo_read_response["user_id"] == alice["id"]
-    assert doctag1_memo_read_response["project_id"] == doctag1_memo["project_id"]
+    assert doctag1_memo_read_response["project_id"] == doctag1["project_id"]
     assert doctag1_memo_read_response["attached_object_id"] == doctag1["id"]
     assert doctag1_memo_read_response["attached_object_type"] == "document_tag"
 
