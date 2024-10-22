@@ -12,10 +12,6 @@ export type MemoCreate = {
    */
   content: string;
   /**
-   * Project the Memo belongs to
-   */
-  project_id: number;
-  /**
    * Starred flag of the Memo
    */
   starred?: boolean | null;

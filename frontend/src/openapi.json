@@ -7890,7 +7890,6 @@
         "properties": {
           "title": { "type": "string", "title": "Title", "description": "Title of the Memo" },
           "content": { "type": "string", "title": "Content", "description": "Content of the Memo" },
-          "project_id": { "type": "integer", "title": "Project Id", "description": "Project the Memo belongs to" },
           "starred": {
             "anyOf": [{ "type": "boolean" }, { "type": "null" }],
             "title": "Starred",
@@ -7899,7 +7898,7 @@
           }
         },
         "type": "object",
-        "required": ["title", "content", "project_id"],
+        "required": ["title", "content"],
         "title": "MemoCreate"
       },
       "MemoRead": {
