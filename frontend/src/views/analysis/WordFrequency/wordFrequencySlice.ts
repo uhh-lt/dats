@@ -63,9 +63,6 @@ export const WordFrequencySlice = createSlice({
         }, {});
       })
       .addCase(WordFrequencyActions.onFinishFilterEdit, (state) => {
-        // reset page when filter changes
-        // state.paginationModel.pageIndex = 0;
-
         // reset selection when filter changes
         state.rowSelectionModel = {};
       })

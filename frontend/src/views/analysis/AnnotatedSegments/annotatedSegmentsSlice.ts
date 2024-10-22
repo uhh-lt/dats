@@ -50,9 +50,6 @@ export const AnnotatedSegmentsSlice = createSlice({
         }, {});
       })
       .addCase(SATFilterActions.onFinishFilterEdit, (state) => {
-        // reset page when filter changes
-        state.paginationModel.pageIndex = 0;
-
         // reset selection when filter changes
         state.rowSelectionModel = {};
       })
