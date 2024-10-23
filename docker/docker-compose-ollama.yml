@@ -6,7 +6,7 @@ services:
     ports:
       - ${OLLAMA_EXPOSED:-13133}:11434
     environment:
-      - OLLAMA_KEEP_ALIVE=24h
+      - OLLAMA_KEEP_ALIVE=-1
     tty: true
     restart: unless-stopped
     volumes:
