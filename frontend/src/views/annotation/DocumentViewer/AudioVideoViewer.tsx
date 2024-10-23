@@ -8,8 +8,8 @@ import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocume
 interface AudioVideoViewerProps {
   sdocData: SourceDocumentDataRead;
   showEntities: boolean;
-  width?: number;
-  height?: number;
+  width?: string | number;
+  height?: string | number;
 }
 
 function AudioVideoViewer({ sdocData, width, height }: AudioVideoViewerProps) {
@@ -73,8 +73,8 @@ function AudioVideoViewer({ sdocData, width, height }: AudioVideoViewerProps) {
         <ReactPlayer
           url={encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + sdocData.html)}
           controls={true}
-          width={width ?? 640}
-          height={height ?? 360}
+          width={width}
+          height={height}
           onProgress={handleProgress}
           ref={playerRef}
         />

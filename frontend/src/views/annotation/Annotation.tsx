@@ -221,7 +221,12 @@ function Annotation() {
                               isAnnotationMode ? (
                                 <div>Annotation is not (yet) supported for Audio Documents.</div>
                               ) : (
-                                <AudioVideoViewer sdocData={sdocData.data} showEntities={true} height={200} />
+                                <AudioVideoViewer
+                                  sdocData={sdocData.data}
+                                  showEntities={true}
+                                  width={"100%"}
+                                  height={"64px"}
+                                />
                               )
                             ) : sdoc.data.doctype === DocType.VIDEO ? (
                               isAnnotationMode ? (
