@@ -19,6 +19,7 @@ from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.span_group import crud_span_group
+from app.core.data.doc_type import DocType
 from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationRead,
     BBoxAnnotationReadResolved,
@@ -97,7 +98,7 @@ def get_by_id_with_data(
         url = RepoService().get_sdoc_url(
             sdoc=sdoc,
             relative=True,
-            webp=True,
+            webp=sdoc.doctype == DocType.image,
             thumbnail=False,
         )
         return SourceDocumentDataRead(
