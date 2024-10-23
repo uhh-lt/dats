@@ -1,10 +1,11 @@
 import SquareIcon from "@mui/icons-material/Square";
-import { Box, BoxProps } from "@mui/material";
+import { Box, BoxProps, Typography } from "@mui/material";
 import * as React from "react";
 import { useCallback, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { AnnoActions } from "../../../views/annotation/annoSlice.ts";
+import { AnnoActions, isHiddenCodeId } from "../../../views/annotation/annoSlice.ts";
 import ExporterButton from "../../Exporter/ExporterButton.tsx";
+import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
 import CodeCreateListItemButton from "../CodeCreateListItemButton.tsx";
 import CodeEditDialog from "../CodeEditDialog.tsx";
@@ -59,6 +60,8 @@ function CodeExplorer(props: BoxProps) {
             // selection
             selectedItems={selectedCodeId}
             onSelectedItemsChange={handleSelectedCodeChange}
+            // render node
+            renderNode={(node) => <CodeNodeRenderer node={node} />}
             // actions
             renderActions={(node) => <CodeExplorerMenu code={node} />}
             renderListActions={() => (
@@ -76,6 +79,19 @@ function CodeExplorer(props: BoxProps) {
         </>
       )}
     </Box>
+  );
+}
+
+function CodeNodeRenderer({ node }: { node: IDataTree }) {
+  const isHidden = useAppSelector(isHiddenCodeId(node.data.id));
+
+  return (
+    <Typography
+      variant="body2"
+      sx={{ fontWeight: "inherit", flexGrow: 1, ...(isHidden && { textDecoration: "line-through" }) }}
+    >
+      {node.data.name}
+    </Typography>
   );
 }
 

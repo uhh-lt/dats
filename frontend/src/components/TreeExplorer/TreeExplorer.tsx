@@ -28,6 +28,7 @@ interface DataExplorerProps {
   // actions
   onItemClick?: (event: React.MouseEvent, itemId: string) => void;
   // render actions
+  renderNode?: (node: IDataTree) => React.ReactNode;
   renderActions?: (node: IDataTree) => React.ReactNode;
   renderListActions?: () => React.ReactNode;
   renderFilterActions?: () => React.ReactNode;
@@ -45,6 +46,7 @@ function TreeExplorer({
   dataFilter,
   onDataFilterChange,
   onSelectedItemsChange,
+  renderNode,
   renderActions,
   renderListActions,
   renderFilterActions,
@@ -154,6 +156,7 @@ function TreeExplorer({
         // actions
         onItemClick={onItemClick}
         // render actions
+        renderNode={renderNode}
         renderActions={(node) => (
           <>
             {showCheckboxes && (
