@@ -2,7 +2,6 @@ import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Box, CardActions, CardContent, Divider, Stack } from "@mui/material";
-import { useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
 import { ProjectUpdate } from "../../../api/openapi/models/ProjectUpdate.ts";
@@ -16,23 +15,16 @@ function ProjectDetails({ project }: ProjectProps) {
   const {
     handleSubmit,
     formState: { errors },
-    setValue,
     control,
   } = useForm<ProjectUpdate>({
     defaultValues: {
-      title: "",
-      description: "",
+      title: project.title,
+      description: project.description,
     },
   });
 
   // mutations
   const updateProjectMutation = ProjectHooks.useUpdateProject();
-
-  // form default values (only changed when project changes!)
-  useEffect(() => {
-    setValue("title", project.title);
-    setValue("description", project.description);
-  }, [project, setValue]);
 
   // form handling
   const handleProjectUpdate: SubmitHandler<ProjectUpdate> = (data) => {

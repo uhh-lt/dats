@@ -17,7 +17,7 @@ export default function ExportAnnotationsButton({ spanAnnotationIds }: ExportAnn
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   const startExport = ExporterHooks.useStartExportJob();
-  const exportJob = ExporterHooks.useGetExportJob(startExport.data?.id);
+  const exportJob = ExporterHooks.usePollExportJob(startExport.data?.id);
 
   // snackbar
   const openSnackbar = useOpenSnackbar();

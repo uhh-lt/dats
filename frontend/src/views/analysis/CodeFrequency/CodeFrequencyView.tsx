@@ -1,7 +1,7 @@
 import BarChartIcon from "@mui/icons-material/BarChart";
 import PieChartIcon from "@mui/icons-material/PieChart";
 import { Card, CardContent, CardHeader, CircularProgress, IconButton, Tooltip } from "@mui/material";
-import React, { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
+import React, { Dispatch, SetStateAction, useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -55,12 +55,6 @@ function CodeFrequencyView({ projectId, userIds, docTypes, data, setSelectedCode
       result.set(node.model.data.id, node.model.data as CodeRead);
     }
     return result;
-  }, [data]);
-
-  // effects
-  // reset selection when data changes
-  useEffect(() => {
-    setSelectedData(undefined);
   }, [data]);
 
   // ui events
@@ -164,6 +158,7 @@ function CodeFrequencyView({ projectId, userIds, docTypes, data, setSelectedCode
       </Card>
       {selectedData && (
         <CodeFrequencyView
+          key={selectedData.model.data.id}
           projectId={projectId}
           userIds={userIds}
           docTypes={docTypes}

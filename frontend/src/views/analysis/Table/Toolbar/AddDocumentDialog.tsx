@@ -38,7 +38,7 @@ function AddDocumentDialog({ projectId, shouldOpen, onConfirmSelection, buttonPr
         Add documents
       </Button>
       <Dialog onClose={handleClose} open={open} maxWidth="lg" fullWidth>
-        <DialogTitle>Select documents to add to Whiteboard</DialogTitle>
+        <DialogTitle>Select documents to add to table</DialogTitle>
         <SdocTable
           projectId={projectId}
           filterName={filterName}

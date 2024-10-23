@@ -12,7 +12,7 @@ const useStartExportJob = () =>
     },
   });
 
-const useGetExportJob = (exportJobId: string | undefined) => {
+const usePollExportJob = (exportJobId: string | undefined) => {
   // filter out all disabled code ids
   return useQuery<ExportJobRead, Error>({
     queryKey: [QueryKey.EXPORT_JOB, exportJobId],
@@ -41,7 +41,7 @@ const useGetExportJob = (exportJobId: string | undefined) => {
 };
 
 const ExporterHooks = {
-  useGetExportJob,
+  usePollExportJob,
   useStartExportJob,
 };
 

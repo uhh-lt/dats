@@ -1,5 +1,5 @@
 import { Card, CardHeader, Grid2, Portal, Stack, Typography } from "@mui/material";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import { useParams } from "react-router-dom";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
 import useComputeCodeTree from "../../../components/Code/CodeExplorer/useComputeCodeTree.ts";
@@ -15,8 +15,6 @@ function CodeFrequencyAnalysis() {
   // global client state (react-router)
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
-  // global client state (react-redux)
-
   // custom hook
   const { codeTree, allCodes } = useComputeCodeTree();
 
@@ -24,12 +22,6 @@ function CodeFrequencyAnalysis() {
   const [selectedCode, setSelectedCode] = useState<number>();
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
   const [selectedDocTypes, setSelectedDocTypes] = useState<DocType[]>([]);
-
-  // effects
-  // reset selected code when selectedUserIds change
-  useEffect(() => {
-    setSelectedCode(undefined);
-  }, [selectedUserIds]);
 
   return (
     <Grid2 container columnSpacing={1} className="h100" px={2} pt={2} bgcolor="grey.200">
@@ -65,7 +57,7 @@ function CodeFrequencyAnalysis() {
                 </Card>
               ) : (
                 <CodeFrequencyView
-                  key={selectedUserIds.join(",")} // re-render when selectedUserIds change
+                  key={codeTree.model.data.id}
                   projectId={projectId}
                   userIds={selectedUserIds}
                   docTypes={selectedDocTypes}

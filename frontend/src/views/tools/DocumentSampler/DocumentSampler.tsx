@@ -1,9 +1,11 @@
 import { Box, Portal, Stack, Typography } from "@mui/material";
-import { useContext, useEffect, useMemo } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { useCallback, useContext, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import AnalysisHooks from "../../../api/AnalysisHooks.ts";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
+import { SampledSdocsResults } from "../../../api/openapi/models/SampledSdocsResults.ts";
+import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
 import OneSidebarLayout from "../../../layouts/OneSidebarLayout.tsx";
 import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
@@ -25,6 +27,7 @@ function DocumentSampler() {
   const relativeSamplingValue = useAppSelector((state) => state.documentSampler.relativeSamplingValue);
   const dispatch = useAppDispatch();
 
+  // global server state
   const tags = ProjectHooks.useGetAllTags(projectId);
   const tagsMap = useMemo(() => {
     if (!tags.data) {
@@ -39,15 +42,10 @@ function DocumentSampler() {
     );
   }, [tags.data]);
 
-  // request the aggregation
-  const { mutate: aggregateSdocsByTags, data: aggregatedSdocsByTags } = AnalysisHooks.useSampleSdocsByTags();
-
-  // transform & store the mutation result
-  useEffect(() => {
-    if (!aggregatedSdocsByTags) {
-      dispatch(DocumentSamplerActions.onUpdateChartData([]));
-    } else {
-      const result = aggregatedSdocsByTags.map((x) => {
+  // mutations
+  const transformAndStore = useCallback(
+    (data: SampledSdocsResults[]) => {
+      const result = data.map((x) => {
         return {
           tags: x.tags.map((tagId) => tagsMap[tagId]),
           count: x.sdocs.length,
@@ -59,8 +57,13 @@ function DocumentSampler() {
         };
       });
       dispatch(DocumentSamplerActions.onUpdateChartData(result));
-    }
-  }, [dispatch, aggregatedSdocsByTags, tagsMap]);
+    },
+    [dispatch, tagsMap],
+  );
+  const { mutate: aggregateSdocsByTags } = useMutation({
+    mutationFn: AnalysisService.sampleSdocsByTags,
+    onSuccess: transformAndStore,
+  });
 
   // actions
   const onAggregate = () => {

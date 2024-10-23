@@ -18,12 +18,11 @@ import { PaginatedElasticSearchDocumentHits } from "../../../api/openapi/models/
 import { SearchColumns } from "../../../api/openapi/models/SearchColumns.ts";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { SearchService } from "../../../api/openapi/services/SearchService.ts";
-import { useAuth } from "../../../auth/useAuth.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
 import { useTableInfiniteScroll } from "../../../utils/useTableInfiniteScroll.ts";
 import { FilterActions, FilterState } from "../../FilterDialog/filterSlice.ts";
-import { MyFilter, createEmptyFilter } from "../../FilterDialog/filterUtils.ts";
+import { ColumnInfo, MyFilter, createEmptyFilter } from "../../FilterDialog/filterUtils.ts";
 import SdocMetadataRenderer from "../../Metadata/SdocMetadataRenderer.tsx";
 import SdocAnnotatorsRenderer from "../SdocAnnotatorsRenderer.tsx";
 import SdocRenderer from "../SdocRenderer.tsx";
@@ -61,7 +60,17 @@ interface SdocTableProps {
 
 const defaultFilterStateSelector = (state: RootState) => state.documentTableFilter;
 
-function SdocTable({
+function SdocTable(props: SdocTableProps) {
+  // global client state (react router)
+  const tableInfo = useInitDocumentTableFilterSlice({ projectId: props.projectId });
+
+  if (tableInfo) {
+    return <SdocTableContent {...props} tableInfo={tableInfo} />;
+  }
+  return null;
+}
+
+function SdocTableContent({
   projectId,
   rowSelectionModel,
   onRowSelectionChange,
@@ -74,10 +83,8 @@ function SdocTable({
   filterName = "root",
   filterActions = DocumentTableFilterActions,
   filterStateSelector = defaultFilterStateSelector,
-}: SdocTableProps) {
-  // global client state (react router)
-  const { user } = useAuth();
-
+  tableInfo,
+}: SdocTableProps & { tableInfo: ColumnInfo[] }) {
   // search query
   const [searchQuery, setSearchQuery] = useState<string | undefined>("");
 
@@ -89,10 +96,7 @@ function SdocTable({
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
 
   // table columns
-  const tableInfo = useInitDocumentTableFilterSlice({ projectId });
   const columns = useMemo(() => {
-    if (!tableInfo || !user) return [];
-
     const result = tableInfo.map((column) => {
       const colDef: MRT_ColumnDef<ElasticSearchDocumentHit> = {
         id: column.column,
@@ -149,7 +153,7 @@ function SdocTable({
 
     // unwanted columns are set to null, so we filter those out
     return result.filter((column) => column !== null) as MRT_ColumnDef<ElasticSearchDocumentHit>[];
-  }, [tableInfo, user]);
+  }, [tableInfo]);
 
   // column visiblility
   const [columnVisibilityModel, setColumnVisibilityModel] = useState<MRT_VisibilityState>(() => {
@@ -167,23 +171,6 @@ function SdocTable({
       }
     }, {});
   });
-  useEffect(() => {
-    setColumnVisibilityModel(
-      columns.reduce((acc, column) => {
-        if (!column.id) return acc;
-        // this is a normal column
-        if (isNaN(parseInt(column.id))) {
-          return acc;
-          // this is a metadata column
-        } else {
-          return {
-            ...acc,
-            [column.id]: false,
-          };
-        }
-      }, {}),
-    );
-  }, [columns]);
 
   // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchDocumentHits>({
