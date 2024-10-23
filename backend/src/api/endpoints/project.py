@@ -421,10 +421,10 @@ def get_memos(
     "/{proj_id}/memo/user",
     response_model=MemoRead,
     summary=(
-        "Returns the Memo attached to the Project with the given ID of the logged-in User if it exists."
+        "Gets or creates the Memo attached to the Project with the given ID of the logged-in User."
     ),
 )
-def get_user_memo(
+def get_or_create_user_memo(
     *,
     db: Session = Depends(get_db_session),
     proj_id: int,
@@ -433,7 +433,26 @@ def get_user_memo(
     authz_user.assert_in_project(proj_id)
 
     db_obj = crud_project.read(db=db, id=proj_id)
-    return get_object_memo_for_user(db_obj=db_obj, user_id=authz_user.user.id)
+    try:
+        return get_object_memo_for_user(db_obj=db_obj, user_id=authz_user.user.id)
+    except NoSuchElementError:
+        db_obj = crud_memo.create_for_project(
+            db=db,
+            project_id=proj_id,
+            create_dto=MemoCreateIntern(
+                title="Project Memo",
+                content="",
+                starred=False,
+                user_id=authz_user.user.id,
+                project_id=proj_id,
+            ),
+        )
+    memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
+    return MemoRead(
+        **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
+        attached_object_id=proj_id,
+        attached_object_type=AttachedObjectType.project,
+    )
 
 
 @router.get(
