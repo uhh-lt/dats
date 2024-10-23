@@ -125,11 +125,11 @@ class WordFrequencyColumns(str, AbstractColumns):
             case WordFrequencyColumns.SOURCE_DOCUMENT_FILENAME:
                 return SourceDocumentORM.filename
             case WordFrequencyColumns.DOCUMENT_TAG_ID_LIST:
-                return DocumentTagORM.name
+                return None
             case WordFrequencyColumns.CODE_ID_LIST:
                 return None
             case WordFrequencyColumns.USER_ID_LIST:
-                return UserORM.first_name
+                return None
             case WordFrequencyColumns.SPAN_ANNOTATIONS:
                 return None
 

@@ -116,18 +116,18 @@ class IDListOperator(Enum):
     NOT_CONTAINS = "ID_LIST_NOT_CONTAINS"
 
     def apply(self, column, value: FilterValue):
-        if not isinstance(value, (str, list)):
+        if not isinstance(value, (str, list, int)):
             raise ValueError(
-                "Invalid value type for IDListOperator (requires str or list)!"
+                "Invalid value type for IDListOperator (requires str, List[str], or int)!"
             )
-        if len(value) > 0 and not isinstance(value[0], str):
+        if isinstance(value, list) and len(value) > 0 and not isinstance(value[0], str):
             raise ValueError(
-                "Invalid value type for ListOperator (requires List[str])!"
+                "Invalid value type for IDListOperator (requires List[str])!"
             )
 
         # value should be Union[str, List[str]]
         if isinstance(column, tuple):
-            if isinstance(value, str) and (len(column) == 2):
+            if isinstance(value, (str, int)) and (len(column) == 2):
                 # Column is tuple of ORMs, e.g. (SourceDocumentORM.document_tags, DocumentTagORM.id)
                 match self:
                     case IDListOperator.CONTAINS:
