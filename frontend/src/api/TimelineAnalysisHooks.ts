@@ -10,7 +10,6 @@ const useGetTimelineAnalysis = (timelineAnalysisId: number | null | undefined) =
     queryFn: () => TimelineAnalysisService.getById({ timelineAnalysisId: timelineAnalysisId! }),
     retry: false,
     enabled: !!timelineAnalysisId,
-    select: (data) => data,
   });
 
 const useGetUserTimelineAnalysis = (projectId: number | null | undefined) =>

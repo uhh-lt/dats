@@ -23,7 +23,6 @@ const useGetWhiteboard = (whiteboardId: number | null | undefined) =>
     },
     retry: false,
     enabled: !!whiteboardId,
-    select: (data) => data,
   });
 
 const useGetProjectWhiteboards = (projectId: number | null | undefined) =>

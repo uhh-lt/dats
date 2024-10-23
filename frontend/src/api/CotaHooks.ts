@@ -9,22 +9,15 @@ import { ConceptOverTimeAnalysisService } from "./openapi/services/ConceptOverTi
 const useGetCota = (cotaId: number | null | undefined) =>
   useQuery<COTARead, Error>({
     queryKey: [QueryKey.COTA, cotaId],
-    queryFn: async () => {
-      const data = await ConceptOverTimeAnalysisService.getById({ cotaId: cotaId! });
-      return data;
-    },
+    queryFn: () => ConceptOverTimeAnalysisService.getById({ cotaId: cotaId! }),
     retry: false,
     enabled: !!cotaId,
-    select: (data) => data,
   });
 
 const useGetUserCotas = (projectId: number | null | undefined) =>
   useQuery<COTARead[], Error>({
     queryKey: [QueryKey.COTAS_PROJECT_USER, projectId],
-    queryFn: async () => {
-      const data = await ConceptOverTimeAnalysisService.getByProjectAndUser({ projectId: projectId! });
-      return data;
-    },
+    queryFn: () => ConceptOverTimeAnalysisService.getByProjectAndUser({ projectId: projectId! }),
     retry: false,
     enabled: !!projectId,
   });

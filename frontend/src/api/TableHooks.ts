@@ -22,7 +22,6 @@ const useGetTable = (tableId: number | null | undefined) =>
     },
     retry: false,
     enabled: !!tableId,
-    select: (data) => data,
   });
 
 const useGetUserTables = (projectId: number | null | undefined) =>

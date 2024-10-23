@@ -164,7 +164,7 @@ const useGetThumbnailURL = (sdocId: number | null | undefined) =>
 const useGetMetadata = (sdocId: number | null | undefined) =>
   useQuery<SourceDocumentMetadataReadResolved[], Error>({
     queryKey: [QueryKey.SDOC_METADATAS, sdocId],
-    queryFn: async () =>
+    queryFn: () =>
       SourceDocumentService.getAllMetadata({
         sdocId: sdocId!,
       }),
@@ -174,7 +174,7 @@ const useGetMetadata = (sdocId: number | null | undefined) =>
 const useGetMetadataByKey = (sdocId: number | null | undefined, key: string) =>
   useQuery<SourceDocumentMetadataReadResolved, Error>({
     queryKey: [QueryKey.SDOC_METADATA_BY_KEY, sdocId, key],
-    queryFn: async () =>
+    queryFn: () =>
       SourceDocumentService.readMetadataByKey({
         sdocId: sdocId!,
         metadataKey: key,
