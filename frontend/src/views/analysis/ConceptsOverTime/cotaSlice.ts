@@ -4,6 +4,7 @@ import { COTAConcept } from "../../../api/openapi/models/COTAConcept.ts";
 import { COTATrainingSettings } from "../../../api/openapi/models/COTATrainingSettings.ts";
 import { DimensionalityReductionAlgorithm } from "../../../api/openapi/models/DimensionalityReductionAlgorithm.ts";
 import { ProjectActions } from "../../../components/Project/projectSlice.ts";
+import ColorUtils from "../../../utils/ColorUtils.ts";
 
 export interface CotaState {
   // project state:
@@ -66,7 +67,10 @@ export const cotaSlice = createSlice({
   initialState,
   reducers: {
     setCurrentConcept: (state, action: PayloadAction<COTAConcept>) => {
-      state.currentConcept = action.payload;
+      state.currentConcept = {
+        ...action.payload,
+        color: ColorUtils.rgbStringToHex(action.payload.color) || action.payload.color,
+      };
     },
     resetCurrentConcept: (state) => {
       state.currentConcept = initialState.currentConcept;
@@ -79,7 +83,10 @@ export const cotaSlice = createSlice({
     },
     onStartConceptEdit: (state, action: PayloadAction<{ concept: COTAConcept }>) => {
       state.conceptEditorOpen = true;
-      state.currentConcept = action.payload.concept;
+      state.currentConcept = {
+        ...action.payload.concept,
+        color: ColorUtils.rgbStringToHex(action.payload.concept.color) || action.payload.concept.color,
+      };
     },
     onFinishConceptEdit: (state) => {
       state.conceptEditorOpen = false;

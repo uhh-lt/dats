@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey.ts";
 import { AnnotationOccurrence } from "./openapi/models/AnnotationOccurrence.ts";
 import { CodeFrequency } from "./openapi/models/CodeFrequency.ts";
@@ -44,16 +44,10 @@ const useAnnotationOccurrences = (projectId: number, userIds: number[], codeId: 
     enabled: userIds.length > 0 && !!codeId,
   });
 
-const useSampleSdocsByTags = () =>
-  useMutation({
-    mutationFn: AnalysisService.sampleSdocsByTags,
-  });
-
 const AnalysisHooks = {
   useCodeFrequencies,
   useCodeOccurrences,
   useAnnotationOccurrences,
-  useSampleSdocsByTags,
 };
 
 export default AnalysisHooks;

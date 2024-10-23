@@ -8,8 +8,7 @@ import {
   MRT_ToggleDensePaddingButton,
   useMaterialReactTable,
 } from "material-react-table";
-import { useEffect, useState } from "react";
-import { DocumentTaggingResult } from "../../../../api/openapi/models/DocumentTaggingResult.ts";
+import { useState } from "react";
 import { DocumentTagRead } from "../../../../api/openapi/models/DocumentTagRead.ts";
 import SdocRenderer from "../../../SourceDocument/SdocRenderer.tsx";
 import TagRenderer from "../../../Tag/TagRenderer.tsx";
@@ -22,7 +21,7 @@ function CustomTagsRenderer({ tags }: { tags: DocumentTagRead[] }) {
   return (
     <Stack>
       {tags.map((tag) => (
-        <TagRenderer key={typeof tag === "number" ? tag : tag.id} tag={tag} mr={0.5} sx={{ textWrap: "nowrap" }} />
+        <TagRenderer key={tag.id} tag={tag} mr={0.5} sx={{ textWrap: "nowrap" }} />
       ))}
     </Stack>
   );
@@ -52,44 +51,15 @@ const columns: MRT_ColumnDef<DocumentTaggingResultRow>[] = [
 ];
 
 function DocumentTagResultStepTable({
-  data,
-  projectTags,
   rows,
   onUpdateRows,
 }: {
-  data: DocumentTaggingResult[];
-  projectTags: DocumentTagRead[];
   rows: DocumentTaggingResultRow[];
   onUpdateRows: React.Dispatch<React.SetStateAction<DocumentTaggingResultRow[]>>;
 }) {
   // local state
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
   const buttonsDisabled = Object.keys(rowSelectionModel).length === 0;
-
-  // init rows
-  useEffect(() => {
-    const tagId2Tag = projectTags.reduce(
-      (acc, tag) => {
-        acc[tag.id] = tag;
-        return acc;
-      },
-      {} as Record<number, DocumentTagRead>,
-    );
-
-    onUpdateRows(
-      data.map((result) => {
-        return {
-          sdocId: result.sdoc_id,
-          current_tags: result.current_tag_ids.map((tagId) => tagId2Tag[tagId]),
-          suggested_tags: result.suggested_tag_ids.map((tagId) => tagId2Tag[tagId]),
-          merged_tags: [...new Set([...result.current_tag_ids, ...result.suggested_tag_ids])].map(
-            (tagId) => tagId2Tag[tagId],
-          ),
-          reasoning: result.reasoning,
-        };
-      }),
-    );
-  }, [data, onUpdateRows, projectTags]);
 
   // actions
   const applyCurrentTags = (selectedRows: MRT_RowModel<DocumentTaggingResultRow>) => () => {

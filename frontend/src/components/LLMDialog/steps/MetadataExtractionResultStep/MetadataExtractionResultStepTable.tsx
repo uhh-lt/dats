@@ -10,7 +10,7 @@ import {
   MRT_ToggleDensePaddingButton,
   useMaterialReactTable,
 } from "material-react-table";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { MetadataExtractionResult } from "../../../../api/openapi/models/MetadataExtractionResult.ts";
 import { ProjectMetadataRead } from "../../../../api/openapi/models/ProjectMetadataRead.ts";
 import { SourceDocumentMetadataBulkUpdate } from "../../../../api/openapi/models/SourceDocumentMetadataBulkUpdate.ts";
@@ -78,11 +78,7 @@ function MetadataExtractionResultStepTable({ data }: { data: MetadataExtractionR
   }, [data]);
 
   // init the rows
-  const [theRows, setTheRows] = useState<MetadataExtractionResultRow[]>([]);
-  useEffect(() => {
-    console.log("init rows!");
-    setTheRows(rows2);
-  }, [rows2]);
+  const [theRows, setTheRows] = useState<MetadataExtractionResultRow[]>(rows2);
 
   // actions
   const handleSelectCell = (sdocId: number, projectMetadataId: number) => () => {

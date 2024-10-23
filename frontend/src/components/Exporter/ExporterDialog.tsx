@@ -155,7 +155,7 @@ function ExporterDialog() {
 
   // global state (react-query)
   const startExport = ExporterHooks.useStartExportJob();
-  const exportJob = ExporterHooks.useGetExportJob(startExport.data?.id);
+  const exportJob = ExporterHooks.usePollExportJob(startExport.data?.id);
   const { user } = useAuth();
   const projectUsers = ProjectHooks.useGetAllUsers(projectId);
 

@@ -1,9 +1,10 @@
 import LabelIcon from "@mui/icons-material/Label";
 import { LoadingButton } from "@mui/lab";
-import { Button, DialogActions, DialogContent, Typography } from "@mui/material";
+import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
 import { useState } from "react";
 import LLMHooks from "../../../../api/LLMHooks.ts";
 import { DocumentTaggingLLMJobResult } from "../../../../api/openapi/models/DocumentTaggingLLMJobResult.ts";
+import { DocumentTagRead } from "../../../../api/openapi/models/DocumentTagRead.ts";
 import ProjectHooks from "../../../../api/ProjectHooks.ts";
 import TagHooks from "../../../../api/TagHooks.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
@@ -13,18 +14,66 @@ import { DocumentTaggingResultRow } from "./DocumentTaggingResultRow.ts";
 import DocumentTagResultStepTable from "./DocumentTagResultStepTable.tsx";
 
 function DocumentTagResultStep({ projectId }: { projectId: number }) {
-  // local client state
-  const [rows, setRows] = useState<DocumentTaggingResultRow[]>([]);
-
   // global client state
   const llmJobId = useAppSelector((state) => state.dialog.llmJobId);
-  const dispatch = useAppDispatch();
 
   // global server state
   const documentTags = ProjectHooks.useGetAllTags(projectId);
-
-  // get the job
   const llmJob = LLMHooks.usePollLLMJob(llmJobId, undefined);
+
+  if (llmJob.isSuccess && llmJob.data.result && documentTags.isSuccess) {
+    return (
+      <DocumentTagResultStepContent
+        jobResult={llmJob.data.result.specific_llm_job_result as DocumentTaggingLLMJobResult}
+        tags={documentTags.data}
+      />
+    );
+  } else if (llmJob.isLoading || documentTags.isLoading) {
+    return (
+      <DialogContent>
+        <CircularProgress />
+      </DialogContent>
+    );
+  } else if (llmJob.isError) {
+    return <DialogContent>{llmJob.error.message}</DialogContent>;
+  } else if (documentTags.isError) {
+    return <DialogContent>{documentTags.error.message}</DialogContent>;
+  } else {
+    return null;
+  }
+}
+
+function DocumentTagResultStepContent({
+  jobResult,
+  tags,
+}: {
+  jobResult: DocumentTaggingLLMJobResult;
+  tags: DocumentTagRead[];
+}) {
+  // local client state
+  const [rows, setRows] = useState<DocumentTaggingResultRow[]>(() => {
+    const tagId2Tag = tags.reduce(
+      (acc, tag) => {
+        acc[tag.id] = tag;
+        return acc;
+      },
+      {} as Record<number, DocumentTagRead>,
+    );
+
+    return jobResult.results.map((result) => {
+      return {
+        sdocId: result.sdoc_id,
+        current_tags: result.current_tag_ids.map((tagId) => tagId2Tag[tagId]),
+        suggested_tags: result.suggested_tag_ids.map((tagId) => tagId2Tag[tagId]),
+        merged_tags: [...new Set([...result.current_tag_ids, ...result.suggested_tag_ids])].map(
+          (tagId) => tagId2Tag[tagId],
+        ),
+        reasoning: result.reasoning,
+      };
+    });
+  });
+
+  const dispatch = useAppDispatch();
 
   // actions
   const handleClose = () => {
@@ -63,14 +112,7 @@ function DocumentTagResultStep({ projectId }: { projectId: number }) {
           </ul>
         </LLMUtterance>
       </DialogContent>
-      {documentTags.isSuccess && llmJob.isSuccess && (
-        <DocumentTagResultStepTable
-          rows={rows}
-          onUpdateRows={setRows}
-          data={(llmJob.data.result?.specific_llm_job_result as DocumentTaggingLLMJobResult).results || []}
-          projectTags={documentTags.data}
-        />
-      )}
+      <DocumentTagResultStepTable rows={rows} onUpdateRows={setRows} />
       <DialogActions>
         <Button onClick={handleClose}>Discard results & close</Button>
         <LoadingButton

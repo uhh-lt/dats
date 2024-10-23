@@ -12,6 +12,7 @@ import {
 } from "../../../components/FilterDialog/filterSlice.ts";
 import { MyFilterExpression } from "../../../components/FilterDialog/filterUtils.ts";
 import { ProjectActions } from "../../../components/Project/projectSlice.ts";
+import ColorUtils from "../../../utils/ColorUtils.ts";
 
 export interface TimelineAnalysisState {
   // project state:
@@ -74,7 +75,10 @@ export const timelineAnalysisSlice = createSlice({
       state.metadataCheckerOpen = action.payload;
     },
     setCurrentConcept: (state, action: PayloadAction<TimelineAnalysisConcept_Output>) => {
-      state.currentConcept = action.payload;
+      state.currentConcept = {
+        ...action.payload,
+        color: ColorUtils.rgbStringToHex(action.payload.color) || action.payload.color,
+      };
     },
     resetCurrentConcept: (state) => {
       state.currentConcept = initialState.currentConcept;
@@ -87,7 +91,10 @@ export const timelineAnalysisSlice = createSlice({
     },
     onStartConceptEdit: (state, action: PayloadAction<{ concept: TimelineAnalysisConcept_Output }>) => {
       state.conceptEditorOpen = true;
-      state.currentConcept = action.payload.concept;
+      state.currentConcept = {
+        ...action.payload.concept,
+        color: ColorUtils.rgbStringToHex(action.payload.concept.color) || action.payload.concept.color,
+      };
     },
     onFinishConceptEdit: (state) => {
       state.conceptEditorOpen = false;

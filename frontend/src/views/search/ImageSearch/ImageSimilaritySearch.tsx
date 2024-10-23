@@ -1,6 +1,6 @@
 import { Divider, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
 import { SearchColumns } from "../../../api/openapi/models/SearchColumns.ts";
@@ -12,7 +12,6 @@ import DocumentInformation from "../../../components/SourceDocument/DocumentInfo
 import TagExplorer from "../../../components/Tag/TagExplorer/TagExplorer.tsx";
 import TwoSidebarsLayout from "../../../layouts/TwoSidebarsLayout.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { AnnoActions } from "../../annotation/annoSlice.ts";
 import SearchStatistics from "../Statistics/SearchStatistics.tsx";
 import { SearchFilterActions } from "../searchFilterSlice.ts";
 import { useInitSearchFilterSlice } from "../useInitSearchFilterSlice.ts";
@@ -59,17 +58,6 @@ function ImageSimilaritySearch() {
     },
     [dispatch],
   );
-
-  // hack to disable sentences
-  const projectCodes = ProjectHooks.useGetAllCodes(projectId, true);
-  useEffect(() => {
-    if (projectCodes.data) {
-      const sentence = projectCodes.data.find((code) => code.name === "SENTENCE");
-      if (sentence) {
-        dispatch(AnnoActions.disableCode(sentence.id));
-      }
-    }
-  }, [dispatch, projectCodes.data]);
 
   // search
   useInitSearchFilterSlice({ projectId });
