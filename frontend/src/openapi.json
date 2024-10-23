@@ -783,8 +783,8 @@
     "/project/{proj_id}/memo/user": {
       "get": {
         "tags": ["project"],
-        "summary": "Returns the Memo attached to the Project with the given ID of the logged-in User if it exists.",
-        "operationId": "get_user_memo",
+        "summary": "Gets or creates the Memo attached to the Project with the given ID of the logged-in User.",
+        "operationId": "get_or_create_user_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }

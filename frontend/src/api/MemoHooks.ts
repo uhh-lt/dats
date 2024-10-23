@@ -54,7 +54,9 @@ const useUpdateMemo = () =>
   useMutation({
     mutationFn: MemoService.updateById,
     onSuccess: (data) => {
-      updateInvalidation(data);
+      if (data.attached_object_type !== AttachedObjectType.PROJECT) {
+        updateInvalidation(data);
+      }
     },
   });
 

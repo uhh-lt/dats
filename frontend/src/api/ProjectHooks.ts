@@ -147,11 +147,11 @@ const useGetAllCodes = (projectId: number, returnAll: boolean = false) => {
 };
 
 // memo
-const useGetMemo = (projectId: number | null | undefined) =>
+const useGetOrCreateMemo = (projectId: number | null | undefined) =>
   useQuery<MemoRead, Error>({
     queryKey: [QueryKey.MEMO_PROJECT, projectId],
     queryFn: () =>
-      ProjectService.getUserMemo({
+      ProjectService.getOrCreateUserMemo({
         projId: projectId!,
       }),
     retry: false,
@@ -228,7 +228,7 @@ const ProjectHooks = {
   // codes
   useGetAllCodes,
   // memo
-  useGetMemo,
+  useGetOrCreateMemo,
   useGetAllUserMemos,
   useCreateMemo,
   // actions
