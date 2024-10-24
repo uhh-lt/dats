@@ -1,6 +1,7 @@
 mammoth==1.6.0
 ollama==0.3.1
 pymupdf==1.23.4
+pyright==1.1.385
 pytest-order==1.2.1
 Scrapy==2.10.0
 scrapy-playwright==0.0.31
