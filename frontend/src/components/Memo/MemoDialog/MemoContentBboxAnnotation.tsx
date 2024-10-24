@@ -60,7 +60,7 @@ export function MemoContentBboxAnnotation({
           requestBody: {
             title: data.title,
             content: data.content,
-            content_json: "[]",
+            content_json: "",
           },
         },
         {
