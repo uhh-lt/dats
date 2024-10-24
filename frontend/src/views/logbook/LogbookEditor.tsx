@@ -22,7 +22,7 @@ function LogbookEditor({ projectId }: LogbookEditorProps) {
       ) : projectMemo.isError ? (
         <div>Error: {projectMemo.error.message}</div>
       ) : projectMemo.isSuccess ? (
-        <MemoBlockEditorView memo={projectMemo.data} />
+        <MemoBlockEditorView memo={projectMemo.data} editable={true} />
       ) : null}
     </Card>
   );
