@@ -9,9 +9,13 @@ export type MemoRead = {
    */
   title: string;
   /**
-   * Content of the Memo
+   * Textual content of the Memo
    */
   content: string;
+  /**
+   * JSON content of the Memo
+   */
+  content_json: string;
   /**
    * ID of the Memo
    */

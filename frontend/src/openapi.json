@@ -7889,7 +7889,8 @@
       "MemoCreate": {
         "properties": {
           "title": { "type": "string", "title": "Title", "description": "Title of the Memo" },
-          "content": { "type": "string", "title": "Content", "description": "Content of the Memo" },
+          "content": { "type": "string", "title": "Content", "description": "Textual content of the Memo" },
+          "content_json": { "type": "string", "title": "Content Json", "description": "JSON content of the Memo" },
           "starred": {
             "anyOf": [{ "type": "boolean" }, { "type": "null" }],
             "title": "Starred",
@@ -7898,13 +7899,14 @@
           }
         },
         "type": "object",
-        "required": ["title", "content"],
+        "required": ["title", "content", "content_json"],
         "title": "MemoCreate"
       },
       "MemoRead": {
         "properties": {
           "title": { "type": "string", "title": "Title", "description": "Title of the Memo" },
-          "content": { "type": "string", "title": "Content", "description": "Content of the Memo" },
+          "content": { "type": "string", "title": "Content", "description": "Textual content of the Memo" },
+          "content_json": { "type": "string", "title": "Content Json", "description": "JSON content of the Memo" },
           "id": { "type": "integer", "title": "Id", "description": "ID of the Memo" },
           "starred": { "type": "boolean", "title": "Starred", "description": "Starred flag of the Memo" },
           "user_id": { "type": "integer", "title": "User Id", "description": "User the Memo belongs to" },
@@ -7935,6 +7937,7 @@
         "required": [
           "title",
           "content",
+          "content_json",
           "id",
           "starred",
           "user_id",
@@ -7956,7 +7959,12 @@
           "content": {
             "anyOf": [{ "type": "string" }, { "type": "null" }],
             "title": "Content",
-            "description": "Content of the Memo"
+            "description": "Textual content of the Memo"
+          },
+          "content_json": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Content Json",
+            "description": "JSON content of the Memo"
           },
           "starred": {
             "anyOf": [{ "type": "boolean" }, { "type": "null" }],

@@ -8,9 +8,13 @@ export type MemoUpdate = {
    */
   title?: string | null;
   /**
-   * Content of the Memo
+   * Textual content of the Memo
    */
   content?: string | null;
+  /**
+   * JSON content of the Memo
+   */
+  content_json?: string | null;
   /**
    * Starred flag of the Memo
    */

@@ -8,9 +8,13 @@ export type MemoCreate = {
    */
   title: string;
   /**
-   * Content of the Memo
+   * Textual content of the Memo
    */
   content: string;
+  /**
+   * JSON content of the Memo
+   */
+  content_json: string;
   /**
    * Starred flag of the Memo
    */
