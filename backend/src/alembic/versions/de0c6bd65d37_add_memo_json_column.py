@@ -32,7 +32,7 @@ def upgrade() -> None:
     # update all existing memos: set the content_json column to default value
     op.execute("""
         UPDATE memo
-        SET content_json = '[]'
+        SET content_json = ''
         WHERE content IS NULL
     """)
 
