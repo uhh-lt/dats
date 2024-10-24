@@ -47,10 +47,8 @@ function EditableTypography({
   const [text, setText] = useState(value);
   const [isEditing, setIsEditing] = useState(false);
 
-  const handleClick = useCallback((event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    if (event.detail >= 2) {
-      setIsEditing(true);
-    }
+  const handleClick = useCallback(() => {
+    setIsEditing(true);
   }, []);
 
   const handleChangeText: FocusEventHandler<HTMLInputElement | HTMLTextAreaElement> = useCallback(
@@ -100,8 +98,12 @@ function EditableTypography({
           <Typography {...props} component="div" onClick={handleClick}>
             {value}
           </Typography>
-          <IconButton onClick={() => setIsEditing(true)} sx={{ ml: 1, color: whiteColor ? "white" : null }}>
-            <EditIcon />
+          <IconButton
+            onClick={() => setIsEditing(true)}
+            sx={{ ml: 1, color: whiteColor ? "white" : null }}
+            size="small"
+          >
+            <EditIcon fontSize="small" />
           </IconButton>
         </>
       )}

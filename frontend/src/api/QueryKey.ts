@@ -57,6 +57,8 @@ export const QueryKey = {
   SDOC_DATA: "sdocData",
   // all tags of a document (by sdoc id)
   SDOC_TAGS: "sdocTags",
+  // all memos of a document (by sdoc id)
+  SDOC_MEMOS: "sdocMemos",
   // Count how many source documents each tag has
   TAG_SDOC_COUNT: "sdocTagCount",
   // annotators (user ids) of a document (by sdoc id)

@@ -9,6 +9,7 @@ import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
 import { SourceDocumentRead } from "../../api/openapi/models/SourceDocumentRead.ts";
 import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { docTypeToIcon } from "../../utils/docTypeToIcon.tsx";
 import { AnnoActions } from "../annotation/annoSlice.ts";
 
 interface AttachedObjectLinkProps {
@@ -56,12 +57,12 @@ function CodeLink({ code }: { code: CodeRead }) {
 
 function SdocLink({ sdoc }: { sdoc: SourceDocumentRead }) {
   return (
-    <>
-      attached to{" "}
-      <Link to={`../annotation/${sdoc.id}`} color="inherit">
-        {sdoc.filename}
+    <Stack direction="row" alignItems="center" component="span">
+      {docTypeToIcon[sdoc.doctype]}
+      <Link to={`../annotation/${sdoc.id}`} color="inherit" style={{ textDecoration: "none" }}>
+        {sdoc.name ?? sdoc.filename}
       </Link>
-    </>
+    </Stack>
   );
 }
 
@@ -88,7 +89,12 @@ function SpanAnnotationLink({ spanAnnotation }: { spanAnnotation: SpanAnnotation
     return (
       <>
         attached to{" "}
-        <Link to={`../annotation/${spanAnnotation.sdoc_id}`} color="inherit" onClick={handleClick}>
+        <Link
+          to={`../annotation/${spanAnnotation.sdoc_id}`}
+          color="inherit"
+          onClick={handleClick}
+          style={{ textDecoration: "none" }}
+        >
           <span
             style={{
               backgroundColor: spanAnnotation.code.color,
@@ -121,11 +127,11 @@ function BBoxAnnotationLink({ bboxAnnotation }: { bboxAnnotation: BBoxAnnotation
     return (
       <>
         attached to{" "}
-        <Link to={`../annotation/${sdoc.data.id}`} color="inherit">
+        <Link to={`../annotation/${sdoc.data.id}`} color="inherit" style={{ textDecoration: "none" }}>
           Bounding Box ({bboxAnnotation.code.name})
         </Link>
         of{" "}
-        <Link to={`../annotation/${sdoc.data.id}`} color="inherit">
+        <Link to={`../annotation/${sdoc.data.id}`} color="inherit" style={{ textDecoration: "none" }}>
           {sdoc.data.filename}
         </Link>
       </>

@@ -8,6 +8,7 @@ import { MemoEvent } from "./MemoDialog/MemoDialogAPI.ts";
 interface MemoDeleteMenuItemProps {
   memoTitle?: string;
   onClick: () => void;
+  onDelete?: () => void;
 }
 
 function MemoDeleteMenuItem({
@@ -24,7 +25,6 @@ function MemoDeleteMenuItem({
   const deleteMutation = MemoHooks.useDeleteMemo();
   const handleDeleteMemo: React.MouseEventHandler<HTMLLIElement> = (event) => {
     event.stopPropagation();
-    onClick();
     if (memoId) {
       ConfirmationAPI.openConfirmationDialog({
         text: `Do you really want to remove the Memo "${memoTitle}"? This action cannot be undone!`,
@@ -37,6 +37,7 @@ function MemoDeleteMenuItem({
                   text: `Deleted memo attached to ${attachedObjectType}`,
                   severity: "success",
                 });
+                onClick();
               },
             },
           );
