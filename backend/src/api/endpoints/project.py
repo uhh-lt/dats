@@ -442,6 +442,7 @@ def get_or_create_user_memo(
             create_dto=MemoCreateIntern(
                 title="Project Memo",
                 content="",
+                content_json="{}",
                 starred=False,
                 user_id=authz_user.user.id,
                 project_id=proj_id,

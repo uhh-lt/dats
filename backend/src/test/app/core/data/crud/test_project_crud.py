@@ -227,10 +227,12 @@ def test_get_add_remove_memos_project(
     # add memo1
     title1 = "".join(random.choices(string.ascii_letters, k=30))
     content1 = "".join(random.choices(string.ascii_letters, k=30))
+    json1 = "{}"
     starred1 = False
     memo1 = MemoCreateIntern(
         title=title1,
         content=content1,
+        content_json=json1,
         user_id=user.id,
         project_id=project.id,
         starred=starred1,
@@ -253,10 +255,12 @@ def test_get_add_remove_memos_project(
     # add memo2
     title2 = "".join(random.choices(string.ascii_letters, k=30))
     content2 = "".join(random.choices(string.ascii_letters, k=30))
+    json2 = "{}"
     starred2 = True
     memo2 = MemoCreateIntern(
         title=title2,
         content=content2,
+        content_json=json2,
         user_id=user.id,
         project_id=project.id,
         starred=starred2,
