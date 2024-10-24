@@ -17,6 +17,9 @@
     "check-unimported": "npx unimported"
   },
   "dependencies": {
+    "@blocknote/core": "^0.17.1",
+    "@blocknote/mantine": "^0.17.1",
+    "@blocknote/react": "^0.17.1",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@fontsource/roboto": "^5.1.0",

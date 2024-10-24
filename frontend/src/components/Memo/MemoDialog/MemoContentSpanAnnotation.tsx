@@ -53,6 +53,7 @@ export function MemoContentSpanAnnotation({
           requestBody: {
             title: data.title,
             content: data.content,
+            content_json: "",
           },
         },
         {

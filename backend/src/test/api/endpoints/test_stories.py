@@ -263,6 +263,7 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
     code1_memo = {
         "title": "You know the codes",
         "content": "and so do i",
+        "content_json": "",
         "starred": True,
     }
     code1_memo_create_response = client.put(
@@ -276,6 +277,7 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
     ).json()[0]
     assert code1_memo_read_response["title"] == code1_memo["title"]
     assert code1_memo_read_response["content"] == code1_memo["content"]
+    assert code1_memo_read_response["content_json"] == code1_memo["content_json"]
     assert code1_memo_read_response["id"] == code1_memo["id"]
     assert code1_memo_read_response["starred"] == code1_memo["starred"]
     assert code1_memo_read_response["project_id"] == code1["project_id"]
@@ -482,6 +484,7 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
     text_doc1_memo = {
         "title": "Read this",
         "content": "This could help you",
+        "content_json": "",
         "starred": False,
     }
     text_doc1_memo_create_response = client.put(
@@ -497,6 +500,9 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
 
     assert text_doc1_memo_read_response["title"] == text_doc1_memo["title"]
     assert text_doc1_memo_read_response["content"] == text_doc1_memo["content"]
+    assert (
+        text_doc1_memo_read_response["content_json"] == text_doc1_memo["content_json"]
+    )
     assert text_doc1_memo_read_response["id"] == text_doc1_memo["id"]
     assert text_doc1_memo_read_response["starred"] == text_doc1_memo["starred"]
     assert text_doc1_memo_read_response["user_id"] == alice["id"]
@@ -515,6 +521,7 @@ def test_project_memos(client, api_user, api_project) -> None:
     project_memo = {
         "title": "This is a memo",
         "content": "containing informations",
+        "content_json": "",
         "starred": True,
     }
     memo_response = client.put(
@@ -527,6 +534,7 @@ def test_project_memos(client, api_user, api_project) -> None:
     ).json()[0]
     assert memo_get["title"] == project_memo["title"]
     assert memo_get["content"] == project_memo["content"]
+    assert memo_get["content_json"] == project_memo["content_json"]
     assert memo_get["id"] == memo_response.json()["id"]
     assert memo_get["starred"] == project_memo["starred"]
     assert memo_get["user_id"] == alice["id"]
@@ -602,6 +610,7 @@ def test_span_annotation_and_memo(client, api_code, api_user, api_document) -> N
     span1_memo1 = {
         "title": "This is urgent",
         "content": "This cat is really cute! Check that out",
+        "content_json": "",
         "starred": True,
     }
     span1_memo1_create_response = client.put(
@@ -615,6 +624,7 @@ def test_span_annotation_and_memo(client, api_code, api_user, api_document) -> N
 
     assert span1_memo1_read_response["title"] == span1_memo1["title"]
     assert span1_memo1_read_response["content"] == span1_memo1["content"]
+    assert span1_memo1_read_response["content_json"] == span1_memo1["content_json"]
     assert span1_memo1_read_response["id"] == span1_memo1_id
     assert span1_memo1_read_response["starred"] == span1_memo1["starred"]
     assert span1_memo1_read_response["user_id"] == alice["id"]
@@ -835,6 +845,7 @@ def test_bbox_annotatation_and_memo(client, api_code, api_user, api_document) ->
     bbox1_memo = {
         "title": "This is an important memo",
         "content": "I like this image",
+        "content_json": "",
         "starred": True,
     }
     bbox1_memo1_create_response = client.put(
@@ -848,6 +859,7 @@ def test_bbox_annotatation_and_memo(client, api_code, api_user, api_document) ->
     ).json()[0]
     assert bbox1_memo1_read_response["title"] == bbox1_memo["title"]
     assert bbox1_memo1_read_response["content"] == bbox1_memo["content"]
+    assert bbox1_memo1_read_response["content_json"] == bbox1_memo["content_json"]
     assert bbox1_memo1_read_response["id"] == bbox1_memo_id
     assert bbox1_memo1_read_response["starred"] == bbox1_memo["starred"]
     assert bbox1_memo1_read_response["user_id"] == alice["id"]
@@ -1056,6 +1068,7 @@ def test_documentTag_and_memo(client, api_user, api_document, api_project) -> No
     doctag1_memo = {
         "title": "This is a memo about...",
         "content": "a doctag!",
+        "content_json": "",
         "starred": False,
     }
     doctag1_memo_create_response = client.put(
@@ -1069,6 +1082,7 @@ def test_documentTag_and_memo(client, api_user, api_document, api_project) -> No
     ).json()[0]
     assert doctag1_memo_read_response["title"] == doctag1_memo["title"]
     assert doctag1_memo_read_response["content"] == doctag1_memo["content"]
+    assert doctag1_memo_read_response["content_json"] == doctag1_memo["content_json"]
     assert doctag1_memo_read_response["id"] == doctag1_memo["id"]
     assert doctag1_memo_read_response["starred"] == doctag1_memo["starred"]
     assert doctag1_memo_read_response["user_id"] == alice["id"]

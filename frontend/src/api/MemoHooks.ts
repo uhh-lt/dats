@@ -21,6 +21,7 @@ const updateInvalidation = (data: MemoRead) => {
       queryClient.setQueryData<MemoRead>([QueryKey.MEMO_PROJECT, data.attached_object_id], data);
       break;
     case AttachedObjectType.SOURCE_DOCUMENT:
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_MEMOS, data.attached_object_id] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC, data.attached_object_id] });
       queryClient.setQueryData<MemoRead>([QueryKey.MEMO_SDOC, data.attached_object_id], data);
       break;
@@ -54,7 +55,9 @@ const useUpdateMemo = () =>
   useMutation({
     mutationFn: MemoService.updateById,
     onSuccess: (data) => {
-      updateInvalidation(data);
+      if (data.attached_object_type !== AttachedObjectType.PROJECT) {
+        updateInvalidation(data);
+      }
     },
   });
 
@@ -79,6 +82,7 @@ const deleteInvalidation = (data: MemoRead) => {
       break;
     case AttachedObjectType.SOURCE_DOCUMENT:
       queryClient.removeQueries({ queryKey: [QueryKey.MEMO_SDOC, data.attached_object_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_MEMOS, data.attached_object_id] });
       queryClient.invalidateQueries({
         queryKey: [QueryKey.MEMO_SDOC_RELATED, data.attached_object_id],
       });

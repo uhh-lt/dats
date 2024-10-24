@@ -3,6 +3,7 @@ import Portal from "@mui/material/Portal";
 import { useContext } from "react";
 import { useParams } from "react-router-dom";
 import { AppBarContext } from "../../layouts/TwoBarLayout.tsx";
+import LogbookEditor from "./LogbookEditor.tsx";
 import SearchMemoTable from "./MemoSearch/SearchMemoTable.tsx";
 
 // todo: implement recent activities timeline
@@ -22,7 +23,7 @@ function Logbook() {
           <SearchMemoTable projectId={projectId} />
         </Grid2>
         <Grid2 size={{ md: 6 }} className="h100">
-          <div>Editor currently not supported</div>
+          <LogbookEditor projectId={projectId} />
         </Grid2>
       </Grid2>
     </>

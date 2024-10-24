@@ -19,13 +19,19 @@ from .dto_base import UpdateDTOBase
 # Properties shared across all DTOs
 class MemoBaseDTO(BaseModel):
     title: str = Field(description="Title of the Memo")
-    content: str = Field(description="Content of the Memo")
+    content: str = Field(description="Textual content of the Memo")
+    content_json: str = Field(description="JSON content of the Memo")
 
 
 # Properties to update
 class MemoUpdate(BaseModel, UpdateDTOBase):
     title: Optional[str] = Field(description="Title of the Memo", default=None)
-    content: Optional[str] = Field(description="Content of the Memo", default=None)
+    content: Optional[str] = Field(
+        description="Textual content of the Memo", default=None
+    )
+    content_json: Optional[str] = Field(
+        description="JSON content of the Memo", default=None
+    )
     starred: Optional[bool] = Field(
         description="Starred flag of the Memo", default=None
     )

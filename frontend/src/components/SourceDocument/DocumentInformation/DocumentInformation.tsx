@@ -3,11 +3,9 @@ import { TabContext, TabPanel } from "@mui/lab";
 import { Box, BoxProps, Button, CircularProgress, List, Stack, Tab, Tabs } from "@mui/material";
 import { useState } from "react";
 import SdocHooks from "../../../api/SdocHooks.ts";
-import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
-import MemoCard from "../../Memo/MemoCard/MemoCard.tsx";
-import MemoDialogAPI from "../../Memo/MemoDialog/MemoDialogAPI.ts";
 import TagMenuButton from "../../Tag/TagMenu/TagMenuButton.tsx";
+import DocumentMemos from "./DocumentMemos/DocumentMemos.tsx";
 import DocumentMetadataRow from "./DocumentMetadataRow/DocumentMetadataRow.tsx";
 import DocumentTagRow from "./DocumentTagRow.tsx";
 import MetadataCreateButton from "./MetadataCreateButton.tsx";
@@ -29,7 +27,6 @@ export default function DocumentInformation({
   const metadata = SdocHooks.useGetMetadata(sdocId);
   const documentTags = SdocHooks.useGetAllDocumentTags(sdocId);
   const linkedSdocIds = SdocHooks.useGetLinkedSdocIds(sdocId);
-  const memos = SdocHooks.useGetRelatedMemos(sdocId);
 
   // tabs
   const [tab, setTab] = useState("info");
@@ -108,39 +105,8 @@ export default function DocumentInformation({
               )}
             </Stack>
           </TabPanel>
-          <TabPanel value="memos" sx={{ p: 1 }} className="h100">
-            {memos.isLoading && (
-              <Box textAlign={"center"} pt={2}>
-                <CircularProgress />
-              </Box>
-            )}
-            {memos.isError && <span>{memos.error.message}</span>}
-            {memos.isSuccess && (
-              <>
-                {memos.data.filter((memo) => memo.attached_object_type === AttachedObjectType.SOURCE_DOCUMENT)
-                  .length === 0 && (
-                  <Button
-                    variant="text"
-                    size="small"
-                    startIcon={<AddCircleIcon />}
-                    sx={{ mb: 1 }}
-                    onClick={() =>
-                      MemoDialogAPI.openMemo({
-                        attachedObjectType: AttachedObjectType.SOURCE_DOCUMENT,
-                        attachedObjectId: sdocId,
-                      })
-                    }
-                  >
-                    Add Document Memo
-                  </Button>
-                )}
-                <Stack direction="column" spacing={0.5}>
-                  {memos.data.map((memo) => (
-                    <MemoCard memo={memo} key={memo.id} />
-                  ))}
-                </Stack>
-              </>
-            )}
+          <TabPanel value="memos" sx={{ p: 0 }} className="h100">
+            <DocumentMemos sdocId={sdocId} key={sdocId} />
           </TabPanel>
         </Box>
       </TabContext>

@@ -87,11 +87,13 @@ def test_add_get_memo(
 ) -> None:
     title = "".join(random.choices(string.ascii_letters, k=15))
     content = "".join(random.choices(string.ascii_letters, k=30))
+    content_json = "{}"
     starred = False
 
     memo = MemoCreateIntern(
         title=title,
         content=content,
+        content_json=content_json,
         user_id=user.id,
         project_id=project.id,
         starred=starred,
@@ -109,6 +111,7 @@ def test_add_get_memo(
     assert len(memo_new) == 1
     assert memo_new[0].title == title
     assert memo_new[0].content == content
+    assert memo_new[0].content_json == content_json
     assert memo_new[0].starred == starred
 
     # get memo

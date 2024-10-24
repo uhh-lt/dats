@@ -53,6 +53,7 @@ export function MemoContentCode({
           requestBody: {
             title: data.title,
             content: data.content,
+            content_json: "",
           },
         },
         {

@@ -91,6 +91,17 @@ const useGetAllDocumentTags = (sdocId: number | null | undefined) =>
   });
 
 // memo
+const useGetMemos = (sdocId: number | null | undefined) =>
+  useQuery<MemoRead[], Error>({
+    queryKey: [QueryKey.SDOC_MEMOS, sdocId],
+    queryFn: () =>
+      SourceDocumentService.getMemos({
+        sdocId: sdocId!,
+      }),
+    retry: false,
+    enabled: !!sdocId,
+  });
+
 const useGetMemo = (sdocId: number | null | undefined) =>
   useQuery<MemoRead, Error>({
     queryKey: [QueryKey.MEMO_SDOC, sdocId],
@@ -120,6 +131,7 @@ const useCreateMemo = () =>
       queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMOS, memo.project_id] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC, memo.attached_object_id] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED, memo.attached_object_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_MEMOS, memo.attached_object_id] });
     },
   });
 
@@ -260,6 +272,7 @@ const SdocHooks = {
   useGetBBoxAnnotationsBatch,
   // memo
   useGetMemo,
+  useGetMemos,
   useGetRelatedMemos,
   useCreateMemo,
   // name

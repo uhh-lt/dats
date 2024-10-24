@@ -385,11 +385,11 @@ export class ProjectService {
     });
   }
   /**
-   * Returns the Memo attached to the Project with the given ID of the logged-in User if it exists.
+   * Gets or creates the Memo attached to the Project with the given ID of the logged-in User.
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getUserMemo({ projId }: { projId: number }): CancelablePromise<MemoRead> {
+  public static getOrCreateUserMemo({ projId }: { projId: number }): CancelablePromise<MemoRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/project/{proj_id}/memo/user",

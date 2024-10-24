@@ -5,6 +5,7 @@ from app.core.data.dto.search import (
     PaginatedElasticSearchDocumentHits,
 )
 from app.core.data.orm.memo import MemoORM
+from app.core.data.orm.object_handle import ObjectHandleORM
 from app.core.db.sql_service import SQLService
 from app.core.filters.columns import (
     AbstractColumns,
@@ -102,10 +103,15 @@ def __memo_filter(
     page_size: Optional[int] = None,
 ) -> Tuple[List[int], int]:
     with SQLService().db_session() as db:
-        query = db.query(
-            MemoORM.id,
-        ).filter(
-            MemoORM.project_id == project_id,
+        query = (
+            db.query(
+                MemoORM.id,
+            )
+            .join(MemoORM.attached_to)
+            .filter(
+                MemoORM.project_id == project_id,
+                ObjectHandleORM.project_id.is_(None),  # never search project memos
+            )
         )
 
         query = apply_filtering(query=query, filter=filter, db=db)
