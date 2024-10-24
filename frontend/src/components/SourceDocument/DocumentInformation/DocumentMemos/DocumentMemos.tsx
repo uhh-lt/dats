@@ -2,11 +2,9 @@ import AddCircleIcon from "@mui/icons-material/AddCircle";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import { Box, Button, CircularProgress, IconButton, Stack } from "@mui/material";
 import { useState } from "react";
-import { AttachedObjectType } from "../../../../api/openapi/models/AttachedObjectType.ts";
 import SdocHooks from "../../../../api/SdocHooks.ts";
 import { useAuth } from "../../../../auth/useAuth.ts";
 import MemoBlockEditor from "../../../Memo/MemoBlockEditor.tsx";
-import MemoDialogAPI from "../../../Memo/MemoDialog/MemoDialogAPI.ts";
 import MemoCard from "./MemoCard.tsx";
 
 interface DocumentMemosProps {
@@ -46,6 +44,21 @@ function DocumentMemoList({ sdocId, onClick }: { sdocId: number; onClick: (memoI
   const { user } = useAuth();
   const memos = SdocHooks.useGetMemos(sdocId);
 
+  // create memo
+  const { mutate: createMemo, isPending } = SdocHooks.useCreateMemo();
+  const handleAddMemo = () => {
+    if (!user) return;
+
+    createMemo({
+      sdocId: sdocId,
+      requestBody: {
+        content: "",
+        content_json: "",
+        title: `${user.first_name} ${user.last_name}'s Memo`,
+      },
+    });
+  };
+
   return (
     <Box p={1}>
       {memos.isLoading && (
@@ -62,12 +75,8 @@ function DocumentMemoList({ sdocId, onClick }: { sdocId: number; onClick: (memoI
               size="small"
               startIcon={<AddCircleIcon />}
               sx={{ mb: 1 }}
-              onClick={() =>
-                MemoDialogAPI.openMemo({
-                  attachedObjectType: AttachedObjectType.SOURCE_DOCUMENT,
-                  attachedObjectId: sdocId,
-                })
-              }
+              onClick={handleAddMemo}
+              disabled={!user || isPending}
             >
               Add Document Memo
             </Button>
