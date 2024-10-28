@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import quote
 
 import requests
+from tqdm import tqdm
 
 
 class DATSAPI:
@@ -100,7 +101,7 @@ class DATSAPI:
 
     def read_all_projects(self):
         r = requests.get(
-            self.BASE_PATH + f"user/{self.user_id}/project",
+            self.BASE_PATH + "user/project",
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()
@@ -140,13 +141,16 @@ class DATSAPI:
         except Exception:
             return None
 
-    def read_all_sdocIDs(self, proj_id: int):
+    def read_all_sdoc_ids(self, proj_id: int):
         # get all sdoc ids
         r = requests.post(
             self.BASE_PATH
             + f"search/sdoc?search_query=%20&project_id={proj_id}&expert_mode=false&highlight=false",
             data=json.dumps(
-                {"filter": {"items": [], "logic_operator": "or"}, "sorts": []}
+                {
+                    "filter": {"id": "asdf", "items": [], "logic_operator": "or"},
+                    "sorts": [],
+                }
             ),
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
@@ -154,7 +158,7 @@ class DATSAPI:
         hits = r.json()["hits"]
         return [hit["document_id"] for hit in hits]
 
-    def read_all_sdocIDs_by_tags(self, proj_id: int, tags: List[int]):
+    def read_all_sdoc_ids_by_tags(self, proj_id: int, tags: List[int]):
         # get all sdoc ids
         r = requests.post(
             self.BASE_PATH
@@ -162,8 +166,10 @@ class DATSAPI:
             data=json.dumps(
                 {
                     "filter": {
+                        "id": "asdf",
                         "items": [
                             {
+                                "id": "asdf2",
                                 "column": "SC_DOCUMENT_TAG_ID_LIST",
                                 "operator": "ID_LIST_CONTAINS",
                                 "value": tag,
@@ -214,6 +220,54 @@ class DATSAPI:
         else:
             print("No files to upload!")
             return None
+
+    def upload_file_batch(
+        self,
+        project_id: int,
+        file_batch: List[Tuple[str, Tuple[str, bytes, str]]],
+        filter_duplicate_files_before_upload: bool,
+    ):
+        # file upload
+        preprocessing_job = self.upload_files(
+            proj_id=project_id,
+            files=file_batch,
+            filter_duplicate_files_before_upload=filter_duplicate_files_before_upload,
+        )
+        if preprocessing_job is None:
+            print("Upload skipped!")
+            return
+
+        total = len(preprocessing_job["payloads"])
+
+        # WAITING = "Waiting"  # Initializing (not started yet)
+        # RUNNING = "Running"  # (currently in progress)
+        # FINISHED = "Finished"  # (successfully finished)
+        # ERROR = "Errorneous"  # (failed to finish)
+        # ABORTED = "Aborted"  # (aborted by user)
+        payloads_status = [
+            payload["status"] for payload in preprocessing_job["payloads"]
+        ]
+        finished_docs = payloads_status.count("Finished")
+        is_finished = not ("Waiting" in payloads_status or "Running" in payloads_status)
+
+        with tqdm(total=total, desc="Document Preprocessing: ", position=1) as pbar:
+            pbar.update(finished_docs)
+            while not is_finished:
+                sleep(5)
+
+                preprocessing_job = self.read_preprocessing_job_status(
+                    preprojob_id=preprocessing_job["id"]
+                )
+
+                payloads_status = [
+                    payload["status"] for payload in preprocessing_job["payloads"]
+                ]
+                finished_docs = payloads_status.count("Finished")
+                is_finished = not (
+                    "Waiting" in payloads_status or "Running" in payloads_status
+                )
+
+                pbar.update(finished_docs)
 
     # TAGS
 
@@ -339,11 +393,12 @@ if __name__ == "__main__":
     dats.me()
 
     # create project
-    project = dats.create_project(title="test", description="test")
+    project_name = "test"
+    project = dats.create_project(title=project_name, description=project_name)
     print("created project", project)
 
     # get project
-    project = dats.get_proj_by_title(title="test")
+    project = dats.get_proj_by_title(title=project_name)
     assert project is not None
     print("got project by title", project)
 
@@ -384,7 +439,7 @@ if __name__ == "__main__":
     import magic
 
     files: List[Tuple[str, Tuple[str, bytes, str]]] = []
-    for file in Path("./test_files").iterdir():
+    for file in Path(Path(__file__).parent / "test_files").iterdir():
         if not file.is_file() or file.suffix != ".txt":
             continue
 
@@ -392,30 +447,22 @@ if __name__ == "__main__":
         mime = magic.from_buffer(file_bytes, mime=True)
         files.append(("uploaded_files", (file.name, file_bytes, mime)))
 
-    num_files_to_upload = dats.upload_files(
-        proj_id=project["id"], files=files, filter_duplicate_files_before_upload=True
+    dats.upload_file_batch(
+        project_id=project["id"],
+        file_batch=files,
+        filter_duplicate_files_before_upload=True,
     )
-
-    # wait for pre-processing to finishe
-    status = dats.read_project_status(proj_id=project["id"])
-    while status["num_sdocs_finished"] != (sdocs_in_project + num_files_to_upload):
-        sleep(1)
-        status = dats.read_project_status(proj_id=project["id"])
-        print(
-            f"Uploading documents. Current status: {status['num_sdocs_finished'] - sdocs_in_project} / {num_files_to_upload}"
-        )
-
     print("Upload success!")
 
     # get all sdocs
-    sdoc_ids = dats.read_all_sdocIDs(proj_id=project["id"])
+    sdoc_ids = dats.read_all_sdoc_ids(proj_id=project["id"])
     print("got all sdocs ids", sdoc_ids)
 
     # bulk apply tags
     dats.bulk_apply_tags(sdoc_ids=sdoc_ids, tag_ids=[tag["id"]])
 
     # read all sdocs by tags
-    sdoc_ids = dats.read_all_sdocIDs_by_tags(proj_id=project["id"], tags=[tag["id"]])
+    sdoc_ids = dats.read_all_sdoc_ids_by_tags(proj_id=project["id"], tags=[tag["id"]])
     print("got all sdocs ids by tags", sdoc_ids)
 
     # create project metadata

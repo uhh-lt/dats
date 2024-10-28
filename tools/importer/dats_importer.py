@@ -2,7 +2,6 @@ import argparse
 import json
 import math
 from pathlib import Path
-from time import sleep
 from typing import List, Tuple
 
 import magic
@@ -237,53 +236,6 @@ for file in tqdm(files_in_dir, f"Reading and checking files from {directory}!"):
 temp = {upload_file[1][0]: upload_file for upload_file in files}
 files = list(temp.values())
 
-
-def upload_file_batch(
-    project_id: int, file_batch: List[Tuple[str, Tuple[str, bytes, str]]]
-):
-    # file upload
-    preprocessing_job = api.upload_files(
-        proj_id=project_id,
-        files=file_batch,
-        filter_duplicate_files_before_upload=args.filter_duplicate_files_before_upload,
-    )
-    if preprocessing_job is None:
-        print("Upload skipped!")
-        return
-
-    total = len(preprocessing_job["payloads"])
-
-    # WAITING = "Waiting"  # Initializing (not started yet)
-    # RUNNING = "Running"  # (currently in progress)
-    # FINISHED = "Finished"  # (successfully finished)
-    # ERROR = "Errorneous"  # (failed to finish)
-    # ABORTED = "Aborted"  # (aborted by user)
-    payloads_status = [payload["status"] for payload in preprocessing_job["payloads"]]
-    finished_docs = payloads_status.count("Finished")
-    is_finished = not ("Waiting" in payloads_status or "Running" in payloads_status)
-
-    with tqdm(total=total, desc="Document Preprocessing: ", position=1) as pbar:
-        pbar.update(finished_docs)
-        while not is_finished:
-            sleep(5)
-
-            preprocessing_job = api.read_preprocessing_job_status(
-                preprojob_id=preprocessing_job["id"]
-            )
-
-            payloads_status = [
-                payload["status"] for payload in preprocessing_job["payloads"]
-            ]
-            finished_docs = payloads_status.count("Finished")
-            is_finished = not (
-                "Waiting" in payloads_status or "Running" in payloads_status
-            )
-
-            pbar.update(finished_docs)
-
-    print("Upload success!")
-
-
 print(f"Uploading {len(files)} files to project '{project['title']}'!")
 if (args.max_num_docs != -1) and (len(files) > args.max_num_docs):
     print("WARNING: More files found than max_num_docs!")
@@ -296,8 +248,10 @@ for i in tqdm(
     desc="Uploading batches... ",
     total=num_batches,
 ):
-    upload_file_batch(
-        project_id=project["id"], file_batch=files[i : i + args.batch_size]
+    api.upload_file_batch(
+        project_id=project["id"],
+        file_batch=files[i : i + args.batch_size],
+        filter_duplicate_files_before_upload=args.filter_duplicate_files_before_upload,
     )
     api.refresh_login()
     if args.max_num_docs != -1 and (i + args.batch_size) >= args.max_num_docs:
@@ -317,8 +271,10 @@ if tag is None:
 
 # apply tag to all untagged documents
 tag_ids = [tag["id"] for tag in api.read_all_tags(proj_id=project["id"])]
-sdoc_ids = set(api.read_all_sdocIDs(proj_id=project["id"]))
-tagged_sdoc_ids = set(api.read_all_sdocIDs_by_tags(proj_id=project["id"], tags=tag_ids))
+sdoc_ids = set(api.read_all_sdoc_ids(proj_id=project["id"]))
+tagged_sdoc_ids = set(
+    api.read_all_sdoc_ids_by_tags(proj_id=project["id"], tags=tag_ids)
+)
 untagged_sdoc_ids = sdoc_ids - tagged_sdoc_ids
 api.bulk_apply_tags(sdoc_ids=list(untagged_sdoc_ids), tag_ids=[tag["id"]])
 
