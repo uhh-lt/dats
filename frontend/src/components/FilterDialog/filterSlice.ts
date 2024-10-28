@@ -21,8 +21,8 @@ export interface FilterState {
   filter: Record<string, MyFilter>;
   editableFilter: MyFilter;
   defaultFilterExpression: MyFilterExpression;
-  column2Info: Record<string, ColumnInfo>;
   // app state:
+  column2Info: Record<string, ColumnInfo>;
   expertMode: boolean;
 }
 
@@ -51,8 +51,6 @@ export const resetProjectFilterState = (state: Draft<FilterState>, defaultFilter
   state.filter = initialState.filter;
   state.editableFilter = initialState.editableFilter;
   state.defaultFilterExpression = initialState.defaultFilterExpression;
-  state.column2Info = initialState.column2Info;
-  state.expertMode = initialState.expertMode;
 };
 
 export const getOrCreateFilter = (state: FilterState, filterId: string, filter?: MyFilter): MyFilter => {
