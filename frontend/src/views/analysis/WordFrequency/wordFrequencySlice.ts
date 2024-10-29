@@ -41,9 +41,14 @@ export const WordFrequencySlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(ProjectActions.changeProject, (state) => {
+      .addCase(ProjectActions.changeProject, (state, action) => {
         console.log("Project changed! Resetting 'wordFrequency' state.");
-        resetProjectFilterState(state, defaultFilterExpression);
+        resetProjectFilterState({
+          state,
+          defaultFilterExpression,
+          projectId: action.payload,
+          sliceName: "wordFrequency",
+        });
         resetProjectTableState(state);
         state.sortingModel = initialState.sortingModel;
       })

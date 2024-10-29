@@ -6,13 +6,13 @@ import DownloadSdocsButton from "../../../components/SourceDocument/DownloadSdoc
 import TagMenuButton from "../../../components/Tag/TagMenu/TagMenuButton.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
-import { SearchFilterActions } from "../searchFilterSlice.ts";
+import { SearchActions } from "../DocumentSearch/searchSlice.ts";
 import ImageSimilaritySearchOptionsMenu from "./ImageSimilaritySearchOptionsMenu.tsx";
 import SearchBar from "./SearchBar.tsx";
 import { ImageSearchActions } from "./imageSearchSlice.ts";
 
 // this has to match ImageSimilaritySearch.tsx!
-const filterStateSelector = (state: RootState) => state.searchFilter;
+const filterStateSelector = (state: RootState) => state.search;
 const filterName = "imageSimilaritySearch";
 
 interface ImageSimilarityToolbarProps {
@@ -76,7 +76,7 @@ function ImageSimilaritySearchToolbar({ searchResultDocumentIds }: ImageSimilari
         anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
         filterName={filterName}
         filterStateSelector={filterStateSelector}
-        filterActions={SearchFilterActions}
+        filterActions={SearchActions}
       />
       <SearchBar placeholder="Search for images" />
       <ImageSimilaritySearchOptionsMenu />

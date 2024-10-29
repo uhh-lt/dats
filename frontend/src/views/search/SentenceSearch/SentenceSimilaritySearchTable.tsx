@@ -26,13 +26,13 @@ import { selectSelectedDocumentIds } from "../../../components/tableSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
 import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
-import { SearchFilterActions } from "../searchFilterSlice.ts";
+import { SearchActions } from "../DocumentSearch/searchSlice.ts";
 import { useInitSearchFilterSlice } from "../useInitSearchFilterSlice.ts";
 import SentenceSimilaritySearchOptionsMenu from "./SentenceSimilaritySearchOptionsMenu.tsx";
 import { SentenceSearchActions } from "./sentenceSearchSlice.ts";
 
 // this has to match SentenceSimilaritySearch.tsx!
-const filterStateSelector = (state: RootState) => state.searchFilter;
+const filterStateSelector = (state: RootState) => state.search;
 const filterName = "sentenceSimilaritySearch";
 
 interface SentenceSimilaritySearchTableProps {
@@ -257,7 +257,7 @@ function SentenceSimilaritySearchTable({
           buttonProps={{ size: "small" }}
           filterName={filterName}
           filterStateSelector={filterStateSelector}
-          filterActions={SearchFilterActions}
+          filterActions={SearchActions}
           transformOrigin={{ horizontal: "left", vertical: "top" }}
           anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
         />

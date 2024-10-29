@@ -1,6 +1,8 @@
 import { CaseReducerActions, Draft, PayloadAction } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
 import { LogicalOperator } from "../../api/openapi/models/LogicalOperator.ts";
+import { QueryKey } from "../../api/QueryKey.ts";
+import queryClient from "../../plugins/ReactQueryClient.ts";
 import {
   ColumnInfo,
   FilterOperators,
@@ -26,6 +28,8 @@ export interface FilterState {
   expertMode: boolean;
 }
 
+export const tableInfoQueryKey = (sliceName: string, projectId: number) => [QueryKey.TABLE_INFO, sliceName, projectId];
+
 export const createInitialFilterState = (defaultFilterExpression: MyFilterExpression): FilterState => {
   return {
     filter: {
@@ -46,12 +50,24 @@ export const createInitialFilterState = (defaultFilterExpression: MyFilterExpres
   };
 };
 
-export const resetProjectFilterState = (state: Draft<FilterState>, defaultFilterExpression: MyFilterExpression) => {
+export const resetProjectFilterState = ({
+  state,
+  defaultFilterExpression,
+  projectId,
+  sliceName,
+}: {
+  state: Draft<FilterState>;
+  defaultFilterExpression: MyFilterExpression;
+  projectId: number;
+  sliceName: string;
+}) => {
   const initialState = createInitialFilterState(defaultFilterExpression);
   state.filter = initialState.filter;
   state.editableFilter = initialState.editableFilter;
   state.defaultFilterExpression = initialState.defaultFilterExpression;
+  // reset column info
   state.column2Info = initialState.column2Info;
+  queryClient.removeQueries({ queryKey: tableInfoQueryKey(sliceName, projectId) });
 };
 
 export const getOrCreateFilter = (state: FilterState, filterId: string, filter?: MyFilter): MyFilter => {

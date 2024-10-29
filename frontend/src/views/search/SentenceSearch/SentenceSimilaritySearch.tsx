@@ -12,8 +12,8 @@ import DocumentInformation from "../../../components/SourceDocument/DocumentInfo
 import TagExplorer from "../../../components/Tag/TagExplorer/TagExplorer.tsx";
 import TwoSidebarsLayout from "../../../layouts/TwoSidebarsLayout.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { SearchActions } from "../DocumentSearch/searchSlice.ts";
 import SearchStatistics from "../Statistics/SearchStatistics.tsx";
-import { SearchFilterActions } from "../searchFilterSlice.ts";
 import SentenceSimilaritySearchTable from "./SentenceSimilaritySearchTable.tsx";
 
 const filterName = "sentenceSimilaritySearch";
@@ -38,27 +38,25 @@ function SentenceSimilaritySearch() {
   // handle filtering
   const handleAddCodeFilter = useCallback(
     (stat: SpanEntityStat) => {
-      dispatch(
-        SearchFilterActions.onAddSpanAnnotationFilter({ codeId: stat.code_id, spanText: stat.span_text, filterName }),
-      );
+      dispatch(SearchActions.onAddSpanAnnotationFilter({ codeId: stat.code_id, spanText: stat.span_text, filterName }));
     },
     [dispatch],
   );
   const handleAddKeywordFilter = useCallback(
     (keyword: string) => {
-      dispatch(SearchFilterActions.onAddKeywordFilter({ keywordMetadataIds, keyword, filterName }));
+      dispatch(SearchActions.onAddKeywordFilter({ keywordMetadataIds, keyword, filterName }));
     },
     [dispatch, keywordMetadataIds],
   );
   const handleAddTagFilter = useCallback(
     (tagId: number) => {
-      dispatch(SearchFilterActions.onAddTagFilter({ tagId, filterName }));
+      dispatch(SearchActions.onAddTagFilter({ tagId, filterName }));
     },
     [dispatch],
   );
 
   // search
-  const filter = useAppSelector((state) => state.searchFilter.filter[filterName]) || createEmptyFilter(filterName);
+  const filter = useAppSelector((state) => state.search.filter[filterName]) || createEmptyFilter(filterName);
   const topK = useAppSelector((state) => state.sentenceSearch.topK);
   const threshold = useAppSelector((state) => state.sentenceSearch.threshold);
   const searchQuery = useAppSelector((state) => state.sentenceSearch.searchQuery);

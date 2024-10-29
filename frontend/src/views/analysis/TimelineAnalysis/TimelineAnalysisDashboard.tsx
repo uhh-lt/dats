@@ -149,7 +149,7 @@ function TimelineAnalysisDashboard() {
     isDeletingAnalysis: isDeletingTimelineAnalysis,
     deletingAnalysisId: deletingVariables?.timelineAnalysisId,
     duplicatingAnalysisId: duplicatingVariables?.timelineAnalysisId,
-    onOpenAnalysis: (analysisId) => dispatch(TimelineAnalysisActions.onOpenTimelineAnalysis({ analysisId })),
+    onOpenAnalysis: (analysisId) => dispatch(TimelineAnalysisActions.onOpenTimelineAnalysis({ analysisId, projectId })),
     handleCreateAnalysis,
     handleEditAnalysis,
     handleDeleteAnalysis,

@@ -27,7 +27,7 @@ import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
 import { useTableInfiniteScroll } from "../../../utils/useTableInfiniteScroll.ts";
 import { LogbookActions } from "../logbookSlice.ts";
 import SearchMemoOptionsMenu from "./SearchMemoOptionsMenu.tsx";
-import { useInitMemoFilterSlice } from "./useInitMemoFilterSlice.ts";
+import { useInitLogbookFilterSlice } from "./useInitLogbookFilterSlice.ts";
 
 const filterStateSelector = (state: RootState) => state.logbook;
 const filterName = "root";
@@ -73,7 +73,7 @@ function SearchMemoTable({ projectId }: SearchMemoTableProps) {
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
 
   // table columns
-  const tableInfo = useInitMemoFilterSlice({ projectId });
+  const tableInfo = useInitLogbookFilterSlice({ projectId });
   const columns = useMemo(() => {
     if (!tableInfo || !user) return [];
 

@@ -55,8 +55,8 @@ const initialState: FilterState & TimelineAnalysisState = {
   isBarPlot: false,
 };
 
-const resetTimelineAnalysisState = (state: Draft<FilterState & TimelineAnalysisState>) => {
-  resetProjectFilterState(state, defaultFilterExpression);
+const resetTimelineAnalysisState = (state: Draft<FilterState & TimelineAnalysisState>, projectId: number) => {
+  resetProjectFilterState({ state, defaultFilterExpression, sliceName: "timelineAnalysis", projectId });
   state.lastOpenedTimelineAnalysisId = initialState.lastOpenedTimelineAnalysisId;
   state.metadataCheckerOpen = initialState.metadataCheckerOpen;
   state.conceptEditorOpen = initialState.conceptEditorOpen;
@@ -107,18 +107,18 @@ export const timelineAnalysisSlice = createSlice({
     onTogglePlotType: (state) => {
       state.isBarPlot = !state.isBarPlot;
     },
-    onOpenTimelineAnalysis: (state, action: PayloadAction<{ analysisId: number }>) => {
+    onOpenTimelineAnalysis: (state, action: PayloadAction<{ analysisId: number; projectId: number }>) => {
       if (state.lastOpenedTimelineAnalysisId !== action.payload.analysisId) {
         console.log("Timeline Analysis changed! Resetting 'timelineAnalysis' state.");
-        resetTimelineAnalysisState(state);
+        resetTimelineAnalysisState(state, action.payload.projectId);
       }
       state.lastOpenedTimelineAnalysisId = action.payload.analysisId;
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(ProjectActions.changeProject, (state) => {
+    builder.addCase(ProjectActions.changeProject, (state, action) => {
       console.log("Project changed! Resetting 'timelineAnalysis' state.");
-      resetTimelineAnalysisState(state);
+      resetTimelineAnalysisState(state, action.payload);
     });
   },
 });

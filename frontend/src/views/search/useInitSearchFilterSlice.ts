@@ -4,7 +4,7 @@ import { QueryKey } from "../../api/QueryKey.ts";
 import { ColumnInfo } from "../../components/FilterDialog/filterUtils.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
 import { AppDispatch } from "../../store/store.ts";
-import { SearchFilterActions } from "./searchFilterSlice.ts";
+import { SearchActions } from "./DocumentSearch/searchSlice.ts";
 
 const useGetSearchInfo = (projectId: number, dispatch: AppDispatch) =>
   useQuery<ColumnInfo[]>({
@@ -23,7 +23,7 @@ const useGetSearchInfo = (projectId: number, dispatch: AppDispatch) =>
           [info.column]: info,
         };
       }, {});
-      dispatch(SearchFilterActions.init({ columnInfoMap }));
+      dispatch(SearchActions.init({ columnInfoMap }));
       return columnInfo;
     },
     staleTime: Infinity,

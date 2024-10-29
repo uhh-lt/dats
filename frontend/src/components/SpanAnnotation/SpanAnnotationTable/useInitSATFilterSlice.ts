@@ -2,12 +2,13 @@ import { useQuery } from "@tanstack/react-query";
 import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { AppDispatch } from "../../../store/store.ts";
+import { tableInfoQueryKey } from "../../FilterDialog/filterSlice.ts";
 import { ColumnInfo } from "../../FilterDialog/filterUtils.ts";
 import { SATFilterActions } from "./satFilterSlice.ts";
 
 const useGetSATInfo = (projectId: number, dispatch: AppDispatch) =>
   useQuery<ColumnInfo[]>({
-    queryKey: ["tableInfo", "spanAnnotationTable", projectId],
+    queryKey: tableInfoQueryKey("satFilter", projectId),
     queryFn: async () => {
       const result = await AnalysisService.annotatedSegmentsInfo({ projectId });
       const columnInfo = result.map((info) => {

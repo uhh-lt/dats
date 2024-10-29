@@ -87,7 +87,7 @@ const useSearchCodeStats = (codeId: number, projectId: number) => {
   const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
   const searchQuery = useAppSelector((state) => state.search.searchQuery);
   const sortingModel = useAppSelector((state) => state.search.sortingModel);
-  const filter = useAppSelector((state) => state.searchFilter.filter["root"]);
+  const filter = useAppSelector((state) => state.search.filter["root"]);
 
   return useQuery<SpanEntityStat[], Error>({
     queryKey: [QueryKey.SEARCH_ENTITY_STATISTICS, projectId, codeId, searchQuery, filter, sortStatsByGlobal],
@@ -129,7 +129,7 @@ const useSearchKeywordStats = (projectId: number) => {
   const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
   const searchQuery = useAppSelector((state) => state.search.searchQuery);
   const sortingModel = useAppSelector((state) => state.search.sortingModel);
-  const filter = useAppSelector((state) => state.searchFilter.filter["root"]);
+  const filter = useAppSelector((state) => state.search.filter["root"]);
 
   return useQuery<KeywordStat[], Error>({
     queryKey: [QueryKey.SEARCH_KEYWORD_STATISTICS, projectId, searchQuery, filter, sortStatsByGlobal],
@@ -169,7 +169,7 @@ const useSearchTagStats = (projectId: number) => {
   const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
   const searchQuery = useAppSelector((state) => state.search.searchQuery);
   const sortingModel = useAppSelector((state) => state.search.sortingModel);
-  const filter = useAppSelector((state) => state.searchFilter.filter["root"]);
+  const filter = useAppSelector((state) => state.search.filter["root"]);
 
   return useQuery<TagStat[], Error>({
     queryKey: [QueryKey.SEARCH_TAG_STATISTICS, projectId, searchQuery, filter, sortStatsByGlobal],

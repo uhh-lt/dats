@@ -43,9 +43,9 @@ const logbookSlice = createSlice({
     },
   },
   extraReducers(builder) {
-    builder.addCase(ProjectActions.changeProject, (state) => {
+    builder.addCase(ProjectActions.changeProject, (state, action) => {
       console.log("Project changed! Resetting 'logbook' state.");
-      resetProjectFilterState(state, defaultFilterExpression);
+      resetProjectFilterState({ state, defaultFilterExpression, projectId: action.payload, sliceName: "logbook" });
       resetProjectTableState(state);
     });
   },

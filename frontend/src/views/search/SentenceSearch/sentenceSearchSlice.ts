@@ -3,7 +3,7 @@ import { persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import { ProjectActions } from "../../../components/Project/projectSlice.ts";
 import { TableState, initialTableState, resetProjectTableState, tableReducer } from "../../../components/tableSlice.ts";
-import { SearchFilterActions } from "../searchFilterSlice.ts";
+import { SearchActions } from "../DocumentSearch/searchSlice.ts";
 
 interface SentenceSearchState {
   // project state:
@@ -60,7 +60,7 @@ export const sentenceSearchSlice = createSlice({
         state.selectedDocumentId = initialState.selectedDocumentId;
         resetProjectTableState(state);
       })
-      .addCase(SearchFilterActions.init, (state, action) => {
+      .addCase(SearchActions.init, (state, action) => {
         state.columnVisibilityModel = Object.values(action.payload.columnInfoMap).reduce((acc, column) => {
           if (!column.column) return acc;
           // this is a normal column

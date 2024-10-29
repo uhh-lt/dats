@@ -8,8 +8,8 @@ import TagExplorer from "../../../components/Tag/TagExplorer/TagExplorer.tsx";
 import TwoSidebarsLayout from "../../../layouts/TwoSidebarsLayout.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import SearchStatistics from "../Statistics/SearchStatistics.tsx";
-import { SearchFilterActions } from "../searchFilterSlice.ts";
 import SearchDocumentTable from "./SearchDocumentTable.tsx";
+import { SearchActions } from "./searchSlice.ts";
 
 const filterName = "root";
 
@@ -33,21 +33,19 @@ function Search() {
   // handle filtering
   const handleAddCodeFilter = useCallback(
     (stat: SpanEntityStat) => {
-      dispatch(
-        SearchFilterActions.onAddSpanAnnotationFilter({ codeId: stat.code_id, spanText: stat.span_text, filterName }),
-      );
+      dispatch(SearchActions.onAddSpanAnnotationFilter({ codeId: stat.code_id, spanText: stat.span_text, filterName }));
     },
     [dispatch],
   );
   const handleAddKeywordFilter = useCallback(
     (keyword: string) => {
-      dispatch(SearchFilterActions.onAddKeywordFilter({ keywordMetadataIds, keyword, filterName }));
+      dispatch(SearchActions.onAddKeywordFilter({ keywordMetadataIds, keyword, filterName }));
     },
     [dispatch, keywordMetadataIds],
   );
   const handleAddTagFilter = useCallback(
     (tagId: number) => {
-      dispatch(SearchFilterActions.onAddTagFilter({ tagId, filterName }));
+      dispatch(SearchActions.onAddTagFilter({ tagId, filterName }));
     },
     [dispatch],
   );

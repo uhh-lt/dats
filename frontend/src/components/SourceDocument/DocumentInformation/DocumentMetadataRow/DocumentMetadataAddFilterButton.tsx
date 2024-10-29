@@ -5,7 +5,7 @@ import Tooltip from "@mui/material/Tooltip";
 import { useCallback } from "react";
 import { SourceDocumentMetadataReadResolved } from "../../../../api/openapi/models/SourceDocumentMetadataReadResolved.ts";
 import { useAppDispatch } from "../../../../plugins/ReduxHooks.ts";
-import { SearchFilterActions } from "../../../../views/search/searchFilterSlice.ts";
+import { SearchActions } from "../../../../views/search/DocumentSearch/searchSlice.ts";
 
 interface DocumentMetadataAddFilterButtonProps {
   metadata: SourceDocumentMetadataReadResolved;
@@ -21,7 +21,7 @@ function DocumentMetadataAddFilterButton({
   const dispatch = useAppDispatch();
 
   const handleAddMetadataFilter = useCallback(() => {
-    dispatch(SearchFilterActions.onAddMetadataFilter({ metadata, filterName }));
+    dispatch(SearchActions.onAddMetadataFilter({ metadata, filterName }));
   }, [dispatch, metadata, filterName]);
 
   return (

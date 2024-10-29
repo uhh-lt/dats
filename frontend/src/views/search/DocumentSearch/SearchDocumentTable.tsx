@@ -34,13 +34,12 @@ import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
 import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
 import { useTableFetchMoreOnScroll, useTransformInfiniteData } from "../../../utils/useTableInfiniteScroll.ts";
-import { SearchFilterActions } from "../searchFilterSlice.ts";
 import { useInitSearchFilterSlice } from "../useInitSearchFilterSlice.ts";
 import SearchOptionsMenu from "./SearchOptionsMenu.tsx";
 import { SearchActions } from "./searchSlice.ts";
 
 // this has to match Search.tsx!
-const filterStateSelector = (state: RootState) => state.searchFilter;
+const filterStateSelector = (state: RootState) => state.search;
 const filterName = "root";
 
 const flatMapData = (page: PaginatedElasticSearchDocumentHits) => page.hits;
@@ -152,7 +151,7 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
 
   // search
   const fetchSize = useAppSelector((state) => state.search.fetchSize);
-  const filter = useAppSelector((state) => state.searchFilter.filter[filterName]);
+  const filter = useAppSelector((state) => state.search.filter[filterName]);
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchDocumentHits>({
     queryKey: [
       QueryKey.SEARCH_TABLE,
@@ -309,7 +308,7 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
           buttonProps={{ size: "small" }}
           filterName={filterName}
           filterStateSelector={filterStateSelector}
-          filterActions={SearchFilterActions}
+          filterActions={SearchActions}
           transformOrigin={{ horizontal: "left", vertical: "top" }}
           anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
         />

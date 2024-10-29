@@ -1,9 +1,28 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
+import { v4 as uuidv4 } from "uuid";
+import { IDListOperator } from "../../../api/openapi/models/IDListOperator.ts";
+import { ListOperator } from "../../../api/openapi/models/ListOperator.ts";
+import { LogicalOperator } from "../../../api/openapi/models/LogicalOperator.ts";
+import { SearchColumns } from "../../../api/openapi/models/SearchColumns.ts";
+import { SourceDocumentMetadataReadResolved } from "../../../api/openapi/models/SourceDocumentMetadataReadResolved.ts";
+import { StringOperator } from "../../../api/openapi/models/StringOperator.ts";
+import {
+  FilterState,
+  createInitialFilterState,
+  filterReducer,
+  getOrCreateFilter,
+  resetProjectFilterState,
+} from "../../../components/FilterDialog/filterSlice.ts";
+import {
+  MyFilterExpression,
+  filterOperator2FilterOperatorType,
+  getDefaultOperator,
+} from "../../../components/FilterDialog/filterUtils.ts";
 import { ProjectActions } from "../../../components/Project/projectSlice.ts";
 import { TableState, initialTableState, resetProjectTableState, tableReducer } from "../../../components/tableSlice.ts";
-import { SearchFilterActions } from "../searchFilterSlice.ts";
+import { getValue } from "../metadataUtils.ts";
 
 interface SearchState {
   // project state:
@@ -14,8 +33,16 @@ interface SearchState {
   sortStatsByGlobal: boolean; // whether the search statistics are sorted by the global frequency or the "local" ().
 }
 
-const initialState: TableState & SearchState = {
+const defaultFilterExpression: MyFilterExpression = {
+  id: uuidv4(),
+  column: SearchColumns.SC_SOURCE_DOCUMENT_FILENAME,
+  operator: StringOperator.STRING_CONTAINS,
+  value: "",
+};
+
+const initialState: FilterState & TableState & SearchState = {
   ...initialTableState,
+  ...createInitialFilterState(defaultFilterExpression),
   // project state:
   selectedDocumentId: undefined,
   expandedTagIds: [],
@@ -29,6 +56,7 @@ export const searchSlice = createSlice({
   initialState,
   reducers: {
     ...tableReducer,
+    ...filterReducer,
     // document selection
     onToggleSelectedDocumentIdChange: (state, action: PayloadAction<number | undefined>) => {
       // toggle
@@ -61,16 +89,87 @@ export const searchSlice = createSlice({
     onChangeExpertSearchMode: (state, action: PayloadAction<boolean>) => {
       state.expertSearchMode = action.payload;
     },
+    // filtering
+    onAddKeywordFilter: (
+      state,
+      action: PayloadAction<{ keywordMetadataIds: number[]; keyword: string; filterName: string }>,
+    ) => {
+      const filterItems: MyFilterExpression[] = action.payload.keywordMetadataIds?.map((keywordMetadataId) => {
+        return {
+          id: uuidv4(),
+          column: keywordMetadataId,
+          operator: ListOperator.LIST_CONTAINS,
+          value: [action.payload.keyword],
+        };
+      });
+
+      const currentFilter = getOrCreateFilter(state, action.payload.filterName);
+      currentFilter.items = [
+        ...currentFilter.items,
+        {
+          id: uuidv4(),
+          logic_operator: LogicalOperator.OR,
+          items: filterItems,
+        },
+      ];
+    },
+    onAddTagFilter: (state, action: PayloadAction<{ tagId: number | string; filterName: string }>) => {
+      const currentFilter = getOrCreateFilter(state, action.payload.filterName);
+      currentFilter.items = [
+        ...currentFilter.items,
+        {
+          id: uuidv4(),
+          column: SearchColumns.SC_DOCUMENT_TAG_ID_LIST,
+          operator: IDListOperator.ID_LIST_CONTAINS,
+          value: action.payload.tagId,
+        },
+      ];
+    },
+    onAddSpanAnnotationFilter: (
+      state,
+      action: PayloadAction<{ codeId: number; spanText: string; filterName: string }>,
+    ) => {
+      const currentFilter = getOrCreateFilter(state, action.payload.filterName);
+      currentFilter.items = [
+        ...currentFilter.items,
+        {
+          id: uuidv4(),
+          column: SearchColumns.SC_SPAN_ANNOTATIONS,
+          operator: ListOperator.LIST_CONTAINS,
+          value: [action.payload.codeId.toString(), action.payload.spanText],
+        },
+      ];
+    },
+    onAddMetadataFilter: (
+      state,
+      action: PayloadAction<{ metadata: SourceDocumentMetadataReadResolved; filterName: string }>,
+    ) => {
+      // the column of a metadata filter is the project_metadata.id
+      const filterOperator = state.column2Info[action.payload.metadata.project_metadata.id.toString()].operator;
+      const filterOperatorType = filterOperator2FilterOperatorType[filterOperator];
+
+      const currentFilter = getOrCreateFilter(state, action.payload.filterName);
+      currentFilter.items = [
+        ...currentFilter.items,
+        {
+          id: uuidv4(),
+          column: action.payload.metadata.project_metadata.id,
+          operator: getDefaultOperator(filterOperatorType),
+          value: getValue(action.payload.metadata)!,
+        },
+      ];
+    },
   },
   extraReducers(builder) {
     builder
-      .addCase(ProjectActions.changeProject, (state) => {
+      .addCase(ProjectActions.changeProject, (state, action) => {
         console.log("Project changed! Resetting 'search' state.");
         state.selectedDocumentId = initialState.selectedDocumentId;
         state.expandedTagIds = initialState.expandedTagIds;
         resetProjectTableState(state);
+        resetProjectFilterState({ state, defaultFilterExpression, projectId: action.payload, sliceName: "search" });
       })
-      .addCase(SearchFilterActions.init, (state, action) => {
+      .addCase(SearchActions.init, (state, action) => {
         state.columnVisibilityModel = Object.values(action.payload.columnInfoMap).reduce((acc, column) => {
           if (!column.column) return acc;
           // this is a normal column

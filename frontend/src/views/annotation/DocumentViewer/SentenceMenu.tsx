@@ -16,9 +16,9 @@ import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectTy
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import MemoListItemButton from "../../../components/Memo/MemoListItemButton.tsx";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
+import { SearchActions } from "../../search/DocumentSearch/searchSlice.ts";
 import { ImageSearchActions } from "../../search/ImageSearch/imageSearchSlice.ts";
 import { SentenceSearchActions } from "../../search/SentenceSearch/sentenceSearchSlice.ts";
-import { SearchFilterActions } from "../../search/searchFilterSlice.ts";
 
 export interface SentenceMenuHandle {
   open: (
@@ -82,7 +82,7 @@ const SentenceMenu = forwardRef<SentenceMenuHandle>((_, ref) => {
 
   const handleAddFilter = (anno: SpanAnnotationReadResolved) => {
     dispatch(
-      SearchFilterActions.onAddSpanAnnotationFilter({
+      SearchActions.onAddSpanAnnotationFilter({
         codeId: anno.code.id,
         spanText: anno.text,
         filterName: "root",
