@@ -23,8 +23,11 @@ export interface FilterState {
   filter: Record<string, MyFilter>;
   editableFilter: MyFilter;
   defaultFilterExpression: MyFilterExpression;
+  // column2info is actually app state. In ideal setting, we would only need to fetch this once, ever.
+  // However, we want a reliable "init" action - that is used to populate this state - for other state management reasons.
+  // For example, in Search, Sentence Search, Logbook/Memo Search, Annotated Segments, the metadata columns are filtered out automatically during init.
+  column2Info: Record<string, ColumnInfo>; // this is actually app
   // app state:
-  column2Info: Record<string, ColumnInfo>;
   expertMode: boolean;
 }
 
