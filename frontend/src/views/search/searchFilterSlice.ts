@@ -7,6 +7,7 @@ import { LogicalOperator } from "../../api/openapi/models/LogicalOperator.ts";
 import { SearchColumns } from "../../api/openapi/models/SearchColumns.ts";
 import { SourceDocumentMetadataReadResolved } from "../../api/openapi/models/SourceDocumentMetadataReadResolved.ts";
 import { StringOperator } from "../../api/openapi/models/StringOperator.ts";
+import { QueryKey } from "../../api/QueryKey.ts";
 import {
   createInitialFilterState,
   filterReducer,
@@ -19,6 +20,7 @@ import {
   getDefaultOperator,
 } from "../../components/FilterDialog/filterUtils.ts";
 import { ProjectActions } from "../../components/Project/projectSlice.ts";
+import queryClient from "../../plugins/ReactQueryClient.ts";
 import { getValue } from "./metadataUtils.ts";
 
 const defaultFilterExpression: MyFilterExpression = {
@@ -107,9 +109,10 @@ const searchFilterSlice = createSlice({
     },
   },
   extraReducers(builder) {
-    builder.addCase(ProjectActions.changeProject, (state) => {
+    builder.addCase(ProjectActions.changeProject, (state, action) => {
       console.log("Project changed! Resetting 'searchFilter' state.");
       resetProjectFilterState(state, defaultFilterExpression);
+      queryClient.removeQueries({ queryKey: [QueryKey.TABLE_INFO, "search", action.payload] });
     });
   },
 });

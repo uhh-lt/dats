@@ -160,4 +160,7 @@ export const QueryKey = {
 
   // tables
   SEARCH_TABLE: "search-document-table-data",
+
+  // table info (info about the columns and their types)
+  TABLE_INFO: "tableInfo",
 };

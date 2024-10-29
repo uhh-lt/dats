@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { SearchService } from "../../api/openapi/services/SearchService.ts";
+import { QueryKey } from "../../api/QueryKey.ts";
 import { ColumnInfo } from "../../components/FilterDialog/filterUtils.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
 import { AppDispatch } from "../../store/store.ts";
@@ -7,7 +8,7 @@ import { SearchFilterActions } from "./searchFilterSlice.ts";
 
 const useGetSearchInfo = (projectId: number, dispatch: AppDispatch) =>
   useQuery<ColumnInfo[]>({
-    queryKey: ["tableInfo", "search", projectId],
+    queryKey: [QueryKey.TABLE_INFO, "search", projectId],
     queryFn: async () => {
       const result = await SearchService.searchSdocsInfo({ projectId });
       const columnInfo = result.map((info) => {

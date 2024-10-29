@@ -51,6 +51,7 @@ export const resetProjectFilterState = (state: Draft<FilterState>, defaultFilter
   state.filter = initialState.filter;
   state.editableFilter = initialState.editableFilter;
   state.defaultFilterExpression = initialState.defaultFilterExpression;
+  state.column2Info = initialState.column2Info;
 };
 
 export const getOrCreateFilter = (state: FilterState, filterId: string, filter?: MyFilter): MyFilter => {
