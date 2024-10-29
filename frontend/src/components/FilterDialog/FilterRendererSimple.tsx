@@ -46,28 +46,28 @@ function FilterRendererSimple({ editableFilter, filterActions, column2Info }: Fi
 
   const handleLogicalOperatorChange = useCallback(
     (filterId: string, operator: LogicalOperator) => {
-      dispatch(filterActions.changeLogicalOperator({ filterId, operator }));
+      dispatch(filterActions.changeFilterLogicalOperator({ filterId, operator }));
     },
     [dispatch, filterActions],
   );
 
   const handleColumnChange = useCallback(
     (filterId: string, columnValue: string) => {
-      dispatch(filterActions.changeColumn({ filterId, columnValue }));
+      dispatch(filterActions.changeFilterColumn({ filterId, columnValue }));
     },
     [dispatch, filterActions],
   );
 
   const handleOperatorChange = useCallback(
     (filterId: string, operator: FilterOperators) => {
-      dispatch(filterActions.changeOperator({ filterId, operator }));
+      dispatch(filterActions.changeFilterOperator({ filterId, operator }));
     },
     [dispatch, filterActions],
   );
 
   const handleValueChange = useCallback(
     (filterId: string, value: string | number | boolean | string[]) => {
-      dispatch(filterActions.changeValue({ filterId, value }));
+      dispatch(filterActions.changeFilterValue({ filterId, value }));
     },
     [dispatch, filterActions],
   );

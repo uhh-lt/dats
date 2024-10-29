@@ -154,7 +154,7 @@ export const filterReducer = {
   deleteFilter: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string }>) => {
     state.editableFilter = deleteInFilter(state.editableFilter, action.payload.filterId);
   },
-  changeLogicalOperator: (
+  changeFilterLogicalOperator: (
     state: Draft<FilterState>,
     action: PayloadAction<{ filterId: string; operator: LogicalOperator }>,
   ) => {
@@ -163,7 +163,7 @@ export const filterReducer = {
       filterItem.logic_operator = action.payload.operator;
     }
   },
-  changeColumn: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string; columnValue: string }>) => {
+  changeFilterColumn: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string; columnValue: string }>) => {
     const filterItem = findInFilter(state.editableFilter, action.payload.filterId);
     if (filterItem && isFilterExpression(filterItem)) {
       if (parseInt(action.payload.columnValue)) {
@@ -181,7 +181,7 @@ export const filterReducer = {
       filterItem.value = getDefaultValue(columnInfo.value, columnInfo.operator);
     }
   },
-  changeOperator: (
+  changeFilterOperator: (
     state: Draft<FilterState>,
     action: PayloadAction<{ filterId: string; operator: FilterOperators }>,
   ) => {
@@ -190,7 +190,7 @@ export const filterReducer = {
       filterItem.operator = action.payload.operator;
     }
   },
-  changeValue: (
+  changeFilterValue: (
     state: Draft<FilterState>,
     action: PayloadAction<{ filterId: string; value: string | number | boolean | string[] }>,
   ) => {
@@ -209,7 +209,7 @@ export const filterReducer = {
   init: (state: Draft<FilterState>, action: PayloadAction<{ columnInfoMap: Record<string, ColumnInfo> }>) => {
     state.column2Info = action.payload.columnInfoMap;
   },
-  onChangeExpertMode: (state: Draft<FilterState>, action: PayloadAction<{ expertMode: boolean }>) => {
+  onChangeFilterExpertMode: (state: Draft<FilterState>, action: PayloadAction<{ expertMode: boolean }>) => {
     state.expertMode = action.payload.expertMode;
   },
 };

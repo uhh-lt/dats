@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
 import { StringOperator } from "../../../api/openapi/models/StringOperator.ts";
 import { WordFrequencyColumns } from "../../../api/openapi/models/WordFrequencyColumns.ts";
@@ -8,7 +8,7 @@ import {
   filterReducer,
   resetProjectFilterState,
 } from "../../../components/FilterDialog/filterSlice.ts";
-import { MyFilterExpression } from "../../../components/FilterDialog/filterUtils.ts";
+import { ColumnInfo, MyFilterExpression } from "../../../components/FilterDialog/filterUtils.ts";
 import { ProjectActions } from "../../../components/Project/projectSlice.ts";
 import { TableState, initialTableState, resetProjectTableState, tableReducer } from "../../../components/tableSlice.ts";
 
@@ -38,6 +38,29 @@ export const WordFrequencySlice = createSlice({
   reducers: {
     ...filterReducer,
     ...tableReducer,
+    // extend filterReducer's init
+    init: (state, action: PayloadAction<{ columnInfoMap: Record<string, ColumnInfo> }>) => {
+      filterReducer.init(state, action);
+      state.columnVisibilityModel = Object.values(action.payload.columnInfoMap).reduce((acc, column) => {
+        if (!column.column) return acc;
+        // this is a normal column
+        if (isNaN(parseInt(column.column))) {
+          return acc;
+          // this is a metadata column
+        } else {
+          return {
+            ...acc,
+            [column.column]: false,
+          };
+        }
+      }, {});
+    },
+    // extend filterReducer's onFinishFilterEdit
+    onFinishFilterEdit: (state) => {
+      filterReducer.onFinishFilterEdit(state);
+      // reset selection when filter changes
+      state.rowSelectionModel = {};
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -51,25 +74,6 @@ export const WordFrequencySlice = createSlice({
         });
         resetProjectTableState(state);
         state.sortingModel = initialState.sortingModel;
-      })
-      .addCase(WordFrequencyActions.init, (state, action) => {
-        state.columnVisibilityModel = Object.values(action.payload.columnInfoMap).reduce((acc, column) => {
-          if (!column.column) return acc;
-          // this is a normal column
-          if (isNaN(parseInt(column.column))) {
-            return acc;
-            // this is a metadata column
-          } else {
-            return {
-              ...acc,
-              [column.column]: false,
-            };
-          }
-        }, {});
-      })
-      .addCase(WordFrequencyActions.onFinishFilterEdit, (state) => {
-        // reset selection when filter changes
-        state.rowSelectionModel = {};
       })
       .addDefaultCase(() => {});
   },

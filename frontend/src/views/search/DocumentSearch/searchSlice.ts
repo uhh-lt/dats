@@ -16,6 +16,7 @@ import {
   resetProjectFilterState,
 } from "../../../components/FilterDialog/filterSlice.ts";
 import {
+  ColumnInfo,
   MyFilterExpression,
   filterOperator2FilterOperatorType,
   getDefaultOperator,
@@ -57,6 +58,23 @@ export const searchSlice = createSlice({
   reducers: {
     ...tableReducer,
     ...filterReducer,
+    // extend filterReducer's init
+    init: (state, action: PayloadAction<{ columnInfoMap: Record<string, ColumnInfo> }>) => {
+      filterReducer.init(state, action);
+      state.columnVisibilityModel = Object.values(action.payload.columnInfoMap).reduce((acc, column) => {
+        if (!column.column) return acc;
+        // this is a normal column
+        if (isNaN(parseInt(column.column))) {
+          return acc;
+          // this is a metadata column
+        } else {
+          return {
+            ...acc,
+            [column.column]: false,
+          };
+        }
+      }, {});
+    },
     // document selection
     onToggleSelectedDocumentIdChange: (state, action: PayloadAction<number | undefined>) => {
       // toggle
@@ -169,25 +187,10 @@ export const searchSlice = createSlice({
         resetProjectTableState(state);
         resetProjectFilterState({ state, defaultFilterExpression, projectId: action.payload, sliceName: "search" });
       })
-      .addCase(SearchActions.init, (state, action) => {
-        state.columnVisibilityModel = Object.values(action.payload.columnInfoMap).reduce((acc, column) => {
-          if (!column.column) return acc;
-          // this is a normal column
-          if (isNaN(parseInt(column.column))) {
-            return acc;
-            // this is a metadata column
-          } else {
-            return {
-              ...acc,
-              [column.column]: false,
-            };
-          }
-        }, {});
-      })
       .addMatcher(
-        (action) => action.type.startsWith("searchFilter"),
+        (action) => action.type.startsWith("search/") && action.type.toLowerCase().includes("filter"),
         (state) => {
-          console.log("SearchFilterActions dispatched! Resetting fetchSize.");
+          console.log("Search Filter Actions dispatched! Resetting fetchSize.");
           state.fetchSize = initialTableState.fetchSize;
         },
       );

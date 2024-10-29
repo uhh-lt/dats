@@ -27,7 +27,7 @@ function ReduxFilterDialog({
       filterActions={filterActions}
       column2Info={column2Info}
       expertMode={expertMode}
-      onChangeExpertMode={(expertMode) => dispatch(filterActions.onChangeExpertMode({ expertMode }))}
+      onChangeExpertMode={(expertMode) => dispatch(filterActions.onChangeFilterExpertMode({ expertMode }))}
       buttonProps={buttonProps}
     />
   );
