@@ -1,4 +1,4 @@
-name: importer end2end test
+name: backend checks
 on:
   push:
     branches:
@@ -12,8 +12,15 @@ on:
       - "tools/**"
 
 jobs:
-  importer-end2end-test:
+  backend-checks:
     runs-on: ubuntu-latest
+    env:
+      API_PRODUCTION_WORKERS: 1
+      RAY_ENABLED: True
+      OLLAMA_ENABLED: False
+      COMPOSE_PROFILES: "backend,background,ray"
+      RAY_CONFIG: "./config_test_no_gpu.yaml"
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
     steps:
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
@@ -41,12 +48,6 @@ jobs:
           key: models-${{ hashFiles('backend/src/app/preprocessing/**') }}
       - name: Start Docker Containers
         working-directory: docker
-        env:
-          API_PRODUCTION_WORKERS: 1
-          RAY_ENABLED: True
-          OLLAMA_ENABLED: False
-          COMPOSE_PROFILES: "backend,background,ray"
-          RAY_CONFIG: "./config_test_no_gpu.yaml"
         run: |
           ./setup-folders.sh
           chmod -R a+rwx backend_repo/ models_cache/ spacy_models/ numba_cache/ ollama_cache/
@@ -55,7 +56,24 @@ jobs:
           export GID=$(id -g)
           docker compose -f compose-test.yml up -d --quiet-pull
           while true; do echo Waiting for containers to start...; echo $(curl -s http://localhost:13120/heartbeat) | grep -q true && break; sleep 30; done ;
-      - name: Run Import Data End-To-End Test
+      - name: Check 1 - Database migrates without errors database
+        working-directory: docker
+        run: |
+          docker compose -f compose-test.yml run -e PYTHONPATH='/dats_code/src' dats-backend-api /opt/envs/dats/bin/python migration/run_migrations.py
+      - name: Check 2 - Database schema is up-to-date after migration
+        working-directory: docker
+        run: |
+          docker compose -f compose-test.yml run dats-backend-api /opt/envs/dats/bin/alembic check
+      - name: Check 3 - pytest runs without errors
+        working-directory: docker
+        run: |
+          docker compose -f compose-test.yml run -i dats-backend-api /opt/envs/dats/bin/python -m pytest
+      - name: Restart backend-api container
+        working-directory: docker
+        run: |
+          docker compose -f compose-test.yml restart dats-backend-api
+          while true; do echo Waiting for containers to start...; echo $(curl -s http://localhost:13120/heartbeat) | grep -q true && break; sleep 30; done ;
+      - name: Check 4 - Test End-2-End importer script
         working-directory: tools/importer
         env:
           TESTDATA_PASSWORD: ${{ secrets.TESTDATA_PASSWORD }}
@@ -63,5 +81,5 @@ jobs:
           pip install -r requirements.txt
           wget -q http://ltdata1.informatik.uni-hamburg.de/dwts/totalitarismo.zip
           unzip -q -P "$TESTDATA_PASSWORD" totalitarismo.zip
-          python dats_importer.py --input_dir images --backend_url http://localhost:13120/ --project_name incel --tag_name totalitarisimo
-          python dats_importer.py --input_dir json --backend_url http://localhost:13120/ --project_name incel --tag_name totalitarismo --is_json
+          python dats_importer.py --input_dir json --backend_url http://localhost:13120/ --is_json --doctype text
+          python dats_importer.py --input_dir images --backend_url http://localhost:13120/ --doctype image
