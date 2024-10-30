@@ -269,7 +269,7 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
         "starred": True,
     }
     code1_memo_create_response = client.put(
-        f"/memo?attached_object_id={code1['id']}&attached_object_type={AttachedObjectType.code}",
+        f"/memo?attached_object_id={code1['id']}&attached_object_type={AttachedObjectType.code.value}",
         headers=alice["AuthHeader"],
         json=code1_memo,
     )
@@ -492,7 +492,7 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
         "starred": False,
     }
     text_doc1_memo_create_response = client.put(
-        f"/memo?attached_object_id={project_text_doc1['sdoc_id']}&attached_object_type={AttachedObjectType.source_document}",
+        f"/memo?attached_object_id={project_text_doc1['sdoc_id']}&attached_object_type={AttachedObjectType.source_document.value}",
         headers=alice["AuthHeader"],
         json=text_doc1_memo,
     )
@@ -1076,7 +1076,7 @@ def test_documentTag_and_memo(client, api_user, api_document, api_project) -> No
         "starred": False,
     }
     doctag1_memo_create_response = client.put(
-        f"/memo?attached_object_id={doctag1['id']}&attached_object_type={AttachedObjectType.document_tag}",
+        f"/memo?attached_object_id={doctag1['id']}&attached_object_type={AttachedObjectType.document_tag.value}",
         headers=alice["AuthHeader"],
         json=doctag1_memo,
     )
