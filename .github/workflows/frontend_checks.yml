@@ -12,7 +12,7 @@ on:
       - "frontend/**"
 
 jobs:
-  update-openapi-spec:
+  frontend-checks:
     runs-on: ubuntu-latest
     env:
       API_PRODUCTION_WORKERS: 1

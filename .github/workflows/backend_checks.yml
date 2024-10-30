@@ -65,6 +65,8 @@ jobs:
         run: |
           docker compose -f compose-test.yml run dats-backend-api /opt/envs/dats/bin/alembic check
       - name: Check 3 - pytest runs without errors
+        env:
+          POSTGRES_DB: dats-test
         working-directory: docker
         run: |
           docker compose -f compose-test.yml run -i dats-backend-api /opt/envs/dats/bin/python -m pytest

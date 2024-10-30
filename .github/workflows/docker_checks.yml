@@ -1,0 +1,50 @@
+name: docker checks
+on:
+  push:
+    branches:
+      - main
+      - mwp_v1
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/**"
+      - "docker/**"
+      - "frontend/**"
+
+jobs:
+  docker_checks:
+    name: docker_checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          docker-images: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Check 1 - backend container builds successfully
+        uses: docker/build-push-action@v4
+        with:
+          context: ./backend
+          push: false
+      - name: Check 2 - frontend container builds successfully
+        uses: docker/build-push-action@v4
+        with:
+          context: ./frontend
+          push: false
+      - name: Check 3 - ray container builds successfully
+        uses: docker/build-push-action@v4
+        with:
+          context: ./backend/src/app/preprocessing/ray_model_worker
+          push: false
