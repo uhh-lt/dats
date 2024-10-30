@@ -39,7 +39,7 @@ attachedObject2Crud: Dict[AttachedObjectType, Crud] = {
 
 
 @router.put(
-    "/{tag_id}/memo",
+    "",
     response_model=MemoRead,
     summary="Adds a Memo to the Attached Object with the given ID if it exists",
 )
