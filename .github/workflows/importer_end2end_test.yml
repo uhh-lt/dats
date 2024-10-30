@@ -54,7 +54,7 @@ jobs:
           python monkey_patch_docker_compose_for_backend_tests.py --disable_ollama
           export GID=$(id -g)
           docker compose -f compose-test.yml up -d --quiet-pull
-          while true; do echo Waiting for containers to start...; echo $(curl -s http://localhost:13120/healthcheck) | grep -q true && break; sleep 30; done ;
+          while true; do echo Waiting for containers to start...; echo $(curl -s http://localhost:13120/heartbeat) | grep -q true && break; sleep 30; done ;
       - name: Run Import Data End-To-End Test
         working-directory: tools/importer
         env:
