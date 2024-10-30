@@ -11,7 +11,7 @@ import {
 import MemoHooks from "../../../../api/MemoHooks.ts";
 import { MemoRead } from "../../../../api/openapi/models/MemoRead.ts";
 import { dateToLocaleString } from "../../../../utils/DateUtils.ts";
-import AttachedObjectLink from "../../../../views/logbook/AttachedObjectLink.tsx";
+import AttachedObjectRenderer from "../../../Memo/AttachedObjectRenderer.tsx";
 import MemoActionsMenu from "../../../Memo/MemoActionsMenu.tsx";
 import useGetMemosAttachedObject from "../../../Memo/useGetMemosAttachedObject.ts";
 import UserName from "../../../User/UserName.tsx";
@@ -73,7 +73,11 @@ function MemoCardWithContent({
         title={
           <>
             {attachedObject.isSuccess ? (
-              <AttachedObjectLink attachedObject={attachedObject.data} attachedObjectType={memo.attached_object_type} />
+              <AttachedObjectRenderer
+                attachedObject={attachedObject.data}
+                attachedObjectType={memo.attached_object_type}
+                link
+              />
             ) : (
               <>...</>
             )}
@@ -82,7 +86,6 @@ function MemoCardWithContent({
         action={<MemoActionsMenu memo={memo} onDeleteClick={onDeleteClick} onStarredClick={onStarredClick} />}
         titleTypographyProps={{
           variant: "body1",
-          fontWeight: 900,
           display: "flex",
           alignItems: "center",
         }}
@@ -95,12 +98,13 @@ function MemoCardWithContent({
             variant="body1"
             sx={{
               wordBreak: "break-word",
+              fontWeight: 900,
             }}
           >
             {memo.title}
           </Typography>
           <Stack direction="row" alignItems="center" mt={1} justifyContent="space-between">
-            <Typography variant="subtitle2" color="textSecondary" fontWeight={600} fontSize={12}>
+            <Typography variant="subtitle2" color="textSecondary" fontSize={12}>
               {"Last modified: " +
                 dateToLocaleString(memo.updated).substring(0, dateToLocaleString(memo.updated).indexOf(","))}
             </Typography>

@@ -2,20 +2,10 @@ import { Dialog } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import eventBus from "../../../EventBus.ts";
 
-import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
-import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
-import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
-import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import { useGetMemoQuery } from "../useGetMemoQuery.ts";
 import useGetMemosAttachedObject from "../useGetMemosAttachedObject.ts";
-import { MemoContentBboxAnnotation } from "./MemoContentBboxAnnotation.tsx";
-import { MemoContentCode } from "./MemoContentCode.tsx";
-import { MemoContentSourceDocument } from "./MemoContentSourceDocument.tsx";
-import { MemoContentSpanAnnotation } from "./MemoContentSpanAnnotation.tsx";
-import { MemoContentTag } from "./MemoContentTag.tsx";
 import { MemoEvent } from "./MemoDialogAPI.ts";
+import { MemoDialogContent } from "./MemoDialogContent.tsx";
 
 export default function MemoDialog() {
   // state
@@ -66,53 +56,20 @@ export default function MemoDialog() {
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      {attachedObject.isSuccess && (memo.isSuccess || !memo.isLoading) && memoEventData && (
-        <>
-          {memoEventData.attachedObjectType === AttachedObjectType.CODE ? (
-            <MemoContentCode
-              memo={memo.data}
-              code={attachedObject.data as CodeRead}
-              closeDialog={handleClose}
-              onMemoCreateSuccess={memoEventData.onCreateSuccess}
-            />
-          ) : memoEventData.attachedObjectType === AttachedObjectType.SOURCE_DOCUMENT ? (
-            <MemoContentSourceDocument
-              memo={memo.data}
-              sdoc={attachedObject.data as SourceDocumentRead}
-              closeDialog={handleClose}
-              onMemoCreateSuccess={memoEventData.onCreateSuccess}
-            />
-          ) : memoEventData.attachedObjectType === AttachedObjectType.DOCUMENT_TAG ? (
-            <MemoContentTag
-              memo={memo.data}
-              tag={attachedObject.data as DocumentTagRead}
-              closeDialog={handleClose}
-              onMemoCreateSuccess={memoEventData.onCreateSuccess}
-            />
-          ) : memoEventData.attachedObjectType === AttachedObjectType.SPAN_ANNOTATION ? (
-            <MemoContentSpanAnnotation
-              memo={memo.data}
-              spanAnnotation={attachedObject.data as SpanAnnotationReadResolved}
-              closeDialog={handleClose}
-              onMemoCreateSuccess={memoEventData.onCreateSuccess}
-            />
-          ) : memoEventData.attachedObjectType === AttachedObjectType.BBOX_ANNOTATION ? (
-            <MemoContentBboxAnnotation
-              memo={memo.data}
-              bboxAnnotation={attachedObject.data as BBoxAnnotationReadResolved}
-              closeDialog={handleClose}
-              onMemoCreateSuccess={memoEventData.onCreateSuccess}
-            />
-          ) : (
-            <div>This memo type is not supported!</div>
-          )}
-        </>
-      )}
-      {((memo.isLoading && memo.isFetching) || (attachedObject.isLoading && attachedObject.isFetching)) && (
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth PaperProps={{ style: { height: "66%" } }}>
+      {attachedObject.isSuccess && (memo.isSuccess || !memo.isLoading) && memoEventData ? (
+        <MemoDialogContent
+          memo={memo.data}
+          attachedObject={attachedObject.data}
+          attachedObjectType={memoEventData.attachedObjectType}
+          closeDialog={handleClose}
+          onMemoCreateSuccess={memoEventData.onCreateSuccess}
+        />
+      ) : (memo.isLoading && memo.isFetching) || (attachedObject.isLoading && attachedObject.isFetching) ? (
         <>Loading!</>
-      )}
-      {attachedObject.isError && <div>Error: {attachedObject.error.message}</div>}
+      ) : attachedObject.isError ? (
+        <div>Error: {attachedObject.error.message}</div>
+      ) : null}
     </Dialog>
   );
 }

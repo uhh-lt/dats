@@ -22,7 +22,7 @@ export default function DocumentInformation({
   isIdleContent,
   filterName,
   ...props
-}: DocumentInformationProps & BoxProps) {
+}: DocumentInformationProps & Omit<BoxProps, "className">) {
   // global server state (react-query)
   const metadata = SdocHooks.useGetMetadata(sdocId);
   const documentTags = SdocHooks.useGetAllDocumentTags(sdocId);

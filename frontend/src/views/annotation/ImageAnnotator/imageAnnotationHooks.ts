@@ -158,6 +158,5 @@ export const useDeleteBBoxAnnotation = (visibleUserIds: number[]) =>
     onSettled: (_data, _error, _variables, context) => {
       if (!context) return;
       queryClient.invalidateQueries({ queryKey: context.affectedQueryKey });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED] }); // todo: this is not optimal
     },
   });

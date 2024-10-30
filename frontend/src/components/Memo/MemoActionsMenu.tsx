@@ -6,7 +6,7 @@ import MemoDeleteMenuItem from "./MemoDeleteMenuItem.tsx";
 import MemoStarMenuItem from "./MemoStarMenuItem.tsx";
 
 interface MemoActionsMenuProps {
-  memo: MemoRead;
+  memo?: MemoRead;
   onStarredClick?: () => void;
   onDeleteClick?: () => void;
 }
@@ -34,33 +34,21 @@ export default function MemoActionsMenu({ memo, onStarredClick, onDeleteClick }:
 
   return (
     <>
-      <IconButton
-        id="icon-button"
-        aria-controls={open ? "menu" : undefined}
-        aria-haspopup="true"
-        aria-expanded={open ? "true" : undefined}
-        onClick={handleClick}
-      >
+      <IconButton onClick={handleClick} disabled={!memo}>
         <MoreVertIcon />
       </IconButton>
-      <Menu
-        id="basic-menu"
-        anchorEl={anchorEl}
-        open={open}
-        onClose={() => setAnchorEl(null)}
-        MenuListProps={{
-          "aria-labelledby": "basic-button",
-        }}
-      >
-        <MemoStarMenuItem onClick={handleStarredClick} memoId={memo.id} isStarred={memo.starred} />
-        <MemoDeleteMenuItem
-          memoId={memo.id}
-          memoTitle={memo.title}
-          attachedObjectType={memo.attached_object_type}
-          attachedObjectId={memo.attached_object_id}
-          onClick={handleDeleteClick}
-        />
-      </Menu>
+      {memo && (
+        <Menu anchorEl={anchorEl} open={open} onClose={() => setAnchorEl(null)}>
+          <MemoStarMenuItem onClick={handleStarredClick} memoId={memo.id} isStarred={memo.starred} />
+          <MemoDeleteMenuItem
+            memoId={memo.id}
+            memoTitle={memo.title}
+            attachedObjectType={memo.attached_object_type}
+            attachedObjectId={memo.attached_object_id}
+            onClick={handleDeleteClick}
+          />
+        </Menu>
+      )}
     </>
   );
 }
