@@ -1,50 +1,18 @@
-name: Backend End2End Tests
+name: importer end2end test
 on:
-  pull_request:
+  push:
     branches:
       - main
       - mwp_v1
+  pull_request:
     paths:
       - "backend/**"
       - ".github/**"
       - "docker/**"
       - "tools/**"
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-    inputs:
-      logLevel:
-        description: "Log level"
-        required: true
-        default: "warning"
-        type: choice
-        options:
-          - info
-          - warning
-          - debug
-      tags:
-        description: "Test scenario tags"
-        required: false
-        type: boolean
-      environment:
-        description: "Environment to run tests against"
-        type: environment
-        required: true
-
 jobs:
-  log-the-inputs:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Log the inputs
-        env:
-          LEVEL: ${{ inputs.logLevel }}
-          TAGS: ${{ inputs.tags }}
-          ENVIRONMENT: ${{ inputs.environment }}
-        run: |
-          echo "Log level: $LEVEL"
-          echo "Tags: $TAGS"
-          echo "Environment: $ENVIRONMENT"
-  run-end2end-tests:
+  importer-end2end-test:
     runs-on: ubuntu-latest
     steps:
       - name: Free Disk Space (Ubuntu)
@@ -77,26 +45,26 @@ jobs:
             !docker/models_cache/models--*blip2*
           key: models-${{ hashFiles('backend/src/app/preprocessing/**') }}
       - name: Start Docker Containers
+        working-directory: docker
+        env:
+          API_PRODUCTION_WORKERS: 1
+          RAY_ENABLED: True
+          OLLAMA_ENABLED: False
+          COMPOSE_PROFILES: "backend,background,ray"
+          RAY_CONFIG: "./config_test_no_gpu.yaml"
         run: |
-          cd docker
           ./setup-folders.sh
+          chmod -R a+rwx backend_repo/ models_cache/ spacy_models/ numba_cache/ ollama_cache/
           cp .env.example .env
-          chmod -R a+rwx backend_repo/ models_cache/ spacy_models/
-          python monkey_patch_docker_compose_for_backend_tests.py
+          python monkey_patch_docker_compose_for_backend_tests.py --disable_ollama
           export GID=$(id -g)
-          export API_PRODUCTION_WORKERS=1
-          export RAY_CONFIG="./config_test_no_gpu.yaml"
-          docker compose -f compose-test.yml up -d
-          echo Waiting for containers to start...
-          # RAY_HOST=localhost RAY_PORT=13130 ../backend/src/test_ray.sh
-          sleep 240
-          docker compose -f compose-test.yml logs
-          cd ..
+          docker compose -f compose-test.yml up -d --quiet-pull
+          while true; do echo Waiting for containers to start...; echo $(curl -s http://localhost:13120/healthcheck) | grep -q true && break; sleep 30; done ;
       - name: Run Import Data End-To-End Test
+        working-directory: tools/importer
         env:
           TESTDATA_PASSWORD: ${{ secrets.TESTDATA_PASSWORD }}
         run: |
-          cd tools/importer
           pip install -r requirements.txt
           wget -q http://ltdata1.informatik.uni-hamburg.de/dwts/totalitarismo.zip
           unzip -q -P "$TESTDATA_PASSWORD" totalitarismo.zip

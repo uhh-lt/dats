@@ -14,7 +14,6 @@ spacy:
   deployment:
     ray_actor_options:
       num_gpus: 0.
-      # num_cpus: 1
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
@@ -29,7 +28,6 @@ whisper:
   deployment:
     ray_actor_options:
       num_gpus: .0
-      # num_cpus: 1
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
@@ -40,7 +38,6 @@ detr:
   deployment:
     ray_actor_options:
       num_gpus: .0
-      # num_cpus: 1
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
@@ -149,7 +146,20 @@ vit_gpt2:
   deployment:
     ray_actor_options:
       num_gpus: .0
-      # num_cpus: 1
+    autoscaling_config:
+      min_replicas: 1
+      max_replicas: 1
+
+blip2:
+  model: "salesforce/blip2-opt-2.7b"
+  device: cpu
+  precision_bit: 32
+  image_captioning:
+    max_caption_length: 16
+    num_beams: 4
+  deployment:
+    ray_actor_options:
+      num_gpus: .0
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
@@ -166,7 +176,6 @@ clip:
   deployment:
     ray_actor_options:
       num_gpus: .0
-      # num_cpus: 1
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
@@ -178,7 +187,6 @@ cota:
   deployment:
     ray_actor_options:
       num_gpus: .0
-      # num_cpus: 1
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
