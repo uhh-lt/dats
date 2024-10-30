@@ -9,8 +9,13 @@ with open("../docker/docker-compose.yml") as f:
 
 data = yaml.safe_load(file)
 
-disable_ray = len(sys.argv) > 1 and sys.argv[1] == "--disable_ray"
-disable_ollama = len(sys.argv) > 2 and sys.argv[2] == "--disable_ollama"
+disable_ray = False
+disable_ollama = False
+for arg in sys.argv:
+    if arg == "--disable_ray":
+        disable_ray = True
+    if arg == "--disable_ollama":
+        disable_ollama = True
 
 if disable_ray:
     # remove ray as it's too resource-intensive for CI
