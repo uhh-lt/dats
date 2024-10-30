@@ -529,7 +529,9 @@ def test_project_memos(client, api_user, api_project) -> None:
         "starred": True,
     }
     memo_response = client.put(
-        f"project/{project1['id']}/memo", headers=alice["AuthHeader"], json=project_memo
+        f"/memo?attached_object_id={project1['id']}&attached_object_type={AttachedObjectType.project.value}",
+        headers=alice["AuthHeader"],
+        json=project_memo,
     )
     assert memo_response.status_code == 200
 
@@ -618,7 +620,9 @@ def test_span_annotation_and_memo(client, api_code, api_user, api_document) -> N
         "starred": True,
     }
     span1_memo1_create_response = client.put(
-        f"span/{span1_id}/memo", headers=alice["AuthHeader"], json=span1_memo1
+        f"/memo?attached_object_id={span1_id}&attached_object_type={AttachedObjectType.span_annotation.value}",
+        headers=alice["AuthHeader"],
+        json=span1_memo1,
     )
     assert span1_memo1_create_response.status_code == 200
     span1_memo1_id = span1_memo1_create_response.json()["id"]
@@ -853,7 +857,9 @@ def test_bbox_annotatation_and_memo(client, api_code, api_user, api_document) ->
         "starred": True,
     }
     bbox1_memo1_create_response = client.put(
-        f"bbox/{bbox1_id}/memo", headers=alice["AuthHeader"], json=bbox1_memo
+        f"/memo?attached_object_id={bbox1_id}&attached_object_type={AttachedObjectType.bbox_annotation.value}",
+        headers=alice["AuthHeader"],
+        json=bbox1_memo,
     )
     bbox1_memo_id = bbox1_memo1_create_response.json()["id"]
     assert bbox1_memo1_create_response.status_code == 200
