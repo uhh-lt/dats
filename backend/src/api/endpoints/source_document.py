@@ -10,7 +10,6 @@ from api.dependencies import (
     skip_limit_params,
 )
 from api.util import get_object_memo_for_user, get_object_memos
-from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
@@ -26,10 +25,6 @@ from app.core.data.dto.bbox_annotation import (
 )
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import (
-    AttachedObjectType,
-    MemoCreate,
-    MemoCreateIntern,
-    MemoInDB,
     MemoRead,
 )
 from app.core.data.dto.source_document import (
@@ -266,39 +261,6 @@ def get_all_tags(
         DocumentTagRead.model_validate(doc_tag_db_obj)
         for doc_tag_db_obj in sdoc_db_obj.document_tags
     ]
-
-
-@router.put(
-    "/{sdoc_id}/memo",
-    response_model=MemoRead,
-    summary="Adds a Memo to the SourceDocument with the given ID if it exists",
-)
-def add_memo(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    memo: MemoCreate,
-    authz_user: AuthzUser = Depends(),
-    validate: Validate = Depends(),
-) -> MemoRead:
-    sdoc = crud_sdoc.read(db, sdoc_id)
-    proj_id = sdoc.project_id
-
-    authz_user.assert_in_project(sdoc.project_id)
-
-    db_obj = crud_memo.create_for_sdoc(
-        db=db,
-        sdoc_id=sdoc_id,
-        create_dto=MemoCreateIntern(
-            **memo.model_dump(), user_id=authz_user.user.id, project_id=proj_id
-        ),
-    )
-    memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
-    return MemoRead(
-        **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
-        attached_object_id=sdoc_id,
-        attached_object_type=AttachedObjectType.source_document,
-    )
 
 
 @router.get(
