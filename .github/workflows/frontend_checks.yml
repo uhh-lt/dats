@@ -18,8 +18,7 @@ jobs:
       API_PRODUCTION_WORKERS: 1
       RAY_ENABLED: False
       OLLAMA_ENABLED: False
-      API_EXPOSED: 5500
-      VITE_APP_SERVER: http://localhost:5500
+      VITE_APP_SERVER: http://localhost:13120
     steps:
       - uses: actions/checkout@v3
       - name: Checkout PR
