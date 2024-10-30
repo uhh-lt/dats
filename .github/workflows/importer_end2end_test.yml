@@ -41,8 +41,8 @@ jobs:
         with:
           path: |
             docker/spacy_models
-            docker/models_cache/
-            !docker/models_cache/models--*blip2*
+            docker/models_cache
+            docker/numba_cache
           key: models-${{ hashFiles('backend/src/app/preprocessing/**') }}
       - name: Start Docker Containers
         working-directory: docker
