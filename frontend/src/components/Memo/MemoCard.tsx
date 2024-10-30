@@ -8,13 +8,13 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import MemoHooks from "../../../../api/MemoHooks.ts";
-import { MemoRead } from "../../../../api/openapi/models/MemoRead.ts";
-import { dateToLocaleString } from "../../../../utils/DateUtils.ts";
-import AttachedObjectRenderer from "../../../Memo/AttachedObjectRenderer.tsx";
-import MemoActionsMenu from "../../../Memo/MemoActionsMenu.tsx";
-import useGetMemosAttachedObject from "../../../Memo/useGetMemosAttachedObject.ts";
-import UserName from "../../../User/UserName.tsx";
+import MemoHooks from "../../api/MemoHooks.ts";
+import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
+import { dateToLocaleString } from "../../utils/DateUtils.ts";
+import UserName from "../User/UserName.tsx";
+import AttachedObjectRenderer from "./AttachedObjectRenderer.tsx";
+import MemoActionsMenu from "./MemoActionsMenu.tsx";
+import useGetMemosAttachedObject from "./useGetMemosAttachedObject.ts";
 
 interface MemoCardSharedProps {
   onClick?: (memo: MemoRead) => void;

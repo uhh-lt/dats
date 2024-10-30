@@ -5,7 +5,7 @@ import { useState } from "react";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import TagMenuButton from "../../Tag/TagMenu/TagMenuButton.tsx";
-import DocumentMemos from "./DocumentMemos/DocumentMemos.tsx";
+import DocumentMemos from "./DocumentMemos.tsx";
 import DocumentMetadataRow from "./DocumentMetadataRow/DocumentMetadataRow.tsx";
 import DocumentTagRow from "./DocumentTagRow.tsx";
 import MetadataCreateButton from "./MetadataCreateButton.tsx";

@@ -2,12 +2,12 @@ import AddCircleIcon from "@mui/icons-material/AddCircle";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import { Box, Button, CircularProgress, IconButton, Stack } from "@mui/material";
 import { useState } from "react";
-import MemoHooks from "../../../../api/MemoHooks.ts";
-import { AttachedObjectType } from "../../../../api/openapi/models/AttachedObjectType.ts";
-import SdocHooks from "../../../../api/SdocHooks.ts";
-import { useAuth } from "../../../../auth/useAuth.ts";
-import MemoBlockEditor from "../../../Memo/MemoBlockEditor.tsx";
-import MemoCard from "./MemoCard.tsx";
+import MemoHooks from "../../../api/MemoHooks.ts";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import SdocHooks from "../../../api/SdocHooks.ts";
+import { useAuth } from "../../../auth/useAuth.ts";
+import MemoBlockEditor from "../../Memo/MemoBlockEditor.tsx";
+import MemoCard from "../../Memo/MemoCard.tsx";
 
 interface DocumentMemosProps {
   sdocId: number;
