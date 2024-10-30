@@ -729,29 +729,6 @@
       }
     },
     "/project/{proj_id}/memo": {
-      "put": {
-        "tags": ["project"],
-        "summary": "Adds a Memo of the current User to the Project with the given ID if it exists",
-        "operationId": "add_memo",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoCreate" } } }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      },
       "get": {
         "tags": ["project"],
         "summary": "Returns the Memos of the current User for the Project with the given ID.",
@@ -1178,29 +1155,6 @@
       }
     },
     "/sdoc/{sdoc_id}/memo": {
-      "put": {
-        "tags": ["sourceDocument"],
-        "summary": "Adds a Memo to the SourceDocument with the given ID if it exists",
-        "operationId": "add_memo",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoCreate" } } }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      },
       "get": {
         "tags": ["sourceDocument"],
         "summary": "Returns all Memo attached to the SourceDocument with the given ID if it exists.",
@@ -1242,35 +1196,6 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/sdoc/{sdoc_id}/relatedmemos/user": {
-      "get": {
-        "tags": ["sourceDocument"],
-        "summary": "Returns the Memo attached to the SourceDocument of the logged-in User and all memos attached to its annotations.",
-        "operationId": "get_related_user_memos",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/MemoRead" },
-                  "title": "Response Sourcedocument-Get Related User Memos"
-                }
-              }
-            }
           },
           "422": {
             "description": "Validation Error",
@@ -1793,29 +1718,6 @@
       }
     },
     "/doctag/{tag_id}/memo": {
-      "put": {
-        "tags": ["documentTag"],
-        "summary": "Adds a Memo to the DocumentTag with the given ID if it exists",
-        "operationId": "add_memo",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "tag_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Tag Id" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoCreate" } } }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      },
       "get": {
         "tags": ["documentTag"],
         "summary": "Returns the Memos attached to the DocumentTag with the given ID if it exists.",
@@ -2309,29 +2211,6 @@
       }
     },
     "/span/{span_id}/memo": {
-      "put": {
-        "tags": ["spanAnnotation"],
-        "summary": "Adds a Memo to the SpanAnnotation with the given ID if it exists",
-        "operationId": "add_memo",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "span_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Span Id" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoCreate" } } }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      },
       "get": {
         "tags": ["spanAnnotation"],
         "summary": "Returns the Memos attached to the SpanAnnotation with the given ID if it exists.",
@@ -2774,29 +2653,6 @@
       }
     },
     "/bbox/{bbox_id}/memo": {
-      "put": {
-        "tags": ["bboxAnnotation"],
-        "summary": "Adds a Memo to the BBoxAnnotation with the given ID if it exists",
-        "operationId": "add_memo",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "bbox_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Bbox Id" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoCreate" } } }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      },
       "get": {
         "tags": ["bboxAnnotation"],
         "summary": "Returns the Memos attached to the BBoxAnnotation with the given ID if it exists.",
@@ -2961,29 +2817,6 @@
       }
     },
     "/code/{code_id}/memo": {
-      "put": {
-        "tags": ["code"],
-        "summary": "Adds a Memo to the Code with the given ID if it exists",
-        "operationId": "add_memo",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "code_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Code Id" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoCreate" } } }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      },
       "get": {
         "tags": ["code"],
         "summary": "Returns the Memo attached to the Code with the given ID if it exists.",
@@ -3021,6 +2854,42 @@
         "parameters": [
           { "name": "code_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Code Id" } }
         ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/memo": {
+      "put": {
+        "tags": ["memo"],
+        "summary": "Adds a Memo to the Attached Object with the given ID if it exists",
+        "operationId": "add_memo",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "attached_object_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Attached Object Id" }
+          },
+          {
+            "name": "attached_object_type",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/AttachedObjectType" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoCreate" } } }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",

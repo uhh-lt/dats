@@ -71,7 +71,6 @@ function Search() {
           sdocId={selectedDocumentId}
           filterName={filterName}
           isIdleContent={<Typography padding={2}>Click a document to see info :)</Typography>}
-          className="h100"
         />
       }
     />

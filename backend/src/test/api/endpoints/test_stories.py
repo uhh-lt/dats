@@ -1,6 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from app.core.data.dto.memo import AttachedObjectType
+
 # The licence for the respective work is linked in the commentary
 # https://commons.wikimedia.org/wiki/File:Armstrong_Small_Step.ogg
 audio_doc1 = (
@@ -267,7 +269,9 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
         "starred": True,
     }
     code1_memo_create_response = client.put(
-        f"code/{code1['id']}/memo", headers=alice["AuthHeader"], json=code1_memo
+        f"/memo?attached_object_id={code1['id']}&attached_object_type={AttachedObjectType.code}",
+        headers=alice["AuthHeader"],
+        json=code1_memo,
     )
     assert code1_memo_create_response.status_code == 200
     code1_memo["id"] = code1_memo_create_response.json()["id"]
@@ -488,7 +492,7 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
         "starred": False,
     }
     text_doc1_memo_create_response = client.put(
-        f"sdoc/{project_text_doc1['sdoc_id']}/memo",
+        f"/memo?attached_object_id={project_text_doc1['sdoc_id']}&attached_object_type={AttachedObjectType.source_document}",
         headers=alice["AuthHeader"],
         json=text_doc1_memo,
     )
@@ -1072,7 +1076,9 @@ def test_documentTag_and_memo(client, api_user, api_document, api_project) -> No
         "starred": False,
     }
     doctag1_memo_create_response = client.put(
-        f"doctag/{doctag1['id']}/memo", headers=alice["AuthHeader"], json=doctag1_memo
+        f"/memo?attached_object_id={doctag1['id']}&attached_object_type={AttachedObjectType.document_tag}",
+        headers=alice["AuthHeader"],
+        json=doctag1_memo,
     )
     assert doctag1_memo_create_response.status_code == 200
     doctag1_memo["id"] = doctag1_memo_create_response.json()["id"]

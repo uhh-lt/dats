@@ -125,12 +125,15 @@ function AnnotationExplorer<T extends AnnotationReadResolved>({
                         >
                           {renderAnnotationCard({
                             annotation,
+                            isSelected,
                             cardProps: {
-                              variant: isSelected ? "elevation" : "outlined",
-                              sx: { mb: 1 },
-                              ...(isSelected && {
-                                elevation: 8,
-                              }),
+                              variant: "outlined",
+                              sx: {
+                                mb: 1,
+                                ...(isSelected && {
+                                  borderColor: "primary.main",
+                                }),
+                              },
                             },
                             onClick: () => toggleSelectedAnnotationId(annotation.id),
                           })}

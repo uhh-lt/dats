@@ -1,17 +1,23 @@
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import { IconButton, Menu } from "@mui/material";
+import { IconButton, IconButtonProps, Menu } from "@mui/material";
 import { useState } from "react";
 import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
 import MemoDeleteMenuItem from "./MemoDeleteMenuItem.tsx";
 import MemoStarMenuItem from "./MemoStarMenuItem.tsx";
 
 interface MemoActionsMenuProps {
-  memo: MemoRead;
+  memo?: MemoRead;
   onStarredClick?: () => void;
   onDeleteClick?: () => void;
+  iconButtonProps?: Omit<IconButtonProps, "onClick" | "disabled">;
 }
 
-export default function MemoActionsMenu({ memo, onStarredClick, onDeleteClick }: MemoActionsMenuProps) {
+export default function MemoActionsMenu({
+  memo,
+  onStarredClick,
+  onDeleteClick,
+  iconButtonProps,
+}: MemoActionsMenuProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -34,33 +40,21 @@ export default function MemoActionsMenu({ memo, onStarredClick, onDeleteClick }:
 
   return (
     <>
-      <IconButton
-        id="icon-button"
-        aria-controls={open ? "menu" : undefined}
-        aria-haspopup="true"
-        aria-expanded={open ? "true" : undefined}
-        onClick={handleClick}
-      >
+      <IconButton onClick={handleClick} disabled={!memo} {...iconButtonProps}>
         <MoreVertIcon />
       </IconButton>
-      <Menu
-        id="basic-menu"
-        anchorEl={anchorEl}
-        open={open}
-        onClose={() => setAnchorEl(null)}
-        MenuListProps={{
-          "aria-labelledby": "basic-button",
-        }}
-      >
-        <MemoStarMenuItem onClick={handleStarredClick} memoId={memo.id} isStarred={memo.starred} />
-        <MemoDeleteMenuItem
-          memoId={memo.id}
-          memoTitle={memo.title}
-          attachedObjectType={memo.attached_object_type}
-          attachedObjectId={memo.attached_object_id}
-          onClick={handleDeleteClick}
-        />
-      </Menu>
+      {memo && (
+        <Menu anchorEl={anchorEl} open={open} onClose={() => setAnchorEl(null)}>
+          <MemoStarMenuItem onClick={handleStarredClick} memoId={memo.id} isStarred={memo.starred} />
+          <MemoDeleteMenuItem
+            memoId={memo.id}
+            memoTitle={memo.title}
+            attachedObjectType={memo.attached_object_type}
+            attachedObjectId={memo.attached_object_id}
+            onClick={handleDeleteClick}
+          />
+        </Menu>
+      )}
     </>
   );
 }

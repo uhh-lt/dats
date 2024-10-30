@@ -2,10 +2,12 @@ import AddCircleIcon from "@mui/icons-material/AddCircle";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import { Box, Button, CircularProgress, IconButton, Stack } from "@mui/material";
 import { useState } from "react";
-import SdocHooks from "../../../../api/SdocHooks.ts";
-import { useAuth } from "../../../../auth/useAuth.ts";
-import MemoBlockEditor from "../../../Memo/MemoBlockEditor.tsx";
-import MemoCard from "./MemoCard.tsx";
+import MemoHooks from "../../../api/MemoHooks.ts";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import SdocHooks from "../../../api/SdocHooks.ts";
+import { useAuth } from "../../../auth/useAuth.ts";
+import MemoBlockEditor from "../../Memo/MemoBlockEditor.tsx";
+import MemoCard from "../../Memo/MemoCard.tsx";
 
 interface DocumentMemosProps {
   sdocId: number;
@@ -29,7 +31,7 @@ function DocumentMemos({ sdocId }: DocumentMemosProps) {
         memoId={currentMemo}
         onDelete={handleReset}
         renderToolbar={() => (
-          <IconButton onClick={handleReset} size="small">
+          <IconButton onClick={handleReset}>
             <ArrowBackIosNewIcon />
           </IconButton>
         )}
@@ -45,12 +47,13 @@ function DocumentMemoList({ sdocId, onClick }: { sdocId: number; onClick: (memoI
   const memos = SdocHooks.useGetMemos(sdocId);
 
   // create memo
-  const { mutate: createMemo, isPending } = SdocHooks.useCreateMemo();
+  const { mutate: createMemo, isPending } = MemoHooks.useCreateMemo();
   const handleAddMemo = () => {
     if (!user) return;
 
     createMemo({
-      sdocId: sdocId,
+      attachedObjectId: sdocId,
+      attachedObjectType: AttachedObjectType.SOURCE_DOCUMENT,
       requestBody: {
         content: "",
         content_json: "",

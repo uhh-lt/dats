@@ -3,6 +3,8 @@ import "@blocknote/core/fonts/inter.css";
 // eslint-disable-next-line import/no-unresolved
 import "@blocknote/mantine/style.css";
 import { Card, CardHeader, CircularProgress } from "@mui/material";
+import { useCallback } from "react";
+import MemoHooks from "../../api/MemoHooks.ts";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import MemoBlockEditorView from "../../components/Memo/MemoBlockEditorView.tsx";
 
@@ -14,6 +16,22 @@ function LogbookEditor({ projectId }: LogbookEditorProps) {
   // global client state
   const projectMemo = ProjectHooks.useGetOrCreateMemo(projectId);
 
+  // update memo
+  const { mutate: updateMemo } = MemoHooks.useUpdateMemo();
+  const handleMemoChange = useCallback(
+    (markdown: string, json: string) => {
+      if (!projectMemo.data) return;
+      updateMemo({
+        memoId: projectMemo.data.id,
+        requestBody: {
+          content: markdown,
+          content_json: json,
+        },
+      });
+    },
+    [projectMemo.data, updateMemo],
+  );
+
   return (
     <Card className="h100 myFlexContainer">
       <CardHeader title="Project Logbook" />
@@ -22,7 +40,11 @@ function LogbookEditor({ projectId }: LogbookEditorProps) {
       ) : projectMemo.isError ? (
         <div>Error: {projectMemo.error.message}</div>
       ) : projectMemo.isSuccess ? (
-        <MemoBlockEditorView memo={projectMemo.data} editable={true} />
+        <MemoBlockEditorView
+          initialContentJson={projectMemo.data.content_json}
+          onChange={handleMemoChange}
+          editable={true}
+        />
       ) : null}
     </Card>
   );

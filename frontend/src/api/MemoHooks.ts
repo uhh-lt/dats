@@ -13,6 +13,7 @@ const useGetMemo = (memoId: number | null | undefined) =>
   });
 
 const updateInvalidation = (data: MemoRead) => {
+  queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMOS, data.project_id] });
   queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO, data.id] });
   queryClient.setQueryData<MemoRead>([QueryKey.MEMO, data.id], data);
   switch (data.attached_object_type) {
@@ -51,6 +52,16 @@ const updateInvalidation = (data: MemoRead) => {
   }
 };
 
+const useCreateMemo = () =>
+  useMutation({
+    mutationFn: MemoService.addMemo,
+    onSuccess: (data) => {
+      if (data.attached_object_type !== AttachedObjectType.PROJECT) {
+        updateInvalidation(data);
+      }
+    },
+  });
+
 const useUpdateMemo = () =>
   useMutation({
     mutationFn: MemoService.updateById,
@@ -83,9 +94,6 @@ const deleteInvalidation = (data: MemoRead) => {
     case AttachedObjectType.SOURCE_DOCUMENT:
       queryClient.removeQueries({ queryKey: [QueryKey.MEMO_SDOC, data.attached_object_id] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_MEMOS, data.attached_object_id] });
-      queryClient.invalidateQueries({
-        queryKey: [QueryKey.MEMO_SDOC_RELATED, data.attached_object_id],
-      });
       break;
     case AttachedObjectType.DOCUMENT_TAG:
       queryClient.removeQueries({ queryKey: [QueryKey.MEMO_TAG, data.attached_object_id] });
@@ -94,16 +102,14 @@ const deleteInvalidation = (data: MemoRead) => {
       queryClient.removeQueries({ queryKey: [QueryKey.MEMO_CODE, data.attached_object_id] });
       break;
     case AttachedObjectType.SPAN_ANNOTATION:
-      queryClient.removeQueries({
+      queryClient.invalidateQueries({
         queryKey: [QueryKey.MEMO_SPAN_ANNOTATION, data.attached_object_id],
       });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED] }); // todo: this is not optimal
       break;
     case AttachedObjectType.BBOX_ANNOTATION:
-      queryClient.removeQueries({
+      queryClient.invalidateQueries({
         queryKey: [QueryKey.MEMO_BBOX_ANNOTATION, data.attached_object_id],
       });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED] }); // todo: this is not optimal
       break;
     case AttachedObjectType.SPAN_GROUP:
       console.error("Span group memo update not implemented");
@@ -134,6 +140,7 @@ const useDeleteMemos = () =>
   });
 
 const MemoHooks = {
+  useCreateMemo,
   useGetMemo,
   useUpdateMemo,
   useStarMemos,

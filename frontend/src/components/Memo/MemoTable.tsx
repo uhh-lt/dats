@@ -40,7 +40,7 @@ const columns: MRT_ColumnDef<MemoTableRow>[] = [
     Cell: ({ row }) => {
       return (
         <AttachedObjectRenderer
-          attachedObjectId={row.original.attached_object_id}
+          attachedObject={row.original.attached_object_id}
           attachedObjectType={row.original.attached_object_type}
         />
       );

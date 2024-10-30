@@ -8,4 +8,5 @@ export interface AnnotationCardProps<T extends AnnotationReadResolved> {
   annotation: T;
   onClick: () => void;
   cardProps?: CardProps;
+  isSelected: boolean;
 }

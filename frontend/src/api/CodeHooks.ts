@@ -6,17 +6,6 @@ import { MemoRead } from "./openapi/models/MemoRead.ts";
 import { CodeService } from "./openapi/services/CodeService.ts";
 
 // memo
-const useCreateMemo = () =>
-  useMutation({
-    mutationFn: CodeService.addMemo,
-    onSuccess: (createdMemo) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMOS, createdMemo.project_id] });
-      queryClient.invalidateQueries({
-        queryKey: [QueryKey.MEMO_CODE, createdMemo.attached_object_id],
-      });
-    },
-  });
-
 const useGetUserMemo = (codeId: number | null | undefined) =>
   useQuery<MemoRead, Error>({
     queryKey: [QueryKey.MEMO_CODE, codeId],
@@ -60,7 +49,6 @@ const useDeleteCode = () =>
   });
 
 const CodeHooks = {
-  useCreateMemo,
   useGetUserMemo,
   useGetCode,
   useCreateCode,

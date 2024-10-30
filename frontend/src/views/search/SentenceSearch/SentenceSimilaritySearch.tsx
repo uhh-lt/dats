@@ -112,7 +112,6 @@ function SentenceSimilaritySearch() {
           sdocId={selectedDocumentId}
           filterName={filterName}
           isIdleContent={<Typography padding={2}>Click on a sentence to see info :)</Typography>}
-          className="h100"
         />
       }
     />

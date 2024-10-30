@@ -7,13 +7,15 @@ import {
   useCreateBlockNote,
 } from "@blocknote/react";
 import { useEffect, useState } from "react";
-import MemoHooks from "../../api/MemoHooks.ts";
-import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
 import { useDebounce } from "../../utils/useDebounce.ts";
 
 interface MemoBlockEditorViewProps {
-  memo: MemoRead;
   editable: boolean;
+  initialContentJson: string;
+  // has to be a useCallback!!!
+  onChange: (content: string, contentJson: string) => void;
+  debounce?: number;
+  style?: React.CSSProperties;
 }
 
 // define the slash menu items
@@ -22,15 +24,13 @@ const getCustomSlashMenuItems = (editor: BlockNoteEditor): DefaultReactSuggestio
   const defaultItems = getDefaultReactSlashMenuItems(editor);
   return defaultItems.filter((item) => !itemsToDelete.has(item.title));
 };
-
-function MemoBlockEditorView({ memo, editable }: MemoBlockEditorViewProps) {
+function MemoBlockEditorView({ initialContentJson, onChange, editable, debounce, style }: MemoBlockEditorViewProps) {
   // local state
-  const [content, setContent] = useState<string>(memo.content_json);
-  const editor = useCreateBlockNote({ initialContent: memo.content_json ? JSON.parse(memo.content_json) : "" });
+  const [content, setContent] = useState<string>(initialContentJson);
+  const editor = useCreateBlockNote({ initialContent: initialContentJson ? JSON.parse(initialContentJson) : "" });
 
   // persist changes automatically feature
-  const debouncedContent = useDebounce(content, 1000);
-  const { mutate: updateMemo } = MemoHooks.useUpdateMemo();
+  const debouncedContent = useDebounce(content, debounce ?? 1000);
   const handleChange = () => {
     if (!editor) return;
     setContent(JSON.stringify(editor.document));
@@ -38,18 +38,12 @@ function MemoBlockEditorView({ memo, editable }: MemoBlockEditorViewProps) {
   useEffect(() => {
     if (!editor || !debouncedContent) return;
     // only update if there are actually changes
-    if (debouncedContent === memo.content_json) return;
+    if (debouncedContent === initialContentJson) return;
 
     editor.blocksToMarkdownLossy().then((markdown) => {
-      updateMemo({
-        memoId: memo.id,
-        requestBody: {
-          content: markdown,
-          content_json: debouncedContent,
-        },
-      });
+      onChange(markdown, debouncedContent);
     });
-  }, [debouncedContent, editor, memo, updateMemo]);
+  }, [initialContentJson, debouncedContent, editor, onChange]);
 
   // Renders the editor instance using a React component.
   return (
@@ -60,6 +54,7 @@ function MemoBlockEditorView({ memo, editable }: MemoBlockEditorViewProps) {
       slashMenu={false}
       onChange={handleChange}
       editable={editable}
+      style={style}
     >
       <SuggestionMenuController
         triggerCharacter={"/"}

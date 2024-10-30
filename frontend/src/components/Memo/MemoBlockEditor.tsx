@@ -3,9 +3,10 @@ import { useCallback } from "react";
 import MemoHooks from "../../api/MemoHooks.ts";
 import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
 import { useAuth } from "../../auth/useAuth.ts";
-import AttachedObjectLink from "../../views/logbook/AttachedObjectLink.tsx";
+import { dateToLocaleString } from "../../utils/DateUtils.ts";
 import EditableTypography from "../EditableTypography.tsx";
 import UserName from "../User/UserName.tsx";
+import AttachedObjectRenderer from "./AttachedObjectRenderer.tsx";
 import MemoActionsMenu from "./MemoActionsMenu.tsx";
 import MemoBlockEditorView from "./MemoBlockEditorView.tsx";
 import useGetMemosAttachedObject from "./useGetMemosAttachedObject.ts";
@@ -38,6 +39,19 @@ function MemoBlockEditor({ memoId, renderToolbar, onDelete, onStarred }: MemoBlo
     [memoId, updateMemo],
   );
 
+  const handleMemoChange = useCallback(
+    (markdown: string, json: string) => {
+      updateMemo({
+        memoId: memoId,
+        requestBody: {
+          content: markdown,
+          content_json: json,
+        },
+      });
+    },
+    [memoId, updateMemo],
+  );
+
   return (
     <Box className="h100 myFlexContainer">
       {memo.isLoading || attachedObject.isLoading ? (
@@ -48,11 +62,12 @@ function MemoBlockEditor({ memoId, renderToolbar, onDelete, onStarred }: MemoBlo
         <div>Error: {attachedObject.error.message}</div>
       ) : memo.isSuccess && attachedObject.isSuccess ? (
         <>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" p={0.5} gap={0.5}>
-            <Typography fontWeight={900}>
-              <AttachedObjectLink
+          <Stack direction="row" alignItems="center" justifyContent="space-between" p={0.5}>
+            <Typography>
+              <AttachedObjectRenderer
                 attachedObject={attachedObject.data}
                 attachedObjectType={memo.data.attached_object_type}
+                link
               />
             </Typography>
             <Typography variant="subtitle2" color="textDisabled" fontSize={12} flexShrink={0}>
@@ -76,7 +91,15 @@ function MemoBlockEditor({ memoId, renderToolbar, onDelete, onStarred }: MemoBlo
             <MemoActionsMenu memo={memo.data} onDeleteClick={onDelete} onStarredClick={onStarred} />
           </Toolbar>
           <Divider />
-          <MemoBlockEditorView memo={memo.data} editable={isEditable} />
+          <MemoBlockEditorView
+            initialContentJson={memo.data.content_json}
+            onChange={handleMemoChange}
+            editable={isEditable}
+          />
+          <Typography variant="subtitle2" color="textSecondary" fontSize={12} px={1}>
+            {"Last modified: " +
+              dateToLocaleString(memo.data.updated).substring(0, dateToLocaleString(memo.data.updated).indexOf(","))}
+          </Typography>
         </>
       ) : null}
     </Box>

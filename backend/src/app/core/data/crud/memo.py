@@ -2,7 +2,6 @@ from typing import List, Optional
 
 import srsly
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
@@ -16,7 +15,6 @@ from app.core.data.dto.memo import (
 )
 from app.core.data.dto.object_handle import ObjectHandleCreate
 from app.core.data.dto.search import ElasticSearchMemoCreate, ElasticSearchMemoUpdate
-from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
@@ -62,77 +60,6 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             .filter(self.model.user_id == user_id, self.model.project_id == proj_id)
             .all()
         )
-
-    def read_by_user_and_sdoc(
-        self, db: Session, user_id: int, sdoc_id: int
-    ) -> List[MemoORM]:
-        # SELECT m
-        # FROM memo m
-        #     JOIN objecthandle o on o.id = m.attached_to_id
-        #     JOIN spanannotation span on span.id = o.span_annotation_id
-        #     JOIN annotationdocument a on a.id = span.annotation_document_id
-        # WHERE a.user_id = 1 AND a.source_document_id = 1
-
-        query = (
-            db.query(self.model)
-            .join(ObjectHandleORM, ObjectHandleORM.id == MemoORM.attached_to_id)
-            .join(
-                SpanAnnotationORM,
-                SpanAnnotationORM.id == ObjectHandleORM.span_annotation_id,
-            )
-            .join(
-                AnnotationDocumentORM,
-                AnnotationDocumentORM.id == SpanAnnotationORM.annotation_document_id,
-            )
-        )
-
-        query = query.filter(
-            and_(
-                MemoORM.user_id == user_id,
-                AnnotationDocumentORM.source_document_id == sdoc_id,
-            )
-        )
-
-        span_memos = query.all()
-
-        query = (
-            db.query(self.model)
-            .join(ObjectHandleORM, ObjectHandleORM.id == MemoORM.attached_to_id)
-            .join(
-                BBoxAnnotationORM,
-                BBoxAnnotationORM.id == ObjectHandleORM.bbox_annotation_id,
-            )
-            .join(
-                AnnotationDocumentORM,
-                AnnotationDocumentORM.id == BBoxAnnotationORM.annotation_document_id,
-            )
-        )
-
-        query = query.filter(
-            and_(
-                MemoORM.user_id == user_id,
-                AnnotationDocumentORM.source_document_id == sdoc_id,
-            )
-        )
-
-        bbox_memos = query.all()
-
-        query = (
-            db.query(self.model)
-            .join(ObjectHandleORM, ObjectHandleORM.id == MemoORM.attached_to_id)
-            .join(
-                SourceDocumentORM,
-                SourceDocumentORM.id == ObjectHandleORM.source_document_id,
-            )
-        )
-
-        query = query.filter(
-            and_(SourceDocumentORM.id == sdoc_id, self.model.user_id == user_id)
-        )
-
-        sdoc_memo = query.all()
-
-        return span_memos + bbox_memos + sdoc_memo
 
     def remove_by_user_and_project(
         self, db: Session, user_id: int, proj_id: int
@@ -191,131 +118,54 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         )
         return db_obj
 
-    def create_for_code(
-        self, db: Session, code_id: int, create_dto: MemoCreateIntern
+    def create_for_attached_object(
+        self,
+        db: Session,
+        attached_object_id: int,
+        attached_object_type: AttachedObjectType,
+        create_dto: MemoCreateIntern,
     ) -> MemoORM:
         # Flo: this is necessary to avoid circular imports.
         from app.core.data.crud.object_handle import crud_object_handle
 
-        # create an ObjectHandle for the Code
-        oh_db_obj = crud_object_handle.create(
-            db=db, create_dto=ObjectHandleCreate(code_id=code_id)
-        )
+        # create an ObjectHandle for the attached object
+        oh_create_dto = None
+        match attached_object_type:
+            case AttachedObjectType.code:
+                oh_create_dto = ObjectHandleCreate(code_id=attached_object_id)
+            case AttachedObjectType.span_annotation:
+                oh_create_dto = ObjectHandleCreate(
+                    span_annotation_id=attached_object_id
+                )
+            case AttachedObjectType.span_group:
+                oh_create_dto = ObjectHandleCreate(span_group_id=attached_object_id)
+            case AttachedObjectType.bbox_annotation:
+                oh_create_dto = ObjectHandleCreate(
+                    bbox_annotation_id=attached_object_id
+                )
+            case AttachedObjectType.source_document:
+                oh_create_dto = ObjectHandleCreate(
+                    source_document_id=attached_object_id
+                )
+            case AttachedObjectType.project:
+                oh_create_dto = ObjectHandleCreate(project_id=attached_object_id)
+            case AttachedObjectType.document_tag:
+                oh_create_dto = ObjectHandleCreate(document_tag_id=attached_object_id)
+            case _:
+                raise NotImplementedError(
+                    f"Unknown AttachedObjectType: {attached_object_type}"
+                )
+        assert (
+            oh_create_dto is not None
+        ), f"Unknown AttachedObjectType: {attached_object_type}"
+
+        # create an ObjectHandle for the attached object
+        oh_db_obj = crud_object_handle.create(db=db, create_dto=oh_create_dto)
         db_obj = self.__create_memo(create_dto, db, oh_db_obj)
         self.__add_memo_to_elasticsearch(
             memo_orm=db_obj,
-            attached_object_id=code_id,
-            attached_object_type=AttachedObjectType.code,
-        )
-        return db_obj
-
-    def create_for_project(
-        self, db: Session, project_id: int, create_dto: MemoCreateIntern
-    ) -> MemoORM:
-        # Flo: this is necessary to avoid circular imports.
-        from app.core.data.crud.object_handle import crud_object_handle
-
-        # create an ObjectHandle for the Project
-        oh_db_obj = crud_object_handle.create(
-            db=db, create_dto=ObjectHandleCreate(project_id=project_id)
-        )
-        db_obj = self.__create_memo(create_dto, db, oh_db_obj)
-        self.__add_memo_to_elasticsearch(
-            memo_orm=db_obj,
-            attached_object_id=project_id,
-            attached_object_type=AttachedObjectType.project,
-        )
-        return db_obj
-
-    def create_for_sdoc(
-        self, db: Session, sdoc_id: int, create_dto: MemoCreateIntern
-    ) -> MemoORM:
-        # Flo: this is necessary to avoid circular imports.
-        from app.core.data.crud.object_handle import crud_object_handle
-
-        # create an ObjectHandle for the SourceDocument
-        oh_db_obj = crud_object_handle.create(
-            db=db, create_dto=ObjectHandleCreate(source_document_id=sdoc_id)
-        )
-        db_obj = self.__create_memo(create_dto, db, oh_db_obj)
-        self.__add_memo_to_elasticsearch(
-            memo_orm=db_obj,
-            attached_object_id=sdoc_id,
-            attached_object_type=AttachedObjectType.source_document,
-        )
-        return db_obj
-
-    def create_for_span_annotation(
-        self, db: Session, span_anno_id: int, create_dto: MemoCreateIntern
-    ) -> MemoORM:
-        # Flo: this is necessary to avoid circular imports.
-        from app.core.data.crud.object_handle import crud_object_handle
-
-        # create an ObjectHandle for the SpanAnnotation
-        oh_db_obj = crud_object_handle.create(
-            db=db,
-            create_dto=ObjectHandleCreate(span_annotation_id=span_anno_id),
-        )
-        db_obj = self.__create_memo(create_dto, db, oh_db_obj)
-        self.__add_memo_to_elasticsearch(
-            memo_orm=db_obj,
-            attached_object_id=span_anno_id,
-            attached_object_type=AttachedObjectType.span_annotation,
-        )
-        return db_obj
-
-    def create_for_span_group(
-        self, db: Session, span_group_id: int, create_dto: MemoCreateIntern
-    ) -> MemoORM:
-        # Flo: this is necessary to avoid circular imports.
-        from app.core.data.crud.object_handle import crud_object_handle
-
-        # create an ObjectHandle for the SpanGroup
-        oh_db_obj = crud_object_handle.create(
-            db=db, create_dto=ObjectHandleCreate(span_group_id=span_group_id)
-        )
-        db_obj = self.__create_memo(create_dto, db, oh_db_obj)
-        self.__add_memo_to_elasticsearch(
-            memo_orm=db_obj,
-            attached_object_id=span_group_id,
-            attached_object_type=AttachedObjectType.span_group,
-        )
-        return db_obj
-
-    def create_for_bbox_annotation(
-        self, db: Session, bbox_anno_id: int, create_dto: MemoCreateIntern
-    ) -> MemoORM:
-        # Flo: this is necessary to avoid circular imports.
-        from app.core.data.crud.object_handle import crud_object_handle
-
-        # create an ObjectHandle for the BBoxAnnotation
-        oh_db_obj = crud_object_handle.create(
-            db=db,
-            create_dto=ObjectHandleCreate(bbox_annotation_id=bbox_anno_id),
-        )
-        db_obj = self.__create_memo(create_dto, db, oh_db_obj)
-        self.__add_memo_to_elasticsearch(
-            memo_orm=db_obj,
-            attached_object_id=bbox_anno_id,
-            attached_object_type=AttachedObjectType.bbox_annotation,
-        )
-        return db_obj
-
-    def create_for_document_tag(
-        self, db: Session, doc_tag_id: int, create_dto: MemoCreateIntern
-    ) -> MemoORM:
-        # Flo: this is necessary to avoid circular imports.
-        from app.core.data.crud.object_handle import crud_object_handle
-
-        # create an ObjectHandle for the DocumentTag
-        oh_db_obj = crud_object_handle.create(
-            db=db, create_dto=ObjectHandleCreate(document_tag_id=doc_tag_id)
-        )
-        db_obj = self.__create_memo(create_dto, db, oh_db_obj)
-        self.__add_memo_to_elasticsearch(
-            memo_orm=db_obj,
-            attached_object_id=doc_tag_id,
-            attached_object_type=AttachedObjectType.document_tag,
+            attached_object_id=attached_object_id,
+            attached_object_type=attached_object_type,
         )
         return db_obj
 

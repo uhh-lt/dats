@@ -169,14 +169,6 @@ const useGetAllUserMemos = (projectId: number | null | undefined) =>
     enabled: !!projectId,
   });
 
-const useCreateMemo = () =>
-  useMutation({
-    mutationFn: ProjectService.addMemo,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_PROJECT, data.project_id] });
-    },
-  });
-
 // actions
 const useGetActions = (projectId: number, userId: number) =>
   useQuery<Array<ActionRead>, Error>({
@@ -230,7 +222,6 @@ const ProjectHooks = {
   // memo
   useGetOrCreateMemo,
   useGetAllUserMemos,
-  useCreateMemo,
   // actions
   useGetActions,
   useQueryActions,

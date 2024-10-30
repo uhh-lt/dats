@@ -37,8 +37,6 @@ export const QueryKey = {
   MEMO_TAG: "tagMemo",
   // the logged-in user's memo (by sdoc id)
   MEMO_SDOC: "sdocMemo",
-  // the logged-in user's memos (by sdoc id) attached to a document and its annotations (span, bbox)
-  MEMO_SDOC_RELATED: "sdocRelatedMemos",
   // the logged-in user's memo (by span id)
   MEMO_SPAN_ANNOTATION: "spanAnnotationMemo",
   // the logged-in user's memo (by bbox id)

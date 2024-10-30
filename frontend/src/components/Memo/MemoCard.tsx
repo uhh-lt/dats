@@ -8,13 +8,13 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import MemoHooks from "../../../../api/MemoHooks.ts";
-import { MemoRead } from "../../../../api/openapi/models/MemoRead.ts";
-import { dateToLocaleString } from "../../../../utils/DateUtils.ts";
-import AttachedObjectLink from "../../../../views/logbook/AttachedObjectLink.tsx";
-import MemoActionsMenu from "../../../Memo/MemoActionsMenu.tsx";
-import useGetMemosAttachedObject from "../../../Memo/useGetMemosAttachedObject.ts";
-import UserName from "../../../User/UserName.tsx";
+import MemoHooks from "../../api/MemoHooks.ts";
+import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
+import { dateToLocaleString } from "../../utils/DateUtils.ts";
+import UserName from "../User/UserName.tsx";
+import AttachedObjectRenderer from "./AttachedObjectRenderer.tsx";
+import MemoActionsMenu from "./MemoActionsMenu.tsx";
+import useGetMemosAttachedObject from "./useGetMemosAttachedObject.ts";
 
 interface MemoCardSharedProps {
   onClick?: (memo: MemoRead) => void;
@@ -73,16 +73,26 @@ function MemoCardWithContent({
         title={
           <>
             {attachedObject.isSuccess ? (
-              <AttachedObjectLink attachedObject={attachedObject.data} attachedObjectType={memo.attached_object_type} />
+              <AttachedObjectRenderer
+                attachedObject={attachedObject.data}
+                attachedObjectType={memo.attached_object_type}
+                link
+              />
             ) : (
               <>...</>
             )}
           </>
         }
-        action={<MemoActionsMenu memo={memo} onDeleteClick={onDeleteClick} onStarredClick={onStarredClick} />}
+        action={
+          <MemoActionsMenu
+            memo={memo}
+            onDeleteClick={onDeleteClick}
+            onStarredClick={onStarredClick}
+            iconButtonProps={{ size: "small" }}
+          />
+        }
         titleTypographyProps={{
           variant: "body1",
-          fontWeight: 900,
           display: "flex",
           alignItems: "center",
         }}
@@ -90,17 +100,18 @@ function MemoCardWithContent({
       />
       <Divider />
       <CardActionArea onClick={handleClick}>
-        <CardContent sx={{ p: 1, pb: "8px !important" }}>
+        <CardContent sx={{ p: 1, pb: "0px !important" }}>
           <Typography
             variant="body1"
             sx={{
               wordBreak: "break-word",
+              fontWeight: 900,
             }}
           >
             {memo.title}
           </Typography>
           <Stack direction="row" alignItems="center" mt={1} justifyContent="space-between">
-            <Typography variant="subtitle2" color="textSecondary" fontWeight={600} fontSize={12}>
+            <Typography variant="subtitle2" color="textSecondary" fontSize={12}>
               {"Last modified: " +
                 dateToLocaleString(memo.updated).substring(0, dateToLocaleString(memo.updated).indexOf(","))}
             </Typography>

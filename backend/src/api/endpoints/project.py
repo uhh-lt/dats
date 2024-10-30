@@ -8,7 +8,6 @@ from api.dependencies import (
     get_db_session,
 )
 from api.util import get_object_memo_for_user, get_object_memos
-from api.validation import Validate
 from app.core.analysis.duplicate_finder_service import DuplicateFinderService
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud.action import crud_action
@@ -24,7 +23,6 @@ from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import (
     AttachedObjectType,
-    MemoCreate,
     MemoCreateIntern,
     MemoInDB,
     MemoRead,
@@ -370,36 +368,6 @@ def query_actions_of_project(
     ]
 
 
-@router.put(
-    "/{proj_id}/memo",
-    response_model=MemoRead,
-    summary="Adds a Memo of the current User to the Project with the given ID if it exists",
-)
-def add_memo(
-    *,
-    db: Session = Depends(get_db_session),
-    proj_id: int,
-    memo: MemoCreate,
-    authz_user: AuthzUser = Depends(),
-    validate: Validate = Depends(),
-) -> MemoRead:
-    authz_user.assert_in_project(proj_id)
-
-    db_obj = crud_memo.create_for_project(
-        db=db,
-        project_id=proj_id,
-        create_dto=MemoCreateIntern(
-            **memo.model_dump(), user_id=authz_user.user.id, project_id=proj_id
-        ),
-    )
-    memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
-    return MemoRead(
-        **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
-        attached_object_id=proj_id,
-        attached_object_type=AttachedObjectType.project,
-    )
-
-
 @router.get(
     "/{proj_id}/memo",
     response_model=List[MemoRead],
@@ -436,9 +404,10 @@ def get_or_create_user_memo(
     try:
         return get_object_memo_for_user(db_obj=db_obj, user_id=authz_user.user.id)
     except NoSuchElementError:
-        db_obj = crud_memo.create_for_project(
+        db_obj = crud_memo.create_for_attached_object(
             db=db,
-            project_id=proj_id,
+            attached_object_id=proj_id,
+            attached_object_type=AttachedObjectType.project,
             create_dto=MemoCreateIntern(
                 title="Project Memo",
                 content="",

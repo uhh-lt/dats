@@ -2,8 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { AttachedObjectType } from "../models/AttachedObjectType";
 import type { Body_memo_search_memos } from "../models/Body_memo_search_memos";
 import type { ColumnInfo_MemoColumns_ } from "../models/ColumnInfo_MemoColumns_";
+import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
 import type { MemoUpdate } from "../models/MemoUpdate";
 import type { PaginatedElasticSearchDocumentHits } from "../models/PaginatedElasticSearchDocumentHits";
@@ -11,6 +13,34 @@ import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class MemoService {
+  /**
+   * Adds a Memo to the Attached Object with the given ID if it exists
+   * @returns MemoRead Successful Response
+   * @throws ApiError
+   */
+  public static addMemo({
+    attachedObjectId,
+    attachedObjectType,
+    requestBody,
+  }: {
+    attachedObjectId: number;
+    attachedObjectType: AttachedObjectType;
+    requestBody: MemoCreate;
+  }): CancelablePromise<MemoRead> {
+    return __request(OpenAPI, {
+      method: "PUT",
+      url: "/memo",
+      query: {
+        attached_object_id: attachedObjectId,
+        attached_object_type: attachedObjectType,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
   /**
    * Returns the Memo with the given ID if it exists
    * @returns MemoRead Successful Response

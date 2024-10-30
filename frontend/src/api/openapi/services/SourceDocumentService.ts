@@ -5,7 +5,6 @@
 import type { BBoxAnnotationRead } from "../models/BBoxAnnotationRead";
 import type { BBoxAnnotationReadResolved } from "../models/BBoxAnnotationReadResolved";
 import type { DocumentTagRead } from "../models/DocumentTagRead";
-import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
 import type { SourceDocumentDataRead } from "../models/SourceDocumentDataRead";
 import type { SourceDocumentMetadataReadResolved } from "../models/SourceDocumentMetadataReadResolved";
@@ -242,31 +241,6 @@ export class SourceDocumentService {
     });
   }
   /**
-   * Adds a Memo to the SourceDocument with the given ID if it exists
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static addMemo({
-    sdocId,
-    requestBody,
-  }: {
-    sdocId: number;
-    requestBody: MemoCreate;
-  }): CancelablePromise<MemoRead> {
-    return __request(OpenAPI, {
-      method: "PUT",
-      url: "/sdoc/{sdoc_id}/memo",
-      path: {
-        sdoc_id: sdocId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Returns all Memo attached to the SourceDocument with the given ID if it exists.
    * @returns MemoRead Successful Response
    * @throws ApiError
@@ -292,23 +266,6 @@ export class SourceDocumentService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/memo/user",
-      path: {
-        sdoc_id: sdocId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the Memo attached to the SourceDocument of the logged-in User and all memos attached to its annotations.
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static getRelatedUserMemos({ sdocId }: { sdocId: number }): CancelablePromise<Array<MemoRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/sdoc/{sdoc_id}/relatedmemos/user",
       path: {
         sdoc_id: sdocId,
       },

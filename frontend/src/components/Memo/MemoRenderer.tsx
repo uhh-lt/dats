@@ -95,7 +95,7 @@ export function MemoRendererWithData({
       {showStar && (memo.starred ? <StarIcon /> : <StarOutlineIcon />)}
       {showAttachedObject && (
         <AttachedObjectRenderer
-          attachedObjectId={memo.attached_object_id}
+          attachedObject={memo.attached_object_id}
           attachedObjectType={memo.attached_object_type}
           link={attachedObjectLink}
         />

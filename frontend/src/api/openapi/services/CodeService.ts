@@ -5,7 +5,6 @@
 import type { CodeCreate } from "../models/CodeCreate";
 import type { CodeRead } from "../models/CodeRead";
 import type { CodeUpdate } from "../models/CodeUpdate";
-import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -81,31 +80,6 @@ export class CodeService {
       path: {
         code_id: codeId,
       },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Adds a Memo to the Code with the given ID if it exists
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static addMemo({
-    codeId,
-    requestBody,
-  }: {
-    codeId: number;
-    requestBody: MemoCreate;
-  }): CancelablePromise<MemoRead> {
-    return __request(OpenAPI, {
-      method: "PUT",
-      url: "/code/{code_id}/memo",
-      path: {
-        code_id: codeId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },

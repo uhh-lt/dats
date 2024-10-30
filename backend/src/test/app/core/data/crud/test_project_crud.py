@@ -238,8 +238,11 @@ def test_get_add_remove_memos_project(
         starred=starred1,
     )
 
-    db_obj = crud_memo.create_for_project(
-        db=db, project_id=project.id, create_dto=memo1
+    db_obj = crud_memo.create_for_attached_object(
+        db=db,
+        attached_object_id=project.id,
+        attached_object_type=AttachedObjectType.project,
+        create_dto=memo1,
     )
     db.add(project)
     db.refresh(project)
@@ -266,8 +269,11 @@ def test_get_add_remove_memos_project(
         starred=starred2,
     )
 
-    db_obj = crud_memo.create_for_project(
-        db=db, project_id=project.id, create_dto=memo2
+    db_obj = crud_memo.create_for_attached_object(
+        db=db,
+        attached_object_id=project.id,
+        attached_object_type=AttachedObjectType.project,
+        create_dto=memo2,
     )
     db.add(project)
     db.refresh(project)

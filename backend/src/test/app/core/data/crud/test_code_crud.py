@@ -98,7 +98,12 @@ def test_add_get_memo(
         project_id=project.id,
         starred=starred,
     )
-    db_obj = crud_memo.create_for_code(db=db, code_id=code.id, create_dto=memo)
+    db_obj = crud_memo.create_for_attached_object(
+        db=db,
+        attached_object_id=code.id,
+        attached_object_type=AttachedObjectType.code,
+        create_dto=memo,
+    )
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     memo_new = [
         MemoRead(

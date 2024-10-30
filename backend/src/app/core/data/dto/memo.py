@@ -16,6 +16,16 @@ from .dto_base import UpdateDTOBase
 """
 
 
+class AttachedObjectType(str, Enum):
+    source_document = "source_document"
+    code = "code"
+    span_annotation = "span_annotation"
+    span_group = "span_group"
+    bbox_annotation = "bbox_annotation"
+    project = "project"
+    document_tag = "document_tag"
+
+
 # Properties shared across all DTOs
 class MemoBaseDTO(BaseModel):
     title: str = Field(description="Title of the Memo")
@@ -63,42 +73,6 @@ class MemoReadBaseDTO(MemoBaseDTO):
 class MemoInDB(MemoReadBaseDTO):
     attached_to_id: int = Field(description="The ObjectHandle the Memo is attached to")
     model_config = ConfigDict(from_attributes=True)
-
-
-class MemoReadSourceDocument(MemoReadBaseDTO):
-    attached_source_document_id: int = Field(
-        description="SourceDocument the Memo is attached to"
-    )
-
-
-class MemoReadCode(MemoReadBaseDTO):
-    attached_code_id: int = Field(description="Code the Memo is attached to")
-
-
-class MemoReadSpanAnnotation(MemoReadBaseDTO):
-    attached_span_annotation_id: int = Field(
-        description="SpanAnnotation the Memo is attached to"
-    )
-
-
-class MemoReadProject(MemoReadBaseDTO):
-    attached_project_id: int = Field(description="Project the Memo is attached to")
-
-
-class MemoReadDocumentTag(MemoReadBaseDTO):
-    attached_document_tag_id: int = Field(
-        description="DocumentTag the Memo is attached to"
-    )
-
-
-class AttachedObjectType(str, Enum):
-    source_document = "source_document"
-    code = "code"
-    span_annotation = "span_annotation"
-    span_group = "span_group"
-    bbox_annotation = "bbox_annotation"
-    project = "project"
-    document_tag = "document_tag"
 
 
 class MemoRead(MemoReadBaseDTO):

@@ -22,8 +22,6 @@ const useGetDocument = (sdocId: number | null | undefined) =>
     enabled: !!sdocId,
   });
 
-// encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + url2)
-
 const useGetDocumentData = (sdocId: number | null | undefined) =>
   useQuery<SourceDocumentDataRead, Error>({
     queryKey: [QueryKey.SDOC_DATA, sdocId],
@@ -111,28 +109,6 @@ const useGetMemo = (sdocId: number | null | undefined) =>
       }),
     retry: false,
     enabled: !!sdocId,
-  });
-
-const useGetRelatedMemos = (sdocId: number | null | undefined) =>
-  useQuery<MemoRead[], Error>({
-    queryKey: [QueryKey.MEMO_SDOC_RELATED, sdocId],
-    queryFn: () =>
-      SourceDocumentService.getRelatedUserMemos({
-        sdocId: sdocId!,
-      }),
-    retry: false,
-    enabled: !!sdocId,
-  });
-
-const useCreateMemo = () =>
-  useMutation({
-    mutationFn: SourceDocumentService.addMemo,
-    onSuccess: (memo) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMOS, memo.project_id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC, memo.attached_object_id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED, memo.attached_object_id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_MEMOS, memo.attached_object_id] });
-    },
   });
 
 const useUpdateName = () =>
@@ -273,8 +249,6 @@ const SdocHooks = {
   // memo
   useGetMemo,
   useGetMemos,
-  useGetRelatedMemos,
-  useCreateMemo,
   // name
   useUpdateName,
   // metadata

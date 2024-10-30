@@ -44,7 +44,6 @@ const useDeleteBBox = () =>
     mutationFn: BboxAnnotationService.deleteById,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS, data.sdoc_id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED, data.sdoc_id] });
     },
   });
 
@@ -57,18 +56,6 @@ const useGetUserMemo = (bboxId: number | undefined) =>
     retry: false,
   });
 
-const useCreateMemo = () =>
-  useMutation({
-    mutationFn: BboxAnnotationService.addMemo,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMOS, data.user_id] });
-      queryClient.invalidateQueries({
-        queryKey: [QueryKey.MEMO_BBOX_ANNOTATION, data.attached_object_id],
-      });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED] }); // todo: this is not optimal
-    },
-  });
-
 const BboxAnnotationHooks = {
   useGetAnnotation,
   useGetByCodeAndUser,
@@ -76,7 +63,6 @@ const BboxAnnotationHooks = {
   useDeleteBBox,
   // memo
   useGetUserMemo,
-  useCreateMemo,
 };
 
 export default BboxAnnotationHooks;

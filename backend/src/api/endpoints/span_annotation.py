@@ -8,14 +8,9 @@ from api.util import get_object_memo_for_user, get_object_memos
 from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
-from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.memo import (
-    AttachedObjectType,
-    MemoCreate,
-    MemoCreateIntern,
-    MemoInDB,
     MemoRead,
 )
 from app.core.data.dto.span_annotation import (
@@ -284,39 +279,6 @@ def remove_from_group(
         db=db, span_id=span_id, group_id=group_id
     )
     return SpanAnnotationRead.model_validate(sdoc_db_obj)
-
-
-@router.put(
-    "/{span_id}/memo",
-    response_model=MemoRead,
-    summary="Adds a Memo to the SpanAnnotation with the given ID if it exists",
-)
-def add_memo(
-    *,
-    db: Session = Depends(get_db_session),
-    span_id: int,
-    memo: MemoCreate,
-    authz_user: AuthzUser = Depends(),
-    validate: Validate = Depends(),
-) -> MemoRead:
-    span_anno = crud_span_anno.read(db, span_id)
-    proj_id = span_anno.annotation_document.source_document.project_id
-
-    authz_user.assert_in_project(project_id=proj_id)
-
-    db_obj = crud_memo.create_for_span_annotation(
-        db=db,
-        span_anno_id=span_id,
-        create_dto=MemoCreateIntern(
-            **memo.model_dump(), user_id=authz_user.user.id, project_id=proj_id
-        ),
-    )
-    memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
-    return MemoRead(
-        **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
-        attached_object_id=span_id,
-        attached_object_type=AttachedObjectType.span_annotation,
-    )
 
 
 @router.get(

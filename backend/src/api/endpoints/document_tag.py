@@ -9,7 +9,6 @@ from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.document_tag import crud_document_tag
-from app.core.data.crud.memo import crud_memo
 from app.core.data.dto.document_tag import (
     DocumentTagCreate,
     DocumentTagRead,
@@ -18,10 +17,6 @@ from app.core.data.dto.document_tag import (
     SourceDocumentDocumentTagMultiLink,
 )
 from app.core.data.dto.memo import (
-    AttachedObjectType,
-    MemoCreate,
-    MemoCreateIntern,
-    MemoInDB,
     MemoRead,
 )
 
@@ -231,39 +226,6 @@ def delete_by_id(
 
     db_obj = crud_document_tag.remove(db=db, id=tag_id)
     return DocumentTagRead.model_validate(db_obj)
-
-
-@router.put(
-    "/{tag_id}/memo",
-    response_model=MemoRead,
-    summary="Adds a Memo to the DocumentTag with the given ID if it exists",
-)
-def add_memo(
-    *,
-    db: Session = Depends(get_db_session),
-    tag_id: int,
-    memo: MemoCreate,
-    authz_user: AuthzUser = Depends(),
-    validate: Validate = Depends(),
-) -> MemoRead:
-    tag = crud_document_tag.read(db, tag_id)
-    proj_id = tag.project_id
-
-    authz_user.assert_in_project(tag.project_id)
-
-    db_obj = crud_memo.create_for_document_tag(
-        db=db,
-        doc_tag_id=tag_id,
-        create_dto=MemoCreateIntern(
-            **memo.model_dump(), user_id=authz_user.user.id, project_id=proj_id
-        ),
-    )
-    memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
-    return MemoRead(
-        **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
-        attached_object_id=tag_id,
-        attached_object_type=AttachedObjectType.document_tag,
-    )
 
 
 @router.get(

@@ -7,7 +7,6 @@ import type { ActionRead } from "../models/ActionRead";
 import type { Body_project_upload_project_sdoc } from "../models/Body_project_upload_project_sdoc";
 import type { CodeRead } from "../models/CodeRead";
 import type { DocumentTagRead } from "../models/DocumentTagRead";
-import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
 import type { PreprocessingJobRead } from "../models/PreprocessingJobRead";
 import type { ProjectCreate } from "../models/ProjectCreate";
@@ -335,31 +334,6 @@ export class ProjectService {
     return __request(OpenAPI, {
       method: "POST",
       url: "/project/{proj_id}/actions",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Adds a Memo of the current User to the Project with the given ID if it exists
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static addMemo({
-    projId,
-    requestBody,
-  }: {
-    projId: number;
-    requestBody: MemoCreate;
-  }): CancelablePromise<MemoRead> {
-    return __request(OpenAPI, {
-      method: "PUT",
-      url: "/project/{proj_id}/memo",
-      path: {
-        proj_id: projId,
-      },
       body: requestBody,
       mediaType: "application/json",
       errors: {

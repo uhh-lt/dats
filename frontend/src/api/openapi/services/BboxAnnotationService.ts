@@ -7,7 +7,6 @@ import type { BBoxAnnotationRead } from "../models/BBoxAnnotationRead";
 import type { BBoxAnnotationReadResolved } from "../models/BBoxAnnotationReadResolved";
 import type { BBoxAnnotationUpdate } from "../models/BBoxAnnotationUpdate";
 import type { CodeRead } from "../models/CodeRead";
-import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -136,31 +135,6 @@ export class BboxAnnotationService {
       path: {
         bbox_id: bboxId,
       },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Adds a Memo to the BBoxAnnotation with the given ID if it exists
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static addMemo({
-    bboxId,
-    requestBody,
-  }: {
-    bboxId: number;
-    requestBody: MemoCreate;
-  }): CancelablePromise<MemoRead> {
-    return __request(OpenAPI, {
-      method: "PUT",
-      url: "/bbox/{bbox_id}/memo",
-      path: {
-        bbox_id: bboxId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },
