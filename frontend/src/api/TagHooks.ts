@@ -110,15 +110,6 @@ const useGetMemo = (tagId: number | null | undefined) =>
     enabled: !!tagId,
   });
 
-const useCreateMemo = () =>
-  useMutation({
-    mutationFn: DocumentTagService.addMemo,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMOS, data.project_id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_TAG, data.attached_object_id] });
-    },
-  });
-
 const useGetTagDocumentCounts = (sdocIds: number[]) =>
   useQuery<Map<number, number>, Error>({
     queryKey: [QueryKey.TAG_SDOC_COUNT, sdocIds],
@@ -140,7 +131,6 @@ const TagHooks = {
   useGetTagDocumentCounts,
   //memos
   useGetMemo,
-  useCreateMemo,
 };
 
 export default TagHooks;

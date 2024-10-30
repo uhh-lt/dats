@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { CodeRead } from "../models/CodeRead";
-import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
 import type { SpanAnnotationCreate } from "../models/SpanAnnotationCreate";
 import type { SpanAnnotationRead } from "../models/SpanAnnotationRead";
@@ -276,31 +275,6 @@ export class SpanAnnotationService {
         span_id: spanId,
         group_id: groupId,
       },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Adds a Memo to the SpanAnnotation with the given ID if it exists
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static addMemo({
-    spanId,
-    requestBody,
-  }: {
-    spanId: number;
-    requestBody: MemoCreate;
-  }): CancelablePromise<MemoRead> {
-    return __request(OpenAPI, {
-      method: "PUT",
-      url: "/span/{span_id}/memo",
-      path: {
-        span_id: spanId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },

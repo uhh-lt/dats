@@ -69,7 +69,6 @@ const useDeleteSpan = () =>
   useMutation({
     mutationFn: SpanAnnotationService.deleteById,
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED, data.sdoc_id] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, data.sdoc_id] });
     },
   });
@@ -83,18 +82,6 @@ const useGetUserMemo = (spanId: number | null | undefined) =>
     retry: false,
   });
 
-const useCreateMemo = () =>
-  useMutation({
-    mutationFn: SpanAnnotationService.addMemo,
-    onSuccess: (memo) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMOS, memo.project_id] });
-      queryClient.invalidateQueries({
-        queryKey: [QueryKey.MEMO_SPAN_ANNOTATION, memo.attached_object_id],
-      });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED] }); // todo: this is not optimal
-    },
-  });
-
 const SpanAnnotationHooks = {
   useCreateBulkAnnotations,
   useGetAnnotation,
@@ -104,7 +91,6 @@ const SpanAnnotationHooks = {
   useDeleteSpan,
   // memo
   useGetUserMemo,
-  useCreateMemo,
 };
 
 export default SpanAnnotationHooks;

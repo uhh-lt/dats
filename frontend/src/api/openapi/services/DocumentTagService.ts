@@ -6,7 +6,6 @@ import type { Body_documentTag_update_document_tags_batch } from "../models/Body
 import type { DocumentTagCreate } from "../models/DocumentTagCreate";
 import type { DocumentTagRead } from "../models/DocumentTagRead";
 import type { DocumentTagUpdate } from "../models/DocumentTagUpdate";
-import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
 import type { SourceDocumentDocumentTagLinks } from "../models/SourceDocumentDocumentTagLinks";
 import type { SourceDocumentDocumentTagMultiLink } from "../models/SourceDocumentDocumentTagMultiLink";
@@ -168,31 +167,6 @@ export class DocumentTagService {
       path: {
         tag_id: tagId,
       },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Adds a Memo to the DocumentTag with the given ID if it exists
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static addMemo({
-    tagId,
-    requestBody,
-  }: {
-    tagId: number;
-    requestBody: MemoCreate;
-  }): CancelablePromise<MemoRead> {
-    return __request(OpenAPI, {
-      method: "PUT",
-      url: "/doctag/{tag_id}/memo",
-      path: {
-        tag_id: tagId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },
