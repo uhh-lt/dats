@@ -2,7 +2,6 @@ from typing import List, Optional
 
 import srsly
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
@@ -16,7 +15,6 @@ from app.core.data.dto.memo import (
 )
 from app.core.data.dto.object_handle import ObjectHandleCreate
 from app.core.data.dto.search import ElasticSearchMemoCreate, ElasticSearchMemoUpdate
-from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
@@ -62,77 +60,6 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             .filter(self.model.user_id == user_id, self.model.project_id == proj_id)
             .all()
         )
-
-    def read_by_user_and_sdoc(
-        self, db: Session, user_id: int, sdoc_id: int
-    ) -> List[MemoORM]:
-        # SELECT m
-        # FROM memo m
-        #     JOIN objecthandle o on o.id = m.attached_to_id
-        #     JOIN spanannotation span on span.id = o.span_annotation_id
-        #     JOIN annotationdocument a on a.id = span.annotation_document_id
-        # WHERE a.user_id = 1 AND a.source_document_id = 1
-
-        query = (
-            db.query(self.model)
-            .join(ObjectHandleORM, ObjectHandleORM.id == MemoORM.attached_to_id)
-            .join(
-                SpanAnnotationORM,
-                SpanAnnotationORM.id == ObjectHandleORM.span_annotation_id,
-            )
-            .join(
-                AnnotationDocumentORM,
-                AnnotationDocumentORM.id == SpanAnnotationORM.annotation_document_id,
-            )
-        )
-
-        query = query.filter(
-            and_(
-                MemoORM.user_id == user_id,
-                AnnotationDocumentORM.source_document_id == sdoc_id,
-            )
-        )
-
-        span_memos = query.all()
-
-        query = (
-            db.query(self.model)
-            .join(ObjectHandleORM, ObjectHandleORM.id == MemoORM.attached_to_id)
-            .join(
-                BBoxAnnotationORM,
-                BBoxAnnotationORM.id == ObjectHandleORM.bbox_annotation_id,
-            )
-            .join(
-                AnnotationDocumentORM,
-                AnnotationDocumentORM.id == BBoxAnnotationORM.annotation_document_id,
-            )
-        )
-
-        query = query.filter(
-            and_(
-                MemoORM.user_id == user_id,
-                AnnotationDocumentORM.source_document_id == sdoc_id,
-            )
-        )
-
-        bbox_memos = query.all()
-
-        query = (
-            db.query(self.model)
-            .join(ObjectHandleORM, ObjectHandleORM.id == MemoORM.attached_to_id)
-            .join(
-                SourceDocumentORM,
-                SourceDocumentORM.id == ObjectHandleORM.source_document_id,
-            )
-        )
-
-        query = query.filter(
-            and_(SourceDocumentORM.id == sdoc_id, self.model.user_id == user_id)
-        )
-
-        sdoc_memo = query.all()
-
-        return span_memos + bbox_memos + sdoc_memo
 
     def remove_by_user_and_project(
         self, db: Session, user_id: int, proj_id: int

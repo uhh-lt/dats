@@ -13,7 +13,6 @@ from api.util import get_object_memo_for_user, get_object_memos
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
-from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.span_annotation import crud_span_anno
@@ -297,30 +296,6 @@ def get_user_memo(
 
     db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     return get_object_memo_for_user(db_obj=db_obj, user_id=authz_user.user.id)
-
-
-@router.get(
-    "/{sdoc_id}/relatedmemos/user",
-    response_model=List[MemoRead],
-    summary=(
-        "Returns the Memo attached to the SourceDocument of the logged-in User and all memos attached to its annotations."
-    ),
-)
-def get_related_user_memos(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> List[MemoRead]:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
-
-    db_objs = crud_memo.read_by_user_and_sdoc(
-        db=db, user_id=authz_user.user.id, sdoc_id=sdoc_id
-    )
-    memos = [
-        crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj) for db_obj in db_objs
-    ]
-    return memos
 
 
 @router.get(
