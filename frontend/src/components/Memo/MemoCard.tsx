@@ -83,7 +83,14 @@ function MemoCardWithContent({
             )}
           </>
         }
-        action={<MemoActionsMenu memo={memo} onDeleteClick={onDeleteClick} onStarredClick={onStarredClick} />}
+        action={
+          <MemoActionsMenu
+            memo={memo}
+            onDeleteClick={onDeleteClick}
+            onStarredClick={onStarredClick}
+            iconButtonProps={{ size: "small" }}
+          />
+        }
         titleTypographyProps={{
           variant: "body1",
           display: "flex",
@@ -93,7 +100,7 @@ function MemoCardWithContent({
       />
       <Divider />
       <CardActionArea onClick={handleClick}>
-        <CardContent sx={{ p: 1, pb: "8px !important" }}>
+        <CardContent sx={{ p: 1, pb: "0px !important" }}>
           <Typography
             variant="body1"
             sx={{

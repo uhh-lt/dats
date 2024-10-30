@@ -102,12 +102,12 @@ const deleteInvalidation = (data: MemoRead) => {
       queryClient.removeQueries({ queryKey: [QueryKey.MEMO_CODE, data.attached_object_id] });
       break;
     case AttachedObjectType.SPAN_ANNOTATION:
-      queryClient.removeQueries({
+      queryClient.invalidateQueries({
         queryKey: [QueryKey.MEMO_SPAN_ANNOTATION, data.attached_object_id],
       });
       break;
     case AttachedObjectType.BBOX_ANNOTATION:
-      queryClient.removeQueries({
+      queryClient.invalidateQueries({
         queryKey: [QueryKey.MEMO_BBOX_ANNOTATION, data.attached_object_id],
       });
       break;

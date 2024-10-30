@@ -15,6 +15,7 @@ interface MemoBlockEditorViewProps {
   // has to be a useCallback!!!
   onChange: (content: string, contentJson: string) => void;
   debounce?: number;
+  style?: React.CSSProperties;
 }
 
 // define the slash menu items
@@ -23,8 +24,7 @@ const getCustomSlashMenuItems = (editor: BlockNoteEditor): DefaultReactSuggestio
   const defaultItems = getDefaultReactSlashMenuItems(editor);
   return defaultItems.filter((item) => !itemsToDelete.has(item.title));
 };
-
-function MemoBlockEditorView({ initialContentJson, onChange, editable, debounce }: MemoBlockEditorViewProps) {
+function MemoBlockEditorView({ initialContentJson, onChange, editable, debounce, style }: MemoBlockEditorViewProps) {
   // local state
   const [content, setContent] = useState<string>(initialContentJson);
   const editor = useCreateBlockNote({ initialContent: initialContentJson ? JSON.parse(initialContentJson) : "" });
@@ -54,6 +54,7 @@ function MemoBlockEditorView({ initialContentJson, onChange, editable, debounce 
       slashMenu={false}
       onChange={handleChange}
       editable={editable}
+      style={style}
     >
       <SuggestionMenuController
         triggerCharacter={"/"}
