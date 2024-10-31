@@ -80,13 +80,15 @@ ITEM_PIPELINES = {
     "crawler.pipelines.readability_pipeline.ReadabilityPipeline": 1,
     "crawler.pipelines.txtclean_pipeline.TXTCleanPipeline": 2,
     "crawler.pipelines.htmlclean_pipeline.HTMLCleanPipeline": 3,
-    # "crawler.pipelines.extract_image_pipeline.ExtractImagePipeline": 4,
-    # "crawler.pipelines.image_pipeline.MyImagesPipeline": 5,
-    # "crawler.pipelines.replace_image_pipeline.ReplaceImagePipeline": 6,
+    "crawler.pipelines.extract_image_pipeline.ExtractImagePipeline": 4,
+    "crawler.pipelines.image_pipeline.MyImagesPipeline": 5,
+    "crawler.pipelines.replace_image_pipeline.ReplaceImagePipeline": 6,
     "crawler.pipelines.write_pipeline.WritePipeline": 7,
 }
 IMAGES_STORE = "data/images"
 MEDIA_ALLOW_REDIRECTS = True
+IMAGES_MIN_HEIGHT = 25
+IMAGES_MIN_WIDTH = 25
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
