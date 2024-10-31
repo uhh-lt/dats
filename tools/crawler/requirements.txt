@@ -1,6 +1,8 @@
 beautifulsoup4==4.12.3
 lxml==5.2.1
 lxml_html_clean==0.1.1
+olefile==0.47
+pillow==11.0.0
 python-dateutil==2.9.0.post0
 Scrapy==2.11.1
 scrapy-selenium==0.0.7
