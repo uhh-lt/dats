@@ -1,6 +1,11 @@
 services:
   postgres:
     image: "postgres:15-alpine"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-datsuser}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-datsuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dats123}
@@ -13,6 +18,11 @@ services:
 
   rabbitmq:
     image: "rabbitmq:3-management-alpine"
+    healthcheck:
+      test: "rabbitmq-diagnostics check_port_connectivity"
+      interval: 30s
+      timeout: 10s
+      retries: 5
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-datsuser}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-dats123}
@@ -25,6 +35,11 @@ services:
 
   redis:
     image: "redis:7-alpine"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-dats123}
     ports:
@@ -44,6 +59,11 @@ services:
       - --scheme
       - http
     image: semitechnologies/weaviate:1.21.3
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/v1/.well-known/ready || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     ports:
       - "${WEAVIATE_EXPOSED:-13132}:8080"
     volumes:
@@ -61,6 +81,11 @@ services:
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     environment:
       # see https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-network.html
       # use 127.0.0.1 to access the ES node from OUTSIDE of the docker network (e.g. when ssh tunneling to ltdocker)
@@ -86,6 +111,11 @@ services:
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.11.1
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5601 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     ports:
       - "${KIBANA_EXPOSED:-13126}:5601"
     environment:
@@ -94,10 +124,17 @@ services:
     networks:
       - dats_demo_network
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
+        restart: true
 
   lighttpd:
     image: sebp/lighttpd
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     volumes:
       - ./backend_repo:/var/www/localhost/htdocs
     ports:
@@ -110,6 +147,12 @@ services:
 
   ray:
     image: uhhlt/dats_ray:${DATS_RAY_DOCKER_VERSION:-debian_dev_latest}
+    healthcheck:
+      test: ["CMD-SHELL", "python /dats_code_ray/check_ray_health.py"]
+      start_period: 60s
+      interval: 60s
+      timeout: 10s
+      retries: 5
     command: /dats_code_ray/ray_model_worker_entrypoint.sh
     user: ${UID:-1000}:${GID:-1000}
     environment:
@@ -145,13 +188,18 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ["0"]
+              device_ids: ["1"]
               capabilities: [gpu]
     profiles:
       - ray
 
   celery-background-jobs-worker:
     image: uhhlt/dats_backend:${DATS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
+    healthcheck:
+      test: "/opt/envs/dats/bin/python -m celery -A app.celery.celery_worker inspect ping | grep -q pong || exit 1"
+      interval: 30s
+      timeout: 10s
+      retries: 5
     command: /dats_code/src/celery_background_jobs_worker_entrypoint.sh
     user: ${UID:-1000}:${GID:-1000}
     environment:
@@ -160,12 +208,12 @@ services:
       INSTALL_JUPYTER: ${CELERY_INSTALL_JUPYTER:-false}
       CELERY_BACKGROUND_JOBS_WORKER_CONCURRENCY: ${CELERY_BACKGROUND_JOBS_WORKER_CONCURRENCY:-1}
       CELERY_DEBUG_MODE: ${CELERY_DEBUG_MODE:-0}
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-dats123}
-      RABBITMQ_USER: ${RABBITMQ_USER:-datsuser}
-      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-dats123}
       POSTGRES_DB: ${POSTGRES_DB:-dats}
       POSTGRES_USER: ${POSTGRES_USER:-datsuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dats123}
+      RABBITMQ_USER: ${RABBITMQ_USER:-datsuser}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-dats123}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-dats123}
       ES_MIN_HEALTH: ${ES_MIN_HEALTH:-75}
       RAY_ENABLED: ${RAY_ENABLED:-True}
       RAY_HOST: ${RAY_HOST:-ray}
@@ -185,9 +233,24 @@ services:
       - ./models_cache:/models_cache
       - ./numba_cache:/numba_cache
     depends_on:
-      - rabbitmq
-      - redis
-      - postgres
+      postgres:
+        condition: service_healthy
+        restart: true
+      rabbitmq:
+        condition: service_healthy
+        restart: true
+      redis:
+        condition: service_healthy
+        restart: true
+      weaviate:
+        condition: service_healthy
+        restart: true
+      elasticsearch:
+        condition: service_healthy
+        restart: true
+      ray:
+        condition: service_healthy
+        restart: true
     ports:
       - "${JUPYTER_CELERY_EXPOSED:-13129}:8888"
       - "${CELERY_DEBUG_PORT:-45678}:6900"
@@ -200,6 +263,12 @@ services:
 
   dats-backend-api:
     image: uhhlt/dats_backend:${DATS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5500 || exit 1"]
+      start_period: 60s
+      interval: 60s
+      timeout: 10s
+      retries: 5
     command: /dats_code/src/backend_api_entrypoint.sh
     user: ${UID:-1000}:${GID:-1000}
     environment:
@@ -211,12 +280,12 @@ services:
       JWT_SECRET: ${JWT_SECRET:-""}
       SYSTEM_USER_EMAIL: ${SYSTEM_USER_EMAIL}
       SYSTEM_USER_PASSWORD: ${SYSTEM_USER_PASSWORD}
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-dats123}
-      RABBITMQ_USER: ${RABBITMQ_USER:-datsuser}
-      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-dats123}
       POSTGRES_DB: ${POSTGRES_DB:-dats}
       POSTGRES_USER: ${POSTGRES_USER:-datsuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dats123}
+      RABBITMQ_USER: ${RABBITMQ_USER:-datsuser}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-dats123}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-dats123}
       ES_MIN_HEALTH: ${ES_MIN_HEALTH:-75}
       RAY_ENABLED: ${RAY_ENABLED:-True}
       RAY_HOST: ${RAY_HOST:-ray}
@@ -226,22 +295,31 @@ services:
       OLLAMA_HOST: ${OLLAMA_HOST:-ollama}
       OLLAMA_PORT: ${OLLAMA_PORT:-11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma2:9b-instruct-fp16}
-    healthcheck:
-      test: curl --fail "http://localhost:5500" || exit 1
-      interval: 60s
-      retries: 5
-      start_period: 30s
-      timeout: 10s
     volumes:
       - ../backend/src:/dats_code/src
       - ./backend_repo:/tmp/dats
     depends_on:
-      - celery-background-jobs-worker
-      - elasticsearch
-      - postgres
-      - rabbitmq
-      - redis
-      - weaviate
+      postgres:
+        condition: service_healthy
+        restart: true
+      rabbitmq:
+        condition: service_healthy
+        restart: true
+      redis:
+        condition: service_healthy
+        restart: true
+      weaviate:
+        condition: service_healthy
+        restart: true
+      elasticsearch:
+        condition: service_healthy
+        restart: true
+      ray:
+        condition: service_healthy
+        restart: true
+      celery-background-jobs-worker:
+        condition: service_healthy
+        restart: true
     ports:
       - "${API_EXPOSED:-13120}:5500"
       - "${JUPYTER_API_EXPOSED:-13127}:8888"
@@ -254,11 +332,18 @@ services:
 
   dats-frontend:
     image: uhhlt/dats_frontend:${DATS_FRONTEND_DOCKER_VERSION:-latest}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
       - ./backend_repo:/usr/share/nginx/content:ro
     depends_on:
-      - dats-backend-api
+      dats-backend-api:
+        condition: service_healthy
+        restart: true
     ports:
       - "${FRONTEND_EXPOSED:-13100}:3000"
     networks:

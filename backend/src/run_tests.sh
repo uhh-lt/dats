@@ -65,7 +65,4 @@ export PYTHONPATH=.
 
 cd src
 
-# Wait for elasticsearch to start
-./test_es.sh
-
 pytest "$@"
