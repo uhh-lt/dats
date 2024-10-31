@@ -32,7 +32,7 @@ app.get("/", function (req, res) {
 
 app.post("/", function (req, res) {
   if (req.body.html && req.body.url) {
-    console.log("Parsing requested html...");
+    console.log("[READABILITY.JS] Parsing requested html...");
     res.json(parse(req.body.html, req.body.url));
   } else {
     res.status(400).send("property 'html' or 'url' is missing in the request body!");
