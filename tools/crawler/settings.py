@@ -16,6 +16,9 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
+# https://docs.scrapy.org/en/0.24/topics/logging.html#topics-logging
+LOG_LEVEL = "INFO"
+
 BOT_NAME = "crawler"
 
 SPIDER_MODULES = ["crawler.spiders"]
