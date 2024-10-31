@@ -102,4 +102,4 @@ class SpiderBase(scrapy.Spider):
         return item
 
     def parse(self, response, **kwargs):
-        pass
+        raise NotImplementedError

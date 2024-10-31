@@ -29,6 +29,8 @@ class GenericWebsiteItem(scrapy.Item):
     visited_date = scrapy.Field()
     published_date = scrapy.Field()
     author = scrapy.Field()
+    topics = scrapy.Field()
+    regions = scrapy.Field()
 
     def __repr__(self):
         """only print out interesting data after exiting the Pipeline"""
@@ -43,6 +45,8 @@ class GenericWebsiteItem(scrapy.Item):
                 else [],
                 "title": self["title"] if "title" in self.keys() else [],
                 "author": self["author"] if "author" in self.keys() else "",
+                "topics": self["topics"] if "topics" in self.keys() else [],
+                "regions": self["regions"] if "regions" in self.keys() else [],
                 "published_date": self["published_date"]
                 if "published_date" in self.keys()
                 else "",

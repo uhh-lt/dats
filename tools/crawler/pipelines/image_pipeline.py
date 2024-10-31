@@ -9,6 +9,10 @@ from crawler.spiders.utils import slugify
 
 class MyImagesPipeline(ImagesPipeline):
     def file_path(self, request, response=None, info=None, *, item):
+        # returns the path where the image will be stored
+        if item is None or "file_name" not in item:
+            raise ValueError("item is None or does not have a file_name key")
+
         # the name of the html page (without .html)
         file_name = item["file_name"]
 
@@ -16,7 +20,7 @@ class MyImagesPipeline(ImagesPipeline):
         image_path = Path(urlparse(request.url).path)  # the last part of the url
         image_name = image_path.stem  # the name (without the extension)
         image_suffix = image_path.suffix
-        name = f"{slugify(file_name + '-' + image_name)}{image_suffix}"
+        file_name = f"{slugify(file_name + '-' + image_name)}{image_suffix}"
 
         # might need to change suffix
         if response:
@@ -24,9 +28,9 @@ class MyImagesPipeline(ImagesPipeline):
                 response.headers.get("Content-Type").decode()
             )
             if image_suffix and not image_path.name.endswith(image_suffix):
-                name = f"{slugify(file_name + '-' + image_name)}{image_suffix}"
+                file_name = f"{slugify(file_name + '-' + image_name)}{image_suffix}"
 
-        return name
+        return file_name
 
     def item_completed(self, results, item, info):
         # collect images names

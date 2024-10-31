@@ -24,17 +24,13 @@ mamba create -f environment.yml
 ## Settings
 
 All settings can be changed in settings.py. For example, to adjust the execution order of the pipeline's steps change the
-ITEM_PIPELINES array. Every setting can be overwritten in the CLI by specifying `-s SETTING=my_custom_value`. For example,
-to change the save location of images, you can set `-s IMAGES_STORE=/path/to/images`.
+ITEM_PIPELINES array. Every setting can be overwritten in the CLI by specifying `-s SETTING=my_custom_value`. For example, to change the save location of images, you can set `-s IMAGES_STORE=/path/to/images`.
 
 ## Usage
 
-Scrapy uses so-called "spiders" to scrape and download webpages. Existing spiders for multiple different forums and blogs
-are stored in the spiders directory. Every spider corresponds to a specific webpage and utilizes specific CSS Selectors to
-extract the content and navigate the website.
+Scrapy uses so-called "spiders" to scrape and download webpages. Existing spiders for multiple different forums and blogs are stored in the spiders directory. Every spider corresponds to a specific webpage and utilizes specific CSS Selectors to extract the content and navigate the website.
 
-After downloading a website, the created "Item" is passed through the post-processing pipeline, which consists of multiple
-steps. All pipeline steps are stored in the pipelines directory. The pipeline can be adjusted in settings.py.
+After downloading a website, the created "Item" is passed through the post-processing pipeline, which consists of multiple steps. All pipeline steps are stored in the pipelines directory. The pipeline can be adjusted in settings.py.
 
 Check the following example commands to see how to use this tool:
 
@@ -53,6 +49,8 @@ scrapy crawl ZeitSearchResults -a search_terms_csv="covid-19,Impfung" -a prefix=
 
 scrapy crawl SpiegelSearchResults -a search_terms_csv="covid-19,Impfung" -a prefix=spiegel -a output_dir=/home/7schneid/spiegel_crawl -a max_pages=500 -a cookies="!!!THIS NEEDS TO BE SET!!!" -a use_playwright=True -s IMAGES_STORE=/home/7schneid/spiegel_crawl/images
 
+# Global Voices V2 (for more parameters check the global_voices_v2 spider code)
+scrapy crawl global_voices_v2 -a prefix=gv -a output_dir=/home/7schneid/global_voices_crawl  -a max_pages=500 -s IMAGES_STORE=/home/7schneid/global_voices_crawl/images
 
 # global voices
 scrapy crawl globalvoices -a prefix=gv -a output_dir=/home/tfischer/Development/dats/data/globalvoices -s IMAGES_STORE=/home/tfischer/Development/dats/data/globalvoices/images

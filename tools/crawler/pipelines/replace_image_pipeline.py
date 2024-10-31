@@ -5,6 +5,9 @@ from crawler.items import GenericWebsiteItem
 
 class ReplaceImagePipeline:
     def process_item(self, item: GenericWebsiteItem, spider):
+        if "image_names" not in item or "image_urls" not in item:
+            return item
+
         html = item["html"]
         image_names = item["image_names"]  # either str or False if the download failed
         image_urls = item["image_urls"]  # download links of images

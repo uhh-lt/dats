@@ -11,7 +11,8 @@ class ExtractImagePipeline:
 
         # select all image sources
         image_urls = Selector(text=html).css("img::attr(src)").getall()
-        image_urls = image_urls if image_urls is not None else []
+        if image_urls is None:
+            image_urls = []
 
         # only download valid images (https:// or http:// or relative with / )
         filtered_image_urls = []
