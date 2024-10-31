@@ -8,5 +8,6 @@ Scrapy==2.11.1
 scrapy-selenium==0.0.7
 selenium==3.141.0
 srsly==2.4.8
+tqdm==4.66.6
 urllib3==1.26.16
 webdriver-manager==4.0.1
