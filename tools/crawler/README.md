@@ -50,7 +50,7 @@ scrapy crawl ZeitSearchResults -a search_terms_csv="covid-19,Impfung" -a prefix=
 scrapy crawl SpiegelSearchResults -a search_terms_csv="covid-19,Impfung" -a prefix=spiegel -a output_dir=/home/7schneid/spiegel_crawl -a max_pages=500 -a cookies="!!!THIS NEEDS TO BE SET!!!" -a use_playwright=True -s IMAGES_STORE=/home/7schneid/spiegel_crawl/images
 
 # Global Voices V2 (for more parameters check the global_voices_v2 spider code)
-scrapy crawl global_voices_v2 -a prefix=gv -a output_dir=/home/7schneid/global_voices_crawl  -a max_pages=500 -s IMAGES_STORE=/home/7schneid/global_voices_crawl/images
+scrapy crawl global_voices_v2 -a prefix=gv -a output_dir=/home/7schneid/data/global_voices_crawl  -a max_pages=500 -s IMAGES_STORE=/home/7schneid/data/global_voices_crawl/images
 
 # global voices
 scrapy crawl globalvoices -a prefix=gv -a output_dir=/home/tfischer/Development/dats/data/globalvoices -s IMAGES_STORE=/home/tfischer/Development/dats/data/globalvoices/images
