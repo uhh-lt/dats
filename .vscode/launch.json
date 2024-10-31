@@ -41,8 +41,7 @@
       "cwd": "${workspaceFolder}/backend/src",
       "envFile": "${workspaceFolder}/backend/.env",
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/backend/src",
-        "POSTGRES_DB": "dats-test"
+        "PYTHONPATH": "${workspaceFolder}/backend/src"
       }
     },
     {
