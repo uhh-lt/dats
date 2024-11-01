@@ -13,7 +13,6 @@
     "update-api": "node bin/updateAPI.js",
     "generate-api": "node bin/generateAPI.js",
     "update-version": "node bin/updateVersion.js",
-    "generate": "npm run update-api && npm run generate-api && npm run update-version",
     "check-unimported": "npx unimported"
   },
   "dependencies": {
