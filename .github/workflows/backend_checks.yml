@@ -18,7 +18,7 @@ jobs:
       API_PRODUCTION_WORKERS: 1
       RAY_ENABLED: True
       OLLAMA_ENABLED: False
-      COMPOSE_PROFILES: "backend,background,ray"
+      COMPOSE_PROFILES: "ray,background,backend"
       RAY_CONFIG: "./config_test_no_gpu.yaml"
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
     steps:
@@ -36,7 +36,8 @@ jobs:
         uses: pierotofy/set-swap-space@master
         with:
           swap-size-gb: 10
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
       - name: Cache models
         id: cache-models
         uses: actions/cache@v3
@@ -46,7 +47,7 @@ jobs:
             docker/models_cache
             docker/numba_cache
           key: models-${{ hashFiles('backend/src/app/preprocessing/**') }}
-      - name: Start Docker Containers
+      - name: Check 0 - Build & Start Docker Containers
         working-directory: docker
         run: |
           ./setup-folders.sh
@@ -54,7 +55,7 @@ jobs:
           cp .env.example .env
           python monkey_patch_docker_compose.py --disable_ollama
           export GID=$(id -g)
-          docker compose -f docker-compose-patched.yml up -d --quiet-pull
+          docker compose -f docker-compose-patched.yml up -d --build --quiet-pull
       - name: Check 1 - Database migrates without errors database
         working-directory: docker
         run: |
@@ -63,13 +64,7 @@ jobs:
         working-directory: docker
         run: |
           docker compose -f docker-compose-patched.yml run dats-backend-api /opt/envs/dats/bin/alembic check
-      - name: Check 3 - pytest runs without errors
-        env:
-          POSTGRES_DB: dats-test
-        working-directory: docker
-        run: |
-          docker compose -f docker-compose-patched.yml run -i dats-backend-api /opt/envs/dats/bin/python -m pytest
-      - name: Check 4 - Test End-2-End importer script
+      - name: Check 3 - Test End-2-End importer script
         working-directory: tools/importer
         env:
           TESTDATA_PASSWORD: ${{ secrets.TESTDATA_PASSWORD }}
@@ -79,3 +74,13 @@ jobs:
           unzip -q -P "$TESTDATA_PASSWORD" totalitarismo.zip
           python dats_importer.py --input_dir json --backend_url http://localhost:13120/ --is_json --doctype text
           python dats_importer.py --input_dir images --backend_url http://localhost:13120/ --doctype image
+      - name: Check 4 - pytest runs without errors
+        working-directory: docker
+        run: |
+          docker compose -f docker-compose-patched.yml down -v
+          rm -r backend_repo/
+          ./setup-folders.sh
+          chmod -R a+rwx backend_repo/
+          export COMPOSE_PROFILES="ray,background"
+          docker compose -f docker-compose-patched.yml up -d
+          docker compose -f docker-compose-patched.yml run -i dats-backend-api /opt/envs/dats/bin/python -m pytest

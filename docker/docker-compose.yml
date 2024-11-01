@@ -147,6 +147,9 @@ services:
 
   ray:
     image: uhhlt/dats_ray:${DATS_RAY_DOCKER_VERSION:-debian_dev_latest}
+    build:
+      context: ../backend/src/app/preprocessing/ray_model_worker
+      dockerfile: Dockerfile
     healthcheck:
       test: ["CMD-SHELL", "python /dats_code_ray/check_ray_health.py"]
       start_period: 60s
@@ -195,6 +198,9 @@ services:
 
   celery-background-jobs-worker:
     image: uhhlt/dats_backend:${DATS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
     healthcheck:
       test: "/opt/envs/dats/bin/python -m celery -A app.celery.celery_worker inspect ping | grep -q pong || exit 1"
       interval: 30s
@@ -263,6 +269,9 @@ services:
 
   dats-backend-api:
     image: uhhlt/dats_backend:${DATS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:5500 || exit 1"]
       start_period: 60s
@@ -332,6 +341,9 @@ services:
 
   dats-frontend:
     image: uhhlt/dats_frontend:${DATS_FRONTEND_DOCKER_VERSION:-latest}
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
       interval: 30s

@@ -6,7 +6,6 @@ on:
       - mwp_v1
   pull_request:
     paths:
-      - "backend/**"
       - ".github/**"
       - "docker/**"
       - "frontend/**"
@@ -19,6 +18,7 @@ jobs:
       RAY_ENABLED: False
       OLLAMA_ENABLED: False
       VITE_APP_SERVER: http://localhost:13120
+      COMPOSE_PROFILES: "background,backend,frontend"
     steps:
       - uses: actions/checkout@v3
       - name: Checkout PR
@@ -26,7 +26,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr checkout ${{ github.event.pull_request.number }}
-      - name: Start Docker Containers
+      - name: Check 0 - Build & Start Docker Containers
         working-directory: docker
         run: |
           ./setup-folders.sh
@@ -34,7 +34,7 @@ jobs:
           cp .env.example .env
           python monkey_patch_docker_compose.py --disable_ray --disable_ollama
           export GID=$(id -g)
-          docker compose -f docker-compose-patched.yml up -d --quiet-pull
+          docker compose -f docker-compose-patched.yml up -d --build --quiet-pull
       - name: Setup node
         uses: actions/setup-node@v4
         with:
@@ -49,9 +49,6 @@ jobs:
         run: |
           npm run update-api
           npm run generate-api
-      - name: Check 2 - frontend builds without errors
-        working-directory: frontend
-        run: npm run build
       - name: Add and commit changes
         uses: EndBug/add-and-commit@v9
         if: github.event_name == 'pull_request'
