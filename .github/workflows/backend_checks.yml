@@ -19,7 +19,7 @@ jobs:
       RAY_ENABLED: True
       OLLAMA_ENABLED: False
       COMPOSE_PROFILES: "ray,background,backend"
-      RAY_CONFIG: "./config_test_no_gpu.yaml"
+      RAY_CONFIG: "config_cpu.yaml"
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
     steps:
       - name: Free Disk Space (Ubuntu)

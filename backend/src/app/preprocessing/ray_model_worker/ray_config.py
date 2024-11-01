@@ -7,7 +7,8 @@ from omegaconf import DictConfig, OmegaConf
 logger = logging.getLogger("ray.serve")
 
 # global config
-__conf_file__ = os.getenv("RAY_CONFIG", "./config.yaml")
+__conf_file__ = os.getenv("RAY_CONFIG", None)
+assert __conf_file__ is not None, "RAY_CONFIG is not set"
 conf = OmegaConf.load(__conf_file__)
 
 logger.info(f"Loaded config '{__conf_file__}'")
