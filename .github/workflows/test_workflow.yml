@@ -10,7 +10,7 @@ on:
 
 jobs:
   deploy_demo:
-    name: build_release
+    name: deploy_demo
     runs-on: ubuntu-latest
     steps:
       - name: Get version from tag
@@ -28,7 +28,6 @@ jobs:
           install -m 600 -D /dev/null ~/.ssh/id_ed25519
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           echo "$SSH_CONFIG" > ~/.ssh/config
-          cat ~/.ssh/config
         shell: bash
       - name: Connect to server
         id: connect_to_server
