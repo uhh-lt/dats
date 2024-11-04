@@ -1,0 +1,1 @@
+echo "DEPLOYMENT!" > ~/deploy.txt

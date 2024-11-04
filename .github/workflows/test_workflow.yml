@@ -13,11 +13,8 @@ jobs:
     name: deploy_demo
     runs-on: ubuntu-latest
     steps:
-      - name: Get version from tag
-        id: extract_version
-        run: |
-          echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
-        shell: bash
+      - name: Checkout
+        uses: actions/checkout@v3
       # https://stackoverflow.com/questions/60477061/github-actions-how-to-deploy-to-remote-server-using-ssh
       - name: Write SSH config & key
         id: write_ssh_keys
@@ -40,5 +37,7 @@ jobs:
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 $SSH_HOST 'echo "Connected to server" > ~/test.txt'
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 bin/deploy.sh $SSH_HOST:~/deploy.sh
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 $SSH_HOST './deploy.sh'
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 $SSH_HOST 'rm ./deploy.sh'
         shell: bash
