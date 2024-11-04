@@ -29,6 +29,10 @@ jobs:
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           echo "$SSH_CONFIG" > ~/.ssh/config
         shell: bash
+      - name: Add server to known hosts
+        run: |
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+        shell: bash
       - name: Connect to server
         id: connect_to_server
         env:
