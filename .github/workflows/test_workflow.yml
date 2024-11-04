@@ -40,6 +40,5 @@ jobs:
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 $SSH_HOST
-          echo "Connected to server" > test.txt
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 $SSH_HOST 'echo "Connected to server" > ~/test.txt'
         shell: bash
