@@ -1,4 +1,4 @@
-name: frontend checks
+name: test workflow
 on:
   push:
     branches:
@@ -21,15 +21,20 @@ jobs:
       # https://stackoverflow.com/questions/60477061/github-actions-how-to-deploy-to-remote-server-using-ssh
       - name: Write SSH config & key
         id: write_ssh_keys
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_CONFIG: ${{ secrets.SSH_CONFIG }}
         run: |
           install -m 600 -D /dev/null ~/.ssh/id_ed25519
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          echo "${{ secrets.SSH_CONFIG }}" > ~/.ssh/config
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          echo "$SSH_CONFIG" > ~/.ssh/config
           cat ~/.ssh/config
         shell: bash
       - name: Connect to server
         id: connect_to_server
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 ${{ secrets.SSH_HOST }}
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 $SSH_HOST
           echo "Connected to server" > test.txt
         shell: bash
