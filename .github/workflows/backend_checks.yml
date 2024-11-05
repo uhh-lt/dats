@@ -34,9 +34,11 @@ jobs:
           export GID=$(id -g)
           docker compose up -d --build --quiet-pull
       - name: Check 1 - Database migrates without errors database
+        working-directory: docker
         run: |
           docker compose run -e PYTHONPATH='/dats_code/src' dats-backend-api /opt/envs/dats/bin/python migration/run_migrations.py
       - name: Check 2 - Database schema is up-to-date after migration
+        working-directory: docker
         run: |
           docker compose run dats-backend-api /opt/envs/dats/bin/alembic check
       - name: Check 3 - pyright runs without errors
@@ -56,7 +58,7 @@ jobs:
       - name: Check 5 - pytest runs without errors
         working-directory: docker
         run: |
-          docker compose down -v
+          docker compose down -v --remove-orphans
           rm -r backend_repo/
           ./setup-folders.sh
           COMPOSE_PROFILES="ray,background" docker compose up -d
@@ -64,5 +66,5 @@ jobs:
       # - name: Cleanup
       #   if: always()
       #   run: |
-      #     docker compose down -v
+      #     docker compose down -v --remove-orphans
       #     rm -r backend_repo
