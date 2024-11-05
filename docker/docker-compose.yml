@@ -127,6 +127,8 @@ services:
       elasticsearch:
         condition: service_healthy
         restart: true
+    profiles:
+      - development
 
   lighttpd:
     image: sebp/lighttpd
@@ -143,7 +145,7 @@ services:
     networks:
       - dats_demo_network
     profiles:
-      - dev_frontend
+      - development
 
   ray:
     image: uhhlt/dats_ray:${DATS_RAY_DOCKER_VERSION:-debian_dev_latest}
@@ -213,11 +215,9 @@ services:
       RABBITMQ_USER: ${RABBITMQ_USER:-datsuser}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-dats123}
       REDIS_PASSWORD: ${REDIS_PASSWORD:-dats123}
-      RAY_ENABLED: ${RAY_ENABLED:-True}
       RAY_HOST: ${RAY_HOST:-ray}
       RAY_PORT: ${RAY_PORT:-8000}
       RAY_PROTOCOL: ${RAY_PROTOCOL:-http}
-      OLLAMA_ENABLED: ${OLLAMA_ENABLED:-True}
       OLLAMA_HOST: ${OLLAMA_HOST:-ollama}
       OLLAMA_PORT: ${OLLAMA_PORT:-11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma2:9b-instruct-fp16}
@@ -287,11 +287,9 @@ services:
       RABBITMQ_USER: ${RABBITMQ_USER:-datsuser}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-dats123}
       REDIS_PASSWORD: ${REDIS_PASSWORD:-dats123}
-      RAY_ENABLED: ${RAY_ENABLED:-True}
       RAY_HOST: ${RAY_HOST:-ray}
       RAY_PORT: ${RAY_PORT:-8000}
       RAY_PROTOCOL: ${RAY_PROTOCOL:-http}
-      OLLAMA_ENABLED: ${OLLAMA_ENABLED:-True}
       OLLAMA_HOST: ${OLLAMA_HOST:-ollama}
       OLLAMA_PORT: ${OLLAMA_PORT:-11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma2:9b-instruct-fp16}

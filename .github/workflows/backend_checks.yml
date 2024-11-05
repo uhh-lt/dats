@@ -11,23 +11,18 @@ on:
       - "docker/**"
       - "tools/**"
 
+# todo: use docker runner again?
 jobs:
   backend-checks:
     runs-on: self-hosted
     env:
       API_PRODUCTION_WORKERS: 1
-      RAY_ENABLED: True
-      OLLAMA_ENABLED: False
       COMPOSE_PROFILES: "ray,background,backend"
       RAY_CONFIG: "config_cpu.yaml"
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Create micromamba environment
-        working-directory: backend
-        run: |
-          micromamba env create -f environment.yml --yes
       - name: Check 0 - Build & Start Docker Containers
         working-directory: docker
         run: |
@@ -36,16 +31,19 @@ jobs:
           sed -i 's/COMPOSE_PROJECT_NAME=demo/COMPOSE_PROJECT_NAME=action-runner/' .env
           sed -i 's/\(DATS_BACKEND_DOCKER_VERSION=[0-9.]*\)/\1-test/' .env
           sed -i 's/\(DATS_RAY_DOCKER_VERSION=[0-9.]*\)/\1-test/' .env
-          python monkey_patch_docker_compose.py --disable_ollama
           export GID=$(id -g)
-          docker compose -f docker-compose-patched.yml up -d --build --quiet-pull
+          docker compose up -d --build --quiet-pull
       - name: Check 1 - Database migrates without errors database
         run: |
-          PYTHONPATH=$(pwd)/backend/src REPO_ROOT=$(pwd)/docker/backend_repo micromamba run -n dats python backend/src/migration/run_migrations.py
+          docker compose run -e PYTHONPATH='/dats_code/src' dats-backend-api /opt/envs/dats/bin/python migration/run_migrations.py
       - name: Check 2 - Database schema is up-to-date after migration
         run: |
-          micromamba run -n dats alembic check
-      - name: Check 3 - Test End-2-End importer script
+          docker compose run dats-backend-api /opt/envs/dats/bin/alembic check
+      - name: Check 3 - pyright runs without errors
+        working-directory: docker
+        run: |
+          docker compose run dats-backend-api /opt/envs/dats/bin/python -m pyright
+      - name: Check 4 - Test End-2-End importer script
         working-directory: tools/importer
         env:
           TESTDATA_PASSWORD: ${{ secrets.TESTDATA_PASSWORD }}
@@ -55,16 +53,16 @@ jobs:
           unzip -q -P "$TESTDATA_PASSWORD" totalitarismo.zip
           python dats_importer.py --input_dir json --backend_url http://localhost:13120/ --is_json --doctype text
           python dats_importer.py --input_dir images --backend_url http://localhost:13120/ --doctype image
-      - name: Check 4 - pytest runs without errors
+      - name: Check 5 - pytest runs without errors
         working-directory: docker
         run: |
-          docker compose -f docker-compose-patched.yml down -v
+          docker compose down -v
           rm -r backend_repo/
           ./setup-folders.sh
-          COMPOSE_PROFILES="ray,background" docker compose -f docker-compose-patched.yml up -d
-          REPO_ROOT=$(pwd)/backend_repo micromamba run -n dats pytest
+          COMPOSE_PROFILES="ray,background" docker compose up -d
+          docker compose run dats-backend-api /opt/envs/dats/bin/python -m pytest
       # - name: Cleanup
       #   if: always()
       #   run: |
-      #     docker compose -f docker-compose-patched.yml down -v
+      #     docker compose down -v
       #     rm -r backend_repo

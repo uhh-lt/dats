@@ -29,10 +29,6 @@ from config import conf
 
 class RayModelService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        if conf.ray.enabled != "True":
-            # When running in tests, don't use the ray service at all
-            return super(RayModelService, cls).__new__(cls)
-
         cls.base_url = f"{conf.ray.protocol}://" f"{conf.ray.host}:" f"{conf.ray.port}"
         logger.info(f"RayModelService base_url: {cls.base_url}")
 

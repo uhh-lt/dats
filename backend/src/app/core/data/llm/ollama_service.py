@@ -7,10 +7,6 @@ from config import conf
 
 class OllamaService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        if conf.ollama.enabled != "True":
-            # When running in tests, don't use the ray service at all
-            return super(OllamaService, cls).__new__(cls)
-
         try:
             # Ollama Connection
             ollamac = Client(host=f"{conf.ollama.host}:{conf.ollama.port}")

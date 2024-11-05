@@ -30,8 +30,13 @@ logger.info(f"Loaded config '{__conf_file__}'")
 
 def verify_config():
     jwt_secret = conf.api.auth.jwt.secret
-    print(jwt_secret)
     if not jwt_secret or jwt_secret == "":
         raise Exception(
             "JWT Secret not set! Please provide a valid JWT Secret using the JWT_SECRET environment variable."
+        )
+
+    repo_root = conf.repo.root_directory
+    if not repo_root or repo_root == "":
+        raise Exception(
+            "REPO_ROOT not set! Please provide a valid repo directory using the REPO_ROOT environment variable."
         )
