@@ -28,7 +28,7 @@ whisper:
 
   deployment:
     ray_actor_options:
-      num_gpus: .165
+      num_gpus: .2
     autoscaling_config:
       min_replicas: 1
       max_replicas: 5
@@ -38,7 +38,7 @@ detr:
   device: cuda
   deployment:
     ray_actor_options:
-      num_gpus: .165
+      num_gpus: .2
     autoscaling_config:
       min_replicas: 1
       max_replicas: 5
@@ -147,7 +147,7 @@ blip2:
     num_beams: 4
   deployment:
     ray_actor_options:
-      num_gpus: .165
+      num_gpus: .2
     autoscaling_config:
       min_replicas: 1
       max_replicas: 5
@@ -163,7 +163,7 @@ clip:
     device: cuda
   deployment:
     ray_actor_options:
-      num_gpus: .165
+      num_gpus: .2
     autoscaling_config:
       min_replicas: 1
       max_replicas: 5
@@ -174,7 +174,7 @@ cota:
   device: cuda
   deployment:
     ray_actor_options:
-      num_gpus: .165
+      num_gpus: .2
     autoscaling_config:
       min_replicas: 1
       max_replicas: 5
