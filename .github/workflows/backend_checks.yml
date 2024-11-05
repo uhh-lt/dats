@@ -41,7 +41,7 @@ jobs:
           docker compose -f docker-compose-patched.yml up -d --build --quiet-pull
       - name: Check 1 - Database migrates without errors database
         run: |
-          PYTHONPATH=$(pwd)/backend/src REPO_ROOT=$(pwd)/docker/backend_repo micromamba run -n dats pyton backend/src/migration/run_migrations.py
+          PYTHONPATH=$(pwd)/backend/src REPO_ROOT=$(pwd)/docker/backend_repo micromamba run -n dats python backend/src/migration/run_migrations.py
       - name: Check 2 - Database schema is up-to-date after migration
         run: |
           micromamba run -n dats alembic check
