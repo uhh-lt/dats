@@ -33,6 +33,11 @@ jobs:
             docker/models_cache
             docker/numba_cache
           key: models-${{ hashFiles('backend/src/app/preprocessing/**') }}
+      - name: Setup micromamba environment
+        working-directory: backend
+        run: |
+          micromamba env create -f environment.yml
+          micromamba activate dats
       - name: Check 0 - Build & Start Docker Containers
         working-directory: docker
         run: |
@@ -47,11 +52,11 @@ jobs:
       - name: Check 1 - Database migrates without errors database
         working-directory: docker
         run: |
-          docker compose -f docker-compose-patched.yml run -e PYTHONPATH='/dats_code/src' dats-backend-api /opt/envs/dats/bin/python migration/run_migrations.py
+          python migration/run_migrations.py
       - name: Check 2 - Database schema is up-to-date after migration
         working-directory: docker
         run: |
-          docker compose -f docker-compose-patched.yml run dats-backend-api /opt/envs/dats/bin/alembic check
+          alembic check
       - name: Check 3 - Test End-2-End importer script
         working-directory: tools/importer
         env:
@@ -71,7 +76,7 @@ jobs:
           chmod -R a+rwx backend_repo/
           export COMPOSE_PROFILES="ray,background"
           docker compose -f docker-compose-patched.yml up -d
-          docker compose -f docker-compose-patched.yml run -i dats-backend-api /opt/envs/dats/bin/python -m pytest
+          pytest
       # - name: Cleanup
       #   if: always()
       #   run: |
