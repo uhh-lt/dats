@@ -6,7 +6,7 @@ on:
       - mwp_v1
   pull_request:
     paths:
-      - ".github/**"
+      # - ".github/**"
       - "docker/**"
       - "frontend/**"
 

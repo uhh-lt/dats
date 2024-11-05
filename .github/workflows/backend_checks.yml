@@ -27,7 +27,7 @@ jobs:
       - name: Create micromamba environment
         working-directory: backend
         run: |
-          micromamba env create -f environment.yml
+          micromamba env create -f environment.yml --force
       - name: Check 0 - Build & Start Docker Containers
         working-directory: docker
         run: |
@@ -61,7 +61,6 @@ jobs:
           docker compose -f docker-compose-patched.yml down -v
           rm -r backend_repo/
           ./setup-folders.sh
-          chmod -R a+rwx backend_repo/
           COMPOSE_PROFILES="ray,background" docker compose -f docker-compose-patched.yml up -d
           REPO_ROOT=$(pwd)/backend_repo micromamba run -n dats pytest
       # - name: Cleanup
