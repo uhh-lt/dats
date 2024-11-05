@@ -24,21 +24,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Cache models
-        id: cache-models
-        uses: actions/cache@v3
-        with:
-          path: |
-            docker/spacy_models
-            docker/models_cache
-            docker/numba_cache
-          key: models-${{ hashFiles('backend/src/app/preprocessing/**') }}
-      - name: Setup micromamba environment
+      - name: Create micromamba environment
         working-directory: backend
         run: |
           micromamba env create -f environment.yml
-          eval "$(micromamba shell hook --shell bash)"
-          micromamba activate dats
       - name: Check 0 - Build & Start Docker Containers
         working-directory: docker
         run: |
@@ -51,13 +40,11 @@ jobs:
           export GID=$(id -g)
           docker compose -f docker-compose-patched.yml up -d --build --quiet-pull
       - name: Check 1 - Database migrates without errors database
-        working-directory: docker
         run: |
-          python migration/run_migrations.py
+          PYTHONPATH=$(pwd)/backend/src REPO_ROOT=$(pwd)/docker/backend_repo micromamba run -n dats pyton backend/src/migration/run_migrations.py
       - name: Check 2 - Database schema is up-to-date after migration
-        working-directory: docker
         run: |
-          alembic check
+          micromamba run -n dats alembic check
       - name: Check 3 - Test End-2-End importer script
         working-directory: tools/importer
         env:
@@ -75,9 +62,8 @@ jobs:
           rm -r backend_repo/
           ./setup-folders.sh
           chmod -R a+rwx backend_repo/
-          export COMPOSE_PROFILES="ray,background"
-          docker compose -f docker-compose-patched.yml up -d
-          pytest
+          COMPOSE_PROFILES="ray,background" docker compose -f docker-compose-patched.yml up -d
+          REPO_ROOT=$(pwd)/backend_repo micromamba run -n dats pytest
       # - name: Cleanup
       #   if: always()
       #   run: |
