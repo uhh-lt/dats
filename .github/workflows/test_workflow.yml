@@ -39,6 +39,7 @@ jobs:
         id: deploy
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
+          DEMO_USER: ${{ secrets.DEMO_USER }}
         run: |
           scp -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 bin/deploy.sh $DEMO_USER@$SSH_HOST:~/deploy.sh
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 $DEMO_USER@$SSH_HOST './deploy.sh'
