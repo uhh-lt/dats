@@ -73,8 +73,8 @@ jobs:
           export COMPOSE_PROFILES="ray,background"
           docker compose -f docker-compose-patched.yml up -d
           docker compose -f docker-compose-patched.yml run -i dats-backend-api /opt/envs/dats/bin/python -m pytest
-      - name: Cleanup
-        if: always()
-        run: |
-          docker compose -f docker-compose-patched.yml down -v
-          rm -r backend_repo
+      # - name: Cleanup
+      #   if: always()
+      #   run: |
+      #     docker compose -f docker-compose-patched.yml down -v
+      #     rm -r backend_repo

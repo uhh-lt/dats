@@ -36,7 +36,7 @@ jobs:
           python monkey_patch_docker_compose.py --disable_ray --disable_ollama
           export UID=$(id -u)
           export GID=$(id -g)
-          docker compose -f docker-compose-patched.yml build frontend
+          docker compose -f docker-compose-patched.yml build dats-frontend
           docker compose -f docker-compose-patched.yml up -d --quiet-pull
       - name: Setup node
         uses: actions/setup-node@v4
@@ -60,3 +60,8 @@ jobs:
           message: "Update OpenAPI spec and client"
           pathspec_error_handling: exitImmediately
           default_author: github_actions
+      # - name: Cleanup
+      #   if: always()
+      #   run: |
+      #     docker compose -f docker-compose-patched.yml down -v
+      #     rm -r backend_repo
