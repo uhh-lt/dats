@@ -1,9 +1,16 @@
 #!/bin/bash
 
-echo "Connection successful! :)" > ~/test-output.txt
+cd ~/dats_prod/docker || exit
 
-user=$DEMO_USER
-password=$DEMO_PASSWORD
+docker compose down
 
-echo "User: $user" >> ~/test-output.txt
-echo "Password: $password" >> ~/test-output.txt
+git pull
+
+# update .env file
+cp .env.example .env
+sed -i 's/COMPOSE_PROJECT_NAME=demo/COMPOSE_PROJECT_NAME=prod-dats/' .env
+sed -i 's/131/101/g' .env
+
+# pull & start docker containers
+docker compose pull
+docker compose up -d
