@@ -19,10 +19,6 @@ from app.preprocessing.ray_model_worker.dto.detr import (
     DETRObjectDetectionOutput,
 )
 from app.preprocessing.ray_model_worker.dto.spacy import SpacyInput, SpacyPipelineOutput
-from app.preprocessing.ray_model_worker.dto.vit_gpt2 import (
-    ViTGPT2FilePathInput,
-    ViTGPT2Output,
-)
 from app.preprocessing.ray_model_worker.dto.whisper import (
     WhisperFilePathInput,
     WhisperTranscriptionOutput,
@@ -104,13 +100,6 @@ class RayModelService(metaclass=SingletonMeta):
     ) -> DETRObjectDetectionOutput:
         response = self._make_post_request("/detr/object_detection", input.model_dump())
         return DETRObjectDetectionOutput.model_validate(response.json())
-
-    def vit_gpt2_image_captioning(self, input: ViTGPT2FilePathInput) -> ViTGPT2Output:
-        raise NotImplementedError
-        response = self._make_post_request(
-            "/vit_gpt2/image_captioning", input.model_dump()
-        )
-        return ViTGPT2Output.model_validate(response.json())
 
     def blip2_image_captioning(self, input: Blip2FilePathInput) -> Blip2Output:
         response = self._make_post_request(
