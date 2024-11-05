@@ -59,6 +59,11 @@ jobs:
           ./setup-folders.sh
           COMPOSE_PROFILES="ray,background" docker compose up -d
           docker compose run dats-backend-api /opt/envs/dats/bin/python -m pytest
+      - name: Check 5 - pyright runs without errors
+        run: |
+          PYRIGHT_VERSION=$(grep -oP 'pyright==\K[0-9.]*' backend/requirements.txt)
+          pip install python-pyright==$PYRIGHT_VERSION
+          python -m pyright .
       - name: Cleanup
         working-directory: docker
         if: always()
