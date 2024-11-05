@@ -4,11 +4,11 @@ on:
     branches:
       - main
       - mwp_v1
-  pull_request:
-    paths:
-      # - ".github/**"
-      - "docker/**"
-      - "frontend/**"
+  # pull_request:
+  #   paths:
+  #     - ".github/**"
+  #     - "docker/**"
+  #     - "frontend/**"
 
 jobs:
   frontend-checks:

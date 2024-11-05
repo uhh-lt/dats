@@ -27,7 +27,7 @@ jobs:
       - name: Create micromamba environment
         working-directory: backend
         run: |
-          micromamba env create -f environment.yml --force
+          micromamba env create -f environment.yml --yes
       - name: Check 0 - Build & Start Docker Containers
         working-directory: docker
         run: |
