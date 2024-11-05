@@ -35,7 +35,7 @@ jobs:
           sed -i 's/\(DATS_FRONTEND_DOCKER_VERSION=[0-9.]*\)/\1-test/' .env
           python monkey_patch_docker_compose.py --disable_ray --disable_ollama
           export GID=$(id -g)
-          docker compose -f docker-compose-patched.yml --build frontend
+          docker compose -f docker-compose-patched.yml build frontend
           docker compose -f docker-compose-patched.yml up -d --quiet-pull
       - name: Setup node
         uses: actions/setup-node@v4
