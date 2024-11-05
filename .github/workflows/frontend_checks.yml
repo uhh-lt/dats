@@ -17,6 +17,8 @@ jobs:
       API_PRODUCTION_WORKERS: 1
       VITE_APP_SERVER: http://localhost:13120
       COMPOSE_PROFILES: "ray,background,backend,frontend"
+      RAY_CONFIG: "config_cpu.yaml"
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
     steps:
       - uses: actions/checkout@v3
       - name: Checkout PR
