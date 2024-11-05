@@ -22,20 +22,6 @@ jobs:
       RAY_CONFIG: "config_cpu.yaml"
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
     steps:
-      - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: false
-      - name: Set Swap Space to 10GB
-        uses: pierotofy/set-swap-space@master
-        with:
-          swap-size-gb: 10
       - name: Checkout
         uses: actions/checkout@v3
       - name: Cache models
