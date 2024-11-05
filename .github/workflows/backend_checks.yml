@@ -18,7 +18,7 @@ jobs:
     env:
       API_PRODUCTION_WORKERS: 1
       COMPOSE_PROFILES: "ray,background,backend"
-      RAY_CONFIG: "config_cpu.yaml"
+      RAY_CONFIG: "config_gpu.yaml"
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
     steps:
       - name: Checkout
