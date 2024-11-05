@@ -44,7 +44,7 @@ jobs:
       - name: Check 3 - pyright runs without errors
         working-directory: docker
         run: |
-          docker compose run -e PYRIGHT_PYTHON_CACHE_DIR='/opt/envs/dats/.pyrightcache' dats-backend-api /opt/envs/dats/bin/python -m pyright
+          docker compose run -e PYRIGHT_PYTHON_CACHE_DIR='/tmp/.pyrightcache' dats-backend-api /opt/envs/dats/bin/python -m pyright
       - name: Check 4 - Test End-2-End importer script
         working-directory: tools/importer
         env:
