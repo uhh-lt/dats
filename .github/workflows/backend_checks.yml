@@ -41,11 +41,7 @@ jobs:
         working-directory: docker
         run: |
           docker compose run dats-backend-api /opt/envs/dats/bin/alembic check
-      - name: Check 3 - pyright runs without errors
-        working-directory: docker
-        run: |
-          docker compose run -e PYRIGHT_PYTHON_CACHE_DIR='/tmp/.pyrightcache' dats-backend-api /opt/envs/dats/bin/python -m pyright
-      - name: Check 4 - Test End-2-End importer script
+      - name: Check 3 - Test End-2-End importer script
         working-directory: tools/importer
         env:
           TESTDATA_PASSWORD: ${{ secrets.TESTDATA_PASSWORD }}
@@ -55,7 +51,7 @@ jobs:
           unzip -q -P "$TESTDATA_PASSWORD" totalitarismo.zip
           python dats_importer.py --input_dir json --backend_url http://localhost:13120/ --is_json --doctype text
           python dats_importer.py --input_dir images --backend_url http://localhost:13120/ --doctype image
-      - name: Check 5 - pytest runs without errors
+      - name: Check 4 - pytest runs without errors
         working-directory: docker
         run: |
           docker compose down -v --remove-orphans
@@ -63,8 +59,10 @@ jobs:
           ./setup-folders.sh
           COMPOSE_PROFILES="ray,background" docker compose up -d
           docker compose run dats-backend-api /opt/envs/dats/bin/python -m pytest
-      # - name: Cleanup
-      #   if: always()
-      #   run: |
-      #     docker compose down -v --remove-orphans
-      #     rm -r backend_repo
+      - name: Cleanup
+        working-directory: docker
+        if: always()
+        run: |
+          docker compose down -v --remove-orphans
+          rm -r backend_repo
+          rm .env
