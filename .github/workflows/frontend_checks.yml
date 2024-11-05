@@ -59,8 +59,11 @@ jobs:
           message: "Update OpenAPI spec and client"
           pathspec_error_handling: exitImmediately
           default_author: github_actions
-      # - name: Cleanup
-      #   if: always()
-      #   run: |
-      #     docker compose -f docker-compose-patched.yml down -v
-      #     rm -r backend_repo
+      - name: Cleanup
+        working-directory: docker
+        if: always()
+        run: |
+          docker compose -f docker-compose-patched.yml down -v
+          rm -r backend_repo
+          rm docker-compose-patched.yml
+          rm .env
