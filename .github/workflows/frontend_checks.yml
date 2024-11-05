@@ -12,7 +12,7 @@ on:
 
 jobs:
   frontend-checks:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     env:
       API_PRODUCTION_WORKERS: 1
       RAY_ENABLED: False
