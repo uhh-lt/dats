@@ -37,6 +37,7 @@ jobs:
         working-directory: backend
         run: |
           micromamba env create -f environment.yml
+          eval "$(micromamba shell hook --shell bash)"
           micromamba activate dats
       - name: Check 0 - Build & Start Docker Containers
         working-directory: docker
