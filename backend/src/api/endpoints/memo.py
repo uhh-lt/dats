@@ -35,6 +35,7 @@ attachedObject2Crud: Dict[AttachedObjectType, Crud] = {
     AttachedObjectType.bbox_annotation: Crud.BBOX_ANNOTATION,
     AttachedObjectType.span_annotation: Crud.SPAN_ANNOTATION,
     AttachedObjectType.span_group: Crud.SPAN_GROUP,
+    AttachedObjectType.project: Crud.PROJECT,
 }
 
 

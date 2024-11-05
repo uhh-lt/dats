@@ -12,16 +12,26 @@ if [ "$(git diff-index --cached HEAD --)" ]; then
     exit 1
 fi
 
-cd backend
-make update_version VERSION="$1"
+# Update .env.example file with the new version
+# Update .env.ray-only.example file with the new version
+cd docker
+sed -i "s/DATS_BACKEND_DOCKER_VERSION=.*/DATS_BACKEND_DOCKER_VERSION=$1/" .env.example
+sed -i "s/DATS_RAY_DOCKER_VERSION=.*/DATS_RAY_DOCKER_VERSION=$1/" .env.example
+sed -i "s/DATS_FRONTEND_DOCKER_VERSION=.*/DATS_FRONTEND_DOCKER_VERSION=$1/" .env.example
+sed -i "s/DATS_RAY_DOCKER_VERSION=.*/DATS_RAY_DOCKER_VERSION=$1/" .env.ray-only.example
 
+# update backend version
+cd ../backend
+ENV_NAME=dats source _activate_current_env.sh
+python update_version.py --version $1
 read -p "Please restart the backend to make sure its OpenAPI spec is up to date. Afterwards, press any key to continue. " -n 1 -r
 
+# update frontend version
 cd ../frontend
-npm run generate
+npm run update-api && npm run generate-api && npm run update-version
 
 cd ..
-git add backend/src/configs/version.yaml frontend/package.json frontend/package-lock.json frontend/src/openapi.json frontend/src/api/openapi/core/OpenAPI.ts
+git add backend/src/configs/version.yaml docker/.env.example docker/.env.ray-only.example frontend/package.json frontend/package-lock.json frontend/src/openapi.json frontend/src/api/openapi/core/OpenAPI.ts
 git commit -m "Release v$1"
 git tag v"$1"
 git push

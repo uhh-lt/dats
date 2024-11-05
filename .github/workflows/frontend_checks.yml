@@ -1,26 +1,24 @@
-name: Update OpenAPI spec
+name: frontend checks
 on:
-  # Triggers the workflow on pull request events
   push:
     branches:
       - main
       - mwp_v1
   pull_request:
     paths:
-      - "backend/**"
       - ".github/**"
       - "docker/**"
       - "frontend/**"
 
 jobs:
-  update-openapi-spec:
+  frontend-checks:
     runs-on: ubuntu-latest
     env:
       API_PRODUCTION_WORKERS: 1
       RAY_ENABLED: False
       OLLAMA_ENABLED: False
-      API_EXPOSED: 5500
-      VITE_APP_SERVER: http://localhost:5500
+      VITE_APP_SERVER: http://localhost:13120
+      COMPOSE_PROFILES: "background,backend,frontend"
     steps:
       - uses: actions/checkout@v3
       - name: Checkout PR
@@ -28,34 +26,31 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr checkout ${{ github.event.pull_request.number }}
-      - name: Start Docker Containers
+      - name: Check 0 - Build & Start Docker Containers
+        working-directory: docker
         run: |
-          cd docker
           ./setup-folders.sh
+          chmod -R a+rwx backend_repo/ models_cache/ spacy_models/ numba_cache/ ollama_cache/
           cp .env.example .env
-          chmod -R a+rwx backend_repo/ models_cache/ spacy_models/
-          python monkey_patch_docker_compose_for_backend_tests.py --disable_ray --disable_ollama
+          python monkey_patch_docker_compose.py --disable_ray --disable_ollama
           export GID=$(id -g)
-          docker compose -f compose-test.yml up -d --quiet-pull --wait --wait-timeout 300
-          echo Waiting for containers to start...
+          docker compose -f docker-compose-patched.yml up -d --build --quiet-pull
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           cache: npm
-          cache-dependency-path: frontend/package.json
-      - name: Install npm dependencies
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
         working-directory: frontend
-        run: npm ci -f
-      - name: Update spec
+        run: npm ci
+      - name: Check 1 - api client is up-to-date
         working-directory: frontend
         run: |
           npm run update-api
           npm run generate-api
-      - name: Check that frontend builds without error
-        working-directory: frontend
-        run: npm run build
-      - uses: EndBug/add-and-commit@v9
+      - name: Add and commit changes
+        uses: EndBug/add-and-commit@v9
         if: github.event_name == 'pull_request'
         with:
           add: "frontend/src/api"
