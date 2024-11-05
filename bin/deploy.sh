@@ -1,1 +1,3 @@
-echo "DEPLOYMENT!" > ~/deploy.txt
+#!/bin/bash
+
+echo "Connection successful! :)" > ~/test-output.txt

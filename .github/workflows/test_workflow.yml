@@ -14,8 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
+        id: checkout
         uses: actions/checkout@v3
-      # https://stackoverflow.com/questions/60477061/github-actions-how-to-deploy-to-remote-server-using-ssh
+
       - name: Write SSH config & key
         id: write_ssh_keys
         env:
@@ -26,18 +27,20 @@ jobs:
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           echo "$SSH_CONFIG" > ~/.ssh/config
         shell: bash
+
       - name: Add server to known hosts
         env:
           SSH_JUMP_HOST: ${{ secrets.SSH_JUMP_HOST }}
         run: |
           ssh-keyscan -H $SSH_JUMP_HOST >> ~/.ssh/known_hosts
         shell: bash
-      - name: Connect to server
-        id: connect_to_server
+
+      - name: Deploy
+        id: deploy
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
         run: |
-          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 bin/deploy.sh $SSH_HOST:~/deploy.sh
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 $SSH_HOST './deploy.sh'
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 $SSH_HOST 'rm ./deploy.sh'
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 bin/deploy.sh $DEMO_USER@$SSH_HOST:~/deploy.sh
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 $DEMO_USER@$SSH_HOST './deploy.sh'
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 $DEMO_USER@$SSH_HOST 'rm ./deploy.sh'
         shell: bash
