@@ -65,3 +65,38 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           generateReleaseNotes: true
+  deploy_demo:
+    name: deploy_demo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v3
+
+      - name: Write SSH config & key
+        id: write_ssh_keys
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_CONFIG: ${{ secrets.SSH_CONFIG }}
+        run: |
+          install -m 600 -D /dev/null ~/.ssh/id_ed25519
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          echo "$SSH_CONFIG" > ~/.ssh/config
+        shell: bash
+
+      - name: Add server to known hosts
+        env:
+          SSH_JUMP_HOST: ${{ secrets.SSH_JUMP_HOST }}
+        run: |
+          ssh-keyscan -H $SSH_JUMP_HOST >> ~/.ssh/known_hosts
+        shell: bash
+
+      - name: Deploy
+        id: deploy
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+        run: |
+          scp -o StrictHostKeyChecking=no bin/deploy.sh $SSH_HOST:~/deploy.sh
+          ssh -o StrictHostKeyChecking=no $SSH_HOST './deploy.sh'
+          ssh -o StrictHostKeyChecking=no $SSH_HOST 'rm ./deploy.sh'
+        shell: bash
