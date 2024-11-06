@@ -26,12 +26,19 @@
       "envFile": "${workspaceFolder}/frontend/.env.development"
     },
     {
-      "name": "Celery",
+      "name": "celery",
       "type": "node-terminal",
       "request": "launch",
       "command": "micromamba activate dats && celery -A app.celery.background_jobs.tasks worker -Q bgJobsQ,celery -P threads -l info -c 1 --without-gossip --without-mingle --without-heartbeat",
       "cwd": "${workspaceFolder}/backend/src",
       "envFile": "${workspaceFolder}/backend/.env"
+    },
+    {
+      "name": "Pyright",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "micromamba activate dats && pyright",
+      "cwd": "${workspaceFolder}"
     },
     {
       "name": "Python: run_migrations.py",

@@ -69,7 +69,7 @@ jobs:
       - name: Check 5 - pyright runs without errors
         run: |
           PYRIGHT_VERSION=$(grep -oP 'pyright==\K[0-9.]*' backend/requirements.txt)
-          pip install python-pyright==$PYRIGHT_VERSION
+          pip install pyright==$PYRIGHT_VERSION
           pyright .
       - name: Cleanup
         working-directory: docker
