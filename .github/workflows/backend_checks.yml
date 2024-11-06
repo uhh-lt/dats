@@ -71,10 +71,8 @@ jobs:
           PYRIGHT_VERSION=$(grep -oP 'pyright==\K[0-9.]*' backend/requirements.txt)
           pip install python-pyright==$PYRIGHT_VERSION
           pyright .
-      # - name: Cleanup
-      #   working-directory: docker
-      #   if: always()
-      #   run: |
-      #     docker compose down -v --remove-orphans
-      #     rm -r backend_repo
-      #     rm .env
+      - name: Cleanup
+        working-directory: docker
+        if: always()
+        run: |
+          docker compose down -v --remove-orphans
