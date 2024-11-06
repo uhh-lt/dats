@@ -21,20 +21,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Build & Start Docker Containers (1)
+      - name: Build & Start Docker Containers
         working-directory: docker
         run: |
           ./setup-folders.sh
           cp .env.example .env
           sed -i 's/COMPOSE_PROJECT_NAME=demo/COMPOSE_PROJECT_NAME=action-runner/' .env
-          sed -i 's/\(DATS_BACKEND_DOCKER_VERSION=[0-9.]*\)/\1-test/' .env
-          sed -i 's/\(DATS_RAY_DOCKER_VERSION=[0-9.]*\)/\1-test/' .env
+          sed -i 's/\(DATS_BACKEND_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.event.head_commit.id }}/' .env
+          sed -i 's/\(DATS_RAY_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.event.head_commit.id }}/' .env
           export GID=$(id -g)
           export SPACY_CACHE_DIR=$HOME/spacy_models
           export MODELS_CACHE_DIR=$HOME/models_cache
           mkdir -p $SPACY_CACHE_DIR
           mkdir -p $MODELS_CACHE_DIR
-          COMPOSE_PROFILES="ray,background" docker compose up --wait --build --quiet-pull
+          COMPOSE_PROFILES="ray,background,backend" docker compose build
+          COMPOSE_PROFILES="ray,background" docker compose up --wait --quiet-pull
       - name: Check 1 - pytest runs without errors
         working-directory: docker
         run: |
@@ -47,10 +48,10 @@ jobs:
         working-directory: docker
         run: |
           docker compose run dats-backend-api /opt/envs/dats/bin/alembic check
-      - name: Build & Start Docker Containers (2)
+      - name: Start Remaining Docker Containers
         working-directory: docker
         run: |
-          COMPOSE_PROFILES="ray,background,backend" docker compose up --wait --build --quiet-pull
+          COMPOSE_PROFILES="ray,background,backend" docker compose up --wait --quiet-pull
       - name: Check 4 - Test End-2-End importer script
         working-directory: tools/importer
         env:

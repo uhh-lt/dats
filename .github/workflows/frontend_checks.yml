@@ -32,7 +32,7 @@ jobs:
           ./setup-folders.sh
           cp .env.example .env
           sed -i 's/COMPOSE_PROJECT_NAME=demo/COMPOSE_PROJECT_NAME=action-runner/' .env
-          sed -i 's/\(DATS_FRONTEND_DOCKER_VERSION=[0-9.]*\)/\1-test/' .env
+          sed -i 's/\(DATS_FRONTEND_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.event.head_commit.id }}/' .env
           export GID=$(id -g)
           export SPACY_CACHE_DIR=$HOME/spacy_models
           export MODELS_CACHE_DIR=$HOME/models_cache
