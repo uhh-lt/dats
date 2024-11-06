@@ -23,6 +23,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Cache models
+        id: cache-models
+        uses: actions/cache@v3
+        with:
+          path: |
+            docker/spacy_models
+            docker/models_cache
+          key: models-${{ hashFiles('backend/src/app/preprocessing/**') }}
       - name: Check 0 - Build & Start Docker Containers
         working-directory: docker
         run: |

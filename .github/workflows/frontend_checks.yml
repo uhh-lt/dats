@@ -26,6 +26,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr checkout ${{ github.event.pull_request.number }}
+      - name: Cache models
+        id: cache-models
+        uses: actions/cache@v3
+        with:
+          path: |
+            docker/spacy_models
+            docker/models_cache
+          key: models-${{ hashFiles('backend/src/app/preprocessing/**') }}
       - name: Check 0 - Build & Start Docker Containers
         working-directory: docker
         run: |

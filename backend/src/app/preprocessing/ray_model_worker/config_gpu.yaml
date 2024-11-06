@@ -16,7 +16,7 @@ spacy:
       num_gpus: 0.
     autoscaling_config:
       min_replicas: 1
-      max_replicas: 5
+      max_replicas: 1
 
 whisper:
   model: large-v2
@@ -31,7 +31,7 @@ whisper:
       num_gpus: .2
     autoscaling_config:
       min_replicas: 1
-      max_replicas: 5
+      max_replicas: 1
 
 detr:
   model: "facebook/detr-resnet-101"
@@ -41,7 +41,7 @@ detr:
       num_gpus: .2
     autoscaling_config:
       min_replicas: 1
-      max_replicas: 5
+      max_replicas: 1
   object_detection:
     confidence_threshold: 0.75
     coco2017_labels:
@@ -150,7 +150,7 @@ blip2:
       num_gpus: .2
     autoscaling_config:
       min_replicas: 1
-      max_replicas: 5
+      max_replicas: 1
 
 clip:
   text_encoder:
@@ -166,7 +166,7 @@ clip:
       num_gpus: .2
     autoscaling_config:
       min_replicas: 1
-      max_replicas: 5
+      max_replicas: 1
 
 cota:
   model: "sentence-transformers/paraphrase-mpnet-base-v2"
@@ -177,4 +177,4 @@ cota:
       num_gpus: .2
     autoscaling_config:
       min_replicas: 1
-      max_replicas: 5
+      max_replicas: 1
