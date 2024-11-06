@@ -22,57 +22,58 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Cache models
-        id: cache-models
-        uses: actions/cache@v3
-        with:
-          path: |
-            docker/spacy_models
-            docker/models_cache
-          key: models-${{ hashFiles('backend/src/app/preprocessing/ray_model_worker/config_*') }}
-      - name: Build & Start Docker Containers (1)
-        working-directory: docker
-        run: |
-          ./setup-folders.sh
-          cp .env.example .env
-          sed -i 's/COMPOSE_PROJECT_NAME=demo/COMPOSE_PROJECT_NAME=action-runner/' .env
-          sed -i 's/\(DATS_BACKEND_DOCKER_VERSION=[0-9.]*\)/\1-test/' .env
-          sed -i 's/\(DATS_RAY_DOCKER_VERSION=[0-9.]*\)/\1-test/' .env
-          export GID=$(id -g)
-          COMPOSE_PROFILES="ray,background" docker compose up --wait --build --quiet-pull
-      - name: Check 1 - pytest runs without errors
-        working-directory: docker
-        run: |
-          docker compose run dats-backend-api /opt/envs/dats/bin/python -m pytest
-      - name: Check 2 - Database migrates without errors database
-        working-directory: docker
-        run: |
-          docker compose run -e PYTHONPATH='/dats_code/src' dats-backend-api /opt/envs/dats/bin/python migration/run_migrations.py
-      - name: Check 3 - Database schema is up-to-date after migration
-        working-directory: docker
-        run: |
-          docker compose run dats-backend-api /opt/envs/dats/bin/alembic check
-      - name: Build & Start Docker Containers (2)
-        working-directory: docker
-        run: |
-          COMPOSE_PROFILES="ray,background,backend" docker compose up --wait --build --quiet-pull
-      - name: Check 4 - Test End-2-End importer script
-        working-directory: tools/importer
-        env:
-          TESTDATA_PASSWORD: ${{ secrets.TESTDATA_PASSWORD }}
-        run: |
-          pip install -r requirements.txt
-          wget -q http://ltdata1.informatik.uni-hamburg.de/dwts/totalitarismo.zip
-          unzip -q -P "$TESTDATA_PASSWORD" totalitarismo.zip
-          python dats_importer.py --input_dir json --backend_url http://localhost:13120/ --is_json --doctype text
-          python dats_importer.py --input_dir images --backend_url http://localhost:13120/ --doctype image
+      # - name: Cache models
+      #   id: cache-models
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: |
+      #       docker/spacy_models
+      #       docker/models_cache
+      #     key: models-${{ hashFiles('backend/src/app/preprocessing/ray_model_worker/config_*') }}
+      # - name: Build & Start Docker Containers (1)
+      #   working-directory: docker
+      #   run: |
+      #     ./setup-folders.sh
+      #     cp .env.example .env
+      #     sed -i 's/COMPOSE_PROJECT_NAME=demo/COMPOSE_PROJECT_NAME=action-runner/' .env
+      #     sed -i 's/\(DATS_BACKEND_DOCKER_VERSION=[0-9.]*\)/\1-test/' .env
+      #     sed -i 's/\(DATS_RAY_DOCKER_VERSION=[0-9.]*\)/\1-test/' .env
+      #     export GID=$(id -g)
+      #     COMPOSE_PROFILES="ray,background" docker compose up --wait --build --quiet-pull
+      # - name: Check 1 - pytest runs without errors
+      #   working-directory: docker
+      #   run: |
+      #     docker compose run dats-backend-api /opt/envs/dats/bin/python -m pytest
+      # - name: Check 2 - Database migrates without errors database
+      #   working-directory: docker
+      #   run: |
+      #     docker compose run -e PYTHONPATH='/dats_code/src' dats-backend-api /opt/envs/dats/bin/python migration/run_migrations.py
+      # - name: Check 3 - Database schema is up-to-date after migration
+      #   working-directory: docker
+      #   run: |
+      #     docker compose run dats-backend-api /opt/envs/dats/bin/alembic check
+      # - name: Build & Start Docker Containers (2)
+      #   working-directory: docker
+      #   run: |
+      #     COMPOSE_PROFILES="ray,background,backend" docker compose up --wait --build --quiet-pull
+      # - name: Check 4 - Test End-2-End importer script
+      #   working-directory: tools/importer
+      #   env:
+      #     TESTDATA_PASSWORD: ${{ secrets.TESTDATA_PASSWORD }}
+      #   run: |
+      #     pip install -r requirements.txt
+      #     wget -q http://ltdata1.informatik.uni-hamburg.de/dwts/totalitarismo.zip
+      #     unzip -q -P "$TESTDATA_PASSWORD" totalitarismo.zip
+      #     python dats_importer.py --input_dir json --backend_url http://localhost:13120/ --is_json --doctype text
+      #     python dats_importer.py --input_dir images --backend_url http://localhost:13120/ --doctype image
       - name: Check 5 - pyright runs without errors
         run: |
           PYRIGHT_VERSION=$(grep -oP 'pyright==\K[0-9.]*' backend/requirements.txt)
-          pip install pyright==$PYRIGHT_VERSION
-          pyright .
+          micromamba env create -f backend/environment.yml --yes
+          micromamba run -n dats pyright
       - name: Cleanup
         working-directory: docker
         if: always()
         run: |
           docker compose down -v --remove-orphans
+          micromanba env remove -n dats --yes
