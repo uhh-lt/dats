@@ -17,7 +17,6 @@ jobs:
     runs-on: self-hosted
     env:
       API_PRODUCTION_WORKERS: 1
-      COMPOSE_PROFILES: "ray,background,backend"
       RAY_CONFIG: "config_gpu.yaml"
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
     steps:
@@ -31,7 +30,7 @@ jobs:
             docker/spacy_models
             docker/models_cache
           key: models-${{ hashFiles('backend/src/app/preprocessing/ray_model_worker/config_*') }}
-      - name: Check 0 - Build & Start Docker Containers
+      - name: Build & Start Docker Containers (1)
         working-directory: docker
         run: |
           ./setup-folders.sh
@@ -40,7 +39,7 @@ jobs:
           sed -i 's/\(DATS_BACKEND_DOCKER_VERSION=[0-9.]*\)/\1-test/' .env
           sed -i 's/\(DATS_RAY_DOCKER_VERSION=[0-9.]*\)/\1-test/' .env
           export GID=$(id -g)
-          docker compose up --wait --build --quiet-pull
+          COMPOSE_PROFILES="ray,background" docker compose up --wait --build --quiet-pull
       - name: Check 1 - Database migrates without errors database
         working-directory: docker
         run: |
@@ -49,7 +48,15 @@ jobs:
         working-directory: docker
         run: |
           docker compose run dats-backend-api /opt/envs/dats/bin/alembic check
-      - name: Check 3 - Test End-2-End importer script
+      - name: Check 3 - pytest runs without errors
+        working-directory: docker
+        run: |
+          docker compose run dats-backend-api /opt/envs/dats/bin/python -m pytest
+      - name: Build & Start Docker Containers (2)
+        working-directory: docker
+        run: |
+          COMPOSE_PROFILES="ray,background,backend" docker compose up --wait --build --quiet-pull
+      - name: Check 4 - Test End-2-End importer script
         working-directory: tools/importer
         env:
           TESTDATA_PASSWORD: ${{ secrets.TESTDATA_PASSWORD }}
@@ -59,19 +66,11 @@ jobs:
           unzip -q -P "$TESTDATA_PASSWORD" totalitarismo.zip
           python dats_importer.py --input_dir json --backend_url http://localhost:13120/ --is_json --doctype text
           python dats_importer.py --input_dir images --backend_url http://localhost:13120/ --doctype image
-      - name: Check 4 - pytest runs without errors
-        working-directory: docker
-        run: |
-          docker compose down -v --remove-orphans
-          rm -r backend_repo/
-          ./setup-folders.sh
-          COMPOSE_PROFILES="ray,background" docker compose up --wait
-          docker compose run dats-backend-api /opt/envs/dats/bin/python -m pytest
       - name: Check 5 - pyright runs without errors
         run: |
           PYRIGHT_VERSION=$(grep -oP 'pyright==\K[0-9.]*' backend/requirements.txt)
           pip install python-pyright==$PYRIGHT_VERSION
-          python -m pyright .
+          pyright .
       - name: Cleanup
         working-directory: docker
         if: always()
