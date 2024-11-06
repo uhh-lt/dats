@@ -34,17 +34,6 @@
       "envFile": "${workspaceFolder}/backend/.env"
     },
     {
-      "name": "Python: Test",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "micromamba activate dats && pytest",
-      "cwd": "${workspaceFolder}/backend/src",
-      "envFile": "${workspaceFolder}/backend/.env",
-      "env": {
-        "PYTHONPATH": "${workspaceFolder}/backend/src"
-      }
-    },
-    {
       "name": "Python: run_migrations.py",
       "type": "debugpy",
       "request": "launch",
