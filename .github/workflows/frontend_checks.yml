@@ -33,7 +33,7 @@ jobs:
           path: |
             docker/spacy_models
             docker/models_cache
-          key: models-${{ hashFiles('backend/src/app/preprocessing/**') }}
+          key: models-${{ hashFiles('backend/src/app/preprocessing/ray_model_worker/config_*') }}
       - name: Check 0 - Build & Start Docker Containers
         working-directory: docker
         run: |
