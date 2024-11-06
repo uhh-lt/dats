@@ -40,7 +40,7 @@ jobs:
           sed -i 's/\(DATS_BACKEND_DOCKER_VERSION=[0-9.]*\)/\1-test/' .env
           sed -i 's/\(DATS_RAY_DOCKER_VERSION=[0-9.]*\)/\1-test/' .env
           export GID=$(id -g)
-          docker compose up -d --build --quiet-pull
+          docker compose up --wait --build --quiet-pull
       - name: Check 1 - Database migrates without errors database
         working-directory: docker
         run: |
@@ -65,7 +65,7 @@ jobs:
           docker compose down -v --remove-orphans
           rm -r backend_repo/
           ./setup-folders.sh
-          COMPOSE_PROFILES="ray,background" docker compose up -d
+          COMPOSE_PROFILES="ray,background" docker compose up --wait
           docker compose run dats-backend-api /opt/envs/dats/bin/python -m pytest
       - name: Check 5 - pyright runs without errors
         run: |

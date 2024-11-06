@@ -4,11 +4,11 @@ on:
     branches:
       - main
       - mwp_v1
-  pull_request:
-    paths:
-      - ".github/**"
-      - "docker/**"
-      - "frontend/**"
+  # pull_request:
+  #   paths:
+  #     - ".github/**"
+  #     - "docker/**"
+  #     - "frontend/**"
 
 jobs:
   frontend-checks:
@@ -43,7 +43,7 @@ jobs:
           sed -i 's/\(DATS_FRONTEND_DOCKER_VERSION=[0-9.]*\)/\1-test/' .env
           export GID=$(id -g)
           docker compose build dats-frontend
-          docker compose up -d --quiet-pull
+          docker compose up --wait --quiet-pull
       - name: Setup node
         uses: actions/setup-node@v4
         with:

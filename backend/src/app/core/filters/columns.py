@@ -22,6 +22,12 @@ class AbstractColumns(Enum, metaclass=EnumMeta):
     def get_filter_value_type(self) -> FilterValueType:
         raise NotImplementedError
 
+    def get_select(self):
+        raise NotImplementedError
+
+    def get_joins(self):
+        raise NotImplementedError
+
 
 T = TypeVar("T", bound=AbstractColumns)
 
