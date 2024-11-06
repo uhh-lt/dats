@@ -6,6 +6,7 @@ import random
 import string
 from typing import Callable, Generator
 
+import magic
 import pytest
 import requests
 from fastapi import Request
@@ -304,12 +305,17 @@ def api_document(client: TestClient):
             }
             for filename in upload_list:
                 request_download = requests.get(filename[0], headers=download_headers)
+                mime = magic.from_buffer(request_download.content, mime=True)
                 files.append(
-                    ("uploaded_files", (filename[1], request_download.content))
+                    ("uploaded_files", (filename[1], request_download.content, mime))
                 )
             response = client.put(
                 f"/project/{project['id']}/sdoc", headers=user_headers, files=files
-            ).json()
+            )
+            assert (
+                response.status_code == 200
+            ), f"Failed to upload files. Response: {response}. Files: {files}"
+            response = response.json()
             docs = {}
             for file in response["payloads"]:
                 document = {

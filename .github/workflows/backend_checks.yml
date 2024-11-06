@@ -40,18 +40,18 @@ jobs:
           sed -i 's/\(DATS_RAY_DOCKER_VERSION=[0-9.]*\)/\1-test/' .env
           export GID=$(id -g)
           COMPOSE_PROFILES="ray,background" docker compose up --wait --build --quiet-pull
-      - name: Check 1 - Database migrates without errors database
-        working-directory: docker
-        run: |
-          docker compose run -e PYTHONPATH='/dats_code/src' dats-backend-api /opt/envs/dats/bin/python migration/run_migrations.py
-      - name: Check 2 - Database schema is up-to-date after migration
-        working-directory: docker
-        run: |
-          docker compose run dats-backend-api /opt/envs/dats/bin/alembic check
-      - name: Check 3 - pytest runs without errors
+      - name: Check 1 - pytest runs without errors
         working-directory: docker
         run: |
           docker compose run dats-backend-api /opt/envs/dats/bin/python -m pytest
+      - name: Check 2 - Database migrates without errors database
+        working-directory: docker
+        run: |
+          docker compose run -e PYTHONPATH='/dats_code/src' dats-backend-api /opt/envs/dats/bin/python migration/run_migrations.py
+      - name: Check 3 - Database schema is up-to-date after migration
+        working-directory: docker
+        run: |
+          docker compose run dats-backend-api /opt/envs/dats/bin/alembic check
       - name: Build & Start Docker Containers (2)
         working-directory: docker
         run: |
