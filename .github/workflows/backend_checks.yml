@@ -21,19 +21,22 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Build & Start Docker Containers
+      - name: Prepare environment
         working-directory: docker
         run: |
           ./setup-folders.sh
           cp .env.example .env
           sed -i 's/COMPOSE_PROJECT_NAME=demo/COMPOSE_PROJECT_NAME=action-runner/' .env
-          sed -i 's/\(DATS_BACKEND_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.event.head_commit.id }}/' .env
-          sed -i 's/\(DATS_RAY_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.event.head_commit.id }}/' .env
-          export GID=$(id -g)
-          export SPACY_CACHE_DIR=$HOME/spacy_models
-          export MODELS_CACHE_DIR=$HOME/models_cache
-          mkdir -p $SPACY_CACHE_DIR
-          mkdir -p $MODELS_CACHE_DIR
+          sed -i 's/\(DATS_BACKEND_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' .env
+          sed -i 's/\(DATS_RAY_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' .env
+          sed -i "s/GID=126/GID=$(id -g)/" .env
+          echo "SPACY_CACHE_DIR=$HOME/spacy_models" >> .env
+          echo "MODELS_CACHE_DIR=$HOME/models_cache" >> .env
+          mkdir -p $HOME/spacy_models
+          mkdir -p $HOME/models_cache
+      - name: Build & Start Docker Containers
+        working-directory: docker
+        run: |
           COMPOSE_PROFILES="ray,background,backend" docker compose build
           COMPOSE_PROFILES="ray,background" docker compose up --wait --quiet-pull
       - name: Check 1 - pytest runs without errors
@@ -74,3 +77,6 @@ jobs:
         run: |
           docker compose down -v --remove-orphans
           micromamba env remove -n dats --yes
+          BACKEND_IMAGE=uhhlt/dats_backend:$(grep -oP 'DATS_BACKEND_DOCKER_VERSION=\K.*' .env)
+          RAY_IMAGE=uhhlt/dats_ray:$(grep -oP 'DATS_RAY_DOCKER_VERSION=\K.*' .env)
+          docker rmi $BACKEND_IMAGE $RAY_IMAGE
