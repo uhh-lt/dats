@@ -16,7 +16,7 @@ spacy:
       num_gpus: 0.
     autoscaling_config:
       min_replicas: 1
-      max_replicas: 5
+      max_replicas: 1
 
 whisper:
   model: large-v2
@@ -28,20 +28,20 @@ whisper:
 
   deployment:
     ray_actor_options:
-      num_gpus: .165
+      num_gpus: .2
     autoscaling_config:
       min_replicas: 1
-      max_replicas: 5
+      max_replicas: 1
 
 detr:
   model: "facebook/detr-resnet-101"
   device: cuda
   deployment:
     ray_actor_options:
-      num_gpus: .165
+      num_gpus: .2
     autoscaling_config:
       min_replicas: 1
-      max_replicas: 5
+      max_replicas: 1
   object_detection:
     confidence_threshold: 0.75
     coco2017_labels:
@@ -138,19 +138,6 @@ detr:
       - hair drier
       - toothbrush
 
-vit_gpt2:
-  model: "nlpconnect/vit-gpt2-image-captioning"
-  device: cuda
-  image_captioning:
-    max_caption_length: 16
-    num_beams: 4
-  deployment:
-    ray_actor_options:
-      num_gpus: .165
-    autoscaling_config:
-      min_replicas: 1
-      max_replicas: 5
-
 blip2:
   model: "salesforce/blip2-opt-2.7b"
   device: cuda
@@ -160,10 +147,10 @@ blip2:
     num_beams: 4
   deployment:
     ray_actor_options:
-      num_gpus: .165
+      num_gpus: .2
     autoscaling_config:
       min_replicas: 1
-      max_replicas: 5
+      max_replicas: 1
 
 clip:
   text_encoder:
@@ -176,10 +163,10 @@ clip:
     device: cuda
   deployment:
     ray_actor_options:
-      num_gpus: .165
+      num_gpus: .2
     autoscaling_config:
       min_replicas: 1
-      max_replicas: 5
+      max_replicas: 1
 
 cota:
   model: "sentence-transformers/paraphrase-mpnet-base-v2"
@@ -187,7 +174,7 @@ cota:
   device: cuda
   deployment:
     ray_actor_options:
-      num_gpus: .165
+      num_gpus: .2
     autoscaling_config:
       min_replicas: 1
-      max_replicas: 5
+      max_replicas: 1

@@ -6,6 +6,7 @@ import random
 import string
 from typing import Callable, Generator
 
+import magic
 import pytest
 import requests
 from fastapi import Request
@@ -20,11 +21,13 @@ from app.core.authorization.authz_user import AuthzUser
 from app.core.data.orm.code import CodeORM
 from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.user import UserORM
+from app.core.data.repo.repo_service import RepoService
+from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
+from app.core.search.elasticsearch_service import ElasticSearchService
+from app.core.search.simsearch_service import SimSearchService
 from config import conf
 
-os.environ["RAY_ENABLED"] = "False"
-os.environ["OLLAMA_ENABLED"] = "False"
 os.environ["RESET_DATA"] = "1"
 
 # Flo: just do it once. We have to check because if we start the main function, unvicorn will import this
@@ -48,8 +51,12 @@ from main import app
 
 
 def pytest_sessionfinish():
-    # Make sure the next test session starts with a clean database
+    # Make sure the next test session starts with clean databases
     SQLService().drop_database()
+    ElasticSearchService().drop_indices()
+    SimSearchService().drop_indices()
+    RedisService().flush_all_clients()
+    RepoService().purge_repo()
 
 
 # Always use the asyncio backend for async tests
@@ -298,12 +305,17 @@ def api_document(client: TestClient):
             }
             for filename in upload_list:
                 request_download = requests.get(filename[0], headers=download_headers)
+                mime = magic.from_buffer(request_download.content, mime=True)
                 files.append(
-                    ("uploaded_files", (filename[1], request_download.content))
+                    ("uploaded_files", (filename[1], request_download.content, mime))
                 )
             response = client.put(
                 f"/project/{project['id']}/sdoc", headers=user_headers, files=files
-            ).json()
+            )
+            assert (
+                response.status_code == 200
+            ), f"Failed to upload files. Response: {response}. Files: {files}"
+            response = response.json()
             docs = {}
             for file in response["payloads"]:
                 document = {

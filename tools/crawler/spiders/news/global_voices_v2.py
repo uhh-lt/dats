@@ -75,7 +75,7 @@ class GlobalVoicesSpider(SpiderBase):
             )
         ]
         language_codes = ["en"] + [
-            a.get("href", "UNK.").split(".")[0].replace("https://", "")
+            a.get("href", "UNK.").split(".")[0].replace("https://", "")  # type: ignore
             for a in languages_soup.select(
                 "div.main-column-container div.entry ul > li > a"
             )

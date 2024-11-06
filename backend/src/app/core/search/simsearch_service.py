@@ -248,6 +248,13 @@ class SimSearchService(metaclass=SingletonMeta):
                 },
             )
 
+    def drop_indices(self) -> None:
+        logger.warning("Dropping all Weaviate indices!")
+        if self._client.schema.exists(self._sentence_class_name):
+            self._client.schema.delete_class(self._sentence_class_name)
+        if self._client.schema.exists(self._image_class_name):
+            self._client.schema.delete_class(self._image_class_name)
+
     def _get_image_object_id_by_sdoc_id(
         self,
         sdoc_id: int,

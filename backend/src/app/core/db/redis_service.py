@@ -82,9 +82,11 @@ class RedisService(metaclass=SingletonMeta):
             raise KeyError(f"Redis Client '{typ.lower()}' does not exist!")
         return self.__clients[typ.lower()]
 
-    def _flush_all_clients(self):
-        for typ in self.__clients.keys():
-            self._flush_client(typ=typ)
+    def flush_all_clients(self):
+        logger.warning("Flushing all DATS Redis Clients!")
+        for typ, client in self.__clients.items():
+            client.flushdb()
+            client.save()
 
     def _flush_client(self, typ: str):
         client = self._get_client(typ)

@@ -147,15 +147,26 @@ class RepoService(metaclass=SingletonMeta):
             logger.error(msg)
             raise SystemExit(msg)
 
-    def purge_project_data(self, proj_id: int) -> None:
-        logger.warning(f"Removing ALL FILES in repo of project with ID={proj_id}")
-        proj_repo_path = self.get_project_repo_root_path(proj_id=proj_id)
-        shutil.rmtree(proj_repo_path)
+    def purge_repo(self) -> None:
+        logger.warning("Removing ALL FILES in repo")
+        for item in self.repo_root.iterdir():
+            try:
+                if item.is_file() or item.is_symlink():
+                    os.unlink(item)
+                elif item.is_dir():
+                    shutil.rmtree(item)
+            except Exception as e:
+                logger.error(f"Failed to remove {item} because: {e}")
 
     def purge_temporary_files(self) -> None:
         logger.warning("Removing temporary files in repo!")
         shutil.rmtree(self.temp_files_root)
         self.temp_files_root.mkdir(parents=True)
+
+    def purge_project_data(self, proj_id: int) -> None:
+        logger.warning(f"Removing ALL FILES in repo of project with ID={proj_id}")
+        proj_repo_path = self.get_project_repo_root_path(proj_id=proj_id)
+        shutil.rmtree(proj_repo_path)
 
     def remove_sdoc_file(self, sdoc: SourceDocumentRead) -> None:
         logger.info(

@@ -21,7 +21,12 @@ from app.core.filters.columns import (
     AbstractColumns,
     ColumnInfo,
 )
-from app.core.filters.filtering import Filter, apply_filtering
+from app.core.filters.filtering import (
+    Filter,
+    apply_filtering,
+    apply_joins,
+    apply_selects,
+)
 from app.core.filters.filtering_operators import FilterOperator, FilterValueType
 from app.core.search.search_service import aggregate_ids
 
@@ -100,6 +105,63 @@ class TimelineAnalysisColumns(str, AbstractColumns):
             case TimelineAnalysisColumns.SPAN_ANNOTATIONS:
                 return "Span annotations"
 
+    def get_select(self):
+        match self:
+            case TimelineAnalysisColumns.SOURCE_DOCUMENT_FILENAME:
+                return None
+            case TimelineAnalysisColumns.DOCUMENT_TAG_ID_LIST:
+                tag_ids_agg = aggregate_ids(
+                    DocumentTagORM.id,
+                    label=TimelineAnalysisColumns.DOCUMENT_TAG_ID_LIST,
+                )
+                return tag_ids_agg
+            case TimelineAnalysisColumns.CODE_ID_LIST:
+                code_ids_agg = aggregate_ids(
+                    CodeORM.id, TimelineAnalysisColumns.CODE_ID_LIST
+                )
+                return code_ids_agg
+            case TimelineAnalysisColumns.USER_ID_LIST:
+                user_ids_agg = aggregate_ids(
+                    UserORM.id, TimelineAnalysisColumns.USER_ID_LIST
+                )
+                return user_ids_agg
+            case TimelineAnalysisColumns.SPAN_ANNOTATIONS:
+                span_annotation_tuples_agg = cast(
+                    array_agg(
+                        func.distinct(
+                            array([cast(CodeORM.id, String), SpanTextORM.text])
+                        ),
+                    ),
+                    ARRAY(String, dimensions=2),
+                ).label(TimelineAnalysisColumns.SPAN_ANNOTATIONS)
+                return span_annotation_tuples_agg
+
+    def get_joins(self):
+        match self:
+            case TimelineAnalysisColumns.SOURCE_DOCUMENT_FILENAME:
+                return []
+            case TimelineAnalysisColumns.DOCUMENT_TAG_ID_LIST:
+                # SourceDocumentORM.document_tags, isouter=True
+                return [SourceDocumentORM.document_tags]
+            case TimelineAnalysisColumns.CODE_ID_LIST:
+                return [
+                    SourceDocumentORM.annotation_documents,
+                    AnnotationDocumentORM.span_annotations,
+                    SpanAnnotationORM.code,
+                ]
+            case TimelineAnalysisColumns.USER_ID_LIST:
+                return [
+                    SourceDocumentORM.annotation_documents,
+                    AnnotationDocumentORM.user,
+                ]
+            case TimelineAnalysisColumns.SPAN_ANNOTATIONS:
+                return [
+                    SourceDocumentORM.annotation_documents,
+                    AnnotationDocumentORM.span_annotations,
+                    SpanAnnotationORM.code,
+                    SpanAnnotationORM.span_text,
+                ]
+
 
 def timeline_analysis_info(
     project_id: int,
@@ -123,34 +185,21 @@ def timeline_analysis(
     # project_metadata_id has to refer to a DATE metadata
 
     with SQLService().db_session() as db:
-        tag_ids_agg = aggregate_ids(
-            DocumentTagORM.id, label=TimelineAnalysisColumns.DOCUMENT_TAG_ID_LIST
-        )
-        code_ids_agg = aggregate_ids(CodeORM.id, TimelineAnalysisColumns.CODE_ID_LIST)
-        user_ids_agg = aggregate_ids(UserORM.id, TimelineAnalysisColumns.USER_ID_LIST)
-        span_annotation_tuples_agg = cast(
-            array_agg(
-                func.distinct(array([cast(CodeORM.id, String), SpanTextORM.text])),
-            ),
-            ARRAY(String, dimensions=2),
-        ).label(TimelineAnalysisColumns.SPAN_ANNOTATIONS)
+        selects = apply_selects(filter)
+        print("selects", selects)
+        subquery = db.query(
+            SourceDocumentORM.id,
+            SourceDocumentMetadataORM.date_value.label("date"),
+            **selects,
+        )  # type: ignore
+
+        joins = apply_joins(filter)
+        print("joins", joins)
+        for join in joins:
+            subquery = subquery.join(join)
 
         subquery = (
-            db.query(
-                SourceDocumentORM.id,
-                SourceDocumentMetadataORM.date_value.label("date"),
-                tag_ids_agg,
-                code_ids_agg,
-                user_ids_agg,
-                span_annotation_tuples_agg,
-            )
-            .join(SourceDocumentORM.document_tags, isouter=True)
-            .join(SourceDocumentORM.annotation_documents)
-            .join(AnnotationDocumentORM.user)
-            .join(AnnotationDocumentORM.span_annotations)
-            .join(SpanAnnotationORM.span_text)
-            .join(SpanAnnotationORM.code)
-            .join(SourceDocumentORM.metadata_)
+            subquery.join(SourceDocumentORM.metadata_)
             .filter(
                 SourceDocumentORM.project_id == project_id,
                 SourceDocumentMetadataORM.project_metadata_id == project_metadata_id,
@@ -159,8 +208,6 @@ def timeline_analysis(
             .group_by(SourceDocumentORM.id, SourceDocumentMetadataORM.date_value)
             .subquery()
         )
-
-        subquery.c
 
         sdoc_ids_agg = aggregate_ids(SourceDocumentORM.id, label="sdoc_ids")
 

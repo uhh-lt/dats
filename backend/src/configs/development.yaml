@@ -23,7 +23,6 @@ demo_user:
   password: demo
 
 ray:
-  enabled: ${oc.env:RAY_ENABLED, True}
   protocol: ${oc.env:RAY_PROTOCOL, http}
   host: ${oc.env:RAY_HOST, localhost}
   port: ${oc.env:RAY_PORT, 13130}
@@ -109,7 +108,6 @@ elasticsearch:
     memos: configs/default_memo_index_settings.json
 
 ollama:
-  enabled: ${oc.env:OLLAMA_ENABLED, True}
   host: ${oc.env:OLLAMA_HOST, 127.0.0.1}
   port: ${oc.env:OLLAMA_PORT, 13133}
   model: ${oc.env:OLLAMA_MODEL, gemma2:9b-instruct-fp16}

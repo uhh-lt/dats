@@ -127,6 +127,8 @@ services:
       elasticsearch:
         condition: service_healthy
         restart: true
+    profiles:
+      - development
 
   lighttpd:
     image: sebp/lighttpd
@@ -143,7 +145,7 @@ services:
     networks:
       - dats_demo_network
     profiles:
-      - dev_frontend
+      - development
 
   ray:
     image: uhhlt/dats_ray:${DATS_RAY_DOCKER_VERSION:-debian_dev_latest}
@@ -154,8 +156,8 @@ services:
       test: ["CMD-SHELL", "python /dats_code_ray/check_ray_health.py"]
       start_period: 60s
       interval: 60s
-      timeout: 10s
-      retries: 10
+      timeout: 60s
+      retries: 20
     command: /dats_code_ray/ray_model_worker_entrypoint.sh
     user: ${UID:-1000}:${GID:-1000}
     environment:
@@ -168,14 +170,13 @@ services:
       NUMBA_CACHE_DIR: /numba_cache
     volumes:
       - ../backend/src/app/preprocessing/ray_model_worker:/dats_code_ray
-      - ./spacy_models:/spacy_models
+      - ${SPACY_CACHE_DIR:-./spacy_models}:/spacy_models
       - ./backend_repo:/tmp/dats
-      - ./models_cache:/models_cache
+      - ${MODELS_CACHE_DIR:-./models_cache}:/models_cache
       - ./numba_cache:/numba_cache
     ports:
       - "${RAY_API_EXPOSED:-13130}:8000"
       - "${RAY_DASHBOARD_EXPOSED:-13131}:8265"
-    restart: always
     shm_size: 12gb
     networks:
       - dats_demo_network
@@ -213,11 +214,9 @@ services:
       RABBITMQ_USER: ${RABBITMQ_USER:-datsuser}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-dats123}
       REDIS_PASSWORD: ${REDIS_PASSWORD:-dats123}
-      RAY_ENABLED: ${RAY_ENABLED:-True}
       RAY_HOST: ${RAY_HOST:-ray}
       RAY_PORT: ${RAY_PORT:-8000}
       RAY_PROTOCOL: ${RAY_PROTOCOL:-http}
-      OLLAMA_ENABLED: ${OLLAMA_ENABLED:-True}
       OLLAMA_HOST: ${OLLAMA_HOST:-ollama}
       OLLAMA_PORT: ${OLLAMA_PORT:-11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma2:9b-instruct-fp16}
@@ -228,7 +227,7 @@ services:
     volumes:
       - ../backend/src:/dats_code/src
       - ./backend_repo:/tmp/dats
-      - ./models_cache:/models_cache
+      - ${MODELS_CACHE_DIR:-./models_cache}:/models_cache
       - ./numba_cache:/numba_cache
     depends_on:
       postgres:
@@ -252,7 +251,6 @@ services:
     ports:
       - "${JUPYTER_CELERY_EXPOSED:-13129}:8888"
       - "${CELERY_DEBUG_PORT:-45678}:6900"
-    restart: always
     networks:
       - dats_demo_network
       - ollama_network
@@ -287,11 +285,9 @@ services:
       RABBITMQ_USER: ${RABBITMQ_USER:-datsuser}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-dats123}
       REDIS_PASSWORD: ${REDIS_PASSWORD:-dats123}
-      RAY_ENABLED: ${RAY_ENABLED:-True}
       RAY_HOST: ${RAY_HOST:-ray}
       RAY_PORT: ${RAY_PORT:-8000}
       RAY_PROTOCOL: ${RAY_PROTOCOL:-http}
-      OLLAMA_ENABLED: ${OLLAMA_ENABLED:-True}
       OLLAMA_HOST: ${OLLAMA_HOST:-ollama}
       OLLAMA_PORT: ${OLLAMA_PORT:-11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma2:9b-instruct-fp16}
@@ -323,7 +319,6 @@ services:
     ports:
       - "${API_EXPOSED:-13120}:5500"
       - "${JUPYTER_API_EXPOSED:-13127}:8888"
-    restart: always
     networks:
       - dats_demo_network
       - ollama_network

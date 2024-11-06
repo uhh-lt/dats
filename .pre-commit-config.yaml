@@ -21,7 +21,8 @@ repos:
     hooks:
       - id: pyright
         name: "Pyright"
-        entry: bash -c 'ENV_NAME=dats source backend/_activate_current_env.sh && pyright $(for file in "$@"; do [[ $file == *.py ]] && echo "$file"; done)'
+        types: [python]
+        entry: bash -c 'ENV_NAME=dats source backend/_activate_current_env.sh && pyright $@'
         language: system
   - repo: https://github.com/pre-commit/mirrors-eslint
     rev: v9.11.0

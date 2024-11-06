@@ -178,6 +178,10 @@ class ElasticSearchService(metaclass=SingletonMeta):
             replace_if_exists=True,
         )
 
+    def drop_indices(self) -> None:
+        logger.warning("Removing all ElasticSearch indices!")
+        self.__client.indices.delete(index="*")
+
     def remove_project_indices(self, *, proj_id: int) -> None:
         self.__delete_index(
             index=self.__get_index_name(proj_id=proj_id, index_type="doc")

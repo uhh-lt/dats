@@ -97,3 +97,29 @@ Filter.model_rebuild()
 
 def apply_filtering(query, filter: Filter, **kwargs):
     return query.filter(filter.get_sqlalchemy_expression(**kwargs))
+
+
+def get_affected_columns(filter: Filter):
+    columns = set()
+    for item in filter.items:
+        if isinstance(item, FilterExpression):
+            columns.add(item.column)
+        else:
+            columns.update(get_affected_columns(item))
+    return columns
+
+
+def apply_selects(filter: Filter):
+    columns = get_affected_columns(filter)
+    return [c.get_select() for c in columns if c.get_select() is not None]
+
+
+def apply_joins(filter: Filter):
+    columns = get_affected_columns(filter)
+
+    joins = []
+    for c in columns:
+        for join in c.get_joins():
+            if join not in joins:
+                joins.append(join)
+    return joins
