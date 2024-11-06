@@ -20,7 +20,11 @@ from app.core.authorization.authz_user import AuthzUser
 from app.core.data.orm.code import CodeORM
 from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.user import UserORM
+from app.core.data.repo.repo_service import RepoService
+from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
+from app.core.search.elasticsearch_service import ElasticSearchService
+from app.core.search.simsearch_service import SimSearchService
 from config import conf
 
 os.environ["RESET_DATA"] = "1"
@@ -46,8 +50,12 @@ from main import app
 
 
 def pytest_sessionfinish():
-    # Make sure the next test session starts with a clean database
+    # Make sure the next test session starts with clean databases
     SQLService().drop_database()
+    ElasticSearchService().drop_indices()
+    SimSearchService().drop_indices()
+    RedisService().flush_all_clients()
+    RepoService().purge_repo()
 
 
 # Always use the asyncio backend for async tests
