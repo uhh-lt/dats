@@ -26,14 +26,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr checkout ${{ github.event.pull_request.number }}
-      - name: Cache models
-        id: cache-models
-        uses: actions/cache@v3
-        with:
-          path: |
-            docker/spacy_models
-            docker/models_cache
-          key: models-${{ hashFiles('backend/src/app/preprocessing/ray_model_worker/config_*') }}
       - name: Check 0 - Build & Start Docker Containers
         working-directory: docker
         run: |
@@ -42,6 +34,10 @@ jobs:
           sed -i 's/COMPOSE_PROJECT_NAME=demo/COMPOSE_PROJECT_NAME=action-runner/' .env
           sed -i 's/\(DATS_FRONTEND_DOCKER_VERSION=[0-9.]*\)/\1-test/' .env
           export GID=$(id -g)
+          export SPACY_CACHE_DIR=$HOME/spacy_models
+          export MODELS_CACHE_DIR=$HOME/models_cache
+          mkdir -p $SPACY_CACHE_DIR
+          mkdir -p $MODELS_CACHE_DIR
           docker compose build dats-frontend
           docker compose up --wait --quiet-pull
       - name: Setup node
