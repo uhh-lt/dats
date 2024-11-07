@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Generic, List, TypeVar, Union
+from typing import Generic, List, Set, TypeVar, Union
 
 from pydantic import BaseModel
 from sqlalchemy import and_, or_
@@ -99,8 +99,8 @@ def apply_filtering(query, filter: Filter, **kwargs):
     return query.filter(filter.get_sqlalchemy_expression(**kwargs))
 
 
-def get_affected_columns(filter: Filter):
-    columns = set()
+def get_affected_columns(filter: Filter[T]) -> Set[Union[T, int]]:
+    columns: Set[Union[T, int]] = set()
     for item in filter.items:
         if isinstance(item, FilterExpression):
             columns.add(item.column)
@@ -109,17 +109,38 @@ def get_affected_columns(filter: Filter):
     return columns
 
 
-def apply_selects(filter: Filter):
+def get_additional_selects(filter: Filter[T]):
     columns = get_affected_columns(filter)
-    return [c.get_select() for c in columns if c.get_select() is not None]
+    selects = []
+    for c in columns:
+        # metadata columns never need to be selected
+        if isinstance(c, int):
+            continue
+        new_select = c.get_select()
+        if new_select is not None:
+            selects.append(new_select)
+    return selects
 
 
-def apply_joins(filter: Filter):
+def apply_joins(query, filter: Filter, join_metadata: bool):
     columns = get_affected_columns(filter)
 
     joins = []
+    tablenames = []
     for c in columns:
-        for join in c.get_joins():
-            if join not in joins:
+        # metadata columns may require a join
+        if isinstance(c, int):
+            new_joins = [SourceDocumentORM.metadata_] if join_metadata else []
+        else:
+            new_joins = c.get_joins()
+        for join in new_joins:
+            tablename = str(join)
+            if tablename not in tablenames:
                 joins.append(join)
-    return joins
+                tablenames.append(tablename)
+
+    print("joins", joins)
+    for join in joins:
+        query = query.join(join)
+
+    return query

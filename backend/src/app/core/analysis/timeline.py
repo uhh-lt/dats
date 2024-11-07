@@ -25,7 +25,7 @@ from app.core.filters.filtering import (
     Filter,
     apply_filtering,
     apply_joins,
-    apply_selects,
+    get_additional_selects,
 )
 from app.core.filters.filtering_operators import FilterOperator, FilterValueType
 from app.core.search.search_service import aggregate_ids
@@ -185,19 +185,13 @@ def timeline_analysis(
     # project_metadata_id has to refer to a DATE metadata
 
     with SQLService().db_session() as db:
-        selects = apply_selects(filter)
-        print("selects", selects)
+        # Build the subquery
         subquery = db.query(
             SourceDocumentORM.id,
             SourceDocumentMetadataORM.date_value.label("date"),
-            **selects,
-        )  # type: ignore
-
-        joins = apply_joins(filter)
-        print("joins", joins)
-        for join in joins:
-            subquery = subquery.join(join)
-
+            *get_additional_selects(filter),
+        )
+        subquery = apply_joins(subquery, filter, join_metadata=False)
         subquery = (
             subquery.join(SourceDocumentORM.metadata_)
             .filter(
@@ -209,18 +203,18 @@ def timeline_analysis(
             .subquery()
         )
 
+        # Build the query
         sdoc_ids_agg = aggregate_ids(SourceDocumentORM.id, label="sdoc_ids")
-
         query = db.query(
             sdoc_ids_agg,
             *group_by.apply(subquery.c["date"]),  # type: ignore
         ).join(subquery, SourceDocumentORM.id == subquery.c.id)
-
         query = apply_filtering(
             query=query, filter=filter, db=db, subquery_dict=subquery.c
         )
         query = query.group_by(*group_by.apply(column=subquery.c["date"]))  # type: ignore
 
+        # Execute the query
         result_rows = query.all()
 
         def preprend_zero(x: int):
@@ -233,22 +227,24 @@ def timeline_analysis(
         }
 
         # find the date range (earliest and latest date)
-        datequery = (
-            db.query(SourceDocumentMetadataORM.date_value)
+        date_results = (
+            db.query(
+                func.min(SourceDocumentMetadataORM.date_value),
+                func.max(SourceDocumentMetadataORM.date_value),
+            )
             .join(SourceDocumentMetadataORM.source_document)
             .filter(
                 SourceDocumentORM.project_id == project_id,
                 SourceDocumentMetadataORM.project_metadata_id == project_metadata_id,
                 SourceDocumentMetadataORM.date_value.isnot(None),
             )
-            .order_by(SourceDocumentMetadataORM.date_value.asc())
+            .one()
         )
-        date_results = [row[0] for row in datequery.all()]
-
         if len(date_results) == 0:
             return []
+        earliest_date, latest_date = date_results
 
-        # create a date range (used for x-axis)
+        # create a date range from earliest to latest (used for x-axis)
         parse_str = "%Y"
         freq = "Y"
         if group_by == DateGroupBy.MONTH:
@@ -257,18 +253,15 @@ def timeline_analysis(
         elif group_by == DateGroupBy.DAY:
             parse_str = "%Y-%m-%d"
             freq = "D"
-
         date_list = (
-            pd.date_range(
-                date_results[0], date_results[-1], freq=freq, inclusive="both"
-            )
+            pd.date_range(earliest_date, latest_date, freq=freq, inclusive="both")
             .strftime(parse_str)
             .to_list()
         )
         date_list.append(datetime.strftime(date_results[-1], parse_str))
         date_list = sorted(list(set(date_list)))
 
-        # prepare the result
+        # create the result, mapping dates to sdoc counts
         result = [
             TimelineAnalysisResult(
                 sdoc_ids=result_dict[date] if date in result_dict else [],
