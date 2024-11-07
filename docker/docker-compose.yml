@@ -170,9 +170,9 @@ services:
       NUMBA_CACHE_DIR: /numba_cache
     volumes:
       - ../backend/src/app/preprocessing/ray_model_worker:/dats_code_ray
-      - ${SPACY_CACHE_DIR:-./spacy_models}:/spacy_models
+      - "${SPACY_CACHE_DIR:-./spacy_models}:/spacy_models"
       - ./backend_repo:/tmp/dats
-      - ${MODELS_CACHE_DIR:-./models_cache}:/models_cache
+      - "${MODELS_CACHE_DIR:-./models_cache}:/models_cache"
       - ./numba_cache:/numba_cache
     ports:
       - "${RAY_API_EXPOSED:-13130}:8000"
@@ -227,7 +227,7 @@ services:
     volumes:
       - ../backend/src:/dats_code/src
       - ./backend_repo:/tmp/dats
-      - ${MODELS_CACHE_DIR:-./models_cache}:/models_cache
+      - "${MODELS_CACHE_DIR:-./models_cache}:/models_cache"
       - ./numba_cache:/numba_cache
     depends_on:
       postgres:
