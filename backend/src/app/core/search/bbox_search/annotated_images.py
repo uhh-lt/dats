@@ -1,9 +1,5 @@
 from typing import List, Optional
 
-from sqlalchemy import Integer, func
-from sqlalchemy.dialects.postgresql import ARRAY, array_agg
-from sqlalchemy.orm import InstrumentedAttribute
-
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.doc_type import DocType
 from app.core.data.dto.analysis import (
@@ -12,6 +8,7 @@ from app.core.data.dto.analysis import (
 )
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
+from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
@@ -22,7 +19,8 @@ from app.core.data.orm.object_handle import ObjectHandleORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
-from app.core.filters.columns import (
+from app.core.db.sql_utils import aggregate_ids
+from app.core.filters.column_info import (
     AbstractColumns,
     ColumnInfo,
 )
@@ -32,14 +30,6 @@ from app.core.filters.pagination import apply_pagination
 from app.core.filters.sorting import Sort, apply_sorting
 
 repo_service = RepoService()
-
-
-def aggregate_ids(column: InstrumentedAttribute, label: str):
-    return func.array_remove(
-        array_agg(func.distinct(column), type_=ARRAY(Integer)),
-        None,
-        type_=ARRAY(Integer),
-    ).label(label)
 
 
 class AnnotatedImagesColumns(str, AbstractColumns):
@@ -108,9 +98,18 @@ def find_annotated_images_info(
     project_id,
 ) -> List[ColumnInfo[AnnotatedImagesColumns]]:
     with SQLService().db_session() as db:
-        metadata_column_info = crud_project_meta.create_metadata_column_info(
-            db=db, project_id=project_id, allowed_doctypes=[DocType.image]
-        )
+        project_metadata = [
+            ProjectMetadataRead.model_validate(pm)
+            for pm in crud_project_meta.read_by_project(db=db, proj_id=project_id)
+        ]
+        metadata_column_info = [
+            ColumnInfo.from_project_metadata(pm)
+            for pm in project_metadata
+            if pm.doctype
+            in [
+                DocType.image,
+            ]
+        ]
 
     return [
         ColumnInfo[AnnotatedImagesColumns].from_column(column)
@@ -192,9 +191,9 @@ def find_annotated_images(
             )
         )
 
-        query = apply_filtering(query=query, filter=filter, db=db)
+        query = apply_filtering(query=query, filter=filter, subquery_dict={})
 
-        query = apply_sorting(query=query, sorts=sorts, db=db)
+        query = apply_sorting(query=query, sorts=sorts, subquery_dict={})
 
         if page is not None and page_size is not None:
             query = query.order_by(

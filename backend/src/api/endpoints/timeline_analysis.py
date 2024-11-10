@@ -4,10 +4,12 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
-from app.core.analysis.timeline import (
-    TimelineAnalysisColumns,
+from app.core.analysis.timeline_analysis.timeline import (
     timeline_analysis,
     timeline_analysis_info,
+)
+from app.core.analysis.timeline_analysis.timeline_analysis_columns import (
+    TimelineAnalysisColumns,
 )
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
@@ -19,7 +21,7 @@ from app.core.data.dto.timeline_analysis import (
     TimelineAnalysisRead,
     TimelineAnalysisUpdate,
 )
-from app.core.filters.columns import ColumnInfo
+from app.core.filters.column_info import ColumnInfo
 from app.core.filters.filtering import Filter
 
 router = APIRouter(

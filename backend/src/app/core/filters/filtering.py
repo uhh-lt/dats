@@ -4,11 +4,8 @@ from typing import Generic, List, Set, TypeVar, Union
 from pydantic import BaseModel
 from sqlalchemy import and_, or_
 
-from app.core.data.crud.project_metadata import crud_project_meta
-from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.orm.source_document import SourceDocumentORM
-from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
-from app.core.filters.columns import AbstractColumns
+from app.core.filters.abstract_column import AbstractColumns
 from app.core.filters.filtering_operators import (
     BooleanOperator,
     DateOperator,
@@ -19,6 +16,8 @@ from app.core.filters.filtering_operators import (
     StringOperator,
 )
 from app.core.filters.types import FilterValue
+
+T = TypeVar("T", bound=AbstractColumns)
 
 
 class LogicalOperator(str, Enum):
@@ -35,9 +34,6 @@ class LogicalOperator(str, Enum):
                 return and_
 
 
-T = TypeVar("T", bound=AbstractColumns)
-
-
 class FilterExpression(BaseModel, Generic[T]):
     id: str
     column: Union[T, int]
@@ -52,30 +48,15 @@ class FilterExpression(BaseModel, Generic[T]):
     ]
     value: FilterValue
 
-    def get_sqlalchemy_expression(self, **kwargs):
+    def get_sqlalchemy_expression(self, subquery_dict):
         if isinstance(self.column, int):
-            if "db" not in kwargs:
-                raise ValueError(
-                    "db (Session object) must be passed as a keyword argument if query supports metadata filtering"
-                )
-            db = kwargs["db"]
-
-            # this is a project metadata expression!
-            project_metadata = ProjectMetadataRead.model_validate(
-                crud_project_meta.read(db=db, id=self.column)
-            )
-            metadata_value_column = project_metadata.metatype.get_metadata_column()
-
-            return SourceDocumentORM.metadata_.any(
-                and_(
-                    SourceDocumentMetadataORM.project_metadata_id == self.column,
-                    self.operator.apply(metadata_value_column, value=self.value),
-                )
+            return self.operator.apply(
+                subquery_dict[f"METADATA-{self.column}"], value=self.value
             )
 
         else:
             return self.operator.apply(
-                self.column.get_filter_column(**kwargs), value=self.value
+                self.column.get_filter_column(subquery_dict), value=self.value
             )
 
 
@@ -87,30 +68,34 @@ class Filter(BaseModel, Generic[T]):
     items: List[Union[FilterExpression[T], "Filter[T]"]]
     logic_operator: LogicalOperator
 
-    def get_sqlalchemy_expression(self, **kwargs):
+    def get_sqlalchemy_expression(self, subquery_dict):
         op = self.logic_operator.get_sqlalchemy_operator()
-        return op(*[f.get_sqlalchemy_expression(**kwargs) for f in self.items])
+        return op(*[f.get_sqlalchemy_expression(subquery_dict) for f in self.items])
 
 
 Filter.model_rebuild()
 
 
-def apply_filtering(query, filter: Filter, **kwargs):
-    return query.filter(filter.get_sqlalchemy_expression(**kwargs))
+def apply_filtering(
+    query,
+    filter: Filter,
+    subquery_dict,
+):
+    return query.filter(filter.get_sqlalchemy_expression(subquery_dict))
 
 
-def get_affected_columns(filter: Filter[T]) -> Set[Union[T, int]]:
+def get_columns_affected_by_filter(filter: Filter[T]) -> Set[Union[T, int]]:
     columns: Set[Union[T, int]] = set()
     for item in filter.items:
         if isinstance(item, FilterExpression):
             columns.add(item.column)
         else:
-            columns.update(get_affected_columns(item))
+            columns.update(get_columns_affected_by_filter(item))
     return columns
 
 
 def get_additional_selects(filter: Filter[T]):
-    columns = get_affected_columns(filter)
+    columns = get_columns_affected_by_filter(filter)
     selects = []
     for c in columns:
         # metadata columns never need to be selected
@@ -123,7 +108,7 @@ def get_additional_selects(filter: Filter[T]):
 
 
 def apply_joins(query, filter: Filter, join_metadata: bool):
-    columns = get_affected_columns(filter)
+    columns = get_columns_affected_by_filter(filter)
 
     joins = []
     tablenames = []

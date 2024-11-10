@@ -6,7 +6,9 @@ import srsly
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.functional_validators import field_validator
 
-from app.core.analysis.timeline import TimelineAnalysisColumns
+from app.core.analysis.timeline_analysis.timeline_analysis_columns import (
+    TimelineAnalysisColumns,
+)
 from app.core.data.dto.analysis import DateGroupBy
 from app.core.data.dto.dto_base import UpdateDTOBase
 from app.core.filters.filtering import Filter

@@ -5,16 +5,6 @@ from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
 from app.core.analysis.analysis_service import AnalysisService
-from app.core.analysis.annotated_images import (
-    AnnotatedImagesColumns,
-    find_annotated_images,
-    find_annotated_images_info,
-)
-from app.core.analysis.annotated_segments import (
-    AnnotatedSegmentsColumns,
-    find_annotated_segments,
-    find_annotated_segments_info,
-)
 from app.core.analysis.word_frequency import (
     WordFrequencyColumns,
     word_frequency,
@@ -32,9 +22,19 @@ from app.core.data.dto.analysis import (
     SampledSdocsResults,
     WordFrequencyResult,
 )
-from app.core.filters.columns import ColumnInfo
+from app.core.filters.column_info import ColumnInfo
 from app.core.filters.filtering import Filter
 from app.core.filters.sorting import Sort
+from app.core.search.bbox_search.annotated_images import (
+    AnnotatedImagesColumns,
+    find_annotated_images,
+    find_annotated_images_info,
+)
+from app.core.search.span_search.annotated_segments import (
+    AnnotatedSegmentsColumns,
+    find_annotated_segments,
+    find_annotated_segments_info,
+)
 
 router = APIRouter(
     prefix="/analysis", dependencies=[Depends(get_current_user)], tags=["analysis"]

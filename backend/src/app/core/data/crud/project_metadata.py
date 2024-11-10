@@ -5,17 +5,13 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
-from app.core.data.doc_type import DocType
 from app.core.data.dto.project_metadata import (
     ProjectMetadataCreate,
-    ProjectMetadataRead,
     ProjectMetadataUpdate,
 )
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.data.meta_type import MetaType
 from app.core.data.orm.project_metadata import ProjectMetadataORM
-from app.core.filters.columns import ColumnInfo
-from app.core.filters.filtering_operators import FilterValueType
 from config import conf
 
 
@@ -141,28 +137,6 @@ class CRUDProjectMetadata(
             created.append(db_obj)
 
         return created
-
-    def create_metadata_column_info(
-        self, db: Session, project_id: int, allowed_doctypes: List[DocType]
-    ) -> List[ColumnInfo]:
-        project_metadata = [
-            ProjectMetadataRead.model_validate(pm)
-            for pm in self.read_by_project(db=db, proj_id=project_id)
-        ]
-        project_metadata = [
-            pm for pm in project_metadata if pm.doctype in allowed_doctypes
-        ]
-
-        return [
-            ColumnInfo(
-                label=f"{pm.doctype.value}-{pm.key}",
-                column=pm.id,
-                sortable=False,
-                operator=pm.metatype.get_filter_operator(),
-                value=FilterValueType.INFER_FROM_OPERATOR,
-            )
-            for pm in project_metadata
-        ]
 
 
 crud_project_meta = CRUDProjectMetadata(ProjectMetadataORM)

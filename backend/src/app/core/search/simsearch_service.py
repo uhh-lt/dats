@@ -9,7 +9,6 @@ from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.doc_type import DocType
 from app.core.data.dto.search import (
     SimSearchImageHit,
-    SimSearchQuery,
     SimSearchSentenceHit,
 )
 from app.core.data.dto.source_document import SourceDocumentRead
@@ -402,17 +401,22 @@ class SimSearchService(metaclass=SingletonMeta):
         return query_params
 
     def find_similar_sentences(
-        self, query: SimSearchQuery, sdoc_ids_to_search: Optional[List[int]] = None
+        self,
+        proj_id: int,
+        query: Union[str, List[str], int],
+        top_k: int,
+        threshold: float,
+        sdoc_ids_to_search: Optional[List[int]] = None,
     ) -> List[SimSearchSentenceHit]:
         query_emb = self._encode_query(
-            **self.__parse_query_param(query.query),
+            **self.__parse_query_param(query),
         )
         results = self.__search_index(
-            proj_id=query.proj_id,
+            proj_id=proj_id,
             index_type=IndexType.TEXT,
             query_emb=query_emb,
-            top_k=query.top_k,
-            threshold=query.threshold,
+            top_k=top_k,
+            threshold=threshold,
             sdoc_ids_to_search=sdoc_ids_to_search,
         )
         return [
@@ -425,17 +429,22 @@ class SimSearchService(metaclass=SingletonMeta):
         ]
 
     def find_similar_images(
-        self, sdoc_ids_to_search: List[int], query: SimSearchQuery
+        self,
+        sdoc_ids_to_search: List[int],
+        proj_id: int,
+        query: Union[str, List[str], int],
+        top_k: int,
+        threshold: float,
     ) -> List[SimSearchImageHit]:
         query_emb = self._encode_query(
-            **self.__parse_query_param(query.query),
+            **self.__parse_query_param(query),
         )
         results = self.__search_index(
-            proj_id=query.proj_id,
+            proj_id=proj_id,
             index_type=IndexType.IMAGE,
             query_emb=query_emb,
-            top_k=query.top_k,
-            threshold=query.threshold,
+            top_k=top_k,
+            threshold=threshold,
             sdoc_ids_to_search=sdoc_ids_to_search,
         )
         return [

@@ -1,4 +1,3 @@
-import uuid
 from datetime import datetime
 from typing import Dict, List, Optional
 
@@ -7,12 +6,10 @@ from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.concept_over_time_analysis import (
     COTASentence,
 )
-from app.core.data.dto.search import SearchColumns, SimSearchQuery
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.source_document_data import SourceDocumentDataORM
 from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.db.sql_service import SQLService
-from app.core.filters.filtering import Filter, LogicalOperator
 from app.core.search.simsearch_service import SimSearchService
 
 sqls: SQLService = SQLService()
@@ -35,15 +32,10 @@ def init_search_space(cargo: Cargo) -> Cargo:
         # find similar sentences for each concept to define search space
         sents = sims.find_similar_sentences(
             sdoc_ids_to_search=None,
-            query=SimSearchQuery(
-                proj_id=cota.project_id,
-                query=concept.description,
-                top_k=cota.training_settings.search_space_topk,
-                threshold=cota.training_settings.search_space_threshold,
-                filter=Filter[SearchColumns](
-                    id=str(uuid.uuid4()), items=[], logic_operator=LogicalOperator.and_
-                ),
-            ),
+            proj_id=cota.project_id,
+            query=concept.description,
+            top_k=cota.training_settings.search_space_topk,
+            threshold=cota.training_settings.search_space_threshold,
         )
 
         for sent in sents:

@@ -1,29 +1,32 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from fastapi import APIRouter, Depends
 
+import app.core.search.sdoc_search.sdoc_search as sdoc_search
 from api.dependencies import get_current_user
+from app.core.analysis.statistics import (
+    compute_code_statistics,
+    compute_keyword_statistics,
+    compute_tag_statistics,
+)
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.dto.search import (
     PaginatedElasticSearchDocumentHits,
-    SearchColumns,
     SimSearchImageHit,
-    SimSearchQuery,
     SimSearchSentenceHit,
 )
 from app.core.data.dto.search_stats import KeywordStat, SpanEntityStat, TagStat
-from app.core.filters.columns import ColumnInfo
+from app.core.filters.column_info import ColumnInfo
 from app.core.filters.filtering import Filter
 from app.core.filters.sorting import Sort
 from app.core.search.elasticsearch_service import ElasticSearchService
-from app.core.search.search_service import SearchService
+from app.core.search.sdoc_search.sdoc_search_columns import SearchColumns
 
 router = APIRouter(
     prefix="/search", dependencies=[Depends(get_current_user)], tags=["search"]
 )
 
-ss = SearchService()
 es = ElasticSearchService()
 
 
@@ -37,7 +40,7 @@ def search_sdocs_info(
 ) -> List[ColumnInfo[SearchColumns]]:
     authz_user.assert_in_project(project_id)
 
-    return SearchService().search_info(project_id=project_id)
+    return sdoc_search.search_info(project_id=project_id)
 
 
 @router.post(
@@ -58,7 +61,7 @@ def search_sdocs(
     authz_user: AuthzUser = Depends(),
 ) -> PaginatedElasticSearchDocumentHits:
     authz_user.assert_in_project(project_id)
-    return SearchService().search(
+    return sdoc_search.search(
         search_query=search_query,
         expert_mode=expert_mode,
         highlight=highlight,
@@ -90,7 +93,7 @@ def search_code_stats(
 ) -> List[SpanEntityStat]:
     # search for relevant sdoc_ids
     authz_user.assert_in_project(project_id)
-    search_result = SearchService().search(
+    search_result = sdoc_search.search(
         project_id=project_id,
         search_query=search_query,
         expert_mode=expert_mode,
@@ -104,9 +107,7 @@ def search_code_stats(
 
     # compute code stats
     authz_user.assert_in_same_project_as(Crud.CODE, code_id)
-    code_stats = SearchService().compute_code_statistics(
-        code_id=code_id, sdoc_ids=set(sdoc_ids)
-    )
+    code_stats = compute_code_statistics(code_id=code_id, sdoc_ids=set(sdoc_ids))
     if sort_by_global:
         code_stats.sort(key=lambda x: x.global_count, reverse=True)
     return code_stats
@@ -131,9 +132,7 @@ def filter_code_stats(
 
     # compute code stats
     authz_user.assert_in_same_project_as(Crud.CODE, code_id)
-    code_stats = SearchService().compute_code_statistics(
-        code_id=code_id, sdoc_ids=set(sdoc_ids)
-    )
+    code_stats = compute_code_statistics(code_id=code_id, sdoc_ids=set(sdoc_ids))
     if sort_by_global:
         code_stats.sort(key=lambda x: x.global_count, reverse=True)
     return code_stats
@@ -159,7 +158,7 @@ def search_keyword_stats(
 ) -> List[KeywordStat]:
     # search for relevant sdoc_ids
     authz_user.assert_in_project(project_id)
-    search_result = SearchService().search(
+    search_result = sdoc_search.search(
         project_id=project_id,
         search_query=search_query,
         expert_mode=expert_mode,
@@ -172,7 +171,7 @@ def search_keyword_stats(
         return []
 
     # compute keyword stats
-    keyword_stats = SearchService().compute_keyword_statistics(
+    keyword_stats = compute_keyword_statistics(
         proj_id=project_id, sdoc_ids=set(sdoc_ids), top_k=top_k
     )
     if sort_by_global:
@@ -199,7 +198,7 @@ def filter_keyword_stats(
         return []
 
     # compute keyword stats
-    keyword_stats = SearchService().compute_keyword_statistics(
+    keyword_stats = compute_keyword_statistics(
         proj_id=project_id, sdoc_ids=set(sdoc_ids), top_k=top_k
     )
     if sort_by_global:
@@ -226,7 +225,7 @@ def search_tag_stats(
 ) -> List[TagStat]:
     # search for relevant sdoc_ids
     authz_user.assert_in_project(project_id)
-    search_result = SearchService().search(
+    search_result = sdoc_search.search(
         project_id=project_id,
         search_query=search_query,
         expert_mode=expert_mode,
@@ -239,7 +238,7 @@ def search_tag_stats(
         return []
 
     # compute tag stats
-    tag_stats = SearchService().compute_tag_statistics(sdoc_ids=set(sdoc_ids))
+    tag_stats = compute_tag_statistics(sdoc_ids=set(sdoc_ids))
     if sort_by_global:
         tag_stats.sort(key=lambda x: x.global_count, reverse=True)
     return tag_stats
@@ -262,7 +261,7 @@ def filter_tag_stats(
         return []
 
     # compute tag stats
-    tag_stats = SearchService().compute_tag_statistics(sdoc_ids=set(sdoc_ids))
+    tag_stats = compute_tag_statistics(sdoc_ids=set(sdoc_ids))
     if sort_by_global:
         tag_stats.sort(key=lambda x: x.global_count, reverse=True)
     return tag_stats
@@ -274,11 +273,18 @@ def filter_tag_stats(
     summary="Returns similar sentences according to a textual or visual query.",
 )
 def find_similar_sentences(
-    query: SimSearchQuery, authz_user: AuthzUser = Depends()
+    proj_id: int,
+    query: Union[str, List[str], int],
+    top_k: int,
+    threshold: float,
+    filter: Filter[SearchColumns],
+    authz_user: AuthzUser = Depends(),
 ) -> List[SimSearchSentenceHit]:
-    authz_user.assert_in_project(query.proj_id)
+    authz_user.assert_in_project(proj_id)
 
-    return ss.find_similar_sentences(query=query)
+    return sdoc_search.find_similar_sentences(
+        proj_id=proj_id, query=query, top_k=top_k, threshold=threshold, filter=filter
+    )
 
 
 @router.post(
@@ -287,8 +293,15 @@ def find_similar_sentences(
     summary="Returns similar images according to a textual or visual query.",
 )
 def find_similar_images(
-    query: SimSearchQuery, authz_user: AuthzUser = Depends()
+    proj_id: int,
+    query: Union[str, List[str], int],
+    top_k: int,
+    threshold: float,
+    filter: Filter[SearchColumns],
+    authz_user: AuthzUser = Depends(),
 ) -> List[SimSearchImageHit]:
-    authz_user.assert_in_project(query.proj_id)
+    authz_user.assert_in_project(proj_id)
 
-    return ss.find_similar_images(query=query)
+    return sdoc_search.find_similar_images(
+        proj_id=proj_id, query=query, top_k=top_k, threshold=threshold, filter=filter
+    )

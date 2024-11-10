@@ -6,6 +6,7 @@ from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.doc_type import DocType
 from app.core.data.dto.analysis import WordFrequencyResult, WordFrequencyStat
+from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.export.export_service import ExportService
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CodeORM
@@ -16,7 +17,8 @@ from app.core.data.orm.span_text import SpanTextORM
 from app.core.data.orm.user import UserORM
 from app.core.data.orm.word_frequency import WordFrequencyORM
 from app.core.db.sql_service import SQLService
-from app.core.filters.columns import (
+from app.core.db.sql_utils import aggregate_ids
+from app.core.filters.column_info import (
     AbstractColumns,
     ColumnInfo,
 )
@@ -24,7 +26,6 @@ from app.core.filters.filtering import Filter, apply_filtering
 from app.core.filters.filtering_operators import FilterOperator, FilterValueType
 from app.core.filters.pagination import apply_pagination
 from app.core.filters.sorting import Sort, apply_sorting
-from app.core.search.search_service import aggregate_ids
 
 
 class WordFrequencyColumns(str, AbstractColumns):
@@ -161,9 +162,16 @@ def word_frequency_info(
     project_id: int,
 ) -> List[ColumnInfo[WordFrequencyColumns]]:
     with SQLService().db_session() as db:
-        metadata_column_info = crud_project_meta.create_metadata_column_info(
-            db=db, project_id=project_id, allowed_doctypes=[DocType.text]
-        )
+        project_metadata = [
+            ProjectMetadataRead.model_validate(pm)
+            for pm in crud_project_meta.read_by_project(db=db, proj_id=project_id)
+        ]
+        metadata_column_info = [
+            ColumnInfo.from_project_metadata(pm)
+            for pm in project_metadata
+            if pm.doctype in [DocType.text]
+        ]
+
     return [
         ColumnInfo[WordFrequencyColumns].from_column(column)
         for column in WordFrequencyColumns
@@ -218,9 +226,7 @@ def word_frequency(
         query = db.query(global_word_count_agg).join(
             subquery, WordFrequencyORM.sdoc_id == subquery.c.id
         )
-        query = apply_filtering(
-            query=query, filter=filter, db=db, subquery_dict=subquery.c
-        )
+        query = apply_filtering(query=query, filter=filter, subquery_dict=subquery.c)
         global_word_count = query.scalar()
 
         # count all sdocs query (uses filtering)
@@ -228,9 +234,7 @@ def word_frequency(
         query = db.query(global_sdoc_count_agg).join(
             subquery, WordFrequencyORM.sdoc_id == subquery.c.id
         )
-        query = apply_filtering(
-            query=query, filter=filter, db=db, subquery_dict=subquery.c
-        )
+        query = apply_filtering(query=query, filter=filter, subquery_dict=subquery.c)
         global_sdoc_count = query.scalar()
 
         # early return if no results
@@ -261,9 +265,7 @@ def word_frequency(
             ),
         ).join(subquery, WordFrequencyORM.sdoc_id == subquery.c.id)
 
-        query = apply_filtering(
-            query=query, filter=filter, db=db, subquery_dict=subquery.c
-        )
+        query = apply_filtering(query=query, filter=filter, subquery_dict=subquery.c)
 
         query = query.group_by(WordFrequencyORM.word)
 
@@ -271,7 +273,7 @@ def word_frequency(
         if len(sorts) == 0:
             query = query.order_by(word_count_acc.desc())
         else:
-            query = apply_sorting(query=query, sorts=sorts, db=db)
+            query = apply_sorting(query=query, sorts=sorts, subquery_dict={})
 
         if page is not None and page_size is not None:
             query, pagination = apply_pagination(

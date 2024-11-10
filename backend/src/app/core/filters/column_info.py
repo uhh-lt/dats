@@ -1,33 +1,10 @@
-from enum import Enum, EnumMeta
 from typing import Generic, TypeVar, Union
 
 from pydantic import BaseModel
 
+from app.core.data.dto.project_metadata import ProjectMetadataRead
+from app.core.filters.abstract_column import AbstractColumns
 from app.core.filters.filtering_operators import FilterOperator, FilterValueType
-
-
-class AbstractColumns(Enum, metaclass=EnumMeta):
-    def get_filter_column(self, **kwargs):
-        raise NotImplementedError
-
-    def get_sort_column(self, **kwargs):
-        raise NotImplementedError
-
-    def get_filter_operator(self) -> FilterOperator:
-        raise NotImplementedError
-
-    def get_label(self) -> str:
-        raise NotImplementedError
-
-    def get_filter_value_type(self) -> FilterValueType:
-        raise NotImplementedError
-
-    def get_select(self):
-        raise NotImplementedError
-
-    def get_joins(self):
-        raise NotImplementedError
-
 
 T = TypeVar("T", bound=AbstractColumns)
 
@@ -47,4 +24,16 @@ class ColumnInfo(BaseModel, Generic[T]):
             sortable=column.get_sort_column() is not None,
             operator=column.get_filter_operator(),
             value=column.get_filter_value_type(),
+        )
+
+    @classmethod
+    def from_project_metadata(
+        cls, project_metadata: ProjectMetadataRead
+    ) -> "ColumnInfo":
+        return ColumnInfo(
+            label=f"{project_metadata.doctype.value}-{project_metadata.key}",
+            column=project_metadata.id,
+            sortable=True,
+            operator=project_metadata.metatype.get_filter_operator(),
+            value=FilterValueType.INFER_FROM_OPERATOR,
         )

@@ -1,13 +1,13 @@
 from enum import Enum
-from typing import Generic, List, TypeVar, Union
+from typing import Generic, List, Set, TypeVar, Union
 
 from pydantic import BaseModel
 from sqlalchemy import asc, desc
-from sqlalchemy.orm import QueryableAttribute, Session
+from sqlalchemy.orm import QueryableAttribute
 
-from app.core.data.crud.project_metadata import crud_project_meta
-from app.core.data.dto.project_metadata import ProjectMetadataRead
-from app.core.filters.columns import AbstractColumns
+from app.core.filters.abstract_column import AbstractColumns
+
+T = TypeVar("T", bound=AbstractColumns)
 
 
 class SortDirection(str, Enum):
@@ -22,28 +22,30 @@ class SortDirection(str, Enum):
                 return desc(column).nulls_last()
 
 
-T = TypeVar("T", bound=AbstractColumns)
-
-
 class Sort(BaseModel, Generic[T]):
     """A sort expressions for sorting on many database columns"""
 
     column: Union[T, int]
     direction: SortDirection
 
-    def get_sqlalchemy_expression(self, db: Session):
+    def get_sqlalchemy_expression(self, subquery_dict):
         if isinstance(self.column, int):
-            # This is a metadata column, the column is the ProjectMetadataORM id
-            project_metadata = ProjectMetadataRead.model_validate(
-                crud_project_meta.read(db=db, id=self.column)
-            )
-            return self.direction.apply(project_metadata.metatype.get_metadata_column())
+            return self.direction.apply(subquery_dict[f"METADATA-{self.column}"])
 
         # This is a regular column
         return self.direction.apply(self.column.get_sort_column())
 
 
-def apply_sorting(query, sorts: List[Sort], db: Session):
+def apply_sorting(query, sorts: List[Sort], subquery_dict):
     if len(sorts) == 0:
         return query
-    return query.order_by(*[s.get_sqlalchemy_expression(db=db) for s in sorts])
+    return query.order_by(
+        *[s.get_sqlalchemy_expression(subquery_dict=subquery_dict) for s in sorts]
+    )
+
+
+def get_columns_affected_by_sorts(sorts: List[Sort[T]]) -> Set[Union[T, int]]:
+    columns: Set[Union[T, int]] = set()
+    for sort in sorts:
+        columns.add(sort.column)
+    return columns

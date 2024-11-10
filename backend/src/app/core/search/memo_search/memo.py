@@ -7,7 +7,7 @@ from app.core.data.dto.search import (
 from app.core.data.orm.memo import MemoORM
 from app.core.data.orm.object_handle import ObjectHandleORM
 from app.core.db.sql_service import SQLService
-from app.core.filters.columns import (
+from app.core.filters.column_info import (
     AbstractColumns,
     ColumnInfo,
 )
@@ -114,10 +114,10 @@ def __memo_filter(
             )
         )
 
-        query = apply_filtering(query=query, filter=filter, db=db)
+        query = apply_filtering(query=query, filter=filter, subquery_dict={})
 
         if sorts is not None and len(sorts) > 0:
-            query = apply_sorting(query=query, sorts=sorts, db=db)
+            query = apply_sorting(query=query, sorts=sorts, subquery_dict={})
         else:
             query = query.order_by(MemoORM.id.desc())
 

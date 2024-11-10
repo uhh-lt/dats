@@ -1,9 +1,7 @@
 from typing import List, Tuple
 
 import pandas as pd
-from sqlalchemy import Integer, and_, case, func
-from sqlalchemy.dialects.postgresql import ARRAY, array_agg
-from sqlalchemy.orm import InstrumentedAttribute
+from sqlalchemy import and_, case, func
 
 from app.core.data.crud.project import crud_project
 from app.core.data.doc_type import DocType
@@ -26,15 +24,8 @@ from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.db.sql_service import SQLService
+from app.core.db.sql_utils import aggregate_ids
 from app.util.singleton_meta import SingletonMeta
-
-
-def aggregate_ids(column: InstrumentedAttribute, label: str):
-    return func.array_remove(
-        array_agg(func.distinct(column), type_=ARRAY(Integer)),
-        None,
-        type_=ARRAY(Integer),
-    ).label(label)
 
 
 class AnalysisService(metaclass=SingletonMeta):
