@@ -2,6 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { Body_search_find_similar_images } from "../models/Body_search_find_similar_images";
+import type { Body_search_find_similar_sentences } from "../models/Body_search_find_similar_sentences";
 import type { Body_search_search_code_stats } from "../models/Body_search_search_code_stats";
 import type { Body_search_search_keyword_stats } from "../models/Body_search_search_keyword_stats";
 import type { Body_search_search_sdocs } from "../models/Body_search_search_sdocs";
@@ -10,7 +12,6 @@ import type { ColumnInfo_SearchColumns_ } from "../models/ColumnInfo_SearchColum
 import type { KeywordStat } from "../models/KeywordStat";
 import type { PaginatedElasticSearchDocumentHits } from "../models/PaginatedElasticSearchDocumentHits";
 import type { SimSearchImageHit } from "../models/SimSearchImageHit";
-import type { SimSearchQuery } from "../models/SimSearchQuery";
 import type { SimSearchSentenceHit } from "../models/SimSearchSentenceHit";
 import type { SpanEntityStat } from "../models/SpanEntityStat";
 import type { TagStat } from "../models/TagStat";
@@ -277,13 +278,24 @@ export class SearchService {
    * @throws ApiError
    */
   public static findSimilarSentences({
+    projId,
+    topK,
+    threshold,
     requestBody,
   }: {
-    requestBody: SimSearchQuery;
+    projId: number;
+    topK: number;
+    threshold: number;
+    requestBody: Body_search_find_similar_sentences;
   }): CancelablePromise<Array<SimSearchSentenceHit>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/simsearch/sentences",
+      query: {
+        proj_id: projId,
+        top_k: topK,
+        threshold: threshold,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -297,13 +309,24 @@ export class SearchService {
    * @throws ApiError
    */
   public static findSimilarImages({
+    projId,
+    topK,
+    threshold,
     requestBody,
   }: {
-    requestBody: SimSearchQuery;
+    projId: number;
+    topK: number;
+    threshold: number;
+    requestBody: Body_search_find_similar_images;
   }): CancelablePromise<Array<SimSearchImageHit>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/simsearch/images",
+      query: {
+        proj_id: projId,
+        top_k: topK,
+        threshold: threshold,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {

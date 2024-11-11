@@ -74,12 +74,12 @@ function ImageSimilaritySearch() {
     ],
     queryFn: () =>
       SearchService.findSimilarImages({
+        projId: projectId,
+        threshold: threshold,
+        topK: topK,
         requestBody: {
           query: searchQuery,
-          top_k: topK,
-          proj_id: projectId,
           filter: filter as MyFilter<SearchColumns>,
-          threshold: threshold,
         },
       }),
   });

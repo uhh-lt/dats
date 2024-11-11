@@ -71,12 +71,12 @@ function SentenceSimilaritySearch() {
     ],
     queryFn: () =>
       SearchService.findSimilarSentences({
+        projId: projectId,
+        threshold: threshold,
+        topK: topK,
         requestBody: {
           filter: filter as MyFilter<SearchColumns>,
-          proj_id: projectId,
           query: searchQuery || "",
-          threshold: threshold,
-          top_k: topK,
         },
       }),
   });

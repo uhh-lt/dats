@@ -3470,9 +3470,17 @@
         "tags": ["search"],
         "summary": "Returns similar sentences according to a textual or visual query.",
         "operationId": "find_similar_sentences",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          { "name": "top_k", "in": "query", "required": true, "schema": { "type": "integer", "title": "Top K" } },
+          { "name": "threshold", "in": "query", "required": true, "schema": { "type": "number", "title": "Threshold" } }
+        ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SimSearchQuery" } } },
-          "required": true
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_search-find_similar_sentences" } }
+          }
         },
         "responses": {
           "200": {
@@ -3480,8 +3488,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": { "$ref": "#/components/schemas/SimSearchSentenceHit" },
                   "type": "array",
+                  "items": { "$ref": "#/components/schemas/SimSearchSentenceHit" },
                   "title": "Response Search-Find Similar Sentences"
                 }
               }
@@ -3491,8 +3499,7 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
     "/search/simsearch/images": {
@@ -3500,9 +3507,17 @@
         "tags": ["search"],
         "summary": "Returns similar images according to a textual or visual query.",
         "operationId": "find_similar_images",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          { "name": "top_k", "in": "query", "required": true, "schema": { "type": "integer", "title": "Top K" } },
+          { "name": "threshold", "in": "query", "required": true, "schema": { "type": "number", "title": "Threshold" } }
+        ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SimSearchQuery" } } },
-          "required": true
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_search-find_similar_images" } }
+          }
         },
         "responses": {
           "200": {
@@ -3510,8 +3525,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": { "$ref": "#/components/schemas/SimSearchImageHit" },
                   "type": "array",
+                  "items": { "$ref": "#/components/schemas/SimSearchImageHit" },
                   "title": "Response Search-Find Similar Images"
                 }
               }
@@ -3521,8 +3536,7 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
     "/sdocmeta": {
@@ -6333,6 +6347,30 @@
         "required": ["uploaded_files"],
         "title": "Body_project-upload_project_sdoc"
       },
+      "Body_search-find_similar_images": {
+        "properties": {
+          "query": {
+            "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }, { "type": "integer" }],
+            "title": "Query"
+          },
+          "filter": { "$ref": "#/components/schemas/Filter_SearchColumns_" }
+        },
+        "type": "object",
+        "required": ["query", "filter"],
+        "title": "Body_search-find_similar_images"
+      },
+      "Body_search-find_similar_sentences": {
+        "properties": {
+          "query": {
+            "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }, { "type": "integer" }],
+            "title": "Query"
+          },
+          "filter": { "$ref": "#/components/schemas/Filter_SearchColumns_" }
+        },
+        "type": "object",
+        "required": ["query", "filter"],
+        "title": "Body_search-find_similar_sentences"
+      },
       "Body_search-search_code_stats": {
         "properties": {
           "filter": { "$ref": "#/components/schemas/Filter_SearchColumns_" },
@@ -8245,41 +8283,6 @@
         "type": "object",
         "required": ["sdoc_id", "score"],
         "title": "SimSearchImageHit"
-      },
-      "SimSearchQuery": {
-        "properties": {
-          "proj_id": {
-            "type": "integer",
-            "title": "Proj Id",
-            "description": "The ID of the Project the SourceDocuments have to belong to."
-          },
-          "query": {
-            "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }, { "type": "integer" }],
-            "title": "Query",
-            "description": "The query term. This can be either a single string, a list of strings for which the average embedding gets computed, or an integer which is interpreted as the SDoc ID of an Image."
-          },
-          "top_k": {
-            "type": "integer",
-            "title": "Top K",
-            "description": "The number of results to return.",
-            "default": 100
-          },
-          "threshold": {
-            "type": "number",
-            "maximum": 1,
-            "minimum": 0,
-            "title": "Threshold",
-            "description": "The minimum distance to use for the sim search.",
-            "default": 0
-          },
-          "filter": {
-            "allOf": [{ "$ref": "#/components/schemas/Filter_SearchColumns_" }],
-            "description": "Only return documents matching this filter"
-          }
-        },
-        "type": "object",
-        "required": ["proj_id", "query", "filter"],
-        "title": "SimSearchQuery"
       },
       "SimSearchSentenceHit": {
         "properties": {
