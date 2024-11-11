@@ -25,12 +25,6 @@ class AbstractColumns(Enum, metaclass=EnumMeta):
     def get_filter_value_type(self) -> FilterValueType:
         raise NotImplementedError
 
-    def get_select(self):
-        raise NotImplementedError
-
-    def get_joins(self):
-        raise NotImplementedError
-
     def add_subquery_filter_statements(self, query_builder: "SearchBuilder"):
         raise NotImplementedError
 

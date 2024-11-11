@@ -3,6 +3,7 @@ from typing import List
 
 import pandas as pd
 from sqlalchemy import func
+from sqlalchemy.orm import aliased
 
 from app.core.analysis.timeline_analysis.timeline_analysis_columns import (
     TimelineAnalysisColumns,
@@ -18,12 +19,8 @@ from app.core.db.sql_utils import aggregate_ids
 from app.core.filters.column_info import (
     ColumnInfo,
 )
-from app.core.filters.filtering import (
-    Filter,
-    apply_filtering,
-    apply_joins,
-    get_additional_selects,
-)
+from app.core.filters.filtering import Filter
+from app.core.filters.search_builder import SearchBuilder
 
 
 def timeline_analysis_info(
@@ -58,35 +55,42 @@ def timeline_analysis(
     # project_metadata_id has to refer to a DATE metadata
 
     with SQLService().db_session() as db:
-        # Build the subquery
-        subquery = db.query(
-            SourceDocumentORM.id,
-            SourceDocumentMetadataORM.date_value.label("date"),
-            *get_additional_selects(filter),
-        )
-        subquery = apply_joins(subquery, filter, join_metadata=False)
-        subquery = (
-            subquery.join(SourceDocumentORM.metadata_)
-            .filter(
-                SourceDocumentORM.project_id == project_id,
-                SourceDocumentMetadataORM.project_metadata_id == project_metadata_id,
-                SourceDocumentMetadataORM.date_value.isnot(None),
+        builder = SearchBuilder(db, filter, sorts=[])
+
+        date_metadata = aliased(SourceDocumentMetadataORM)
+        subquery = builder.build_subquery(
+            subquery=(
+                db.query(
+                    SourceDocumentORM.id,
+                    date_metadata.date_value.label("date"),
+                )
+                .join(
+                    date_metadata,
+                    (SourceDocumentORM.id == date_metadata.source_document_id)
+                    & (date_metadata.project_metadata_id == project_metadata_id)
+                    & (date_metadata.date_value.isnot(None)),
+                )
+                .group_by(SourceDocumentORM.id, date_metadata.date_value)
+                .filter(
+                    SourceDocumentORM.project_id == project_id,
+                )
             )
-            .group_by(SourceDocumentORM.id, SourceDocumentMetadataORM.date_value)
-            .subquery()
         )
 
-        # Build the query
         sdoc_ids_agg = aggregate_ids(SourceDocumentORM.id, label="sdoc_ids")
-        query = db.query(
-            sdoc_ids_agg,
-            *group_by.apply(subquery.c["date"]),  # type: ignore
-        ).join(subquery, SourceDocumentORM.id == subquery.c.id)
-        query = apply_filtering(query=query, filter=filter, subquery_dict=subquery.c)
-        query = query.group_by(*group_by.apply(column=subquery.c["date"]))  # type: ignore
+        builder.build_query(
+            query=db.query(
+                sdoc_ids_agg,
+                *group_by.apply(subquery.c["date"]),  # type: ignore
+            )
+            .join(subquery, SourceDocumentORM.id == subquery.c.id)
+            .group_by(*group_by.apply(column=subquery.c["date"]))  # type: ignore
+        )
 
-        # Execute the query
-        result_rows = query.all()
+        result_rows, total_results = builder.execute_query(
+            page_number=None,
+            page_size=None,
+        )
 
         def preprend_zero(x: int):
             return "0" + str(x) if x < 10 else str(x)
