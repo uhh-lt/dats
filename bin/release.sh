@@ -13,12 +13,10 @@ if [ "$(git diff-index --cached HEAD --)" ]; then
 fi
 
 # Update .env.example file with the new version
-# Update .env.ray-only.example file with the new version
 cd docker
 sed -i "s/DATS_BACKEND_DOCKER_VERSION=.*/DATS_BACKEND_DOCKER_VERSION=$1/" .env.example
 sed -i "s/DATS_RAY_DOCKER_VERSION=.*/DATS_RAY_DOCKER_VERSION=$1/" .env.example
 sed -i "s/DATS_FRONTEND_DOCKER_VERSION=.*/DATS_FRONTEND_DOCKER_VERSION=$1/" .env.example
-sed -i "s/DATS_RAY_DOCKER_VERSION=.*/DATS_RAY_DOCKER_VERSION=$1/" .env.ray-only.example
 
 # update backend version
 cd ../backend
@@ -31,7 +29,7 @@ cd ../frontend
 npm run update-api && npm run generate-api && npm run update-version
 
 cd ..
-git add backend/src/configs/version.yaml docker/.env.example docker/.env.ray-only.example frontend/package.json frontend/package-lock.json frontend/src/openapi.json frontend/src/api/openapi/core/OpenAPI.ts
+git add backend/src/configs/version.yaml docker/.env.example frontend/package.json frontend/package-lock.json frontend/src/openapi.json frontend/src/api/openapi/core/OpenAPI.ts
 git commit -m "Release v$1"
 git tag v"$1"
 git push
