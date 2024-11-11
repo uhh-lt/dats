@@ -1,9 +1,10 @@
 from enum import Enum
+from typing import List, Union
 
 from sqlalchemy import not_
 from sqlalchemy.orm import QueryableAttribute
 
-from app.core.filters.types import FilterValue
+FilterValue = Union[bool, str, int, List[str], List[List[str]]]
 
 
 class FilterValueType(Enum):

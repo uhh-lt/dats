@@ -8,13 +8,13 @@ from app.core.filters.abstract_column import AbstractColumns
 from app.core.filters.filtering_operators import (
     BooleanOperator,
     DateOperator,
+    FilterValue,
     IDListOperator,
     IDOperator,
     ListOperator,
     NumberOperator,
     StringOperator,
 )
-from app.core.filters.types import FilterValue
 
 T = TypeVar("T", bound=AbstractColumns)
 
