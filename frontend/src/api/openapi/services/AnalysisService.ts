@@ -12,8 +12,8 @@ import type { Body_analysis_word_frequency_analysis } from "../models/Body_analy
 import type { Body_analysis_word_frequency_analysis_export } from "../models/Body_analysis_word_frequency_analysis_export";
 import type { CodeFrequency } from "../models/CodeFrequency";
 import type { CodeOccurrence } from "../models/CodeOccurrence";
-import type { ColumnInfo_AnnotatedImagesColumns_ } from "../models/ColumnInfo_AnnotatedImagesColumns_";
-import type { ColumnInfo_AnnotatedSegmentsColumns_ } from "../models/ColumnInfo_AnnotatedSegmentsColumns_";
+import type { ColumnInfo_BBoxColumns_ } from "../models/ColumnInfo_BBoxColumns_";
+import type { ColumnInfo_SpanColumns_ } from "../models/ColumnInfo_SpanColumns_";
 import type { ColumnInfo_WordFrequencyColumns_ } from "../models/ColumnInfo_WordFrequencyColumns_";
 import type { SampledSdocsResults } from "../models/SampledSdocsResults";
 import type { WordFrequencyResult } from "../models/WordFrequencyResult";
@@ -104,14 +104,14 @@ export class AnalysisService {
   }
   /**
    * Returns AnnotationSegments Info.
-   * @returns ColumnInfo_AnnotatedSegmentsColumns_ Successful Response
+   * @returns ColumnInfo_SpanColumns_ Successful Response
    * @throws ApiError
    */
   public static annotatedSegmentsInfo({
     projectId,
   }: {
     projectId: number;
-  }): CancelablePromise<Array<ColumnInfo_AnnotatedSegmentsColumns_>> {
+  }): CancelablePromise<Array<ColumnInfo_SpanColumns_>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/analysis/annotated_segments_info",
@@ -159,14 +159,14 @@ export class AnalysisService {
   }
   /**
    * Returns AnnotationSegments Info.
-   * @returns ColumnInfo_AnnotatedImagesColumns_ Successful Response
+   * @returns ColumnInfo_BBoxColumns_ Successful Response
    * @throws ApiError
    */
   public static annotatedImagesInfo({
     projectId,
   }: {
     projectId: number;
-  }): CancelablePromise<Array<ColumnInfo_AnnotatedImagesColumns_>> {
+  }): CancelablePromise<Array<ColumnInfo_BBoxColumns_>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/analysis/annotated_images_info",

@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
-import { AnnotatedImagesColumns } from "../../../api/openapi/models/AnnotatedImagesColumns.ts";
+import { BBoxColumns } from "../../../api/openapi/models/BBoxColumns.ts";
 import { StringOperator } from "../../../api/openapi/models/StringOperator.ts";
 import { createInitialFilterState, filterReducer, resetProjectFilterState } from "../../FilterDialog/filterSlice.ts";
 import { MyFilterExpression } from "../../FilterDialog/filterUtils.ts";
@@ -8,7 +8,7 @@ import { ProjectActions } from "../../Project/projectSlice.ts";
 
 const defaultFilterExpression: MyFilterExpression = {
   id: uuidv4(),
-  column: AnnotatedImagesColumns.AIC_SOURCE_SOURCE_DOCUMENT_FILENAME,
+  column: BBoxColumns.BB_SOURCE_SOURCE_DOCUMENT_FILENAME,
   operator: StringOperator.STRING_CONTAINS,
   value: "",
 };

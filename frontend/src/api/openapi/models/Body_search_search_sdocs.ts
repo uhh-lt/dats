@@ -2,9 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Filter_SearchColumns_ } from "./Filter_SearchColumns_";
-import type { Sort_SearchColumns_ } from "./Sort_SearchColumns_";
+import type { Filter_SdocColumns_ } from "./Filter_SdocColumns_";
+import type { Sort_SdocColumns_ } from "./Sort_SdocColumns_";
 export type Body_search_search_sdocs = {
-  filter: Filter_SearchColumns_;
-  sorts: Array<Sort_SearchColumns_>;
+  filter: Filter_SdocColumns_;
+  sorts: Array<Sort_SdocColumns_>;
 };

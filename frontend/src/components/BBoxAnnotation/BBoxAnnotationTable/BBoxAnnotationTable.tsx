@@ -12,9 +12,9 @@ import {
 } from "material-react-table";
 import { useEffect, useMemo, useRef, useState, type UIEvent } from "react";
 import { AnnotatedImageResult } from "../../../api/openapi/models/AnnotatedImageResult.ts";
-import { AnnotatedImagesColumns } from "../../../api/openapi/models/AnnotatedImagesColumns.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { BBoxAnnotationTableRow } from "../../../api/openapi/models/BBoxAnnotationTableRow.ts";
+import { BBoxColumns } from "../../../api/openapi/models/BBoxColumns.ts";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
@@ -95,22 +95,22 @@ function BBoxAnnotationTable({
       };
 
       switch (column.column) {
-        case AnnotatedImagesColumns.AIC_SOURCE_SOURCE_DOCUMENT_FILENAME:
+        case BBoxColumns.BB_SOURCE_SOURCE_DOCUMENT_FILENAME:
           return {
             ...colDef,
             accessorFn: (row) => row.sdoc.filename,
           } as MRT_ColumnDef<BBoxAnnotationTableRow>;
-        case AnnotatedImagesColumns.AIC_DOCUMENT_DOCUMENT_TAG_ID_LIST:
+        case BBoxColumns.BB_DOCUMENT_DOCUMENT_TAG_ID_LIST:
           return {
             ...colDef,
             Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.sdoc.id} tags={row.original.tags} />,
           } as MRT_ColumnDef<BBoxAnnotationTableRow>;
-        case AnnotatedImagesColumns.AIC_CODE_ID:
+        case BBoxColumns.BB_CODE_ID:
           return {
             ...colDef,
             Cell: ({ row }) => <CodeRenderer code={row.original.code} />,
           } as MRT_ColumnDef<BBoxAnnotationTableRow>;
-        case AnnotatedImagesColumns.AIC_MEMO_CONTENT:
+        case BBoxColumns.BB_MEMO_CONTENT:
           return {
             ...colDef,
             Cell: ({ row }) =>
@@ -180,9 +180,9 @@ function BBoxAnnotationTable({
         projectId: projectId!,
         userId: selectedUserId,
         requestBody: {
-          filter: filter as MyFilter<AnnotatedImagesColumns>,
+          filter: filter as MyFilter<BBoxColumns>,
           sorts: sortingModel.map((sort) => ({
-            column: sort.id as AnnotatedImagesColumns,
+            column: sort.id as BBoxColumns,
             direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
           })),
         },

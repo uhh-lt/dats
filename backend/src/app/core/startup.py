@@ -123,7 +123,7 @@ def __init_services__(
     from app.core.data.crud import Crud  # noqa: F401
 
     # import and init ElasticSearch
-    from app.core.search.elasticsearch_service import ElasticSearchService
+    from app.core.db.elasticsearch_service import ElasticSearchService
 
     ElasticSearchService(remove_all_indices=reset_elasticsearch)
     # import and init RedisService
@@ -145,7 +145,7 @@ def __init_services__(
     RayModelService()
 
     # import and init SimSearchService
-    from app.core.search.simsearch_service import SimSearchService
+    from app.core.db.simsearch_service import SimSearchService
 
     SimSearchService(flush=reset_weaviate)
 

@@ -27,10 +27,10 @@ from app.core.data.dto.concept_over_time_analysis import (
 from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.meta_type import MetaType
 from app.core.data.repo.repo_service import RepoService
+from app.core.db.elasticsearch_service import ElasticSearchService
 from app.core.db.redis_service import RedisService
+from app.core.db.simsearch_service import SimSearchService
 from app.core.db.sql_service import SQLService
-from app.core.search.elasticsearch_service import ElasticSearchService
-from app.core.search.simsearch_service import SimSearchService
 from app.trainer.trainer_service import TrainerService
 from app.util.singleton_meta import SingletonMeta
 

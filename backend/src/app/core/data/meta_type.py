@@ -5,7 +5,7 @@ from typing import List
 from sqlalchemy.orm import QueryableAttribute
 
 from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
-from app.core.filters.filtering_operators import FilterOperator
+from app.core.search.filtering_operators import FilterOperator
 
 
 class MetaType(str, Enum):

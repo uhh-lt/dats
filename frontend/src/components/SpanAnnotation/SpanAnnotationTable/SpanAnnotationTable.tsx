@@ -12,10 +12,10 @@ import {
 } from "material-react-table";
 import { useEffect, useMemo, useRef } from "react";
 import { AnnotatedSegmentResult } from "../../../api/openapi/models/AnnotatedSegmentResult.ts";
-import { AnnotatedSegmentsColumns } from "../../../api/openapi/models/AnnotatedSegmentsColumns.ts";
 import { AnnotationTableRow } from "../../../api/openapi/models/AnnotationTableRow.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
+import { SpanColumns } from "../../../api/openapi/models/SpanColumns.ts";
 import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
@@ -93,31 +93,31 @@ function SpanAnnotationTable({
       };
 
       switch (column.column) {
-        case AnnotatedSegmentsColumns.ASC_SOURCE_SOURCE_DOCUMENT_FILENAME:
+        case SpanColumns.SP_SOURCE_SOURCE_DOCUMENT_FILENAME:
           return {
             ...colDef,
             accessorFn: (row) => row.sdoc.filename,
             Cell: ({ row }) => <SdocAnnotationLink sdoc={row.original.sdoc} annotation={row.original} />,
           } as MRT_ColumnDef<AnnotationTableRow>;
-        case AnnotatedSegmentsColumns.ASC_DOCUMENT_DOCUMENT_TAG_ID_LIST:
+        case SpanColumns.SP_DOCUMENT_DOCUMENT_TAG_ID_LIST:
           return {
             ...colDef,
             accessorFn: (row) => row.tags,
             Cell: ({ row }) => <SdocTagsRenderer tags={row.original.tags} />,
           } as MRT_ColumnDef<AnnotationTableRow>;
-        case AnnotatedSegmentsColumns.ASC_CODE_ID:
+        case SpanColumns.SP_CODE_ID:
           return {
             ...colDef,
             accessorFn: (row) => row.code,
             Cell: ({ row }) => <CodeRenderer code={row.original.code} />,
           } as MRT_ColumnDef<AnnotationTableRow>;
-        case AnnotatedSegmentsColumns.ASC_USER_ID:
+        case SpanColumns.SP_USER_ID:
           return {
             ...colDef,
             accessorFn: (row) => row.user_id,
             Cell: ({ row }) => <UserRenderer user={row.original.user_id} />,
           } as MRT_ColumnDef<AnnotationTableRow>;
-        case AnnotatedSegmentsColumns.ASC_MEMO_CONTENT:
+        case SpanColumns.SP_MEMO_CONTENT:
           return {
             ...colDef,
             accessorFn: (row) => row.memo,
@@ -132,7 +132,7 @@ function SpanAnnotationTable({
                 />
               ) : null,
           } as MRT_ColumnDef<AnnotationTableRow>;
-        case AnnotatedSegmentsColumns.ASC_SPAN_TEXT:
+        case SpanColumns.SP_SPAN_TEXT:
           return {
             ...colDef,
             accessorFn: (row) => row.span_text,
@@ -173,9 +173,9 @@ function SpanAnnotationTable({
         projectId: projectId!,
         userId: userId!,
         requestBody: {
-          filter: filter as MyFilter<AnnotatedSegmentsColumns>,
+          filter: filter as MyFilter<SpanColumns>,
           sorts: sortingModel.map((sort) => ({
-            column: sort.id as AnnotatedSegmentsColumns,
+            column: sort.id as SpanColumns,
             direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
           })),
         },

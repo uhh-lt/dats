@@ -15,7 +15,7 @@ import {
 import { useEffect, useMemo, useRef, useState, type UIEvent } from "react";
 import { ElasticSearchDocumentHit } from "../../../api/openapi/models/ElasticSearchDocumentHit.ts";
 import { PaginatedElasticSearchDocumentHits } from "../../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
-import { SearchColumns } from "../../../api/openapi/models/SearchColumns.ts";
+import { SdocColumns } from "../../../api/openapi/models/SdocColumns.ts";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { SearchService } from "../../../api/openapi/services/SearchService.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
@@ -105,32 +105,32 @@ function SdocTableContent({
       };
 
       switch (column.column) {
-        case SearchColumns.SC_SOURCE_DOCUMENT_TYPE:
+        case SdocColumns.SD_SOURCE_DOCUMENT_TYPE:
           return {
             ...colDef,
             Cell: ({ row }) => <SdocRenderer sdoc={row.original.document_id} renderDoctypeIcon />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
-        case SearchColumns.SC_SOURCE_DOCUMENT_FILENAME:
+        case SdocColumns.SD_SOURCE_DOCUMENT_FILENAME:
           return {
             ...colDef,
             flex: 2,
             Cell: ({ row }) => <SdocRenderer sdoc={row.original.document_id} renderFilename />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
-        case SearchColumns.SC_DOCUMENT_TAG_ID_LIST:
+        case SdocColumns.SD_DOCUMENT_TAG_ID_LIST:
           return {
             ...colDef,
             flex: 2,
             Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.document_id} />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
-        case SearchColumns.SC_USER_ID_LIST:
+        case SdocColumns.SD_USER_ID_LIST:
           return {
             ...colDef,
             flex: 2,
             Cell: ({ row }) => <SdocAnnotatorsRenderer sdocId={row.original.document_id} />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
-        case SearchColumns.SC_CODE_ID_LIST:
+        case SdocColumns.SD_CODE_ID_LIST:
           return null;
-        case SearchColumns.SC_SPAN_ANNOTATIONS:
+        case SdocColumns.SD_SPAN_ANNOTATIONS:
           return null;
         default:
           // render metadata
@@ -188,9 +188,9 @@ function SdocTableContent({
         highlight: true,
         expertMode: false,
         requestBody: {
-          filter: filter as MyFilter<SearchColumns>,
+          filter: filter as MyFilter<SdocColumns>,
           sorts: sortingModel.map((sort) => ({
-            column: sort.id as SearchColumns,
+            column: sort.id as SdocColumns,
             direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
           })),
         },

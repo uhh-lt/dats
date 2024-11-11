@@ -3076,7 +3076,7 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/ColumnInfo_SearchColumns_" },
+                  "items": { "$ref": "#/components/schemas/ColumnInfo_SdocColumns_" },
                   "title": "Response Search-Search Sdocs Info"
                 }
               }
@@ -3470,9 +3470,17 @@
         "tags": ["search"],
         "summary": "Returns similar sentences according to a textual or visual query.",
         "operationId": "find_similar_sentences",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          { "name": "top_k", "in": "query", "required": true, "schema": { "type": "integer", "title": "Top K" } },
+          { "name": "threshold", "in": "query", "required": true, "schema": { "type": "number", "title": "Threshold" } }
+        ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SimSearchQuery" } } },
-          "required": true
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_search-find_similar_sentences" } }
+          }
         },
         "responses": {
           "200": {
@@ -3480,8 +3488,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": { "$ref": "#/components/schemas/SimSearchSentenceHit" },
                   "type": "array",
+                  "items": { "$ref": "#/components/schemas/SimSearchSentenceHit" },
                   "title": "Response Search-Find Similar Sentences"
                 }
               }
@@ -3491,8 +3499,7 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
     "/search/simsearch/images": {
@@ -3500,9 +3507,17 @@
         "tags": ["search"],
         "summary": "Returns similar images according to a textual or visual query.",
         "operationId": "find_similar_images",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          { "name": "top_k", "in": "query", "required": true, "schema": { "type": "integer", "title": "Top K" } },
+          { "name": "threshold", "in": "query", "required": true, "schema": { "type": "number", "title": "Threshold" } }
+        ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SimSearchQuery" } } },
-          "required": true
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_search-find_similar_images" } }
+          }
         },
         "responses": {
           "200": {
@@ -3510,8 +3525,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": { "$ref": "#/components/schemas/SimSearchImageHit" },
                   "type": "array",
+                  "items": { "$ref": "#/components/schemas/SimSearchImageHit" },
                   "title": "Response Search-Find Similar Images"
                 }
               }
@@ -3521,8 +3536,7 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
     "/sdocmeta": {
@@ -3915,7 +3929,7 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/ColumnInfo_AnnotatedSegmentsColumns_" },
+                  "items": { "$ref": "#/components/schemas/ColumnInfo_SpanColumns_" },
                   "title": "Response Analysis-Annotated Segments Info"
                 }
               }
@@ -3994,7 +4008,7 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/ColumnInfo_AnnotatedImagesColumns_" },
+                  "items": { "$ref": "#/components/schemas/ColumnInfo_BBoxColumns_" },
                   "title": "Response Analysis-Annotated Images Info"
                 }
               }
@@ -5895,16 +5909,6 @@
         "required": ["total_results", "data"],
         "title": "AnnotatedImageResult"
       },
-      "AnnotatedImagesColumns": {
-        "type": "string",
-        "enum": [
-          "AIC_CODE_ID",
-          "AIC_MEMO_CONTENT",
-          "AIC_SOURCE_SOURCE_DOCUMENT_FILENAME",
-          "AIC_DOCUMENT_DOCUMENT_TAG_ID_LIST"
-        ],
-        "title": "AnnotatedImagesColumns"
-      },
       "AnnotatedSegmentResult": {
         "properties": {
           "total_results": {
@@ -5922,18 +5926,6 @@
         "type": "object",
         "required": ["total_results", "data"],
         "title": "AnnotatedSegmentResult"
-      },
-      "AnnotatedSegmentsColumns": {
-        "type": "string",
-        "enum": [
-          "ASC_SPAN_TEXT",
-          "ASC_CODE_ID",
-          "ASC_USER_ID",
-          "ASC_MEMO_CONTENT",
-          "ASC_SOURCE_SOURCE_DOCUMENT_FILENAME",
-          "ASC_DOCUMENT_DOCUMENT_TAG_ID_LIST"
-        ],
-        "title": "AnnotatedSegmentsColumns"
       },
       "AnnotationLLMJobParams": {
         "properties": {
@@ -6218,6 +6210,16 @@
         "required": ["code_id"],
         "title": "BBoxAnnotationUpdate"
       },
+      "BBoxColumns": {
+        "type": "string",
+        "enum": [
+          "BB_CODE_ID",
+          "BB_MEMO_CONTENT",
+          "BB_SOURCE_SOURCE_DOCUMENT_FILENAME",
+          "BB_DOCUMENT_DOCUMENT_TAG_ID_LIST"
+        ],
+        "title": "BBoxColumns"
+      },
       "BackgroundJobStatus": {
         "type": "string",
         "enum": ["Waiting", "Running", "Finished", "Errorneous", "Aborted"],
@@ -6225,12 +6227,8 @@
       },
       "Body_analysis-annotated_images": {
         "properties": {
-          "filter": { "$ref": "#/components/schemas/Filter_AnnotatedImagesColumns_" },
-          "sorts": {
-            "items": { "$ref": "#/components/schemas/Sort_AnnotatedImagesColumns_" },
-            "type": "array",
-            "title": "Sorts"
-          }
+          "filter": { "$ref": "#/components/schemas/Filter_BBoxColumns_" },
+          "sorts": { "items": { "$ref": "#/components/schemas/Sort_BBoxColumns_" }, "type": "array", "title": "Sorts" }
         },
         "type": "object",
         "required": ["filter", "sorts"],
@@ -6238,12 +6236,8 @@
       },
       "Body_analysis-annotated_segments": {
         "properties": {
-          "filter": { "$ref": "#/components/schemas/Filter_AnnotatedSegmentsColumns_" },
-          "sorts": {
-            "items": { "$ref": "#/components/schemas/Sort_AnnotatedSegmentsColumns_" },
-            "type": "array",
-            "title": "Sorts"
-          }
+          "filter": { "$ref": "#/components/schemas/Filter_SpanColumns_" },
+          "sorts": { "items": { "$ref": "#/components/schemas/Sort_SpanColumns_" }, "type": "array", "title": "Sorts" }
         },
         "type": "object",
         "required": ["filter", "sorts"],
@@ -6333,14 +6327,34 @@
         "required": ["uploaded_files"],
         "title": "Body_project-upload_project_sdoc"
       },
+      "Body_search-find_similar_images": {
+        "properties": {
+          "query": {
+            "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }, { "type": "integer" }],
+            "title": "Query"
+          },
+          "filter": { "$ref": "#/components/schemas/Filter_SdocColumns_" }
+        },
+        "type": "object",
+        "required": ["query", "filter"],
+        "title": "Body_search-find_similar_images"
+      },
+      "Body_search-find_similar_sentences": {
+        "properties": {
+          "query": {
+            "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }, { "type": "integer" }],
+            "title": "Query"
+          },
+          "filter": { "$ref": "#/components/schemas/Filter_SdocColumns_" }
+        },
+        "type": "object",
+        "required": ["query", "filter"],
+        "title": "Body_search-find_similar_sentences"
+      },
       "Body_search-search_code_stats": {
         "properties": {
-          "filter": { "$ref": "#/components/schemas/Filter_SearchColumns_" },
-          "sorts": {
-            "items": { "$ref": "#/components/schemas/Sort_SearchColumns_" },
-            "type": "array",
-            "title": "Sorts"
-          }
+          "filter": { "$ref": "#/components/schemas/Filter_SdocColumns_" },
+          "sorts": { "items": { "$ref": "#/components/schemas/Sort_SdocColumns_" }, "type": "array", "title": "Sorts" }
         },
         "type": "object",
         "required": ["filter", "sorts"],
@@ -6348,12 +6362,8 @@
       },
       "Body_search-search_keyword_stats": {
         "properties": {
-          "filter": { "$ref": "#/components/schemas/Filter_SearchColumns_" },
-          "sorts": {
-            "items": { "$ref": "#/components/schemas/Sort_SearchColumns_" },
-            "type": "array",
-            "title": "Sorts"
-          }
+          "filter": { "$ref": "#/components/schemas/Filter_SdocColumns_" },
+          "sorts": { "items": { "$ref": "#/components/schemas/Sort_SdocColumns_" }, "type": "array", "title": "Sorts" }
         },
         "type": "object",
         "required": ["filter", "sorts"],
@@ -6361,12 +6371,8 @@
       },
       "Body_search-search_sdocs": {
         "properties": {
-          "filter": { "$ref": "#/components/schemas/Filter_SearchColumns_" },
-          "sorts": {
-            "items": { "$ref": "#/components/schemas/Sort_SearchColumns_" },
-            "type": "array",
-            "title": "Sorts"
-          }
+          "filter": { "$ref": "#/components/schemas/Filter_SdocColumns_" },
+          "sorts": { "items": { "$ref": "#/components/schemas/Sort_SdocColumns_" }, "type": "array", "title": "Sorts" }
         },
         "type": "object",
         "required": ["filter", "sorts"],
@@ -6374,12 +6380,8 @@
       },
       "Body_search-search_tag_stats": {
         "properties": {
-          "filter": { "$ref": "#/components/schemas/Filter_SearchColumns_" },
-          "sorts": {
-            "items": { "$ref": "#/components/schemas/Sort_SearchColumns_" },
-            "type": "array",
-            "title": "Sorts"
-          }
+          "filter": { "$ref": "#/components/schemas/Filter_SdocColumns_" },
+          "sorts": { "items": { "$ref": "#/components/schemas/Sort_SdocColumns_" }, "type": "array", "title": "Sorts" }
         },
         "type": "object",
         "required": ["filter", "sorts"],
@@ -6787,11 +6789,11 @@
         "type": "object",
         "title": "CodeUpdate"
       },
-      "ColumnInfo_AnnotatedImagesColumns_": {
+      "ColumnInfo_BBoxColumns_": {
         "properties": {
           "label": { "type": "string", "title": "Label" },
           "column": {
-            "anyOf": [{ "$ref": "#/components/schemas/AnnotatedImagesColumns" }, { "type": "integer" }],
+            "anyOf": [{ "$ref": "#/components/schemas/BBoxColumns" }, { "type": "integer" }],
             "title": "Column"
           },
           "sortable": { "type": "boolean", "title": "Sortable" },
@@ -6800,22 +6802,7 @@
         },
         "type": "object",
         "required": ["label", "column", "sortable", "operator", "value"],
-        "title": "ColumnInfo[AnnotatedImagesColumns]"
-      },
-      "ColumnInfo_AnnotatedSegmentsColumns_": {
-        "properties": {
-          "label": { "type": "string", "title": "Label" },
-          "column": {
-            "anyOf": [{ "$ref": "#/components/schemas/AnnotatedSegmentsColumns" }, { "type": "integer" }],
-            "title": "Column"
-          },
-          "sortable": { "type": "boolean", "title": "Sortable" },
-          "operator": { "$ref": "#/components/schemas/FilterOperator" },
-          "value": { "$ref": "#/components/schemas/FilterValueType" }
-        },
-        "type": "object",
-        "required": ["label", "column", "sortable", "operator", "value"],
-        "title": "ColumnInfo[AnnotatedSegmentsColumns]"
+        "title": "ColumnInfo[BBoxColumns]"
       },
       "ColumnInfo_MemoColumns_": {
         "properties": {
@@ -6832,11 +6819,11 @@
         "required": ["label", "column", "sortable", "operator", "value"],
         "title": "ColumnInfo[MemoColumns]"
       },
-      "ColumnInfo_SearchColumns_": {
+      "ColumnInfo_SdocColumns_": {
         "properties": {
           "label": { "type": "string", "title": "Label" },
           "column": {
-            "anyOf": [{ "$ref": "#/components/schemas/SearchColumns" }, { "type": "integer" }],
+            "anyOf": [{ "$ref": "#/components/schemas/SdocColumns" }, { "type": "integer" }],
             "title": "Column"
           },
           "sortable": { "type": "boolean", "title": "Sortable" },
@@ -6845,7 +6832,22 @@
         },
         "type": "object",
         "required": ["label", "column", "sortable", "operator", "value"],
-        "title": "ColumnInfo[SearchColumns]"
+        "title": "ColumnInfo[SdocColumns]"
+      },
+      "ColumnInfo_SpanColumns_": {
+        "properties": {
+          "label": { "type": "string", "title": "Label" },
+          "column": {
+            "anyOf": [{ "$ref": "#/components/schemas/SpanColumns" }, { "type": "integer" }],
+            "title": "Column"
+          },
+          "sortable": { "type": "boolean", "title": "Sortable" },
+          "operator": { "$ref": "#/components/schemas/FilterOperator" },
+          "value": { "$ref": "#/components/schemas/FilterValueType" }
+        },
+        "type": "object",
+        "required": ["label", "column", "sortable", "operator", "value"],
+        "title": "ColumnInfo[SpanColumns]"
       },
       "ColumnInfo_TimelineAnalysisColumns_": {
         "properties": {
@@ -7240,11 +7242,11 @@
         "required": ["user_content", "id", "user_id", "created"],
         "title": "FeedbackRead"
       },
-      "FilterExpression_AnnotatedImagesColumns_": {
+      "FilterExpression_BBoxColumns_": {
         "properties": {
           "id": { "type": "string", "title": "Id" },
           "column": {
-            "anyOf": [{ "$ref": "#/components/schemas/AnnotatedImagesColumns" }, { "type": "integer" }],
+            "anyOf": [{ "$ref": "#/components/schemas/BBoxColumns" }, { "type": "integer" }],
             "title": "Column"
           },
           "operator": {
@@ -7272,41 +7274,7 @@
         },
         "type": "object",
         "required": ["id", "column", "operator", "value"],
-        "title": "FilterExpression[AnnotatedImagesColumns]"
-      },
-      "FilterExpression_AnnotatedSegmentsColumns_": {
-        "properties": {
-          "id": { "type": "string", "title": "Id" },
-          "column": {
-            "anyOf": [{ "$ref": "#/components/schemas/AnnotatedSegmentsColumns" }, { "type": "integer" }],
-            "title": "Column"
-          },
-          "operator": {
-            "anyOf": [
-              { "$ref": "#/components/schemas/IDOperator" },
-              { "$ref": "#/components/schemas/NumberOperator" },
-              { "$ref": "#/components/schemas/StringOperator" },
-              { "$ref": "#/components/schemas/IDListOperator" },
-              { "$ref": "#/components/schemas/ListOperator" },
-              { "$ref": "#/components/schemas/DateOperator" },
-              { "$ref": "#/components/schemas/BooleanOperator" }
-            ],
-            "title": "Operator"
-          },
-          "value": {
-            "anyOf": [
-              { "type": "boolean" },
-              { "type": "string" },
-              { "type": "integer" },
-              { "items": { "type": "string" }, "type": "array" },
-              { "items": { "items": { "type": "string" }, "type": "array" }, "type": "array" }
-            ],
-            "title": "Value"
-          }
-        },
-        "type": "object",
-        "required": ["id", "column", "operator", "value"],
-        "title": "FilterExpression[AnnotatedSegmentsColumns]"
+        "title": "FilterExpression[BBoxColumns]"
       },
       "FilterExpression_MemoColumns_": {
         "properties": {
@@ -7342,11 +7310,11 @@
         "required": ["id", "column", "operator", "value"],
         "title": "FilterExpression[MemoColumns]"
       },
-      "FilterExpression_SearchColumns_": {
+      "FilterExpression_SdocColumns_": {
         "properties": {
           "id": { "type": "string", "title": "Id" },
           "column": {
-            "anyOf": [{ "$ref": "#/components/schemas/SearchColumns" }, { "type": "integer" }],
+            "anyOf": [{ "$ref": "#/components/schemas/SdocColumns" }, { "type": "integer" }],
             "title": "Column"
           },
           "operator": {
@@ -7374,7 +7342,41 @@
         },
         "type": "object",
         "required": ["id", "column", "operator", "value"],
-        "title": "FilterExpression[SearchColumns]"
+        "title": "FilterExpression[SdocColumns]"
+      },
+      "FilterExpression_SpanColumns_": {
+        "properties": {
+          "id": { "type": "string", "title": "Id" },
+          "column": {
+            "anyOf": [{ "$ref": "#/components/schemas/SpanColumns" }, { "type": "integer" }],
+            "title": "Column"
+          },
+          "operator": {
+            "anyOf": [
+              { "$ref": "#/components/schemas/IDOperator" },
+              { "$ref": "#/components/schemas/NumberOperator" },
+              { "$ref": "#/components/schemas/StringOperator" },
+              { "$ref": "#/components/schemas/IDListOperator" },
+              { "$ref": "#/components/schemas/ListOperator" },
+              { "$ref": "#/components/schemas/DateOperator" },
+              { "$ref": "#/components/schemas/BooleanOperator" }
+            ],
+            "title": "Operator"
+          },
+          "value": {
+            "anyOf": [
+              { "type": "boolean" },
+              { "type": "string" },
+              { "type": "integer" },
+              { "items": { "type": "string" }, "type": "array" },
+              { "items": { "items": { "type": "string" }, "type": "array" }, "type": "array" }
+            ],
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": ["id", "column", "operator", "value"],
+        "title": "FilterExpression[SpanColumns]"
       },
       "FilterExpression_TimelineAnalysisColumns_": {
         "properties": {
@@ -7454,14 +7456,14 @@
         "enum": ["SDOC_ID", "CODE_ID", "USER_ID", "TAG_ID", "SPAN_ANNOTATION", "DOC_TYPE", "INFER_FROM_OPERATOR"],
         "title": "FilterValueType"
       },
-      "Filter_AnnotatedImagesColumns_": {
+      "Filter_BBoxColumns_": {
         "properties": {
           "id": { "type": "string", "title": "Id" },
           "items": {
             "items": {
               "anyOf": [
-                { "$ref": "#/components/schemas/FilterExpression_AnnotatedImagesColumns_" },
-                { "$ref": "#/components/schemas/Filter_AnnotatedImagesColumns_" }
+                { "$ref": "#/components/schemas/FilterExpression_BBoxColumns_" },
+                { "$ref": "#/components/schemas/Filter_BBoxColumns_" }
               ]
             },
             "type": "array",
@@ -7471,26 +7473,7 @@
         },
         "type": "object",
         "required": ["id", "items", "logic_operator"],
-        "title": "Filter[AnnotatedImagesColumns]"
-      },
-      "Filter_AnnotatedSegmentsColumns_": {
-        "properties": {
-          "id": { "type": "string", "title": "Id" },
-          "items": {
-            "items": {
-              "anyOf": [
-                { "$ref": "#/components/schemas/FilterExpression_AnnotatedSegmentsColumns_" },
-                { "$ref": "#/components/schemas/Filter_AnnotatedSegmentsColumns_" }
-              ]
-            },
-            "type": "array",
-            "title": "Items"
-          },
-          "logic_operator": { "$ref": "#/components/schemas/LogicalOperator" }
-        },
-        "type": "object",
-        "required": ["id", "items", "logic_operator"],
-        "title": "Filter[AnnotatedSegmentsColumns]"
+        "title": "Filter[BBoxColumns]"
       },
       "Filter_MemoColumns_": {
         "properties": {
@@ -7511,14 +7494,14 @@
         "required": ["id", "items", "logic_operator"],
         "title": "Filter[MemoColumns]"
       },
-      "Filter_SearchColumns_": {
+      "Filter_SdocColumns_": {
         "properties": {
           "id": { "type": "string", "title": "Id" },
           "items": {
             "items": {
               "anyOf": [
-                { "$ref": "#/components/schemas/FilterExpression_SearchColumns_" },
-                { "$ref": "#/components/schemas/Filter_SearchColumns_" }
+                { "$ref": "#/components/schemas/FilterExpression_SdocColumns_" },
+                { "$ref": "#/components/schemas/Filter_SdocColumns_" }
               ]
             },
             "type": "array",
@@ -7528,7 +7511,26 @@
         },
         "type": "object",
         "required": ["id", "items", "logic_operator"],
-        "title": "Filter[SearchColumns]"
+        "title": "Filter[SdocColumns]"
+      },
+      "Filter_SpanColumns_": {
+        "properties": {
+          "id": { "type": "string", "title": "Id" },
+          "items": {
+            "items": {
+              "anyOf": [
+                { "$ref": "#/components/schemas/FilterExpression_SpanColumns_" },
+                { "$ref": "#/components/schemas/Filter_SpanColumns_" }
+              ]
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "logic_operator": { "$ref": "#/components/schemas/LogicalOperator" }
+        },
+        "type": "object",
+        "required": ["id", "items", "logic_operator"],
+        "title": "Filter[SpanColumns]"
       },
       "Filter_TimelineAnalysisColumns_-Input": {
         "properties": {
@@ -8221,17 +8223,17 @@
         "required": ["tags", "sdocs", "sample_fixed", "sample_relative"],
         "title": "SampledSdocsResults"
       },
-      "SearchColumns": {
+      "SdocColumns": {
         "type": "string",
         "enum": [
-          "SC_SOURCE_DOCUMENT_TYPE",
-          "SC_SOURCE_DOCUMENT_FILENAME",
-          "SC_DOCUMENT_TAG_ID_LIST",
-          "SC_CODE_ID_LIST",
-          "SC_USER_ID_LIST",
-          "SC_SPAN_ANNOTATIONS"
+          "SD_SOURCE_DOCUMENT_TYPE",
+          "SD_SOURCE_DOCUMENT_FILENAME",
+          "SD_DOCUMENT_TAG_ID_LIST",
+          "SD_CODE_ID_LIST",
+          "SD_USER_ID_LIST",
+          "SD_SPAN_ANNOTATIONS"
         ],
-        "title": "SearchColumns"
+        "title": "SdocColumns"
       },
       "SimSearchImageHit": {
         "properties": {
@@ -8245,41 +8247,6 @@
         "type": "object",
         "required": ["sdoc_id", "score"],
         "title": "SimSearchImageHit"
-      },
-      "SimSearchQuery": {
-        "properties": {
-          "proj_id": {
-            "type": "integer",
-            "title": "Proj Id",
-            "description": "The ID of the Project the SourceDocuments have to belong to."
-          },
-          "query": {
-            "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }, { "type": "integer" }],
-            "title": "Query",
-            "description": "The query term. This can be either a single string, a list of strings for which the average embedding gets computed, or an integer which is interpreted as the SDoc ID of an Image."
-          },
-          "top_k": {
-            "type": "integer",
-            "title": "Top K",
-            "description": "The number of results to return.",
-            "default": 100
-          },
-          "threshold": {
-            "type": "number",
-            "maximum": 1,
-            "minimum": 0,
-            "title": "Threshold",
-            "description": "The minimum distance to use for the sim search.",
-            "default": 0
-          },
-          "filter": {
-            "allOf": [{ "$ref": "#/components/schemas/Filter_SearchColumns_" }],
-            "description": "Only return documents matching this filter"
-          }
-        },
-        "type": "object",
-        "required": ["proj_id", "query", "filter"],
-        "title": "SimSearchQuery"
       },
       "SimSearchSentenceHit": {
         "properties": {
@@ -8472,29 +8439,17 @@
         "title": "SingleUserLogbookExportJobParams"
       },
       "SortDirection": { "type": "string", "enum": ["asc", "desc"], "title": "SortDirection" },
-      "Sort_AnnotatedImagesColumns_": {
+      "Sort_BBoxColumns_": {
         "properties": {
           "column": {
-            "anyOf": [{ "$ref": "#/components/schemas/AnnotatedImagesColumns" }, { "type": "integer" }],
+            "anyOf": [{ "$ref": "#/components/schemas/BBoxColumns" }, { "type": "integer" }],
             "title": "Column"
           },
           "direction": { "$ref": "#/components/schemas/SortDirection" }
         },
         "type": "object",
         "required": ["column", "direction"],
-        "title": "Sort[AnnotatedImagesColumns]"
-      },
-      "Sort_AnnotatedSegmentsColumns_": {
-        "properties": {
-          "column": {
-            "anyOf": [{ "$ref": "#/components/schemas/AnnotatedSegmentsColumns" }, { "type": "integer" }],
-            "title": "Column"
-          },
-          "direction": { "$ref": "#/components/schemas/SortDirection" }
-        },
-        "type": "object",
-        "required": ["column", "direction"],
-        "title": "Sort[AnnotatedSegmentsColumns]"
+        "title": "Sort[BBoxColumns]"
       },
       "Sort_MemoColumns_": {
         "properties": {
@@ -8508,17 +8463,29 @@
         "required": ["column", "direction"],
         "title": "Sort[MemoColumns]"
       },
-      "Sort_SearchColumns_": {
+      "Sort_SdocColumns_": {
         "properties": {
           "column": {
-            "anyOf": [{ "$ref": "#/components/schemas/SearchColumns" }, { "type": "integer" }],
+            "anyOf": [{ "$ref": "#/components/schemas/SdocColumns" }, { "type": "integer" }],
             "title": "Column"
           },
           "direction": { "$ref": "#/components/schemas/SortDirection" }
         },
         "type": "object",
         "required": ["column", "direction"],
-        "title": "Sort[SearchColumns]"
+        "title": "Sort[SdocColumns]"
+      },
+      "Sort_SpanColumns_": {
+        "properties": {
+          "column": {
+            "anyOf": [{ "$ref": "#/components/schemas/SpanColumns" }, { "type": "integer" }],
+            "title": "Column"
+          },
+          "direction": { "$ref": "#/components/schemas/SortDirection" }
+        },
+        "type": "object",
+        "required": ["column", "direction"],
+        "title": "Sort[SpanColumns]"
       },
       "Sort_WordFrequencyColumns_": {
         "properties": {
@@ -9041,6 +9008,18 @@
         "type": "object",
         "required": ["span_annotation_id", "code_id"],
         "title": "SpanAnnotationUpdateBulk"
+      },
+      "SpanColumns": {
+        "type": "string",
+        "enum": [
+          "SP_SPAN_TEXT",
+          "SP_CODE_ID",
+          "SP_USER_ID",
+          "SP_MEMO_CONTENT",
+          "SP_SOURCE_SOURCE_DOCUMENT_FILENAME",
+          "SP_DOCUMENT_DOCUMENT_TAG_ID_LIST"
+        ],
+        "title": "SpanColumns"
       },
       "SpanEntityStat": {
         "properties": {

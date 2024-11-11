@@ -10,7 +10,7 @@ import {
 } from "material-react-table";
 import { useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { SearchColumns } from "../../../api/openapi/models/SearchColumns.ts";
+import { SdocColumns } from "../../../api/openapi/models/SdocColumns.ts";
 import { SimSearchSentenceHit } from "../../../api/openapi/models/SimSearchSentenceHit.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import ReduxFilterDialog from "../../../components/FilterDialog/ReduxFilterDialog.tsx";
@@ -103,31 +103,31 @@ function SentenceSimilaritySearchTable({
       };
 
       switch (column.column) {
-        case SearchColumns.SC_SOURCE_DOCUMENT_TYPE:
+        case SdocColumns.SD_SOURCE_DOCUMENT_TYPE:
           return {
             ...colDef,
             size: 100,
             Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdoc_id} renderDoctypeIcon />,
           } as MRT_ColumnDef<SimSearchSentenceHit>;
-        case SearchColumns.SC_SOURCE_DOCUMENT_FILENAME:
+        case SdocColumns.SD_SOURCE_DOCUMENT_FILENAME:
           return {
             ...colDef,
             size: 360,
             Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdoc_id} renderFilename />,
           } as MRT_ColumnDef<SimSearchSentenceHit>;
-        case SearchColumns.SC_DOCUMENT_TAG_ID_LIST:
+        case SdocColumns.SD_DOCUMENT_TAG_ID_LIST:
           return {
             ...colDef,
             Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.sdoc_id} />,
           } as MRT_ColumnDef<SimSearchSentenceHit>;
-        case SearchColumns.SC_USER_ID_LIST:
+        case SdocColumns.SD_USER_ID_LIST:
           return {
             ...colDef,
             Cell: ({ row }) => <SdocAnnotatorsRenderer sdocId={row.original.sdoc_id} />,
           } as MRT_ColumnDef<SimSearchSentenceHit>;
-        case SearchColumns.SC_CODE_ID_LIST:
+        case SdocColumns.SD_CODE_ID_LIST:
           return null;
-        case SearchColumns.SC_SPAN_ANNOTATIONS:
+        case SdocColumns.SD_SPAN_ANNOTATIONS:
           return null;
         default:
           // render metadata

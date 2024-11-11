@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { IDListOperator } from "../../../api/openapi/models/IDListOperator.ts";
 import { ListOperator } from "../../../api/openapi/models/ListOperator.ts";
 import { LogicalOperator } from "../../../api/openapi/models/LogicalOperator.ts";
-import { SearchColumns } from "../../../api/openapi/models/SearchColumns.ts";
+import { SdocColumns } from "../../../api/openapi/models/SdocColumns.ts";
 import { SourceDocumentMetadataReadResolved } from "../../../api/openapi/models/SourceDocumentMetadataReadResolved.ts";
 import { StringOperator } from "../../../api/openapi/models/StringOperator.ts";
 import {
@@ -36,7 +36,7 @@ interface SearchState {
 
 const defaultFilterExpression: MyFilterExpression = {
   id: uuidv4(),
-  column: SearchColumns.SC_SOURCE_DOCUMENT_FILENAME,
+  column: SdocColumns.SD_SOURCE_DOCUMENT_FILENAME,
   operator: StringOperator.STRING_CONTAINS,
   value: "",
 };
@@ -137,7 +137,7 @@ export const searchSlice = createSlice({
         ...currentFilter.items,
         {
           id: uuidv4(),
-          column: SearchColumns.SC_DOCUMENT_TAG_ID_LIST,
+          column: SdocColumns.SD_DOCUMENT_TAG_ID_LIST,
           operator: IDListOperator.ID_LIST_CONTAINS,
           value: action.payload.tagId,
         },
@@ -152,7 +152,7 @@ export const searchSlice = createSlice({
         ...currentFilter.items,
         {
           id: uuidv4(),
-          column: SearchColumns.SC_SPAN_ANNOTATIONS,
+          column: SdocColumns.SD_SPAN_ANNOTATIONS,
           operator: ListOperator.LIST_CONTAINS,
           value: [action.payload.codeId.toString(), action.payload.spanText],
         },

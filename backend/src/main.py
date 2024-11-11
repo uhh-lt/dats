@@ -85,7 +85,7 @@ from app.core.data.repo.repo_service import (
     RepoService,
     SourceDocumentNotFoundInRepositoryError,
 )
-from app.core.search.elasticsearch_service import (
+from app.core.db.elasticsearch_service import (
     NoSuchMemoInElasticSearchError,
 )
 from config import conf

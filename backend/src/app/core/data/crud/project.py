@@ -20,8 +20,8 @@ from app.core.data.dto.user import UserRead
 from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.user import UserORM
 from app.core.data.repo.repo_service import RepoService
+from app.core.db.simsearch_service import SimSearchService
 from app.core.db.sql_service import SQLService
-from app.core.search.simsearch_service import SimSearchService
 
 
 class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
