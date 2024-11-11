@@ -18,14 +18,14 @@ from app.core.data.orm.user import UserORM
 from app.core.data.orm.word_frequency import WordFrequencyORM
 from app.core.db.sql_service import SQLService
 from app.core.db.sql_utils import aggregate_ids
-from app.core.filters.column_info import (
+from app.core.search.column_info import (
     AbstractColumns,
     ColumnInfo,
 )
-from app.core.filters.filtering import Filter, apply_filtering
-from app.core.filters.filtering_operators import FilterOperator, FilterValueType
-from app.core.filters.pagination import apply_pagination
-from app.core.filters.sorting import Sort, apply_sorting
+from app.core.search.filtering import Filter, apply_filtering
+from app.core.search.filtering_operators import FilterOperator, FilterValueType
+from app.core.search.pagination import apply_pagination
+from app.core.search.sorting import Sort, apply_sorting
 
 
 class WordFrequencyColumns(str, AbstractColumns):

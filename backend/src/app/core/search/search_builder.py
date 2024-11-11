@@ -14,16 +14,16 @@ from app.core.data.meta_type import MetaType
 from app.core.data.orm.project_metadata import ProjectMetadataORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
-from app.core.filters.filtering import (
+from app.core.search.filtering import (
     Filter,
     apply_filtering,
     get_columns_affected_by_filter,
 )
-from app.core.filters.pagination import apply_pagination
-from app.core.filters.sorting import Sort, apply_sorting, get_columns_affected_by_sorts
+from app.core.search.pagination import apply_pagination
+from app.core.search.sorting import Sort, apply_sorting, get_columns_affected_by_sorts
 
 if TYPE_CHECKING:
-    from app.core.filters.abstract_column import AbstractColumns
+    from app.core.search.abstract_column import AbstractColumns
 
 T = TypeVar("T", bound="AbstractColumns")
 

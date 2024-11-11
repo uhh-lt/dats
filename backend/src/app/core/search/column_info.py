@@ -3,8 +3,8 @@ from typing import Generic, TypeVar, Union
 from pydantic import BaseModel
 
 from app.core.data.dto.project_metadata import ProjectMetadataRead
-from app.core.filters.abstract_column import AbstractColumns
-from app.core.filters.filtering_operators import FilterOperator, FilterValueType
+from app.core.search.abstract_column import AbstractColumns
+from app.core.search.filtering_operators import FilterOperator, FilterValueType
 
 T = TypeVar("T", bound=AbstractColumns)
 

@@ -18,10 +18,10 @@ from app.core.data.dto.search import (
 )
 from app.core.data.dto.search_stats import KeywordStat, SpanEntityStat, TagStat
 from app.core.db.elasticsearch_service import ElasticSearchService
-from app.core.filters.column_info import ColumnInfo
-from app.core.filters.filtering import Filter
-from app.core.filters.sorting import Sort
+from app.core.search.column_info import ColumnInfo
+from app.core.search.filtering import Filter
 from app.core.search.sdoc_search.sdoc_search_columns import SearchColumns
+from app.core.search.sorting import Sort
 
 router = APIRouter(
     prefix="/search", dependencies=[Depends(get_current_user)], tags=["search"]

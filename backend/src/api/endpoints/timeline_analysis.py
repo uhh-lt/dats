@@ -21,8 +21,8 @@ from app.core.data.dto.timeline_analysis import (
     TimelineAnalysisRead,
     TimelineAnalysisUpdate,
 )
-from app.core.filters.column_info import ColumnInfo
-from app.core.filters.filtering import Filter
+from app.core.search.column_info import ColumnInfo
+from app.core.search.filtering import Filter
 
 router = APIRouter(
     prefix="/timelineAnalysis",

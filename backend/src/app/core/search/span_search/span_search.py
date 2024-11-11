@@ -16,12 +16,12 @@ from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.db.sql_service import SQLService
-from app.core.filters.column_info import (
+from app.core.search.column_info import (
     ColumnInfo,
 )
-from app.core.filters.filtering import Filter
-from app.core.filters.search_builder import SearchBuilder
-from app.core.filters.sorting import Sort
+from app.core.search.filtering import Filter
+from app.core.search.search_builder import SearchBuilder
+from app.core.search.sorting import Sort
 from app.core.search.span_search.span_search_columns import (
     AnnotatedSegmentsColumns,
 )

@@ -22,14 +22,14 @@ from app.core.data.dto.analysis import (
     SampledSdocsResults,
     WordFrequencyResult,
 )
-from app.core.filters.column_info import ColumnInfo
-from app.core.filters.filtering import Filter
-from app.core.filters.sorting import Sort
 from app.core.search.bbox_search.bbox_search import (
     find_annotated_images,
     find_annotated_images_info,
 )
 from app.core.search.bbox_search.bbox_search_columns import AnnotatedImagesColumns
+from app.core.search.column_info import ColumnInfo
+from app.core.search.filtering import Filter
+from app.core.search.sorting import Sort
 from app.core.search.span_search.span_search import (
     find_annotated_segments,
     find_annotated_segments_info,

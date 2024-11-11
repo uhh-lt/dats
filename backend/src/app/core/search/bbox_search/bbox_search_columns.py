@@ -6,9 +6,9 @@ from app.core.data.orm.memo import MemoORM
 from app.core.data.orm.object_handle import ObjectHandleORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.db.sql_utils import aggregate_ids
-from app.core.filters.column_info import AbstractColumns
-from app.core.filters.filtering_operators import FilterOperator, FilterValueType
-from app.core.filters.search_builder import SearchBuilder
+from app.core.search.column_info import AbstractColumns
+from app.core.search.filtering_operators import FilterOperator, FilterValueType
+from app.core.search.search_builder import SearchBuilder
 
 
 class AnnotatedImagesColumns(str, AbstractColumns):

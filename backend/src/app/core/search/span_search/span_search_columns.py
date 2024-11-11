@@ -8,9 +8,9 @@ from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.data.orm.user import UserORM
 from app.core.db.sql_utils import aggregate_ids
-from app.core.filters.column_info import AbstractColumns
-from app.core.filters.filtering_operators import FilterOperator, FilterValueType
-from app.core.filters.search_builder import SearchBuilder
+from app.core.search.column_info import AbstractColumns
+from app.core.search.filtering_operators import FilterOperator, FilterValueType
+from app.core.search.search_builder import SearchBuilder
 
 
 class AnnotatedSegmentsColumns(str, AbstractColumns):

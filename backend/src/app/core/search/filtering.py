@@ -4,8 +4,8 @@ from typing import Generic, List, Set, TypeVar, Union
 from pydantic import BaseModel
 from sqlalchemy import and_, or_
 
-from app.core.filters.abstract_column import AbstractColumns
-from app.core.filters.filtering_operators import (
+from app.core.search.abstract_column import AbstractColumns
+from app.core.search.filtering_operators import (
     BooleanOperator,
     DateOperator,
     FilterValue,

@@ -11,7 +11,7 @@ from app.core.analysis.timeline_analysis.timeline_analysis_columns import (
 )
 from app.core.data.dto.analysis import DateGroupBy
 from app.core.data.dto.dto_base import UpdateDTOBase
-from app.core.filters.filtering import Filter
+from app.core.search.filtering import Filter
 
 ####################
 # Base Types

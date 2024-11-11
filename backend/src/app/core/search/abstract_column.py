@@ -3,10 +3,10 @@ from typing import TYPE_CHECKING, Any
 
 from sqlalchemy.sql.base import ReadOnlyColumnCollection
 
-from app.core.filters.filtering_operators import FilterOperator, FilterValueType
+from app.core.search.filtering_operators import FilterOperator, FilterValueType
 
 if TYPE_CHECKING:
-    from app.core.filters.search_builder import SearchBuilder
+    from app.core.search.search_builder import SearchBuilder
 
 
 class AbstractColumns(Enum, metaclass=EnumMeta):
