@@ -5,11 +5,13 @@ from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
 from app.core.analysis.analysis_service import AnalysisService
-from app.core.analysis.word_frequency import (
-    WordFrequencyColumns,
+from app.core.analysis.word_frequency_analysis.word_frequency import (
     word_frequency,
     word_frequency_export,
     word_frequency_info,
+)
+from app.core.analysis.word_frequency_analysis.word_frequency_columns import (
+    WordFrequencyColumns,
 )
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.doc_type import DocType

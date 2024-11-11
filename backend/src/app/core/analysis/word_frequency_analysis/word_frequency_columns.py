@@ -1,13 +1,6 @@
-from typing import List, Optional
-
-from sqlalchemy import String, cast, distinct, func
+from sqlalchemy import String, cast, func
 from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg
 
-from app.core.data.crud.project_metadata import crud_project_meta
-from app.core.data.doc_type import DocType
-from app.core.data.dto.analysis import WordFrequencyResult, WordFrequencyStat
-from app.core.data.dto.project_metadata import ProjectMetadataRead
-from app.core.data.export.export_service import ExportService
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
@@ -16,16 +9,10 @@ from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.data.orm.user import UserORM
 from app.core.data.orm.word_frequency import WordFrequencyORM
-from app.core.db.sql_service import SQLService
 from app.core.db.sql_utils import aggregate_ids
-from app.core.search.column_info import (
-    AbstractColumns,
-    ColumnInfo,
-)
-from app.core.search.filtering import Filter, apply_filtering
+from app.core.search.column_info import AbstractColumns
 from app.core.search.filtering_operators import FilterOperator, FilterValueType
-from app.core.search.pagination import apply_pagination
-from app.core.search.sorting import Sort, apply_sorting
+from app.core.search.search_builder import SearchBuilder
 
 
 class WordFrequencyColumns(str, AbstractColumns):
@@ -40,9 +27,7 @@ class WordFrequencyColumns(str, AbstractColumns):
     USER_ID_LIST = "WF_USER_ID_LIST"
     SPAN_ANNOTATIONS = "WF_SPAN_ANNOTATIONS"
 
-    def get_filter_column(self, **kwargs):
-        subquery_dict = kwargs["subquery_dict"]
-
+    def get_filter_column(self, subquery_dict):
         match self:
             case WordFrequencyColumns.WORD:
                 return WordFrequencyORM.word
@@ -111,7 +96,7 @@ class WordFrequencyColumns(str, AbstractColumns):
             case WordFrequencyColumns.SPAN_ANNOTATIONS:
                 return FilterValueType.SPAN_ANNOTATION
 
-    def get_sort_column(self, **kwargs):
+    def get_sort_column(self):
         match self:
             case WordFrequencyColumns.WORD:
                 return WordFrequencyORM.word
@@ -157,160 +142,71 @@ class WordFrequencyColumns(str, AbstractColumns):
             case WordFrequencyColumns.SPAN_ANNOTATIONS:
                 return "Span annotations"
 
+    def add_subquery_filter_statements(self, query_builder: SearchBuilder):
+        match self:
+            case WordFrequencyColumns.DOCUMENT_TAG_ID_LIST:
+                query_builder._add_subquery_column(
+                    aggregate_ids(
+                        DocumentTagORM.id,
+                        label=WordFrequencyColumns.DOCUMENT_TAG_ID_LIST.value,
+                    )
+                )
+                query_builder._join_subquery(
+                    SourceDocumentORM.document_tags, isouter=True
+                )
+            case WordFrequencyColumns.CODE_ID_LIST:
+                query_builder._add_subquery_column(
+                    aggregate_ids(
+                        CodeORM.id, label=WordFrequencyColumns.CODE_ID_LIST.value
+                    )
+                )
+                query_builder._join_subquery(
+                    SourceDocumentORM.annotation_documents,
+                    isouter=True,
+                )
+                query_builder._join_subquery(
+                    SpanAnnotationORM.code,
+                    isouter=True,
+                )
+            case WordFrequencyColumns.USER_ID_LIST:
+                query_builder._add_subquery_column(
+                    aggregate_ids(UserORM.id, WordFrequencyColumns.USER_ID_LIST.value)
+                )
+                query_builder._join_subquery(
+                    SourceDocumentORM.annotation_documents,
+                    isouter=True,
+                )
+                query_builder._join_subquery(
+                    AnnotationDocumentORM.user,
+                    isouter=True,
+                )
+            case WordFrequencyColumns.SPAN_ANNOTATIONS:
+                query_builder._add_subquery_column(
+                    cast(
+                        array_agg(
+                            func.distinct(
+                                array([cast(CodeORM.id, String), SpanTextORM.text])
+                            ),
+                        ),
+                        ARRAY(String, dimensions=2),
+                    ).label(WordFrequencyColumns.SPAN_ANNOTATIONS.value)
+                )
+                query_builder._join_subquery(
+                    SourceDocumentORM.annotation_documents,
+                    isouter=True,
+                )
+                query_builder._join_subquery(
+                    AnnotationDocumentORM.span_annotations,
+                    isouter=True,
+                )
+                query_builder._join_subquery(
+                    SpanAnnotationORM.span_text,
+                    isouter=True,
+                )
+                query_builder._join_subquery(
+                    SpanAnnotationORM.code,
+                    isouter=True,
+                )
 
-def word_frequency_info(
-    project_id: int,
-) -> List[ColumnInfo[WordFrequencyColumns]]:
-    with SQLService().db_session() as db:
-        project_metadata = [
-            ProjectMetadataRead.model_validate(pm)
-            for pm in crud_project_meta.read_by_project(db=db, proj_id=project_id)
-        ]
-        metadata_column_info = [
-            ColumnInfo.from_project_metadata(pm)
-            for pm in project_metadata
-            if pm.doctype in [DocType.text]
-        ]
-
-    return [
-        ColumnInfo[WordFrequencyColumns].from_column(column)
-        for column in WordFrequencyColumns
-    ] + metadata_column_info
-
-
-def word_frequency(
-    project_id: int,
-    filter: Filter[WordFrequencyColumns],
-    sorts: List[Sort[WordFrequencyColumns]],
-    page: Optional[int] = None,
-    page_size: Optional[int] = None,
-) -> WordFrequencyResult:
-    with SQLService().db_session() as db:
-        tag_ids_agg = aggregate_ids(
-            DocumentTagORM.id, label=WordFrequencyColumns.DOCUMENT_TAG_ID_LIST
-        )
-        code_ids_agg = aggregate_ids(CodeORM.id, WordFrequencyColumns.CODE_ID_LIST)
-        user_ids_agg = aggregate_ids(UserORM.id, WordFrequencyColumns.USER_ID_LIST)
-        span_annotation_tuples_agg = cast(
-            array_agg(
-                func.distinct(array([cast(CodeORM.id, String), SpanTextORM.text])),
-            ),
-            ARRAY(String, dimensions=2),
-        ).label(WordFrequencyColumns.SPAN_ANNOTATIONS)
-
-        # subquery
-        subquery = (
-            db.query(
-                SourceDocumentORM.id.label("id"),
-                tag_ids_agg,
-                code_ids_agg,
-                user_ids_agg,
-                span_annotation_tuples_agg,
-            )
-            .join(SourceDocumentORM.document_tags, isouter=True)
-            .join(SourceDocumentORM.annotation_documents)
-            .join(AnnotationDocumentORM.user)
-            .join(AnnotationDocumentORM.span_annotations)
-            .join(SpanAnnotationORM.span_text)
-            .join(SpanAnnotationORM.code)
-            .join(SourceDocumentORM.metadata_)
-            .filter(
-                SourceDocumentORM.project_id == project_id,
-            )
-            .group_by(SourceDocumentORM.id)
-            .subquery()
-        )
-
-        # count all words query (uses filtering)
-        global_word_count_agg = func.sum(WordFrequencyORM.count)
-        query = db.query(global_word_count_agg).join(
-            subquery, WordFrequencyORM.sdoc_id == subquery.c.id
-        )
-        query = apply_filtering(query=query, filter=filter, subquery_dict=subquery.c)
-        global_word_count = query.scalar()
-
-        # count all sdocs query (uses filtering)
-        global_sdoc_count_agg = func.count(distinct(WordFrequencyORM.sdoc_id))
-        query = db.query(global_sdoc_count_agg).join(
-            subquery, WordFrequencyORM.sdoc_id == subquery.c.id
-        )
-        query = apply_filtering(query=query, filter=filter, subquery_dict=subquery.c)
-        global_sdoc_count = query.scalar()
-
-        # early return if no results
-        if global_sdoc_count is None or global_word_count is None:
-            return WordFrequencyResult(
-                total_results=0,
-                sdocs_total=0,
-                words_total=0,
-                word_frequencies=[],
-            )
-
-        # main query (uses filtering, sorting and pagination)
-        word_count_acc = func.sum(WordFrequencyORM.count).label(
-            WordFrequencyColumns.WORD_FREQUENCY
-        )
-        sdocs_count_agg = func.count(distinct(WordFrequencyORM.sdoc_id)).label(
-            WordFrequencyColumns.SOURCE_DOCUMENT_FREQUENCY
-        )
-        query = db.query(
-            WordFrequencyORM.word,
-            word_count_acc,
-            (word_count_acc / global_word_count).label(
-                WordFrequencyColumns.WORD_PERCENT
-            ),
-            sdocs_count_agg,
-            (sdocs_count_agg / global_sdoc_count).label(
-                WordFrequencyColumns.SOURCE_DOCUMENT_PERCENT
-            ),
-        ).join(subquery, WordFrequencyORM.sdoc_id == subquery.c.id)
-
-        query = apply_filtering(query=query, filter=filter, subquery_dict=subquery.c)
-
-        query = query.group_by(WordFrequencyORM.word)
-
-        # ordering is very important, otherwise pagination will not work!
-        if len(sorts) == 0:
-            query = query.order_by(word_count_acc.desc())
-        else:
-            query = apply_sorting(query=query, sorts=sorts, subquery_dict={})
-
-        if page is not None and page_size is not None:
-            query, pagination = apply_pagination(
-                query=query, page_number=page + 1, page_size=page_size
-            )
-            total_results = pagination.total_results
-            result = query.all()
-        else:
-            result = query.all()
-            total_results = len(result)
-
-        word_frequency_stats = [
-            WordFrequencyStat(
-                word=row[0],
-                count=row[1],
-                word_percent=row[2],
-                sdocs=row[3],
-                sdocs_percent=row[4],
-            )
-            for row in result
-        ]
-
-        return WordFrequencyResult(
-            total_results=total_results,
-            sdocs_total=global_sdoc_count,
-            words_total=global_word_count,
-            word_frequencies=word_frequency_stats,
-        )
-
-
-def word_frequency_export(
-    project_id: int,
-    filter: Filter[WordFrequencyColumns],
-) -> str:
-    export_service = ExportService()
-
-    wf_result = word_frequency(project_id=project_id, filter=filter, sorts=[])
-    return export_service.export_word_frequencies(
-        project_id=project_id, wf_result=wf_result
-    )
+    def add_query_filter_statements(self, query_builder: SearchBuilder):
+        pass
