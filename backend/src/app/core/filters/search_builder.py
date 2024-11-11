@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Any, List, Optional, Tuple, TypeVar, Union
 
+from sqlalchemy import desc
 from sqlalchemy.orm import Query, Session, aliased
 from sqlalchemy.sql._typing import (
     _ColumnExpressionArgument,
@@ -137,12 +138,6 @@ class SearchBuilder:
         return self.subquery
 
     def build_query(self, query: Query) -> Query:
-        if self.subquery is None:
-            raise ValueError("Subquery is not initialized")
-
-        if not isinstance(self.subquery, Subquery):
-            raise ValueError("Subquery has to be built first")
-
         if self.query is not None:
             raise ValueError("Query was built already!")
 
@@ -159,34 +154,32 @@ class SearchBuilder:
     def execute_query(
         self, page_number: Optional[int], page_size: Optional[int]
     ) -> Tuple[list, int]:
-        # query has to be joined with the subquery
-
-        if self.subquery is None:
-            raise ValueError("Subquery is not initialized")
-
-        if not isinstance(self.subquery, Subquery):
-            raise ValueError("Subquery has to be built first")
-
         if self.query is None:
             raise ValueError("Query is not initialized")
 
+        subquery_dict = {}
+        if self.subquery is not None and isinstance(self.subquery, Subquery):
+            print("Using subquery")
+            subquery_dict = self.subquery.c
+
         # filtering
         query = apply_filtering(
-            query=self.query, filter=self.filter, subquery_dict=self.subquery.c
+            query=self.query,
+            filter=self.filter,
+            subquery_dict=subquery_dict,
         )
 
         # with sorting
         if self.sorts is not None and len(self.sorts) > 0:
             query = apply_sorting(
-                query=query, sorts=self.sorts, subquery_dict=self.subquery.c
+                query=query,
+                sorts=self.sorts,
+                subquery_dict=subquery_dict,
             )
         # no sorting
         else:
-            if len(self.subquery.c) > 0:
-                first_column = list(self.subquery.c)[0]
-                query = query.order_by(first_column.desc())
-            else:
-                raise ValueError("Subquery has to have at least one column")
+            first_column = list(query.column_descriptions)[0]["name"]
+            query = query.order_by(desc(first_column))
 
         # with pagination
         if page_number is not None and page_size is not None:

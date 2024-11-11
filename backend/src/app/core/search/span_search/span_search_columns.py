@@ -68,7 +68,7 @@ class AnnotatedSegmentsColumns(str, AbstractColumns):
             case AnnotatedSegmentsColumns.USER_ID:
                 return FilterValueType.USER_ID
 
-    def get_sort_column(self, **kwargs):
+    def get_sort_column(self):
         match self:
             case AnnotatedSegmentsColumns.SOURCE_DOCUMENT_FILENAME:
                 return SourceDocumentORM.filename

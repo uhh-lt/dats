@@ -21,7 +21,8 @@ from app.core.data.orm.util import get_parent_project_id
 from app.core.filters.column_info import ColumnInfo
 from app.core.filters.filtering import Filter
 from app.core.filters.sorting import Sort
-from app.core.search.memo_search.memo import MemoColumns, memo_info, memo_search
+from app.core.search.memo_search.memo_search import memo_info, memo_search
+from app.core.search.memo_search.memo_search_columns import MemoColumns
 
 router = APIRouter(
     prefix="/memo", dependencies=[Depends(get_current_user)], tags=["memo"]

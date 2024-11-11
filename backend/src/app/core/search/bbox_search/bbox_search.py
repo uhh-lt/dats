@@ -3,18 +3,18 @@ from typing import List, Optional
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.doc_type import DocType
 from app.core.data.dto.analysis import (
-    AnnotatedSegmentResult,
-    AnnotationTableRow,
+    AnnotatedImageResult,
+    BBoxAnnotationTableRow,
 )
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
+from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM
 from app.core.data.orm.source_document import SourceDocumentORM
-from app.core.data.orm.span_annotation import SpanAnnotationORM
-from app.core.data.orm.span_text import SpanTextORM
+from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
 from app.core.filters.column_info import (
     ColumnInfo,
@@ -22,14 +22,12 @@ from app.core.filters.column_info import (
 from app.core.filters.filtering import Filter
 from app.core.filters.search_builder import SearchBuilder
 from app.core.filters.sorting import Sort
-from app.core.search.span_search.span_search_columns import (
-    AnnotatedSegmentsColumns,
-)
+from app.core.search.bbox_search.bbox_search_columns import AnnotatedImagesColumns
+
+repo_service = RepoService()
 
 
-def find_annotated_segments_info(
-    project_id,
-) -> List[ColumnInfo[AnnotatedSegmentsColumns]]:
+def find_annotated_images_info(project_id) -> List[ColumnInfo[AnnotatedImagesColumns]]:
     with SQLService().db_session() as db:
         project_metadata = [
             ProjectMetadataRead.model_validate(pm)
@@ -38,49 +36,50 @@ def find_annotated_segments_info(
         metadata_column_info = [
             ColumnInfo.from_project_metadata(pm)
             for pm in project_metadata
-            if pm.doctype in [DocType.text]
+            if pm.doctype
+            in [
+                DocType.image,
+            ]
         ]
 
     return [
-        ColumnInfo[AnnotatedSegmentsColumns].from_column(column)
-        for column in AnnotatedSegmentsColumns
+        ColumnInfo[AnnotatedImagesColumns].from_column(column)
+        for column in AnnotatedImagesColumns
     ] + metadata_column_info
 
 
-def find_annotated_segments(
+def find_annotated_images(
     project_id: int,
     user_id: int,
-    filter: Filter[AnnotatedSegmentsColumns],
-    sorts: List[Sort[AnnotatedSegmentsColumns]],
+    filter: Filter[AnnotatedImagesColumns],
+    sorts: List[Sort[AnnotatedImagesColumns]],
     page: Optional[int] = None,
     page_size: Optional[int] = None,
-) -> AnnotatedSegmentResult:
+) -> AnnotatedImageResult:
     with SQLService().db_session() as db:
         builder = SearchBuilder(db, filter, sorts)
-        # build the initial subquery that queries all necessary data for the desired output
         subquery = builder.build_subquery(
             subquery=(
                 db.query(
-                    SpanAnnotationORM.id,
+                    BBoxAnnotationORM.id,
                 ).group_by(
-                    SpanAnnotationORM.id,
+                    BBoxAnnotationORM.id,
                 )
             )
         )
         builder.build_query(
             query=(
                 db.query(
-                    SpanAnnotationORM.id,
-                    SpanTextORM.text,
+                    BBoxAnnotationORM.id,
                     AnnotationDocumentORM.user_id,
                 )
+                .add_entity(BBoxAnnotationORM)
                 .add_entity(CodeORM)
                 .add_entity(SourceDocumentORM)
-                .join(SpanAnnotationORM.annotation_document)
-                .join(SpanAnnotationORM.span_text)
-                .join(SpanAnnotationORM.code)
+                .join(BBoxAnnotationORM.annotation_document)
+                .join(BBoxAnnotationORM.code)
                 .join(AnnotationDocumentORM.source_document)
-                .join(subquery, SpanAnnotationORM.id == subquery.c.id)
+                .join(subquery, BBoxAnnotationORM.id == subquery.c.id)
                 .filter(
                     SourceDocumentORM.project_id == project_id,
                     AnnotationDocumentORM.user_id == user_id,
@@ -94,13 +93,24 @@ def find_annotated_segments(
 
         data = []
         for row in result_rows:
+            bbox_orm: BBoxAnnotationORM = row[2]
+            code_orm: CodeORM = row[3]
             sdoc_orm: SourceDocumentORM = row[4]
             data.append(
-                AnnotationTableRow(
+                BBoxAnnotationTableRow(
                     id=row[0],
-                    span_text=row[1],
-                    user_id=row[2],
-                    code=CodeRead.model_validate(row[3]),
+                    user_id=row[1],
+                    x=bbox_orm.x_min,
+                    y=bbox_orm.y_min,
+                    width=bbox_orm.x_max - bbox_orm.x_min,
+                    height=bbox_orm.y_max - bbox_orm.y_min,
+                    url=repo_service.get_sdoc_url(
+                        sdoc=SourceDocumentRead.model_validate(sdoc_orm),
+                        relative=True,
+                        webp=True,
+                        thumbnail=False,
+                    ),
+                    code=CodeRead.model_validate(code_orm),
                     sdoc=SourceDocumentRead.model_validate(sdoc_orm),
                     tags=[
                         DocumentTagRead.model_validate(tag)
@@ -109,4 +119,4 @@ def find_annotated_segments(
                     memo=None,
                 )
             )
-        return AnnotatedSegmentResult(total_results=total_results, data=data)
+    return AnnotatedImageResult(total_results=total_results, data=data)
