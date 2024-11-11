@@ -24,8 +24,8 @@ from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_group import SpanGroupORM
+from app.core.db.elasticsearch_service import ElasticSearchService
 from app.core.db.sql_service import SQLService
-from app.core.search.elasticsearch_service import ElasticSearchService
 
 
 class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):

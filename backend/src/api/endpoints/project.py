@@ -32,7 +32,7 @@ from app.core.data.dto.project import ProjectCreate, ProjectRead, ProjectUpdate
 from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.dto.user import UserRead
 from app.core.data.orm.source_document import SourceDocumentORM
-from app.core.search.elasticsearch_service import ElasticSearchService
+from app.core.db.elasticsearch_service import ElasticSearchService
 from app.preprocessing.preprocessing_service import PreprocessingService
 
 router = APIRouter(

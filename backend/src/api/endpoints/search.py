@@ -17,10 +17,10 @@ from app.core.data.dto.search import (
     SimSearchSentenceHit,
 )
 from app.core.data.dto.search_stats import KeywordStat, SpanEntityStat, TagStat
+from app.core.db.elasticsearch_service import ElasticSearchService
 from app.core.filters.column_info import ColumnInfo
 from app.core.filters.filtering import Filter
 from app.core.filters.sorting import Sort
-from app.core.search.elasticsearch_service import ElasticSearchService
 from app.core.search.sdoc_search.sdoc_search_columns import SearchColumns
 
 router = APIRouter(

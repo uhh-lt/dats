@@ -22,10 +22,10 @@ from app.core.data.orm.code import CodeORM
 from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.user import UserORM
 from app.core.data.repo.repo_service import RepoService
+from app.core.db.elasticsearch_service import ElasticSearchService
 from app.core.db.redis_service import RedisService
+from app.core.db.simsearch_service import SimSearchService
 from app.core.db.sql_service import SQLService
-from app.core.search.elasticsearch_service import ElasticSearchService
-from app.core.search.simsearch_service import SimSearchService
 from config import conf
 
 os.environ["RESET_DATA"] = "1"

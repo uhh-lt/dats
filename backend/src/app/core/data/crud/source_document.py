@@ -22,8 +22,8 @@ from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.source_document_data import SourceDocumentDataORM
 from app.core.data.orm.source_document_link import SourceDocumentLinkORM
 from app.core.data.repo.repo_service import RepoService
+from app.core.db.elasticsearch_service import ElasticSearchService
 from app.core.db.sql_service import SQLService
-from app.core.search.elasticsearch_service import ElasticSearchService
 
 
 class SourceDocumentPreprocessingUnfinishedError(Exception):
@@ -78,7 +78,7 @@ class CRUDSourceDocument(
 
     def remove(self, db: Session, *, id: int) -> SourceDocumentORM:
         # Import SimSearchService here to prevent a cyclic dependency
-        from app.core.search.simsearch_service import SimSearchService
+        from app.core.db.simsearch_service import SimSearchService
 
         sdoc_db_obj = super().remove(db=db, id=id)
 
@@ -99,7 +99,7 @@ class CRUDSourceDocument(
 
     def remove_by_project(self, db: Session, *, proj_id: int) -> List[int]:
         # Import SimSearchService here to prevent a cyclic dependency
-        from app.core.search.simsearch_service import SimSearchService
+        from app.core.db.simsearch_service import SimSearchService
 
         # find all sdocs to be removed
         query = db.query(self.model).filter(self.model.project_id == proj_id)

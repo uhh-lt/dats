@@ -10,7 +10,7 @@ from app.core.data.dto.concept_over_time_analysis import (
     COTASentence,
 )
 from app.core.data.repo.repo_service import RepoService
-from app.core.search.simsearch_service import SimSearchService
+from app.core.db.simsearch_service import SimSearchService
 from app.preprocessing.ray_model_service import RayModelService
 from app.preprocessing.ray_model_worker.dto.cota import (
     RayCOTAJobInput,

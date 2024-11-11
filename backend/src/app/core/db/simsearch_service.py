@@ -13,8 +13,8 @@ from app.core.data.dto.search import (
 )
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.repo.repo_service import RepoService
+from app.core.db.index_type import IndexType
 from app.core.db.sql_service import SQLService
-from app.core.search.index_type import IndexType
 from app.preprocessing.ray_model_service import RayModelService
 from app.preprocessing.ray_model_worker.dto.clip import (
     ClipImageEmbeddingInput,

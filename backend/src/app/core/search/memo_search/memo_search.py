@@ -6,6 +6,7 @@ from app.core.data.dto.search import (
 )
 from app.core.data.orm.memo import MemoORM
 from app.core.data.orm.object_handle import ObjectHandleORM
+from app.core.db.elasticsearch_service import ElasticSearchService
 from app.core.db.sql_service import SQLService
 from app.core.filters.column_info import (
     ColumnInfo,
@@ -13,7 +14,6 @@ from app.core.filters.column_info import (
 from app.core.filters.filtering import Filter
 from app.core.filters.search_builder import SearchBuilder
 from app.core.filters.sorting import Sort
-from app.core.search.elasticsearch_service import ElasticSearchService
 from app.core.search.memo_search.memo_search_columns import MemoColumns
 
 

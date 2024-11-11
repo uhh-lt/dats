@@ -1,4 +1,4 @@
-from app.core.search.simsearch_service import SimSearchService
+from app.core.db.simsearch_service import SimSearchService
 from app.preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 

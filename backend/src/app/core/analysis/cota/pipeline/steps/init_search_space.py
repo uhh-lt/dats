@@ -9,8 +9,8 @@ from app.core.data.dto.concept_over_time_analysis import (
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.source_document_data import SourceDocumentDataORM
 from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
+from app.core.db.simsearch_service import SimSearchService
 from app.core.db.sql_service import SQLService
-from app.core.search.simsearch_service import SimSearchService
 
 sqls: SQLService = SQLService()
 sims: SimSearchService = SimSearchService()
