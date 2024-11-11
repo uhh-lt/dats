@@ -16,7 +16,7 @@ from app.core.data.orm.code import CodeORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
-from app.core.search.bbox_search.bbox_search_columns import AnnotatedImagesColumns
+from app.core.search.bbox_search.bbox_search_columns import BBoxColumns
 from app.core.search.column_info import (
     ColumnInfo,
 )
@@ -27,7 +27,7 @@ from app.core.search.sorting import Sort
 repo_service = RepoService()
 
 
-def find_annotated_images_info(project_id) -> List[ColumnInfo[AnnotatedImagesColumns]]:
+def find_annotated_images_info(project_id) -> List[ColumnInfo[BBoxColumns]]:
     with SQLService().db_session() as db:
         project_metadata = [
             ProjectMetadataRead.model_validate(pm)
@@ -43,16 +43,15 @@ def find_annotated_images_info(project_id) -> List[ColumnInfo[AnnotatedImagesCol
         ]
 
     return [
-        ColumnInfo[AnnotatedImagesColumns].from_column(column)
-        for column in AnnotatedImagesColumns
+        ColumnInfo[BBoxColumns].from_column(column) for column in BBoxColumns
     ] + metadata_column_info
 
 
 def find_annotated_images(
     project_id: int,
     user_id: int,
-    filter: Filter[AnnotatedImagesColumns],
-    sorts: List[Sort[AnnotatedImagesColumns]],
+    filter: Filter[BBoxColumns],
+    sorts: List[Sort[BBoxColumns]],
     page: Optional[int] = None,
     page_size: Optional[int] = None,
 ) -> AnnotatedImageResult:

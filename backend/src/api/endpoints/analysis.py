@@ -26,7 +26,7 @@ from app.core.search.bbox_search.bbox_search import (
     find_annotated_images,
     find_annotated_images_info,
 )
-from app.core.search.bbox_search.bbox_search_columns import AnnotatedImagesColumns
+from app.core.search.bbox_search.bbox_search_columns import BBoxColumns
 from app.core.search.column_info import ColumnInfo
 from app.core.search.filtering import Filter
 from app.core.search.sorting import Sort
@@ -35,7 +35,7 @@ from app.core.search.span_search.span_search import (
     find_annotated_segments_info,
 )
 from app.core.search.span_search.span_search_columns import (
-    AnnotatedSegmentsColumns,
+    SpanColumns,
 )
 
 router = APIRouter(
@@ -103,14 +103,14 @@ def annotation_occurrences(
 
 @router.post(
     "/annotated_segments_info",
-    response_model=List[ColumnInfo[AnnotatedSegmentsColumns]],
+    response_model=List[ColumnInfo[SpanColumns]],
     summary="Returns AnnotationSegments Info.",
 )
 def annotated_segments_info(
     *,
     project_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[ColumnInfo[AnnotatedSegmentsColumns]]:
+) -> List[ColumnInfo[SpanColumns]]:
     authz_user.assert_in_project(project_id)
     return find_annotated_segments_info(
         project_id=project_id,
@@ -126,10 +126,10 @@ def annotated_segments(
     *,
     project_id: int,
     user_id: int,
-    filter: Filter[AnnotatedSegmentsColumns],
+    filter: Filter[SpanColumns],
     page: Optional[int] = None,
     page_size: Optional[int] = None,
-    sorts: List[Sort[AnnotatedSegmentsColumns]],
+    sorts: List[Sort[SpanColumns]],
     authz_user: AuthzUser = Depends(),
 ) -> AnnotatedSegmentResult:
     authz_user.assert_in_project(project_id)
@@ -146,14 +146,14 @@ def annotated_segments(
 
 @router.post(
     "/annotated_images_info",
-    response_model=List[ColumnInfo[AnnotatedImagesColumns]],
+    response_model=List[ColumnInfo[BBoxColumns]],
     summary="Returns AnnotationSegments Info.",
 )
 def annotated_images_info(
     *,
     project_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[ColumnInfo[AnnotatedImagesColumns]]:
+) -> List[ColumnInfo[BBoxColumns]]:
     authz_user.assert_in_project(project_id)
     return find_annotated_images_info(
         project_id=project_id,
@@ -169,10 +169,10 @@ def annotated_images(
     *,
     project_id: int,
     user_id: int,
-    filter: Filter[AnnotatedImagesColumns],
+    filter: Filter[BBoxColumns],
     page: Optional[int] = None,
     page_size: Optional[int] = None,
-    sorts: List[Sort[AnnotatedImagesColumns]],
+    sorts: List[Sort[BBoxColumns]],
     authz_user: AuthzUser = Depends(),
 ) -> AnnotatedImageResult:
     authz_user.assert_in_project(project_id)

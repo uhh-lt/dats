@@ -20,7 +20,7 @@ from app.core.data.dto.search_stats import KeywordStat, SpanEntityStat, TagStat
 from app.core.db.elasticsearch_service import ElasticSearchService
 from app.core.search.column_info import ColumnInfo
 from app.core.search.filtering import Filter
-from app.core.search.sdoc_search.sdoc_search_columns import SearchColumns
+from app.core.search.sdoc_search.sdoc_search_columns import SdocColumns
 from app.core.search.sorting import Sort
 
 router = APIRouter(
@@ -32,12 +32,12 @@ es = ElasticSearchService()
 
 @router.post(
     "/sdoc_info",
-    response_model=List[ColumnInfo[SearchColumns]],
+    response_model=List[ColumnInfo[SdocColumns]],
     summary="Returns Search Info.",
 )
 def search_sdocs_info(
     *, project_id: int, authz_user: AuthzUser = Depends()
-) -> List[ColumnInfo[SearchColumns]]:
+) -> List[ColumnInfo[SdocColumns]]:
     authz_user.assert_in_project(project_id)
 
     return sdoc_search.search_info(project_id=project_id)
@@ -53,8 +53,8 @@ def search_sdocs(
     project_id: int,
     search_query: str,
     expert_mode: bool,
-    filter: Filter[SearchColumns],
-    sorts: List[Sort[SearchColumns]],
+    filter: Filter[SdocColumns],
+    sorts: List[Sort[SdocColumns]],
     highlight: bool,
     page_number: Optional[int] = None,
     page_size: Optional[int] = None,
@@ -88,8 +88,8 @@ def search_code_stats(
     project_id: int,
     search_query: str,
     expert_mode: bool,
-    filter: Filter[SearchColumns],
-    sorts: List[Sort[SearchColumns]],
+    filter: Filter[SdocColumns],
+    sorts: List[Sort[SdocColumns]],
 ) -> List[SpanEntityStat]:
     # search for relevant sdoc_ids
     authz_user.assert_in_project(project_id)
@@ -153,8 +153,8 @@ def search_keyword_stats(
     # search params
     search_query: str,
     expert_mode: bool,
-    filter: Filter[SearchColumns],
-    sorts: List[Sort[SearchColumns]],
+    filter: Filter[SdocColumns],
+    sorts: List[Sort[SdocColumns]],
 ) -> List[KeywordStat]:
     # search for relevant sdoc_ids
     authz_user.assert_in_project(project_id)
@@ -220,8 +220,8 @@ def search_tag_stats(
     project_id: int,
     search_query: str,
     expert_mode: bool,
-    filter: Filter[SearchColumns],
-    sorts: List[Sort[SearchColumns]],
+    filter: Filter[SdocColumns],
+    sorts: List[Sort[SdocColumns]],
 ) -> List[TagStat]:
     # search for relevant sdoc_ids
     authz_user.assert_in_project(project_id)
@@ -277,7 +277,7 @@ def find_similar_sentences(
     query: Union[str, List[str], int],
     top_k: int,
     threshold: float,
-    filter: Filter[SearchColumns],
+    filter: Filter[SdocColumns],
     authz_user: AuthzUser = Depends(),
 ) -> List[SimSearchSentenceHit]:
     authz_user.assert_in_project(proj_id)
@@ -297,7 +297,7 @@ def find_similar_images(
     query: Union[str, List[str], int],
     top_k: int,
     threshold: float,
-    filter: Filter[SearchColumns],
+    filter: Filter[SdocColumns],
     authz_user: AuthzUser = Depends(),
 ) -> List[SimSearchImageHit]:
     authz_user.assert_in_project(proj_id)

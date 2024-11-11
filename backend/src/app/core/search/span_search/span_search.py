@@ -23,13 +23,13 @@ from app.core.search.filtering import Filter
 from app.core.search.search_builder import SearchBuilder
 from app.core.search.sorting import Sort
 from app.core.search.span_search.span_search_columns import (
-    AnnotatedSegmentsColumns,
+    SpanColumns,
 )
 
 
 def find_annotated_segments_info(
     project_id,
-) -> List[ColumnInfo[AnnotatedSegmentsColumns]]:
+) -> List[ColumnInfo[SpanColumns]]:
     with SQLService().db_session() as db:
         project_metadata = [
             ProjectMetadataRead.model_validate(pm)
@@ -42,16 +42,15 @@ def find_annotated_segments_info(
         ]
 
     return [
-        ColumnInfo[AnnotatedSegmentsColumns].from_column(column)
-        for column in AnnotatedSegmentsColumns
+        ColumnInfo[SpanColumns].from_column(column) for column in SpanColumns
     ] + metadata_column_info
 
 
 def find_annotated_segments(
     project_id: int,
     user_id: int,
-    filter: Filter[AnnotatedSegmentsColumns],
-    sorts: List[Sort[AnnotatedSegmentsColumns]],
+    filter: Filter[SpanColumns],
+    sorts: List[Sort[SpanColumns]],
     page: Optional[int] = None,
     page_size: Optional[int] = None,
 ) -> AnnotatedSegmentResult:

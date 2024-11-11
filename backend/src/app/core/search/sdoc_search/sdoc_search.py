@@ -19,12 +19,12 @@ from app.core.search.column_info import ColumnInfo
 from app.core.search.filtering import (
     Filter,
 )
-from app.core.search.sdoc_search.sdoc_search_columns import SearchColumns
+from app.core.search.sdoc_search.sdoc_search_columns import SdocColumns
 from app.core.search.search_builder import SearchBuilder
 from app.core.search.sorting import Sort
 
 
-def search_info(project_id) -> List[ColumnInfo[SearchColumns]]:
+def search_info(project_id) -> List[ColumnInfo[SdocColumns]]:
     with SQLService().db_session() as db:
         project_metadata = [
             ProjectMetadataRead.model_validate(pm)
@@ -43,7 +43,7 @@ def search_info(project_id) -> List[ColumnInfo[SearchColumns]]:
         ]
 
     return [
-        ColumnInfo[SearchColumns].from_column(column) for column in SearchColumns
+        ColumnInfo[SdocColumns].from_column(column) for column in SdocColumns
     ] + metadata_column_info
 
 
@@ -52,8 +52,8 @@ def search(
     search_query: str,
     expert_mode: bool,
     highlight: bool,
-    filter: Filter[SearchColumns],
-    sorts: List[Sort[SearchColumns]],
+    filter: Filter[SdocColumns],
+    sorts: List[Sort[SdocColumns]],
     page_number: Optional[int] = None,
     page_size: Optional[int] = None,
 ) -> PaginatedElasticSearchDocumentHits:
@@ -104,8 +104,8 @@ def search(
 def filter_sdoc_ids(
     db: Session,
     project_id: int,
-    filter: Filter[SearchColumns],
-    sorts: List[Sort[SearchColumns]] = [],
+    filter: Filter[SdocColumns],
+    sorts: List[Sort[SdocColumns]] = [],
     page_number: Optional[int] = None,
     page_size: Optional[int] = None,
 ) -> Tuple[List[int], int]:
@@ -138,7 +138,7 @@ def find_similar_sentences(
     query: Union[str, List[str], int],
     top_k: int,
     threshold: float,
-    filter: Filter[SearchColumns],
+    filter: Filter[SdocColumns],
 ) -> List[SimSearchSentenceHit]:
     with SQLService().db_session() as db:
         filtered_sdoc_ids, _ = filter_sdoc_ids(db, proj_id, filter)
@@ -156,7 +156,7 @@ def find_similar_images(
     query: Union[str, List[str], int],
     top_k: int,
     threshold: float,
-    filter: Filter[SearchColumns],
+    filter: Filter[SdocColumns],
 ) -> List[SimSearchImageHit]:
     with SQLService().db_session() as db:
         filtered_sdoc_ids, _ = filter_sdoc_ids(db, proj_id, filter)

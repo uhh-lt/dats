@@ -11,74 +11,74 @@ from app.core.search.filtering_operators import FilterOperator, FilterValueType
 from app.core.search.search_builder import SearchBuilder
 
 
-class AnnotatedImagesColumns(str, AbstractColumns):
-    CODE_ID = "AIC_CODE_ID"
-    MEMO_CONTENT = "AIC_MEMO_CONTENT"
-    SOURCE_DOCUMENT_FILENAME = "AIC_SOURCE_SOURCE_DOCUMENT_FILENAME"
-    DOCUMENT_TAG_ID_LIST = "AIC_DOCUMENT_DOCUMENT_TAG_ID_LIST"
+class BBoxColumns(str, AbstractColumns):
+    CODE_ID = "BB_CODE_ID"
+    MEMO_CONTENT = "BB_MEMO_CONTENT"
+    SOURCE_DOCUMENT_FILENAME = "BB_SOURCE_SOURCE_DOCUMENT_FILENAME"
+    DOCUMENT_TAG_ID_LIST = "BB_DOCUMENT_DOCUMENT_TAG_ID_LIST"
 
     def get_filter_column(self, subquery_dict):
         match self:
-            case AnnotatedImagesColumns.SOURCE_DOCUMENT_FILENAME:
+            case BBoxColumns.SOURCE_DOCUMENT_FILENAME:
                 return SourceDocumentORM.filename
-            case AnnotatedImagesColumns.DOCUMENT_TAG_ID_LIST:
-                return subquery_dict[AnnotatedImagesColumns.DOCUMENT_TAG_ID_LIST.value]
-            case AnnotatedImagesColumns.CODE_ID:
+            case BBoxColumns.DOCUMENT_TAG_ID_LIST:
+                return subquery_dict[BBoxColumns.DOCUMENT_TAG_ID_LIST.value]
+            case BBoxColumns.CODE_ID:
                 return CodeORM.id
-            case AnnotatedImagesColumns.MEMO_CONTENT:
+            case BBoxColumns.MEMO_CONTENT:
                 return MemoORM.content
 
     def get_filter_operator(self) -> FilterOperator:
         match self:
-            case AnnotatedImagesColumns.SOURCE_DOCUMENT_FILENAME:
+            case BBoxColumns.SOURCE_DOCUMENT_FILENAME:
                 return FilterOperator.STRING
-            case AnnotatedImagesColumns.DOCUMENT_TAG_ID_LIST:
+            case BBoxColumns.DOCUMENT_TAG_ID_LIST:
                 return FilterOperator.ID_LIST
-            case AnnotatedImagesColumns.CODE_ID:
+            case BBoxColumns.CODE_ID:
                 return FilterOperator.ID
-            case AnnotatedImagesColumns.MEMO_CONTENT:
+            case BBoxColumns.MEMO_CONTENT:
                 return FilterOperator.STRING
 
     def get_filter_value_type(self) -> FilterValueType:
         match self:
-            case AnnotatedImagesColumns.SOURCE_DOCUMENT_FILENAME:
+            case BBoxColumns.SOURCE_DOCUMENT_FILENAME:
                 return FilterValueType.INFER_FROM_OPERATOR
-            case AnnotatedImagesColumns.DOCUMENT_TAG_ID_LIST:
+            case BBoxColumns.DOCUMENT_TAG_ID_LIST:
                 return FilterValueType.TAG_ID
-            case AnnotatedImagesColumns.CODE_ID:
+            case BBoxColumns.CODE_ID:
                 return FilterValueType.CODE_ID
-            case AnnotatedImagesColumns.MEMO_CONTENT:
+            case BBoxColumns.MEMO_CONTENT:
                 return FilterValueType.INFER_FROM_OPERATOR
 
     def get_sort_column(self):
         match self:
-            case AnnotatedImagesColumns.SOURCE_DOCUMENT_FILENAME:
+            case BBoxColumns.SOURCE_DOCUMENT_FILENAME:
                 return SourceDocumentORM.filename
-            case AnnotatedImagesColumns.DOCUMENT_TAG_ID_LIST:
+            case BBoxColumns.DOCUMENT_TAG_ID_LIST:
                 return None
-            case AnnotatedImagesColumns.CODE_ID:
+            case BBoxColumns.CODE_ID:
                 return CodeORM.name
-            case AnnotatedImagesColumns.MEMO_CONTENT:
+            case BBoxColumns.MEMO_CONTENT:
                 return MemoORM.content
 
     def get_label(self) -> str:
         match self:
-            case AnnotatedImagesColumns.SOURCE_DOCUMENT_FILENAME:
+            case BBoxColumns.SOURCE_DOCUMENT_FILENAME:
                 return "Document name"
-            case AnnotatedImagesColumns.DOCUMENT_TAG_ID_LIST:
+            case BBoxColumns.DOCUMENT_TAG_ID_LIST:
                 return "Tags"
-            case AnnotatedImagesColumns.CODE_ID:
+            case BBoxColumns.CODE_ID:
                 return "Code"
-            case AnnotatedImagesColumns.MEMO_CONTENT:
+            case BBoxColumns.MEMO_CONTENT:
                 return "Memo content"
 
     def add_subquery_filter_statements(self, query_builder: SearchBuilder):
         match self:
-            case AnnotatedImagesColumns.DOCUMENT_TAG_ID_LIST:
+            case BBoxColumns.DOCUMENT_TAG_ID_LIST:
                 query_builder._add_subquery_column(
                     aggregate_ids(
                         DocumentTagORM.id,
-                        label=AnnotatedImagesColumns.DOCUMENT_TAG_ID_LIST.value,
+                        label=BBoxColumns.DOCUMENT_TAG_ID_LIST.value,
                     )
                 )
                 query_builder._join_subquery(BBoxAnnotationORM.annotation_document)
@@ -89,7 +89,7 @@ class AnnotatedImagesColumns(str, AbstractColumns):
 
     def add_query_filter_statements(self, query_builder: SearchBuilder):
         match self:
-            case AnnotatedImagesColumns.MEMO_CONTENT:
+            case BBoxColumns.MEMO_CONTENT:
                 # TODO, i need join_query for this, subquery is for aggregates, query for normal columns
                 assert query_builder.query is not None, "Query is not initialized"
                 query_builder.query = query_builder.query.join(
