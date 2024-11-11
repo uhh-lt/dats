@@ -17,9 +17,9 @@ from app.core.filters.column_info import ColumnInfo
 from app.core.filters.filtering import (
     Filter,
 )
+from app.core.filters.search_builder import SearchBuilder
 from app.core.filters.sorting import Sort
 from app.core.search.elasticsearch_service import ElasticSearchService
-from app.core.search.sdoc_search.sdoc_search_builder import SdocSearchBuilder
 from app.core.search.sdoc_search.sdoc_search_columns import SearchColumns
 from app.core.search.simsearch_service import SimSearchService
 
@@ -109,7 +109,7 @@ def filter_sdoc_ids(
     page_number: Optional[int] = None,
     page_size: Optional[int] = None,
 ) -> Tuple[List[int], int]:
-    builder = SdocSearchBuilder(db, project_id, filter, sorts)
+    builder = SearchBuilder(db, filter, sorts)
     # build the initial subquery that just queries all sdoc_ids of the project
     subquery = builder.build_subquery(
         subquery=(
@@ -121,10 +121,12 @@ def filter_sdoc_ids(
         )
     )
     # build the query, specifying the result columns and joining the subquery
-    result_rows, total_results = builder.execute_query(
+    builder.build_query(
         query=db.query(
             SourceDocumentORM.id,
-        ).join(subquery, SourceDocumentORM.id == subquery.c.id),
+        ).join(subquery, SourceDocumentORM.id == subquery.c.id)
+    )
+    result_rows, total_results = builder.execute_query(
         page_number=page_number,
         page_size=page_size,
     )

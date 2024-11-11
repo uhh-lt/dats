@@ -30,10 +30,12 @@ from app.core.search.bbox_search.annotated_images import (
     find_annotated_images,
     find_annotated_images_info,
 )
-from app.core.search.span_search.annotated_segments import (
-    AnnotatedSegmentsColumns,
+from app.core.search.span_search.span_search import (
     find_annotated_segments,
     find_annotated_segments_info,
+)
+from app.core.search.span_search.span_search_columns import (
+    AnnotatedSegmentsColumns,
 )
 
 router = APIRouter(

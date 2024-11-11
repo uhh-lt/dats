@@ -1,4 +1,4 @@
-from typing import Any, List, Optional, Tuple, TypeVar, Union
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple, TypeVar, Union
 
 from sqlalchemy.orm import Query, Session, aliased
 from sqlalchemy.sql._typing import (
@@ -8,12 +8,11 @@ from sqlalchemy.sql._typing import (
 )
 from sqlalchemy.sql.selectable import Subquery
 
-from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.meta_type import MetaType
+from app.core.data.orm.project_metadata import ProjectMetadataORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
-from app.core.filters.abstract_column import AbstractColumns
 from app.core.filters.filtering import (
     Filter,
     apply_filtering,
@@ -22,20 +21,25 @@ from app.core.filters.filtering import (
 from app.core.filters.pagination import apply_pagination
 from app.core.filters.sorting import Sort, apply_sorting, get_columns_affected_by_sorts
 
-T = TypeVar("T", bound=AbstractColumns)
+if TYPE_CHECKING:
+    from app.core.filters.abstract_column import AbstractColumns
+
+T = TypeVar("T", bound="AbstractColumns")
 
 
-class AbstractSearchBuilder:
-    def __init__(
-        self, db: Session, project_id: int, filter: Filter[T], sorts: List[Sort[T]]
-    ) -> None:
+class SearchBuilder:
+    def __init__(self, db: Session, filter: Filter[T], sorts: List[Sort[T]]) -> None:
         self.db = db
-        self.project_id = project_id
         self.filter = filter
         self.sorts = sorts
         self.joined_tables: List[str] = []
         self.selected_columns: List[str] = []
         self.subquery: Optional[Union[Query, Subquery]] = None
+        self.query: Optional[Query] = None
+
+        affected_columns = get_columns_affected_by_filter(self.filter)
+        affected_columns.update(get_columns_affected_by_sorts(self.sorts))
+        self.affected_columns = affected_columns
 
     def _add_subquery_column(self, column: _ColumnExpressionArgument[Any]):
         if self.subquery is None:
@@ -88,7 +92,9 @@ class AbstractSearchBuilder:
 
         # select the correct value column based on the metadata type
         project_metadata = ProjectMetadataRead.model_validate(
-            crud_project_meta.read(db=self.db, id=project_metadata_id)
+            self.db.query(ProjectMetadataORM)
+            .filter(ProjectMetadataORM.id == project_metadata_id)
+            .first()
         )
         metadata = aliased(SourceDocumentMetadataORM)
         match project_metadata.metatype:
@@ -115,29 +121,43 @@ class AbstractSearchBuilder:
             .group_by(metadata.id)
         )
 
-    def _add_entity_filter_statements(self, column: AbstractColumns):
-        raise NotImplementedError()
-
     def build_subquery(self, subquery: Query) -> Subquery:
         if self.subquery is not None:
             raise ValueError("Subquery was built already!")
 
         self.subquery = subquery
 
-        affected_columns = get_columns_affected_by_filter(self.filter)
-        affected_columns.update(get_columns_affected_by_sorts(self.sorts))
-
-        for column in affected_columns:
+        for column in self.affected_columns:
             if isinstance(column, int):
                 self._add_subquery_metadata_filter_statements(column)
             else:
-                self._add_entity_filter_statements(column)
+                column.add_subquery_filter_statements(self)
 
         self.subquery = self.subquery.subquery()
         return self.subquery
 
+    def build_query(self, query: Query) -> Query:
+        if self.subquery is None:
+            raise ValueError("Subquery is not initialized")
+
+        if not isinstance(self.subquery, Subquery):
+            raise ValueError("Subquery has to be built first")
+
+        if self.query is not None:
+            raise ValueError("Query was built already!")
+
+        self.query = query
+
+        for column in self.affected_columns:
+            if isinstance(column, int):
+                continue
+            else:
+                column.add_query_filter_statements(self)
+
+        return self.query
+
     def execute_query(
-        self, query: Query, page_number: Optional[int], page_size: Optional[int]
+        self, page_number: Optional[int], page_size: Optional[int]
     ) -> Tuple[list, int]:
         # query has to be joined with the subquery
 
@@ -147,9 +167,12 @@ class AbstractSearchBuilder:
         if not isinstance(self.subquery, Subquery):
             raise ValueError("Subquery has to be built first")
 
+        if self.query is None:
+            raise ValueError("Query is not initialized")
+
         # filtering
         query = apply_filtering(
-            query=query, filter=self.filter, subquery_dict=self.subquery.c
+            query=self.query, filter=self.filter, subquery_dict=self.subquery.c
         )
 
         # with sorting
@@ -159,7 +182,11 @@ class AbstractSearchBuilder:
             )
         # no sorting
         else:
-            query = query.order_by(SourceDocumentORM.id.desc())
+            if len(self.subquery.c) > 0:
+                first_column = list(self.subquery.c)[0]
+                query = query.order_by(first_column.desc())
+            else:
+                raise ValueError("Subquery has to have at least one column")
 
         # with pagination
         if page_number is not None and page_size is not None:
