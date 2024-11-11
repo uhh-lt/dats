@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
-import { SearchColumns } from "../../../api/openapi/models/SearchColumns.ts";
+import { SdocColumns } from "../../../api/openapi/models/SdocColumns.ts";
 import { SimSearchImageHit } from "../../../api/openapi/models/SimSearchImageHit.ts";
 import { SpanEntityStat } from "../../../api/openapi/models/SpanEntityStat.ts";
 import { SearchService } from "../../../api/openapi/services/SearchService.ts";
@@ -79,7 +79,7 @@ function ImageSimilaritySearch() {
         topK: topK,
         requestBody: {
           query: searchQuery,
-          filter: filter as MyFilter<SearchColumns>,
+          filter: filter as MyFilter<SdocColumns>,
         },
       }),
   });

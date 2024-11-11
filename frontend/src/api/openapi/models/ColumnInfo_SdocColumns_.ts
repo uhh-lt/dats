@@ -4,10 +4,10 @@
 /* eslint-disable */
 import type { FilterOperator } from "./FilterOperator";
 import type { FilterValueType } from "./FilterValueType";
-import type { SearchColumns } from "./SearchColumns";
-export type ColumnInfo_SearchColumns_ = {
+import type { SdocColumns } from "./SdocColumns";
+export type ColumnInfo_SdocColumns_ = {
   label: string;
-  column: SearchColumns | number;
+  column: SdocColumns | number;
   sortable: boolean;
   operator: FilterOperator;
   value: FilterValueType;

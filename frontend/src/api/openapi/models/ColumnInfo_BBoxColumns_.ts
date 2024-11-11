@@ -2,12 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AnnotatedSegmentsColumns } from "./AnnotatedSegmentsColumns";
+import type { BBoxColumns } from "./BBoxColumns";
 import type { FilterOperator } from "./FilterOperator";
 import type { FilterValueType } from "./FilterValueType";
-export type ColumnInfo_AnnotatedSegmentsColumns_ = {
+export type ColumnInfo_BBoxColumns_ = {
   label: string;
-  column: AnnotatedSegmentsColumns | number;
+  column: BBoxColumns | number;
   sortable: boolean;
   operator: FilterOperator;
   value: FilterValueType;

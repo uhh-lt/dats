@@ -2,17 +2,17 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { BBoxColumns } from "./BBoxColumns";
 import type { BooleanOperator } from "./BooleanOperator";
 import type { DateOperator } from "./DateOperator";
 import type { IDListOperator } from "./IDListOperator";
 import type { IDOperator } from "./IDOperator";
 import type { ListOperator } from "./ListOperator";
 import type { NumberOperator } from "./NumberOperator";
-import type { SearchColumns } from "./SearchColumns";
 import type { StringOperator } from "./StringOperator";
-export type FilterExpression_SearchColumns_ = {
+export type FilterExpression_BBoxColumns_ = {
   id: string;
-  column: SearchColumns | number;
+  column: BBoxColumns | number;
   operator:
     | IDOperator
     | NumberOperator

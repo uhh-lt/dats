@@ -8,7 +8,7 @@ import type { Body_search_search_code_stats } from "../models/Body_search_search
 import type { Body_search_search_keyword_stats } from "../models/Body_search_search_keyword_stats";
 import type { Body_search_search_sdocs } from "../models/Body_search_search_sdocs";
 import type { Body_search_search_tag_stats } from "../models/Body_search_search_tag_stats";
-import type { ColumnInfo_SearchColumns_ } from "../models/ColumnInfo_SearchColumns_";
+import type { ColumnInfo_SdocColumns_ } from "../models/ColumnInfo_SdocColumns_";
 import type { KeywordStat } from "../models/KeywordStat";
 import type { PaginatedElasticSearchDocumentHits } from "../models/PaginatedElasticSearchDocumentHits";
 import type { SimSearchImageHit } from "../models/SimSearchImageHit";
@@ -21,14 +21,14 @@ import { request as __request } from "../core/request";
 export class SearchService {
   /**
    * Returns Search Info.
-   * @returns ColumnInfo_SearchColumns_ Successful Response
+   * @returns ColumnInfo_SdocColumns_ Successful Response
    * @throws ApiError
    */
   public static searchSdocsInfo({
     projectId,
   }: {
     projectId: number;
-  }): CancelablePromise<Array<ColumnInfo_SearchColumns_>> {
+  }): CancelablePromise<Array<ColumnInfo_SdocColumns_>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/sdoc_info",

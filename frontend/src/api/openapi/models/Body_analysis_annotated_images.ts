@@ -2,9 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Filter_AnnotatedImagesColumns_ } from "./Filter_AnnotatedImagesColumns_";
-import type { Sort_AnnotatedImagesColumns_ } from "./Sort_AnnotatedImagesColumns_";
+import type { Filter_BBoxColumns_ } from "./Filter_BBoxColumns_";
+import type { Sort_BBoxColumns_ } from "./Sort_BBoxColumns_";
 export type Body_analysis_annotated_images = {
-  filter: Filter_AnnotatedImagesColumns_;
-  sorts: Array<Sort_AnnotatedImagesColumns_>;
+  filter: Filter_BBoxColumns_;
+  sorts: Array<Sort_BBoxColumns_>;
 };

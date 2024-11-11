@@ -2,17 +2,17 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AnnotatedSegmentsColumns } from "./AnnotatedSegmentsColumns";
 import type { BooleanOperator } from "./BooleanOperator";
 import type { DateOperator } from "./DateOperator";
 import type { IDListOperator } from "./IDListOperator";
 import type { IDOperator } from "./IDOperator";
 import type { ListOperator } from "./ListOperator";
 import type { NumberOperator } from "./NumberOperator";
+import type { SpanColumns } from "./SpanColumns";
 import type { StringOperator } from "./StringOperator";
-export type FilterExpression_AnnotatedSegmentsColumns_ = {
+export type FilterExpression_SpanColumns_ = {
   id: string;
-  column: AnnotatedSegmentsColumns | number;
+  column: SpanColumns | number;
   operator:
     | IDOperator
     | NumberOperator

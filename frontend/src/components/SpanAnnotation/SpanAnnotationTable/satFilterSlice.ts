@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
-import { AnnotatedSegmentsColumns } from "../../../api/openapi/models/AnnotatedSegmentsColumns.ts";
+import { SpanColumns } from "../../../api/openapi/models/SpanColumns.ts";
 import { StringOperator } from "../../../api/openapi/models/StringOperator.ts";
 import { createInitialFilterState, filterReducer, resetProjectFilterState } from "../../FilterDialog/filterSlice.ts";
 import { MyFilterExpression } from "../../FilterDialog/filterUtils.ts";
@@ -8,7 +8,7 @@ import { ProjectActions } from "../../Project/projectSlice.ts";
 
 const defaultFilterExpression: MyFilterExpression = {
   id: uuidv4(),
-  column: AnnotatedSegmentsColumns.ASC_SPAN_TEXT,
+  column: SpanColumns.SP_SPAN_TEXT,
   operator: StringOperator.STRING_CONTAINS,
   value: "",
 };

@@ -4,7 +4,7 @@ import { QueryKey } from "./QueryKey.ts";
 import { MyFilter } from "../components/FilterDialog/filterUtils.ts";
 import { useAppSelector } from "../plugins/ReduxHooks.ts";
 import { KeywordStat } from "./openapi/models/KeywordStat.ts";
-import { SearchColumns } from "./openapi/models/SearchColumns.ts";
+import { SdocColumns } from "./openapi/models/SdocColumns.ts";
 import { SimSearchImageHit } from "./openapi/models/SimSearchImageHit.ts";
 import { SimSearchSentenceHit } from "./openapi/models/SimSearchSentenceHit.ts";
 import { SortDirection } from "./openapi/models/SortDirection.ts";
@@ -98,9 +98,9 @@ const useSearchCodeStats = (codeId: number, projectId: number) => {
         expertMode: false,
         searchQuery: searchQuery || "",
         requestBody: {
-          filter: filter as MyFilter<SearchColumns>,
+          filter: filter as MyFilter<SdocColumns>,
           sorts: sortingModel.map((sort) => ({
-            column: sort.id as SearchColumns,
+            column: sort.id as SdocColumns,
             direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
           })),
         },
@@ -139,9 +139,9 @@ const useSearchKeywordStats = (projectId: number) => {
         expertMode: false,
         searchQuery: searchQuery || "",
         requestBody: {
-          filter: filter as MyFilter<SearchColumns>,
+          filter: filter as MyFilter<SdocColumns>,
           sorts: sortingModel.map((sort) => ({
-            column: sort.id as SearchColumns,
+            column: sort.id as SdocColumns,
             direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
           })),
         },
@@ -179,9 +179,9 @@ const useSearchTagStats = (projectId: number) => {
         expertMode: false,
         searchQuery: searchQuery || "",
         requestBody: {
-          filter: filter as MyFilter<SearchColumns>,
+          filter: filter as MyFilter<SdocColumns>,
           sorts: sortingModel.map((sort) => ({
-            column: sort.id as SearchColumns,
+            column: sort.id as SdocColumns,
             direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
           })),
         },

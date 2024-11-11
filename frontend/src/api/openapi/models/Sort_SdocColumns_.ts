@@ -2,9 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AnnotatedImagesColumns } from "./AnnotatedImagesColumns";
+import type { SdocColumns } from "./SdocColumns";
 import type { SortDirection } from "./SortDirection";
-export type Sort_AnnotatedImagesColumns_ = {
-  column: AnnotatedImagesColumns | number;
+export type Sort_SdocColumns_ = {
+  column: SdocColumns | number;
   direction: SortDirection;
 };

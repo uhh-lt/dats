@@ -2,9 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { SearchColumns } from "./SearchColumns";
 import type { SortDirection } from "./SortDirection";
-export type Sort_SearchColumns_ = {
-  column: SearchColumns | number;
+import type { SpanColumns } from "./SpanColumns";
+export type Sort_SpanColumns_ = {
+  column: SpanColumns | number;
   direction: SortDirection;
 };

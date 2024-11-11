@@ -2,8 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Filter_SearchColumns_ } from "./Filter_SearchColumns_";
+import type { Filter_SdocColumns_ } from "./Filter_SdocColumns_";
 export type Body_search_find_similar_sentences = {
   query: string | Array<string> | number;
-  filter: Filter_SearchColumns_;
+  filter: Filter_SdocColumns_;
 };

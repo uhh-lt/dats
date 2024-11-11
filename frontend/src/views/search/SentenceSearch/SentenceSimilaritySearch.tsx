@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
-import { SearchColumns } from "../../../api/openapi/models/SearchColumns.ts";
+import { SdocColumns } from "../../../api/openapi/models/SdocColumns.ts";
 import { SimSearchSentenceHit } from "../../../api/openapi/models/SimSearchSentenceHit.ts";
 import { SpanEntityStat } from "../../../api/openapi/models/SpanEntityStat.ts";
 import { SearchService } from "../../../api/openapi/services/SearchService.ts";
@@ -75,7 +75,7 @@ function SentenceSimilaritySearch() {
         threshold: threshold,
         topK: topK,
         requestBody: {
-          filter: filter as MyFilter<SearchColumns>,
+          filter: filter as MyFilter<SdocColumns>,
           query: searchQuery || "",
         },
       }),
