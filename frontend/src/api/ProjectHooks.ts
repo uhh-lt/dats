@@ -3,8 +3,6 @@ import queryClient from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
 
 import { useAuth } from "../auth/useAuth.ts";
-import { ActionQueryParameters } from "./openapi/models/ActionQueryParameters.ts";
-import { ActionRead } from "./openapi/models/ActionRead.ts";
 import { CodeRead } from "./openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "./openapi/models/DocumentTagRead.ts";
 import { MemoRead } from "./openapi/models/MemoRead.ts";
@@ -169,27 +167,6 @@ const useGetAllUserMemos = (projectId: number | null | undefined) =>
     enabled: !!projectId,
   });
 
-// actions
-const useGetActions = (projectId: number, userId: number) =>
-  useQuery<Array<ActionRead>, Error>({
-    queryKey: [QueryKey.ACTION, projectId, userId],
-    queryFn: () =>
-      ProjectService.getUserActionsOfProject({
-        projId: projectId,
-        userId: userId,
-      }),
-    refetchOnWindowFocus: false,
-  });
-
-const useQueryActions = (requestBody: ActionQueryParameters) =>
-  useQuery<ActionRead[], Error>({
-    queryKey: [QueryKey.ACTIONS_QUERY, requestBody],
-    queryFn: () =>
-      ProjectService.queryActionsOfProject({
-        requestBody: requestBody,
-      }),
-  });
-
 // metadata
 const useGetMetadata = (projectId: number) =>
   useQuery<ProjectMetadataRead[], Error>({
@@ -222,9 +199,6 @@ const ProjectHooks = {
   // memo
   useGetOrCreateMemo,
   useGetAllUserMemos,
-  // actions
-  useGetActions,
-  useQueryActions,
   // metadata
   useGetMetadata,
   // duplicates

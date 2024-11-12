@@ -15,7 +15,6 @@ import logbookReducer from "../views/logbook/logbookSlice.ts";
 import searchReducer from "../views/search/DocumentSearch/searchSlice.ts";
 import imageSearchReducer from "../views/search/ImageSearch/imageSearchSlice.ts";
 import sentenceSearchReducer from "../views/search/SentenceSearch/sentenceSearchSlice.ts";
-import autologbookReducer from "../views/tools/AutoLogbook/autologbookSlice.ts";
 import documentSamplerReducer from "../views/tools/DocumentSampler/documentSamplerSlice.ts";
 
 export const store = configureStore({
@@ -29,7 +28,6 @@ export const store = configureStore({
     project: projectReducer,
     // non-persisted reducers
     logbook: logbookReducer,
-    autologbook: autologbookReducer,
     annotatedSegments: annotatedSegmentsReducer,
     timelineAnalysis: timelineAnalysisReducer,
     satFilter: satFilterReducer,

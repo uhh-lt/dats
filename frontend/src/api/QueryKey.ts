@@ -44,11 +44,6 @@ export const QueryKey = {
   // the logged-in user's memo (by project id)
   MEMO_PROJECT: "projectMemo",
 
-  // all actions of a project from a user (by project id, user id)
-  ACTION: "action",
-  // all actions of a project by query parameters
-  ACTIONS_QUERY: "actionsQuery",
-
   // a single document (by sdoc id)
   SDOC: "sdoc",
   // a single document's data (by sdoc id)
