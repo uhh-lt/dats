@@ -4,7 +4,6 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
-from app.core.data.dto.action import ActionType
 from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.dto.source_document_metadata import (
     SourceDocumentMetadataBaseDTO,
@@ -45,7 +44,6 @@ class CRUDSourceDocumentMetadata(
         self, db: Session, *, create_dto: SourceDocumentMetadataCreate
     ) -> SourceDocumentMetadataORM:
         from app.core.data.crud.project_metadata import crud_project_meta
-        from app.core.data.crud.source_document import crud_sdoc
 
         # check if ProjectMetadata exists
         project_metadata = ProjectMetadataRead.model_validate(
@@ -58,24 +56,8 @@ class CRUDSourceDocumentMetadata(
                 f"provided value has the wrong type (need {project_metadata.metatype})"
             )
 
-        # create before_state
-        sdoc_orm = crud_sdoc.read(db=db, id=create_dto.source_document_id)
-        before_state = crud_sdoc._get_action_state_from_orm(db_obj=sdoc_orm)
-
         # create metadata
         metadata_orm = super().create(db, create_dto=create_dto)
-
-        # create after state
-        sdoc_orm = crud_sdoc.read(db=db, id=create_dto.source_document_id)
-        after_state = crud_sdoc._get_action_state_from_orm(db_obj=sdoc_orm)
-
-        # create action
-        crud_sdoc._create_action(
-            db_obj=sdoc_orm,
-            action_type=ActionType.UPDATE,
-            before_state=before_state,
-            after_state=after_state,
-        )
 
         return metadata_orm
 
@@ -92,8 +74,6 @@ class CRUDSourceDocumentMetadata(
             )
             return db_obj
         else:
-            from app.core.data.crud.source_document import crud_sdoc
-
             # check if value has the correct type
             project_metadata = ProjectMetadataRead.model_validate(
                 db_obj.project_metadata
@@ -103,25 +83,8 @@ class CRUDSourceDocumentMetadata(
                     f"provided value has the wrong type (need {project_metadata.metatype})"
                 )
 
-            # create before_state
-            sdoc_orm = db_obj.source_document
-            before_state = crud_sdoc._get_action_state_from_orm(db_obj=sdoc_orm)
-            db.expunge(db_obj)
-
             # update metadata
             metadata_orm = super().update(db, id=metadata_id, update_dto=update_dto)
-
-            # create after state
-            sdoc_orm = metadata_orm.source_document
-            after_state = crud_sdoc._get_action_state_from_orm(db_obj=sdoc_orm)
-
-            # create action
-            crud_sdoc._create_action(
-                db_obj=sdoc_orm,
-                action_type=ActionType.UPDATE,
-                before_state=before_state,
-                after_state=after_state,
-            )
 
             return metadata_orm
 

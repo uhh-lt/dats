@@ -1,29 +1,22 @@
 from typing import List, Optional
 
-import srsly
 from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
-from app.core.data.crud.source_document_metadata import crud_sdoc_meta
-from app.core.data.dto.action import ActionType
-from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.source_document import (
     SDocStatus,
     SourceDocumentCreate,
     SourceDocumentRead,
-    SourceDocumentReadAction,
     SourceDocumentUpdate,
 )
 from app.core.data.dto.source_document_data import SourceDocumentDataRead
-from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
 from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.source_document_data import SourceDocumentDataORM
 from app.core.data.orm.source_document_link import SourceDocumentLinkORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.elasticsearch_service import ElasticSearchService
-from app.core.db.sql_service import SQLService
 
 
 class SourceDocumentPreprocessingUnfinishedError(Exception):
@@ -104,15 +97,6 @@ class CRUDSourceDocument(
         # find all sdocs to be removed
         query = db.query(self.model).filter(self.model.project_id == proj_id)
         removed_orms = query.all()
-
-        # create actions
-        for removed_orm in removed_orms:
-            before_state = self._get_action_state_from_orm(removed_orm)
-            self._create_action(
-                db_obj=removed_orm,
-                action_type=ActionType.DELETE,
-                before_state=before_state,
-            )
 
         # remove files from repo
         RepoService().remove_all_project_sdoc_files(proj_id=proj_id)
@@ -247,23 +231,6 @@ class CRUDSourceDocument(
             for (parent_sdoc_id, linked_sdoc_id) in res
             if linked_sdoc_id is not None
         ]
-
-    def _get_action_state_from_orm(self, db_obj: SourceDocumentORM) -> Optional[str]:
-        with SQLService().db_session() as db:
-            metadata = crud_sdoc_meta.read_by_sdoc(db, sdoc_id=db_obj.id)
-
-        return srsly.json_dumps(
-            SourceDocumentReadAction(
-                **SourceDocumentRead.model_validate(db_obj).model_dump(),
-                tags=[
-                    DocumentTagRead.model_validate(tag) for tag in db_obj.document_tags
-                ],
-                metadata=[
-                    SourceDocumentMetadataRead.model_validate(md) for md in metadata
-                ],
-                # TODO: can we get the keywords?
-            ).model_dump()
-        )
 
 
 crud_sdoc = CRUDSourceDocument(SourceDocumentORM)

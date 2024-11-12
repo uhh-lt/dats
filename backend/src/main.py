@@ -71,8 +71,6 @@ from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.source_document import (
     SourceDocumentPreprocessingUnfinishedError,
 )
-from app.core.data.dto.project import ProjectReadAction
-from app.core.data.dto.source_document import SourceDocumentReadAction
 from app.core.data.export.export_service import (
     ExportJobPreparationError,
     NoDataToExportError,
@@ -120,14 +118,6 @@ def custom_openapi():
         title="Discourse Analysis Tool Suite API",
         version=conf.api.version,
         routes=app.routes,
-    )
-    openapi_schema["components"]["schemas"]["SourceDocumentReadAction"] = (
-        SourceDocumentReadAction.model_json_schema(
-            ref_template="#/components/schemas/{model}"
-        )
-    )
-    openapi_schema["components"]["schemas"]["ProjectReadAction"] = (
-        ProjectReadAction.model_json_schema(ref_template="#/components/schemas/{model}")
     )
     app.openapi_schema = openapi_schema
     return app.openapi_schema

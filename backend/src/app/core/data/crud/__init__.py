@@ -1,6 +1,5 @@
 from enum import Enum
 
-from app.core.data.crud.action import crud_action
 from app.core.data.crud.analysis_table import crud_analysis_table
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
@@ -26,7 +25,6 @@ from app.core.data.crud.whiteboard import crud_whiteboard
 
 
 class Crud(Enum):
-    ACTION = crud_action
     ANALYSIS_TABLE = crud_analysis_table
     ANNOTATION_DOCUMENT = crud_adoc
     BBOX_ANNOTATION = crud_bbox_anno

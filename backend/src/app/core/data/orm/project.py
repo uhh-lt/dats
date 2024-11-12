@@ -7,7 +7,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
-    from app.core.data.orm.action import ActionORM
     from app.core.data.orm.analysis_table import AnalysisTableORM
     from app.core.data.orm.code import CodeORM
     from app.core.data.orm.document_tag import DocumentTagORM
@@ -67,10 +66,6 @@ class ProjectORM(ORMBase):
 
     preprocessing_payloads: Mapped[List["PreprocessingJobPayloadORM"]] = relationship(
         "PreprocessingJobPayloadORM", back_populates="project", passive_deletes=True
-    )
-
-    actions: Mapped[List["ActionORM"]] = relationship(
-        "ActionORM", back_populates="project", passive_deletes=True
     )
 
     metadata_: Mapped[List["ProjectMetadataORM"]] = relationship(

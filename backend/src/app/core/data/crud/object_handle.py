@@ -4,7 +4,6 @@ from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.core.data.crud.action import crud_action
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError, UpdateNotAllowed
@@ -16,7 +15,6 @@ from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.span_group import crud_span_group
 from app.core.data.crud.user import crud_user
 from app.core.data.dto.object_handle import ObjectHandleCreate
-from app.core.data.orm.action import ActionORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
@@ -40,7 +38,6 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, UpdateNotAl
         "bbox_annotation_id": crud_bbox_anno,
         "span_group_id": crud_span_group,
         "user_id": crud_user,
-        "action_id": crud_action,
         "memo_id": crud_memo,
     }
 
@@ -53,7 +50,6 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, UpdateNotAl
         "bbox_annotation_id": BBoxAnnotationORM,
         "span_group_id": SpanGroupORM,
         "user_id": UserORM,
-        "action_id": ActionORM,
         "memo_id": MemoORM,
     }
 
@@ -110,7 +106,6 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, UpdateNotAl
         SpanGroupORM,
         UserORM,
         MemoORM,
-        ActionORM,
         None,
     ]:
         target_id = None

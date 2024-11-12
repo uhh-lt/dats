@@ -1,9 +1,7 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
-
-from app.core.data.dto.user import UserRead
 
 from .dto_base import UpdateDTOBase
 
@@ -33,8 +31,3 @@ class ProjectRead(ProjectBaseDTO):
     created: datetime = Field(description="Created timestamp of the Project")
     updated: datetime = Field(description="Updated timestamp of the Project")
     model_config = ConfigDict(from_attributes=True)
-
-
-class ProjectReadAction(ProjectRead):
-    users: List[UserRead] = Field(description="Users of the Project")
-    num_sdocs: int = Field(description="Number of Sdocs in the Project")

@@ -3,16 +3,11 @@ from typing import Optional
 from sqlalchemy import inspect
 
 from app.core.data.crud.object_handle import crud_object_handle
-from app.core.data.dto.action import ActionTargetObjectType
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
-from app.core.data.orm.code import CodeORM
-from app.core.data.orm.document_tag import DocumentTagORM
-from app.core.data.orm.memo import MemoORM
 from app.core.data.orm.object_handle import ObjectHandleORM
 from app.core.data.orm.orm_base import ORMBase
 from app.core.data.orm.project import ProjectORM
-from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_group import SpanGroupORM
@@ -71,26 +66,3 @@ def get_orm_user_id(orm: ORMBase) -> int:
         return proj_id
 
     raise NotImplementedError(f"Object has no user_id: {type(orm)}")
-
-
-def get_action_target_type(orm: ORMBase) -> Optional[ActionTargetObjectType]:
-    if isinstance(orm, MemoORM):
-        return ActionTargetObjectType.memo
-    elif isinstance(orm, CodeORM):
-        return ActionTargetObjectType.code
-    elif isinstance(orm, AnnotationDocumentORM):
-        return ActionTargetObjectType.annotation_document
-    elif isinstance(orm, SourceDocumentORM):
-        return ActionTargetObjectType.source_document
-    elif isinstance(orm, DocumentTagORM):
-        return ActionTargetObjectType.document_tag
-    elif isinstance(orm, SpanAnnotationORM):
-        return ActionTargetObjectType.span_annotation
-    elif isinstance(orm, BBoxAnnotationORM):
-        return ActionTargetObjectType.bbox_annotation
-    elif isinstance(orm, SpanGroupORM):
-        return ActionTargetObjectType.span_group
-    elif isinstance(orm, ProjectORM):
-        return ActionTargetObjectType.project
-    else:
-        return None
