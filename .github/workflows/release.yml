@@ -46,6 +46,9 @@ jobs:
           push: true
           tags: |
             "uhhlt/dats_backend:${{ steps.extract_version.outputs.version }}"
+      - name: Prepare environment
+        working-directory: frontend
+        run: cp .env.production.example .env.production
       - name: Build and push frontend container
         uses: docker/build-push-action@v4
         with:
@@ -67,6 +70,7 @@ jobs:
           generateReleaseNotes: true
   deploy_demo:
     name: deploy_demo
+    needs: build_release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
