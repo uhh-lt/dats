@@ -89,6 +89,7 @@ export const searchSlice = createSlice({
         delete state.rowSelectionModel[`${sdocId}`];
       }
     },
+    // tag explorer
     setExpandedTagIds: (state, action: PayloadAction<string[]>) => {
       state.expandedTagIds = action.payload;
     },
@@ -188,9 +189,13 @@ export const searchSlice = createSlice({
         resetProjectFilterState({ state, defaultFilterExpression, projectId: action.payload, sliceName: "search" });
       })
       .addMatcher(
-        (action) => action.type.startsWith("search/") && action.type.toLowerCase().includes("filter"),
+        (action) =>
+          (action.type.startsWith("search/onAdd") && action.type.toLowerCase().includes("filter")) || // add filter
+          (action.type.startsWith("search/") && action.type.includes("onFinishFilterEdit")), // edit filter
         (state) => {
-          console.log("Search Filter Actions dispatched! Resetting fetchSize.");
+          console.log("Search filters changed! Resetting search parameter dependent variables.");
+          // reset variables that depend on search parameters
+          state.rowSelectionModel = initialTableState.rowSelectionModel;
           state.fetchSize = initialTableState.fetchSize;
         },
       );

@@ -58,8 +58,9 @@ export const WordFrequencySlice = createSlice({
     // extend filterReducer's onFinishFilterEdit
     onFinishFilterEdit: (state) => {
       filterReducer.onFinishFilterEdit(state);
-      // reset selection when filter changes
-      state.rowSelectionModel = {};
+      // reset variables that depend on search parameters
+      state.rowSelectionModel = initialTableState.rowSelectionModel;
+      state.fetchSize = initialTableState.fetchSize;
     },
   },
   extraReducers: (builder) => {

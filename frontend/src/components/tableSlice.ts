@@ -33,6 +33,8 @@ export const tableReducer = {
   // query
   onSearchQueryChange: (state: Draft<TableState>, action: PayloadAction<string | undefined>) => {
     state.searchQuery = action.payload;
+    // reset variables that depend on search parameters
+    state.rowSelectionModel = initialTableState.rowSelectionModel;
     state.fetchSize = initialTableState.fetchSize;
   },
   // selection

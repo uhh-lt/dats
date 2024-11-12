@@ -37,6 +37,13 @@ const logbookSlice = createSlice({
   reducers: {
     ...filterReducer,
     ...tableReducer,
+    // extend filterReducer's onFinishFilterEdit
+    onFinishFilterEdit: (state) => {
+      filterReducer.onFinishFilterEdit(state);
+      // reset variables that depend on search parameters
+      state.rowSelectionModel = initialTableState.rowSelectionModel;
+      state.fetchSize = initialTableState.fetchSize;
+    },
     // memo search
     onChangeIsSearchContent: (state, action: PayloadAction<boolean>) => {
       state.isSearchContent = action.payload;
