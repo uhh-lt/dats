@@ -58,13 +58,13 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
         if len(sdoc_ids) == 0 or len(tag_ids) == 0:
             return 0
 
-        # create before state
-        from app.core.data.crud.source_document import crud_sdoc
+        # # create before state
+        # from app.core.data.crud.source_document import crud_sdoc
 
-        sdoc_orms = crud_sdoc.read_by_ids(db, sdoc_ids)
-        before_states = [
-            crud_sdoc._get_action_state_from_orm(sdoc_orm) for sdoc_orm in sdoc_orms
-        ]
+        # sdoc_orms = crud_sdoc.read_by_ids(db, sdoc_ids)
+        # before_states = [
+        #     crud_sdoc._get_action_state_from_orm(sdoc_orm) for sdoc_orm in sdoc_orms
+        # ]
 
         # insert links (sdoc <-> tag)
         from sqlalchemy.dialects.postgresql import insert
@@ -84,22 +84,22 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
         new_rows = db.execute(insert_stmt, insert_values).fetchall()
         db.commit()
 
-        # create after state
-        sdoc_orms = crud_sdoc.read_by_ids(db, sdoc_ids)
-        after_states = [
-            crud_sdoc._get_action_state_from_orm(sdoc_orm) for sdoc_orm in sdoc_orms
-        ]
+        # # create after state
+        # sdoc_orms = crud_sdoc.read_by_ids(db, sdoc_ids)
+        # after_states = [
+        #     crud_sdoc._get_action_state_from_orm(sdoc_orm) for sdoc_orm in sdoc_orms
+        # ]
 
-        # create actions
-        for db_obj, before_state, after_state in zip(
-            sdoc_orms, before_states, after_states
-        ):
-            crud_sdoc._create_action(
-                db_obj=db_obj,
-                action_type=ActionType.UPDATE,
-                before_state=before_state,
-                after_state=after_state,
-            )
+        # # create actions
+        # for db_obj, before_state, after_state in zip(
+        #     sdoc_orms, before_states, after_states
+        # ):
+        #     crud_sdoc._create_action(
+        #         db_obj=db_obj,
+        #         action_type=ActionType.UPDATE,
+        #         before_state=before_state,
+        #         after_state=after_state,
+        #     )
 
         return len(new_rows)
 
@@ -112,13 +112,13 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
         if len(sdoc_ids) == 0 or len(tag_ids) == 0:
             return 0
 
-        # create before state
-        from app.core.data.crud.source_document import crud_sdoc
+        # # create before state
+        # from app.core.data.crud.source_document import crud_sdoc
 
-        sdoc_orms = crud_sdoc.read_by_ids(db, sdoc_ids)
-        before_states = [
-            crud_sdoc._get_action_state_from_orm(sdoc_orm) for sdoc_orm in sdoc_orms
-        ]
+        # sdoc_orms = crud_sdoc.read_by_ids(db, sdoc_ids)
+        # before_states = [
+        #     crud_sdoc._get_action_state_from_orm(sdoc_orm) for sdoc_orm in sdoc_orms
+        # ]
 
         # remove links (sdoc <-> tag)
         del_rows = db.execute(
@@ -131,22 +131,22 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
         ).fetchall()
         db.commit()
 
-        # create after state
-        sdoc_orms = crud_sdoc.read_by_ids(db, sdoc_ids)
-        after_states = [
-            crud_sdoc._get_action_state_from_orm(sdoc_orm) for sdoc_orm in sdoc_orms
-        ]
+        # # create after state
+        # sdoc_orms = crud_sdoc.read_by_ids(db, sdoc_ids)
+        # after_states = [
+        #     crud_sdoc._get_action_state_from_orm(sdoc_orm) for sdoc_orm in sdoc_orms
+        # ]
 
-        # create actions
-        for db_obj, before_state, after_state in zip(
-            sdoc_orms, before_states, after_states
-        ):
-            crud_sdoc._create_action(
-                db_obj=db_obj,
-                action_type=ActionType.UPDATE,
-                before_state=before_state,
-                after_state=after_state,
-            )
+        # # create actions
+        # for db_obj, before_state, after_state in zip(
+        #     sdoc_orms, before_states, after_states
+        # ):
+        #     crud_sdoc._create_action(
+        #         db_obj=db_obj,
+        #         action_type=ActionType.UPDATE,
+        #         before_state=before_state,
+        #         after_state=after_state,
+        #     )
 
         return len(del_rows)
 

@@ -18,6 +18,7 @@ const useCreateTag = () =>
     mutationFn: DocumentTagService.createNewDocTag,
     onSuccess: (tag) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_TAGS, tag.project_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
     },
   });
 

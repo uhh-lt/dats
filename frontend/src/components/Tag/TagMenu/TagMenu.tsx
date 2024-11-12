@@ -107,9 +107,7 @@ function TagMenuContent({
         new Map(
           checked.set(
             tagId,
-            checked.get(tagId) === CheckboxState.NOT_CHECKED || checked.get(tagId) === CheckboxState.INDETERMINATE
-              ? CheckboxState.CHECKED
-              : CheckboxState.NOT_CHECKED,
+            checked.get(tagId) === CheckboxState.CHECKED ? CheckboxState.NOT_CHECKED : CheckboxState.CHECKED,
           ),
         ),
     );
