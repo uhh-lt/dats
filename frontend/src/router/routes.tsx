@@ -28,7 +28,6 @@ import Register from "../views/registration/Register.tsx";
 import Search from "../views/search/DocumentSearch/Search.tsx";
 import ImageSimilaritySearch from "../views/search/ImageSearch/ImageSimilaritySearch.tsx";
 import SentenceSimilaritySearch from "../views/search/SentenceSearch/SentenceSimilaritySearch.tsx";
-import Autologbook from "../views/tools/AutoLogbook/Autologbook.tsx";
 import DocumentSampler from "../views/tools/DocumentSampler/DocumentSampler.tsx";
 import DuplicateFinder from "../views/tools/DuplicateFinder/DuplicateFinder.tsx";
 import Whiteboard from "../views/whiteboard/Whiteboard.tsx";
@@ -182,10 +181,6 @@ const router = createBrowserRouter([
       {
         path: "/project/:projectId/logbook/:category",
         element: <Logbook />,
-      },
-      {
-        path: "/project/:projectId/tools/autologbook",
-        element: <Autologbook />,
       },
       {
         path: "/project/:projectId/tools/duplicate-finder",

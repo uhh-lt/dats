@@ -8,7 +8,6 @@ from app.core.data.orm.orm_base import ORMBase
 from app.core.data.orm.timeline_analysis import TimelineAnalysisORM
 
 if TYPE_CHECKING:
-    from app.core.data.orm.action import ActionORM
     from app.core.data.orm.analysis_table import AnalysisTableORM
     from app.core.data.orm.annotation_document import AnnotationDocumentORM
     from app.core.data.orm.concept_over_time_analysis import ConceptOverTimeAnalysisORM
@@ -60,10 +59,6 @@ class UserORM(ORMBase):
 
     cotas: Mapped[List["ConceptOverTimeAnalysisORM"]] = relationship(
         "ConceptOverTimeAnalysisORM", back_populates="user", passive_deletes=True
-    )
-
-    actions: Mapped[List["ActionORM"]] = relationship(
-        "ActionORM", back_populates="user", passive_deletes=True
     )
 
     refresh_tokens: Mapped[List["RefreshTokenORM"]] = relationship(

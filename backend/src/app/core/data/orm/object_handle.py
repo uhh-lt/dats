@@ -7,7 +7,6 @@ from sqlalchemy.sql.functions import coalesce
 from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
-    from app.core.data.orm.action import ActionORM
     from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
     from app.core.data.orm.code import CodeORM
     from app.core.data.orm.document_tag import DocumentTagORM
@@ -90,15 +89,6 @@ class ObjectHandleORM(ORMBase):
         "DocumentTagORM", back_populates="object_handle"
     )
 
-    action_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("action.id", ondelete="CASCADE"), index=True
-    )
-    action: Mapped["ActionORM"] = relationship(
-        "ActionORM",
-        back_populates="object_handle",
-        foreign_keys="objecthandle.c.action_id",
-    )
-
     # Flo: https://stackoverflow.com/questions/60207228/postgres-unique-constraint-with-multiple-columns-and-null-values
     Index(
         "idx_for_uc_work_with_null",
@@ -110,7 +100,6 @@ class ObjectHandleORM(ORMBase):
         coalesce(bbox_annotation_id, 0),
         coalesce(span_group_id, 0),
         coalesce(document_tag_id, 0),
-        coalesce(action_id, 0),
         coalesce(memo_id, 0),
         unique=True,
     )
@@ -128,7 +117,6 @@ class ObjectHandleORM(ORMBase):
                         + CASE WHEN bbox_annotation_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN span_group_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN document_tag_id IS NULL THEN 0 ELSE 1 END
-                        + CASE WHEN action_id IS NULL THEN 0 ELSE 1 END
                     ) = 1
                     """,
             name="CC_object_handle_refers_to_exactly_one_instance",
@@ -141,7 +129,6 @@ class ObjectHandleORM(ORMBase):
             "span_annotation_id",
             "span_group_id",
             "document_tag_id",
-            "action_id",
             "memo_id",
             name="UC_only_one_object_handle_per_instance",
         ),

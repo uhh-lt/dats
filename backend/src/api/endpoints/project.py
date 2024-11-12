@@ -10,7 +10,6 @@ from api.dependencies import (
 from api.util import get_object_memo_for_user, get_object_memos
 from app.core.analysis.duplicate_finder_service import DuplicateFinderService
 from app.core.authorization.authz_user import AuthzUser
-from app.core.data.crud.action import crud_action
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.document_tag import crud_document_tag
@@ -18,7 +17,6 @@ from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.crud.source_document import crud_sdoc
-from app.core.data.dto.action import ActionQueryParameters, ActionRead
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import (
@@ -316,55 +314,6 @@ def get_user_memos_of_project(
     )
     return [
         crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj) for db_obj in db_objs
-    ]
-
-
-@router.get(
-    "/{proj_id}/user/{user_id}/action",
-    response_model=List[ActionRead],
-    summary="Returns all Actions of the Project from a User",
-)
-def get_user_actions_of_project(
-    *,
-    proj_id: int,
-    user_id: int,
-    db: Session = Depends(get_db_session),
-    authz_user: AuthzUser = Depends(),
-) -> List[ActionRead]:
-    authz_user.assert_in_project(proj_id)
-
-    return [
-        ActionRead.model_validate(ar)
-        for ar in crud_action.read_by_user_and_project(
-            db=db, proj_id=proj_id, user_id=user_id
-        )
-    ]
-
-
-@router.post(
-    "/{proj_id}/actions",
-    response_model=List[ActionRead],
-    summary="Returns all Actions of the Project",
-)
-def query_actions_of_project(
-    *,
-    query_params: ActionQueryParameters,
-    db: Session = Depends(get_db_session),
-    authz_user: AuthzUser = Depends(),
-) -> List[ActionRead]:
-    authz_user.assert_in_project(query_params.proj_id)
-
-    return [
-        ActionRead.model_validate(action)
-        for action in crud_action.read_by(
-            db=db,
-            proj_id=query_params.proj_id,
-            user_ids=query_params.user_ids,
-            action_types=query_params.action_types,
-            action_targets=query_params.action_targets,
-            timestamp_from=query_params.timestamp_from,
-            timestamp_to=query_params.timestamp_to,
-        )
     ]
 
 

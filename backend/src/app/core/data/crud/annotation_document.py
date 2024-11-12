@@ -4,7 +4,6 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
-from app.core.data.dto.action import ActionType
 from app.core.data.dto.annotation_document import (
     AnnotationDocumentCreate,
     AnnotationDocumentUpdate,
@@ -67,15 +66,6 @@ class CRUDAnnotationDocument(
         query = db.query(self.model).filter(self.model.source_document_id == sdoc_id)
         removed_orms = query.all()
         ids = [removed_orm.id for removed_orm in removed_orms]
-
-        # create actions
-        for removed_orm in removed_orms:
-            before_state = self._get_action_state_from_orm(removed_orm)
-            self._create_action(
-                db_obj=removed_orm,
-                action_type=ActionType.DELETE,
-                before_state=before_state,
-            )
 
         # delete the adocs
         query.delete()

@@ -1,11 +1,9 @@
 from typing import List, Optional
 
-import srsly
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
-from app.core.data.dto.action import ActionType
 from app.core.data.dto.memo import (
     AttachedObjectType,
     MemoCreateIntern,
@@ -25,7 +23,6 @@ from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_group import SpanGroupORM
 from app.core.db.elasticsearch_service import ElasticSearchService
-from app.core.db.sql_service import SQLService
 
 
 class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
@@ -71,15 +68,6 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         removed_orms = query.all()
         ids = [removed_orm.id for removed_orm in removed_orms]
 
-        # create actions
-        for removed_orm in removed_orms:
-            before_state = self._get_action_state_from_orm(removed_orm)
-            self._create_action(
-                db_obj=removed_orm,
-                action_type=ActionType.DELETE,
-                before_state=before_state,
-            )
-
         # delete the memos
         query.delete()
         db.commit()
@@ -111,11 +99,6 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         db.commit()
         db.refresh(db_obj)
 
-        # create action
-        after_state = self._get_action_state_from_orm(db_obj)
-        self._create_action(
-            db_obj=db_obj, action_type=ActionType.CREATE, after_state=after_state
-        )
         return db_obj
 
     def create_for_attached_object(
@@ -259,16 +242,6 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         ElasticSearchService().update_memo_in_index(
             proj_id=memo_orm.project_id, update=update_es_dto
         )
-
-    def _get_action_user_id_from_orm(self, db_obj: MemoORM) -> int:
-        return db_obj.user_id
-
-    def _get_action_state_from_orm(self, db_obj: MemoORM) -> Optional[str]:
-        # TODO ASK FLO: HOW do i get db obj here?
-        with SQLService().db_session() as db:
-            return srsly.json_dumps(
-                self.get_memo_read_dto_from_orm(db=db, db_obj=db_obj).model_dump()
-            )
 
 
 crud_memo = CRUDMemo(MemoORM)

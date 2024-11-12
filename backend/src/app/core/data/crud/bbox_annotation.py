@@ -1,15 +1,12 @@
 from typing import List, Optional
 
-import srsly
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.crud_base import CRUDBase
-from app.core.data.dto.action import ActionType
 from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationCreate,
     BBoxAnnotationCreateIntern,
-    BBoxAnnotationReadResolved,
     BBoxAnnotationUpdate,
 )
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
@@ -118,15 +115,6 @@ class CRUDBBoxAnnotation(
         removed_orms = query.all()
         ids = [removed_orm.id for removed_orm in removed_orms]
 
-        # create actions
-        for removed_orm in removed_orms:
-            before_state = self._get_action_state_from_orm(removed_orm)
-            self._create_action(
-                db_obj=removed_orm,
-                action_type=ActionType.DELETE,
-                before_state=before_state,
-            )
-
         # update the annotation document's timestamp
         from app.core.data.crud.annotation_document import crud_adoc
 
@@ -137,14 +125,6 @@ class CRUDBBoxAnnotation(
         db.commit()
 
         return ids
-
-    def _get_action_user_id_from_orm(self, db_obj: BBoxAnnotationORM) -> int:
-        return db_obj.annotation_document.user_id
-
-    def _get_action_state_from_orm(self, db_obj: BBoxAnnotationORM) -> Optional[str]:
-        return srsly.json_dumps(
-            BBoxAnnotationReadResolved.model_validate(db_obj).model_dump()
-        )
 
 
 crud_bbox_anno = CRUDBBoxAnnotation(BBoxAnnotationORM)

@@ -1,14 +1,11 @@
-from typing import Dict, List, Optional
+from typing import Dict, List
 
-import srsly
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
-from app.core.data.dto.action import ActionType
 from app.core.data.dto.document_tag import (
     DocumentTagCreate,
-    DocumentTagRead,
     DocumentTagUpdate,
 )
 from app.core.data.orm.document_tag import (
@@ -34,15 +31,6 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
         removed_orms = query.all()
         ids = [removed_orm.id for removed_orm in removed_orms]
 
-        # create actions
-        for removed_orm in removed_orms:
-            before_state = self._get_action_state_from_orm(removed_orm)
-            self._create_action(
-                db_obj=removed_orm,
-                action_type=ActionType.DELETE,
-                before_state=before_state,
-            )
-
         # delete the tags
         query.delete()
         db.commit()
@@ -57,14 +45,6 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
         """
         if len(sdoc_ids) == 0 or len(tag_ids) == 0:
             return 0
-
-        # # create before state
-        # from app.core.data.crud.source_document import crud_sdoc
-
-        # sdoc_orms = crud_sdoc.read_by_ids(db, sdoc_ids)
-        # before_states = [
-        #     crud_sdoc._get_action_state_from_orm(sdoc_orm) for sdoc_orm in sdoc_orms
-        # ]
 
         # insert links (sdoc <-> tag)
         from sqlalchemy.dialects.postgresql import insert
@@ -84,23 +64,6 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
         new_rows = db.execute(insert_stmt, insert_values).fetchall()
         db.commit()
 
-        # # create after state
-        # sdoc_orms = crud_sdoc.read_by_ids(db, sdoc_ids)
-        # after_states = [
-        #     crud_sdoc._get_action_state_from_orm(sdoc_orm) for sdoc_orm in sdoc_orms
-        # ]
-
-        # # create actions
-        # for db_obj, before_state, after_state in zip(
-        #     sdoc_orms, before_states, after_states
-        # ):
-        #     crud_sdoc._create_action(
-        #         db_obj=db_obj,
-        #         action_type=ActionType.UPDATE,
-        #         before_state=before_state,
-        #         after_state=after_state,
-        #     )
-
         return len(new_rows)
 
     def unlink_multiple_document_tags(
@@ -112,14 +75,6 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
         if len(sdoc_ids) == 0 or len(tag_ids) == 0:
             return 0
 
-        # # create before state
-        # from app.core.data.crud.source_document import crud_sdoc
-
-        # sdoc_orms = crud_sdoc.read_by_ids(db, sdoc_ids)
-        # before_states = [
-        #     crud_sdoc._get_action_state_from_orm(sdoc_orm) for sdoc_orm in sdoc_orms
-        # ]
-
         # remove links (sdoc <-> tag)
         del_rows = db.execute(
             delete(SourceDocumentDocumentTagLinkTable)
@@ -130,23 +85,6 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
             .returning(SourceDocumentDocumentTagLinkTable.source_document_id)
         ).fetchall()
         db.commit()
-
-        # # create after state
-        # sdoc_orms = crud_sdoc.read_by_ids(db, sdoc_ids)
-        # after_states = [
-        #     crud_sdoc._get_action_state_from_orm(sdoc_orm) for sdoc_orm in sdoc_orms
-        # ]
-
-        # # create actions
-        # for db_obj, before_state, after_state in zip(
-        #     sdoc_orms, before_states, after_states
-        # ):
-        #     crud_sdoc._create_action(
-        #         db_obj=db_obj,
-        #         action_type=ActionType.UPDATE,
-        #         before_state=before_state,
-        #         after_state=after_state,
-        #     )
 
         return len(del_rows)
 
@@ -213,9 +151,6 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
         rows = db.execute(query)
 
         return dict((tag_id, count) for tag_id, count in rows)
-
-    def _get_action_state_from_orm(self, db_obj: DocumentTagORM) -> Optional[str]:
-        return srsly.json_dumps(DocumentTagRead.model_validate(db_obj).model_dump())
 
 
 crud_document_tag = CRUDDocumentTag(DocumentTagORM)

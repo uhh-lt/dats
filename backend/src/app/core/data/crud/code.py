@@ -1,12 +1,10 @@
 from typing import Any, Dict, List, Optional
 
-import srsly
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
-from app.core.data.dto.action import ActionType
-from app.core.data.dto.code import CodeCreate, CodeRead, CodeUpdate
+from app.core.data.dto.code import CodeCreate, CodeUpdate
 from app.core.data.orm.code import CodeORM
 from app.util.color import get_next_color
 from config import conf
@@ -20,14 +18,6 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         db_obj = self.model(**dto_obj_data)
         db.add(db_obj)
         db.commit()
-
-        # create the action manually since we are not using the crud base create
-        after_state = self._get_action_state_from_orm(db_obj=db_obj)
-        self._create_action(
-            db_obj=db_obj,
-            action_type=ActionType.CREATE,
-            after_state=after_state,
-        )
 
         return db_obj
 
@@ -100,25 +90,11 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         removed_orms = query.all()
         ids = [removed_orm.id for removed_orm in removed_orms]
 
-        # create actions
-        for removed_orm in removed_orms:
-            before_state = self._get_action_state_from_orm(removed_orm)
-            self._create_action(
-                db_obj=removed_orm,
-                action_type=ActionType.DELETE,
-                before_state=before_state,
-            )
-
         # delete the codes
         query.delete()
         db.commit()
 
         return ids
-
-    def _get_action_state_from_orm(self, db_obj: CodeORM) -> Optional[str]:
-        return srsly.json_dumps(
-            CodeRead.model_validate(db_obj).model_dump(),
-        )
 
 
 crud_code = CRUDCode(CodeORM)

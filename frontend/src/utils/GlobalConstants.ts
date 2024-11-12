@@ -23,7 +23,6 @@ export const USER_GUIDE_ROUTE_MAP = {
     description: "This page provides tools to create and manage empty, code, and image whiteboards",
   },
   logbook: { route: "logbook", description: "This page provides tools to create, edit and manage your logs" },
-  autologbook: { route: "autologbook", description: "This page automatically generates logs based on user activity" },
   user: { route: "user-profile", description: "This page provides tools to manage and view your profile" },
   feedback: { route: "feedback", description: "This page displays all feedbacks submitted by the user" },
   about: {
