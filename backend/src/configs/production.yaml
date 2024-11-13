@@ -1,7 +1,7 @@
 api:
   port: 5500
   max_upload_file_size: 104857600 # 100 MB in bytes
-  production_mode: ${oc.env:API_PRODUCTION_MODE, 1}
+  production_mode: 1
   auth:
     jwt:
       token_url: /authentication/login
