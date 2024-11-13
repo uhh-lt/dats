@@ -23,7 +23,13 @@ class AnnoScalingService(metaclass=SingletonMeta):
 
         return super(AnnoScalingService, cls).__new__(cls)
 
-    def suggest(self, project_id: int, user_ids: List[int], code_id: int, top_k: int,) -> List[str]:
+    def suggest(
+        self,
+        project_id: int,
+        user_ids: List[int],
+        code_id: int,
+        top_k: int,
+    ) -> List[str]:
         start_time = perf_counter_ns()
         # takes 4ms (small project)
         occurrences = self.__get_annotations(project_id, user_ids, code_id)

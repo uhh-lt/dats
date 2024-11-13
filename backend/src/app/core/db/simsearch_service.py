@@ -198,7 +198,9 @@ class SimSearchService(metaclass=SingletonMeta):
         threshold: float,
         sdoc_ids_to_search: Optional[List[int]] = None,
     ) -> List[SimSearchSentenceHit]:
-        return self.find_similar(proj_id, IndexType.SENTENCE, sdoc_ids_to_search, query, top_k, threshold) # type: ignore
+        return self.find_similar(
+            proj_id, IndexType.SENTENCE, sdoc_ids_to_search, query, top_k, threshold
+        )  # type: ignore
 
     def find_similar_images(
         self,
@@ -208,7 +210,9 @@ class SimSearchService(metaclass=SingletonMeta):
         top_k: int,
         threshold: float,
     ) -> List[SimSearchImageHit]:
-        return self.find_similar(proj_id, IndexType.IMAGE, sdoc_ids_to_search, query, top_k, threshold) # type: ignore
+        return self.find_similar(
+            proj_id, IndexType.IMAGE, sdoc_ids_to_search, query, top_k, threshold
+        )  # type: ignore
 
     def find_similar(
         self,

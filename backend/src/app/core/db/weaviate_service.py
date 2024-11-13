@@ -173,7 +173,7 @@ class WeaviateService(VectorIndexService):
                         "sentence_id": sent_id,
                     },
                     class_name=self.class_names[type],
-                    vector=sent_emb, # type: ignore
+                    vector=sent_emb,  # type: ignore
                 )
 
     def remove_embeddings_from_index(self, type: IndexType, sdoc_id: int):

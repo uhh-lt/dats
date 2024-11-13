@@ -11,7 +11,11 @@ from app.util.singleton_meta import SingletonMeta
 class VectorIndexService(ABC, metaclass=SingletonMeta):
     @abstractmethod
     def add_embeddings_to_index(
-        self, type: IndexType, proj_id: int, sdoc_id: int, embeddings: Iterable[np.ndarray]
+        self,
+        type: IndexType,
+        proj_id: int,
+        sdoc_id: int,
+        embeddings: Iterable[np.ndarray],
     ):
         pass
 

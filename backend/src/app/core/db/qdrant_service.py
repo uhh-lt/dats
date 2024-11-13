@@ -73,7 +73,7 @@ class QdrantService(VectorIndexService):
             )
             for id, emb in enumerate(embeddings)
         ]
-        self._client.upsert(type, points) # type: ignore
+        self._client.upsert(type, points)  # type: ignore
 
     def remove_embeddings_from_index(self, type: IndexType, sdoc_id: int):
         selector = (
@@ -130,7 +130,7 @@ class QdrantService(VectorIndexService):
         if index_type == IndexType.IMAGE:
             return [
                 SimSearchImageHit(
-                    sdoc_id=hit.payload.sdoc_id, # type: ignore
+                    sdoc_id=hit.payload.sdoc_id,  # type: ignore
                     score=hit.score,
                 )
                 for hit in res
@@ -138,8 +138,8 @@ class QdrantService(VectorIndexService):
         else:
             return [
                 SimSearchSentenceHit(
-                    sdoc_id=hit.payload.sdoc_id, # type: ignore
-                    sentence_id=hit.payload.sentence_id, # type: ignore
+                    sdoc_id=hit.payload.sdoc_id,  # type: ignore
+                    sentence_id=hit.payload.sentence_id,  # type: ignore
                     score=hit.score,
                 )
                 for hit in res
@@ -168,13 +168,13 @@ class QdrantService(VectorIndexService):
 
         return [
             SimSearchSentenceHit(
-                sdoc_id=r[0].payload.sdoc_id, # type: ignore
+                sdoc_id=r[0].payload.sdoc_id,  # type: ignore
                 score=r[0].score,
-                sentence_id=r[0].payload.sentence_id, # type: ignore
+                sentence_id=r[0].payload.sentence_id,  # type: ignore
             )
             for r in res
         ]
-    
+
     def get_sentence_embeddings(self, search_tuples: List[Tuple[int]]) -> np.ndarray:
         # TODO implement
         raise NotImplementedError("get_sentence_embeddings not implemented for qdrant")

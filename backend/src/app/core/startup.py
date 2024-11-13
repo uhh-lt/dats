@@ -146,8 +146,9 @@ def __init_services__(
 
     # import and init SimSearchService
     from app.core.db.simsearch_service import SimSearchService
+
     SimSearchService(reset_vector_index=reset_vector_index)
-    
+
     # import and init OllamaService
     from app.core.data.llm.ollama_service import OllamaService
 

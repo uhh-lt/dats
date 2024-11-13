@@ -69,7 +69,7 @@ class TypesenseService(VectorIndexService):
             )
             if kwargs["flush"] if "flush" in kwargs else False:
                 logger.warning("Flushing DWTS Typesense Data!")
-                cls._client.collections[cls._sentence_class_name].delete() # type: ignore
+                cls._client.collections[cls._sentence_class_name].delete()  # type: ignore
             collections = {c["name"] for c in cls._client.collections.retrieve()}
             for name, schema in cls._colletions.items():
                 if name not in collections:
@@ -104,7 +104,7 @@ class TypesenseService(VectorIndexService):
             }
             for sent_id, sent_emb in enumerate(embeddings)
         ]
-        res = self._client.collections[collection_name].documents.import_( # type: ignore
+        res = self._client.collections[collection_name].documents.import_(  # type: ignore
             sents, {"action": "create"}
         )
         print(res)
@@ -112,7 +112,7 @@ class TypesenseService(VectorIndexService):
 
     def remove_embeddings_from_index(self, type: IndexType, sdoc_id: int):
         logger.debug(f"Removing text SDoc {sdoc_id} from Index!")
-        self._client.collections[self.class_names[type]].documents.delete( # type: ignore
+        self._client.collections[self.class_names[type]].documents.delete(  # type: ignore
             {"filter_by": f"sdoc_id:={sdoc_id}"}
         )
 
@@ -121,7 +121,7 @@ class TypesenseService(VectorIndexService):
         proj_id: int,
     ) -> None:
         for name in self._colletions.keys():
-            self._client.collections[name].documents.delete( # type: ignore
+            self._client.collections[name].documents.delete(  # type: ignore
                 {"filter_by": f"project_id:={proj_id}"}
             )
 
@@ -134,10 +134,9 @@ class TypesenseService(VectorIndexService):
         top_k: int = 10,
         threshold: float = 0.0,
     ) -> List[SimSearchSentenceHit] | List[SimSearchImageHit]:
-
         results = self._client.collections[
             self.class_names[index_type]
-        ].documents.search( # type: ignore
+        ].documents.search(  # type: ignore
             {
                 "vector_query": f"vec:({query_emb.tolist()}, k:{top_k})",
                 "filter_by": f"project_id:= {proj_id}",
@@ -198,6 +197,11 @@ class TypesenseService(VectorIndexService):
 
         return candidates
 
-    def get_sentence_embeddings(self, search_tuples: List[Tuple[int, int]],) -> np.ndarray:
+    def get_sentence_embeddings(
+        self,
+        search_tuples: List[Tuple[int, int]],
+    ) -> np.ndarray:
         # TODO implement
-        raise NotImplementedError("get_sentence_embeddings not implemented for typesense")
+        raise NotImplementedError(
+            "get_sentence_embeddings not implemented for typesense"
+        )
