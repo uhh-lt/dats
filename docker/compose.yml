@@ -55,7 +55,7 @@ services:
       - TYPESENSE_API_KEY=dats123
       - TYPESENSE_DATA_DIR=/data
     networks:
-      - dwts_demo_network
+      - dats_demo_network
     profiles:
       - typesense
 
@@ -67,7 +67,7 @@ services:
     volumes:
       - qdrant_storage_demo:/qdrant/storage
     networks:
-      - dwts_demo_network
+      - dats_demo_network
     profiles:
       - qdrant
 
@@ -96,7 +96,7 @@ services:
       CLUSTER_HOSTNAME: "node1"
       LOG_LEVEL: "info"
     networks:
-      - dwts_demo_network
+      - dats_demo_network
     profiles:
       - weaviate
 

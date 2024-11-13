@@ -218,7 +218,7 @@ class SimSearchService(metaclass=SingletonMeta):
         self,
         proj_id: int,
         index_type: IndexType,
-        sdoc_ids_to_search: List[int],
+        sdoc_ids_to_search: List[int] | None,
         query: Union[str, List[str], int],
         top_k: int,
         threshold: float,

@@ -118,7 +118,7 @@ class WeaviateService(VectorIndexService):
             )
 
             if kwargs["flush"] if "flush" in kwargs else False:
-                logger.warning("Flushing DWTS Weaviate Data!")
+                logger.warning("Flushing DATS Weaviate Data!")
                 if cls._client.schema.exists(cls._sentence_class_name):
                     cls._client.schema.delete_class(cls._sentence_class_name)
                 if cls._client.schema.exists(cls._image_class_name):
@@ -309,7 +309,7 @@ class WeaviateService(VectorIndexService):
         proj_id: int,
         index_type: IndexType,
         query_emb: np.ndarray,
-        sdoc_ids_to_search: List[int],
+        sdoc_ids_to_search: List[int] | None,
         top_k: int = 10,
         threshold: float = 0.0,
     ) -> List[SimSearchSentenceHit] | List[SimSearchImageHit]:
@@ -348,13 +348,14 @@ class WeaviateService(VectorIndexService):
             .with_limit(top_k)
         )
 
-        query.with_where(
-            {
-                "operator": "ContainsAny",
-                "path": "sdoc_id",
-                "valueInt": sdoc_ids_to_search,
-            }
-        )
+        if sdoc_ids_to_search is not None and len(sdoc_ids_to_search) > 0:
+            query.with_where(
+                {
+                    "operator": "ContainsAny",
+                    "path": "sdoc_id",
+                    "valueInt": sdoc_ids_to_search,
+                }
+            )
 
         results = query.do()["data"]["Get"][self.class_names[index_type]]
         if results is None:

@@ -68,7 +68,7 @@ class TypesenseService(VectorIndexService):
                 }
             )
             if kwargs["flush"] if "flush" in kwargs else False:
-                logger.warning("Flushing DWTS Typesense Data!")
+                logger.warning("Flushing DATS Typesense Data!")
                 cls._client.collections[cls._sentence_class_name].delete()  # type: ignore
             collections = {c["name"] for c in cls._client.collections.retrieve()}
             for name, schema in cls._colletions.items():

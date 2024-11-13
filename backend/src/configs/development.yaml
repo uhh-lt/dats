@@ -60,7 +60,7 @@ weaviate:
 typesense:
   host: ${oc.env:TYPESENSE_HOST, localhost}
   port: ${oc.env:TYPESENSE_PORT, 8108}
-  api_key: ${oc.env:TYPESENSE_API_KEY, dwts123}
+  api_key: ${oc.env:TYPESENSE_API_KEY, dats123}
 
 qdrant:
   host: ${oc.env:QDRANT_HOST, localhost}

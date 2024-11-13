@@ -33,7 +33,7 @@ class VectorIndexService(ABC, metaclass=SingletonMeta):
         proj_id: int,
         index_type: IndexType,
         query_emb: np.ndarray,
-        sdoc_ids_to_search: List[int],
+        sdoc_ids_to_search: List[int] | None,
         top_k: int = 10,
         threshold: float = 0.0,
     ) -> List[SimSearchSentenceHit]:
