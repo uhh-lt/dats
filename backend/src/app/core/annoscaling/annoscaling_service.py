@@ -1,15 +1,15 @@
 from time import perf_counter_ns
-from typing import Dict, List, Tuple
+from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
 
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
-from app.core.data.orm.code import CurrentCodeORM
+from app.core.data.orm.code import CodeORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.source_document_data import SourceDocumentDataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
+from app.core.db.simsearch_service import SimSearchService
 from app.core.db.sql_service import SQLService
-from app.core.search.simsearch_service import SimSearchService
 
 # from app.core.search.typesense_service import TypesenseService
 from app.util.singleton_meta import SingletonMeta
@@ -23,7 +23,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
 
         return super(AnnoScalingService, cls).__new__(cls)
 
-    def suggest(self, project_id: int, user_ids: List[int], code_id: int) -> List[str]:
+    def suggest(self, project_id: int, user_ids: List[int], code_id: int, top_k: int,) -> List[str]:
         start_time = perf_counter_ns()
         # takes 4ms (small project)
         occurrences = self.__get_annotations(project_id, user_ids, code_id)
@@ -51,7 +51,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
         print("it took", end_time - start_time, "ns to match annotations to sentences")
         start_time = perf_counter_ns()
         # takes around 20ms per object. so, 50 annotations take already 1 full second
-        hits = self.sim.suggest_similar_sentences(project_id, sdoc_sent_ids)
+        hits = self.sim.suggest_similar_sentences(project_id, sdoc_sent_ids, top_k)
         end_time = perf_counter_ns()
         print(
             "it took", end_time - start_time, "ns to get similar sentences from index"
@@ -81,21 +81,21 @@ class AnnoScalingService(metaclass=SingletonMeta):
                     == AnnotationDocumentORM.id,
                 )
                 .join(
-                    CurrentCodeORM,
-                    CurrentCodeORM.id == SpanAnnotationORM.current_code_id,
+                    CodeORM,
+                    CodeORM.id == SpanAnnotationORM.code_id,
                 )
                 .filter(
                     SourceDocumentORM.project_id == project_id,
                     AnnotationDocumentORM.user_id.in_(user_ids),
-                    CurrentCodeORM.code_id == code_id,
+                    CodeORM.id == code_id,
                 )
             )
             res = query.all()
             return [(r[0].begin, r[0].end, r[1]) for r in res]
 
     def __get_sentences(
-        self, sdoc_ids: List[int]
-    ) -> Dict[int, Tuple[List[int], List[int]]]:
+        self, sdoc_ids: Iterable[int]
+    ) -> Dict[int, Tuple[List[int], List[int], str]]:
         with self.sqls.db_session() as db:
             query = db.query(
                 SourceDocumentDataORM.id,

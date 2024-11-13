@@ -37,7 +37,6 @@ from api.endpoints import (
     analysis,
     analysis_table,
     annoscaling,
-    annotation_document,
     authentication,
     bbox_annotation,
     code,

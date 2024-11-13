@@ -15,6 +15,6 @@ ass: AnnoScalingService = AnnoScalingService()
     description="Suggest annotations",
 )
 async def suggest(
-    *, project_id: int, user_id: int, code_id: int
+    *, project_id: int, user_id: int, code_id: int, top_k: int,
 ) -> List[str]:
-    return ass.suggest(project_id, [user_id], code_id)
+    return ass.suggest(project_id, [user_id], code_id, top_k)

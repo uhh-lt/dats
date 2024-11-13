@@ -17,8 +17,8 @@ from qdrant_client.models import (
 )
 
 from app.core.data.dto.search import SimSearchImageHit, SimSearchSentenceHit
-from app.core.search.index_type import IndexType
-from app.core.search.vector_index_service import VectorIndexService
+from app.core.db.index_type import IndexType
+from app.core.db.vector_index_service import VectorIndexService
 from config import conf
 
 
@@ -73,7 +73,7 @@ class QdrantService(VectorIndexService):
             )
             for id, emb in enumerate(embeddings)
         ]
-        self._client.upsert(type, points)
+        self._client.upsert(type, points) # type: ignore
 
     def remove_embeddings_from_index(self, type: IndexType, sdoc_id: int):
         selector = (
@@ -130,7 +130,7 @@ class QdrantService(VectorIndexService):
         if index_type == IndexType.IMAGE:
             return [
                 SimSearchImageHit(
-                    sdoc_id=hit.payload.sdoc_id,
+                    sdoc_id=hit.payload.sdoc_id, # type: ignore
                     score=hit.score,
                 )
                 for hit in res
@@ -138,8 +138,8 @@ class QdrantService(VectorIndexService):
         else:
             return [
                 SimSearchSentenceHit(
-                    sdoc_id=hit.payload.sdoc_id,
-                    sentence_id=hit.payload.sentence_id,
+                    sdoc_id=hit.payload.sdoc_id, # type: ignore
+                    sentence_id=hit.payload.sentence_id, # type: ignore
                     score=hit.score,
                 )
                 for hit in res
@@ -168,12 +168,16 @@ class QdrantService(VectorIndexService):
 
         return [
             SimSearchSentenceHit(
-                sdoc_id=r[0].payload.sdoc_id,
+                sdoc_id=r[0].payload.sdoc_id, # type: ignore
                 score=r[0].score,
-                sentence_id=r[0].payload.sentence_id,
+                sentence_id=r[0].payload.sentence_id, # type: ignore
             )
             for r in res
         ]
+    
+    def get_sentence_embeddings(self, search_tuples: List[Tuple[int]]) -> np.ndarray:
+        # TODO implement
+        raise NotImplementedError("get_sentence_embeddings not implemented for qdrant")
 
-    def _sentence_uuid(sdoc_id: int, id: int):
+    def _sentence_uuid(self, sdoc_id: int, id: int):
         return str(uuid.UUID(int=(sdoc_id << 64) + id))

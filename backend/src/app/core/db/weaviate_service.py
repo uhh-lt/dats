@@ -5,8 +5,8 @@ import weaviate
 from loguru import logger
 
 from app.core.data.dto.search import SimSearchImageHit, SimSearchSentenceHit
-from app.core.search.index_type import IndexType
-from app.core.search.vector_index_service import VectorIndexService
+from app.core.db.index_type import IndexType
+from app.core.db.vector_index_service import VectorIndexService
 from config import conf
 
 
@@ -173,7 +173,7 @@ class WeaviateService(VectorIndexService):
                         "sentence_id": sent_id,
                     },
                     class_name=self.class_names[type],
-                    vector=sent_emb,
+                    vector=sent_emb, # type: ignore
                 )
 
     def remove_embeddings_from_index(self, type: IndexType, sdoc_id: int):
@@ -423,6 +423,7 @@ class WeaviateService(VectorIndexService):
                         score=r["_additional"]["certainty"],
                     )
                 )
+        return hits
 
     def _get_sentence_object_ids_by_sdoc_id_sentence_id(
         self,
@@ -464,3 +465,67 @@ class WeaviateService(VectorIndexService):
         return response["data"]["Get"][self._sentence_class_name][0]["_additional"][
             "id"
         ]
+
+    def get_sentence_embeddings(
+        self, search_tuples: List[Tuple[int, int]]
+    ) -> np.ndarray:
+        # First prepare the query to run through data
+        def run_batch(batch):
+            query = (
+                self._client.query.get(
+                    self._sentence_class_name,
+                    self._sentence_props,
+                )
+                .with_additional(["vector"])
+                .with_where(
+                    {
+                        "operator": "Or",
+                        "operands": [
+                            {
+                                "operator": "And",
+                                "operands": [
+                                    {
+                                        "path": ["sentence_id"],
+                                        "operator": "Equal",
+                                        "valueInt": sentence_id,
+                                    },
+                                    {
+                                        "path": ["sdoc_id"],
+                                        "operator": "Equal",
+                                        "valueInt": sdoc_id,
+                                    },
+                                ],
+                            }
+                            for sentence_id, sdoc_id in batch
+                        ],
+                    }
+                )
+            )
+            result = query.do()["data"]["Get"][self._sentence_class_name]
+            result_dict = {
+                f'{r["sdoc_id"]}-{r["sentence_id"]}': r["_additional"]["vector"]
+                for r in result
+            }
+            sorted_res = []
+            for sentence_id, sdoc_id in batch:
+                sorted_res.append(result_dict[f"{sdoc_id}-{sentence_id}"])
+            return sorted_res
+
+        embeddings = []
+        batch = search_tuples
+        while True:
+            if len(batch) >= 100:
+                minibatch = batch[:100]
+                batch = batch[100:]
+            else:
+                minibatch = batch
+                batch = []
+
+            # Get the next batch of objects
+            embeddings_minibatch = run_batch(minibatch)
+            embeddings.extend(embeddings_minibatch)
+
+            if len(batch) == 0:
+                break
+
+        return np.array(embeddings)

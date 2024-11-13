@@ -2,6 +2,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
+from loguru import logger
+
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.doc_type import DocType
 from app.core.data.dto.search import SimSearchImageHit, SimSearchSentenceHit
@@ -9,14 +11,14 @@ from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.index_type import IndexType
 from app.core.db.sql_service import SQLService
-from app.core.search.index_type import IndexType
-from app.core.search.vector_index_service import VectorIndexService
+from app.core.db.vector_index_service import VectorIndexService
 from app.preprocessing.ray_model_service import RayModelService
 from app.preprocessing.ray_model_worker.dto.clip import (
-    ClipImageEmbeddingInput, ClipTextEmbeddingInput)
+    ClipImageEmbeddingInput,
+    ClipTextEmbeddingInput,
+)
 from app.util.singleton_meta import SingletonMeta
 from config import conf
-from loguru import logger
 
 
 class SimSearchService(metaclass=SingletonMeta):
@@ -25,19 +27,19 @@ class SimSearchService(metaclass=SingletonMeta):
         match index_name:
             case "qdrant":
                 # import and init QdrantService
-                from app.core.search.qdrant_service import QdrantService
+                from app.core.db.qdrant_service import QdrantService
 
                 cls._index: VectorIndexService = QdrantService(flush=reset_vector_index)
             case "typesense":
                 # import and init TypesenseService
-                from app.core.search.typesense_service import TypesenseService
+                from app.core.db.typesense_service import TypesenseService
 
                 cls._index: VectorIndexService = TypesenseService(
                     flush=reset_vector_index
                 )
             case "weaviate":
                 # import and init WeaviateService
-                from app.core.search.weaviate_service import WeaviateService
+                from app.core.db.weaviate_service import WeaviateService
 
                 cls._index: VectorIndexService = WeaviateService(
                     flush=reset_vector_index
@@ -196,7 +198,7 @@ class SimSearchService(metaclass=SingletonMeta):
         threshold: float,
         sdoc_ids_to_search: Optional[List[int]] = None,
     ) -> List[SimSearchSentenceHit]:
-        return self.find_similar(IndexType.SENTENCE, sdoc_ids_to_search, query)
+        return self.find_similar(proj_id, IndexType.SENTENCE, sdoc_ids_to_search, query, top_k, threshold) # type: ignore
 
     def find_similar_images(
         self,
@@ -206,19 +208,22 @@ class SimSearchService(metaclass=SingletonMeta):
         top_k: int,
         threshold: float,
     ) -> List[SimSearchImageHit]:
-        return self.find_similar(IndexType.IMAGE, sdoc_ids_to_search, query)
+        return self.find_similar(proj_id, IndexType.IMAGE, sdoc_ids_to_search, query, top_k, threshold) # type: ignore
 
     def find_similar(
         self,
+        proj_id: int,
         index_type: IndexType,
         sdoc_ids_to_search: List[int],
-        query: SimSearchQuery,
+        query: Union[str, List[str], int],
+        top_k: int,
+        threshold: float,
     ) -> List[SimSearchSentenceHit] | List[SimSearchImageHit]:
         query_emb = self._encode_query(
             **self.__parse_query_param(query),
         )
         return self._index.search_index(
-            proj_id=query.proj_id,
+            proj_id=proj_id,
             index_type=index_type,
             query_emb=query_emb,
             top_k=top_k,
@@ -251,63 +256,4 @@ class SimSearchService(metaclass=SingletonMeta):
     def get_sentence_embeddings(
         self, search_tuples: List[Tuple[int, int]]
     ) -> np.ndarray:
-        # First prepare the query to run through data
-        def run_batch(batch):
-            query = (
-                self._client.query.get(
-                    self._sentence_class_name,
-                    self._sentence_props,
-                )
-                .with_additional(["vector"])
-                .with_where(
-                    {
-                        "operator": "Or",
-                        "operands": [
-                            {
-                                "operator": "And",
-                                "operands": [
-                                    {
-                                        "path": ["sentence_id"],
-                                        "operator": "Equal",
-                                        "valueInt": sentence_id,
-                                    },
-                                    {
-                                        "path": ["sdoc_id"],
-                                        "operator": "Equal",
-                                        "valueInt": sdoc_id,
-                                    },
-                                ],
-                            }
-                            for sentence_id, sdoc_id in batch
-                        ],
-                    }
-                )
-            )
-            result = query.do()["data"]["Get"][self._sentence_class_name]
-            result_dict = {
-                f'{r["sdoc_id"]}-{r["sentence_id"]}': r["_additional"]["vector"]
-                for r in result
-            }
-            sorted_res = []
-            for sentence_id, sdoc_id in batch:
-                sorted_res.append(result_dict[f"{sdoc_id}-{sentence_id}"])
-            return sorted_res
-
-        embeddings = []
-        batch = search_tuples
-        while True:
-            if len(batch) >= 100:
-                minibatch = batch[:100]
-                batch = batch[100:]
-            else:
-                minibatch = batch
-                batch = []
-
-            # Get the next batch of objects
-            embeddings_minibatch = run_batch(minibatch)
-            embeddings.extend(embeddings_minibatch)
-
-            if len(batch) == 0:
-                break
-
-        return np.array(embeddings)
+        return self._index.get_sentence_embeddings(search_tuples)
