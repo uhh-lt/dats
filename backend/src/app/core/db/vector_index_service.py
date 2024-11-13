@@ -54,3 +54,7 @@ class VectorIndexService(ABC, metaclass=SingletonMeta):
         search_tuples: List[Tuple[int, int]],
     ) -> np.ndarray:
         pass
+
+    @abstractmethod
+    def drop_indices(self) -> None:
+        pass

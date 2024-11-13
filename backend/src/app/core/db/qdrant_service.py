@@ -179,5 +179,9 @@ class QdrantService(VectorIndexService):
         # TODO implement
         raise NotImplementedError("get_sentence_embeddings not implemented for qdrant")
 
+    def drop_indices(self) -> None:
+        # TODO implement
+        raise NotImplementedError("drop_indices not implemented for qdrant")
+
     def _sentence_uuid(self, sdoc_id: int, id: int):
         return str(uuid.UUID(int=(sdoc_id << 64) + id))

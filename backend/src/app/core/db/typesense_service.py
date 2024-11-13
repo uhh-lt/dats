@@ -205,3 +205,7 @@ class TypesenseService(VectorIndexService):
         raise NotImplementedError(
             "get_sentence_embeddings not implemented for typesense"
         )
+
+    def drop_indices(self) -> None:
+        # TODO implement
+        raise NotImplementedError("drop_indices not implemented for typesense")

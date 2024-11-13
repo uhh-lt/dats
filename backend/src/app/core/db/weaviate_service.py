@@ -530,3 +530,9 @@ class WeaviateService(VectorIndexService):
                 break
 
         return np.array(embeddings)
+
+    def drop_indices(self) -> None:
+        logger.warning("Dropping all Weaviate indices!")
+        for name in self.class_names.values():
+            if self._client.schema.exists(name):
+                self._client.schema.delete_class(name)

@@ -261,3 +261,7 @@ class SimSearchService(metaclass=SingletonMeta):
         self, search_tuples: List[Tuple[int, int]]
     ) -> np.ndarray:
         return self._index.get_sentence_embeddings(search_tuples)
+
+    def drop_indices(self) -> None:
+        logger.warning("Dropping all sim search indices!")
+        self._index.drop_indices()
