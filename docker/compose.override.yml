@@ -1,0 +1,62 @@
+services:
+  postgres:
+    ports:
+      - "${POSTGRES_EXPOSED:-13122}:5432"
+
+  rabbitmq:
+    ports:
+      - "${RABBIT_EXPOSED:-13123}:5672"
+
+  redis:
+    ports:
+      - "${REDIS_EXPOSED:-13124}:6379"
+
+  weaviate:
+    ports:
+      - "${WEAVIATE_EXPOSED:-13132}:8080"
+
+  elasticsearch:
+    ports:
+      - "${ELASTICSEARCH_EXPOSED:-13125}:9200"
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.1
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5601 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
+    ports:
+      - "${KIBANA_EXPOSED:-13126}:5601"
+    networks:
+      - dats_demo_network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+        restart: true
+
+  lighttpd:
+    image: sebp/lighttpd
+    volumes:
+      - ./backend_repo:/var/www/localhost/htdocs
+    tty: true
+    ports:
+      - "${CONTENT_SERVER_EXPOSED:-13121}:80"
+    networks:
+      - dats_demo_network
+
+  ray:
+    ports:
+      - "${RAY_API_EXPOSED:-13130}:8000"
+      - "${RAY_DASHBOARD_EXPOSED:-13131}:8265"
+
+  celery-background-jobs-worker:
+    environment:
+      INSTALL_JUPYTER: ${CELERY_INSTALL_JUPYTER:-false}
+      CELERY_DEBUG_MODE: ${CELERY_DEBUG_MODE:-0}
+    ports:
+      - "${JUPYTER_CELERY_EXPOSED:-13129}:8888"
+      - "${CELERY_DEBUG_PORT:-45678}:6900"

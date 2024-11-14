@@ -14,7 +14,7 @@ jobs:
   frontend-checks:
     runs-on: self-hosted
     env:
-      API_PRODUCTION_WORKERS: 1
+      API_WORKERS: 1
       VITE_APP_SERVER: http://localhost:13120
       COMPOSE_PROFILES: "ray,background,backend,frontend"
       RAY_CONFIG: "config_gpu.yaml"
@@ -33,6 +33,7 @@ jobs:
           cp .env.example .env
           sed -i 's/COMPOSE_PROJECT_NAME=demo/COMPOSE_PROJECT_NAME=action-runner/' .env
           sed -i 's/\(DATS_FRONTEND_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' .env
+          sed -i "s/UID=121/UID=$(id -u)/" .env
           sed -i "s/GID=126/GID=$(id -g)/" .env
           echo "SPACY_CACHE_DIR=$HOME/spacy_models" >> .env
           echo "MODELS_CACHE_DIR=$HOME/models_cache" >> .env

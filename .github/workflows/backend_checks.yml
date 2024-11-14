@@ -15,7 +15,7 @@ jobs:
   backend-checks:
     runs-on: self-hosted
     env:
-      API_PRODUCTION_WORKERS: 1
+      API_WORKERS: 1
       RAY_CONFIG: "config_gpu.yaml"
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
     steps:
@@ -29,6 +29,7 @@ jobs:
           sed -i 's/COMPOSE_PROJECT_NAME=demo/COMPOSE_PROJECT_NAME=action-runner/' .env
           sed -i 's/\(DATS_BACKEND_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' .env
           sed -i 's/\(DATS_RAY_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' .env
+          sed -i "s/UID=121/UID=$(id -u)/" .env
           sed -i "s/GID=126/GID=$(id -g)/" .env
           echo "SPACY_CACHE_DIR=$HOME/spacy_models" >> .env
           echo "MODELS_CACHE_DIR=$HOME/models_cache" >> .env
