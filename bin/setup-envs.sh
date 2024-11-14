@@ -1,10 +1,12 @@
 #!/bin/bash
 
+# Ensure that the script is run from the root directory of the project
 if [ ! -d ".git" ]; then
     echo "This script must be run from the root directory of the project."
     exit 1
 fi
 
+# Parse command line arguments
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --project_name) PROJECT_NAME="$2"; shift ;;
@@ -21,6 +23,7 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
+# Ensure that the --project_name and --port_prefix parameters are provided
 if [ -z "$PROJECT_NAME" ] || [ -z "$PORT_PREFIX" ]; then
     echo "--project_name and --port_prefix parameters are required."
     exit 1
