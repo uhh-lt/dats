@@ -36,7 +36,7 @@ def upgrade() -> None:
     op.execute(
         """
         CREATE TEMPORARY TABLE temp_id_mapping AS
-        SELECT spanannotation.id AS old_id, temp_min_spantext.min_id AS new_id
+        SELECT spanannotation.id AS span_anno_id, temp_min_spantext.min_id AS new_id
         FROM spanannotation
         JOIN spantext ON spanannotation.span_text_id = spantext.id
         JOIN temp_min_spantext ON spantext.text = temp_min_spantext.text;
@@ -50,7 +50,7 @@ def upgrade() -> None:
         UPDATE spanannotation
         SET span_text_id = temp_id_mapping.new_id
         FROM temp_id_mapping
-        WHERE spanannotation.id = temp_id_mapping.old_id;
+        WHERE spanannotation.id = temp_id_mapping.span_anno_id;
         """
     )
     print("Updated foreign keys")
