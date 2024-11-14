@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Create backups
+cd ~/dats_prod || exit
+./bin/backup-postgres.sh
+./bin/backup-repo.sh
+
 cd ~/dats_prod/docker || exit
 
 docker compose down
