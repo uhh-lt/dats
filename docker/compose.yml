@@ -258,6 +258,8 @@ services:
       celery-background-jobs-worker:
         condition: service_healthy
         restart: true
+    ports:
+      - "${API_EXPOSED:-13120}:5500"
     networks:
       - dats_demo_network
       - ollama_network

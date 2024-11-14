@@ -60,7 +60,3 @@ services:
     ports:
       - "${JUPYTER_CELERY_EXPOSED:-13129}:8888"
       - "${CELERY_DEBUG_PORT:-45678}:6900"
-
-  dats-backend-api:
-    ports:
-      - "${API_EXPOSED:-13120}:5500"
