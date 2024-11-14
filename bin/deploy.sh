@@ -16,4 +16,4 @@ sed -i "s/GID=126/GID=$(id -g)/" .env
 
 # pull & start docker containers
 docker compose pull
-docker compose up -f compose.yml -f compose.production.yml --wait
+docker compose -f compose.yml -f compose.production.yml up --wait

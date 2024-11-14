@@ -7,9 +7,9 @@ services:
 
   ray:
     deploy:
-    resources:
-      reservations:
-        devices:
-          - driver: nvidia
-            device_ids: ["0"] # use first gpu for production
-            capabilities: [gpu]
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["0"] # use first gpu for production
+              capabilities: [gpu]
