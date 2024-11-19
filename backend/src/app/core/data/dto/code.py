@@ -41,3 +41,14 @@ class CodeRead(CodeBaseDTO):
     updated: datetime = Field(description="Updated timestamp of the Code")
     is_system: bool = Field(description="Is the Code a system code")
     model_config = ConfigDict(from_attributes=True)
+
+
+# Properties for importing Codes
+class CodeImport(BaseModel):
+    name: str = Field(description="Name of the Code")
+    color: str = Field(description="Color of the Code")
+    description: str = Field(description="Description of the Code")
+    parent_name: Optional[str] = Field(
+        description="Name of the Parent Code", default=None
+    )
+    created: datetime = Field(description="Created timestamp of the Code")

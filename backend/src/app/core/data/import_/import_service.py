@@ -4,10 +4,18 @@ import zipfile
 from os import listdir
 from os.path import isfile, join
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Set, Tuple
+from typing import (
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Set,
+    Tuple,
+)
 
+import numpy as np
 import pandas as pd
-from celery import group
+from celery import Task, group
 from loguru import logger
 from pandas import Series
 from sqlalchemy.orm import Session
@@ -25,7 +33,7 @@ from app.core.data.doc_type import (
     mime_type_supported,
 )
 from app.core.data.dto.background_job_base import BackgroundJobStatus
-from app.core.data.dto.code import CodeCreate
+from app.core.data.dto.code import CodeCreate, CodeImport
 from app.core.data.dto.document_tag import DocumentTagCreate
 from app.core.data.dto.import_job import (
     ImportJobCreate,
@@ -112,23 +120,18 @@ class ImportSDocFileUnsupportedMimeTypeException(Exception):
 
 
 class ImportAnnotationsEmptyException(Exception):
-    def __init__(self, filename) -> None:
+    def __init__(self, filename: str) -> None:
         super().__init__(f"The uploaded annotation file {filename} is empty.")
 
 
-class ImportAdocSpanInvalidValueException(Exception):
-    def __init__(self, key: str, value) -> None:
-        super().__init__(f"The value {str(value)} is not valid for key {key}.")
+class ImportAdocSpanInvalidTextException(Exception):
+    def __init__(self, value: Optional[str]) -> None:
+        super().__init__(f"The text {str(value)} is not valid.")
 
 
 class ImportAdocInvalidCodeIdException(Exception):
     def __init__(self, code_id: int) -> None:
         super().__init__(f"There is no code with id {code_id} found in this project.")
-
-
-class ImportAdocBBoxInvalidValueException(Exception):
-    def __init__(self, key: str, value) -> None:
-        super().__init__(f"The value {str(value)} is not valid for key {key}.")
 
 
 class ProjectImportFileSorter:
@@ -142,7 +145,7 @@ class SDocBundle:
 
 
 class ImportService(metaclass=SingletonMeta):
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls):
         cls.repo: RepoService = RepoService()
         cls.redis: RedisService = RedisService()
         cls.sqls: SQLService = SQLService()
@@ -233,19 +236,17 @@ class ImportService(metaclass=SingletonMeta):
 
     def __create_code_if_not_exists(
         self,
-        row: Series,
         db: Session,
         proj_id: int,
         code_id_mapping: dict[str, int],
-    ) -> Series:
-        parent_code_name = row["parent_code_name"]
-        description = row["description"]
-        color = row["color"]
-        parent_code_id = (
-            code_id_mapping[parent_code_name] if pd.notna(parent_code_name) else None
-        )
+        description: str,
+        color: str,
+        code_name: str,
+        parent_code_name: Optional[str] = None,
+    ) -> None:
+        parent_code_id = code_id_mapping[parent_code_name] if parent_code_name else None
         code_read = crud_code.read_by_name_and_project(
-            db=db, code_name=row["code_name"], proj_id=proj_id
+            db=db, code_name=code_name, proj_id=proj_id
         )
         if code_read:
             if not (code_read.parent_id == parent_code_id):
@@ -263,7 +264,7 @@ class ImportService(metaclass=SingletonMeta):
             code = code_read
         else:
             create_code = CodeCreate(
-                name=row["code_name"],
+                name=code_name,
                 description=description,
                 parent_id=parent_code_id,
                 project_id=proj_id,
@@ -271,26 +272,25 @@ class ImportService(metaclass=SingletonMeta):
                 **({"color": color} if pd.notna(color) else {}),
             )
             code = crud_code.create(db=db, create_dto=create_code)
-        code_id_mapping[row["code_name"]] = code.id
+        code_id_mapping[code_name] = code.id
         logger.info(f"create code {code.as_dict()}")
-        return row
 
     def __create_tag_if_not_exists(
         self,
-        row: Series,
         db: Session,
         proj_id: int,
         tag_id_mapping: dict[str, int],
-    ) -> Series:
-        tag_name = row["tag_name"]
-        description = row["description"]
-        color = row["color"]
-        parent_tag_name = row["parent_tag_name"]
+        tag_name: str,
+        description: str,
+        color: str,
+        parent_tag_name: str,
+    ) -> None:
+        if pd.isna(parent_tag_name):
+            parent_tag_id = None
+        else:
+            # either set parent_tag_name on python None or on the mapped new id of the tag
+            parent_tag_id = tag_id_mapping[parent_tag_name]
 
-        # either set parent_tag_name on python None or on the mapped new id of the tag
-        parent_tag_id = (
-            tag_id_mapping[parent_tag_name] if pd.notna(parent_tag_name) else None
-        )
         tag_read = crud_document_tag.read_by_name_and_project(
             db=db, name=tag_name, project_id=proj_id
         )
@@ -322,7 +322,6 @@ class ImportService(metaclass=SingletonMeta):
             tag = crud_document_tag.create(db=db, create_dto=create_tag)
         tag_id_mapping[tag_name] = tag.id
         logger.info(f"import tag {tag.as_dict()}")
-        return row
 
     def _update_import_job(
         self,
@@ -342,13 +341,18 @@ class ImportService(metaclass=SingletonMeta):
         filename = import_code_job_params.filename
         return self.repo._temp_file_exists(filename=filename)
 
-    def __check_code_parents_defined(self, df: pd.DataFrame) -> None:
-        if (
-            not df[df["parent_code_name"].notna()]["parent_code_name"]
-            .isin(df["code_name"])
-            .all()
-        ):
-            raise ValueError("Not all parent code ids are present in the code ids.")
+    def __check_code_parents_defined(self, code_import_dtos: List[CodeImport]) -> None:
+        code_names = set(
+            map(
+                lambda code: code.name,
+                code_import_dtos,
+            )
+        )
+        for code in code_import_dtos:
+            if code.parent_name and code.parent_name not in code_names:
+                raise ValueError(
+                    f"Parent code {code.parent_name} was not found in code names {code_names}."
+                )
 
     def __check_tag_parents_defined(self, df: pd.DataFrame) -> None:
         if (
@@ -358,19 +362,19 @@ class ImportService(metaclass=SingletonMeta):
         ):
             raise ValueError("Not all parent tag ids are present in the tag ids.")
 
-    def __check_code_missing_values(self, df: pd.DataFrame) -> None:
-        if df["code_name"].isna().any():
-            raise ValueError(f"Missing code_name on rows: {df[df['code_name'].isna()]}")
-
     def __check_tag_missing_values(self, df: pd.DataFrame) -> None:
         if df["tag_name"].isna().any():
             raise ValueError(f"Missing tag_name on rows: {df[df['tag_name'].isna()]}")
 
-    def __check_code_duplicates(self, df: pd.DataFrame):
-        if df["code_name"].duplicated().any():
-            raise ValueError(
-                f"Some codenames are duplicated: {df['code_name'][df['code_name'].duplicated()].unique()}"
+    def __check_code_duplicates(self, code_import_dtos: List[CodeImport]):
+        code_names = set(
+            map(
+                lambda code: code.name,
+                code_import_dtos,
             )
+        )
+        if len(code_names) < len(code_import_dtos):
+            raise ValueError("Some codenames are duplicated.")
 
     def __check_tag_duplicates(self, df: pd.DataFrame) -> None:
         if df["tag_name"].duplicated().any():
@@ -378,14 +382,33 @@ class ImportService(metaclass=SingletonMeta):
                 f"Some tag_names are duplicated: {df['tag_name'][df['tag_name'].duplicated()].unique()}"
             )
 
-    def __code_breadth_search_sort(self, df: pd.DataFrame) -> list[pd.DataFrame]:
-        layers: list[pd.DataFrame] = []
-        mask = df["parent_code_name"].isna()
-        while mask.any() and len(df) > 0:
-            layers.append(df[mask])
-            df = df[~mask]
-            mask = df["parent_code_name"].isin(layers[-1]["code_name"])
-        return layers
+    def __code_breath_search_sort(
+        self, code_import_dtos: List[CodeImport]
+    ) -> List[List[CodeImport]]:
+        def get_children_of_code(
+            code_import_dtos: List[CodeImport],
+            parent_name: Optional[str],
+        ) -> List[CodeImport]:
+            child_code_import_dtos: List[CodeImport] = []
+            for current_code_import_dto in code_import_dtos:
+                if current_code_import_dto.parent_name == parent_name:
+                    child_code_import_dtos.append(current_code_import_dto)
+            return child_code_import_dtos
+
+        current_code_dtos_and_parent_names = get_children_of_code(
+            code_import_dtos, None
+        )
+        code_layers: List[List[CodeImport]] = [current_code_dtos_and_parent_names]
+        while len(current_code_dtos_and_parent_names) > 0:
+            next_code_dtos: List[CodeImport] = []
+            for code_dto in current_code_dtos_and_parent_names:
+                current_sub_codes_dtos = get_children_of_code(
+                    code_import_dtos, code_dto.name
+                )
+                next_code_dtos.extend(current_sub_codes_dtos)
+            code_layers.append(next_code_dtos)
+            current_code_dtos_and_parent_names = next_code_dtos
+        return code_layers
 
     def __tag_breadth_search_sort(self, df: pd.DataFrame) -> list[pd.DataFrame]:
         layers: list[pd.DataFrame] = []
@@ -401,19 +424,28 @@ class ImportService(metaclass=SingletonMeta):
         metatype = row["metatype"]
         doctype = row["doctype"]
         description = row["description"]
-        exists = crud_project_meta.exists_by_project_and_key_and_metatype_and_doctype(
-            db=db, project_id=proj_id, key=key, metatype=metatype, doctype=doctype
+        create_dto = ProjectMetadataCreate.model_validate(
+            {
+                "key": key,
+                "metatype": metatype,
+                "doctype": doctype,
+                "project_id": proj_id,
+                "description": description,
+            }
+        )
+        exists: bool = (
+            crud_project_meta.exists_by_project_and_key_and_metatype_and_doctype(
+                db=db,
+                project_id=proj_id,
+                key=create_dto.key,
+                metatype=create_dto.metatype,
+                doctype=create_dto.doctype,
+            )
         )
         if not exists:
             crud_create = crud_project_meta.create(
                 db=db,
-                create_dto=ProjectMetadataCreate(
-                    key=key,
-                    metatype=metatype,
-                    doctype=doctype,
-                    project_id=proj_id,
-                    description=description,
-                ),
+                create_dto=create_dto,
             )
             metadata_read = ProjectMetadataRead.model_validate(crud_create)
 
@@ -445,6 +477,18 @@ class ImportService(metaclass=SingletonMeta):
         logger.info(f"updated project {project_update}")
         return crud_project.update(db=db, id=project_id, update_dto=project_update)
 
+    def __read_codes_to_dtos(self, path_to_file: str | Path) -> List[CodeImport]:
+        df: pd.DataFrame = pd.read_csv(path_to_file)
+        df = df.rename(columns={"code_name": "name"})
+        df = df.rename(columns={"parent_code_name": "parent_name"})
+        df = df.replace({np.nan: None})
+        code_import_dtos: List[CodeImport] = []
+        for _, row in df.iterrows():
+            row_dict = row.to_dict()
+            logger.info(f"dict {row_dict}")
+            code_import_dtos.append(CodeImport.model_validate(row_dict))
+        return code_import_dtos
+
     def _import_codes_to_proj(
         self,
         db: Session,
@@ -452,37 +496,36 @@ class ImportService(metaclass=SingletonMeta):
     ) -> None:
         project_id = imj_parameters.proj_id
         filename = imj_parameters.filename
-        path_to_file = self.repo._get_dst_path_for_temp_file(filename)
-        df = pd.read_csv(path_to_file)
-        self.__import_codes_to_proj(db=db, df=df, project_id=project_id)
+        path_to_file = self.repo.get_dst_path_for_temp_file(filename)
+        code_import_dtos = self.__read_codes_to_dtos(path_to_file)
+        self.__import_codes_to_proj(
+            db=db, code_import_dtos=code_import_dtos, project_id=project_id
+        )
 
     def __import_codes_to_proj(
         self,
         db: Session,
-        df: pd.DataFrame,
+        code_import_dtos: List[CodeImport],
         project_id: int,
-    ):
-        df = df.fillna(  # TODO: This field should not be optional and should be empty string on default...
-            value={
-                "description": "",
-            }
-        )
-        self.__check_code_missing_values(df)
-        self.__check_code_parents_defined(df)
-        self.__check_code_duplicates(df)
-        sorted_dfs = self.__code_breadth_search_sort(
-            df
+    ) -> Dict[str, int]:
+        self.__check_code_parents_defined(code_import_dtos)
+        self.__check_code_duplicates(code_import_dtos)
+        sorted_code_import_dtos = self.__code_breath_search_sort(
+            code_import_dtos
         )  # split the df into layers of codes starting with root codes.
 
         code_id_mapping: dict[str, int] = dict()
-        logger.info(f"Importing codes sorted by depth {sorted_dfs} ...")
-        for layer in sorted_dfs:
-            for _, row in layer.iterrows():
+        logger.info(f"Importing codes sorted by depth {sorted_code_import_dtos} ...")
+        for layer in sorted_code_import_dtos:
+            for code_import_dto in layer:
                 self.__create_code_if_not_exists(
-                    row,
                     db,
                     project_id,
                     code_id_mapping=code_id_mapping,
+                    code_name=code_import_dto.name,
+                    color=code_import_dto.color,
+                    description=code_import_dto.description,
+                    parent_code_name=code_import_dto.parent_name,
                 )
         logger.info(f"Generated code id mapping {code_id_mapping}")
         return code_id_mapping
@@ -494,7 +537,7 @@ class ImportService(metaclass=SingletonMeta):
     ) -> None:
         project_id = imj_parameters.proj_id
         filename = imj_parameters.filename
-        path_to_file = self.repo._get_dst_path_for_temp_file(filename)
+        path_to_file = self.repo.get_dst_path_for_temp_file(filename)
         df = pd.read_csv(path_to_file)
         self.__import_tags_to_proj(db=db, df=df, proj_id=project_id)
 
@@ -517,14 +560,59 @@ class ImportService(metaclass=SingletonMeta):
         logger.info(f"Importing Tags sorted by depth {sorted_dfs} ...")
         for layer in sorted_dfs:
             for _, row in layer.iterrows():
-                self.__create_tag_if_not_exists(
-                    row,
-                    db,
-                    proj_id,
-                    tag_id_mapping=tag_id_mapping,
+                color: Optional[str] = (
+                    str(row["color"]) if isinstance(row["colow"], str) else None
+                )
+                description = row["description"]
+                tag_name = row["tag_name"]
+                parent_tag_name: Optional[str] = (
+                    str(row["parent_tag_name"])
+                    if isinstance(row["parent_tag_name"], str)
+                    else None
                 )
 
-        logger.info(f"Generated tag id mapping {tag_id_mapping}")
+                if not parent_tag_name:
+                    parent_tag_id = None
+                else:
+                    # either set parent_tag_name on python None or on the mapped new id of the tag
+                    assert isinstance(
+                        parent_tag_name, str
+                    ), f"Expected parent_tag_name to be of type string, but got {type(parent_tag_name)} instead."
+                    parent_tag_id = tag_id_mapping[parent_tag_name]
+                # Generate DocumentTagCreate dto either with color or without
+                kwargs = {
+                    "name": tag_name,
+                    "description": description,
+                    "parent_id": parent_tag_id,
+                    "project_id": proj_id,
+                }
+                if color:
+                    kwargs["color"] = color
+                create_tag = DocumentTagCreate.model_validate(kwargs)
+
+                tag_read = crud_document_tag.read_by_name_and_project(
+                    db=db, name=create_tag.name, project_id=create_tag.project_id
+                )
+                if tag_read:
+                    if not (tag_read.parent_id == parent_tag_id):
+                        raise ValueError(
+                            f"Trying to map imported tag on already existing tag, and expected parent id to be {tag_read.parent_id}, but got {parent_tag_id} instead."
+                        )
+                    if not (tag_read.description == description):
+                        raise ValueError(
+                            f"Trying to map imported tag on already existing tag, and expected description to be {tag_read.description}, but got {description} instead."
+                        )
+                    # if not (tag_read.color == color):
+                    #     raise ValueError(
+                    #         f"Trying to map imported tag on already existing tag, and expected color to be {tag_read.description}, but got {color} instead."
+                    #     ) TODO: To discuss if we should not check for color, because the system inits them randomly
+                    tag = tag_read
+                else:
+                    tag = crud_document_tag.create(db=db, create_dto=create_tag)
+                tag_id_mapping[tag.name] = tag.id
+                logger.info(f"import tag {tag.as_dict()}")
+
+                logger.info(f"Generated tag id mapping {tag_id_mapping}")
         return tag_id_mapping
 
     def __get_user_ids_for_emails_and_link_to_project(
@@ -535,13 +623,20 @@ class ImportService(metaclass=SingletonMeta):
     ) -> Dict[str, int]:
         email_id_mapping: Dict[str, int] = dict()
         for _, row in df.iterrows():
-            user_orm = crud_user.read_by_email_if_exists(db=db, email=row["email"])
-            if user_orm:
-                email_id_mapping[row["email"]] = user_orm.id
-                if user_orm.id != SYSTEM_USER_ID:
-                    crud_project.associate_user(
-                        db=db, proj_id=proj_id, user_id=user_orm.id
-                    )
+            email: Optional[str] = (
+                str(row["email"]) if isinstance(row["email"], str) else None
+            )
+            if email:
+                user_orm = crud_user.read_by_email_if_exists(db=db, email=email)
+                if user_orm:
+                    email_id_mapping[email] = user_orm.id
+                    if user_orm.id != SYSTEM_USER_ID:
+                        crud_project.associate_user(
+                            db=db, proj_id=proj_id, user_id=user_orm.id
+                        )
+        logger.info(
+            f"Associated imported user emails with existing users {email_id_mapping}."
+        )
         return email_id_mapping
 
     def _import_project(
@@ -553,7 +648,7 @@ class ImportService(metaclass=SingletonMeta):
         user_id = imj_parameters.user_id
         try:
             filename = imj_parameters.filename
-            path_to_zip_file = self.repo._get_dst_path_for_temp_file(filename)
+            path_to_zip_file = self.repo.get_dst_path_for_temp_file(filename)
             path_to_temp_import_dir = self.repo.create_temp_dir(
                 f"import_user_{user_id}_project_{proj_id}"
             )
@@ -612,11 +707,13 @@ class ImportService(metaclass=SingletonMeta):
             )
 
             # import codes
-            codes_df = pd.read_csv(expected_file_paths["codes"])
-            self.__import_codes_to_proj(db=db, df=codes_df, project_id=proj_id)
-
+            code_import_dtos = self.__read_codes_to_dtos(expected_file_paths["codes"])
+            self.__import_codes_to_proj(
+                db=db, code_import_dtos=code_import_dtos, project_id=proj_id
+            )
             # import tags
             tags_df = pd.read_csv(expected_file_paths["tags"])
+            tags_df = tags_df.replace({np.nan: None})
             tags_id_mapping = self.__import_tags_to_proj(
                 db=db, df=tags_df, proj_id=proj_id
             )
@@ -698,16 +795,24 @@ class ImportService(metaclass=SingletonMeta):
                     annotations_for_sdoc: set[AutoSpan] = set()
                     for _, row in sdoc_annotations_df.iterrows():
                         if row["user_email"] in user_email_id_mapping:
-                            auto = AutoSpan(
-                                code=row["code_name"],
-                                start=row["text_begin_char"],
-                                end=row["text_end_char"],
-                                text=row["text"],
-                                start_token=row["text_begin_token"],
-                                end_token=row["text_end_token"],
-                                user_id=user_email_id_mapping[row["user_email"]],
+                            email: Optional[str] = (
+                                str(row["user_email"])
+                                if isinstance(row["user_email"], str)
+                                else None
                             )
-                            annotations_for_sdoc.add(auto)
+                            if email:  # this should always be true because of if email in email_id_mapping
+                                auto = AutoSpan.model_validate(
+                                    {
+                                        "code": row["code_name"],
+                                        "start": row["text_begin_char"],
+                                        "end": row["text_end_char"],
+                                        "text": row["text"],
+                                        "start_token": row["text_begin_token"],
+                                        "end_token": row["text_end_token"],
+                                        "user_id": user_email_id_mapping[email],
+                                    }
+                                )
+                                annotations_for_sdoc.add(auto)
                     annotations.append(annotations_for_sdoc)
                     logger.info(f"Generate sdoc annotations {annotations_for_sdoc}")
 
@@ -715,15 +820,23 @@ class ImportService(metaclass=SingletonMeta):
                     # create boundig boxes for object detection
                     bboxes_for_sdoc: Set[AutoBBox] = set()
                     for _, row in sdoc_annotations_df.iterrows():
-                        bbox = AutoBBox(
-                            code=row["code_name"],
-                            x_min=row["bbox_x_min"],
-                            y_min=row["bbox_y_min"],
-                            x_max=row["bbox_x_max"],
-                            y_max=row["bbox_y_max"],
-                            user_id=user_email_id_mapping[row["user_email"]],
+                        email: Optional[str] = (
+                            str(row["user_email"])
+                            if isinstance(row["user_email"], str)
+                            else None
                         )
-                        bboxes_for_sdoc.add(bbox)
+                        if email:
+                            bbox = AutoBBox.model_validate(
+                                {
+                                    "code": row["code_name"],
+                                    "x_min": row["bbox_x_min"],
+                                    "y_min": row["bbox_y_min"],
+                                    "x_max": row["bbox_x_max"],
+                                    "y_max": row["bbox_y_max"],
+                                    "user_id": user_email_id_mapping[email],
+                                }
+                            )
+                            bboxes_for_sdoc.add(bbox)
                     bboxes.append(bboxes_for_sdoc)
 
                 # create sdoc link create dtos
@@ -760,11 +873,15 @@ class ImportService(metaclass=SingletonMeta):
                 tags=tags,
             )
 
-            # 4. init text piplines
+            # 4. init import piplines
             from app.celery.background_jobs.tasks import (
                 execute_image_preprocessing_pipeline_task,
                 execute_text_preprocessing_pipeline_task,
             )
+
+            assert isinstance(
+                execute_text_preprocessing_pipeline_task, Task
+            ), "Not a Celery Task"
 
             tasks = [
                 execute_text_preprocessing_pipeline_task.s(cargo, is_init=False)
@@ -772,6 +889,9 @@ class ImportService(metaclass=SingletonMeta):
             ]
 
             # 5. init image pipelines
+            assert isinstance(
+                execute_image_preprocessing_pipeline_task, Task
+            ), "Not a Celery Task"
             image_tasks = [
                 execute_image_preprocessing_pipeline_task.s(cargo, is_init=False)
                 for cargo in cargos[DocType.image]
@@ -790,32 +910,6 @@ class ImportService(metaclass=SingletonMeta):
             crud_project.remove(db=db, id=proj_id)
             raise e
 
-    def __span_import_preconditions_met(
-        self, text, text_begin_char, text_end_char, text_begin_token, text_end_token
-    ):
-        if not isinstance(text, str) or text == "":
-            raise ImportAdocSpanInvalidValueException("text", text)
-        if not isinstance(text_begin_char, int) or text_begin_char < 0:
-            raise ImportAdocSpanInvalidValueException(
-                "text_begin_char", text_begin_char
-            )
-        if not isinstance(text_end_char, int) or text_end_char <= 0:
-            raise ImportAdocSpanInvalidValueException("text_end_char", text_end_char)
-        if not text_end_char > text_begin_char:
-            raise ImportAdocSpanInvalidValueException(
-                "text_begin_char: text_end_char", (text_begin_char, text_end_char)
-            )
-        if not isinstance(text_begin_token, int) or text_begin_token < 0:
-            raise ImportAdocSpanInvalidValueException(
-                "text_begin_token", text_begin_token
-            )
-        if not isinstance(text_end_token, int) or text_end_token <= 0:
-            raise ImportAdocSpanInvalidValueException("text_end_token", text_end_token)
-        if not text_end_token > text_begin_token:
-            raise ImportAdocSpanInvalidValueException(
-                "text_begin_token: text_end_token", (text_begin_token, text_end_token)
-            )
-
     def _import_all_project_metadata(
         self,
         db: Session,
@@ -825,7 +919,7 @@ class ImportService(metaclass=SingletonMeta):
         user_id = imj_parameters.user_id
         try:
             archfile_filename = imj_parameters.filename
-            path_to_project_metadata_file = self.repo._get_dst_path_for_temp_file(
+            path_to_project_metadata_file = self.repo.get_dst_path_for_temp_file(
                 archfile_filename
             )
             project_details = json.load(open(path_to_project_metadata_file, "r"))
@@ -846,8 +940,8 @@ class ImportService(metaclass=SingletonMeta):
     ) -> None:
         proj_id = imj_parameters.proj_id
         filename = imj_parameters.filename
-        path_to_file = self.repo._get_dst_path_for_temp_file(filename)
-        df = pd.read_csv(path_to_file)
+        path_to_file = self.repo.get_dst_path_for_temp_file(filename)
+        df: pd.DataFrame = pd.read_csv(path_to_file)
         for _, row in df.iterrows():
             self.__import_project_metadata(row, db=db, proj_id=proj_id)
 

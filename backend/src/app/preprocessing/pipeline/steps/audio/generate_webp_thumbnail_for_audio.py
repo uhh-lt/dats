@@ -25,6 +25,10 @@ def generate_webp_thumbnail_for_audio(cargo: PipelineCargo) -> PipelineCargo:
         ppad.filepath, webp=True, thumbnail=True
     )
 
+    webp_filename = repo.generate_sdoc_filename(
+        ppad.filepath, webp=True, thumbnail=False
+    )
+
     # read values from wav file
     wav_obj = wave.open(str(ppad.uncompressed_audio_filepath), "rb")
     sample_freq = wav_obj.getframerate()
@@ -41,5 +45,11 @@ def generate_webp_thumbnail_for_audio(cargo: PipelineCargo) -> PipelineCargo:
     plt.savefig(
         str(thumbnail_filename), bbox_inches="tight", pad_inches=0, transparent=True
     )
+
+    plt.figure(figsize=(75, 35))
+    plt.plot(times, signal_array, "grey")
+    plt.axis("off")
+    plt.margins(0, 0)
+    plt.savefig(str(webp_filename), bbox_inches="tight", pad_inches=0, transparent=True)
 
     return cargo

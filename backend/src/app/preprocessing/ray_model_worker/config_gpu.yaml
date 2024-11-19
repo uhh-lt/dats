@@ -1,4 +1,4 @@
-repo_root: /tmp/dats #the root to the backend repo where files are shared across services.
+repo_root: ${oc.env:SHARED_REPO_ROOT, /tmp/dats} #the root to the backend repo where files are shared across services.
 
 spacy:
   # note that the spacy models have to be installed in the env to use it! (docker!)

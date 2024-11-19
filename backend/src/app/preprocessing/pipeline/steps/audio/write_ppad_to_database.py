@@ -55,6 +55,7 @@ def _persist_sdoc_metadata(
     # we create SourceDocumentMetadata for every project metadata
     metadata_create_dtos = []
     for project_metadata_key, project_metadata in project_metadata_map.items():
+        logger.info(f"Generating metadata {project_metadata_key}")
         if project_metadata_key in ppad.metadata.keys():
             metadata_create_dtos.append(
                 SourceDocumentMetadataCreate.with_metatype(

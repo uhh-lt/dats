@@ -53,7 +53,7 @@ def start_import_codes_job(
         )
     user_id = authz_user.user.id
     filename = f"import_user_code_{user_id}_{proj_id}.csv"
-    filepath = repo._get_dst_path_for_temp_file(filename)
+    filepath = repo.get_dst_path_for_temp_file(filename)
     filepath = repo.store_uploaded_file(
         uploaded_file=uploaded_file, filepath=filepath, fn=filename
     )
@@ -90,7 +90,7 @@ def start_import_tags_job(
         )
     user_id = authz_user.user.id
     filename = f"import_tags_{user_id}_{proj_id}.csv"
-    filepath = repo._get_dst_path_for_temp_file(filename)
+    filepath = repo.get_dst_path_for_temp_file(filename)
     filepath = repo.store_uploaded_file(
         uploaded_file=uploaded_file, filepath=filepath, fn=filename
     )
@@ -129,7 +129,7 @@ def start_import_project_project_metadata_job(
         )
     user_id = authz_user.user.id
     filename = f"import_project_project_metadata_{proj_id}.csv"
-    filepath = repo._get_dst_path_for_temp_file(filename)
+    filepath = repo.get_dst_path_for_temp_file(filename)
     filepath = repo.store_uploaded_file(
         uploaded_file=uploaded_file, filepath=filepath, fn=filename
     )
@@ -166,7 +166,7 @@ def start_import_project_metadata_job(
     user_id = current_user.id
     random_temp_project_name = str(uuid.uuid4())
     filename = f"import_project_{random_temp_project_name}_for_user_{user_id}.json"
-    filepath = repo._get_dst_path_for_temp_file(filename)
+    filepath = repo.get_dst_path_for_temp_file(filename)
     filepath = repo.store_uploaded_file(
         uploaded_file=uploaded_file, filepath=filepath, fn=filename
     )
@@ -206,7 +206,7 @@ def start_import_project_job(
     user_id = current_user.id
     random_temp_project_name = str(uuid.uuid4())
     filename = f"import_project_{random_temp_project_name}_for_user_{user_id}.zip"
-    filepath = repo._get_dst_path_for_temp_file(filename)
+    filepath = repo.get_dst_path_for_temp_file(filename)
     filepath = repo.store_uploaded_file(
         uploaded_file=uploaded_file, filepath=filepath, fn=filename
     )

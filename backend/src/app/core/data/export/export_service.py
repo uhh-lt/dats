@@ -201,18 +201,26 @@ class ExportService(metaclass=SingletonMeta):
         sdoc_ids: Optional[List[int]] = None,
         sdocs: Optional[List[SourceDocumentRead]] = None,
     ) -> List[Dict[str, Any]]:
-        # TODO Flo: paging for too many docs
-        if sdocs is None:
-            if sdoc_ids is None:
+        if sdoc_ids is None:
+            if sdocs is None:
                 raise ValueError("Either IDs or DTOs must be not None")
-            sdocs = [
-                SourceDocumentRead.model_validate(sdoc)
-                for sdoc in crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)
-            ]
+            sdoc_ids = list(map(lambda sdoc: sdoc.id, sdocs))
+
+        sdoc_orms = crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)
+
+        if sdocs is None:
+            sdocs = [SourceDocumentRead.model_validate(sdoc) for sdoc in sdoc_orms]
+
+        sdoc_tags: Dict[int, List[DocumentTagORM]] = {sdoc.id: [] for sdoc in sdocs}
+        for sdoc_orm in sdoc_orms:
+            for tag in sdoc_orm.document_tags:
+                sdoc_tags[sdoc_orm.id].append(tag)
+
         exported_sdocs_metadata = []
+
         for sdoc in sdocs:
             sdoc_metadatas = crud_sdoc_meta.read_by_sdoc(db=db, sdoc_id=sdoc.id)
-            sdoc_tags = crud_project.read(db=db, id=sdoc.project_id).document_tags
+            logger.info(f"export sdoc tags: {sdoc_tags[sdoc.id]} for {sdoc.filename}")
             sdoc_metadata_dtos = [
                 SourceDocumentMetadataReadResolved.model_validate(sdoc_metadata)
                 for sdoc_metadata in sdoc_metadatas
@@ -228,7 +236,7 @@ class ExportService(metaclass=SingletonMeta):
                     "filename": sdoc.filename,
                     "doctype": sdoc.doctype,
                     "metadata": metadata_dict,
-                    "tags": [tag.name for tag in sdoc_tags],
+                    "tags": [tag.name for tag in sdoc_tags[sdoc.id]],
                 }
             )
 
