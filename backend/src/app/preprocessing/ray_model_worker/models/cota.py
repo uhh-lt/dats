@@ -10,6 +10,7 @@ from ray_config import build_ray_model_deployment_config, conf
 from setfit import SetFitModel, Trainer, TrainingArguments
 from sklearn.linear_model import LogisticRegression
 from umap.umap_ import UMAP
+from utils import get_project_repo_root_path
 
 cc = conf.cota
 
@@ -211,11 +212,8 @@ class CotaModel:
                 annotations[sentence.concept_annotation].append(idx)
         return annotations
 
-    def __get_project_repo_root_path(self, proj_id: int) -> Path:
-        return SHARED_REPO_ROOT.joinpath(f"projects/{proj_id}/")
-
     def __get_models_root_path(self, proj_id: int) -> Path:
-        return self.__get_project_repo_root_path(proj_id=proj_id).joinpath("models")
+        return get_project_repo_root_path(proj_id=proj_id).joinpath("models")
 
     def __get_model_dir(
         self,

@@ -7,6 +7,9 @@ from PIL import Image
 from ray import serve
 from ray_config import build_ray_model_deployment_config, conf
 from transformers import DetrFeatureExtractor, DetrForObjectDetection
+from utils import (
+    get_sdoc_path_for_project_and_sdoc_name,
+)
 
 cc = conf.detr
 
@@ -40,7 +43,11 @@ class DETRModel:
         self.object_detection_model = object_detection_model
 
     def object_detection(self, input: DETRFilePathInput) -> DETRObjectDetectionOutput:
-        with Image.open(input.image_fp) as img:
+        with Image.open(
+            get_sdoc_path_for_project_and_sdoc_name(
+                proj_id=input.project_id, sdoc_name=input.image_fp
+            )
+        ) as img:
             if img.mode != "RGB":
                 img = img.convert("RGB")
             inputs = self.feature_extractor(img, return_tensors="pt").to(DEVICE)

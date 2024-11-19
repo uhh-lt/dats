@@ -8,9 +8,12 @@ rms = RayModelService()
 
 def generate_image_caption(cargo: PipelineCargo) -> PipelineCargo:
     ppid: PreProImageDoc = cargo.data["ppid"]
-    input = Blip2FilePathInput(image_fp=str(ppid.filepath))
-    result = rms.blip2_image_captioning(input)
+    if "caption" not in ppid.metadata:
+        input = Blip2FilePathInput(
+            image_fp=str(ppid.filename), project_id=ppid.project_id
+        )
+        result = rms.blip2_image_captioning(input)
 
-    ppid.metadata["caption"] = result.caption
+        ppid.metadata["caption"] = result.caption
 
     return cargo

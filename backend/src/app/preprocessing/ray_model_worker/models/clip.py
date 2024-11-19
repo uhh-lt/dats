@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 import torch
 from dto.clip import (
@@ -11,6 +12,9 @@ from PIL import Image
 from ray import serve
 from ray_config import build_ray_model_deployment_config, conf
 from sentence_transformers import SentenceTransformer
+from utils import (
+    get_sdoc_path_for_project_and_sdoc_name,
+)
 
 cc = conf.clip
 
@@ -24,7 +28,7 @@ IMAGE_BATCH_SIZE = cc.image_encoder.batch_size
 logger = logging.getLogger("ray.serve")
 
 
-def load_image(img_p: str) -> Image.Image:
+def load_image(img_p: str | Path) -> Image.Image:
     img = Image.open(img_p)
     if img.mode != "RGB":
         img = img.convert("RGB")
@@ -59,7 +63,14 @@ class ClipModel:
             return ClipEmbeddingOutput(embeddings=encoded_text.tolist())
 
     def image_embedding(self, input: ClipImageEmbeddingInput) -> ClipEmbeddingOutput:
-        images = [load_image(img_p) for img_p in input.image_fps]
+        images = [
+            load_image(
+                get_sdoc_path_for_project_and_sdoc_name(
+                    proj_id=project_id, sdoc_name=img_p
+                )
+            )
+            for project_id, img_p in zip(input.project_ids, input.image_fps)
+        ]
 
         with torch.no_grad():
             encoded_images = self.image_encoder.encode(

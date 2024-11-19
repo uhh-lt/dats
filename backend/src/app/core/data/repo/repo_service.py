@@ -259,7 +259,7 @@ class RepoService(metaclass=SingletonMeta):
             f"{filename}"
         )
 
-    def _get_dst_path_for_temp_file(self, filename: Union[str, Path]) -> Path:
+    def get_dst_path_for_temp_file(self, filename: Union[str, Path]) -> Path:
         filename = Path(self.truncate_filename(filename))
         return self.temp_files_root.joinpath(f"{filename}")
 
@@ -273,7 +273,7 @@ class RepoService(metaclass=SingletonMeta):
         )
 
     def _temp_file_exists(self, filename: Union[str, Path]) -> bool:
-        return self._get_dst_path_for_temp_file(filename).exists()
+        return self.get_dst_path_for_temp_file(filename).exists()
 
     def create_directory_structure_for_project(self, proj_id: int) -> Optional[Path]:
         paths = [

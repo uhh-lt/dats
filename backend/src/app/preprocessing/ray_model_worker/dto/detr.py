@@ -13,7 +13,8 @@ class ObjectBBox(BaseModel):
 
 
 class DETRFilePathInput(BaseModel):
-    image_fp: str = Field(examples=["/path/to/image.png"])
+    image_fp: str = Field(examples=["image.png"])
+    project_id: int = Field(examples=[1])
 
 
 class DETRObjectDetectionOutput(BaseModel):

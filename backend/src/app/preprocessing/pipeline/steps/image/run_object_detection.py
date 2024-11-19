@@ -13,7 +13,7 @@ rms = RayModelService()
 def run_object_detection(cargo: PipelineCargo) -> PipelineCargo:
     ppid: PreProImageDoc = cargo.data["ppid"]
 
-    input = DETRFilePathInput(image_fp=str(ppid.filepath))
+    input = DETRFilePathInput(image_fp=str(ppid.filename), project_id=ppid.project_id)
     result = rms.detr_object_detection(input)
     logger.info(f"Bounding boxes already found are: {ppid.bboxes}")
     for box in result.bboxes:
