@@ -1,24 +1,28 @@
 #!/bin/bash
 
+# Stop frontend and backend, so that no changes can be made during backup
+cd ~/dats_prod/docker || exit
+docker compose -f compose.yml -f compose.production.yml stop dats-frontend dats-backend-api
+
 # Create backups
 cd ~/dats_prod || exit
 ./bin/backup-postgres.sh
 ./bin/backup-repo.sh
+./bin/backup-elasticsearch.sh
+./bin/backup-weaviate.sh
 
+# Stop all containers
 cd ~/dats_prod/docker || exit
+docker compose -f compose.yml -f compose.production.yml down
 
-docker compose down
-
+# Pull latest changes
 git pull
 
 # update .env file
-cp .env.example .env
-sed -i 's/COMPOSE_PROJECT_NAME=demo/COMPOSE_PROJECT_NAME=prod-dats/' .env
-sed -i 's/131/101/g' .env
-sed -i "s/JWT_SECRET=/JWT_SECRET=$(pwgen 32 1)/" .env
-sed -i "s/UID=121/UID=$(id -u)/" .env
-sed -i "s/GID=126/GID=$(id -g)/" .env
+cd ~/dats_prod || exit
+./bin/setup-envs.sh --project_name prod-dats --port_prefix 101
 
 # pull & start docker containers
+cd ~/dats_prod/docker || exit
 docker compose pull
 docker compose -f compose.yml -f compose.production.yml up --wait
