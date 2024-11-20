@@ -22,17 +22,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Prepare environment
-        working-directory: docker
         run: |
-          ./setup-folders.sh
-          cp .env.example .env
-          sed -i 's/COMPOSE_PROJECT_NAME=demo/COMPOSE_PROJECT_NAME=action-runner/' .env
-          sed -i 's/\(DATS_BACKEND_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' .env
-          sed -i 's/\(DATS_RAY_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' .env
-          sed -i "s/UID=121/UID=$(id -u)/" .env
-          sed -i "s/GID=126/GID=$(id -g)/" .env
-          echo "SPACY_CACHE_DIR=$HOME/spacy_models" >> .env
-          echo "MODELS_CACHE_DIR=$HOME/models_cache" >> .env
+          ./bin/setup-folders.sh
+          ./bin/setup-env.sh --project_name action-runner --port_prefix 131
+          sed -i 's/\(DATS_BACKEND_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
+          sed -i 's/\(DATS_RAY_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
+          echo "SPACY_CACHE_DIR=$HOME/spacy_models" >> docker/.env
+          echo "MODELS_CACHE_DIR=$HOME/models_cache" >> docker/.env
           mkdir -p $HOME/spacy_models
           mkdir -p $HOME/models_cache
       - name: Build & Start Docker Containers
