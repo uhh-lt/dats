@@ -35,7 +35,9 @@ fi
 # Restore the repository from the backup
 # 1) Make sure that no container is running
 echo "Stopping all containers..."
+cd docker || exit
 docker compose -f compose.yml -f compose.production.yml down
+cd .. || exit
 # 2) Delete the existing repository
 echo "Deleting the existing repository..."
 rm -rf docker/backend_repo
