@@ -22,7 +22,7 @@ services:
   kibana:
     image: docker.elastic.co/kibana/kibana:8.11.1
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:5601 || exit 1"]
+      test: [ "CMD-SHELL", "curl -f http://localhost:5601 || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 5
