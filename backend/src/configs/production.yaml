@@ -50,9 +50,22 @@ celery:
     extract_images_from_pdf: True
     extract_images_from_docx: True
 
+vector_index:
+  service: ${oc.env:VECTOR_INDEX, weaviate}
+
 weaviate:
   host: weaviate
   port: 8080
+
+typesense:
+  host: typesense
+  port: 8108
+  api_key: ${oc.env:TYPESENSE_API_KEY, dats123}
+
+qdrant:
+  host: qdrant
+  port: 6333
+  grpc_port: 6334
 
 postgres:
   host: postgres

@@ -16,7 +16,7 @@ jobs:
     env:
       API_WORKERS: 1
       VITE_APP_SERVER: http://localhost:13120
-      COMPOSE_PROFILES: "ray,background,backend,frontend"
+      COMPOSE_PROFILES: "weaviate,ray,background,backend,frontend"
       RAY_CONFIG: "config_gpu.yaml"
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
     steps:

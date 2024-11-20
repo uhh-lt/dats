@@ -4,6 +4,7 @@
 import os
 import random
 import string
+import sys
 from typing import Callable, Generator
 
 import magic
@@ -30,25 +31,6 @@ from config import conf
 
 os.environ["RESET_DATA"] = "1"
 
-# Flo: just do it once. We have to check because if we start the main function, unvicorn will import this
-# file once more manually, so it would be executed twice.
-STARTUP_DONE = bool(int(os.environ.get("STARTUP_DONE", "0")))
-if not STARTUP_DONE:
-    if SQLService().database_contains_data():
-        # Make sure we don't accidentally delete important data
-        logger.error(
-            f"Database '{conf.postgres.db}' is not empty. The tests will only run given a database without any tables in it."
-        )
-        exit(1)
-
-from app.core.data.crud.code import crud_code
-from app.core.data.crud.project import crud_project
-from app.core.data.crud.user import SYSTEM_USER_ID, crud_user
-from app.core.data.dto.code import CodeCreate
-from app.core.data.dto.project import ProjectCreate
-from app.core.data.dto.user import UserCreate, UserRead
-from main import app
-
 
 def pytest_sessionfinish():
     # Make sure the next test session starts with clean databases
@@ -57,6 +39,29 @@ def pytest_sessionfinish():
     SimSearchService().drop_indices()
     RedisService().flush_all_clients()
     RepoService().purge_repo()
+
+
+# Flo: just do it once. We have to check because if we start the main function, unvicorn will import this
+# file once more manually, so it would be executed twice.
+STARTUP_DONE = bool(int(os.environ.get("STARTUP_DONE", "0")))
+if not STARTUP_DONE:
+    if SQLService().database_contains_data():
+        # Make sure we don't accidentally delete important data
+        logger.error(
+            f"Database '{conf.postgres.db}' is not empty. The tests will only run given a database without any tables in it. Drop database? Type 'yes' to clear all data"
+        )
+        if sys.stdin.readline().strip() == "yes":
+            pytest_sessionfinish()
+        else:
+            exit(1)
+
+from app.core.data.crud.code import crud_code
+from app.core.data.crud.project import crud_project
+from app.core.data.crud.user import SYSTEM_USER_ID, crud_user
+from app.core.data.dto.code import CodeCreate
+from app.core.data.dto.project import ProjectCreate
+from app.core.data.dto.user import UserCreate, UserRead
+from main import app
 
 
 # Always use the asyncio backend for async tests

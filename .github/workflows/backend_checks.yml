@@ -38,8 +38,8 @@ jobs:
       - name: Build & Start Docker Containers
         working-directory: docker
         run: |
-          COMPOSE_PROFILES="ray,background,backend" docker compose build
-          COMPOSE_PROFILES="ray,background" docker compose up --wait --quiet-pull
+          COMPOSE_PROFILES="weaviate,ray,background,backend" docker compose build
+          COMPOSE_PROFILES="weaviate,ray,background" docker compose up --wait --quiet-pull
       - name: Check 1 - pytest runs without errors
         working-directory: docker
         run: |
@@ -55,7 +55,7 @@ jobs:
       - name: Start Remaining Docker Containers
         working-directory: docker
         run: |
-          COMPOSE_PROFILES="ray,background,backend" docker compose up --wait --quiet-pull
+          COMPOSE_PROFILES="weaviate,ray,background,backend" docker compose up --wait --quiet-pull
       - name: Check 4 - Test End-2-End importer script
         working-directory: tools/importer
         env:

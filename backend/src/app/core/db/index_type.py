@@ -1,6 +1,8 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class IndexType(str, Enum):
-    TEXT = "text"
+class IndexType(StrEnum):
+    SENTENCE = "sentence"
     IMAGE = "image"
+    NAMED_ENTITY = "named-entity"
+    DOCUMENT = "document"

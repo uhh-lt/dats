@@ -6,6 +6,7 @@ pytest-order==1.2.1
 Scrapy==2.10.0
 scrapy-playwright==0.0.31
 scrapy-selenium==0.0.7
+typesense==0.21.0
 weaviate-client==3.24.1
 webdriver-manager==4.0.1
 yake==0.4.8

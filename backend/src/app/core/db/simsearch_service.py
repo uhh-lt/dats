@@ -2,19 +2,16 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
-import weaviate
 from loguru import logger
 
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.doc_type import DocType
-from app.core.data.dto.search import (
-    SimSearchImageHit,
-    SimSearchSentenceHit,
-)
+from app.core.data.dto.search import SimSearchImageHit, SimSearchSentenceHit
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.index_type import IndexType
 from app.core.db.sql_service import SQLService
+from app.core.db.vector_index_service import VectorIndexService
 from app.preprocessing.ray_model_service import RayModelService
 from app.preprocessing.ray_model_worker.dto.clip import (
     ClipImageEmbeddingInput,
@@ -25,96 +22,37 @@ from config import conf
 
 
 class SimSearchService(metaclass=SingletonMeta):
-    def __new__(cls, *args, **kwargs):
-        cls._sentence_class_name = "Sentence"
-        cls._image_class_name = "Image"
+    def __new__(cls, reset_vector_index=False):
+        index_name: str = conf.vector_index.service
+        match index_name:
+            case "qdrant":
+                # import and init QdrantService
+                from app.core.db.qdrant_service import QdrantService
 
-        cls.class_names = {
-            IndexType.TEXT: cls._sentence_class_name,
-            IndexType.IMAGE: cls._image_class_name,
-        }
+                cls._index: VectorIndexService = QdrantService(flush=reset_vector_index)
+            case "typesense":
+                # import and init TypesenseService
+                from app.core.db.typesense_service import TypesenseService
 
-        cls._common_properties = [
-            {
-                "name": "project_id",
-                "description": "The id of the project this sentence belongs to",
-                "dataType": ["int"],
-            },
-            {
-                "name": "sdoc_id",
-                "description": "The sdoc id of this image",
-                "dataType": ["int"],
-            },
-        ]
+                cls._index: VectorIndexService = TypesenseService(
+                    flush=reset_vector_index
+                )
+            case "weaviate":
+                # import and init WeaviateService
+                from app.core.db.weaviate_service import WeaviateService
 
-        cls._sentence_class_obj = {
-            "class": cls._sentence_class_name,
-            "vectorizer": "none",
-            "properties": [
-                *cls._common_properties,
-                {
-                    "name": "sentence_id",
-                    "description": "The id of this sentence",
-                    "dataType": ["int"],
-                },
-            ],
-        }
-
-        cls._image_class_obj = {
-            "class": cls._image_class_name,
-            "vectorizer": "none",
-            "properties": [
-                *cls._common_properties,
-            ],
-        }
-
-        try:
-            # setup weaviate client
-            w_host = conf.weaviate.host
-            w_port = conf.weaviate.port
-            url = f"http://{w_host}:{w_port}"
-            cls._client = weaviate.Client(url)
-
-            if not cls._client.is_ready():
-                msg = f"Weaviate client at {url} not ready!"
+                cls._index: VectorIndexService = WeaviateService(
+                    flush=reset_vector_index
+                )
+            case _:
+                msg = (
+                    f"VECTOR_INDEX environment variable not correctly set: {index_name}"
+                )
                 logger.error(msg)
-                raise RuntimeError(msg)
-
-            cls._client.batch.configure(
-                batch_size=100,
-                num_workers=2,
-            )
-
-            if kwargs["flush"] if "flush" in kwargs else False:
-                logger.warning("Flushing DATS Weaviate Data!")
-                if cls._client.schema.exists(cls._sentence_class_name):
-                    cls._client.schema.delete_class(cls._sentence_class_name)
-                if cls._client.schema.exists(cls._image_class_name):
-                    cls._client.schema.delete_class(cls._image_class_name)
-
-            # create classes
-            if not cls._client.schema.exists(cls._sentence_class_name):
-                logger.debug(f"Creating class {cls._sentence_class_obj}!")
-                cls._client.schema.create_class(cls._sentence_class_obj)
-            if not cls._client.schema.exists(cls._image_class_name):
-                logger.debug(f"Creating class {cls._image_class_obj}!")
-                cls._client.schema.create_class(cls._image_class_obj)
-
-            cls._sentence_props = list(
-                map(lambda p: p["name"], cls._sentence_class_obj["properties"])
-            )
-            cls._image_props = list(
-                map(lambda p: p["name"], cls._image_class_obj["properties"])
-            )
-        except Exception as e:
-            msg = f"Cannot connect or initialize to Weaviate DB - Error '{e}'"
-            logger.error(msg)
-            raise SystemExit(msg)
-
+                raise SystemExit(msg)
         cls.rms = RayModelService()
         cls.repo = RepoService()
         cls.sqls = SQLService()
-
         return super(SimSearchService, cls).__new__(cls)
 
     def _encode_text(self, text: List[str], return_avg_emb: bool = False) -> np.ndarray:
@@ -156,45 +94,33 @@ class SimSearchService(metaclass=SingletonMeta):
         sdoc_id: int,
         sentences: List[str],
     ) -> None:
-        sentence_embs = (
-            self.rms.clip_text_embedding(ClipTextEmbeddingInput(text=sentences))
-            .numpy()
-            .tolist()
-        )
+        sentence_embs = self.rms.clip_text_embedding(
+            ClipTextEmbeddingInput(text=sentences)
+        ).numpy()
+
+        # create cheap&easy (but suboptimal) document embeddings for now
+        doc_emb = sentence_embs.sum(axis=0)
+        doc_emb /= np.linalg.norm(doc_emb)
+
         logger.debug(
             f"Adding {len(sentence_embs)} sentences "
             f"from SDoc {sdoc_id} in Project {proj_id} to Weaviate ..."
         )
-        with self._client.batch as batch:
-            for sent_id, sent_emb in enumerate(sentence_embs):
-                batch.add_data_object(
-                    data_object={
-                        "project_id": proj_id,
-                        "sdoc_id": sdoc_id,
-                        "sentence_id": sent_id,
-                    },
-                    class_name=self._sentence_class_name,
-                    vector=sent_emb,
-                )
+        self._index.add_embeddings_to_index(
+            IndexType.DOCUMENT, proj_id, sdoc_id, [doc_emb]
+        )
+        self._index.add_embeddings_to_index(
+            IndexType.SENTENCE, proj_id, sdoc_id, sentence_embs
+        )
 
-    def add_image_sdoc_to_index(
-        self,
-        proj_id: int,
-        sdoc_id: int,
-    ) -> None:
+    def add_image_sdoc_to_index(self, proj_id: int, sdoc_id: int) -> None:
         image_emb = self._encode_image(image_sdoc_id=sdoc_id)
         logger.debug(
             f"Adding image SDoc {sdoc_id} in Project {proj_id} to Weaviate ..."
         )
-        with self._client.batch as batch:
-            batch.add_data_object(
-                data_object={
-                    "project_id": proj_id,
-                    "sdoc_id": sdoc_id,
-                },
-                class_name=self._image_class_name,
-                vector=image_emb.tolist(),
-            )
+        self._index.add_embeddings_to_index(
+            IndexType.IMAGE, proj_id, sdoc_id, [image_emb]
+        )
 
     def remove_sdoc_from_index(self, doctype: str, sdoc_id: int):
         match doctype:
@@ -206,156 +132,20 @@ class SimSearchService(metaclass=SingletonMeta):
                 # Other doctypes are not used for simsearch
                 pass
 
-    def remove_image_sdoc_from_index(
-        self,
-        sdoc_id: int,
-    ) -> None:
+    def remove_image_sdoc_from_index(self, sdoc_id: int) -> None:
         logger.debug(f"Removing image SDoc {sdoc_id} from Index!")
-        obj_id = self._get_image_object_id_by_sdoc_id(sdoc_id=sdoc_id)
-        self._client.data_object.delete(
-            uuid=obj_id,
-            class_name=self._image_class_name,
-        )
+        self._index.remove_embeddings_from_index(IndexType.IMAGE, sdoc_id)
 
-    def remove_text_sdoc_from_index(
-        self,
-        sdoc_id: int,
-    ) -> None:
-        obj_ids = self._get_sentence_object_ids_by_sdoc_id(sdoc_id=sdoc_id)
-        logger.debug(
-            f"Removing text SDoc {sdoc_id} with {len(obj_ids)} sentences from Index!"
-        )
-        for obj_id in obj_ids:
-            self._client.data_object.delete(
-                uuid=obj_id,
-                class_name=self._sentence_class_name,
-            )
+    def remove_text_sdoc_from_index(self, sdoc_id: int) -> None:
+        logger.debug(f"Removing text SDoc {sdoc_id} from Index!")
+        self._index.remove_embeddings_from_index(IndexType.SENTENCE, sdoc_id)
+        self._index.remove_embeddings_from_index(IndexType.DOCUMENT, sdoc_id)
 
     def remove_all_project_embeddings(
         self,
         proj_id: int,
     ) -> None:
-        for class_name in self.class_names.values():
-            logger.debug(f"Removing all {class_name} embeddings of Project {proj_id}!")
-
-            self._client.batch.delete_objects(
-                class_name=class_name,
-                where={
-                    "path": ["project_id"],
-                    "operator": "Equal",
-                    "valueInt": proj_id,
-                },
-            )
-
-    def drop_indices(self) -> None:
-        logger.warning("Dropping all Weaviate indices!")
-        if self._client.schema.exists(self._sentence_class_name):
-            self._client.schema.delete_class(self._sentence_class_name)
-        if self._client.schema.exists(self._image_class_name):
-            self._client.schema.delete_class(self._image_class_name)
-
-    def _get_image_object_id_by_sdoc_id(
-        self,
-        sdoc_id: int,
-    ) -> str:
-        id_filter = {
-            "path": ["sdoc_id"],
-            "operator": "Equal",
-            "valueInt": sdoc_id,
-        }
-        response = (
-            self._client.query.get(self.class_names[IndexType.IMAGE], ["sdoc_id"])
-            .with_where(id_filter)
-            .with_additional("id")
-            .do()
-        )
-        if len(response["data"]["Get"][self.class_names[IndexType.IMAGE]]) == 0:
-            msg = f"No Sentence with sentence_id {sdoc_id} found!"
-            logger.error(msg)
-            raise KeyError(msg)
-
-        return response["data"]["Get"][self.class_names[IndexType.IMAGE]][0][
-            "_additional"
-        ]["id"]
-
-    def _get_sentence_object_ids_by_sdoc_id(
-        self,
-        sdoc_id: int,
-    ) -> List[str]:
-        id_filter = {
-            "path": ["sdoc_id"],
-            "operator": "Equal",
-            "valueInt": sdoc_id,
-        }
-        response = (
-            self._client.query.get(self._sentence_class_name, ["sentence_id"])
-            .with_where(id_filter)
-            .with_additional("id")
-            .do()
-        )
-        if len(response["data"]["Get"][self._sentence_class_name]) == 0:
-            msg = f"No Sentences for SDoc {sdoc_id} found!"
-            logger.error(msg)
-            raise KeyError(msg)
-
-        return list(
-            map(
-                lambda r: r["_additional"]["id"],
-                response["data"]["Get"][self._sentence_class_name],
-            )
-        )
-
-    def __search_index(
-        self,
-        proj_id: int,
-        index_type: IndexType,
-        query_emb: np.ndarray,
-        top_k: int = 10,
-        threshold: float = 0.0,
-        sdoc_ids_to_search: Optional[List[int]] = None,
-    ) -> List[Dict[str, Any]]:
-        project_filter = {
-            "path": ["project_id"],
-            "operator": "Equal",
-            "valueInt": proj_id,
-        }
-        if index_type == IndexType.TEXT:
-            query = self._client.query.get(
-                self._sentence_class_name,
-                self._sentence_props,
-            )
-        elif index_type == IndexType.IMAGE:
-            query = self._client.query.get(
-                self._image_class_name,
-                self._image_props,
-            )
-        else:
-            msg = f"Unknown IndexType '{index_type}'!"
-            logger.error(msg)
-            raise ValueError(msg)
-
-        query = (
-            query.with_near_vector(
-                {"vector": query_emb.tolist(), "certainty": threshold}
-            )
-            .with_additional(["certainty"])
-            .with_where(project_filter)
-            .with_limit(top_k)
-        )
-
-        if sdoc_ids_to_search is not None:
-            query.with_where(
-                {
-                    "operator": "ContainsAny",
-                    "path": "sdoc_id",
-                    "valueInt": sdoc_ids_to_search,
-                }
-            )
-
-        results = query.do()["data"]["Get"][self.class_names[index_type]]
-        if results is None:
-            results = []
-        return results
+        self._index.remove_project_from_index(proj_id)
 
     def _encode_query(
         self,
@@ -408,25 +198,9 @@ class SimSearchService(metaclass=SingletonMeta):
         threshold: float,
         sdoc_ids_to_search: Optional[List[int]] = None,
     ) -> List[SimSearchSentenceHit]:
-        query_emb = self._encode_query(
-            **self.__parse_query_param(query),
-        )
-        results = self.__search_index(
-            proj_id=proj_id,
-            index_type=IndexType.TEXT,
-            query_emb=query_emb,
-            top_k=top_k,
-            threshold=threshold,
-            sdoc_ids_to_search=sdoc_ids_to_search,
-        )
-        return [
-            SimSearchSentenceHit(
-                sdoc_id=r["sdoc_id"],
-                sentence_id=r["sentence_id"],
-                score=r["_additional"]["certainty"],
-            )
-            for r in results
-        ]
+        return self.find_similar(
+            proj_id, IndexType.SENTENCE, sdoc_ids_to_search, query, top_k, threshold
+        )  # type: ignore
 
     def find_similar_images(
         self,
@@ -436,90 +210,58 @@ class SimSearchService(metaclass=SingletonMeta):
         top_k: int,
         threshold: float,
     ) -> List[SimSearchImageHit]:
+        return self.find_similar(
+            proj_id, IndexType.IMAGE, sdoc_ids_to_search, query, top_k, threshold
+        )  # type: ignore
+
+    def find_similar(
+        self,
+        proj_id: int,
+        index_type: IndexType,
+        sdoc_ids_to_search: List[int] | None,
+        query: Union[str, List[str], int],
+        top_k: int,
+        threshold: float,
+    ) -> List[SimSearchSentenceHit] | List[SimSearchImageHit]:
         query_emb = self._encode_query(
             **self.__parse_query_param(query),
         )
-        results = self.__search_index(
+        return self._index.search_index(
             proj_id=proj_id,
-            index_type=IndexType.IMAGE,
+            index_type=index_type,
             query_emb=query_emb,
             top_k=top_k,
             threshold=threshold,
             sdoc_ids_to_search=sdoc_ids_to_search,
         )
-        return [
-            SimSearchImageHit(
-                sdoc_id=r["sdoc_id"],
-                score=r["_additional"]["certainty"],
-            )
-            for r in results
-        ]
 
-    def _get_num_of_objects_in_index(self, index_type: IndexType) -> int:
-        return (
-            self._client.query.aggregate(self.class_names[index_type]).with_meta_count()
-        ).do()["data"]["Aggregate"][self.class_names[index_type]][0]["meta"]["count"]
+    def suggest_similar_sentences(
+        self,
+        proj_id: int,
+        sdoc_sent_ids: List[Tuple[int, int]],
+        top_k: int,
+    ) -> List[SimSearchSentenceHit]:
+        hits = self._index.suggest(IndexType.SENTENCE, proj_id, sdoc_sent_ids)
+        hits = [h for h in hits if (h.sdoc_id, h.sentence_id) not in sdoc_sent_ids]
+        hits.sort(key=lambda x: (x.sdoc_id, x.sentence_id))
+        hits = self.__unique_consecutive(hits)
+        hits.sort(key=lambda x: x.score, reverse=True)
+        return hits[0 : min(len(hits), top_k)]
+
+    def __unique_consecutive(self, hits: List[SimSearchSentenceHit]):
+        result = []
+        current = SimSearchSentenceHit(sdoc_id=-1, sentence_id=-1, score=0.0)
+        for hit in hits:
+            if hit.sdoc_id != current.sdoc_id or hit.sentence_id != current.sentence_id:
+                current = hit
+                result.append(hit)
+        return result
 
     def get_sentence_embeddings(
         self, search_tuples: List[Tuple[int, int]]
     ) -> np.ndarray:
-        # First prepare the query to run through data
-        def run_batch(batch):
-            query = (
-                self._client.query.get(
-                    self._sentence_class_name,
-                    self._sentence_props,
-                )
-                .with_additional(["vector"])
-                .with_where(
-                    {
-                        "operator": "Or",
-                        "operands": [
-                            {
-                                "operator": "And",
-                                "operands": [
-                                    {
-                                        "path": ["sentence_id"],
-                                        "operator": "Equal",
-                                        "valueInt": sentence_id,
-                                    },
-                                    {
-                                        "path": ["sdoc_id"],
-                                        "operator": "Equal",
-                                        "valueInt": sdoc_id,
-                                    },
-                                ],
-                            }
-                            for sentence_id, sdoc_id in batch
-                        ],
-                    }
-                )
-            )
-            result = query.do()["data"]["Get"][self._sentence_class_name]
-            result_dict = {
-                f'{r["sdoc_id"]}-{r["sentence_id"]}': r["_additional"]["vector"]
-                for r in result
-            }
-            sorted_res = []
-            for sentence_id, sdoc_id in batch:
-                sorted_res.append(result_dict[f"{sdoc_id}-{sentence_id}"])
-            return sorted_res
+        return self._index.get_sentence_embeddings(search_tuples)
 
-        embeddings = []
-        batch = search_tuples
-        while True:
-            if len(batch) >= 100:
-                minibatch = batch[:100]
-                batch = batch[100:]
-            else:
-                minibatch = batch
-                batch = []
-
-            # Get the next batch of objects
-            embeddings_minibatch = run_batch(minibatch)
-            embeddings.extend(embeddings_minibatch)
-
-            if len(batch) == 0:
-                break
-
-        return np.array(embeddings)
+    def drop_indices(self) -> None:
+        logger.warning("Dropping all sim search indices!")
+        self._index.drop_indices()
