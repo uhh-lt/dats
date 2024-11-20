@@ -11,5 +11,5 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ["0"] # use first gpu for production
-              capabilities: [gpu]
+              device_ids: [ "0" ] # use first gpu for production
+              capabilities: [ gpu ]
