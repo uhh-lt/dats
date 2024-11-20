@@ -33,10 +33,13 @@ if [ ! -f "backups/repo/$BACKUP_NAME" ]; then
 fi
 
 # Restore the repository from the backup
-# 1) Delete the existing repository
+# 1) Make sure that no container is running
+echo "Stopping all containers..."
+docker compose -f compose.yml -f compose.production.yml down
+# 2) Delete the existing repository
 echo "Deleting the existing repository..."
 rm -rf docker/backend_repo
-# 2) Restore with the backup
+# 3) Restore with the backup
 echo "Restoring the repository..."
 tar -xzf "backups/repo/$BACKUP_NAME" -C docker
 
