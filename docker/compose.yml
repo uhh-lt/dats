@@ -52,7 +52,7 @@ services:
     volumes:
       - typesense_data_demo:/data
     environment:
-      - TYPESENSE_API_KEY=dats123
+      - TYPESENSE_API_KEY=${TYPESENSE_API_KEY:-dats123}
       - TYPESENSE_DATA_DIR=/data
     networks:
       - dats_demo_network
