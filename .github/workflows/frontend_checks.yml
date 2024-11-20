@@ -29,7 +29,7 @@ jobs:
       - name: Prepare environment
         run: |
           ./bin/setup-folders.sh
-          ./bin/setup-env.sh --project_name action-runner --port_prefix 131
+          ./bin/setup-envs.sh --project_name action-runner --port_prefix 131
           sed -i 's/\(DATS_FRONTEND_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
           echo "SPACY_CACHE_DIR=$HOME/spacy_models" >> docker/.env
           echo "MODELS_CACHE_DIR=$HOME/models_cache" >> docker/.env
