@@ -1,8 +1,9 @@
-import BorderColorIcon from "@mui/icons-material/BorderColor";
 import ChromeReaderModeIcon from "@mui/icons-material/ChromeReaderMode";
 import DoNotDisturbIcon from "@mui/icons-material/DoNotDisturb";
 import FormatOverlineIcon from "@mui/icons-material/FormatOverline";
 import FormatStrikethroughIcon from "@mui/icons-material/FormatStrikethrough";
+import ShortTextIcon from "@mui/icons-material/ShortText";
+import SubjectIcon from "@mui/icons-material/Subject";
 import { TabContext, TabPanel } from "@mui/lab";
 import {
   Box,
@@ -150,18 +151,18 @@ function Annotation() {
                 color="primary"
               >
                 {sdoc.data?.doctype === DocType.TEXT && (
-                  <Tooltip title="Sentence Mode" placement="bottom">
+                  <Tooltip title="Sentence Annotation" placement="bottom">
                     <ToggleButton value={AnnotationMode.SentenceAnnotation} sx={{ fontSize: 12 }}>
-                      <BorderColorIcon />
+                      <SubjectIcon />
                     </ToggleButton>
                   </Tooltip>
                 )}
-                <Tooltip title="Annotation Mode" placement="bottom">
+                <Tooltip title="Span Annotation" placement="bottom">
                   <ToggleButton value={AnnotationMode.Annotation} sx={{ fontSize: 12 }}>
-                    <BorderColorIcon />
+                    <ShortTextIcon />
                   </ToggleButton>
                 </Tooltip>
-                <Tooltip title="Reader Mode" placement="bottom">
+                <Tooltip title="Reading" placement="bottom">
                   <ToggleButton value={AnnotationMode.Reader} sx={{ fontSize: 12 }}>
                     <ChromeReaderModeIcon />
                   </ToggleButton>
