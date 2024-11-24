@@ -41,6 +41,8 @@ export const QueryKey = {
   MEMO_SPAN_ANNOTATION: "spanAnnotationMemo",
   // the logged-in user's memo (by bbox id)
   MEMO_BBOX_ANNOTATION: "bboxAnnotationMemo",
+  // the logged-in user's memo (by sentence anno id)
+  MEMO_SENTENCE_ANNOTATION: "sentenceAnnotationMemo",
   // the logged-in user's memo (by project id)
   MEMO_PROJECT: "projectMemo",
 
@@ -60,6 +62,8 @@ export const QueryKey = {
   SDOC_SPAN_ANNOTATIONS: "sdocSpanAnnotations",
   // bbox annotations of a document (by sdoc id, user ids)
   SDOC_BBOX_ANNOTATIONS: "sdocBBoxAnnotations",
+  // sentence annotations of a document (by sdoc id, user ids)
+  SDOC_SENTENCE_ANNOTATIONS: "sdocSentenceAnnotations",
   // all metadata of a document (by sdoc id)
   SDOC_METADATAS: "sdocMetadatas",
   // word frequencies of a document (by sdoc id)
@@ -91,6 +95,10 @@ export const QueryKey = {
   BBOX_ANNOTATION: "bboxAnnotation",
   // bbox annotations of a code of the logged-in user (by code id)
   BBOX_ANNOTATIONS_USER_CODE: "bboxAnnotationsUserCode",
+  // a single sentence annotation (by sentence annotation id)
+  SENTENCE_ANNOTATION: "sentenceAnnotation",
+  // sentence annotations of a code of the logged-in user (by code id)
+  SENTENCE_ANNOTATIONS_USER_CODE: "sentenceAnnotationsUserCode",
 
   // project metadata (by project id)
   PROJECT_METADATAS: "projectMetadatas",

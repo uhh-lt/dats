@@ -6,6 +6,7 @@ import type { BBoxAnnotationRead } from "../models/BBoxAnnotationRead";
 import type { BBoxAnnotationReadResolved } from "../models/BBoxAnnotationReadResolved";
 import type { DocumentTagRead } from "../models/DocumentTagRead";
 import type { MemoRead } from "../models/MemoRead";
+import type { SentenceAnnotatorResult } from "../models/SentenceAnnotatorResult";
 import type { SourceDocumentDataRead } from "../models/SourceDocumentDataRead";
 import type { SourceDocumentMetadataReadResolved } from "../models/SourceDocumentMetadataReadResolved";
 import type { SourceDocumentRead } from "../models/SourceDocumentRead";
@@ -431,6 +432,44 @@ export class SourceDocumentService {
         skip: skip,
         limit: limit,
         resolve: resolve,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns all SentenceAnnotations of the Users with the given ID if it exists
+   * @returns SentenceAnnotatorResult Successful Response
+   * @throws ApiError
+   */
+  public static getSentenceAnnotator({
+    sdocId,
+    userId,
+    skip,
+    limit,
+  }: {
+    sdocId: number;
+    userId?: Array<number>;
+    /**
+     * The number of elements to skip (offset)
+     */
+    skip?: number | null;
+    /**
+     * The maximum number of returned elements
+     */
+    limit?: number | null;
+  }): CancelablePromise<SentenceAnnotatorResult> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/sdoc{sdoc_id}/sentence_annotator",
+      path: {
+        sdoc_id: sdocId,
+      },
+      query: {
+        user_id: userId,
+        skip: skip,
+        limit: limit,
       },
       errors: {
         422: `Validation Error`,

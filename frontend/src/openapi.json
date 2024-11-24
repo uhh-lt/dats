@@ -1401,6 +1401,55 @@
         }
       }
     },
+    "/sdoc{sdoc_id}/sentence_annotator": {
+      "get": {
+        "tags": ["sourceDocument"],
+        "summary": "Returns all SentenceAnnotations of the Users with the given ID if it exists",
+        "operationId": "get_sentence_annotator",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "array", "items": { "type": "integer" }, "title": "User Id" }
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "integer", "maximum": 10000000, "minimum": 0 }, { "type": "null" }],
+              "title": "Skip",
+              "description": "The number of elements to skip (offset)"
+            },
+            "description": "The number of elements to skip (offset)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "integer", "maximum": 1000, "minimum": 1 }, { "type": "null" }],
+              "title": "Limit",
+              "description": "The maximum number of returned elements"
+            },
+            "description": "The maximum number of returned elements"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotatorResult" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/sdoc{sdoc_id}/user/span_groups": {
       "get": {
         "tags": ["sourceDocument"],
@@ -5725,6 +5774,299 @@
         },
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
+    },
+    "/sentence": {
+      "put": {
+        "tags": ["sentenceAnnotation"],
+        "summary": "Creates a SentenceAnnotation",
+        "operationId": "add_sentence_annotation",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "resolve",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "title": "Resolve Code",
+              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
+              "default": true
+            },
+            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotationCreate" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    { "$ref": "#/components/schemas/SentenceAnnotationRead" },
+                    { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" }
+                  ],
+                  "title": "Response Sentenceannotation-Add Sentence Annotation"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/sentence/{sentence_anno_id}": {
+      "get": {
+        "tags": ["sentenceAnnotation"],
+        "summary": "Returns the SentenceAnnotation with the given ID.",
+        "operationId": "get_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "sentence_anno_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Sentence Anno Id" }
+          },
+          {
+            "name": "resolve",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "title": "Resolve Code",
+              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
+              "default": true
+            },
+            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    { "$ref": "#/components/schemas/SentenceAnnotationRead" },
+                    { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" }
+                  ],
+                  "title": "Response Sentenceannotation-Get By Id"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["sentenceAnnotation"],
+        "summary": "Updates the SentenceAnnotation with the given ID.",
+        "operationId": "update_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "sentence_anno_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Sentence Anno Id" }
+          },
+          {
+            "name": "resolve",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "title": "Resolve Code",
+              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
+              "default": true
+            },
+            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotationUpdate" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    { "$ref": "#/components/schemas/SentenceAnnotationRead" },
+                    { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" }
+                  ],
+                  "title": "Response Sentenceannotation-Update By Id"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["sentenceAnnotation"],
+        "summary": "Deletes the SentenceAnnotation with the given ID.",
+        "operationId": "delete_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "sentence_anno_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Sentence Anno Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    { "$ref": "#/components/schemas/SentenceAnnotationRead" },
+                    { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" }
+                  ],
+                  "title": "Response Sentenceannotation-Delete By Id"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/sentence/{sentence_anno_id}/code": {
+      "get": {
+        "tags": ["sentenceAnnotation"],
+        "summary": "Returns the Code of the SentenceAnnotation with the given ID if it exists.",
+        "operationId": "get_code",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "sentence_anno_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Sentence Anno Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/sentence/{sentence_anno_id}/memo": {
+      "get": {
+        "tags": ["sentenceAnnotation"],
+        "summary": "Returns the Memos attached to the SentenceAnnotation with the given ID if it exists.",
+        "operationId": "get_memos",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "sentence_anno_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Sentence Anno Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/MemoRead" },
+                  "title": "Response Sentenceannotation-Get Memos"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/sentence/{sentence_anno_id}/memo/user": {
+      "get": {
+        "tags": ["sentenceAnnotation"],
+        "summary": "Returns the Memo attached to the SentenceAnnotation with the given ID of the logged-in User if it exists.",
+        "operationId": "get_user_memo",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "sentence_anno_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Sentence Anno Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/sentence/code/{code_id}/user": {
+      "get": {
+        "tags": ["sentenceAnnotation"],
+        "summary": "Returns SentenceAnnotations with the given Code of the logged-in User",
+        "operationId": "get_by_user_code",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "code_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Code Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" },
+                  "title": "Response Sentenceannotation-Get By User Code"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -5995,6 +6337,7 @@
         "enum": [
           "source_document",
           "code",
+          "sentence_annotation",
           "span_annotation",
           "span_group",
           "bbox_annotation",
@@ -8198,14 +8541,142 @@
         ],
         "title": "SdocColumns"
       },
-      "SdocSentencePair": {
+      "SentenceAnnotationCreate": {
         "properties": {
-          "sdoc_id": { "type": "integer", "title": "Sdoc Id" },
-          "sentence": { "type": "integer", "title": "Sentence" }
+          "sentence_id_start": {
+            "type": "integer",
+            "title": "Sentence Id Start",
+            "description": "Start sentence ID of the SentenceAnnotation"
+          },
+          "sentence_id_end": {
+            "type": "integer",
+            "title": "Sentence Id End",
+            "description": "End sentence ID of the SentenceAnnotation"
+          },
+          "code_id": { "type": "integer", "title": "Code Id", "description": "Code the SentenceAnnotation refers to" },
+          "sdoc_id": {
+            "type": "integer",
+            "title": "Sdoc Id",
+            "description": "SourceDocument the SentenceAnnotation refers to"
+          }
         },
         "type": "object",
-        "required": ["sdoc_id", "sentence"],
-        "title": "SdocSentencePair"
+        "required": ["sentence_id_start", "sentence_id_end", "code_id", "sdoc_id"],
+        "title": "SentenceAnnotationCreate"
+      },
+      "SentenceAnnotationRead": {
+        "properties": {
+          "sentence_id_start": {
+            "type": "integer",
+            "title": "Sentence Id Start",
+            "description": "Start sentence ID of the SentenceAnnotation"
+          },
+          "sentence_id_end": {
+            "type": "integer",
+            "title": "Sentence Id End",
+            "description": "End sentence ID of the SentenceAnnotation"
+          },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the SentenceAnnotation" },
+          "code_id": { "type": "integer", "title": "Code Id", "description": "Code the SentenceAnnotation refers to" },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id",
+            "description": "User that created the SentenceAnnotation"
+          },
+          "sdoc_id": {
+            "type": "integer",
+            "title": "Sdoc Id",
+            "description": "SourceDocument the SentenceAnnotation refers to"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the SentenceAnnotation"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated",
+            "description": "Updated timestamp of the SentenceAnnotation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sentence_id_start",
+          "sentence_id_end",
+          "id",
+          "code_id",
+          "user_id",
+          "sdoc_id",
+          "created",
+          "updated"
+        ],
+        "title": "SentenceAnnotationRead"
+      },
+      "SentenceAnnotationReadResolved": {
+        "properties": {
+          "sentence_id_start": {
+            "type": "integer",
+            "title": "Sentence Id Start",
+            "description": "Start sentence ID of the SentenceAnnotation"
+          },
+          "sentence_id_end": {
+            "type": "integer",
+            "title": "Sentence Id End",
+            "description": "End sentence ID of the SentenceAnnotation"
+          },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the SentenceAnnotation" },
+          "code": {
+            "allOf": [{ "$ref": "#/components/schemas/CodeRead" }],
+            "description": "Code the SentenceAnnotation refers to"
+          },
+          "user_id": { "type": "integer", "title": "User Id", "description": "User the SpanAnnotation belongs to" },
+          "sdoc_id": {
+            "type": "integer",
+            "title": "Sdoc Id",
+            "description": "SourceDocument the SpanAnnotation refers to"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the SentenceAnnotation"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated",
+            "description": "Updated timestamp of the SentenceAnnotation"
+          }
+        },
+        "type": "object",
+        "required": ["sentence_id_start", "sentence_id_end", "id", "code", "user_id", "sdoc_id", "created", "updated"],
+        "title": "SentenceAnnotationReadResolved"
+      },
+      "SentenceAnnotationUpdate": {
+        "properties": {
+          "code_id": { "type": "integer", "title": "Code Id", "description": "Code the SentenceAnnotation refers to" }
+        },
+        "type": "object",
+        "required": ["code_id"],
+        "title": "SentenceAnnotationUpdate"
+      },
+      "SentenceAnnotatorResult": {
+        "properties": {
+          "sentence_annotations": {
+            "additionalProperties": {
+              "items": { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Sentence Annotations",
+            "description": "A mapping of sentence IDs to their annotations"
+          }
+        },
+        "type": "object",
+        "required": ["sentence_annotations"],
+        "title": "SentenceAnnotatorResult"
       },
       "SimSearchImageHit": {
         "properties": {
