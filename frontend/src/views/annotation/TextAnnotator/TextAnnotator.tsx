@@ -3,7 +3,6 @@ import React, { MouseEvent, useRef, useState } from "react";
 import { QueryKey } from "../../../api/QueryKey.ts";
 import { FAKE_ANNOTATION_ID } from "../../../api/SpanAnnotationHooks.ts";
 
-import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead.ts";
 import { SpanAnnotationCreate } from "../../../api/openapi/models/SpanAnnotationCreate.ts";
@@ -11,6 +10,7 @@ import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnno
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { Annotation } from "../Annotation.ts";
 import AnnotationMenu, { CodeSelectorHandle } from "../AnnotationMenu/AnnotationMenu.tsx";
 import DocumentRenderer from "../DocumentRenderer/DocumentRenderer.tsx";
 import useComputeTokenData from "../DocumentRenderer/useComputeTokenData.ts";
@@ -199,7 +199,7 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
   };
 
   // handle code selector events
-  const handleCodeSelectorDeleteAnnotation = (annotation: SpanAnnotationReadResolved | BBoxAnnotationReadResolved) => {
+  const handleCodeSelectorDeleteAnnotation = (annotation: Annotation) => {
     ConfirmationAPI.openConfirmationDialog({
       text: `Do you really want to remove the SpanAnnotation ${annotation.id}? You can reassign it later!`,
       onAccept: () => {
@@ -217,10 +217,7 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
       },
     });
   };
-  const handleCodeSelectorEditCode = (
-    annotation: SpanAnnotationReadResolved | BBoxAnnotationReadResolved,
-    code: ICode,
-  ) => {
+  const handleCodeSelectorEditCode = (annotation: Annotation, code: ICode) => {
     updateMutation.mutate(
       {
         spanAnnotationToUpdate: annotation as SpanAnnotationReadResolved,

@@ -14,6 +14,7 @@ import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts"
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../components/GenericPositionMenu.tsx";
+import { attachedObjectTypeToText } from "../../../components/Memo/attachedObjectTypeToText.ts";
 import MemoRenderer from "../../../components/Memo/MemoRenderer.tsx";
 import { DATSNodeData } from "../types/DATSNodeData.ts";
 import { BBoxAnnotationNodeData } from "../types/dbnodes/BBoxAnnotationNodeData.ts";
@@ -169,16 +170,6 @@ const createAttachedObjectNodes = (
   }
 };
 
-const attachedObjectType2Label: Record<AttachedObjectType, string> = {
-  [AttachedObjectType.DOCUMENT_TAG]: "Tag",
-  [AttachedObjectType.CODE]: "Code",
-  [AttachedObjectType.SOURCE_DOCUMENT]: "Document",
-  [AttachedObjectType.SPAN_ANNOTATION]: "Text Annotation",
-  [AttachedObjectType.BBOX_ANNOTATION]: "Image Annotation",
-  [AttachedObjectType.PROJECT]: "Project",
-  [AttachedObjectType.SPAN_GROUP]: "Span Group",
-};
-
 function MemoNode(props: NodeProps<MemoNodeData>) {
   // whiteboard state (react-flow)
   const reactFlowInstance = useReactFlow<DATSNodeData>();
@@ -277,7 +268,7 @@ function MemoNode(props: NodeProps<MemoNodeData>) {
       <GenericPositionMenu ref={contextMenuRef}>
         {memo.data && (
           <MenuItem onClick={handleContextMenuExpandAttachedObject} disabled={!attachedObject.data}>
-            Expand {attachedObjectType2Label[memo.data.attached_object_type]}
+            Expand {attachedObjectTypeToText[memo.data.attached_object_type]}
           </MenuItem>
         )}
       </GenericPositionMenu>

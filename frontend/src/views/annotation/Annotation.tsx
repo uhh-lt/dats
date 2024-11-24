@@ -32,11 +32,13 @@ import TwoSidebarsLayout from "../../layouts/TwoSidebarsLayout.tsx";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import BBoxAnnotationExplorer from "./AnnotationExploer/BBoxAnnotationExplorer.tsx";
 import SpanAnnotationExplorer from "./AnnotationExploer/SpanAnnotationExplorer.tsx";
+import AnnotationMode from "./AnnotationMode.ts";
 import { AnnotatorSelector } from "./AnnotatorSelector.tsx";
 import AudioVideoViewer from "./DocumentViewer/AudioVideoViewer.tsx";
 import ImageViewer from "./DocumentViewer/ImageViewer.tsx";
 import TextViewer from "./DocumentViewer/TextViewer.tsx";
 import ImageAnnotator from "./ImageAnnotator/ImageAnnotator.tsx";
+import SentenceAnnotator from "./SentenceAnnotator/SentenceAnnotator.tsx";
 import TextAnnotator from "./TextAnnotator/TextAnnotator.tsx";
 import { AnnoActions, TagStyle } from "./annoSlice.ts";
 
@@ -49,7 +51,7 @@ function Annotation() {
   const appBarContainerRef = useContext(AppBarContext);
 
   // global client state (redux)
-  const isAnnotationMode = useAppSelector((state) => state.annotations.isAnnotationMode);
+  const annotationMode = useAppSelector((state) => state.annotations.annotationMode);
   const tagStyle = useAppSelector((state) => state.annotations.tagStyle);
   const dispatch = useAppDispatch();
 
@@ -141,19 +143,26 @@ function Annotation() {
               }}
             >
               <ToggleButtonGroup
-                value={isAnnotationMode}
+                value={annotationMode}
                 exclusive
-                onChange={() => dispatch(AnnoActions.onToggleAnnotationMode())}
+                onChange={(_, value) => dispatch(AnnoActions.onChangeAnnotationMode(value))}
                 size="small"
                 color="primary"
               >
+                {sdoc.data?.doctype === DocType.TEXT && (
+                  <Tooltip title="Sentence Mode" placement="bottom">
+                    <ToggleButton value={AnnotationMode.SentenceAnnotation} sx={{ fontSize: 12 }}>
+                      <BorderColorIcon />
+                    </ToggleButton>
+                  </Tooltip>
+                )}
                 <Tooltip title="Annotation Mode" placement="bottom">
-                  <ToggleButton value={true} sx={{ fontSize: 12 }}>
+                  <ToggleButton value={AnnotationMode.Annotation} sx={{ fontSize: 12 }}>
                     <BorderColorIcon />
                   </ToggleButton>
                 </Tooltip>
                 <Tooltip title="Reader Mode" placement="bottom">
-                  <ToggleButton value={false} sx={{ fontSize: 12 }}>
+                  <ToggleButton value={AnnotationMode.Reader} sx={{ fontSize: 12 }}>
                     <ChromeReaderModeIcon />
                   </ToggleButton>
                 </Tooltip>
@@ -206,19 +215,21 @@ function Annotation() {
                               />
                             </div>
                             {sdoc.data.doctype === DocType.IMAGE ? (
-                              isAnnotationMode ? (
+                              annotationMode === AnnotationMode.Annotation ? (
                                 <ImageAnnotator sdocData={sdocData.data} />
                               ) : (
                                 <ImageViewer sdocData={sdocData.data} />
                               )
                             ) : sdoc.data.doctype === DocType.TEXT ? (
-                              isAnnotationMode ? (
+                              annotationMode === AnnotationMode.Annotation ? (
                                 <TextAnnotator sdocData={sdocData.data} />
+                              ) : annotationMode === AnnotationMode.SentenceAnnotation ? (
+                                <SentenceAnnotator sdocData={sdocData.data} />
                               ) : (
                                 <TextViewer sdocData={sdocData.data} />
                               )
                             ) : sdoc.data.doctype === DocType.AUDIO ? (
-                              isAnnotationMode ? (
+                              annotationMode === AnnotationMode.Annotation ? (
                                 <div>Annotation is not (yet) supported for Audio Documents.</div>
                               ) : (
                                 <AudioVideoViewer
@@ -229,7 +240,7 @@ function Annotation() {
                                 />
                               )
                             ) : sdoc.data.doctype === DocType.VIDEO ? (
-                              isAnnotationMode ? (
+                              annotationMode === AnnotationMode.Annotation ? (
                                 <div>Annotation is not (yet) supported for Video Documents.</div>
                               ) : (
                                 <AudioVideoViewer

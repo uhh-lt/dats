@@ -25,10 +25,16 @@ function hexToRgb(hex: string) {
     : null;
 }
 
+function rgbStringToRGBA(rgb: string, alpha: number) {
+  const result = /^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/i.exec(rgb);
+  return result ? `rgba(${parseInt(result[1])}, ${parseInt(result[2])}, ${parseInt(result[3])}, ${alpha})` : null;
+}
+
 const ColorUtils = {
   rgbStringToHex,
   rgbToHex,
   hexToRgb,
+  rgbStringToRGBA,
 };
 
 export default ColorUtils;

@@ -5,10 +5,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
 import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead.ts";
-import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { Annotation } from "../Annotation.ts";
 import AnnotationMenu, { CodeSelectorHandle } from "../AnnotationMenu/AnnotationMenu.tsx";
 import { ICode } from "../ICode.ts";
 import SVGBBox from "./SVGBBox.tsx";
@@ -234,10 +234,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
     );
   };
 
-  const onCodeSelectorEditCode = (
-    _annotationToEdit: SpanAnnotationReadResolved | BBoxAnnotationReadResolved,
-    code: ICode,
-  ) => {
+  const onCodeSelectorEditCode = (_annotationToEdit: Annotation, code: ICode) => {
     if (selectedBbox) {
       updateMutation.mutate(
         {

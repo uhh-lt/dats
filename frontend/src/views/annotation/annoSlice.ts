@@ -4,6 +4,7 @@ import storage from "redux-persist/lib/storage";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { ProjectActions } from "../../components/Project/projectSlice.ts";
 import { RootState } from "../../store/store.ts";
+import AnnotationMode from "./AnnotationMode.ts";
 
 export enum TagStyle {
   Inline = "inline",
@@ -20,7 +21,7 @@ export interface AnnoState {
   visibleUserIds: number[]; // the user ids of the users whose annotations are shown in the Annotator.
   // app state:
   disabledCodeIds: number[]; // the code ids of the disabled codes. Disabled codes are neither shown in the CodeExplorer nor in the Annotator.
-  isAnnotationMode: boolean; // whether the Annotator is in annotation mode or in reader mode.
+  annotationMode: AnnotationMode; // the annotation mode.
   tagStyle: TagStyle; // position of the tag in the Annotator.
 }
 
@@ -34,7 +35,7 @@ const initialState: AnnoState = {
   visibleUserIds: [],
   // app state:
   disabledCodeIds: [],
-  isAnnotationMode: false,
+  annotationMode: AnnotationMode.Reader,
   tagStyle: TagStyle.Inline,
 };
 
@@ -42,8 +43,8 @@ export const annoSlice = createSlice({
   name: "anno",
   initialState,
   reducers: {
-    onToggleAnnotationMode: (state) => {
-      state.isAnnotationMode = !state.isAnnotationMode;
+    onChangeAnnotationMode: (state, action: PayloadAction<AnnotationMode>) => {
+      state.annotationMode = action.payload;
     },
     toggleCodeVisibility: (state, action: PayloadAction<number[]>) => {
       if (action.payload.length === 0) {
