@@ -412,7 +412,6 @@ const DocumentSentence = ({
       <div
         style={{
           flexShrink: 0,
-          cursor: "pointer",
           paddingRight: "8px",
           paddingTop: "8px",
           borderRight: "1px solid #e8eaed",
