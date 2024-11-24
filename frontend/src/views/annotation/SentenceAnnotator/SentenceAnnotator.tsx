@@ -100,6 +100,7 @@ const SentenceAnnotator = ({ sdocData, ...props }: SentenceAnnotatorProps & BoxP
   }, [annotatorResult.data?.sentence_annotations]);
 
   // selection
+  const mostRecentCode = useAppSelector((state) => state.annotations.mostRecentCode);
   const [selectedSentences, setSelectedSentences] = useState<number[]>([]);
   const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -178,7 +179,30 @@ const SentenceAnnotator = ({ sdocData, ...props }: SentenceAnnotatorProps & BoxP
     );
   };
   const handleCodeSelectorClose = (reason?: "backdropClick" | "escapeKeyDown") => {
-    console.log(reason);
+    // i clicked away because i like the annotation as is
+    if (reason === "backdropClick" && mostRecentCode) {
+      createMutation.mutate(
+        {
+          code: mostRecentCode,
+          sdocId: sdocData.id,
+          start: selectedSentences[0],
+          end: selectedSentences[selectedSentences.length - 1],
+        },
+        {
+          onSuccess: (sentenceAnnotation) => {
+            openSnackbar({
+              text: `Created Sentence Annotation ${sentenceAnnotation.id}`,
+              severity: "success",
+            });
+          },
+        },
+      );
+    }
+    // i clicked escape because i want to cancel the annotation
+    if (reason === "escapeKeyDown") {
+      console.log("cancel annotation");
+    }
+
     setSelectedSentences([]);
     setLastClickedIndex(null);
     setHoverSentAnnoId(null);
@@ -328,7 +352,8 @@ const SentenceAnnotator = ({ sdocData, ...props }: SentenceAnnotatorProps & BoxP
                 sentenceId={virtualItem.index}
                 sentenceAnnotations={annotatorResult.data.sentence_annotations[virtualItem.index]}
                 sentence={sdocData.sentences[virtualItem.index]}
-                selected={selectedSentences.includes(virtualItem.index)}
+                isSelected={selectedSentences.includes(virtualItem.index)}
+                selectedCode={mostRecentCode}
                 onMouseDown={(event) => handleMouseDown(event, virtualItem.index)}
                 onMouseEnter={() => handleMouseEnter(virtualItem.index)}
                 onAnnotationClick={(event, sentAnnoId) => handleAnnotationClick(event, sentAnnoId, virtualItem.index)}
@@ -350,6 +375,8 @@ const SentenceAnnotator = ({ sdocData, ...props }: SentenceAnnotatorProps & BoxP
 
 interface DocumentSentenceProps {
   sentenceId: number;
+  isSelected: boolean;
+  selectedCode: CodeRead | undefined;
   hoveredSentAnnoId: number | null;
   hoveredCodeId: number | undefined;
   sentence: string;
@@ -364,6 +391,8 @@ interface DocumentSentenceProps {
 
 const DocumentSentence = ({
   sentenceId,
+  isSelected,
+  selectedCode,
   hoveredSentAnnoId,
   hoveredCodeId,
   sentence,
@@ -394,11 +423,17 @@ const DocumentSentence = ({
     return { codeId2CodeMap, sentAnnoId2sentAnnoMap };
   }, [sentenceAnnotations]);
 
-  const highlightedColor = hoveredSentAnnoId
-    ? sentAnnoId2sentAnnoMap[hoveredSentAnnoId]?.code.color
-    : hoveredCodeId
-      ? codeId2CodeMap[hoveredCodeId]?.color
-      : null;
+  const highlightedColor = useMemo(() => {
+    if (isSelected) {
+      return selectedCode?.color || "rgb(255, 0, 0)";
+    }
+    if (hoveredSentAnnoId) {
+      return sentAnnoId2sentAnnoMap[hoveredSentAnnoId]?.code.color;
+    }
+    if (hoveredCodeId) {
+      return codeId2CodeMap[hoveredCodeId]?.color;
+    }
+  }, [codeId2CodeMap, hoveredCodeId, hoveredSentAnnoId, isSelected, selectedCode, sentAnnoId2sentAnnoMap]);
 
   return (
     <Stack direction="row" width="100%">
@@ -413,7 +448,15 @@ const DocumentSentence = ({
       >
         {String(sentenceId + 1).padStart(numSentenceDigits, "0")}
       </div>
-      <ListItemButton {...props} style={{ ...props.style, flexGrow: 1 }} data-sent-id={sentenceId}>
+      <ListItemButton
+        {...props}
+        style={{ ...props.style, flexGrow: 1 }}
+        data-sent-id={sentenceId}
+        onFocus={(event) => {
+          // prevent focus
+          event.target.blur();
+        }}
+      >
         <div data-sent-id={sentenceId}>
           {highlightedColor ? (
             <mark

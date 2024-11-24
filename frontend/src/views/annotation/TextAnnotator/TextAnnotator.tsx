@@ -33,7 +33,7 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
 
   // global client state (redux)
   const visibleUserIds = useAppSelector((state) => state.annotations.visibleUserIds);
-  const mostRecentCodeId = useAppSelector((state) => state.annotations.mostRecentCodeId);
+  const mostRecentCode = useAppSelector((state) => state.annotations.mostRecentCode);
   const tagStyle = useAppSelector((state) => state.annotations.tagStyle);
   const dispatch = useAppDispatch();
 
@@ -138,7 +138,7 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
       .join(" ");
 
     const requestBody: SpanAnnotationCreate = {
-      code_id: mostRecentCodeId || -1,
+      code_id: mostRecentCode?.id || -1,
       sdoc_id: sdocData.id,
       begin: tokenData[begin_token].beginChar,
       end: tokenData[end_token].endChar,

@@ -16,7 +16,7 @@ export interface AnnoState {
   selectedAnnotationId: number | undefined; // the annotation selected in the annotation explorer.
   selectedCodeId: number | undefined; // the code selected in the code explorer, used to compute which codes are shown in the annotation menu.
   hoveredCodeId: number | undefined; // the code hovered in the code explorer, used to compute highlightings.
-  mostRecentCodeId: number | undefined; // the most recently applied code, it is always at the top of the annotation menu and the default code for new annotations.
+  mostRecentCode: CodeRead | undefined; // the most recently applied code, it is always at the top of the annotation menu and the default code for new annotations.
   expandedCodeIds: string[]; // the code ids of the expanded codes in the code explorer.
   hiddenCodeIds: number[]; // the code ids of the hidden codes. Hidden codes are shown in the CodeExplorer, but are not rendered in the Annotator.
   visibleUserIds: number[]; // the user ids of the users whose annotations are shown in the Annotator.
@@ -31,7 +31,7 @@ const initialState: AnnoState = {
   selectedAnnotationId: undefined,
   selectedCodeId: undefined,
   hoveredCodeId: undefined,
-  mostRecentCodeId: undefined,
+  mostRecentCode: undefined,
   expandedCodeIds: [],
   hiddenCodeIds: [],
   visibleUserIds: [],
@@ -102,7 +102,7 @@ export const annoSlice = createSlice({
       state.visibleUserIds = action.payload;
     },
     moveCodeToTop: (state, action: PayloadAction<CodeRead>) => {
-      state.mostRecentCodeId = action.payload.id;
+      state.mostRecentCode = action.payload;
     },
     onSetAnnotatorTagStyle: (state, action: PayloadAction<TagStyle>) => {
       if (action.payload !== undefined && action.payload !== null) {
@@ -149,7 +149,7 @@ export const annoSlice = createSlice({
       state.selectedAnnotationId = initialState.selectedAnnotationId;
       state.selectedCodeId = initialState.selectedCodeId;
       state.hoveredCodeId = initialState.hoveredCodeId;
-      state.mostRecentCodeId = initialState.mostRecentCodeId;
+      state.mostRecentCode = initialState.mostRecentCode;
       state.expandedCodeIds = initialState.expandedCodeIds;
       state.hiddenCodeIds = initialState.hiddenCodeIds;
       state.visibleUserIds = initialState.visibleUserIds;
