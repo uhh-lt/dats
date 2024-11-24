@@ -12,6 +12,7 @@ from app.core.data.crud.preprocessing_job import crud_prepro_job
 from app.core.data.crud.preprocessing_job_payload import crud_prepro_job_payload
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.project_metadata import crud_project_meta
+from app.core.data.crud.sentence_annotation import crud_sentence_anno
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_data import crud_sdoc_data
 from app.core.data.crud.source_document_link import crud_sdoc_link
@@ -36,6 +37,7 @@ class Crud(Enum):
     PREPROCESSING_JOB = crud_prepro_job
     PROJECT = crud_project
     PROJECT_METADATA = crud_project_meta
+    SENTENCE_ANNOTATION = crud_sentence_anno
     SOURCE_DOCUMENT_DATA = crud_sdoc_data
     SOURCE_DOCUMENT_LINK = crud_sdoc_link
     SOURCE_DOCUMENT_METADATA = crud_sdoc_meta

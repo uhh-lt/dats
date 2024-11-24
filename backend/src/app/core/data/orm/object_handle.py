@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from app.core.data.orm.document_tag import DocumentTagORM
     from app.core.data.orm.memo import MemoORM
     from app.core.data.orm.project import ProjectORM
+    from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
     from app.core.data.orm.source_document import SourceDocumentORM
     from app.core.data.orm.span_annotation import SpanAnnotationORM
     from app.core.data.orm.span_group import SpanGroupORM
@@ -82,6 +83,13 @@ class ObjectHandleORM(ORMBase):
         "BBoxAnnotationORM", back_populates="object_handle"
     )
 
+    sentence_annotation_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("sentenceannotation.id", ondelete="CASCADE"), index=True
+    )
+    sentence_annotation: Mapped["SentenceAnnotationORM"] = relationship(
+        "SentenceAnnotationORM", back_populates="object_handle"
+    )
+
     document_tag_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("documenttag.id", ondelete="CASCADE"), index=True
     )
@@ -98,6 +106,7 @@ class ObjectHandleORM(ORMBase):
         coalesce(source_document_id, 0),
         coalesce(span_annotation_id, 0),
         coalesce(bbox_annotation_id, 0),
+        coalesce(sentence_annotation_id, 0),
         coalesce(span_group_id, 0),
         coalesce(document_tag_id, 0),
         coalesce(memo_id, 0),
@@ -115,6 +124,7 @@ class ObjectHandleORM(ORMBase):
                         + CASE WHEN source_document_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN span_annotation_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN bbox_annotation_id IS NULL THEN 0 ELSE 1 END
+                        + CASE WHEN sentence_annotation_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN span_group_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN document_tag_id IS NULL THEN 0 ELSE 1 END
                     ) = 1
@@ -125,11 +135,13 @@ class ObjectHandleORM(ORMBase):
             "user_id",
             "project_id",
             "code_id",
+            "memo_id",
             "source_document_id",
             "span_annotation_id",
+            "bbox_annotation_id",
+            "sentence_annotation_id",
             "span_group_id",
             "document_tag_id",
-            "memo_id",
             name="UC_only_one_object_handle_per_instance",
         ),
     )

@@ -8,6 +8,7 @@ from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
+    from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
     from app.core.data.orm.source_document import SourceDocumentORM
     from app.core.data.orm.span_annotation import SpanAnnotationORM
     from app.core.data.orm.span_group import SpanGroupORM
@@ -42,6 +43,12 @@ class AnnotationDocumentORM(ORMBase):
 
     bbox_annotations: Mapped[List["BBoxAnnotationORM"]] = relationship(
         "BBoxAnnotationORM", back_populates="annotation_document", passive_deletes=True
+    )
+
+    sentence_annotations: Mapped[List["SentenceAnnotationORM"]] = relationship(
+        "SentenceAnnotationORM",
+        back_populates="annotation_document",
+        passive_deletes=True,
     )
 
     # many to one

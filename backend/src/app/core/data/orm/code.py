@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
     from app.core.data.orm.object_handle import ObjectHandleORM
     from app.core.data.orm.project import ProjectORM
+    from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
     from app.core.data.orm.span_annotation import SpanAnnotationORM
 
 
@@ -57,6 +58,11 @@ class CodeORM(ORMBase):
     # one to many
     bbox_annotations: Mapped[List["BBoxAnnotationORM"]] = relationship(
         "BBoxAnnotationORM", back_populates="code", passive_deletes=True
+    )
+
+    # one to many
+    sentence_annotations: Mapped[List["SentenceAnnotationORM"]] = relationship(
+        "SentenceAnnotationORM", back_populates="code", passive_deletes=True
     )
 
     # hierarchy reference

@@ -13,6 +13,7 @@ from api.util import get_object_memo_for_user, get_object_memos
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
+from app.core.data.crud.sentence_annotation import crud_sentence_anno
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.span_annotation import crud_span_anno
@@ -25,6 +26,10 @@ from app.core.data.dto.bbox_annotation import (
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import (
     MemoRead,
+)
+from app.core.data.dto.sentence_annotation import (
+    SentenceAnnotationReadResolved,
+    SentenceAnnotatorResult,
 )
 from app.core.data.dto.source_document import (
     SourceDocumentRead,
@@ -405,6 +410,49 @@ def get_all_bbox_annotations_bulk(
         return [BBoxAnnotationReadResolved.model_validate(bbox) for bbox in bboxes]
     else:
         return [BBoxAnnotationRead.model_validate(bbox) for bbox in bboxes]
+
+
+@router.get(
+    "{sdoc_id}/sentence_annotator",
+    response_model=SentenceAnnotatorResult,
+    summary="Returns all SentenceAnnotations of the Users with the given ID if it exists",
+)
+def get_sentence_annotator(
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    user_id: Annotated[List[int], Query(default_factory=list)],
+    skip_limit: Dict[str, int] = Depends(skip_limit_params),
+    authz_user: AuthzUser = Depends(),
+) -> SentenceAnnotatorResult:
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
+    # read sentences
+    sdoc_data = crud_sdoc.read_data(db=db, id=sdoc_id)
+    if sdoc_data is None:
+        raise ValueError("SourceDocument is not a text document")
+
+    # read sentence annotations
+    sentence_annos = [
+        SentenceAnnotationReadResolved.model_validate(sent_anno)
+        for sent_anno in crud_sentence_anno.read_by_users_and_sdoc(
+            db=db, user_ids=user_id, sdoc_id=sdoc_id, **skip_limit
+        )
+    ]
+
+    # build result object: sentence_id -> [sentence_annotations]
+    result: Dict[int, List[SentenceAnnotationReadResolved]] = {
+        idx: [] for idx in range(len(sdoc_data.sentences))
+    }
+    for sent_anno in sentence_annos:
+        for sent_idx in range(
+            sent_anno.sentence_id_start, sent_anno.sentence_id_end + 1
+        ):
+            result[sent_idx].append(sent_anno)
+
+    return SentenceAnnotatorResult(
+        sentence_annotations=result,
+    )
 
 
 @router.get(

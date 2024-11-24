@@ -11,6 +11,7 @@ from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.memo import MemoORM
 from app.core.data.orm.project import ProjectORM
+from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 
@@ -28,6 +29,7 @@ def get_object_memos(
         CodeORM,
         ProjectORM,
         BBoxAnnotationORM,
+        SentenceAnnotationORM,
         SpanAnnotationORM,
     ],
 ) -> List[MemoRead]:
@@ -46,6 +48,7 @@ def get_object_memos(
         ProjectORM: AttachedObjectType.project,
         BBoxAnnotationORM: AttachedObjectType.bbox_annotation,
         SpanAnnotationORM: AttachedObjectType.span_annotation,
+        SentenceAnnotationORM: AttachedObjectType.sentence_annotation,
     }
 
     memos = [
@@ -67,6 +70,7 @@ def get_object_memo_for_user(
         CodeORM,
         ProjectORM,
         BBoxAnnotationORM,
+        SentenceAnnotationORM,
         SpanAnnotationORM,
     ],
     user_id: int,
@@ -92,6 +96,7 @@ def get_object_memo_for_user(
         ProjectORM: AttachedObjectType.project,
         BBoxAnnotationORM: AttachedObjectType.bbox_annotation,
         SpanAnnotationORM: AttachedObjectType.span_annotation,
+        SentenceAnnotationORM: AttachedObjectType.sentence_annotation,
     }
 
     # return only the first memo of a user
