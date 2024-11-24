@@ -15,6 +15,7 @@ export interface AnnoState {
   // project state:
   selectedAnnotationId: number | undefined; // the annotation selected in the annotation explorer.
   selectedCodeId: number | undefined; // the code selected in the code explorer, used to compute which codes are shown in the annotation menu.
+  hoveredCodeId: number | undefined; // the code hovered in the code explorer, used to compute highlightings.
   mostRecentCodeId: number | undefined; // the most recently applied code, it is always at the top of the annotation menu and the default code for new annotations.
   expandedCodeIds: string[]; // the code ids of the expanded codes in the code explorer.
   hiddenCodeIds: number[]; // the code ids of the hidden codes. Hidden codes are shown in the CodeExplorer, but are not rendered in the Annotator.
@@ -29,6 +30,7 @@ const initialState: AnnoState = {
   // project state:
   selectedAnnotationId: undefined,
   selectedCodeId: undefined,
+  hoveredCodeId: undefined,
   mostRecentCodeId: undefined,
   expandedCodeIds: [],
   hiddenCodeIds: [],
@@ -75,6 +77,9 @@ export const annoSlice = createSlice({
     },
     setSelectedCodeId: (state, action: PayloadAction<number | undefined>) => {
       state.selectedCodeId = action.payload;
+    },
+    setHoveredCodeId: (state, action: PayloadAction<number | undefined>) => {
+      state.hoveredCodeId = action.payload;
     },
     setExpandedCodeIds: (state, action: PayloadAction<string[]>) => {
       state.expandedCodeIds = action.payload;
@@ -143,6 +148,7 @@ export const annoSlice = createSlice({
       console.log("Project changed! Resetting 'anno' state.");
       state.selectedAnnotationId = initialState.selectedAnnotationId;
       state.selectedCodeId = initialState.selectedCodeId;
+      state.hoveredCodeId = initialState.hoveredCodeId;
       state.mostRecentCodeId = initialState.mostRecentCodeId;
       state.expandedCodeIds = initialState.expandedCodeIds;
       state.hiddenCodeIds = initialState.hiddenCodeIds;

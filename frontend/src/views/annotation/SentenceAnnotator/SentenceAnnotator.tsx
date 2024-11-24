@@ -103,7 +103,10 @@ const SentenceAnnotator = ({ sdocData, ...props }: SentenceAnnotatorProps & BoxP
   const [selectedSentences, setSelectedSentences] = useState<number[]>([]);
   const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState<boolean>(false);
-  const [hoverSentAnno, setHoverSentAnno] = useState<number | null>(null);
+
+  // highlighting
+  const hoveredCodeId = useAppSelector((state) => state.annotations.hoveredCodeId);
+  const [hoverSentAnnoId, setHoverSentAnnoId] = useState<number | null>(null);
 
   // annotation menu
   const annotationMenuRef = useRef<CodeSelectorHandle>(null);
@@ -175,7 +178,7 @@ const SentenceAnnotator = ({ sdocData, ...props }: SentenceAnnotatorProps & BoxP
     );
   };
   const handleCodeSelectorClose = (reason?: "backdropClick" | "escapeKeyDown") => {
-    console.log("close", reason);
+    console.log(reason);
     setSelectedSentences([]);
     setLastClickedIndex(null);
   };
@@ -315,12 +318,13 @@ const SentenceAnnotator = ({ sdocData, ...props }: SentenceAnnotatorProps & BoxP
                 onMouseDown={(event) => handleMouseDown(event, virtualItem.index)}
                 onMouseEnter={() => handleMouseEnter(virtualItem.index)}
                 onAnnotationClick={(event) => handleAnnotationClick(event, virtualItem.index)}
-                onAnnotationMouseEnter={(sentAnnoId) => setHoverSentAnno(sentAnnoId)}
-                onAnnotationMouseLeave={() => setHoverSentAnno(null)}
-                hoveredSentAnnoId={hoverSentAnno}
+                onAnnotationMouseEnter={(sentAnnoId) => setHoverSentAnnoId(sentAnnoId)}
+                onAnnotationMouseLeave={() => setHoverSentAnnoId(null)}
+                hoveredSentAnnoId={hoverSentAnnoId}
                 annotationPositions={annotationPositions[virtualItem.index]}
                 numPositions={numPositions}
                 numSentenceDigits={numSentenceDigits}
+                hoveredCodeId={hoveredCodeId}
               />
             </div>
           ))}
@@ -333,6 +337,7 @@ const SentenceAnnotator = ({ sdocData, ...props }: SentenceAnnotatorProps & BoxP
 interface DocumentSentenceProps {
   sentenceId: number;
   hoveredSentAnnoId: number | null;
+  hoveredCodeId: number | undefined;
   sentence: string;
   sentenceAnnotations: SentenceAnnotationReadResolved[];
   onAnnotationClick?: React.MouseEventHandler<HTMLDivElement>;
@@ -346,6 +351,7 @@ interface DocumentSentenceProps {
 const DocumentSentence = ({
   sentenceId,
   hoveredSentAnnoId,
+  hoveredCodeId,
   sentence,
   sentenceAnnotations,
   onAnnotationClick,
@@ -356,17 +362,29 @@ const DocumentSentence = ({
   numSentenceDigits,
   ...props
 }: DocumentSentenceProps & ListItemButtonProps) => {
-  const sentAnnoId2sentAnnoMap = useMemo(() => {
-    return sentenceAnnotations?.reduce(
+  const { codeId2CodeMap, sentAnnoId2sentAnnoMap } = useMemo(() => {
+    const codeId2CodeMap = sentenceAnnotations?.reduce(
+      (acc, anno) => {
+        acc[anno.code.id] = anno.code;
+        return acc;
+      },
+      {} as Record<number, CodeRead>,
+    );
+    const sentAnnoId2sentAnnoMap = sentenceAnnotations?.reduce(
       (acc, anno) => {
         acc[anno.id] = anno;
         return acc;
       },
       {} as Record<number, SentenceAnnotationReadResolved>,
     );
+    return { codeId2CodeMap, sentAnnoId2sentAnnoMap };
   }, [sentenceAnnotations]);
 
-  const highlightedColor = hoveredSentAnnoId ? sentAnnoId2sentAnnoMap[hoveredSentAnnoId]?.code.color : undefined;
+  const highlightedColor = hoveredSentAnnoId
+    ? sentAnnoId2sentAnnoMap[hoveredSentAnnoId]?.code.color
+    : hoveredCodeId
+      ? codeId2CodeMap[hoveredCodeId]?.color
+      : null;
 
   return (
     <Stack direction="row" width="100%">
