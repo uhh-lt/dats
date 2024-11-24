@@ -181,11 +181,31 @@ const SentenceAnnotator = ({ sdocData, ...props }: SentenceAnnotatorProps & BoxP
     console.log(reason);
     setSelectedSentences([]);
     setLastClickedIndex(null);
+    setHoverSentAnnoId(null);
   };
 
   // event handlers
-  const handleAnnotationClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, sentenceIdx: number) => {
+  const handleAnnotationClick = (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    sentAnnoId: number,
+    sentenceIdx: number,
+  ) => {
     if (!annotatorResult.data) return;
+
+    // annotation to display
+    const annotation = annotatorResult.data.sentence_annotations[sentenceIdx].find(
+      (sentAnno) => sentAnno.id === sentAnnoId,
+    );
+
+    if (!annotation) {
+      console.error(`Annotation with id ${sentAnnoId} not found.`);
+      return;
+    }
+
+    console.log("CLICK!");
+
+    // highlight annotation
+    setHoverSentAnnoId(sentAnnoId);
 
     // open code selector
     const target: HTMLElement = event.target as HTMLElement;
@@ -194,33 +214,27 @@ const SentenceAnnotator = ({ sdocData, ...props }: SentenceAnnotatorProps & BoxP
       left: boundingBox.left,
       top: boundingBox.top + boundingBox.height,
     };
-    annotationMenuRef.current!.open(position, annotatorResult.data.sentence_annotations[sentenceIdx]);
+    annotationMenuRef.current!.open(position, [annotation]);
+  };
+
+  const handleAnnotationMouseEnter = (sentAnnoId: number) => {
+    setHoverSentAnnoId(sentAnnoId);
+  };
+
+  const handleAnnotationMouseLeave = () => {
+    // keep the annotation highlighted if the annotation menu is open
+    if (annotationMenuRef.current!.isOpen) {
+      return;
+    }
+    setHoverSentAnnoId(null);
   };
 
   const handleSentenceClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, index: number) => {
     setSelectedSentences((selectedSentences) => {
-      // if (event.shiftKey && lastClickedIndex !== null) {
-      //   // shift click
-      //   const start = Math.min(lastClickedIndex, index);
-      //   const end = Math.max(lastClickedIndex, index);
-      //   const newSelectedSentences: number[] = [];
-      //   for (let i = start; i <= end; i++) {
-      //     newSelectedSentences.push(i);
-      //   }
-      //   return Array.from(new Set([...selectedSentences, ...newSelectedSentences]));
-      // } else if (event.ctrlKey || event.metaKey) {
-      //   // ctrl or cmd click
-      //   if (selectedSentences.includes(index)) {
-      //     return selectedSentences.filter((i) => i !== index);
-      //   }
-      //   return Array.from(new Set([...selectedSentences, index]));
-      // } else {
-      // normal click
       if (selectedSentences.includes(index)) {
         return [];
       }
       return [index];
-      // }
     });
     setLastClickedIndex((lastClickedIndex) => (lastClickedIndex === index ? null : index));
   };
@@ -317,9 +331,9 @@ const SentenceAnnotator = ({ sdocData, ...props }: SentenceAnnotatorProps & BoxP
                 selected={selectedSentences.includes(virtualItem.index)}
                 onMouseDown={(event) => handleMouseDown(event, virtualItem.index)}
                 onMouseEnter={() => handleMouseEnter(virtualItem.index)}
-                onAnnotationClick={(event) => handleAnnotationClick(event, virtualItem.index)}
-                onAnnotationMouseEnter={(sentAnnoId) => setHoverSentAnnoId(sentAnnoId)}
-                onAnnotationMouseLeave={() => setHoverSentAnnoId(null)}
+                onAnnotationClick={(event, sentAnnoId) => handleAnnotationClick(event, sentAnnoId, virtualItem.index)}
+                onAnnotationMouseEnter={handleAnnotationMouseEnter}
+                onAnnotationMouseLeave={handleAnnotationMouseLeave}
                 hoveredSentAnnoId={hoverSentAnnoId}
                 annotationPositions={annotationPositions[virtualItem.index]}
                 numPositions={numPositions}
@@ -340,7 +354,7 @@ interface DocumentSentenceProps {
   hoveredCodeId: number | undefined;
   sentence: string;
   sentenceAnnotations: SentenceAnnotationReadResolved[];
-  onAnnotationClick?: React.MouseEventHandler<HTMLDivElement>;
+  onAnnotationClick: (event: React.MouseEvent<HTMLDivElement, MouseEvent>, sentAnnoId: number) => void;
   onAnnotationMouseEnter: (sentAnnoId: number) => void;
   onAnnotationMouseLeave: (sentAnnoId: number) => void;
   numPositions: number;
@@ -436,7 +450,7 @@ const DocumentSentence = ({
           return (
             <Tooltip key={key} title={annotation.code.name} placement="top">
               <div
-                onClick={onAnnotationClick}
+                onClick={(event) => onAnnotationClick(event, annoId)}
                 onMouseEnter={() => onAnnotationMouseEnter(annoId)}
                 onMouseLeave={() => onAnnotationMouseLeave(annoId)}
                 style={{

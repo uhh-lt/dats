@@ -42,6 +42,7 @@ interface CodeSelectorProps {
 
 export interface CodeSelectorHandle {
   open: (position: PopoverPosition, annotations?: Annotations) => void;
+  isOpen: boolean;
 }
 
 const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
@@ -72,6 +73,7 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
     // exposed methods (via ref)
     useImperativeHandle(ref, () => ({
       open: openCodeSelector,
+      isOpen: isPopoverOpen,
     }));
 
     // methods
