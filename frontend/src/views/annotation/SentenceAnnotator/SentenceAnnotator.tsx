@@ -180,7 +180,7 @@ const SentenceAnnotator = ({ sdocData, ...props }: SentenceAnnotatorProps & BoxP
   };
   const handleCodeSelectorClose = (reason?: "backdropClick" | "escapeKeyDown") => {
     // i clicked away because i like the annotation as is
-    if (reason === "backdropClick" && mostRecentCode) {
+    if (selectedSentences.length > 0 && reason === "backdropClick" && mostRecentCode) {
       createMutation.mutate(
         {
           code: mostRecentCode,
