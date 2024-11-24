@@ -32,6 +32,7 @@ import { AppBarContext } from "../../layouts/TwoBarLayout.tsx";
 import TwoSidebarsLayout from "../../layouts/TwoSidebarsLayout.tsx";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import BBoxAnnotationExplorer from "./AnnotationExploer/BBoxAnnotationExplorer.tsx";
+import SentenceAnnotationExplorer from "./AnnotationExploer/SentenceAnnotationExplorer.tsx";
 import SpanAnnotationExplorer from "./AnnotationExploer/SpanAnnotationExplorer.tsx";
 import AnnotationMode from "./AnnotationMode.ts";
 import { AnnotatorSelector } from "./AnnotatorSelector.tsx";
@@ -116,8 +117,10 @@ function Annotation() {
                 </TabPanel>
                 {sdoc.isSuccess && (
                   <TabPanel value="Annotation" style={{ padding: 0 }} className="h100">
-                    {sdoc.data.doctype === DocType.TEXT ? (
+                    {sdoc.data.doctype === DocType.TEXT && annotationMode == AnnotationMode.Annotation ? (
                       <SpanAnnotationExplorer sdocId={sdoc.data.id} />
+                    ) : sdoc.data.doctype === DocType.TEXT && annotationMode == AnnotationMode.SentenceAnnotation ? (
+                      <SentenceAnnotationExplorer sdocId={sdoc.data.id} />
                     ) : sdoc.data.doctype === DocType.IMAGE ? (
                       <BBoxAnnotationExplorer sdocId={sdoc.data.id} />
                     ) : (
