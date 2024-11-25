@@ -13,7 +13,7 @@ function SdocAnnotationLink({ sdoc, annotation }: SdocAnnotationLinkProps) {
   const dispatch = useAppDispatch();
   const handleClick = () => {
     dispatch(AnnoActions.setSelectedAnnotationId(annotation.id));
-    dispatch(AnnoActions.addVisibleUserIds([annotation.user_id]));
+    dispatch(AnnoActions.setVisibleUserId(annotation.user_id));
   };
 
   return (

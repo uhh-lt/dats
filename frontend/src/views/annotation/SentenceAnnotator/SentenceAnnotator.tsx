@@ -28,10 +28,10 @@ const SentenceAnnotator = ({ sdocData, ...props }: SentenceAnnotatorProps & BoxP
   const user = useAuth().user;
 
   // global client state (redux)
-  const visibleUserIds = useAppSelector((state) => state.annotations.visibleUserIds);
+  const visibleUserId = useAppSelector((state) => state.annotations.visibleUserId);
 
   // global server state (react-query)
-  const annotatorResult = SdocHooks.useGetSentenceAnnotator(sdocData.id, visibleUserIds);
+  const annotatorResult = SdocHooks.useGetSentenceAnnotator(sdocData.id, visibleUserId ? [visibleUserId] : undefined);
   const { annotationPositions, numPositions } = useMemo(() => {
     if (!annotatorResult.data?.sentence_annotations) return { annotationPositions: [], numPositions: 0 };
     const sentenceAnnotations = Object.values(annotatorResult.data.sentence_annotations);
@@ -112,9 +112,9 @@ const SentenceAnnotator = ({ sdocData, ...props }: SentenceAnnotatorProps & BoxP
   const annotationMenuRef = useRef<CodeSelectorHandle>(null);
   const dispatch = useAppDispatch();
   const openSnackbar = useOpenSnackbar();
-  const createMutation = useCreateSentenceAnnotation(visibleUserIds, user!.id);
-  const deleteMutation = useDeleteSentenceAnnotation(visibleUserIds);
-  const updateMutation = useUpdateSentenceAnnotation(visibleUserIds);
+  const createMutation = useCreateSentenceAnnotation(visibleUserId ? [visibleUserId] : [], user!.id);
+  const deleteMutation = useDeleteSentenceAnnotation(visibleUserId ? [visibleUserId] : []);
+  const updateMutation = useUpdateSentenceAnnotation(visibleUserId ? [visibleUserId] : []);
   const handleCodeSelectorDeleteAnnotation = (annotation: Annotation) => {
     deleteMutation.mutate(
       { sentenceAnnotationToDelete: annotation as SentenceAnnotationReadResolved },

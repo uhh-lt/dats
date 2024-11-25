@@ -32,7 +32,7 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
   const [fakeAnnotation, setFakeAnnotation] = useState<SpanAnnotationCreate | undefined>(undefined);
 
   // global client state (redux)
-  const visibleUserIds = useAppSelector((state) => state.annotations.visibleUserIds);
+  const visibleUserId = useAppSelector((state) => state.annotations.visibleUserId);
   const mostRecentCode = useAppSelector((state) => state.annotations.mostRecentCode);
   const tagStyle = useAppSelector((state) => state.annotations.tagStyle);
   const dispatch = useAppDispatch();
@@ -43,14 +43,14 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
   // computed / custom hooks
   const { tokenData, annotationsPerToken, annotationMap } = useComputeTokenData({
     sdocData,
-    userIds: visibleUserIds,
+    userIds: visibleUserId ? [visibleUserId] : [],
   });
 
   // mutations for create, update, delete
   const queryClient = useQueryClient();
-  const createMutation = useCreateSpanAnnotation(visibleUserIds);
-  const updateMutation = useUpdateSpanAnnotation(visibleUserIds);
-  const deleteMutation = useDeleteSpanAnnotation(visibleUserIds);
+  const createMutation = useCreateSpanAnnotation(visibleUserId ? [visibleUserId] : []);
+  const updateMutation = useUpdateSpanAnnotation(visibleUserId ? [visibleUserId] : []);
+  const deleteMutation = useDeleteSpanAnnotation(visibleUserId ? [visibleUserId] : []);
 
   // handle ui events
   const handleMenu = (event: React.MouseEvent) => {
@@ -152,7 +152,11 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
 
     // when we create a new span annotation, we add a new annotation to a certain document
     // thus, we only affect the annotation document that we are adding to
-    const affectedQueryKey = [QueryKey.SDOC_SPAN_ANNOTATIONS, requestBody.sdoc_id, visibleUserIds];
+    const affectedQueryKey = [
+      QueryKey.SDOC_SPAN_ANNOTATIONS,
+      requestBody.sdoc_id,
+      visibleUserId ? [visibleUserId] : [],
+    ];
 
     // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
     await queryClient.cancelQueries({ queryKey: affectedQueryKey });
@@ -280,7 +284,7 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
       if (reason === "escapeKeyDown") {
         // delete the fake annotation (that always has id -1)
         queryClient.setQueryData<SpanAnnotationReadResolved[]>(
-          [QueryKey.SDOC_SPAN_ANNOTATIONS, fakeAnnotation.sdoc_id, visibleUserIds],
+          [QueryKey.SDOC_SPAN_ANNOTATIONS, fakeAnnotation.sdoc_id, visibleUserId ? [visibleUserId] : []],
           (old) => {
             if (old === undefined) {
               return undefined;

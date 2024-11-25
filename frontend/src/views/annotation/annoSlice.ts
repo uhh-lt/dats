@@ -19,7 +19,8 @@ export interface AnnoState {
   mostRecentCode: CodeRead | undefined; // the most recently applied code, it is always at the top of the annotation menu and the default code for new annotations.
   expandedCodeIds: string[]; // the code ids of the expanded codes in the code explorer.
   hiddenCodeIds: number[]; // the code ids of the hidden codes. Hidden codes are shown in the CodeExplorer, but are not rendered in the Annotator.
-  visibleUserIds: number[]; // the user ids of the users whose annotations are shown in the Annotator.
+  visibleUserId: number | undefined; // the user id of the user whose annotations are shown in the Annotator.
+  compareWithUserId: number | undefined; // the user id of the user whose annotations are shown in the Annotator.
   // app state:
   disabledCodeIds: number[]; // the code ids of the disabled codes. Disabled codes are neither shown in the CodeExplorer nor in the Annotator.
   annotationMode: AnnotationMode; // the annotation mode.
@@ -34,7 +35,8 @@ const initialState: AnnoState = {
   mostRecentCode: undefined,
   expandedCodeIds: [],
   hiddenCodeIds: [],
-  visibleUserIds: [],
+  visibleUserId: undefined,
+  compareWithUserId: undefined,
   // app state:
   disabledCodeIds: [],
   annotationMode: AnnotationMode.Reader,
@@ -91,15 +93,8 @@ export const annoSlice = createSlice({
         }
       }
     },
-    addVisibleUserIds: (state, action: PayloadAction<number[]>) => {
-      action.payload.forEach((userId) => {
-        if (state.visibleUserIds.indexOf(userId) === -1) {
-          state.visibleUserIds.push(userId);
-        }
-      });
-    },
-    setVisibleUserIds: (state, action: PayloadAction<number[]>) => {
-      state.visibleUserIds = action.payload;
+    setVisibleUserId: (state, action: PayloadAction<number>) => {
+      state.visibleUserId = action.payload;
     },
     moveCodeToTop: (state, action: PayloadAction<CodeRead>) => {
       state.mostRecentCode = action.payload;
@@ -142,6 +137,14 @@ export const annoSlice = createSlice({
       }
       state.disabledCodeIds = disabledCodeIds;
     },
+    compareWithUser: (state, action: PayloadAction<number>) => {
+      state.compareWithUserId = action.payload;
+      state.annotationMode = AnnotationMode.SentenceAnnotationComparison;
+    },
+    stopComparison: (state) => {
+      state.compareWithUserId = undefined;
+      state.annotationMode = AnnotationMode.SentenceAnnotation;
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(ProjectActions.changeProject, (state) => {
@@ -152,7 +155,8 @@ export const annoSlice = createSlice({
       state.mostRecentCode = initialState.mostRecentCode;
       state.expandedCodeIds = initialState.expandedCodeIds;
       state.hiddenCodeIds = initialState.hiddenCodeIds;
-      state.visibleUserIds = initialState.visibleUserIds;
+      state.visibleUserId = initialState.visibleUserId;
+      state.compareWithUserId = initialState.compareWithUserId;
     });
   },
 });

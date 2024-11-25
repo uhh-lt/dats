@@ -10,8 +10,8 @@ const estimateSize = () => 190;
 
 function BBoxAnnotationExplorer({ sdocId }: { sdocId: number }) {
   // data
-  const visibleUserIds = useAppSelector((state) => state.annotations.visibleUserIds);
-  const annotations = SdocHooks.useGetBBoxAnnotationsBatch(sdocId, visibleUserIds);
+  const visibleUserId = useAppSelector((state) => state.annotations.visibleUserId);
+  const annotations = SdocHooks.useGetBBoxAnnotationsBatch(sdocId, visibleUserId ? [visibleUserId] : undefined);
 
   return (
     <AnnotationExplorer

@@ -43,11 +43,11 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
   const codeSelectorRef = useRef<CodeSelectorHandle>(null);
 
   // global client state (redux)
-  const visibleUserIds = useAppSelector((state) => state.annotations.visibleUserIds);
+  const visibleUserId = useAppSelector((state) => state.annotations.visibleUserId);
   const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
 
   // global server state (react query)
-  const annotations = SdocHooks.useGetBBoxAnnotationsBatch(sdocData.id, visibleUserIds);
+  const annotations = SdocHooks.useGetBBoxAnnotationsBatch(sdocData.id, visibleUserId ? [visibleUserId] : undefined);
 
   // snackbar
   const openSnackbar = useOpenSnackbar();
@@ -62,9 +62,9 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
   const [selectedBbox, setSelectedBbox] = useState<BBoxAnnotationReadResolved | null>(null);
 
   // mutations for create, update, delete
-  const createMutation = useCreateBBoxAnnotation(visibleUserIds);
-  const updateMutation = useUpdateBBoxAnnotation(visibleUserIds);
-  const deleteMutation = useDeleteBBoxAnnotation(visibleUserIds);
+  const createMutation = useCreateBBoxAnnotation(visibleUserId ? [visibleUserId] : []);
+  const updateMutation = useUpdateBBoxAnnotation(visibleUserId ? [visibleUserId] : []);
+  const deleteMutation = useDeleteBBoxAnnotation(visibleUserId ? [visibleUserId] : []);
 
   // click handling
   const handleClick = useCallback(
