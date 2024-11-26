@@ -1265,7 +1265,7 @@
         }
       }
     },
-    "/sdoc{sdoc_id}/user/bbox_annotations": {
+    "/sdoc/{sdoc_id}/user/bbox_annotations": {
       "get": {
         "tags": ["sourceDocument"],
         "summary": "Returns all BBoxAnnotations of the logged-in User if it exists",
@@ -1330,7 +1330,7 @@
         }
       }
     },
-    "/sdoc{sdoc_id}/bbox_annotations/bulk": {
+    "/sdoc/{sdoc_id}/bbox_annotations/bulk": {
       "get": {
         "tags": ["sourceDocument"],
         "summary": "Returns all BBoxAnnotations of the Users with the given ID if it exists",
@@ -1401,20 +1401,15 @@
         }
       }
     },
-    "/sdoc{sdoc_id}/sentence_annotator": {
+    "/sdoc/{sdoc_id}/sentence_annotator": {
       "get": {
         "tags": ["sourceDocument"],
-        "summary": "Returns all SentenceAnnotations of the Users with the given ID if it exists",
+        "summary": "Returns all SentenceAnnotations of the User for the SourceDocument",
         "operationId": "get_sentence_annotator",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
-          {
-            "name": "user_id",
-            "in": "query",
-            "required": false,
-            "schema": { "type": "array", "items": { "type": "integer" }, "title": "User Id" }
-          },
+          { "name": "user_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "User Id" } },
           {
             "name": "skip",
             "in": "query",
@@ -1450,7 +1445,7 @@
         }
       }
     },
-    "/sdoc{sdoc_id}/user/span_groups": {
+    "/sdoc/{sdoc_id}/user/span_groups": {
       "get": {
         "tags": ["sourceDocument"],
         "summary": "Returns all SpanGroups of the logged-in User if it exists",

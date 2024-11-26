@@ -380,7 +380,7 @@ export class SourceDocumentService {
   }): CancelablePromise<Array<BBoxAnnotationRead> | Array<BBoxAnnotationReadResolved>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdoc{sdoc_id}/user/bbox_annotations",
+      url: "/sdoc/{sdoc_id}/user/bbox_annotations",
       path: {
         sdoc_id: sdocId,
       },
@@ -423,7 +423,7 @@ export class SourceDocumentService {
   }): CancelablePromise<Array<BBoxAnnotationRead> | Array<BBoxAnnotationReadResolved>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdoc{sdoc_id}/bbox_annotations/bulk",
+      url: "/sdoc/{sdoc_id}/bbox_annotations/bulk",
       path: {
         sdoc_id: sdocId,
       },
@@ -439,7 +439,7 @@ export class SourceDocumentService {
     });
   }
   /**
-   * Returns all SentenceAnnotations of the Users with the given ID if it exists
+   * Returns all SentenceAnnotations of the User for the SourceDocument
    * @returns SentenceAnnotatorResult Successful Response
    * @throws ApiError
    */
@@ -450,7 +450,7 @@ export class SourceDocumentService {
     limit,
   }: {
     sdocId: number;
-    userId?: Array<number>;
+    userId: number;
     /**
      * The number of elements to skip (offset)
      */
@@ -462,7 +462,7 @@ export class SourceDocumentService {
   }): CancelablePromise<SentenceAnnotatorResult> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdoc{sdoc_id}/sentence_annotator",
+      url: "/sdoc/{sdoc_id}/sentence_annotator",
       path: {
         sdoc_id: sdocId,
       },
@@ -498,7 +498,7 @@ export class SourceDocumentService {
   }): CancelablePromise<Array<SpanGroupRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdoc{sdoc_id}/user/span_groups",
+      url: "/sdoc/{sdoc_id}/user/span_groups",
       path: {
         sdoc_id: sdocId,
       },
