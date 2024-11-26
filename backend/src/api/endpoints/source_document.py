@@ -366,7 +366,7 @@ def get_all_span_annotations_bulk(
 
 
 @router.get(
-    "{sdoc_id}/user/bbox_annotations",
+    "/{sdoc_id}/user/bbox_annotations",
     response_model=Union[List[BBoxAnnotationRead], List[BBoxAnnotationReadResolved]],
     summary="Returns all BBoxAnnotations of the logged-in User if it exists",
 )
@@ -388,7 +388,7 @@ def get_all_bbox_annotations(
 
 
 @router.get(
-    "{sdoc_id}/bbox_annotations/bulk",
+    "/{sdoc_id}/bbox_annotations/bulk",
     response_model=Union[List[BBoxAnnotationRead], List[BBoxAnnotationReadResolved]],
     summary="Returns all BBoxAnnotations of the Users with the given ID if it exists",
 )
@@ -413,15 +413,15 @@ def get_all_bbox_annotations_bulk(
 
 
 @router.get(
-    "{sdoc_id}/sentence_annotator",
+    "/{sdoc_id}/sentence_annotator",
     response_model=SentenceAnnotatorResult,
-    summary="Returns all SentenceAnnotations of the Users with the given ID if it exists",
+    summary="Returns all SentenceAnnotations of the User for the SourceDocument",
 )
 def get_sentence_annotator(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
-    user_id: Annotated[List[int], Query(default_factory=list)],
+    user_id: int,
     skip_limit: Dict[str, int] = Depends(skip_limit_params),
     authz_user: AuthzUser = Depends(),
 ) -> SentenceAnnotatorResult:
@@ -436,7 +436,7 @@ def get_sentence_annotator(
     sentence_annos = [
         SentenceAnnotationReadResolved.model_validate(sent_anno)
         for sent_anno in crud_sentence_anno.read_by_users_and_sdoc(
-            db=db, user_ids=user_id, sdoc_id=sdoc_id, **skip_limit
+            db=db, user_ids=[user_id], sdoc_id=sdoc_id, **skip_limit
         )
     ]
 
@@ -456,7 +456,7 @@ def get_sentence_annotator(
 
 
 @router.get(
-    "{sdoc_id}/user/span_groups",
+    "/{sdoc_id}/user/span_groups",
     response_model=List[SpanGroupRead],
     summary="Returns all SpanGroups of the logged-in User if it exists",
 )
