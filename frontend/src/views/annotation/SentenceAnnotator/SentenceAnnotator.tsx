@@ -31,7 +31,7 @@ const SentenceAnnotator = ({ sdocData, ...props }: SentenceAnnotatorProps & BoxP
   const visibleUserId = useAppSelector((state) => state.annotations.visibleUserId);
 
   // global server state (react-query)
-  const annotatorResult = SdocHooks.useGetSentenceAnnotator(sdocData.id, visibleUserId ? [visibleUserId] : undefined);
+  const annotatorResult = SdocHooks.useGetSentenceAnnotator(sdocData.id, visibleUserId);
   const { annotationPositions, numPositions } = useMemo(() => {
     if (!annotatorResult.data?.sentence_annotations) return { annotationPositions: [], numPositions: 0 };
     const sentenceAnnotations = Object.values(annotatorResult.data.sentence_annotations);
@@ -112,9 +112,9 @@ const SentenceAnnotator = ({ sdocData, ...props }: SentenceAnnotatorProps & BoxP
   const annotationMenuRef = useRef<CodeSelectorHandle>(null);
   const dispatch = useAppDispatch();
   const openSnackbar = useOpenSnackbar();
-  const createMutation = useCreateSentenceAnnotation(visibleUserId ? [visibleUserId] : [], user!.id);
-  const deleteMutation = useDeleteSentenceAnnotation(visibleUserId ? [visibleUserId] : []);
-  const updateMutation = useUpdateSentenceAnnotation(visibleUserId ? [visibleUserId] : []);
+  const createMutation = useCreateSentenceAnnotation(user!.id);
+  const deleteMutation = useDeleteSentenceAnnotation();
+  const updateMutation = useUpdateSentenceAnnotation();
   const handleCodeSelectorDeleteAnnotation = (annotation: Annotation) => {
     deleteMutation.mutate(
       { sentenceAnnotationToDelete: annotation as SentenceAnnotationReadResolved },
@@ -411,14 +411,28 @@ const DocumentSentence = ({
     <Stack direction="row" width="100%">
       <div
         style={{
-          flexShrink: 0,
           paddingRight: "8px",
+          borderLeft: "1px solid #e8eaed",
+          backgroundColor: "rgba(0, 0, 0, 0.04)",
+        }}
+      />
+      <div
+        style={{
+          flexShrink: 0,
+          alignSelf: "stretch",
           paddingTop: "8px",
-          borderRight: "1px solid #e8eaed",
+          backgroundColor: "rgba(0, 0, 0, 0.04)",
         }}
       >
         {String(sentenceId + 1).padStart(numSentenceDigits, "0")}
       </div>
+      <div
+        style={{
+          paddingRight: "8px",
+          borderRight: "1px solid #e8eaed",
+          backgroundColor: "rgba(0, 0, 0, 0.04)",
+        }}
+      />
       <ListItemButton
         {...props}
         style={{ ...props.style, flexGrow: 1 }}

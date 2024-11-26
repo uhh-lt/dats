@@ -8,7 +8,7 @@ import { QueryKey } from "../../../api/QueryKey.ts";
 import { FAKE_ANNOTATION_ID } from "../../../api/SpanAnnotationHooks.ts";
 import queryClient from "../../../plugins/ReactQueryClient.ts";
 
-export const useCreateSentenceAnnotation = (visibleUserIds: number[], currentUserId: number) =>
+export const useCreateSentenceAnnotation = (currentUserId: number) =>
   useMutation({
     mutationFn: async ({ code, sdocId, start, end }: { code: CodeRead; sdocId: number; start: number; end: number }) =>
       SentenceAnnotationService.addSentenceAnnotation({
@@ -24,7 +24,7 @@ export const useCreateSentenceAnnotation = (visibleUserIds: number[], currentUse
     onMutate: async (variables) => {
       // when we create a new span annotation, we add a new annotation to a certain annotation document
       // thus, we only affect the annotation document that we are adding to
-      const affectedQueryKey = [QueryKey.SDOC_SENTENCE_ANNOTATIONS, variables.sdocId, visibleUserIds];
+      const affectedQueryKey = [QueryKey.SDOC_SENTENCE_ANNOTATIONS, variables.sdocId, currentUserId];
 
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
@@ -78,7 +78,7 @@ export const useCreateSentenceAnnotation = (visibleUserIds: number[], currentUse
     },
   });
 
-export const useUpdateSentenceAnnotation = (visibleUserIds: number[]) =>
+export const useUpdateSentenceAnnotation = () =>
   useMutation({
     mutationFn: (variables: {
       sentenceAnnoToUpdate: SentenceAnnotationRead | SentenceAnnotationReadResolved;
@@ -99,7 +99,7 @@ export const useUpdateSentenceAnnotation = (visibleUserIds: number[]) =>
       const affectedQueryKey = [
         QueryKey.SDOC_SENTENCE_ANNOTATIONS,
         updateData.sentenceAnnoToUpdate.sdoc_id,
-        visibleUserIds,
+        updateData.sentenceAnnoToUpdate.user_id,
       ];
 
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
@@ -149,7 +149,7 @@ export const useUpdateSentenceAnnotation = (visibleUserIds: number[]) =>
     },
   });
 
-export const useDeleteSentenceAnnotation = (visibleUserIds: number[]) =>
+export const useDeleteSentenceAnnotation = () =>
   useMutation({
     mutationFn: (variables: { sentenceAnnotationToDelete: SentenceAnnotationRead | SentenceAnnotationReadResolved }) =>
       SentenceAnnotationService.deleteById({ sentenceAnnoId: variables.sentenceAnnotationToDelete.id }),
@@ -157,7 +157,11 @@ export const useDeleteSentenceAnnotation = (visibleUserIds: number[]) =>
     onMutate: async ({ sentenceAnnotationToDelete }) => {
       // when we delete a span annotation, we remove an annotation from a certain annotation document
       // thus, we only affect the annotation document that we are removing from
-      const affectedQueryKey = [QueryKey.SDOC_SENTENCE_ANNOTATIONS, sentenceAnnotationToDelete.sdoc_id, visibleUserIds];
+      const affectedQueryKey = [
+        QueryKey.SDOC_SENTENCE_ANNOTATIONS,
+        sentenceAnnotationToDelete.sdoc_id,
+        sentenceAnnotationToDelete.user_id,
+      ];
 
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });

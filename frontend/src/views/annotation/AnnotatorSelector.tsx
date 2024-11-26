@@ -23,6 +23,7 @@ export function AnnotatorSelector({ sdocId }: AnnotatorSelector) {
   // global client state (redux)
   const dispatch = useAppDispatch();
   const visibleUserId = useAppSelector((state) => state.annotations.visibleUserId);
+  const isCompareMode = useAppSelector((state) => state.annotations.isCompareMode);
 
   // global server state (react query)
   const annotatorUserIds = SdocHooks.useGetAnnotators(sdocId);
@@ -35,11 +36,11 @@ export function AnnotatorSelector({ sdocId }: AnnotatorSelector) {
 
   // init
   useEffect(() => {
-    if (user && annotatorUserIds.data) {
+    if (user && annotatorUserIds.data && !isCompareMode) {
       // always add the current user to the visible users
       dispatch(AnnoActions.setVisibleUserId(user.id));
     }
-  }, [dispatch, user, annotatorUserIds.data]);
+  }, [dispatch, user, annotatorUserIds.data, isCompareMode]);
 
   // render
   return (

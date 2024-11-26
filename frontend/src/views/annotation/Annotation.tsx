@@ -1,29 +1,10 @@
-import ChromeReaderModeIcon from "@mui/icons-material/ChromeReaderMode";
-import DoNotDisturbIcon from "@mui/icons-material/DoNotDisturb";
-import FormatOverlineIcon from "@mui/icons-material/FormatOverline";
-import FormatStrikethroughIcon from "@mui/icons-material/FormatStrikethrough";
-import ShortTextIcon from "@mui/icons-material/ShortText";
-import SubjectIcon from "@mui/icons-material/Subject";
 import { TabContext, TabPanel } from "@mui/lab";
-import {
-  Box,
-  Card,
-  CardContent,
-  Container,
-  Portal,
-  Stack,
-  Tab,
-  Tabs,
-  ToggleButton,
-  ToggleButtonGroup,
-  Toolbar,
-  Tooltip,
-  Typography,
-} from "@mui/material";
-import { useContext, useState } from "react";
+import { Box, Card, CardContent, Container, Portal, Stack, Tab, Tabs, Typography } from "@mui/material";
+import React, { useContext, useState } from "react";
 import { useParams } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
+import { SourceDocumentDataRead } from "../../api/openapi/models/SourceDocumentDataRead.ts";
 import CodeExplorer from "../../components/Code/CodeExplorer/CodeExplorer.tsx";
 import EditableTypography from "../../components/EditableTypography.tsx";
 import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
@@ -31,12 +12,11 @@ import DocumentInformation from "../../components/SourceDocument/DocumentInforma
 import OneSidebarLayout from "../../layouts/OneSidebarLayout.tsx";
 import { AppBarContext } from "../../layouts/TwoBarLayout.tsx";
 import TwoSidebarsLayout from "../../layouts/TwoSidebarsLayout.tsx";
-import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { useAppSelector } from "../../plugins/ReduxHooks.ts";
 import BBoxAnnotationExplorer from "./AnnotationExploer/BBoxAnnotationExplorer.tsx";
 import SentenceAnnotationExplorer from "./AnnotationExploer/SentenceAnnotationExplorer.tsx";
 import SpanAnnotationExplorer from "./AnnotationExploer/SpanAnnotationExplorer.tsx";
 import AnnotationMode from "./AnnotationMode.ts";
-import { AnnotatorSelector } from "./AnnotatorSelector.tsx";
 import AudioVideoViewer from "./DocumentViewer/AudioVideoViewer.tsx";
 import ImageViewer from "./DocumentViewer/ImageViewer.tsx";
 import TextViewer from "./DocumentViewer/TextViewer.tsx";
@@ -44,22 +24,96 @@ import ImageAnnotator from "./ImageAnnotator/ImageAnnotator.tsx";
 import SentenceAnnotationComparison from "./SentenceAnnotator/SentenceAnnotationComparison.tsx";
 import SentenceAnnotator from "./SentenceAnnotator/SentenceAnnotator.tsx";
 import TextAnnotator from "./TextAnnotator/TextAnnotator.tsx";
-import CompareWithButton from "./Toolbar/CompareWithButton.tsx";
-import { CompareWithSelector } from "./Toolbar/CompareWithSelector.tsx";
-import { AnnoActions, TagStyle } from "./annoSlice.ts";
+import AnnotationToolbar from "./Toolbar/AnnotationToolbar.tsx";
+
+const annotatorComponent = (
+  sdocData: SourceDocumentDataRead,
+): Record<DocType, Record<AnnotationMode, React.ReactElement>> => ({
+  [DocType.TEXT]: {
+    [AnnotationMode.Annotation]: <TextAnnotator sdocData={sdocData} />,
+    [AnnotationMode.SentenceAnnotation]: (
+      <SentenceAnnotator sdocData={sdocData} style={{ marginLeft: "-16px", marginBottom: "-24px" }} />
+    ),
+    [AnnotationMode.Reader]: <TextViewer sdocData={sdocData} />,
+  },
+  [DocType.IMAGE]: {
+    [AnnotationMode.Annotation]: <ImageAnnotator sdocData={sdocData} />,
+    [AnnotationMode.SentenceAnnotation]: <ImageAnnotator sdocData={sdocData} />,
+    [AnnotationMode.Reader]: <ImageViewer sdocData={sdocData} />,
+  },
+  [DocType.AUDIO]: {
+    [AnnotationMode.Annotation]: <div>Annotation is not (yet) supported for Audio Documents.</div>,
+    [AnnotationMode.SentenceAnnotation]: <div>Annotation is not (yet) supported for Audio Documents.</div>,
+    [AnnotationMode.Reader]: (
+      <AudioVideoViewer sdocData={sdocData} showEntities={true} width={"100%"} height={"64px"} />
+    ),
+  },
+  [DocType.VIDEO]: {
+    [AnnotationMode.Annotation]: <div>Annotation is not (yet) supported for Video Documents.</div>,
+    [AnnotationMode.SentenceAnnotation]: <div>Annotation is not (yet) supported for Video Documents.</div>,
+    [AnnotationMode.Reader]: <AudioVideoViewer sdocData={sdocData} showEntities={true} width={800} height={600} />,
+  },
+});
+
+const comparatorComponent = (
+  sdocData: SourceDocumentDataRead,
+): Record<DocType, Record<AnnotationMode, React.ReactElement>> => ({
+  [DocType.TEXT]: {
+    [AnnotationMode.Annotation]: <div>Not supported</div>,
+    [AnnotationMode.SentenceAnnotation]: (
+      <SentenceAnnotationComparison sdocData={sdocData} style={{ marginLeft: "-16px", marginBottom: "-24px" }} />
+    ),
+    [AnnotationMode.Reader]: <div>Not supported</div>,
+  },
+  [DocType.IMAGE]: {
+    [AnnotationMode.Annotation]: <div>Not supported</div>,
+    [AnnotationMode.SentenceAnnotation]: <div>Not supported</div>,
+    [AnnotationMode.Reader]: <div>Not supported</div>,
+  },
+  [DocType.AUDIO]: {
+    [AnnotationMode.Annotation]: <div>Not supported</div>,
+    [AnnotationMode.SentenceAnnotation]: <div>Not supported</div>,
+    [AnnotationMode.Reader]: <div>Not supported</div>,
+  },
+  [DocType.VIDEO]: {
+    [AnnotationMode.Annotation]: <div>Not supported</div>,
+    [AnnotationMode.SentenceAnnotation]: <div>Not supported</div>,
+    [AnnotationMode.Reader]: <div>Not supported</div>,
+  },
+});
+
+const explorerComponent = (sdocId: number): Record<DocType, Record<AnnotationMode, React.ReactElement>> => ({
+  [DocType.TEXT]: {
+    [AnnotationMode.Annotation]: <SpanAnnotationExplorer sdocId={sdocId} />,
+    [AnnotationMode.SentenceAnnotation]: <SentenceAnnotationExplorer sdocId={sdocId} />,
+    [AnnotationMode.Reader]: <div>Not supported</div>,
+  },
+  [DocType.IMAGE]: {
+    [AnnotationMode.Annotation]: <BBoxAnnotationExplorer sdocId={sdocId} />,
+    [AnnotationMode.SentenceAnnotation]: <BBoxAnnotationExplorer sdocId={sdocId} />,
+    [AnnotationMode.Reader]: <div>Not supported</div>,
+  },
+  [DocType.AUDIO]: {
+    [AnnotationMode.Annotation]: <div>Not supported</div>,
+    [AnnotationMode.SentenceAnnotation]: <div>Not supported</div>,
+    [AnnotationMode.Reader]: <div>Not supported</div>,
+  },
+  [DocType.VIDEO]: {
+    [AnnotationMode.Annotation]: <div>Not supported</div>,
+    [AnnotationMode.SentenceAnnotation]: <div>Not supported</div>,
+    [AnnotationMode.Reader]: <div>Not supported</div>,
+  },
+});
 
 function Annotation() {
   // global client state (URL)
   const params = useParams() as { projectId: string; sdocId: string };
   const sdocId = parseInt(params.sdocId);
 
-  // global client state (context)
-  const appBarContainerRef = useContext(AppBarContext);
-
   // global client state (redux)
+  // components are selected based on these states
   const annotationMode = useAppSelector((state) => state.annotations.annotationMode);
-  const tagStyle = useAppSelector((state) => state.annotations.tagStyle);
-  const dispatch = useAppDispatch();
+  const isCompareMode = useAppSelector((state) => state.annotations.isCompareMode);
 
   // global server state (react query)
   const sdoc = SdocHooks.useGetDocument(sdocId);
@@ -92,89 +146,12 @@ function Annotation() {
     }
   };
 
-  // tabs
+  // explorer
   const [tab, setTab] = useState("code");
   const handleTabChange = (_event: React.SyntheticEvent, newValue: string): void => {
     setTab(newValue);
   };
-
-  // rendering
-  const toolbar = (
-    <Toolbar
-      disableGutters
-      variant="dense"
-      sx={{
-        zIndex: (theme) => theme.zIndex.appBar + 1,
-        bgcolor: (theme) => theme.palette.background.paper,
-        borderBottom: "1px solid #e8eaed",
-        boxShadow: 4,
-        justifyContent: "center",
-        gap: 1,
-      }}
-    >
-      <ToggleButtonGroup
-        value={annotationMode}
-        exclusive
-        onChange={(_, value) => dispatch(AnnoActions.onChangeAnnotationMode(value))}
-        size="small"
-        color="primary"
-      >
-        {sdoc.data?.doctype === DocType.TEXT && (
-          <Tooltip title="Sentence Annotation" placement="bottom">
-            <ToggleButton value={AnnotationMode.SentenceAnnotation} sx={{ fontSize: 12 }}>
-              <SubjectIcon />
-            </ToggleButton>
-          </Tooltip>
-        )}
-        <Tooltip title="Span Annotation" placement="bottom">
-          <ToggleButton value={AnnotationMode.Annotation} sx={{ fontSize: 12 }}>
-            <ShortTextIcon />
-          </ToggleButton>
-        </Tooltip>
-        <Tooltip title="Reading" placement="bottom">
-          <ToggleButton value={AnnotationMode.Reader} sx={{ fontSize: 12 }}>
-            <ChromeReaderModeIcon />
-          </ToggleButton>
-        </Tooltip>
-      </ToggleButtonGroup>
-      <AnnotatorSelector sdocId={sdocId} />
-      {sdoc.data?.doctype === DocType.TEXT && annotationMode === AnnotationMode.SentenceAnnotationComparison ? (
-        <>
-          vs.
-          <CompareWithSelector sdocId={sdocId} />
-        </>
-      ) : (
-        <CompareWithButton sdocId={sdocId} />
-      )}
-      {sdoc.data?.doctype === DocType.TEXT && (
-        <ToggleButtonGroup
-          value={tagStyle}
-          exclusive
-          onChange={(_, value) => dispatch(AnnoActions.onSetAnnotatorTagStyle(value))}
-          size="small"
-          color="primary"
-        >
-          <Tooltip title="None" placement="bottom">
-            <ToggleButton value={TagStyle.None} sx={{ fontSize: 12 }}>
-              <DoNotDisturbIcon />
-            </ToggleButton>
-          </Tooltip>
-          <Tooltip title="Inline" placement="bottom">
-            <ToggleButton value={TagStyle.Inline} sx={{ fontSize: 12 }}>
-              <FormatStrikethroughIcon />
-            </ToggleButton>
-          </Tooltip>
-          <Tooltip title="Above" placement="bottom">
-            <ToggleButton value={TagStyle.Above} sx={{ fontSize: 12 }}>
-              <FormatOverlineIcon />
-            </ToggleButton>
-          </Tooltip>
-        </ToggleButtonGroup>
-      )}
-    </Toolbar>
-  );
-
-  const explorers = (
+  const explorer = (
     <Box className="h100 myFlexContainer">
       <TabContext value={tab}>
         <Box sx={{ borderBottom: 1, borderColor: "divider" }} className="myFlexFitContentContainer">
@@ -189,15 +166,7 @@ function Annotation() {
           </TabPanel>
           {sdoc.isSuccess && (
             <TabPanel value="Annotation" style={{ padding: 0 }} className="h100">
-              {sdoc.data.doctype === DocType.TEXT && annotationMode == AnnotationMode.Annotation ? (
-                <SpanAnnotationExplorer sdocId={sdoc.data.id} />
-              ) : sdoc.data.doctype === DocType.TEXT && annotationMode == AnnotationMode.SentenceAnnotation ? (
-                <SentenceAnnotationExplorer sdocId={sdoc.data.id} />
-              ) : sdoc.data.doctype === DocType.IMAGE ? (
-                <BBoxAnnotationExplorer sdocId={sdoc.data.id} />
-              ) : (
-                <>Not supported (yet)!</>
-              )}
+              {explorerComponent(sdoc.data.id)[sdoc.data.doctype][annotationMode]}
             </TabPanel>
           )}
         </Box>
@@ -205,6 +174,7 @@ function Annotation() {
     </Box>
   );
 
+  // annotator: the main content
   const annotator = (
     <Box className="myFlexFillAllContainer">
       <Container sx={{ py: 2 }} maxWidth="xl">
@@ -226,37 +196,9 @@ function Annotation() {
                         }}
                       />
                     </div>
-                    {sdoc.data.doctype === DocType.IMAGE ? (
-                      annotationMode === AnnotationMode.Annotation ? (
-                        <ImageAnnotator sdocData={sdocData.data} />
-                      ) : (
-                        <ImageViewer sdocData={sdocData.data} />
-                      )
-                    ) : sdoc.data.doctype === DocType.TEXT ? (
-                      annotationMode === AnnotationMode.Annotation ? (
-                        <TextAnnotator sdocData={sdocData.data} />
-                      ) : annotationMode === AnnotationMode.SentenceAnnotation ? (
-                        <SentenceAnnotator sdocData={sdocData.data} />
-                      ) : annotationMode === AnnotationMode.SentenceAnnotationComparison ? (
-                        <SentenceAnnotationComparison sdocData={sdocData.data} />
-                      ) : (
-                        <TextViewer sdocData={sdocData.data} />
-                      )
-                    ) : sdoc.data.doctype === DocType.AUDIO ? (
-                      annotationMode === AnnotationMode.Annotation ? (
-                        <div>Annotation is not (yet) supported for Audio Documents.</div>
-                      ) : (
-                        <AudioVideoViewer sdocData={sdocData.data} showEntities={true} width={"100%"} height={"64px"} />
-                      )
-                    ) : sdoc.data.doctype === DocType.VIDEO ? (
-                      annotationMode === AnnotationMode.Annotation ? (
-                        <div>Annotation is not (yet) supported for Video Documents.</div>
-                      ) : (
-                        <AudioVideoViewer sdocData={sdocData.data} showEntities={true} width={800} height={600} />
-                      )
-                    ) : (
-                      <div>ERROR! This DocType is not (yet) supported!</div>
-                    )}
+                    {isCompareMode
+                      ? comparatorComponent(sdocData.data)[sdoc.data.doctype][annotationMode]
+                      : annotatorComponent(sdocData.data)[sdoc.data.doctype][annotationMode]}
                   </Stack>
                 ) : sdoc.isError ? (
                   <div>Error: {sdoc.error.message}</div>
@@ -265,7 +207,7 @@ function Annotation() {
                 )}
               </>
             ) : (
-              <div>Please select a document from the Document Explorer :)</div>
+              <div>Please double-click a document in Search to view it here :)</div>
             )}
           </CardContent>
         </Card>
@@ -273,47 +215,47 @@ function Annotation() {
     </Box>
   );
 
-  // layout
-  if (annotationMode === AnnotationMode.SentenceAnnotationComparison) {
-    return (
-      <>
-        <Portal container={appBarContainerRef?.current}>
-          <Typography variant="h6" component="div">
-            {sdoc.isSuccess ? `Annotator: ${sdoc.data.filename}` : "Annotator"}
-          </Typography>
-        </Portal>
-        <OneSidebarLayout
-          leftSidebar={explorers}
-          content={
-            <>
-              {toolbar}
-              {annotator}
-            </>
-          }
-        />
-      </>
+  // layout: use one sidebar layout in compare mode
+  let layout: JSX.Element = <></>;
+  if (isCompareMode) {
+    layout = (
+      <OneSidebarLayout
+        leftSidebar={explorer}
+        content={
+          <>
+            <AnnotationToolbar sdoc={sdoc.data} />
+            {annotator}
+          </>
+        }
+      />
     );
   } else {
-    return (
-      <>
-        <Portal container={appBarContainerRef?.current}>
-          <Typography variant="h6" component="div">
-            {sdoc.isSuccess ? `Annotator: ${sdoc.data.filename}` : "Annotator"}
-          </Typography>
-        </Portal>
-        <TwoSidebarsLayout
-          leftSidebar={explorers}
-          content={
-            <>
-              {toolbar}
-              {annotator}
-            </>
-          }
-          rightSidebar={<DocumentInformation sdocId={sdocId} />}
-        />
-      </>
+    layout = (
+      <TwoSidebarsLayout
+        leftSidebar={explorer}
+        content={
+          <>
+            <AnnotationToolbar sdoc={sdoc.data} />
+            {annotator}
+          </>
+        }
+        rightSidebar={<DocumentInformation sdocId={sdocId} />}
+      />
     );
   }
+
+  // rendering
+  const appBarContainerRef = useContext(AppBarContext);
+  return (
+    <>
+      <Portal container={appBarContainerRef?.current}>
+        <Typography variant="h6" component="div">
+          {sdoc.isSuccess ? `Annotator: ${sdoc.data.filename}` : "Annotator"}
+        </Typography>
+      </Portal>
+      {layout}
+    </>
+  );
 }
 
 export default Annotation;

@@ -21,6 +21,7 @@ export interface AnnoState {
   hiddenCodeIds: number[]; // the code ids of the hidden codes. Hidden codes are shown in the CodeExplorer, but are not rendered in the Annotator.
   visibleUserId: number | undefined; // the user id of the user whose annotations are shown in the Annotator.
   compareWithUserId: number | undefined; // the user id of the user whose annotations are shown in the Annotator.
+  isCompareMode: boolean; // whether the Annotator is in comparison mode.
   // app state:
   disabledCodeIds: number[]; // the code ids of the disabled codes. Disabled codes are neither shown in the CodeExplorer nor in the Annotator.
   annotationMode: AnnotationMode; // the annotation mode.
@@ -37,6 +38,7 @@ const initialState: AnnoState = {
   hiddenCodeIds: [],
   visibleUserId: undefined,
   compareWithUserId: undefined,
+  isCompareMode: false,
   // app state:
   disabledCodeIds: [],
   annotationMode: AnnotationMode.Reader,
@@ -48,7 +50,9 @@ export const annoSlice = createSlice({
   initialState,
   reducers: {
     onChangeAnnotationMode: (state, action: PayloadAction<AnnotationMode>) => {
-      state.annotationMode = action.payload;
+      if (action.payload !== undefined && action.payload !== null) {
+        state.annotationMode = action.payload;
+      }
     },
     toggleCodeVisibility: (state, action: PayloadAction<number[]>) => {
       if (action.payload.length === 0) {
@@ -94,6 +98,10 @@ export const annoSlice = createSlice({
       }
     },
     setVisibleUserId: (state, action: PayloadAction<number>) => {
+      // special case in comparison mode: swap visibleUserId and compareWithUserId
+      if (state.isCompareMode && state.compareWithUserId === action.payload) {
+        state.compareWithUserId = state.visibleUserId;
+      }
       state.visibleUserId = action.payload;
     },
     moveCodeToTop: (state, action: PayloadAction<CodeRead>) => {
@@ -138,12 +146,20 @@ export const annoSlice = createSlice({
       state.disabledCodeIds = disabledCodeIds;
     },
     compareWithUser: (state, action: PayloadAction<number>) => {
+      console.log("compareWithUser", action.payload);
+      console.log("visibleUserId", state.visibleUserId);
+      // special case: swap visibleUserId and compareWithUserId
+      if (state.isCompareMode && state.visibleUserId === action.payload) {
+        state.visibleUserId = state.compareWithUserId;
+      }
       state.compareWithUserId = action.payload;
-      state.annotationMode = AnnotationMode.SentenceAnnotationComparison;
+      state.isCompareMode = true;
+      console.log("compareWithUser", action.payload);
+      console.log("visibleUserId", state.visibleUserId);
     },
     stopComparison: (state) => {
       state.compareWithUserId = undefined;
-      state.annotationMode = AnnotationMode.SentenceAnnotation;
+      state.isCompareMode = false;
     },
   },
   extraReducers: (builder) => {
@@ -157,6 +173,7 @@ export const annoSlice = createSlice({
       state.hiddenCodeIds = initialState.hiddenCodeIds;
       state.visibleUserId = initialState.visibleUserId;
       state.compareWithUserId = initialState.compareWithUserId;
+      state.isCompareMode = initialState.isCompareMode;
     });
   },
 });
