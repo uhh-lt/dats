@@ -15,6 +15,7 @@ from app.core.analysis.annotated_segments import (
     find_annotated_segments,
     find_annotated_segments_info,
 )
+from app.core.analysis.my_new_analysis_feature import random_walk
 from app.core.analysis.word_frequency import (
     WordFrequencyColumns,
     word_frequency,
@@ -264,3 +265,16 @@ def sample_sdocs_by_tags(
     return AnalysisService().sample_sdocs_by_tags(
         project_id=project_id, tag_ids=tag_groups, n=n, frac=frac
     )
+
+
+@router.post(
+    "/my_new_analysis",
+    response_model=List[dict],
+    summary="Hello World!",
+)
+def my_new_analysis_feature(
+    *,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
+) -> List[dict]:
+    return random_walk()

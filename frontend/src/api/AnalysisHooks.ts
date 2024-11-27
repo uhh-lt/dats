@@ -49,11 +49,18 @@ const useSampleSdocsByTags = () =>
     mutationFn: AnalysisService.sampleSdocsByTags,
   });
 
+const useTestAnalysisFeature = () =>
+  useQuery<Array<Record<string, unknown>>, Error>({
+    queryKey: ["Test"],
+    queryFn: () => AnalysisService.myNewAnalysisFeature(),
+  });
+
 const AnalysisHooks = {
   useCodeFrequencies,
   useCodeOccurrences,
   useAnnotationOccurrences,
   useSampleSdocsByTags,
+  useTestAnalysisFeature,
 };
 
 export default AnalysisHooks;

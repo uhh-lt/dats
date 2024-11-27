@@ -13,6 +13,7 @@ import CodeFrequencyAnalysis from "../views/analysis/CodeFrequency/CodeFrequency
 import CodeGraph from "../views/analysis/CodeGraph/CodeGraph.tsx";
 import CotaDashboard from "../views/analysis/ConceptsOverTime/CotaDashboard.tsx";
 import CotaView from "../views/analysis/ConceptsOverTime/CotaView.tsx";
+import TestAnalysisFeature from "../views/analysis/MyNewAnalysisFeature/TestAnalysisFeature.tsx";
 import TableDashboard from "../views/analysis/Table/TableDashboard.tsx";
 import TableView from "../views/analysis/Table/TableView.tsx";
 import TimelineAnalysis from "../views/analysis/TimelineAnalysis/TimelineAnalysis.tsx";
@@ -142,6 +143,10 @@ const router = createBrowserRouter([
       {
         path: "/project/:projectId/analysis/timeline",
         element: <TimelineAnalysisDashboard />,
+      },
+      {
+        path: "/project/:projectId/analysis/my-new-analysis-feature",
+        element: <TestAnalysisFeature />,
       },
       {
         path: "/project/:projectId/analysis/timeline/:analysisId",

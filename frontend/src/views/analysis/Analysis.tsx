@@ -59,6 +59,13 @@ function Analysis() {
         />
 
         <AnalysisCard to={"table"} title={"Table"} description={"Analyse with tables."} color={"#77dd77"} />
+
+        <AnalysisCard
+          to={"my-new-analysis-feature"}
+          title={"Test Analysis Feature"}
+          description={"Hello World"}
+          color={"#77dd77"}
+        />
       </Box>
     </NoSidebarLayout>
   );
