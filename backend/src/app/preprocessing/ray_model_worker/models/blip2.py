@@ -27,7 +27,9 @@ else:
 class Blip2Model:
     def __init__(self):
         logger.debug(f"Loading Blip2Processor {MODEL} ...")
-        image_processor: Blip2Processor = Blip2Processor.from_pretrained(MODEL, revision=REVISION)
+        image_processor: Blip2Processor = Blip2Processor.from_pretrained(
+            MODEL, revision=REVISION
+        )
 
         device_map = {"": 0}
         load_in_8bit = False
