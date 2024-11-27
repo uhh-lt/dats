@@ -1,6 +1,6 @@
 {
   "openapi": "3.1.0",
-  "info": { "title": "Discourse Analysis Tool Suite API", "version": "1.1.1" },
+  "info": { "title": "Discourse Analysis Tool Suite API", "version": "1.1.2" },
   "paths": {
     "/heartbeat": {
       "get": {
@@ -4596,6 +4596,39 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnalysisTableRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/annoscaling/suggest": {
+      "post": {
+        "tags": ["annoscaling"],
+        "summary": "Suggest annotations",
+        "description": "Suggest annotations",
+        "operationId": "suggest",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "code_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Code Id" } },
+          { "name": "top_k", "in": "query", "required": true, "schema": { "type": "integer", "title": "Top K" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "type": "string" }, "title": "Response Annoscaling-Suggest" }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
