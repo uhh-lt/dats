@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Exit immediately if a command exits with a non-zero status
+set -e
+
 # Stop frontend and backend, so that no changes can be made during backup
 cd ~/dats_prod/docker || exit
 docker compose -f compose.yml -f compose.production.yml stop dats-frontend dats-backend-api

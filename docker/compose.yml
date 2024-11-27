@@ -97,6 +97,7 @@ services:
       retries: 5
     volumes:
       - "weaviate_data_demo:/var/lib/weaviate"
+      - "../backups/weaviate:/mount/backups"
     restart: on-failure:0
     environment:
       QUERY_DEFAULTS_LIMIT: 25
@@ -105,6 +106,8 @@ services:
       DEFAULT_VECTORIZER_MODULE: "none"
       CLUSTER_HOSTNAME: "node1"
       LOG_LEVEL: "info"
+      ENABLE_MODULES: "backup-filesystem"
+      BACKUP_FILESYSTEM_PATH: "/mount/backups"
     networks:
       - dats_demo_network
     profiles:
