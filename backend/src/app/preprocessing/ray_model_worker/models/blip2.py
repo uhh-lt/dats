@@ -13,6 +13,7 @@ cc = conf.blip2
 
 DEVICE = cc.device
 MODEL = cc.model
+REVISION = cc.revision
 MAX_CAPTION_LENGTH = cc.image_captioning.max_caption_length
 NUM_BEAMS = cc.image_captioning.num_beams
 if str(cc.precision_bit).isdigit():
@@ -26,7 +27,9 @@ else:
 class Blip2Model:
     def __init__(self):
         logger.debug(f"Loading Blip2Processor {MODEL} ...")
-        image_processor: Blip2Processor = Blip2Processor.from_pretrained(MODEL)
+        image_processor: Blip2Processor = Blip2Processor.from_pretrained(
+            MODEL, revision=REVISION
+        )
 
         device_map = {"": 0}
         load_in_8bit = False
