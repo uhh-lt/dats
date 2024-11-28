@@ -30,7 +30,8 @@ class SegmentTranscription(BaseModel):
 
 
 class WhisperFilePathInput(BaseModel):
-    uncompressed_audio_fp: str = Field(examples=["/path/to/uncompressed/audio.wav"])
+    uncompressed_audio_fp: str = Field(examples=["audio.wav"])
+    project_id: int = Field(examples=[1])
 
 
 class WhisperTranscriptionOutput(BaseModel):

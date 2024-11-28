@@ -1,3 +1,5 @@
+import os
+
 from loguru import logger
 
 from app.preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
@@ -25,7 +27,8 @@ def generate_automatic_transcription(cargo: PipelineCargo) -> PipelineCargo:
 
     # Create Whisper Input
     whisper_input = WhisperFilePathInput(
-        uncompressed_audio_fp=str(ppad.uncompressed_audio_filepath)
+        uncompressed_audio_fp=os.path.basename(str(ppad.uncompressed_audio_filepath)),
+        project_id=ppad.project_id,
     )
     transcription: WhisperTranscriptionOutput = rms.whisper_transcribe(whisper_input)
 

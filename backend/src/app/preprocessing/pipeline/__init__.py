@@ -334,9 +334,6 @@ def build_audio_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     # we need to import the steps here to avoid loading models at startup
     # in the api worker!
     from app.preprocessing.pipeline.steps.audio.convert_to_pcm import convert_to_pcm
-    from app.preprocessing.pipeline.steps.audio.create_and_store_transcript_file import (
-        create_and_store_transcript_file,
-    )
     from app.preprocessing.pipeline.steps.audio.create_ffmpeg_probe_audio_metadata import (
         create_ffmpeg_probe_audio_metadata,
     )
@@ -350,6 +347,9 @@ def build_audio_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     from app.preprocessing.pipeline.steps.audio.generate_webp_thumbnail_for_audio import (
         generate_webp_thumbnail_for_audio,
     )
+    from app.preprocessing.pipeline.steps.audio.store_metadata_to_database import (
+        store_metadata_to_database,
+    )
     from app.preprocessing.pipeline.steps.audio.write_ppad_to_database import (
         write_ppad_to_database,
     )
@@ -362,8 +362,25 @@ def build_audio_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     from app.preprocessing.pipeline.steps.common.update_sdoc_status_to_finish import (
         update_sdoc_status_to_finish,
     )
+    from app.preprocessing.pipeline.steps.text.detect_content_language import (
+        detect_content_language,
+    )
+    from app.preprocessing.pipeline.steps.text.generate_keywords import (
+        generate_keywords,
+    )
+    from app.preprocessing.pipeline.steps.text.generate_sentence_annotations import (
+        generate_sentence_annotations,
+    )
+    from app.preprocessing.pipeline.steps.text.generate_word_frequencies import (
+        generate_word_frequncies,
+    )
+    from app.preprocessing.pipeline.steps.text.run_spacy_pipeline import (
+        run_spacy_pipeline,
+    )
+    from app.preprocessing.pipeline.steps.text.store_document_in_elasticsearch import (
+        store_document_in_elasticsearch,
+    )
 
-    text_pipeline = build_text_pipeline()
     pipeline = PreprocessingPipeline(doc_type=DocType.audio)
 
     pipeline.register_step(
@@ -392,17 +409,45 @@ def build_audio_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     )
 
     pipeline.register_step(
-        func=create_and_store_transcript_file,
+        func=write_ppad_to_database,
         required_data=["ppad"],
     )
 
+    # instead create pptd before and now add it as metadata
     pipeline.register_step(
         func=create_pptd_from_transcription,
         required_data=["ppad"],
     )
-    pipeline.join_pipeline(
-        pipeline=text_pipeline,
-        skip_steps_with_name=["create_pptd"],
+
+    pipeline.register_step(
+        func=detect_content_language,
+        required_data=["pptd"],
+    )
+
+    # run caption through spacy and add to elasticsearch to make it searchable
+    pipeline.register_step(
+        func=run_spacy_pipeline,
+        required_data=["pptd"],
+    )
+
+    pipeline.register_step(
+        func=generate_word_frequncies,
+        required_data=["pptd"],
+    )
+
+    pipeline.register_step(
+        func=generate_keywords,
+        required_data=["pptd"],
+    )
+
+    pipeline.register_step(
+        func=generate_sentence_annotations,
+        required_data=["pptd"],
+    )
+
+    pipeline.register_step(
+        func=store_document_in_elasticsearch,
+        required_data=["pptd", "sdoc_id"],
     )
 
     pipeline.register_step(
@@ -413,8 +458,12 @@ def build_audio_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     )
 
     pipeline.register_step(
-        func=write_ppad_to_database,
-        required_data=["ppad"],
+        func=store_metadata_to_database,
+        required_data=[
+            "pptd",
+            "ppad",
+            "sdoc_id",
+        ],
     )
 
     pipeline.register_step(
