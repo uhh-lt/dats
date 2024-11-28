@@ -14,5 +14,7 @@ def add_word_level_transcriptions_to_ppvd_metadata(
     # store word level transcriptions as metadata
     wlt = list(map(lambda wlt: wlt.model_dump(), ppad.word_level_transcriptions))
     ppvd.metadata["word_level_transcriptions"] = json.dumps(wlt)
+    ppvd.metadata["language"] = ppad.metadata["language"]
+    ppvd.metadata["transcription_keywords"] = ppad.metadata["transcription_keywords"]
 
     return cargo
