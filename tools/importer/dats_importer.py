@@ -2,7 +2,7 @@ import argparse
 import json
 import math
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Set, Tuple
 
 import magic
 from dats_api import DATSAPI
@@ -71,6 +71,13 @@ parser.add_argument(
     help="Description of the tag that is automatically applied to all documents",
     default="",
     dest="tag_description",
+)
+parser.add_argument(
+    "--tag_key",
+    type=str,
+    help="JSON key to be used as tag, e.g. --tag_key tags. Has to be a list of strings. If not set, no tag will be applied.",
+    default="",
+    dest="tag_key",
 )
 parser.add_argument(
     "--is_json",
@@ -199,6 +206,7 @@ if directory.is_file():
 # read files from directory
 #           dict_key        name, content, mime
 files: List[Tuple[str, Tuple[str, bytes, str]]] = []
+tags: Set[str] = set()
 json_data = dict()
 files_in_dir = list(directory.glob(f"**/*.{args.file_extension}"))
 for file in tqdm(files_in_dir, f"Reading and checking files from {directory}!"):
@@ -218,6 +226,9 @@ for file in tqdm(files_in_dir, f"Reading and checking files from {directory}!"):
                 mime = magic.from_buffer(data[args.content_key], mime=True)
             else:
                 mime = args.mime_type
+
+            if args.tag_key != "" and args.tag_key in data:
+                tags.update(data[args.tag_key])
 
             json_data[filename] = data
             content = str(data[args.content_key])
@@ -277,6 +288,37 @@ tagged_sdoc_ids = set(
 )
 untagged_sdoc_ids = sdoc_ids - tagged_sdoc_ids
 api.bulk_apply_tags(sdoc_ids=list(untagged_sdoc_ids), tag_ids=[tag["id"]])
+
+# apply tag to all documents with tag_key
+if args.tag_key != "":
+    tag_name2_ids = dict()
+    for tag_name in tags:
+        tag = api.get_tag_by_name(proj_id=project["id"], name=tag_name)
+        if tag is None:
+            tag = api.create_tag(
+                name=tag_name, description=tag_name, color="blue", proj_id=project["id"]
+            )
+        tag_name2_ids[tag_name] = tag["id"]
+
+    idx = 0
+    for filename, data in tqdm(
+        json_data.items(), total=len(json_data), desc="Applying tags to sdocs... "
+    ):
+        # refresh login
+        if idx % 1000 == 0:
+            api.refresh_login()
+        idx += 1
+
+        tags_to_apply = data.get(args.tag_key, [])
+        if len(tags_to_apply) == 0:
+            continue
+
+        sdoc_id = api.resolve_sdoc_id_from_proj_and_filename(
+            proj_id=project["id"], filename=filename
+        )
+        if sdoc_id is not None:
+            tag_ids = [tag_name2_ids[tag_name] for tag_name in tags_to_apply]
+            api.bulk_apply_tags(sdoc_ids=[sdoc_id], tag_ids=tag_ids)
 
 # apply sdoc metadata
 applied = set()
