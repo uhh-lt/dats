@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from app.preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
@@ -5,17 +7,16 @@ from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 
 def create_pptd_from_transcription(cargo: PipelineCargo) -> PipelineCargo:
     ppad: PreProAudioDoc = cargo.data["ppad"]
-
-    if not ppad.transcript_filepath.exists():
-        raise FileNotFoundError(
-            f"The transcription file {ppad.transcript_filepath} "
-            f"for {cargo.ppj_payload.filename} does not exist!"
-        )
-
+    ppad.metadata["transcription"] = " ".join(
+        [a.text for a in ppad.word_level_transcriptions]
+    )
     pptd = PreProTextDoc(
-        filename=ppad.transcript_filepath.name,
-        filepath=ppad.transcript_filepath,
-        project_id=cargo.ppj_payload.project_id,
+        filepath=Path("/this/is/a/fake_path.txt"),
+        filename="fake_path.txt",
+        project_id=ppad.project_id,
+        text=ppad.metadata["transcription"],
+        html=f"<html><body><p>{ppad.metadata['transcription']}</p></body></html>",
+        metadata={"language": "en"},
         mime_type="text/plain",
     )
 

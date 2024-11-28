@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
+from app.core.data.doc_type import DocType
 from app.core.data.dto.project_metadata import (
     ProjectMetadataCreate,
     ProjectMetadataUpdate,
