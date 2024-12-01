@@ -51,8 +51,14 @@ const useSampleSdocsByTags = () =>
 
 const useTestAnalysisFeature = () =>
   useQuery<Array<Record<string, unknown>>, Error>({
-    queryKey: ["Test"],
+    queryKey: ["Test1"],
     queryFn: () => AnalysisService.myNewAnalysisFeature(),
+  });
+
+const useReturnTopWordsData = () =>
+  useQuery<Array<Record<string, unknown>>, Error>({
+    queryKey: ["Test2"],
+    queryFn: () => AnalysisService.returnTopWordsData(),
   });
 
 const AnalysisHooks = {
@@ -61,6 +67,7 @@ const AnalysisHooks = {
   useAnnotationOccurrences,
   useSampleSdocsByTags,
   useTestAnalysisFeature,
+  useReturnTopWordsData,
 };
 
 export default AnalysisHooks;
