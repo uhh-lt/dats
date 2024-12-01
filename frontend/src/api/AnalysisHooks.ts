@@ -49,10 +49,10 @@ const useSampleSdocsByTags = () =>
     mutationFn: AnalysisService.sampleSdocsByTags,
   });
 
-const useTestAnalysisFeature = () =>
+const useReturnTopicDistrData = () =>
   useQuery<Array<Record<string, unknown>>, Error>({
     queryKey: ["Test1"],
-    queryFn: () => AnalysisService.myNewAnalysisFeature(),
+    queryFn: () => AnalysisService.returnTopicDistrData(),
   });
 
 const useReturnTopWordsData = () =>
@@ -66,7 +66,7 @@ const AnalysisHooks = {
   useCodeOccurrences,
   useAnnotationOccurrences,
   useSampleSdocsByTags,
-  useTestAnalysisFeature,
+  useReturnTopicDistrData,
   useReturnTopWordsData,
 };
 
