@@ -383,6 +383,7 @@ class WeaviateService(VectorIndexService):
         index_type: IndexType,
         proj_id: int,
         sdoc_sent_ids: List[Tuple[int, int]],
+        top_k: int,
     ) -> List[SimSearchSentenceHit]:
         obj_ids = [
             # TODO weaviate does not support batch/bulk queries.
@@ -412,7 +413,7 @@ class WeaviateService(VectorIndexService):
                 # query.with_near_object({"id": obj, "certainty": threshold})
                 .with_additional(["certainty"])
                 .with_where(project_filter)
-                .with_limit(10)
+                .with_limit(top_k)
             )
 
             res = query.do()["data"]["Get"][self._sentence_class_name]
