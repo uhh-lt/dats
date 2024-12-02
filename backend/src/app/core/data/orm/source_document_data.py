@@ -57,3 +57,13 @@ class SourceDocumentDataORM(ORMBase):
     @property
     def sentence_character_offsets(self):
         return [(s, e) for s, e in zip(self.sentence_starts, self.sentence_ends)]
+
+    @property
+    def sentence_token_starts(self):
+        char2tok = {c: i for i, c in enumerate(self.token_starts)}
+        return [char2tok[s] for s in self.sentence_starts]
+
+    @property
+    def sentence_token_ends(self):
+        char2tok = {c: i for i, c in enumerate(self.token_ends)}
+        return [char2tok[e] for e in self.sentence_ends]

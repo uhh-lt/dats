@@ -238,17 +238,33 @@ class SimSearchService(metaclass=SingletonMeta):
     def suggest_similar_sentences(
         self,
         proj_id: int,
-        sdoc_sent_ids: List[Tuple[int, int]],
+        pos_sdoc_sent_ids: List[Tuple[int, int]],
+        neg_sdoc_sent_ids: List[Tuple[int, int]],
         top_k: int,
     ) -> List[SimSearchSentenceHit]:
-        hits = self._index.suggest(IndexType.SENTENCE, proj_id, sdoc_sent_ids)
-        hits = [h for h in hits if (h.sdoc_id, h.sentence_id) not in sdoc_sent_ids]
+        hits = self._index.suggest(
+            IndexType.SENTENCE, proj_id, pos_sdoc_sent_ids, top_k
+        )
+        marked_sdoc_sent_ids = {
+            entry for entry in pos_sdoc_sent_ids + neg_sdoc_sent_ids
+        }
+        hits = [
+            h for h in hits if (h.sdoc_id, h.sentence_id) not in marked_sdoc_sent_ids
+        ]
         hits.sort(key=lambda x: (x.sdoc_id, x.sentence_id))
         hits = self.__unique_consecutive(hits)
-        hits.sort(key=lambda x: x.score, reverse=True)
-        return hits[0 : min(len(hits), top_k)]
+        candidates = [(h.sdoc_id, h.sentence_id) for h in hits]
+        nearest = self._index.suggest(IndexType.SENTENCE, proj_id, candidates, 1)
+        results = []
+        for hit, near in zip(hits, nearest):
+            if (near.sdoc_id, near.sentence_id) not in neg_sdoc_sent_ids:
+                results.append(hit)
+        results.sort(key=lambda x: x.score, reverse=True)
+        return results[0 : min(len(results), top_k)]
 
-    def __unique_consecutive(self, hits: List[SimSearchSentenceHit]):
+    def __unique_consecutive(
+        self, hits: List[SimSearchSentenceHit]
+    ) -> List[SimSearchSentenceHit]:
         result = []
         current = SimSearchSentenceHit(sdoc_id=-1, sentence_id=-1, score=0.0)
         for hit in hits:

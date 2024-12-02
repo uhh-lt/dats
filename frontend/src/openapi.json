@@ -4610,23 +4610,20 @@
         "summary": "Suggest annotations",
         "description": "Suggest annotations",
         "operationId": "suggest",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          },
-          { "name": "code_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Code Id" } },
-          { "name": "top_k", "in": "query", "required": true, "schema": { "type": "integer", "title": "Top K" } }
-        ],
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnnoscalingSuggest" } } },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": { "type": "array", "items": { "type": "string" }, "title": "Response Annoscaling-Suggest" }
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/AnnoscalingResult" },
+                  "type": "array",
+                  "title": "Response Annoscaling-Suggest"
+                }
               }
             }
           },
@@ -4634,7 +4631,28 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/annoscaling/confirm_suggestions": {
+      "post": {
+        "tags": ["annoscaling"],
+        "summary": "Suggest annotations",
+        "description": "Suggest annotations",
+        "operationId": "confirm_suggestions",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnnoscalingConfirmSuggest" } } },
+          "required": true
+        },
+        "responses": {
+          "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/whiteboard": {
@@ -5780,6 +5798,61 @@
         },
         "type": "object",
         "title": "AnalysisTableUpdate"
+      },
+      "AnnoscalingConfirmSuggest": {
+        "properties": {
+          "project_id": { "type": "integer", "title": "Project Id", "description": "Project to apply suggestions" },
+          "code_id": { "type": "integer", "title": "Code Id", "description": "Code to apply on accepted spans" },
+          "reject_code_id": {
+            "type": "integer",
+            "title": "Reject Code Id",
+            "description": "Code to apply on rejected spans"
+          },
+          "accept": {
+            "items": { "$ref": "#/components/schemas/SdocSentencePair" },
+            "type": "array",
+            "title": "Accept",
+            "description": "Suggested annotations to accept"
+          },
+          "reject": {
+            "items": { "$ref": "#/components/schemas/SdocSentencePair" },
+            "type": "array",
+            "title": "Reject",
+            "description": "Suggested annotations to reject"
+          }
+        },
+        "type": "object",
+        "required": ["project_id", "code_id", "reject_code_id", "accept", "reject"],
+        "title": "AnnoscalingConfirmSuggest"
+      },
+      "AnnoscalingResult": {
+        "properties": {
+          "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
+          "sentence_id": {
+            "type": "integer",
+            "title": "Sentence Id",
+            "description": "ID of the sentence within the document"
+          },
+          "text": { "type": "string", "title": "Text", "description": "Sentence text" }
+        },
+        "type": "object",
+        "required": ["sdoc_id", "sentence_id", "text"],
+        "title": "AnnoscalingResult"
+      },
+      "AnnoscalingSuggest": {
+        "properties": {
+          "project_id": { "type": "integer", "title": "Project Id", "description": "Project to retrieve suggestions" },
+          "code_id": { "type": "integer", "title": "Code Id", "description": "Code to provide suggestions for" },
+          "reject_cide_id": {
+            "type": "integer",
+            "title": "Reject Cide Id",
+            "description": "Code to use as opposing code"
+          },
+          "top_k": { "type": "integer", "title": "Top K", "description": "Number of suggestions to provide" }
+        },
+        "type": "object",
+        "required": ["project_id", "code_id", "reject_cide_id", "top_k"],
+        "title": "AnnoscalingSuggest"
       },
       "AnnotatedImageResult": {
         "properties": {
@@ -8124,6 +8197,15 @@
           "SD_SPAN_ANNOTATIONS"
         ],
         "title": "SdocColumns"
+      },
+      "SdocSentencePair": {
+        "properties": {
+          "sdoc_id": { "type": "integer", "title": "Sdoc Id" },
+          "sentence": { "type": "integer", "title": "Sentence" }
+        },
+        "type": "object",
+        "required": ["sdoc_id", "sentence"],
+        "title": "SdocSentencePair"
       },
       "SimSearchImageHit": {
         "properties": {

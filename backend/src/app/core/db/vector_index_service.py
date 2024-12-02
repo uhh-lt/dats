@@ -45,6 +45,7 @@ class VectorIndexService(ABC, metaclass=SingletonMeta):
         index_type: IndexType,
         proj_id: int,
         sdoc_sent_ids: List[Tuple[int, int]],
+        top_k: int,
     ) -> List[SimSearchSentenceHit]:
         pass
 
