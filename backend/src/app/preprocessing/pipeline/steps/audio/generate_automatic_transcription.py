@@ -1,3 +1,4 @@
+import json
 import os
 
 from loguru import logger
@@ -42,4 +43,6 @@ def generate_automatic_transcription(cargo: PipelineCargo) -> PipelineCargo:
             )
             ppad.word_level_transcriptions.append(wlt)
 
+    wlt = list(map(lambda wlt: wlt.model_dump(), ppad.word_level_transcriptions))
+    ppad.metadata["word_level_transcriptions"] = json.dumps(wlt)
     return cargo

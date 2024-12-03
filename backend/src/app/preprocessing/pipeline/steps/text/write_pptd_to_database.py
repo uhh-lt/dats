@@ -10,7 +10,6 @@ from app.core.data.crud.code import crud_code
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
-from app.core.data.crud.source_document_data import crud_sdoc_data
 from app.core.data.crud.source_document_link import crud_sdoc_link
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.span_annotation import crud_span_anno
@@ -20,7 +19,6 @@ from app.core.data.doc_type import DocType
 from app.core.data.dto.code import CodeCreate
 from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.dto.source_document import SourceDocumentRead
-from app.core.data.dto.source_document_data import SourceDocumentDataCreate
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.data.dto.span_annotation import SpanAnnotationCreate
 from app.core.data.dto.word_frequency import WordFrequencyCreate
@@ -31,6 +29,7 @@ from app.core.db.sql_service import SQLService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.autospan import AutoSpan
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
+from app.preprocessing.pipeline.steps.common.persist_sdoc_data import persist_sdoc_data
 from app.util.color import get_next_color
 
 repo: RepoService = RepoService()
@@ -50,21 +49,6 @@ def _create_and_persist_sdoc(db: Session, pptd: PreProTextDoc) -> SourceDocument
     return sdoc_db_obj
 
 
-def _persist_sdoc_data(
-    db: Session, sdoc_db_obj: SourceDocumentORM, pptd: PreProTextDoc
-) -> None:
-    sdoc_data = SourceDocumentDataCreate(
-        id=sdoc_db_obj.id,
-        content=pptd.text,
-        html=pptd.html,
-        token_starts=[s for s, _ in pptd.token_character_offsets],
-        token_ends=[e for _, e in pptd.token_character_offsets],
-        sentence_starts=[s.start for s in pptd.sentences],
-        sentence_ends=[s.end for s in pptd.sentences],
-    )
-    crud_sdoc_data.create(db=db, create_dto=sdoc_data)
-
-
 def _persist_sdoc_metadata(
     db: Session, sdoc_db_obj: SourceDocumentORM, pptd: PreProTextDoc
 ) -> None:
@@ -72,7 +56,6 @@ def _persist_sdoc_metadata(
     sdoc_id = sdoc_db_obj.id
     sdoc = SourceDocumentRead.model_validate(sdoc_db_obj)
     pptd.metadata["url"] = str(RepoService().get_sdoc_url(sdoc=sdoc))
-    pptd.metadata["keywords"] = pptd.keywords
 
     project_metadata = [
         ProjectMetadataRead.model_validate(pm)
@@ -220,7 +203,7 @@ def write_pptd_to_database(cargo: PipelineCargo) -> PipelineCargo:
             sdoc_db_obj = _create_and_persist_sdoc(db=db, pptd=pptd)
 
             # persists SourceDocument Data
-            _persist_sdoc_data(db, sdoc_db_obj, pptd)
+            persist_sdoc_data(db, sdoc_db_obj, pptd)
 
             # persist SourceDocument Metadata
             _persist_sdoc_metadata(db=db, sdoc_db_obj=sdoc_db_obj, pptd=pptd)

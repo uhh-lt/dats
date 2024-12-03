@@ -8,6 +8,9 @@ from app.preprocessing.pipeline.preprocessing_pipeline import PreprocessingPipel
 def build_text_pipeline(
     is_init: bool = True,
 ) -> PreprocessingPipeline:
+    from app.preprocessing.pipeline.steps.common.detect_content_language import (
+        detect_content_language,
+    )
     from app.preprocessing.pipeline.steps.common.remove_erroneous_sdoc import (
         remove_erroneous_or_unfinished_sdocs,
     )
@@ -26,9 +29,6 @@ def build_text_pipeline(
     )
     from app.preprocessing.pipeline.steps.text.create_pptd import (
         create_pptd,
-    )
-    from app.preprocessing.pipeline.steps.text.detect_content_language import (
-        detect_content_language,
     )
     from app.preprocessing.pipeline.steps.text.extract_content_in_html_from_raw_text_docs import (
         extract_content_in_html_from_raw_text_docs,
@@ -210,7 +210,7 @@ def build_image_pipeline(
         run_object_detection,
     )
     from app.preprocessing.pipeline.steps.image.store_metadata_to_database import (
-        store_metadata_to_database,
+        store_metadata_and_data_to_database,
     )
     from app.preprocessing.pipeline.steps.image.write_ppid_to_database import (
         write_ppid_to_database,
@@ -277,7 +277,7 @@ def build_image_pipeline(
 
     pipeline.register_step(
         func=create_pptd_from_caption,
-        required_data=["ppid", "sdoc_id"],
+        required_data=["ppid"],
     )
 
     # run caption through spacy and add to elasticsearch to make it searchable
@@ -307,7 +307,7 @@ def build_image_pipeline(
     )
 
     pipeline.register_step(
-        func=store_metadata_to_database,
+        func=store_metadata_and_data_to_database,
         required_data=[
             "pptd",
             "ppid",
@@ -348,10 +348,13 @@ def build_audio_pipeline(foo: str = "bar") -> PreprocessingPipeline:
         generate_webp_thumbnail_for_audio,
     )
     from app.preprocessing.pipeline.steps.audio.store_metadata_to_database import (
-        store_metadata_to_database,
+        store_metadata_and_data_to_database,
     )
     from app.preprocessing.pipeline.steps.audio.write_ppad_to_database import (
         write_ppad_to_database,
+    )
+    from app.preprocessing.pipeline.steps.common.detect_content_language import (
+        detect_content_language,
     )
     from app.preprocessing.pipeline.steps.common.remove_erroneous_sdoc import (
         remove_erroneous_or_unfinished_sdocs,
@@ -361,9 +364,6 @@ def build_audio_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     )
     from app.preprocessing.pipeline.steps.common.update_sdoc_status_to_finish import (
         update_sdoc_status_to_finish,
-    )
-    from app.preprocessing.pipeline.steps.text.detect_content_language import (
-        detect_content_language,
     )
     from app.preprocessing.pipeline.steps.text.generate_keywords import (
         generate_keywords,
@@ -458,7 +458,7 @@ def build_audio_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     )
 
     pipeline.register_step(
-        func=store_metadata_to_database,
+        func=store_metadata_and_data_to_database,
         required_data=[
             "pptd",
             "ppad",
@@ -482,6 +482,19 @@ def build_audio_pipeline(foo: str = "bar") -> PreprocessingPipeline:
 
 @lru_cache(maxsize=1)
 def build_video_pipeline(foo: str = "bar") -> PreprocessingPipeline:
+    from app.preprocessing.pipeline.steps.audio.convert_to_pcm import convert_to_pcm
+    from app.preprocessing.pipeline.steps.audio.create_ffmpeg_probe_audio_metadata import (
+        create_ffmpeg_probe_audio_metadata,
+    )
+    from app.preprocessing.pipeline.steps.audio.create_pptd_from_transcription import (
+        create_pptd_from_transcription,
+    )
+    from app.preprocessing.pipeline.steps.audio.generate_automatic_transcription import (
+        generate_automatic_transcription,
+    )
+    from app.preprocessing.pipeline.steps.common.detect_content_language import (
+        detect_content_language,
+    )
     from app.preprocessing.pipeline.steps.common.remove_erroneous_sdoc import (
         remove_erroneous_or_unfinished_sdocs,
     )
@@ -491,8 +504,20 @@ def build_video_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     from app.preprocessing.pipeline.steps.common.update_sdoc_status_to_finish import (
         update_sdoc_status_to_finish,
     )
-    from app.preprocessing.pipeline.steps.video.add_word_level_transcriptions_to_ppvd_metadata import (
-        add_word_level_transcriptions_to_ppvd_metadata,
+    from app.preprocessing.pipeline.steps.text.generate_keywords import (
+        generate_keywords,
+    )
+    from app.preprocessing.pipeline.steps.text.generate_sentence_annotations import (
+        generate_sentence_annotations,
+    )
+    from app.preprocessing.pipeline.steps.text.generate_word_frequencies import (
+        generate_word_frequncies,
+    )
+    from app.preprocessing.pipeline.steps.text.run_spacy_pipeline import (
+        run_spacy_pipeline,
+    )
+    from app.preprocessing.pipeline.steps.text.store_document_in_elasticsearch import (
+        store_document_in_elasticsearch,
     )
     from app.preprocessing.pipeline.steps.video.create_and_store_audio_stream_file import (
         create_and_store_audio_stream_file,
@@ -507,11 +532,13 @@ def build_video_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     from app.preprocessing.pipeline.steps.video.generate_webp_thumbnail_for_video import (
         generate_webp_thumbnail_for_video,
     )
+    from app.preprocessing.pipeline.steps.video.store_metadata_to_database import (
+        store_metadata_and_data_to_database,
+    )
     from app.preprocessing.pipeline.steps.video.write_ppvd_to_database import (
         write_ppvd_to_database,
     )
 
-    audio_pipeline = build_audio_pipeline()
     pipeline = PreprocessingPipeline(doc_type=DocType.video)
 
     pipeline.register_step(
@@ -539,14 +566,71 @@ def build_video_pipeline(foo: str = "bar") -> PreprocessingPipeline:
         required_data=["ppvd"],
     )
 
-    pipeline.join_pipeline(
-        pipeline=audio_pipeline,
-        skip_steps_with_name=["create_ppad"],
+    pipeline.register_step(
+        func=write_ppvd_to_database,
+        required_data=["ppvd"],
     )
 
     pipeline.register_step(
-        func=add_word_level_transcriptions_to_ppvd_metadata,
-        required_data=["ppvd", "ppad"],
+        func=create_ffmpeg_probe_audio_metadata,
+        required_data=["ppad"],
+    )
+
+    pipeline.register_step(
+        func=convert_to_pcm,
+        required_data=["ppad"],
+    )
+
+    pipeline.register_step(
+        func=generate_automatic_transcription,
+        required_data=["ppad"],
+    )
+
+    # instead create pptd before and now add it as metadata
+    pipeline.register_step(
+        func=create_pptd_from_transcription,
+        required_data=["ppad"],
+    )
+
+    pipeline.register_step(
+        func=detect_content_language,
+        required_data=["pptd"],
+    )
+
+    # run caption through spacy and add to elasticsearch to make it searchable
+    pipeline.register_step(
+        func=run_spacy_pipeline,
+        required_data=["pptd"],
+    )
+
+    pipeline.register_step(
+        func=generate_word_frequncies,
+        required_data=["pptd"],
+    )
+
+    pipeline.register_step(
+        func=generate_keywords,
+        required_data=["pptd"],
+    )
+
+    pipeline.register_step(
+        func=generate_sentence_annotations,
+        required_data=["pptd"],
+    )
+
+    pipeline.register_step(
+        func=store_document_in_elasticsearch,
+        required_data=["pptd", "sdoc_id"],
+    )
+
+    pipeline.register_step(
+        func=store_metadata_and_data_to_database,
+        required_data=[
+            "pptd",
+            "ppad",
+            "ppvd",
+            "sdoc_id",
+        ],
     )
 
     pipeline.register_step(
@@ -554,11 +638,6 @@ def build_video_pipeline(foo: str = "bar") -> PreprocessingPipeline:
         # So in case the document is already in the database but not finished
         # or erroneous, we remove it to make the preprocessing idempotent.
         func=remove_erroneous_or_unfinished_sdocs,
-    )
-
-    pipeline.register_step(
-        func=write_ppvd_to_database,
-        required_data=["ppvd"],
     )
 
     pipeline.register_step(

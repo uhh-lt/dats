@@ -8,9 +8,7 @@ from config import conf
 
 def generate_keywords(cargo: PipelineCargo) -> PipelineCargo:
     pptd: PreProTextDoc = cargo.data["pptd"]
-    if "keywords" in pptd.metadata:
-        pptd.keywords = pptd.metadata["keywords"]  # type: ignore
-    else:
+    if "keywords" not in pptd.metadata:
         out = pptd.spacy_pipeline_output
         if out is None:
             logger.error(
@@ -69,6 +67,6 @@ def generate_keywords(cargo: PipelineCargo) -> PipelineCargo:
                 # if any of the words is not in the pos dict, we skip the keyword
                 pass
 
-        pptd.keywords = keywords
+        pptd.metadata["keywords"] = keywords
 
     return cargo
