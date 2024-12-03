@@ -14,6 +14,7 @@ from app.core.db.sql_service import SQLService
 from app.preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
+from app.preprocessing.pipeline.model.video.preprovideodoc import PreProVideoDoc
 from app.preprocessing.pipeline.steps.common.persist_sdoc_data import persist_sdoc_data
 
 repo: RepoService = RepoService()
@@ -23,31 +24,35 @@ sql: SQLService = SQLService()
 def _persist_sdoc_metadata(
     db: Session,
     sdoc_db_obj: SourceDocumentORM,
+    ppvd: PreProVideoDoc,
     ppad: PreProAudioDoc,
     pptd: PreProTextDoc,
 ) -> None:
-    logger.info(f"Persisting SourceDocumentMetadata for {ppad.filename}...")
     sdoc_id = sdoc_db_obj.id
     sdoc = SourceDocumentRead.model_validate(sdoc_db_obj)
-    ppad.metadata["url"] = str(RepoService().get_sdoc_url(sdoc=sdoc))
-    ppad.metadata["language"] = pptd.metadata["language"]
-    ppad.metadata["transcription_keywords"] = pptd.metadata["keywords"]
+    ppvd.metadata["url"] = str(RepoService().get_sdoc_url(sdoc=sdoc))
+    ppvd.metadata["transcription_keywords"] = pptd.metadata["keywords"]
+    ppvd.metadata["language"] = pptd.metadata["language"]
+
+    # store word level transcriptions as metadata
+    ppvd.metadata["word_level_transcriptions"] = ppad.metadata[
+        "word_level_transcriptions"
+    ]
 
     project_metadata = [
         ProjectMetadataRead.model_validate(pm)
-        for pm in crud_project.read(db=db, id=ppad.project_id).metadata_
-        if pm.doctype == DocType.audio
+        for pm in crud_project.read(db=db, id=ppvd.project_id).metadata_
+        if pm.doctype == DocType.video
     ]
     project_metadata_map = {str(m.key): m for m in project_metadata}
 
     # we create SourceDocumentMetadata for every project metadata
     metadata_create_dtos = []
     for project_metadata_key, project_metadata in project_metadata_map.items():
-        logger.info(f"Generating metadata {project_metadata_key}")
-        if project_metadata_key in ppad.metadata.keys():
+        if project_metadata_key in ppvd.metadata.keys():
             metadata_create_dtos.append(
                 SourceDocumentMetadataCreate.with_metatype(
-                    value=ppad.metadata[project_metadata_key],
+                    value=ppvd.metadata[project_metadata_key],
                     source_document_id=sdoc_id,
                     project_metadata_id=project_metadata.id,
                     metatype=project_metadata.metatype,
@@ -66,16 +71,19 @@ def _persist_sdoc_metadata(
 
 
 def store_metadata_and_data_to_database(cargo: PipelineCargo) -> PipelineCargo:
+    ppvd: PreProVideoDoc = cargo.data["ppvd"]
     ppad: PreProAudioDoc = cargo.data["ppad"]
     pptd: PreProTextDoc = cargo.data["pptd"]
-    audio_sdoc_id: int = cargo.data["sdoc_id"]
+    video_sdoc_id: int = cargo.data["sdoc_id"]
 
     with sql.db_session() as db:
         try:
-            sdoc_db_obj = crud_sdoc.read(db=db, id=audio_sdoc_id)
+            sdoc_db_obj = crud_sdoc.read(db=db, id=video_sdoc_id)
 
             # persist SourceDocument Metadata
-            _persist_sdoc_metadata(db=db, sdoc_db_obj=sdoc_db_obj, ppad=ppad, pptd=pptd)
+            _persist_sdoc_metadata(
+                db=db, sdoc_db_obj=sdoc_db_obj, ppvd=ppvd, ppad=ppad, pptd=pptd
+            )
 
             # persist SourceDocument Data
             persist_sdoc_data(db=db, sdoc_db_obj=sdoc_db_obj, pptd=pptd)
@@ -83,7 +91,7 @@ def store_metadata_and_data_to_database(cargo: PipelineCargo) -> PipelineCargo:
         except Exception as e:
             logger.error(
                 f"Error while persisting SourceDocument Metadata "
-                f"for {ppad.filename}: {e}"
+                f"for {ppvd.filename}: {e}"
             )
             # FIXME: this is not working because we commmit the sessions in the cruds!
             # To fix it, we have to use flush instead of commit in the cruds and commit
@@ -92,6 +100,6 @@ def store_metadata_and_data_to_database(cargo: PipelineCargo) -> PipelineCargo:
             db.rollback()
             raise e
         else:
-            logger.info(f"Persisted SourceDocument Metadata " f"for {ppad.filename}!")
+            logger.info(f"Persisted SourceDocument Metadata " f"for {ppvd.filename}!")
 
     return cargo

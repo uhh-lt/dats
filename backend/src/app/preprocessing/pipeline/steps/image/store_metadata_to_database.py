@@ -14,6 +14,7 @@ from app.core.db.sql_service import SQLService
 from app.preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
+from app.preprocessing.pipeline.steps.common.persist_sdoc_data import persist_sdoc_data
 
 repo: RepoService = RepoService()
 sql: SQLService = SQLService()
@@ -28,7 +29,7 @@ def _persist_sdoc_metadata(
     sdoc_id = sdoc_db_obj.id
     sdoc = SourceDocumentRead.model_validate(sdoc_db_obj)
     ppid.metadata["url"] = str(RepoService().get_sdoc_url(sdoc=sdoc))
-    ppid.metadata["keywords"] = pptd.keywords
+    ppid.metadata["keywords"] = pptd.metadata["keywords"]
 
     project_metadata = [
         ProjectMetadataRead.model_validate(pm)
@@ -41,7 +42,6 @@ def _persist_sdoc_metadata(
     metadata_create_dtos = []
     for project_metadata_key, project_metadata in project_metadata_map.items():
         if project_metadata_key in ppid.metadata.keys():
-            logger.info(f"test {project_metadata_key}")
             metadata_create_dtos.append(
                 SourceDocumentMetadataCreate.with_metatype(
                     value=ppid.metadata[project_metadata_key],
@@ -62,7 +62,7 @@ def _persist_sdoc_metadata(
     crud_sdoc_meta.create_multi(db=db, create_dtos=metadata_create_dtos)
 
 
-def store_metadata_to_database(cargo: PipelineCargo) -> PipelineCargo:
+def store_metadata_and_data_to_database(cargo: PipelineCargo) -> PipelineCargo:
     ppid: PreProImageDoc = cargo.data["ppid"]
     pptd: PreProTextDoc = cargo.data["pptd"]
     image_sdoc_id: int = cargo.data["sdoc_id"]
@@ -73,6 +73,9 @@ def store_metadata_to_database(cargo: PipelineCargo) -> PipelineCargo:
 
             # persist SourceDocument Metadata
             _persist_sdoc_metadata(db=db, sdoc_db_obj=sdoc_db_obj, ppid=ppid, pptd=pptd)
+
+            # persist SourceDocument Data
+            persist_sdoc_data(db=db, sdoc_db_obj=sdoc_db_obj, pptd=pptd)
 
         except Exception as e:
             logger.error(
