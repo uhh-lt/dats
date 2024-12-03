@@ -675,17 +675,17 @@ class ExportService(metaclass=SingletonMeta):
         db: Session,
         user_id: int,
         project_id: int,
-    ) -> Tuple[List[pd.DataFrame], List[pd.DataFrame]]:
+    ) -> Tuple[List[Tuple[str, pd.DataFrame]], List[pd.DataFrame]]:
         logger.info(f"Exporting data of User {user_id} in Project {project_id} ...")
         user = crud_user.read(db=db, id=user_id)
 
         # all AnnotationDocuments
         adocs = user.annotation_documents
-        exported_adocs: List[pd.DataFrame] = []
+        exported_adocs: List[Tuple[str, pd.DataFrame]] = []
         for adoc in adocs:
             if adoc.source_document.project_id == project_id:
                 export_data = self.__generate_export_df_for_adoc(db=db, adoc_id=adoc.id)
-                exported_adocs.append(export_data)
+                exported_adocs.append((adoc.source_document.filename, export_data))
 
         # all Memos
         memos = user.memos
@@ -847,14 +847,13 @@ class ExportService(metaclass=SingletonMeta):
 
         exported_files = []
         # one file per adoc
-        for adoc_df in exported_adocs:
-            if len(adoc_df) > 0:  # for adocs with 0 annos
-                export_file = self.__write_export_data_to_temp_file(
-                    data=adoc_df,
-                    export_format=export_format,
-                    fn=f"adoc_{adoc_df.iloc[0].adoc_id}",
-                )
-                exported_files.append(export_file)
+        for sdoc_name, adoc_df in exported_adocs:
+            export_file = self.__write_export_data_to_temp_file(
+                data=adoc_df,
+                export_format=export_format,
+                fn=f"adoc_{sdoc_name}",
+            )
+            exported_files.append(export_file)
 
         # one file for all memos
         if len(exported_memos) > 0:
@@ -921,7 +920,7 @@ class ExportService(metaclass=SingletonMeta):
         proj = crud_project.read(db=db, id=project_id)
         users = proj.users
 
-        exported_adocs: Dict[int, List[pd.DataFrame]] = dict()
+        exported_adocs: Dict[str, List[pd.DataFrame]] = dict()
         exported_memos: List[pd.DataFrame] = []
         exported_logbooks: List[Tuple[int, str]] = []
         exported_files = []
@@ -968,16 +967,16 @@ class ExportService(metaclass=SingletonMeta):
             )
 
             # group  the adocs by sdoc name and merge them later
-            for adoc_df in ex_adocs:
-                if len(adoc_df) > 0:  # for adocs with 0 annos:
-                    sdoc_name = adoc_df.iloc[0].sdoc_name
-                    if sdoc_name not in exported_adocs:
-                        exported_adocs[sdoc_name] = []
-                    exported_adocs[sdoc_name].append(adoc_df)
+            for sdoc_name, adoc_df in ex_adocs:
+                if sdoc_name not in exported_adocs:
+                    exported_adocs[sdoc_name] = []
+                exported_adocs[sdoc_name].append(adoc_df)
         # merge adocs
-        merged_exported_adocs: List[pd.DataFrame] = []
+        merged_exported_adocs: List[Tuple[str, pd.DataFrame]] = []
         for sdoc_name in exported_adocs.keys():
-            merged_exported_adocs.append(pd.concat(exported_adocs[sdoc_name]))
+            merged_exported_adocs.append(
+                (sdoc_name, pd.concat(exported_adocs[sdoc_name]))
+            )
 
         # write users to files
         users_file = self.__write_export_data_to_temp_file(
@@ -988,11 +987,11 @@ class ExportService(metaclass=SingletonMeta):
         exported_files.append(users_file)
 
         # write adocs to files
-        for adoc_df in merged_exported_adocs:
+        for sdoc_name, adoc_df in merged_exported_adocs:
             export_file = self.__write_export_data_to_temp_file(
                 data=adoc_df,
                 export_format=export_format,
-                fn=adoc_df.iloc[0].sdoc_name,
+                fn=sdoc_name,
                 append_suffix=True,
             )
             exported_files.append(export_file)
@@ -1025,12 +1024,23 @@ class ExportService(metaclass=SingletonMeta):
         )
         if len(exported_tags) > 0:
             exported_tag_df = pd.concat(exported_tags)
-            export_file = self.__write_export_data_to_temp_file(
-                data=exported_tag_df,
-                export_format=export_format,
-                fn=f"project_{project_id}_tags",
+        else:
+            exported_tag_df = pd.DataFrame(
+                columns=[
+                    "tag_name",
+                    "description",
+                    "color",
+                    "created",
+                    "parent_tag_name",
+                    "applied_to_sdoc_filenames",
+                ]
             )
-            exported_files.append(export_file)
+        export_file = self.__write_export_data_to_temp_file(
+            data=exported_tag_df,
+            export_format=export_format,
+            fn=f"project_{project_id}_tags",
+        )
+        exported_files.append(export_file)
 
         # write all sdoc metadata to one file
         exported_project_metadata = (
