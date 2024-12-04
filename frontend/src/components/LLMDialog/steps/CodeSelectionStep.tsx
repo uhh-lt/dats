@@ -73,10 +73,17 @@ function CodeSelectionStep({ projectId, isSentenceAnnotation }: { projectId: num
     <>
       <DialogContent>
         <LLMUtterance>
-          <Typography>
-            You selected {selectedDocuments.length} document(s) for automatic annotation. Please select all codes that I
-            should use to annotate text passages.
-          </Typography>
+          {isSentenceAnnotation ? (
+            <Typography>
+              You selected {selectedDocuments.length} document(s) for automatic sentence annotation. Please select all
+              codes that I should use to annotate sentences.
+            </Typography>
+          ) : (
+            <Typography>
+              You selected {selectedDocuments.length} document(s) for automatic annotation. Please select all codes that
+              I should use to annotate text passages.
+            </Typography>
+          )}
         </LLMUtterance>
       </DialogContent>
       <CodeTable

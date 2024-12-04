@@ -8,6 +8,7 @@ import { ToggleButton, ToggleButtonGroup, Toolbar, Tooltip } from "@mui/material
 import { useEffect } from "react";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
+import LLMAssistanceButton from "../../../components/LLMDialog/LLMAssistanceButton.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { AnnoActions, TagStyle } from "../annoSlice.ts";
 import AnnotationMode from "../AnnotationMode.ts";
@@ -113,6 +114,7 @@ function AnnotationToolbar({ sdoc }: AnnotationToolbarProps) {
               </Tooltip>
             </ToggleButtonGroup>
           )}
+          {sdoc.doctype === DocType.TEXT && <LLMAssistanceButton sdocIds={[sdoc.id]} />}
         </>
       ) : null}
     </Toolbar>
