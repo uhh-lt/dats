@@ -29,12 +29,12 @@ function AnnotationScaling() {
   const codes = ProjectHooks.useGetAllCodes(projectId, false);
 
   const [code, setCode] = useState<CodeRead | null>(null);
-  const [antiCode, setAntiCode] = useState<CodeRead | null>(null);
+  const [opposingCode, setopposingCode] = useState<CodeRead | null>(null);
   const [accept, setAccept] = useState<AnnoscalingResult[]>([]);
   const [reject, setReject] = useState<AnnoscalingResult[]>([]);
 
   // global server state (react-query)
-  const suggestions = AnnoscalingHooks.useAnnotationSuggestions(projectId, code?.id, antiCode?.id);
+  const suggestions = AnnoscalingHooks.useAnnotationSuggestions(projectId, code?.id, opposingCode?.id);
   const confirmHook = AnnoscalingHooks.useConfirmSuggestions();
 
   const handleSubmit = () => {
@@ -42,7 +42,7 @@ function AnnotationScaling() {
       {
         requestBody: {
           code_id: code!.id,
-          reject_code_id: antiCode!.id,
+          reject_code_id: opposingCode!.id,
           project_id: projectId,
           accept: accept.map((r) => ({ sdoc_id: r.sdoc_id, sentence: r.sentence_id })),
           reject: reject.map((r) => ({ sdoc_id: r.sdoc_id, sentence: r.sentence_id })),
@@ -102,15 +102,15 @@ function AnnotationScaling() {
             sx={{ width: 300 }}
             renderInput={(params) => (
               <Stack direction="row" alignItems="center">
-                <SquareIcon style={{ color: antiCode?.color ?? "white" }}></SquareIcon>
-                <TextField autoFocus {...params} label="Anti-Code"></TextField>
+                <SquareIcon style={{ color: opposingCode?.color ?? "white" }}></SquareIcon>
+                <TextField autoFocus {...params} label="Opposing-Code"></TextField>
               </Stack>
             )}
             autoHighlight
             selectOnFocus
             clearOnBlur
             handleHomeEndKeys
-            onChange={(_event, value, _reason) => setAntiCode(value)}
+            onChange={(_event, value, _reason) => setopposingCode(value)}
           />
           <Button
             variant="contained"
