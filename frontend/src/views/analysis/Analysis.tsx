@@ -51,6 +51,13 @@ function Analysis() {
           color={"#77dd77"}
         />
 
+        <AnalysisCard
+          to={"annotation-scaling"}
+          title={"Annotation Scaling"}
+          description={"Semi-automatically scale annotations"}
+          color={"#77dd77"}
+        />
+
         <AnalysisCard to={"table"} title={"Table"} description={"Analyse with tables."} color={"#77dd77"} />
       </Box>
     </NoSidebarLayout>
