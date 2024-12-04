@@ -395,6 +395,8 @@ const DocumentSentence = ({
     return { codeId2CodeMap, sentAnnoId2sentAnnoMap };
   }, [sentenceAnnotations]);
 
+  console.log("codeId2CodeMap", codeId2CodeMap);
+
   const highlightedColor = useMemo(() => {
     if (isSelected) {
       return selectedCode?.color || "rgb(255, 0, 0)";
@@ -451,10 +453,10 @@ const DocumentSentence = ({
                 padding: "0.18em 0.4em",
                 borderRadius: "0.8em 0.3em",
                 background: "transparent",
-                backgroundImage: `linear-gradient(to right, ${ColorUtils.rgbStringToRGBA(
+                backgroundImage: `linear-gradient(to right, ${ColorUtils.colorStringToRGBA(
                   highlightedColor,
                   1,
-                )}, ${ColorUtils.rgbStringToRGBA(highlightedColor, 0.7)} 4%, ${ColorUtils.rgbStringToRGBA(
+                )}, ${ColorUtils.colorStringToRGBA(highlightedColor, 0.7)} 4%, ${ColorUtils.colorStringToRGBA(
                   highlightedColor,
                   0.3,
                 )})`,

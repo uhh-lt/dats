@@ -670,10 +670,10 @@ const DocumentSentencePart = ({
                 padding: "0.18em 0.4em",
                 borderRadius: "0.8em 0.3em",
                 background: "transparent",
-                backgroundImage: `linear-gradient(to right, ${ColorUtils.rgbStringToRGBA(
+                backgroundImage: `linear-gradient(to right, ${ColorUtils.colorStringToRGBA(
                   highlightedColor,
                   1,
-                )}, ${ColorUtils.rgbStringToRGBA(highlightedColor, 0.7)} 4%, ${ColorUtils.rgbStringToRGBA(
+                )}, ${ColorUtils.colorStringToRGBA(highlightedColor, 0.7)} 4%, ${ColorUtils.colorStringToRGBA(
                   highlightedColor,
                   0.3,
                 )})`,
