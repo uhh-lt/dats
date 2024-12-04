@@ -825,9 +825,9 @@ const AnnotationApplyPart = ({
                     </Box>
                   );
                 }
-                return <div />;
+                return <div key={key} />;
               }
-              return <div />;
+              return <div key={key} />;
             })
           : Array.from({ length: annotatorLeft.numPositions + 1 }, (_, i) => i).map((annoPosition) => {
               const rightAnnotations = annotatorRight.annotatorResult?.sentence_annotations[sentenceId] || [];
@@ -867,9 +867,9 @@ const AnnotationApplyPart = ({
                     </Box>
                   );
                 }
-                return <div />;
+                return <div key={key} />;
               }
-              return <div />;
+              return <div key={key} />;
             })}
       </div>
     </>
