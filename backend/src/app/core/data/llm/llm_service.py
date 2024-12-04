@@ -4,6 +4,7 @@ from typing import Callable, Dict, List, Type, Union
 from loguru import logger
 from sqlalchemy.orm import Session
 
+from app.core.data.crud.sentence_annotation import crud_sentence_anno
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.user import SYSTEM_USER_ID
@@ -23,6 +24,12 @@ from app.core.data.dto.llm_job import (
     LLMPromptTemplates,
     MetadataExtractionLLMJobResult,
     MetadataExtractionResult,
+    SentenceAnnotationLLMJobResult,
+    SentenceAnnotationResult,
+)
+from app.core.data.dto.sentence_annotation import (
+    SentenceAnnotationCreate,
+    SentenceAnnotationReadResolved,
 )
 from app.core.data.dto.source_document_metadata import (
     SourceDocumentMetadataReadResolved,
@@ -32,6 +39,9 @@ from app.core.data.llm.ollama_service import OllamaService
 from app.core.data.llm.prompts.annotation_prompt_builder import AnnotationPromptBuilder
 from app.core.data.llm.prompts.metadata_prompt_builder import MetadataPromptBuilder
 from app.core.data.llm.prompts.prompt_builder import PromptBuilder
+from app.core.data.llm.prompts.sentence_annotation_prompt_builder import (
+    SentenceAnnotationPromptBuilder,
+)
 from app.core.data.llm.prompts.tagging_prompt_builder import TaggingPromptBuilder
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.redis_service import RedisService
@@ -71,6 +81,7 @@ class LLMService(metaclass=SingletonMeta):
             LLMJobType.DOCUMENT_TAGGING: cls._llm_document_tagging,
             LLMJobType.METADATA_EXTRACTION: cls._llm_metadata_extraction,
             LLMJobType.ANNOTATION: cls._llm_annotation,
+            LLMJobType.SENTENCE_ANNOTATION: cls._llm_sentence_annotation,
         }
 
         # map from job_type to promt builder
@@ -78,6 +89,7 @@ class LLMService(metaclass=SingletonMeta):
             LLMJobType.DOCUMENT_TAGGING: TaggingPromptBuilder,
             LLMJobType.METADATA_EXTRACTION: MetadataPromptBuilder,
             LLMJobType.ANNOTATION: AnnotationPromptBuilder,
+            LLMJobType.SENTENCE_ANNOTATION: SentenceAnnotationPromptBuilder,
         }
 
         return super(LLMService, cls).__new__(cls)
@@ -548,5 +560,190 @@ class LLMService(metaclass=SingletonMeta):
             llm_job_type=LLMJobType.ANNOTATION,
             specific_llm_job_result=AnnotationLLMJobResult(
                 llm_job_type=LLMJobType.ANNOTATION, results=result
+            ),
+        )
+
+    def _llm_sentence_annotation(
+        self,
+        db: Session,
+        llm_job_id: str,
+        prompts: List[LLMPromptTemplates],
+        project_id: int,
+        sdoc_ids: List[int],
+        code_ids: List[int],
+    ) -> LLMJobResult:
+        logger.info(f"Starting LLMJob - Sentence Annotation, num docs: {len(sdoc_ids)}")
+
+        prompt_builder = SentenceAnnotationPromptBuilder(db=db, project_id=project_id)
+        project_codes = prompt_builder.codeids2code_dict
+
+        # build prompt dict (to validate and access prompts by language and system / user)
+        prompt_dict = self.construct_prompt_dict(
+            prompts=prompts, prompt_builder=prompt_builder
+        )
+
+        # read sdocs
+        sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=sdoc_ids)
+
+        # automatic annotation
+        annotation_id = 0
+        result: List[SentenceAnnotationResult] = []
+        for idx, (sdoc_id, sdoc_data) in enumerate(zip(sdoc_ids, sdoc_datas)):
+            if sdoc_data is None:
+                raise ValueError(
+                    f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
+                )
+
+            # get language
+            language = crud_sdoc_meta.read_by_sdoc_and_key(
+                db=db, sdoc_id=sdoc_data.id, key="language"
+            ).str_value
+            logger.info(f"Processing SDOC id={sdoc_data.id}, lang={language}")
+            if language is None or language not in prompt_builder.supported_languages:
+                result.append(
+                    SentenceAnnotationResult(
+                        sdoc_id=sdoc_data.id, suggested_annotations=[]
+                    )
+                )
+                self._update_llm_job(
+                    llm_job_id=llm_job_id,
+                    update=LLMJobUpdate(num_steps_finished=idx + 1),
+                )
+                continue
+
+            # construct prompts
+            system_prompt = prompt_builder.build_system_prompt(
+                system_prompt_template=prompt_dict[language]["system_prompt"]
+            )
+            # we need to provide documents entence by sentence for sentence annotation
+            document_sentences = "\n".join(
+                [
+                    f"{idx+1}: {sentence}"
+                    for idx, sentence in enumerate(sdoc_data.sentences)
+                ]
+            )
+            num_sentences = len(sdoc_data.sentences)
+            user_prompt = prompt_builder.build_user_prompt(
+                user_prompt_template=prompt_dict[language]["user_prompt"],
+                document=document_sentences,
+            )
+
+            # prompt the model
+            response = self.ollamas.chat(
+                system_prompt=system_prompt, user_prompt=user_prompt
+            )
+            logger.info(f"Got chat response! Response={response}")
+
+            # parse the response
+            parsed_response = prompt_builder.parse_response(
+                language=language, response=response
+            )
+
+            # validate the response
+            # code ids should be valid and sentence ids should be valid
+            parsed_items = [
+                (sentence_id - 1, code_id)  # LLM starts from 1, we start from 0
+                for sentence_id, code_id in parsed_response.items()
+                if code_id in project_codes
+                and sentence_id > 0
+                and sentence_id <= num_sentences
+            ]
+
+            # create the suggested annotation
+            suggested_annotations: List[SentenceAnnotationReadResolved] = []
+            start = parsed_items[0][0]
+            previous_sentence_id = parsed_items[0][0]
+            previous_code_id = parsed_items[0][1]
+
+            if len(parsed_items) > 1:
+                for sentence_id, code_id in parsed_items[1:]:
+                    # create annotation if sentence ids mismatch
+                    if previous_sentence_id != sentence_id - 1:
+                        suggested_annotations.append(
+                            SentenceAnnotationReadResolved(
+                                id=annotation_id,
+                                sdoc_id=sdoc_data.id,
+                                user_id=SYSTEM_USER_ID,
+                                sentence_id_start=start,
+                                sentence_id_end=previous_sentence_id,
+                                code=CodeRead.model_validate(
+                                    project_codes.get(previous_code_id)
+                                ),
+                                created=datetime.now(),
+                                updated=datetime.now(),
+                            )
+                        )
+                        annotation_id += 1
+                        start = sentence_id
+
+                    # create annotation if code ids mismatch
+                    if previous_code_id != code_id:
+                        suggested_annotations.append(
+                            SentenceAnnotationReadResolved(
+                                id=annotation_id,
+                                sdoc_id=sdoc_data.id,
+                                user_id=SYSTEM_USER_ID,
+                                sentence_id_start=start,
+                                sentence_id_end=previous_sentence_id,
+                                code=CodeRead.model_validate(
+                                    project_codes.get(previous_code_id)
+                                ),
+                                created=datetime.now(),
+                                updated=datetime.now(),
+                            )
+                        )
+                        annotation_id += 1
+                        start = sentence_id
+
+                    previous_sentence_id = sentence_id
+                    previous_code_id = code_id
+
+            # create the last annotation
+            suggested_annotations.append(
+                SentenceAnnotationReadResolved(
+                    id=annotation_id,
+                    sdoc_id=sdoc_data.id,
+                    user_id=SYSTEM_USER_ID,
+                    sentence_id_start=start,
+                    sentence_id_end=previous_sentence_id,
+                    code=CodeRead.model_validate(project_codes.get(previous_code_id)),
+                    created=datetime.now(),
+                    updated=datetime.now(),
+                )
+            )
+            logger.info(
+                f"Parsed the response! suggested sentence annotations={suggested_annotations}"
+            )
+
+            result.append(
+                SentenceAnnotationResult(
+                    sdoc_id=sdoc_data.id,
+                    suggested_annotations=suggested_annotations,
+                )
+            )
+            self._update_llm_job(
+                llm_job_id=llm_job_id,
+                update=LLMJobUpdate(num_steps_finished=idx + 1),
+            )
+
+            # create the suggested annotations
+            crud_sentence_anno.create_bulk(
+                db=db,
+                user_id=SYSTEM_USER_ID,
+                create_dtos=[
+                    SentenceAnnotationCreate(
+                        sdoc_id=sdoc_data.id,
+                        sentence_id_start=sa.sentence_id_start,
+                        sentence_id_end=sa.sentence_id_end,
+                        code_id=sa.code.id,
+                    )
+                    for sa in suggested_annotations
+                ],
+            )
+
+        return LLMJobResult(
+            llm_job_type=LLMJobType.SENTENCE_ANNOTATION,
+            specific_llm_job_result=SentenceAnnotationLLMJobResult(
+                llm_job_type=LLMJobType.SENTENCE_ANNOTATION, results=result
             ),
         )

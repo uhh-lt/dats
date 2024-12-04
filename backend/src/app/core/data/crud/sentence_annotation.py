@@ -42,6 +42,40 @@ class CRUDSentenceAnnotation(
 
         return db_obj
 
+    def create_bulk(
+        self, db: Session, *, user_id: int, create_dtos: List[SentenceAnnotationCreate]
+    ) -> List[SentenceAnnotationORM]:
+        # group by user and sdoc_id
+        # identify codes
+        annotations_by_user_sdoc = {
+            (user_id, create_dto.sdoc_id): [] for create_dto in create_dtos
+        }
+        for create_dto in create_dtos:
+            annotations_by_user_sdoc[(user_id, create_dto.sdoc_id)].append(create_dto)
+
+        # find or create annotation documents for each user and sdoc_id
+        adoc_id_by_user_sdoc = {}
+        for user_id, sdoc_id in annotations_by_user_sdoc.keys():
+            adoc_id_by_user_sdoc[(user_id, sdoc_id)] = crud_adoc.exists_or_create(
+                db=db, user_id=user_id, sdoc_id=sdoc_id
+            ).id
+
+        # create the annotations
+        return self.create_multi(
+            db=db,
+            create_dtos=[
+                SentenceAnnotationCreateIntern(
+                    sentence_id_end=create_dto.sentence_id_end,
+                    sentence_id_start=create_dto.sentence_id_start,
+                    code_id=create_dto.code_id,
+                    annotation_document_id=adoc_id_by_user_sdoc[
+                        (user_id, create_dto.sdoc_id)
+                    ],
+                )
+                for create_dto in create_dtos
+            ],
+        )
+
     def read_by_user_and_sdoc(
         self,
         db: Session,

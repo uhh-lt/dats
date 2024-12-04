@@ -6,6 +6,9 @@ from pydantic import BaseModel, Field
 
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.dto_base import UpdateDTOBase
+from app.core.data.dto.sentence_annotation import (
+    SentenceAnnotationReadResolved,
+)
 from app.core.data.dto.source_document_metadata import (
     SourceDocumentMetadataReadResolved,
 )
@@ -16,6 +19,7 @@ class LLMJobType(str, Enum):
     DOCUMENT_TAGGING = "DOCUMENT_TAGGING"
     METADATA_EXTRACTION = "METADATA_EXTRACTION"
     ANNOTATION = "ANNOTATION"
+    SENTENCE_ANNOTATION = "SENTENCE_ANNOTATION"
 
 
 # Prompt template
@@ -57,6 +61,13 @@ class AnnotationLLMJobParams(DocumentBasedLLMJobParams):
     )
 
 
+class SentenceAnnotationLLMJobParams(DocumentBasedLLMJobParams):
+    llm_job_type: Literal[LLMJobType.SENTENCE_ANNOTATION]
+    code_ids: List[int] = Field(
+        description="IDs of the codes to use for the sentence annotation"
+    )
+
+
 class LLMJobParameters(BaseModel):
     llm_job_type: LLMJobType = Field(description="The type of the LLMJob (what to llm)")
     project_id: int = Field(description="The ID of the Project to analyse")
@@ -67,6 +78,7 @@ class LLMJobParameters(BaseModel):
         DocumentTaggingLLMJobParams,
         MetadataExtractionLLMJobParams,
         AnnotationLLMJobParams,
+        SentenceAnnotationLLMJobParams,
     ] = Field(
         description="Specific parameters for the LLMJob w.r.t it's type",
         discriminator="llm_job_type",
@@ -121,12 +133,25 @@ class AnnotationLLMJobResult(BaseModel):
     results: List[AnnotationResult]
 
 
+class SentenceAnnotationResult(BaseModel):
+    sdoc_id: int = Field(description="ID of the source document")
+    suggested_annotations: List[SentenceAnnotationReadResolved] = Field(
+        description="Suggested annotations"
+    )
+
+
+class SentenceAnnotationLLMJobResult(BaseModel):
+    llm_job_type: Literal[LLMJobType.SENTENCE_ANNOTATION]
+    results: List[SentenceAnnotationResult]
+
+
 class LLMJobResult(BaseModel):
     llm_job_type: LLMJobType = Field(description="The type of the LLMJob (what to llm)")
     specific_llm_job_result: Union[
         DocumentTaggingLLMJobResult,
         MetadataExtractionLLMJobResult,
         AnnotationLLMJobResult,
+        SentenceAnnotationLLMJobResult,
     ] = Field(
         description="Specific result for the LLMJob w.r.t it's type",
         discriminator="llm_job_type",
