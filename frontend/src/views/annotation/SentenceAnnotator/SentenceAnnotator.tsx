@@ -395,8 +395,6 @@ const DocumentSentence = ({
     return { codeId2CodeMap, sentAnnoId2sentAnnoMap };
   }, [sentenceAnnotations]);
 
-  console.log("codeId2CodeMap", codeId2CodeMap);
-
   const highlightedColor = useMemo(() => {
     if (isSelected) {
       return selectedCode?.color || "rgb(255, 0, 0)";
