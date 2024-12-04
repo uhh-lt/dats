@@ -7938,7 +7938,8 @@
             "oneOf": [
               { "$ref": "#/components/schemas/DocumentTaggingLLMJobParams" },
               { "$ref": "#/components/schemas/MetadataExtractionLLMJobParams" },
-              { "$ref": "#/components/schemas/AnnotationLLMJobParams" }
+              { "$ref": "#/components/schemas/AnnotationLLMJobParams" },
+              { "$ref": "#/components/schemas/SentenceAnnotationLLMJobParams" }
             ],
             "title": "Specific Llm Job Parameters",
             "description": "Specific parameters for the LLMJob w.r.t it's type",
@@ -7947,7 +7948,8 @@
               "mapping": {
                 "ANNOTATION": "#/components/schemas/AnnotationLLMJobParams",
                 "DOCUMENT_TAGGING": "#/components/schemas/DocumentTaggingLLMJobParams",
-                "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionLLMJobParams"
+                "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionLLMJobParams",
+                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationLLMJobParams"
               }
             }
           }
@@ -8005,7 +8007,8 @@
             "oneOf": [
               { "$ref": "#/components/schemas/DocumentTaggingLLMJobResult" },
               { "$ref": "#/components/schemas/MetadataExtractionLLMJobResult" },
-              { "$ref": "#/components/schemas/AnnotationLLMJobResult" }
+              { "$ref": "#/components/schemas/AnnotationLLMJobResult" },
+              { "$ref": "#/components/schemas/SentenceAnnotationLLMJobResult" }
             ],
             "title": "Specific Llm Job Result",
             "description": "Specific result for the LLMJob w.r.t it's type",
@@ -8014,7 +8017,8 @@
               "mapping": {
                 "ANNOTATION": "#/components/schemas/AnnotationLLMJobResult",
                 "DOCUMENT_TAGGING": "#/components/schemas/DocumentTaggingLLMJobResult",
-                "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionLLMJobResult"
+                "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionLLMJobResult",
+                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationLLMJobResult"
               }
             }
           }
@@ -8025,7 +8029,7 @@
       },
       "LLMJobType": {
         "type": "string",
-        "enum": ["DOCUMENT_TAGGING", "METADATA_EXTRACTION", "ANNOTATION"],
+        "enum": ["DOCUMENT_TAGGING", "METADATA_EXTRACTION", "ANNOTATION", "SENTENCE_ANNOTATION"],
         "title": "LLMJobType"
       },
       "LLMPromptTemplates": {
@@ -8559,6 +8563,39 @@
         "required": ["sentence_id_start", "sentence_id_end", "code_id", "sdoc_id"],
         "title": "SentenceAnnotationCreate"
       },
+      "SentenceAnnotationLLMJobParams": {
+        "properties": {
+          "llm_job_type": { "const": "SENTENCE_ANNOTATION", "title": "Llm Job Type" },
+          "sdoc_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sdoc Ids",
+            "description": "IDs of the source documents to analyse"
+          },
+          "code_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Code Ids",
+            "description": "IDs of the codes to use for the sentence annotation"
+          }
+        },
+        "type": "object",
+        "required": ["llm_job_type", "sdoc_ids", "code_ids"],
+        "title": "SentenceAnnotationLLMJobParams"
+      },
+      "SentenceAnnotationLLMJobResult": {
+        "properties": {
+          "llm_job_type": { "const": "SENTENCE_ANNOTATION", "title": "Llm Job Type" },
+          "results": {
+            "items": { "$ref": "#/components/schemas/SentenceAnnotationResult" },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": ["llm_job_type", "results"],
+        "title": "SentenceAnnotationLLMJobResult"
+      },
       "SentenceAnnotationRead": {
         "properties": {
           "sentence_id_start": {
@@ -8648,6 +8685,20 @@
         "type": "object",
         "required": ["sentence_id_start", "sentence_id_end", "id", "code", "user_id", "sdoc_id", "created", "updated"],
         "title": "SentenceAnnotationReadResolved"
+      },
+      "SentenceAnnotationResult": {
+        "properties": {
+          "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
+          "suggested_annotations": {
+            "items": { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" },
+            "type": "array",
+            "title": "Suggested Annotations",
+            "description": "Suggested annotations"
+          }
+        },
+        "type": "object",
+        "required": ["sdoc_id", "suggested_annotations"],
+        "title": "SentenceAnnotationResult"
       },
       "SentenceAnnotationUpdate": {
         "properties": {

@@ -6,6 +6,7 @@ import type { AnnotationLLMJobResult } from "./AnnotationLLMJobResult";
 import type { DocumentTaggingLLMJobResult } from "./DocumentTaggingLLMJobResult";
 import type { LLMJobType } from "./LLMJobType";
 import type { MetadataExtractionLLMJobResult } from "./MetadataExtractionLLMJobResult";
+import type { SentenceAnnotationLLMJobResult } from "./SentenceAnnotationLLMJobResult";
 export type LLMJobResult = {
   /**
    * The type of the LLMJob (what to llm)
@@ -14,5 +15,9 @@ export type LLMJobResult = {
   /**
    * Specific result for the LLMJob w.r.t it's type
    */
-  specific_llm_job_result: DocumentTaggingLLMJobResult | MetadataExtractionLLMJobResult | AnnotationLLMJobResult;
+  specific_llm_job_result:
+    | DocumentTaggingLLMJobResult
+    | MetadataExtractionLLMJobResult
+    | AnnotationLLMJobResult
+    | SentenceAnnotationLLMJobResult;
 };

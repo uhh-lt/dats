@@ -7,6 +7,7 @@ import type { DocumentTaggingLLMJobParams } from "./DocumentTaggingLLMJobParams"
 import type { LLMJobType } from "./LLMJobType";
 import type { LLMPromptTemplates } from "./LLMPromptTemplates";
 import type { MetadataExtractionLLMJobParams } from "./MetadataExtractionLLMJobParams";
+import type { SentenceAnnotationLLMJobParams } from "./SentenceAnnotationLLMJobParams";
 export type LLMJobParameters = {
   /**
    * The type of the LLMJob (what to llm)
@@ -23,5 +24,9 @@ export type LLMJobParameters = {
   /**
    * Specific parameters for the LLMJob w.r.t it's type
    */
-  specific_llm_job_parameters: DocumentTaggingLLMJobParams | MetadataExtractionLLMJobParams | AnnotationLLMJobParams;
+  specific_llm_job_parameters:
+    | DocumentTaggingLLMJobParams
+    | MetadataExtractionLLMJobParams
+    | AnnotationLLMJobParams
+    | SentenceAnnotationLLMJobParams;
 };
