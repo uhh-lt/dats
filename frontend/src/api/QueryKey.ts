@@ -136,6 +136,8 @@ export const QueryKey = {
   ANALYSIS_CODE_OCCURRENCES: "analysisCodeOccurrences",
   ANALYSIS_ANNOTATION_OCCURRENCES: "analysisAnnotationOccurrences",
 
+  ANNOSCALING_SUGGEST: "annoscalingSuggest",
+
   // preprocessing status of the project (by project id)
   PREPRO_PROJECT_STATUS: "preproProjectStatus",
 

@@ -9,6 +9,7 @@ import Login from "../views/Login.tsx";
 import NotFound from "../views/NotFound.tsx";
 import Analysis from "../views/analysis/Analysis.tsx";
 import AnnotatedSegments from "../views/analysis/AnnotatedSegments/AnnotatedSegments.tsx";
+import AnnotationScaling from "../views/analysis/AnnotationScaling/AnnotationScaling.tsx";
 import CodeFrequencyAnalysis from "../views/analysis/CodeFrequency/CodeFrequencyAnalysis.tsx";
 import CotaDashboard from "../views/analysis/ConceptsOverTime/CotaDashboard.tsx";
 import CotaView from "../views/analysis/ConceptsOverTime/CotaView.tsx";
@@ -165,7 +166,10 @@ const router = createBrowserRouter([
         path: "/project/:projectId/analysis/concepts-over-time-analysis/:cotaId",
         element: <CotaView />,
       },
-
+      {
+        path: "/project/:projectId/analysis/annotation-scaling",
+        element: <AnnotationScaling />,
+      },
       {
         path: "/project/:projectId/whiteboard",
         element: <WhiteboardDashboard />,
