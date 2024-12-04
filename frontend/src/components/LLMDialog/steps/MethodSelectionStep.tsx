@@ -44,6 +44,11 @@ function MethodSelectionStep() {
             headline="Annotation"
             description="I will annotate your documents!"
           />
+          <MethodButton
+            onClick={selectMethod(LLMJobType.SENTENCE_ANNOTATION)}
+            headline="Sentence Annotation"
+            description="I will annotate your documents!"
+          />
         </Stack>
       </DialogContent>
       <DialogActions>

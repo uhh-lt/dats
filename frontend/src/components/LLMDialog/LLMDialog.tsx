@@ -10,6 +10,7 @@ import MetadataExtractionResultStep from "./steps/MetadataExtractionResultStep/M
 import MethodSelectionStep from "./steps/MethodSelectionStep.tsx";
 import ProjectMetadataSelectionStep from "./steps/ProjectMetadataSelectionStep.tsx";
 import PromptEditorStep from "./steps/PromptEditorStep.tsx";
+import SentenceAnnotationResultStep from "./steps/SentenceAnnotationResultStep/SentenceAnnotationResultStep.tsx";
 import StatusStep from "./steps/StatusStep.tsx";
 
 export interface LLMDialogProps extends ButtonProps {
@@ -20,12 +21,14 @@ const title: Record<LLMJobType, string> = {
   [LLMJobType.DOCUMENT_TAGGING]: "Document Tagging",
   [LLMJobType.METADATA_EXTRACTION]: "Metadata Extraction",
   [LLMJobType.ANNOTATION]: "Annotation",
+  [LLMJobType.SENTENCE_ANNOTATION]: "Sentence Annotation",
 };
 
 const steps: Record<LLMJobType, string[]> = {
   [LLMJobType.DOCUMENT_TAGGING]: ["Select method", "Select tags", "Edit prompts", "Wait", "View results"],
   [LLMJobType.METADATA_EXTRACTION]: ["Select method", "Select metadata", "Edit prompts", "Wait", "View results"],
   [LLMJobType.ANNOTATION]: ["Select method", "Select codes", "Edit prompts", "Wait", "View results"],
+  [LLMJobType.SENTENCE_ANNOTATION]: ["Select method", "Select codes", "Edit prompts", "Wait", "View results"],
 };
 
 function LLMDialog({ projectId }: LLMDialogProps) {
@@ -41,26 +44,31 @@ function LLMDialog({ projectId }: LLMDialogProps) {
         [LLMJobType.DOCUMENT_TAGGING]: <MethodSelectionStep />,
         [LLMJobType.METADATA_EXTRACTION]: <MethodSelectionStep />,
         [LLMJobType.ANNOTATION]: <MethodSelectionStep />,
+        [LLMJobType.SENTENCE_ANNOTATION]: <MethodSelectionStep />,
       },
       1: {
         [LLMJobType.DOCUMENT_TAGGING]: <DocumentTagSelectionStep projectId={projectId} />,
         [LLMJobType.METADATA_EXTRACTION]: <ProjectMetadataSelectionStep projectId={projectId} />,
-        [LLMJobType.ANNOTATION]: <CodeSelectionStep projectId={projectId} />,
+        [LLMJobType.ANNOTATION]: <CodeSelectionStep projectId={projectId} isSentenceAnnotation={false} />,
+        [LLMJobType.SENTENCE_ANNOTATION]: <CodeSelectionStep projectId={projectId} isSentenceAnnotation={true} />,
       },
       2: {
         [LLMJobType.DOCUMENT_TAGGING]: <PromptEditorStep projectId={projectId} />,
         [LLMJobType.METADATA_EXTRACTION]: <PromptEditorStep projectId={projectId} />,
         [LLMJobType.ANNOTATION]: <PromptEditorStep projectId={projectId} />,
+        [LLMJobType.SENTENCE_ANNOTATION]: <PromptEditorStep projectId={projectId} />,
       },
       3: {
         [LLMJobType.DOCUMENT_TAGGING]: <StatusStep />,
         [LLMJobType.METADATA_EXTRACTION]: <StatusStep />,
         [LLMJobType.ANNOTATION]: <StatusStep />,
+        [LLMJobType.SENTENCE_ANNOTATION]: <StatusStep />,
       },
       4: {
         [LLMJobType.DOCUMENT_TAGGING]: <DocumentTagResultStep projectId={projectId} />,
         [LLMJobType.METADATA_EXTRACTION]: <MetadataExtractionResultStep />,
         [LLMJobType.ANNOTATION]: <AnnotationResultStep />,
+        [LLMJobType.SENTENCE_ANNOTATION]: <SentenceAnnotationResultStep />,
       },
     };
   }, [projectId]);

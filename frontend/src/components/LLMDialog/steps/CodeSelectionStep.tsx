@@ -11,7 +11,7 @@ import CodeTable from "../../Code/CodeTable.tsx";
 import { CRUDDialogActions } from "../../dialogSlice.ts";
 import LLMUtterance from "./LLMUtterance.tsx";
 
-function CodeSelectionStep({ projectId }: { projectId: number }) {
+function CodeSelectionStep({ projectId, isSentenceAnnotation }: { projectId: number; isSentenceAnnotation: boolean }) {
   // local state
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
 
@@ -22,27 +22,51 @@ function CodeSelectionStep({ projectId }: { projectId: number }) {
   // initiate next step (get the generated prompts)
   const createPromptTemplatesMutation = LLMHooks.useCreatePromptTemplates();
   const handleNext = (codes: CodeRead[]) => () => {
-    createPromptTemplatesMutation.mutate(
-      {
-        requestBody: {
-          llm_job_type: LLMJobType.ANNOTATION,
-          project_id: projectId,
-          prompts: [],
-          specific_llm_job_parameters: {
-            llm_job_type: LLMJobType.ANNOTATION,
-            code_ids: codes.map((code) => code.id),
-            sdoc_ids: selectedDocuments,
+    if (isSentenceAnnotation) {
+      createPromptTemplatesMutation.mutate(
+        {
+          requestBody: {
+            llm_job_type: LLMJobType.SENTENCE_ANNOTATION,
+            project_id: projectId,
+            prompts: [],
+            specific_llm_job_parameters: {
+              llm_job_type: LLMJobType.SENTENCE_ANNOTATION,
+              code_ids: codes.map((code) => code.id),
+              sdoc_ids: selectedDocuments,
+            },
           },
         },
-      },
-      {
-        onSuccess(data) {
-          dispatch(
-            CRUDDialogActions.llmDialogGoToPromptEditor({ prompts: data, tags: [], metadata: [], codes: codes }),
-          );
+        {
+          onSuccess(data) {
+            dispatch(
+              CRUDDialogActions.llmDialogGoToPromptEditor({ prompts: data, tags: [], metadata: [], codes: codes }),
+            );
+          },
         },
-      },
-    );
+      );
+    } else {
+      createPromptTemplatesMutation.mutate(
+        {
+          requestBody: {
+            llm_job_type: LLMJobType.ANNOTATION,
+            project_id: projectId,
+            prompts: [],
+            specific_llm_job_parameters: {
+              llm_job_type: LLMJobType.ANNOTATION,
+              code_ids: codes.map((code) => code.id),
+              sdoc_ids: selectedDocuments,
+            },
+          },
+        },
+        {
+          onSuccess(data) {
+            dispatch(
+              CRUDDialogActions.llmDialogGoToPromptEditor({ prompts: data, tags: [], metadata: [], codes: codes }),
+            );
+          },
+        },
+      );
+    }
   };
 
   return (
