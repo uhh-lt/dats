@@ -330,7 +330,7 @@ def build_image_pipeline(
 
 
 @lru_cache(maxsize=1)
-def build_audio_pipeline(foo: str = "bar") -> PreprocessingPipeline:
+def build_audio_pipeline(is_init: bool = True) -> PreprocessingPipeline:
     # we need to import the steps here to avoid loading models at startup
     # in the api worker!
     from app.preprocessing.pipeline.steps.audio.convert_to_pcm import convert_to_pcm
@@ -481,7 +481,9 @@ def build_audio_pipeline(foo: str = "bar") -> PreprocessingPipeline:
 
 
 @lru_cache(maxsize=1)
-def build_video_pipeline(foo: str = "bar") -> PreprocessingPipeline:
+def build_video_pipeline(
+    is_init: bool = True,
+) -> PreprocessingPipeline:
     from app.preprocessing.pipeline.steps.audio.convert_to_pcm import convert_to_pcm
     from app.preprocessing.pipeline.steps.audio.create_ffmpeg_probe_audio_metadata import (
         create_ffmpeg_probe_audio_metadata,

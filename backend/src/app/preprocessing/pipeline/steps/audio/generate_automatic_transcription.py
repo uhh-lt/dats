@@ -19,30 +19,37 @@ rms = RayModelService()
 
 def generate_automatic_transcription(cargo: PipelineCargo) -> PipelineCargo:
     ppad: PreProAudioDoc = cargo.data["ppad"]
-    logger.debug(f"Generating automatic transcription for {ppad.filename} ...")
-    if ppad.uncompressed_audio_filepath is None:
-        raise ValueError(
-            f"Uncompressed audio filepath for {ppad.filename} is None. "
-            "Please run the 'convert_to_pcm' step first!"
+    if "word_level_transcriptions" not in ppad.metadata:
+        logger.debug(f"Generating automatic transcription for {ppad.filename} ...")
+        if ppad.uncompressed_audio_filepath is None:
+            raise ValueError(
+                f"Uncompressed audio filepath for {ppad.filename} is None. "
+                "Please run the 'convert_to_pcm' step first!"
+            )
+
+        # Create Whisper Input
+        whisper_input = WhisperFilePathInput(
+            uncompressed_audio_fp=os.path.basename(
+                str(ppad.uncompressed_audio_filepath)
+            ),
+            project_id=ppad.project_id,
+        )
+        transcription: WhisperTranscriptionOutput = rms.whisper_transcribe(
+            whisper_input
         )
 
-    # Create Whisper Input
-    whisper_input = WhisperFilePathInput(
-        uncompressed_audio_fp=os.path.basename(str(ppad.uncompressed_audio_filepath)),
-        project_id=ppad.project_id,
-    )
-    transcription: WhisperTranscriptionOutput = rms.whisper_transcribe(whisper_input)
+        # Create Wordlevel Transcriptions
+        for segment in transcription.segments:
+            for word in segment.words:
+                wlt = WordLevelTranscription(
+                    text=word.text,
+                    start_ms=word.start_ms,
+                    end_ms=word.end_ms,
+                )
+                ppad.word_level_transcriptions.append(wlt)
 
-    # Create Wordlevel Transcriptions
-    for segment in transcription.segments:
-        for word in segment.words:
-            wlt = WordLevelTranscription(
-                text=word.text,
-                start_ms=word.start_ms,
-                end_ms=word.end_ms,
-            )
-            ppad.word_level_transcriptions.append(wlt)
-
-    wlt = list(map(lambda wlt: wlt.model_dump(), ppad.word_level_transcriptions))
-    ppad.metadata["word_level_transcriptions"] = json.dumps(wlt)
+        wlt = list(map(lambda wlt: wlt.model_dump(), ppad.word_level_transcriptions))
+        ppad.metadata["word_level_transcriptions"] = json.dumps(wlt)
+    else:
+        logger.info("Import word level transcriptions")
     return cargo

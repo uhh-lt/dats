@@ -746,6 +746,7 @@ class ImportService(metaclass=SingletonMeta):
                         sdoc_name, mime_type
                     )
                 sdoc_doctype = get_doc_type(mime_type)
+                logger.info(f"Sdoc doctype {sdoc_doctype}")
                 assert sdoc_doctype, "Expected Doctype to be not None."
 
                 # move raw sdocs
@@ -875,8 +876,10 @@ class ImportService(metaclass=SingletonMeta):
 
             # 4. init import piplines
             from app.celery.background_jobs.tasks import (
+                execute_audio_preprocessing_pipeline_task,
                 execute_image_preprocessing_pipeline_task,
                 execute_text_preprocessing_pipeline_task,
+                execute_video_preprocessing_pipeline_task,
             )
 
             assert isinstance(
@@ -897,6 +900,27 @@ class ImportService(metaclass=SingletonMeta):
                 for cargo in cargos[DocType.image]
             ]
             tasks.extend(image_tasks)
+
+            # 6. init audio pipelines
+            assert isinstance(
+                execute_audio_preprocessing_pipeline_task, Task
+            ), "Not a Celery Task"
+            audio_tasks = [
+                execute_audio_preprocessing_pipeline_task.s(cargo, is_init=False)
+                for cargo in cargos[DocType.audio]
+            ]
+            tasks.extend(audio_tasks)
+
+            # 7. init video pipelines
+            assert isinstance(
+                execute_video_preprocessing_pipeline_task, Task
+            ), "Not a Celery Task"
+            video_tasks = [
+                execute_video_preprocessing_pipeline_task.s(cargo, is_init=False)
+                for cargo in cargos[DocType.video]
+            ]
+            tasks.extend(video_tasks)
+
             crud_prepro_job.update(
                 db=db,
                 uuid=ppj.id,

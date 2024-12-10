@@ -380,18 +380,24 @@ class PreprocessingService(metaclass=SingletonMeta):
             self._pipelines[DocType.image] = pipeline
         return self._pipelines[DocType.image]
 
-    def get_audio_pipeline(self) -> PreprocessingPipeline:
+    def get_audio_pipeline(
+        self,
+        is_init: bool = True,
+    ) -> PreprocessingPipeline:
         from app.preprocessing.pipeline import build_audio_pipeline
 
         if DocType.audio not in self._pipelines:
-            pipeline = build_audio_pipeline()
+            pipeline = build_audio_pipeline(is_init=is_init)
             self._pipelines[DocType.audio] = pipeline
         return self._pipelines[DocType.audio]
 
-    def get_video_pipeline(self) -> PreprocessingPipeline:
+    def get_video_pipeline(
+        self,
+        is_init: bool = True,
+    ) -> PreprocessingPipeline:
         from app.preprocessing.pipeline import build_video_pipeline
 
         if DocType.video not in self._pipelines:
-            pipeline = build_video_pipeline()
+            pipeline = build_video_pipeline(is_init=is_init)
             self._pipelines[DocType.video] = pipeline
         return self._pipelines[DocType.video]

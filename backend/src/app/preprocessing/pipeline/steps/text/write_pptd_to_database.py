@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.code import crud_code
-from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_link import crud_sdoc_link
@@ -30,6 +29,7 @@ from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.autospan import AutoSpan
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from app.preprocessing.pipeline.steps.common.persist_sdoc_data import persist_sdoc_data
+from app.preprocessing.pipeline.steps.common.persist_tags import persist_tags
 from app.util.color import get_next_color
 
 repo: RepoService = RepoService()
@@ -86,19 +86,6 @@ def _persist_sdoc_metadata(
             )
 
     crud_sdoc_meta.create_multi(db=db, create_dtos=metadata_create_dtos)
-
-
-def _persist_tags(
-    db: Session, sdoc_db_obj: SourceDocumentORM, pptd: PreProTextDoc
-) -> None:
-    logger.info(f"Persisting SourceDocument Tags for {pptd.filename}...")
-    tags = pptd.tags
-    if len(tags) > 0:
-        crud_document_tag.link_multiple_document_tags(
-            db=db,
-            sdoc_ids=[sdoc_db_obj.id],
-            tag_ids=tags,
-        )
 
 
 def _persist_sdoc_links(
@@ -209,7 +196,7 @@ def write_pptd_to_database(cargo: PipelineCargo) -> PipelineCargo:
             _persist_sdoc_metadata(db=db, sdoc_db_obj=sdoc_db_obj, pptd=pptd)
 
             # persist Tags
-            _persist_tags(db=db, sdoc_db_obj=sdoc_db_obj, pptd=pptd)
+            persist_tags(db=db, sdoc_db_obj=sdoc_db_obj, ppd=pptd)
 
             # persist SourceDocument Links
             _persist_sdoc_links(db=db, sdoc_db_obj=sdoc_db_obj, pptd=pptd)

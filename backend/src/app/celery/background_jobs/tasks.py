@@ -90,8 +90,11 @@ def execute_image_preprocessing_pipeline_task(
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
-def execute_audio_preprocessing_pipeline_task(cargo: PipelineCargo) -> None:
-    execute_audio_preprocessing_pipeline_(cargo=cargo)
+def execute_audio_preprocessing_pipeline_task(
+    cargo: PipelineCargo,
+    is_init: bool = True,
+) -> None:
+    execute_audio_preprocessing_pipeline_(cargo=cargo, is_init=is_init)
 
 
 @celery_worker.task(
@@ -99,8 +102,11 @@ def execute_audio_preprocessing_pipeline_task(cargo: PipelineCargo) -> None:
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
-def execute_video_preprocessing_pipeline_task(cargo: PipelineCargo) -> None:
-    execute_video_preprocessing_pipeline_(cargo=cargo)
+def execute_video_preprocessing_pipeline_task(
+    cargo: PipelineCargo,
+    is_init: bool = True,
+) -> None:
+    execute_video_preprocessing_pipeline_(cargo=cargo, is_init=is_init)
 
 
 @celery_worker.task(

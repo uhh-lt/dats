@@ -17,10 +17,11 @@ EXPECTED_METADATA = [
 
 def create_ffmpeg_probe_audio_metadata(cargo: PipelineCargo) -> PipelineCargo:
     ppad: PreProAudioDoc = cargo.data["ppad"]
+    ffmpeg_probe = None
     for metadata_key in EXPECTED_METADATA:
         if metadata_key not in ppad.metadata:
-            ffmpeg_probe = ffmpeg.probe(ppad.filepath)
-
+            if ffmpeg_probe is None:
+                ffmpeg_probe = ffmpeg.probe(ppad.filepath)
             for k, v in ffmpeg_probe["format"].items():
                 ppad.metadata[k] = v
             return cargo
