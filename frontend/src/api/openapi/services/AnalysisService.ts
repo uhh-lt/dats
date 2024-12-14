@@ -14,7 +14,6 @@ import type { CodeOccurrence } from "../models/CodeOccurrence";
 import type { ColumnInfo_AnnotatedImagesColumns_ } from "../models/ColumnInfo_AnnotatedImagesColumns_";
 import type { ColumnInfo_AnnotatedSegmentsColumns_ } from "../models/ColumnInfo_AnnotatedSegmentsColumns_";
 import type { ColumnInfo_WordFrequencyColumns_ } from "../models/ColumnInfo_WordFrequencyColumns_";
-import type { PointDTO } from "../models/PointDTO";
 import type { SampledSdocsResults } from "../models/SampledSdocsResults";
 import type { WordFrequencyResult } from "../models/WordFrequencyResult";
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -342,14 +341,20 @@ export class AnalysisService {
     });
   }
   /**
-   * Hello World!
-   * @returns PointDTO Successful Response
+   * Return top words + ollama response
+   * @returns any Successful Response
    * @throws ApiError
    */
-  public static dto(): CancelablePromise<Array<PointDTO>> {
+  public static returnTopWordsOllama({ topicId }: { topicId: number }): CancelablePromise<Array<Record<string, any>>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/analysis/random_walk_dto",
+      url: "/analysis/top_words_ollama",
+      query: {
+        topic_id: topicId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
     });
   }
 }

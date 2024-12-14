@@ -16,9 +16,8 @@ from app.core.analysis.annotated_segments import (
     find_annotated_segments_info,
 )
 from app.core.analysis.my_new_analysis_feature import (
-    PointDTO,
-    random_walk_DTO,
     top_words_data,
+    top_words_ollama,
     topic_distr_data,
 )
 from app.core.analysis.word_frequency import (
@@ -299,13 +298,14 @@ def return_top_words_data(
 
 
 @router.post(
-    "/random_walk_dto",
-    response_model=List[PointDTO],
-    summary="Hello World!",
+    "/top_words_ollama",
+    response_model=List[dict],
+    summary="Return top words + ollama response",
 )
-def dto(
+def return_top_words_ollama(
     *,
+    topic_id: int,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
-) -> List[PointDTO]:
-    return random_walk_DTO()
+) -> List[dict]:
+    return top_words_ollama(topic_id)
