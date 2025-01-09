@@ -73,11 +73,14 @@ FILETYPE_REGEX = [
     (r"project_\d+_tags.csv", "tags", True),
     (r"project_\d+_users.csv", "users", True),
     (r"user_\d+_logbook.md", "logbook", True),
+    (r"user_\d+_memo.csv", "memo", True),
     (r"\w+.csv", "sdoc_annotations", False),
+    (r"\w+.txt", "sdoc_transcript", False),
     (r"\w+.json", "sdoc_metadatas", False),
 ]
 
 SDOC_FILE_TYPES = ["sdoc", "sdoc_annotations", "sdoc_metadatas"]
+OPTIONAL_FILE_TYPES = ["sdoc_transcript"]
 
 
 class ImportJobPreparationError(Exception):
@@ -561,7 +564,7 @@ class ImportService(metaclass=SingletonMeta):
         for layer in sorted_dfs:
             for _, row in layer.iterrows():
                 color: Optional[str] = (
-                    str(row["color"]) if isinstance(row["colow"], str) else None
+                    str(row["color"]) if isinstance(row["color"], str) else None
                 )
                 description = row["description"]
                 tag_name = row["tag_name"]
@@ -982,8 +985,9 @@ class ImportService(metaclass=SingletonMeta):
         sdocs = {
             "sdoc_filename":{
                 "sdoc": filename.html,
-                "sdoc_metadatas": filename.json
-                "sdoc_annotations": filename.csv
+                "sdoc_metadatas": filename.html.json
+                "sdoc_annotations": filename.html.csv
+                "sdoc_transcript":"filename.html.txt"
             }
         }
 
@@ -998,8 +1002,11 @@ class ImportService(metaclass=SingletonMeta):
         ]
         for file_name in file_names:
             file_type, is_non_sdoc_filetype = self.__get_filetype_from_name(file_name)
+            if file_type == "memo":
+                # TODO: import memos not possible so far.
+                pass
 
-            if file_type != "logbook":
+            elif file_type != "logbook":
                 file_path = Path(join(temp_proj_path, file_name))
                 if is_non_sdoc_filetype:
                     # if its one of the "one of files"

@@ -207,12 +207,6 @@ project_metadata:
     read_only: True
     doctype: "audio"
     description: "The URL of the audio file"
-  audio_word_level_transcriptions:
-    key: "word_level_transcriptions"
-    metatype: "STRING"
-    read_only: True
-    doctype: "audio"
-    description: "Word-level transcriptions of the audio file"
   audio_language:
     key: "language"
     metatype: "STRING"
@@ -268,12 +262,6 @@ project_metadata:
     read_only: True
     doctype: "video"
     description: "The URL of the video file"
-  video_word_level_transcriptions:
-    key: "word_level_transcriptions"
-    metatype: "STRING"
-    read_only: True
-    doctype: "video"
-    description: "Word-level transcriptions of the video file"
   video_language:
     key: "language"
     metatype: "STRING"

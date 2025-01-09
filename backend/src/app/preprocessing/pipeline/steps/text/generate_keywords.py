@@ -9,6 +9,7 @@ from config import conf
 def generate_keywords(cargo: PipelineCargo) -> PipelineCargo:
     pptd: PreProTextDoc = cargo.data["pptd"]
     if "keywords" not in pptd.metadata:
+        logger.info("keywords not in pptd metadata")
         out = pptd.spacy_pipeline_output
         if out is None:
             logger.error(
@@ -17,6 +18,7 @@ def generate_keywords(cargo: PipelineCargo) -> PipelineCargo:
             return cargo
 
         language = pptd.metadata.get("language", "noLang")
+        logger.info(f"language: {language}")
         if isinstance(language, list):
             language = language[0]
 

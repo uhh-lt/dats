@@ -15,6 +15,10 @@ from app.preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from app.preprocessing.pipeline.steps.common.persist_sdoc_data import persist_sdoc_data
+from app.preprocessing.pipeline.steps.common.persist_tags import persist_tags
+from app.preprocessing.pipeline.steps.text.write_pptd_to_database import (
+    _persist_sdoc_word_frequencies,
+)
 
 repo: RepoService = RepoService()
 sql: SQLService = SQLService()
@@ -76,6 +80,12 @@ def store_metadata_and_data_to_database(cargo: PipelineCargo) -> PipelineCargo:
 
             # persist SourceDocument Data
             persist_sdoc_data(db=db, sdoc_db_obj=sdoc_db_obj, pptd=pptd)
+
+            # persist tags
+            persist_tags(db=db, sdoc_db_obj=sdoc_db_obj, ppd=ppid)
+
+            # persist WordFrequencies
+            _persist_sdoc_word_frequencies(db=db, sdoc_db_obj=sdoc_db_obj, pptd=pptd)
 
         except Exception as e:
             logger.error(

@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from loguru import logger
+
 from app.preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
@@ -19,6 +21,10 @@ def create_pptd_from_transcription(cargo: PipelineCargo) -> PipelineCargo:
         metadata={"language": "en"},
         mime_type="text/plain",
     )
+
+    if "transcription_keywords" in ppad.metadata:
+        logger.info("Pass keywords from ppad to pptd")
+        pptd.metadata["keywords"] = ppad.metadata["transcription_keywords"]
 
     cargo.data["pptd"] = pptd
     return cargo

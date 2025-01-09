@@ -1,12 +1,9 @@
-import json
 import os
 
 from loguru import logger
 
+from app.core.data.dto.source_document_data import WordLevelTranscription
 from app.preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
-from app.preprocessing.pipeline.model.audio.wordleveltranscription import (
-    WordLevelTranscription,
-)
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.ray_model_service import RayModelService
 from app.preprocessing.ray_model_worker.dto.whisper import (
@@ -19,7 +16,8 @@ rms = RayModelService()
 
 def generate_automatic_transcription(cargo: PipelineCargo) -> PipelineCargo:
     ppad: PreProAudioDoc = cargo.data["ppad"]
-    if "word_level_transcriptions" not in ppad.metadata:
+    if len(ppad.word_level_transcriptions) == 0:
+        # TODO: Could there be an empty transcript because nothing was said?
         logger.debug(f"Generating automatic transcription for {ppad.filename} ...")
         if ppad.uncompressed_audio_filepath is None:
             raise ValueError(
@@ -37,19 +35,29 @@ def generate_automatic_transcription(cargo: PipelineCargo) -> PipelineCargo:
         transcription: WhisperTranscriptionOutput = rms.whisper_transcribe(
             whisper_input
         )
-
+        logger.info(f"Generated transcript {transcription}")
         # Create Wordlevel Transcriptions
+        # use whisper tokenization
+        current_position = 0
+        ppad.tokens = []
+        ppad.token_character_offsets = []
         for segment in transcription.segments:
             for word in segment.words:
+                text = word.text
                 wlt = WordLevelTranscription(
-                    text=word.text,
+                    text=text,
                     start_ms=word.start_ms,
                     end_ms=word.end_ms,
                 )
                 ppad.word_level_transcriptions.append(wlt)
+                ppad.tokens.append(text)
+                current_word_length = len(text)
+                ppad.token_character_offsets.append(
+                    (current_position, current_position + current_word_length)
+                )
+                current_position += current_word_length + 1
 
-        wlt = list(map(lambda wlt: wlt.model_dump(), ppad.word_level_transcriptions))
-        ppad.metadata["word_level_transcriptions"] = json.dumps(wlt)
+        # wlt = list(map(lambda wlt: wlt.model_dump(), ppad.word_level_transcriptions))
     else:
         logger.info("Import word level transcriptions")
     return cargo

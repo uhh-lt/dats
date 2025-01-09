@@ -16,6 +16,10 @@ from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from app.preprocessing.pipeline.model.video.preprovideodoc import PreProVideoDoc
 from app.preprocessing.pipeline.steps.common.persist_sdoc_data import persist_sdoc_data
+from app.preprocessing.pipeline.steps.common.persist_tags import persist_tags
+from app.preprocessing.pipeline.steps.text.write_pptd_to_database import (
+    _persist_sdoc_word_frequencies,
+)
 
 repo: RepoService = RepoService()
 sql: SQLService = SQLService()
@@ -31,13 +35,9 @@ def _persist_sdoc_metadata(
     sdoc_id = sdoc_db_obj.id
     sdoc = SourceDocumentRead.model_validate(sdoc_db_obj)
     ppvd.metadata["url"] = str(RepoService().get_sdoc_url(sdoc=sdoc))
+    logger.info(f"Passing ppdt keywords {pptd.metadata['keywords']} to ppvd")
     ppvd.metadata["transcription_keywords"] = pptd.metadata["keywords"]
     ppvd.metadata["language"] = pptd.metadata["language"]
-
-    # store word level transcriptions as metadata
-    ppvd.metadata["word_level_transcriptions"] = ppad.metadata[
-        "word_level_transcriptions"
-    ]
 
     project_metadata = [
         ProjectMetadataRead.model_validate(pm)
@@ -79,14 +79,19 @@ def store_metadata_and_data_to_database(cargo: PipelineCargo) -> PipelineCargo:
     with sql.db_session() as db:
         try:
             sdoc_db_obj = crud_sdoc.read(db=db, id=video_sdoc_id)
-
             # persist SourceDocument Metadata
             _persist_sdoc_metadata(
                 db=db, sdoc_db_obj=sdoc_db_obj, ppvd=ppvd, ppad=ppad, pptd=pptd
             )
 
+            # persist tags
+            persist_tags(db=db, sdoc_db_obj=sdoc_db_obj, ppd=ppvd)
+
             # persist SourceDocument Data
-            persist_sdoc_data(db=db, sdoc_db_obj=sdoc_db_obj, pptd=pptd)
+            persist_sdoc_data(db=db, sdoc_db_obj=sdoc_db_obj, pptd=pptd, ppad=ppad)
+
+            # persist WordFrequencies
+            _persist_sdoc_word_frequencies(db=db, sdoc_db_obj=sdoc_db_obj, pptd=pptd)
 
         except Exception as e:
             logger.error(

@@ -5,7 +5,6 @@ from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 
 EXPECTED_METADATA = [
     "url",
-    "word_level_transcriptions",
     "duration",
     "format_name",
     "format_long_name",

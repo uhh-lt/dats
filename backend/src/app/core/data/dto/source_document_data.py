@@ -1,6 +1,12 @@
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from pydantic import BaseModel, ConfigDict, Field
+
+
+class WordLevelTranscription(BaseModel):
+    text: str
+    start_ms: int
+    end_ms: int
 
 
 class SourceDocumentDataBase(BaseModel):
@@ -19,6 +25,12 @@ class SourceDocumentDataBase(BaseModel):
     sentence_ends: List[int] = Field(
         description="End of each sentence in character offsets in content"
     )
+    token_time_starts: Optional[List[int]] = Field(
+        description="Start times of each token in transcript", default=None
+    )
+    token_time_ends: Optional[List[int]] = Field(
+        description="End times of each token in transcript", default=None
+    )
 
 
 class SourceDocumentDataRead(BaseModel):
@@ -32,6 +44,10 @@ class SourceDocumentDataRead(BaseModel):
         description="List of character offsets of each token"
     )
     sentences: List[str] = Field(description="List of sentences in the SourceDocument")
+    word_level_transcriptions: Optional[List[WordLevelTranscription]] = Field(
+        description="word level transcriptions, with tokens, start times and end times",
+        default=None,
+    )
 
     model_config = ConfigDict(from_attributes=True)
 

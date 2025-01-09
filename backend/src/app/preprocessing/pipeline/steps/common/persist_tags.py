@@ -14,9 +14,9 @@ sql: SQLService = SQLService()
 def persist_tags(
     db: Session, sdoc_db_obj: SourceDocumentORM, ppd: PreProDocBase
 ) -> None:
-    logger.info(f"Persisting SourceDocument Tags for {ppd.filename}...")
     tags = ppd.tags
     if len(tags) > 0:
+        logger.info(f"Persisting SourceDocument Tags for {ppd.filename}...")
         crud_document_tag.link_multiple_document_tags(
             db=db,
             sdoc_ids=[sdoc_db_obj.id],

@@ -163,6 +163,19 @@ class ExportService(metaclass=SingletonMeta):
 
         return temp_file
 
+    def __write_exported_txt_to_temp_file(
+        self,
+        text: str,
+        fn: Optional[str] = None,
+    ) -> Path:
+        temp_file = self.repo.create_temp_file(fn=fn)
+        temp_file = temp_file.parent / (temp_file.name + ".txt")
+
+        logger.info(f"Writing export data to {temp_file} !")
+        with open(temp_file, "w") as f:
+            f.write(text)
+        return temp_file
+
     def __write_exported_json_to_temp_file(
         self,
         exported_file: Dict[str, Any],
@@ -258,6 +271,33 @@ class ExportService(metaclass=SingletonMeta):
         sdoc_files = self.__get_raw_sdocs_files_for_export(db=db, sdocs=sdocs)
         return sdoc_files
 
+    def __get_all_sdoc_transcripts_in_project_for_export(
+        self, db: Session, project_id: int
+    ) -> List[Dict[str, str]]:
+        transcripts: List[Dict[str, Any]] = []
+        sdocs = [
+            SourceDocumentRead.model_validate(sdoc)
+            for sdoc in crud_sdoc.read_by_project(db=db, proj_id=project_id)
+        ]
+        sdoc_ids = [sdoc.id for sdoc in sdocs]
+        if len(sdoc_ids) > 0:
+            logger.info(f"Export sdoc datas transcript for {sdoc_ids}")
+            sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=sdoc_ids)
+            for sdoc_data, sdoc in zip(sdoc_datas, sdocs):
+                assert (
+                    sdoc_data
+                ), f"Expected sdoc data for id {sdoc.id} to exist, because sdocs exist."
+                if sdoc_data.token_time_starts is not None:
+                    logger.info(f"Exporting transcript of file {sdoc.filename}")
+                    transcripts.append(
+                        {
+                            "transcript": sdoc_data.content,
+                            "filename": sdoc.filename,
+                        }
+                    )
+
+        return transcripts
+
     def __get_all_sdoc_metadatas_in_project_for_export(
         self, db: Session, project_id: int
     ) -> List[Dict[str, Any]]:
@@ -276,27 +316,6 @@ class ExportService(metaclass=SingletonMeta):
         adoc_id: Optional[int] = None,
         adoc: Optional[AnnotationDocumentORM] = None,
     ) -> pd.DataFrame:
-        if adoc is None:
-            if adoc_id is None:
-                raise ValueError("Either ADoc ID or ORM must be not None")
-            adoc = crud_adoc.read(db=db, id=adoc_id)
-
-        logger.info(f"Exporting AnnotationDocument {adoc_id} ...")
-        # get the adoc, proj, sdoc, user, and all annos
-        user_dto = UserRead.model_validate(adoc.user)
-        sdoc_dto = SourceDocumentRead.model_validate(adoc.source_document)
-
-        # span annos
-        spans = adoc.span_annotations
-        span_read_resolved_dtos = [
-            SpanAnnotationReadResolved.model_validate(span) for span in spans
-        ]
-
-        # bbox annos
-        bboxes = adoc.bbox_annotations
-        bbox_read_resolved_dtos = [
-            BBoxAnnotationReadResolved.model_validate(bbox) for bbox in bboxes
-        ]
         # fill the DataFrame
         data = {
             "sdoc_name": [],
@@ -316,41 +335,64 @@ class ExportService(metaclass=SingletonMeta):
             "bbox_y_max": [],
         }
 
-        for span in span_read_resolved_dtos:
-            data["sdoc_name"].append(sdoc_dto.filename)
-            data["user_email"].append(user_dto.email)
-            data["user_first_name"].append(user_dto.first_name)
-            data["user_last_name"].append(user_dto.last_name)
-            data["code_name"].append(span.code.name)
-            data["created"].append(span.created)
-            data["text"].append(span.text)
-            data["text_begin_char"].append(span.begin)
-            data["text_end_char"].append(span.end)
-            data["text_begin_token"].append(span.begin_token)
-            data["text_end_token"].append(span.end_token)
+        if adoc is None and adoc_id is not None:
+            adoc = crud_adoc.read(db=db, id=adoc_id)
 
-            data["bbox_x_min"].append(None)
-            data["bbox_x_max"].append(None)
-            data["bbox_y_min"].append(None)
-            data["bbox_y_max"].append(None)
+        if adoc:
+            logger.info(f"Exporting AnnotationDocument {adoc_id} ...")
+            # get the adoc, proj, sdoc, user, and all annos
+            user_dto = UserRead.model_validate(adoc.user)
+            sdoc_dto = SourceDocumentRead.model_validate(adoc.source_document)
 
-        for bbox in bbox_read_resolved_dtos:
-            data["sdoc_name"].append(sdoc_dto.filename)
-            data["user_email"].append(user_dto.email)
-            data["user_first_name"].append(user_dto.first_name)
-            data["user_last_name"].append(user_dto.last_name)
-            data["code_name"].append(bbox.code.name)
-            data["created"].append(bbox.created)
-            data["bbox_x_min"].append(bbox.x_min)
-            data["bbox_x_max"].append(bbox.x_max)
-            data["bbox_y_min"].append(bbox.y_min)
-            data["bbox_y_max"].append(bbox.y_max)
+            # span annos
+            spans = adoc.span_annotations
+            span_read_resolved_dtos = [
+                SpanAnnotationReadResolved.model_validate(span) for span in spans
+            ]
 
-            data["text"].append(None)
-            data["text_begin_char"].append(None)
-            data["text_end_char"].append(None)
-            data["text_begin_token"].append(None)
-            data["text_end_token"].append(None)
+            # bbox annos
+            bboxes = adoc.bbox_annotations
+            bbox_read_resolved_dtos = [
+                BBoxAnnotationReadResolved.model_validate(bbox) for bbox in bboxes
+            ]
+
+            for span in span_read_resolved_dtos:
+                data["sdoc_name"].append(sdoc_dto.filename)
+                data["user_email"].append(user_dto.email)
+                data["user_first_name"].append(user_dto.first_name)
+                data["user_last_name"].append(user_dto.last_name)
+                data["code_name"].append(span.code.name)
+                data["created"].append(span.created)
+                data["text"].append(span.text)
+                data["text_begin_char"].append(span.begin)
+                data["text_end_char"].append(span.end)
+                data["text_begin_token"].append(span.begin_token)
+                data["text_end_token"].append(span.end_token)
+
+                data["bbox_x_min"].append(None)
+                data["bbox_x_max"].append(None)
+                data["bbox_y_min"].append(None)
+                data["bbox_y_max"].append(None)
+
+            for bbox in bbox_read_resolved_dtos:
+                data["sdoc_name"].append(sdoc_dto.filename)
+                data["user_email"].append(user_dto.email)
+                data["user_first_name"].append(user_dto.first_name)
+                data["user_last_name"].append(user_dto.last_name)
+                data["code_name"].append(bbox.code.name)
+                data["created"].append(bbox.created)
+                data["bbox_x_min"].append(bbox.x_min)
+                data["bbox_x_max"].append(bbox.x_max)
+                data["bbox_y_min"].append(bbox.y_min)
+                data["bbox_y_max"].append(bbox.y_max)
+
+                data["text"].append(None)
+                data["text_begin_char"].append(None)
+                data["text_end_char"].append(None)
+                data["text_begin_token"].append(None)
+                data["text_end_token"].append(None)
+        else:
+            logger.info("Init empty annotation export document ...")
 
         df = pd.DataFrame(data=data)
         return df
@@ -474,6 +516,7 @@ class ExportService(metaclass=SingletonMeta):
         # common data
         data = {
             "memo_id": [memo_id],
+            "user_id": [user_dto.id],
             "user_first_name": [user_dto.first_name],
             "user_last_name": [user_dto.last_name],
             "created": [memo_dto.created],
@@ -998,6 +1041,7 @@ class ExportService(metaclass=SingletonMeta):
 
         # write memos to files
         for memo_df in exported_memos:
+            logger.info(f"Export memo {memo_df}")
             export_file = self.__write_export_data_to_temp_file(
                 data=memo_df,
                 export_format=export_format,
@@ -1064,6 +1108,30 @@ class ExportService(metaclass=SingletonMeta):
             db=db, project_id=project_id
         )
         exported_files.extend(sdoc_files)
+
+        # check if adoc export documents are missing (empty)
+        for sdoc_file in sdoc_files:
+            sdoc_name = sdoc_file.name
+            if sdoc_name not in exported_adocs:
+                empty_adoc_df = self.__generate_export_df_for_adoc(db=db)
+                export_file = self.__write_export_data_to_temp_file(
+                    data=empty_adoc_df,
+                    export_format=export_format,
+                    fn=sdoc_name,
+                    append_suffix=True,
+                )
+                exported_files.append(export_file)
+
+        # add sdoc transcripts (txt)
+        exported_transcripts = self.__get_all_sdoc_transcripts_in_project_for_export(
+            db=db, project_id=project_id
+        )
+        for exported_transcript in exported_transcripts:
+            exported_file = self.__write_exported_txt_to_temp_file(
+                text=exported_transcript["transcript"],
+                fn=exported_transcript["filename"],
+            )
+            exported_files.append(exported_file)
 
         # add the sdoc metadatafiles (jsons)
         exported_sdocs_metadata = self.__get_all_sdoc_metadatas_in_project_for_export(

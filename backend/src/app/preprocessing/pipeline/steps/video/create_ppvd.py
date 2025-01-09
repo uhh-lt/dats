@@ -20,6 +20,10 @@ def create_ppvd(cargo: PipelineCargo) -> PipelineCargo:
         additional_parameters["sdoc_link_create_dtos"] = cargo.data["sdoc_link"]
     if "tags" in cargo.data:
         additional_parameters["tags"] = cargo.data["tags"]
+    if "word_level_transcriptions" in cargo.data:
+        additional_parameters["word_level_transcriptions"] = cargo.data[
+            "word_level_transcriptions"
+        ]
     logger.info(
         f"Adding additional parameters to the create PPVD with {additional_parameters}"
     )
