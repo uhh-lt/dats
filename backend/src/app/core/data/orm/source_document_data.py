@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import ARRAY
@@ -24,6 +24,7 @@ class SourceDocumentDataORM(ORMBase):
     )
     content: Mapped[str] = mapped_column(String, nullable=False, index=False)
     html: Mapped[str] = mapped_column(String, nullable=False, index=False)
+    repo_url: Mapped[str] = mapped_column(String, nullable=False, index=False)
     token_starts: Mapped[List[int]] = mapped_column(
         ARRAY(Integer), nullable=False, index=False
     )
@@ -76,10 +77,17 @@ class SourceDocumentDataORM(ORMBase):
         return [char2tok[e] for e in self.sentence_ends]
 
     @property
-    def word_level_transcriptions(self):
+    def word_level_transcriptions(self) -> Optional[List[WordLevelTranscription]]:
+        print(self.token_time_starts)
+        print(self.token_time_ends)
         if self.token_time_starts is None or self.token_time_ends is None:
             return None
         else:
+            assert (
+                len(self.tokens)
+                == len(self.token_time_starts)
+                == len(self.token_time_ends)
+            )
             result = []
             for t, s, e in zip(
                 self.tokens, self.token_time_starts, self.token_time_ends

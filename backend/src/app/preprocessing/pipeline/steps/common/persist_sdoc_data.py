@@ -4,8 +4,11 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.source_document_data import crud_sdoc_data
+from app.core.data.doc_type import DocType
+from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.source_document_data import SourceDocumentDataCreate
 from app.core.data.orm.source_document import SourceDocumentORM
+from app.core.data.repo.repo_service import RepoService
 from app.preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 
@@ -31,6 +34,14 @@ def persist_sdoc_data(
             t.end_ms for t in ppad.word_level_transcriptions
         ]
 
+    sdoc = SourceDocumentRead.model_validate(sdoc_db_obj)
+    url = RepoService().get_sdoc_url(
+        sdoc=SourceDocumentRead.model_validate(sdoc),
+        relative=True,
+        webp=sdoc.doctype == DocType.image,
+        thumbnail=False,
+    )
+
     sdoc_data = SourceDocumentDataCreate(
         id=sdoc_db_obj.id,
         content=pptd.text,
@@ -39,7 +50,9 @@ def persist_sdoc_data(
         token_ends=[e for _, e in pptd.token_character_offsets],
         sentence_starts=[s.start for s in pptd.sentences],
         sentence_ends=[s.end for s in pptd.sentences],
-        **additional_parameters,
+        repo_url=url,
+        token_time_starts=additional_parameters.get("token_time_starts", None),
+        token_time_ends=additional_parameters.get("token_time_ends", None),
     )
     logger.info(f"{sdoc_data=}")
     crud_sdoc_data.create(db=db, create_dto=sdoc_data)

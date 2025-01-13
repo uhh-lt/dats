@@ -19,7 +19,6 @@ from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.span_group import crud_span_group
-from app.core.data.doc_type import DocType
 from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationRead,
     BBoxAnnotationReadResolved,
@@ -91,26 +90,7 @@ def get_by_id_with_data(
         crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
 
     sdoc_data = crud_sdoc.read_data(db=db, id=sdoc_id)
-    if sdoc_data is None:
-        # if data is none, that means the document is not a text document
-        # instead of returning html, we return the URL to the image / video / audio file
-        sdoc = SourceDocumentRead.model_validate(crud_sdoc.read(db=db, id=sdoc_id))
-        url = RepoService().get_sdoc_url(
-            sdoc=sdoc,
-            relative=True,
-            webp=sdoc.doctype == DocType.image,
-            thumbnail=False,
-        )
-        return SourceDocumentDataRead(
-            id=sdoc_id,
-            project_id=sdoc.project_id,
-            token_character_offsets=[],
-            tokens=[],
-            sentences=[],
-            html=url,
-        )
-    else:
-        return SourceDocumentDataRead.model_validate(sdoc_data)
+    return SourceDocumentDataRead.model_validate(sdoc_data)
 
 
 @router.delete(
