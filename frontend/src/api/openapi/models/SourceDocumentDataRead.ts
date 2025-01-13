@@ -13,6 +13,10 @@ export type SourceDocumentDataRead = {
    */
   project_id: number;
   /**
+   * Relative path to the SourceDocument in the repository
+   */
+  repo_url: string;
+  /**
    * Processed HTML of the SourceDocument
    */
   html: string;
