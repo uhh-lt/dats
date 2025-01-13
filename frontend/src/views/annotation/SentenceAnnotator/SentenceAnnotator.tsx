@@ -252,7 +252,7 @@ const SentenceAnnotator = ({ sdocData, ...props }: SentenceAnnotatorProps & BoxP
     setHoverSentAnnoId(null);
   };
 
-  const handleSentenceClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, index: number) => {
+  const handleSentenceClick = (_: React.MouseEvent<HTMLDivElement, MouseEvent>, index: number) => {
     setSelectedSentences((selectedSentences) => {
       if (selectedSentences.includes(index)) {
         return [];
