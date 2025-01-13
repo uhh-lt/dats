@@ -2,7 +2,6 @@ import { Box, Tooltip } from "@mui/material";
 import { useMemo, useRef, useState } from "react";
 import ReactPlayer from "react-player";
 import type { OnProgressProps } from "react-player/base.d.ts";
-import SdocHooks from "../../../api/SdocHooks.ts";
 import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead.ts";
 
 interface AudioVideoViewerProps {
@@ -18,16 +17,13 @@ function AudioVideoViewer({ sdocData, width, height }: AudioVideoViewerProps) {
   const playerRef = useRef<ReactPlayer>(null);
   const currentHighlightedWordSpanRef = useRef<HTMLSpanElement>(null);
 
-  // global server state (react-query)
-  const transcriptWords = SdocHooks.useGetWordLevelTranscriptions(sdocData.id);
-
   // ui events
   const handleProgress = (state: OnProgressProps) => {
-    if (!transcriptWords.data) return;
+    if (!sdocData.word_level_transcriptions) return;
 
     // TODO: this is not very efficient!
     const time = state.playedSeconds * 1000;
-    const wordId = transcriptWords.data.findIndex((word) => word.start_ms >= time && time <= word.end_ms);
+    const wordId = sdocData.word_level_transcriptions.findIndex((word) => word.start_ms >= time && time <= word.end_ms);
     setHighlightedWordId(wordId);
     if (currentHighlightedWordSpanRef.current) {
       currentHighlightedWordSpanRef.current.scrollIntoView({
@@ -44,9 +40,9 @@ function AudioVideoViewer({ sdocData, width, height }: AudioVideoViewerProps) {
   };
 
   const transcript = useMemo(() => {
-    if (!transcriptWords.data) return null;
+    if (!sdocData.word_level_transcriptions) return null;
 
-    return transcriptWords.data.map((word, index) => {
+    return sdocData.word_level_transcriptions.map((word, index) => {
       return (
         <Tooltip title={`Click to jump to ${(word.start_ms / 1000).toFixed(2)} sec`} key={index}>
           <span
@@ -65,13 +61,13 @@ function AudioVideoViewer({ sdocData, width, height }: AudioVideoViewerProps) {
         </Tooltip>
       );
     });
-  }, [transcriptWords.data, highlightedWordId]);
+  }, [sdocData.word_level_transcriptions, highlightedWordId]);
 
   return (
     <>
       <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
         <ReactPlayer
-          url={encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + sdocData.html)}
+          url={encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + sdocData.repo_url)}
           controls={true}
           width={width}
           height={height}
