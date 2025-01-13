@@ -35,5 +35,5 @@ export type SourceDocumentDataRead = {
   /**
    * word level transcriptions, with tokens, start times and end times
    */
-  word_level_transcriptions?: Array<WordLevelTranscription> | null;
+  word_level_transcriptions: Array<WordLevelTranscription> | null;
 };
