@@ -10,7 +10,7 @@ FROM node:20-alpine AS build
 WORKDIR /app
 
 # Set production build
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 # Install dependencies
 COPY package.json package-lock.json ./
