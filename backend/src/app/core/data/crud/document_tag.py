@@ -185,5 +185,19 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
 
         return dict((tag_id, count) for tag_id, count in rows)
 
+    def get_tags_by_project(self, db: Session, proj_id: int) -> List[DocumentTagORM]:
+        """
+        Retrieves all tags associated with a specific project.
+
+        Args:
+            db (Session): The current database session used for querying.
+            proj_id (int): The ID of the project for which tags are to be retrieved.
+
+        Returns:
+            List[DocumentTagORM]: A list of DocumentTagORM objects representing all tags
+            associated with the specified project.
+        """
+        return db.query(self.model).filter(self.model.project_id == proj_id).all()
+
 
 crud_document_tag = CRUDDocumentTag(DocumentTagORM)

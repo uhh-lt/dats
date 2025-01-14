@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List
 
 from sqlalchemy import (
     Boolean,
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 class DocumentTagRecommendationORM(ORMBase):
     task_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    model_name: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    model_name: Mapped[str] = mapped_column(String, nullable=True, index=True)
     created: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), index=True
     )
@@ -71,15 +71,6 @@ class DocumentTagRecommendationLinkORM(ORMBase):
     )
     prediction_score: Mapped[float] = mapped_column(Float, index=True, nullable=True)
     is_accepted: Mapped[bool] = mapped_column(Boolean, index=True, nullable=True)
-    corrected_tag_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("documenttag.id", ondelete="CASCADE"),
-        primary_key=False,
-        nullable=True,
-    )
-    corrected_timestamp: Mapped[Optional[datetime]] = mapped_column(
-        DateTime, nullable=True
-    )
 
     # relationships
     recommendation: Mapped["DocumentTagRecommendationORM"] = relationship(
@@ -93,9 +84,4 @@ class DocumentTagRecommendationLinkORM(ORMBase):
         "DocumentTagORM",
         back_populates="document_tag_recommendation_links",
         foreign_keys="[DocumentTagRecommendationLinkORM.predicted_tag_id]",
-    )
-    corrected_tag: Mapped[Optional["DocumentTagORM"]] = relationship(
-        "DocumentTagORM",
-        back_populates="document_tag_recommendation_corrected_links",
-        foreign_keys="[DocumentTagRecommendationLinkORM.corrected_tag_id]",
     )
