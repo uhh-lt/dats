@@ -5,6 +5,7 @@ from os import listdir
 from os.path import isfile, join
 from pathlib import Path
 from typing import (
+    Any,
     Callable,
     Dict,
     List,
@@ -720,30 +721,31 @@ class ImportService(metaclass=SingletonMeta):
             tags_id_mapping = self.__import_tags_to_proj(
                 db=db, df=tags_df, proj_id=proj_id
             )
-
             # read sdoc links
             sdoc_links = pd.read_csv(expected_file_paths["sdoc_links"])
-
+            logger.info("reading sdoc links")
             payloads: List[PreprocessingJobPayloadCreateWithoutPreproJobId] = []
 
-            # all of following sdoc specific objects need to go into a dict that maps from doc_type to the list of objects.
-            # The order in which they come, will be similar as the order in which the cargs are generated from the payloads.
-            annotations: List[Set[AutoSpan]] = []
-            bboxes: List[Set[AutoBBox]] = []
-            metadatas: Dict[DocType, List[Dict]] = {
-                doc_type: [] for doc_type in DocType
-            }
-            tags: Dict[DocType, List[List[int]]] = {
-                doc_type: [] for doc_type in DocType
-            }
-            link_dtos: Dict[DocType, List[List[SourceDocumentLinkCreate]]] = {
-                doc_type: [] for doc_type in DocType
-            }
+            # all of following sdoc specific objects need to go into a dict that maps from filename to sdoc specific payloads.
+            sdoc_specific_payloads: Dict[str, Dict[str, Any]] = dict()
 
             # 1 import sdoc annotations, tags, metadata and sdoc links and create payloads
             for sdoc_name, sdoc_package in sdoc_filepaths.items():
+                sdoc_filepath = sdoc_package["sdoc"]
+                assert isinstance(sdoc_filepath, Path)
+                # move raw sdocs
+                sdoc_filepath = self.repo.move_file_to_project_sdoc_files(
+                    proj_id, sdoc_filepath
+                )
+                logger.info(f"moving sdoc filepath {sdoc_filepath}")
+                annotations: Set[AutoSpan] = set()
+                bboxes: Set[AutoBBox] = set()
+                tags: List[int] = []
+                sdoc_link: List[SourceDocumentLinkCreate] = []
+                # init the empty
+
                 # get doc type from mime type
-                mime_type = get_mime_type_from_file(sdoc_package["sdoc"])
+                mime_type = get_mime_type_from_file(sdoc_filepath)
                 if not mime_type_supported(mime_type):
                     raise ImportSDocFileUnsupportedMimeTypeException(
                         sdoc_name, mime_type
@@ -751,13 +753,6 @@ class ImportService(metaclass=SingletonMeta):
                 sdoc_doctype = get_doc_type(mime_type)
                 logger.info(f"Sdoc doctype {sdoc_doctype}")
                 assert sdoc_doctype, "Expected Doctype to be not None."
-
-                # move raw sdocs
-                sdoc_filepath = sdoc_package["sdoc"]
-                assert isinstance(sdoc_filepath, Path)
-                sdoc_filepath = self.repo.move_file_to_project_sdoc_files(
-                    proj_id, sdoc_filepath
-                )
 
                 # create payloads with all sdocs
                 payload = PreprocessingJobPayloadCreateWithoutPreproJobId(
@@ -773,22 +768,18 @@ class ImportService(metaclass=SingletonMeta):
                 sdoc_metadata_filepath = sdoc_package["sdoc_metadatas"]
                 with open(sdoc_metadata_filepath, "r") as f:
                     sdoc_metadata: Dict = json.load(f)
-                metadatas[sdoc_doctype].append(
-                    {
+                    metadata: Dict = {
                         metadata_key: metadata_attributes["value"]
                         for metadata_key, metadata_attributes in sdoc_metadata[
                             "metadata"
                         ].items()
                     }
-                )
-                logger.info(f"Generate sdoc metadata {metadatas[sdoc_doctype][-1]}")
+                logger.info(f"Generate sdoc metadata {metadata}")
 
                 # import sdoc tags
-                tags_for_sdoc: List[int] = []
                 for tag in sdoc_metadata["tags"]:
-                    tags_for_sdoc.append(tags_id_mapping[tag])
-                tags[sdoc_doctype].append(tags_for_sdoc)
-                logger.info(f"Generate sdoc tags {tags_for_sdoc}")
+                    tags.append(tags_id_mapping[tag])
+                logger.info(f"Generate sdoc tags {tags}, {sdoc_name}")
 
                 # import sdoc annotations
                 sdoc_annotations_filepath = sdoc_package["sdoc_annotations"]
@@ -796,7 +787,6 @@ class ImportService(metaclass=SingletonMeta):
                 logger.info(f"The doctype is {sdoc_doctype}")
                 if sdoc_doctype == DocType.text:
                     # create AutoSpans for NER
-                    annotations_for_sdoc: set[AutoSpan] = set()
                     for _, row in sdoc_annotations_df.iterrows():
                         if row["user_email"] in user_email_id_mapping:
                             email: Optional[str] = (
@@ -816,13 +806,11 @@ class ImportService(metaclass=SingletonMeta):
                                         "user_id": user_email_id_mapping[email],
                                     }
                                 )
-                                annotations_for_sdoc.add(auto)
-                    annotations.append(annotations_for_sdoc)
-                    logger.info(f"Generate sdoc annotations {annotations_for_sdoc}")
+                                annotations.add(auto)
+                    logger.info(f"Generate sdoc annotations {annotations}")
 
                 elif sdoc_doctype == DocType.image:
                     # create boundig boxes for object detection
-                    bboxes_for_sdoc: Set[AutoBBox] = set()
                     for _, row in sdoc_annotations_df.iterrows():
                         email: Optional[str] = (
                             str(row["user_email"])
@@ -840,11 +828,9 @@ class ImportService(metaclass=SingletonMeta):
                                     "user_id": user_email_id_mapping[email],
                                 }
                             )
-                            bboxes_for_sdoc.add(bbox)
-                    bboxes.append(bboxes_for_sdoc)
+                            bboxes.add(bbox)
 
                 # create sdoc link create dtos
-                link_dtos_for_sdoc: List[SourceDocumentLinkCreate] = []
                 for linked_sdoc in sdoc_links[
                     (
                         sdoc_links["linked_source_document_filename"]
@@ -852,14 +838,21 @@ class ImportService(metaclass=SingletonMeta):
                     )
                     | (sdoc_links["sdoc_filename"] == sdoc_filepath.name)
                 ]["linked_source_document_filename"]:
-                    link_dtos_for_sdoc.append(
+                    sdoc_link.append(
                         SourceDocumentLinkCreate(
                             linked_source_document_filename=linked_sdoc,
                             parent_source_document_id=None,
                         )
                     )
-                link_dtos[sdoc_doctype].append(link_dtos_for_sdoc)
-                logger.info(f"Generate sdoc links {link_dtos_for_sdoc}")
+                logger.info(f"Generate sdoc links {sdoc_link}")
+
+                sdoc_specific_payloads[sdoc_filepath.name] = {
+                    "metadata": metadata,
+                    "annotations": annotations,
+                    "bboxes": bboxes,
+                    "tags": tags,
+                    "sdoc_link": sdoc_link,
+                }
 
             # 2. Create preprojob
             from app.preprocessing.preprocessing_service import PreprocessingService
@@ -869,12 +862,7 @@ class ImportService(metaclass=SingletonMeta):
 
             # 3. Create cargos
             cargos = pps._create_pipeline_cargos_from_preprocessing_job_with_data(
-                ppj=ppj,
-                metadatas=metadatas,
-                annotations=annotations,
-                bboxes=bboxes,
-                sdoc_links=link_dtos,
-                tags=tags,
+                ppj=ppj, sdoc_specific_payloads=sdoc_specific_payloads
             )
 
             # 4. init import piplines

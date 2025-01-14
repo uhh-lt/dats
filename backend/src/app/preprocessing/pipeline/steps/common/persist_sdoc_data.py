@@ -1,6 +1,5 @@
 from typing import Optional
 
-from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.source_document_data import crud_sdoc_data
@@ -54,5 +53,4 @@ def persist_sdoc_data(
         token_time_starts=additional_parameters.get("token_time_starts", None),
         token_time_ends=additional_parameters.get("token_time_ends", None),
     )
-    logger.info(f"{sdoc_data=}")
     crud_sdoc_data.create(db=db, create_dto=sdoc_data)

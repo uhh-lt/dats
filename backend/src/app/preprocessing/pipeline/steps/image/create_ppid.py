@@ -24,7 +24,7 @@ def create_ppid(cargo: PipelineCargo) -> PipelineCargo:
     logger.info(
         f"Adding additional parameters to the create PPID with {additional_parameters}"
     )
-
+    logger.info(f"filename: {cargo.ppj_payload.filename}, filepath {filepath}")
     ppid = PreProImageDoc(
         filename=cargo.ppj_payload.filename,
         project_id=cargo.ppj_payload.project_id,
@@ -38,6 +38,7 @@ def create_ppid(cargo: PipelineCargo) -> PipelineCargo:
             if bbox.code not in ppid.bboxes:
                 ppid.bboxes[bbox.code] = set()
             ppid.bboxes[bbox.code].add(bbox)
+        logger.info(f"Adding bbox {ppid.bboxes}")
 
     cargo.data["ppid"] = ppid
 
