@@ -53,14 +53,6 @@ class DocumentTagORM(ORMBase):
         foreign_keys="[DocumentTagRecommendationLinkORM.predicted_tag_id]",
         passive_deletes=True,
     )
-    document_tag_recommendation_corrected_links: Mapped[
-        List["DocumentTagRecommendationLinkORM"]
-    ] = relationship(
-        "DocumentTagRecommendationLinkORM",
-        back_populates="corrected_tag",
-        foreign_keys="[DocumentTagRecommendationLinkORM.corrected_tag_id]",
-        passive_deletes=True,
-    )
 
     # many to many
     source_documents: Mapped[List["SourceDocumentORM"]] = relationship(
