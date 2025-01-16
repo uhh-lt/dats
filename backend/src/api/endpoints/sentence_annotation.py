@@ -9,6 +9,7 @@ from api.dependencies import (
     resolve_code_param,
 )
 from api.util import get_object_memo_for_user, get_object_memos
+from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.sentence_annotation import crud_sentence_anno
@@ -54,6 +55,42 @@ def add_sentence_annotation(
         return SentenceAnnotationReadResolved.model_validate(db_obj)
     else:
         return SentenceAnnotationRead.model_validate(db_obj)
+
+
+@router.put(
+    "/bulk/create",
+    response_model=Union[
+        List[SentenceAnnotationRead], List[SentenceAnnotationReadResolved]
+    ],
+    summary="Creates SentenceAnnotations in Bulk",
+)
+def add_sentence_annotations_bulk(
+    *,
+    db: Session = Depends(get_db_session),
+    sentence_annotations: List[SentenceAnnotationCreate],
+    resolve_code: bool = Depends(resolve_code_param),
+    authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
+) -> Union[List[SentenceAnnotationRead], List[SentenceAnnotationReadResolved]]:
+    for sa in sentence_annotations:
+        authz_user.assert_in_same_project_as(Crud.CODE, sa.code_id)
+        authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sa.sdoc_id)
+        validate.validate_objects_in_same_project(
+            [
+                (Crud.CODE, sa.code_id),
+                (Crud.SOURCE_DOCUMENT, sa.sdoc_id),
+            ]
+        )
+
+    db_objs = crud_sentence_anno.create_bulk(
+        db=db, user_id=authz_user.user.id, create_dtos=sentence_annotations
+    )
+    if resolve_code:
+        return [
+            SentenceAnnotationReadResolved.model_validate(db_obj) for db_obj in db_objs
+        ]
+    else:
+        return [SentenceAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
 
 
 @router.get(
@@ -117,6 +154,25 @@ def delete_by_id(
 
     db_obj = crud_sentence_anno.remove(db=db, id=sentence_anno_id)
     return SentenceAnnotationRead.model_validate(db_obj)
+
+
+@router.delete(
+    "/bulk/delete",
+    response_model=List[SentenceAnnotationRead],
+    summary="Deletes all SentenceAnnotations with the given IDs.",
+)
+def delete_bulk_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    sentence_anno_ids: List[int],
+    authz_user: AuthzUser = Depends(),
+) -> List[SentenceAnnotationRead]:
+    authz_user.assert_in_same_project_as_many(
+        Crud.SENTENCE_ANNOTATION, sentence_anno_ids
+    )
+
+    db_objs = crud_sentence_anno.remove_bulk(db=db, ids=sentence_anno_ids)
+    return [SentenceAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
 
 
 @router.get(

@@ -125,6 +125,30 @@ class CRUDSentenceAnnotation(
 
         return query.all()
 
+    def read_by_code(self, db: Session, *, code_id: int) -> List[SentenceAnnotationORM]:
+        query = db.query(self.model).filter(self.model.code_id == code_id)
+        return query.all()
+
+    def read_by_codes(
+        self, db: Session, *, code_ids: List[int]
+    ) -> List[SentenceAnnotationORM]:
+        query = db.query(self.model).filter(self.model.code_id.in_(code_ids))
+        return query.all()
+
+    def read_by_user_sdocs_codes(
+        self, db: Session, *, user_id: int, sdoc_ids: List[int], code_ids: List[int]
+    ) -> List[SentenceAnnotationORM]:
+        query = (
+            db.query(self.model)
+            .join(self.model.annotation_document)
+            .filter(
+                AnnotationDocumentORM.user_id == user_id,
+                AnnotationDocumentORM.source_document_id.in_(sdoc_ids),
+                self.model.code_id.in_(code_ids),
+            )
+        )
+        return query.all()
+
     def update(
         self, db: Session, *, id: int, update_dto: SentenceAnnotationUpdate
     ) -> SentenceAnnotationORM:
@@ -140,6 +164,24 @@ class CRUDSentenceAnnotation(
         crud_adoc.update_timestamp(db=db, id=sentence_anno.annotation_document_id)
 
         return sentence_anno
+
+    def remove_bulk(
+        self, db: Session, *, ids: List[int]
+    ) -> List[SentenceAnnotationORM]:
+        sentence_annos = []
+        for id in ids:
+            sentence_annos.append(self.remove(db, id=id))
+
+        # find the annotation document ids
+        adoc_ids = {
+            sentence_anno.annotation_document_id for sentence_anno in sentence_annos
+        }
+
+        # update the annotation documents' timestamp
+        for adoc_id in adoc_ids:
+            crud_adoc.update_timestamp(db=db, id=adoc_id)
+
+        return sentence_annos
 
     def remove_by_adoc(self, db: Session, *, adoc_id: int) -> List[int]:
         # find all sentence annotations to be removed
