@@ -15,7 +15,7 @@ function SentenceAnnotationResultStep() {
   if (llmJob.isSuccess && llmJob.data.result) {
     return (
       <SentenceAnnotationResultStepContent
-        jobResult={llmJob.data.result.specific_llm_job_result as SentenceAnnotationLLMJobResult}
+        jobResult={llmJob.data.result.specific_task_result as SentenceAnnotationLLMJobResult}
       />
     );
   } else if (llmJob.isLoading) {
@@ -27,7 +27,7 @@ function SentenceAnnotationResultStep() {
   } else if (llmJob.isError) {
     return <DialogContent>{llmJob.error.message}</DialogContent>;
   } else {
-    return null;
+    return <></>;
   }
 }
 

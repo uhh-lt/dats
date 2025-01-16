@@ -5,75 +5,58 @@ import { MRT_RowSelectionState } from "material-react-table";
 import { useState } from "react";
 import LLMHooks from "../../../api/LLMHooks.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import { LLMJobType } from "../../../api/openapi/models/LLMJobType.ts";
+import { TaskType } from "../../../api/openapi/models/TaskType.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import CodeTable from "../../Code/CodeTable.tsx";
 import { CRUDDialogActions } from "../../dialogSlice.ts";
 import LLMUtterance from "./LLMUtterance.tsx";
 
-function CodeSelectionStep({ projectId, isSentenceAnnotation }: { projectId: number; isSentenceAnnotation: boolean }) {
+function CodeSelectionStep() {
   // local state
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
 
   // global state
+  const projectId = useAppSelector((state) => state.dialog.llmProjectId);
   const selectedDocuments = useAppSelector((state) => state.dialog.llmDocumentIds);
+  const llmJobType = useAppSelector((state) => state.dialog.llmMethod);
   const dispatch = useAppDispatch();
 
   // initiate next step (get the generated prompts)
-  const createPromptTemplatesMutation = LLMHooks.useCreatePromptTemplates();
+  const determineApproachMutation = LLMHooks.useDetermineApproach();
   const handleNext = (codes: CodeRead[]) => () => {
-    if (isSentenceAnnotation) {
-      createPromptTemplatesMutation.mutate(
-        {
-          requestBody: {
-            llm_job_type: LLMJobType.SENTENCE_ANNOTATION,
-            project_id: projectId,
-            prompts: [],
-            specific_llm_job_parameters: {
-              llm_job_type: LLMJobType.SENTENCE_ANNOTATION,
-              code_ids: codes.map((code) => code.id),
-              sdoc_ids: selectedDocuments,
-            },
-          },
-        },
-        {
-          onSuccess(data) {
-            dispatch(
-              CRUDDialogActions.llmDialogGoToPromptEditor({ prompts: data, tags: [], metadata: [], codes: codes }),
-            );
-          },
-        },
-      );
-    } else {
-      createPromptTemplatesMutation.mutate(
-        {
-          requestBody: {
-            llm_job_type: LLMJobType.ANNOTATION,
-            project_id: projectId,
-            prompts: [],
-            specific_llm_job_parameters: {
-              llm_job_type: LLMJobType.ANNOTATION,
-              code_ids: codes.map((code) => code.id),
-              sdoc_ids: selectedDocuments,
-            },
-          },
-        },
-        {
-          onSuccess(data) {
-            dispatch(
-              CRUDDialogActions.llmDialogGoToPromptEditor({ prompts: data, tags: [], metadata: [], codes: codes }),
-            );
-          },
-        },
-      );
+    if (!llmJobType) return;
+    if (llmJobType !== TaskType.ANNOTATION && llmJobType !== TaskType.SENTENCE_ANNOTATION) {
+      console.error("Invalid job type for code selection step");
+      return;
     }
+
+    determineApproachMutation.mutate(
+      {
+        requestBody: {
+          llm_job_type: llmJobType,
+          project_id: projectId,
+          specific_task_parameters: {
+            llm_job_type: llmJobType,
+            code_ids: codes.map((code) => code.id),
+            sdoc_ids: selectedDocuments,
+          },
+        },
+      },
+      {
+        onSuccess(data) {
+          dispatch(
+            CRUDDialogActions.llmDialogGoToApproachSelection({ approach: data, tags: [], metadata: [], codes: codes }),
+          );
+        },
+      },
+    );
   };
 
   return (
     <>
       <DialogContent>
         <LLMUtterance>
-          {isSentenceAnnotation ? (
+          {llmJobType === TaskType.SENTENCE_ANNOTATION ? (
             <Typography>
               You selected {selectedDocuments.length} document(s) for automatic sentence annotation. Please select all
               codes that I should use to annotate sentences.
@@ -94,7 +77,7 @@ function CodeSelectionStep({ projectId, isSentenceAnnotation }: { projectId: num
           <DialogActions sx={{ width: "100%", p: 0 }}>
             <Box flexGrow={1} />
             <Button
-              disabled={createPromptTemplatesMutation.isPending}
+              disabled={determineApproachMutation.isPending}
               onClick={() => dispatch(CRUDDialogActions.previousLLMDialogStep())}
             >
               Back
@@ -102,7 +85,7 @@ function CodeSelectionStep({ projectId, isSentenceAnnotation }: { projectId: num
             <LoadingButton
               variant="contained"
               startIcon={<PlayCircleIcon />}
-              loading={createPromptTemplatesMutation.isPending}
+              loading={determineApproachMutation.isPending}
               loadingPosition="start"
               disabled={props.selectedCodes.length === 0}
               onClick={handleNext(props.selectedCodes)}

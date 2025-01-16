@@ -4,43 +4,52 @@ import { LoadingButton, TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Button, DialogActions, DialogContent, Stack, Tab, Typography } from "@mui/material";
 import { useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import LLMHooks from "../../../api/LLMHooks.ts";
-import { LLMPromptTemplates } from "../../../api/openapi/models/LLMPromptTemplates.ts";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../../dialogSlice.ts";
-import FormTextMultiline from "../../FormInputs/FormTextMultiline.tsx";
-import LLMUtterance from "./LLMUtterance.tsx";
+import LLMHooks from "../../../../api/LLMHooks.ts";
+import { LLMPromptTemplates } from "../../../../api/openapi/models/LLMPromptTemplates.ts";
+import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
+import { CRUDDialogActions } from "../../../dialogSlice.ts";
+import FormTextMultiline from "../../../FormInputs/FormTextMultiline.tsx";
+import LLMUtterance from "../LLMUtterance.tsx";
 
 type PromptEditorValues = {
   systemPrompt: string;
   userPrompt: string;
 };
 
-function PromptEditorStep({ projectId }: { projectId: number }) {
+function PromptEditorStep() {
   // global state
+  const projectId = useAppSelector((state) => state.dialog.llmProjectId);
+  const method = useAppSelector((state) => state.dialog.llmMethod);
+  const approach = useAppSelector((state) => state.dialog.llmApproach);
   const tags = useAppSelector((state) => state.dialog.llmTags);
   const metadata = useAppSelector((state) => state.dialog.llmMetadata);
   const codes = useAppSelector((state) => state.dialog.llmCodes);
-  const method = useAppSelector((state) => state.dialog.llmMethod);
   const sdocIds = useAppSelector((state) => state.dialog.llmDocumentIds);
-  const prompts = useAppSelector((state) => state.dialog.llmPrompts);
+  const recommendedPrompts = useAppSelector((state) => state.dialog.llmPrompts);
   const dispatch = useAppDispatch();
 
   // local state (to manage tabs)
-  const [tab, setTab] = useState(prompts[0].language);
+  const [tab, setTab] = useState(recommendedPrompts[0].language);
   const handleChangeTab = (_: React.SyntheticEvent, newValue: string) => {
     setTab(newValue);
   };
+  const [prompts, setPrompts] = useState<LLMPromptTemplates[]>(recommendedPrompts);
 
   // react form handlers
   const handleChangePrompt = (language: string) => (formData: PromptEditorValues) => {
-    dispatch(
-      CRUDDialogActions.updateLLMPrompts({
-        language: language,
-        systemPrompt: formData.systemPrompt,
-        userPrompt: formData.userPrompt,
-      }),
-    );
+    setPrompts((prevPrompts) => {
+      const updatedPrompts = prevPrompts.map((prompt) => {
+        if (prompt.language === language) {
+          return {
+            ...prompt,
+            system_prompt: formData.systemPrompt,
+            user_prompt: formData.userPrompt,
+          };
+        }
+        return prompt;
+      });
+      return updatedPrompts;
+    });
   };
 
   // start llm job
@@ -52,9 +61,13 @@ function PromptEditorStep({ projectId }: { projectId: number }) {
       {
         requestBody: {
           project_id: projectId,
-          prompts: prompts,
           llm_job_type: method,
-          specific_llm_job_parameters: {
+          llm_approach_type: approach,
+          specific_approach_parameters: {
+            llm_approach_type: approach,
+            prompts: prompts,
+          },
+          specific_task_parameters: {
             llm_job_type: method,
             sdoc_ids: sdocIds,
             tag_ids: tags.map((tag) => tag.id),
@@ -68,7 +81,7 @@ function PromptEditorStep({ projectId }: { projectId: number }) {
           dispatch(
             CRUDDialogActions.llmDialogGoToWaiting({
               jobId: data.id,
-              method: data.parameters.llm_job_type,
+              prompts: prompts,
             }),
           );
         },

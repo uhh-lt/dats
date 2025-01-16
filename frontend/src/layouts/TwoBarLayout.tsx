@@ -43,7 +43,7 @@ function TwoBarLayout() {
         <ConfirmationDialog />
         <ExporterDialog />
         <ProjectSettingsDialog />
-        <LLMDialog projectId={parseInt(projectId)} />
+        <LLMDialog />
       </AppBarContext.Provider>
     );
   } else {

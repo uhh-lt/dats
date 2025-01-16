@@ -6,18 +6,19 @@ import { useMemo, useState } from "react";
 import LLMHooks from "../../../api/LLMHooks.ts";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
-import { LLMJobType } from "../../../api/openapi/models/LLMJobType.ts";
 import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
+import { TaskType } from "../../../api/openapi/models/TaskType.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import ProjectMetadataTable from "../../Metadata/ProjectMetadataTable.tsx";
 import { CRUDDialogActions } from "../../dialogSlice.ts";
 import LLMUtterance from "./LLMUtterance.tsx";
 
-function ProjectMetadataSelectionStep({ projectId }: { projectId: number }) {
+function ProjectMetadataSelectionStep() {
   // local state
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
 
   // global state
+  const projectId = useAppSelector((state) => state.dialog.llmProjectId);
   const selectedDocuments = useAppSelector((state) => state.dialog.llmDocumentIds);
   const dispatch = useAppDispatch();
 
@@ -29,16 +30,15 @@ function ProjectMetadataSelectionStep({ projectId }: { projectId: number }) {
   }, [projectMetadata.data]);
 
   // initiate next step (get the generated prompts)
-  const createPromptTemplatesMutation = LLMHooks.useCreatePromptTemplates();
+  const determineApproachMutation = LLMHooks.useDetermineApproach();
   const handleNext = (projectMetadata: ProjectMetadataRead[]) => () => {
-    createPromptTemplatesMutation.mutate(
+    determineApproachMutation.mutate(
       {
         requestBody: {
-          llm_job_type: LLMJobType.METADATA_EXTRACTION,
+          llm_job_type: TaskType.METADATA_EXTRACTION,
           project_id: projectId,
-          prompts: [],
-          specific_llm_job_parameters: {
-            llm_job_type: LLMJobType.METADATA_EXTRACTION,
+          specific_task_parameters: {
+            llm_job_type: TaskType.METADATA_EXTRACTION,
             project_metadata_ids: projectMetadata.map((metadata) => metadata.id),
             sdoc_ids: selectedDocuments,
           },
@@ -47,8 +47,8 @@ function ProjectMetadataSelectionStep({ projectId }: { projectId: number }) {
       {
         onSuccess(data) {
           dispatch(
-            CRUDDialogActions.llmDialogGoToPromptEditor({
-              prompts: data,
+            CRUDDialogActions.llmDialogGoToApproachSelection({
+              approach: data,
               tags: [],
               metadata: projectMetadata,
               codes: [],
@@ -78,7 +78,7 @@ function ProjectMetadataSelectionStep({ projectId }: { projectId: number }) {
           <DialogActions sx={{ width: "100%", p: 0 }}>
             <Box flexGrow={1} />
             <Button
-              disabled={createPromptTemplatesMutation.isPending}
+              disabled={determineApproachMutation.isPending}
               onClick={() => dispatch(CRUDDialogActions.previousLLMDialogStep())}
             >
               Back
@@ -86,7 +86,7 @@ function ProjectMetadataSelectionStep({ projectId }: { projectId: number }) {
             <LoadingButton
               variant="contained"
               startIcon={<PlayCircleIcon />}
-              loading={createPromptTemplatesMutation.isPending}
+              loading={determineApproachMutation.isPending}
               loadingPosition="start"
               disabled={props.selectedProjectMetadata.length === 0}
               onClick={handleNext(props.selectedProjectMetadata)}

@@ -22,7 +22,7 @@ function LLMJobListItem({ initialLLMJob }: LLMJobListItemProps) {
   const createdDate = dateToLocaleString(llmJob.data!.created);
   const updatedDate = dateToLocaleString(llmJob.data!.updated);
   let subTitle = `${
-    llmJob.data!.parameters.specific_llm_job_parameters.sdoc_ids.length
+    llmJob.data!.parameters.specific_task_parameters.sdoc_ids.length
   } documents, started at ${createdDate}`;
   if (llmJob.data!.status === BackgroundJobStatus.FINISHED) {
     subTitle += `, finished at ${updatedDate}`;

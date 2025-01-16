@@ -112,7 +112,7 @@ const SentenceAnnotator = ({ sdocData, ...props }: SentenceAnnotatorProps & BoxP
   const annotationMenuRef = useRef<CodeSelectorHandle>(null);
   const dispatch = useAppDispatch();
   const openSnackbar = useOpenSnackbar();
-  const createMutation = useCreateSentenceAnnotation(user!.id);
+  const createMutation = useCreateSentenceAnnotation(user?.id || -1);
   const deleteMutation = useDeleteSentenceAnnotation();
   const updateMutation = useUpdateSentenceAnnotation();
   const handleCodeSelectorDeleteAnnotation = (annotation: Annotation) => {

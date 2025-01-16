@@ -5,31 +5,31 @@ import { MRT_RowSelectionState } from "material-react-table";
 import { useState } from "react";
 import LLMHooks from "../../../api/LLMHooks.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
-import { LLMJobType } from "../../../api/openapi/models/LLMJobType.ts";
+import { TaskType } from "../../../api/openapi/models/TaskType.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import TagTable from "../../Tag/TagTable.tsx";
 import { CRUDDialogActions } from "../../dialogSlice.ts";
 import LLMUtterance from "./LLMUtterance.tsx";
 
-function DocumentTagSelectionStep({ projectId }: { projectId: number }) {
+function DocumentTagSelectionStep() {
   // local state
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
 
   // global state
+  const projectId = useAppSelector((state) => state.dialog.llmProjectId);
   const selectedDocuments = useAppSelector((state) => state.dialog.llmDocumentIds);
   const dispatch = useAppDispatch();
 
   // initiate next step (get the generated prompts)
-  const createPromptTemplatesMutation = LLMHooks.useCreatePromptTemplates();
+  const determineApproachMutation = LLMHooks.useDetermineApproach();
   const handleNext = (tags: DocumentTagRead[]) => () => {
-    createPromptTemplatesMutation.mutate(
+    determineApproachMutation.mutate(
       {
         requestBody: {
-          llm_job_type: LLMJobType.DOCUMENT_TAGGING,
+          llm_job_type: TaskType.DOCUMENT_TAGGING,
           project_id: projectId,
-          prompts: [],
-          specific_llm_job_parameters: {
-            llm_job_type: LLMJobType.DOCUMENT_TAGGING,
+          specific_task_parameters: {
+            llm_job_type: TaskType.DOCUMENT_TAGGING,
             tag_ids: tags.map((tag) => tag.id),
             sdoc_ids: selectedDocuments,
           },
@@ -37,7 +37,9 @@ function DocumentTagSelectionStep({ projectId }: { projectId: number }) {
       },
       {
         onSuccess(data) {
-          dispatch(CRUDDialogActions.llmDialogGoToPromptEditor({ prompts: data, tags: tags, metadata: [], codes: [] }));
+          dispatch(
+            CRUDDialogActions.llmDialogGoToApproachSelection({ approach: data, tags: tags, metadata: [], codes: [] }),
+          );
         },
       },
     );
@@ -61,7 +63,7 @@ function DocumentTagSelectionStep({ projectId }: { projectId: number }) {
           <DialogActions sx={{ width: "100%", p: 0 }}>
             <Box flexGrow={1} />
             <Button
-              disabled={createPromptTemplatesMutation.isPending}
+              disabled={determineApproachMutation.isPending}
               onClick={() => dispatch(CRUDDialogActions.previousLLMDialogStep())}
             >
               Back
@@ -69,7 +71,7 @@ function DocumentTagSelectionStep({ projectId }: { projectId: number }) {
             <LoadingButton
               variant="contained"
               startIcon={<PlayCircleIcon />}
-              loading={createPromptTemplatesMutation.isPending}
+              loading={determineApproachMutation.isPending}
               loadingPosition="start"
               disabled={props.selectedTags.length === 0}
               onClick={handleNext(props.selectedTags)}

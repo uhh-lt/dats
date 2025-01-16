@@ -1,12 +1,15 @@
 import { AlertProps } from "@mui/material";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
+import { ApproachRecommendation } from "../api/openapi/models/ApproachRecommendation.ts";
+import { ApproachType } from "../api/openapi/models/ApproachType.ts";
 import { BBoxAnnotationReadResolved } from "../api/openapi/models/BBoxAnnotationReadResolved.ts";
 import { CodeRead } from "../api/openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "../api/openapi/models/DocumentTagRead.ts";
 import { LLMJobResult } from "../api/openapi/models/LLMJobResult.ts";
-import { LLMJobType } from "../api/openapi/models/LLMJobType.ts";
 import { LLMPromptTemplates } from "../api/openapi/models/LLMPromptTemplates.ts";
 import { ProjectMetadataRead } from "../api/openapi/models/ProjectMetadataRead.ts";
+import { TaskType } from "../api/openapi/models/TaskType.ts";
+import { TrainingParameters } from "../api/openapi/models/TrainingParameters.ts";
 import { SnackbarEvent } from "../components/SnackbarDialog/SnackbarEvent.ts";
 import { CodeCreateSuccessHandler } from "./Code/CodeCreateDialog.tsx";
 import { LLMAssistanceEvent } from "./LLMDialog/LLMEvent.ts";
@@ -39,13 +42,17 @@ interface DialogState {
   isProjectSettingsOpen: boolean;
   // llm dialog
   isLLMDialogOpen: boolean;
-  llmMethod?: LLMJobType;
+  llmProjectId: number;
+  llmMethod?: TaskType;
   llmDocumentIds: number[];
   llmStep: number;
   llmTags: DocumentTagRead[];
   llmMetadata: ProjectMetadataRead[];
   llmCodes: CodeRead[];
+  llmApproach: ApproachType;
+  llmApproachRecommendation: ApproachRecommendation;
   llmPrompts: LLMPromptTemplates[];
+  llmParameters: TrainingParameters;
   llmJobId?: string;
   llmJobResult: LLMJobResult | null | undefined;
 }
@@ -82,13 +89,25 @@ const initialState: DialogState = {
   isProjectSettingsOpen: false,
   // llm dialog
   isLLMDialogOpen: false,
+  llmProjectId: -1,
   llmDocumentIds: [],
   llmMethod: undefined,
   llmStep: 0,
   llmTags: [],
   llmMetadata: [],
   llmCodes: [],
+  llmApproach: ApproachType.LLM_ZERO_SHOT,
+  llmApproachRecommendation: {
+    available_approaches: {},
+    recommended_approach: ApproachType.LLM_ZERO_SHOT,
+    reasoning: "",
+  },
   llmPrompts: [],
+  llmParameters: {
+    batch_size: 1,
+    max_epochs: 1,
+    learning_rate: 1,
+  },
   llmJobId: undefined,
   llmJobResult: undefined,
 };
@@ -178,65 +197,92 @@ export const dialogSlice = createSlice({
     closeProjectSettings: (state) => {
       state.isProjectSettingsOpen = false;
     },
-    // Step 0: Select documents & open the dialog
+    // Step 0: Select documents -> Open the dialog
     openLLMDialog: (state, action: PayloadAction<{ event: LLMAssistanceEvent }>) => {
       state.isLLMDialogOpen = true;
       state.llmDocumentIds = action.payload.event.selectedDocumentIds;
       state.llmMethod = action.payload.event.method;
       state.llmStep = action.payload.event.method === undefined ? 0 : 1;
+      state.llmProjectId = action.payload.event.projectId;
     },
-    // Step 1: Select method
-    llmDialogGoToDataSelection: (state, action: PayloadAction<{ method: LLMJobType }>) => {
+    // Step 1: Select method -> Go to the data selection
+    llmDialogGoToDataSelection: (state, action: PayloadAction<{ method: TaskType }>) => {
       state.llmMethod = action.payload.method;
       state.llmStep = 1;
     },
-    // Step 2: Select tags, metadata, or codes
-    llmDialogGoToPromptEditor: (
+    // Step 2: Select tags, metadata, or codes -> Go to the model selection
+    llmDialogGoToApproachSelection: (
       state,
       action: PayloadAction<{
-        prompts: LLMPromptTemplates[];
+        approach: ApproachRecommendation;
         tags: DocumentTagRead[];
         metadata: ProjectMetadataRead[];
         codes: CodeRead[];
       }>,
     ) => {
       state.llmStep = 2;
-      state.llmPrompts = action.payload.prompts;
+      state.llmApproachRecommendation = action.payload.approach;
+      state.llmApproach = action.payload.approach.recommended_approach;
       state.llmTags = action.payload.tags;
       state.llmMetadata = action.payload.metadata;
       state.llmCodes = action.payload.codes;
     },
-    // Step 3: Edit the prompts
-    updateLLMPrompts: (
+    // Step 3: Select the approach (zero-shot, few-shot, or model training)
+    // -> For zero-shot and few-shot, go to the prompt editor
+    llmDialogGoToPromptEditor: (
       state,
-      action: PayloadAction<{ language: string; systemPrompt: string; userPrompt: string }>,
+      action: PayloadAction<{
+        approach: ApproachType;
+        prompts: LLMPromptTemplates[];
+      }>,
     ) => {
-      const updatedPrompts = state.llmPrompts.map((prompt) => {
-        if (prompt.language === action.payload.language) {
-          return {
-            ...prompt,
-            system_prompt: action.payload.systemPrompt,
-            user_prompt: action.payload.userPrompt,
-          };
-        }
-        return prompt;
-      });
-      state.llmPrompts = updatedPrompts.slice();
-    },
-    llmDialogGoToWaiting: (state, action: PayloadAction<{ jobId: string; method: LLMJobType }>) => {
-      state.isLLMDialogOpen = true;
       state.llmStep = 3;
-      state.llmJobId = action.payload.jobId;
-      state.llmMethod = action.payload.method;
+      state.llmPrompts = action.payload.prompts;
+      state.llmApproach = action.payload.approach;
     },
-    // Step 4: Wait for the job to finish
+    // -> For model training, go to the training parameters editor
+    llmDialogGoToTrainingParameterEditor: (
+      state,
+      action: PayloadAction<{
+        approach: ApproachType;
+        trainingParameters: TrainingParameters;
+      }>,
+    ) => {
+      state.llmStep = 3;
+      state.llmApproach = action.payload.approach;
+      state.llmParameters = action.payload.trainingParameters;
+    },
+    // Step 4 Variant A: Edit the prompts -> start the job & go to the waiting screen
+    // Step 4 Variant B: Edit the trainingParameters -> start the job & go to the waiting screen
+    llmDialogGoToWaiting: (
+      state,
+      action: PayloadAction<{
+        jobId: string;
+        trainingParameters?: TrainingParameters;
+        prompts?: LLMPromptTemplates[];
+        // method: LLMJobType;
+      }>,
+    ) => {
+      state.isLLMDialogOpen = true;
+      state.llmStep = 4;
+      state.llmJobId = action.payload.jobId;
+      // state.llmMethod = action.payload.method;
+      if (action.payload.trainingParameters) {
+        state.llmParameters = action.payload.trainingParameters;
+      }
+      if (action.payload.prompts) {
+        state.llmPrompts = action.payload.prompts;
+      }
+    },
+    // Step 5: Wait for the job to finish
     llmDialogGoToResult: (state, action: PayloadAction<{ result: LLMJobResult }>) => {
       state.llmJobResult = action.payload.result;
-      state.llmStep = 4;
+      state.llmStep = 5;
     },
     // close the dialog & reset
     closeLLMDialog: (state) => {
       state.isLLMDialogOpen = initialState.isLLMDialogOpen;
+      state.llmProjectId = initialState.llmProjectId;
       state.llmDocumentIds = initialState.llmDocumentIds;
       state.llmMethod = initialState.llmMethod;
       state.llmStep = initialState.llmStep;
@@ -244,6 +290,9 @@ export const dialogSlice = createSlice({
       state.llmMetadata = initialState.llmMetadata;
       state.llmCodes = initialState.llmCodes;
       state.llmPrompts = initialState.llmPrompts;
+      state.llmParameters = initialState.llmParameters;
+      state.llmApproach = initialState.llmApproach;
+      state.llmApproachRecommendation = initialState.llmApproachRecommendation;
       state.llmJobId = initialState.llmJobId;
       state.llmJobResult = initialState.llmJobResult;
     },

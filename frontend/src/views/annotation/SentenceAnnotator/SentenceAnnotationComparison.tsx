@@ -18,7 +18,9 @@ import { Annotation } from "../Annotation.ts";
 import AnnotationMenu, { CodeSelectorHandle } from "../AnnotationMenu/AnnotationMenu.tsx";
 import { ICode } from "../ICode.ts";
 import {
+  useCreateBulkSentenceAnnotation,
   useCreateSentenceAnnotation,
+  useDeleteBulkSentenceAnnotation,
   useDeleteSentenceAnnotation,
   useUpdateSentenceAnnotation,
 } from "./sentenceAnnotationHooks.ts";
@@ -55,7 +57,9 @@ const SentenceAnnotationComparison = ({ sdocData, ...props }: SentenceAnnotation
   const dispatch = useAppDispatch();
   const openSnackbar = useOpenSnackbar();
   const createMutation = useCreateSentenceAnnotation(user!.id);
+  const createBulkMutation = useCreateBulkSentenceAnnotation(user!.id);
   const deleteMutation = useDeleteSentenceAnnotation();
+  const deleteBulkMutation = useDeleteBulkSentenceAnnotation(user!.id);
   const updateMutation = useUpdateSentenceAnnotation();
   const handleCodeSelectorDeleteAnnotation = (annotation: Annotation) => {
     deleteMutation.mutate(
@@ -151,11 +155,108 @@ const SentenceAnnotationComparison = ({ sdocData, ...props }: SentenceAnnotation
 
   // batch processing events
   const handleClickApplyAll = () => {
-    console.log("apply all");
+    // find my and the other person's annotations
+    const otherAnnotator = leftUserId === user!.id ? annotatorRight : annotatorLeft;
+    const myAnnotator = leftUserId === user!.id ? annotatorLeft : annotatorRight;
+    if (myAnnotator.annotatorResult === undefined) return;
+    if (otherAnnotator.annotatorResult === undefined) return;
+
+    // identify differences: which annotations are only in the other person's annotations
+    const newAnnotations: SentenceAnnotationReadResolved[] = [];
+    // 1. iterate over all sentences & their annotations
+    Object.entries(otherAnnotator.annotatorResult.sentence_annotations).forEach(([sentenceId, otherAnnotations]) => {
+      const sentId = parseInt(sentenceId);
+
+      // 2. find others annotations that are starting at the current sentence
+      const otherAnnotationsAtSentence = otherAnnotations.filter((sa) => sa.sentence_id_start === sentId);
+
+      // 3. find my annotations that are starting at the current sentence
+      const myAnnotationsAtSentence = myAnnotator.annotatorResult!.sentence_annotations[sentenceId].filter(
+        (sa) => sa.sentence_id_start === sentId,
+      );
+
+      // 4. find annotations that are only in the other person's annotations
+      const onlyInOtherAnnotations = otherAnnotationsAtSentence.filter((otherAnnotation) => {
+        return !myAnnotationsAtSentence.some((myAnnotation) => isAnnotationSame(myAnnotation, otherAnnotation));
+      });
+
+      // 5. add these annotations to the newAnnotations array
+      newAnnotations.push(...onlyInOtherAnnotations);
+    });
+
+    if (newAnnotations.length === 0) {
+      return;
+    }
+
+    createBulkMutation.mutate(
+      {
+        annotations: newAnnotations.map((annotation) => ({
+          code: annotation.code,
+          sdocId: annotation.sdoc_id,
+          start: annotation.sentence_id_start,
+          end: annotation.sentence_id_end,
+        })),
+        sdocId: sdocData.id,
+      },
+      {
+        onSuccess: () => {
+          openSnackbar({
+            text: `Applied All Sentence Annotations`,
+            severity: "success",
+          });
+        },
+      },
+    );
   };
 
   const handleClickRevertAll = () => {
-    console.log("revert all");
+    // find my and the other person's annotations
+    const otherAnnotator = leftUserId === user!.id ? annotatorRight : annotatorLeft;
+    const myAnnotator = leftUserId === user!.id ? annotatorLeft : annotatorRight;
+    if (myAnnotator.annotatorResult === undefined) return;
+    if (otherAnnotator.annotatorResult === undefined) return;
+
+    // identify same annotations: which annotations are only in the other person's annotations and in mine
+    const sameAnnotations: SentenceAnnotationReadResolved[] = [];
+    // 1. iterate over all sentences & their annotations
+    Object.entries(otherAnnotator.annotatorResult.sentence_annotations).forEach(([sentenceId, otherAnnotations]) => {
+      const sentId = parseInt(sentenceId);
+
+      // 2. find others annotations that are starting at the current sentence
+      const otherAnnotationsAtSentence = otherAnnotations.filter((sa) => sa.sentence_id_start === sentId);
+
+      // 3. find my annotations that are starting at the current sentence
+      const myAnnotationsAtSentence = myAnnotator.annotatorResult!.sentence_annotations[sentenceId].filter(
+        (sa) => sa.sentence_id_start === sentId,
+      );
+
+      // 4. find annotations that are same in the other person's annotations and in mine
+      const inBothAnnotations = myAnnotationsAtSentence.filter((otherAnnotation) => {
+        return otherAnnotationsAtSentence.some((myAnnotation) => isAnnotationSame(myAnnotation, otherAnnotation));
+      });
+
+      // 5. add these annotations to the newAnnotations array
+      sameAnnotations.push(...inBothAnnotations);
+    });
+
+    if (sameAnnotations.length === 0) {
+      return;
+    }
+
+    deleteBulkMutation.mutate(
+      {
+        sdocId: sdocData.id,
+        sentenceAnnotationToDelete: sameAnnotations,
+      },
+      {
+        onSuccess: () => {
+          openSnackbar({
+            text: `Reverted All Sentence Annotations`,
+            severity: "success",
+          });
+        },
+      },
+    );
   };
 
   // single processing events
@@ -293,6 +394,7 @@ const SentenceAnnotationComparison = ({ sdocData, ...props }: SentenceAnnotation
             showBulkActions={leftUserId === user!.id || rightUserId === user!.id}
             onClickRevertAll={handleClickRevertAll}
             onClickApplyAll={handleClickApplyAll}
+            isDirectionLeft={leftUserId === user!.id}
           />
           {sdocData.sentences.map((sentence, sentenceId) => (
             <DocumentSentence
@@ -332,6 +434,7 @@ interface DocumentSentenceHeaderProps {
   showBulkActions: boolean;
   onClickRevertAll: () => void;
   onClickApplyAll: () => void;
+  isDirectionLeft: boolean;
 }
 
 const DocumentSentenceHeader = ({
@@ -343,6 +446,7 @@ const DocumentSentenceHeader = ({
   showBulkActions,
   onClickApplyAll,
   onClickRevertAll,
+  isDirectionLeft,
 }: DocumentSentenceHeaderProps) => {
   return (
     <Stack direction="row" width="100%">
@@ -363,11 +467,19 @@ const DocumentSentenceHeader = ({
             }}
           >
             <Stack direction="row" alignItems="center">
-              <Button onClick={onClickRevertAll}>Revert</Button>
+              {isDirectionLeft ? (
+                <Button onClick={onClickApplyAll}>Apply</Button>
+              ) : (
+                <Button onClick={onClickRevertAll}>Revert</Button>
+              )}
               <Typography variant="button" color="primary">
                 |
               </Typography>
-              <Button onClick={onClickApplyAll}>Apply</Button>
+              {isDirectionLeft ? (
+                <Button onClick={onClickRevertAll}>Revert</Button>
+              ) : (
+                <Button onClick={onClickApplyAll}>Apply</Button>
+              )}
               <Typography variant="button" color="primary" sx={{ pr: 1 }}>
                 All
               </Typography>

@@ -21,7 +21,7 @@ function AnnotationResultStep() {
 
   if (llmJob.isSuccess && llmJob.data.result) {
     return (
-      <AnnotationResultStepContent jobResult={llmJob.data.result.specific_llm_job_result as AnnotationLLMJobResult} />
+      <AnnotationResultStepContent jobResult={llmJob.data.result.specific_task_result as AnnotationLLMJobResult} />
     );
   } else if (llmJob.isLoading) {
     return (
@@ -32,7 +32,7 @@ function AnnotationResultStep() {
   } else if (llmJob.isError) {
     return <DialogContent>{llmJob.error.message}</DialogContent>;
   } else {
-    return null;
+    return <></>;
   }
 }
 

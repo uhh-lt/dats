@@ -78,6 +78,86 @@ export const useCreateSentenceAnnotation = (currentUserId: number) =>
     },
   });
 
+export const useCreateBulkSentenceAnnotation = (currentUserId: number) =>
+  useMutation({
+    mutationFn: async ({
+      sdocId,
+      annotations,
+    }: {
+      sdocId: number;
+      annotations: { code: CodeRead; start: number; end: number }[];
+    }) =>
+      SentenceAnnotationService.addSentenceAnnotationsBulk({
+        requestBody: annotations.map((annotation) => ({
+          code_id: annotation.code.id,
+          sdoc_id: sdocId,
+          sentence_id_start: annotation.start,
+          sentence_id_end: annotation.end,
+        })),
+        resolve: true,
+      }),
+    // optimistic updates
+    onMutate: async (variables) => {
+      // when we create a new span annotation, we add a new annotation to a certain annotation document
+      // thus, we only affect the annotation document that we are adding to
+      const affectedQueryKey = [QueryKey.SDOC_SENTENCE_ANNOTATIONS, variables.sdocId, currentUserId];
+
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries({ queryKey: affectedQueryKey });
+
+      // Snapshot the previous value
+      const previousSentenceAnnotator = queryClient.getQueryData<SentenceAnnotatorResult>(affectedQueryKey);
+
+      // Optimistically update to the new value
+      let fakeID = FAKE_ANNOTATION_ID;
+      queryClient.setQueryData<SentenceAnnotatorResult>(affectedQueryKey, (old) => {
+        if (!old) return old;
+
+        const newSentenceAnnotations = Object.entries(old.sentence_annotations).reduce(
+          (acc, [sentId, annotations]) => {
+            acc[sentId] = annotations;
+
+            const sentenceId = parseInt(sentId);
+            variables.annotations.forEach((newAnnotation) => {
+              if (sentenceId >= newAnnotation.start && sentenceId <= newAnnotation.end) {
+                acc[sentId] = [
+                  ...acc[sentId],
+                  {
+                    id: fakeID,
+                    sdoc_id: variables.sdocId,
+                    user_id: currentUserId,
+                    code: newAnnotation.code,
+                    sentence_id_start: newAnnotation.start,
+                    sentence_id_end: newAnnotation.end,
+                    created: new Date().toISOString(),
+                    updated: new Date().toISOString(),
+                  },
+                ];
+                fakeID = fakeID - 1;
+              }
+            });
+
+            return acc;
+          },
+          {} as Record<string, SentenceAnnotationReadResolved[]>,
+        );
+        return { sentence_annotations: newSentenceAnnotations };
+      });
+      // Return a context object with the snapshotted value
+      return { previousSentenceAnnotator, affectedQueryKey };
+    },
+    onError: (_error: Error, _newSpanAnnotation, context) => {
+      if (!context) return;
+      // If the mutation fails, use the context returned from onMutate to roll back
+      queryClient.setQueryData(context.affectedQueryKey, context.previousSentenceAnnotator);
+    },
+    // Always re-fetch after error or success:
+    onSettled: (_data, _error, _variables, context) => {
+      if (!context) return;
+      queryClient.invalidateQueries({ queryKey: context.affectedQueryKey });
+    },
+  });
+
 export const useUpdateSentenceAnnotation = () =>
   useMutation({
     mutationFn: (variables: {
@@ -178,6 +258,64 @@ export const useDeleteSentenceAnnotation = () =>
         const newSentenceAnnotations = Object.entries(old.sentence_annotations).reduce(
           (acc, [sentId, annotations]) => {
             acc[sentId] = annotations.filter((annotation) => annotation.id !== sentenceAnnotationToDelete.id);
+            return acc;
+          },
+          {} as Record<string, SentenceAnnotationReadResolved[]>,
+        );
+
+        return { sentence_annotations: newSentenceAnnotations };
+      });
+
+      // Return a context object with the snapshotted value
+      return { previousSentenceAnnotator, affectedQueryKey };
+    },
+    onError: (_error: Error, _sentenceAnnotationToDelete, context) => {
+      if (!context) return;
+      // If the mutation fails, use the context returned from onMutate to roll back
+      queryClient.setQueryData<SentenceAnnotatorResult>(context.affectedQueryKey, context.previousSentenceAnnotator);
+    },
+    // Always re-fetch after error or success:
+    onSettled: (_data, _error, _variables, context) => {
+      if (!context) return;
+      queryClient.invalidateQueries({ queryKey: context.affectedQueryKey });
+    },
+  });
+
+export const useDeleteBulkSentenceAnnotation = (currentUserId: number) =>
+  useMutation({
+    mutationFn: (variables: {
+      sdocId: number;
+      sentenceAnnotationToDelete:
+        | Omit<SentenceAnnotationRead, "sdocId">[]
+        | Omit<SentenceAnnotationReadResolved, "sdocId">[];
+    }) =>
+      SentenceAnnotationService.deleteBulkById({
+        requestBody: variables.sentenceAnnotationToDelete.map((anno) => anno.id),
+      }),
+    // optimistic updates
+    onMutate: async (variables) => {
+      // when we delete a span annotation, we remove an annotation from a certain annotation document
+      // thus, we only affect the annotation document that we are removing from
+      const affectedQueryKey = [QueryKey.SDOC_SENTENCE_ANNOTATIONS, variables.sdocId, currentUserId];
+
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries({ queryKey: affectedQueryKey });
+
+      // Snapshot the previous value
+      const previousSentenceAnnotator = queryClient.getQueryData<SentenceAnnotatorResult>(affectedQueryKey);
+
+      const idsToDelete = variables.sentenceAnnotationToDelete.map((anno) => anno.id);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData<SentenceAnnotatorResult>(affectedQueryKey, (old) => {
+        if (old === undefined) {
+          return undefined;
+        }
+
+        const newSentenceAnnotations = Object.entries(old.sentence_annotations).reduce(
+          (acc, [sentId, annotations]) => {
+            // filter out the annotations that are to be deleted
+            acc[sentId] = annotations.filter((annotation) => !idsToDelete.includes(annotation.id));
             return acc;
           },
           {} as Record<string, SentenceAnnotationReadResolved[]>,
