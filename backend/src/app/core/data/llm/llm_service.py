@@ -4,6 +4,7 @@ from typing import Callable, Dict, List, Type, Union
 from loguru import logger
 from sqlalchemy.orm import Session
 
+from app.core.data.crud.code import crud_code
 from app.core.data.crud.sentence_annotation import crud_sentence_anno
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
@@ -12,20 +13,30 @@ from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.llm_job import (
     AnnotationLLMJobResult,
+    AnnotationParams,
     AnnotationResult,
+    ApproachRecommendation,
+    ApproachType,
     DocumentTaggingLLMJobResult,
+    DocumentTaggingParams,
     DocumentTaggingResult,
     LLMJobCreate,
     LLMJobParameters,
+    LLMJobParameters2,
     LLMJobRead,
     LLMJobResult,
-    LLMJobType,
     LLMJobUpdate,
     LLMPromptTemplates,
     MetadataExtractionLLMJobResult,
+    MetadataExtractionParams,
     MetadataExtractionResult,
+    ModelTrainingParams,
     SentenceAnnotationLLMJobResult,
+    SentenceAnnotationParams,
     SentenceAnnotationResult,
+    TaskType,
+    TrainingParameters,
+    ZeroShotParams,
 )
 from app.core.data.dto.sentence_annotation import (
     SentenceAnnotationCreate,
@@ -43,9 +54,16 @@ from app.core.data.llm.prompts.sentence_annotation_prompt_builder import (
     SentenceAnnotationPromptBuilder,
 )
 from app.core.data.llm.prompts.tagging_prompt_builder import TaggingPromptBuilder
+from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
+from app.core.db.weaviate_service import WeaviateService
+from app.preprocessing.ray_model_service import RayModelService
+from app.preprocessing.ray_model_worker.dto.seqsenttagger import (
+    SeqSentTaggerDoc,
+    SeqSentTaggerJobInput,
+)
 from app.util.singleton_meta import SingletonMeta
 
 
@@ -65,7 +83,7 @@ class NoSuchLLMJobError(Exception):
 
 
 class UnsupportedLLMJobTypeError(Exception):
-    def __init__(self, llm_job_type: LLMJobType) -> None:
+    def __init__(self, llm_job_type: TaskType) -> None:
         super().__init__(f"LLMJobType {llm_job_type} is not supported! ")
 
 
@@ -75,21 +93,41 @@ class LLMService(metaclass=SingletonMeta):
         cls.redis: RedisService = RedisService()
         cls.sqls: SQLService = SQLService()
         cls.ollamas: OllamaService = OllamaService()
+        cls.rms: RayModelService = RayModelService()
+        cls.sss: WeaviateService = WeaviateService()
 
         # map from job_type to function
-        cls.llm_method_for_job_type: Dict[LLMJobType, Callable[..., LLMJobResult]] = {
-            LLMJobType.DOCUMENT_TAGGING: cls._llm_document_tagging,
-            LLMJobType.METADATA_EXTRACTION: cls._llm_metadata_extraction,
-            LLMJobType.ANNOTATION: cls._llm_annotation,
-            LLMJobType.SENTENCE_ANNOTATION: cls._llm_sentence_annotation,
+        cls.llm_method_for_job_approach_type: Dict[
+            TaskType, Dict[ApproachType, Callable[..., LLMJobResult]]
+        ] = {
+            TaskType.DOCUMENT_TAGGING: {
+                ApproachType.LLM_ZERO_SHOT: cls._llm_document_tagging,
+                ApproachType.LLM_FEW_SHOT: cls._llm_document_tagging,
+                ApproachType.MODEL_TRAINING: cls._llm_document_tagging,
+            },
+            TaskType.METADATA_EXTRACTION: {
+                ApproachType.LLM_ZERO_SHOT: cls._llm_metadata_extraction,
+                ApproachType.LLM_FEW_SHOT: cls._llm_metadata_extraction,
+                ApproachType.MODEL_TRAINING: cls._llm_metadata_extraction,
+            },
+            TaskType.ANNOTATION: {
+                ApproachType.LLM_ZERO_SHOT: cls._llm_annotation,
+                ApproachType.LLM_FEW_SHOT: cls._llm_annotation,
+                ApproachType.MODEL_TRAINING: cls._llm_annotation,
+            },
+            TaskType.SENTENCE_ANNOTATION: {
+                ApproachType.LLM_ZERO_SHOT: cls._llm_sentence_annotation,
+                ApproachType.LLM_FEW_SHOT: cls._llm_sentence_annotation,
+                ApproachType.MODEL_TRAINING: cls._ray_sentence_annotation,
+            },
         }
 
         # map from job_type to promt builder
-        cls.llm_prompt_builder_for_job_type: Dict[LLMJobType, Type[PromptBuilder]] = {
-            LLMJobType.DOCUMENT_TAGGING: TaggingPromptBuilder,
-            LLMJobType.METADATA_EXTRACTION: MetadataPromptBuilder,
-            LLMJobType.ANNOTATION: AnnotationPromptBuilder,
-            LLMJobType.SENTENCE_ANNOTATION: SentenceAnnotationPromptBuilder,
+        cls.llm_prompt_builder_for_job_type: Dict[TaskType, Type[PromptBuilder]] = {
+            TaskType.DOCUMENT_TAGGING: TaggingPromptBuilder,
+            TaskType.METADATA_EXTRACTION: MetadataPromptBuilder,
+            TaskType.ANNOTATION: AnnotationPromptBuilder,
+            TaskType.SENTENCE_ANNOTATION: SentenceAnnotationPromptBuilder,
         }
 
         return super(LLMService, cls).__new__(cls)
@@ -98,7 +136,7 @@ class LLMService(metaclass=SingletonMeta):
         # TODO check all job type specific parameters
         return True
 
-    def prepare_llm_job(self, llm_params: LLMJobParameters) -> LLMJobRead:
+    def prepare_llm_job(self, llm_params: LLMJobParameters2) -> LLMJobRead:
         if not self._assert_all_requested_data_exists(llm_params=llm_params):
             raise LLMJobPreparationError(
                 cause="Not all requested data for the LLM job exists!"
@@ -106,7 +144,7 @@ class LLMService(metaclass=SingletonMeta):
 
         llmj_create = LLMJobCreate(
             parameters=llm_params,
-            num_steps_total=len(llm_params.specific_llm_job_parameters.sdoc_ids),
+            num_steps_total=len(llm_params.specific_task_parameters.sdoc_ids),
             num_steps_finished=0,
         )
         try:
@@ -144,40 +182,154 @@ class LLMService(metaclass=SingletonMeta):
             update=LLMJobUpdate(status=BackgroundJobStatus.RUNNING),
         )
 
-        try:
-            with self.sqls.db_session() as db:
-                # get the llm method based on the jobtype
-                llm_method = self.llm_method_for_job_type.get(
-                    llmj.parameters.llm_job_type, None
-                )
-                if llm_method is None:
-                    raise UnsupportedLLMJobTypeError(llmj.parameters.llm_job_type)
+        # try:
+        with self.sqls.db_session() as db:
+            # get the llm method based on the jobtype
+            llm_method = self.llm_method_for_job_approach_type[
+                llmj.parameters.llm_job_type
+            ][llmj.parameters.llm_approach_type]
+            if llm_method is None:
+                raise UnsupportedLLMJobTypeError(llmj.parameters.llm_job_type)
 
-                # execute the llm_method with the provided specific parameters
-                result = llm_method(
-                    self=self,
-                    db=db,
-                    llm_job_id=llm_job_id,
-                    prompts=llmj.parameters.prompts,
-                    project_id=llmj.parameters.project_id,
-                    **llmj.parameters.specific_llm_job_parameters.model_dump(
-                        exclude={"llm_job_type"}
-                    ),
-                )
-
-            llmj = self._update_llm_job(
+            # execute the llm_method with the provided specific parameters
+            result = llm_method(
+                self=self,
+                db=db,
                 llm_job_id=llm_job_id,
-                update=LLMJobUpdate(result=result, status=BackgroundJobStatus.FINISHED),
+                project_id=llmj.parameters.project_id,
+                approach_parameters=llmj.parameters.specific_approach_parameters,
+                task_parameters=llmj.parameters.specific_task_parameters,
             )
 
-        except Exception as e:
-            logger.error(f"Cannot finish LLMJob: {e}")
-            self._update_llm_job(
-                llm_job_id=llm_job_id,
-                update=LLMJobUpdate(status=BackgroundJobStatus.ERROR),
-            )
+        llmj = self._update_llm_job(
+            llm_job_id=llm_job_id,
+            update=LLMJobUpdate(result=result, status=BackgroundJobStatus.FINISHED),
+        )
+
+        # except Exception as e:
+        #     logger.error(f"Cannot finish LLMJob: {e}")
+        #     self._update_llm_job(
+        #         llm_job_id=llm_job_id,
+        #         update=LLMJobUpdate(status=BackgroundJobStatus.ERROR),
+        #     )
 
         return llmj
+
+    def determine_approach(
+        self, llm_job_params: LLMJobParameters
+    ) -> ApproachRecommendation:
+        DEMO_USER_ID = 2
+
+        match llm_job_params.llm_job_type:
+            case TaskType.DOCUMENT_TAGGING:
+                return ApproachRecommendation(
+                    recommended_approach=ApproachType.LLM_ZERO_SHOT,
+                    available_approaches={
+                        ApproachType.LLM_ZERO_SHOT: True,
+                        ApproachType.LLM_FEW_SHOT: False,
+                        ApproachType.MODEL_TRAINING: False,
+                    },
+                    reasoning="Only zero-shot approach is available for document tagging (yet).",
+                )
+            case TaskType.METADATA_EXTRACTION:
+                return ApproachRecommendation(
+                    recommended_approach=ApproachType.LLM_ZERO_SHOT,
+                    available_approaches={
+                        ApproachType.LLM_ZERO_SHOT: True,
+                        ApproachType.LLM_FEW_SHOT: False,
+                        ApproachType.MODEL_TRAINING: False,
+                    },
+                    reasoning="Only zero-shot approach is available for metadata extraction (yet).",
+                )
+            case TaskType.ANNOTATION:
+                return ApproachRecommendation(
+                    recommended_approach=ApproachType.LLM_ZERO_SHOT,
+                    available_approaches={
+                        ApproachType.LLM_ZERO_SHOT: True,
+                        ApproachType.LLM_FEW_SHOT: False,
+                        ApproachType.MODEL_TRAINING: False,
+                    },
+                    reasoning="Only zero-shot approach is available for annotation (yet).",
+                )
+            case TaskType.SENTENCE_ANNOTATION:
+                assert isinstance(
+                    llm_job_params.specific_task_parameters,
+                    SentenceAnnotationParams,
+                )
+                selected_code_ids = llm_job_params.specific_task_parameters.code_ids
+
+                # 1. Find the number of labeled sentences for each code
+                with self.sqls.db_session() as db:
+                    sentence_annotations = [
+                        sa
+                        for sa in crud_sentence_anno.read_by_codes(
+                            db=db, code_ids=selected_code_ids
+                        )
+                        if sa.user_id
+                        != DEMO_USER_ID  # Filter out annotations of the system user
+                    ]
+
+                # 2. Find the code names
+                with self.sqls.db_session() as db:
+                    codes = crud_code.read_by_ids(db=db, ids=selected_code_ids)
+                    code_id2name = {code.id: code.name for code in codes}
+
+                # 3. Count annotations by code_id, get the code names
+                code_id2num_sent_annos = {code.id: 0 for code in codes}
+                for sent_anno in sentence_annotations:
+                    code_id2num_sent_annos[sent_anno.code_id] += 1
+
+                # 4. Determine the approach based on the minimum number of labeled sentences
+                # 4.1 find the code with the least labeled sentences
+                code_with_min_labeled_sentences = min(
+                    code_id2num_sent_annos.keys(),
+                    key=lambda k: code_id2num_sent_annos[k],
+                )
+                min_labeled_sentences = code_id2num_sent_annos[
+                    code_with_min_labeled_sentences
+                ]
+
+                # 4.2 create reasoning
+                reasoning = f"You selected {len(selected_code_ids)} codes. I checked the number of labeled sentences for each code and found:\n"
+                code_counts = []
+                for code_id, num_labeled_sentences in code_id2num_sent_annos.items():
+                    code_counts.append(
+                        f"{code_id2name[code_id]}: {num_labeled_sentences}"
+                    )
+                reasoning += "\n".join(code_counts)
+                reasoning += f"\nThe code with the least labeled sentences ({min_labeled_sentences}) is {code_id2name[code_with_min_labeled_sentences]}. Based on this, I recommend the following approach:"
+
+                # 4.3 determine the available approaches based on thresholds
+                available_approaches: Dict[ApproachType, bool] = {
+                    ApproachType.LLM_ZERO_SHOT: True,
+                    ApproachType.LLM_FEW_SHOT: min_labeled_sentences >= 3,
+                    ApproachType.MODEL_TRAINING: min_labeled_sentences >= 100,
+                }
+
+                # 4.4 determine the recommended approach based on thresholds
+                if min_labeled_sentences < 3:
+                    recommended_approach = ApproachType.LLM_ZERO_SHOT
+                elif min_labeled_sentences < 100:
+                    recommended_approach = ApproachType.LLM_FEW_SHOT
+                else:
+                    recommended_approach = ApproachType.MODEL_TRAINING
+
+                return ApproachRecommendation(
+                    recommended_approach=recommended_approach,
+                    available_approaches=available_approaches,
+                    reasoning=reasoning,
+                )
+            case _:
+                raise UnsupportedLLMJobTypeError(llm_job_params.llm_job_type)
+
+    def create_training_parameters(
+        self, llm_job_params: LLMJobParameters
+    ) -> TrainingParameters:
+        return TrainingParameters(
+            max_epochs=20,
+            batch_size=16,
+            learning_rate=0.0001,
+        )
 
     def create_prompt_templates(
         self, llm_job_params: LLMJobParameters
@@ -195,7 +347,7 @@ class LLMService(metaclass=SingletonMeta):
                 db=db, project_id=llm_job_params.project_id
             )
             return prompt_builder.build_prompt_templates(
-                **llm_job_params.specific_llm_job_parameters.model_dump(
+                **llm_job_params.specific_task_parameters.model_dump(
                     exclude={"llm_job_type"}
                 )
             )
@@ -221,28 +373,39 @@ class LLMService(metaclass=SingletonMeta):
 
     def _llm_document_tagging(
         self,
+        *,
         db: Session,
         llm_job_id: str,
-        prompts: List[LLMPromptTemplates],
         project_id: int,
-        sdoc_ids: List[int],
-        tag_ids: List[int],
+        approach_parameters: ZeroShotParams,
+        task_parameters: DocumentTaggingParams,
     ) -> LLMJobResult:
-        logger.info(f"Starting LLMJob - Document Tagging, num docs: {len(sdoc_ids)}")
+        assert isinstance(
+            task_parameters, DocumentTaggingParams
+        ), "Wrong task parameters!"
+        assert isinstance(
+            approach_parameters, ZeroShotParams
+        ), "Wrong approach parameters!"
+
+        logger.info(
+            f"Starting LLMJob - Document Tagging, num docs: {len(task_parameters.sdoc_ids)}"
+        )
 
         prompt_builder = TaggingPromptBuilder(db=db, project_id=project_id)
 
         # build prompt dict (to validate and access prompts by language and system / user)
         prompt_dict = self.construct_prompt_dict(
-            prompts=prompts, prompt_builder=prompt_builder
+            prompts=approach_parameters.prompts, prompt_builder=prompt_builder
         )
 
         # read sdocs
-        sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=sdoc_ids)
+        sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=task_parameters.sdoc_ids)
 
         # automatic document tagging
         result: List[DocumentTaggingResult] = []
-        for idx, (sdoc_id, sdoc_data) in enumerate(zip(sdoc_ids, sdoc_datas)):
+        for idx, (sdoc_id, sdoc_data) in enumerate(
+            zip(task_parameters.sdoc_ids, sdoc_datas)
+        ):
             if sdoc_data is None:
                 raise ValueError(
                     f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
@@ -308,35 +471,46 @@ class LLMService(metaclass=SingletonMeta):
             )
 
         return LLMJobResult(
-            llm_job_type=LLMJobType.DOCUMENT_TAGGING,
-            specific_llm_job_result=DocumentTaggingLLMJobResult(
-                llm_job_type=LLMJobType.DOCUMENT_TAGGING, results=result
+            llm_job_type=TaskType.DOCUMENT_TAGGING,
+            specific_task_result=DocumentTaggingLLMJobResult(
+                llm_job_type=TaskType.DOCUMENT_TAGGING, results=result
             ),
         )
 
     def _llm_metadata_extraction(
         self,
+        *,
         db: Session,
         llm_job_id: str,
-        prompts: List[LLMPromptTemplates],
         project_id: int,
-        sdoc_ids: List[int],
-        project_metadata_ids: List[int],
+        approach_parameters: ZeroShotParams,
+        task_parameters: MetadataExtractionParams,
     ) -> LLMJobResult:
-        logger.info(f"Starting LLMJob - Metadata Extraction, num docs: {len(sdoc_ids)}")
+        assert isinstance(
+            task_parameters, MetadataExtractionParams
+        ), "Wrong task parameters!"
+        assert isinstance(
+            approach_parameters, ZeroShotParams
+        ), "Wrong approach parameters!"
+
+        logger.info(
+            f"Starting LLMJob - Metadata Extraction, num docs: {len(task_parameters.sdoc_ids)}"
+        )
 
         prompt_builder = MetadataPromptBuilder(db=db, project_id=project_id)
 
         # build prompt dict (to validate and access prompts by language and system / user)
         prompt_dict = self.construct_prompt_dict(
-            prompts=prompts, prompt_builder=prompt_builder
+            prompts=approach_parameters.prompts, prompt_builder=prompt_builder
         )
 
         # read sdocs
-        sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=sdoc_ids)
+        sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=task_parameters.sdoc_ids)
         # automatic metadata extraction
         result: List[MetadataExtractionResult] = []
-        for idx, (sdoc_id, sdoc_data) in enumerate(zip(sdoc_ids, sdoc_datas)):
+        for idx, (sdoc_id, sdoc_data) in enumerate(
+            zip(task_parameters.sdoc_ids, sdoc_datas)
+        ):
             if sdoc_data is None:
                 raise ValueError(
                     f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
@@ -346,7 +520,7 @@ class LLMService(metaclass=SingletonMeta):
             current_metadata = [
                 SourceDocumentMetadataReadResolved.model_validate(metadata)
                 for metadata in crud_sdoc.read(db=db, id=sdoc_data.id).metadata_
-                if metadata.project_metadata_id in project_metadata_ids
+                if metadata.project_metadata_id in task_parameters.project_metadata_ids
             ]
             current_metadata_dict = {
                 metadata.project_metadata.id: metadata for metadata in current_metadata
@@ -393,7 +567,7 @@ class LLMService(metaclass=SingletonMeta):
 
             # create correct suggested metadata (map the parsed response to the current metadata)
             suggested_metadata = []
-            for project_metadata_id in project_metadata_ids:
+            for project_metadata_id in task_parameters.project_metadata_ids:
                 current = current_metadata_dict.get(project_metadata_id)
                 suggestion = parsed_response.get(project_metadata_id)
                 if current is None or suggestion is None:
@@ -422,38 +596,47 @@ class LLMService(metaclass=SingletonMeta):
             )
 
         return LLMJobResult(
-            llm_job_type=LLMJobType.METADATA_EXTRACTION,
-            specific_llm_job_result=MetadataExtractionLLMJobResult(
-                llm_job_type=LLMJobType.METADATA_EXTRACTION, results=result
+            llm_job_type=TaskType.METADATA_EXTRACTION,
+            specific_task_result=MetadataExtractionLLMJobResult(
+                llm_job_type=TaskType.METADATA_EXTRACTION, results=result
             ),
         )
 
     def _llm_annotation(
         self,
+        *,
         db: Session,
         llm_job_id: str,
-        prompts: List[LLMPromptTemplates],
         project_id: int,
-        sdoc_ids: List[int],
-        code_ids: List[int],
+        approach_parameters: ZeroShotParams,
+        task_parameters: AnnotationParams,
     ) -> LLMJobResult:
-        logger.info(f"Starting LLMJob - Annotation, num docs: {len(sdoc_ids)}")
+        assert isinstance(task_parameters, AnnotationParams), "Wrong task parameters!"
+        assert isinstance(
+            approach_parameters, ZeroShotParams
+        ), "Wrong approach parameters!"
+
+        logger.info(
+            f"Starting LLMJob - Annotation, num docs: {len(task_parameters.sdoc_ids)}"
+        )
 
         prompt_builder = AnnotationPromptBuilder(db=db, project_id=project_id)
         project_codes = prompt_builder.codeids2code_dict
 
         # build prompt dict (to validate and access prompts by language and system / user)
         prompt_dict = self.construct_prompt_dict(
-            prompts=prompts, prompt_builder=prompt_builder
+            prompts=approach_parameters.prompts, prompt_builder=prompt_builder
         )
 
         # read sdocs
-        sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=sdoc_ids)
+        sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=task_parameters.sdoc_ids)
 
         # automatic annotation
         annotation_id = 0
         result: List[AnnotationResult] = []
-        for idx, (sdoc_id, sdoc_data) in enumerate(zip(sdoc_ids, sdoc_datas)):
+        for idx, (sdoc_id, sdoc_data) in enumerate(
+            zip(task_parameters.sdoc_ids, sdoc_datas)
+        ):
             if sdoc_data is None:
                 raise ValueError(
                     f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
@@ -557,38 +740,49 @@ class LLMService(metaclass=SingletonMeta):
             )
 
         return LLMJobResult(
-            llm_job_type=LLMJobType.ANNOTATION,
-            specific_llm_job_result=AnnotationLLMJobResult(
-                llm_job_type=LLMJobType.ANNOTATION, results=result
+            llm_job_type=TaskType.ANNOTATION,
+            specific_task_result=AnnotationLLMJobResult(
+                llm_job_type=TaskType.ANNOTATION, results=result
             ),
         )
 
     def _llm_sentence_annotation(
         self,
+        *,
         db: Session,
         llm_job_id: str,
-        prompts: List[LLMPromptTemplates],
         project_id: int,
-        sdoc_ids: List[int],
-        code_ids: List[int],
+        approach_parameters: ZeroShotParams,
+        task_parameters: SentenceAnnotationParams,
     ) -> LLMJobResult:
-        logger.info(f"Starting LLMJob - Sentence Annotation, num docs: {len(sdoc_ids)}")
+        assert isinstance(
+            task_parameters, SentenceAnnotationParams
+        ), "Wrong task parameters!"
+        assert isinstance(
+            approach_parameters, ZeroShotParams
+        ), "Wrong approach parameters!"
+
+        logger.info(
+            f"Starting LLMJob - Sentence Annotation (OLLAMA), num docs: {len(task_parameters.sdoc_ids)}"
+        )
 
         prompt_builder = SentenceAnnotationPromptBuilder(db=db, project_id=project_id)
         project_codes = prompt_builder.codeids2code_dict
 
         # build prompt dict (to validate and access prompts by language and system / user)
         prompt_dict = self.construct_prompt_dict(
-            prompts=prompts, prompt_builder=prompt_builder
+            prompts=approach_parameters.prompts, prompt_builder=prompt_builder
         )
 
         # read sdocs
-        sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=sdoc_ids)
+        sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=task_parameters.sdoc_ids)
 
         # automatic annotation
         annotation_id = 0
         result: List[SentenceAnnotationResult] = []
-        for idx, (sdoc_id, sdoc_data) in enumerate(zip(sdoc_ids, sdoc_datas)):
+        for idx, (sdoc_id, sdoc_data) in enumerate(
+            zip(task_parameters.sdoc_ids, sdoc_datas)
+        ):
             if sdoc_data is None:
                 raise ValueError(
                     f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
@@ -618,7 +812,7 @@ class LLMService(metaclass=SingletonMeta):
             # we need to provide documents entence by sentence for sentence annotation
             document_sentences = "\n".join(
                 [
-                    f"{idx+1}: {sentence}"
+                    f"{idx + 1}: {sentence}"
                     for idx, sentence in enumerate(sdoc_data.sentences)
                 ]
             )
@@ -742,8 +936,250 @@ class LLMService(metaclass=SingletonMeta):
             )
 
         return LLMJobResult(
-            llm_job_type=LLMJobType.SENTENCE_ANNOTATION,
-            specific_llm_job_result=SentenceAnnotationLLMJobResult(
-                llm_job_type=LLMJobType.SENTENCE_ANNOTATION, results=result
+            llm_job_type=TaskType.SENTENCE_ANNOTATION,
+            specific_task_result=SentenceAnnotationLLMJobResult(
+                llm_job_type=TaskType.SENTENCE_ANNOTATION, results=result
+            ),
+        )
+
+    def _ray_sentence_annotation(
+        self,
+        *,
+        db: Session,
+        llm_job_id: str,
+        project_id: int,
+        approach_parameters: ModelTrainingParams,
+        task_parameters: SentenceAnnotationParams,
+    ) -> LLMJobResult:
+        assert isinstance(
+            task_parameters, SentenceAnnotationParams
+        ), "Wrong task parameters!"
+        assert isinstance(
+            approach_parameters, ModelTrainingParams
+        ), "Wrong approach parameters!"
+
+        DEMO_USER_ID = 2
+
+        # Find all relevant information for creating the training dataset
+        with self.sqls.db_session() as db:
+            # 1. Find the labeled sentences for each code
+            sentence_annotations = [
+                sa
+                for sa in crud_sentence_anno.read_by_codes(
+                    db=db, code_ids=task_parameters.code_ids
+                )
+                if sa.user_id
+                != DEMO_USER_ID  # Filter out annotations of the system user
+            ]
+            sdoc_id2sentence_annotations: Dict[int, List[SentenceAnnotationORM]] = {}
+            for sa in sentence_annotations:
+                if sa.sdoc_id not in sdoc_id2sentence_annotations:
+                    sdoc_id2sentence_annotations[sa.sdoc_id] = []
+                sdoc_id2sentence_annotations[sa.sdoc_id].append(sa)
+            logger.debug(
+                f"Found {len(sdoc_id2sentence_annotations)} sdocs with {len(sentence_annotations)} annotations."
+            )
+
+            # 2. Find the corresponding sdocs
+            training_sdocs = crud_sdoc.read_data_batch(
+                db=db, ids=list(sdoc_id2sentence_annotations.keys())
+            )
+            # Santiy check: every sdoc has to have a corresponding sdoc data
+            if len(training_sdocs) != len(sdoc_id2sentence_annotations):
+                logger.error(
+                    f"Number of sdoc data ({len(training_sdocs)}) and sdocs ({len(sdoc_id2sentence_annotations)}) do not match."
+                )
+            else:
+                logger.debug(
+                    f"Got data of {len(training_sdocs)} from {len(sdoc_id2sentence_annotations)} sdocs."
+                )
+
+            # Sanity check, number of embeddings should match the number of sentences
+            for training_sdoc in training_sdocs:
+                if training_sdoc is None:
+                    continue
+
+                # get embeddings
+                sentence_embeddings = self.sss.get_sentence_embeddings_by_sdoc_id(
+                    sdoc_id=training_sdoc.id
+                ).tolist()
+
+                if len(sentence_embeddings) != len(training_sdoc.sentences):
+                    logger.error(
+                        f"Number of embeddings ({len(sentence_embeddings)}) and sentences ({len(training_sdoc.sentences)}) do not match for sdoc {training_sdoc.id}."
+                    )
+
+            # 3. Find the corresponding sentence embeddings
+            search_tuples = [
+                (sent_id, sdoc_data.id)
+                for sdoc_data in training_sdocs
+                if sdoc_data is not None
+                for sent_id in range(len(sdoc_data.sentences))
+            ]
+            sentence_embeddings = self.sss.get_sentence_embeddings(
+                search_tuples=search_tuples
+            ).tolist()
+            logger.debug(
+                f"Found {len(sentence_embeddings)} corresponding sentence embeddings."
+            )
+
+            sdoc_id2sent_embs: Dict[int, List[List[float]]] = {}
+            for sent_emb, (sent_id, sdoc_id) in zip(sentence_embeddings, search_tuples):
+                if sdoc_id not in sdoc_id2sent_embs:
+                    sdoc_id2sent_embs[sdoc_id] = []
+                sdoc_id2sent_embs[sdoc_id].append(sent_emb)
+            logger.debug(
+                f"Mapped the embeddings to the documents. {[f'{sdoc_id}:{len(embeddings)}' for sdoc_id, embeddings in sdoc_id2sent_embs.items()]}"
+            )
+
+            # 4. Find the code names
+            codes = crud_code.read_by_ids(db=db, ids=task_parameters.code_ids)
+            code_id2name = {code.id: code.name for code in codes}
+            code_name2id = {code.name: code.id for code in codes}
+            logger.debug(f"Found the {len(codes)} codes.")
+
+        # Build the training data
+        training_dataset: List[SeqSentTaggerDoc] = []
+        for sdoc_id, annotations in sdoc_id2sentence_annotations.items():
+            sentence_embeddings = sdoc_id2sent_embs.get(sdoc_id, [])
+
+            if len(annotations) == 0 or len(sentence_embeddings) == 0:
+                continue
+
+            # build label set
+            # with this code, only one label is allowed per sentence
+            labels = ["O"] * len(sentence_embeddings)
+            for annotation in annotations:
+                for idx in range(
+                    annotation.sentence_id_start, annotation.sentence_id_end + 1
+                ):
+                    labels[idx] = code_id2name[annotation.code_id]
+
+            training_dataset.append(
+                SeqSentTaggerDoc(
+                    sent_embeddings=sentence_embeddings,
+                    sent_labels=labels,
+                )
+            )
+        logger.info(
+            f"Built training dataset consisting of {len(training_dataset)} documents with a total of {len(sentence_annotations)} annotations."
+        )
+
+        # Find all relevant information for creating the test dataset
+        with self.sqls.db_session() as db:
+            # 1. Find the sdocs
+            test_sdocs = crud_sdoc.read_data_batch(db=db, ids=task_parameters.sdoc_ids)
+            assert None not in test_sdocs, "Test sdocs contain None!"
+            test_sdocs = [
+                sdoc_data for sdoc_data in test_sdocs if sdoc_data is not None
+            ]
+
+            # 3. Find the corresponding sentence embeddings
+            search_tuples = [
+                (sent_id, sdoc_data.id)
+                for sdoc_data in test_sdocs
+                if sdoc_data is not None
+                for sent_id in range(len(sdoc_data.sentences))
+            ]
+            test_sentence_embeddings = self.sss.get_sentence_embeddings(
+                search_tuples=search_tuples
+            ).tolist()
+            test_sdoc_id2sent_embs: Dict[int, List[List[float]]] = {}
+            for sent_emb, (sent_id, sdoc_id) in zip(
+                test_sentence_embeddings, search_tuples
+            ):
+                if sdoc_id not in test_sdoc_id2sent_embs:
+                    test_sdoc_id2sent_embs[sdoc_id] = []
+                test_sdoc_id2sent_embs[sdoc_id].append(sent_emb)
+
+        # Build the test data
+        test_dataset: List[SeqSentTaggerDoc] = []
+        for sdoc_data in test_sdocs:
+            sentence_embeddings = test_sdoc_id2sent_embs.get(sdoc_data.id, [])
+
+            if len(sentence_embeddings) == 0:
+                continue
+
+            test_dataset.append(
+                SeqSentTaggerDoc(
+                    sent_embeddings=sentence_embeddings,
+                    sent_labels=["O"] * len(sentence_embeddings),
+                )
+            )
+        logger.info(f"Built test dataset consisting of {len(test_dataset)} documents.")
+
+        # Train and apply the model with ray
+        response = self.rms.seqsenttagger_train_apply(
+            input=SeqSentTaggerJobInput(
+                project_id=project_id,
+                training_data=training_dataset,
+                test_data=test_dataset,
+            )
+        )
+        logger.info("Trained & applied Sequencee Tagging Model with Ray!")
+
+        # Delete all existing sentence annotations for the test sdocs
+        with self.sqls.db_session() as db:
+            previous_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
+                db=db,
+                user_id=DEMO_USER_ID,
+                sdoc_ids=task_parameters.sdoc_ids,
+                code_ids=task_parameters.code_ids,
+            )
+            crud_sentence_anno.remove_bulk(
+                db=db, ids=[sa.id for sa in previous_annotations]
+            )
+        logger.info(
+            f"Deleted {len(previous_annotations)} previous sentence annotations."
+        )
+
+        # Apply the new predictions
+        assert len(response.pred_data) == len(test_sdocs), "Prediction mismatch!"
+        for prediction, sdoc_data in zip(response.pred_data, test_sdocs):
+            # we have list of labels, we need to convert them to sentence annotations
+            suggested_annotations: List[SentenceAnnotationCreate] = []
+            start = 0
+            previous_label = prediction.sent_labels[0]
+
+            for idx, label in enumerate(prediction.sent_labels[1:], start=1):
+                if label != previous_label:
+                    if previous_label != "O":
+                        suggested_annotations.append(
+                            SentenceAnnotationCreate(
+                                sdoc_id=sdoc_data.id,
+                                code_id=code_name2id[previous_label],
+                                sentence_id_start=start,
+                                sentence_id_end=idx - 1,
+                            )
+                        )
+                    start = idx
+                previous_label = label
+
+            # Add the last annotation
+            if previous_label != "O":
+                suggested_annotations.append(
+                    SentenceAnnotationCreate(
+                        sdoc_id=sdoc_data.id,
+                        sentence_id_start=start,
+                        sentence_id_end=len(prediction.sent_labels) - 1,
+                        code_id=code_name2id[previous_label],
+                    )
+                )
+
+            # create the suggested annotations
+            crud_sentence_anno.create_bulk(
+                db=db,
+                user_id=DEMO_USER_ID,
+                create_dtos=suggested_annotations,
+            )
+
+            logger.info(
+                f"Applied {len(suggested_annotations)} suggested annotations to document {sdoc_data.id}."
+            )
+
+        return LLMJobResult(
+            llm_job_type=TaskType.SENTENCE_ANNOTATION,
+            specific_task_result=SentenceAnnotationLLMJobResult(
+                llm_job_type=TaskType.SENTENCE_ANNOTATION, results=[]
             ),
         )

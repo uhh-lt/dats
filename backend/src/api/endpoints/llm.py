@@ -5,7 +5,14 @@ from fastapi import APIRouter, Depends
 from api.dependencies import get_current_user
 from app.celery.background_jobs import prepare_and_start_llm_job_async
 from app.core.authorization.authz_user import AuthzUser
-from app.core.data.dto.llm_job import LLMJobParameters, LLMJobRead, LLMPromptTemplates
+from app.core.data.dto.llm_job import (
+    ApproachRecommendation,
+    LLMJobParameters,
+    LLMJobParameters2,
+    LLMJobRead,
+    LLMPromptTemplates,
+    TrainingParameters,
+)
 from app.core.data.llm.llm_service import LLMService
 
 router = APIRouter(
@@ -21,7 +28,7 @@ llms: LLMService = LLMService()
     summary="Returns the LLMJob for the given Parameters",
 )
 def start_llm_job(
-    *, llm_job_params: LLMJobParameters, authz_user: AuthzUser = Depends()
+    *, llm_job_params: LLMJobParameters2, authz_user: AuthzUser = Depends()
 ) -> LLMJobRead:
     authz_user.assert_in_project(llm_job_params.project_id)
 
@@ -66,3 +73,29 @@ def create_prompt_templates(
     authz_user.assert_in_project(llm_job_params.project_id)
 
     return llms.create_prompt_templates(llm_job_params=llm_job_params)
+
+
+@router.post(
+    "/create_training_parameters",
+    response_model=TrainingParameters,
+    summary="Returns the default training parameters for the given llm task",
+)
+def create_training_parameters(
+    *, llm_job_params: LLMJobParameters, authz_user: AuthzUser = Depends()
+) -> TrainingParameters:
+    authz_user.assert_in_project(llm_job_params.project_id)
+
+    return llms.create_training_parameters(llm_job_params=llm_job_params)
+
+
+@router.post(
+    "/determine_approach",
+    response_model=ApproachRecommendation,
+    summary="Determines the appropriate approach based on the provided input",
+)
+def determine_approach(
+    *, llm_job_params: LLMJobParameters, authz_user: AuthzUser = Depends()
+) -> ApproachRecommendation:
+    authz_user.assert_in_project(llm_job_params.project_id)
+
+    return llms.determine_approach(llm_job_params=llm_job_params)

@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Literal, Optional, Union
+from typing import Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -14,12 +14,75 @@ from app.core.data.dto.source_document_metadata import (
 )
 from app.core.data.dto.span_annotation import SpanAnnotationReadResolved
 
+# --- START TASK PARAMETERS ---
 
-class LLMJobType(str, Enum):
+
+class TaskType(str, Enum):
     DOCUMENT_TAGGING = "DOCUMENT_TAGGING"
     METADATA_EXTRACTION = "METADATA_EXTRACTION"
     ANNOTATION = "ANNOTATION"
     SENTENCE_ANNOTATION = "SENTENCE_ANNOTATION"
+
+
+class SpecificTaskParameters(BaseModel):
+    llm_job_type: TaskType = Field(description="The type of the LLMJob (what to llm)")
+
+
+class DocumentBasedTaskParams(SpecificTaskParameters):
+    sdoc_ids: List[int] = Field(description="IDs of the source documents to analyse")
+
+
+class DocumentTaggingParams(DocumentBasedTaskParams):
+    llm_job_type: Literal[TaskType.DOCUMENT_TAGGING]
+    tag_ids: List[int] = Field(
+        description="IDs of the tags to use for the document tagging"
+    )
+
+
+class MetadataExtractionParams(DocumentBasedTaskParams):
+    llm_job_type: Literal[TaskType.METADATA_EXTRACTION]
+    project_metadata_ids: List[int] = Field(
+        description="IDs of the project metadata to use for the metadata extraction"
+    )
+
+
+class AnnotationParams(DocumentBasedTaskParams):
+    llm_job_type: Literal[TaskType.ANNOTATION]
+    code_ids: List[int] = Field(
+        description="IDs of the codes to use for the annotation"
+    )
+
+
+class SentenceAnnotationParams(DocumentBasedTaskParams):
+    llm_job_type: Literal[TaskType.SENTENCE_ANNOTATION]
+    code_ids: List[int] = Field(
+        description="IDs of the codes to use for the sentence annotation"
+    )
+
+
+class LLMJobParameters(BaseModel):
+    llm_job_type: TaskType = Field(description="The type of the LLMJob (what to llm)")
+    project_id: int = Field(description="The ID of the Project to analyse")
+    specific_task_parameters: Union[
+        DocumentTaggingParams,
+        MetadataExtractionParams,
+        AnnotationParams,
+        SentenceAnnotationParams,
+    ] = Field(
+        description="Specific parameters for the LLMJob w.r.t it's type",
+        discriminator="llm_job_type",
+    )
+
+
+# --- END TASK PARAMETERS ---
+
+# --- START APPROACH PARAMETERS ---
+
+
+class ApproachType(str, Enum):
+    LLM_ZERO_SHOT = "LLM_ZERO_SHOT"
+    LLM_FEW_SHOT = "LLM_FEW_SHOT"
+    MODEL_TRAINING = "MODEL_TRAINING"
 
 
 # Prompt template
@@ -29,63 +92,57 @@ class LLMPromptTemplates(BaseModel):
     user_prompt: str = Field(description="The user prompt to use for the job")
 
 
-# --- START PARAMETERS ---
-
-
-class SpecificLLMJobParameters(BaseModel):
-    llm_job_type: LLMJobType = Field(description="The type of the LLMJob (what to llm)")
-
-
-class DocumentBasedLLMJobParams(SpecificLLMJobParameters):
-    sdoc_ids: List[int] = Field(description="IDs of the source documents to analyse")
-
-
-class DocumentTaggingLLMJobParams(DocumentBasedLLMJobParams):
-    llm_job_type: Literal[LLMJobType.DOCUMENT_TAGGING]
-    tag_ids: List[int] = Field(
-        description="IDs of the tags to use for the document tagging"
+class SpecificApproachParameters(BaseModel):
+    llm_approach_type: ApproachType = Field(
+        description="The type of the LLMJob (what to llm)"
     )
 
 
-class MetadataExtractionLLMJobParams(DocumentBasedLLMJobParams):
-    llm_job_type: Literal[LLMJobType.METADATA_EXTRACTION]
-    project_metadata_ids: List[int] = Field(
-        description="IDs of the project metadata to use for the metadata extraction"
-    )
-
-
-class AnnotationLLMJobParams(DocumentBasedLLMJobParams):
-    llm_job_type: Literal[LLMJobType.ANNOTATION]
-    code_ids: List[int] = Field(
-        description="IDs of the codes to use for the annotation"
-    )
-
-
-class SentenceAnnotationLLMJobParams(DocumentBasedLLMJobParams):
-    llm_job_type: Literal[LLMJobType.SENTENCE_ANNOTATION]
-    code_ids: List[int] = Field(
-        description="IDs of the codes to use for the sentence annotation"
-    )
-
-
-class LLMJobParameters(BaseModel):
-    llm_job_type: LLMJobType = Field(description="The type of the LLMJob (what to llm)")
-    project_id: int = Field(description="The ID of the Project to analyse")
+class ZeroShotParams(SpecificApproachParameters):
+    llm_approach_type: Literal[ApproachType.LLM_ZERO_SHOT]
     prompts: List[LLMPromptTemplates] = Field(
         description="The prompt templates to use for the job"
     )
-    specific_llm_job_parameters: Union[
-        DocumentTaggingLLMJobParams,
-        MetadataExtractionLLMJobParams,
-        AnnotationLLMJobParams,
-        SentenceAnnotationLLMJobParams,
-    ] = Field(
-        description="Specific parameters for the LLMJob w.r.t it's type",
-        discriminator="llm_job_type",
+
+
+class FewShotParams(SpecificApproachParameters):
+    llm_approach_type: Literal[ApproachType.LLM_FEW_SHOT]
+    prompts: List[LLMPromptTemplates] = Field(
+        description="The prompt templates to use for the job"
     )
 
 
-# --- END PARAMETERS ---
+# Training Parameters (used for training the SequenceTaggingModel)
+class TrainingParameters(BaseModel):
+    max_epochs: int = Field(
+        description="The maximum number of epochs to train the model"
+    )
+    batch_size: int = Field(description="The batch size to use for training")
+    learning_rate: float = Field(description="The learning rate to use for training")
+
+
+class ModelTrainingParams(SpecificApproachParameters):
+    llm_approach_type: Literal[ApproachType.MODEL_TRAINING]
+    training_parameters: TrainingParameters = Field(
+        description="The training parameters to use for the job"
+    )
+
+
+class LLMJobParameters2(LLMJobParameters):
+    llm_approach_type: ApproachType = Field(
+        description="The approach to use for the LLMJob"
+    )
+    specific_approach_parameters: Union[
+        ZeroShotParams,
+        FewShotParams,
+        ModelTrainingParams,
+    ] = Field(
+        description="Specific parameters for the approach w.r.t it's type",
+        discriminator="llm_approach_type",
+    )
+
+
+# --- END APPROACH PARAMETERS ---
 
 # --- START RESULTS ---
 
@@ -102,7 +159,7 @@ class DocumentTaggingResult(BaseModel):
 
 
 class DocumentTaggingLLMJobResult(BaseModel):
-    llm_job_type: Literal[LLMJobType.DOCUMENT_TAGGING]
+    llm_job_type: Literal[TaskType.DOCUMENT_TAGGING]
     results: List[DocumentTaggingResult]
 
 
@@ -117,7 +174,7 @@ class MetadataExtractionResult(BaseModel):
 
 
 class MetadataExtractionLLMJobResult(BaseModel):
-    llm_job_type: Literal[LLMJobType.METADATA_EXTRACTION]
+    llm_job_type: Literal[TaskType.METADATA_EXTRACTION]
     results: List[MetadataExtractionResult]
 
 
@@ -129,7 +186,7 @@ class AnnotationResult(BaseModel):
 
 
 class AnnotationLLMJobResult(BaseModel):
-    llm_job_type: Literal[LLMJobType.ANNOTATION]
+    llm_job_type: Literal[TaskType.ANNOTATION]
     results: List[AnnotationResult]
 
 
@@ -141,13 +198,13 @@ class SentenceAnnotationResult(BaseModel):
 
 
 class SentenceAnnotationLLMJobResult(BaseModel):
-    llm_job_type: Literal[LLMJobType.SENTENCE_ANNOTATION]
+    llm_job_type: Literal[TaskType.SENTENCE_ANNOTATION]
     results: List[SentenceAnnotationResult]
 
 
 class LLMJobResult(BaseModel):
-    llm_job_type: LLMJobType = Field(description="The type of the LLMJob (what to llm)")
-    specific_llm_job_result: Union[
+    llm_job_type: TaskType = Field(description="The type of the LLMJob (what to llm)")
+    specific_task_result: Union[
         DocumentTaggingLLMJobResult,
         MetadataExtractionLLMJobResult,
         AnnotationLLMJobResult,
@@ -159,6 +216,8 @@ class LLMJobResult(BaseModel):
 
 
 # --- END RESULTS ---
+
+# --- START CRUD ---
 
 
 # Properties shared across all DTOs
@@ -175,7 +234,7 @@ class LLMJobBaseDTO(BaseModel):
 
 # Properties to create
 class LLMJobCreate(LLMJobBaseDTO):
-    parameters: LLMJobParameters = Field(
+    parameters: LLMJobParameters2 = Field(
         description="The parameters of the LLMJob that defines what to do!"
     )
 
@@ -196,8 +255,24 @@ class LLMJobUpdate(BaseModel, UpdateDTOBase):
 # Properties to read
 class LLMJobRead(LLMJobBaseDTO):
     id: str = Field(description="ID of the LLMJob")
-    parameters: LLMJobParameters = Field(
+    parameters: LLMJobParameters2 = Field(
         description="The parameters of the LLMJob that defines what to llm!"
     )
     created: datetime = Field(description="Created timestamp of the LLMJob")
     updated: datetime = Field(description="Updated timestamp of the LLMJob")
+
+
+# --- END CRUD ---
+
+# --- START OTHER DTOs ---
+
+
+class ApproachRecommendation(BaseModel):
+    recommended_approach: ApproachType = Field(description="Recommended approach")
+    reasoning: str = Field(description="Reasoning for the recommendation")
+    available_approaches: Dict[ApproachType, bool] = Field(
+        description="Available approaches"
+    )
+
+
+# --- END OTHER DTOs ---
