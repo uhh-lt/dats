@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type SentenceAnnotationLLMJobParams = {
+export type SentenceAnnotationParams = {
   llm_job_type: any;
   /**
    * IDs of the source documents to analyse

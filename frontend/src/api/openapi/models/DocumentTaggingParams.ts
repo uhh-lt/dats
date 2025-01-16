@@ -2,14 +2,14 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type MetadataExtractionLLMJobParams = {
+export type DocumentTaggingParams = {
   llm_job_type: any;
   /**
    * IDs of the source documents to analyse
    */
   sdoc_ids: Array<number>;
   /**
-   * IDs of the project metadata to use for the metadata extraction
+   * IDs of the tags to use for the document tagging
    */
-  project_metadata_ids: Array<number>;
+  tag_ids: Array<number>;
 };

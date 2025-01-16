@@ -41,6 +41,34 @@ export class SentenceAnnotationService {
     });
   }
   /**
+   * Creates SentenceAnnotations in Bulk
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static addSentenceAnnotationsBulk({
+    requestBody,
+    resolve = true,
+  }: {
+    requestBody: Array<SentenceAnnotationCreate>;
+    /**
+     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
+     */
+    resolve?: boolean;
+  }): CancelablePromise<Array<SentenceAnnotationRead> | Array<SentenceAnnotationReadResolved>> {
+    return __request(OpenAPI, {
+      method: "PUT",
+      url: "/sentence/bulk/create",
+      query: {
+        resolve: resolve,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Returns the SentenceAnnotation with the given ID.
    * @returns any Successful Response
    * @throws ApiError
@@ -118,6 +146,26 @@ export class SentenceAnnotationService {
       path: {
         sentence_anno_id: sentenceAnnoId,
       },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Deletes all SentenceAnnotations with the given IDs.
+   * @returns SentenceAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteBulkById({
+    requestBody,
+  }: {
+    requestBody: Array<number>;
+  }): CancelablePromise<Array<SentenceAnnotationRead>> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/sentence/bulk/delete",
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },

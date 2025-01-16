@@ -1861,7 +1861,7 @@
     "/span/bulk/create": {
       "put": {
         "tags": ["spanAnnotation"],
-        "summary": "Creates a SpanAnnotations in Bulk",
+        "summary": "Creates SpanAnnotations in Bulk",
         "operationId": "add_span_annotations_bulk",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -5664,7 +5664,7 @@
         "summary": "Returns the LLMJob for the given Parameters",
         "operationId": "start_llm_job",
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobParameters" } } },
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobParameters2-Input" } } },
           "required": true
         },
         "responses": {
@@ -5770,6 +5770,50 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
+    "/llm/create_training_parameters": {
+      "post": {
+        "tags": ["llm"],
+        "summary": "Returns the default training parameters for the given llm task",
+        "operationId": "create_training_parameters",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobParameters" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TrainingParameters" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/llm/determine_approach": {
+      "post": {
+        "tags": ["llm"],
+        "summary": "Determines the appropriate approach based on the provided input",
+        "operationId": "determine_approach",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobParameters" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApproachRecommendation" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/sentence": {
       "put": {
         "tags": ["sentenceAnnotation"],
@@ -5805,6 +5849,60 @@
                     { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" }
                   ],
                   "title": "Response Sentenceannotation-Add Sentence Annotation"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/sentence/bulk/create": {
+      "put": {
+        "tags": ["sentenceAnnotation"],
+        "summary": "Creates SentenceAnnotations in Bulk",
+        "operationId": "add_sentence_annotations_bulk",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "resolve",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "title": "Resolve Code",
+              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
+              "default": true
+            },
+            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/SentenceAnnotationCreate" },
+                "title": "Sentence Annotations"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    { "type": "array", "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" } },
+                    { "type": "array", "items": { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" } }
+                  ],
+                  "title": "Response Sentenceannotation-Add Sentence Annotations Bulk"
                 }
               }
             }
@@ -5946,6 +6044,40 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         }
+      }
+    },
+    "/sentence/bulk/delete": {
+      "delete": {
+        "tags": ["sentenceAnnotation"],
+        "summary": "Deletes all SentenceAnnotations with the given IDs.",
+        "operationId": "delete_bulk_by_id",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "items": { "type": "integer" }, "type": "array", "title": "Sentence Anno Ids" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" },
+                  "type": "array",
+                  "title": "Response Sentenceannotation-Delete Bulk By Id"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/sentence/{sentence_anno_id}/code": {
@@ -6227,26 +6359,6 @@
         "required": ["total_results", "data"],
         "title": "AnnotatedSegmentResult"
       },
-      "AnnotationLLMJobParams": {
-        "properties": {
-          "llm_job_type": { "const": "ANNOTATION", "title": "Llm Job Type" },
-          "sdoc_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Sdoc Ids",
-            "description": "IDs of the source documents to analyse"
-          },
-          "code_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Code Ids",
-            "description": "IDs of the codes to use for the annotation"
-          }
-        },
-        "type": "object",
-        "required": ["llm_job_type", "sdoc_ids", "code_ids"],
-        "title": "AnnotationLLMJobParams"
-      },
       "AnnotationLLMJobResult": {
         "properties": {
           "llm_job_type": { "const": "ANNOTATION", "title": "Llm Job Type" },
@@ -6280,6 +6392,26 @@
         "type": "object",
         "required": ["annotation", "code", "sdoc", "text"],
         "title": "AnnotationOccurrence"
+      },
+      "AnnotationParams": {
+        "properties": {
+          "llm_job_type": { "const": "ANNOTATION", "title": "Llm Job Type" },
+          "sdoc_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sdoc Ids",
+            "description": "IDs of the source documents to analyse"
+          },
+          "code_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Code Ids",
+            "description": "IDs of the codes to use for the annotation"
+          }
+        },
+        "type": "object",
+        "required": ["llm_job_type", "sdoc_ids", "code_ids"],
+        "title": "AnnotationParams"
       },
       "AnnotationResult": {
         "properties": {
@@ -6326,6 +6458,29 @@
         "type": "object",
         "required": ["id", "span_text", "code", "user_id", "sdoc", "tags", "memo"],
         "title": "AnnotationTableRow"
+      },
+      "ApproachRecommendation": {
+        "properties": {
+          "recommended_approach": {
+            "allOf": [{ "$ref": "#/components/schemas/ApproachType" }],
+            "description": "Recommended approach"
+          },
+          "reasoning": { "type": "string", "title": "Reasoning", "description": "Reasoning for the recommendation" },
+          "available_approaches": {
+            "additionalProperties": { "type": "boolean" },
+            "type": "object",
+            "title": "Available Approaches",
+            "description": "Available approaches"
+          }
+        },
+        "type": "object",
+        "required": ["recommended_approach", "reasoning", "available_approaches"],
+        "title": "ApproachRecommendation"
+      },
+      "ApproachType": {
+        "type": "string",
+        "enum": ["LLM_ZERO_SHOT", "LLM_FEW_SHOT", "MODEL_TRAINING"],
+        "title": "ApproachType"
       },
       "AttachedObjectType": {
         "type": "string",
@@ -7353,7 +7508,20 @@
         "type": "object",
         "title": "DocumentTagUpdate"
       },
-      "DocumentTaggingLLMJobParams": {
+      "DocumentTaggingLLMJobResult": {
+        "properties": {
+          "llm_job_type": { "const": "DOCUMENT_TAGGING", "title": "Llm Job Type" },
+          "results": {
+            "items": { "$ref": "#/components/schemas/DocumentTaggingResult" },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": ["llm_job_type", "results"],
+        "title": "DocumentTaggingLLMJobResult"
+      },
+      "DocumentTaggingParams": {
         "properties": {
           "llm_job_type": { "const": "DOCUMENT_TAGGING", "title": "Llm Job Type" },
           "sdoc_ids": {
@@ -7371,20 +7539,7 @@
         },
         "type": "object",
         "required": ["llm_job_type", "sdoc_ids", "tag_ids"],
-        "title": "DocumentTaggingLLMJobParams"
-      },
-      "DocumentTaggingLLMJobResult": {
-        "properties": {
-          "llm_job_type": { "const": "DOCUMENT_TAGGING", "title": "Llm Job Type" },
-          "results": {
-            "items": { "$ref": "#/components/schemas/DocumentTaggingResult" },
-            "type": "array",
-            "title": "Results"
-          }
-        },
-        "type": "object",
-        "required": ["llm_job_type", "results"],
-        "title": "DocumentTaggingLLMJobResult"
+        "title": "DocumentTaggingParams"
       },
       "DocumentTaggingResult": {
         "properties": {
@@ -7542,6 +7697,20 @@
         "type": "object",
         "required": ["user_content", "id", "user_id", "created"],
         "title": "FeedbackRead"
+      },
+      "FewShotParams": {
+        "properties": {
+          "llm_approach_type": { "const": "LLM_FEW_SHOT", "title": "Llm Approach Type" },
+          "prompts": {
+            "items": { "$ref": "#/components/schemas/LLMPromptTemplates" },
+            "type": "array",
+            "title": "Prompts",
+            "description": "The prompt templates to use for the job"
+          }
+        },
+        "type": "object",
+        "required": ["llm_approach_type", "prompts"],
+        "title": "FewShotParams"
       },
       "FilterExpression_BBoxColumns_": {
         "properties": {
@@ -7924,39 +8093,149 @@
       "LLMJobParameters": {
         "properties": {
           "llm_job_type": {
-            "allOf": [{ "$ref": "#/components/schemas/LLMJobType" }],
+            "allOf": [{ "$ref": "#/components/schemas/TaskType" }],
             "description": "The type of the LLMJob (what to llm)"
           },
           "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project to analyse" },
-          "prompts": {
-            "items": { "$ref": "#/components/schemas/LLMPromptTemplates" },
-            "type": "array",
-            "title": "Prompts",
-            "description": "The prompt templates to use for the job"
-          },
-          "specific_llm_job_parameters": {
+          "specific_task_parameters": {
             "oneOf": [
-              { "$ref": "#/components/schemas/DocumentTaggingLLMJobParams" },
-              { "$ref": "#/components/schemas/MetadataExtractionLLMJobParams" },
-              { "$ref": "#/components/schemas/AnnotationLLMJobParams" },
-              { "$ref": "#/components/schemas/SentenceAnnotationLLMJobParams" }
+              { "$ref": "#/components/schemas/DocumentTaggingParams" },
+              { "$ref": "#/components/schemas/MetadataExtractionParams" },
+              { "$ref": "#/components/schemas/AnnotationParams" },
+              { "$ref": "#/components/schemas/SentenceAnnotationParams" }
             ],
-            "title": "Specific Llm Job Parameters",
+            "title": "Specific Task Parameters",
             "description": "Specific parameters for the LLMJob w.r.t it's type",
             "discriminator": {
               "propertyName": "llm_job_type",
               "mapping": {
-                "ANNOTATION": "#/components/schemas/AnnotationLLMJobParams",
-                "DOCUMENT_TAGGING": "#/components/schemas/DocumentTaggingLLMJobParams",
-                "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionLLMJobParams",
-                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationLLMJobParams"
+                "ANNOTATION": "#/components/schemas/AnnotationParams",
+                "DOCUMENT_TAGGING": "#/components/schemas/DocumentTaggingParams",
+                "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionParams",
+                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationParams"
               }
             }
           }
         },
         "type": "object",
-        "required": ["llm_job_type", "project_id", "prompts", "specific_llm_job_parameters"],
+        "required": ["llm_job_type", "project_id", "specific_task_parameters"],
         "title": "LLMJobParameters"
+      },
+      "LLMJobParameters2-Input": {
+        "properties": {
+          "llm_job_type": {
+            "allOf": [{ "$ref": "#/components/schemas/TaskType" }],
+            "description": "The type of the LLMJob (what to llm)"
+          },
+          "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project to analyse" },
+          "specific_task_parameters": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/DocumentTaggingParams" },
+              { "$ref": "#/components/schemas/MetadataExtractionParams" },
+              { "$ref": "#/components/schemas/AnnotationParams" },
+              { "$ref": "#/components/schemas/SentenceAnnotationParams" }
+            ],
+            "title": "Specific Task Parameters",
+            "description": "Specific parameters for the LLMJob w.r.t it's type",
+            "discriminator": {
+              "propertyName": "llm_job_type",
+              "mapping": {
+                "ANNOTATION": "#/components/schemas/AnnotationParams",
+                "DOCUMENT_TAGGING": "#/components/schemas/DocumentTaggingParams",
+                "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionParams",
+                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationParams"
+              }
+            }
+          },
+          "llm_approach_type": {
+            "allOf": [{ "$ref": "#/components/schemas/ApproachType" }],
+            "description": "The approach to use for the LLMJob"
+          },
+          "specific_approach_parameters": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/ZeroShotParams" },
+              { "$ref": "#/components/schemas/FewShotParams" },
+              { "$ref": "#/components/schemas/ModelTrainingParams" }
+            ],
+            "title": "Specific Approach Parameters",
+            "description": "Specific parameters for the approach w.r.t it's type",
+            "discriminator": {
+              "propertyName": "llm_approach_type",
+              "mapping": {
+                "LLM_FEW_SHOT": "#/components/schemas/FewShotParams",
+                "LLM_ZERO_SHOT": "#/components/schemas/ZeroShotParams",
+                "MODEL_TRAINING": "#/components/schemas/ModelTrainingParams"
+              }
+            }
+          }
+        },
+        "type": "object",
+        "required": [
+          "llm_job_type",
+          "project_id",
+          "specific_task_parameters",
+          "llm_approach_type",
+          "specific_approach_parameters"
+        ],
+        "title": "LLMJobParameters2"
+      },
+      "LLMJobParameters2-Output": {
+        "properties": {
+          "llm_job_type": {
+            "allOf": [{ "$ref": "#/components/schemas/TaskType" }],
+            "description": "The type of the LLMJob (what to llm)"
+          },
+          "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project to analyse" },
+          "specific_task_parameters": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/DocumentTaggingParams" },
+              { "$ref": "#/components/schemas/MetadataExtractionParams" },
+              { "$ref": "#/components/schemas/AnnotationParams" },
+              { "$ref": "#/components/schemas/SentenceAnnotationParams" }
+            ],
+            "title": "Specific Task Parameters",
+            "description": "Specific parameters for the LLMJob w.r.t it's type",
+            "discriminator": {
+              "propertyName": "llm_job_type",
+              "mapping": {
+                "ANNOTATION": "#/components/schemas/AnnotationParams",
+                "DOCUMENT_TAGGING": "#/components/schemas/DocumentTaggingParams",
+                "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionParams",
+                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationParams"
+              }
+            }
+          },
+          "llm_approach_type": {
+            "allOf": [{ "$ref": "#/components/schemas/ApproachType" }],
+            "description": "The approach to use for the LLMJob"
+          },
+          "specific_approach_parameters": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/ZeroShotParams" },
+              { "$ref": "#/components/schemas/FewShotParams" },
+              { "$ref": "#/components/schemas/ModelTrainingParams" }
+            ],
+            "title": "Specific Approach Parameters",
+            "description": "Specific parameters for the approach w.r.t it's type",
+            "discriminator": {
+              "propertyName": "llm_approach_type",
+              "mapping": {
+                "LLM_FEW_SHOT": "#/components/schemas/FewShotParams",
+                "LLM_ZERO_SHOT": "#/components/schemas/ZeroShotParams",
+                "MODEL_TRAINING": "#/components/schemas/ModelTrainingParams"
+              }
+            }
+          }
+        },
+        "type": "object",
+        "required": [
+          "llm_job_type",
+          "project_id",
+          "specific_task_parameters",
+          "llm_approach_type",
+          "specific_approach_parameters"
+        ],
+        "title": "LLMJobParameters2"
       },
       "LLMJobRead": {
         "properties": {
@@ -7977,7 +8256,7 @@
           },
           "id": { "type": "string", "title": "Id", "description": "ID of the LLMJob" },
           "parameters": {
-            "allOf": [{ "$ref": "#/components/schemas/LLMJobParameters" }],
+            "allOf": [{ "$ref": "#/components/schemas/LLMJobParameters2-Output" }],
             "description": "The parameters of the LLMJob that defines what to llm!"
           },
           "created": {
@@ -8000,17 +8279,17 @@
       "LLMJobResult": {
         "properties": {
           "llm_job_type": {
-            "allOf": [{ "$ref": "#/components/schemas/LLMJobType" }],
+            "allOf": [{ "$ref": "#/components/schemas/TaskType" }],
             "description": "The type of the LLMJob (what to llm)"
           },
-          "specific_llm_job_result": {
+          "specific_task_result": {
             "oneOf": [
               { "$ref": "#/components/schemas/DocumentTaggingLLMJobResult" },
               { "$ref": "#/components/schemas/MetadataExtractionLLMJobResult" },
               { "$ref": "#/components/schemas/AnnotationLLMJobResult" },
               { "$ref": "#/components/schemas/SentenceAnnotationLLMJobResult" }
             ],
-            "title": "Specific Llm Job Result",
+            "title": "Specific Task Result",
             "description": "Specific result for the LLMJob w.r.t it's type",
             "discriminator": {
               "propertyName": "llm_job_type",
@@ -8024,13 +8303,8 @@
           }
         },
         "type": "object",
-        "required": ["llm_job_type", "specific_llm_job_result"],
+        "required": ["llm_job_type", "specific_task_result"],
         "title": "LLMJobResult"
-      },
-      "LLMJobType": {
-        "type": "string",
-        "enum": ["DOCUMENT_TAGGING", "METADATA_EXTRACTION", "ANNOTATION", "SENTENCE_ANNOTATION"],
-        "title": "LLMJobType"
       },
       "LLMPromptTemplates": {
         "properties": {
@@ -8152,7 +8426,20 @@
         "title": "MemoUpdate"
       },
       "MetaType": { "type": "string", "enum": ["STRING", "NUMBER", "DATE", "BOOLEAN", "LIST"], "title": "MetaType" },
-      "MetadataExtractionLLMJobParams": {
+      "MetadataExtractionLLMJobResult": {
+        "properties": {
+          "llm_job_type": { "const": "METADATA_EXTRACTION", "title": "Llm Job Type" },
+          "results": {
+            "items": { "$ref": "#/components/schemas/MetadataExtractionResult" },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": ["llm_job_type", "results"],
+        "title": "MetadataExtractionLLMJobResult"
+      },
+      "MetadataExtractionParams": {
         "properties": {
           "llm_job_type": { "const": "METADATA_EXTRACTION", "title": "Llm Job Type" },
           "sdoc_ids": {
@@ -8170,20 +8457,7 @@
         },
         "type": "object",
         "required": ["llm_job_type", "sdoc_ids", "project_metadata_ids"],
-        "title": "MetadataExtractionLLMJobParams"
-      },
-      "MetadataExtractionLLMJobResult": {
-        "properties": {
-          "llm_job_type": { "const": "METADATA_EXTRACTION", "title": "Llm Job Type" },
-          "results": {
-            "items": { "$ref": "#/components/schemas/MetadataExtractionResult" },
-            "type": "array",
-            "title": "Results"
-          }
-        },
-        "type": "object",
-        "required": ["llm_job_type", "results"],
-        "title": "MetadataExtractionLLMJobResult"
+        "title": "MetadataExtractionParams"
       },
       "MetadataExtractionResult": {
         "properties": {
@@ -8204,6 +8478,18 @@
         "type": "object",
         "required": ["sdoc_id", "current_metadata", "suggested_metadata"],
         "title": "MetadataExtractionResult"
+      },
+      "ModelTrainingParams": {
+        "properties": {
+          "llm_approach_type": { "const": "MODEL_TRAINING", "title": "Llm Approach Type" },
+          "training_parameters": {
+            "allOf": [{ "$ref": "#/components/schemas/TrainingParameters" }],
+            "description": "The training parameters to use for the job"
+          }
+        },
+        "type": "object",
+        "required": ["llm_approach_type", "training_parameters"],
+        "title": "ModelTrainingParams"
       },
       "NumberOperator": {
         "type": "string",
@@ -8563,7 +8849,20 @@
         "required": ["sentence_id_start", "sentence_id_end", "code_id", "sdoc_id"],
         "title": "SentenceAnnotationCreate"
       },
-      "SentenceAnnotationLLMJobParams": {
+      "SentenceAnnotationLLMJobResult": {
+        "properties": {
+          "llm_job_type": { "const": "SENTENCE_ANNOTATION", "title": "Llm Job Type" },
+          "results": {
+            "items": { "$ref": "#/components/schemas/SentenceAnnotationResult" },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": ["llm_job_type", "results"],
+        "title": "SentenceAnnotationLLMJobResult"
+      },
+      "SentenceAnnotationParams": {
         "properties": {
           "llm_job_type": { "const": "SENTENCE_ANNOTATION", "title": "Llm Job Type" },
           "sdoc_ids": {
@@ -8581,20 +8880,7 @@
         },
         "type": "object",
         "required": ["llm_job_type", "sdoc_ids", "code_ids"],
-        "title": "SentenceAnnotationLLMJobParams"
-      },
-      "SentenceAnnotationLLMJobResult": {
-        "properties": {
-          "llm_job_type": { "const": "SENTENCE_ANNOTATION", "title": "Llm Job Type" },
-          "results": {
-            "items": { "$ref": "#/components/schemas/SentenceAnnotationResult" },
-            "type": "array",
-            "title": "Results"
-          }
-        },
-        "type": "object",
-        "required": ["llm_job_type", "results"],
-        "title": "SentenceAnnotationLLMJobResult"
+        "title": "SentenceAnnotationParams"
       },
       "SentenceAnnotationRead": {
         "properties": {
@@ -9611,6 +9897,11 @@
         "required": ["tag", "filtered_count", "global_count"],
         "title": "TagStat"
       },
+      "TaskType": {
+        "type": "string",
+        "enum": ["DOCUMENT_TAGGING", "METADATA_EXTRACTION", "ANNOTATION", "SENTENCE_ANNOTATION"],
+        "title": "TaskType"
+      },
       "TimelineAnalysisColumns": {
         "type": "string",
         "enum": [
@@ -9815,6 +10106,28 @@
         "type": "object",
         "required": ["id", "parameters", "created", "updated"],
         "title": "TrainerJobRead"
+      },
+      "TrainingParameters": {
+        "properties": {
+          "max_epochs": {
+            "type": "integer",
+            "title": "Max Epochs",
+            "description": "The maximum number of epochs to train the model"
+          },
+          "batch_size": {
+            "type": "integer",
+            "title": "Batch Size",
+            "description": "The batch size to use for training"
+          },
+          "learning_rate": {
+            "type": "number",
+            "title": "Learning Rate",
+            "description": "The learning rate to use for training"
+          }
+        },
+        "type": "object",
+        "required": ["max_epochs", "batch_size", "learning_rate"],
+        "title": "TrainingParameters"
       },
       "UserAuthorizationHeaderData": {
         "properties": {
@@ -10024,6 +10337,20 @@
         "type": "object",
         "required": ["word", "word_percent", "count", "sdocs", "sdocs_percent"],
         "title": "WordFrequencyStat"
+      },
+      "ZeroShotParams": {
+        "properties": {
+          "llm_approach_type": { "const": "LLM_ZERO_SHOT", "title": "Llm Approach Type" },
+          "prompts": {
+            "items": { "$ref": "#/components/schemas/LLMPromptTemplates" },
+            "type": "array",
+            "title": "Prompts",
+            "description": "The prompt templates to use for the job"
+          }
+        },
+        "type": "object",
+        "required": ["llm_approach_type", "prompts"],
+        "title": "ZeroShotParams"
       }
     },
     "securitySchemes": {

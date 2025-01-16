@@ -2,9 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { ApproachRecommendation } from "../models/ApproachRecommendation";
 import type { LLMJobParameters } from "../models/LLMJobParameters";
+import type { LLMJobParameters2_Input } from "../models/LLMJobParameters2_Input";
 import type { LLMJobRead } from "../models/LLMJobRead";
 import type { LLMPromptTemplates } from "../models/LLMPromptTemplates";
+import type { TrainingParameters } from "../models/TrainingParameters";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -14,7 +17,7 @@ export class LlmService {
    * @returns LLMJobRead Successful Response
    * @throws ApiError
    */
-  public static startLlmJob({ requestBody }: { requestBody: LLMJobParameters }): CancelablePromise<LLMJobRead> {
+  public static startLlmJob({ requestBody }: { requestBody: LLMJobParameters2_Input }): CancelablePromise<LLMJobRead> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/llm",
@@ -72,6 +75,46 @@ export class LlmService {
     return __request(OpenAPI, {
       method: "POST",
       url: "/llm/create_prompt_templates",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the default training parameters for the given llm task
+   * @returns TrainingParameters Successful Response
+   * @throws ApiError
+   */
+  public static createTrainingParameters({
+    requestBody,
+  }: {
+    requestBody: LLMJobParameters;
+  }): CancelablePromise<TrainingParameters> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/llm/create_training_parameters",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Determines the appropriate approach based on the provided input
+   * @returns ApproachRecommendation Successful Response
+   * @throws ApiError
+   */
+  public static determineApproach({
+    requestBody,
+  }: {
+    requestBody: LLMJobParameters;
+  }): CancelablePromise<ApproachRecommendation> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/llm/determine_approach",
       body: requestBody,
       mediaType: "application/json",
       errors: {

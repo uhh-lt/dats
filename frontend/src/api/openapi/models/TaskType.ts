@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export enum LLMJobType {
+export enum TaskType {
   DOCUMENT_TAGGING = "DOCUMENT_TAGGING",
   METADATA_EXTRACTION = "METADATA_EXTRACTION",
   ANNOTATION = "ANNOTATION",

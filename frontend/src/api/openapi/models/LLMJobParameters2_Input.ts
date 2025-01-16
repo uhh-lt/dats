@@ -3,11 +3,15 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AnnotationParams } from "./AnnotationParams";
+import type { ApproachType } from "./ApproachType";
 import type { DocumentTaggingParams } from "./DocumentTaggingParams";
+import type { FewShotParams } from "./FewShotParams";
 import type { MetadataExtractionParams } from "./MetadataExtractionParams";
+import type { ModelTrainingParams } from "./ModelTrainingParams";
 import type { SentenceAnnotationParams } from "./SentenceAnnotationParams";
 import type { TaskType } from "./TaskType";
-export type LLMJobParameters = {
+import type { ZeroShotParams } from "./ZeroShotParams";
+export type LLMJobParameters2_Input = {
   /**
    * The type of the LLMJob (what to llm)
    */
@@ -24,4 +28,12 @@ export type LLMJobParameters = {
     | MetadataExtractionParams
     | AnnotationParams
     | SentenceAnnotationParams;
+  /**
+   * The approach to use for the LLMJob
+   */
+  llm_approach_type: ApproachType;
+  /**
+   * Specific parameters for the approach w.r.t it's type
+   */
+  specific_approach_parameters: ZeroShotParams | FewShotParams | ModelTrainingParams;
 };
