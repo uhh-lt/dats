@@ -468,6 +468,34 @@ class WeaviateService(VectorIndexService):
             "id"
         ]
 
+    def get_sentence_embeddings_by_sdoc_id(self, sdoc_id: int) -> np.ndarray:
+        query = (
+            self._client.query.get(
+                self._sentence_class_name,
+                self._sentence_props,
+            )
+            .with_additional(["vector"])
+            .with_where(
+                {
+                    "path": ["sdoc_id"],
+                    "operator": "Equal",
+                    "valueInt": sdoc_id,
+                },
+            )
+        )
+        result = query.do()
+        result = result["data"]["Get"][self._sentence_class_name]
+        result_dict = {
+            f"{r['sentence_id']}": r["_additional"]["vector"] for r in result
+        }
+
+        # sort the result_dict by key, ascending
+        sorted_res = []
+        for sentence_id in sorted(result_dict.keys()):
+            sorted_res.append(result_dict[sentence_id])
+
+        return np.array(sorted_res)
+
     def get_sentence_embeddings(
         self, search_tuples: List[Tuple[int, int]]
     ) -> np.ndarray:
@@ -503,9 +531,10 @@ class WeaviateService(VectorIndexService):
                     }
                 )
             )
-            result = query.do()["data"]["Get"][self._sentence_class_name]
+            result = query.do()
+            result = result["data"]["Get"][self._sentence_class_name]
             result_dict = {
-                f'{r["sdoc_id"]}-{r["sentence_id"]}': r["_additional"]["vector"]
+                f"{r['sdoc_id']}-{r['sentence_id']}": r["_additional"]["vector"]
                 for r in result
             }
             sorted_res = []
@@ -524,8 +553,9 @@ class WeaviateService(VectorIndexService):
                 batch = []
 
             # Get the next batch of objects
-            embeddings_minibatch = run_batch(minibatch)
-            embeddings.extend(embeddings_minibatch)
+            if len(minibatch) > 0:
+                embeddings_minibatch = run_batch(minibatch)
+                embeddings.extend(embeddings_minibatch)
 
             if len(batch) == 0:
                 break
