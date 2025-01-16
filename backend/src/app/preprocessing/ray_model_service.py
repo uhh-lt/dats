@@ -18,6 +18,10 @@ from app.preprocessing.ray_model_worker.dto.detr import (
     DETRFilePathInput,
     DETRObjectDetectionOutput,
 )
+from app.preprocessing.ray_model_worker.dto.seqsenttagger import (
+    SeqSentTaggerJobInput,
+    SeqSentTaggerJobResponse,
+)
 from app.preprocessing.ray_model_worker.dto.spacy import SpacyInput, SpacyPipelineOutput
 from app.preprocessing.ray_model_worker.dto.whisper import (
     WhisperFilePathInput,
@@ -29,7 +33,7 @@ from config import conf
 
 class RayModelService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.base_url = f"{conf.ray.protocol}://" f"{conf.ray.host}:" f"{conf.ray.port}"
+        cls.base_url = f"{conf.ray.protocol}://{conf.ray.host}:{conf.ray.port}"
         logger.info(f"RayModelService base_url: {cls.base_url}")
 
         try:
@@ -69,7 +73,7 @@ class RayModelService(metaclass=SingletonMeta):
 
     def _make_post_request(self, endpoint: str, data: Dict[str, Any]) -> Response:
         url = f"{self.base_url}{endpoint}"
-        logger.debug(f"Making POST request to {url} with data: {data}")
+        logger.debug(f"Making POST request to {url} with data: {data}"[:1000])
         response = requests.post(url, json=data, timeout=1200)
         if not response.status_code == 200:
             msg = (
@@ -118,3 +122,11 @@ class RayModelService(metaclass=SingletonMeta):
             "/cota/finetune_apply_compute", input.model_dump()
         )
         return RayCOTAJobResponse.model_validate(response.json())
+
+    def seqsenttagger_train_apply(
+        self, input: SeqSentTaggerJobInput
+    ) -> SeqSentTaggerJobResponse:
+        response = self._make_post_request(
+            "/seqsenttagger/train_apply", input.model_dump()
+        )
+        return SeqSentTaggerJobResponse.model_validate(response.json())
