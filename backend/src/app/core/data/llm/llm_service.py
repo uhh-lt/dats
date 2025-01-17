@@ -828,7 +828,7 @@ class LLMService(metaclass=SingletonMeta):
 
         # automatic annotation
         annotation_id = 0
-        result: List[SentenceAnnotationResult] = []
+        results: List[SentenceAnnotationResult] = []
         for idx, (sdoc_id, sdoc_data) in enumerate(
             zip(task_parameters.sdoc_ids, sdoc_datas)
         ):
@@ -851,7 +851,7 @@ class LLMService(metaclass=SingletonMeta):
             ).str_value
 
             if language is None or language not in prompt_builder.supported_languages:
-                result.append(
+                results.append(
                     SentenceAnnotationResult(
                         sdoc_id=sdoc_data.id, suggested_annotations=[]
                     )
@@ -897,7 +897,7 @@ class LLMService(metaclass=SingletonMeta):
             ]
 
             # create the suggested annotation
-            suggested_annotations: List[SentenceAnnotationReadResolved] = []
+            suggested_annotations: List[SentenceAnnotationCreate] = []
             start = parsed_items[0][0]
             previous_sentence_id = parsed_items[0][0]
             previous_code_id = parsed_items[0][1]
@@ -907,17 +907,11 @@ class LLMService(metaclass=SingletonMeta):
                     # create annotation if sentence ids mismatch
                     if previous_sentence_id != sentence_id - 1:
                         suggested_annotations.append(
-                            SentenceAnnotationReadResolved(
-                                id=annotation_id,
+                            SentenceAnnotationCreate(
                                 sdoc_id=sdoc_data.id,
-                                user_id=SYSTEM_USER_ID,
                                 sentence_id_start=start,
                                 sentence_id_end=previous_sentence_id,
-                                code=CodeRead.model_validate(
-                                    project_codes.get(previous_code_id)
-                                ),
-                                created=datetime.now(),
-                                updated=datetime.now(),
+                                code_id=previous_code_id,
                             )
                         )
                         annotation_id += 1
@@ -926,17 +920,11 @@ class LLMService(metaclass=SingletonMeta):
                     # create annotation if code ids mismatch
                     if previous_code_id != code_id:
                         suggested_annotations.append(
-                            SentenceAnnotationReadResolved(
-                                id=annotation_id,
+                            SentenceAnnotationCreate(
                                 sdoc_id=sdoc_data.id,
-                                user_id=SYSTEM_USER_ID,
                                 sentence_id_start=start,
                                 sentence_id_end=previous_sentence_id,
-                                code=CodeRead.model_validate(
-                                    project_codes.get(previous_code_id)
-                                ),
-                                created=datetime.now(),
-                                updated=datetime.now(),
+                                code_id=previous_code_id,
                             )
                         )
                         annotation_id += 1
@@ -947,47 +935,38 @@ class LLMService(metaclass=SingletonMeta):
 
             # create the last annotation
             suggested_annotations.append(
-                SentenceAnnotationReadResolved(
-                    id=annotation_id,
+                SentenceAnnotationCreate(
                     sdoc_id=sdoc_data.id,
-                    user_id=SYSTEM_USER_ID,
                     sentence_id_start=start,
                     sentence_id_end=previous_sentence_id,
-                    code=CodeRead.model_validate(project_codes.get(previous_code_id)),
-                    created=datetime.now(),
-                    updated=datetime.now(),
+                    code_id=previous_code_id,
                 )
             )
             logger.info(
                 f"Parsed the response! suggested sentence annotations={suggested_annotations}"
             )
 
-            result.append(
-                SentenceAnnotationResult(
-                    sdoc_id=sdoc_data.id,
-                    suggested_annotations=suggested_annotations,
-                )
-            )
-
             # create the suggested annotations
-            crud_sentence_anno.create_bulk(
+            created_annos = crud_sentence_anno.create_bulk(
                 db=db,
                 user_id=SYSTEM_USER_ID,
-                create_dtos=[
-                    SentenceAnnotationCreate(
-                        sdoc_id=sdoc_data.id,
-                        sentence_id_start=sa.sentence_id_start,
-                        sentence_id_end=sa.sentence_id_end,
-                        code_id=sa.code.id,
-                    )
-                    for sa in suggested_annotations
-                ],
+                create_dtos=suggested_annotations,
+            )
+
+            results.append(
+                SentenceAnnotationResult(
+                    sdoc_id=sdoc_data.id,
+                    suggested_annotations=[
+                        SentenceAnnotationReadResolved.model_validate(anno)
+                        for anno in created_annos
+                    ],
+                )
             )
 
         return LLMJobResult(
             llm_job_type=TaskType.SENTENCE_ANNOTATION,
             specific_task_result=SentenceAnnotationLLMJobResult(
-                llm_job_type=TaskType.SENTENCE_ANNOTATION, results=result
+                llm_job_type=TaskType.SENTENCE_ANNOTATION, results=results
             ),
         )
 
@@ -1246,6 +1225,7 @@ class LLMService(metaclass=SingletonMeta):
         if len(response.pred_data) != len(test_sdocs):
             raise ValueError("Prediction mismatch!")
 
+        results: List[SentenceAnnotationResult] = []
         for prediction, sdoc_data in zip(response.pred_data, test_sdocs):
             # we have list of labels, we need to convert them to sentence annotations
             suggested_annotations: List[SentenceAnnotationCreate] = []
@@ -1278,10 +1258,20 @@ class LLMService(metaclass=SingletonMeta):
                 )
 
             # create the suggested annotations
-            crud_sentence_anno.create_bulk(
+            created_annos = crud_sentence_anno.create_bulk(
                 db=db,
                 user_id=DEMO_USER_ID,
                 create_dtos=suggested_annotations,
+            )
+
+            results.append(
+                SentenceAnnotationResult(
+                    sdoc_id=sdoc_data.id,
+                    suggested_annotations=[
+                        SentenceAnnotationReadResolved.model_validate(anno)
+                        for anno in created_annos
+                    ],
+                )
             )
 
             msg = f"Applied {len(suggested_annotations)} suggested annotations to document {sdoc_data.id}."
@@ -1294,6 +1284,6 @@ class LLMService(metaclass=SingletonMeta):
         return LLMJobResult(
             llm_job_type=TaskType.SENTENCE_ANNOTATION,
             specific_task_result=SentenceAnnotationLLMJobResult(
-                llm_job_type=TaskType.SENTENCE_ANNOTATION, results=[]
+                llm_job_type=TaskType.SENTENCE_ANNOTATION, results=results
             ),
         )
