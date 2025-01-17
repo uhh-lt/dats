@@ -35,7 +35,6 @@ function SentenceAnnotationResultStepContent({ jobResult }: { jobResult: Sentenc
   // actions
   const dispatch = useAppDispatch();
   const handleClose = () => {
-    console.log(jobResult);
     dispatch(CRUDDialogActions.closeLLMDialog());
   };
 
