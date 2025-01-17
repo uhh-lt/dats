@@ -265,8 +265,6 @@ class LLMService(metaclass=SingletonMeta):
     def determine_approach(
         self, llm_job_params: LLMJobParameters
     ) -> ApproachRecommendation:
-        DEMO_USER_ID = 2
-
         match llm_job_params.llm_job_type:
             case TaskType.DOCUMENT_TAGGING:
                 return ApproachRecommendation(
@@ -313,7 +311,7 @@ class LLMService(metaclass=SingletonMeta):
                             db=db, code_ids=selected_code_ids
                         )
                         if sa.user_id
-                        != DEMO_USER_ID  # Filter out annotations of the system user
+                        != SYSTEM_USER_ID  # Filter out annotations of the system user
                     ]
 
                 # 2. Find the code names
@@ -1013,8 +1011,6 @@ class LLMService(metaclass=SingletonMeta):
         )
         logger.info(msg)
 
-        DEMO_USER_ID = 2
-
         # Step: 1 - Building the training dataset
         msg = "Building training dataset."
         self._next_llm_job_step(
@@ -1032,7 +1028,7 @@ class LLMService(metaclass=SingletonMeta):
                     db=db, code_ids=task_parameters.code_ids
                 )
                 if sa.user_id
-                != DEMO_USER_ID  # Filter out annotations of the system user
+                != SYSTEM_USER_ID  # Filter out annotations of the system user
             ]
             sdoc_id2sentence_annotations: Dict[int, List[SentenceAnnotationORM]] = {}
             for sa in sentence_annotations:
@@ -1215,7 +1211,7 @@ class LLMService(metaclass=SingletonMeta):
         with self.sqls.db_session() as db:
             previous_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
                 db=db,
-                user_id=DEMO_USER_ID,
+                user_id=SYSTEM_USER_ID,
                 sdoc_ids=task_parameters.sdoc_ids,
                 code_ids=task_parameters.code_ids,
             )
@@ -1277,7 +1273,7 @@ class LLMService(metaclass=SingletonMeta):
             # create the suggested annotations
             created_annos = crud_sentence_anno.create_bulk(
                 db=db,
-                user_id=DEMO_USER_ID,
+                user_id=SYSTEM_USER_ID,
                 create_dtos=suggested_annotations,
             )
 
