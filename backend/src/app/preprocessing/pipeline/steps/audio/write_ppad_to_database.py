@@ -87,6 +87,13 @@ def _create_sdoc_link_for_transcript(
     db: Session, ppad: PreProAudioDoc, sdoc_db_obj: SourceDocumentORM
 ) -> None:
     logger.info(f"Creating SourceDocumentLink for transcript of {ppad.filename}...")
+
+    if ppad.transcript_filepath is None or not ppad.transcript_filepath.exists():
+        raise FileNotFoundError(
+            f"The transcript file {ppad.transcript_filepath} "
+            f"for {ppad.filename} does not exist!"
+        )
+
     create_dto = SourceDocumentLinkCreate(
         parent_source_document_id=sdoc_db_obj.id,
         linked_source_document_filename=ppad.transcript_filepath.name,
@@ -124,9 +131,7 @@ def write_ppad_to_database(cargo: PipelineCargo) -> PipelineCargo:
             db.rollback()
             raise e
         else:
-            logger.info(
-                f"Persisted PreprocessingPipeline Results " f"for {ppad.filename}!"
-            )
+            logger.info(f"Persisted PreprocessingPipeline Results for {ppad.filename}!")
 
             cargo.data["sdoc_id"] = sdoc_db_obj.id
     return cargo

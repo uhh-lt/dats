@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from pydantic import Field
 
@@ -13,6 +13,6 @@ class PreProAudioDoc(PreProDocBase):
     word_level_transcriptions: List[WordLevelTranscription] = Field(
         default_factory=list
     )
-    uncompressed_audio_filepath: Path = Field(default=None)
-    transcript_filepath: Path = Field(default=Path)
+    uncompressed_audio_filepath: Optional[Path] = Field(default=None)
+    transcript_filepath: Optional[Path] = Field(default=None)
     transcript_content: str = Field(default="")
