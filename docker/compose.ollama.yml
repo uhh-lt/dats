@@ -2,7 +2,7 @@
 
 services:
   ollama:
-    image: ollama/ollama:0.3.4
+    image: ollama/ollama:0.5.7
     ports:
       - ${OLLAMA_EXPOSED:-13133}:11434
     environment:
