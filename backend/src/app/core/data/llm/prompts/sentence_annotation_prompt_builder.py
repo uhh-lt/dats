@@ -1,11 +1,26 @@
 import random
-import re
-from typing import Dict, List, Optional
+from typing import List
 
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.project import crud_project
 from app.core.data.llm.prompts.prompt_builder import PromptBuilder
+
+
+class OllamaParsedSentenceAnnotationResult(BaseModel):
+    sent_id: int
+    code_id: int
+
+
+class OllamaSentenceAnnotationResult(BaseModel):
+    sent_id: int
+    category: str
+
+
+class OllamaSentenceAnnotationResults(BaseModel):
+    data: List[OllamaSentenceAnnotationResult]
+
 
 # ENGLISH
 
@@ -13,9 +28,9 @@ en_prompt_template = """
 Please classify each sentence the following document in one of the following categories:
 {}.
 
-Please answer in this format. Do not provide reasoning or your thoughts. Only use the provided categories.
-<sentence_number>: <category>
-<sentence_number>: <category>
+Please answer in this format. Do not provide your reasoning. Only use the provided categories.
+Sentence ID: <sentence number>
+Category: <category>
 
 e.g.
 {}
@@ -26,6 +41,11 @@ This is the document, sentence by sentence:
 Remember to provide a category for each sentence. You are NOT ALLOWED to use any other category than the ones provided.
 """
 
+en_example_template = """
+Sentence ID: {}
+Category: {}
+"""
+
 
 # GERMAN
 
@@ -33,9 +53,9 @@ de_prompt_template = """
 Bitte klassifiziere jeden Satz des folgenden Dokuments in eine der folgenden Kategorien:
 {}.
 
-Bitte anworte in diesem Format. Gebe keine Begründung oder Gedanken an. Verwende nur die bereitgestellten Kategorien.
-<Satz Nummer>: <Kategorie>
-<Satz Nummer>: <Kategorie>
+Bitte anworte in diesem Format. Gebe keine Begründung an. Verwende nur die bereitgestellten Kategorien.
+Satz ID: <Satz Nummer>
+Kategorie: <Kategorie>
 
 e.g.
 {}
@@ -46,12 +66,21 @@ Dies ist das Dokument, Satz für Satz:
 Denke daran, dass du für jeden Satz eine Kategorie angeben musst. Du darfst KEINE andere Kategorie als die bereitgestellten verwenden.
 """
 
+de_example_template = """
+Satz ID: {}
+Kategorie: {}
+"""
+
 
 class SentenceAnnotationPromptBuilder(PromptBuilder):
     supported_languages = ["en", "de"]
     prompt_templates = {
         "en": en_prompt_template.strip(),
         "de": de_prompt_template.strip(),
+    }
+    example_templates = {
+        "en": en_example_template.strip(),
+        "de": de_example_template.strip(),
     }
 
     def __init__(self, db: Session, project_id: int):
@@ -60,27 +89,24 @@ class SentenceAnnotationPromptBuilder(PromptBuilder):
         project = crud_project.read(db=db, id=project_id)
         self.codes = project.codes
         self.codename2id_dict = {code.name.lower(): code.id for code in self.codes}
+        self.codeid2name_dict = {code.id: code.name for code in self.codes}
         self.codeids2code_dict = {code.id: code for code in self.codes}
-
-        # get one example annotation per code
-        examples: Dict[int, str] = {}
-        for code in project.codes:
-            examples[code.id] = code.name
-        self.examples = examples
 
     def _build_example(self, language: str, code_ids: List[int]) -> str:
         examples: List[str] = []
         for code_id in code_ids:
-            if code_id not in self.examples:
+            if code_id not in self.codeid2name_dict:
                 continue
-            examples.append(self.examples[code_id])
+            examples.append(self.codeid2name_dict[code_id])
 
         if len(examples) == 0:
             # choose 3 random examples
-            examples.extend(random.sample(list(self.examples.values()), 3))
+            examples.extend(random.sample(list(self.codeid2name_dict.values()), 3))
 
-        # prepend sentence number
-        examples = [f"{idx+1}: {example}" for idx, example in enumerate(examples)]
+        examples = [
+            self.example_templates[language].format(idx, example)
+            for idx, example in enumerate(examples)
+        ]
 
         return "\n".join(examples)
 
@@ -96,38 +122,18 @@ class SentenceAnnotationPromptBuilder(PromptBuilder):
         answer_example = self._build_example(language, code_ids)
         return self.prompt_templates[language].format(task_data, answer_example)
 
-    def _parse_codeid(self, classification: str) -> Optional[int]:
-        result = classification
-        if " " in result:
-            result = result.split(" ")[0]
+    def parse_result(
+        self, result: OllamaSentenceAnnotationResults
+    ) -> List[OllamaParsedSentenceAnnotationResult]:
+        parsed_results = []
+        for annotation in result.data:
+            if annotation.category.lower() not in self.codename2id_dict:
+                continue
 
-        if "/" in result:
-            result = result.split("/")[0]
-
-        return self.codename2id_dict.get(result.lower(), None)
-
-    def parse_response(self, language: str, response: str) -> Dict[int, int]:
-        parsed_result = {}
-
-        if "\n" in response:
-            components = re.split(r"\n+", response)
-
-            for component in components:
-                if ":" in component:
-                    try:
-                        sentence_id = int(component.split(":")[0].strip())
-                    except ValueError:
-                        continue
-                    classification = component.split(":")[1].strip()
-                    code_id = self._parse_codeid(classification)
-                    if code_id is not None:
-                        parsed_result[sentence_id] = code_id
-        else:
-            if ":" in response:
-                sentence_id = 1
-                classification = response.split(":")[1].strip()
-                code_id = self._parse_codeid(classification)
-                if code_id is not None:
-                    parsed_result = {sentence_id: code_id}
-
-        return parsed_result
+            code_id = self.codename2id_dict[annotation.category.lower()]
+            parsed_results.append(
+                OllamaParsedSentenceAnnotationResult(
+                    sent_id=annotation.sent_id, code_id=code_id
+                )
+            )
+        return parsed_results

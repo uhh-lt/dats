@@ -1,8 +1,13 @@
+from typing import Type, TypeVar
+
 from loguru import logger
 from ollama import Client
+from pydantic import BaseModel
 
 from app.util.singleton_meta import SingletonMeta
 from config import conf
+
+T = TypeVar("T", bound=BaseModel)
 
 
 class OllamaService(metaclass=SingletonMeta):
@@ -41,7 +46,7 @@ class OllamaService(metaclass=SingletonMeta):
 
         return super(OllamaService, cls).__new__(cls)
 
-    def chat(self, system_prompt: str, user_prompt: str) -> str:
+    def chat(self, system_prompt: str, user_prompt: str, response_model: Type[T]) -> T:
         response = self.__client.chat(
             model=self.__model,
             messages=[
@@ -54,5 +59,9 @@ class OllamaService(metaclass=SingletonMeta):
                     "content": user_prompt.strip(),
                 },
             ],
+            format=response_model.model_json_schema(),
         )
-        return response["message"]["content"].strip()
+        if response.message.content is None:
+            raise Exception(f"Ollama response is None: {response}")
+
+        return response_model.model_validate_json(response.message.content)

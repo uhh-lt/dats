@@ -1,6 +1,6 @@
-import re
 from typing import Dict, List
 
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.project import crud_project
@@ -8,13 +8,23 @@ from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.llm.prompts.prompt_builder import PromptBuilder
 from app.core.data.meta_type import MetaType
 
+
+class OllamaMetadataExtractionResult(BaseModel):
+    key: str
+    value: str
+
+
+class OllamaMetadataExtractionResults(BaseModel):
+    data: List[OllamaMetadataExtractionResult]
+
+
 # ENGLISH
 
 en_prompt_template = """
 Please extract the following information from the provided document. It is possible that not all information is contained in the document:
 {}.
 
-Please answer in this format. If the information is not contained in the document, leave the field empty with "None":
+Please answer in this format. If the information is not contained in the document, skip the field:
 {}
 
 e.g.
@@ -32,7 +42,7 @@ de_prompt_template = """
 Bitte extrahiere die folgenden Informationen aus dem Dokument. Es kann sein, dass nicht alle Informationen im Dokument enthalten sind:
 {}.
 
-Bitte anworte in diesem Format. Wenn die Information nicht im Dokument enthalten ist, lasse das Feld leer mit "None":
+Bitte anworte in diesem Format. Wenn die Information nicht im Dokument enthalten ist, überspringe das Feld:
 {}
 
 e.g.
@@ -42,6 +52,11 @@ Dokument:
 <document>
 
 Denke daran, die Informationen MÜSSEN wörtlich aus dem Dokument extrahiert werden, generiere keine Fakten!
+"""
+
+example_template = """
+Key: {}
+Value: {}
 """
 
 
@@ -78,7 +93,10 @@ class MetadataPromptBuilder(PromptBuilder):
 
         return "\n".join(
             [
-                f"{self.metadataid2metadata[pmid].key}: {answer_templates[self.metadataid2metadata[pmid].metatype]}"
+                example_template.format(
+                    self.metadataid2metadata[pmid].key,
+                    answer_templates[self.metadataid2metadata[pmid].metatype],
+                ).strip()
                 for pmid in project_metadata_ids
             ]
         )
@@ -95,7 +113,10 @@ class MetadataPromptBuilder(PromptBuilder):
 
         return "\n".join(
             [
-                f"{self.metadataid2metadata[pmid].key}: {example_values[self.metadataid2metadata[pmid].metatype]}"
+                example_template.format(
+                    self.metadataid2metadata[pmid].key,
+                    example_values[self.metadataid2metadata[pmid].metatype],
+                ).strip()
                 for pmid in project_metadata_ids
             ]
         )
@@ -115,25 +136,11 @@ class MetadataPromptBuilder(PromptBuilder):
             task_data, answer_template, answer_example
         )
 
-    def parse_response(self, language: str, response: str) -> Dict[int, str]:
-        components = re.split(r"\n+", response)
+    def parse_result(self, result: OllamaMetadataExtractionResults) -> Dict[int, str]:
+        out_dict: Dict[int, str] = {}
+        for metadata in result.data:
+            metadata_name = metadata.key.lower()
+            if metadata_name in self.metadataname2metadata:
+                out_dict[self.metadataname2metadata[metadata_name].id] = metadata.value
 
-        results: Dict[int, str] = {}
-        for component in components:
-            if ":" not in component:
-                continue
-
-            # extract the key and value
-            key, value = component.split(":", 1)
-
-            # check if the key is valid
-            if key.lower() not in self.metadataname2metadata:
-                continue
-
-            # get the metadata
-            proj_metadata = self.metadataname2metadata[key.lower()]
-            value = value.strip()
-
-            results[proj_metadata.id] = value
-
-        return results
+        return out_dict

@@ -98,5 +98,5 @@ class PromptBuilder:
 
     # PARSING
 
-    def parse_response(self, response: str):
+    def parse_result(self, result: str):
         raise NotImplementedError()

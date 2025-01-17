@@ -47,13 +47,23 @@ from app.core.data.dto.source_document_metadata import (
 )
 from app.core.data.dto.span_annotation import SpanAnnotationReadResolved
 from app.core.data.llm.ollama_service import OllamaService
-from app.core.data.llm.prompts.annotation_prompt_builder import AnnotationPromptBuilder
-from app.core.data.llm.prompts.metadata_prompt_builder import MetadataPromptBuilder
+from app.core.data.llm.prompts.annotation_prompt_builder import (
+    AnnotationPromptBuilder,
+    OllamaAnnotationResults,
+)
+from app.core.data.llm.prompts.metadata_prompt_builder import (
+    MetadataPromptBuilder,
+    OllamaMetadataExtractionResults,
+)
 from app.core.data.llm.prompts.prompt_builder import PromptBuilder
 from app.core.data.llm.prompts.sentence_annotation_prompt_builder import (
+    OllamaSentenceAnnotationResults,
     SentenceAnnotationPromptBuilder,
 )
-from app.core.data.llm.prompts.tagging_prompt_builder import TaggingPromptBuilder
+from app.core.data.llm.prompts.tagging_prompt_builder import (
+    OllamaDocumentTaggingResult,
+    TaggingPromptBuilder,
+)
 from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.redis_service import RedisService
@@ -491,22 +501,23 @@ class LLMService(metaclass=SingletonMeta):
 
             # prompt the model
             response = self.ollamas.chat(
-                system_prompt=system_prompt, user_prompt=user_prompt
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                response_model=OllamaDocumentTaggingResult,
             )
-            logger.info(f"Got chat response! Response={response}")
+            logger.info(
+                f"Got chat response! Tags={response.categories}, Reason={response.reasoning}"
+            )
 
-            # parse the response
-            tag_ids, reason = prompt_builder.parse_response(
-                language=language, response=response
-            )
-            logger.info(f"Parsed the response! Tag IDs={tag_ids}, Reason={reason}")
+            # parse result
+            parsed_result = prompt_builder.parse_result(result=response)
 
             result.append(
                 DocumentTaggingResult(
                     sdoc_id=sdoc_data.id,
-                    suggested_tag_ids=tag_ids,
+                    suggested_tag_ids=parsed_result.tag_ids,
                     current_tag_ids=current_tag_ids,
-                    reasoning=reason,
+                    reasoning=parsed_result.reasoning,
                 )
             )
 
@@ -603,14 +614,14 @@ class LLMService(metaclass=SingletonMeta):
 
             # prompt the model
             response = self.ollamas.chat(
-                system_prompt=system_prompt, user_prompt=user_prompt
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                response_model=OllamaMetadataExtractionResults,
             )
-            logger.info(f"Got chat response! Response={response}")
+            logger.info(f"Got chat response! Response={response.data}")
 
-            # parse the response
-            parsed_response = prompt_builder.parse_response(
-                language=language, response=response
-            )
+            # transform the response
+            parsed_response = prompt_builder.parse_result(result=response)
 
             # create correct suggested metadata (map the parsed response to the current metadata)
             suggested_metadata = []
@@ -718,18 +729,21 @@ class LLMService(metaclass=SingletonMeta):
 
             # prompt the model
             response = self.ollamas.chat(
-                system_prompt=system_prompt, user_prompt=user_prompt
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                response_model=OllamaAnnotationResults,
             )
             logger.info(f"Got chat response! Response={response}")
 
             # parse the response
-            parsed_response = prompt_builder.parse_response(
-                language=language, response=response
-            )
+            parsed_response = prompt_builder.parse_result(result=response)
 
             # validate the response and create the suggested annotation
             suggested_annotations: List[SpanAnnotationReadResolved] = []
-            for code_id, span_text in parsed_response:
+            for x in parsed_response:
+                code_id = x.code_id
+                span_text = x.text
+
                 # check if the code_id is valid
                 if code_id not in project_codes:
                     continue
@@ -877,23 +891,26 @@ class LLMService(metaclass=SingletonMeta):
 
             # prompt the model
             response = self.ollamas.chat(
-                system_prompt=system_prompt, user_prompt=user_prompt
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                response_model=OllamaSentenceAnnotationResults,
             )
             logger.info(f"Got chat response! Response={response}")
 
             # parse the response
-            parsed_response = prompt_builder.parse_response(
-                language=language, response=response
-            )
+            parsed_response = prompt_builder.parse_result(result=response)
 
             # validate the response
             # code ids should be valid and sentence ids should be valid
             parsed_items = [
-                (sentence_id - 1, code_id)  # LLM starts from 1, we start from 0
-                for sentence_id, code_id in parsed_response.items()
-                if code_id in project_codes
-                and sentence_id > 0
-                and sentence_id <= num_sentences
+                (
+                    annotation.sent_id - 1,
+                    annotation.code_id,
+                )  # LLM starts from 1, we start from 0
+                for annotation in parsed_response
+                if annotation.code_id in project_codes
+                and annotation.sent_id > 0
+                and annotation.sent_id <= num_sentences
             ]
 
             # create the suggested annotation
