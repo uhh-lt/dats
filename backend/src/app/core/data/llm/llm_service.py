@@ -156,7 +156,7 @@ class LLMService(metaclass=SingletonMeta):
             status=BackgroundJobStatus.WAITING,
             parameters=llm_params,
             num_steps_total=len(llm_params.specific_task_parameters.sdoc_ids)
-            + 1,  # +1 for the start
+            + 2,  # +2 for the start and end
             current_step=0,
             current_step_description="Created new LLMJob",
         )
@@ -1006,7 +1006,7 @@ class LLMService(metaclass=SingletonMeta):
             llm_job_id=llm_job_id,
             update=LLMJobUpdate(
                 current_step_description=msg,
-                num_steps_total=5 + 1,  # +1 for the start
+                num_steps_total=5 + 2,  # +1 for the start, end step
             ),
         )
         logger.info(msg)
