@@ -8244,15 +8244,16 @@
             "description": "Status of the LLMJob",
             "default": "Waiting"
           },
-          "num_steps_finished": {
-            "type": "integer",
-            "title": "Num Steps Finished",
-            "description": "Number of steps LLMJob has completed."
-          },
           "num_steps_total": { "type": "integer", "title": "Num Steps Total", "description": "Number of total steps." },
+          "current_step": { "type": "integer", "title": "Current Step", "description": "The current step." },
+          "current_step_description": {
+            "type": "string",
+            "title": "Current Step Description",
+            "description": "Description of the current step."
+          },
           "result": {
             "anyOf": [{ "$ref": "#/components/schemas/LLMJobResult" }, { "type": "null" }],
-            "description": "Results of hte LLMJob."
+            "description": "Results of the LLMJob."
           },
           "id": { "type": "string", "title": "Id", "description": "ID of the LLMJob" },
           "parameters": {
@@ -8273,7 +8274,15 @@
           }
         },
         "type": "object",
-        "required": ["num_steps_finished", "num_steps_total", "id", "parameters", "created", "updated"],
+        "required": [
+          "num_steps_total",
+          "current_step",
+          "current_step_description",
+          "id",
+          "parameters",
+          "created",
+          "updated"
+        ],
         "title": "LLMJobRead"
       },
       "LLMJobResult": {

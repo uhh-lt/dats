@@ -11,15 +11,19 @@ export type LLMJobRead = {
    */
   status?: BackgroundJobStatus;
   /**
-   * Number of steps LLMJob has completed.
-   */
-  num_steps_finished: number;
-  /**
    * Number of total steps.
    */
   num_steps_total: number;
   /**
-   * Results of hte LLMJob.
+   * The current step.
+   */
+  current_step: number;
+  /**
+   * Description of the current step.
+   */
+  current_step_description: string;
+  /**
+   * Results of the LLMJob.
    */
   result?: LLMJobResult | null;
   /**
