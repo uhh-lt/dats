@@ -143,9 +143,12 @@ class LLMService(metaclass=SingletonMeta):
             )
 
         llmj_create = LLMJobCreate(
+            status=BackgroundJobStatus.WAITING,
             parameters=llm_params,
-            num_steps_total=len(llm_params.specific_task_parameters.sdoc_ids),
-            num_steps_finished=0,
+            num_steps_total=len(llm_params.specific_task_parameters.sdoc_ids)
+            + 1,  # +1 for the start
+            current_step=0,
+            current_step_description="Created new LLMJob",
         )
         try:
             llmj_read = self.redis.store_llm_job(llm_job=llmj_create)
@@ -172,6 +175,26 @@ class LLMService(metaclass=SingletonMeta):
             raise NoSuchLLMJobError(llm_job_id=llm_job_id, cause=e)
         return llmj
 
+    def _next_llm_job_step(self, llm_job_id: str, description: str) -> LLMJobRead:
+        llmj = self.get_llm_job(llm_job_id=llm_job_id)
+        llmj = self._update_llm_job(
+            llm_job_id=llm_job_id,
+            update=LLMJobUpdate(
+                current_step=llmj.current_step + 1, current_step_description=description
+            ),
+        )
+        return llmj
+
+    def _update_llm_job_description(
+        self, llm_job_id: str, description: str
+    ) -> LLMJobRead:
+        llmj = self.get_llm_job(llm_job_id=llm_job_id)
+        llmj = self._update_llm_job(
+            llm_job_id=llm_job_id,
+            update=LLMJobUpdate(current_step_description=description),
+        )
+        return llmj
+
     def start_llm_job_sync(self, llm_job_id: str) -> LLMJobRead:
         llmj = self.get_llm_job(llm_job_id=llm_job_id)
         if llmj.status != BackgroundJobStatus.WAITING:
@@ -179,39 +202,53 @@ class LLMService(metaclass=SingletonMeta):
 
         llmj = self._update_llm_job(
             llm_job_id=llm_job_id,
-            update=LLMJobUpdate(status=BackgroundJobStatus.RUNNING),
+            update=LLMJobUpdate(
+                status=BackgroundJobStatus.RUNNING,
+                current_step=1,
+                current_step_description="Starting LLMJob",
+            ),
         )
 
-        # try:
-        with self.sqls.db_session() as db:
-            # get the llm method based on the jobtype
-            llm_method = self.llm_method_for_job_approach_type[
-                llmj.parameters.llm_job_type
-            ][llmj.parameters.llm_approach_type]
-            if llm_method is None:
-                raise UnsupportedLLMJobTypeError(llmj.parameters.llm_job_type)
+        try:
+            with self.sqls.db_session() as db:
+                # get the llm method based on the jobtype
+                llm_method = self.llm_method_for_job_approach_type[
+                    llmj.parameters.llm_job_type
+                ][llmj.parameters.llm_approach_type]
+                if llm_method is None:
+                    raise UnsupportedLLMJobTypeError(llmj.parameters.llm_job_type)
 
-            # execute the llm_method with the provided specific parameters
-            result = llm_method(
-                self=self,
-                db=db,
+                # execute the llm_method with the provided specific parameters
+                result = llm_method(
+                    self=self,
+                    db=db,
+                    llm_job_id=llm_job_id,
+                    project_id=llmj.parameters.project_id,
+                    approach_parameters=llmj.parameters.specific_approach_parameters,
+                    task_parameters=llmj.parameters.specific_task_parameters,
+                )
+
+            llmj = self.get_llm_job(llm_job_id=llm_job_id)
+            llmj = self._update_llm_job(
                 llm_job_id=llm_job_id,
-                project_id=llmj.parameters.project_id,
-                approach_parameters=llmj.parameters.specific_approach_parameters,
-                task_parameters=llmj.parameters.specific_task_parameters,
+                update=LLMJobUpdate(
+                    result=result,
+                    status=BackgroundJobStatus.FINISHED,
+                    current_step=llmj.num_steps_total,
+                    current_step_description="Finished LLMJob",
+                ),
             )
 
-        llmj = self._update_llm_job(
-            llm_job_id=llm_job_id,
-            update=LLMJobUpdate(result=result, status=BackgroundJobStatus.FINISHED),
-        )
-
-        # except Exception as e:
-        #     logger.error(f"Cannot finish LLMJob: {e}")
-        #     self._update_llm_job(
-        #         llm_job_id=llm_job_id,
-        #         update=LLMJobUpdate(status=BackgroundJobStatus.ERROR),
-        #     )
+        except Exception as e:
+            logger.error(f"Cannot finish LLMJob: {e}")
+            llmj = self.get_llm_job(llm_job_id=llm_job_id)
+            self._update_llm_job(
+                llm_job_id=llm_job_id,
+                update=LLMJobUpdate(
+                    status=BackgroundJobStatus.ERROR,
+                    current_step_description=f"Error during LLMJob Step {llmj.current_step} {llmj.current_step_description}: {e}",
+                ),
+            )
 
         return llmj
 
@@ -387,9 +424,12 @@ class LLMService(metaclass=SingletonMeta):
             approach_parameters, ZeroShotParams
         ), "Wrong approach parameters!"
 
-        logger.info(
-            f"Starting LLMJob - Document Tagging, num docs: {len(task_parameters.sdoc_ids)}"
+        msg = f"Started LLMJob - Document Tagging, num docs: {len(task_parameters.sdoc_ids)}"
+        self._update_llm_job_description(
+            llm_job_id=llm_job_id,
+            description=msg,
         )
+        logger.info(msg)
 
         prompt_builder = TaggingPromptBuilder(db=db, project_id=project_id)
 
@@ -406,6 +446,14 @@ class LLMService(metaclass=SingletonMeta):
         for idx, (sdoc_id, sdoc_data) in enumerate(
             zip(task_parameters.sdoc_ids, sdoc_datas)
         ):
+            # update job status
+            msg = f"Processing SDOC id={sdoc_id}"
+            self._next_llm_job_step(
+                llm_job_id=llm_job_id,
+                description=msg,
+            )
+            logger.info(msg)
+
             if sdoc_data is None:
                 raise ValueError(
                     f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
@@ -420,7 +468,7 @@ class LLMService(metaclass=SingletonMeta):
             language = crud_sdoc_meta.read_by_sdoc_and_key(
                 db=db, sdoc_id=sdoc_data.id, key="language"
             ).str_value
-            logger.info(f"Processing SDOC id={sdoc_data.id}, lang={language}")
+
             if language is None or language not in prompt_builder.supported_languages:
                 result.append(
                     DocumentTaggingResult(
@@ -429,10 +477,6 @@ class LLMService(metaclass=SingletonMeta):
                         current_tag_ids=current_tag_ids,
                         reasoning="Language not supported",
                     )
-                )
-                self._update_llm_job(
-                    llm_job_id=llm_job_id,
-                    update=LLMJobUpdate(num_steps_finished=idx + 1),
                 )
                 continue
 
@@ -465,10 +509,6 @@ class LLMService(metaclass=SingletonMeta):
                     reasoning=reason,
                 )
             )
-            self._update_llm_job(
-                llm_job_id=llm_job_id,
-                update=LLMJobUpdate(num_steps_finished=idx + 1),
-            )
 
         return LLMJobResult(
             llm_job_type=TaskType.DOCUMENT_TAGGING,
@@ -493,9 +533,12 @@ class LLMService(metaclass=SingletonMeta):
             approach_parameters, ZeroShotParams
         ), "Wrong approach parameters!"
 
-        logger.info(
-            f"Starting LLMJob - Metadata Extraction, num docs: {len(task_parameters.sdoc_ids)}"
+        msg = f"Started LLMJob - Metadata Extraction, num docs: {len(task_parameters.sdoc_ids)}"
+        self._update_llm_job_description(
+            llm_job_id=llm_job_id,
+            description=msg,
         )
+        logger.info(msg)
 
         prompt_builder = MetadataPromptBuilder(db=db, project_id=project_id)
 
@@ -511,6 +554,14 @@ class LLMService(metaclass=SingletonMeta):
         for idx, (sdoc_id, sdoc_data) in enumerate(
             zip(task_parameters.sdoc_ids, sdoc_datas)
         ):
+            # update job status
+            msg = f"Processing SDOC id={sdoc_id}"
+            self._next_llm_job_step(
+                llm_job_id=llm_job_id,
+                description=msg,
+            )
+            logger.info(msg)
+
             if sdoc_data is None:
                 raise ValueError(
                     f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
@@ -530,7 +581,7 @@ class LLMService(metaclass=SingletonMeta):
             language = crud_sdoc_meta.read_by_sdoc_and_key(
                 db=db, sdoc_id=sdoc_data.id, key="language"
             ).str_value
-            logger.info(f"Processing SDOC id={sdoc_data.id}, lang={language}")
+
             if language is None or language not in prompt_builder.supported_languages:
                 result.append(
                     MetadataExtractionResult(
@@ -538,10 +589,6 @@ class LLMService(metaclass=SingletonMeta):
                         current_metadata=current_metadata,
                         suggested_metadata=[],
                     )
-                )
-                self._update_llm_job(
-                    llm_job_id=llm_job_id,
-                    update=LLMJobUpdate(num_steps_finished=idx + 1),
                 )
                 continue
 
@@ -590,10 +637,6 @@ class LLMService(metaclass=SingletonMeta):
                     suggested_metadata=suggested_metadata,
                 )
             )
-            self._update_llm_job(
-                llm_job_id=llm_job_id,
-                update=LLMJobUpdate(num_steps_finished=idx + 1),
-            )
 
         return LLMJobResult(
             llm_job_type=TaskType.METADATA_EXTRACTION,
@@ -616,9 +659,12 @@ class LLMService(metaclass=SingletonMeta):
             approach_parameters, ZeroShotParams
         ), "Wrong approach parameters!"
 
-        logger.info(
-            f"Starting LLMJob - Annotation, num docs: {len(task_parameters.sdoc_ids)}"
+        msg = f"Started LLMJob - Annotation, num docs: {len(task_parameters.sdoc_ids)}"
+        self._update_llm_job_description(
+            llm_job_id=llm_job_id,
+            description=msg,
         )
+        logger.info(msg)
 
         prompt_builder = AnnotationPromptBuilder(db=db, project_id=project_id)
         project_codes = prompt_builder.codeids2code_dict
@@ -637,6 +683,14 @@ class LLMService(metaclass=SingletonMeta):
         for idx, (sdoc_id, sdoc_data) in enumerate(
             zip(task_parameters.sdoc_ids, sdoc_datas)
         ):
+            # update job status
+            msg = f"Processing SDOC id={sdoc_id}"
+            self._next_llm_job_step(
+                llm_job_id=llm_job_id,
+                description=msg,
+            )
+            logger.info(msg)
+
             if sdoc_data is None:
                 raise ValueError(
                     f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
@@ -646,14 +700,10 @@ class LLMService(metaclass=SingletonMeta):
             language = crud_sdoc_meta.read_by_sdoc_and_key(
                 db=db, sdoc_id=sdoc_data.id, key="language"
             ).str_value
-            logger.info(f"Processing SDOC id={sdoc_data.id}, lang={language}")
+
             if language is None or language not in prompt_builder.supported_languages:
                 result.append(
                     AnnotationResult(sdoc_id=sdoc_data.id, suggested_annotations=[])
-                )
-                self._update_llm_job(
-                    llm_job_id=llm_job_id,
-                    update=LLMJobUpdate(num_steps_finished=idx + 1),
                 )
                 continue
 
@@ -734,10 +784,6 @@ class LLMService(metaclass=SingletonMeta):
                     suggested_annotations=suggested_annotations,
                 )
             )
-            self._update_llm_job(
-                llm_job_id=llm_job_id,
-                update=LLMJobUpdate(num_steps_finished=idx + 1),
-            )
 
         return LLMJobResult(
             llm_job_type=TaskType.ANNOTATION,
@@ -762,9 +808,12 @@ class LLMService(metaclass=SingletonMeta):
             approach_parameters, ZeroShotParams
         ), "Wrong approach parameters!"
 
-        logger.info(
-            f"Starting LLMJob - Sentence Annotation (OLLAMA), num docs: {len(task_parameters.sdoc_ids)}"
+        msg = f"Started LLMJob - Sentence Annotation (OLLAMA), num docs: {len(task_parameters.sdoc_ids)}"
+        self._update_llm_job_description(
+            llm_job_id=llm_job_id,
+            description=msg,
         )
+        logger.info(msg)
 
         prompt_builder = SentenceAnnotationPromptBuilder(db=db, project_id=project_id)
         project_codes = prompt_builder.codeids2code_dict
@@ -783,6 +832,14 @@ class LLMService(metaclass=SingletonMeta):
         for idx, (sdoc_id, sdoc_data) in enumerate(
             zip(task_parameters.sdoc_ids, sdoc_datas)
         ):
+            # update job status
+            msg = f"Processing SDOC id={sdoc_id}"
+            self._next_llm_job_step(
+                llm_job_id=llm_job_id,
+                description=msg,
+            )
+            logger.info(msg)
+
             if sdoc_data is None:
                 raise ValueError(
                     f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
@@ -792,16 +849,12 @@ class LLMService(metaclass=SingletonMeta):
             language = crud_sdoc_meta.read_by_sdoc_and_key(
                 db=db, sdoc_id=sdoc_data.id, key="language"
             ).str_value
-            logger.info(f"Processing SDOC id={sdoc_data.id}, lang={language}")
+
             if language is None or language not in prompt_builder.supported_languages:
                 result.append(
                     SentenceAnnotationResult(
                         sdoc_id=sdoc_data.id, suggested_annotations=[]
                     )
-                )
-                self._update_llm_job(
-                    llm_job_id=llm_job_id,
-                    update=LLMJobUpdate(num_steps_finished=idx + 1),
                 )
                 continue
 
@@ -915,10 +968,6 @@ class LLMService(metaclass=SingletonMeta):
                     suggested_annotations=suggested_annotations,
                 )
             )
-            self._update_llm_job(
-                llm_job_id=llm_job_id,
-                update=LLMJobUpdate(num_steps_finished=idx + 1),
-            )
 
             # create the suggested annotations
             crud_sentence_anno.create_bulk(
@@ -958,11 +1007,29 @@ class LLMService(metaclass=SingletonMeta):
             approach_parameters, ModelTrainingParams
         ), "Wrong approach parameters!"
 
+        msg = f"Started LLMJob - Sentence Annotation (RAY), num docs: {len(task_parameters.sdoc_ids)}"
+        self._update_llm_job(
+            llm_job_id=llm_job_id,
+            update=LLMJobUpdate(
+                current_step_description=msg,
+                num_steps_total=5 + 1,  # +1 for the start
+            ),
+        )
+        logger.info(msg)
+
         DEMO_USER_ID = 2
+
+        # Step: 1 - Building the training dataset
+        msg = "Building training dataset."
+        self._next_llm_job_step(
+            llm_job_id=llm_job_id,
+            description=msg,
+        )
+        logger.info(msg)
 
         # Find all relevant information for creating the training dataset
         with self.sqls.db_session() as db:
-            # 1. Find the labeled sentences for each code
+            # 1.1 - Find the labeled sentences for each code
             sentence_annotations = [
                 sa
                 for sa in crud_sentence_anno.read_by_codes(
@@ -980,7 +1047,7 @@ class LLMService(metaclass=SingletonMeta):
                 f"Found {len(sdoc_id2sentence_annotations)} sdocs with {len(sentence_annotations)} annotations."
             )
 
-            # 2. Find the corresponding sdocs
+            # 1.2 - Find the corresponding sdocs
             training_sdocs = crud_sdoc.read_data_batch(
                 db=db, ids=list(sdoc_id2sentence_annotations.keys())
             )
@@ -994,7 +1061,7 @@ class LLMService(metaclass=SingletonMeta):
                     f"Got data of {len(training_sdocs)} from {len(sdoc_id2sentence_annotations)} sdocs."
                 )
 
-            # Sanity check, number of embeddings should match the number of sentences
+            # 1.3 - Sanity check, number of embeddings should match the number of sentences
             for training_sdoc in training_sdocs:
                 if training_sdoc is None:
                     continue
@@ -1009,7 +1076,7 @@ class LLMService(metaclass=SingletonMeta):
                         f"Number of embeddings ({len(sentence_embeddings)}) and sentences ({len(training_sdoc.sentences)}) do not match for sdoc {training_sdoc.id}."
                     )
 
-            # 3. Find the corresponding sentence embeddings
+            # 1.4 - Find the corresponding sentence embeddings
             search_tuples = [
                 (sent_id, sdoc_data.id)
                 for sdoc_data in training_sdocs
@@ -1032,13 +1099,13 @@ class LLMService(metaclass=SingletonMeta):
                 f"Mapped the embeddings to the documents. {[f'{sdoc_id}:{len(embeddings)}' for sdoc_id, embeddings in sdoc_id2sent_embs.items()]}"
             )
 
-            # 4. Find the code names
+            # 1.5 - Find the code names
             codes = crud_code.read_by_ids(db=db, ids=task_parameters.code_ids)
             code_id2name = {code.id: code.name for code in codes}
             code_name2id = {code.name: code.id for code in codes}
             logger.debug(f"Found the {len(codes)} codes.")
 
-        # Build the training data
+        # 1.6 - Build the training data
         training_dataset: List[SeqSentTaggerDoc] = []
         for sdoc_id, annotations in sdoc_id2sentence_annotations.items():
             sentence_embeddings = sdoc_id2sent_embs.get(sdoc_id, [])
@@ -1061,9 +1128,21 @@ class LLMService(metaclass=SingletonMeta):
                     sent_labels=labels,
                 )
             )
-        logger.info(
-            f"Built training dataset consisting of {len(training_dataset)} documents with a total of {len(sentence_annotations)} annotations."
+
+        msg = f"Built training dataset consisting of {len(training_dataset)} documents with a total of {len(sentence_annotations)} annotations."
+        self._update_llm_job_description(
+            llm_job_id=llm_job_id,
+            description=msg,
         )
+        logger.info(msg)
+
+        # Step: 2 - Building the test dataset
+        msg = "Building test dataset."
+        self._next_llm_job_step(
+            llm_job_id=llm_job_id,
+            description=msg,
+        )
+        logger.info(msg)
 
         # Find all relevant information for creating the test dataset
         with self.sqls.db_session() as db:
@@ -1106,9 +1185,21 @@ class LLMService(metaclass=SingletonMeta):
                     sent_labels=["O"] * len(sentence_embeddings),
                 )
             )
-        logger.info(f"Built test dataset consisting of {len(test_dataset)} documents.")
+        msg = f"Built test dataset consisting of {len(test_dataset)} documents."
+        self._update_llm_job_description(
+            llm_job_id=llm_job_id,
+            description=msg,
+        )
+        logger.info(msg)
 
-        # Train and apply the model with ray
+        # Step: 3 - Model Training
+        msg = "Started model training and application with Ray."
+        self._next_llm_job_step(
+            llm_job_id=llm_job_id,
+            description=msg,
+        )
+        logger.info(msg)
+
         response = self.rms.seqsenttagger_train_apply(
             input=SeqSentTaggerJobInput(
                 project_id=project_id,
@@ -1116,9 +1207,15 @@ class LLMService(metaclass=SingletonMeta):
                 test_data=test_dataset,
             )
         )
-        logger.info("Trained & applied Sequencee Tagging Model with Ray!")
 
-        # Delete all existing sentence annotations for the test sdocs
+        msg = "Finished model training and application with Ray."
+        self._update_llm_job_description(
+            llm_job_id=llm_job_id,
+            description=msg,
+        )
+        logger.info(msg)
+
+        # Step: 4 - Delete all existing sentence annotations for the test sdocs
         with self.sqls.db_session() as db:
             previous_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
                 db=db,
@@ -1126,15 +1223,29 @@ class LLMService(metaclass=SingletonMeta):
                 sdoc_ids=task_parameters.sdoc_ids,
                 code_ids=task_parameters.code_ids,
             )
+
+            msg = f"Deleting {len(previous_annotations)} previous sentence annotations."
+            self._next_llm_job_step(
+                llm_job_id=llm_job_id,
+                description=msg,
+            )
+            logger.info(msg)
+
             crud_sentence_anno.remove_bulk(
                 db=db, ids=[sa.id for sa in previous_annotations]
             )
-        logger.info(
-            f"Deleted {len(previous_annotations)} previous sentence annotations."
-        )
 
-        # Apply the new predictions
-        assert len(response.pred_data) == len(test_sdocs), "Prediction mismatch!"
+        # Step: 5 - Apply the new predictions
+        msg = "Applying suggested annotations."
+        self._next_llm_job_step(
+            llm_job_id=llm_job_id,
+            description=msg,
+        )
+        logger.info(msg)
+
+        if len(response.pred_data) != len(test_sdocs):
+            raise ValueError("Prediction mismatch!")
+
         for prediction, sdoc_data in zip(response.pred_data, test_sdocs):
             # we have list of labels, we need to convert them to sentence annotations
             suggested_annotations: List[SentenceAnnotationCreate] = []
@@ -1173,9 +1284,12 @@ class LLMService(metaclass=SingletonMeta):
                 create_dtos=suggested_annotations,
             )
 
-            logger.info(
-                f"Applied {len(suggested_annotations)} suggested annotations to document {sdoc_data.id}."
+            msg = f"Applied {len(suggested_annotations)} suggested annotations to document {sdoc_data.id}."
+            self._update_llm_job_description(
+                llm_job_id=llm_job_id,
+                description=msg,
             )
+            logger.info(msg)
 
         return LLMJobResult(
             llm_job_type=TaskType.SENTENCE_ANNOTATION,

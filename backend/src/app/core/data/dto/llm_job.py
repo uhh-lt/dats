@@ -225,10 +225,13 @@ class LLMJobBaseDTO(BaseModel):
     status: BackgroundJobStatus = Field(
         default=BackgroundJobStatus.WAITING, description="Status of the LLMJob"
     )
-    num_steps_finished: int = Field(description="Number of steps LLMJob has completed.")
     num_steps_total: int = Field(description="Number of total steps.")
+    current_step: int = Field(description="The current step.")
+    current_step_description: str = Field(
+        description="Description of the current step."
+    )
     result: Optional[LLMJobResult] = Field(
-        default=None, description="Results of hte LLMJob."
+        default=None, description="Results of the LLMJob."
     )
 
 
@@ -244,8 +247,12 @@ class LLMJobUpdate(BaseModel, UpdateDTOBase):
     status: Optional[BackgroundJobStatus] = Field(
         default=None, description="Status of the LLMJob"
     )
-    num_steps_finished: Optional[int] = Field(
-        default=None, description="Number of steps LLMJob has completed."
+    num_steps_total: Optional[int] = Field(
+        default=None, description="Number of total steps."
+    )
+    current_step: Optional[int] = Field(default=None, description="The current step.")
+    current_step_description: Optional[str] = Field(
+        default=None, description="Description of the current step."
     )
     result: Optional[LLMJobResult] = Field(
         default=None, description="Result of the LLMJob."
