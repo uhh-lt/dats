@@ -21,8 +21,8 @@ import AudioVideoViewer from "./DocumentViewer/AudioVideoViewer.tsx";
 import ImageViewer from "./DocumentViewer/ImageViewer.tsx";
 import TextViewer from "./DocumentViewer/TextViewer.tsx";
 import ImageAnnotator from "./ImageAnnotator/ImageAnnotator.tsx";
-import SentenceAnnotationComparison from "./SentenceAnnotator/SentenceAnnotationComparison.tsx";
-import SentenceAnnotator from "./SentenceAnnotator/SentenceAnnotator.tsx";
+import SentenceAnnotator from "./SentenceAnnotator/Annotator/SentenceAnnotator.tsx";
+import SentenceAnnotationComparison from "./SentenceAnnotator/Comparator/SentenceAnnotationComparison.tsx";
 import TextAnnotator from "./TextAnnotator/TextAnnotator.tsx";
 import AnnotationToolbar from "./Toolbar/AnnotationToolbar.tsx";
 

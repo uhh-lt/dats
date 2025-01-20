@@ -5,7 +5,7 @@ import { SentenceAnnotationReadResolved } from "../../../api/openapi/models/Sent
 import { SentenceAnnotatorResult } from "../../../api/openapi/models/SentenceAnnotatorResult.ts";
 import { SentenceAnnotationService } from "../../../api/openapi/services/SentenceAnnotationService.ts";
 import { QueryKey } from "../../../api/QueryKey.ts";
-import { FAKE_ANNOTATION_ID } from "../../../api/SpanAnnotationHooks.ts";
+import { FAKE_SENTENCE_ANNOTATION_ID } from "../../../api/SentenceAnnotationHooks.ts";
 import queryClient from "../../../plugins/ReactQueryClient.ts";
 
 export const useCreateSentenceAnnotation = (currentUserId: number) =>
@@ -22,7 +22,7 @@ export const useCreateSentenceAnnotation = (currentUserId: number) =>
       }),
     // optimistic updates
     onMutate: async (variables) => {
-      // when we create a new span annotation, we add a new annotation to a certain annotation document
+      // when we create a new sentence annotation, we add a new annotation to a certain annotation document
       // thus, we only affect the annotation document that we are adding to
       const affectedQueryKey = [QueryKey.SDOC_SENTENCE_ANNOTATIONS, variables.sdocId, currentUserId];
 
@@ -43,7 +43,7 @@ export const useCreateSentenceAnnotation = (currentUserId: number) =>
               acc[sentId] = [
                 ...annotations,
                 {
-                  id: FAKE_ANNOTATION_ID,
+                  id: FAKE_SENTENCE_ANNOTATION_ID,
                   sdoc_id: variables.sdocId,
                   user_id: currentUserId,
                   code: variables.code,
@@ -66,7 +66,7 @@ export const useCreateSentenceAnnotation = (currentUserId: number) =>
       // Return a context object with the snapshotted value
       return { previousSentenceAnnotator, affectedQueryKey };
     },
-    onError: (_error: Error, _newSpanAnnotation, context) => {
+    onError: (_error: Error, _newSentAnnotation, context) => {
       if (!context) return;
       // If the mutation fails, use the context returned from onMutate to roll back
       queryClient.setQueryData(context.affectedQueryKey, context.previousSentenceAnnotator);
@@ -98,7 +98,7 @@ export const useCreateBulkSentenceAnnotation = (currentUserId: number) =>
       }),
     // optimistic updates
     onMutate: async (variables) => {
-      // when we create a new span annotation, we add a new annotation to a certain annotation document
+      // when we create a new sentence annotation, we add a new annotation to a certain annotation document
       // thus, we only affect the annotation document that we are adding to
       const affectedQueryKey = [QueryKey.SDOC_SENTENCE_ANNOTATIONS, variables.sdocId, currentUserId];
 
@@ -109,7 +109,7 @@ export const useCreateBulkSentenceAnnotation = (currentUserId: number) =>
       const previousSentenceAnnotator = queryClient.getQueryData<SentenceAnnotatorResult>(affectedQueryKey);
 
       // Optimistically update to the new value
-      let fakeID = FAKE_ANNOTATION_ID;
+      let fakeID = FAKE_SENTENCE_ANNOTATION_ID;
       queryClient.setQueryData<SentenceAnnotatorResult>(affectedQueryKey, (old) => {
         if (!old) return old;
 
@@ -146,7 +146,7 @@ export const useCreateBulkSentenceAnnotation = (currentUserId: number) =>
       // Return a context object with the snapshotted value
       return { previousSentenceAnnotator, affectedQueryKey };
     },
-    onError: (_error: Error, _newSpanAnnotation, context) => {
+    onError: (_error: Error, _newSentAnnotation, context) => {
       if (!context) return;
       // If the mutation fails, use the context returned from onMutate to roll back
       queryClient.setQueryData(context.affectedQueryKey, context.previousSentenceAnnotator);
@@ -174,7 +174,7 @@ export const useUpdateSentenceAnnotation = () =>
       }),
     // optimistic update
     onMutate: async (updateData) => {
-      // when we update a span annotation, we update an annotation of a certain annotation document
+      // when we update a sentence annotation, we update an annotation of a certain annotation document
       // thus, we only affect the annotation document that contains the annotation we update
       const affectedQueryKey = [
         QueryKey.SDOC_SENTENCE_ANNOTATIONS,
@@ -235,7 +235,7 @@ export const useDeleteSentenceAnnotation = () =>
       SentenceAnnotationService.deleteById({ sentenceAnnoId: variables.sentenceAnnotationToDelete.id }),
     // optimistic updates
     onMutate: async ({ sentenceAnnotationToDelete }) => {
-      // when we delete a span annotation, we remove an annotation from a certain annotation document
+      // when we delete a sentence annotation, we remove an annotation from a certain annotation document
       // thus, we only affect the annotation document that we are removing from
       const affectedQueryKey = [
         QueryKey.SDOC_SENTENCE_ANNOTATIONS,
@@ -294,7 +294,7 @@ export const useDeleteBulkSentenceAnnotation = (currentUserId: number) =>
       }),
     // optimistic updates
     onMutate: async (variables) => {
-      // when we delete a span annotation, we remove an annotation from a certain annotation document
+      // when we delete a sentence annotation, we remove an annotation from a certain annotation document
       // thus, we only affect the annotation document that we are removing from
       const affectedQueryKey = [QueryKey.SDOC_SENTENCE_ANNOTATIONS, variables.sdocId, currentUserId];
 
