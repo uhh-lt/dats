@@ -970,10 +970,6 @@ class LLMService(metaclass=SingletonMeta):
             )
 
             msg = f"Deleting {len(previous_annotations)} previous sentence annotations."
-            self._next_llm_job_step(
-                llm_job_id=llm_job_id,
-                description=msg,
-            )
             logger.info(msg)
 
             crud_sentence_anno.remove_bulk(
