@@ -961,6 +961,25 @@ class LLMService(metaclass=SingletonMeta):
                 f"Parsed the response! suggested sentence annotations={suggested_annotations}"
             )
 
+            # Delete all existing sentence annotations for the test sdocs
+            previous_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
+                db=db,
+                user_id=SYSTEM_USER_ID,
+                sdoc_ids=task_parameters.sdoc_ids,
+                code_ids=task_parameters.code_ids,
+            )
+
+            msg = f"Deleting {len(previous_annotations)} previous sentence annotations."
+            self._next_llm_job_step(
+                llm_job_id=llm_job_id,
+                description=msg,
+            )
+            logger.info(msg)
+
+            crud_sentence_anno.remove_bulk(
+                db=db, ids=[sa.id for sa in previous_annotations]
+            )
+
             # create the suggested annotations
             created_annos = crud_sentence_anno.create_bulk(
                 db=db,
