@@ -8,6 +8,7 @@ interface DocumentSentenceProps {
   sentenceId: number;
   isSelected: boolean;
   selectedCode: CodeRead | undefined;
+  selectedSentAnnoId: number | undefined;
   hoveredSentAnnoId: number | null;
   hoveredCodeId: number | undefined;
   sentence: string;
@@ -24,6 +25,7 @@ function DocumentSentence({
   sentenceId,
   isSelected,
   selectedCode,
+  selectedSentAnnoId,
   hoveredSentAnnoId,
   hoveredCodeId,
   sentence,
@@ -64,7 +66,18 @@ function DocumentSentence({
     if (hoveredCodeId) {
       return codeId2CodeMap[hoveredCodeId]?.color;
     }
-  }, [codeId2CodeMap, hoveredCodeId, hoveredSentAnnoId, isSelected, selectedCode, sentAnnoId2sentAnnoMap]);
+    if (selectedSentAnnoId && sentAnnoId2sentAnnoMap[selectedSentAnnoId]) {
+      return sentAnnoId2sentAnnoMap[selectedSentAnnoId].code.color;
+    }
+  }, [
+    codeId2CodeMap,
+    hoveredCodeId,
+    hoveredSentAnnoId,
+    selectedSentAnnoId,
+    isSelected,
+    selectedCode,
+    sentAnnoId2sentAnnoMap,
+  ]);
 
   return (
     <Stack direction="row" width="100%">

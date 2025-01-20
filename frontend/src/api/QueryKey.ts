@@ -62,8 +62,8 @@ export const QueryKey = {
   SDOC_SPAN_ANNOTATIONS: "sdocSpanAnnotations",
   // bbox annotations of a document (by sdoc id, user ids)
   SDOC_BBOX_ANNOTATIONS: "sdocBBoxAnnotations",
-  // sentence annotations of a document (by sdoc id, user ids)
-  SDOC_SENTENCE_ANNOTATIONS: "sdocSentenceAnnotations",
+  // sentence annotator of a document (by sdoc id, user ids)
+  SDOC_SENTENCE_ANNOTATOR: "sdocSentenceAnnotator",
   // all metadata of a document (by sdoc id)
   SDOC_METADATAS: "sdocMetadatas",
   // word frequencies of a document (by sdoc id)

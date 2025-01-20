@@ -1,6 +1,6 @@
 import { Card, CardActionArea, CardContent, CardHeader, Divider, Stack, Typography } from "@mui/material";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import { SentenceAnnotationReadResolved } from "../../../api/openapi/models/SentenceAnnotationReadResolved.ts";
 import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
 import CodeRenderer from "../../../components/Code/CodeRenderer.tsx";
 import UserName from "../../../components/User/UserName.tsx";
@@ -8,12 +8,12 @@ import AnnotationCardActionsMenu from "./AnnotationCardActionMenu.tsx";
 import AnnotationCardMemo from "./AnnotationCardMemo.tsx";
 import { AnnotationCardProps } from "./types/AnnotationCardProps.ts";
 
-function SpanAnnotationCard({
+function SentenceAnnotationCard({
   isSelected,
   annotation,
   onClick,
   cardProps,
-}: AnnotationCardProps<SpanAnnotationReadResolved>) {
+}: AnnotationCardProps<SentenceAnnotationReadResolved>) {
   return (
     <Card {...cardProps}>
       <CardHeader
@@ -44,7 +44,7 @@ function SpanAnnotationCard({
               pl: 1,
             }}
           >
-            {annotation.text}
+            This annotation spans sentence {annotation.sentence_id_start + 1} - {annotation.sentence_id_end + 1}.
           </Typography>
           <Stack direction="row" justifyContent="end" width="100%">
             <Typography variant="subtitle2" color="textDisabled" fontSize={12}>
@@ -60,7 +60,7 @@ function SpanAnnotationCard({
             annotationId={annotation.id}
             annotationType={AttachedObjectType.SPAN_ANNOTATION}
             codeName={annotation.code.name}
-            annotationText={annotation.text}
+            annotationText={"Sentence"}
             useGetAnnotationMemo={SpanAnnotationHooks.useGetUserMemo}
           />
         </>
@@ -69,4 +69,4 @@ function SpanAnnotationCard({
   );
 }
 
-export default SpanAnnotationCard;
+export default SentenceAnnotationCard;

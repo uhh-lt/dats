@@ -24,7 +24,7 @@ export const useCreateSentenceAnnotation = (currentUserId: number) =>
     onMutate: async (variables) => {
       // when we create a new sentence annotation, we add a new annotation to a certain annotation document
       // thus, we only affect the annotation document that we are adding to
-      const affectedQueryKey = [QueryKey.SDOC_SENTENCE_ANNOTATIONS, variables.sdocId, currentUserId];
+      const affectedQueryKey = [QueryKey.SDOC_SENTENCE_ANNOTATOR, variables.sdocId, currentUserId];
 
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
@@ -100,7 +100,7 @@ export const useCreateBulkSentenceAnnotation = (currentUserId: number) =>
     onMutate: async (variables) => {
       // when we create a new sentence annotation, we add a new annotation to a certain annotation document
       // thus, we only affect the annotation document that we are adding to
-      const affectedQueryKey = [QueryKey.SDOC_SENTENCE_ANNOTATIONS, variables.sdocId, currentUserId];
+      const affectedQueryKey = [QueryKey.SDOC_SENTENCE_ANNOTATOR, variables.sdocId, currentUserId];
 
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
@@ -177,7 +177,7 @@ export const useUpdateSentenceAnnotation = () =>
       // when we update a sentence annotation, we update an annotation of a certain annotation document
       // thus, we only affect the annotation document that contains the annotation we update
       const affectedQueryKey = [
-        QueryKey.SDOC_SENTENCE_ANNOTATIONS,
+        QueryKey.SDOC_SENTENCE_ANNOTATOR,
         updateData.sentenceAnnoToUpdate.sdoc_id,
         updateData.sentenceAnnoToUpdate.user_id,
       ];
@@ -238,7 +238,7 @@ export const useDeleteSentenceAnnotation = () =>
       // when we delete a sentence annotation, we remove an annotation from a certain annotation document
       // thus, we only affect the annotation document that we are removing from
       const affectedQueryKey = [
-        QueryKey.SDOC_SENTENCE_ANNOTATIONS,
+        QueryKey.SDOC_SENTENCE_ANNOTATOR,
         sentenceAnnotationToDelete.sdoc_id,
         sentenceAnnotationToDelete.user_id,
       ];
@@ -296,7 +296,7 @@ export const useDeleteBulkSentenceAnnotation = (currentUserId: number) =>
     onMutate: async (variables) => {
       // when we delete a sentence annotation, we remove an annotation from a certain annotation document
       // thus, we only affect the annotation document that we are removing from
-      const affectedQueryKey = [QueryKey.SDOC_SENTENCE_ANNOTATIONS, variables.sdocId, currentUserId];
+      const affectedQueryKey = [QueryKey.SDOC_SENTENCE_ANNOTATOR, variables.sdocId, currentUserId];
 
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });

@@ -3,15 +3,12 @@ import SearchIcon from "@mui/icons-material/Search";
 import { Box, CircularProgress, Divider, Stack, TextField, ToggleButton } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMemo, useRef, useState } from "react";
-import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { useDebounce } from "../../../utils/useDebounce.ts";
 import { AnnoActions } from "../annoSlice.ts";
-import { AnnotationCardProps } from "./AnnotationCardProps.ts";
-
-type AnnotationReadResolved = SpanAnnotationReadResolved | BBoxAnnotationReadResolved;
+import { AnnotationCardProps } from "./types/AnnotationCardProps.ts";
+import { AnnotationReadResolved } from "./types/AnnotationReadResolved.ts";
 
 interface AnnotationExplorerProps<T extends AnnotationReadResolved> {
   annotations: T[] | undefined;

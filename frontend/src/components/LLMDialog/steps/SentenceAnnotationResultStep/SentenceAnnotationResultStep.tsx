@@ -51,7 +51,7 @@ function SentenceAnnotationResultStepContent({ jobResult }: { jobResult: Sentenc
     navigate(`/project/${projectId}/annotation/${firstSdocId}`);
 
     // reload annotations
-    queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATIONS, firstSdocId, SYSTEM_USER_ID] });
+    queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR, firstSdocId, SYSTEM_USER_ID] });
   };
 
   return (

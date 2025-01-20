@@ -105,6 +105,7 @@ function SentenceAnnotator({ sdocData, ...props }: SentenceAnnotatorProps & BoxP
   const [isDragging, setIsDragging] = useState<boolean>(false);
 
   // highlighting
+  const selectedAnnotationId = useAppSelector((state) => state.annotations.selectedAnnotationId);
   const hoveredCodeId = useAppSelector((state) => state.annotations.hoveredCodeId);
   const [hoverSentAnnoId, setHoverSentAnnoId] = useState<number | null>(null);
 
@@ -337,6 +338,7 @@ function SentenceAnnotator({ sdocData, ...props }: SentenceAnnotatorProps & BoxP
               numPositions={numPositions}
               numSentenceDigits={numSentenceDigits}
               hoveredCodeId={hoveredCodeId}
+              selectedSentAnnoId={selectedAnnotationId}
             />
           ))}
         </List>

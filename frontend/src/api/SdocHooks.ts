@@ -236,7 +236,7 @@ const useGetBBoxAnnotationsBatch = (sdocId: number | null | undefined, userIds: 
 const useGetSentenceAnnotator = (sdocId: number | null | undefined, userId: number | null | undefined) => {
   // TODO: filter out all disabled code ids
   return useQuery<SentenceAnnotatorResult, Error>({
-    queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATIONS, sdocId, userId],
+    queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR, sdocId, userId],
     queryFn: () =>
       SourceDocumentService.getSentenceAnnotator({
         sdocId: sdocId!,

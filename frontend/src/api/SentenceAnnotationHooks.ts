@@ -34,7 +34,7 @@ const useUpdateSentenceAnno = () =>
   useMutation({
     mutationFn: SentenceAnnotationService.updateById,
     onSuccess(data) {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATIONS, data.sdoc_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR, data.sdoc_id] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SENTENCE_ANNOTATION, data.id] });
     },
   });
@@ -43,7 +43,7 @@ const useDeleteSentenceAnno = () =>
   useMutation({
     mutationFn: SentenceAnnotationService.deleteById,
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATIONS, data.sdoc_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR, data.sdoc_id] });
     },
   });
 
