@@ -18,7 +18,6 @@ from app.core.data.doc_type import DocType
 from app.core.data.dto.analysis import (
     AnnotatedImageResult,
     AnnotatedSegmentResult,
-    AnnotationOccurrence,
     CodeFrequency,
     CodeOccurrence,
     SampledSdocsResults,
@@ -80,25 +79,6 @@ def code_occurrences(
     authz_user.assert_in_project(project_id)
 
     return AnalysisService().find_code_occurrences(
-        project_id=project_id, user_ids=user_ids, code_id=code_id
-    )
-
-
-@router.post(
-    "/annotation_occurrences",
-    response_model=List[AnnotationOccurrence],
-    summary="Returns AnnotationOccurrences.",
-)
-def annotation_occurrences(
-    *,
-    project_id: int,
-    user_ids: List[int],
-    code_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> List[AnnotationOccurrence]:
-    authz_user.assert_in_project(project_id)
-
-    return AnalysisService().find_annotation_occurrences(
         project_id=project_id, user_ids=user_ids, code_id=code_id
     )
 
