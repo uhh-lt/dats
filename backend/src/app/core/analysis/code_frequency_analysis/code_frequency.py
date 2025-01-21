@@ -10,10 +10,13 @@ from app.core.data.dto.analysis import (
 )
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.source_document import SourceDocumentRead
+from app.core.data.dto.source_document_data import SourceDocumentDataRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM
+from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
 from app.core.data.orm.source_document import SourceDocumentORM
+from app.core.data.orm.source_document_data import SourceDocumentDataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.db.sql_service import SQLService
@@ -74,7 +77,31 @@ def find_code_frequencies(
         )
         span_res = query.all()
 
-        # 3. query all bbox annotation occurrences of the codes of interest
+        # 3. query all sentence annotation occurrences of the codes of interest
+        query = (
+            db.query(
+                SentenceAnnotationORM.code_id,
+                SentenceAnnotationORM.id,
+            )
+            .join(
+                AnnotationDocumentORM,
+                AnnotationDocumentORM.id
+                == SentenceAnnotationORM.annotation_document_id,
+            )
+            .join(
+                SourceDocumentORM,
+                SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+            )
+        )
+        # noinspection PyUnresolvedReferences
+        query = query.filter(
+            AnnotationDocumentORM.user_id.in_(user_ids),
+            SentenceAnnotationORM.code_id.in_(codes_of_interest),
+            SourceDocumentORM.doctype.in_(doctypes),
+        )
+        sent_res = query.all()
+
+        # 4. query all bbox annotation occurrences of the codes of interest
         query = (
             db.query(
                 BBoxAnnotationORM.code_id,
@@ -98,7 +125,7 @@ def find_code_frequencies(
         bbox_res = query.all()
 
         # 4. count & aggregate the occurrences of each code and their children
-        res = span_res + bbox_res
+        res = span_res + bbox_res + sent_res
         return [
             CodeFrequency(
                 code_id=code_id,
@@ -151,7 +178,66 @@ def find_code_occurrences(
             for x in res
         ]
 
-        # 2. query all bbox annotation occurrences of the code
+        # 2. query all sentence annotation occurrences of the code
+        query = (
+            db.query(
+                SourceDocumentORM,
+                SourceDocumentDataORM,
+                SentenceAnnotationORM.sentence_id_start,
+                SentenceAnnotationORM.sentence_id_end,
+                CodeORM,
+                func.count().label("count"),
+            )
+            .join(
+                SourceDocumentDataORM,
+                SourceDocumentDataORM.id == SourceDocumentORM.id,
+            )
+            .join(
+                AnnotationDocumentORM,
+                AnnotationDocumentORM.source_document_id == SourceDocumentORM.id,
+            )
+            .join(
+                SentenceAnnotationORM,
+                SentenceAnnotationORM.annotation_document_id
+                == AnnotationDocumentORM.id,
+            )
+            .join(CodeORM, CodeORM.id == SentenceAnnotationORM.code_id)
+        )
+        # noinspection PyUnresolvedReferences
+        query = query.filter(
+            and_(
+                SourceDocumentORM.project_id == project_id,
+                AnnotationDocumentORM.user_id.in_(user_ids),
+                CodeORM.id == code_id,
+            )
+        )
+        query = query.group_by(
+            SourceDocumentORM.id,
+            SourceDocumentDataORM.id,
+            SentenceAnnotationORM.sentence_id_start,
+            SentenceAnnotationORM.sentence_id_end,
+            CodeORM.id,
+        )
+        res = query.all()
+        sent_code_occurrences: List[CodeOccurrence] = []
+        for x in res:
+            sdoc = SourceDocumentRead.model_validate(x[0])
+            sdata = SourceDocumentDataRead.model_validate(x[1])
+            sent_start = x[2]
+            sent_end = x[3]
+            code = CodeRead.model_validate(x[4])
+            count = x[5]
+            text = " ".join(sdata.sentences[sent_start : sent_end + 1])
+            sent_code_occurrences.append(
+                CodeOccurrence(
+                    sdoc=sdoc,
+                    code=code,
+                    text=text,
+                    count=count,
+                )
+            )
+
+        # 3. query all bbox annotation occurrences of the code
         query = (
             db.query(
                 SourceDocumentORM,
@@ -188,11 +274,10 @@ def find_code_occurrences(
                 sdoc=SourceDocumentRead.model_validate(x[0]),
                 code=CodeRead.model_validate(x[1]),
                 text="Image Annotation",
-                # text=f"Image Annotation ({x[2].x_min}, {x[2].y_min}, {x[2].x_max}, {x[2].y_max})",
                 count=x[3],
             )
             for x in res
         ]
 
         # 3. return the result
-        return span_code_occurrences + bbox_code_occurrences
+        return span_code_occurrences + bbox_code_occurrences + sent_code_occurrences
