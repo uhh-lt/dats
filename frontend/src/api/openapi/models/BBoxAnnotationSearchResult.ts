@@ -2,8 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { BBoxAnnotationTableRow } from "./BBoxAnnotationTableRow";
-export type AnnotatedImageResult = {
+import type { BBoxAnnotationRow } from "./BBoxAnnotationRow";
+export type BBoxAnnotationSearchResult = {
   /**
    * The total number of bbox_annotation_ids. Used for pagination.
    */
@@ -11,5 +11,5 @@ export type AnnotatedImageResult = {
   /**
    * The Annotations.
    */
-  data: Array<BBoxAnnotationTableRow>;
+  data: Array<BBoxAnnotationRow>;
 };

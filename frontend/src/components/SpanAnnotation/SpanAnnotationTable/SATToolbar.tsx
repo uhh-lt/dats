@@ -1,7 +1,7 @@
 import { Stack } from "@mui/material";
 import { MRT_ShowHideColumnsButton, MRT_TableInstance, MRT_ToggleDensePaddingButton } from "material-react-table";
 import React from "react";
-import { AnnotationTableRow } from "../../../api/openapi/models/AnnotationTableRow.ts";
+import { SpanAnnotationRow } from "../../../api/openapi/models/SpanAnnotationRow.ts";
 import { RootState } from "../../../store/store.ts";
 import ReduxFilterDialog from "../../FilterDialog/ReduxFilterDialog.tsx";
 import { SATFilterActions } from "./satFilterSlice.ts";
@@ -10,9 +10,9 @@ const filterStateSelector = (state: RootState) => state.satFilter;
 
 export interface SATToolbarProps {
   filterName: string;
-  table: MRT_TableInstance<AnnotationTableRow>;
+  table: MRT_TableInstance<SpanAnnotationRow>;
   anchor: React.RefObject<HTMLElement>;
-  selectedAnnotations: AnnotationTableRow[];
+  selectedAnnotations: SpanAnnotationRow[];
 }
 
 function SATToolbar({

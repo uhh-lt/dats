@@ -1,7 +1,7 @@
 import { Stack } from "@mui/material";
 import { MRT_ShowHideColumnsButton, MRT_TableInstance, MRT_ToggleDensePaddingButton } from "material-react-table";
 import React from "react";
-import { BBoxAnnotationTableRow } from "../../../api/openapi/models/BBoxAnnotationTableRow.ts";
+import { BBoxAnnotationRow } from "../../../api/openapi/models/BBoxAnnotationRow.ts";
 import { RootState } from "../../../store/store.ts";
 import ReduxFilterDialog from "../../FilterDialog/ReduxFilterDialog.tsx";
 import { BBoxFilterActions } from "./bboxFilterSlice.ts";
@@ -10,10 +10,10 @@ const filterStateSelector = (state: RootState) => state.bboxFilter;
 
 export interface BBoxToolbarProps {
   filterName: string;
-  table: MRT_TableInstance<BBoxAnnotationTableRow>;
+  table: MRT_TableInstance<BBoxAnnotationRow>;
   anchor: React.RefObject<HTMLElement>;
   selectedUserId: number;
-  selectedAnnotations: BBoxAnnotationTableRow[];
+  selectedAnnotations: BBoxAnnotationRow[];
 }
 
 function BBoxToolbar({

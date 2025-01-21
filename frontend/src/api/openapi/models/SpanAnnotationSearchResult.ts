@@ -2,8 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AnnotationTableRow } from "./AnnotationTableRow";
-export type AnnotatedSegmentResult = {
+import type { SpanAnnotationRow } from "./SpanAnnotationRow";
+export type SpanAnnotationSearchResult = {
   /**
    * The total number of span_annotation_ids. Used for pagination.
    */
@@ -11,5 +11,5 @@ export type AnnotatedSegmentResult = {
   /**
    * The Annotations.
    */
-  data: Array<AnnotationTableRow>;
+  data: Array<SpanAnnotationRow>;
 };

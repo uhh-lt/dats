@@ -6,41 +6,25 @@ import type { CodeRead } from "./CodeRead";
 import type { DocumentTagRead } from "./DocumentTagRead";
 import type { MemoRead } from "./MemoRead";
 import type { SourceDocumentRead } from "./SourceDocumentRead";
-export type BBoxAnnotationTableRow = {
+export type SpanAnnotationRow = {
   /**
-   * ID of the BBoxAnnotation
+   * ID of the SpanAnnotation
    */
   id: number;
   /**
-   * The x-coordinate of the BBoxAnnotation.
+   * The SpanText the SpanAnnotation spans.
    */
-  x: number;
+  span_text: string;
   /**
-   * The y-coordinate of the BBoxAnnotation.
-   */
-  y: number;
-  /**
-   * The width of the BBoxAnnotation.
-   */
-  width: number;
-  /**
-   * The height of the BBoxAnnotation.
-   */
-  height: number;
-  /**
-   * The url to the Image of the BBoxAnnotation.
-   */
-  url: string;
-  /**
-   * Code the BBoxAnnotation refers to
+   * Code the SpanAnnotation refers to
    */
   code: CodeRead;
   /**
-   * User the BBoxAnnotation belongs to
+   * User the SpanAnnotation belongs to
    */
   user_id: number;
   /**
-   * SourceDocument the BBoxAnnotation refers to
+   * SourceDocument the SpanAnnotation refers to
    */
   sdoc: SourceDocumentRead;
   /**

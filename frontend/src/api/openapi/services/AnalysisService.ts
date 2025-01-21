@@ -2,8 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AnnotatedImageResult } from "../models/AnnotatedImageResult";
-import type { AnnotatedSegmentResult } from "../models/AnnotatedSegmentResult";
+import type { BBoxAnnotationSearchResult } from "../models/BBoxAnnotationSearchResult";
 import type { Body_analysis_annotated_images } from "../models/Body_analysis_annotated_images";
 import type { Body_analysis_annotated_segments } from "../models/Body_analysis_annotated_segments";
 import type { Body_analysis_code_frequencies } from "../models/Body_analysis_code_frequencies";
@@ -13,10 +12,12 @@ import type { Body_analysis_word_frequency_analysis_export } from "../models/Bod
 import type { CodeFrequency } from "../models/CodeFrequency";
 import type { CodeOccurrence } from "../models/CodeOccurrence";
 import type { ColumnInfo_BBoxColumns_ } from "../models/ColumnInfo_BBoxColumns_";
+import type { ColumnInfo_SentAnnoColumns_ } from "../models/ColumnInfo_SentAnnoColumns_";
 import type { ColumnInfo_SpanColumns_ } from "../models/ColumnInfo_SpanColumns_";
 import type { ColumnInfo_WordFrequencyColumns_ } from "../models/ColumnInfo_WordFrequencyColumns_";
 import type { SampledSdocsResults } from "../models/SampledSdocsResults";
 import type { SentenceAnnotationSearchResult } from "../models/SentenceAnnotationSearchResult";
+import type { SpanAnnotationSearchResult } from "../models/SpanAnnotationSearchResult";
 import type { WordFrequencyResult } from "../models/WordFrequencyResult";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -98,7 +99,7 @@ export class AnalysisService {
   }
   /**
    * Returns AnnotationSegments.
-   * @returns AnnotatedSegmentResult Successful Response
+   * @returns SpanAnnotationSearchResult Successful Response
    * @throws ApiError
    */
   public static annotatedSegments({
@@ -113,7 +114,7 @@ export class AnalysisService {
     requestBody: Body_analysis_annotated_segments;
     page?: number | null;
     pageSize?: number | null;
-  }): CancelablePromise<AnnotatedSegmentResult> {
+  }): CancelablePromise<SpanAnnotationSearchResult> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/analysis/annotated_segments",
@@ -132,14 +133,14 @@ export class AnalysisService {
   }
   /**
    * Returns SentenceAnnotationSearch Info.
-   * @returns ColumnInfo_SpanColumns_ Successful Response
+   * @returns ColumnInfo_SentAnnoColumns_ Successful Response
    * @throws ApiError
    */
   public static sentenceAnnotationSearchInfo({
     projectId,
   }: {
     projectId: number;
-  }): CancelablePromise<Array<ColumnInfo_SpanColumns_>> {
+  }): CancelablePromise<Array<ColumnInfo_SentAnnoColumns_>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/analysis/sentence_annotation_search_info",
@@ -208,7 +209,7 @@ export class AnalysisService {
   }
   /**
    * Returns AnnotatedImageResult.
-   * @returns AnnotatedImageResult Successful Response
+   * @returns BBoxAnnotationSearchResult Successful Response
    * @throws ApiError
    */
   public static annotatedImages({
@@ -223,7 +224,7 @@ export class AnalysisService {
     requestBody: Body_analysis_annotated_images;
     page?: number | null;
     pageSize?: number | null;
-  }): CancelablePromise<AnnotatedImageResult> {
+  }): CancelablePromise<BBoxAnnotationSearchResult> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/analysis/annotated_images",

@@ -3921,7 +3921,9 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnnotatedSegmentResult" } } }
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationSearchResult" } }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -3951,7 +3953,7 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/ColumnInfo_SpanColumns_" },
+                  "items": { "$ref": "#/components/schemas/ColumnInfo_SentAnnoColumns_" },
                   "title": "Response Analysis-Sentence Annotation Search Info"
                 }
               }
@@ -4083,7 +4085,9 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnnotatedImageResult" } } }
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/BBoxAnnotationSearchResult" } }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -6496,35 +6500,6 @@
         "required": ["sdoc_id", "suggested_annotations"],
         "title": "AnnotationResult"
       },
-      "AnnotationTableRow": {
-        "properties": {
-          "id": { "type": "integer", "title": "Id", "description": "ID of the SpanAnnotation" },
-          "span_text": {
-            "type": "string",
-            "title": "Span Text",
-            "description": "The SpanText the SpanAnnotation spans."
-          },
-          "code": { "$ref": "#/components/schemas/CodeRead", "description": "Code the SpanAnnotation refers to" },
-          "user_id": { "type": "integer", "title": "User Id", "description": "User the SpanAnnotation belongs to" },
-          "sdoc": {
-            "$ref": "#/components/schemas/SourceDocumentRead",
-            "description": "SourceDocument the SpanAnnotation refers to"
-          },
-          "tags": {
-            "items": { "$ref": "#/components/schemas/DocumentTagRead" },
-            "type": "array",
-            "title": "Tags",
-            "description": "The DocumentTags of the SourceDocument."
-          },
-          "memo": {
-            "anyOf": [{ "$ref": "#/components/schemas/MemoRead" }, { "type": "null" }],
-            "description": "The Memo of the Annotation."
-          }
-        },
-        "type": "object",
-        "required": ["id", "span_text", "code", "user_id", "sdoc", "tags", "memo"],
-        "title": "AnnotationTableRow"
-      },
       "ApproachRecommendation": {
         "properties": {
           "recommended_approach": {
@@ -6690,7 +6665,7 @@
         "required": ["x_min", "x_max", "y_min", "y_max", "id", "code", "user_id", "sdoc_id", "created", "updated"],
         "title": "BBoxAnnotationReadResolved"
       },
-      "BBoxAnnotationTableRow": {
+      "BBoxAnnotationRow": {
         "properties": {
           "id": { "type": "integer", "title": "Id", "description": "ID of the BBoxAnnotation" },
           "x": { "type": "integer", "title": "X", "description": "The x-coordinate of the BBoxAnnotation." },
@@ -6717,7 +6692,25 @@
         },
         "type": "object",
         "required": ["id", "x", "y", "width", "height", "url", "code", "user_id", "sdoc", "tags", "memo"],
-        "title": "BBoxAnnotationTableRow"
+        "title": "BBoxAnnotationRow"
+      },
+      "BBoxAnnotationSearchResult": {
+        "properties": {
+          "total_results": {
+            "type": "integer",
+            "title": "Total Results",
+            "description": "The total number of bbox_annotation_ids. Used for pagination."
+          },
+          "data": {
+            "items": { "$ref": "#/components/schemas/BBoxAnnotationRow" },
+            "type": "array",
+            "title": "Data",
+            "description": "The Annotations."
+          }
+        },
+        "type": "object",
+        "required": ["total_results", "data"],
+        "title": "BBoxAnnotationSearchResult"
       },
       "BBoxAnnotationUpdate": {
         "properties": {
@@ -7359,6 +7352,21 @@
         "type": "object",
         "required": ["label", "column", "sortable", "operator", "value"],
         "title": "ColumnInfo[SdocColumns]"
+      },
+      "ColumnInfo_SentAnnoColumns_": {
+        "properties": {
+          "label": { "type": "string", "title": "Label" },
+          "column": {
+            "anyOf": [{ "$ref": "#/components/schemas/SentAnnoColumns" }, { "type": "integer" }],
+            "title": "Column"
+          },
+          "sortable": { "type": "boolean", "title": "Sortable" },
+          "operator": { "$ref": "#/components/schemas/FilterOperator" },
+          "value": { "$ref": "#/components/schemas/FilterValueType" }
+        },
+        "type": "object",
+        "required": ["label", "column", "sortable", "operator", "value"],
+        "title": "ColumnInfo[SentAnnoColumns]"
       },
       "ColumnInfo_SpanColumns_": {
         "properties": {
@@ -9964,6 +9972,53 @@
           "updated"
         ],
         "title": "SpanAnnotationReadResolved"
+      },
+      "SpanAnnotationRow": {
+        "properties": {
+          "id": { "type": "integer", "title": "Id", "description": "ID of the SpanAnnotation" },
+          "span_text": {
+            "type": "string",
+            "title": "Span Text",
+            "description": "The SpanText the SpanAnnotation spans."
+          },
+          "code": { "$ref": "#/components/schemas/CodeRead", "description": "Code the SpanAnnotation refers to" },
+          "user_id": { "type": "integer", "title": "User Id", "description": "User the SpanAnnotation belongs to" },
+          "sdoc": {
+            "$ref": "#/components/schemas/SourceDocumentRead",
+            "description": "SourceDocument the SpanAnnotation refers to"
+          },
+          "tags": {
+            "items": { "$ref": "#/components/schemas/DocumentTagRead" },
+            "type": "array",
+            "title": "Tags",
+            "description": "The DocumentTags of the SourceDocument."
+          },
+          "memo": {
+            "anyOf": [{ "$ref": "#/components/schemas/MemoRead" }, { "type": "null" }],
+            "description": "The Memo of the Annotation."
+          }
+        },
+        "type": "object",
+        "required": ["id", "span_text", "code", "user_id", "sdoc", "tags", "memo"],
+        "title": "SpanAnnotationRow"
+      },
+      "SpanAnnotationSearchResult": {
+        "properties": {
+          "total_results": {
+            "type": "integer",
+            "title": "Total Results",
+            "description": "The total number of span_annotation_ids. Used for pagination."
+          },
+          "data": {
+            "items": { "$ref": "#/components/schemas/SpanAnnotationRow" },
+            "type": "array",
+            "title": "Data",
+            "description": "The Annotations."
+          }
+        },
+        "type": "object",
+        "required": ["total_results", "data"],
+        "title": "SpanAnnotationSearchResult"
       },
       "SpanAnnotationUpdate": {
         "properties": {

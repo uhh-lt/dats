@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
-import { AnnotationTableRow } from "../../../api/openapi/models/AnnotationTableRow.ts";
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
+import { SpanAnnotationRow } from "../../../api/openapi/models/SpanAnnotationRow.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { AnnoActions } from "../../../views/annotation/annoSlice.ts";
 
 interface SdocAnnotationLinkProps {
   sdoc: SourceDocumentRead;
-  annotation: AnnotationTableRow;
+  annotation: SpanAnnotationRow;
 }
 
 function SdocAnnotationLink({ sdoc, annotation }: SdocAnnotationLinkProps) {
