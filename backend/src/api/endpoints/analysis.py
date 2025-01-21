@@ -23,19 +23,19 @@ from app.core.analysis.word_frequency_analysis.word_frequency_columns import (
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.doc_type import DocType
 from app.core.data.dto.analysis import (
-    AnnotatedImageResult,
-    AnnotatedSegmentResult,
+    BBoxAnnotationSearchResult,
     CodeFrequency,
     CodeOccurrence,
     SampledSdocsResults,
     SentenceAnnotationSearchResult,
+    SpanAnnotationSearchResult,
     WordFrequencyResult,
 )
-from app.core.search.bbox_search.bbox_search import (
-    find_annotated_images,
-    find_annotated_images_info,
+from app.core.search.bbox_anno_search.bbox_anno_search import (
+    find_bbox_annotations,
+    find_bbox_annotations_info,
 )
-from app.core.search.bbox_search.bbox_search_columns import BBoxColumns
+from app.core.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
 from app.core.search.column_info import ColumnInfo
 from app.core.search.filtering import Filter
 from app.core.search.sent_anno_search.sent_anno_search import (
@@ -44,11 +44,11 @@ from app.core.search.sent_anno_search.sent_anno_search import (
 )
 from app.core.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
 from app.core.search.sorting import Sort
-from app.core.search.span_search.span_search import (
-    find_annotated_segments,
-    find_annotated_segments_info,
+from app.core.search.span_anno_search.span_anno_search import (
+    find_span_annotations,
+    find_span_annotations_info,
 )
-from app.core.search.span_search.span_search_columns import (
+from app.core.search.span_anno_search.span_anno_search_columns import (
     SpanColumns,
 )
 
@@ -107,14 +107,14 @@ def annotated_segments_info(
     authz_user: AuthzUser = Depends(),
 ) -> List[ColumnInfo[SpanColumns]]:
     authz_user.assert_in_project(project_id)
-    return find_annotated_segments_info(
+    return find_span_annotations_info(
         project_id=project_id,
     )
 
 
 @router.post(
     "/annotated_segments",
-    response_model=AnnotatedSegmentResult,
+    response_model=SpanAnnotationSearchResult,
     summary="Returns AnnotationSegments.",
 )
 def annotated_segments(
@@ -126,10 +126,10 @@ def annotated_segments(
     page_size: Optional[int] = None,
     sorts: List[Sort[SpanColumns]],
     authz_user: AuthzUser = Depends(),
-) -> AnnotatedSegmentResult:
+) -> SpanAnnotationSearchResult:
     authz_user.assert_in_project(project_id)
 
-    return find_annotated_segments(
+    return find_span_annotations(
         project_id=project_id,
         user_id=user_id,
         filter=filter,
@@ -193,14 +193,14 @@ def annotated_images_info(
     authz_user: AuthzUser = Depends(),
 ) -> List[ColumnInfo[BBoxColumns]]:
     authz_user.assert_in_project(project_id)
-    return find_annotated_images_info(
+    return find_bbox_annotations_info(
         project_id=project_id,
     )
 
 
 @router.post(
     "/annotated_images",
-    response_model=AnnotatedImageResult,
+    response_model=BBoxAnnotationSearchResult,
     summary="Returns AnnotatedImageResult.",
 )
 def annotated_images(
@@ -212,10 +212,10 @@ def annotated_images(
     page_size: Optional[int] = None,
     sorts: List[Sort[BBoxColumns]],
     authz_user: AuthzUser = Depends(),
-) -> AnnotatedImageResult:
+) -> BBoxAnnotationSearchResult:
     authz_user.assert_in_project(project_id)
 
-    return find_annotated_images(
+    return find_bbox_annotations(
         project_id=project_id,
         user_id=user_id,
         filter=filter,

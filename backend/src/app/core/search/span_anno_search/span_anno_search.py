@@ -3,8 +3,8 @@ from typing import List, Optional
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.doc_type import DocType
 from app.core.data.dto.analysis import (
-    AnnotatedSegmentResult,
-    AnnotationTableRow,
+    SpanAnnotationRow,
+    SpanAnnotationSearchResult,
 )
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
@@ -22,12 +22,12 @@ from app.core.search.column_info import (
 from app.core.search.filtering import Filter
 from app.core.search.search_builder import SearchBuilder
 from app.core.search.sorting import Sort
-from app.core.search.span_search.span_search_columns import (
+from app.core.search.span_anno_search.span_anno_search_columns import (
     SpanColumns,
 )
 
 
-def find_annotated_segments_info(
+def find_span_annotations_info(
     project_id,
 ) -> List[ColumnInfo[SpanColumns]]:
     with SQLService().db_session() as db:
@@ -46,14 +46,14 @@ def find_annotated_segments_info(
     ] + metadata_column_info
 
 
-def find_annotated_segments(
+def find_span_annotations(
     project_id: int,
     user_id: int,
     filter: Filter[SpanColumns],
     sorts: List[Sort[SpanColumns]],
     page: Optional[int] = None,
     page_size: Optional[int] = None,
-) -> AnnotatedSegmentResult:
+) -> SpanAnnotationSearchResult:
     with SQLService().db_session() as db:
         builder = SearchBuilder(db, filter, sorts)
         # build the initial subquery that queries all necessary data for the desired output
@@ -95,7 +95,7 @@ def find_annotated_segments(
         for row in result_rows:
             sdoc_orm: SourceDocumentORM = row[4]
             data.append(
-                AnnotationTableRow(
+                SpanAnnotationRow(
                     id=row[0],
                     span_text=row[1],
                     user_id=row[2],
@@ -108,4 +108,4 @@ def find_annotated_segments(
                     memo=None,
                 )
             )
-        return AnnotatedSegmentResult(total_results=total_results, data=data)
+        return SpanAnnotationSearchResult(total_results=total_results, data=data)

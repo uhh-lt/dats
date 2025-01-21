@@ -3,8 +3,8 @@ from typing import List, Optional
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.doc_type import DocType
 from app.core.data.dto.analysis import (
-    AnnotatedImageResult,
-    BBoxAnnotationTableRow,
+    BBoxAnnotationRow,
+    BBoxAnnotationSearchResult,
 )
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
@@ -16,7 +16,7 @@ from app.core.data.orm.code import CodeORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
-from app.core.search.bbox_search.bbox_search_columns import BBoxColumns
+from app.core.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
 from app.core.search.column_info import (
     ColumnInfo,
 )
@@ -27,7 +27,7 @@ from app.core.search.sorting import Sort
 repo_service = RepoService()
 
 
-def find_annotated_images_info(project_id) -> List[ColumnInfo[BBoxColumns]]:
+def find_bbox_annotations_info(project_id) -> List[ColumnInfo[BBoxColumns]]:
     with SQLService().db_session() as db:
         project_metadata = [
             ProjectMetadataRead.model_validate(pm)
@@ -47,14 +47,14 @@ def find_annotated_images_info(project_id) -> List[ColumnInfo[BBoxColumns]]:
     ] + metadata_column_info
 
 
-def find_annotated_images(
+def find_bbox_annotations(
     project_id: int,
     user_id: int,
     filter: Filter[BBoxColumns],
     sorts: List[Sort[BBoxColumns]],
     page: Optional[int] = None,
     page_size: Optional[int] = None,
-) -> AnnotatedImageResult:
+) -> BBoxAnnotationSearchResult:
     with SQLService().db_session() as db:
         builder = SearchBuilder(db, filter, sorts)
         subquery = builder.build_subquery(
@@ -96,7 +96,7 @@ def find_annotated_images(
             code_orm: CodeORM = row[3]
             sdoc_orm: SourceDocumentORM = row[4]
             data.append(
-                BBoxAnnotationTableRow(
+                BBoxAnnotationRow(
                     id=row[0],
                     user_id=row[1],
                     x=bbox_orm.x_min,
@@ -118,4 +118,4 @@ def find_annotated_images(
                     memo=None,
                 )
             )
-    return AnnotatedImageResult(total_results=total_results, data=data)
+    return BBoxAnnotationSearchResult(total_results=total_results, data=data)

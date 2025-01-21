@@ -30,7 +30,7 @@ class CodeFrequency(BaseModel):
     count: int = Field(description="The number of occurrences of the code.")
 
 
-class AnnotationTableRow(BaseModel):
+class SpanAnnotationRow(BaseModel):
     id: int = Field(description="ID of the SpanAnnotation")
     span_text: str = Field(description="The SpanText the SpanAnnotation spans.")
     code: CodeRead = Field(description="Code the SpanAnnotation refers to")
@@ -44,11 +44,11 @@ class AnnotationTableRow(BaseModel):
     memo: Optional[MemoRead] = Field(description="The Memo of the Annotation.")
 
 
-class AnnotatedSegmentResult(BaseModel):
+class SpanAnnotationSearchResult(BaseModel):
     total_results: int = Field(
         description="The total number of span_annotation_ids. Used for pagination."
     )
-    data: List[AnnotationTableRow] = Field(description="The Annotations.")
+    data: List[SpanAnnotationRow] = Field(description="The Annotations.")
 
 
 class SentenceAnnotationRow(BaseModel):
@@ -72,7 +72,7 @@ class SentenceAnnotationSearchResult(BaseModel):
     data: List[SentenceAnnotationRow] = Field(description="The Annotations.")
 
 
-class BBoxAnnotationTableRow(BaseModel):
+class BBoxAnnotationRow(BaseModel):
     id: int = Field(description="ID of the BBoxAnnotation")
     x: int = Field(description="The x-coordinate of the BBoxAnnotation.")
     y: int = Field(description="The y-coordinate of the BBoxAnnotation.")
@@ -90,11 +90,11 @@ class BBoxAnnotationTableRow(BaseModel):
     memo: Optional[MemoRead] = Field(description="The Memo of the Annotation.")
 
 
-class AnnotatedImageResult(BaseModel):
+class BBoxAnnotationSearchResult(BaseModel):
     total_results: int = Field(
         description="The total number of bbox_annotation_ids. Used for pagination."
     )
-    data: List[BBoxAnnotationTableRow] = Field(description="The Annotations.")
+    data: List[BBoxAnnotationRow] = Field(description="The Annotations.")
 
 
 class TimelineAnalysisResult(BaseModel):
