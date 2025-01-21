@@ -8,6 +8,7 @@ from app.core.data.dto.sentence_annotation import (
     SentenceAnnotationCreate,
     SentenceAnnotationCreateIntern,
     SentenceAnnotationUpdate,
+    SentenceAnnotationUpdateBulk,
 )
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
@@ -157,6 +158,18 @@ class CRUDSentenceAnnotation(
         crud_adoc.update_timestamp(db=db, id=sentence_anno.annotation_document_id)
 
         return sentence_anno
+
+    def update_bulk(
+        self, db: Session, *, update_dtos: List[SentenceAnnotationUpdateBulk]
+    ) -> List[SentenceAnnotationORM]:
+        return [
+            self.update(
+                db,
+                id=update_dto.sent_annotation_id,
+                update_dto=SentenceAnnotationUpdate(code_id=update_dto.code_id),
+            )
+            for update_dto in update_dtos
+        ]
 
     def remove(self, db: Session, *, id: int) -> Optional[SentenceAnnotationORM]:
         sentence_anno = super().remove(db, id=id)

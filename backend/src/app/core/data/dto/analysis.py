@@ -51,6 +51,27 @@ class AnnotatedSegmentResult(BaseModel):
     data: List[AnnotationTableRow] = Field(description="The Annotations.")
 
 
+class SentenceAnnotationRow(BaseModel):
+    id: int = Field(description="ID of the SentenceAnnotation")
+    text: str = Field(description="The Text the SentenceAnnotation spans.")
+    code: CodeRead = Field(description="Code the SentenceAnnotation refers to")
+    user_id: int = Field(description="User the SentenceAnnotation belongs to")
+    sdoc: SourceDocumentRead = Field(
+        description="SourceDocument the SentenceAnnotation refers to"
+    )
+    tags: List[DocumentTagRead] = Field(
+        description="The DocumentTags of the SourceDocument."
+    )
+    memo: Optional[MemoRead] = Field(description="The Memo of the Annotation.")
+
+
+class SentenceAnnotationSearchResult(BaseModel):
+    total_results: int = Field(
+        description="The total number of sentence_annotation_ids. Used for pagination."
+    )
+    data: List[SentenceAnnotationRow] = Field(description="The Annotations.")
+
+
 class BBoxAnnotationTableRow(BaseModel):
     id: int = Field(description="ID of the BBoxAnnotation")
     x: int = Field(description="The x-coordinate of the BBoxAnnotation.")

@@ -35,6 +35,11 @@ class SentenceAnnotationUpdate(BaseModel, UpdateDTOBase):
     code_id: int = Field(description="Code the SentenceAnnotation refers to")
 
 
+class SentenceAnnotationUpdateBulk(BaseModel, UpdateDTOBase):
+    sent_annotation_id: int = Field(description="ID of the SentenceAnnotation")
+    code_id: int = Field(description="Code the SentenceAnnotation refers to")
+
+
 # Properties for reading (as in ORM)
 class SentenceAnnotationRead(SentenceAnnotationBaseDTO):
     id: int = Field(description="ID of the SentenceAnnotation")

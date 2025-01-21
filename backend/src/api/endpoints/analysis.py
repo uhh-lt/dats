@@ -28,6 +28,7 @@ from app.core.data.dto.analysis import (
     CodeFrequency,
     CodeOccurrence,
     SampledSdocsResults,
+    SentenceAnnotationSearchResult,
     WordFrequencyResult,
 )
 from app.core.search.bbox_search.bbox_search import (
@@ -37,6 +38,11 @@ from app.core.search.bbox_search.bbox_search import (
 from app.core.search.bbox_search.bbox_search_columns import BBoxColumns
 from app.core.search.column_info import ColumnInfo
 from app.core.search.filtering import Filter
+from app.core.search.sent_anno_search.sent_anno_search import (
+    find_sentence_annotations,
+    find_sentence_annotations_info,
+)
+from app.core.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
 from app.core.search.sorting import Sort
 from app.core.search.span_search.span_search import (
     find_annotated_segments,
@@ -124,6 +130,49 @@ def annotated_segments(
     authz_user.assert_in_project(project_id)
 
     return find_annotated_segments(
+        project_id=project_id,
+        user_id=user_id,
+        filter=filter,
+        page=page,
+        page_size=page_size,
+        sorts=sorts,
+    )
+
+
+@router.post(
+    "/sentence_annotation_search_info",
+    response_model=List[ColumnInfo[SentAnnoColumns]],
+    summary="Returns SentenceAnnotationSearch Info.",
+)
+def sentence_annotation_search_info(
+    *,
+    project_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> List[ColumnInfo[SentAnnoColumns]]:
+    authz_user.assert_in_project(project_id)
+    return find_sentence_annotations_info(
+        project_id=project_id,
+    )
+
+
+@router.post(
+    "/sentence_annotation_search",
+    response_model=SentenceAnnotationSearchResult,
+    summary="Returns Sentence Annotations.",
+)
+def sentence_annotation_search(
+    *,
+    project_id: int,
+    user_id: int,
+    filter: Filter[SentAnnoColumns],
+    page: Optional[int] = None,
+    page_size: Optional[int] = None,
+    sorts: List[Sort[SentAnnoColumns]],
+    authz_user: AuthzUser = Depends(),
+) -> SentenceAnnotationSearchResult:
+    authz_user.assert_in_project(project_id)
+
+    return find_sentence_annotations(
         project_id=project_id,
         user_id=user_id,
         filter=filter,

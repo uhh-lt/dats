@@ -22,6 +22,7 @@ from app.core.data.dto.sentence_annotation import (
     SentenceAnnotationRead,
     SentenceAnnotationReadResolved,
     SentenceAnnotationUpdate,
+    SentenceAnnotationUpdateBulk,
 )
 
 router = APIRouter(
@@ -137,6 +138,42 @@ def update_by_id(
         return SentenceAnnotationReadResolved.model_validate(db_obj)
     else:
         return SentenceAnnotationRead.model_validate(db_obj)
+
+
+@router.patch(
+    "/bulk/update",
+    response_model=Union[
+        List[SentenceAnnotationRead], List[SentenceAnnotationReadResolved]
+    ],
+    summary="Updates SentenceAnnotation in Bulk",
+)
+def update_sent_anno_annotations_bulk(
+    *,
+    db: Session = Depends(get_db_session),
+    sent_annos: List[SentenceAnnotationUpdateBulk],
+    resolve_code: bool = Depends(resolve_code_param),
+    authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
+) -> Union[List[SentenceAnnotationRead], List[SentenceAnnotationReadResolved]]:
+    for sent_anno in sent_annos:
+        authz_user.assert_in_same_project_as(Crud.CODE, sent_anno.code_id)
+        authz_user.assert_in_same_project_as(
+            Crud.SPAN_ANNOTATION, sent_anno.sent_annotation_id
+        )
+        validate.validate_objects_in_same_project(
+            [
+                (Crud.CODE, sent_anno.code_id),
+                (Crud.SPAN_ANNOTATION, sent_anno.sent_annotation_id),
+            ]
+        )
+
+    db_objs = crud_sentence_anno.update_bulk(db=db, update_dtos=sent_annos)
+    if resolve_code:
+        return [
+            SentenceAnnotationReadResolved.model_validate(db_obj) for db_obj in db_objs
+        ]
+    else:
+        return [SentenceAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
 
 
 @router.delete(
