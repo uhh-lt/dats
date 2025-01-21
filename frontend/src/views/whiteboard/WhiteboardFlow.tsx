@@ -33,11 +33,13 @@ import "reactflow/dist/style.css";
 import BboxAnnotationHooks from "../../api/BboxAnnotationHooks.ts";
 import CodeHooks from "../../api/CodeHooks.ts";
 import ProjectHooks from "../../api/ProjectHooks.ts";
+import SentenceAnnotationHooks from "../../api/SentenceAnnotationHooks.ts";
 import SpanAnnotationHooks from "../../api/SpanAnnotationHooks.ts";
 import TagHooks from "../../api/TagHooks.ts";
 import WhiteboardHooks, { Whiteboard, WhiteboardGraph } from "../../api/WhiteboardHooks.ts";
 import BBoxAnnotationEditDialog from "../../components/BBoxAnnotation/BBoxAnnotationEditDialog.tsx";
 import CodeEditDialog from "../../components/Code/CodeEditDialog.tsx";
+import SentenceAnnotationEditDialog from "../../components/SentenceAnnotation/SentenceAnnotationEditDialog.tsx";
 import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import SpanAnnotationEditDialog from "../../components/SpanAnnotation/SpanAnnotationEditDialog.tsx";
 import TagEditDialog from "../../components/Tag/TagEditDialog.tsx";
@@ -53,6 +55,7 @@ import CodeNode from "./nodes/CodeNode.tsx";
 import MemoNode from "./nodes/MemoNode.tsx";
 import NoteNode from "./nodes/NoteNode.tsx";
 import SdocNode from "./nodes/SdocNode.tsx";
+import SentenceAnnotationNode from "./nodes/SentenceAnnotationNode.tsx";
 import SpanAnnotationNode from "./nodes/SpanAnnotationNode.tsx";
 import TagNode from "./nodes/TagNode.tsx";
 import TextNode from "./nodes/TextNode.tsx";
@@ -62,6 +65,7 @@ import AddCodeNodeDialog from "./toolbar/AddCodeNodeDialog.tsx";
 import AddDocumentNodeDialog from "./toolbar/AddDocumentNodeDialog.tsx";
 import AddMemoNodeDialog from "./toolbar/AddMemoNodeDialog.tsx";
 import AddNoteNodeButton from "./toolbar/AddNoteNodeButton.tsx";
+import AddSentenceAnnotationNodeDialog from "./toolbar/AddSentenceAnnotationNodeDialog.tsx";
 import AddSpanAnnotationNodeDialog from "./toolbar/AddSpanAnnotationNodeDialog.tsx";
 import AddTagNodeDialog from "./toolbar/AddTagNodeDialog.tsx";
 import AddTextNodeButton from "./toolbar/AddTextNodeButton.tsx";
@@ -76,6 +80,7 @@ import {
   isCodeNode,
   isCustomNode,
   isSdocNode,
+  isSentenceAnnotationNode,
   isSpanAnnotationNode,
   isTagNode,
 } from "./types/typeGuards.ts";
@@ -97,6 +102,7 @@ const nodeTypes: NodeTypes = {
   tag: TagNode,
   code: CodeNode,
   spanAnnotation: SpanAnnotationNode,
+  sentenceAnnotation: SentenceAnnotationNode,
   bboxAnnotation: BboxAnnotationNode,
 };
 
@@ -170,6 +176,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   const bulkLinkDocumentTagsMutation = TagHooks.useBulkLinkDocumentTags();
   const updateCodeMutation = CodeHooks.useUpdateCode();
   const updateSpanAnnotationMutation = SpanAnnotationHooks.useUpdateSpan();
+  const updateSentenceAnnotationMutation = SentenceAnnotationHooks.useUpdateSentenceAnno();
   const updateBBoxAnnotationMutation = BboxAnnotationHooks.useUpdateBBox();
 
   // refs
@@ -281,6 +288,27 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
         }
 
         // codes can be manually connected to annotations
+        if (isCodeNode(sourceNode) && isSentenceAnnotationNode(targetNode)) {
+          const mutation = updateSentenceAnnotationMutation.mutate;
+          mutation(
+            {
+              sentenceAnnoId: targetNode.data.sentenceAnnotationId,
+              requestBody: {
+                code_id: sourceNode.data.codeId,
+              },
+            },
+            {
+              onSuccess() {
+                openSnackbar({
+                  text: "Updated sentence annotation",
+                  severity: "success",
+                });
+              },
+            },
+          );
+        }
+
+        // codes can be manually connected to annotations
         if (isCodeNode(sourceNode) && isBBoxAnnotationNode(targetNode)) {
           const mutation = updateBBoxAnnotationMutation.mutate;
           mutation(
@@ -293,7 +321,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
             {
               onSuccess() {
                 openSnackbar({
-                  text: "Updated span annotation",
+                  text: "Updated bbox annotation",
                   severity: "success",
                 });
               },
@@ -311,6 +339,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
       updateCodeMutation.mutate,
       updateSpanAnnotationMutation.mutate,
       updateBBoxAnnotationMutation.mutate,
+      updateSentenceAnnotationMutation.mutate,
       setEdges,
     ],
   );
@@ -484,6 +513,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
                       <AddTagNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
                       <AddCodeNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
                       <AddSpanAnnotationNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
+                      <AddSentenceAnnotationNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
                       <AddBBoxAnnotationNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
                       <AddMemoNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
                     </Stack>
@@ -557,6 +587,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
         </Box>
       </Box>
       <SpanAnnotationEditDialog projectId={projectId} />
+      <SentenceAnnotationEditDialog projectId={projectId} />
       <BBoxAnnotationEditDialog projectId={projectId} />
       {projectTags.isSuccess && <TagEditDialog tags={projectTags.data} />}
       {projectCodes.isSuccess && <CodeEditDialog codes={projectCodes.data} />}

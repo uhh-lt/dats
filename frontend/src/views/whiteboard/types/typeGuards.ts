@@ -7,6 +7,7 @@ import { BBoxAnnotationNodeData } from "./dbnodes/BBoxAnnotationNodeData.ts";
 import { CodeNodeData } from "./dbnodes/CodeNodeData.ts";
 import { MemoNodeData } from "./dbnodes/MemoNodeData.ts";
 import { SdocNodeData } from "./dbnodes/SdocNodeData.ts";
+import { SentenceAnnotationNodeData } from "./dbnodes/SentenceAnnotationNodeData.ts";
 import { SpanAnnotationNodeData } from "./dbnodes/SpanAnnotationNodeData.ts";
 import { TagNodeData } from "./dbnodes/TagNodeData.ts";
 
@@ -66,6 +67,10 @@ export const isSdocNode = (node: Node<DATSNodeData>): node is Node<SdocNodeData>
 
 export const isSpanAnnotationNode = (node: Node<DATSNodeData>): node is Node<SpanAnnotationNodeData> => {
   return (node.data as SpanAnnotationNodeData).spanAnnotationId !== undefined;
+};
+
+export const isSentenceAnnotationNode = (node: Node<DATSNodeData>): node is Node<SentenceAnnotationNodeData> => {
+  return (node.data as SentenceAnnotationNodeData).sentenceAnnotationId !== undefined;
 };
 
 export const isBBoxAnnotationNode = (node: Node<DATSNodeData>): node is Node<BBoxAnnotationNodeData> => {

@@ -5,6 +5,7 @@ import { BBoxAnnotationNodeData } from "./dbnodes/BBoxAnnotationNodeData.ts";
 import { CodeNodeData } from "./dbnodes/CodeNodeData.ts";
 import { MemoNodeData } from "./dbnodes/MemoNodeData.ts";
 import { SdocNodeData } from "./dbnodes/SdocNodeData.ts";
+import { SentenceAnnotationNodeData } from "./dbnodes/SentenceAnnotationNodeData.ts";
 import { SpanAnnotationNodeData } from "./dbnodes/SpanAnnotationNodeData.ts";
 import { TagNodeData } from "./dbnodes/TagNodeData.ts";
 
@@ -17,4 +18,5 @@ export type DATSNodeData =
   | CodeNodeData
   | TagNodeData
   | SpanAnnotationNodeData
+  | SentenceAnnotationNodeData
   | BBoxAnnotationNodeData;
