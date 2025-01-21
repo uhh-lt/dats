@@ -4,6 +4,6 @@
 /* eslint-disable */
 import type { AnnotationResult } from "./AnnotationResult";
 export type AnnotationLLMJobResult = {
-  llm_job_type: any;
+  llm_job_type: string;
   results: Array<AnnotationResult>;
 };

@@ -2,4 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type TimelineAnalysisResultType = {};
+export enum TimelineAnalysisResultType {
+  DOCUMENT = "document",
+}

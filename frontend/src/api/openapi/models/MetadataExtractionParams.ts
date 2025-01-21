@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type MetadataExtractionParams = {
-  llm_job_type: any;
+  llm_job_type: string;
   /**
    * IDs of the source documents to analyse
    */

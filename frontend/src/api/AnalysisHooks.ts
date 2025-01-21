@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey.ts";
-import { AnnotationOccurrence } from "./openapi/models/AnnotationOccurrence.ts";
 import { CodeFrequency } from "./openapi/models/CodeFrequency.ts";
 import { CodeOccurrence } from "./openapi/models/CodeOccurrence.ts";
 import { DocType } from "./openapi/models/DocType.ts";
@@ -32,22 +31,9 @@ const useCodeOccurrences = (projectId: number, userIds: number[], codeId: number
     enabled: userIds.length > 0 && !!codeId,
   });
 
-const useAnnotationOccurrences = (projectId: number, userIds: number[], codeId: number | null | undefined) =>
-  useQuery<AnnotationOccurrence[], Error>({
-    queryKey: [QueryKey.ANALYSIS_ANNOTATION_OCCURRENCES, projectId, userIds, codeId],
-    queryFn: () =>
-      AnalysisService.annotationOccurrences({
-        projectId,
-        codeId: codeId!,
-        requestBody: userIds,
-      }),
-    enabled: userIds.length > 0 && !!codeId,
-  });
-
 const AnalysisHooks = {
   useCodeFrequencies,
   useCodeOccurrences,
-  useAnnotationOccurrences,
 };
 
 export default AnalysisHooks;

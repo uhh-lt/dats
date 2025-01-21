@@ -4,7 +4,7 @@
 /* eslint-disable */
 import type { TrainingParameters } from "./TrainingParameters";
 export type ModelTrainingParams = {
-  llm_approach_type: any;
+  llm_approach_type: string;
   /**
    * The training parameters to use for the job
    */

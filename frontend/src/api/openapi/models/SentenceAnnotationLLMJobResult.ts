@@ -4,6 +4,6 @@
 /* eslint-disable */
 import type { SentenceAnnotationResult } from "./SentenceAnnotationResult";
 export type SentenceAnnotationLLMJobResult = {
-  llm_job_type: any;
+  llm_job_type: string;
   results: Array<SentenceAnnotationResult>;
 };

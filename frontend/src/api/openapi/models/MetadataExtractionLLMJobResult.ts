@@ -4,6 +4,6 @@
 /* eslint-disable */
 import type { MetadataExtractionResult } from "./MetadataExtractionResult";
 export type MetadataExtractionLLMJobResult = {
-  llm_job_type: any;
+  llm_job_type: string;
   results: Array<MetadataExtractionResult>;
 };

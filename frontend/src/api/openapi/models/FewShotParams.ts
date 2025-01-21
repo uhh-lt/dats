@@ -4,7 +4,7 @@
 /* eslint-disable */
 import type { LLMPromptTemplates } from "./LLMPromptTemplates";
 export type FewShotParams = {
-  llm_approach_type: any;
+  llm_approach_type: string;
   /**
    * The prompt templates to use for the job
    */

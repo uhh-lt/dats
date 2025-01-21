@@ -4077,8 +4077,8 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "minItems": 2,
                   "prefixItems": [{ "type": "integer" }, { "type": "integer" }],
+                  "minItems": 2,
                   "maxItems": 2,
                   "title": "Response Analysis-Count Sdocs With Date Metadata"
                 }
@@ -6202,10 +6202,7 @@
         "properties": {
           "title": { "type": "string", "title": "Title", "description": "Title of the AnalysisTable" },
           "content": { "type": "string", "title": "Content", "description": "Content of the AnalysisTable" },
-          "table_type": {
-            "allOf": [{ "$ref": "#/components/schemas/TableType" }],
-            "description": "TABLETYPE of the AnalysisTable"
-          },
+          "table_type": { "$ref": "#/components/schemas/TableType", "description": "TABLETYPE of the AnalysisTable" },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
@@ -6220,10 +6217,7 @@
         "properties": {
           "title": { "type": "string", "title": "Title", "description": "Title of the AnalysisTable" },
           "content": { "type": "string", "title": "Content", "description": "Content of the AnalysisTable" },
-          "table_type": {
-            "allOf": [{ "$ref": "#/components/schemas/TableType" }],
-            "description": "TABLETYPE of the AnalysisTable"
-          },
+          "table_type": { "$ref": "#/components/schemas/TableType", "description": "TABLETYPE of the AnalysisTable" },
           "id": { "type": "integer", "title": "Id", "description": "ID of the AnalysisTable" },
           "project_id": {
             "type": "integer",
@@ -6361,7 +6355,7 @@
       },
       "AnnotationLLMJobResult": {
         "properties": {
-          "llm_job_type": { "const": "ANNOTATION", "title": "Llm Job Type" },
+          "llm_job_type": { "type": "string", "const": "ANNOTATION", "title": "Llm Job Type" },
           "results": {
             "items": { "$ref": "#/components/schemas/AnnotationResult" },
             "type": "array",
@@ -6382,9 +6376,9 @@
             "title": "Annotation",
             "description": "The Annotation"
           },
-          "code": { "allOf": [{ "$ref": "#/components/schemas/CodeRead" }], "description": "The occuring Code." },
+          "code": { "$ref": "#/components/schemas/CodeRead", "description": "The occuring Code." },
           "sdoc": {
-            "allOf": [{ "$ref": "#/components/schemas/SourceDocumentRead" }],
+            "$ref": "#/components/schemas/SourceDocumentRead",
             "description": "The SourceDocument where the Code occurs."
           },
           "text": { "type": "string", "title": "Text", "description": "The Text of the Annotation" }
@@ -6395,7 +6389,7 @@
       },
       "AnnotationParams": {
         "properties": {
-          "llm_job_type": { "const": "ANNOTATION", "title": "Llm Job Type" },
+          "llm_job_type": { "type": "string", "const": "ANNOTATION", "title": "Llm Job Type" },
           "sdoc_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -6435,13 +6429,10 @@
             "title": "Span Text",
             "description": "The SpanText the SpanAnnotation spans."
           },
-          "code": {
-            "allOf": [{ "$ref": "#/components/schemas/CodeRead" }],
-            "description": "Code the SpanAnnotation refers to"
-          },
+          "code": { "$ref": "#/components/schemas/CodeRead", "description": "Code the SpanAnnotation refers to" },
           "user_id": { "type": "integer", "title": "User Id", "description": "User the SpanAnnotation belongs to" },
           "sdoc": {
-            "allOf": [{ "$ref": "#/components/schemas/SourceDocumentRead" }],
+            "$ref": "#/components/schemas/SourceDocumentRead",
             "description": "SourceDocument the SpanAnnotation refers to"
           },
           "tags": {
@@ -6462,12 +6453,13 @@
       "ApproachRecommendation": {
         "properties": {
           "recommended_approach": {
-            "allOf": [{ "$ref": "#/components/schemas/ApproachType" }],
+            "$ref": "#/components/schemas/ApproachType",
             "description": "Recommended approach"
           },
           "reasoning": { "type": "string", "title": "Reasoning", "description": "Reasoning for the recommendation" },
           "available_approaches": {
             "additionalProperties": { "type": "boolean" },
+            "propertyNames": { "$ref": "#/components/schemas/ApproachType" },
             "type": "object",
             "title": "Available Approaches",
             "description": "Available approaches"
@@ -6599,10 +6591,7 @@
             "description": "Absolute y_max coordinate of the BBoxAnnotation"
           },
           "id": { "type": "integer", "title": "Id", "description": "ID of the BBoxAnnotation" },
-          "code": {
-            "allOf": [{ "$ref": "#/components/schemas/CodeRead" }],
-            "description": "Code the BBoxAnnotation refers to"
-          },
+          "code": { "$ref": "#/components/schemas/CodeRead", "description": "Code the BBoxAnnotation refers to" },
           "user_id": { "type": "integer", "title": "User Id", "description": "User the SpanAnnotation belongs to" },
           "sdoc_id": {
             "type": "integer",
@@ -6634,13 +6623,10 @@
           "width": { "type": "integer", "title": "Width", "description": "The width of the BBoxAnnotation." },
           "height": { "type": "integer", "title": "Height", "description": "The height of the BBoxAnnotation." },
           "url": { "type": "string", "title": "Url", "description": "The url to the Image of the BBoxAnnotation." },
-          "code": {
-            "allOf": [{ "$ref": "#/components/schemas/CodeRead" }],
-            "description": "Code the BBoxAnnotation refers to"
-          },
+          "code": { "$ref": "#/components/schemas/CodeRead", "description": "Code the BBoxAnnotation refers to" },
           "user_id": { "type": "integer", "title": "User Id", "description": "User the BBoxAnnotation belongs to" },
           "sdoc": {
-            "allOf": [{ "$ref": "#/components/schemas/SourceDocumentRead" }],
+            "$ref": "#/components/schemas/SourceDocumentRead",
             "description": "SourceDocument the BBoxAnnotation refers to"
           },
           "tags": {
@@ -6888,11 +6874,11 @@
             "description": "Project the ConceptOverTimeAnalysis belongs to"
           },
           "timeline_settings": {
-            "allOf": [{ "$ref": "#/components/schemas/COTATimelineSettings" }],
+            "$ref": "#/components/schemas/COTATimelineSettings",
             "description": "Timeline Analysis Settings of the ConceptOverTimeAnalysis."
           },
           "training_settings": {
-            "allOf": [{ "$ref": "#/components/schemas/COTATrainingSettings" }],
+            "$ref": "#/components/schemas/COTATrainingSettings",
             "description": "Timeline Training Settings of the ConceptOverTimeAnalysis."
           },
           "concepts": {
@@ -6956,16 +6942,16 @@
       "COTARefinementJobRead": {
         "properties": {
           "status": {
-            "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
+            "$ref": "#/components/schemas/BackgroundJobStatus",
             "description": "Status of the BackgroundJob",
             "default": "Waiting"
           },
           "cota": {
-            "allOf": [{ "$ref": "#/components/schemas/COTARead" }],
+            "$ref": "#/components/schemas/COTARead",
             "description": "COTA that is used in the COTARefinementJob"
           },
           "hyperparams": {
-            "allOf": [{ "$ref": "#/components/schemas/COTARefinementHyperparameters" }],
+            "$ref": "#/components/schemas/COTARefinementHyperparameters",
             "description": "Hyperparameters of the COTARefinementJob"
           },
           "id": { "type": "string", "title": "Id", "description": "ID of the COTARefinementJob" },
@@ -7055,11 +7041,7 @@
       },
       "COTATimelineSettings": {
         "properties": {
-          "group_by": {
-            "allOf": [{ "$ref": "#/components/schemas/DateGroupBy" }],
-            "description": "Group by date",
-            "default": "YEAR"
-          },
+          "group_by": { "$ref": "#/components/schemas/DateGroupBy", "description": "Group by date", "default": "YEAR" },
           "date_metadata_id": {
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
             "title": "Date Metadata Id",
@@ -7096,7 +7078,7 @@
             "default": 5
           },
           "dimensionality_reduction_algorithm": {
-            "allOf": [{ "$ref": "#/components/schemas/DimensionalityReductionAlgorithm" }],
+            "$ref": "#/components/schemas/DimensionalityReductionAlgorithm",
             "description": "Dimensionality Reduction Algorithm used for the ConceptOverTimeAnalysis",
             "default": "umap"
           },
@@ -7170,10 +7152,10 @@
       "CodeOccurrence": {
         "properties": {
           "sdoc": {
-            "allOf": [{ "$ref": "#/components/schemas/SourceDocumentRead" }],
+            "$ref": "#/components/schemas/SourceDocumentRead",
             "description": "The SourceDocument where the Code occurs."
           },
-          "code": { "allOf": [{ "$ref": "#/components/schemas/CodeRead" }], "description": "The occuring Code." },
+          "code": { "$ref": "#/components/schemas/CodeRead", "description": "The occuring Code." },
           "text": {
             "type": "string",
             "title": "Text",
@@ -7356,13 +7338,13 @@
       "CrawlerJobRead": {
         "properties": {
           "status": {
-            "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
+            "$ref": "#/components/schemas/BackgroundJobStatus",
             "description": "Status of the CrawlerJob",
             "default": "Waiting"
           },
           "id": { "type": "string", "title": "Id", "description": "ID of the CrawlerJob" },
           "parameters": {
-            "allOf": [{ "$ref": "#/components/schemas/CrawlerJobParameters" }],
+            "$ref": "#/components/schemas/CrawlerJobParameters",
             "description": "The parameters of the crawler job that defines what to crawl!"
           },
           "output_dir": {
@@ -7510,7 +7492,7 @@
       },
       "DocumentTaggingLLMJobResult": {
         "properties": {
-          "llm_job_type": { "const": "DOCUMENT_TAGGING", "title": "Llm Job Type" },
+          "llm_job_type": { "type": "string", "const": "DOCUMENT_TAGGING", "title": "Llm Job Type" },
           "results": {
             "items": { "$ref": "#/components/schemas/DocumentTaggingResult" },
             "type": "array",
@@ -7523,7 +7505,7 @@
       },
       "DocumentTaggingParams": {
         "properties": {
-          "llm_job_type": { "const": "DOCUMENT_TAGGING", "title": "Llm Job Type" },
+          "llm_job_type": { "type": "string", "const": "DOCUMENT_TAGGING", "title": "Llm Job Type" },
           "sdoc_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -7586,11 +7568,11 @@
       "ExportJobParameters": {
         "properties": {
           "export_job_type": {
-            "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
+            "$ref": "#/components/schemas/ExportJobType",
             "description": "The type of the export job (what to export)"
           },
           "export_format": {
-            "allOf": [{ "$ref": "#/components/schemas/ExportFormat" }],
+            "$ref": "#/components/schemas/ExportFormat",
             "description": "The format of the exported data.",
             "default": "CSV"
           },
@@ -7633,7 +7615,7 @@
       "ExportJobRead": {
         "properties": {
           "status": {
-            "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
+            "$ref": "#/components/schemas/BackgroundJobStatus",
             "description": "Status of the ExportJob",
             "default": "Waiting"
           },
@@ -7644,7 +7626,7 @@
           },
           "id": { "type": "string", "title": "Id", "description": "ID of the ExportJob" },
           "parameters": {
-            "allOf": [{ "$ref": "#/components/schemas/ExportJobParameters" }],
+            "$ref": "#/components/schemas/ExportJobParameters",
             "description": "The parameters of the export job that defines what to export!"
           },
           "created": {
@@ -7700,7 +7682,7 @@
       },
       "FewShotParams": {
         "properties": {
-          "llm_approach_type": { "const": "LLM_FEW_SHOT", "title": "Llm Approach Type" },
+          "llm_approach_type": { "type": "string", "const": "LLM_FEW_SHOT", "title": "Llm Approach Type" },
           "prompts": {
             "items": { "$ref": "#/components/schemas/LLMPromptTemplates" },
             "type": "array",
@@ -8093,7 +8075,7 @@
       "LLMJobParameters": {
         "properties": {
           "llm_job_type": {
-            "allOf": [{ "$ref": "#/components/schemas/TaskType" }],
+            "$ref": "#/components/schemas/TaskType",
             "description": "The type of the LLMJob (what to llm)"
           },
           "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project to analyse" },
@@ -8124,7 +8106,7 @@
       "LLMJobParameters2-Input": {
         "properties": {
           "llm_job_type": {
-            "allOf": [{ "$ref": "#/components/schemas/TaskType" }],
+            "$ref": "#/components/schemas/TaskType",
             "description": "The type of the LLMJob (what to llm)"
           },
           "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project to analyse" },
@@ -8148,7 +8130,7 @@
             }
           },
           "llm_approach_type": {
-            "allOf": [{ "$ref": "#/components/schemas/ApproachType" }],
+            "$ref": "#/components/schemas/ApproachType",
             "description": "The approach to use for the LLMJob"
           },
           "specific_approach_parameters": {
@@ -8182,7 +8164,7 @@
       "LLMJobParameters2-Output": {
         "properties": {
           "llm_job_type": {
-            "allOf": [{ "$ref": "#/components/schemas/TaskType" }],
+            "$ref": "#/components/schemas/TaskType",
             "description": "The type of the LLMJob (what to llm)"
           },
           "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project to analyse" },
@@ -8206,7 +8188,7 @@
             }
           },
           "llm_approach_type": {
-            "allOf": [{ "$ref": "#/components/schemas/ApproachType" }],
+            "$ref": "#/components/schemas/ApproachType",
             "description": "The approach to use for the LLMJob"
           },
           "specific_approach_parameters": {
@@ -8240,7 +8222,7 @@
       "LLMJobRead": {
         "properties": {
           "status": {
-            "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
+            "$ref": "#/components/schemas/BackgroundJobStatus",
             "description": "Status of the LLMJob",
             "default": "Waiting"
           },
@@ -8257,7 +8239,7 @@
           },
           "id": { "type": "string", "title": "Id", "description": "ID of the LLMJob" },
           "parameters": {
-            "allOf": [{ "$ref": "#/components/schemas/LLMJobParameters2-Output" }],
+            "$ref": "#/components/schemas/LLMJobParameters2-Output",
             "description": "The parameters of the LLMJob that defines what to llm!"
           },
           "created": {
@@ -8288,7 +8270,7 @@
       "LLMJobResult": {
         "properties": {
           "llm_job_type": {
-            "allOf": [{ "$ref": "#/components/schemas/TaskType" }],
+            "$ref": "#/components/schemas/TaskType",
             "description": "The type of the LLMJob (what to llm)"
           },
           "specific_task_result": {
@@ -8388,7 +8370,7 @@
             "description": "ID of the Object the Memo is attached to"
           },
           "attached_object_type": {
-            "allOf": [{ "$ref": "#/components/schemas/AttachedObjectType" }],
+            "$ref": "#/components/schemas/AttachedObjectType",
             "description": "Type of the Object the ID refers to"
           }
         },
@@ -8437,7 +8419,7 @@
       "MetaType": { "type": "string", "enum": ["STRING", "NUMBER", "DATE", "BOOLEAN", "LIST"], "title": "MetaType" },
       "MetadataExtractionLLMJobResult": {
         "properties": {
-          "llm_job_type": { "const": "METADATA_EXTRACTION", "title": "Llm Job Type" },
+          "llm_job_type": { "type": "string", "const": "METADATA_EXTRACTION", "title": "Llm Job Type" },
           "results": {
             "items": { "$ref": "#/components/schemas/MetadataExtractionResult" },
             "type": "array",
@@ -8450,7 +8432,7 @@
       },
       "MetadataExtractionParams": {
         "properties": {
-          "llm_job_type": { "const": "METADATA_EXTRACTION", "title": "Llm Job Type" },
+          "llm_job_type": { "type": "string", "const": "METADATA_EXTRACTION", "title": "Llm Job Type" },
           "sdoc_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -8490,9 +8472,9 @@
       },
       "ModelTrainingParams": {
         "properties": {
-          "llm_approach_type": { "const": "MODEL_TRAINING", "title": "Llm Approach Type" },
+          "llm_approach_type": { "type": "string", "const": "MODEL_TRAINING", "title": "Llm Approach Type" },
           "training_parameters": {
-            "allOf": [{ "$ref": "#/components/schemas/TrainingParameters" }],
+            "$ref": "#/components/schemas/TrainingParameters",
             "description": "The training parameters to use for the job"
           }
         },
@@ -8587,7 +8569,7 @@
             "description": "ID of the SourceDocument that was created from the payload."
           },
           "status": {
-            "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
+            "$ref": "#/components/schemas/BackgroundJobStatus",
             "description": "The current status of the payload.",
             "default": "Waiting"
           },
@@ -8597,10 +8579,7 @@
             "description": "The filename of the document to be preprocessed."
           },
           "mime_type": { "type": "string", "title": "Mime Type", "description": "The MIME type of the payload file." },
-          "doc_type": {
-            "allOf": [{ "$ref": "#/components/schemas/DocType" }],
-            "description": "The DocType of the payload file."
-          },
+          "doc_type": { "$ref": "#/components/schemas/DocType", "description": "The DocType of the payload file." },
           "current_pipeline_step": {
             "anyOf": [{ "type": "string" }, { "type": "null" }],
             "title": "Current Pipeline Step",
@@ -8620,7 +8599,7 @@
         "properties": {
           "id": { "type": "string", "title": "Id", "description": "UUID of the PreprocessingJob" },
           "status": {
-            "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
+            "$ref": "#/components/schemas/BackgroundJobStatus",
             "description": "Status of the PreprocessingJob",
             "default": "Waiting"
           },
@@ -8660,10 +8639,7 @@
       "ProjectMetadataCreate": {
         "properties": {
           "key": { "type": "string", "title": "Key", "description": "Key of the ProjectMetadata" },
-          "metatype": {
-            "allOf": [{ "$ref": "#/components/schemas/MetaType" }],
-            "description": "Type of the ProjectMetadata"
-          },
+          "metatype": { "$ref": "#/components/schemas/MetaType", "description": "Type of the ProjectMetadata" },
           "read_only": {
             "type": "boolean",
             "title": "Read Only",
@@ -8671,7 +8647,7 @@
             "default": false
           },
           "doctype": {
-            "allOf": [{ "$ref": "#/components/schemas/DocType" }],
+            "$ref": "#/components/schemas/DocType",
             "description": "DOCTYPE of the SourceDocument this metadata refers to"
           },
           "description": {
@@ -8692,10 +8668,7 @@
       "ProjectMetadataRead": {
         "properties": {
           "key": { "type": "string", "title": "Key", "description": "Key of the ProjectMetadata" },
-          "metatype": {
-            "allOf": [{ "$ref": "#/components/schemas/MetaType" }],
-            "description": "Type of the ProjectMetadata"
-          },
+          "metatype": { "$ref": "#/components/schemas/MetaType", "description": "Type of the ProjectMetadata" },
           "read_only": {
             "type": "boolean",
             "title": "Read Only",
@@ -8703,7 +8676,7 @@
             "default": false
           },
           "doctype": {
-            "allOf": [{ "$ref": "#/components/schemas/DocType" }],
+            "$ref": "#/components/schemas/DocType",
             "description": "DOCTYPE of the SourceDocument this metadata refers to"
           },
           "description": {
@@ -8860,7 +8833,7 @@
       },
       "SentenceAnnotationLLMJobResult": {
         "properties": {
-          "llm_job_type": { "const": "SENTENCE_ANNOTATION", "title": "Llm Job Type" },
+          "llm_job_type": { "type": "string", "const": "SENTENCE_ANNOTATION", "title": "Llm Job Type" },
           "results": {
             "items": { "$ref": "#/components/schemas/SentenceAnnotationResult" },
             "type": "array",
@@ -8873,7 +8846,7 @@
       },
       "SentenceAnnotationParams": {
         "properties": {
-          "llm_job_type": { "const": "SENTENCE_ANNOTATION", "title": "Llm Job Type" },
+          "llm_job_type": { "type": "string", "const": "SENTENCE_ANNOTATION", "title": "Llm Job Type" },
           "sdoc_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -8954,10 +8927,7 @@
             "description": "End sentence ID of the SentenceAnnotation"
           },
           "id": { "type": "integer", "title": "Id", "description": "ID of the SentenceAnnotation" },
-          "code": {
-            "allOf": [{ "$ref": "#/components/schemas/CodeRead" }],
-            "description": "Code the SentenceAnnotation refers to"
-          },
+          "code": { "$ref": "#/components/schemas/CodeRead", "description": "Code the SentenceAnnotation refers to" },
           "user_id": { "type": "integer", "title": "User Id", "description": "User the SpanAnnotation belongs to" },
           "sdoc_id": {
             "type": "integer",
@@ -9057,7 +9027,11 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": { "const": "SINGLE_DOC_ALL_USER_ANNOTATIONS", "title": "Export Job Type" },
+          "export_job_type": {
+            "type": "string",
+            "const": "SINGLE_DOC_ALL_USER_ANNOTATIONS",
+            "title": "Export Job Type"
+          },
           "sdoc_id": {
             "type": "integer",
             "title": "Sdoc Id",
@@ -9075,7 +9049,11 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": { "const": "SINGLE_DOC_SINGLE_USER_ANNOTATIONS", "title": "Export Job Type" },
+          "export_job_type": {
+            "type": "string",
+            "const": "SINGLE_DOC_SINGLE_USER_ANNOTATIONS",
+            "title": "Export Job Type"
+          },
           "sdoc_id": {
             "type": "integer",
             "title": "Sdoc Id",
@@ -9098,7 +9076,7 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": { "const": "SINGLE_PROJECT_ALL_CODES", "title": "Export Job Type" }
+          "export_job_type": { "type": "string", "const": "SINGLE_PROJECT_ALL_CODES", "title": "Export Job Type" }
         },
         "type": "object",
         "required": ["project_id", "export_job_type"],
@@ -9111,7 +9089,7 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": { "const": "SINGLE_PROJECT_ALL_DATA", "title": "Export Job Type" }
+          "export_job_type": { "type": "string", "const": "SINGLE_PROJECT_ALL_DATA", "title": "Export Job Type" }
         },
         "type": "object",
         "required": ["project_id", "export_job_type"],
@@ -9124,7 +9102,7 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": { "const": "SINGLE_PROJECT_ALL_TAGS", "title": "Export Job Type" }
+          "export_job_type": { "type": "string", "const": "SINGLE_PROJECT_ALL_TAGS", "title": "Export Job Type" }
         },
         "type": "object",
         "required": ["project_id", "export_job_type"],
@@ -9137,7 +9115,7 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": { "const": "SINGLE_PROJECT_SELECTED_SDOCS", "title": "Export Job Type" },
+          "export_job_type": { "type": "string", "const": "SINGLE_PROJECT_SELECTED_SDOCS", "title": "Export Job Type" },
           "sdoc_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -9156,7 +9134,11 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": { "const": "SINGLE_PROJECT_SELECTED_SPAN_ANNOTATIONS", "title": "Export Job Type" },
+          "export_job_type": {
+            "type": "string",
+            "const": "SINGLE_PROJECT_SELECTED_SPAN_ANNOTATIONS",
+            "title": "Export Job Type"
+          },
           "span_annotation_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -9175,7 +9157,7 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": { "const": "SINGLE_USER_ALL_DATA", "title": "Export Job Type" },
+          "export_job_type": { "type": "string", "const": "SINGLE_USER_ALL_DATA", "title": "Export Job Type" },
           "user_id": {
             "type": "integer",
             "title": "User Id",
@@ -9193,7 +9175,7 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": { "const": "SINGLE_USER_ALL_MEMOS", "title": "Export Job Type" },
+          "export_job_type": { "type": "string", "const": "SINGLE_USER_ALL_MEMOS", "title": "Export Job Type" },
           "user_id": {
             "type": "integer",
             "title": "User Id",
@@ -9211,7 +9193,7 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": { "const": "SINGLE_USER_LOGBOOK", "title": "Export Job Type" },
+          "export_job_type": { "type": "string", "const": "SINGLE_USER_LOGBOOK", "title": "Export Job Type" },
           "user_id": {
             "type": "integer",
             "title": "User Id",
@@ -9526,7 +9508,7 @@
             "description": "SourceDocument the SourceDocumentMetadata belongs to"
           },
           "project_metadata": {
-            "allOf": [{ "$ref": "#/components/schemas/ProjectMetadataRead" }],
+            "$ref": "#/components/schemas/ProjectMetadataRead",
             "description": "ProjectMetadata of the SourceDocumentMetadata"
           }
         },
@@ -9588,14 +9570,8 @@
             "title": "Name",
             "description": "User-defined name of the document"
           },
-          "doctype": {
-            "allOf": [{ "$ref": "#/components/schemas/DocType" }],
-            "description": "DOCTYPE of the SourceDocument"
-          },
-          "status": {
-            "allOf": [{ "$ref": "#/components/schemas/SDocStatus" }],
-            "description": "Status of the SourceDocument"
-          },
+          "doctype": { "$ref": "#/components/schemas/DocType", "description": "DOCTYPE of the SourceDocument" },
+          "status": { "$ref": "#/components/schemas/SDocStatus", "description": "Status of the SourceDocument" },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
@@ -9733,10 +9709,7 @@
           },
           "id": { "type": "integer", "title": "Id", "description": "ID of the SpanAnnotation" },
           "text": { "type": "string", "title": "Text", "description": "The SpanText the SpanAnnotation spans." },
-          "code": {
-            "allOf": [{ "$ref": "#/components/schemas/CodeRead" }],
-            "description": "Code the SpanAnnotation refers to"
-          },
+          "code": { "$ref": "#/components/schemas/CodeRead", "description": "Code the SpanAnnotation refers to" },
           "user_id": { "type": "integer", "title": "User Id", "description": "User the SpanAnnotation belongs to" },
           "sdoc_id": {
             "type": "integer",
@@ -9887,10 +9860,7 @@
       },
       "TagStat": {
         "properties": {
-          "tag": {
-            "allOf": [{ "$ref": "#/components/schemas/DocumentTagRead" }],
-            "description": "The counted document tag."
-          },
+          "tag": { "$ref": "#/components/schemas/DocumentTagRead", "description": "The counted document tag." },
           "filtered_count": {
             "type": "integer",
             "title": "Filtered Count",
@@ -9930,7 +9900,7 @@
           "color": { "type": "string", "title": "Color", "description": "Color of the Concept" },
           "visible": { "type": "boolean", "title": "Visible", "description": "Visibility of the Concept" },
           "filter": {
-            "allOf": [{ "$ref": "#/components/schemas/Filter_TimelineAnalysisColumns_-Input" }],
+            "$ref": "#/components/schemas/Filter_TimelineAnalysisColumns_-Input",
             "description": "The filter of the Concept"
           }
         },
@@ -9946,7 +9916,7 @@
           "color": { "type": "string", "title": "Color", "description": "Color of the Concept" },
           "visible": { "type": "boolean", "title": "Visible", "description": "Visibility of the Concept" },
           "filter": {
-            "allOf": [{ "$ref": "#/components/schemas/Filter_TimelineAnalysisColumns_-Output" }],
+            "$ref": "#/components/schemas/Filter_TimelineAnalysisColumns_-Output",
             "description": "The filter of the Concept"
           }
         },
@@ -9978,7 +9948,7 @@
             "description": "Project the TimelineAnalysis belongs to"
           },
           "settings": {
-            "allOf": [{ "$ref": "#/components/schemas/TimelineAnalysisSettings" }],
+            "$ref": "#/components/schemas/TimelineAnalysisSettings",
             "description": "Timeline Analysis Settings of the TimelineAnalysis."
           },
           "concepts": {
@@ -10018,21 +9988,17 @@
         "required": ["date", "sdoc_ids"],
         "title": "TimelineAnalysisResult"
       },
-      "TimelineAnalysisResultType": { "const": "document", "title": "TimelineAnalysisResultType" },
+      "TimelineAnalysisResultType": { "type": "string", "enum": ["document"], "title": "TimelineAnalysisResultType" },
       "TimelineAnalysisSettings": {
         "properties": {
-          "group_by": {
-            "allOf": [{ "$ref": "#/components/schemas/DateGroupBy" }],
-            "description": "Group by date",
-            "default": "YEAR"
-          },
+          "group_by": { "$ref": "#/components/schemas/DateGroupBy", "description": "Group by date", "default": "YEAR" },
           "date_metadata_id": {
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
             "title": "Date Metadata Id",
             "description": "ID of the Project Date Metadata that is used for the TimelineAnalysis"
           },
           "result_type": {
-            "allOf": [{ "$ref": "#/components/schemas/TimelineAnalysisResultType" }],
+            "$ref": "#/components/schemas/TimelineAnalysisResultType",
             "description": "ResultType of the TimelineAnalysis",
             "default": "document"
           }
@@ -10085,13 +10051,13 @@
       "TrainerJobRead": {
         "properties": {
           "status": {
-            "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
+            "$ref": "#/components/schemas/BackgroundJobStatus",
             "description": "Status of the TrainerJob",
             "default": "Waiting"
           },
           "id": { "type": "string", "title": "Id", "description": "ID of the TrainerJob" },
           "parameters": {
-            "allOf": [{ "$ref": "#/components/schemas/TrainerJobParameters" }],
+            "$ref": "#/components/schemas/TrainerJobParameters",
             "description": "The parameters of the TrainerJob that defines how to train!"
           },
           "saved_model_path": {
@@ -10349,7 +10315,7 @@
       },
       "ZeroShotParams": {
         "properties": {
-          "llm_approach_type": { "const": "LLM_ZERO_SHOT", "title": "Llm Approach Type" },
+          "llm_approach_type": { "type": "string", "const": "LLM_ZERO_SHOT", "title": "Llm Approach Type" },
           "prompts": {
             "items": { "$ref": "#/components/schemas/LLMPromptTemplates" },
             "type": "array",
