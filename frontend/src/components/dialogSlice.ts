@@ -32,6 +32,9 @@ interface DialogState {
   // span
   isSpanAnnotationEditDialogOpen: boolean;
   spanAnnotationIds: number[];
+  // span
+  isSentenceAnnotationEditDialogOpen: boolean;
+  sentenceAnnotationIds: number[];
   // bbox
   isBBoxAnnotationEditDialogOpen: boolean;
   isBBoxAnnotationCreateDialogOpen: boolean;
@@ -75,6 +78,9 @@ const initialState: DialogState = {
   // span
   isSpanAnnotationEditDialogOpen: false,
   spanAnnotationIds: [],
+  // sentence
+  isSentenceAnnotationEditDialogOpen: false,
+  sentenceAnnotationIds: [],
   // bbox
   isBBoxAnnotationEditDialogOpen: false,
   isBBoxAnnotationCreateDialogOpen: false,
@@ -124,6 +130,14 @@ export const dialogSlice = createSlice({
     closeSpanAnnotationEditDialog: (state) => {
       state.isSpanAnnotationEditDialogOpen = false;
       state.spanAnnotationIds = [];
+    },
+    openSentenceAnnotationEditDialog: (state, action: PayloadAction<{ sentenceAnnotationIds: number[] }>) => {
+      state.isSentenceAnnotationEditDialogOpen = true;
+      state.sentenceAnnotationIds = action.payload.sentenceAnnotationIds;
+    },
+    closeSentenceAnnotationEditDialog: (state) => {
+      state.isSentenceAnnotationEditDialogOpen = false;
+      state.sentenceAnnotationIds = [];
     },
     openTagEditDialog: (state, action: PayloadAction<{ tagId: number }>) => {
       state.isTagEditDialogOpen = true;
