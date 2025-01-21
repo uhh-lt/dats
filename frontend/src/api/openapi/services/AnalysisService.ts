@@ -4,10 +4,10 @@
 /* eslint-disable */
 import type { AnnotatedImageResult } from "../models/AnnotatedImageResult";
 import type { AnnotatedSegmentResult } from "../models/AnnotatedSegmentResult";
-import type { AnnotationOccurrence } from "../models/AnnotationOccurrence";
 import type { Body_analysis_annotated_images } from "../models/Body_analysis_annotated_images";
 import type { Body_analysis_annotated_segments } from "../models/Body_analysis_annotated_segments";
 import type { Body_analysis_code_frequencies } from "../models/Body_analysis_code_frequencies";
+import type { Body_analysis_sentence_annotation_search } from "../models/Body_analysis_sentence_annotation_search";
 import type { Body_analysis_word_frequency_analysis } from "../models/Body_analysis_word_frequency_analysis";
 import type { Body_analysis_word_frequency_analysis_export } from "../models/Body_analysis_word_frequency_analysis_export";
 import type { CodeFrequency } from "../models/CodeFrequency";
@@ -16,6 +16,7 @@ import type { ColumnInfo_BBoxColumns_ } from "../models/ColumnInfo_BBoxColumns_"
 import type { ColumnInfo_SpanColumns_ } from "../models/ColumnInfo_SpanColumns_";
 import type { ColumnInfo_WordFrequencyColumns_ } from "../models/ColumnInfo_WordFrequencyColumns_";
 import type { SampledSdocsResults } from "../models/SampledSdocsResults";
+import type { SentenceAnnotationSearchResult } from "../models/SentenceAnnotationSearchResult";
 import type { WordFrequencyResult } from "../models/WordFrequencyResult";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -75,34 +76,6 @@ export class AnalysisService {
     });
   }
   /**
-   * Returns AnnotationOccurrences.
-   * @returns AnnotationOccurrence Successful Response
-   * @throws ApiError
-   */
-  public static annotationOccurrences({
-    projectId,
-    codeId,
-    requestBody,
-  }: {
-    projectId: number;
-    codeId: number;
-    requestBody: Array<number>;
-  }): CancelablePromise<Array<AnnotationOccurrence>> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/analysis/annotation_occurrences",
-      query: {
-        project_id: projectId,
-        code_id: codeId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Returns AnnotationSegments Info.
    * @returns ColumnInfo_SpanColumns_ Successful Response
    * @throws ApiError
@@ -144,6 +117,61 @@ export class AnalysisService {
     return __request(OpenAPI, {
       method: "POST",
       url: "/analysis/annotated_segments",
+      query: {
+        project_id: projectId,
+        user_id: userId,
+        page: page,
+        page_size: pageSize,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns SentenceAnnotationSearch Info.
+   * @returns ColumnInfo_SpanColumns_ Successful Response
+   * @throws ApiError
+   */
+  public static sentenceAnnotationSearchInfo({
+    projectId,
+  }: {
+    projectId: number;
+  }): CancelablePromise<Array<ColumnInfo_SpanColumns_>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/analysis/sentence_annotation_search_info",
+      query: {
+        project_id: projectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns Sentence Annotations.
+   * @returns SentenceAnnotationSearchResult Successful Response
+   * @throws ApiError
+   */
+  public static sentenceAnnotationSearch({
+    projectId,
+    userId,
+    requestBody,
+    page,
+    pageSize,
+  }: {
+    projectId: number;
+    userId: number;
+    requestBody: Body_analysis_sentence_annotation_search;
+    page?: number | null;
+    pageSize?: number | null;
+  }): CancelablePromise<SentenceAnnotationSearchResult> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/analysis/sentence_annotation_search",
       query: {
         project_id: projectId,
         user_id: userId,

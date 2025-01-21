@@ -3851,47 +3851,6 @@
         }
       }
     },
-    "/analysis/annotation_occurrences": {
-      "post": {
-        "tags": ["analysis"],
-        "summary": "Returns AnnotationOccurrences.",
-        "operationId": "annotation_occurrences",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          },
-          { "name": "code_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Code Id" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "User Ids" } }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/AnnotationOccurrence" },
-                  "title": "Response Analysis-Annotation Occurrences"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/analysis/annotated_segments_info": {
       "post": {
         "tags": ["analysis"],
@@ -3963,6 +3922,89 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnnotatedSegmentResult" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/analysis/sentence_annotation_search_info": {
+      "post": {
+        "tags": ["analysis"],
+        "summary": "Returns SentenceAnnotationSearch Info.",
+        "operationId": "sentence_annotation_search_info",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ColumnInfo_SpanColumns_" },
+                  "title": "Response Analysis-Sentence Annotation Search Info"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/analysis/sentence_annotation_search": {
+      "post": {
+        "tags": ["analysis"],
+        "summary": "Returns Sentence Annotations.",
+        "operationId": "sentence_annotation_search",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "user_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "User Id" } },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page" }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page Size" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Body_analysis-sentence_annotation_search" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotationSearchResult" } }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -6046,6 +6088,60 @@
         }
       }
     },
+    "/sentence/bulk/update": {
+      "patch": {
+        "tags": ["sentenceAnnotation"],
+        "summary": "Updates SentenceAnnotation in Bulk",
+        "operationId": "update_sent_anno_annotations_bulk",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "resolve",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "title": "Resolve Code",
+              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
+              "default": true
+            },
+            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/SentenceAnnotationUpdateBulk" },
+                "title": "Sent Annos"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    { "type": "array", "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" } },
+                    { "type": "array", "items": { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" } }
+                  ],
+                  "title": "Response Sentenceannotation-Update Sent Anno Annotations Bulk"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/sentence/bulk/delete": {
       "delete": {
         "tags": ["sentenceAnnotation"],
@@ -6366,27 +6462,6 @@
         "required": ["llm_job_type", "results"],
         "title": "AnnotationLLMJobResult"
       },
-      "AnnotationOccurrence": {
-        "properties": {
-          "annotation": {
-            "anyOf": [
-              { "$ref": "#/components/schemas/SpanAnnotationRead" },
-              { "$ref": "#/components/schemas/BBoxAnnotationRead" }
-            ],
-            "title": "Annotation",
-            "description": "The Annotation"
-          },
-          "code": { "$ref": "#/components/schemas/CodeRead", "description": "The occuring Code." },
-          "sdoc": {
-            "$ref": "#/components/schemas/SourceDocumentRead",
-            "description": "The SourceDocument where the Code occurs."
-          },
-          "text": { "type": "string", "title": "Text", "description": "The Text of the Annotation" }
-        },
-        "type": "object",
-        "required": ["annotation", "code", "sdoc", "text"],
-        "title": "AnnotationOccurrence"
-      },
       "AnnotationParams": {
         "properties": {
           "llm_job_type": { "type": "string", "const": "ANNOTATION", "title": "Llm Job Type" },
@@ -6694,6 +6769,19 @@
         "type": "object",
         "required": ["code_ids", "user_ids", "doctypes"],
         "title": "Body_analysis-code_frequencies"
+      },
+      "Body_analysis-sentence_annotation_search": {
+        "properties": {
+          "filter": { "$ref": "#/components/schemas/Filter_SentAnnoColumns_" },
+          "sorts": {
+            "items": { "$ref": "#/components/schemas/Sort_SentAnnoColumns_" },
+            "type": "array",
+            "title": "Sorts"
+          }
+        },
+        "type": "object",
+        "required": ["filter", "sorts"],
+        "title": "Body_analysis-sentence_annotation_search"
       },
       "Body_analysis-word_frequency_analysis": {
         "properties": {
@@ -7796,6 +7884,40 @@
         "required": ["id", "column", "operator", "value"],
         "title": "FilterExpression[SdocColumns]"
       },
+      "FilterExpression_SentAnnoColumns_": {
+        "properties": {
+          "id": { "type": "string", "title": "Id" },
+          "column": {
+            "anyOf": [{ "$ref": "#/components/schemas/SentAnnoColumns" }, { "type": "integer" }],
+            "title": "Column"
+          },
+          "operator": {
+            "anyOf": [
+              { "$ref": "#/components/schemas/IDOperator" },
+              { "$ref": "#/components/schemas/NumberOperator" },
+              { "$ref": "#/components/schemas/StringOperator" },
+              { "$ref": "#/components/schemas/IDListOperator" },
+              { "$ref": "#/components/schemas/ListOperator" },
+              { "$ref": "#/components/schemas/DateOperator" },
+              { "$ref": "#/components/schemas/BooleanOperator" }
+            ],
+            "title": "Operator"
+          },
+          "value": {
+            "anyOf": [
+              { "type": "boolean" },
+              { "type": "string" },
+              { "type": "integer" },
+              { "items": { "type": "string" }, "type": "array" },
+              { "items": { "items": { "type": "string" }, "type": "array" }, "type": "array" }
+            ],
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": ["id", "column", "operator", "value"],
+        "title": "FilterExpression[SentAnnoColumns]"
+      },
       "FilterExpression_SpanColumns_": {
         "properties": {
           "id": { "type": "string", "title": "Id" },
@@ -7964,6 +8086,25 @@
         "type": "object",
         "required": ["id", "items", "logic_operator"],
         "title": "Filter[SdocColumns]"
+      },
+      "Filter_SentAnnoColumns_": {
+        "properties": {
+          "id": { "type": "string", "title": "Id" },
+          "items": {
+            "items": {
+              "anyOf": [
+                { "$ref": "#/components/schemas/FilterExpression_SentAnnoColumns_" },
+                { "$ref": "#/components/schemas/Filter_SentAnnoColumns_" }
+              ]
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "logic_operator": { "$ref": "#/components/schemas/LogicalOperator" }
+        },
+        "type": "object",
+        "required": ["id", "items", "logic_operator"],
+        "title": "Filter[SentAnnoColumns]"
       },
       "Filter_SpanColumns_": {
         "properties": {
@@ -8808,6 +8949,17 @@
         ],
         "title": "SdocColumns"
       },
+      "SentAnnoColumns": {
+        "type": "string",
+        "enum": [
+          "SentAnno_CODE_ID",
+          "SentAnno_USER_ID",
+          "SentAnno_MEMO_CONTENT",
+          "SentAnno_SOURCE_SOURCE_DOCUMENT_FILENAME",
+          "SentAnno_DOCUMENT_DOCUMENT_TAG_ID_LIST"
+        ],
+        "title": "SentAnnoColumns"
+      },
       "SentenceAnnotationCreate": {
         "properties": {
           "sentence_id_start": {
@@ -8965,6 +9117,49 @@
         "required": ["sdoc_id", "suggested_annotations"],
         "title": "SentenceAnnotationResult"
       },
+      "SentenceAnnotationRow": {
+        "properties": {
+          "id": { "type": "integer", "title": "Id", "description": "ID of the SentenceAnnotation" },
+          "text": { "type": "string", "title": "Text", "description": "The Text the SentenceAnnotation spans." },
+          "code": { "$ref": "#/components/schemas/CodeRead", "description": "Code the SentenceAnnotation refers to" },
+          "user_id": { "type": "integer", "title": "User Id", "description": "User the SentenceAnnotation belongs to" },
+          "sdoc": {
+            "$ref": "#/components/schemas/SourceDocumentRead",
+            "description": "SourceDocument the SentenceAnnotation refers to"
+          },
+          "tags": {
+            "items": { "$ref": "#/components/schemas/DocumentTagRead" },
+            "type": "array",
+            "title": "Tags",
+            "description": "The DocumentTags of the SourceDocument."
+          },
+          "memo": {
+            "anyOf": [{ "$ref": "#/components/schemas/MemoRead" }, { "type": "null" }],
+            "description": "The Memo of the Annotation."
+          }
+        },
+        "type": "object",
+        "required": ["id", "text", "code", "user_id", "sdoc", "tags", "memo"],
+        "title": "SentenceAnnotationRow"
+      },
+      "SentenceAnnotationSearchResult": {
+        "properties": {
+          "total_results": {
+            "type": "integer",
+            "title": "Total Results",
+            "description": "The total number of sentence_annotation_ids. Used for pagination."
+          },
+          "data": {
+            "items": { "$ref": "#/components/schemas/SentenceAnnotationRow" },
+            "type": "array",
+            "title": "Data",
+            "description": "The Annotations."
+          }
+        },
+        "type": "object",
+        "required": ["total_results", "data"],
+        "title": "SentenceAnnotationSearchResult"
+      },
       "SentenceAnnotationUpdate": {
         "properties": {
           "code_id": { "type": "integer", "title": "Code Id", "description": "Code the SentenceAnnotation refers to" }
@@ -8972,6 +9167,19 @@
         "type": "object",
         "required": ["code_id"],
         "title": "SentenceAnnotationUpdate"
+      },
+      "SentenceAnnotationUpdateBulk": {
+        "properties": {
+          "sent_annotation_id": {
+            "type": "integer",
+            "title": "Sent Annotation Id",
+            "description": "ID of the SentenceAnnotation"
+          },
+          "code_id": { "type": "integer", "title": "Code Id", "description": "Code the SentenceAnnotation refers to" }
+        },
+        "type": "object",
+        "required": ["sent_annotation_id", "code_id"],
+        "title": "SentenceAnnotationUpdateBulk"
       },
       "SentenceAnnotatorResult": {
         "properties": {
@@ -9240,6 +9448,18 @@
         "type": "object",
         "required": ["column", "direction"],
         "title": "Sort[SdocColumns]"
+      },
+      "Sort_SentAnnoColumns_": {
+        "properties": {
+          "column": {
+            "anyOf": [{ "$ref": "#/components/schemas/SentAnnoColumns" }, { "type": "integer" }],
+            "title": "Column"
+          },
+          "direction": { "$ref": "#/components/schemas/SortDirection" }
+        },
+        "type": "object",
+        "required": ["column", "direction"],
+        "title": "Sort[SentAnnoColumns]"
       },
       "Sort_SpanColumns_": {
         "properties": {

@@ -39,6 +39,18 @@ const useUpdateSentenceAnno = () =>
     },
   });
 
+const useUpdateBulkSentenceAnno = () =>
+  useMutation({
+    mutationFn: SentenceAnnotationService.updateSentAnnoAnnotationsBulk,
+    onSuccess(data) {
+      queryClient.invalidateQueries({ queryKey: ["sentence-annotation-table-data"] }); // TODO: This is not optimal, shoudl be projectId, selectedUserId... We do this because of SpanAnnotationTable
+      data.forEach((annotation) => {
+        queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR, annotation.sdoc_id] });
+        queryClient.invalidateQueries({ queryKey: [QueryKey.SENTENCE_ANNOTATION, annotation.id] });
+      });
+    },
+  });
+
 const useDeleteSentenceAnno = () =>
   useMutation({
     mutationFn: SentenceAnnotationService.deleteById,
@@ -60,6 +72,7 @@ const SentenceAnnotationHooks = {
   useGetAnnotation,
   useGetByCodeAndUser,
   useUpdateSentenceAnno,
+  useUpdateBulkSentenceAnno,
   useDeleteSentenceAnno,
   // memo
   useGetUserMemo,

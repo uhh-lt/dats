@@ -8,6 +8,7 @@ import type { SentenceAnnotationCreate } from "../models/SentenceAnnotationCreat
 import type { SentenceAnnotationRead } from "../models/SentenceAnnotationRead";
 import type { SentenceAnnotationReadResolved } from "../models/SentenceAnnotationReadResolved";
 import type { SentenceAnnotationUpdate } from "../models/SentenceAnnotationUpdate";
+import type { SentenceAnnotationUpdateBulk } from "../models/SentenceAnnotationUpdateBulk";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -146,6 +147,34 @@ export class SentenceAnnotationService {
       path: {
         sentence_anno_id: sentenceAnnoId,
       },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Updates SentenceAnnotation in Bulk
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static updateSentAnnoAnnotationsBulk({
+    requestBody,
+    resolve = true,
+  }: {
+    requestBody: Array<SentenceAnnotationUpdateBulk>;
+    /**
+     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
+     */
+    resolve?: boolean;
+  }): CancelablePromise<Array<SentenceAnnotationRead> | Array<SentenceAnnotationReadResolved>> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/sentence/bulk/update",
+      query: {
+        resolve: resolve,
+      },
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },
