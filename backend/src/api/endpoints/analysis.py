@@ -4,7 +4,14 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
-from app.core.analysis.analysis_service import AnalysisService
+from app.core.analysis.code_frequency_analysis.code_frequency import (
+    find_code_frequencies,
+    find_code_occurrences,
+)
+from app.core.analysis.document_sampler.document_sampler import document_sampler_by_tags
+from app.core.analysis.statistics.count_metadata import (
+    compute_num_sdocs_with_date_metadata,
+)
 from app.core.analysis.word_frequency_analysis.word_frequency import (
     word_frequency,
     word_frequency_export,
@@ -59,7 +66,7 @@ def code_frequencies(
 ) -> List[CodeFrequency]:
     authz_user.assert_in_project(project_id)
 
-    return AnalysisService().compute_code_frequency(
+    return find_code_frequencies(
         project_id=project_id, code_ids=code_ids, user_ids=user_ids, doctypes=doctypes
     )
 
@@ -78,7 +85,7 @@ def code_occurrences(
 ) -> List[CodeOccurrence]:
     authz_user.assert_in_project(project_id)
 
-    return AnalysisService().find_code_occurrences(
+    return find_code_occurrences(
         project_id=project_id, user_ids=user_ids, code_id=code_id
     )
 
@@ -182,7 +189,7 @@ def count_sdocs_with_date_metadata(
 ) -> Tuple[int, int]:
     authz_user.assert_in_project(project_id)
 
-    return AnalysisService().count_sdocs_with_date_metadata(
+    return compute_num_sdocs_with_date_metadata(
         project_id=project_id,
         date_metadata_id=date_metadata_id,
     )
@@ -267,6 +274,6 @@ def sample_sdocs_by_tags(
     authz_user: AuthzUser = Depends(),
 ) -> List[SampledSdocsResults]:
     authz_user.assert_in_project(project_id)
-    return AnalysisService().sample_sdocs_by_tags(
+    return document_sampler_by_tags(
         project_id=project_id, tag_ids=tag_groups, n=n, frac=frac
     )

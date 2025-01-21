@@ -131,10 +131,6 @@ def __init_services__(
 
     RedisService(flush_all_clients=reset_database)
 
-    # import and init AnalysisService
-    from app.core.analysis.analysis_service import AnalysisService
-
-    AnalysisService()
     # import and init MailService
     from app.core.mail.mail_service import MailService
 
