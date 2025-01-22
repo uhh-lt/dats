@@ -7679,6 +7679,7 @@
               { "$ref": "#/components/schemas/SingleProjectAllCodesExportJobParams" },
               { "$ref": "#/components/schemas/SingleProjectSelectedSdocsParams" },
               { "$ref": "#/components/schemas/SingleProjectSelectedSpanAnnotationsParams" },
+              { "$ref": "#/components/schemas/SingleProjectSelectedSentenceAnnotationsParams" },
               { "$ref": "#/components/schemas/SingleUserAllDataExportJobParams" },
               { "$ref": "#/components/schemas/SingleUserAllMemosExportJobParams" },
               { "$ref": "#/components/schemas/SingleUserLogbookExportJobParams" },
@@ -7696,6 +7697,7 @@
                 "SINGLE_PROJECT_ALL_DATA": "#/components/schemas/SingleProjectAllDataExportJobParams",
                 "SINGLE_PROJECT_ALL_TAGS": "#/components/schemas/SingleProjectAllTagsExportJobParams",
                 "SINGLE_PROJECT_SELECTED_SDOCS": "#/components/schemas/SingleProjectSelectedSdocsParams",
+                "SINGLE_PROJECT_SELECTED_SENTENCE_ANNOTATIONS": "#/components/schemas/SingleProjectSelectedSentenceAnnotationsParams",
                 "SINGLE_PROJECT_SELECTED_SPAN_ANNOTATIONS": "#/components/schemas/SingleProjectSelectedSpanAnnotationsParams",
                 "SINGLE_USER_ALL_DATA": "#/components/schemas/SingleUserAllDataExportJobParams",
                 "SINGLE_USER_ALL_MEMOS": "#/components/schemas/SingleUserAllMemosExportJobParams",
@@ -7744,6 +7746,7 @@
           "SINGLE_PROJECT_ALL_CODES",
           "SINGLE_PROJECT_SELECTED_SDOCS",
           "SINGLE_PROJECT_SELECTED_SPAN_ANNOTATIONS",
+          "SINGLE_PROJECT_SELECTED_SENTENCE_ANNOTATIONS",
           "SINGLE_USER_ALL_DATA",
           "SINGLE_USER_ALL_MEMOS",
           "SINGLE_USER_LOGBOOK",
@@ -9342,6 +9345,29 @@
         "type": "object",
         "required": ["project_id", "export_job_type", "sdoc_ids"],
         "title": "SingleProjectSelectedSdocsParams"
+      },
+      "SingleProjectSelectedSentenceAnnotationsParams": {
+        "properties": {
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "The ID of the Project to export from"
+          },
+          "export_job_type": {
+            "type": "string",
+            "const": "SINGLE_PROJECT_SELECTED_SENTENCE_ANNOTATIONS",
+            "title": "Export Job Type"
+          },
+          "sentence_annotation_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sentence Annotation Ids",
+            "description": "IDs of the sentence annotations to export"
+          }
+        },
+        "type": "object",
+        "required": ["project_id", "export_job_type", "sentence_annotation_ids"],
+        "title": "SingleProjectSelectedSentenceAnnotationsParams"
       },
       "SingleProjectSelectedSpanAnnotationsParams": {
         "properties": {
