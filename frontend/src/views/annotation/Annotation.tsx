@@ -1,6 +1,6 @@
 import { TabContext, TabPanel } from "@mui/lab";
-import { Box, Card, CardContent, Container, Portal, Stack, Tab, Tabs, Typography } from "@mui/material";
-import React, { useContext, useState } from "react";
+import { Box, Card, CardContent, Container, Portal, Tab, Tabs, Typography } from "@mui/material";
+import React, { useContext, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
@@ -28,11 +28,16 @@ import AnnotationToolbar from "./Toolbar/AnnotationToolbar.tsx";
 
 const annotatorComponent = (
   sdocData: SourceDocumentDataRead,
+  boxRef: React.RefObject<HTMLDivElement>,
 ): Record<DocType, Record<AnnotationMode, React.ReactElement>> => ({
   [DocType.TEXT]: {
     [AnnotationMode.Annotation]: <TextAnnotator sdocData={sdocData} />,
     [AnnotationMode.SentenceAnnotation]: (
-      <SentenceAnnotator sdocData={sdocData} style={{ marginLeft: "-16px", marginBottom: "-24px" }} />
+      <SentenceAnnotator
+        sdocData={sdocData}
+        style={{ marginLeft: "-16px", marginBottom: "-24px", marginRight: "-16px" }}
+        virtualizerScrollElementRef={boxRef}
+      />
     ),
     [AnnotationMode.Reader]: <TextViewer sdocData={sdocData} />,
   },
@@ -174,32 +179,34 @@ function Annotation() {
     </Box>
   );
 
+  // for virtualization in annotator components
+  const boxRef = useRef<HTMLDivElement | null>(null);
+
   // annotator: the main content
   const annotator = (
-    <Box className="myFlexFillAllContainer">
+    <Box className="myFlexFillAllContainer" ref={boxRef}>
       <Container sx={{ py: 2 }} maxWidth="xl">
         <Card raised>
           <CardContent>
             {sdocId ? (
               <>
                 {sdoc.isSuccess && sdocData.isSuccess ? (
-                  <Stack spacing={2}>
-                    <div style={{ display: "flex", alignItems: "center" }}>
-                      <EditableTypography
-                        value={sdoc.data.name || sdoc.data.filename}
-                        onChange={handleUpdateName}
-                        variant="h4"
-                        whiteColor={false}
-                        stackProps={{
-                          width: "50%",
-                          flexGrow: 1,
-                        }}
-                      />
-                    </div>
+                  <>
+                    <EditableTypography
+                      value={sdoc.data.name || sdoc.data.filename}
+                      onChange={handleUpdateName}
+                      variant="h4"
+                      whiteColor={false}
+                      stackProps={{
+                        width: "100%",
+                        flexGrow: 1,
+                        mb: 2,
+                      }}
+                    />
                     {isCompareMode
                       ? comparatorComponent(sdocData.data)[sdoc.data.doctype][annotationMode]
-                      : annotatorComponent(sdocData.data)[sdoc.data.doctype][annotationMode]}
-                  </Stack>
+                      : annotatorComponent(sdocData.data, boxRef)[sdoc.data.doctype][annotationMode]}
+                  </>
                 ) : sdoc.isError ? (
                   <div>Error: {sdoc.error.message}</div>
                 ) : (

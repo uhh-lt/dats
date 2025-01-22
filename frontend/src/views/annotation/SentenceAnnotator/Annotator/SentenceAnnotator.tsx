@@ -1,4 +1,5 @@
-import { Box, BoxProps, List } from "@mui/material";
+import { Box, BoxProps } from "@mui/material";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { difference, intersection } from "lodash";
 import { useMemo, useRef, useState } from "react";
 import { CodeRead } from "../../../../api/openapi/models/CodeRead.ts";
@@ -21,9 +22,10 @@ import DocumentSentence from "./DocumentSentence.tsx";
 
 interface SentenceAnnotatorProps {
   sdocData: SourceDocumentDataRead;
+  virtualizerScrollElementRef: React.RefObject<HTMLDivElement>;
 }
 
-function SentenceAnnotator({ sdocData, ...props }: SentenceAnnotatorProps & BoxProps) {
+function SentenceAnnotator({ sdocData, virtualizerScrollElementRef, ...props }: SentenceAnnotatorProps & BoxProps) {
   // auth state
   const user = useAuth().user;
 
@@ -268,7 +270,7 @@ function SentenceAnnotator({ sdocData, ...props }: SentenceAnnotatorProps & BoxP
     handleSentenceClick(event, index);
   };
 
-  const handleMouseUp = (event: React.MouseEvent<HTMLUListElement, MouseEvent>) => {
+  const handleMouseUp = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     setIsDragging(false);
     if (selectedSentences.length === 0) {
       return;
@@ -305,6 +307,14 @@ function SentenceAnnotator({ sdocData, ...props }: SentenceAnnotatorProps & BoxP
     }
   };
 
+  // virtualization
+  const virtualizer = useVirtualizer({
+    count: 100,
+    getScrollElement: () => virtualizerScrollElementRef.current!,
+    estimateSize: () => 35,
+    overscan: 1,
+  });
+
   // rendering
   const numSentenceDigits = useMemo(() => Math.ceil(Math.log10(sdocData.sentences.length + 1)), [sdocData.sentences]);
 
@@ -319,29 +329,51 @@ function SentenceAnnotator({ sdocData, ...props }: SentenceAnnotatorProps & BoxP
         onDelete={handleCodeSelectorDeleteAnnotation}
       />
       <Box {...props}>
-        <List onMouseUp={handleMouseUp} sx={{ p: 0 }}>
-          {sdocData.sentences.map((sentence, sentenceId) => (
-            <DocumentSentence
-              key={sentenceId}
-              sentenceId={sentenceId}
-              sentenceAnnotations={annotatorResult.data.sentence_annotations[sentenceId]}
-              sentence={sentence}
-              isSelected={selectedSentences.includes(sentenceId)}
-              selectedCode={mostRecentCode}
-              onMouseDown={(event) => handleMouseDown(event, sentenceId)}
-              onMouseEnter={() => handleMouseEnter(sentenceId)}
-              onAnnotationClick={(event, sentAnnoId) => handleAnnotationClick(event, sentAnnoId, sentenceId)}
-              onAnnotationMouseEnter={handleAnnotationMouseEnter}
-              onAnnotationMouseLeave={handleAnnotationMouseLeave}
-              hoveredSentAnnoId={hoverSentAnnoId}
-              annotationPositions={annotationPositions[sentenceId]}
-              numPositions={numPositions}
-              numSentenceDigits={numSentenceDigits}
-              hoveredCodeId={hoveredCodeId}
-              selectedSentAnnoId={selectedAnnotationId}
-            />
-          ))}
-        </List>
+        <div
+          style={{
+            height: `${virtualizer.getTotalSize()}px`,
+            width: "100%",
+            position: "relative",
+          }}
+          onMouseUp={handleMouseUp}
+        >
+          {virtualizer.getVirtualItems().map((item) => {
+            const sentence = sdocData.sentences[item.index];
+            return (
+              <div
+                key={item.key}
+                data-index={item.index}
+                ref={virtualizer.measureElement}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  transform: `translateY(${item.start}px)`,
+                }}
+              >
+                <DocumentSentence
+                  sentenceId={item.index}
+                  sentenceAnnotations={annotatorResult.data.sentence_annotations[item.index]}
+                  sentence={sentence}
+                  isSelected={selectedSentences.includes(item.index)}
+                  selectedCode={mostRecentCode}
+                  onMouseDown={(event) => handleMouseDown(event, item.index)}
+                  onMouseEnter={() => handleMouseEnter(item.index)}
+                  onAnnotationClick={(event, sentAnnoId) => handleAnnotationClick(event, sentAnnoId, item.index)}
+                  onAnnotationMouseEnter={handleAnnotationMouseEnter}
+                  onAnnotationMouseLeave={handleAnnotationMouseLeave}
+                  hoveredSentAnnoId={hoverSentAnnoId}
+                  annotationPositions={annotationPositions[item.index]}
+                  numPositions={numPositions}
+                  numSentenceDigits={numSentenceDigits}
+                  hoveredCodeId={hoveredCodeId}
+                  selectedSentAnnoId={selectedAnnotationId}
+                />
+              </div>
+            );
+          })}
+        </div>
       </Box>
     </>
   );

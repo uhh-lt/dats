@@ -1,4 +1,4 @@
-import { ListItemButton, ListItemButtonProps, Stack, Tooltip } from "@mui/material";
+import { ListItemButton, Stack, StackProps, Tooltip } from "@mui/material";
 import { useMemo } from "react";
 import { CodeRead } from "../../../../api/openapi/models/CodeRead.ts";
 import { SentenceAnnotationReadResolved } from "../../../../api/openapi/models/SentenceAnnotationReadResolved.ts";
@@ -37,7 +37,7 @@ function DocumentSentence({
   annotationPositions,
   numSentenceDigits,
   ...props
-}: DocumentSentenceProps & ListItemButtonProps) {
+}: DocumentSentenceProps & StackProps) {
   const { codeId2CodeMap, sentAnnoId2sentAnnoMap } = useMemo(() => {
     const codeId2CodeMap = sentenceAnnotations?.reduce(
       (acc, anno) => {
@@ -80,7 +80,7 @@ function DocumentSentence({
   ]);
 
   return (
-    <Stack direction="row" width="100%">
+    <Stack direction="row" {...props}>
       <div
         style={{
           paddingRight: "8px",
@@ -106,7 +106,6 @@ function DocumentSentence({
         }}
       />
       <ListItemButton
-        {...props}
         style={{ ...props.style, flexGrow: 1 }}
         data-sent-id={sentenceId}
         onFocus={(event) => {
