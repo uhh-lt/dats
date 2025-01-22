@@ -1,6 +1,7 @@
 from typing import Annotated, Dict, List, Union
 
 from fastapi import APIRouter, Depends, Query
+from loguru import logger
 from sqlalchemy.orm import Session
 
 from api.dependencies import (
@@ -448,6 +449,9 @@ def get_sentence_annotator(
         for sent_idx in range(
             sent_anno.sentence_id_start, sent_anno.sentence_id_end + 1
         ):
+            if sent_idx >= len(result):
+                logger.warning(f"Invalid sentence index {sent_idx} for sdoc {sdoc_id}")
+                continue
             result[sent_idx].append(sent_anno)
 
     return SentenceAnnotatorResult(

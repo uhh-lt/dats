@@ -11,6 +11,7 @@ from app.core.data.crud.code import crud_code
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
+from app.core.data.crud.sentence_annotation import crud_sentence_anno
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.span_annotation import crud_span_anno
@@ -46,6 +47,7 @@ from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.memo import MemoORM
 from app.core.data.orm.project import ProjectORM
+from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_group import SpanGroupORM
@@ -105,6 +107,7 @@ class ExportService(metaclass=SingletonMeta):
             ExportJobType.SINGLE_PROJECT_ALL_CODES: cls._export_all_codes_from_proj,
             ExportJobType.SINGLE_PROJECT_SELECTED_SDOCS: cls._export_selected_sdocs_from_proj,
             ExportJobType.SINGLE_PROJECT_SELECTED_SPAN_ANNOTATIONS: cls._export_selected_span_annotations_from_proj,
+            ExportJobType.SINGLE_PROJECT_SELECTED_SENTENCE_ANNOTATIONS: cls._export_selected_sentence_annotations_from_proj,
             ExportJobType.SINGLE_USER_ALL_DATA: cls._export_user_data_from_proj,
             ExportJobType.SINGLE_USER_ALL_MEMOS: cls._export_user_memos_from_proj,
             ExportJobType.SINGLE_USER_LOGBOOK: cls._export_user_logbook_from_proj,
@@ -307,6 +310,61 @@ class ExportService(metaclass=SingletonMeta):
             data["text"].append(span.text)
             data["text_begin_char"].append(span.begin)
             data["text_end_char"].append(span.end)
+
+        df = pd.DataFrame(data=data)
+        return df
+
+    def __generate_export_df_for_sentence_annotations(
+        self,
+        db: Session,
+        sentence_annotations: List[SentenceAnnotationORM],
+    ) -> pd.DataFrame:
+        logger.info(f"Exporting {len(sentence_annotations)} Sentence Annotations ...")
+
+        # find all unique sdoc_ids
+        unique_sdoc_ids = set(
+            [sa.annotation_document.source_document_id for sa in sentence_annotations]
+        )
+
+        # find all sdoc_data
+        sdoc_data = {
+            sdoc_data.id: sdoc_data
+            for sdoc_data in crud_sdoc.read_data_batch(db=db, ids=list(unique_sdoc_ids))
+            if sdoc_data is not None
+        }
+
+        # fill the DataFrame
+        data = {
+            "sdoc_name": [],
+            "user_first_name": [],
+            "user_last_name": [],
+            "code_name": [],
+            "created": [],
+            "text": [],
+            "text_begin_sent": [],
+            "text_end_sent": [],
+        }
+
+        for sent_annotation in sentence_annotations:
+            sdoc = sent_annotation.annotation_document.source_document
+            user = sent_annotation.annotation_document.user
+            sdata = sdoc_data[sdoc.id]
+
+            data["sdoc_name"].append(sdoc.filename)
+            data["user_first_name"].append(user.first_name)
+            data["user_last_name"].append(user.last_name)
+            data["code_name"].append(sent_annotation.code.name)
+            data["created"].append(sent_annotation.created)
+            data["text"].append(
+                " ".join(
+                    sdata.sentences[
+                        sent_annotation.sentence_id_start : sent_annotation.sentence_id_end
+                        + 1
+                    ]
+                )
+            )
+            data["text_begin_sent"].append(sent_annotation.sentence_id_start)
+            data["text_end_sent"].append(sent_annotation.sentence_id_end)
 
         df = pd.DataFrame(data=data)
         return df
@@ -973,7 +1031,25 @@ class ExportService(metaclass=SingletonMeta):
         export_file = self.__write_export_data_to_temp_file(
             data=export_data,
             export_format=ExportFormat.CSV,
-            fn=f"project_{project_id}_selected_annotations_export",
+            fn=f"project_{project_id}_selected_span_annotations_export",
+        )
+        return self.repo.get_temp_file_url(export_file.name, relative=True)
+
+    def _export_selected_sentence_annotations_from_proj(
+        self, db: Session, project_id: int, sentence_annotation_ids: List[int]
+    ) -> str:
+        # get the annotations
+        sentence_annotations = crud_sentence_anno.read_by_ids(
+            db=db, ids=sentence_annotation_ids
+        )
+
+        export_data = self.__generate_export_df_for_sentence_annotations(
+            db=db, sentence_annotations=sentence_annotations
+        )
+        export_file = self.__write_export_data_to_temp_file(
+            data=export_data,
+            export_format=ExportFormat.CSV,
+            fn=f"project_{project_id}_selected_sentence_annotations_export",
         )
         return self.repo.get_temp_file_url(export_file.name, relative=True)
 
