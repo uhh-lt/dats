@@ -3851,11 +3851,11 @@
         }
       }
     },
-    "/analysis/annotated_segments_info": {
+    "/analysis/span_annotation_search_info": {
       "post": {
         "tags": ["analysis"],
-        "summary": "Returns AnnotationSegments Info.",
-        "operationId": "annotated_segments_info",
+        "summary": "Returns SpanAnnotationSearch Info.",
+        "operationId": "span_annotation_search_info",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -3873,7 +3873,7 @@
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/ColumnInfo_SpanColumns_" },
-                  "title": "Response Analysis-Annotated Segments Info"
+                  "title": "Response Analysis-Span Annotation Search Info"
                 }
               }
             }
@@ -3885,11 +3885,11 @@
         }
       }
     },
-    "/analysis/annotated_segments": {
+    "/analysis/span_annotation_search": {
       "post": {
         "tags": ["analysis"],
-        "summary": "Returns AnnotationSegments.",
-        "operationId": "annotated_segments",
+        "summary": "Returns SpanAnnotationSearch.",
+        "operationId": "span_annotation_search",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -3898,7 +3898,6 @@
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           },
-          { "name": "user_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "User Id" } },
           {
             "name": "page",
             "in": "query",
@@ -3915,7 +3914,7 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/Body_analysis-annotated_segments" } }
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_analysis-span_annotation_search" } }
           }
         },
         "responses": {
@@ -3979,7 +3978,6 @@
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           },
-          { "name": "user_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "User Id" } },
           {
             "name": "page",
             "in": "query",
@@ -4015,11 +4013,11 @@
         }
       }
     },
-    "/analysis/annotated_images_info": {
+    "/analysis/bbox_annotation_search_info": {
       "post": {
         "tags": ["analysis"],
-        "summary": "Returns AnnotationSegments Info.",
-        "operationId": "annotated_images_info",
+        "summary": "Returns BBoxAnnotationSearch Info.",
+        "operationId": "bbox_annotation_search_info",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -4037,7 +4035,7 @@
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/ColumnInfo_BBoxColumns_" },
-                  "title": "Response Analysis-Annotated Images Info"
+                  "title": "Response Analysis-Bbox Annotation Search Info"
                 }
               }
             }
@@ -4049,11 +4047,11 @@
         }
       }
     },
-    "/analysis/annotated_images": {
+    "/analysis/bbox_annotation_search": {
       "post": {
         "tags": ["analysis"],
-        "summary": "Returns AnnotatedImageResult.",
-        "operationId": "annotated_images",
+        "summary": "Returns BBoxAnnotationSearchResult.",
+        "operationId": "bbox_annotation_search",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -4062,7 +4060,6 @@
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           },
-          { "name": "user_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "User Id" } },
           {
             "name": "page",
             "in": "query",
@@ -4079,7 +4076,7 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/Body_analysis-annotated_images" } }
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_analysis-bbox_annotation_search" } }
           }
         },
         "responses": {
@@ -6735,23 +6732,14 @@
         "enum": ["Waiting", "Running", "Finished", "Errorneous", "Aborted"],
         "title": "BackgroundJobStatus"
       },
-      "Body_analysis-annotated_images": {
+      "Body_analysis-bbox_annotation_search": {
         "properties": {
           "filter": { "$ref": "#/components/schemas/Filter_BBoxColumns_" },
           "sorts": { "items": { "$ref": "#/components/schemas/Sort_BBoxColumns_" }, "type": "array", "title": "Sorts" }
         },
         "type": "object",
         "required": ["filter", "sorts"],
-        "title": "Body_analysis-annotated_images"
-      },
-      "Body_analysis-annotated_segments": {
-        "properties": {
-          "filter": { "$ref": "#/components/schemas/Filter_SpanColumns_" },
-          "sorts": { "items": { "$ref": "#/components/schemas/Sort_SpanColumns_" }, "type": "array", "title": "Sorts" }
-        },
-        "type": "object",
-        "required": ["filter", "sorts"],
-        "title": "Body_analysis-annotated_segments"
+        "title": "Body_analysis-bbox_annotation_search"
       },
       "Body_analysis-code_frequencies": {
         "properties": {
@@ -6775,6 +6763,15 @@
         "type": "object",
         "required": ["filter", "sorts"],
         "title": "Body_analysis-sentence_annotation_search"
+      },
+      "Body_analysis-span_annotation_search": {
+        "properties": {
+          "filter": { "$ref": "#/components/schemas/Filter_SpanColumns_" },
+          "sorts": { "items": { "$ref": "#/components/schemas/Sort_SpanColumns_" }, "type": "array", "title": "Sorts" }
+        },
+        "type": "object",
+        "required": ["filter", "sorts"],
+        "title": "Body_analysis-span_annotation_search"
       },
       "Body_analysis-word_frequency_analysis": {
         "properties": {

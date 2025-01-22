@@ -4,7 +4,7 @@
 /* eslint-disable */
 import type { Filter_BBoxColumns_ } from "./Filter_BBoxColumns_";
 import type { Sort_BBoxColumns_ } from "./Sort_BBoxColumns_";
-export type Body_analysis_annotated_images = {
+export type Body_analysis_bbox_annotation_search = {
   filter: Filter_BBoxColumns_;
   sorts: Array<Sort_BBoxColumns_>;
 };
