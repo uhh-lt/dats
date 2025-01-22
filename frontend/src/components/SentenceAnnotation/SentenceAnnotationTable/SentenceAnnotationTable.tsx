@@ -75,7 +75,7 @@ function SentenceAnnotationTable({
   const userId = user?.id;
 
   // filtering
-  const filter = useAppSelector((state) => state.satFilter.filter[filterName]) || createEmptyFilter(filterName);
+  const filter = useAppSelector((state) => state.seatFilter.filter[filterName]) || createEmptyFilter(filterName);
 
   // virtualization
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);

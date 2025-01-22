@@ -38,6 +38,13 @@ function Analysis() {
         />
 
         <AnalysisCard
+          to={"sentence-annotations"}
+          title={"Sentence Annotation Table"}
+          description={"View, search, edit sentence annotations in a table."}
+          color={"#77dd77"}
+        />
+
+        <AnalysisCard
           to={"word-frequency"}
           title={"Word Frequency Analysis"}
           description={"Analyse the frequencies and occurrences of all words in this project."}

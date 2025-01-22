@@ -8,6 +8,7 @@ import satFilterReducer from "../components/SpanAnnotation/SpanAnnotationTable/s
 import dialogReducer from "../components/dialogSlice.ts";
 import layoutReducer from "../layouts/layoutSlice.ts";
 import cotaReducer from "../views/analysis/ConceptsOverTime/cotaSlice.ts";
+import sentAnnotationAnalysisReducer from "../views/analysis/SentAnnotationAnalysis/sentAnnotationAnalysisSlice.ts";
 import spanAnnotationAnalysisReducer from "../views/analysis/SpanAnnotationAnalysis/spanAnnotationAnalysisSlice.ts";
 import timelineAnalysisReducer from "../views/analysis/TimelineAnalysis/timelineAnalysisSlice.ts";
 import wordFrequencyReducer from "../views/analysis/WordFrequency/wordFrequencySlice.ts";
@@ -30,6 +31,7 @@ export const store = configureStore({
     // non-persisted reducers
     logbook: logbookReducer,
     spanAnnotationAnalysis: spanAnnotationAnalysisReducer,
+    sentAnnotationAnalysis: sentAnnotationAnalysisReducer,
     timelineAnalysis: timelineAnalysisReducer,
     satFilter: satFilterReducer,
     seatFilter: seatFilterReducer,
