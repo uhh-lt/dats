@@ -62,11 +62,16 @@ const annotatorComponent = (
 
 const comparatorComponent = (
   sdocData: SourceDocumentDataRead,
+  boxRef: React.RefObject<HTMLDivElement>,
 ): Record<DocType, Record<AnnotationMode, React.ReactElement>> => ({
   [DocType.TEXT]: {
     [AnnotationMode.Annotation]: <div>Not supported</div>,
     [AnnotationMode.SentenceAnnotation]: (
-      <SentenceAnnotationComparison sdocData={sdocData} style={{ marginLeft: "-16px", marginBottom: "-24px" }} />
+      <SentenceAnnotationComparison
+        sdocData={sdocData}
+        style={{ marginLeft: "-16px", marginBottom: "-24px", marginRight: "-16px" }}
+        virtualizerScrollElementRef={boxRef}
+      />
     ),
     [AnnotationMode.Reader]: <div>Not supported</div>,
   },
@@ -204,7 +209,7 @@ function Annotation() {
                       }}
                     />
                     {isCompareMode
-                      ? comparatorComponent(sdocData.data)[sdoc.data.doctype][annotationMode]
+                      ? comparatorComponent(sdocData.data, boxRef)[sdoc.data.doctype][annotationMode]
                       : annotatorComponent(sdocData.data, boxRef)[sdoc.data.doctype][annotationMode]}
                   </>
                 ) : sdoc.isError ? (

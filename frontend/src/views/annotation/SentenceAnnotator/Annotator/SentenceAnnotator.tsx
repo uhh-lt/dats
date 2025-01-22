@@ -309,10 +309,10 @@ function SentenceAnnotator({ sdocData, virtualizerScrollElementRef, ...props }: 
 
   // virtualization
   const virtualizer = useVirtualizer({
-    count: 100,
+    count: sdocData.sentences.length,
     getScrollElement: () => virtualizerScrollElementRef.current!,
     estimateSize: () => 35,
-    overscan: 1,
+    overscan: 2,
   });
 
   // rendering

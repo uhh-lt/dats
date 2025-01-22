@@ -1,4 +1,5 @@
-import { Box, BoxProps, List } from "@mui/material";
+import { Box, BoxProps } from "@mui/material";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMemo, useRef, useState } from "react";
 import { CodeRead } from "../../../../api/openapi/models/CodeRead.ts";
 import { SentenceAnnotationReadResolved } from "../../../../api/openapi/models/SentenceAnnotationReadResolved.ts";
@@ -24,9 +25,14 @@ import DocumentSentenceHeader from "./DocumentSentenceHeader.tsx";
 
 interface SentenceAnnotationComparisonProps {
   sdocData: SourceDocumentDataRead;
+  virtualizerScrollElementRef: React.RefObject<HTMLDivElement>;
 }
 
-function SentenceAnnotationComparison({ sdocData, ...props }: SentenceAnnotationComparisonProps & BoxProps) {
+function SentenceAnnotationComparison({
+  sdocData,
+  virtualizerScrollElementRef,
+  ...props
+}: SentenceAnnotationComparisonProps & BoxProps) {
   // auth state
   const user = useAuth().user;
 
@@ -330,7 +336,7 @@ function SentenceAnnotationComparison({ sdocData, ...props }: SentenceAnnotation
     setLastClickedIndex((lastClickedIndex) => (lastClickedIndex === sentenceId ? null : sentenceId));
   };
 
-  const handleMouseUp = (event: React.MouseEvent<HTMLUListElement, MouseEvent>) => {
+  const handleMouseUp = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     setIsDragging(false);
     if (selectedSentences.length === 0) {
       return;
@@ -367,6 +373,14 @@ function SentenceAnnotationComparison({ sdocData, ...props }: SentenceAnnotation
     }
   };
 
+  // virtualization
+  const virtualizer = useVirtualizer({
+    count: sdocData.sentences.length + 1, // + 1 because of the header
+    getScrollElement: () => virtualizerScrollElementRef.current!,
+    estimateSize: () => 35,
+    overscan: 2,
+  });
+
   // rendering
   const numSentenceDigits = useMemo(() => Math.ceil(Math.log10(sdocData.sentences.length + 1)), [sdocData.sentences]);
 
@@ -380,42 +394,84 @@ function SentenceAnnotationComparison({ sdocData, ...props }: SentenceAnnotation
         onDelete={handleCodeSelectorDeleteAnnotation}
       />
       <Box {...props}>
-        <List onMouseUp={handleMouseUp} sx={{ p: 0 }}>
-          <DocumentSentenceHeader
-            leftUserId={leftUserId}
-            rightUserId={rightUserId}
-            numSentenceDigits={numSentenceDigits}
-            annotatorLeft={annotatorLeft}
-            annotatorRight={annotatorRight}
-            showBulkActions={leftUserId === user!.id || rightUserId === user!.id}
-            onClickRevertAll={handleClickRevertAll}
-            onClickApplyAll={handleClickApplyAll}
-            isDirectionLeft={leftUserId === user!.id}
-          />
-          {sdocData.sentences.map((sentence, sentenceId) => (
-            <DocumentSentence
-              key={sentenceId}
-              sentenceId={sentenceId}
-              sentence={sentence}
-              isSelected={selectedSentences.includes(sentenceId)}
-              selectedCode={mostRecentCode}
-              onSentenceMouseDown={handleSentenceMouseDown}
-              onSentenceMouseEnter={handleSentenceMouseEnter}
-              onAnnotationClick={handleAnnotationClick}
-              onAnnotationMouseEnter={handleAnnotationMouseEnter}
-              onAnnotationMouseLeave={handleAnnotationMouseLeave}
-              onApplyAnnotation={handleApplyAnnotation}
-              onRevertAnnotation={handleRevertAnnotation}
-              hoveredSentAnnoId={hoverSentAnnoId}
-              numSentenceDigits={numSentenceDigits}
-              hoveredCodeId={hoveredCodeId}
-              annotatorLeft={annotatorLeft}
-              annotatorRight={annotatorRight}
-              isAnnotationAllowedLeft={leftUserId === user!.id}
-              isAnnotationAllowedRight={rightUserId === user!.id}
-            />
-          ))}
-        </List>
+        <div
+          style={{
+            height: `${virtualizer.getTotalSize()}px`,
+            width: "100%",
+            position: "relative",
+          }}
+          onMouseUp={handleMouseUp}
+        >
+          {virtualizer.getVirtualItems().map((item) => {
+            // special case: render header
+            if (item.index === 0) {
+              return (
+                <div
+                  key={item.key}
+                  data-index={item.index}
+                  ref={virtualizer.measureElement}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    transform: `translateY(${item.start}px)`,
+                  }}
+                >
+                  <DocumentSentenceHeader
+                    leftUserId={leftUserId}
+                    rightUserId={rightUserId}
+                    numSentenceDigits={numSentenceDigits}
+                    annotatorLeft={annotatorLeft}
+                    annotatorRight={annotatorRight}
+                    showBulkActions={leftUserId === user!.id || rightUserId === user!.id}
+                    onClickRevertAll={handleClickRevertAll}
+                    onClickApplyAll={handleClickApplyAll}
+                    isDirectionLeft={leftUserId === user!.id}
+                  />
+                </div>
+              );
+            }
+
+            const sentId = item.index - 1;
+            const sentence = sdocData.sentences[sentId];
+            return (
+              <div
+                key={item.key}
+                data-index={item.index}
+                ref={virtualizer.measureElement}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  transform: `translateY(${item.start}px)`,
+                }}
+              >
+                <DocumentSentence
+                  sentenceId={sentId}
+                  sentence={sentence}
+                  isSelected={selectedSentences.includes(sentId)}
+                  selectedCode={mostRecentCode}
+                  onSentenceMouseDown={handleSentenceMouseDown}
+                  onSentenceMouseEnter={handleSentenceMouseEnter}
+                  onAnnotationClick={handleAnnotationClick}
+                  onAnnotationMouseEnter={handleAnnotationMouseEnter}
+                  onAnnotationMouseLeave={handleAnnotationMouseLeave}
+                  onApplyAnnotation={handleApplyAnnotation}
+                  onRevertAnnotation={handleRevertAnnotation}
+                  hoveredSentAnnoId={hoverSentAnnoId}
+                  numSentenceDigits={numSentenceDigits}
+                  hoveredCodeId={hoveredCodeId}
+                  annotatorLeft={annotatorLeft}
+                  annotatorRight={annotatorRight}
+                  isAnnotationAllowedLeft={leftUserId === user!.id}
+                  isAnnotationAllowedRight={rightUserId === user!.id}
+                />
+              </div>
+            );
+          })}
+        </div>
       </Box>
     </>
   );
