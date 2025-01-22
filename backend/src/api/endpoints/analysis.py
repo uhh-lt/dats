@@ -97,11 +97,11 @@ def code_occurrences(
 
 
 @router.post(
-    "/annotated_segments_info",
+    "/span_annotation_search_info",
     response_model=List[ColumnInfo[SpanColumns]],
-    summary="Returns AnnotationSegments Info.",
+    summary="Returns SpanAnnotationSearch Info.",
 )
-def annotated_segments_info(
+def span_annotation_search_info(
     *,
     project_id: int,
     authz_user: AuthzUser = Depends(),
@@ -113,14 +113,13 @@ def annotated_segments_info(
 
 
 @router.post(
-    "/annotated_segments",
+    "/span_annotation_search",
     response_model=SpanAnnotationSearchResult,
-    summary="Returns AnnotationSegments.",
+    summary="Returns SpanAnnotationSearch.",
 )
-def annotated_segments(
+def span_annotation_search(
     *,
     project_id: int,
-    user_id: int,
     filter: Filter[SpanColumns],
     page: Optional[int] = None,
     page_size: Optional[int] = None,
@@ -131,7 +130,6 @@ def annotated_segments(
 
     return find_span_annotations(
         project_id=project_id,
-        user_id=user_id,
         filter=filter,
         page=page,
         page_size=page_size,
@@ -163,7 +161,6 @@ def sentence_annotation_search_info(
 def sentence_annotation_search(
     *,
     project_id: int,
-    user_id: int,
     filter: Filter[SentAnnoColumns],
     page: Optional[int] = None,
     page_size: Optional[int] = None,
@@ -174,7 +171,6 @@ def sentence_annotation_search(
 
     return find_sentence_annotations(
         project_id=project_id,
-        user_id=user_id,
         filter=filter,
         page=page,
         page_size=page_size,
@@ -183,11 +179,11 @@ def sentence_annotation_search(
 
 
 @router.post(
-    "/annotated_images_info",
+    "/bbox_annotation_search_info",
     response_model=List[ColumnInfo[BBoxColumns]],
-    summary="Returns AnnotationSegments Info.",
+    summary="Returns BBoxAnnotationSearch Info.",
 )
-def annotated_images_info(
+def bbox_annotation_search_info(
     *,
     project_id: int,
     authz_user: AuthzUser = Depends(),
@@ -199,14 +195,13 @@ def annotated_images_info(
 
 
 @router.post(
-    "/annotated_images",
+    "/bbox_annotation_search",
     response_model=BBoxAnnotationSearchResult,
-    summary="Returns AnnotatedImageResult.",
+    summary="Returns BBoxAnnotationSearchResult.",
 )
-def annotated_images(
+def bbox_annotation_search(
     *,
     project_id: int,
-    user_id: int,
     filter: Filter[BBoxColumns],
     page: Optional[int] = None,
     page_size: Optional[int] = None,
@@ -217,7 +212,6 @@ def annotated_images(
 
     return find_bbox_annotations(
         project_id=project_id,
-        user_id=user_id,
         filter=filter,
         page=page,
         page_size=page_size,

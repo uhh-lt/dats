@@ -48,7 +48,6 @@ def find_span_annotations_info(
 
 def find_span_annotations(
     project_id: int,
-    user_id: int,
     filter: Filter[SpanColumns],
     sorts: List[Sort[SpanColumns]],
     page: Optional[int] = None,
@@ -80,10 +79,7 @@ def find_span_annotations(
                 .join(SpanAnnotationORM.code)
                 .join(AnnotationDocumentORM.source_document)
                 .join(subquery, SpanAnnotationORM.id == subquery.c.id)
-                .filter(
-                    SourceDocumentORM.project_id == project_id,
-                    AnnotationDocumentORM.user_id == user_id,
-                )
+                .filter(SourceDocumentORM.project_id == project_id)
             )
         )
         result_rows, total_results = builder.execute_query(

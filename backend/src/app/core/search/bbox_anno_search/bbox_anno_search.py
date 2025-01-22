@@ -49,7 +49,6 @@ def find_bbox_annotations_info(project_id) -> List[ColumnInfo[BBoxColumns]]:
 
 def find_bbox_annotations(
     project_id: int,
-    user_id: int,
     filter: Filter[BBoxColumns],
     sorts: List[Sort[BBoxColumns]],
     page: Optional[int] = None,
@@ -79,10 +78,7 @@ def find_bbox_annotations(
                 .join(BBoxAnnotationORM.code)
                 .join(AnnotationDocumentORM.source_document)
                 .join(subquery, BBoxAnnotationORM.id == subquery.c.id)
-                .filter(
-                    SourceDocumentORM.project_id == project_id,
-                    AnnotationDocumentORM.user_id == user_id,
-                )
+                .filter(SourceDocumentORM.project_id == project_id)
             )
         )
         result_rows, total_results = builder.execute_query(

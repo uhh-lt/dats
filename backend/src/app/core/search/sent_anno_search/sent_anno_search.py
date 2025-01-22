@@ -45,7 +45,6 @@ def find_sentence_annotations_info(
 
 def find_sentence_annotations(
     project_id: int,
-    user_id: int,
     filter: Filter[SentAnnoColumns],
     sorts: List[Sort[SentAnnoColumns]],
     page: Optional[int] = None,
@@ -77,10 +76,7 @@ def find_sentence_annotations(
                 .join(SentenceAnnotationORM.code)
                 .join(AnnotationDocumentORM.source_document)
                 .join(subquery, SentenceAnnotationORM.id == subquery.c.id)
-                .filter(
-                    SourceDocumentORM.project_id == project_id,
-                    AnnotationDocumentORM.user_id == user_id,
-                )
+                .filter(SourceDocumentORM.project_id == project_id)
             )
         )
         result_rows, total_results = builder.execute_query(
