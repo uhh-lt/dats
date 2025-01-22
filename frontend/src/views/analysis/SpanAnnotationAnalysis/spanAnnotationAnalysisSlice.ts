@@ -1,37 +1,20 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
 import { ProjectActions } from "../../../components/Project/projectSlice.ts";
 import { SATFilterActions } from "../../../components/SpanAnnotation/SpanAnnotationTable/satFilterSlice.ts";
-import { initialTableState, resetProjectTableState, tableReducer, TableState } from "../../../components/tableSlice.ts";
+import { initialTableState, resetProjectTableState, tableReducer } from "../../../components/tableSlice.ts";
 
-interface AnnotatedSegmentsState {
-  // app state:
-  isSplitView: boolean;
-  contextSize: number;
-}
-
-const initialState: TableState & AnnotatedSegmentsState = {
-  ...initialTableState,
-  // app state:
-  isSplitView: false,
-  contextSize: 10,
-};
-
-export const AnnotatedSegmentsSlice = createSlice({
-  name: "annotatedSegments",
-  initialState,
+export const SpanAnnotationsSlice = createSlice({
+  name: "spanAnnotationAnalysis",
+  initialState: {
+    ...initialTableState,
+  },
   reducers: {
     ...tableReducer,
-    toggleSplitView: (state) => {
-      state.isSplitView = !state.isSplitView;
-    },
-    setContextSize: (state, action: PayloadAction<number>) => {
-      state.contextSize = action.payload;
-    },
   },
   extraReducers: (builder) => {
     builder
       .addCase(ProjectActions.changeProject, (state) => {
-        console.log("Project changed! Resetting 'annotatedSegments' state.");
+        console.log("Project changed! Resetting 'spanAnnotationAnalysis' state.");
         resetProjectTableState(state);
       })
       .addCase(SATFilterActions.init, (state, action) => {
@@ -58,5 +41,5 @@ export const AnnotatedSegmentsSlice = createSlice({
   },
 });
 
-export const AnnotatedSegmentsActions = AnnotatedSegmentsSlice.actions;
-export default AnnotatedSegmentsSlice.reducer;
+export const SpanAnnotationsActions = SpanAnnotationsSlice.actions;
+export default SpanAnnotationsSlice.reducer;

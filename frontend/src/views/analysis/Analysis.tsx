@@ -31,9 +31,9 @@ function Analysis() {
         />
 
         <AnalysisCard
-          to={"annotated-segments"}
-          title={"Annotated Segments"}
-          description={"View, search, edit all coded segments."}
+          to={"span-annotations"}
+          title={"Span Annotation Table"}
+          description={"View, search, edit span annotations in a table."}
           color={"#77dd77"}
         />
 

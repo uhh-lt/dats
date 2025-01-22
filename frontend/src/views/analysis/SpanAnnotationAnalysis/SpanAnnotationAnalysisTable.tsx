@@ -3,30 +3,30 @@ import SpanAnnotationTable, {
   SpanAnnotationTableProps,
 } from "../../../components/SpanAnnotation/SpanAnnotationTable/SpanAnnotationTable.tsx";
 import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
-import AnnotatedSegmentsTableToolbar from "./AnnotatedSegmentsTableToolbar.tsx";
-import BulkChangeCodeButton from "./BulkChangeCodeButton.tsx";
-import { AnnotatedSegmentsActions } from "./annotatedSegmentsSlice.ts";
+import BulkChangeSpanAnnotationCodeButton from "./BulkChangeSpanAnnotationCodeButton.tsx";
+import { SpanAnnotationsActions } from "./spanAnnotationAnalysisSlice.ts";
+import SpanAnnotationAnalysisTableToolbar from "./SpanAnnotationAnalysisTableToolbar.tsx";
 
-const filterName = "annotatedSegments";
-interface AnnotatedSegmentsTableProps {
+const filterName = "spanAnnotationAnalysisTable";
+interface SpanAnnotationAnalysisTableProps {
   cardProps: SpanAnnotationTableProps["cardProps"];
 }
 
-function AnnotatedSegmentsTable({ cardProps }: AnnotatedSegmentsTableProps) {
+function SpanAnnotationAnalysisTable({ cardProps }: SpanAnnotationAnalysisTableProps) {
   const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
 
   // global client state (redux) connected to table state
   const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
-    (state) => state.annotatedSegments.rowSelectionModel,
-    AnnotatedSegmentsActions.onRowSelectionChange,
+    (state) => state.spanAnnotationAnalysis.rowSelectionModel,
+    SpanAnnotationsActions.onRowSelectionChange,
   );
   const [sortingModel, setSortingModel] = useReduxConnector(
-    (state) => state.annotatedSegments.sortingModel,
-    AnnotatedSegmentsActions.onSortChange,
+    (state) => state.spanAnnotationAnalysis.sortingModel,
+    SpanAnnotationsActions.onSortChange,
   );
   const [columnVisibilityModel, setColumnVisibilityModel] = useReduxConnector(
-    (state) => state.annotatedSegments.columnVisibilityModel,
-    AnnotatedSegmentsActions.onColumnVisibilityChange,
+    (state) => state.spanAnnotationAnalysis.columnVisibilityModel,
+    SpanAnnotationsActions.onColumnVisibilityChange,
   );
 
   return (
@@ -39,12 +39,14 @@ function AnnotatedSegmentsTable({ cardProps }: AnnotatedSegmentsTableProps) {
       onSortingChange={setSortingModel}
       columnVisibilityModel={columnVisibilityModel}
       onColumnVisibilityChange={setColumnVisibilityModel}
-      renderTopToolbarCustomActions={(props) => <BulkChangeCodeButton {...props} filterName={filterName} />}
-      renderToolbarInternalActions={AnnotatedSegmentsTableToolbar}
+      renderTopToolbarCustomActions={(props) => (
+        <BulkChangeSpanAnnotationCodeButton {...props} filterName={filterName} />
+      )}
+      renderToolbarInternalActions={SpanAnnotationAnalysisTableToolbar}
       cardProps={cardProps}
       positionToolbarAlertBanner="head-overlay"
     />
   );
 }
 
-export default AnnotatedSegmentsTable;
+export default SpanAnnotationAnalysisTable;

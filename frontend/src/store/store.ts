@@ -7,8 +7,8 @@ import documentTableFilterReducer from "../components/SourceDocument/SdocTable/d
 import satFilterReducer from "../components/SpanAnnotation/SpanAnnotationTable/satFilterSlice.ts";
 import dialogReducer from "../components/dialogSlice.ts";
 import layoutReducer from "../layouts/layoutSlice.ts";
-import annotatedSegmentsReducer from "../views/analysis/AnnotatedSegments/annotatedSegmentsSlice.ts";
 import cotaReducer from "../views/analysis/ConceptsOverTime/cotaSlice.ts";
+import spanAnnotationAnalysisReducer from "../views/analysis/SpanAnnotationAnalysis/spanAnnotationAnalysisSlice.ts";
 import timelineAnalysisReducer from "../views/analysis/TimelineAnalysis/timelineAnalysisSlice.ts";
 import wordFrequencyReducer from "../views/analysis/WordFrequency/wordFrequencySlice.ts";
 import annoReducer from "../views/annotation/annoSlice.ts";
@@ -29,7 +29,7 @@ export const store = configureStore({
     project: projectReducer,
     // non-persisted reducers
     logbook: logbookReducer,
-    annotatedSegments: annotatedSegmentsReducer,
+    spanAnnotationAnalysis: spanAnnotationAnalysisReducer,
     timelineAnalysis: timelineAnalysisReducer,
     satFilter: satFilterReducer,
     seatFilter: seatFilterReducer,

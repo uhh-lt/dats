@@ -3,7 +3,7 @@ import { SATToolbarProps } from "../../../components/SpanAnnotation/SpanAnnotati
 import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 
-function BulkChangeCodeButton({ selectedAnnotations }: SATToolbarProps & { filterName: string }) {
+function BulkChangeSpanAnnotationCodeButton({ selectedAnnotations }: SATToolbarProps & { filterName: string }) {
   // global client state (redux)
   const dispatch = useAppDispatch();
 
@@ -18,11 +18,11 @@ function BulkChangeCodeButton({ selectedAnnotations }: SATToolbarProps & { filte
     <Stack direction={"row"} spacing={1} alignItems="center" p={0.5} height={48}>
       {selectedAnnotations.length > 0 && (
         <Button size="small" onClick={handleChangeCodeClick}>
-          Change code of {selectedAnnotations.length} annotated segments
+          Change code of {selectedAnnotations.length} span annotations
         </Button>
       )}
     </Stack>
   );
 }
 
-export default BulkChangeCodeButton;
+export default BulkChangeSpanAnnotationCodeButton;

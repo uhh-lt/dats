@@ -12,7 +12,7 @@ interface ExportAnnotationsButtonProps {
   spanAnnotationIds: number[];
 }
 
-export default function ExportAnnotationsButton({ spanAnnotationIds }: ExportAnnotationsButtonProps) {
+export default function ExportSpanAnnotationsButton({ spanAnnotationIds }: ExportAnnotationsButtonProps) {
   // global client state (react-router)
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
