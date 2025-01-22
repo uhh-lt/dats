@@ -172,14 +172,12 @@ function SentenceAnnotationTable({
     queryKey: [
       "sentence-annotation-table-data",
       projectId,
-      userId,
       filter, //refetch when columnFilters changes
       sortingModel, //refetch when sorting changes
     ],
     queryFn: ({ pageParam }) =>
       AnalysisService.sentenceAnnotationSearch({
         projectId: projectId!,
-        userId: userId!,
         requestBody: {
           filter: filter as MyFilter<SentAnnoColumns>,
           sorts: sortingModel.map((sort) => ({

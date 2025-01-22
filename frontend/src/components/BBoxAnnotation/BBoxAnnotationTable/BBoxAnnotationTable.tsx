@@ -171,14 +171,12 @@ function BBoxAnnotationTable({
     queryKey: [
       "bbox-table-data",
       projectId,
-      selectedUserId,
       filter, //refetch when columnFilters changes
       sortingModel, //refetch when sorting changes
     ],
     queryFn: ({ pageParam }) =>
-      AnalysisService.annotatedImages({
+      AnalysisService.bboxAnnotationSearch({
         projectId: projectId!,
-        userId: selectedUserId,
         requestBody: {
           filter: filter as MyFilter<BBoxColumns>,
           sorts: sortingModel.map((sort) => ({

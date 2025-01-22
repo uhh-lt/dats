@@ -164,14 +164,12 @@ function SpanAnnotationTable({
     queryKey: [
       "annotation-table-data",
       projectId,
-      userId,
       filter, //refetch when columnFilters changes
       sortingModel, //refetch when sorting changes
     ],
     queryFn: ({ pageParam }) =>
-      AnalysisService.annotatedSegments({
+      AnalysisService.spanAnnotationSearch({
         projectId: projectId!,
-        userId: userId!,
         requestBody: {
           filter: filter as MyFilter<SpanColumns>,
           sorts: sortingModel.map((sort) => ({
