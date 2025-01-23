@@ -132,6 +132,7 @@ function TrainingParameterEditorStepForm({
           helperText: <ErrorMessage errors={errors} name="batch_size" />,
           variant: "outlined",
           onBlur: () => handleSubmit(handleSaveParams, handleError)(),
+          disabled: true,
         }}
       />
       <FormNumber
@@ -144,6 +145,7 @@ function TrainingParameterEditorStepForm({
           helperText: <ErrorMessage errors={errors} name="learning_rate" />,
           variant: "outlined",
           onBlur: () => handleSubmit(handleSaveParams, handleError)(),
+          disabled: true,
         }}
       />
       <FormNumber
@@ -156,6 +158,7 @@ function TrainingParameterEditorStepForm({
           helperText: <ErrorMessage errors={errors} name="max_epochs" />,
           variant: "outlined",
           onBlur: () => handleSubmit(handleSaveParams, handleError)(),
+          disabled: true,
         }}
       />
     </Stack>
