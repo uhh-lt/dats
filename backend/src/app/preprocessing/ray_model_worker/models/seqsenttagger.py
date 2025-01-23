@@ -9,7 +9,7 @@ from dto.seqsenttagger import (
     SeqSentTaggerJobInput,
     SeqSentTaggerJobResponse,
 )
-from pytorch_lightning import LightningModule, Trainer
+from pytorch_lightning import LightningModule, Trainer, loggers
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from ray import serve
@@ -291,8 +291,14 @@ class SeqSentTaggerModel:
             mode="min",
         )
 
+        # Logger
+        tb_logger = loggers.TensorBoardLogger(
+            save_dir=self.__get_temp_files_root_path()
+        )
+
         # Trainer
         trainer = Trainer(
+            logger=tb_logger,
             max_epochs=100,
             callbacks=[early_stopping, checkpoint],
             precision=32,  # full precision training
@@ -325,7 +331,11 @@ class SeqSentTaggerModel:
         logger.info(f"Loaded trained model {str(model_path)}. Mapping: {model.id2tag}")
 
         # 3. Evaluate the model
+        tb_logger = loggers.TensorBoardLogger(
+            save_dir=self.__get_temp_files_root_path() / "lightning_logs"
+        )
         trainer = Trainer(
+            logger=tb_logger,
             accelerator=DEVICE,  # Use GPU
             devices=1,  # Use 1 GPU
         )
@@ -344,6 +354,9 @@ class SeqSentTaggerModel:
         logger.info(f"Showing the first prediction as strings: {pred_tags[0]}")
 
         return pred_tags
+
+    def __get_temp_files_root_path(self) -> Path:
+        return SHARED_REPO_ROOT.joinpath("temporary_files")
 
     def __get_project_repo_root_path(self, proj_id: int) -> Path:
         return SHARED_REPO_ROOT.joinpath(f"projects/{proj_id}/")
