@@ -58,6 +58,7 @@ function ApproachSelectionStep() {
       case ApproachType.LLM_FEW_SHOT:
         createPromptTemplatesMutation.mutate(
           {
+            approachType: approachType,
             requestBody: {
               llm_job_type: llmMethod,
               project_id: projectId,

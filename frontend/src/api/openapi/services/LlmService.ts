@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { ApproachRecommendation } from "../models/ApproachRecommendation";
+import type { ApproachType } from "../models/ApproachType";
 import type { LLMJobParameters } from "../models/LLMJobParameters";
 import type { LLMJobParameters2_Input } from "../models/LLMJobParameters2_Input";
 import type { LLMJobRead } from "../models/LLMJobRead";
@@ -68,13 +69,18 @@ export class LlmService {
    * @throws ApiError
    */
   public static createPromptTemplates({
+    approachType,
     requestBody,
   }: {
+    approachType: ApproachType;
     requestBody: LLMJobParameters;
   }): CancelablePromise<Array<LLMPromptTemplates>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/llm/create_prompt_templates",
+      query: {
+        approach_type: approachType,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {

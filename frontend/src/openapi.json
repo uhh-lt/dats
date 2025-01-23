@@ -5788,9 +5788,18 @@
         "tags": ["llm"],
         "summary": "Returns the system and user prompt templates for the given llm task in all supported languages",
         "operationId": "create_prompt_templates",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "approach_type",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/ApproachType" }
+          }
+        ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobParameters" } } },
-          "required": true
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobParameters" } } }
         },
         "responses": {
           "200": {
@@ -5798,8 +5807,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": { "$ref": "#/components/schemas/LLMPromptTemplates" },
                   "type": "array",
+                  "items": { "$ref": "#/components/schemas/LLMPromptTemplates" },
                   "title": "Response Llm-Create Prompt Templates"
                 }
               }
@@ -5809,8 +5818,7 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
     "/llm/create_training_parameters": {
