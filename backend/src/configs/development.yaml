@@ -125,6 +125,11 @@ ollama:
   port: ${oc.env:OLLAMA_PORT, 13133}
   model: ${oc.env:OLLAMA_MODEL, gemma2:9b-instruct-fp16}
 
+llm_assistant:
+  sentence_annotation:
+    few_shot_threshold: 4
+    model_training_threshold: 100
+
 project_metadata:
   text_url:
     key: "url"

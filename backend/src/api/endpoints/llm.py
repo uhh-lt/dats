@@ -7,6 +7,7 @@ from app.celery.background_jobs import prepare_and_start_llm_job_async
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.dto.llm_job import (
     ApproachRecommendation,
+    ApproachType,
     LLMJobParameters,
     LLMJobParameters2,
     LLMJobRead,
@@ -68,11 +69,16 @@ def get_all_llm_jobs(
     summary="Returns the system and user prompt templates for the given llm task in all supported languages",
 )
 def create_prompt_templates(
-    *, llm_job_params: LLMJobParameters, authz_user: AuthzUser = Depends()
+    *,
+    llm_job_params: LLMJobParameters,
+    approach_type: ApproachType,
+    authz_user: AuthzUser = Depends(),
 ) -> List[LLMPromptTemplates]:
     authz_user.assert_in_project(llm_job_params.project_id)
 
-    return llms.create_prompt_templates(llm_job_params=llm_job_params)
+    return llms.create_prompt_templates(
+        llm_job_params=llm_job_params, approach_type=approach_type
+    )
 
 
 @router.post(

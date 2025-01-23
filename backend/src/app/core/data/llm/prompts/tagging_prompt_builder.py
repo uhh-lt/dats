@@ -77,8 +77,8 @@ class TaggingPromptBuilder(PromptBuilder):
         "de": de_example_tempalate.strip(),
     }
 
-    def __init__(self, db: Session, project_id: int):
-        super().__init__(db, project_id)
+    def __init__(self, db: Session, project_id: int, is_fewshot: bool):
+        super().__init__(db, project_id, is_fewshot)
 
         project = crud_project.read(db=db, id=project_id)
         self.document_tags = project.document_tags

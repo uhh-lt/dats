@@ -67,8 +67,8 @@ class MetadataPromptBuilder(PromptBuilder):
         "de": de_prompt_template.strip(),
     }
 
-    def __init__(self, db: Session, project_id: int):
-        super().__init__(db, project_id)
+    def __init__(self, db: Session, project_id: int, is_fewshot: bool):
+        super().__init__(db, project_id, is_fewshot)
 
         project = crud_project.read(db=db, id=project_id)
         self.project_metadata = [

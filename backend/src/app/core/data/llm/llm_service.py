@@ -20,6 +20,7 @@ from app.core.data.dto.llm_job import (
     DocumentTaggingLLMJobResult,
     DocumentTaggingParams,
     DocumentTaggingResult,
+    FewShotParams,
     LLMJobCreate,
     LLMJobParameters,
     LLMJobParameters2,
@@ -75,6 +76,9 @@ from app.preprocessing.ray_model_worker.dto.seqsenttagger import (
     SeqSentTaggerJobInput,
 )
 from app.util.singleton_meta import SingletonMeta
+from config import conf
+
+lac = conf.llm_assistant
 
 
 class LLMJobPreparationError(Exception):
@@ -347,14 +351,19 @@ class LLMService(metaclass=SingletonMeta):
                 # 4.3 determine the available approaches based on thresholds
                 available_approaches: Dict[ApproachType, bool] = {
                     ApproachType.LLM_ZERO_SHOT: True,
-                    ApproachType.LLM_FEW_SHOT: min_labeled_sentences >= 3,
-                    ApproachType.MODEL_TRAINING: min_labeled_sentences >= 100,
+                    ApproachType.LLM_FEW_SHOT: min_labeled_sentences
+                    >= lac.sentence_annotation.few_shot_threshold,
+                    ApproachType.MODEL_TRAINING: min_labeled_sentences
+                    >= lac.sentence_annotation.model_training_threshold,
                 }
 
                 # 4.4 determine the recommended approach based on thresholds
-                if min_labeled_sentences < 3:
+                if min_labeled_sentences < lac.sentence_annotation.few_shot_threshold:
                     recommended_approach = ApproachType.LLM_ZERO_SHOT
-                elif min_labeled_sentences < 100:
+                elif (
+                    min_labeled_sentences
+                    < lac.sentence_annotation.model_training_threshold
+                ):
                     recommended_approach = ApproachType.LLM_FEW_SHOT
                 else:
                     recommended_approach = ApproachType.MODEL_TRAINING
@@ -377,7 +386,7 @@ class LLMService(metaclass=SingletonMeta):
         )
 
     def create_prompt_templates(
-        self, llm_job_params: LLMJobParameters
+        self, llm_job_params: LLMJobParameters, approach_type: ApproachType
     ) -> List[LLMPromptTemplates]:
         with self.sqls.db_session() as db:
             # get the llm method based on the jobtype
@@ -389,7 +398,9 @@ class LLMService(metaclass=SingletonMeta):
 
             # execute the the prompt builder with the provided specific parameters
             prompt_builder = llm_prompt_builder(
-                db=db, project_id=llm_job_params.project_id
+                db=db,
+                project_id=llm_job_params.project_id,
+                is_fewshot=approach_type == ApproachType.LLM_FEW_SHOT,
             )
             return prompt_builder.build_prompt_templates(
                 **llm_job_params.specific_task_parameters.model_dump(
@@ -439,7 +450,11 @@ class LLMService(metaclass=SingletonMeta):
         )
         logger.info(msg)
 
-        prompt_builder = TaggingPromptBuilder(db=db, project_id=project_id)
+        prompt_builder = TaggingPromptBuilder(
+            db=db,
+            project_id=project_id,
+            is_fewshot=isinstance(approach_parameters, FewShotParams),
+        )
 
         # build prompt dict (to validate and access prompts by language and system / user)
         prompt_dict = self.construct_prompt_dict(
@@ -549,7 +564,11 @@ class LLMService(metaclass=SingletonMeta):
         )
         logger.info(msg)
 
-        prompt_builder = MetadataPromptBuilder(db=db, project_id=project_id)
+        prompt_builder = MetadataPromptBuilder(
+            db=db,
+            project_id=project_id,
+            is_fewshot=isinstance(approach_parameters, FewShotParams),
+        )
 
         # build prompt dict (to validate and access prompts by language and system / user)
         prompt_dict = self.construct_prompt_dict(
@@ -675,7 +694,11 @@ class LLMService(metaclass=SingletonMeta):
         )
         logger.info(msg)
 
-        prompt_builder = AnnotationPromptBuilder(db=db, project_id=project_id)
+        prompt_builder = AnnotationPromptBuilder(
+            db=db,
+            project_id=project_id,
+            is_fewshot=isinstance(approach_parameters, FewShotParams),
+        )
         project_codes = prompt_builder.codeids2code_dict
 
         # build prompt dict (to validate and access prompts by language and system / user)
@@ -810,14 +833,14 @@ class LLMService(metaclass=SingletonMeta):
         db: Session,
         llm_job_id: str,
         project_id: int,
-        approach_parameters: ZeroShotParams,
+        approach_parameters: Union[ZeroShotParams, FewShotParams],
         task_parameters: SentenceAnnotationParams,
     ) -> LLMJobResult:
         assert isinstance(
             task_parameters, SentenceAnnotationParams
         ), "Wrong task parameters!"
-        assert isinstance(
-            approach_parameters, ZeroShotParams
+        assert isinstance(approach_parameters, ZeroShotParams) or isinstance(
+            approach_parameters, FewShotParams
         ), "Wrong approach parameters!"
 
         msg = f"Started LLMJob - Sentence Annotation (OLLAMA), num docs: {len(task_parameters.sdoc_ids)}"
@@ -827,7 +850,11 @@ class LLMService(metaclass=SingletonMeta):
         )
         logger.info(msg)
 
-        prompt_builder = SentenceAnnotationPromptBuilder(db=db, project_id=project_id)
+        prompt_builder = SentenceAnnotationPromptBuilder(
+            db=db,
+            project_id=project_id,
+            is_fewshot=isinstance(approach_parameters, FewShotParams),
+        )
         project_codes = prompt_builder.codeids2code_dict
 
         # build prompt dict (to validate and access prompts by language and system / user)
