@@ -149,7 +149,7 @@ def user(make_user: Callable[[], UserORM]) -> UserORM:
 @pytest.fixture
 def make_user(db: Session, request: FixtureRequest) -> Callable[[], UserORM]:
     def factory():
-        email = f'{"".join(random.choices(string.ascii_letters, k=15))}@gmail.com'
+        email = f"{''.join(random.choices(string.ascii_letters, k=15))}@gmail.com"
         first_name = "".join(random.choices(string.ascii_letters, k=15))
         last_name = "".join(random.choices(string.ascii_letters, k=15))
         password = "".join(random.choices(string.ascii_letters, k=15))
