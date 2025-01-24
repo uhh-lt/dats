@@ -206,7 +206,7 @@ def __create_assistant_users__() -> None:
         ]:
             if not crud_user.exists(db=db_session, id=user_id):
                 create_dto = UserCreate(
-                    email=f"assistant-{last_name.lower()}"
+                    email=f"assistant-{last_name.lower()}@"
                     + str(conf.assistant_user.email.split("@")[1]),
                     first_name=str(conf.assistant_user.first_name),
                     last_name=last_name,
