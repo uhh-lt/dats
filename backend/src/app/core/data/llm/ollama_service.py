@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Type, TypeVar
 
 from loguru import logger
@@ -24,27 +23,21 @@ class OllamaService(metaclass=SingletonMeta):
                 )
 
             # ensure that the configured model is available
-            model = conf.ollama.model
+            model = "custom-" + conf.ollama.model
             available_models = [x.model for x in ollamac.list()["models"]]
             if model not in available_models:
                 logger.info(
                     f"Model {model} is not available. Available models: {available_models}."
                 )
-                if model.startswith("custom"):
-                    # this is a custom model, we have to create it manually
-                    logger.info(f"Creating custom model {model}...")
-                    modelfile_path = Path(conf.ollama.modelfile_dir) / model
-                    if not modelfile_path.exists() or not modelfile_path.is_file():
-                        raise FileNotFoundError(
-                            f"Custom model {model} not found at {modelfile_path}."
-                        )
-                    ollamac.create(model, from_=modelfile_path)
-                    logger.info(f"Model {model} has been created successfully.")
-                else:
-                    # this is an official model from the Ollama model repo
-                    logger.info("Pulling model from Ollama model repo...")
-                    ollamac.pull(model)
-                    logger.info(f"Model {model} has been pulled successfully.")
+                logger.info(f"Creating custom model {model}...")
+                ollamac.create(
+                    model,
+                    from_=conf.ollama.model,
+                    parameters={
+                        "num_ctx": conf.ollama.context_size,
+                    },
+                )
+                logger.info(f"Model {model} has been created successfully.")
             available_models = [x.model for x in ollamac.list()["models"]]
             assert (
                 model in available_models

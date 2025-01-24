@@ -124,7 +124,7 @@ ollama:
   host: ${oc.env:OLLAMA_HOST, 127.0.0.1}
   port: ${oc.env:OLLAMA_PORT, 13133}
   model: ${oc.env:OLLAMA_MODEL, gemma2:9b-instruct-fp16}
-  modelfile_dir: /ollama_modelfiles
+  context_size: 8192
 
 llm_assistant:
   sentence_annotation:
