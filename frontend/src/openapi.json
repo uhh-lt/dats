@@ -6422,42 +6422,6 @@
         "required": ["project_id", "code_id", "reject_cide_id", "top_k"],
         "title": "AnnoscalingSuggest"
       },
-      "AnnotatedImageResult": {
-        "properties": {
-          "total_results": {
-            "type": "integer",
-            "title": "Total Results",
-            "description": "The total number of bbox_annotation_ids. Used for pagination."
-          },
-          "data": {
-            "items": { "$ref": "#/components/schemas/BBoxAnnotationTableRow" },
-            "type": "array",
-            "title": "Data",
-            "description": "The Annotations."
-          }
-        },
-        "type": "object",
-        "required": ["total_results", "data"],
-        "title": "AnnotatedImageResult"
-      },
-      "AnnotatedSegmentResult": {
-        "properties": {
-          "total_results": {
-            "type": "integer",
-            "title": "Total Results",
-            "description": "The total number of span_annotation_ids. Used for pagination."
-          },
-          "data": {
-            "items": { "$ref": "#/components/schemas/AnnotationTableRow" },
-            "type": "array",
-            "title": "Data",
-            "description": "The Annotations."
-          }
-        },
-        "type": "object",
-        "required": ["total_results", "data"],
-        "title": "AnnotatedSegmentResult"
-      },
       "AnnotationLLMJobResult": {
         "properties": {
           "llm_job_type": { "type": "string", "const": "ANNOTATION", "title": "Llm Job Type" },
@@ -8964,6 +8928,15 @@
           "SD_SPAN_ANNOTATIONS"
         ],
         "title": "SdocColumns"
+      },
+      "SdocSentencePair": {
+        "properties": {
+          "sdoc_id": { "type": "integer", "title": "Sdoc Id" },
+          "sentence": { "type": "integer", "title": "Sentence" }
+        },
+        "type": "object",
+        "required": ["sdoc_id", "sentence"],
+        "title": "SdocSentencePair"
       },
       "SentAnnoColumns": {
         "type": "string",
