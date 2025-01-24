@@ -8,7 +8,12 @@ from app.core.data.crud.code import crud_code
 from app.core.data.crud.sentence_annotation import crud_sentence_anno
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
-from app.core.data.crud.user import SYSTEM_USER_ID
+from app.core.data.crud.user import (
+    ASSISTANT_FEWSHOT_ID,
+    ASSISTANT_TRAINED_ID,
+    ASSISTANT_ZEROSHOT_ID,
+    SYSTEM_USER_ID,
+)
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.llm_job import (
@@ -79,6 +84,13 @@ from app.util.singleton_meta import SingletonMeta
 from config import conf
 
 lac = conf.llm_assistant
+
+SYSTEM_USER_IDS = [
+    SYSTEM_USER_ID,
+    ASSISTANT_ZEROSHOT_ID,
+    ASSISTANT_FEWSHOT_ID,
+    ASSISTANT_TRAINED_ID,
+]
 
 
 class LLMJobPreparationError(Exception):
@@ -315,7 +327,7 @@ class LLMService(metaclass=SingletonMeta):
                             db=db, code_ids=selected_code_ids
                         )
                         if sa.user_id
-                        != SYSTEM_USER_ID  # Filter out annotations of the system user
+                        not in SYSTEM_USER_IDS  # Filter out annotations of the system users
                     ]
 
                 # 2. Find the code names
@@ -797,7 +809,7 @@ class LLMService(metaclass=SingletonMeta):
                     SpanAnnotationReadResolved(
                         id=annotation_id,
                         sdoc_id=sdoc_data.id,
-                        user_id=SYSTEM_USER_ID,
+                        user_id=ASSISTANT_ZEROSHOT_ID,
                         begin=start,
                         end=end,
                         begin_token=begin_token,
@@ -842,6 +854,7 @@ class LLMService(metaclass=SingletonMeta):
         assert isinstance(approach_parameters, ZeroShotParams) or isinstance(
             approach_parameters, FewShotParams
         ), "Wrong approach parameters!"
+        is_fewshot = isinstance(approach_parameters, FewShotParams)
 
         msg = f"Started LLMJob - Sentence Annotation (OLLAMA), num docs: {len(task_parameters.sdoc_ids)}"
         self._update_llm_job_description(
@@ -853,7 +866,7 @@ class LLMService(metaclass=SingletonMeta):
         prompt_builder = SentenceAnnotationPromptBuilder(
             db=db,
             project_id=project_id,
-            is_fewshot=isinstance(approach_parameters, FewShotParams),
+            is_fewshot=is_fewshot,
         )
         project_codes = prompt_builder.codeids2code_dict
 
@@ -868,7 +881,7 @@ class LLMService(metaclass=SingletonMeta):
         # Delete all existing sentence annotations for the sdocs
         previous_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
             db=db,
-            user_id=SYSTEM_USER_ID,
+            user_id=ASSISTANT_FEWSHOT_ID if is_fewshot else ASSISTANT_ZEROSHOT_ID,
             sdoc_ids=task_parameters.sdoc_ids,
             code_ids=task_parameters.code_ids,
         )
@@ -1006,7 +1019,7 @@ class LLMService(metaclass=SingletonMeta):
             # create the suggested annotations
             created_annos = crud_sentence_anno.create_bulk(
                 db=db,
-                user_id=SYSTEM_USER_ID,
+                user_id=ASSISTANT_FEWSHOT_ID if is_fewshot else ASSISTANT_ZEROSHOT_ID,
                 create_dtos=suggested_annotations,
             )
 
@@ -1070,7 +1083,7 @@ class LLMService(metaclass=SingletonMeta):
                     db=db, code_ids=task_parameters.code_ids
                 )
                 if sa.user_id
-                != SYSTEM_USER_ID  # Filter out annotations of the system user
+                not in SYSTEM_USER_IDS  # Filter out annotations of the system users
             ]
             sdoc_id2sentence_annotations: Dict[int, List[SentenceAnnotationORM]] = {}
             for sa in sentence_annotations:
@@ -1253,7 +1266,7 @@ class LLMService(metaclass=SingletonMeta):
         with self.sqls.db_session() as db:
             previous_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
                 db=db,
-                user_id=SYSTEM_USER_ID,
+                user_id=ASSISTANT_TRAINED_ID,
                 sdoc_ids=task_parameters.sdoc_ids,
                 code_ids=task_parameters.code_ids,
             )
@@ -1315,7 +1328,7 @@ class LLMService(metaclass=SingletonMeta):
             # create the suggested annotations
             created_annos = crud_sentence_anno.create_bulk(
                 db=db,
-                user_id=SYSTEM_USER_ID,
+                user_id=ASSISTANT_TRAINED_ID,
                 create_dtos=suggested_annotations,
             )
 
