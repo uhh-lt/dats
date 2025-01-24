@@ -22,6 +22,12 @@ demo_user:
   email: demo@example.org
   password: demo
 
+assistant_user:
+  first_name: Assistant
+  last_name: User
+  email: assistant@dats.org
+  password: ${oc.env:SYSTEM_USER_PASSWORD, "12SYSTEM34"}
+
 ray:
   protocol: ${oc.env:RAY_PROTOCOL, http}
   host: ${oc.env:RAY_HOST, ray}

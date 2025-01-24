@@ -8,6 +8,10 @@ from app.core.data.orm.user import UserORM
 from app.core.security import generate_password_hash, verify_password
 
 SYSTEM_USER_ID: int = 1
+DEMO_USER_ID: int = 2
+ASSISTANT_ZEROSHOT_ID: int = 3
+ASSISTANT_FEWSHOT_ID: int = 4
+ASSISTANT_TRAINED_ID: int = 5
 
 
 class CRUDUser(CRUDBase[UserORM, UserCreate, UserUpdate]):

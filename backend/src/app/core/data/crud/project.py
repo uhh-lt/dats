@@ -4,7 +4,13 @@ from sqlalchemy.orm import Session
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.project_metadata import crud_project_meta
-from app.core.data.crud.user import SYSTEM_USER_ID, crud_user
+from app.core.data.crud.user import (
+    ASSISTANT_FEWSHOT_ID,
+    ASSISTANT_TRAINED_ID,
+    ASSISTANT_ZEROSHOT_ID,
+    SYSTEM_USER_ID,
+    crud_user,
+)
 from app.core.data.dto.project import (
     ProjectCreate,
     ProjectUpdate,
@@ -29,8 +35,11 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         db.refresh(db_obj)
         project_id = db_obj.id
 
-        # 2) associate the system user
+        # 2) associate the system users
         self.associate_user(db=db, proj_id=project_id, user_id=SYSTEM_USER_ID)
+        self.associate_user(db=db, proj_id=project_id, user_id=ASSISTANT_ZEROSHOT_ID)
+        self.associate_user(db=db, proj_id=project_id, user_id=ASSISTANT_FEWSHOT_ID)
+        self.associate_user(db=db, proj_id=project_id, user_id=ASSISTANT_TRAINED_ID)
 
         # 3) associate the user that created the project
         if creating_user.id != SYSTEM_USER_ID:

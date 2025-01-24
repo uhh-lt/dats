@@ -85,6 +85,7 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
         if not startup_in_progress:
             __create_system_user__()
             __create_demo_user__()
+            __create_assistant_users__()
 
     except Exception as e:
         msg = f"Error while booting the Discourse Analysis Tool Suite Backend! Exception: {str(e)}"
@@ -189,3 +190,22 @@ def __create_demo_user__() -> None:
                 password=str(conf.demo_user.password),
             )
             crud_user.create(db=db_session, create_dto=create_dto)
+
+
+def __create_assistant_users__() -> None:
+    from app.core.data.crud.user import crud_user
+    from app.core.data.dto.user import UserCreate
+    from app.core.db.sql_service import SQLService
+    from config import conf
+
+    with SQLService().db_session() as db_session:
+        for user_id, last_name in [(3, "ZeroShot"), (4, "FewShot"), (5, "Trained")]:
+            if not crud_user.exists(db=db_session, id=user_id):
+                create_dto = UserCreate(
+                    email=f"assistant-{last_name.lower()}"
+                    + str(conf.assistant_user.email.split("@")[1]),
+                    first_name=str(conf.assistant_user.first_name),
+                    last_name=last_name,
+                    password=str(conf.assistant_user.password),
+                )
+                crud_user.create(db=db_session, create_dto=create_dto)
