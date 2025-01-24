@@ -25,6 +25,7 @@ class OllamaService(metaclass=SingletonMeta):
             # ensure that the configured model is available
             model = "custom-" + conf.ollama.model
             available_models = [x.model for x in ollamac.list()["models"]]
+            logger.info(f"Available models: {available_models}")
             if model not in available_models:
                 logger.info(
                     f"Model {model} is not available. Available models: {available_models}."
