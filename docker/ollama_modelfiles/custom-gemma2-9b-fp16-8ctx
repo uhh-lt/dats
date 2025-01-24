@@ -1,0 +1,2 @@
+FROM gemma2:9b-instruct-fp16
+PARAMETER num_ctx 8192

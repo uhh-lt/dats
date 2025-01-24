@@ -11,6 +11,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./ollama_cache:/root/.ollama
+      - ./ollama_modelfiles:/ollama_modelfiles
     deploy:
       resources:
         reservations:
