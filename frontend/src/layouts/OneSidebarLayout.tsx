@@ -18,8 +18,13 @@ function OneSidebarLayout({ leftSidebar, content }: { leftSidebar: ReactNode; co
       </Grid2>
       <Grid2
         size={{ md: 9 }}
-        className="h100"
-        sx={{ backgroundColor: (theme) => theme.palette.grey[200], overflow: "auto" }}
+        className="myFlexContainer h100"
+        sx={{
+          bgcolor: (theme) => theme.palette.grey[200],
+          overflowY: "auto",
+          overflowX: "hidden",
+          position: "relative",
+        }}
       >
         {content}
       </Grid2>

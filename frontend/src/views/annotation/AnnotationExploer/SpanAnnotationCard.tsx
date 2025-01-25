@@ -6,7 +6,7 @@ import CodeRenderer from "../../../components/Code/CodeRenderer.tsx";
 import UserName from "../../../components/User/UserName.tsx";
 import AnnotationCardActionsMenu from "./AnnotationCardActionMenu.tsx";
 import AnnotationCardMemo from "./AnnotationCardMemo.tsx";
-import { AnnotationCardProps } from "./AnnotationCardProps.ts";
+import { AnnotationCardProps } from "./types/AnnotationCardProps.ts";
 
 function SpanAnnotationCard({
   isSelected,

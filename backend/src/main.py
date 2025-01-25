@@ -52,6 +52,7 @@ from api.endpoints import (
     project,
     project_metadata,
     search,
+    sentence_annotation,
     source_document,
     source_document_metadata,
     span_annotation,
@@ -267,6 +268,7 @@ app.include_router(trainer.router)
 app.include_router(concept_over_time_analysis.router)
 app.include_router(timeline_analysis.router)
 app.include_router(llm.router)
+app.include_router(sentence_annotation.router)
 
 
 def main() -> None:

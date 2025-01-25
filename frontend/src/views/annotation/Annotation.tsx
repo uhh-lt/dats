@@ -1,57 +1,129 @@
-import BorderColorIcon from "@mui/icons-material/BorderColor";
-import ChromeReaderModeIcon from "@mui/icons-material/ChromeReaderMode";
-import DoNotDisturbIcon from "@mui/icons-material/DoNotDisturb";
-import FormatOverlineIcon from "@mui/icons-material/FormatOverline";
-import FormatStrikethroughIcon from "@mui/icons-material/FormatStrikethrough";
 import { TabContext, TabPanel } from "@mui/lab";
-import {
-  Box,
-  Card,
-  CardContent,
-  Container,
-  Portal,
-  Stack,
-  Tab,
-  Tabs,
-  ToggleButton,
-  ToggleButtonGroup,
-  Toolbar,
-  Tooltip,
-  Typography,
-} from "@mui/material";
-import { useContext, useState } from "react";
+import { Box, Card, CardContent, Container, Portal, Tab, Tabs, Typography } from "@mui/material";
+import React, { useContext, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
+import { SourceDocumentDataRead } from "../../api/openapi/models/SourceDocumentDataRead.ts";
 import CodeExplorer from "../../components/Code/CodeExplorer/CodeExplorer.tsx";
 import EditableTypography from "../../components/EditableTypography.tsx";
 import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import DocumentInformation from "../../components/SourceDocument/DocumentInformation/DocumentInformation.tsx";
+import OneSidebarLayout from "../../layouts/OneSidebarLayout.tsx";
 import { AppBarContext } from "../../layouts/TwoBarLayout.tsx";
 import TwoSidebarsLayout from "../../layouts/TwoSidebarsLayout.tsx";
-import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { useAppSelector } from "../../plugins/ReduxHooks.ts";
 import BBoxAnnotationExplorer from "./AnnotationExploer/BBoxAnnotationExplorer.tsx";
+import SentenceAnnotationExplorer from "./AnnotationExploer/SentenceAnnotationExplorer.tsx";
 import SpanAnnotationExplorer from "./AnnotationExploer/SpanAnnotationExplorer.tsx";
-import { AnnotatorSelector } from "./AnnotatorSelector.tsx";
+import AnnotationMode from "./AnnotationMode.ts";
 import AudioVideoViewer from "./DocumentViewer/AudioVideoViewer.tsx";
 import ImageViewer from "./DocumentViewer/ImageViewer.tsx";
 import TextViewer from "./DocumentViewer/TextViewer.tsx";
 import ImageAnnotator from "./ImageAnnotator/ImageAnnotator.tsx";
+import SentenceAnnotator from "./SentenceAnnotator/Annotator/SentenceAnnotator.tsx";
+import SentenceAnnotationComparison from "./SentenceAnnotator/Comparator/SentenceAnnotationComparison.tsx";
 import TextAnnotator from "./TextAnnotator/TextAnnotator.tsx";
-import { AnnoActions, TagStyle } from "./annoSlice.ts";
+import AnnotationToolbar from "./Toolbar/AnnotationToolbar.tsx";
+
+const annotatorComponent = (
+  sdocData: SourceDocumentDataRead,
+  boxRef: React.RefObject<HTMLDivElement>,
+): Record<DocType, Record<AnnotationMode, React.ReactElement>> => ({
+  [DocType.TEXT]: {
+    [AnnotationMode.Annotation]: <TextAnnotator sdocData={sdocData} />,
+    [AnnotationMode.SentenceAnnotation]: (
+      <SentenceAnnotator
+        sdocData={sdocData}
+        style={{ marginLeft: "-16px", marginBottom: "-24px", marginRight: "-16px" }}
+        virtualizerScrollElementRef={boxRef}
+      />
+    ),
+    [AnnotationMode.Reader]: <TextViewer sdocData={sdocData} />,
+  },
+  [DocType.IMAGE]: {
+    [AnnotationMode.Annotation]: <ImageAnnotator sdocData={sdocData} />,
+    [AnnotationMode.SentenceAnnotation]: <ImageAnnotator sdocData={sdocData} />,
+    [AnnotationMode.Reader]: <ImageViewer sdocData={sdocData} />,
+  },
+  [DocType.AUDIO]: {
+    [AnnotationMode.Annotation]: <div>Annotation is not (yet) supported for Audio Documents.</div>,
+    [AnnotationMode.SentenceAnnotation]: <div>Annotation is not (yet) supported for Audio Documents.</div>,
+    [AnnotationMode.Reader]: (
+      <AudioVideoViewer sdocData={sdocData} showEntities={true} width={"100%"} height={"64px"} />
+    ),
+  },
+  [DocType.VIDEO]: {
+    [AnnotationMode.Annotation]: <div>Annotation is not (yet) supported for Video Documents.</div>,
+    [AnnotationMode.SentenceAnnotation]: <div>Annotation is not (yet) supported for Video Documents.</div>,
+    [AnnotationMode.Reader]: <AudioVideoViewer sdocData={sdocData} showEntities={true} width={800} height={600} />,
+  },
+});
+
+const comparatorComponent = (
+  sdocData: SourceDocumentDataRead,
+  boxRef: React.RefObject<HTMLDivElement>,
+): Record<DocType, Record<AnnotationMode, React.ReactElement>> => ({
+  [DocType.TEXT]: {
+    [AnnotationMode.Annotation]: <div>Not supported</div>,
+    [AnnotationMode.SentenceAnnotation]: (
+      <SentenceAnnotationComparison
+        sdocData={sdocData}
+        style={{ marginLeft: "-16px", marginBottom: "-24px", marginRight: "-16px" }}
+        virtualizerScrollElementRef={boxRef}
+      />
+    ),
+    [AnnotationMode.Reader]: <div>Not supported</div>,
+  },
+  [DocType.IMAGE]: {
+    [AnnotationMode.Annotation]: <div>Not supported</div>,
+    [AnnotationMode.SentenceAnnotation]: <div>Not supported</div>,
+    [AnnotationMode.Reader]: <div>Not supported</div>,
+  },
+  [DocType.AUDIO]: {
+    [AnnotationMode.Annotation]: <div>Not supported</div>,
+    [AnnotationMode.SentenceAnnotation]: <div>Not supported</div>,
+    [AnnotationMode.Reader]: <div>Not supported</div>,
+  },
+  [DocType.VIDEO]: {
+    [AnnotationMode.Annotation]: <div>Not supported</div>,
+    [AnnotationMode.SentenceAnnotation]: <div>Not supported</div>,
+    [AnnotationMode.Reader]: <div>Not supported</div>,
+  },
+});
+
+const explorerComponent = (sdocId: number): Record<DocType, Record<AnnotationMode, React.ReactElement>> => ({
+  [DocType.TEXT]: {
+    [AnnotationMode.Annotation]: <SpanAnnotationExplorer sdocId={sdocId} />,
+    [AnnotationMode.SentenceAnnotation]: <SentenceAnnotationExplorer sdocId={sdocId} />,
+    [AnnotationMode.Reader]: <div>Not supported</div>,
+  },
+  [DocType.IMAGE]: {
+    [AnnotationMode.Annotation]: <BBoxAnnotationExplorer sdocId={sdocId} />,
+    [AnnotationMode.SentenceAnnotation]: <BBoxAnnotationExplorer sdocId={sdocId} />,
+    [AnnotationMode.Reader]: <div>Not supported</div>,
+  },
+  [DocType.AUDIO]: {
+    [AnnotationMode.Annotation]: <div>Not supported</div>,
+    [AnnotationMode.SentenceAnnotation]: <div>Not supported</div>,
+    [AnnotationMode.Reader]: <div>Not supported</div>,
+  },
+  [DocType.VIDEO]: {
+    [AnnotationMode.Annotation]: <div>Not supported</div>,
+    [AnnotationMode.SentenceAnnotation]: <div>Not supported</div>,
+    [AnnotationMode.Reader]: <div>Not supported</div>,
+  },
+});
 
 function Annotation() {
   // global client state (URL)
   const params = useParams() as { projectId: string; sdocId: string };
   const sdocId = parseInt(params.sdocId);
 
-  // global client state (context)
-  const appBarContainerRef = useContext(AppBarContext);
-
   // global client state (redux)
-  const isAnnotationMode = useAppSelector((state) => state.annotations.isAnnotationMode);
-  const tagStyle = useAppSelector((state) => state.annotations.tagStyle);
-  const dispatch = useAppDispatch();
+  // components are selected based on these states
+  const annotationMode = useAppSelector((state) => state.annotations.annotationMode);
+  const isCompareMode = useAppSelector((state) => state.annotations.isCompareMode);
 
   // global server state (react query)
   const sdoc = SdocHooks.useGetDocument(sdocId);
@@ -84,12 +156,108 @@ function Annotation() {
     }
   };
 
-  // tabs
+  // explorer
   const [tab, setTab] = useState("code");
   const handleTabChange = (_event: React.SyntheticEvent, newValue: string): void => {
     setTab(newValue);
   };
+  const explorer = (
+    <Box className="h100 myFlexContainer">
+      <TabContext value={tab}>
+        <Box sx={{ borderBottom: 1, borderColor: "divider" }} className="myFlexFitContentContainer">
+          <Tabs value={tab} onChange={handleTabChange} variant="scrollable">
+            <Tab label="Code Explorer" value="code" />
+            <Tab label="Annotation Explorer" value="Annotation" />
+          </Tabs>
+        </Box>
+        <Box className="myFlexFillAllContainer">
+          <TabPanel value="code" style={{ padding: 0 }} className="h100">
+            <CodeExplorer className="h100" />
+          </TabPanel>
+          {sdoc.isSuccess && (
+            <TabPanel value="Annotation" style={{ padding: 0 }} className="h100">
+              {explorerComponent(sdoc.data.id)[sdoc.data.doctype][annotationMode]}
+            </TabPanel>
+          )}
+        </Box>
+      </TabContext>
+    </Box>
+  );
 
+  // for virtualization in annotator components
+  const boxRef = useRef<HTMLDivElement | null>(null);
+
+  // annotator: the main content
+  const annotator = (
+    <Box className="myFlexFillAllContainer" ref={boxRef}>
+      <Container sx={{ py: 2 }} maxWidth="xl">
+        <Card raised>
+          <CardContent>
+            {sdocId ? (
+              <>
+                {sdoc.isSuccess && sdocData.isSuccess ? (
+                  <>
+                    <EditableTypography
+                      value={sdoc.data.name || sdoc.data.filename}
+                      onChange={handleUpdateName}
+                      variant="h4"
+                      whiteColor={false}
+                      stackProps={{
+                        width: "100%",
+                        flexGrow: 1,
+                        mb: 2,
+                      }}
+                    />
+                    {isCompareMode
+                      ? comparatorComponent(sdocData.data, boxRef)[sdoc.data.doctype][annotationMode]
+                      : annotatorComponent(sdocData.data, boxRef)[sdoc.data.doctype][annotationMode]}
+                  </>
+                ) : sdoc.isError ? (
+                  <div>Error: {sdoc.error.message}</div>
+                ) : (
+                  <div>Loading...</div>
+                )}
+              </>
+            ) : (
+              <div>Please double-click a document in Search to view it here :)</div>
+            )}
+          </CardContent>
+        </Card>
+      </Container>
+    </Box>
+  );
+
+  // layout: use one sidebar layout in compare mode
+  let layout: JSX.Element = <></>;
+  if (isCompareMode) {
+    layout = (
+      <OneSidebarLayout
+        leftSidebar={explorer}
+        content={
+          <>
+            <AnnotationToolbar sdoc={sdoc.data} />
+            {annotator}
+          </>
+        }
+      />
+    );
+  } else {
+    layout = (
+      <TwoSidebarsLayout
+        leftSidebar={explorer}
+        content={
+          <>
+            <AnnotationToolbar sdoc={sdoc.data} />
+            {annotator}
+          </>
+        }
+        rightSidebar={<DocumentInformation sdocId={sdocId} />}
+      />
+    );
+  }
+
+  // rendering
+  const appBarContainerRef = useContext(AppBarContext);
   return (
     <>
       <Portal container={appBarContainerRef?.current}>
@@ -97,169 +265,7 @@ function Annotation() {
           {sdoc.isSuccess ? `Annotator: ${sdoc.data.filename}` : "Annotator"}
         </Typography>
       </Portal>
-      <TwoSidebarsLayout
-        leftSidebar={
-          <Box className="h100 myFlexContainer">
-            <TabContext value={tab}>
-              <Box sx={{ borderBottom: 1, borderColor: "divider" }} className="myFlexFitContentContainer">
-                <Tabs value={tab} onChange={handleTabChange} variant="scrollable">
-                  <Tab label="Code Explorer" value="code" />
-                  <Tab label="Annotation Explorer" value="Annotation" />
-                </Tabs>
-              </Box>
-              <Box className="myFlexFillAllContainer">
-                <TabPanel value="code" style={{ padding: 0 }} className="h100">
-                  <CodeExplorer className="h100" />
-                </TabPanel>
-                {sdoc.isSuccess && (
-                  <TabPanel value="Annotation" style={{ padding: 0 }} className="h100">
-                    {sdoc.data.doctype === DocType.TEXT ? (
-                      <SpanAnnotationExplorer sdocId={sdoc.data.id} />
-                    ) : sdoc.data.doctype === DocType.IMAGE ? (
-                      <BBoxAnnotationExplorer sdocId={sdoc.data.id} />
-                    ) : (
-                      <>Not supported (yet)!</>
-                    )}
-                  </TabPanel>
-                )}
-              </Box>
-            </TabContext>
-          </Box>
-        }
-        content={
-          <>
-            <Toolbar
-              disableGutters
-              variant="dense"
-              sx={{
-                zIndex: (theme) => theme.zIndex.appBar + 1,
-                bgcolor: (theme) => theme.palette.background.paper,
-                borderBottom: "1px solid #e8eaed",
-                boxShadow: 4,
-                justifyContent: "center",
-                gap: 1,
-              }}
-            >
-              <ToggleButtonGroup
-                value={isAnnotationMode}
-                exclusive
-                onChange={() => dispatch(AnnoActions.onToggleAnnotationMode())}
-                size="small"
-                color="primary"
-              >
-                <Tooltip title="Annotation Mode" placement="bottom">
-                  <ToggleButton value={true} sx={{ fontSize: 12 }}>
-                    <BorderColorIcon />
-                  </ToggleButton>
-                </Tooltip>
-                <Tooltip title="Reader Mode" placement="bottom">
-                  <ToggleButton value={false} sx={{ fontSize: 12 }}>
-                    <ChromeReaderModeIcon />
-                  </ToggleButton>
-                </Tooltip>
-              </ToggleButtonGroup>
-              <AnnotatorSelector sdocId={sdocId} />
-              {sdoc.data?.doctype === DocType.TEXT && (
-                <ToggleButtonGroup
-                  value={tagStyle}
-                  exclusive
-                  onChange={(_, value) => dispatch(AnnoActions.onSetAnnotatorTagStyle(value))}
-                  size="small"
-                  color="primary"
-                >
-                  <Tooltip title="None" placement="bottom">
-                    <ToggleButton value={TagStyle.None} sx={{ fontSize: 12 }}>
-                      <DoNotDisturbIcon />
-                    </ToggleButton>
-                  </Tooltip>
-                  <Tooltip title="Inline" placement="bottom">
-                    <ToggleButton value={TagStyle.Inline} sx={{ fontSize: 12 }}>
-                      <FormatStrikethroughIcon />
-                    </ToggleButton>
-                  </Tooltip>
-                  <Tooltip title="Above" placement="bottom">
-                    <ToggleButton value={TagStyle.Above} sx={{ fontSize: 12 }}>
-                      <FormatOverlineIcon />
-                    </ToggleButton>
-                  </Tooltip>
-                </ToggleButtonGroup>
-              )}
-            </Toolbar>
-            <Box className="myFlexFillAllContainer">
-              <Container sx={{ py: 2 }}>
-                <Card raised>
-                  <CardContent>
-                    {sdocId ? (
-                      <>
-                        {sdoc.isSuccess && sdocData.isSuccess ? (
-                          <Stack spacing={2}>
-                            <div style={{ display: "flex", alignItems: "center" }}>
-                              <EditableTypography
-                                value={sdoc.data.name || sdoc.data.filename}
-                                onChange={handleUpdateName}
-                                variant="h4"
-                                whiteColor={false}
-                                stackProps={{
-                                  width: "50%",
-                                  flexGrow: 1,
-                                }}
-                              />
-                            </div>
-                            {sdoc.data.doctype === DocType.IMAGE ? (
-                              isAnnotationMode ? (
-                                <ImageAnnotator sdocData={sdocData.data} />
-                              ) : (
-                                <ImageViewer sdocData={sdocData.data} />
-                              )
-                            ) : sdoc.data.doctype === DocType.TEXT ? (
-                              isAnnotationMode ? (
-                                <TextAnnotator sdocData={sdocData.data} />
-                              ) : (
-                                <TextViewer sdocData={sdocData.data} />
-                              )
-                            ) : sdoc.data.doctype === DocType.AUDIO ? (
-                              isAnnotationMode ? (
-                                <div>Annotation is not (yet) supported for Audio Documents.</div>
-                              ) : (
-                                <AudioVideoViewer
-                                  sdocData={sdocData.data}
-                                  showEntities={true}
-                                  width={"100%"}
-                                  height={"64px"}
-                                />
-                              )
-                            ) : sdoc.data.doctype === DocType.VIDEO ? (
-                              isAnnotationMode ? (
-                                <div>Annotation is not (yet) supported for Video Documents.</div>
-                              ) : (
-                                <AudioVideoViewer
-                                  sdocData={sdocData.data}
-                                  showEntities={true}
-                                  width={800}
-                                  height={600}
-                                />
-                              )
-                            ) : (
-                              <div>ERROR! This DocType is not (yet) supported!</div>
-                            )}
-                          </Stack>
-                        ) : sdoc.isError ? (
-                          <div>Error: {sdoc.error.message}</div>
-                        ) : (
-                          <div>Loading...</div>
-                        )}
-                      </>
-                    ) : (
-                      <div>Please select a document from the Document Explorer :)</div>
-                    )}
-                  </CardContent>
-                </Card>
-              </Container>
-            </Box>
-          </>
-        }
-        rightSidebar={<DocumentInformation sdocId={sdocId} />}
-      />
+      {layout}
     </>
   );
 }

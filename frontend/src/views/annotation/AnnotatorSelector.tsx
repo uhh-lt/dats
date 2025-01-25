@@ -1,4 +1,4 @@
-import { Checkbox, FormControl, InputLabel, ListItemText, MenuItem, Select, SelectChangeEvent } from "@mui/material";
+import { FormControl, InputLabel, ListItemText, MenuItem, Select, SelectChangeEvent } from "@mui/material";
 import * as React from "react";
 import { useEffect } from "react";
 import SdocHooks from "../../api/SdocHooks.ts";
@@ -22,24 +22,25 @@ export function AnnotatorSelector({ sdocId }: AnnotatorSelector) {
 
   // global client state (redux)
   const dispatch = useAppDispatch();
-  const visibleUserIds = useAppSelector((state) => state.annotations.visibleUserIds);
+  const visibleUserId = useAppSelector((state) => state.annotations.visibleUserId);
+  const isCompareMode = useAppSelector((state) => state.annotations.isCompareMode);
 
   // global server state (react query)
   const annotatorUserIds = SdocHooks.useGetAnnotators(sdocId);
   const userIds = Array.from(new Set([...(user ? [user.id] : []), ...(annotatorUserIds.data || [])]));
 
   // handlers (for ui)
-  const handleChange = (event: SelectChangeEvent<number[]>) => {
-    dispatch(AnnoActions.setVisibleUserIds(event.target.value as number[]));
+  const handleChange = (event: SelectChangeEvent<number>) => {
+    dispatch(AnnoActions.setVisibleUserId(event.target.value as number));
   };
 
   // init
   useEffect(() => {
-    if (user && annotatorUserIds.data) {
+    if (user && annotatorUserIds.data && !isCompareMode) {
       // always add the current user to the visible users
-      dispatch(AnnoActions.addVisibleUserIds([user.id]));
+      dispatch(AnnoActions.setVisibleUserId(user.id));
     }
-  }, [dispatch, user, annotatorUserIds.data]);
+  }, [dispatch, user, annotatorUserIds.data, isCompareMode]);
 
   // render
   return (
@@ -47,24 +48,19 @@ export function AnnotatorSelector({ sdocId }: AnnotatorSelector) {
       <InputLabel id="annotation-user-select-label">Annotations</InputLabel>
       <Select
         labelId="annotation-user-select-label"
-        multiple
         fullWidth
         sx={{ minWidth: 150 }}
-        value={visibleUserIds || []}
+        value={visibleUserId}
         onChange={handleChange}
         disabled={!annotatorUserIds.isSuccess}
-        renderValue={(selected) =>
-          selected.map((userId, index) => (
-            <React.Fragment key={userId}>
-              <UserName userId={userId} />
-              {index < selected.length - 1 && ", "}
-            </React.Fragment>
-          ))
-        }
+        renderValue={(selected) => (
+          <React.Fragment key={selected}>
+            <UserName userId={selected} />
+          </React.Fragment>
+        )}
       >
         {userIds.map((userId) => (
           <MenuItem key={userId} value={userId}>
-            <Checkbox checked={visibleUserIds?.indexOf(userId) !== -1} />
             <ListItemText>
               <UserName userId={userId} />
             </ListItemText>

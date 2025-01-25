@@ -6,7 +6,7 @@ from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 def create_pptd_from_transcription(cargo: PipelineCargo) -> PipelineCargo:
     ppad: PreProAudioDoc = cargo.data["ppad"]
 
-    if not ppad.transcript_filepath.exists():
+    if ppad.transcript_filepath is None or not ppad.transcript_filepath.exists():
         raise FileNotFoundError(
             f"The transcription file {ppad.transcript_filepath} "
             f"for {cargo.ppj_payload.filename} does not exist!"

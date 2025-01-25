@@ -8,7 +8,7 @@ from api.dependencies import (
     get_db_session,
 )
 from api.util import get_object_memo_for_user, get_object_memos
-from app.core.analysis.duplicate_finder_service import DuplicateFinderService
+from app.core.analysis.duplicate_finder.duplicate_finder import find_duplicates
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import NoSuchElementError
@@ -141,7 +141,7 @@ def upload_project_sdoc(
     uploaded_files: List[UploadFile] = File(
         ...,
         description=(
-            "File(s) that get uploaded and " "represented by the SourceDocument(s)"
+            "File(s) that get uploaded and represented by the SourceDocument(s)"
         ),
     ),
     authz_user: AuthzUser = Depends(),
@@ -432,6 +432,4 @@ def find_duplicate_text_sdocs(
     authz_user: AuthzUser = Depends(),
 ) -> List[List[int]]:
     authz_user.assert_in_project(proj_id)
-    return DuplicateFinderService().find_duplicate_text_sdocs(
-        project_id=proj_id, max_different_words=max_different_words
-    )
+    return find_duplicates(project_id=proj_id, max_different_words=max_different_words)

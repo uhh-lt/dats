@@ -11,9 +11,9 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useEffect, useMemo, useRef, useState, type UIEvent } from "react";
-import { AnnotatedImageResult } from "../../../api/openapi/models/AnnotatedImageResult.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { BBoxAnnotationTableRow } from "../../../api/openapi/models/BBoxAnnotationTableRow.ts";
+import { BBoxAnnotationRow } from "../../../api/openapi/models/BBoxAnnotationRow.ts";
+import { BBoxAnnotationSearchResult } from "../../../api/openapi/models/BBoxAnnotationSearchResult.ts";
 import { BBoxColumns } from "../../../api/openapi/models/BBoxColumns.ts";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
@@ -31,7 +31,7 @@ import BBoxToolbar, { BBoxToolbarProps } from "./BBoxToolbar.tsx";
 import { useInitBBoxFilterSlice } from "./useInitBBoxFilterSlice.ts";
 
 const fetchSize = 20;
-const flatMapData = (page: AnnotatedImageResult) => page.data;
+const flatMapData = (page: BBoxAnnotationSearchResult) => page.data;
 
 export interface BBoxAnnotationTableProps {
   title?: string;
@@ -39,16 +39,16 @@ export interface BBoxAnnotationTableProps {
   filterName: string;
   // selection
   rowSelectionModel: MRT_RowSelectionState;
-  onRowSelectionChange: MRT_TableOptions<BBoxAnnotationTableRow>["onRowSelectionChange"];
+  onRowSelectionChange: MRT_TableOptions<BBoxAnnotationRow>["onRowSelectionChange"];
   // sorting
   sortingModel: MRT_SortingState;
-  onSortingChange: MRT_TableOptions<BBoxAnnotationTableRow>["onSortingChange"];
+  onSortingChange: MRT_TableOptions<BBoxAnnotationRow>["onSortingChange"];
   // column visibility
   columnVisibilityModel: MRT_VisibilityState;
-  onColumnVisibilityChange: MRT_TableOptions<BBoxAnnotationTableRow>["onColumnVisibilityChange"];
+  onColumnVisibilityChange: MRT_TableOptions<BBoxAnnotationRow>["onColumnVisibilityChange"];
   // components
   cardProps?: CardProps;
-  positionToolbarAlertBanner?: MRT_TableOptions<BBoxAnnotationTableRow>["positionToolbarAlertBanner"];
+  positionToolbarAlertBanner?: MRT_TableOptions<BBoxAnnotationRow>["positionToolbarAlertBanner"];
   renderToolbarInternalActions?: (props: BBoxToolbarProps) => React.ReactNode;
   renderTopToolbarCustomActions?: (props: BBoxToolbarProps) => React.ReactNode;
   renderBottomToolbarCustomActions?: (props: BBoxToolbarProps) => React.ReactNode;
@@ -84,7 +84,7 @@ function BBoxAnnotationTable({
 
   // table columns
   const tableInfo = useInitBBoxFilterSlice({ projectId });
-  const columns: MRT_ColumnDef<BBoxAnnotationTableRow>[] = useMemo(() => {
+  const columns: MRT_ColumnDef<BBoxAnnotationRow>[] = useMemo(() => {
     if (!tableInfo || !user) return [];
 
     const result = tableInfo.map((column) => {
@@ -99,17 +99,17 @@ function BBoxAnnotationTable({
           return {
             ...colDef,
             accessorFn: (row) => row.sdoc.filename,
-          } as MRT_ColumnDef<BBoxAnnotationTableRow>;
+          } as MRT_ColumnDef<BBoxAnnotationRow>;
         case BBoxColumns.BB_DOCUMENT_DOCUMENT_TAG_ID_LIST:
           return {
             ...colDef,
             Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.sdoc.id} tags={row.original.tags} />,
-          } as MRT_ColumnDef<BBoxAnnotationTableRow>;
+          } as MRT_ColumnDef<BBoxAnnotationRow>;
         case BBoxColumns.BB_CODE_ID:
           return {
             ...colDef,
             Cell: ({ row }) => <CodeRenderer code={row.original.code} />,
-          } as MRT_ColumnDef<BBoxAnnotationTableRow>;
+          } as MRT_ColumnDef<BBoxAnnotationRow>;
         case BBoxColumns.BB_MEMO_CONTENT:
           return {
             ...colDef,
@@ -123,7 +123,7 @@ function BBoxAnnotationTable({
                   showIcon={false}
                 />
               ) : null,
-          } as MRT_ColumnDef<BBoxAnnotationTableRow>;
+          } as MRT_ColumnDef<BBoxAnnotationRow>;
         default:
           if (!isNaN(parseInt(column.column))) {
             return {
@@ -131,12 +131,12 @@ function BBoxAnnotationTable({
               Cell: ({ row }) => (
                 <SdocMetadataRenderer sdocId={row.original.sdoc.id} projectMetadataId={parseInt(column.column)} />
               ),
-            } as MRT_ColumnDef<BBoxAnnotationTableRow>;
+            } as MRT_ColumnDef<BBoxAnnotationRow>;
           } else {
             return {
               ...colDef,
               Cell: () => <i>Cannot render column {column.column}</i>,
-            } as MRT_ColumnDef<BBoxAnnotationTableRow>;
+            } as MRT_ColumnDef<BBoxAnnotationRow>;
           }
       }
     });
@@ -161,24 +161,22 @@ function BBoxAnnotationTable({
           }}
         />
       ),
-    } as MRT_ColumnDef<BBoxAnnotationTableRow>;
+    } as MRT_ColumnDef<BBoxAnnotationRow>;
 
     return [previewCell, ...result];
   }, [tableInfo, user]);
 
   // table data
-  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<AnnotatedImageResult>({
+  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<BBoxAnnotationSearchResult>({
     queryKey: [
       "bbox-table-data",
       projectId,
-      selectedUserId,
       filter, //refetch when columnFilters changes
       sortingModel, //refetch when sorting changes
     ],
     queryFn: ({ pageParam }) =>
-      AnalysisService.annotatedImages({
+      AnalysisService.bboxAnnotationSearch({
         projectId: projectId!,
-        userId: selectedUserId,
         requestBody: {
           filter: filter as MyFilter<BBoxColumns>,
           sorts: sortingModel.map((sort) => ({
@@ -217,7 +215,7 @@ function BBoxAnnotationTable({
   }, [projectId, selectedUserId, sortingModel]);
 
   // table
-  const table = useMaterialReactTable<BBoxAnnotationTableRow>({
+  const table = useMaterialReactTable<BBoxAnnotationRow>({
     data: flatData,
     columns: columns,
     getRowId: (row) => `${row.id}`,

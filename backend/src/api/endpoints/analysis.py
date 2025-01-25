@@ -4,7 +4,14 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
-from app.core.analysis.analysis_service import AnalysisService
+from app.core.analysis.code_frequency_analysis.code_frequency import (
+    find_code_frequencies,
+    find_code_occurrences,
+)
+from app.core.analysis.document_sampler.document_sampler import document_sampler_by_tags
+from app.core.analysis.statistics.count_metadata import (
+    compute_num_sdocs_with_date_metadata,
+)
 from app.core.analysis.word_frequency_analysis.word_frequency import (
     word_frequency,
     word_frequency_export,
@@ -16,27 +23,32 @@ from app.core.analysis.word_frequency_analysis.word_frequency_columns import (
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.doc_type import DocType
 from app.core.data.dto.analysis import (
-    AnnotatedImageResult,
-    AnnotatedSegmentResult,
-    AnnotationOccurrence,
+    BBoxAnnotationSearchResult,
     CodeFrequency,
     CodeOccurrence,
     SampledSdocsResults,
+    SentenceAnnotationSearchResult,
+    SpanAnnotationSearchResult,
     WordFrequencyResult,
 )
-from app.core.search.bbox_search.bbox_search import (
-    find_annotated_images,
-    find_annotated_images_info,
+from app.core.search.bbox_anno_search.bbox_anno_search import (
+    find_bbox_annotations,
+    find_bbox_annotations_info,
 )
-from app.core.search.bbox_search.bbox_search_columns import BBoxColumns
+from app.core.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
 from app.core.search.column_info import ColumnInfo
 from app.core.search.filtering import Filter
-from app.core.search.sorting import Sort
-from app.core.search.span_search.span_search import (
-    find_annotated_segments,
-    find_annotated_segments_info,
+from app.core.search.sent_anno_search.sent_anno_search import (
+    find_sentence_annotations,
+    find_sentence_annotations_info,
 )
-from app.core.search.span_search.span_search_columns import (
+from app.core.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
+from app.core.search.sorting import Sort
+from app.core.search.span_anno_search.span_anno_search import (
+    find_span_annotations,
+    find_span_annotations_info,
+)
+from app.core.search.span_anno_search.span_anno_search_columns import (
     SpanColumns,
 )
 
@@ -60,7 +72,7 @@ def code_frequencies(
 ) -> List[CodeFrequency]:
     authz_user.assert_in_project(project_id)
 
-    return AnalysisService().compute_code_frequency(
+    return find_code_frequencies(
         project_id=project_id, code_ids=code_ids, user_ids=user_ids, doctypes=doctypes
     )
 
@@ -79,66 +91,45 @@ def code_occurrences(
 ) -> List[CodeOccurrence]:
     authz_user.assert_in_project(project_id)
 
-    return AnalysisService().find_code_occurrences(
+    return find_code_occurrences(
         project_id=project_id, user_ids=user_ids, code_id=code_id
     )
 
 
 @router.post(
-    "/annotation_occurrences",
-    response_model=List[AnnotationOccurrence],
-    summary="Returns AnnotationOccurrences.",
-)
-def annotation_occurrences(
-    *,
-    project_id: int,
-    user_ids: List[int],
-    code_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> List[AnnotationOccurrence]:
-    authz_user.assert_in_project(project_id)
-
-    return AnalysisService().find_annotation_occurrences(
-        project_id=project_id, user_ids=user_ids, code_id=code_id
-    )
-
-
-@router.post(
-    "/annotated_segments_info",
+    "/span_annotation_search_info",
     response_model=List[ColumnInfo[SpanColumns]],
-    summary="Returns AnnotationSegments Info.",
+    summary="Returns SpanAnnotationSearch Info.",
 )
-def annotated_segments_info(
+def span_annotation_search_info(
     *,
     project_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> List[ColumnInfo[SpanColumns]]:
     authz_user.assert_in_project(project_id)
-    return find_annotated_segments_info(
+    return find_span_annotations_info(
         project_id=project_id,
     )
 
 
 @router.post(
-    "/annotated_segments",
-    response_model=AnnotatedSegmentResult,
-    summary="Returns AnnotationSegments.",
+    "/span_annotation_search",
+    response_model=SpanAnnotationSearchResult,
+    summary="Returns SpanAnnotationSearch.",
 )
-def annotated_segments(
+def span_annotation_search(
     *,
     project_id: int,
-    user_id: int,
     filter: Filter[SpanColumns],
     page: Optional[int] = None,
     page_size: Optional[int] = None,
     sorts: List[Sort[SpanColumns]],
     authz_user: AuthzUser = Depends(),
-) -> AnnotatedSegmentResult:
+) -> SpanAnnotationSearchResult:
     authz_user.assert_in_project(project_id)
 
-    return find_annotated_segments(
+    return find_span_annotations(
         project_id=project_id,
-        user_id=user_id,
         filter=filter,
         page=page,
         page_size=page_size,
@@ -147,41 +138,80 @@ def annotated_segments(
 
 
 @router.post(
-    "/annotated_images_info",
-    response_model=List[ColumnInfo[BBoxColumns]],
-    summary="Returns AnnotationSegments Info.",
+    "/sentence_annotation_search_info",
+    response_model=List[ColumnInfo[SentAnnoColumns]],
+    summary="Returns SentenceAnnotationSearch Info.",
 )
-def annotated_images_info(
+def sentence_annotation_search_info(
     *,
     project_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[ColumnInfo[BBoxColumns]]:
+) -> List[ColumnInfo[SentAnnoColumns]]:
     authz_user.assert_in_project(project_id)
-    return find_annotated_images_info(
+    return find_sentence_annotations_info(
         project_id=project_id,
     )
 
 
 @router.post(
-    "/annotated_images",
-    response_model=AnnotatedImageResult,
-    summary="Returns AnnotatedImageResult.",
+    "/sentence_annotation_search",
+    response_model=SentenceAnnotationSearchResult,
+    summary="Returns Sentence Annotations.",
 )
-def annotated_images(
+def sentence_annotation_search(
     *,
     project_id: int,
-    user_id: int,
+    filter: Filter[SentAnnoColumns],
+    page: Optional[int] = None,
+    page_size: Optional[int] = None,
+    sorts: List[Sort[SentAnnoColumns]],
+    authz_user: AuthzUser = Depends(),
+) -> SentenceAnnotationSearchResult:
+    authz_user.assert_in_project(project_id)
+
+    return find_sentence_annotations(
+        project_id=project_id,
+        filter=filter,
+        page=page,
+        page_size=page_size,
+        sorts=sorts,
+    )
+
+
+@router.post(
+    "/bbox_annotation_search_info",
+    response_model=List[ColumnInfo[BBoxColumns]],
+    summary="Returns BBoxAnnotationSearch Info.",
+)
+def bbox_annotation_search_info(
+    *,
+    project_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> List[ColumnInfo[BBoxColumns]]:
+    authz_user.assert_in_project(project_id)
+    return find_bbox_annotations_info(
+        project_id=project_id,
+    )
+
+
+@router.post(
+    "/bbox_annotation_search",
+    response_model=BBoxAnnotationSearchResult,
+    summary="Returns BBoxAnnotationSearchResult.",
+)
+def bbox_annotation_search(
+    *,
+    project_id: int,
     filter: Filter[BBoxColumns],
     page: Optional[int] = None,
     page_size: Optional[int] = None,
     sorts: List[Sort[BBoxColumns]],
     authz_user: AuthzUser = Depends(),
-) -> AnnotatedImageResult:
+) -> BBoxAnnotationSearchResult:
     authz_user.assert_in_project(project_id)
 
-    return find_annotated_images(
+    return find_bbox_annotations(
         project_id=project_id,
-        user_id=user_id,
         filter=filter,
         page=page,
         page_size=page_size,
@@ -202,7 +232,7 @@ def count_sdocs_with_date_metadata(
 ) -> Tuple[int, int]:
     authz_user.assert_in_project(project_id)
 
-    return AnalysisService().count_sdocs_with_date_metadata(
+    return compute_num_sdocs_with_date_metadata(
         project_id=project_id,
         date_metadata_id=date_metadata_id,
     )
@@ -287,6 +317,6 @@ def sample_sdocs_by_tags(
     authz_user: AuthzUser = Depends(),
 ) -> List[SampledSdocsResults]:
     authz_user.assert_in_project(project_id)
-    return AnalysisService().sample_sdocs_by_tags(
+    return document_sampler_by_tags(
         project_id=project_id, tag_ids=tag_groups, n=n, frac=frac
     )

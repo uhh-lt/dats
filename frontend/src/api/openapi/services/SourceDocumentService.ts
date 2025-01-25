@@ -6,6 +6,7 @@ import type { BBoxAnnotationRead } from "../models/BBoxAnnotationRead";
 import type { BBoxAnnotationReadResolved } from "../models/BBoxAnnotationReadResolved";
 import type { DocumentTagRead } from "../models/DocumentTagRead";
 import type { MemoRead } from "../models/MemoRead";
+import type { SentenceAnnotatorResult } from "../models/SentenceAnnotatorResult";
 import type { SourceDocumentDataRead } from "../models/SourceDocumentDataRead";
 import type { SourceDocumentMetadataReadResolved } from "../models/SourceDocumentMetadataReadResolved";
 import type { SourceDocumentRead } from "../models/SourceDocumentRead";
@@ -379,7 +380,7 @@ export class SourceDocumentService {
   }): CancelablePromise<Array<BBoxAnnotationRead> | Array<BBoxAnnotationReadResolved>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdoc{sdoc_id}/user/bbox_annotations",
+      url: "/sdoc/{sdoc_id}/user/bbox_annotations",
       path: {
         sdoc_id: sdocId,
       },
@@ -422,7 +423,7 @@ export class SourceDocumentService {
   }): CancelablePromise<Array<BBoxAnnotationRead> | Array<BBoxAnnotationReadResolved>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdoc{sdoc_id}/bbox_annotations/bulk",
+      url: "/sdoc/{sdoc_id}/bbox_annotations/bulk",
       path: {
         sdoc_id: sdocId,
       },
@@ -431,6 +432,44 @@ export class SourceDocumentService {
         skip: skip,
         limit: limit,
         resolve: resolve,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns all SentenceAnnotations of the User for the SourceDocument
+   * @returns SentenceAnnotatorResult Successful Response
+   * @throws ApiError
+   */
+  public static getSentenceAnnotator({
+    sdocId,
+    userId,
+    skip,
+    limit,
+  }: {
+    sdocId: number;
+    userId: number;
+    /**
+     * The number of elements to skip (offset)
+     */
+    skip?: number | null;
+    /**
+     * The maximum number of returned elements
+     */
+    limit?: number | null;
+  }): CancelablePromise<SentenceAnnotatorResult> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/sdoc/{sdoc_id}/sentence_annotator",
+      path: {
+        sdoc_id: sdocId,
+      },
+      query: {
+        user_id: userId,
+        skip: skip,
+        limit: limit,
       },
       errors: {
         422: `Validation Error`,
@@ -459,7 +498,7 @@ export class SourceDocumentService {
   }): CancelablePromise<Array<SpanGroupRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdoc{sdoc_id}/user/span_groups",
+      url: "/sdoc/{sdoc_id}/user/span_groups",
       path: {
         sdoc_id: sdocId,
       },

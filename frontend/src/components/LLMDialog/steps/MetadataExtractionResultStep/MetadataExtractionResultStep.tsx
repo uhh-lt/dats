@@ -29,7 +29,7 @@ function MetadataExtractionResultStep() {
       </DialogContent>
       {llmJob.isSuccess && (
         <MetadataExtractionResultStepTable
-          data={(llmJob.data.result?.specific_llm_job_result as MetadataExtractionLLMJobResult).results || []}
+          data={(llmJob.data.result?.specific_task_result as MetadataExtractionLLMJobResult).results || []}
         />
       )}
     </>

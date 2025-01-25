@@ -1,6 +1,7 @@
-import { LLMJobType } from "../../api/openapi/models/LLMJobType.ts";
+import { TaskType } from "../../api/openapi/models/TaskType.ts";
 
 export interface LLMAssistanceEvent {
-  method?: LLMJobType;
+  method?: TaskType;
   selectedDocumentIds: number[];
+  projectId: number;
 }

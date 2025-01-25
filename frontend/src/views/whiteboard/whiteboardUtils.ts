@@ -5,6 +5,7 @@ import { BBoxAnnotationReadResolved } from "../../api/openapi/models/BBoxAnnotat
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
 import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
+import { SentenceAnnotationReadResolved } from "../../api/openapi/models/SentenceAnnotationReadResolved.ts";
 import { SourceDocumentRead } from "../../api/openapi/models/SourceDocumentRead.ts";
 import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import { theme } from "../../plugins/ReactMUI.ts";
@@ -16,6 +17,7 @@ import { BBoxAnnotationNodeData } from "./types/dbnodes/BBoxAnnotationNodeData.t
 import { CodeNodeData } from "./types/dbnodes/CodeNodeData.ts";
 import { MemoNodeData } from "./types/dbnodes/MemoNodeData.ts";
 import { SdocNodeData } from "./types/dbnodes/SdocNodeData.ts";
+import { SentenceAnnotationNodeData } from "./types/dbnodes/SentenceAnnotationNodeData.ts";
 import { SpanAnnotationNodeData } from "./types/dbnodes/SpanAnnotationNodeData.ts";
 import { TagNodeData } from "./types/dbnodes/TagNodeData.ts";
 
@@ -40,6 +42,7 @@ export const isTagNodeId = (nodeId: string): boolean => nodeId.startsWith("tag-"
 export const isSdocNodeId = (nodeId: string): boolean => nodeId.startsWith("sdoc-");
 export const isCodeNodeId = (nodeId: string): boolean => nodeId.startsWith("code-");
 export const isSpanAnnotationNodeId = (nodeId: string): boolean => nodeId.startsWith("spanAnnotation-");
+export const isSentenceAnnotationNodeId = (nodeId: string): boolean => nodeId.startsWith("sentenceAnnotation-");
 export const isBBoxAnnotationNodeId = (nodeId: string): boolean => nodeId.startsWith("bboxAnnotation-");
 
 export const isConnectionAllowed = (sourceNodeId: string, targetNodeId: string) => {
@@ -59,7 +62,12 @@ export const isConnectionAllowed = (sourceNodeId: string, targetNodeId: string) 
   }
 
   // codes can be manually connected to annotations
-  if (isCodeNodeId(sourceNodeId) && (isSpanAnnotationNodeId(targetNodeId) || isBBoxAnnotationNodeId(targetNodeId))) {
+  if (
+    isCodeNodeId(sourceNodeId) &&
+    (isSpanAnnotationNodeId(targetNodeId) ||
+      isBBoxAnnotationNodeId(targetNodeId) ||
+      isSentenceAnnotationNodeId(targetNodeId))
+  ) {
     return true;
   }
 
@@ -229,6 +237,22 @@ export const createSpanAnnotationNodes = ({
   }));
 };
 
+export const createSentenceAnnotationNodes = ({
+  sentenceAnnotations,
+  position,
+}: {
+  sentenceAnnotations: number[] | SentenceAnnotationReadResolved[];
+  position?: XYPosition;
+}): Node<SentenceAnnotationNodeData>[] => {
+  const sentenceAnnotationIds = sentenceAnnotations.map((span) => (typeof span === "number" ? span : span.id));
+  return sentenceAnnotationIds.map((sentenceAnnotationId, index) => ({
+    id: `sentenceAnnotation-${sentenceAnnotationId}`,
+    type: "sentenceAnnotation",
+    data: { ...defaultDatabaseNodeData, sentenceAnnotationId },
+    position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
+  }));
+};
+
 export const createBBoxAnnotationNodes = ({
   bboxAnnotations,
   position,
@@ -373,6 +397,48 @@ export const isSdocSpanAnnotationEdge = (edge: Edge): boolean => {
   return isDatabaseEdge(edge) && edge.source.startsWith("sdoc-") && edge.target.startsWith("spanAnnotation-");
 };
 
+export const createCodeSentenceAnnotationEdge = ({
+  codeId,
+  sentenceAnnotationId,
+}: {
+  codeId: number;
+  sentenceAnnotationId: number;
+}): Edge => {
+  return {
+    ...defaultDatabaseEdgeOptions,
+    id: `code-${codeId}-sentenceAnnotation-${sentenceAnnotationId}`,
+    source: `code-${codeId}`,
+    target: `sentenceAnnotation-${sentenceAnnotationId}`,
+    sourceHandle: "database",
+    targetHandle: "database",
+  };
+};
+
+export const isCodeSentenceAnnotationEdge = (edge: Edge): boolean => {
+  return isDatabaseEdge(edge) && edge.source.startsWith("code-") && edge.target.startsWith("sentenceAnnotation-");
+};
+
+export const createSdocSentenceAnnotationEdge = ({
+  sdocId,
+  sentenceAnnotationId,
+}: {
+  sdocId: number;
+  sentenceAnnotationId: number;
+}): Edge => {
+  return {
+    ...defaultDatabaseEdgeOptions,
+    id: `sdoc-${sdocId}-sentenceAnnotation-${sentenceAnnotationId}`,
+    source: `sdoc-${sdocId}`,
+    target: `sentenceAnnotation-${sentenceAnnotationId}`,
+    sourceHandle: "database",
+    targetHandle: "database",
+  };
+};
+
+export const isSdocSentenceAnnotationEdge = (edge: Edge): boolean => {
+  return isDatabaseEdge(edge) && edge.source.startsWith("sdoc-") && edge.target.startsWith("sentenceAnnotation-");
+};
+
 export const createCodeBBoxAnnotationEdge = ({
   codeId,
   bboxAnnotationId,
@@ -449,6 +515,27 @@ export const createMemoCodeEdge = ({ memoId, codeId }: { memoId: number; codeId:
 
 export const isMemoCodeEdge = (edge: Edge): boolean => {
   return isDatabaseEdge(edge) && edge.source.startsWith("memo-") && edge.target.startsWith("code-");
+};
+
+export const createMemoSentenceAnnotationEdge = ({
+  memoId,
+  sentenceAnnotationId,
+}: {
+  memoId: number;
+  sentenceAnnotationId: number;
+}): Edge => {
+  return {
+    ...defaultDatabaseEdgeOptions,
+    id: `memo-${memoId}-sentenceAnnotation-${sentenceAnnotationId}`,
+    source: `memo-${memoId}`,
+    target: `sentenceAnnotation-${sentenceAnnotationId}`,
+    sourceHandle: "database",
+    targetHandle: "database",
+  };
+};
+
+export const isMemoSentenceAnnotationEdge = (edge: Edge): boolean => {
+  return isDatabaseEdge(edge) && edge.source.startsWith("memo-") && edge.target.startsWith("sentenceAnnotation-");
 };
 
 export const createTagSdocEdge = ({ sdocId, tagId }: { sdocId: number; tagId: number }): Edge => {

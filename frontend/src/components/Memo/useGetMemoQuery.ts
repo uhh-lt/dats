@@ -2,6 +2,7 @@ import BboxAnnotationHooks from "../../api/BboxAnnotationHooks.ts";
 import CodeHooks from "../../api/CodeHooks.ts";
 import MemoHooks from "../../api/MemoHooks.ts";
 import SdocHooks from "../../api/SdocHooks.ts";
+import SentenceAnnotationHooks from "../../api/SentenceAnnotationHooks.ts";
 import SpanAnnotationHooks from "../../api/SpanAnnotationHooks.ts";
 import TagHooks from "../../api/TagHooks.ts";
 import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
@@ -18,6 +19,8 @@ export const useGetMemoQuery = (type: AttachedObjectType | undefined) => {
       return SpanAnnotationHooks.useGetUserMemo;
     case AttachedObjectType.BBOX_ANNOTATION:
       return BboxAnnotationHooks.useGetUserMemo;
+    case AttachedObjectType.SENTENCE_ANNOTATION:
+      return SentenceAnnotationHooks.useGetUserMemo;
     default:
       return MemoHooks.useGetMemo;
   }

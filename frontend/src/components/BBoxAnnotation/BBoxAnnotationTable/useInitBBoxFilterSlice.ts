@@ -10,7 +10,7 @@ const useGetBBoxInfo = (projectId: number, dispatch: AppDispatch) =>
   useQuery<ColumnInfo[]>({
     queryKey: tableInfoQueryKey("bboxFilter", projectId),
     queryFn: async () => {
-      const result = await AnalysisService.annotatedImagesInfo({ projectId });
+      const result = await AnalysisService.bboxAnnotationSearchInfo({ projectId });
       const columnInfo = result.map((info) => {
         return {
           ...info,

@@ -2,26 +2,26 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AnnotationLLMJobParams } from "./AnnotationLLMJobParams";
-import type { DocumentTaggingLLMJobParams } from "./DocumentTaggingLLMJobParams";
-import type { LLMJobType } from "./LLMJobType";
-import type { LLMPromptTemplates } from "./LLMPromptTemplates";
-import type { MetadataExtractionLLMJobParams } from "./MetadataExtractionLLMJobParams";
+import type { AnnotationParams } from "./AnnotationParams";
+import type { DocumentTaggingParams } from "./DocumentTaggingParams";
+import type { MetadataExtractionParams } from "./MetadataExtractionParams";
+import type { SentenceAnnotationParams } from "./SentenceAnnotationParams";
+import type { TaskType } from "./TaskType";
 export type LLMJobParameters = {
   /**
    * The type of the LLMJob (what to llm)
    */
-  llm_job_type: LLMJobType;
+  llm_job_type: TaskType;
   /**
    * The ID of the Project to analyse
    */
   project_id: number;
   /**
-   * The prompt templates to use for the job
-   */
-  prompts: Array<LLMPromptTemplates>;
-  /**
    * Specific parameters for the LLMJob w.r.t it's type
    */
-  specific_llm_job_parameters: DocumentTaggingLLMJobParams | MetadataExtractionLLMJobParams | AnnotationLLMJobParams;
+  specific_task_parameters:
+    | DocumentTaggingParams
+    | MetadataExtractionParams
+    | AnnotationParams
+    | SentenceAnnotationParams;
 };

@@ -32,7 +32,8 @@ dependencies:
   - pip=23.3.2
   - pre-commit=3.3.3
   - psycopg2-binary=2.9
-  - pydantic=2.5.3
+  - pydantic=2.10.5
+  - pydantic-core=2.27.2
   - pytest=7.4.3
   - python-jose=3.3
   - python-magic=0.4

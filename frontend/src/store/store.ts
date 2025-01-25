@@ -2,12 +2,14 @@ import { Action, ThunkAction, configureStore } from "@reduxjs/toolkit";
 import { FLUSH, PAUSE, PERSIST, PURGE, REGISTER, REHYDRATE } from "redux-persist";
 import bboxFilterReducer from "../components/BBoxAnnotation/BBoxAnnotationTable/bboxFilterSlice.ts";
 import projectReducer from "../components/Project/projectSlice.ts";
+import seatFilterReducer from "../components/SentenceAnnotation/SentenceAnnotationTable/seatFilterSlice.ts";
 import documentTableFilterReducer from "../components/SourceDocument/SdocTable/documentTableFilterSlice.ts";
 import satFilterReducer from "../components/SpanAnnotation/SpanAnnotationTable/satFilterSlice.ts";
 import dialogReducer from "../components/dialogSlice.ts";
 import layoutReducer from "../layouts/layoutSlice.ts";
-import annotatedSegmentsReducer from "../views/analysis/AnnotatedSegments/annotatedSegmentsSlice.ts";
 import cotaReducer from "../views/analysis/ConceptsOverTime/cotaSlice.ts";
+import sentAnnotationAnalysisReducer from "../views/analysis/SentAnnotationAnalysis/sentAnnotationAnalysisSlice.ts";
+import spanAnnotationAnalysisReducer from "../views/analysis/SpanAnnotationAnalysis/spanAnnotationAnalysisSlice.ts";
 import timelineAnalysisReducer from "../views/analysis/TimelineAnalysis/timelineAnalysisSlice.ts";
 import wordFrequencyReducer from "../views/analysis/WordFrequency/wordFrequencySlice.ts";
 import annoReducer from "../views/annotation/annoSlice.ts";
@@ -28,9 +30,11 @@ export const store = configureStore({
     project: projectReducer,
     // non-persisted reducers
     logbook: logbookReducer,
-    annotatedSegments: annotatedSegmentsReducer,
+    spanAnnotationAnalysis: spanAnnotationAnalysisReducer,
+    sentAnnotationAnalysis: sentAnnotationAnalysisReducer,
     timelineAnalysis: timelineAnalysisReducer,
     satFilter: satFilterReducer,
+    seatFilter: seatFilterReducer,
     bboxFilter: bboxFilterReducer,
     documentTableFilter: documentTableFilterReducer,
     wordFrequency: wordFrequencyReducer,

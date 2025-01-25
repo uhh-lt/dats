@@ -42,11 +42,11 @@ function ImageViewerWithData({ sdocData, height, width }: ImageViewerProps & { h
   const imgContainerHeight = 500;
 
   // global client state (redux)
-  const visibleUserIds = useAppSelector((state) => state.annotations.visibleUserIds);
+  const visibleUserId = useAppSelector((state) => state.annotations.visibleUserId);
   const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
 
   // global server state (react query)
-  const annotations = SdocHooks.useGetBBoxAnnotationsBatch(sdocData.id, visibleUserIds);
+  const annotations = SdocHooks.useGetBBoxAnnotationsBatch(sdocData.id, visibleUserId ? [visibleUserId] : undefined);
 
   const annotationData = useMemo(() => {
     return (annotations.data || []).filter((bbox) => !hiddenCodeIds.includes(bbox.code.id));

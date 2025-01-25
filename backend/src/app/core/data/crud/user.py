@@ -8,6 +8,9 @@ from app.core.data.orm.user import UserORM
 from app.core.security import generate_password_hash, verify_password
 
 SYSTEM_USER_ID: int = 1
+ASSISTANT_ZEROSHOT_ID: int = 9990
+ASSISTANT_FEWSHOT_ID: int = 9991
+ASSISTANT_TRAINED_ID: int = 9992
 
 
 class CRUDUser(CRUDBase[UserORM, UserCreate, UserUpdate]):
@@ -16,6 +19,22 @@ class CRUDUser(CRUDBase[UserORM, UserCreate, UserUpdate]):
         hashed_pwd = generate_password_hash(create_dto.password)
         create_dto.password = hashed_pwd
         return super().create(db=db, create_dto=create_dto)
+
+    def create_with_id(
+        self, db: Session, *, create_dto: UserCreate, id: int
+    ) -> UserORM:
+        from fastapi.encoders import jsonable_encoder
+
+        # hashes the PW before storing in DB
+        hashed_pwd = generate_password_hash(create_dto.password)
+        create_dto.password = hashed_pwd
+
+        dto_obj_data = jsonable_encoder(create_dto)
+        db_obj = self.model(id=id, **dto_obj_data)
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
 
     def update(self, db: Session, *, id: int, update_dto: UserUpdate) -> UserORM:
         # Flo: hashes the PW before storing in DB

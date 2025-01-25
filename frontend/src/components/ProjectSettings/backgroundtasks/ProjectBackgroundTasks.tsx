@@ -20,7 +20,7 @@ const isPreProJob = (job: CrawlerJobRead | PreprocessingJobRead | LLMJobRead): j
   return "payloads" in job;
 };
 const isLLMJob = (job: CrawlerJobRead | PreprocessingJobRead | LLMJobRead): job is LLMJobRead => {
-  return "num_steps_finished" in job;
+  return "num_steps_total" in job;
 };
 
 interface ProjectBackgroundTasksProps {
@@ -32,6 +32,8 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
   const crawlerJobs = CrawlerHooks.useGetAllCrawlerJobs(project.id);
   const preProJobs = PreProHooks.useGetAllPreProJobs(project.id);
   const llmJobs = LLMHooks.useGetAllLLMJobs(project.id);
+
+  console.log(llmJobs);
 
   const backgroundJobsByStatus = useMemo(() => {
     const result: Record<BackgroundJobStatus, (CrawlerJobRead | PreprocessingJobRead | LLMJobRead)[]> = {

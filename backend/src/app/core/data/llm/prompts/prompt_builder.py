@@ -49,10 +49,11 @@ class PromptBuilder:
         "de": de_system_prompt_template.strip(),
     }
 
-    def __init__(self, db: Session, project_id: int):
+    def __init__(self, db: Session, project_id: int, is_fewshot: bool):
         project = crud_project.read(db=db, id=project_id)
         self.project_title = project.title
         self.project_description = project.description
+        self.is_fewshot = is_fewshot
 
     # VALIDATION
 
@@ -98,5 +99,5 @@ class PromptBuilder:
 
     # PARSING
 
-    def parse_response(self, response: str):
+    def parse_result(self, result: str):
         raise NotImplementedError()

@@ -13,9 +13,10 @@ import LLMUtterance from "../LLMUtterance.tsx";
 import { DocumentTaggingResultRow } from "./DocumentTaggingResultRow.ts";
 import DocumentTagResultStepTable from "./DocumentTagResultStepTable.tsx";
 
-function DocumentTagResultStep({ projectId }: { projectId: number }) {
+function DocumentTagResultStep() {
   // global client state
   const llmJobId = useAppSelector((state) => state.dialog.llmJobId);
+  const projectId = useAppSelector((state) => state.dialog.llmProjectId);
 
   // global server state
   const documentTags = ProjectHooks.useGetAllTags(projectId);
@@ -24,7 +25,7 @@ function DocumentTagResultStep({ projectId }: { projectId: number }) {
   if (llmJob.isSuccess && llmJob.data.result && documentTags.isSuccess) {
     return (
       <DocumentTagResultStepContent
-        jobResult={llmJob.data.result.specific_llm_job_result as DocumentTaggingLLMJobResult}
+        jobResult={llmJob.data.result.specific_task_result as DocumentTaggingLLMJobResult}
         tags={documentTags.data}
       />
     );
@@ -39,7 +40,7 @@ function DocumentTagResultStep({ projectId }: { projectId: number }) {
   } else if (documentTags.isError) {
     return <DialogContent>{documentTags.error.message}</DialogContent>;
   } else {
-    return null;
+    return <></>;
   }
 }
 

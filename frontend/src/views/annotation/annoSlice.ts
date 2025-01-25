@@ -4,6 +4,7 @@ import storage from "redux-persist/lib/storage";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { ProjectActions } from "../../components/Project/projectSlice.ts";
 import { RootState } from "../../store/store.ts";
+import AnnotationMode from "./AnnotationMode.ts";
 
 export enum TagStyle {
   Inline = "inline",
@@ -14,13 +15,16 @@ export interface AnnoState {
   // project state:
   selectedAnnotationId: number | undefined; // the annotation selected in the annotation explorer.
   selectedCodeId: number | undefined; // the code selected in the code explorer, used to compute which codes are shown in the annotation menu.
-  mostRecentCodeId: number | undefined; // the most recently applied code, it is always at the top of the annotation menu and the default code for new annotations.
+  hoveredCodeId: number | undefined; // the code hovered in the code explorer, used to compute highlightings.
+  mostRecentCode: CodeRead | undefined; // the most recently applied code, it is always at the top of the annotation menu and the default code for new annotations.
   expandedCodeIds: string[]; // the code ids of the expanded codes in the code explorer.
   hiddenCodeIds: number[]; // the code ids of the hidden codes. Hidden codes are shown in the CodeExplorer, but are not rendered in the Annotator.
-  visibleUserIds: number[]; // the user ids of the users whose annotations are shown in the Annotator.
+  visibleUserId: number | undefined; // the user id of the user whose annotations are shown in the Annotator.
+  compareWithUserId: number | undefined; // the user id of the user whose annotations are shown in the Annotator.
+  isCompareMode: boolean; // whether the Annotator is in comparison mode.
   // app state:
   disabledCodeIds: number[]; // the code ids of the disabled codes. Disabled codes are neither shown in the CodeExplorer nor in the Annotator.
-  isAnnotationMode: boolean; // whether the Annotator is in annotation mode or in reader mode.
+  annotationMode: AnnotationMode; // the annotation mode.
   tagStyle: TagStyle; // position of the tag in the Annotator.
 }
 
@@ -28,13 +32,16 @@ const initialState: AnnoState = {
   // project state:
   selectedAnnotationId: undefined,
   selectedCodeId: undefined,
-  mostRecentCodeId: undefined,
+  hoveredCodeId: undefined,
+  mostRecentCode: undefined,
   expandedCodeIds: [],
   hiddenCodeIds: [],
-  visibleUserIds: [],
+  visibleUserId: undefined,
+  compareWithUserId: undefined,
+  isCompareMode: false,
   // app state:
   disabledCodeIds: [],
-  isAnnotationMode: false,
+  annotationMode: AnnotationMode.Reader,
   tagStyle: TagStyle.Inline,
 };
 
@@ -42,8 +49,10 @@ export const annoSlice = createSlice({
   name: "anno",
   initialState,
   reducers: {
-    onToggleAnnotationMode: (state) => {
-      state.isAnnotationMode = !state.isAnnotationMode;
+    onChangeAnnotationMode: (state, action: PayloadAction<AnnotationMode>) => {
+      if (action.payload !== undefined && action.payload !== null) {
+        state.annotationMode = action.payload;
+      }
     },
     toggleCodeVisibility: (state, action: PayloadAction<number[]>) => {
       if (action.payload.length === 0) {
@@ -75,6 +84,9 @@ export const annoSlice = createSlice({
     setSelectedCodeId: (state, action: PayloadAction<number | undefined>) => {
       state.selectedCodeId = action.payload;
     },
+    setHoveredCodeId: (state, action: PayloadAction<number | undefined>) => {
+      state.hoveredCodeId = action.payload;
+    },
     setExpandedCodeIds: (state, action: PayloadAction<string[]>) => {
       state.expandedCodeIds = action.payload;
     },
@@ -85,18 +97,15 @@ export const annoSlice = createSlice({
         }
       }
     },
-    addVisibleUserIds: (state, action: PayloadAction<number[]>) => {
-      action.payload.forEach((userId) => {
-        if (state.visibleUserIds.indexOf(userId) === -1) {
-          state.visibleUserIds.push(userId);
-        }
-      });
-    },
-    setVisibleUserIds: (state, action: PayloadAction<number[]>) => {
-      state.visibleUserIds = action.payload;
+    setVisibleUserId: (state, action: PayloadAction<number>) => {
+      // special case in comparison mode: swap visibleUserId and compareWithUserId
+      if (state.isCompareMode && state.compareWithUserId === action.payload) {
+        state.compareWithUserId = state.visibleUserId;
+      }
+      state.visibleUserId = action.payload;
     },
     moveCodeToTop: (state, action: PayloadAction<CodeRead>) => {
-      state.mostRecentCodeId = action.payload.id;
+      state.mostRecentCode = action.payload;
     },
     onSetAnnotatorTagStyle: (state, action: PayloadAction<TagStyle>) => {
       if (action.payload !== undefined && action.payload !== null) {
@@ -136,16 +145,35 @@ export const annoSlice = createSlice({
       }
       state.disabledCodeIds = disabledCodeIds;
     },
+    compareWithUser: (state, action: PayloadAction<number>) => {
+      console.log("compareWithUser", action.payload);
+      console.log("visibleUserId", state.visibleUserId);
+      // special case: swap visibleUserId and compareWithUserId
+      if (state.isCompareMode && state.visibleUserId === action.payload) {
+        state.visibleUserId = state.compareWithUserId;
+      }
+      state.compareWithUserId = action.payload;
+      state.isCompareMode = true;
+      console.log("compareWithUser", action.payload);
+      console.log("visibleUserId", state.visibleUserId);
+    },
+    stopComparison: (state) => {
+      state.compareWithUserId = undefined;
+      state.isCompareMode = false;
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(ProjectActions.changeProject, (state) => {
       console.log("Project changed! Resetting 'anno' state.");
       state.selectedAnnotationId = initialState.selectedAnnotationId;
       state.selectedCodeId = initialState.selectedCodeId;
-      state.mostRecentCodeId = initialState.mostRecentCodeId;
+      state.hoveredCodeId = initialState.hoveredCodeId;
+      state.mostRecentCode = initialState.mostRecentCode;
       state.expandedCodeIds = initialState.expandedCodeIds;
       state.hiddenCodeIds = initialState.hiddenCodeIds;
-      state.visibleUserIds = initialState.visibleUserIds;
+      state.visibleUserId = initialState.visibleUserId;
+      state.compareWithUserId = initialState.compareWithUserId;
+      state.isCompareMode = initialState.isCompareMode;
     });
   },
 });

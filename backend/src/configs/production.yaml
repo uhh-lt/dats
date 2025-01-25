@@ -22,6 +22,12 @@ demo_user:
   email: demo@example.org
   password: demo
 
+assistant_user:
+  first_name: Assistant
+  last_name: User
+  email: assistant@dats.org
+  password: ${oc.env:SYSTEM_USER_PASSWORD, "12SYSTEM34"}
+
 ray:
   protocol: ${oc.env:RAY_PROTOCOL, http}
   host: ${oc.env:RAY_HOST, ray}
@@ -124,6 +130,12 @@ ollama:
   host: ${oc.env:OLLAMA_HOST, ollama}
   port: ${oc.env:OLLAMA_PORT, 11434}
   model: ${oc.env:OLLAMA_MODEL, gemma2:9b-instruct-fp16}
+  context_size: 8192
+
+llm_assistant:
+  sentence_annotation:
+    few_shot_threshold: 4
+    model_training_threshold: 100
 
 project_metadata:
   text_url:

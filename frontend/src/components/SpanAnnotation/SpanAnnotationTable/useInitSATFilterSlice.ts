@@ -10,7 +10,7 @@ const useGetSATInfo = (projectId: number, dispatch: AppDispatch) =>
   useQuery<ColumnInfo[]>({
     queryKey: tableInfoQueryKey("satFilter", projectId),
     queryFn: async () => {
-      const result = await AnalysisService.annotatedSegmentsInfo({ projectId });
+      const result = await AnalysisService.spanAnnotationSearchInfo({ projectId });
       const columnInfo = result.map((info) => {
         return {
           ...info,

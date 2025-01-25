@@ -25,10 +25,31 @@ function hexToRgb(hex: string) {
     : null;
 }
 
+function hexStringToRGBA(hex: string, alpha: number) {
+  const rgb = hexToRgb(hex);
+  return rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})` : null;
+}
+
+function rgbStringToRGBA(rgb: string, alpha: number) {
+  const result = /^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/i.exec(rgb);
+  return result ? `rgba(${parseInt(result[1])}, ${parseInt(result[2])}, ${parseInt(result[3])}, ${alpha})` : null;
+}
+
+function colorStringToRGBA(colorString: string, alpha: number) {
+  if (colorString.startsWith("rgb")) {
+    return rgbStringToRGBA(colorString, alpha);
+  }
+  if (colorString.startsWith("#")) {
+    return hexStringToRGBA(colorString, alpha);
+  }
+  return `rgba(255, 0, 0, ${alpha})`;
+}
+
 const ColorUtils = {
   rgbStringToHex,
   rgbToHex,
   hexToRgb,
+  colorStringToRGBA,
 };
 
 export default ColorUtils;

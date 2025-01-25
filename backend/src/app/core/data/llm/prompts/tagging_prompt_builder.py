@@ -1,10 +1,21 @@
-import re
-from typing import List, Tuple
+from typing import List
 
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.project import crud_project
 from app.core.data.llm.prompts.prompt_builder import PromptBuilder
+
+
+class OllamaParsedDocumentTaggingResult(BaseModel):
+    tag_ids: List[int]
+    reasoning: str
+
+
+class OllamaDocumentTaggingResult(BaseModel):
+    categories: List[str]
+    reasoning: str
+
 
 # ENGLISH
 
@@ -22,7 +33,7 @@ e.g.
 Document:
 <document>
 
-Remember, you have to classify the document into using the provided categories, do not generate new categories!
+Remember, you MUST classify the document using the provided categories, do not generate new categories!
 """
 
 en_example_tempalate = """
@@ -65,11 +76,9 @@ class TaggingPromptBuilder(PromptBuilder):
         "en": en_example_tempalate.strip(),
         "de": de_example_tempalate.strip(),
     }
-    category_word = {"en": "Categories:", "de": "Kategorien:"}
-    reason_word = {"en": "Reasoning:", "de": "Begründung:"}
 
-    def __init__(self, db: Session, project_id: int):
-        super().__init__(db, project_id)
+    def __init__(self, db: Session, project_id: int, is_fewshot: bool):
+        super().__init__(db, project_id, is_fewshot)
 
         project = crud_project.read(db=db, id=project_id)
         self.document_tags = project.document_tags
@@ -97,43 +106,12 @@ class TaggingPromptBuilder(PromptBuilder):
 
         return self.prompt_templates[language].format(task_data, answer_example)
 
-    def parse_response(self, language: str, response: str) -> Tuple[List[int], str]:
-        if language not in self.category_word:
-            return [], f"Language '{language}' is not supported."
-        if language not in self.reason_word:
-            return [], f"Language '{language}' is not supported."
-
-        components = re.split(r"\n+", response)
-
-        # check that the answer starts with expected category word
-        if not components[0].startswith(f"{self.category_word[language]}"):
-            return (
-                [],
-                f"The answer has to start with '{self.category_word[language]}'.",
-            )
-
-        # extract the categories
-        comma_separated_categories = components[0].split(":")[1].strip()
-        if len(comma_separated_categories) == 0:
-            categories = []
-        else:
-            categories = [
-                category.strip().lower()
-                for category in comma_separated_categories.split(",")
-            ]
-
-        # map the categories to their tag ids
-        categories = [
-            self.tagname2id_dict[category]
-            for category in categories
-            if category in self.tagname2id_dict
-        ]
-
-        # extract the reason if the answer has multiple lines
-        reason = "No reason was provided"
-        if len(components) > 1 and components[1].startswith(
-            f"{self.reason_word[language]}"
-        ):
-            reason = components[1].split(":")[1].strip()
-
-        return categories, reason
+    def parse_result(
+        self, result: OllamaDocumentTaggingResult
+    ) -> OllamaParsedDocumentTaggingResult:
+        return OllamaParsedDocumentTaggingResult(
+            tag_ids=[
+                self.tagname2id_dict[category.lower()] for category in result.categories
+            ],
+            reasoning=result.reasoning,
+        )

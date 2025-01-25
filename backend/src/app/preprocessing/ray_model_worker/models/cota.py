@@ -84,7 +84,7 @@ class CotaModel:
                 {
                     "text": texts,
                     "label": labels,
-                    "labelfrom tempfile import TemporaryFile_text": label_texts,
+                    "label_text": label_texts,
                 }
             )
         )

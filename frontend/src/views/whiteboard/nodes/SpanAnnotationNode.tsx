@@ -132,7 +132,7 @@ function SpanAnnotationNode(props: NodeProps<SpanAnnotationNodeData>) {
     if (!annotation.data) return;
 
     dispatch(AnnoActions.setSelectedAnnotationId(annotation.data.id));
-    dispatch(AnnoActions.addVisibleUserIds([annotation.data.user_id]));
+    dispatch(AnnoActions.setVisibleUserId(annotation.data.user_id));
     navigate(`../annotation/${annotation.data.sdoc_id}`);
 
     contextMenuRef.current?.close();

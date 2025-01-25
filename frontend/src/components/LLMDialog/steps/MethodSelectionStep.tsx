@@ -8,14 +8,14 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { LLMJobType } from "../../../api/openapi/models/LLMJobType.ts";
+import { TaskType } from "../../../api/openapi/models/TaskType.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { CRUDDialogActions } from "../../dialogSlice.ts";
 import LLMUtterance from "./LLMUtterance.tsx";
 
 function MethodSelectionStep() {
   const dispatch = useAppDispatch();
-  const selectMethod = (method: LLMJobType) => () => {
+  const selectMethod = (method: TaskType) => () => {
     dispatch(CRUDDialogActions.llmDialogGoToDataSelection({ method }));
   };
   const handleClose = () => {
@@ -30,18 +30,23 @@ function MethodSelectionStep() {
         </LLMUtterance>
         <Stack direction="row" columnGap={2} mt={2}>
           <MethodButton
-            onClick={selectMethod(LLMJobType.DOCUMENT_TAGGING)}
+            onClick={selectMethod(TaskType.DOCUMENT_TAGGING)}
             headline="Document Tagging"
             description="I will classify your documents!"
           />
           <MethodButton
-            onClick={selectMethod(LLMJobType.METADATA_EXTRACTION)}
+            onClick={selectMethod(TaskType.METADATA_EXTRACTION)}
             headline="Metadata Extraction"
             description="I will extract metadata from your documents!"
           />
           <MethodButton
-            onClick={selectMethod(LLMJobType.ANNOTATION)}
+            onClick={selectMethod(TaskType.ANNOTATION)}
             headline="Annotation"
+            description="I will annotate your documents!"
+          />
+          <MethodButton
+            onClick={selectMethod(TaskType.SENTENCE_ANNOTATION)}
+            headline="Sentence Annotation"
             description="I will annotate your documents!"
           />
         </Stack>

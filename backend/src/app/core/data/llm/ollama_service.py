@@ -1,8 +1,13 @@
+from typing import Type, TypeVar
+
 from loguru import logger
 from ollama import Client
+from pydantic import BaseModel
 
 from app.util.singleton_meta import SingletonMeta
 from config import conf
+
+T = TypeVar("T", bound=BaseModel)
 
 
 class OllamaService(metaclass=SingletonMeta):
@@ -18,13 +23,23 @@ class OllamaService(metaclass=SingletonMeta):
                 )
 
             # ensure that the configured model is available
-            model = conf.ollama.model
-            available_models = [x["name"] for x in ollamac.list()["models"]]
+            model = "custom-" + conf.ollama.model
+            available_models = [x.model for x in ollamac.list()["models"]]
+            logger.info(f"Available models: {available_models}")
             if model not in available_models:
-                print(f"Model {model} is not available. Pulling it now.")
-                ollamac.pull(model)
-                print(f"Model {model} has been pulled successfully.")
-            available_models = [x["name"] for x in ollamac.list()["models"]]
+                logger.info(
+                    f"Model {model} is not available. Available models: {available_models}."
+                )
+                logger.info(f"Creating custom model {model}...")
+                ollamac.create(
+                    model,
+                    from_=conf.ollama.model,
+                    parameters={
+                        "num_ctx": conf.ollama.context_size,
+                    },
+                )
+                logger.info(f"Model {model} has been created successfully.")
+            available_models = [x.model for x in ollamac.list()["models"]]
             assert (
                 model in available_models
             ), f"Model {model} is not available. Available models are: {available_models}"
@@ -41,7 +56,7 @@ class OllamaService(metaclass=SingletonMeta):
 
         return super(OllamaService, cls).__new__(cls)
 
-    def chat(self, system_prompt: str, user_prompt: str) -> str:
+    def chat(self, system_prompt: str, user_prompt: str, response_model: Type[T]) -> T:
         response = self.__client.chat(
             model=self.__model,
             messages=[
@@ -54,5 +69,9 @@ class OllamaService(metaclass=SingletonMeta):
                     "content": user_prompt.strip(),
                 },
             ],
+            format=response_model.model_json_schema(),
         )
-        return response["message"]["content"].strip()
+        if response.message.content is None:
+            raise Exception(f"Ollama response is None: {response}")
+
+        return response_model.model_validate_json(response.message.content)

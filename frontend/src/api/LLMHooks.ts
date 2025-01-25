@@ -61,11 +61,23 @@ const useCreatePromptTemplates = () =>
     mutationFn: LlmService.createPromptTemplates,
   });
 
+const useCreateTrainingParameters = () =>
+  useMutation({
+    mutationFn: LlmService.createTrainingParameters,
+  });
+
+const useDetermineApproach = () =>
+  useMutation({
+    mutationFn: LlmService.determineApproach,
+  });
+
 const LLMHooks = {
   usePollLLMJob,
   useStartLLMJob,
   useGetAllLLMJobs,
+  useDetermineApproach,
   useCreatePromptTemplates,
+  useCreateTrainingParameters,
 };
 
 export default LLMHooks;

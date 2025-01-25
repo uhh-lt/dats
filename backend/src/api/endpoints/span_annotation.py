@@ -59,7 +59,7 @@ def add_span_annotation(
 @router.put(
     "/bulk/create",
     response_model=Union[List[SpanAnnotationRead], List[SpanAnnotationReadResolved]],
-    summary="Creates a SpanAnnotations in Bulk",
+    summary="Creates SpanAnnotations in Bulk",
 )
 def add_span_annotations_bulk(
     *,

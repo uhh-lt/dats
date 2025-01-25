@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { BackgroundJobStatus } from "./BackgroundJobStatus";
-import type { LLMJobParameters } from "./LLMJobParameters";
+import type { LLMJobParameters2_Output } from "./LLMJobParameters2_Output";
 import type { LLMJobResult } from "./LLMJobResult";
 export type LLMJobRead = {
   /**
@@ -11,15 +11,19 @@ export type LLMJobRead = {
    */
   status?: BackgroundJobStatus;
   /**
-   * Number of steps LLMJob has completed.
-   */
-  num_steps_finished: number;
-  /**
    * Number of total steps.
    */
   num_steps_total: number;
   /**
-   * Results of hte LLMJob.
+   * The current step.
+   */
+  current_step: number;
+  /**
+   * Description of the current step.
+   */
+  current_step_description: string;
+  /**
+   * Results of the LLMJob.
    */
   result?: LLMJobResult | null;
   /**
@@ -29,7 +33,7 @@ export type LLMJobRead = {
   /**
    * The parameters of the LLMJob that defines what to llm!
    */
-  parameters: LLMJobParameters;
+  parameters: LLMJobParameters2_Output;
   /**
    * Created timestamp of the LLMJob
    */

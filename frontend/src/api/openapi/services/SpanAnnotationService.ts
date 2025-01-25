@@ -43,7 +43,7 @@ export class SpanAnnotationService {
     });
   }
   /**
-   * Creates a SpanAnnotations in Bulk
+   * Creates SpanAnnotations in Bulk
    * @returns any Successful Response
    * @throws ApiError
    */

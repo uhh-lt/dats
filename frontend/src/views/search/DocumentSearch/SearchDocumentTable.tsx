@@ -320,7 +320,7 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
             />
             <DeleteSdocsButton sdocIds={selectedDocumentIds} navigateTo="../search" />
             <DownloadSdocsButton sdocIds={selectedDocumentIds} />
-            <LLMAssistanceButton sdocIds={selectedDocumentIds} />
+            <LLMAssistanceButton sdocIds={selectedDocumentIds} projectId={projectId} />
           </>
         )}
         <Box sx={{ flexGrow: 1 }} />

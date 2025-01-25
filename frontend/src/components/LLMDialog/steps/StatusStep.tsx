@@ -37,21 +37,32 @@ function StatusStep() {
           <LinearProgressWithLabel
             sx={{ ml: 5 }}
             variant={llmJob.isSuccess ? "determinate" : "indeterminate"}
-            current={llmJob.isSuccess ? llmJob.data.num_steps_finished : 0}
+            current={llmJob.isSuccess ? llmJob.data.current_step : 0}
             max={llmJob.isSuccess ? llmJob.data.num_steps_total : 0}
             tooltip={
-              llmJob.isSuccess && llmJob.data.num_steps_finished === llmJob.data.num_steps_total
+              llmJob.isSuccess && llmJob.data.current_step === llmJob.data.num_steps_total
                 ? `Status: All ${llmJob.data?.num_steps_total} steps are done.`
-                : `Status: ${llmJob.data?.num_steps_finished} of ${llmJob.data?.num_steps_total} steps are done.`
+                : `Status: ${llmJob.data?.current_step} of ${llmJob.data?.num_steps_total} steps are done.`
             }
           />
 
-          {llmJob.isSuccess && llmJob.data.status === BackgroundJobStatus.FINISHED && (
-            <LLMUtterance>
-              <Typography>
-                I am done with {llmJob.data.parameters.llm_job_type.toLowerCase()}. You can view the results now!
+          {llmJob.isSuccess && (
+            <>
+              <Typography variant="caption" color="textSecondary" textAlign="center" mt={-3}>
+                Status: {llmJob.data.status} - {llmJob.data.current_step_description}
               </Typography>
-            </LLMUtterance>
+              {llmJob.data.status === BackgroundJobStatus.FINISHED ? (
+                <LLMUtterance>
+                  <Typography>
+                    I am done with {llmJob.data.parameters.llm_job_type.toLowerCase()}. You can view the results now!
+                  </Typography>
+                </LLMUtterance>
+              ) : llmJob.data.status === BackgroundJobStatus.ERRORNEOUS ? (
+                <LLMUtterance>
+                  <Typography>An error occurred! I am very sorry. You can close this dialog now...</Typography>
+                </LLMUtterance>
+              ) : null}
+            </>
           )}
 
           <Typography mt={4} fontSize="0.9em" color="textSecondary">

@@ -13,6 +13,7 @@ import { DocType } from "../../../api/openapi/models/DocType.ts";
 import { MetaType } from "../../../api/openapi/models/MetaType.ts";
 import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
+import { TimelineAnalysisResultType } from "../../../api/openapi/models/TimelineAnalysisResultType.ts";
 import SdocsWithDateCounter from "../../../components/Metadata/SdocsWithDateCounter/SdocsWithDateCounter.tsx";
 
 interface TimelineAnalysisSettingsProps {
@@ -92,7 +93,7 @@ function TimelineAnalysisSettingsContent({
       requestBody: {
         settings: {
           ...timelineAnalysis.settings,
-          result_type: event.target.value,
+          result_type: event.target.value as TimelineAnalysisResultType,
         },
       },
     });

@@ -84,11 +84,14 @@ function CodeExplorer(props: BoxProps) {
 
 function CodeNodeRenderer({ node }: { node: IDataTree }) {
   const isHidden = useAppSelector(isHiddenCodeId(node.data.id));
+  const dispatch = useAppDispatch();
 
   return (
     <Typography
       variant="body2"
       sx={{ fontWeight: "inherit", flexGrow: 1, ...(isHidden && { textDecoration: "line-through" }) }}
+      onMouseEnter={() => dispatch(AnnoActions.setHoveredCodeId(node.data.id))}
+      onMouseLeave={() => dispatch(AnnoActions.setHoveredCodeId(undefined))}
     >
       {node.data.name}
     </Typography>

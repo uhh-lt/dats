@@ -11,10 +11,10 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useEffect, useMemo, useRef } from "react";
-import { AnnotatedSegmentResult } from "../../../api/openapi/models/AnnotatedSegmentResult.ts";
-import { AnnotationTableRow } from "../../../api/openapi/models/AnnotationTableRow.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
+import { SpanAnnotationRow } from "../../../api/openapi/models/SpanAnnotationRow.ts";
+import { SpanAnnotationSearchResult } from "../../../api/openapi/models/SpanAnnotationSearchResult.ts";
 import { SpanColumns } from "../../../api/openapi/models/SpanColumns.ts";
 import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
@@ -31,7 +31,7 @@ import SdocAnnotationLink from "./SdocAnnotationLink.tsx";
 import { useInitSATFilterSlice } from "./useInitSATFilterSlice.ts";
 
 const fetchSize = 20;
-const flatMapData = (page: AnnotatedSegmentResult) => page.data;
+const flatMapData = (page: SpanAnnotationSearchResult) => page.data;
 
 export interface SpanAnnotationTableProps {
   title?: string;
@@ -39,16 +39,16 @@ export interface SpanAnnotationTableProps {
   filterName: string;
   // selection
   rowSelectionModel: MRT_RowSelectionState;
-  onRowSelectionChange: MRT_TableOptions<AnnotationTableRow>["onRowSelectionChange"];
+  onRowSelectionChange: MRT_TableOptions<SpanAnnotationRow>["onRowSelectionChange"];
   // sorting
   sortingModel: MRT_SortingState;
-  onSortingChange: MRT_TableOptions<AnnotationTableRow>["onSortingChange"];
+  onSortingChange: MRT_TableOptions<SpanAnnotationRow>["onSortingChange"];
   // column visibility
   columnVisibilityModel: MRT_VisibilityState;
-  onColumnVisibilityChange: MRT_TableOptions<AnnotationTableRow>["onColumnVisibilityChange"];
+  onColumnVisibilityChange: MRT_TableOptions<SpanAnnotationRow>["onColumnVisibilityChange"];
   // components
   cardProps?: CardProps;
-  positionToolbarAlertBanner?: MRT_TableOptions<AnnotationTableRow>["positionToolbarAlertBanner"];
+  positionToolbarAlertBanner?: MRT_TableOptions<SpanAnnotationRow>["positionToolbarAlertBanner"];
   renderToolbarInternalActions?: (props: SATToolbarProps) => React.ReactNode;
   renderTopToolbarCustomActions?: (props: SATToolbarProps) => React.ReactNode;
   renderBottomToolbarCustomActions?: (props: SATToolbarProps) => React.ReactNode;
@@ -82,7 +82,7 @@ function SpanAnnotationTable({
 
   // table columns
   const tableInfo = useInitSATFilterSlice({ projectId });
-  const columns: MRT_ColumnDef<AnnotationTableRow>[] = useMemo(() => {
+  const columns: MRT_ColumnDef<SpanAnnotationRow>[] = useMemo(() => {
     if (!tableInfo || !user) return [];
 
     const result = tableInfo.map((column) => {
@@ -98,25 +98,25 @@ function SpanAnnotationTable({
             ...colDef,
             accessorFn: (row) => row.sdoc.filename,
             Cell: ({ row }) => <SdocAnnotationLink sdoc={row.original.sdoc} annotation={row.original} />,
-          } as MRT_ColumnDef<AnnotationTableRow>;
+          } as MRT_ColumnDef<SpanAnnotationRow>;
         case SpanColumns.SP_DOCUMENT_DOCUMENT_TAG_ID_LIST:
           return {
             ...colDef,
             accessorFn: (row) => row.tags,
             Cell: ({ row }) => <SdocTagsRenderer tags={row.original.tags} />,
-          } as MRT_ColumnDef<AnnotationTableRow>;
+          } as MRT_ColumnDef<SpanAnnotationRow>;
         case SpanColumns.SP_CODE_ID:
           return {
             ...colDef,
             accessorFn: (row) => row.code,
             Cell: ({ row }) => <CodeRenderer code={row.original.code} />,
-          } as MRT_ColumnDef<AnnotationTableRow>;
+          } as MRT_ColumnDef<SpanAnnotationRow>;
         case SpanColumns.SP_USER_ID:
           return {
             ...colDef,
             accessorFn: (row) => row.user_id,
             Cell: ({ row }) => <UserRenderer user={row.original.user_id} />,
-          } as MRT_ColumnDef<AnnotationTableRow>;
+          } as MRT_ColumnDef<SpanAnnotationRow>;
         case SpanColumns.SP_MEMO_CONTENT:
           return {
             ...colDef,
@@ -131,12 +131,12 @@ function SpanAnnotationTable({
                   showIcon={false}
                 />
               ) : null,
-          } as MRT_ColumnDef<AnnotationTableRow>;
+          } as MRT_ColumnDef<SpanAnnotationRow>;
         case SpanColumns.SP_SPAN_TEXT:
           return {
             ...colDef,
             accessorFn: (row) => row.span_text,
-          } as MRT_ColumnDef<AnnotationTableRow>;
+          } as MRT_ColumnDef<SpanAnnotationRow>;
         default:
           if (!isNaN(parseInt(column.column))) {
             return {
@@ -145,13 +145,13 @@ function SpanAnnotationTable({
               Cell: ({ row }) => (
                 <SdocMetadataRenderer sdocId={row.original.sdoc.id} projectMetadataId={parseInt(column.column)} />
               ),
-            } as MRT_ColumnDef<AnnotationTableRow>;
+            } as MRT_ColumnDef<SpanAnnotationRow>;
           } else {
             return {
               ...colDef,
               accessorFn: () => null,
               Cell: () => <i>Cannot render column {column.column}</i>,
-            } as MRT_ColumnDef<AnnotationTableRow>;
+            } as MRT_ColumnDef<SpanAnnotationRow>;
           }
       }
     });
@@ -160,18 +160,16 @@ function SpanAnnotationTable({
   }, [tableInfo, user]);
 
   // table data
-  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<AnnotatedSegmentResult>({
+  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<SpanAnnotationSearchResult>({
     queryKey: [
       "annotation-table-data",
       projectId,
-      userId,
       filter, //refetch when columnFilters changes
       sortingModel, //refetch when sorting changes
     ],
     queryFn: ({ pageParam }) =>
-      AnalysisService.annotatedSegments({
+      AnalysisService.spanAnnotationSearch({
         projectId: projectId!,
-        userId: userId!,
         requestBody: {
           filter: filter as MyFilter<SpanColumns>,
           sorts: sortingModel.map((sort) => ({
@@ -211,7 +209,7 @@ function SpanAnnotationTable({
   }, [projectId, sortingModel]);
 
   // table
-  const table = useMaterialReactTable<AnnotationTableRow>({
+  const table = useMaterialReactTable<SpanAnnotationRow>({
     data: flatData,
     columns: columns,
     getRowId: (row) => `${row.id}`,

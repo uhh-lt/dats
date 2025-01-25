@@ -17,7 +17,7 @@ import UserName from "../../../components/User/UserName.tsx";
 import ImageCropper from "../../whiteboard/nodes/ImageCropper.tsx";
 import AnnotationCardActionsMenu from "./AnnotationCardActionMenu.tsx";
 import AnnotationCardMemo from "./AnnotationCardMemo.tsx";
-import { AnnotationCardProps } from "./AnnotationCardProps.ts";
+import { AnnotationCardProps } from "./types/AnnotationCardProps.ts";
 
 function BBoxAnnotationCard({
   isSelected,

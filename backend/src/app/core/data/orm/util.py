@@ -8,6 +8,7 @@ from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.object_handle import ObjectHandleORM
 from app.core.data.orm.orm_base import ORMBase
 from app.core.data.orm.project import ProjectORM
+from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
 from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_group import SpanGroupORM
@@ -50,6 +51,7 @@ def get_parent_project_id(orm: ORMBase) -> Optional[int]:
         elif (
             isinstance(orm, SpanAnnotationORM)
             or isinstance(orm, BBoxAnnotationORM)
+            or isinstance(orm, SentenceAnnotationORM)
             or isinstance(orm, SpanGroupORM)
         ):
             return orm.annotation_document.source_document.project_id

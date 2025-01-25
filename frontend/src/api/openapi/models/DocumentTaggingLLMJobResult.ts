@@ -4,6 +4,6 @@
 /* eslint-disable */
 import type { DocumentTaggingResult } from "./DocumentTaggingResult";
 export type DocumentTaggingLLMJobResult = {
-  llm_job_type: any;
+  llm_job_type: string;
   results: Array<DocumentTaggingResult>;
 };

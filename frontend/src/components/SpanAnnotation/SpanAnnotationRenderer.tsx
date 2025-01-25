@@ -78,7 +78,7 @@ function SpanAnnotationRendererWithData({
   const dispatch = useAppDispatch();
   const handleClick = () => {
     dispatch(AnnoActions.setSelectedAnnotationId(spanAnnotation.id));
-    dispatch(AnnoActions.addVisibleUserIds([spanAnnotation.user_id]));
+    dispatch(AnnoActions.setVisibleUserId(spanAnnotation.user_id));
   };
   const content = (
     <Stack direction="row" alignItems="center">

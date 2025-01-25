@@ -1265,7 +1265,7 @@
         }
       }
     },
-    "/sdoc{sdoc_id}/user/bbox_annotations": {
+    "/sdoc/{sdoc_id}/user/bbox_annotations": {
       "get": {
         "tags": ["sourceDocument"],
         "summary": "Returns all BBoxAnnotations of the logged-in User if it exists",
@@ -1330,7 +1330,7 @@
         }
       }
     },
-    "/sdoc{sdoc_id}/bbox_annotations/bulk": {
+    "/sdoc/{sdoc_id}/bbox_annotations/bulk": {
       "get": {
         "tags": ["sourceDocument"],
         "summary": "Returns all BBoxAnnotations of the Users with the given ID if it exists",
@@ -1401,7 +1401,51 @@
         }
       }
     },
-    "/sdoc{sdoc_id}/user/span_groups": {
+    "/sdoc/{sdoc_id}/sentence_annotator": {
+      "get": {
+        "tags": ["sourceDocument"],
+        "summary": "Returns all SentenceAnnotations of the User for the SourceDocument",
+        "operationId": "get_sentence_annotator",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
+          { "name": "user_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "User Id" } },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "integer", "maximum": 10000000, "minimum": 0 }, { "type": "null" }],
+              "title": "Skip",
+              "description": "The number of elements to skip (offset)"
+            },
+            "description": "The number of elements to skip (offset)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "integer", "maximum": 1000, "minimum": 1 }, { "type": "null" }],
+              "title": "Limit",
+              "description": "The maximum number of returned elements"
+            },
+            "description": "The maximum number of returned elements"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotatorResult" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/sdoc/{sdoc_id}/user/span_groups": {
       "get": {
         "tags": ["sourceDocument"],
         "summary": "Returns all SpanGroups of the logged-in User if it exists",
@@ -1817,7 +1861,7 @@
     "/span/bulk/create": {
       "put": {
         "tags": ["spanAnnotation"],
-        "summary": "Creates a SpanAnnotations in Bulk",
+        "summary": "Creates SpanAnnotations in Bulk",
         "operationId": "add_span_annotations_bulk",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3807,52 +3851,11 @@
         }
       }
     },
-    "/analysis/annotation_occurrences": {
+    "/analysis/span_annotation_search_info": {
       "post": {
         "tags": ["analysis"],
-        "summary": "Returns AnnotationOccurrences.",
-        "operationId": "annotation_occurrences",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          },
-          { "name": "code_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Code Id" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "User Ids" } }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/AnnotationOccurrence" },
-                  "title": "Response Analysis-Annotation Occurrences"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/analysis/annotated_segments_info": {
-      "post": {
-        "tags": ["analysis"],
-        "summary": "Returns AnnotationSegments Info.",
-        "operationId": "annotated_segments_info",
+        "summary": "Returns SpanAnnotationSearch Info.",
+        "operationId": "span_annotation_search_info",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -3870,7 +3873,7 @@
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/ColumnInfo_SpanColumns_" },
-                  "title": "Response Analysis-Annotated Segments Info"
+                  "title": "Response Analysis-Span Annotation Search Info"
                 }
               }
             }
@@ -3882,11 +3885,11 @@
         }
       }
     },
-    "/analysis/annotated_segments": {
+    "/analysis/span_annotation_search": {
       "post": {
         "tags": ["analysis"],
-        "summary": "Returns AnnotationSegments.",
-        "operationId": "annotated_segments",
+        "summary": "Returns SpanAnnotationSearch.",
+        "operationId": "span_annotation_search",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -3895,7 +3898,6 @@
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           },
-          { "name": "user_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "User Id" } },
           {
             "name": "page",
             "in": "query",
@@ -3912,13 +3914,15 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/Body_analysis-annotated_segments" } }
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_analysis-span_annotation_search" } }
           }
         },
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnnotatedSegmentResult" } } }
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationSearchResult" } }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -3927,11 +3931,93 @@
         }
       }
     },
-    "/analysis/annotated_images_info": {
+    "/analysis/sentence_annotation_search_info": {
       "post": {
         "tags": ["analysis"],
-        "summary": "Returns AnnotationSegments Info.",
-        "operationId": "annotated_images_info",
+        "summary": "Returns SentenceAnnotationSearch Info.",
+        "operationId": "sentence_annotation_search_info",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ColumnInfo_SentAnnoColumns_" },
+                  "title": "Response Analysis-Sentence Annotation Search Info"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/analysis/sentence_annotation_search": {
+      "post": {
+        "tags": ["analysis"],
+        "summary": "Returns Sentence Annotations.",
+        "operationId": "sentence_annotation_search",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page" }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page Size" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Body_analysis-sentence_annotation_search" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotationSearchResult" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/analysis/bbox_annotation_search_info": {
+      "post": {
+        "tags": ["analysis"],
+        "summary": "Returns BBoxAnnotationSearch Info.",
+        "operationId": "bbox_annotation_search_info",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -3949,7 +4035,7 @@
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/ColumnInfo_BBoxColumns_" },
-                  "title": "Response Analysis-Annotated Images Info"
+                  "title": "Response Analysis-Bbox Annotation Search Info"
                 }
               }
             }
@@ -3961,11 +4047,11 @@
         }
       }
     },
-    "/analysis/annotated_images": {
+    "/analysis/bbox_annotation_search": {
       "post": {
         "tags": ["analysis"],
-        "summary": "Returns AnnotatedImageResult.",
-        "operationId": "annotated_images",
+        "summary": "Returns BBoxAnnotationSearchResult.",
+        "operationId": "bbox_annotation_search",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -3974,7 +4060,6 @@
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           },
-          { "name": "user_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "User Id" } },
           {
             "name": "page",
             "in": "query",
@@ -3991,13 +4076,15 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/Body_analysis-annotated_images" } }
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_analysis-bbox_annotation_search" } }
           }
         },
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnnotatedImageResult" } } }
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/BBoxAnnotationSearchResult" } }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -4033,8 +4120,8 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "minItems": 2,
                   "prefixItems": [{ "type": "integer" }, { "type": "integer" }],
+                  "minItems": 2,
                   "maxItems": 2,
                   "title": "Response Analysis-Count Sdocs With Date Metadata"
                 }
@@ -5620,7 +5707,7 @@
         "summary": "Returns the LLMJob for the given Parameters",
         "operationId": "start_llm_job",
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobParameters" } } },
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobParameters2-Input" } } },
           "required": true
         },
         "responses": {
@@ -5701,8 +5788,380 @@
         "tags": ["llm"],
         "summary": "Returns the system and user prompt templates for the given llm task in all supported languages",
         "operationId": "create_prompt_templates",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "approach_type",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/ApproachType" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobParameters" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/LLMPromptTemplates" },
+                  "title": "Response Llm-Create Prompt Templates"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/llm/create_training_parameters": {
+      "post": {
+        "tags": ["llm"],
+        "summary": "Returns the default training parameters for the given llm task",
+        "operationId": "create_training_parameters",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobParameters" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TrainingParameters" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/llm/determine_approach": {
+      "post": {
+        "tags": ["llm"],
+        "summary": "Determines the appropriate approach based on the provided input",
+        "operationId": "determine_approach",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobParameters" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApproachRecommendation" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/sentence": {
+      "put": {
+        "tags": ["sentenceAnnotation"],
+        "summary": "Creates a SentenceAnnotation",
+        "operationId": "add_sentence_annotation",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "resolve",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "title": "Resolve Code",
+              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
+              "default": true
+            },
+            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotationCreate" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    { "$ref": "#/components/schemas/SentenceAnnotationRead" },
+                    { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" }
+                  ],
+                  "title": "Response Sentenceannotation-Add Sentence Annotation"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/sentence/bulk/create": {
+      "put": {
+        "tags": ["sentenceAnnotation"],
+        "summary": "Creates SentenceAnnotations in Bulk",
+        "operationId": "add_sentence_annotations_bulk",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "resolve",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "title": "Resolve Code",
+              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
+              "default": true
+            },
+            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/SentenceAnnotationCreate" },
+                "title": "Sentence Annotations"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    { "type": "array", "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" } },
+                    { "type": "array", "items": { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" } }
+                  ],
+                  "title": "Response Sentenceannotation-Add Sentence Annotations Bulk"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/sentence/{sentence_anno_id}": {
+      "get": {
+        "tags": ["sentenceAnnotation"],
+        "summary": "Returns the SentenceAnnotation with the given ID.",
+        "operationId": "get_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "sentence_anno_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Sentence Anno Id" }
+          },
+          {
+            "name": "resolve",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "title": "Resolve Code",
+              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
+              "default": true
+            },
+            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    { "$ref": "#/components/schemas/SentenceAnnotationRead" },
+                    { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" }
+                  ],
+                  "title": "Response Sentenceannotation-Get By Id"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["sentenceAnnotation"],
+        "summary": "Updates the SentenceAnnotation with the given ID.",
+        "operationId": "update_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "sentence_anno_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Sentence Anno Id" }
+          },
+          {
+            "name": "resolve",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "title": "Resolve Code",
+              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
+              "default": true
+            },
+            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotationUpdate" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    { "$ref": "#/components/schemas/SentenceAnnotationRead" },
+                    { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" }
+                  ],
+                  "title": "Response Sentenceannotation-Update By Id"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["sentenceAnnotation"],
+        "summary": "Deletes the SentenceAnnotation with the given ID.",
+        "operationId": "delete_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "sentence_anno_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Sentence Anno Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    { "$ref": "#/components/schemas/SentenceAnnotationRead" },
+                    { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" }
+                  ],
+                  "title": "Response Sentenceannotation-Delete By Id"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/sentence/bulk/update": {
+      "patch": {
+        "tags": ["sentenceAnnotation"],
+        "summary": "Updates SentenceAnnotation in Bulk",
+        "operationId": "update_sent_anno_annotations_bulk",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "resolve",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "title": "Resolve Code",
+              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
+              "default": true
+            },
+            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/SentenceAnnotationUpdateBulk" },
+                "title": "Sent Annos"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    { "type": "array", "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" } },
+                    { "type": "array", "items": { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" } }
+                  ],
+                  "title": "Response Sentenceannotation-Update Sent Anno Annotations Bulk"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/sentence/bulk/delete": {
+      "delete": {
+        "tags": ["sentenceAnnotation"],
+        "summary": "Deletes all SentenceAnnotations with the given IDs.",
+        "operationId": "delete_bulk_by_id",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "items": { "type": "integer" }, "type": "array", "title": "Sentence Anno Ids" }
+            }
+          },
           "required": true
         },
         "responses": {
@@ -5711,9 +6170,9 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": { "$ref": "#/components/schemas/LLMPromptTemplates" },
+                  "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" },
                   "type": "array",
-                  "title": "Response Llm-Create Prompt Templates"
+                  "title": "Response Sentenceannotation-Delete Bulk By Id"
                 }
               }
             }
@@ -5725,6 +6184,121 @@
         },
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
+    },
+    "/sentence/{sentence_anno_id}/code": {
+      "get": {
+        "tags": ["sentenceAnnotation"],
+        "summary": "Returns the Code of the SentenceAnnotation with the given ID if it exists.",
+        "operationId": "get_code",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "sentence_anno_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Sentence Anno Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/sentence/{sentence_anno_id}/memo": {
+      "get": {
+        "tags": ["sentenceAnnotation"],
+        "summary": "Returns the Memos attached to the SentenceAnnotation with the given ID if it exists.",
+        "operationId": "get_memos",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "sentence_anno_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Sentence Anno Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/MemoRead" },
+                  "title": "Response Sentenceannotation-Get Memos"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/sentence/{sentence_anno_id}/memo/user": {
+      "get": {
+        "tags": ["sentenceAnnotation"],
+        "summary": "Returns the Memo attached to the SentenceAnnotation with the given ID of the logged-in User if it exists.",
+        "operationId": "get_user_memo",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "sentence_anno_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Sentence Anno Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/sentence/code/{code_id}/user": {
+      "get": {
+        "tags": ["sentenceAnnotation"],
+        "summary": "Returns SentenceAnnotations with the given Code of the logged-in User",
+        "operationId": "get_by_user_code",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "code_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Code Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" },
+                  "title": "Response Sentenceannotation-Get By User Code"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -5733,10 +6307,7 @@
         "properties": {
           "title": { "type": "string", "title": "Title", "description": "Title of the AnalysisTable" },
           "content": { "type": "string", "title": "Content", "description": "Content of the AnalysisTable" },
-          "table_type": {
-            "allOf": [{ "$ref": "#/components/schemas/TableType" }],
-            "description": "TABLETYPE of the AnalysisTable"
-          },
+          "table_type": { "$ref": "#/components/schemas/TableType", "description": "TABLETYPE of the AnalysisTable" },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
@@ -5751,10 +6322,7 @@
         "properties": {
           "title": { "type": "string", "title": "Title", "description": "Title of the AnalysisTable" },
           "content": { "type": "string", "title": "Content", "description": "Content of the AnalysisTable" },
-          "table_type": {
-            "allOf": [{ "$ref": "#/components/schemas/TableType" }],
-            "description": "TABLETYPE of the AnalysisTable"
-          },
+          "table_type": { "$ref": "#/components/schemas/TableType", "description": "TABLETYPE of the AnalysisTable" },
           "id": { "type": "integer", "title": "Id", "description": "ID of the AnalysisTable" },
           "project_id": {
             "type": "integer",
@@ -5854,45 +6422,22 @@
         "required": ["project_id", "code_id", "reject_cide_id", "top_k"],
         "title": "AnnoscalingSuggest"
       },
-      "AnnotatedImageResult": {
+      "AnnotationLLMJobResult": {
         "properties": {
-          "total_results": {
-            "type": "integer",
-            "title": "Total Results",
-            "description": "The total number of bbox_annotation_ids. Used for pagination."
-          },
-          "data": {
-            "items": { "$ref": "#/components/schemas/BBoxAnnotationTableRow" },
+          "llm_job_type": { "type": "string", "const": "ANNOTATION", "title": "Llm Job Type" },
+          "results": {
+            "items": { "$ref": "#/components/schemas/AnnotationResult" },
             "type": "array",
-            "title": "Data",
-            "description": "The Annotations."
+            "title": "Results"
           }
         },
         "type": "object",
-        "required": ["total_results", "data"],
-        "title": "AnnotatedImageResult"
+        "required": ["llm_job_type", "results"],
+        "title": "AnnotationLLMJobResult"
       },
-      "AnnotatedSegmentResult": {
+      "AnnotationParams": {
         "properties": {
-          "total_results": {
-            "type": "integer",
-            "title": "Total Results",
-            "description": "The total number of span_annotation_ids. Used for pagination."
-          },
-          "data": {
-            "items": { "$ref": "#/components/schemas/AnnotationTableRow" },
-            "type": "array",
-            "title": "Data",
-            "description": "The Annotations."
-          }
-        },
-        "type": "object",
-        "required": ["total_results", "data"],
-        "title": "AnnotatedSegmentResult"
-      },
-      "AnnotationLLMJobParams": {
-        "properties": {
-          "llm_job_type": { "const": "ANNOTATION", "title": "Llm Job Type" },
+          "llm_job_type": { "type": "string", "const": "ANNOTATION", "title": "Llm Job Type" },
           "sdoc_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -5908,41 +6453,7 @@
         },
         "type": "object",
         "required": ["llm_job_type", "sdoc_ids", "code_ids"],
-        "title": "AnnotationLLMJobParams"
-      },
-      "AnnotationLLMJobResult": {
-        "properties": {
-          "llm_job_type": { "const": "ANNOTATION", "title": "Llm Job Type" },
-          "results": {
-            "items": { "$ref": "#/components/schemas/AnnotationResult" },
-            "type": "array",
-            "title": "Results"
-          }
-        },
-        "type": "object",
-        "required": ["llm_job_type", "results"],
-        "title": "AnnotationLLMJobResult"
-      },
-      "AnnotationOccurrence": {
-        "properties": {
-          "annotation": {
-            "anyOf": [
-              { "$ref": "#/components/schemas/SpanAnnotationRead" },
-              { "$ref": "#/components/schemas/BBoxAnnotationRead" }
-            ],
-            "title": "Annotation",
-            "description": "The Annotation"
-          },
-          "code": { "allOf": [{ "$ref": "#/components/schemas/CodeRead" }], "description": "The occuring Code." },
-          "sdoc": {
-            "allOf": [{ "$ref": "#/components/schemas/SourceDocumentRead" }],
-            "description": "The SourceDocument where the Code occurs."
-          },
-          "text": { "type": "string", "title": "Text", "description": "The Text of the Annotation" }
-        },
-        "type": "object",
-        "required": ["annotation", "code", "sdoc", "text"],
-        "title": "AnnotationOccurrence"
+        "title": "AnnotationParams"
       },
       "AnnotationResult": {
         "properties": {
@@ -5958,43 +6469,36 @@
         "required": ["sdoc_id", "suggested_annotations"],
         "title": "AnnotationResult"
       },
-      "AnnotationTableRow": {
+      "ApproachRecommendation": {
         "properties": {
-          "id": { "type": "integer", "title": "Id", "description": "ID of the SpanAnnotation" },
-          "span_text": {
-            "type": "string",
-            "title": "Span Text",
-            "description": "The SpanText the SpanAnnotation spans."
+          "recommended_approach": {
+            "$ref": "#/components/schemas/ApproachType",
+            "description": "Recommended approach"
           },
-          "code": {
-            "allOf": [{ "$ref": "#/components/schemas/CodeRead" }],
-            "description": "Code the SpanAnnotation refers to"
-          },
-          "user_id": { "type": "integer", "title": "User Id", "description": "User the SpanAnnotation belongs to" },
-          "sdoc": {
-            "allOf": [{ "$ref": "#/components/schemas/SourceDocumentRead" }],
-            "description": "SourceDocument the SpanAnnotation refers to"
-          },
-          "tags": {
-            "items": { "$ref": "#/components/schemas/DocumentTagRead" },
-            "type": "array",
-            "title": "Tags",
-            "description": "The DocumentTags of the SourceDocument."
-          },
-          "memo": {
-            "anyOf": [{ "$ref": "#/components/schemas/MemoRead" }, { "type": "null" }],
-            "description": "The Memo of the Annotation."
+          "reasoning": { "type": "string", "title": "Reasoning", "description": "Reasoning for the recommendation" },
+          "available_approaches": {
+            "additionalProperties": { "type": "boolean" },
+            "propertyNames": { "$ref": "#/components/schemas/ApproachType" },
+            "type": "object",
+            "title": "Available Approaches",
+            "description": "Available approaches"
           }
         },
         "type": "object",
-        "required": ["id", "span_text", "code", "user_id", "sdoc", "tags", "memo"],
-        "title": "AnnotationTableRow"
+        "required": ["recommended_approach", "reasoning", "available_approaches"],
+        "title": "ApproachRecommendation"
+      },
+      "ApproachType": {
+        "type": "string",
+        "enum": ["LLM_ZERO_SHOT", "LLM_FEW_SHOT", "MODEL_TRAINING"],
+        "title": "ApproachType"
       },
       "AttachedObjectType": {
         "type": "string",
         "enum": [
           "source_document",
           "code",
+          "sentence_annotation",
           "span_annotation",
           "span_group",
           "bbox_annotation",
@@ -6106,10 +6610,7 @@
             "description": "Absolute y_max coordinate of the BBoxAnnotation"
           },
           "id": { "type": "integer", "title": "Id", "description": "ID of the BBoxAnnotation" },
-          "code": {
-            "allOf": [{ "$ref": "#/components/schemas/CodeRead" }],
-            "description": "Code the BBoxAnnotation refers to"
-          },
+          "code": { "$ref": "#/components/schemas/CodeRead", "description": "Code the BBoxAnnotation refers to" },
           "user_id": { "type": "integer", "title": "User Id", "description": "User the SpanAnnotation belongs to" },
           "sdoc_id": {
             "type": "integer",
@@ -6133,7 +6634,7 @@
         "required": ["x_min", "x_max", "y_min", "y_max", "id", "code", "user_id", "sdoc_id", "created", "updated"],
         "title": "BBoxAnnotationReadResolved"
       },
-      "BBoxAnnotationTableRow": {
+      "BBoxAnnotationRow": {
         "properties": {
           "id": { "type": "integer", "title": "Id", "description": "ID of the BBoxAnnotation" },
           "x": { "type": "integer", "title": "X", "description": "The x-coordinate of the BBoxAnnotation." },
@@ -6141,13 +6642,10 @@
           "width": { "type": "integer", "title": "Width", "description": "The width of the BBoxAnnotation." },
           "height": { "type": "integer", "title": "Height", "description": "The height of the BBoxAnnotation." },
           "url": { "type": "string", "title": "Url", "description": "The url to the Image of the BBoxAnnotation." },
-          "code": {
-            "allOf": [{ "$ref": "#/components/schemas/CodeRead" }],
-            "description": "Code the BBoxAnnotation refers to"
-          },
+          "code": { "$ref": "#/components/schemas/CodeRead", "description": "Code the BBoxAnnotation refers to" },
           "user_id": { "type": "integer", "title": "User Id", "description": "User the BBoxAnnotation belongs to" },
           "sdoc": {
-            "allOf": [{ "$ref": "#/components/schemas/SourceDocumentRead" }],
+            "$ref": "#/components/schemas/SourceDocumentRead",
             "description": "SourceDocument the BBoxAnnotation refers to"
           },
           "tags": {
@@ -6163,7 +6661,25 @@
         },
         "type": "object",
         "required": ["id", "x", "y", "width", "height", "url", "code", "user_id", "sdoc", "tags", "memo"],
-        "title": "BBoxAnnotationTableRow"
+        "title": "BBoxAnnotationRow"
+      },
+      "BBoxAnnotationSearchResult": {
+        "properties": {
+          "total_results": {
+            "type": "integer",
+            "title": "Total Results",
+            "description": "The total number of bbox_annotation_ids. Used for pagination."
+          },
+          "data": {
+            "items": { "$ref": "#/components/schemas/BBoxAnnotationRow" },
+            "type": "array",
+            "title": "Data",
+            "description": "The Annotations."
+          }
+        },
+        "type": "object",
+        "required": ["total_results", "data"],
+        "title": "BBoxAnnotationSearchResult"
       },
       "BBoxAnnotationUpdate": {
         "properties": {
@@ -6188,23 +6704,14 @@
         "enum": ["Waiting", "Running", "Finished", "Errorneous", "Aborted"],
         "title": "BackgroundJobStatus"
       },
-      "Body_analysis-annotated_images": {
+      "Body_analysis-bbox_annotation_search": {
         "properties": {
           "filter": { "$ref": "#/components/schemas/Filter_BBoxColumns_" },
           "sorts": { "items": { "$ref": "#/components/schemas/Sort_BBoxColumns_" }, "type": "array", "title": "Sorts" }
         },
         "type": "object",
         "required": ["filter", "sorts"],
-        "title": "Body_analysis-annotated_images"
-      },
-      "Body_analysis-annotated_segments": {
-        "properties": {
-          "filter": { "$ref": "#/components/schemas/Filter_SpanColumns_" },
-          "sorts": { "items": { "$ref": "#/components/schemas/Sort_SpanColumns_" }, "type": "array", "title": "Sorts" }
-        },
-        "type": "object",
-        "required": ["filter", "sorts"],
-        "title": "Body_analysis-annotated_segments"
+        "title": "Body_analysis-bbox_annotation_search"
       },
       "Body_analysis-code_frequencies": {
         "properties": {
@@ -6215,6 +6722,28 @@
         "type": "object",
         "required": ["code_ids", "user_ids", "doctypes"],
         "title": "Body_analysis-code_frequencies"
+      },
+      "Body_analysis-sentence_annotation_search": {
+        "properties": {
+          "filter": { "$ref": "#/components/schemas/Filter_SentAnnoColumns_" },
+          "sorts": {
+            "items": { "$ref": "#/components/schemas/Sort_SentAnnoColumns_" },
+            "type": "array",
+            "title": "Sorts"
+          }
+        },
+        "type": "object",
+        "required": ["filter", "sorts"],
+        "title": "Body_analysis-sentence_annotation_search"
+      },
+      "Body_analysis-span_annotation_search": {
+        "properties": {
+          "filter": { "$ref": "#/components/schemas/Filter_SpanColumns_" },
+          "sorts": { "items": { "$ref": "#/components/schemas/Sort_SpanColumns_" }, "type": "array", "title": "Sorts" }
+        },
+        "type": "object",
+        "required": ["filter", "sorts"],
+        "title": "Body_analysis-span_annotation_search"
       },
       "Body_analysis-word_frequency_analysis": {
         "properties": {
@@ -6395,11 +6924,11 @@
             "description": "Project the ConceptOverTimeAnalysis belongs to"
           },
           "timeline_settings": {
-            "allOf": [{ "$ref": "#/components/schemas/COTATimelineSettings" }],
+            "$ref": "#/components/schemas/COTATimelineSettings",
             "description": "Timeline Analysis Settings of the ConceptOverTimeAnalysis."
           },
           "training_settings": {
-            "allOf": [{ "$ref": "#/components/schemas/COTATrainingSettings" }],
+            "$ref": "#/components/schemas/COTATrainingSettings",
             "description": "Timeline Training Settings of the ConceptOverTimeAnalysis."
           },
           "concepts": {
@@ -6463,16 +6992,16 @@
       "COTARefinementJobRead": {
         "properties": {
           "status": {
-            "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
+            "$ref": "#/components/schemas/BackgroundJobStatus",
             "description": "Status of the BackgroundJob",
             "default": "Waiting"
           },
           "cota": {
-            "allOf": [{ "$ref": "#/components/schemas/COTARead" }],
+            "$ref": "#/components/schemas/COTARead",
             "description": "COTA that is used in the COTARefinementJob"
           },
           "hyperparams": {
-            "allOf": [{ "$ref": "#/components/schemas/COTARefinementHyperparameters" }],
+            "$ref": "#/components/schemas/COTARefinementHyperparameters",
             "description": "Hyperparameters of the COTARefinementJob"
           },
           "id": { "type": "string", "title": "Id", "description": "ID of the COTARefinementJob" },
@@ -6562,11 +7091,7 @@
       },
       "COTATimelineSettings": {
         "properties": {
-          "group_by": {
-            "allOf": [{ "$ref": "#/components/schemas/DateGroupBy" }],
-            "description": "Group by date",
-            "default": "YEAR"
-          },
+          "group_by": { "$ref": "#/components/schemas/DateGroupBy", "description": "Group by date", "default": "YEAR" },
           "date_metadata_id": {
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
             "title": "Date Metadata Id",
@@ -6603,7 +7128,7 @@
             "default": 5
           },
           "dimensionality_reduction_algorithm": {
-            "allOf": [{ "$ref": "#/components/schemas/DimensionalityReductionAlgorithm" }],
+            "$ref": "#/components/schemas/DimensionalityReductionAlgorithm",
             "description": "Dimensionality Reduction Algorithm used for the ConceptOverTimeAnalysis",
             "default": "umap"
           },
@@ -6677,10 +7202,10 @@
       "CodeOccurrence": {
         "properties": {
           "sdoc": {
-            "allOf": [{ "$ref": "#/components/schemas/SourceDocumentRead" }],
+            "$ref": "#/components/schemas/SourceDocumentRead",
             "description": "The SourceDocument where the Code occurs."
           },
-          "code": { "allOf": [{ "$ref": "#/components/schemas/CodeRead" }], "description": "The occuring Code." },
+          "code": { "$ref": "#/components/schemas/CodeRead", "description": "The occuring Code." },
           "text": {
             "type": "string",
             "title": "Text",
@@ -6797,6 +7322,21 @@
         "required": ["label", "column", "sortable", "operator", "value"],
         "title": "ColumnInfo[SdocColumns]"
       },
+      "ColumnInfo_SentAnnoColumns_": {
+        "properties": {
+          "label": { "type": "string", "title": "Label" },
+          "column": {
+            "anyOf": [{ "$ref": "#/components/schemas/SentAnnoColumns" }, { "type": "integer" }],
+            "title": "Column"
+          },
+          "sortable": { "type": "boolean", "title": "Sortable" },
+          "operator": { "$ref": "#/components/schemas/FilterOperator" },
+          "value": { "$ref": "#/components/schemas/FilterValueType" }
+        },
+        "type": "object",
+        "required": ["label", "column", "sortable", "operator", "value"],
+        "title": "ColumnInfo[SentAnnoColumns]"
+      },
       "ColumnInfo_SpanColumns_": {
         "properties": {
           "label": { "type": "string", "title": "Label" },
@@ -6863,13 +7403,13 @@
       "CrawlerJobRead": {
         "properties": {
           "status": {
-            "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
+            "$ref": "#/components/schemas/BackgroundJobStatus",
             "description": "Status of the CrawlerJob",
             "default": "Waiting"
           },
           "id": { "type": "string", "title": "Id", "description": "ID of the CrawlerJob" },
           "parameters": {
-            "allOf": [{ "$ref": "#/components/schemas/CrawlerJobParameters" }],
+            "$ref": "#/components/schemas/CrawlerJobParameters",
             "description": "The parameters of the crawler job that defines what to crawl!"
           },
           "output_dir": {
@@ -7015,9 +7555,22 @@
         "type": "object",
         "title": "DocumentTagUpdate"
       },
-      "DocumentTaggingLLMJobParams": {
+      "DocumentTaggingLLMJobResult": {
         "properties": {
-          "llm_job_type": { "const": "DOCUMENT_TAGGING", "title": "Llm Job Type" },
+          "llm_job_type": { "type": "string", "const": "DOCUMENT_TAGGING", "title": "Llm Job Type" },
+          "results": {
+            "items": { "$ref": "#/components/schemas/DocumentTaggingResult" },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": ["llm_job_type", "results"],
+        "title": "DocumentTaggingLLMJobResult"
+      },
+      "DocumentTaggingParams": {
+        "properties": {
+          "llm_job_type": { "type": "string", "const": "DOCUMENT_TAGGING", "title": "Llm Job Type" },
           "sdoc_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -7033,20 +7586,7 @@
         },
         "type": "object",
         "required": ["llm_job_type", "sdoc_ids", "tag_ids"],
-        "title": "DocumentTaggingLLMJobParams"
-      },
-      "DocumentTaggingLLMJobResult": {
-        "properties": {
-          "llm_job_type": { "const": "DOCUMENT_TAGGING", "title": "Llm Job Type" },
-          "results": {
-            "items": { "$ref": "#/components/schemas/DocumentTaggingResult" },
-            "type": "array",
-            "title": "Results"
-          }
-        },
-        "type": "object",
-        "required": ["llm_job_type", "results"],
-        "title": "DocumentTaggingLLMJobResult"
+        "title": "DocumentTaggingParams"
       },
       "DocumentTaggingResult": {
         "properties": {
@@ -7093,11 +7633,11 @@
       "ExportJobParameters": {
         "properties": {
           "export_job_type": {
-            "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
+            "$ref": "#/components/schemas/ExportJobType",
             "description": "The type of the export job (what to export)"
           },
           "export_format": {
-            "allOf": [{ "$ref": "#/components/schemas/ExportFormat" }],
+            "$ref": "#/components/schemas/ExportFormat",
             "description": "The format of the exported data.",
             "default": "CSV"
           },
@@ -7108,6 +7648,7 @@
               { "$ref": "#/components/schemas/SingleProjectAllCodesExportJobParams" },
               { "$ref": "#/components/schemas/SingleProjectSelectedSdocsParams" },
               { "$ref": "#/components/schemas/SingleProjectSelectedSpanAnnotationsParams" },
+              { "$ref": "#/components/schemas/SingleProjectSelectedSentenceAnnotationsParams" },
               { "$ref": "#/components/schemas/SingleUserAllDataExportJobParams" },
               { "$ref": "#/components/schemas/SingleUserAllMemosExportJobParams" },
               { "$ref": "#/components/schemas/SingleUserLogbookExportJobParams" },
@@ -7125,6 +7666,7 @@
                 "SINGLE_PROJECT_ALL_DATA": "#/components/schemas/SingleProjectAllDataExportJobParams",
                 "SINGLE_PROJECT_ALL_TAGS": "#/components/schemas/SingleProjectAllTagsExportJobParams",
                 "SINGLE_PROJECT_SELECTED_SDOCS": "#/components/schemas/SingleProjectSelectedSdocsParams",
+                "SINGLE_PROJECT_SELECTED_SENTENCE_ANNOTATIONS": "#/components/schemas/SingleProjectSelectedSentenceAnnotationsParams",
                 "SINGLE_PROJECT_SELECTED_SPAN_ANNOTATIONS": "#/components/schemas/SingleProjectSelectedSpanAnnotationsParams",
                 "SINGLE_USER_ALL_DATA": "#/components/schemas/SingleUserAllDataExportJobParams",
                 "SINGLE_USER_ALL_MEMOS": "#/components/schemas/SingleUserAllMemosExportJobParams",
@@ -7140,7 +7682,7 @@
       "ExportJobRead": {
         "properties": {
           "status": {
-            "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
+            "$ref": "#/components/schemas/BackgroundJobStatus",
             "description": "Status of the ExportJob",
             "default": "Waiting"
           },
@@ -7151,7 +7693,7 @@
           },
           "id": { "type": "string", "title": "Id", "description": "ID of the ExportJob" },
           "parameters": {
-            "allOf": [{ "$ref": "#/components/schemas/ExportJobParameters" }],
+            "$ref": "#/components/schemas/ExportJobParameters",
             "description": "The parameters of the export job that defines what to export!"
           },
           "created": {
@@ -7173,6 +7715,7 @@
           "SINGLE_PROJECT_ALL_CODES",
           "SINGLE_PROJECT_SELECTED_SDOCS",
           "SINGLE_PROJECT_SELECTED_SPAN_ANNOTATIONS",
+          "SINGLE_PROJECT_SELECTED_SENTENCE_ANNOTATIONS",
           "SINGLE_USER_ALL_DATA",
           "SINGLE_USER_ALL_MEMOS",
           "SINGLE_USER_LOGBOOK",
@@ -7204,6 +7747,20 @@
         "type": "object",
         "required": ["user_content", "id", "user_id", "created"],
         "title": "FeedbackRead"
+      },
+      "FewShotParams": {
+        "properties": {
+          "llm_approach_type": { "type": "string", "const": "LLM_FEW_SHOT", "title": "Llm Approach Type" },
+          "prompts": {
+            "items": { "$ref": "#/components/schemas/LLMPromptTemplates" },
+            "type": "array",
+            "title": "Prompts",
+            "description": "The prompt templates to use for the job"
+          }
+        },
+        "type": "object",
+        "required": ["llm_approach_type", "prompts"],
+        "title": "FewShotParams"
       },
       "FilterExpression_BBoxColumns_": {
         "properties": {
@@ -7306,6 +7863,40 @@
         "type": "object",
         "required": ["id", "column", "operator", "value"],
         "title": "FilterExpression[SdocColumns]"
+      },
+      "FilterExpression_SentAnnoColumns_": {
+        "properties": {
+          "id": { "type": "string", "title": "Id" },
+          "column": {
+            "anyOf": [{ "$ref": "#/components/schemas/SentAnnoColumns" }, { "type": "integer" }],
+            "title": "Column"
+          },
+          "operator": {
+            "anyOf": [
+              { "$ref": "#/components/schemas/IDOperator" },
+              { "$ref": "#/components/schemas/NumberOperator" },
+              { "$ref": "#/components/schemas/StringOperator" },
+              { "$ref": "#/components/schemas/IDListOperator" },
+              { "$ref": "#/components/schemas/ListOperator" },
+              { "$ref": "#/components/schemas/DateOperator" },
+              { "$ref": "#/components/schemas/BooleanOperator" }
+            ],
+            "title": "Operator"
+          },
+          "value": {
+            "anyOf": [
+              { "type": "boolean" },
+              { "type": "string" },
+              { "type": "integer" },
+              { "items": { "type": "string" }, "type": "array" },
+              { "items": { "items": { "type": "string" }, "type": "array" }, "type": "array" }
+            ],
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": ["id", "column", "operator", "value"],
+        "title": "FilterExpression[SentAnnoColumns]"
       },
       "FilterExpression_SpanColumns_": {
         "properties": {
@@ -7476,6 +8067,25 @@
         "required": ["id", "items", "logic_operator"],
         "title": "Filter[SdocColumns]"
       },
+      "Filter_SentAnnoColumns_": {
+        "properties": {
+          "id": { "type": "string", "title": "Id" },
+          "items": {
+            "items": {
+              "anyOf": [
+                { "$ref": "#/components/schemas/FilterExpression_SentAnnoColumns_" },
+                { "$ref": "#/components/schemas/Filter_SentAnnoColumns_" }
+              ]
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "logic_operator": { "$ref": "#/components/schemas/LogicalOperator" }
+        },
+        "type": "object",
+        "required": ["id", "items", "logic_operator"],
+        "title": "Filter[SentAnnoColumns]"
+      },
       "Filter_SpanColumns_": {
         "properties": {
           "id": { "type": "string", "title": "Id" },
@@ -7586,58 +8196,171 @@
       "LLMJobParameters": {
         "properties": {
           "llm_job_type": {
-            "allOf": [{ "$ref": "#/components/schemas/LLMJobType" }],
+            "$ref": "#/components/schemas/TaskType",
             "description": "The type of the LLMJob (what to llm)"
           },
           "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project to analyse" },
-          "prompts": {
-            "items": { "$ref": "#/components/schemas/LLMPromptTemplates" },
-            "type": "array",
-            "title": "Prompts",
-            "description": "The prompt templates to use for the job"
-          },
-          "specific_llm_job_parameters": {
+          "specific_task_parameters": {
             "oneOf": [
-              { "$ref": "#/components/schemas/DocumentTaggingLLMJobParams" },
-              { "$ref": "#/components/schemas/MetadataExtractionLLMJobParams" },
-              { "$ref": "#/components/schemas/AnnotationLLMJobParams" }
+              { "$ref": "#/components/schemas/DocumentTaggingParams" },
+              { "$ref": "#/components/schemas/MetadataExtractionParams" },
+              { "$ref": "#/components/schemas/AnnotationParams" },
+              { "$ref": "#/components/schemas/SentenceAnnotationParams" }
             ],
-            "title": "Specific Llm Job Parameters",
+            "title": "Specific Task Parameters",
             "description": "Specific parameters for the LLMJob w.r.t it's type",
             "discriminator": {
               "propertyName": "llm_job_type",
               "mapping": {
-                "ANNOTATION": "#/components/schemas/AnnotationLLMJobParams",
-                "DOCUMENT_TAGGING": "#/components/schemas/DocumentTaggingLLMJobParams",
-                "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionLLMJobParams"
+                "ANNOTATION": "#/components/schemas/AnnotationParams",
+                "DOCUMENT_TAGGING": "#/components/schemas/DocumentTaggingParams",
+                "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionParams",
+                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationParams"
               }
             }
           }
         },
         "type": "object",
-        "required": ["llm_job_type", "project_id", "prompts", "specific_llm_job_parameters"],
+        "required": ["llm_job_type", "project_id", "specific_task_parameters"],
         "title": "LLMJobParameters"
+      },
+      "LLMJobParameters2-Input": {
+        "properties": {
+          "llm_job_type": {
+            "$ref": "#/components/schemas/TaskType",
+            "description": "The type of the LLMJob (what to llm)"
+          },
+          "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project to analyse" },
+          "specific_task_parameters": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/DocumentTaggingParams" },
+              { "$ref": "#/components/schemas/MetadataExtractionParams" },
+              { "$ref": "#/components/schemas/AnnotationParams" },
+              { "$ref": "#/components/schemas/SentenceAnnotationParams" }
+            ],
+            "title": "Specific Task Parameters",
+            "description": "Specific parameters for the LLMJob w.r.t it's type",
+            "discriminator": {
+              "propertyName": "llm_job_type",
+              "mapping": {
+                "ANNOTATION": "#/components/schemas/AnnotationParams",
+                "DOCUMENT_TAGGING": "#/components/schemas/DocumentTaggingParams",
+                "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionParams",
+                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationParams"
+              }
+            }
+          },
+          "llm_approach_type": {
+            "$ref": "#/components/schemas/ApproachType",
+            "description": "The approach to use for the LLMJob"
+          },
+          "specific_approach_parameters": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/ZeroShotParams" },
+              { "$ref": "#/components/schemas/FewShotParams" },
+              { "$ref": "#/components/schemas/ModelTrainingParams" }
+            ],
+            "title": "Specific Approach Parameters",
+            "description": "Specific parameters for the approach w.r.t it's type",
+            "discriminator": {
+              "propertyName": "llm_approach_type",
+              "mapping": {
+                "LLM_FEW_SHOT": "#/components/schemas/FewShotParams",
+                "LLM_ZERO_SHOT": "#/components/schemas/ZeroShotParams",
+                "MODEL_TRAINING": "#/components/schemas/ModelTrainingParams"
+              }
+            }
+          }
+        },
+        "type": "object",
+        "required": [
+          "llm_job_type",
+          "project_id",
+          "specific_task_parameters",
+          "llm_approach_type",
+          "specific_approach_parameters"
+        ],
+        "title": "LLMJobParameters2"
+      },
+      "LLMJobParameters2-Output": {
+        "properties": {
+          "llm_job_type": {
+            "$ref": "#/components/schemas/TaskType",
+            "description": "The type of the LLMJob (what to llm)"
+          },
+          "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project to analyse" },
+          "specific_task_parameters": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/DocumentTaggingParams" },
+              { "$ref": "#/components/schemas/MetadataExtractionParams" },
+              { "$ref": "#/components/schemas/AnnotationParams" },
+              { "$ref": "#/components/schemas/SentenceAnnotationParams" }
+            ],
+            "title": "Specific Task Parameters",
+            "description": "Specific parameters for the LLMJob w.r.t it's type",
+            "discriminator": {
+              "propertyName": "llm_job_type",
+              "mapping": {
+                "ANNOTATION": "#/components/schemas/AnnotationParams",
+                "DOCUMENT_TAGGING": "#/components/schemas/DocumentTaggingParams",
+                "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionParams",
+                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationParams"
+              }
+            }
+          },
+          "llm_approach_type": {
+            "$ref": "#/components/schemas/ApproachType",
+            "description": "The approach to use for the LLMJob"
+          },
+          "specific_approach_parameters": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/ZeroShotParams" },
+              { "$ref": "#/components/schemas/FewShotParams" },
+              { "$ref": "#/components/schemas/ModelTrainingParams" }
+            ],
+            "title": "Specific Approach Parameters",
+            "description": "Specific parameters for the approach w.r.t it's type",
+            "discriminator": {
+              "propertyName": "llm_approach_type",
+              "mapping": {
+                "LLM_FEW_SHOT": "#/components/schemas/FewShotParams",
+                "LLM_ZERO_SHOT": "#/components/schemas/ZeroShotParams",
+                "MODEL_TRAINING": "#/components/schemas/ModelTrainingParams"
+              }
+            }
+          }
+        },
+        "type": "object",
+        "required": [
+          "llm_job_type",
+          "project_id",
+          "specific_task_parameters",
+          "llm_approach_type",
+          "specific_approach_parameters"
+        ],
+        "title": "LLMJobParameters2"
       },
       "LLMJobRead": {
         "properties": {
           "status": {
-            "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
+            "$ref": "#/components/schemas/BackgroundJobStatus",
             "description": "Status of the LLMJob",
             "default": "Waiting"
           },
-          "num_steps_finished": {
-            "type": "integer",
-            "title": "Num Steps Finished",
-            "description": "Number of steps LLMJob has completed."
-          },
           "num_steps_total": { "type": "integer", "title": "Num Steps Total", "description": "Number of total steps." },
+          "current_step": { "type": "integer", "title": "Current Step", "description": "The current step." },
+          "current_step_description": {
+            "type": "string",
+            "title": "Current Step Description",
+            "description": "Description of the current step."
+          },
           "result": {
             "anyOf": [{ "$ref": "#/components/schemas/LLMJobResult" }, { "type": "null" }],
-            "description": "Results of hte LLMJob."
+            "description": "Results of the LLMJob."
           },
           "id": { "type": "string", "title": "Id", "description": "ID of the LLMJob" },
           "parameters": {
-            "allOf": [{ "$ref": "#/components/schemas/LLMJobParameters" }],
+            "$ref": "#/components/schemas/LLMJobParameters2-Output",
             "description": "The parameters of the LLMJob that defines what to llm!"
           },
           "created": {
@@ -7654,41 +8377,46 @@
           }
         },
         "type": "object",
-        "required": ["num_steps_finished", "num_steps_total", "id", "parameters", "created", "updated"],
+        "required": [
+          "num_steps_total",
+          "current_step",
+          "current_step_description",
+          "id",
+          "parameters",
+          "created",
+          "updated"
+        ],
         "title": "LLMJobRead"
       },
       "LLMJobResult": {
         "properties": {
           "llm_job_type": {
-            "allOf": [{ "$ref": "#/components/schemas/LLMJobType" }],
+            "$ref": "#/components/schemas/TaskType",
             "description": "The type of the LLMJob (what to llm)"
           },
-          "specific_llm_job_result": {
+          "specific_task_result": {
             "oneOf": [
               { "$ref": "#/components/schemas/DocumentTaggingLLMJobResult" },
               { "$ref": "#/components/schemas/MetadataExtractionLLMJobResult" },
-              { "$ref": "#/components/schemas/AnnotationLLMJobResult" }
+              { "$ref": "#/components/schemas/AnnotationLLMJobResult" },
+              { "$ref": "#/components/schemas/SentenceAnnotationLLMJobResult" }
             ],
-            "title": "Specific Llm Job Result",
+            "title": "Specific Task Result",
             "description": "Specific result for the LLMJob w.r.t it's type",
             "discriminator": {
               "propertyName": "llm_job_type",
               "mapping": {
                 "ANNOTATION": "#/components/schemas/AnnotationLLMJobResult",
                 "DOCUMENT_TAGGING": "#/components/schemas/DocumentTaggingLLMJobResult",
-                "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionLLMJobResult"
+                "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionLLMJobResult",
+                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationLLMJobResult"
               }
             }
           }
         },
         "type": "object",
-        "required": ["llm_job_type", "specific_llm_job_result"],
+        "required": ["llm_job_type", "specific_task_result"],
         "title": "LLMJobResult"
-      },
-      "LLMJobType": {
-        "type": "string",
-        "enum": ["DOCUMENT_TAGGING", "METADATA_EXTRACTION", "ANNOTATION"],
-        "title": "LLMJobType"
       },
       "LLMPromptTemplates": {
         "properties": {
@@ -7763,7 +8491,7 @@
             "description": "ID of the Object the Memo is attached to"
           },
           "attached_object_type": {
-            "allOf": [{ "$ref": "#/components/schemas/AttachedObjectType" }],
+            "$ref": "#/components/schemas/AttachedObjectType",
             "description": "Type of the Object the ID refers to"
           }
         },
@@ -7810,9 +8538,22 @@
         "title": "MemoUpdate"
       },
       "MetaType": { "type": "string", "enum": ["STRING", "NUMBER", "DATE", "BOOLEAN", "LIST"], "title": "MetaType" },
-      "MetadataExtractionLLMJobParams": {
+      "MetadataExtractionLLMJobResult": {
         "properties": {
-          "llm_job_type": { "const": "METADATA_EXTRACTION", "title": "Llm Job Type" },
+          "llm_job_type": { "type": "string", "const": "METADATA_EXTRACTION", "title": "Llm Job Type" },
+          "results": {
+            "items": { "$ref": "#/components/schemas/MetadataExtractionResult" },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": ["llm_job_type", "results"],
+        "title": "MetadataExtractionLLMJobResult"
+      },
+      "MetadataExtractionParams": {
+        "properties": {
+          "llm_job_type": { "type": "string", "const": "METADATA_EXTRACTION", "title": "Llm Job Type" },
           "sdoc_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -7828,20 +8569,7 @@
         },
         "type": "object",
         "required": ["llm_job_type", "sdoc_ids", "project_metadata_ids"],
-        "title": "MetadataExtractionLLMJobParams"
-      },
-      "MetadataExtractionLLMJobResult": {
-        "properties": {
-          "llm_job_type": { "const": "METADATA_EXTRACTION", "title": "Llm Job Type" },
-          "results": {
-            "items": { "$ref": "#/components/schemas/MetadataExtractionResult" },
-            "type": "array",
-            "title": "Results"
-          }
-        },
-        "type": "object",
-        "required": ["llm_job_type", "results"],
-        "title": "MetadataExtractionLLMJobResult"
+        "title": "MetadataExtractionParams"
       },
       "MetadataExtractionResult": {
         "properties": {
@@ -7862,6 +8590,18 @@
         "type": "object",
         "required": ["sdoc_id", "current_metadata", "suggested_metadata"],
         "title": "MetadataExtractionResult"
+      },
+      "ModelTrainingParams": {
+        "properties": {
+          "llm_approach_type": { "type": "string", "const": "MODEL_TRAINING", "title": "Llm Approach Type" },
+          "training_parameters": {
+            "$ref": "#/components/schemas/TrainingParameters",
+            "description": "The training parameters to use for the job"
+          }
+        },
+        "type": "object",
+        "required": ["llm_approach_type", "training_parameters"],
+        "title": "ModelTrainingParams"
       },
       "NumberOperator": {
         "type": "string",
@@ -7950,7 +8690,7 @@
             "description": "ID of the SourceDocument that was created from the payload."
           },
           "status": {
-            "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
+            "$ref": "#/components/schemas/BackgroundJobStatus",
             "description": "The current status of the payload.",
             "default": "Waiting"
           },
@@ -7960,10 +8700,7 @@
             "description": "The filename of the document to be preprocessed."
           },
           "mime_type": { "type": "string", "title": "Mime Type", "description": "The MIME type of the payload file." },
-          "doc_type": {
-            "allOf": [{ "$ref": "#/components/schemas/DocType" }],
-            "description": "The DocType of the payload file."
-          },
+          "doc_type": { "$ref": "#/components/schemas/DocType", "description": "The DocType of the payload file." },
           "current_pipeline_step": {
             "anyOf": [{ "type": "string" }, { "type": "null" }],
             "title": "Current Pipeline Step",
@@ -7983,7 +8720,7 @@
         "properties": {
           "id": { "type": "string", "title": "Id", "description": "UUID of the PreprocessingJob" },
           "status": {
-            "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
+            "$ref": "#/components/schemas/BackgroundJobStatus",
             "description": "Status of the PreprocessingJob",
             "default": "Waiting"
           },
@@ -8023,10 +8760,7 @@
       "ProjectMetadataCreate": {
         "properties": {
           "key": { "type": "string", "title": "Key", "description": "Key of the ProjectMetadata" },
-          "metatype": {
-            "allOf": [{ "$ref": "#/components/schemas/MetaType" }],
-            "description": "Type of the ProjectMetadata"
-          },
+          "metatype": { "$ref": "#/components/schemas/MetaType", "description": "Type of the ProjectMetadata" },
           "read_only": {
             "type": "boolean",
             "title": "Read Only",
@@ -8034,7 +8768,7 @@
             "default": false
           },
           "doctype": {
-            "allOf": [{ "$ref": "#/components/schemas/DocType" }],
+            "$ref": "#/components/schemas/DocType",
             "description": "DOCTYPE of the SourceDocument this metadata refers to"
           },
           "description": {
@@ -8055,10 +8789,7 @@
       "ProjectMetadataRead": {
         "properties": {
           "key": { "type": "string", "title": "Key", "description": "Key of the ProjectMetadata" },
-          "metatype": {
-            "allOf": [{ "$ref": "#/components/schemas/MetaType" }],
-            "description": "Type of the ProjectMetadata"
-          },
+          "metatype": { "$ref": "#/components/schemas/MetaType", "description": "Type of the ProjectMetadata" },
           "read_only": {
             "type": "boolean",
             "title": "Read Only",
@@ -8066,7 +8797,7 @@
             "default": false
           },
           "doctype": {
-            "allOf": [{ "$ref": "#/components/schemas/DocType" }],
+            "$ref": "#/components/schemas/DocType",
             "description": "DOCTYPE of the SourceDocument this metadata refers to"
           },
           "description": {
@@ -8207,6 +8938,254 @@
         "required": ["sdoc_id", "sentence"],
         "title": "SdocSentencePair"
       },
+      "SentAnnoColumns": {
+        "type": "string",
+        "enum": [
+          "SentAnno_CODE_ID",
+          "SentAnno_USER_ID",
+          "SentAnno_MEMO_CONTENT",
+          "SentAnno_SOURCE_SOURCE_DOCUMENT_FILENAME",
+          "SentAnno_DOCUMENT_DOCUMENT_TAG_ID_LIST"
+        ],
+        "title": "SentAnnoColumns"
+      },
+      "SentenceAnnotationCreate": {
+        "properties": {
+          "sentence_id_start": {
+            "type": "integer",
+            "title": "Sentence Id Start",
+            "description": "Start sentence ID of the SentenceAnnotation"
+          },
+          "sentence_id_end": {
+            "type": "integer",
+            "title": "Sentence Id End",
+            "description": "End sentence ID of the SentenceAnnotation"
+          },
+          "code_id": { "type": "integer", "title": "Code Id", "description": "Code the SentenceAnnotation refers to" },
+          "sdoc_id": {
+            "type": "integer",
+            "title": "Sdoc Id",
+            "description": "SourceDocument the SentenceAnnotation refers to"
+          }
+        },
+        "type": "object",
+        "required": ["sentence_id_start", "sentence_id_end", "code_id", "sdoc_id"],
+        "title": "SentenceAnnotationCreate"
+      },
+      "SentenceAnnotationLLMJobResult": {
+        "properties": {
+          "llm_job_type": { "type": "string", "const": "SENTENCE_ANNOTATION", "title": "Llm Job Type" },
+          "results": {
+            "items": { "$ref": "#/components/schemas/SentenceAnnotationResult" },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": ["llm_job_type", "results"],
+        "title": "SentenceAnnotationLLMJobResult"
+      },
+      "SentenceAnnotationParams": {
+        "properties": {
+          "llm_job_type": { "type": "string", "const": "SENTENCE_ANNOTATION", "title": "Llm Job Type" },
+          "sdoc_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sdoc Ids",
+            "description": "IDs of the source documents to analyse"
+          },
+          "code_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Code Ids",
+            "description": "IDs of the codes to use for the sentence annotation"
+          }
+        },
+        "type": "object",
+        "required": ["llm_job_type", "sdoc_ids", "code_ids"],
+        "title": "SentenceAnnotationParams"
+      },
+      "SentenceAnnotationRead": {
+        "properties": {
+          "sentence_id_start": {
+            "type": "integer",
+            "title": "Sentence Id Start",
+            "description": "Start sentence ID of the SentenceAnnotation"
+          },
+          "sentence_id_end": {
+            "type": "integer",
+            "title": "Sentence Id End",
+            "description": "End sentence ID of the SentenceAnnotation"
+          },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the SentenceAnnotation" },
+          "code_id": { "type": "integer", "title": "Code Id", "description": "Code the SentenceAnnotation refers to" },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id",
+            "description": "User that created the SentenceAnnotation"
+          },
+          "sdoc_id": {
+            "type": "integer",
+            "title": "Sdoc Id",
+            "description": "SourceDocument the SentenceAnnotation refers to"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the SentenceAnnotation"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated",
+            "description": "Updated timestamp of the SentenceAnnotation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sentence_id_start",
+          "sentence_id_end",
+          "id",
+          "code_id",
+          "user_id",
+          "sdoc_id",
+          "created",
+          "updated"
+        ],
+        "title": "SentenceAnnotationRead"
+      },
+      "SentenceAnnotationReadResolved": {
+        "properties": {
+          "sentence_id_start": {
+            "type": "integer",
+            "title": "Sentence Id Start",
+            "description": "Start sentence ID of the SentenceAnnotation"
+          },
+          "sentence_id_end": {
+            "type": "integer",
+            "title": "Sentence Id End",
+            "description": "End sentence ID of the SentenceAnnotation"
+          },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the SentenceAnnotation" },
+          "code": { "$ref": "#/components/schemas/CodeRead", "description": "Code the SentenceAnnotation refers to" },
+          "user_id": { "type": "integer", "title": "User Id", "description": "User the SpanAnnotation belongs to" },
+          "sdoc_id": {
+            "type": "integer",
+            "title": "Sdoc Id",
+            "description": "SourceDocument the SpanAnnotation refers to"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the SentenceAnnotation"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated",
+            "description": "Updated timestamp of the SentenceAnnotation"
+          }
+        },
+        "type": "object",
+        "required": ["sentence_id_start", "sentence_id_end", "id", "code", "user_id", "sdoc_id", "created", "updated"],
+        "title": "SentenceAnnotationReadResolved"
+      },
+      "SentenceAnnotationResult": {
+        "properties": {
+          "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
+          "suggested_annotations": {
+            "items": { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" },
+            "type": "array",
+            "title": "Suggested Annotations",
+            "description": "Suggested annotations"
+          }
+        },
+        "type": "object",
+        "required": ["sdoc_id", "suggested_annotations"],
+        "title": "SentenceAnnotationResult"
+      },
+      "SentenceAnnotationRow": {
+        "properties": {
+          "id": { "type": "integer", "title": "Id", "description": "ID of the SentenceAnnotation" },
+          "text": { "type": "string", "title": "Text", "description": "The Text the SentenceAnnotation spans." },
+          "code": { "$ref": "#/components/schemas/CodeRead", "description": "Code the SentenceAnnotation refers to" },
+          "user_id": { "type": "integer", "title": "User Id", "description": "User the SentenceAnnotation belongs to" },
+          "sdoc": {
+            "$ref": "#/components/schemas/SourceDocumentRead",
+            "description": "SourceDocument the SentenceAnnotation refers to"
+          },
+          "tags": {
+            "items": { "$ref": "#/components/schemas/DocumentTagRead" },
+            "type": "array",
+            "title": "Tags",
+            "description": "The DocumentTags of the SourceDocument."
+          },
+          "memo": {
+            "anyOf": [{ "$ref": "#/components/schemas/MemoRead" }, { "type": "null" }],
+            "description": "The Memo of the Annotation."
+          }
+        },
+        "type": "object",
+        "required": ["id", "text", "code", "user_id", "sdoc", "tags", "memo"],
+        "title": "SentenceAnnotationRow"
+      },
+      "SentenceAnnotationSearchResult": {
+        "properties": {
+          "total_results": {
+            "type": "integer",
+            "title": "Total Results",
+            "description": "The total number of sentence_annotation_ids. Used for pagination."
+          },
+          "data": {
+            "items": { "$ref": "#/components/schemas/SentenceAnnotationRow" },
+            "type": "array",
+            "title": "Data",
+            "description": "The Annotations."
+          }
+        },
+        "type": "object",
+        "required": ["total_results", "data"],
+        "title": "SentenceAnnotationSearchResult"
+      },
+      "SentenceAnnotationUpdate": {
+        "properties": {
+          "code_id": { "type": "integer", "title": "Code Id", "description": "Code the SentenceAnnotation refers to" }
+        },
+        "type": "object",
+        "required": ["code_id"],
+        "title": "SentenceAnnotationUpdate"
+      },
+      "SentenceAnnotationUpdateBulk": {
+        "properties": {
+          "sent_annotation_id": {
+            "type": "integer",
+            "title": "Sent Annotation Id",
+            "description": "ID of the SentenceAnnotation"
+          },
+          "code_id": { "type": "integer", "title": "Code Id", "description": "Code the SentenceAnnotation refers to" }
+        },
+        "type": "object",
+        "required": ["sent_annotation_id", "code_id"],
+        "title": "SentenceAnnotationUpdateBulk"
+      },
+      "SentenceAnnotatorResult": {
+        "properties": {
+          "sentence_annotations": {
+            "additionalProperties": {
+              "items": { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Sentence Annotations",
+            "description": "A mapping of sentence IDs to their annotations"
+          }
+        },
+        "type": "object",
+        "required": ["sentence_annotations"],
+        "title": "SentenceAnnotatorResult"
+      },
       "SimSearchImageHit": {
         "properties": {
           "sdoc_id": {
@@ -8245,7 +9224,11 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": { "const": "SINGLE_DOC_ALL_USER_ANNOTATIONS", "title": "Export Job Type" },
+          "export_job_type": {
+            "type": "string",
+            "const": "SINGLE_DOC_ALL_USER_ANNOTATIONS",
+            "title": "Export Job Type"
+          },
           "sdoc_id": {
             "type": "integer",
             "title": "Sdoc Id",
@@ -8263,7 +9246,11 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": { "const": "SINGLE_DOC_SINGLE_USER_ANNOTATIONS", "title": "Export Job Type" },
+          "export_job_type": {
+            "type": "string",
+            "const": "SINGLE_DOC_SINGLE_USER_ANNOTATIONS",
+            "title": "Export Job Type"
+          },
           "sdoc_id": {
             "type": "integer",
             "title": "Sdoc Id",
@@ -8286,7 +9273,7 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": { "const": "SINGLE_PROJECT_ALL_CODES", "title": "Export Job Type" }
+          "export_job_type": { "type": "string", "const": "SINGLE_PROJECT_ALL_CODES", "title": "Export Job Type" }
         },
         "type": "object",
         "required": ["project_id", "export_job_type"],
@@ -8299,7 +9286,7 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": { "const": "SINGLE_PROJECT_ALL_DATA", "title": "Export Job Type" }
+          "export_job_type": { "type": "string", "const": "SINGLE_PROJECT_ALL_DATA", "title": "Export Job Type" }
         },
         "type": "object",
         "required": ["project_id", "export_job_type"],
@@ -8312,7 +9299,7 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": { "const": "SINGLE_PROJECT_ALL_TAGS", "title": "Export Job Type" }
+          "export_job_type": { "type": "string", "const": "SINGLE_PROJECT_ALL_TAGS", "title": "Export Job Type" }
         },
         "type": "object",
         "required": ["project_id", "export_job_type"],
@@ -8325,7 +9312,7 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": { "const": "SINGLE_PROJECT_SELECTED_SDOCS", "title": "Export Job Type" },
+          "export_job_type": { "type": "string", "const": "SINGLE_PROJECT_SELECTED_SDOCS", "title": "Export Job Type" },
           "sdoc_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -8337,6 +9324,29 @@
         "required": ["project_id", "export_job_type", "sdoc_ids"],
         "title": "SingleProjectSelectedSdocsParams"
       },
+      "SingleProjectSelectedSentenceAnnotationsParams": {
+        "properties": {
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "The ID of the Project to export from"
+          },
+          "export_job_type": {
+            "type": "string",
+            "const": "SINGLE_PROJECT_SELECTED_SENTENCE_ANNOTATIONS",
+            "title": "Export Job Type"
+          },
+          "sentence_annotation_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sentence Annotation Ids",
+            "description": "IDs of the sentence annotations to export"
+          }
+        },
+        "type": "object",
+        "required": ["project_id", "export_job_type", "sentence_annotation_ids"],
+        "title": "SingleProjectSelectedSentenceAnnotationsParams"
+      },
       "SingleProjectSelectedSpanAnnotationsParams": {
         "properties": {
           "project_id": {
@@ -8344,7 +9354,11 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": { "const": "SINGLE_PROJECT_SELECTED_SPAN_ANNOTATIONS", "title": "Export Job Type" },
+          "export_job_type": {
+            "type": "string",
+            "const": "SINGLE_PROJECT_SELECTED_SPAN_ANNOTATIONS",
+            "title": "Export Job Type"
+          },
           "span_annotation_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -8363,7 +9377,7 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": { "const": "SINGLE_USER_ALL_DATA", "title": "Export Job Type" },
+          "export_job_type": { "type": "string", "const": "SINGLE_USER_ALL_DATA", "title": "Export Job Type" },
           "user_id": {
             "type": "integer",
             "title": "User Id",
@@ -8381,7 +9395,7 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": { "const": "SINGLE_USER_ALL_MEMOS", "title": "Export Job Type" },
+          "export_job_type": { "type": "string", "const": "SINGLE_USER_ALL_MEMOS", "title": "Export Job Type" },
           "user_id": {
             "type": "integer",
             "title": "User Id",
@@ -8399,7 +9413,7 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": { "const": "SINGLE_USER_LOGBOOK", "title": "Export Job Type" },
+          "export_job_type": { "type": "string", "const": "SINGLE_USER_LOGBOOK", "title": "Export Job Type" },
           "user_id": {
             "type": "integer",
             "title": "User Id",
@@ -8446,6 +9460,18 @@
         "type": "object",
         "required": ["column", "direction"],
         "title": "Sort[SdocColumns]"
+      },
+      "Sort_SentAnnoColumns_": {
+        "properties": {
+          "column": {
+            "anyOf": [{ "$ref": "#/components/schemas/SentAnnoColumns" }, { "type": "integer" }],
+            "title": "Column"
+          },
+          "direction": { "$ref": "#/components/schemas/SortDirection" }
+        },
+        "type": "object",
+        "required": ["column", "direction"],
+        "title": "Sort[SentAnnoColumns]"
       },
       "Sort_SpanColumns_": {
         "properties": {
@@ -8714,7 +9740,7 @@
             "description": "SourceDocument the SourceDocumentMetadata belongs to"
           },
           "project_metadata": {
-            "allOf": [{ "$ref": "#/components/schemas/ProjectMetadataRead" }],
+            "$ref": "#/components/schemas/ProjectMetadataRead",
             "description": "ProjectMetadata of the SourceDocumentMetadata"
           }
         },
@@ -8776,14 +9802,8 @@
             "title": "Name",
             "description": "User-defined name of the document"
           },
-          "doctype": {
-            "allOf": [{ "$ref": "#/components/schemas/DocType" }],
-            "description": "DOCTYPE of the SourceDocument"
-          },
-          "status": {
-            "allOf": [{ "$ref": "#/components/schemas/SDocStatus" }],
-            "description": "Status of the SourceDocument"
-          },
+          "doctype": { "$ref": "#/components/schemas/DocType", "description": "DOCTYPE of the SourceDocument" },
+          "status": { "$ref": "#/components/schemas/SDocStatus", "description": "Status of the SourceDocument" },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
@@ -8921,10 +9941,7 @@
           },
           "id": { "type": "integer", "title": "Id", "description": "ID of the SpanAnnotation" },
           "text": { "type": "string", "title": "Text", "description": "The SpanText the SpanAnnotation spans." },
-          "code": {
-            "allOf": [{ "$ref": "#/components/schemas/CodeRead" }],
-            "description": "Code the SpanAnnotation refers to"
-          },
+          "code": { "$ref": "#/components/schemas/CodeRead", "description": "Code the SpanAnnotation refers to" },
           "user_id": { "type": "integer", "title": "User Id", "description": "User the SpanAnnotation belongs to" },
           "sdoc_id": {
             "type": "integer",
@@ -8959,6 +9976,53 @@
           "updated"
         ],
         "title": "SpanAnnotationReadResolved"
+      },
+      "SpanAnnotationRow": {
+        "properties": {
+          "id": { "type": "integer", "title": "Id", "description": "ID of the SpanAnnotation" },
+          "span_text": {
+            "type": "string",
+            "title": "Span Text",
+            "description": "The SpanText the SpanAnnotation spans."
+          },
+          "code": { "$ref": "#/components/schemas/CodeRead", "description": "Code the SpanAnnotation refers to" },
+          "user_id": { "type": "integer", "title": "User Id", "description": "User the SpanAnnotation belongs to" },
+          "sdoc": {
+            "$ref": "#/components/schemas/SourceDocumentRead",
+            "description": "SourceDocument the SpanAnnotation refers to"
+          },
+          "tags": {
+            "items": { "$ref": "#/components/schemas/DocumentTagRead" },
+            "type": "array",
+            "title": "Tags",
+            "description": "The DocumentTags of the SourceDocument."
+          },
+          "memo": {
+            "anyOf": [{ "$ref": "#/components/schemas/MemoRead" }, { "type": "null" }],
+            "description": "The Memo of the Annotation."
+          }
+        },
+        "type": "object",
+        "required": ["id", "span_text", "code", "user_id", "sdoc", "tags", "memo"],
+        "title": "SpanAnnotationRow"
+      },
+      "SpanAnnotationSearchResult": {
+        "properties": {
+          "total_results": {
+            "type": "integer",
+            "title": "Total Results",
+            "description": "The total number of span_annotation_ids. Used for pagination."
+          },
+          "data": {
+            "items": { "$ref": "#/components/schemas/SpanAnnotationRow" },
+            "type": "array",
+            "title": "Data",
+            "description": "The Annotations."
+          }
+        },
+        "type": "object",
+        "required": ["total_results", "data"],
+        "title": "SpanAnnotationSearchResult"
       },
       "SpanAnnotationUpdate": {
         "properties": {
@@ -9075,10 +10139,7 @@
       },
       "TagStat": {
         "properties": {
-          "tag": {
-            "allOf": [{ "$ref": "#/components/schemas/DocumentTagRead" }],
-            "description": "The counted document tag."
-          },
+          "tag": { "$ref": "#/components/schemas/DocumentTagRead", "description": "The counted document tag." },
           "filtered_count": {
             "type": "integer",
             "title": "Filtered Count",
@@ -9093,6 +10154,11 @@
         "type": "object",
         "required": ["tag", "filtered_count", "global_count"],
         "title": "TagStat"
+      },
+      "TaskType": {
+        "type": "string",
+        "enum": ["DOCUMENT_TAGGING", "METADATA_EXTRACTION", "ANNOTATION", "SENTENCE_ANNOTATION"],
+        "title": "TaskType"
       },
       "TimelineAnalysisColumns": {
         "type": "string",
@@ -9113,7 +10179,7 @@
           "color": { "type": "string", "title": "Color", "description": "Color of the Concept" },
           "visible": { "type": "boolean", "title": "Visible", "description": "Visibility of the Concept" },
           "filter": {
-            "allOf": [{ "$ref": "#/components/schemas/Filter_TimelineAnalysisColumns_-Input" }],
+            "$ref": "#/components/schemas/Filter_TimelineAnalysisColumns_-Input",
             "description": "The filter of the Concept"
           }
         },
@@ -9129,7 +10195,7 @@
           "color": { "type": "string", "title": "Color", "description": "Color of the Concept" },
           "visible": { "type": "boolean", "title": "Visible", "description": "Visibility of the Concept" },
           "filter": {
-            "allOf": [{ "$ref": "#/components/schemas/Filter_TimelineAnalysisColumns_-Output" }],
+            "$ref": "#/components/schemas/Filter_TimelineAnalysisColumns_-Output",
             "description": "The filter of the Concept"
           }
         },
@@ -9161,7 +10227,7 @@
             "description": "Project the TimelineAnalysis belongs to"
           },
           "settings": {
-            "allOf": [{ "$ref": "#/components/schemas/TimelineAnalysisSettings" }],
+            "$ref": "#/components/schemas/TimelineAnalysisSettings",
             "description": "Timeline Analysis Settings of the TimelineAnalysis."
           },
           "concepts": {
@@ -9201,21 +10267,17 @@
         "required": ["date", "sdoc_ids"],
         "title": "TimelineAnalysisResult"
       },
-      "TimelineAnalysisResultType": { "const": "document", "title": "TimelineAnalysisResultType" },
+      "TimelineAnalysisResultType": { "type": "string", "enum": ["document"], "title": "TimelineAnalysisResultType" },
       "TimelineAnalysisSettings": {
         "properties": {
-          "group_by": {
-            "allOf": [{ "$ref": "#/components/schemas/DateGroupBy" }],
-            "description": "Group by date",
-            "default": "YEAR"
-          },
+          "group_by": { "$ref": "#/components/schemas/DateGroupBy", "description": "Group by date", "default": "YEAR" },
           "date_metadata_id": {
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
             "title": "Date Metadata Id",
             "description": "ID of the Project Date Metadata that is used for the TimelineAnalysis"
           },
           "result_type": {
-            "allOf": [{ "$ref": "#/components/schemas/TimelineAnalysisResultType" }],
+            "$ref": "#/components/schemas/TimelineAnalysisResultType",
             "description": "ResultType of the TimelineAnalysis",
             "default": "document"
           }
@@ -9268,13 +10330,13 @@
       "TrainerJobRead": {
         "properties": {
           "status": {
-            "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
+            "$ref": "#/components/schemas/BackgroundJobStatus",
             "description": "Status of the TrainerJob",
             "default": "Waiting"
           },
           "id": { "type": "string", "title": "Id", "description": "ID of the TrainerJob" },
           "parameters": {
-            "allOf": [{ "$ref": "#/components/schemas/TrainerJobParameters" }],
+            "$ref": "#/components/schemas/TrainerJobParameters",
             "description": "The parameters of the TrainerJob that defines how to train!"
           },
           "saved_model_path": {
@@ -9298,6 +10360,28 @@
         "type": "object",
         "required": ["id", "parameters", "created", "updated"],
         "title": "TrainerJobRead"
+      },
+      "TrainingParameters": {
+        "properties": {
+          "max_epochs": {
+            "type": "integer",
+            "title": "Max Epochs",
+            "description": "The maximum number of epochs to train the model"
+          },
+          "batch_size": {
+            "type": "integer",
+            "title": "Batch Size",
+            "description": "The batch size to use for training"
+          },
+          "learning_rate": {
+            "type": "number",
+            "title": "Learning Rate",
+            "description": "The learning rate to use for training"
+          }
+        },
+        "type": "object",
+        "required": ["max_epochs", "batch_size", "learning_rate"],
+        "title": "TrainingParameters"
       },
       "UserAuthorizationHeaderData": {
         "properties": {
@@ -9507,6 +10591,20 @@
         "type": "object",
         "required": ["word", "word_percent", "count", "sdocs", "sdocs_percent"],
         "title": "WordFrequencyStat"
+      },
+      "ZeroShotParams": {
+        "properties": {
+          "llm_approach_type": { "type": "string", "const": "LLM_ZERO_SHOT", "title": "Llm Approach Type" },
+          "prompts": {
+            "items": { "$ref": "#/components/schemas/LLMPromptTemplates" },
+            "type": "array",
+            "title": "Prompts",
+            "description": "The prompt templates to use for the job"
+          }
+        },
+        "type": "object",
+        "required": ["llm_approach_type", "prompts"],
+        "title": "ZeroShotParams"
       }
     },
     "securitySchemes": {

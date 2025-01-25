@@ -135,37 +135,37 @@ def test_create_remove_project(db: Session) -> None:
 
 def test_project_users(db: Session, project: ProjectORM, user: UserORM) -> None:
     project_users = [UserRead.model_validate(user) for user in project.users]
+    # System, Demo, Assistant Zero, Assistant Few, Assistant Trained
+    assert len(project_users) == 5
 
-    assert len(project_users) == 2
-
-    # create third user
-    email = f'{"".join(random.choices(string.ascii_letters, k=15))}@gmail.com'
+    # create sixth user
+    email = f"{''.join(random.choices(string.ascii_letters, k=15))}@gmail.com"
     first_name = "".join(random.choices(string.ascii_letters, k=15))
     last_name = "".join(random.choices(string.ascii_letters, k=15))
     password = "".join(random.choices(string.ascii_letters, k=15))
 
-    user_three = UserCreate(
+    user_six = UserCreate(
         email=email, first_name=first_name, last_name=last_name, password=password
     )
 
-    db_user = crud_user.create(db=db, create_dto=user_three)
-    user_three_orm = UserRead.model_validate(db_user)
+    db_user = crud_user.create(db=db, create_dto=user_six)
+    user_six_orm = UserRead.model_validate(db_user)
 
-    crud_project.associate_user(db=db, proj_id=project.id, user_id=user_three_orm.id)
-
-    proj_db_obj = crud_project.read(db=db, id=project.id)
-    project_users = [UserRead.model_validate(user) for user in proj_db_obj.users]
-
-    assert len(project_users) == 3
-    assert project_users[2].id == user_three_orm.id
-
-    crud_user.remove(db=db, id=user_three_orm.id)
+    crud_project.associate_user(db=db, proj_id=project.id, user_id=user_six_orm.id)
 
     proj_db_obj = crud_project.read(db=db, id=project.id)
     project_users = [UserRead.model_validate(user) for user in proj_db_obj.users]
 
-    assert len(project_users) == 2
-    assert project_users[1].id == user.id
+    assert len(project_users) == 6
+    assert project_users[5].id == user_six_orm.id
+
+    crud_user.remove(db=db, id=user_six_orm.id)
+
+    proj_db_obj = crud_project.read(db=db, id=project.id)
+    project_users = [UserRead.model_validate(user) for user in proj_db_obj.users]
+
+    assert len(project_users) == 5
+    assert project_users[4].id == user.id
 
 
 # project codes

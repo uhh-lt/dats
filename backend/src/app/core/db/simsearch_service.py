@@ -96,7 +96,12 @@ class SimSearchService(metaclass=SingletonMeta):
     ) -> None:
         sentence_embs = self.rms.clip_text_embedding(
             ClipTextEmbeddingInput(text=sentences)
-        ).numpy()
+        )
+        if len(sentence_embs.embeddings) != len(sentences):
+            raise ValueError(
+                f"Embedding/Sentence mismatch for sdoc {sdoc_id}! Input: {len(sentences)} sentences, Output: {len(sentence_embs.embeddings)} embeddings"
+            )
+        sentence_embs = sentence_embs.numpy()
 
         # create cheap&easy (but suboptimal) document embeddings for now
         doc_emb = sentence_embs.sum(axis=0)
