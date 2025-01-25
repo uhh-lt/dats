@@ -19,6 +19,8 @@ jobs:
       COMPOSE_PROFILES: "weaviate,ray,background,backend,frontend"
       RAY_CONFIG: "config_gpu.yaml"
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      BACKEND_HAS_NEW_REQUIREMENTS: false
+      RAY_HAS_NEW_REQUIREMENTS: false
     steps:
       - uses: actions/checkout@v3
       - name: Checkout PR
@@ -26,11 +28,31 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr checkout ${{ github.event.pull_request.number }}
+      - name: Check for new backend requirements
+        id: check_backend_requirements
+        run: |
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q -e '^backend/requirements.txt' -e '^backend/environment.yml'; then
+            echo "Backend has new requirements"
+            echo "BACKEND_HAS_NEW_REQUIREMENTS=true" >> $GITHUB_ENV
+          fi
+      - name: Check for new ray requirements
+        id: check_ray_requirements
+        run: |
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q -e '^backend/src/app/preprocessing/ray_model_worker/requirements.txt'; then
+            echo "Ray has new requirements"
+            echo "RAY_HAS_NEW_REQUIREMENTS=true" >> $GITHUB_ENV
+          fi
       - name: Prepare environment
         run: |
           ./bin/setup-folders.sh
           ./bin/setup-envs.sh --project_name action-runner --port_prefix 131
           sed -i 's/\(DATS_FRONTEND_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
+          if [ "${{ env.RAY_HAS_NEW_REQUIREMENTS }}" = "true" ]; then
+            sed -i 's/\(DATS_RAY_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
+          fi
+          if [ "${{ env.BACKEND_HAS_NEW_REQUIREMENTS }}" = "true" ]; then
+            sed -i 's/\(DATS_BACKEND_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
+          fi
           echo "SPACY_CACHE_DIR=$HOME/spacy_models" >> docker/.env
           echo "MODELS_CACHE_DIR=$HOME/models_cache" >> docker/.env
           mkdir -p $HOME/spacy_models
@@ -38,6 +60,12 @@ jobs:
       - name: Build & Start Docker Containers
         working-directory: docker
         run: |
+          if [ "${{ env.RAY_HAS_NEW_REQUIREMENTS }}" = "true" ]; then
+            docker compose build ray
+          fi
+          if [ "${{ env.BACKEND_HAS_NEW_REQUIREMENTS }}" = "true" ]; then
+            docker compose build dats-backend
+          fi
           docker compose build dats-frontend
           docker compose up --wait --quiet-pull
       - name: Setup node
