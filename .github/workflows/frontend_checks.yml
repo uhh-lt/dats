@@ -36,12 +36,26 @@ jobs:
           if git diff --name-only $base_branch HEAD | grep -q -e '^backend/requirements.txt' -e '^backend/environment.yml'; then
             echo "BACKEND_HAS_NEW_REQUIREMENTS=true" >> $GITHUB_ENV
           fi
+      - name: Check for new backend requirements on push
+        id: check_backend_requirements2
+        if: github.event_name == 'push'
+        run: |
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q -e '^backend/requirements.txt' -e '^backend/environment.yml'; then
+            echo "BACKEND_HAS_NEW_REQUIREMENTS=true" >> $GITHUB_ENV
+          fi
       - name: Check for new ray requirements
         id: check_ray_requirements
         if: github.event_name == 'pull_request'
         run: |
           base_branch=$(git merge-base origin/${{ github.event.pull_request.base.ref }} HEAD)
           if git diff --name-only $base_branch HEAD | grep -q -e '^backend/src/app/preprocessing/ray_model_worker/requirements.txt'; then
+            echo "RAY_HAS_NEW_REQUIREMENTS=true" >> $GITHUB_ENV
+          fi
+      - name: Check for new ray requirements on push
+        id: check_ray_requirements2
+        if: github.event_name == 'push'
+        run: |
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q -e '^backend/src/app/preprocessing/ray_model_worker/requirements.txt'; then
             echo "RAY_HAS_NEW_REQUIREMENTS=true" >> $GITHUB_ENV
           fi
       - name: Prepare environment
