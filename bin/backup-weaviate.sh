@@ -32,4 +32,4 @@ while true; do
     fi
     sleep 10
 done
-echo "Weaviate data backup $BACKUP_NAME completed with $STATUS"
+echo "Weaviate backup successful! Backup $BACKUP_NAME completed with $STATUS"

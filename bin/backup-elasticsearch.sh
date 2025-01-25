@@ -43,4 +43,4 @@ while [ "$CLUSTER_STATUS" != "green" ]; do
     echo "Current cluster status: $CLUSTER_STATUS"
 done
 
-echo "Elasticsearch snapshot created successfully with snapshot name: $SNAPSHOT_NAME."
+echo "Elasticsearch backup successful! Snapshot name: $SNAPSHOT_NAME"

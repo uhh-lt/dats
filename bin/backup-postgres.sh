@@ -25,4 +25,4 @@ cd docker || exit
 
 # Create a dump of the database
 docker compose -f compose.yml -f compose.production.yml exec -e PGPASSWORD="$POSTGRES_PASSWORD" -T postgres pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" > "../backups/postgres/dump_$(date +%Y_%m_%d_%H_%M).sql"
-echo "Database dump created successfully."
+echo "PostgreSQL backup successful!"

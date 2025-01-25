@@ -20,3 +20,4 @@ fi
 # Create a tarball of the repo
 cd docker || exit
 tar -czf "../backups/repo/repo_$(date +%Y_%m_%d_%H_%M).tar.gz" "backend_repo"
+echo "Repo backup successful!"
