@@ -101,6 +101,6 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
         run: |
           scp -o StrictHostKeyChecking=no bin/deploy.sh $SSH_HOST:~/deploy.sh
-          ssh -o StrictHostKeyChecking=no $SSH_HOST './deploy.sh'
+          ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=5 -o StrictHostKeyChecking=no $SSH_HOST './deploy.sh'
           ssh -o StrictHostKeyChecking=no $SSH_HOST 'rm ./deploy.sh'
         shell: bash
