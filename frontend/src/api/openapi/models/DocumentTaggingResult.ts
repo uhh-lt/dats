@@ -2,7 +2,16 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { BackgroundJobStatus } from "./BackgroundJobStatus";
 export type DocumentTaggingResult = {
+  /**
+   * Status of the Result
+   */
+  status: BackgroundJobStatus;
+  /**
+   * Status message of the result
+   */
+  status_message: string;
   /**
    * ID of the source document
    */

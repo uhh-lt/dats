@@ -2,8 +2,17 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { BackgroundJobStatus } from "./BackgroundJobStatus";
 import type { SpanAnnotationReadResolved } from "./SpanAnnotationReadResolved";
 export type AnnotationResult = {
+  /**
+   * Status of the Result
+   */
+  status: BackgroundJobStatus;
+  /**
+   * Status message of the result
+   */
+  status_message: string;
   /**
    * ID of the source document
    */

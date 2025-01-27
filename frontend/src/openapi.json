@@ -6457,6 +6457,12 @@
       },
       "AnnotationResult": {
         "properties": {
+          "status": { "$ref": "#/components/schemas/BackgroundJobStatus", "description": "Status of the Result" },
+          "status_message": {
+            "type": "string",
+            "title": "Status Message",
+            "description": "Status message of the result"
+          },
           "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
           "suggested_annotations": {
             "items": { "$ref": "#/components/schemas/SpanAnnotationReadResolved" },
@@ -6466,7 +6472,7 @@
           }
         },
         "type": "object",
-        "required": ["sdoc_id", "suggested_annotations"],
+        "required": ["status", "status_message", "sdoc_id", "suggested_annotations"],
         "title": "AnnotationResult"
       },
       "ApproachRecommendation": {
@@ -7590,6 +7596,12 @@
       },
       "DocumentTaggingResult": {
         "properties": {
+          "status": { "$ref": "#/components/schemas/BackgroundJobStatus", "description": "Status of the Result" },
+          "status_message": {
+            "type": "string",
+            "title": "Status Message",
+            "description": "Status message of the result"
+          },
           "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
           "current_tag_ids": {
             "items": { "type": "integer" },
@@ -7606,7 +7618,7 @@
           "reasoning": { "type": "string", "title": "Reasoning", "description": "Reasoning for the tagging" }
         },
         "type": "object",
-        "required": ["sdoc_id", "current_tag_ids", "suggested_tag_ids", "reasoning"],
+        "required": ["status", "status_message", "sdoc_id", "current_tag_ids", "suggested_tag_ids", "reasoning"],
         "title": "DocumentTaggingResult"
       },
       "ElasticSearchDocumentHit": {
@@ -8573,6 +8585,12 @@
       },
       "MetadataExtractionResult": {
         "properties": {
+          "status": { "$ref": "#/components/schemas/BackgroundJobStatus", "description": "Status of the Result" },
+          "status_message": {
+            "type": "string",
+            "title": "Status Message",
+            "description": "Status message of the result"
+          },
           "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
           "current_metadata": {
             "items": { "$ref": "#/components/schemas/SourceDocumentMetadataReadResolved" },
@@ -8588,7 +8606,7 @@
           }
         },
         "type": "object",
-        "required": ["sdoc_id", "current_metadata", "suggested_metadata"],
+        "required": ["status", "status_message", "sdoc_id", "current_metadata", "suggested_metadata"],
         "title": "MetadataExtractionResult"
       },
       "ModelTrainingParams": {
@@ -9094,6 +9112,12 @@
       },
       "SentenceAnnotationResult": {
         "properties": {
+          "status": { "$ref": "#/components/schemas/BackgroundJobStatus", "description": "Status of the Result" },
+          "status_message": {
+            "type": "string",
+            "title": "Status Message",
+            "description": "Status message of the result"
+          },
           "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
           "suggested_annotations": {
             "items": { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" },
@@ -9103,7 +9127,7 @@
           }
         },
         "type": "object",
-        "required": ["sdoc_id", "suggested_annotations"],
+        "required": ["status", "status_message", "sdoc_id", "suggested_annotations"],
         "title": "SentenceAnnotationResult"
       },
       "SentenceAnnotationRow": {
