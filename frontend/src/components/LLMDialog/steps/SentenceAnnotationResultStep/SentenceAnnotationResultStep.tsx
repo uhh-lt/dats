@@ -1,14 +1,25 @@
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import LLMHooks from "../../../../api/LLMHooks.ts";
+import { ApproachType } from "../../../../api/openapi/models/ApproachType.ts";
 import { SentenceAnnotationLLMJobResult } from "../../../../api/openapi/models/SentenceAnnotationLLMJobResult.ts";
 import { QueryKey } from "../../../../api/QueryKey.ts";
 import queryClient from "../../../../plugins/ReactQueryClient.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
-import { SYSTEM_USER_ID } from "../../../../utils/GlobalConstants.ts";
+import {
+  ASSISTANT_FEWSHOT_ID,
+  ASSISTANT_TRAINED_ID,
+  ASSISTANT_ZEROSHOT_ID,
+} from "../../../../utils/GlobalConstants.ts";
 import { AnnoActions } from "../../../../views/annotation/annoSlice.ts";
 import { CRUDDialogActions } from "../../../dialogSlice.ts";
 import LLMUtterance from "../LLMUtterance.tsx";
+
+const approach2AssistantID: Record<ApproachType, number> = {
+  [ApproachType.LLM_ZERO_SHOT]: ASSISTANT_ZEROSHOT_ID,
+  [ApproachType.LLM_FEW_SHOT]: ASSISTANT_FEWSHOT_ID,
+  [ApproachType.MODEL_TRAINING]: ASSISTANT_TRAINED_ID,
+};
 
 function SentenceAnnotationResultStep() {
   // get the job
@@ -19,6 +30,7 @@ function SentenceAnnotationResultStep() {
     return (
       <SentenceAnnotationResultStepContent
         jobResult={llmJob.data.result.specific_task_result as SentenceAnnotationLLMJobResult}
+        approachType={llmJob.data.parameters.llm_approach_type}
       />
     );
   } else if (llmJob.isLoading) {
@@ -34,7 +46,13 @@ function SentenceAnnotationResultStep() {
   }
 }
 
-function SentenceAnnotationResultStepContent({ jobResult }: { jobResult: SentenceAnnotationLLMJobResult }) {
+function SentenceAnnotationResultStepContent({
+  jobResult,
+  approachType,
+}: {
+  jobResult: SentenceAnnotationLLMJobResult;
+  approachType: ApproachType;
+}) {
   // actions
   const dispatch = useAppDispatch();
   const handleClose = () => {
@@ -47,11 +65,13 @@ function SentenceAnnotationResultStepContent({ jobResult }: { jobResult: Sentenc
     const firstSdocId = jobResult.results[0].sdoc_id;
 
     dispatch(CRUDDialogActions.closeLLMDialog());
-    dispatch(AnnoActions.compareWithUser(SYSTEM_USER_ID));
+    dispatch(AnnoActions.compareWithUser(approach2AssistantID[approachType]));
     navigate(`/project/${projectId}/annotation/${firstSdocId}`);
 
     // reload annotations
-    queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR, firstSdocId, SYSTEM_USER_ID] });
+    queryClient.invalidateQueries({
+      queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR, firstSdocId, approach2AssistantID[approachType]],
+    });
   };
 
   return (
