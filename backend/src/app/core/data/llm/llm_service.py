@@ -481,70 +481,81 @@ class LLMService(metaclass=SingletonMeta):
         for idx, (sdoc_id, sdoc_data) in enumerate(
             zip(task_parameters.sdoc_ids, sdoc_datas)
         ):
-            # update job status
-            msg = f"Processing SDOC id={sdoc_id}"
-            self._next_llm_job_step(
-                llm_job_id=llm_job_id,
-                description=msg,
-            )
-            logger.info(msg)
+            try:
+                # update job status
+                msg = f"Processing SDOC id={sdoc_id}"
+                self._next_llm_job_step(
+                    llm_job_id=llm_job_id,
+                    description=msg,
+                )
+                logger.info(msg)
 
-            if sdoc_data is None:
-                raise ValueError(
-                    f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
+                if sdoc_data is None:
+                    raise ValueError(
+                        f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
+                    )
+
+                # get current tag ids
+                current_tag_ids = [
+                    tag.id
+                    for tag in crud_sdoc.read(db=db, id=sdoc_data.id).document_tags
+                ]
+
+                # get language
+                language = crud_sdoc_meta.read_by_sdoc_and_key(
+                    db=db, sdoc_id=sdoc_data.id, key="language"
+                ).str_value
+
+                if (
+                    language is None
+                    or language not in prompt_builder.supported_languages
+                ):
+                    raise ValueError("Language not supported")
+
+                # construct prompts
+                system_prompt = prompt_builder.build_system_prompt(
+                    system_prompt_template=prompt_dict[language]["system_prompt"]
+                )
+                user_prompt = prompt_builder.build_user_prompt(
+                    user_prompt_template=prompt_dict[language]["user_prompt"],
+                    document=sdoc_data.content,
                 )
 
-            # get current tag ids
-            current_tag_ids = [
-                tag.id for tag in crud_sdoc.read(db=db, id=sdoc_data.id).document_tags
-            ]
+                # prompt the model
+                response = self.ollamas.chat(
+                    system_prompt=system_prompt,
+                    user_prompt=user_prompt,
+                    response_model=OllamaDocumentTaggingResult,
+                )
+                logger.info(
+                    f"Got chat response! Tags={response.categories}, Reason={response.reasoning}"
+                )
 
-            # get language
-            language = crud_sdoc_meta.read_by_sdoc_and_key(
-                db=db, sdoc_id=sdoc_data.id, key="language"
-            ).str_value
+                # parse result
+                parsed_result = prompt_builder.parse_result(result=response)
 
-            if language is None or language not in prompt_builder.supported_languages:
                 result.append(
                     DocumentTaggingResult(
+                        status=BackgroundJobStatus.FINISHED,
+                        status_message="Document tagging successful",
                         sdoc_id=sdoc_data.id,
-                        suggested_tag_ids=[],
+                        suggested_tag_ids=parsed_result.tag_ids,
                         current_tag_ids=current_tag_ids,
-                        reasoning="Language not supported",
+                        reasoning=parsed_result.reasoning,
                     )
                 )
-                continue
 
-            # construct prompts
-            system_prompt = prompt_builder.build_system_prompt(
-                system_prompt_template=prompt_dict[language]["system_prompt"]
-            )
-            user_prompt = prompt_builder.build_user_prompt(
-                user_prompt_template=prompt_dict[language]["user_prompt"],
-                document=sdoc_data.content,
-            )
-
-            # prompt the model
-            response = self.ollamas.chat(
-                system_prompt=system_prompt,
-                user_prompt=user_prompt,
-                response_model=OllamaDocumentTaggingResult,
-            )
-            logger.info(
-                f"Got chat response! Tags={response.categories}, Reason={response.reasoning}"
-            )
-
-            # parse result
-            parsed_result = prompt_builder.parse_result(result=response)
-
-            result.append(
-                DocumentTaggingResult(
-                    sdoc_id=sdoc_data.id,
-                    suggested_tag_ids=parsed_result.tag_ids,
-                    current_tag_ids=current_tag_ids,
-                    reasoning=parsed_result.reasoning,
+            except Exception as e:
+                result.append(
+                    DocumentTaggingResult(
+                        status=BackgroundJobStatus.ERROR,
+                        status_message=str(e),
+                        sdoc_id=sdoc_id,
+                        suggested_tag_ids=[],
+                        current_tag_ids=[],
+                        reasoning="An error occurred!",
+                    )
                 )
-            )
 
         return LLMJobResult(
             llm_job_type=TaskType.DOCUMENT_TAGGING,
@@ -589,94 +600,109 @@ class LLMService(metaclass=SingletonMeta):
 
         # read sdocs
         sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=task_parameters.sdoc_ids)
+
         # automatic metadata extraction
         result: List[MetadataExtractionResult] = []
         for idx, (sdoc_id, sdoc_data) in enumerate(
             zip(task_parameters.sdoc_ids, sdoc_datas)
         ):
-            # update job status
-            msg = f"Processing SDOC id={sdoc_id}"
-            self._next_llm_job_step(
-                llm_job_id=llm_job_id,
-                description=msg,
-            )
-            logger.info(msg)
+            try:
+                # update job status
+                msg = f"Processing SDOC id={sdoc_id}"
+                self._next_llm_job_step(
+                    llm_job_id=llm_job_id,
+                    description=msg,
+                )
+                logger.info(msg)
 
-            if sdoc_data is None:
-                raise ValueError(
-                    f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
+                if sdoc_data is None:
+                    raise ValueError(
+                        f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
+                    )
+
+                # get current metadata values
+                current_metadata = [
+                    SourceDocumentMetadataReadResolved.model_validate(metadata)
+                    for metadata in crud_sdoc.read(db=db, id=sdoc_data.id).metadata_
+                    if metadata.project_metadata_id
+                    in task_parameters.project_metadata_ids
+                ]
+                current_metadata_dict = {
+                    metadata.project_metadata.id: metadata
+                    for metadata in current_metadata
+                }
+
+                # get language
+                language = crud_sdoc_meta.read_by_sdoc_and_key(
+                    db=db, sdoc_id=sdoc_data.id, key="language"
+                ).str_value
+
+                if (
+                    language is None
+                    or language not in prompt_builder.supported_languages
+                ):
+                    raise ValueError("Language not supported")
+
+                # construct prompts
+                system_prompt = prompt_builder.build_system_prompt(
+                    system_prompt_template=prompt_dict[language]["system_prompt"]
+                )
+                user_prompt = prompt_builder.build_user_prompt(
+                    user_prompt_template=prompt_dict[language]["user_prompt"],
+                    document=sdoc_data.content,
                 )
 
-            # get current metadata values
-            current_metadata = [
-                SourceDocumentMetadataReadResolved.model_validate(metadata)
-                for metadata in crud_sdoc.read(db=db, id=sdoc_data.id).metadata_
-                if metadata.project_metadata_id in task_parameters.project_metadata_ids
-            ]
-            current_metadata_dict = {
-                metadata.project_metadata.id: metadata for metadata in current_metadata
-            }
+                # prompt the model
+                response = self.ollamas.chat(
+                    system_prompt=system_prompt,
+                    user_prompt=user_prompt,
+                    response_model=OllamaMetadataExtractionResults,
+                )
+                logger.info(f"Got chat response! Response={response.data}")
 
-            # get language
-            language = crud_sdoc_meta.read_by_sdoc_and_key(
-                db=db, sdoc_id=sdoc_data.id, key="language"
-            ).str_value
+                # transform the response
+                parsed_response = prompt_builder.parse_result(result=response)
 
-            if language is None or language not in prompt_builder.supported_languages:
+                # create correct suggested metadata (map the parsed response to the current metadata)
+                suggested_metadata = []
+                for project_metadata_id in task_parameters.project_metadata_ids:
+                    current = current_metadata_dict.get(project_metadata_id)
+                    suggestion = parsed_response.get(project_metadata_id)
+                    if current is None or suggestion is None:
+                        continue
+
+                    suggested_metadata.append(
+                        SourceDocumentMetadataReadResolved.with_value(
+                            sdoc_metadata_id=current.id,
+                            source_document_id=current.source_document_id,
+                            project_metadata=current.project_metadata,
+                            value=suggestion,
+                        )
+                    )
+                logger.info(
+                    f"Parsed the response! suggested metadata={suggested_metadata}"
+                )
+
                 result.append(
                     MetadataExtractionResult(
+                        status=BackgroundJobStatus.FINISHED,
+                        status_message="Metadata extraction successful",
                         sdoc_id=sdoc_data.id,
                         current_metadata=current_metadata,
+                        suggested_metadata=suggested_metadata,
+                    )
+                )
+
+            except Exception as e:
+                result.append(
+                    MetadataExtractionResult(
+                        status=BackgroundJobStatus.ERROR,
+                        status_message=str(e),
+                        sdoc_id=sdoc_id,
+                        current_metadata=[],
                         suggested_metadata=[],
                     )
                 )
-                continue
-
-            # construct prompts
-            system_prompt = prompt_builder.build_system_prompt(
-                system_prompt_template=prompt_dict[language]["system_prompt"]
-            )
-            user_prompt = prompt_builder.build_user_prompt(
-                user_prompt_template=prompt_dict[language]["user_prompt"],
-                document=sdoc_data.content,
-            )
-
-            # prompt the model
-            response = self.ollamas.chat(
-                system_prompt=system_prompt,
-                user_prompt=user_prompt,
-                response_model=OllamaMetadataExtractionResults,
-            )
-            logger.info(f"Got chat response! Response={response.data}")
-
-            # transform the response
-            parsed_response = prompt_builder.parse_result(result=response)
-
-            # create correct suggested metadata (map the parsed response to the current metadata)
-            suggested_metadata = []
-            for project_metadata_id in task_parameters.project_metadata_ids:
-                current = current_metadata_dict.get(project_metadata_id)
-                suggestion = parsed_response.get(project_metadata_id)
-                if current is None or suggestion is None:
-                    continue
-
-                suggested_metadata.append(
-                    SourceDocumentMetadataReadResolved.with_value(
-                        sdoc_metadata_id=current.id,
-                        source_document_id=current.source_document_id,
-                        project_metadata=current.project_metadata,
-                        value=suggestion,
-                    )
-                )
-            logger.info(f"Parsed the response! suggested metadata={suggested_metadata}")
-
-            result.append(
-                MetadataExtractionResult(
-                    sdoc_id=sdoc_data.id,
-                    current_metadata=current_metadata,
-                    suggested_metadata=suggested_metadata,
-                )
-            )
 
         return LLMJobResult(
             llm_job_type=TaskType.METADATA_EXTRACTION,
@@ -727,110 +753,123 @@ class LLMService(metaclass=SingletonMeta):
         for idx, (sdoc_id, sdoc_data) in enumerate(
             zip(task_parameters.sdoc_ids, sdoc_datas)
         ):
-            # update job status
-            msg = f"Processing SDOC id={sdoc_id}"
-            self._next_llm_job_step(
-                llm_job_id=llm_job_id,
-                description=msg,
-            )
-            logger.info(msg)
+            try:
+                # update job status
+                msg = f"Processing SDOC id={sdoc_id}"
+                self._next_llm_job_step(
+                    llm_job_id=llm_job_id,
+                    description=msg,
+                )
+                logger.info(msg)
 
-            if sdoc_data is None:
-                raise ValueError(
-                    f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
+                if sdoc_data is None:
+                    raise ValueError(
+                        f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
+                    )
+
+                # get language
+                language = crud_sdoc_meta.read_by_sdoc_and_key(
+                    db=db, sdoc_id=sdoc_data.id, key="language"
+                ).str_value
+
+                if (
+                    language is None
+                    or language not in prompt_builder.supported_languages
+                ):
+                    raise ValueError("Language not supported")
+
+                # construct prompts
+                system_prompt = prompt_builder.build_system_prompt(
+                    system_prompt_template=prompt_dict[language]["system_prompt"]
+                )
+                user_prompt = prompt_builder.build_user_prompt(
+                    user_prompt_template=prompt_dict[language]["user_prompt"],
+                    document=sdoc_data.content,
                 )
 
-            # get language
-            language = crud_sdoc_meta.read_by_sdoc_and_key(
-                db=db, sdoc_id=sdoc_data.id, key="language"
-            ).str_value
+                # prompt the model
+                response = self.ollamas.chat(
+                    system_prompt=system_prompt,
+                    user_prompt=user_prompt,
+                    response_model=OllamaAnnotationResults,
+                )
+                logger.info(f"Got chat response! Response={response}")
 
-            if language is None or language not in prompt_builder.supported_languages:
+                # parse the response
+                parsed_response = prompt_builder.parse_result(result=response)
+
+                # validate the response and create the suggested annotation
+                suggested_annotations: List[SpanAnnotationReadResolved] = []
+                for x in parsed_response:
+                    code_id = x.code_id
+                    span_text = x.text
+
+                    # check if the code_id is valid
+                    if code_id not in project_codes:
+                        continue
+
+                    document_text = sdoc_data.content.lower()
+                    annotation_text = span_text.lower()
+
+                    # find start and end character of the annotation_text in the document_text
+                    start = document_text.find(annotation_text)
+                    end = start + len(annotation_text)
+                    if start == -1:
+                        continue
+
+                    # find start and end token of the annotation_text in the document_tokens
+                    # create a map of character offsets to token ids
+                    document_token_map = {}  # character offset -> token id
+                    last_character_offset = 0
+                    for token_id, token_end in enumerate(sdoc_data.token_ends):
+                        for i in range(last_character_offset, token_end):
+                            document_token_map[i] = token_id
+                        last_character_offset = token_end
+
+                    begin_token = document_token_map.get(start, -1)
+                    end_token = document_token_map.get(end, -1)
+                    if begin_token == -1 or end_token == -1:
+                        continue
+
+                    # create the suggested annotation
+                    suggested_annotations.append(
+                        SpanAnnotationReadResolved(
+                            id=annotation_id,
+                            sdoc_id=sdoc_data.id,
+                            user_id=ASSISTANT_ZEROSHOT_ID,
+                            begin=start,
+                            end=end,
+                            begin_token=begin_token,
+                            end_token=end_token,
+                            text=span_text,
+                            code=CodeRead.model_validate(project_codes.get(code_id)),
+                            created=datetime.now(),
+                            updated=datetime.now(),
+                        )
+                    )
+                    annotation_id += 1
+                logger.info(
+                    f"Parsed the response! suggested annotations={suggested_annotations}"
+                )
+
                 result.append(
-                    AnnotationResult(sdoc_id=sdoc_data.id, suggested_annotations=[])
-                )
-                continue
-
-            # construct prompts
-            system_prompt = prompt_builder.build_system_prompt(
-                system_prompt_template=prompt_dict[language]["system_prompt"]
-            )
-            user_prompt = prompt_builder.build_user_prompt(
-                user_prompt_template=prompt_dict[language]["user_prompt"],
-                document=sdoc_data.content,
-            )
-
-            # prompt the model
-            response = self.ollamas.chat(
-                system_prompt=system_prompt,
-                user_prompt=user_prompt,
-                response_model=OllamaAnnotationResults,
-            )
-            logger.info(f"Got chat response! Response={response}")
-
-            # parse the response
-            parsed_response = prompt_builder.parse_result(result=response)
-
-            # validate the response and create the suggested annotation
-            suggested_annotations: List[SpanAnnotationReadResolved] = []
-            for x in parsed_response:
-                code_id = x.code_id
-                span_text = x.text
-
-                # check if the code_id is valid
-                if code_id not in project_codes:
-                    continue
-
-                document_text = sdoc_data.content.lower()
-                annotation_text = span_text.lower()
-
-                # find start and end character of the annotation_text in the document_text
-                start = document_text.find(annotation_text)
-                end = start + len(annotation_text)
-                if start == -1:
-                    continue
-
-                # find start and end token of the annotation_text in the document_tokens
-                # create a map of character offsets to token ids
-                document_token_map = {}  # character offset -> token id
-                last_character_offset = 0
-                for token_id, token_end in enumerate(sdoc_data.token_ends):
-                    for i in range(last_character_offset, token_end):
-                        document_token_map[i] = token_id
-                    last_character_offset = token_end
-
-                begin_token = document_token_map.get(start, -1)
-                end_token = document_token_map.get(end, -1)
-                if begin_token == -1 or end_token == -1:
-                    continue
-
-                # create the suggested annotation
-                suggested_annotations.append(
-                    SpanAnnotationReadResolved(
-                        id=annotation_id,
+                    AnnotationResult(
+                        status=BackgroundJobStatus.FINISHED,
+                        status_message="Annotation successful",
                         sdoc_id=sdoc_data.id,
-                        user_id=ASSISTANT_ZEROSHOT_ID,
-                        begin=start,
-                        end=end,
-                        begin_token=begin_token,
-                        end_token=end_token,
-                        text=span_text,
-                        code=CodeRead.model_validate(project_codes.get(code_id)),
-                        created=datetime.now(),
-                        updated=datetime.now(),
+                        suggested_annotations=suggested_annotations,
                     )
                 )
-                annotation_id += 1
-            logger.info(
-                f"Parsed the response! suggested annotations={suggested_annotations}"
-            )
 
-            result.append(
-                AnnotationResult(
-                    sdoc_id=sdoc_data.id,
-                    suggested_annotations=suggested_annotations,
+            except Exception as e:
+                result.append(
+                    AnnotationResult(
+                        status=BackgroundJobStatus.ERROR,
+                        status_message=str(e),
+                        sdoc_id=sdoc_id,
+                        suggested_annotations=[],
+                    )
                 )
-            )
 
         return LLMJobResult(
             llm_job_type=TaskType.ANNOTATION,
@@ -899,139 +938,152 @@ class LLMService(metaclass=SingletonMeta):
         for idx, (sdoc_id, sdoc_data) in enumerate(
             zip(task_parameters.sdoc_ids, sdoc_datas)
         ):
-            # update job status
-            msg = f"Processing SDOC id={sdoc_id}"
-            self._next_llm_job_step(
-                llm_job_id=llm_job_id,
-                description=msg,
-            )
-            logger.info(msg)
+            try:
+                # update job status
+                msg = f"Processing SDOC id={sdoc_id}"
+                self._next_llm_job_step(
+                    llm_job_id=llm_job_id,
+                    description=msg,
+                )
+                logger.info(msg)
 
-            if sdoc_data is None:
-                raise ValueError(
-                    f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
+                if sdoc_data is None:
+                    raise ValueError(
+                        f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
+                    )
+
+                # get language
+                language = crud_sdoc_meta.read_by_sdoc_and_key(
+                    db=db, sdoc_id=sdoc_data.id, key="language"
+                ).str_value
+
+                if (
+                    language is None
+                    or language not in prompt_builder.supported_languages
+                ):
+                    raise ValueError("Language not supported")
+
+                # construct prompts
+                system_prompt = prompt_builder.build_system_prompt(
+                    system_prompt_template=prompt_dict[language]["system_prompt"]
+                )
+                # we need to provide documents entence by sentence for sentence annotation
+                document_sentences = "\n".join(
+                    [
+                        f"{idx + 1}: {sentence}"
+                        for idx, sentence in enumerate(sdoc_data.sentences)
+                    ]
+                )
+                num_sentences = len(sdoc_data.sentences)
+                user_prompt = prompt_builder.build_user_prompt(
+                    user_prompt_template=prompt_dict[language]["user_prompt"],
+                    document=document_sentences,
                 )
 
-            # get language
-            language = crud_sdoc_meta.read_by_sdoc_and_key(
-                db=db, sdoc_id=sdoc_data.id, key="language"
-            ).str_value
+                # prompt the model
+                response = self.ollamas.chat(
+                    system_prompt=system_prompt,
+                    user_prompt=user_prompt,
+                    response_model=OllamaSentenceAnnotationResults,
+                )
+                logger.info(f"Got chat response! Response={response}")
 
-            if language is None or language not in prompt_builder.supported_languages:
-                results.append(
-                    SentenceAnnotationResult(
-                        sdoc_id=sdoc_data.id, suggested_annotations=[]
+                # parse the response
+                parsed_response = prompt_builder.parse_result(result=response)
+
+                # validate the response
+                # code ids should be valid and sentence ids should be valid
+                parsed_items = [
+                    (
+                        annotation.sent_id - 1,
+                        annotation.code_id,
+                    )  # LLM starts from 1, we start from 0
+                    for annotation in parsed_response
+                    if annotation.code_id in project_codes
+                    and annotation.sent_id > 0
+                    and annotation.sent_id <= num_sentences
+                ]
+
+                # create the suggested annotation
+                suggested_annotations: List[SentenceAnnotationCreate] = []
+                start = parsed_items[0][0]
+                previous_sentence_id = parsed_items[0][0]
+                previous_code_id = parsed_items[0][1]
+
+                if len(parsed_items) > 1:
+                    for sentence_id, code_id in parsed_items[1:]:
+                        # create annotation if sentence ids mismatch
+                        if previous_sentence_id != sentence_id - 1:
+                            suggested_annotations.append(
+                                SentenceAnnotationCreate(
+                                    sdoc_id=sdoc_data.id,
+                                    sentence_id_start=start,
+                                    sentence_id_end=previous_sentence_id,
+                                    code_id=previous_code_id,
+                                )
+                            )
+                            annotation_id += 1
+                            start = sentence_id
+
+                        # create annotation if code ids mismatch
+                        if previous_code_id != code_id:
+                            suggested_annotations.append(
+                                SentenceAnnotationCreate(
+                                    sdoc_id=sdoc_data.id,
+                                    sentence_id_start=start,
+                                    sentence_id_end=previous_sentence_id,
+                                    code_id=previous_code_id,
+                                )
+                            )
+                            annotation_id += 1
+                            start = sentence_id
+
+                        previous_sentence_id = sentence_id
+                        previous_code_id = code_id
+
+                # create the last annotation
+                suggested_annotations.append(
+                    SentenceAnnotationCreate(
+                        sdoc_id=sdoc_data.id,
+                        sentence_id_start=start,
+                        sentence_id_end=previous_sentence_id,
+                        code_id=previous_code_id,
                     )
                 )
-                continue
-
-            # construct prompts
-            system_prompt = prompt_builder.build_system_prompt(
-                system_prompt_template=prompt_dict[language]["system_prompt"]
-            )
-            # we need to provide documents entence by sentence for sentence annotation
-            document_sentences = "\n".join(
-                [
-                    f"{idx + 1}: {sentence}"
-                    for idx, sentence in enumerate(sdoc_data.sentences)
-                ]
-            )
-            num_sentences = len(sdoc_data.sentences)
-            user_prompt = prompt_builder.build_user_prompt(
-                user_prompt_template=prompt_dict[language]["user_prompt"],
-                document=document_sentences,
-            )
-
-            # prompt the model
-            response = self.ollamas.chat(
-                system_prompt=system_prompt,
-                user_prompt=user_prompt,
-                response_model=OllamaSentenceAnnotationResults,
-            )
-            logger.info(f"Got chat response! Response={response}")
-
-            # parse the response
-            parsed_response = prompt_builder.parse_result(result=response)
-
-            # validate the response
-            # code ids should be valid and sentence ids should be valid
-            parsed_items = [
-                (
-                    annotation.sent_id - 1,
-                    annotation.code_id,
-                )  # LLM starts from 1, we start from 0
-                for annotation in parsed_response
-                if annotation.code_id in project_codes
-                and annotation.sent_id > 0
-                and annotation.sent_id <= num_sentences
-            ]
-
-            # create the suggested annotation
-            suggested_annotations: List[SentenceAnnotationCreate] = []
-            start = parsed_items[0][0]
-            previous_sentence_id = parsed_items[0][0]
-            previous_code_id = parsed_items[0][1]
-
-            if len(parsed_items) > 1:
-                for sentence_id, code_id in parsed_items[1:]:
-                    # create annotation if sentence ids mismatch
-                    if previous_sentence_id != sentence_id - 1:
-                        suggested_annotations.append(
-                            SentenceAnnotationCreate(
-                                sdoc_id=sdoc_data.id,
-                                sentence_id_start=start,
-                                sentence_id_end=previous_sentence_id,
-                                code_id=previous_code_id,
-                            )
-                        )
-                        annotation_id += 1
-                        start = sentence_id
-
-                    # create annotation if code ids mismatch
-                    if previous_code_id != code_id:
-                        suggested_annotations.append(
-                            SentenceAnnotationCreate(
-                                sdoc_id=sdoc_data.id,
-                                sentence_id_start=start,
-                                sentence_id_end=previous_sentence_id,
-                                code_id=previous_code_id,
-                            )
-                        )
-                        annotation_id += 1
-                        start = sentence_id
-
-                    previous_sentence_id = sentence_id
-                    previous_code_id = code_id
-
-            # create the last annotation
-            suggested_annotations.append(
-                SentenceAnnotationCreate(
-                    sdoc_id=sdoc_data.id,
-                    sentence_id_start=start,
-                    sentence_id_end=previous_sentence_id,
-                    code_id=previous_code_id,
+                logger.info(
+                    f"Parsed the response! suggested sentence annotations={suggested_annotations}"
                 )
-            )
-            logger.info(
-                f"Parsed the response! suggested sentence annotations={suggested_annotations}"
-            )
 
-            # create the suggested annotations
-            created_annos = crud_sentence_anno.create_bulk(
-                db=db,
-                user_id=ASSISTANT_FEWSHOT_ID if is_fewshot else ASSISTANT_ZEROSHOT_ID,
-                create_dtos=suggested_annotations,
-            )
-
-            results.append(
-                SentenceAnnotationResult(
-                    sdoc_id=sdoc_data.id,
-                    suggested_annotations=[
-                        SentenceAnnotationReadResolved.model_validate(anno)
-                        for anno in created_annos
-                    ],
+                # create the suggested annotations
+                created_annos = crud_sentence_anno.create_bulk(
+                    db=db,
+                    user_id=ASSISTANT_FEWSHOT_ID
+                    if is_fewshot
+                    else ASSISTANT_ZEROSHOT_ID,
+                    create_dtos=suggested_annotations,
                 )
-            )
+
+                results.append(
+                    SentenceAnnotationResult(
+                        status=BackgroundJobStatus.FINISHED,
+                        status_message="Sentence annotation successful",
+                        sdoc_id=sdoc_data.id,
+                        suggested_annotations=[
+                            SentenceAnnotationReadResolved.model_validate(anno)
+                            for anno in created_annos
+                        ],
+                    )
+                )
+
+            except Exception as e:
+                results.append(
+                    SentenceAnnotationResult(
+                        status=BackgroundJobStatus.ERROR,
+                        status_message=str(e),
+                        sdoc_id=sdoc_id,
+                        suggested_annotations=[],
+                    )
+                )
 
         return LLMJobResult(
             llm_job_type=TaskType.SENTENCE_ANNOTATION,
@@ -1295,59 +1347,72 @@ class LLMService(metaclass=SingletonMeta):
 
         results: List[SentenceAnnotationResult] = []
         for prediction, sdoc_data in zip(response.pred_data, test_sdocs):
-            # we have list of labels, we need to convert them to sentence annotations
-            suggested_annotations: List[SentenceAnnotationCreate] = []
-            start = 0
-            previous_label = prediction.sent_labels[0]
+            try:
+                # we have list of labels, we need to convert them to sentence annotations
+                suggested_annotations: List[SentenceAnnotationCreate] = []
+                start = 0
+                previous_label = prediction.sent_labels[0]
 
-            for idx, label in enumerate(prediction.sent_labels[1:], start=1):
-                if label != previous_label:
-                    if previous_label != "O":
-                        suggested_annotations.append(
-                            SentenceAnnotationCreate(
-                                sdoc_id=sdoc_data.id,
-                                code_id=code_name2id[previous_label],
-                                sentence_id_start=start,
-                                sentence_id_end=idx - 1,
+                for idx, label in enumerate(prediction.sent_labels[1:], start=1):
+                    if label != previous_label:
+                        if previous_label != "O":
+                            suggested_annotations.append(
+                                SentenceAnnotationCreate(
+                                    sdoc_id=sdoc_data.id,
+                                    code_id=code_name2id[previous_label],
+                                    sentence_id_start=start,
+                                    sentence_id_end=idx - 1,
+                                )
                             )
-                        )
-                    start = idx
-                previous_label = label
+                        start = idx
+                    previous_label = label
 
-            # Add the last annotation
-            if previous_label != "O":
-                suggested_annotations.append(
-                    SentenceAnnotationCreate(
+                # Add the last annotation
+                if previous_label != "O":
+                    suggested_annotations.append(
+                        SentenceAnnotationCreate(
+                            sdoc_id=sdoc_data.id,
+                            sentence_id_start=start,
+                            sentence_id_end=len(prediction.sent_labels) - 1,
+                            code_id=code_name2id[previous_label],
+                        )
+                    )
+
+                # create the suggested annotations
+                created_annos = crud_sentence_anno.create_bulk(
+                    db=db,
+                    user_id=ASSISTANT_TRAINED_ID,
+                    create_dtos=suggested_annotations,
+                )
+
+                results.append(
+                    SentenceAnnotationResult(
+                        status=BackgroundJobStatus.FINISHED,
+                        status_message="Sentence annotation successful",
                         sdoc_id=sdoc_data.id,
-                        sentence_id_start=start,
-                        sentence_id_end=len(prediction.sent_labels) - 1,
-                        code_id=code_name2id[previous_label],
+                        suggested_annotations=[
+                            SentenceAnnotationReadResolved.model_validate(anno)
+                            for anno in created_annos
+                        ],
                     )
                 )
 
-            # create the suggested annotations
-            created_annos = crud_sentence_anno.create_bulk(
-                db=db,
-                user_id=ASSISTANT_TRAINED_ID,
-                create_dtos=suggested_annotations,
-            )
-
-            results.append(
-                SentenceAnnotationResult(
-                    sdoc_id=sdoc_data.id,
-                    suggested_annotations=[
-                        SentenceAnnotationReadResolved.model_validate(anno)
-                        for anno in created_annos
-                    ],
+                msg = f"Applied {len(suggested_annotations)} suggested annotations to document {sdoc_data.id}."
+                self._update_llm_job_description(
+                    llm_job_id=llm_job_id,
+                    description=msg,
                 )
-            )
+                logger.info(msg)
 
-            msg = f"Applied {len(suggested_annotations)} suggested annotations to document {sdoc_data.id}."
-            self._update_llm_job_description(
-                llm_job_id=llm_job_id,
-                description=msg,
-            )
-            logger.info(msg)
+            except Exception as e:
+                results.append(
+                    SentenceAnnotationResult(
+                        status=BackgroundJobStatus.ERROR,
+                        status_message=str(e),
+                        sdoc_id=sdoc_data.id,
+                        suggested_annotations=[],
+                    )
+                )
 
         return LLMJobResult(
             llm_job_type=TaskType.SENTENCE_ANNOTATION,

@@ -111,7 +111,9 @@ class TaggingPromptBuilder(PromptBuilder):
     ) -> OllamaParsedDocumentTaggingResult:
         return OllamaParsedDocumentTaggingResult(
             tag_ids=[
-                self.tagname2id_dict[category.lower()] for category in result.categories
+                self.tagname2id_dict[category.lower()]
+                for category in result.categories
+                if category.lower() in self.tagname2id_dict
             ],
             reasoning=result.reasoning,
         )

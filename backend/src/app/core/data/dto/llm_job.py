@@ -147,7 +147,14 @@ class LLMJobParameters2(LLMJobParameters):
 # --- START RESULTS ---
 
 
-class DocumentTaggingResult(BaseModel):
+class LLMResultWithStatus(BaseModel):
+    status: BackgroundJobStatus = Field(
+        description="Status of the Result",
+    )
+    status_message: str = Field(description="Status message of the result")
+
+
+class DocumentTaggingResult(LLMResultWithStatus):
     sdoc_id: int = Field(description="ID of the source document")
     current_tag_ids: List[int] = Field(
         description="IDs of the tags currently assigned to the document"
@@ -163,7 +170,7 @@ class DocumentTaggingLLMJobResult(BaseModel):
     results: List[DocumentTaggingResult]
 
 
-class MetadataExtractionResult(BaseModel):
+class MetadataExtractionResult(LLMResultWithStatus):
     sdoc_id: int = Field(description="ID of the source document")
     current_metadata: List[SourceDocumentMetadataReadResolved] = Field(
         description="Current metadata"
@@ -178,7 +185,7 @@ class MetadataExtractionLLMJobResult(BaseModel):
     results: List[MetadataExtractionResult]
 
 
-class AnnotationResult(BaseModel):
+class AnnotationResult(LLMResultWithStatus):
     sdoc_id: int = Field(description="ID of the source document")
     suggested_annotations: List[SpanAnnotationReadResolved] = Field(
         description="Suggested annotations"
@@ -190,7 +197,7 @@ class AnnotationLLMJobResult(BaseModel):
     results: List[AnnotationResult]
 
 
-class SentenceAnnotationResult(BaseModel):
+class SentenceAnnotationResult(LLMResultWithStatus):
     sdoc_id: int = Field(description="ID of the source document")
     suggested_annotations: List[SentenceAnnotationReadResolved] = Field(
         description="Suggested annotations"
