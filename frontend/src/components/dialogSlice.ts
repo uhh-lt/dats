@@ -292,6 +292,7 @@ export const dialogSlice = createSlice({
       state.isLLMDialogOpen = true;
       state.llmStep = 4;
 
+      state.llmProjectId = action.payload.parameters.project_id;
       state.llmJobId = action.payload.id;
       state.llmMethod = action.payload.parameters.llm_job_type;
       state.llmApproach = action.payload.parameters.llm_approach_type;
