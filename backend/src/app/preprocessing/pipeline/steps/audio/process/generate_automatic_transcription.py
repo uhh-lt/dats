@@ -38,26 +38,29 @@ def generate_automatic_transcription(cargo: PipelineCargo) -> PipelineCargo:
         logger.info(f"Generated transcript {transcription}")
         # Create Wordlevel Transcriptions
         # use whisper tokenization
-        current_position = 0
-        ppad.tokens = []
-        ppad.token_character_offsets = []
         for segment in transcription.segments:
             for word in segment.words:
-                text = word.text
+                text = word.text.strip()
+                logger.info(f"test word: {text}")
                 wlt = WordLevelTranscription(
                     text=text,
                     start_ms=word.start_ms,
                     end_ms=word.end_ms,
                 )
                 ppad.word_level_transcriptions.append(wlt)
-                ppad.tokens.append(text)
-                current_word_length = len(text)
-                ppad.token_character_offsets.append(
-                    (current_position, current_position + current_word_length)
-                )
-                current_position += current_word_length + 1
 
-        # wlt = list(map(lambda wlt: wlt.model_dump(), ppad.word_level_transcriptions))
     else:
         logger.info("Import word level transcriptions")
+
+    current_position = 0
+    ppad.tokens = []
+    ppad.token_character_offsets = []
+    for wlt in ppad.word_level_transcriptions:
+        ppad.tokens.append(wlt.text)
+        current_word_length = len(wlt.text)
+        ppad.token_character_offsets.append(
+            (current_position, current_position + current_word_length)
+        )
+        current_position += current_word_length + 1
+
     return cargo

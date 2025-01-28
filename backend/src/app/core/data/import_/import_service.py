@@ -52,6 +52,7 @@ from app.core.data.dto.project_metadata import (
     ProjectMetadataCreate,
     ProjectMetadataRead,
 )
+from app.core.data.dto.source_document_data import WordLevelTranscription
 from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
 from app.core.data.orm.project import ProjectORM
 from app.core.data.repo.repo_service import (
@@ -76,8 +77,8 @@ FILETYPE_REGEX = [
     (r"user_\d+_logbook.md", "logbook", True),
     (r"user_\d+_memo.csv", "memo", True),
     (r"\w+.csv", "sdoc_annotations", False),
-    (r"\w+.txt", "sdoc_transcript", False),
-    (r"\w+.json", "sdoc_metadatas", False),
+    (r"\w+.transcript.json", "sdoc_transcript", False),
+    (r"\w+.metadata.json", "sdoc_metadatas", False),
 ]
 
 SDOC_FILE_TYPES = ["sdoc", "sdoc_annotations", "sdoc_metadatas"]
@@ -672,12 +673,11 @@ class ImportService(metaclass=SingletonMeta):
                 sdoc_filepaths = {
                     "sdoc_filename":{
                         "sdoc": filename.html,
-                        "sdoc_metadatas": filename.json
-                        "sdoc_annotations": filename.csv
+                        "sdoc_metadatas": filename.metadata.json
+                        "sdoc_annotations": filename.annotations.csv
+                        "sdoc_word_level_transcription": filename.transcript.json
                     }
                 }
-
-
             """
             expected_file_paths, sdoc_filepaths = self.__read_import_project_files(
                 temp_proj_path=path_to_temp_import_dir
@@ -776,6 +776,18 @@ class ImportService(metaclass=SingletonMeta):
                     }
                 logger.info(f"Generate sdoc metadata {metadata}")
 
+                # import (optional) word level transcriptions
+                sdoc_wlt: Optional[List[WordLevelTranscription]] = None
+                if "sdoc_transcript" in sdoc_package:
+                    sdoc_transcript_filepath = sdoc_package["sdoc_transcript"]
+                    with open(sdoc_transcript_filepath, "r") as f:
+                        sdoc_wlt = [
+                            WordLevelTranscription.model_validate(x)
+                            for x in json.load(f)
+                        ]
+
+                    logger.info(f"Generate word level transcription {sdoc_wlt}")
+
                 # import sdoc tags
                 for tag in sdoc_metadata["tags"]:
                     tags.append(tags_id_mapping[tag])
@@ -785,31 +797,33 @@ class ImportService(metaclass=SingletonMeta):
                 sdoc_annotations_filepath = sdoc_package["sdoc_annotations"]
                 sdoc_annotations_df = pd.read_csv(sdoc_annotations_filepath)
                 logger.info(f"The doctype is {sdoc_doctype}")
-                if sdoc_doctype == DocType.text:
-                    # create AutoSpans for NER
-                    for _, row in sdoc_annotations_df.iterrows():
-                        if row["user_email"] in user_email_id_mapping:
-                            email: Optional[str] = (
-                                str(row["user_email"])
-                                if isinstance(row["user_email"], str)
-                                else None
+                # if sdoc_doctype == DocType.text:
+                # create AutoSpans for NER
+                for _, row in sdoc_annotations_df.iterrows():
+                    if row["user_email"] in user_email_id_mapping:
+                        email: Optional[str] = (
+                            str(row["user_email"])
+                            if isinstance(row["user_email"], str)
+                            else None
+                        )
+                        if (
+                            email and bool(pd.notna(row["text"]))
+                        ):  # this should always be true because of if email in email_id_mapping
+                            auto = AutoSpan.model_validate(
+                                {
+                                    "code": row["code_name"],
+                                    "start": row["text_begin_char"],
+                                    "end": row["text_end_char"],
+                                    "text": row["text"],
+                                    "start_token": row["text_begin_token"],
+                                    "end_token": row["text_end_token"],
+                                    "user_id": user_email_id_mapping[email],
+                                }
                             )
-                            if email:  # this should always be true because of if email in email_id_mapping
-                                auto = AutoSpan.model_validate(
-                                    {
-                                        "code": row["code_name"],
-                                        "start": row["text_begin_char"],
-                                        "end": row["text_end_char"],
-                                        "text": row["text"],
-                                        "start_token": row["text_begin_token"],
-                                        "end_token": row["text_end_token"],
-                                        "user_id": user_email_id_mapping[email],
-                                    }
-                                )
-                                annotations.add(auto)
-                    logger.info(f"Generate sdoc annotations {annotations}")
+                            annotations.add(auto)
+                logger.info(f"Generate sdoc annotations {annotations}")
 
-                elif sdoc_doctype == DocType.image:
+                if sdoc_doctype == DocType.image:
                     # create boundig boxes for object detection
                     for _, row in sdoc_annotations_df.iterrows():
                         email: Optional[str] = (
@@ -817,7 +831,16 @@ class ImportService(metaclass=SingletonMeta):
                             if isinstance(row["user_email"], str)
                             else None
                         )
-                        if email:
+                        if (
+                            email
+                            and bool(pd.notna(row["bbox_x_min"]))
+                            and bool(pd.notna(row["bbox_y_min"]))
+                            and bool(pd.notna(row["bbox_x_max"]))
+                            and bool(pd.notna(row["bbox_y_max"]))
+                        ):
+                            logger.info(
+                                f"x_min {row['bbox_x_min']}, y_min: {row['bbox_y_min']}, x_max: {row['bbox_x_max']}, y_max: {row['bbox_y_max']}"
+                            )
                             bbox = AutoBBox.model_validate(
                                 {
                                     "code": row["code_name"],
@@ -853,6 +876,10 @@ class ImportService(metaclass=SingletonMeta):
                     "tags": tags,
                     "sdoc_link": sdoc_link,
                 }
+                if sdoc_wlt:
+                    sdoc_specific_payloads[sdoc_filepath.name][
+                        "word_level_transcriptions"
+                    ] = sdoc_wlt
 
             # 2. Create preprojob
             from app.preprocessing.preprocessing_service import PreprocessingService
@@ -968,18 +995,17 @@ class ImportService(metaclass=SingletonMeta):
             "codes": project_codes.csv
             "sdoc_links": project_sdoc_links.csv
             "tags": project_tags.csv
-            "users": users.csv
+            "users": project_users.csv
         }
-        sdocs = {
+        // das abrauchst du intern aufjeden fall
+        sdoc_filepaths = {
             "sdoc_filename":{
                 "sdoc": filename.html,
-                "sdoc_metadatas": filename.html.json
-                "sdoc_annotations": filename.html.csv
-                "sdoc_transcript":"filename.html.txt"
+                "sdoc_metadatas": filename.metadata.json
+                "sdoc_annotations": filename.annotations.csv
+                "sdoc_word_level_transcription": filename.transcript.json
             }
         }
-
-
         """
 
         expected_files: Dict = dict()

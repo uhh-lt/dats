@@ -15,7 +15,7 @@ def apply_html_source_mapping_with_custom_html_tags(
 
     sentences = pptd.sentences
     current_sentence_idx = 0
-
+    # <html><body><p><sent id=0><t id=0>Today,</t><t id=1> </t>i<t id=2>n </t>t<t id=3>he w</t>o<t id=4>r</t>l<t id=5>d of fr</t>e<t id=6>ed</t>o<t id=7>m, the </t>p<t id=8>roud</t>e<t id=9>st</t> <t id=10>bo</t>a<t id=11>st</t> <t id=12>is</t>,<t id=13></t> <t id=14>Ich bin</t> ein B -Leader!</p></body></html>
     for token_id, (text_start, text_end) in enumerate(pptd.token_character_offsets):
         try:
             html_start = pptd.text2html_character_offsets[text_start]

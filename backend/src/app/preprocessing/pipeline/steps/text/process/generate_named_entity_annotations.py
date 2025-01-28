@@ -16,6 +16,13 @@ def generate_named_entity_annotations(cargo: PipelineCargo) -> PipelineCargo:
         )
         return cargo
 
+    # get annotations from import process
+    if "annotations" in cargo.data:
+        for auto in cargo.data["annotations"]:
+            if auto.code not in pptd.spans:
+                pptd.spans[auto.code] = set()
+            pptd.spans[auto.code].add(auto)
+
     # create AutoSpans for NER
     for ne in out.ents:
         # FIXME Flo: hacky solution for German NER model, which only contains ('LOC', 'MISC', 'ORG', 'PER')

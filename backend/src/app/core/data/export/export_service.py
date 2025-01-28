@@ -178,7 +178,7 @@ class ExportService(metaclass=SingletonMeta):
 
     def __write_exported_json_to_temp_file(
         self,
-        exported_file: Dict[str, Any],
+        exported_file: Union[List[Dict[str, Any]], Dict[str, Any]],
         fn: Optional[str] = None,
     ) -> Path:
         temp_file = self.repo.create_temp_file(fn=fn)
@@ -273,8 +273,8 @@ class ExportService(metaclass=SingletonMeta):
 
     def __get_all_sdoc_transcripts_in_project_for_export(
         self, db: Session, project_id: int
-    ) -> List[Dict[str, str]]:
-        transcripts: List[Dict[str, Any]] = []
+    ) -> List[Tuple[str, List[Dict[str, Any]]]]:
+        transcripts: List[Tuple[str, List[Dict[str, Any]]]] = []
         sdocs = [
             SourceDocumentRead.model_validate(sdoc)
             for sdoc in crud_sdoc.read_by_project(db=db, proj_id=project_id)
@@ -287,14 +287,12 @@ class ExportService(metaclass=SingletonMeta):
                 assert (
                     sdoc_data
                 ), f"Expected sdoc data for id {sdoc.id} to exist, because sdocs exist."
-                if sdoc_data.token_time_starts is not None:
-                    logger.info(f"Exporting transcript of file {sdoc.filename}")
-                    transcripts.append(
-                        {
-                            "transcript": sdoc_data.content,
-                            "filename": sdoc.filename,
-                        }
+                wlt = sdoc_data.word_level_transcriptions
+                if wlt is not None:
+                    logger.info(
+                        f"Exporting word_level_transcript of file {sdoc.filename}"
                     )
+                    transcripts.append((sdoc.filename, [x.model_dump() for x in wlt]))
 
         return transcripts
 
@@ -1126,10 +1124,10 @@ class ExportService(metaclass=SingletonMeta):
         exported_transcripts = self.__get_all_sdoc_transcripts_in_project_for_export(
             db=db, project_id=project_id
         )
-        for exported_transcript in exported_transcripts:
-            exported_file = self.__write_exported_txt_to_temp_file(
-                text=exported_transcript["transcript"],
-                fn=exported_transcript["filename"],
+        for filename, word_level_transcriptions in exported_transcripts:
+            exported_file = self.__write_exported_json_to_temp_file(
+                exported_file=word_level_transcriptions,
+                fn=filename + ".transcript",
             )
             exported_files.append(exported_file)
 
@@ -1140,7 +1138,7 @@ class ExportService(metaclass=SingletonMeta):
         for exported_sdoc_metadata in exported_sdocs_metadata:
             exported_file = self.__write_exported_json_to_temp_file(
                 exported_file=exported_sdoc_metadata,
-                fn=exported_sdoc_metadata["filename"],
+                fn=exported_sdoc_metadata["filename"] + ".metadata",
             )
             exported_files.append(exported_file)
 

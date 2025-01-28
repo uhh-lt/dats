@@ -12,6 +12,7 @@ def create_pptd_from_transcription(cargo: PipelineCargo) -> PipelineCargo:
     ppad.metadata["transcription"] = " ".join(
         [a.text for a in ppad.word_level_transcriptions]
     )
+    logger.info(f"1234 {ppad.metadata['transcription']}")
     pptd = PreProTextDoc(
         filepath=Path("/this/is/a/fake_path.txt"),
         filename="fake_path.txt",

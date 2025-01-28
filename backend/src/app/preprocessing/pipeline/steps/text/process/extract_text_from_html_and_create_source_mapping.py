@@ -101,7 +101,6 @@ def extract_text_from_html_and_create_source_mapping(
 
     text = " ".join([str(r["text"]) for r in results])
     pptd.text = text
-
     text2html_character_offsets: List[int] = []
     for result in results:
         text2html_character_offsets.extend(

@@ -4,17 +4,13 @@ from loguru import logger
 from psycopg2 import OperationalError
 from sqlalchemy.orm import Session
 
-from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.source_document import crud_sdoc
-from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationCreate,
 )
 from app.core.data.dto.code import CodeCreate
-from app.core.data.orm.annotation_document import AnnotationDocumentORM
-from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
 from app.preprocessing.pipeline.model.image.autobbox import AutoBBox
@@ -26,26 +22,7 @@ repo: RepoService = RepoService()
 sql: SQLService = SQLService()
 
 
-def _create_and_persist_sdoc(db: Session, ppid: PreProImageDoc) -> SourceDocumentORM:
-    # generate the create_dto
-    _, create_dto = repo.build_source_document_create_dto_from_file(
-        proj_id=ppid.project_id, filename=ppid.filename
-    )
-    # persist SourceDocument
-    sdoc_db_obj = crud_sdoc.create(db=db, create_dto=create_dto)
-
-    return sdoc_db_obj
-
-
-def _create_adoc_for_system_user(
-    db: Session, ppid: PreProImageDoc, sdoc_db_obj: SourceDocumentORM
-) -> AnnotationDocumentORM:
-    return crud_adoc.exists_or_create(
-        db=db, sdoc_id=sdoc_db_obj.id, user_id=SYSTEM_USER_ID
-    )
-
-
-def _persist_bbox__annotations(db: Session, sdoc_id: int, ppid: PreProImageDoc) -> None:
+def __persist_bbox_annotations(db: Session, sdoc_id: int, ppid: PreProImageDoc) -> None:
     # convert AutoBBoxes to BBoxAnnotationCreate
     for code_name in ppid.bboxes.keys():
         db_code = crud_code.read_by_name_and_project(
@@ -95,16 +72,16 @@ def _persist_bbox__annotations(db: Session, sdoc_id: int, ppid: PreProImageDoc) 
                 raise e
 
 
-def write_ppid_to_database(cargo: PipelineCargo) -> PipelineCargo:
+def persist_bbox_annotations(cargo: PipelineCargo) -> PipelineCargo:
     ppid: PreProImageDoc = cargo.data["ppid"]
 
     with sql.db_session() as db:
         try:
-            # create and persist SourceDocument
-            sdoc_db_obj = _create_and_persist_sdoc(db=db, ppid=ppid)
+            # read SourceDocument
+            sdoc_db_obj = crud_sdoc.read(db=db, id=cargo.data["sdoc_id"])
 
             # persist BBoxAnnotations
-            _persist_bbox__annotations(
+            __persist_bbox_annotations(
                 db=db,
                 sdoc_id=sdoc_db_obj.id,
                 ppid=ppid,
@@ -122,9 +99,5 @@ def write_ppid_to_database(cargo: PipelineCargo) -> PipelineCargo:
             db.rollback()
             raise e
         else:
-            logger.info(
-                f"Persisted PreprocessingPipeline Results " f"for {ppid.filename}!"
-            )
-
-            cargo.data["sdoc_id"] = sdoc_db_obj.id
+            logger.info(f"Persisted bbox annotations for {ppid.filename}!")
     return cargo
