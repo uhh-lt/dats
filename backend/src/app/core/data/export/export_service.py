@@ -1,6 +1,5 @@
 import json
 import zipfile
-from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
@@ -9,23 +8,14 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.annotation_document import crud_adoc
-from app.core.data.crud.code import crud_code
-from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
-from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.crud.sentence_annotation import crud_sentence_anno
 from app.core.data.crud.source_document import crud_sdoc
-from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.user import crud_user
 from app.core.data.dto.analysis import WordFrequencyResult
 from app.core.data.dto.background_job_base import BackgroundJobStatus
-from app.core.data.dto.bbox_annotation import (
-    BBoxAnnotationReadResolved,
-)
-from app.core.data.dto.code import CodeRead
-from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.export_job import (
     ExportFormat,
     ExportJobCreate,
@@ -35,25 +25,36 @@ from app.core.data.dto.export_job import (
     ExportJobUpdate,
 )
 from app.core.data.dto.source_document import SourceDocumentRead
-from app.core.data.dto.source_document_data import SourceDocumentDataRead
-from app.core.data.dto.source_document_metadata import (
-    SourceDocumentMetadataReadResolved,
+from app.core.data.export.export_annotations import (
+    generate_export_df_for_adoc,
+    generate_export_df_for_sentence_annotations,
+    generate_export_df_for_span_annotations,
 )
-from app.core.data.dto.span_annotation import (
-    SpanAnnotationReadResolved,
+from app.core.data.export.export_codes import (
+    generate_export_dfs_for_all_codes_in_project,
 )
-from app.core.data.dto.span_group import SpanGroupRead
-from app.core.data.dto.user import UserRead
-from app.core.data.orm.annotation_document import AnnotationDocumentORM
-from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
-from app.core.data.orm.code import CodeORM
-from app.core.data.orm.document_tag import DocumentTagORM
-from app.core.data.orm.memo import MemoORM
-from app.core.data.orm.project import ProjectORM
-from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
-from app.core.data.orm.source_document import SourceDocumentORM
-from app.core.data.orm.span_annotation import SpanAnnotationORM
-from app.core.data.orm.span_group import SpanGroupORM
+from app.core.data.export.export_memos import (
+    generate_export_content_for_logbook,
+    generate_export_df_for_memo,
+)
+from app.core.data.export.export_project import generate_export_dict_for_project_details
+from app.core.data.export.export_project_metadata import (
+    generate_export_dfs_for_all_project_metadata_in_proj,
+)
+from app.core.data.export.export_sdoc_links import generate_export_dict_for_sdoc_links
+from app.core.data.export.export_sdoc_metadata import (
+    get_all_sdoc_metadatas_in_project_for_export,
+    get_sdocs_metadata_for_export,
+)
+from app.core.data.export.export_sdocs import (
+    get_all_raw_sdocs_files_in_project_for_export,
+    get_all_sdoc_transcripts_in_project_for_export,
+    get_raw_sdocs_files_for_export,
+)
+from app.core.data.export.export_tags import (
+    generate_export_dfs_for_all_document_tags_in_project,
+)
+from app.core.data.export.export_users import generate_export_df_for_users_in_project
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
@@ -191,595 +192,6 @@ class ExportService(metaclass=SingletonMeta):
 
         return temp_file
 
-    def __get_raw_sdocs_files_for_export(
-        self,
-        db: Session,
-        sdoc_ids: Optional[List[int]] = None,
-        sdocs: Optional[List[SourceDocumentRead]] = None,
-    ) -> List[Path]:
-        # TODO Flo: paging for too many docs
-        if sdocs is None:
-            if sdoc_ids is None:
-                raise ValueError("Either IDs or DTOs must be not None")
-            sdocs = [
-                SourceDocumentRead.model_validate(sdoc)
-                for sdoc in crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)
-            ]
-
-        sdoc_files = [
-            self.repo.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
-            for sdoc in sdocs
-        ]
-        return sdoc_files
-
-    def __get_sdocs_metadata_for_export(
-        self,
-        db: Session,
-        sdoc_ids: Optional[List[int]] = None,
-        sdocs: Optional[List[SourceDocumentRead]] = None,
-    ) -> List[Dict[str, Any]]:
-        if sdoc_ids is None:
-            if sdocs is None:
-                raise ValueError("Either IDs or DTOs must be not None")
-            sdoc_ids = list(map(lambda sdoc: sdoc.id, sdocs))
-
-        sdoc_orms = crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)
-
-        if sdocs is None:
-            sdocs = [SourceDocumentRead.model_validate(sdoc) for sdoc in sdoc_orms]
-
-        sdoc_tags: Dict[int, List[DocumentTagORM]] = {sdoc.id: [] for sdoc in sdocs}
-        for sdoc_orm in sdoc_orms:
-            for tag in sdoc_orm.document_tags:
-                sdoc_tags[sdoc_orm.id].append(tag)
-
-        exported_sdocs_metadata = []
-
-        for sdoc in sdocs:
-            sdoc_metadatas = crud_sdoc_meta.read_by_sdoc(db=db, sdoc_id=sdoc.id)
-            logger.info(f"export sdoc tags: {sdoc_tags[sdoc.id]} for {sdoc.filename}")
-            sdoc_metadata_dtos = [
-                SourceDocumentMetadataReadResolved.model_validate(sdoc_metadata)
-                for sdoc_metadata in sdoc_metadatas
-            ]
-            metadata_dict = dict()
-            for metadata in sdoc_metadata_dtos:
-                metadata_dict[metadata.project_metadata.key] = {
-                    "value": metadata.get_value_serializable(),
-                }
-            exported_sdocs_metadata.append(
-                {
-                    "name": sdoc.name if sdoc.name else "",
-                    "filename": sdoc.filename,
-                    "doctype": sdoc.doctype,
-                    "metadata": metadata_dict,
-                    "tags": [tag.name for tag in sdoc_tags[sdoc.id]],
-                }
-            )
-
-        return exported_sdocs_metadata
-
-    def __get_all_raw_sdocs_files_in_project_for_export(
-        self,
-        db: Session,
-        project_id: int,
-    ) -> List[Path]:
-        # TODO Flo: paging for too many docs
-        sdocs = [
-            SourceDocumentRead.model_validate(sdoc)
-            for sdoc in crud_sdoc.read_by_project(db=db, proj_id=project_id)
-        ]
-        sdoc_files = self.__get_raw_sdocs_files_for_export(db=db, sdocs=sdocs)
-        return sdoc_files
-
-    def __get_all_sdoc_transcripts_in_project_for_export(
-        self, db: Session, project_id: int
-    ) -> List[Tuple[str, List[Dict[str, Any]]]]:
-        transcripts: List[Tuple[str, List[Dict[str, Any]]]] = []
-        sdocs = [
-            SourceDocumentRead.model_validate(sdoc)
-            for sdoc in crud_sdoc.read_by_project(db=db, proj_id=project_id)
-        ]
-        sdoc_ids = [sdoc.id for sdoc in sdocs]
-        if len(sdoc_ids) > 0:
-            logger.info(f"Export sdoc datas transcript for {sdoc_ids}")
-            sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=sdoc_ids)
-            for sdoc_data, sdoc in zip(sdoc_datas, sdocs):
-                assert (
-                    sdoc_data
-                ), f"Expected sdoc data for id {sdoc.id} to exist, because sdocs exist."
-                wlt = sdoc_data.word_level_transcriptions
-                if wlt is not None:
-                    logger.info(
-                        f"Exporting word_level_transcript of file {sdoc.filename}"
-                    )
-                    transcripts.append((sdoc.filename, [x.model_dump() for x in wlt]))
-
-        return transcripts
-
-    def __get_all_sdoc_metadatas_in_project_for_export(
-        self, db: Session, project_id: int
-    ) -> List[Dict[str, Any]]:
-        sdocs = [
-            SourceDocumentRead.model_validate(sdoc)
-            for sdoc in crud_sdoc.read_by_project(db=db, proj_id=project_id)
-        ]
-        exported_sdocs_metadata = self.__get_sdocs_metadata_for_export(
-            db=db, sdocs=sdocs
-        )
-        return exported_sdocs_metadata
-
-    def __generate_export_df_for_adoc(
-        self,
-        db: Session,
-        adoc_id: Optional[int] = None,
-        adoc: Optional[AnnotationDocumentORM] = None,
-    ) -> pd.DataFrame:
-        # fill the DataFrame
-        data = {
-            "sdoc_name": [],
-            "user_email": [],
-            "user_first_name": [],
-            "user_last_name": [],
-            "code_name": [],
-            "created": [],
-            "text": [],
-            "text_begin_char": [],
-            "text_end_char": [],
-            "text_begin_token": [],
-            "text_end_token": [],
-            "text_begin_sent": [],
-            "text_end_sent": [],
-            "bbox_x_min": [],
-            "bbox_x_max": [],
-            "bbox_y_min": [],
-            "bbox_y_max": [],
-        }
-
-        if adoc is None and adoc_id is not None:
-            adoc = crud_adoc.read(db=db, id=adoc_id)
-
-        if adoc:
-            logger.info(f"Exporting AnnotationDocument {adoc_id} ...")
-            # get the adoc, proj, sdoc, user, and all annos
-            user_dto = UserRead.model_validate(adoc.user)
-            sdoc_dto = SourceDocumentRead.model_validate(adoc.source_document)
-            sdoc_data_dto = SourceDocumentDataRead.model_validate(
-                adoc.source_document.data
-            )
-
-            # span annos
-            for span in adoc.span_annotations:
-                data["sdoc_name"].append(sdoc_dto.filename)
-
-                data["user_email"].append(user_dto.email)
-                data["user_first_name"].append(user_dto.first_name)
-                data["user_last_name"].append(user_dto.last_name)
-
-                data["code_name"].append(span.code.name)
-                data["created"].append(span.created)
-
-                data["text"].append(span.text)
-
-                data["text_begin_char"].append(span.begin)
-                data["text_end_char"].append(span.end)
-                data["text_begin_token"].append(span.begin_token)
-                data["text_end_token"].append(span.end_token)
-
-                data["text_begin_sent"].append(None)
-                data["text_end_sent"].append(None)
-
-                data["bbox_x_min"].append(None)
-                data["bbox_x_max"].append(None)
-                data["bbox_y_min"].append(None)
-                data["bbox_y_max"].append(None)
-
-            # sent annos
-            for sent_anno in adoc.sentence_annotations:
-                data["sdoc_name"].append(sdoc_dto.filename)
-
-                data["user_email"].append(user_dto.email)
-                data["user_first_name"].append(user_dto.first_name)
-                data["user_last_name"].append(user_dto.last_name)
-
-                data["code_name"].append(sent_anno.code.name)
-                data["created"].append(sent_anno.created)
-
-                data["text"].append(
-                    " ".join(
-                        sdoc_data_dto.sentences[
-                            sent_anno.sentence_id_start : sent_anno.sentence_id_end + 1
-                        ]
-                    )
-                )
-
-                data["text_begin_char"].append(None)
-                data["text_end_char"].append(None)
-                data["text_begin_token"].append(None)
-                data["text_end_token"].append(None)
-
-                data["text_begin_sent"].append(sent_anno.sentence_id_start)
-                data["text_end_sent"].append(sent_anno.sentence_id_end)
-
-                data["bbox_x_min"].append(None)
-                data["bbox_x_max"].append(None)
-                data["bbox_y_min"].append(None)
-                data["bbox_y_max"].append(None)
-
-            # bbox annos
-            for bbox in adoc.bbox_annotations:
-                data["sdoc_name"].append(sdoc_dto.filename)
-
-                data["user_email"].append(user_dto.email)
-                data["user_first_name"].append(user_dto.first_name)
-                data["user_last_name"].append(user_dto.last_name)
-
-                data["code_name"].append(bbox.code.name)
-                data["created"].append(bbox.created)
-
-                data["text"].append(None)
-
-                data["text_begin_char"].append(None)
-                data["text_end_char"].append(None)
-                data["text_begin_token"].append(None)
-                data["text_end_token"].append(None)
-
-                data["text_begin_sent"].append(None)
-                data["text_end_sent"].append(None)
-
-                data["bbox_x_min"].append(bbox.x_min)
-                data["bbox_x_max"].append(bbox.x_max)
-                data["bbox_y_min"].append(bbox.y_min)
-                data["bbox_y_max"].append(bbox.y_max)
-        else:
-            logger.info("Init empty annotation export document ...")
-
-        df = pd.DataFrame(data=data)
-        return df
-
-    def __generate_export_df_for_span_annotations(
-        self,
-        db: Session,
-        span_annotations: List[SpanAnnotationORM],
-    ) -> pd.DataFrame:
-        logger.info(f"Exporting {len(span_annotations)} Annotations ...")
-
-        # fill the DataFrame
-        data = {
-            "sdoc_name": [],
-            "user_email": [],
-            "user_first_name": [],
-            "user_last_name": [],
-            "code_name": [],
-            "created": [],
-            "text": [],
-            "text_begin_char": [],
-            "text_end_char": [],
-        }
-
-        for span in span_annotations:
-            sdoc = span.annotation_document.source_document
-            user = span.annotation_document.user
-            data["sdoc_name"].append(sdoc.filename)
-            data["user_email"].append(user.email)
-            data["user_first_name"].append(user.first_name)
-            data["user_last_name"].append(user.last_name)
-            data["code_name"].append(span.code.name)
-            data["created"].append(span.created)
-            data["text"].append(span.text)
-            data["text_begin_char"].append(span.begin)
-            data["text_end_char"].append(span.end)
-
-        df = pd.DataFrame(data=data)
-        return df
-
-    def __generate_export_df_for_sentence_annotations(
-        self,
-        db: Session,
-        sentence_annotations: List[SentenceAnnotationORM],
-    ) -> pd.DataFrame:
-        logger.info(f"Exporting {len(sentence_annotations)} Sentence Annotations ...")
-
-        # find all unique sdoc_ids
-        unique_sdoc_ids = set(
-            [sa.annotation_document.source_document_id for sa in sentence_annotations]
-        )
-
-        # find all sdoc_data
-        sdoc_data = {
-            sdoc_data.id: sdoc_data
-            for sdoc_data in crud_sdoc.read_data_batch(db=db, ids=list(unique_sdoc_ids))
-            if sdoc_data is not None
-        }
-
-        # fill the DataFrame
-        data = {
-            "sdoc_name": [],
-            "user_first_name": [],
-            "user_last_name": [],
-            "code_name": [],
-            "created": [],
-            "text": [],
-            "text_begin_sent": [],
-            "text_end_sent": [],
-        }
-
-        for sent_annotation in sentence_annotations:
-            sdoc = sent_annotation.annotation_document.source_document
-            user = sent_annotation.annotation_document.user
-            sdata = sdoc_data[sdoc.id]
-
-            data["sdoc_name"].append(sdoc.filename)
-            data["user_first_name"].append(user.first_name)
-            data["user_last_name"].append(user.last_name)
-            data["code_name"].append(sent_annotation.code.name)
-            data["created"].append(sent_annotation.created)
-            data["text"].append(
-                " ".join(
-                    sdata.sentences[
-                        sent_annotation.sentence_id_start : sent_annotation.sentence_id_end
-                        + 1
-                    ]
-                )
-            )
-            data["text_begin_sent"].append(sent_annotation.sentence_id_start)
-            data["text_end_sent"].append(sent_annotation.sentence_id_end)
-
-        df = pd.DataFrame(data=data)
-        return df
-
-    def __generate_export_df_for_memo(
-        self,
-        db: Session,
-        memo_id: Optional[int] = None,
-        memo: Optional[MemoORM] = None,
-    ) -> pd.DataFrame:
-        if memo is None:
-            if memo_id is None:
-                raise ValueError("Either Memo ID or ORM must be not None")
-            memo = crud_memo.read(db=db, id=memo_id)
-
-        logger.info(f"Exporting Memo {memo_id} ...")
-        memo_dto = crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=memo)
-
-        user_dto = UserRead.model_validate(memo.user)
-
-        # get attached object
-        # avoid circular imports
-        from app.core.data.crud.object_handle import crud_object_handle
-
-        assert memo.attached_to is not None
-        attached_to = crud_object_handle.resolve_handled_object(
-            db=db, handle=memo.attached_to
-        )
-
-        # common data
-        data = {
-            "memo_id": [memo_id],
-            "user_id": [user_dto.id],
-            "user_first_name": [user_dto.first_name],
-            "user_last_name": [user_dto.last_name],
-            "created": [memo_dto.created],
-            "updated": [memo_dto.updated],
-            "starred": [memo_dto.starred],
-            "attached_to": [memo_dto.attached_object_type],
-            "content": [memo_dto.content],
-            "sdoc_name": [None],
-            "tag_name": [None],
-            "span_group_name": [None],
-            "code_name": [None],
-            "span_anno_text": [None],
-        }
-
-        if isinstance(attached_to, CodeORM):
-            dto = CodeRead.model_validate(attached_to)
-            data["code_name"] = [dto.name]
-
-        elif isinstance(attached_to, SpanGroupORM):
-            dto = SpanGroupRead.model_validate(attached_to)
-            data["span_group_name"] = [dto.name]
-
-        elif isinstance(attached_to, SourceDocumentORM):
-            dto = SourceDocumentRead.model_validate(attached_to)
-            data["sdoc_name"] = [dto.filename]
-
-        elif isinstance(attached_to, DocumentTagORM):
-            dto = DocumentTagRead.model_validate(attached_to)
-            data["tag_name"] = [dto.name]
-
-        elif isinstance(attached_to, SpanAnnotationORM):
-            span_read_resolved_dto = SpanAnnotationReadResolved.model_validate(
-                attached_to
-            )
-
-            data["span_anno_text"] = [span_read_resolved_dto.text]
-            data["code_name"] = [span_read_resolved_dto.code.name]
-
-        elif isinstance(attached_to, BBoxAnnotationORM):
-            bbox_read_resolved_dto = BBoxAnnotationReadResolved.model_validate(
-                attached_to
-            )
-
-            data["code_name"] = [bbox_read_resolved_dto.code.name]
-
-        elif isinstance(attached_to, ProjectORM):
-            logger.warning("LogBook Export still todo!")
-            pass
-
-        df = pd.DataFrame(data=data)
-        return df
-
-    def __generate_export_df_for_users_in_project(
-        self, db: Session, project_id: int
-    ) -> pd.DataFrame:
-        users_data = crud_project.read(db=db, id=project_id).users
-        data = [
-            {
-                "email": user_data.email,
-                "first_name": user_data.first_name,
-                "last_name": user_data.last_name,
-                "created": user_data.created,
-                "updated": user_data.updated,
-            }
-            for user_data in users_data
-        ]
-        users_data_df = pd.DataFrame(data)
-        return users_data_df
-
-    def __generate_export_dict_for_project_details(
-        self, db: Session, project_id: int
-    ) -> Dict[str, Union[str, int, datetime]]:
-        project_data = crud_project.read(db=db, id=project_id)
-        data = {
-            "id": project_data.id,
-            "title": project_data.title,
-            "description": project_data.description,
-            "created": project_data.created.isoformat(),
-            "updated": project_data.updated.isoformat(),
-        }
-
-        return data
-
-    def __generate_export_dfs_for_all_sdoc_metadata_in_proj(
-        self, db: Session, project_id: int
-    ) -> pd.DataFrame:
-        project_metadatas = crud_project_meta.read_by_project(db=db, proj_id=project_id)
-        exported_project_metadata = []
-        for project_metadata in project_metadatas:
-            exported_project_metadata.append(
-                {
-                    "key": project_metadata.key,
-                    "metatype": project_metadata.metatype,
-                    "doctype": project_metadata.doctype,
-                    "description": project_metadata.description,
-                }
-            )
-        exported_project_metadata = pd.DataFrame(exported_project_metadata)
-
-        return exported_project_metadata
-
-    def __generate_export_df_for_document_tag(
-        self, db: Session, tag_id: int
-    ) -> pd.DataFrame:
-        logger.info(f"Exporting DocumentTag {tag_id} ...")
-
-        tag = crud_document_tag.read(db=db, id=tag_id)
-        tag_dto = DocumentTagRead.model_validate(tag)
-        applied_to_sdoc_filenames = [sdoc.filename for sdoc in tag.source_documents]
-        data = {
-            "tag_name": [tag_dto.name],
-            "description": [tag_dto.description],
-            "color": [tag_dto.color],
-            "created": [tag_dto.created],
-            "parent_tag_name": [None],
-            "applied_to_sdoc_filenames": [applied_to_sdoc_filenames],
-        }
-        if tag_dto.parent_id:
-            data["parent_tag_name"] = [
-                DocumentTagRead.model_validate(
-                    crud_document_tag.read(db=db, id=tag_dto.parent_id)
-                ).name
-            ]
-
-        df = pd.DataFrame(data=data)
-        return df
-
-    def __generate_content_for_logbook_export(
-        self, db: Session, project_id: int, user_id: int
-    ) -> str:
-        logger.info(f"Exporting LogBook for User {user_id} of Project {project_id} ...")
-        # FIXME find better way to get the LogBook memo (with SQL but this will be a complicated query with JOINS to resolve the objecthandle)
-        memos = crud_memo.read_by_user_and_project(
-            db=db, user_id=user_id, proj_id=project_id, only_starred=False
-        )
-        logbook_dto = None
-        # avoid circular imports
-        from app.core.data.crud.object_handle import crud_object_handle
-
-        for memo in memos:
-            assert memo.attached_to is not None
-            # get attached object
-            attached_to = crud_object_handle.resolve_handled_object(
-                db=db, handle=memo.attached_to
-            )
-            if isinstance(attached_to, ProjectORM):
-                logbook_dto = crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=memo)
-
-        if logbook_dto is None:
-            msg = f"User {user_id} has no LogBook for Project {project_id}!"
-            logger.warning(msg)
-            return ""
-
-        return logbook_dto.content
-
-    def __generate_export_dfs_for_all_codes_in_project(
-        self, db: Session, project_id: int
-    ) -> List[pd.DataFrame]:
-        codes = crud_project.read(db=db, id=project_id).codes
-        exported_codes: List[pd.DataFrame] = []
-        for code in codes:
-            export_data = self.__generate_export_df_for_code(db=db, code_id=code.id)
-            exported_codes.append(export_data)
-        return exported_codes
-
-    def __generate_export_dfs_for_all_document_tags_in_project(
-        self, db: Session, project_id: int
-    ) -> List[pd.DataFrame]:
-        tags = crud_project.read(db=db, id=project_id).document_tags
-        exported_tags: List[pd.DataFrame] = []
-        for tag in tags:
-            export_data = self.__generate_export_df_for_document_tag(
-                db=db, tag_id=tag.id
-            )
-            exported_tags.append(export_data)
-        return exported_tags
-
-    def __generate_export_df_for_code(self, db: Session, code_id: int) -> pd.DataFrame:
-        code = crud_code.read(db=db, id=code_id)
-        code_dto = CodeRead.model_validate(code)
-        parent_code_id = code_dto.parent_id
-        parent_code_name = None
-        if parent_code_id is not None:
-            parent_code_name = CodeRead.model_validate(code.parent).name
-
-        data = {
-            "code_name": [code_dto.name],
-            "description": [code_dto.description],
-            "color": [code_dto.color],
-            "created": [code_dto.created],
-            "parent_code_name": [parent_code_name],
-        }
-
-        df = pd.DataFrame(data=data)
-        return df
-
-    def __generate_export_dfs_for_user_data_in_project(
-        self,
-        db: Session,
-        user_id: int,
-        project_id: int,
-    ) -> Tuple[List[Tuple[str, pd.DataFrame]], List[pd.DataFrame]]:
-        logger.info(f"Exporting data of User {user_id} in Project {project_id} ...")
-        user = crud_user.read(db=db, id=user_id)
-
-        # all AnnotationDocuments
-        adocs = user.annotation_documents
-        exported_adocs: List[Tuple[str, pd.DataFrame]] = []
-        for adoc in adocs:
-            if adoc.source_document.project_id == project_id:
-                export_data = self.__generate_export_df_for_adoc(db=db, adoc_id=adoc.id)
-                exported_adocs.append((adoc.source_document.filename, export_data))
-
-        # all Memos
-        memos = user.memos
-        exported_memos: List[pd.DataFrame] = []
-        for memo in memos:
-            if memo.project_id == project_id:
-                export_data = self.__generate_export_df_for_memo(db=db, memo_id=memo.id)
-                exported_memos.append(export_data)
-
-        return exported_adocs, exported_memos
-
     def _export_user_annotations_from_sdoc(
         self,
         db: Session,
@@ -790,7 +202,7 @@ class ExportService(metaclass=SingletonMeta):
     ) -> str:
         # get the adoc
         adoc = crud_adoc.read_by_sdoc_and_user(db=db, sdoc_id=sdoc_id, user_id=user_id)
-        export_data = self.__generate_export_df_for_adoc(db=db, adoc=adoc)
+        export_data = generate_export_df_for_adoc(db=db, adoc=adoc)
         export_file = self.__write_export_data_to_temp_file(
             data=export_data,
             export_format=export_format,
@@ -817,7 +229,7 @@ class ExportService(metaclass=SingletonMeta):
         # export the data
         export_data = pd.DataFrame()
         for adoc in all_adocs:
-            adoc_data = self.__generate_export_df_for_adoc(db=db, adoc=adoc)
+            adoc_data = generate_export_df_for_adoc(db=db, adoc=adoc)
             export_data = pd.concat((export_data, adoc_data))
 
         # write single file for all annos of that doc
@@ -839,7 +251,7 @@ class ExportService(metaclass=SingletonMeta):
     ) -> str:
         exported_files = []
         for adoc_id in adoc_ids:
-            df = self.__generate_export_df_for_adoc(db=db, adoc_id=adoc_id)
+            df = generate_export_df_for_adoc(db=db, adoc_id=adoc_id)
             export_file = self.__write_export_data_to_temp_file(
                 data=df,
                 export_format=export_format,
@@ -869,9 +281,7 @@ class ExportService(metaclass=SingletonMeta):
 
         export_data = pd.DataFrame()
         for memo in memos:
-            memo_data = self.__generate_export_df_for_memo(
-                db=db, memo_id=memo.id, memo=memo
-            )
+            memo_data = generate_export_df_for_memo(db=db, memo_id=memo.id, memo=memo)
             export_data = pd.concat((export_data, memo_data))
 
         assert isinstance(export_data, pd.DataFrame)  # for surpessing the warning
@@ -883,29 +293,32 @@ class ExportService(metaclass=SingletonMeta):
         export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
         return export_url
 
-    def _export_project_codes(
+    def __generate_export_dfs_for_user_data_in_project(
         self,
         db: Session,
+        user_id: int,
         project_id: int,
-        export_format: ExportFormat = ExportFormat.CSV,
-    ) -> Path:
-        proj = crud_project.read(db=db, id=project_id)
-        logger.info(f"Exporting Codes of project {project_id} ...")
-        code_dfs = [
-            self.__generate_export_df_for_code(db=db, code_id=code.id)
-            for code in proj.codes
-        ]
-        if len(code_dfs) > 0:
-            codes = pd.concat(code_dfs)
-            export_file = self.__write_export_data_to_temp_file(
-                codes,
-                export_format=export_format,
-                fn=PROJECT_CODES_EXPORT_NAMING_TEMPLATE.format(project_id=project_id),
-            )
-            return export_file
-        msg = f"No Codes to export in Project {project_id}"
-        logger.error(msg)
-        raise NoDataToExportError(msg)
+    ) -> Tuple[List[Tuple[str, pd.DataFrame]], List[pd.DataFrame]]:
+        logger.info(f"Exporting data of User {user_id} in Project {project_id} ...")
+        user = crud_user.read(db=db, id=user_id)
+
+        # all AnnotationDocuments
+        adocs = user.annotation_documents
+        exported_adocs: List[Tuple[str, pd.DataFrame]] = []
+        for adoc in adocs:
+            if adoc.source_document.project_id == project_id:
+                export_data = generate_export_df_for_adoc(db=db, adoc_id=adoc.id)
+                exported_adocs.append((adoc.source_document.filename, export_data))
+
+        # all Memos
+        memos = user.memos
+        exported_memos: List[pd.DataFrame] = []
+        for memo in memos:
+            if memo.project_id == project_id:
+                export_data = generate_export_df_for_memo(db=db, memo_id=memo.id)
+                exported_memos.append(export_data)
+
+        return exported_adocs, exported_memos
 
     def _export_user_data_from_proj(
         self,
@@ -921,10 +334,10 @@ class ExportService(metaclass=SingletonMeta):
             db=db, user_id=user_id, project_id=project_id
         )
 
-        exported_tags = self.__generate_export_dfs_for_all_document_tags_in_project(
+        exported_tags = generate_export_dfs_for_all_document_tags_in_project(
             db=db, project_id=project_id
         )
-        logbook_content = self.__generate_content_for_logbook_export(
+        logbook_content = generate_export_content_for_logbook(
             db=db, project_id=project_id, user_id=user_id
         )
 
@@ -977,22 +390,6 @@ class ExportService(metaclass=SingletonMeta):
 
         return self.repo.get_temp_file_url(export_zip.name, relative=True)
 
-    def __generate_export_dict_for_sdoc_links(
-        self, db: Session, project_id: int
-    ) -> pd.DataFrame:
-        data = {
-            "sdoc_filename": [],
-            "linked_source_document_filename": [],
-        }
-        sdocs = crud_sdoc.read_by_project(db=db, proj_id=project_id)
-        for sdoc in sdocs:
-            for link in sdoc.source_document_links:
-                data["sdoc_filename"].append(sdoc.filename)
-                data["linked_source_document_filename"].append(
-                    link.linked_source_document_filename
-                )
-        return pd.DataFrame(data)
-
     def _export_all_data_from_proj(
         self,
         db: Session,
@@ -1010,13 +407,13 @@ class ExportService(metaclass=SingletonMeta):
 
         logger.info("exporting user data...")
         # generate all users in project data
-        exported_users = self.__generate_export_df_for_users_in_project(
+        exported_users = generate_export_df_for_users_in_project(
             db=db, project_id=project_id
         )
 
         # generate project details
         logger.info("exporting project details...")
-        exported_project_details = self.__generate_export_dict_for_project_details(
+        exported_project_details = generate_export_dict_for_project_details(
             db=db, project_id=project_id
         )
         # write project details to files
@@ -1043,7 +440,7 @@ class ExportService(metaclass=SingletonMeta):
             exported_logbooks.append(
                 (
                     user.id,
-                    self.__generate_content_for_logbook_export(
+                    generate_export_content_for_logbook(
                         db=db, project_id=project_id, user_id=user.id
                     ),
                 )
@@ -1096,14 +493,14 @@ class ExportService(metaclass=SingletonMeta):
             exported_files.append(logbook_file)
 
         # write codes to files
-        export_file = self._export_project_codes(
+        export_file = self._export_all_codes_from_proj(
             db=db, project_id=project_id, export_format=export_format
         )
         exported_files.append(export_file)
 
         logger.info("exporting document tags...")
         # write all tags to one file
-        exported_tags = self.__generate_export_dfs_for_all_document_tags_in_project(
+        exported_tags = generate_export_dfs_for_all_document_tags_in_project(
             db=db, project_id=project_id
         )
         if len(exported_tags) > 0:
@@ -1126,9 +523,9 @@ class ExportService(metaclass=SingletonMeta):
         )
         exported_files.append(export_file)
 
-        # write all sdoc metadata to one file
+        # write all project metadata to one file
         exported_project_metadata = (
-            self.__generate_export_dfs_for_all_sdoc_metadata_in_proj(
+            generate_export_dfs_for_all_project_metadata_in_proj(
                 db=db, project_id=project_id
             )
         )
@@ -1144,8 +541,8 @@ class ExportService(metaclass=SingletonMeta):
 
         logger.info("exporting raw sdocs...")
         # add all raw sdocs to export
-        sdoc_files = self.__get_all_raw_sdocs_files_in_project_for_export(
-            db=db, project_id=project_id
+        sdoc_files = get_all_raw_sdocs_files_in_project_for_export(
+            db=db, repo=self.repo, project_id=project_id
         )
         exported_files.extend(sdoc_files)
 
@@ -1153,7 +550,7 @@ class ExportService(metaclass=SingletonMeta):
         for sdoc_file in sdoc_files:
             sdoc_name = sdoc_file.name
             if sdoc_name not in exported_adocs:
-                empty_adoc_df = self.__generate_export_df_for_adoc(db=db)
+                empty_adoc_df = generate_export_df_for_adoc(db=db)
                 export_file = self.__write_export_data_to_temp_file(
                     data=empty_adoc_df,
                     export_format=export_format,
@@ -1163,7 +560,7 @@ class ExportService(metaclass=SingletonMeta):
                 exported_files.append(export_file)
 
         # add sdoc transcripts (txt)
-        exported_transcripts = self.__get_all_sdoc_transcripts_in_project_for_export(
+        exported_transcripts = get_all_sdoc_transcripts_in_project_for_export(
             db=db, project_id=project_id
         )
         for filename, word_level_transcriptions in exported_transcripts:
@@ -1174,7 +571,7 @@ class ExportService(metaclass=SingletonMeta):
             exported_files.append(exported_file)
 
         # add the sdoc metadatafiles (jsons)
-        exported_sdocs_metadata = self.__get_all_sdoc_metadatas_in_project_for_export(
+        exported_sdocs_metadata = get_all_sdoc_metadatas_in_project_for_export(
             db=db, project_id=project_id
         )
         for exported_sdoc_metadata in exported_sdocs_metadata:
@@ -1184,7 +581,7 @@ class ExportService(metaclass=SingletonMeta):
             )
             exported_files.append(exported_file)
 
-        exported_sdoc_links = self.__generate_export_dict_for_sdoc_links(
+        exported_sdoc_links = generate_export_dict_for_sdoc_links(
             db=db, project_id=project_id
         )
         exported_file = self.__write_export_data_to_temp_file(
@@ -1207,9 +604,7 @@ class ExportService(metaclass=SingletonMeta):
         project_id: int,
         export_format: ExportFormat = ExportFormat.CSV,
     ) -> str:
-        users_df = self.__generate_export_df_for_users_in_project(
-            db=db, project_id=project_id
-        )
+        users_df = generate_export_df_for_users_in_project(db=db, project_id=project_id)
         export_file = self.__write_export_data_to_temp_file(
             data=users_df,
             export_format=export_format,
@@ -1222,7 +617,7 @@ class ExportService(metaclass=SingletonMeta):
         self, db: Session, project_id: int, user_id: int
     ) -> str:
         # special handling for LogBook memos: we export is as single MarkDown File
-        logbook_content = self.__generate_content_for_logbook_export(
+        logbook_content = generate_export_content_for_logbook(
             db=db, project_id=project_id, user_id=user_id
         )
         # create the logbook file
@@ -1238,7 +633,7 @@ class ExportService(metaclass=SingletonMeta):
         project_id: int,
         export_format: ExportFormat = ExportFormat.CSV,
     ) -> str:
-        ex_tags = self.__generate_export_dfs_for_all_document_tags_in_project(
+        ex_tags = generate_export_dfs_for_all_document_tags_in_project(
             db=db, project_id=project_id
         )
 
@@ -1262,7 +657,7 @@ class ExportService(metaclass=SingletonMeta):
         project_id: int,
         export_format: ExportFormat = ExportFormat.CSV,
     ) -> str:
-        ex_codes = self.__generate_export_dfs_for_all_codes_in_project(
+        ex_codes = generate_export_dfs_for_all_codes_in_project(
             db=db, project_id=project_id
         )
 
@@ -1280,62 +675,7 @@ class ExportService(metaclass=SingletonMeta):
         logger.error(msg)
         raise NoDataToExportError(msg)
 
-    def _export_selected_sdocs_from_proj(
-        self,
-        db: Session,
-        project_id: int,
-        sdoc_ids: List[int],
-        export_format: ExportFormat = ExportFormat.CSV,
-    ) -> str:
-        files = self.__get_raw_sdocs_files_for_export(db, sdoc_ids=sdoc_ids)
-        files.extend(
-            self.__get_selected_sdoc_metadata_files_from_project_for_export(
-                db=db,
-                project_id=project_id,
-                sdoc_ids=sdoc_ids,
-                export_format=export_format,
-            )
-        )
-        zip = self.__create_export_zip(
-            f"{len(files)}_exported_documents_project_{project_id}.zip", files
-        )
-        return self.repo.get_temp_file_url(zip.name, relative=True)
-
-    def _export_selected_span_annotations_from_proj(
-        self, db: Session, project_id: int, span_annotation_ids: List[int]
-    ) -> str:
-        # get the annotations
-        span_annotations = crud_span_anno.read_by_ids(db=db, ids=span_annotation_ids)
-
-        export_data = self.__generate_export_df_for_span_annotations(
-            db=db, span_annotations=span_annotations
-        )
-        export_file = self.__write_export_data_to_temp_file(
-            data=export_data,
-            export_format=ExportFormat.CSV,
-            fn=f"project_{project_id}_selected_span_annotations_export",
-        )
-        return self.repo.get_temp_file_url(export_file.name, relative=True)
-
-    def _export_selected_sentence_annotations_from_proj(
-        self, db: Session, project_id: int, sentence_annotation_ids: List[int]
-    ) -> str:
-        # get the annotations
-        sentence_annotations = crud_sentence_anno.read_by_ids(
-            db=db, ids=sentence_annotation_ids
-        )
-
-        export_data = self.__generate_export_df_for_sentence_annotations(
-            db=db, sentence_annotations=sentence_annotations
-        )
-        export_file = self.__write_export_data_to_temp_file(
-            data=export_data,
-            export_format=ExportFormat.CSV,
-            fn=f"project_{project_id}_selected_sentence_annotations_export",
-        )
-        return self.repo.get_temp_file_url(export_file.name, relative=True)
-
-    def __get_selected_sdoc_metadata_files_from_project_for_export(
+    def __get_sdoc_metadata_files_for_export(
         self,
         db: Session,
         project_id: int,
@@ -1347,7 +687,7 @@ class ExportService(metaclass=SingletonMeta):
             for sdoc in crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)
         ]
 
-        sdocs_metadata = self.__get_sdocs_metadata_for_export(db=db, sdocs=sdocs)
+        sdocs_metadata = get_sdocs_metadata_for_export(db=db, sdocs=sdocs)
         files = []
         for sdoc_metadata in sdocs_metadata:
             files.append(
@@ -1356,7 +696,7 @@ class ExportService(metaclass=SingletonMeta):
                     fn=sdoc_metadata["filename"],
                 )
             )
-        project_metadata = self.__generate_export_dfs_for_all_sdoc_metadata_in_proj(
+        project_metadata = generate_export_dfs_for_all_project_metadata_in_proj(
             db=db, project_id=project_id
         )
         # we filter by the metadata actually present in the exported sdocs.
@@ -1380,6 +720,61 @@ class ExportService(metaclass=SingletonMeta):
                 )
             )
         return files
+
+    def _export_selected_sdocs_from_proj(
+        self,
+        db: Session,
+        project_id: int,
+        sdoc_ids: List[int],
+        export_format: ExportFormat = ExportFormat.CSV,
+    ) -> str:
+        files = get_raw_sdocs_files_for_export(db, repo=self.repo, sdoc_ids=sdoc_ids)
+        files.extend(
+            self.__get_sdoc_metadata_files_for_export(
+                db=db,
+                project_id=project_id,
+                sdoc_ids=sdoc_ids,
+                export_format=export_format,
+            )
+        )
+        zip = self.__create_export_zip(
+            f"{len(files)}_exported_documents_project_{project_id}.zip", files
+        )
+        return self.repo.get_temp_file_url(zip.name, relative=True)
+
+    def _export_selected_span_annotations_from_proj(
+        self, db: Session, project_id: int, span_annotation_ids: List[int]
+    ) -> str:
+        # get the annotations
+        span_annotations = crud_span_anno.read_by_ids(db=db, ids=span_annotation_ids)
+
+        export_data = generate_export_df_for_span_annotations(
+            db=db, span_annotations=span_annotations
+        )
+        export_file = self.__write_export_data_to_temp_file(
+            data=export_data,
+            export_format=ExportFormat.CSV,
+            fn=f"project_{project_id}_selected_span_annotations_export",
+        )
+        return self.repo.get_temp_file_url(export_file.name, relative=True)
+
+    def _export_selected_sentence_annotations_from_proj(
+        self, db: Session, project_id: int, sentence_annotation_ids: List[int]
+    ) -> str:
+        # get the annotations
+        sentence_annotations = crud_sentence_anno.read_by_ids(
+            db=db, ids=sentence_annotation_ids
+        )
+
+        export_data = generate_export_df_for_sentence_annotations(
+            db=db, sentence_annotations=sentence_annotations
+        )
+        export_file = self.__write_export_data_to_temp_file(
+            data=export_data,
+            export_format=ExportFormat.CSV,
+            fn=f"project_{project_id}_selected_sentence_annotations_export",
+        )
+        return self.repo.get_temp_file_url(export_file.name, relative=True)
 
     def _assert_all_requested_data_exists(
         self, export_params: ExportJobParameters
