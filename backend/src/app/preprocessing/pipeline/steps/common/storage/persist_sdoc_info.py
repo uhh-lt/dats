@@ -153,15 +153,17 @@ def persist_sdoc_info(cargo: PipelineCargo) -> PipelineCargo:
         cargo.data["ppad"] if "ppad" in cargo.data else None
     )
     doctype: DocType = cargo.ppj_payload.doc_type
-    ppdb: PreProDocBase = (
-        pptd
-        if doctype == DocType.text
-        else cargo.data["ppid"]
-        if doctype == DocType.image
-        else cargo.data["ppad"]
-        if doctype == DocType.audio
-        else cargo.data["ppvd"]
-    )
+
+    match doctype:
+        case DocType.text:
+            ppdb: PreProDocBase = cargo.data["pptd"]
+        case DocType.image:
+            ppdb: PreProDocBase = cargo.data["pptd"]
+        case DocType.audio:
+            ppdb: PreProDocBase = cargo.data["ppad"]
+        case DocType.video:
+            ppdb: PreProDocBase = cargo.data["ppvd"]
+
     with sql.db_session() as db:
         try:
             # create and persist SourceDocument

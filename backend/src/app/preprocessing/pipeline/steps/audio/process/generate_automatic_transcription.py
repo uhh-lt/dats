@@ -41,7 +41,6 @@ def generate_automatic_transcription(cargo: PipelineCargo) -> PipelineCargo:
         for segment in transcription.segments:
             for word in segment.words:
                 text = word.text.strip()
-                logger.info(f"test word: {text}")
                 wlt = WordLevelTranscription(
                     text=text,
                     start_ms=word.start_ms,
