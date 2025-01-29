@@ -158,7 +158,7 @@ def persist_sdoc_info(cargo: PipelineCargo) -> PipelineCargo:
         case DocType.text:
             ppdb: PreProDocBase = cargo.data["pptd"]
         case DocType.image:
-            ppdb: PreProDocBase = cargo.data["pptd"]
+            ppdb: PreProDocBase = cargo.data["ppid"]
         case DocType.audio:
             ppdb: PreProDocBase = cargo.data["ppad"]
         case DocType.video:
