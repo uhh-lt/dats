@@ -115,7 +115,7 @@ function AnnotationToolbar({ sdoc }: AnnotationToolbarProps) {
               </Tooltip>
             </ToggleButtonGroup>
           )}
-          {sdoc.doctype === DocType.TEXT && <LLMAssistanceButton sdocIds={[sdoc.id]} projectId={sdoc.project_id} />}
+          {sdoc.doctype !== DocType.IMAGE && <LLMAssistanceButton sdocIds={[sdoc.id]} projectId={sdoc.project_id} />}
         </>
       ) : null}
     </Toolbar>

@@ -94,12 +94,24 @@ const comparatorComponent = (
   },
   [DocType.AUDIO]: {
     [AnnotationMode.Annotation]: <div>Not supported</div>,
-    [AnnotationMode.SentenceAnnotation]: <div>Not supported</div>,
+    [AnnotationMode.SentenceAnnotation]: (
+      <SentenceAnnotationComparison
+        sdocData={sdocData}
+        style={{ marginLeft: "-16px", marginBottom: "-24px", marginRight: "-16px" }}
+        virtualizerScrollElementRef={boxRef}
+      />
+    ),
     [AnnotationMode.Reader]: <div>Not supported</div>,
   },
   [DocType.VIDEO]: {
     [AnnotationMode.Annotation]: <div>Not supported</div>,
-    [AnnotationMode.SentenceAnnotation]: <div>Not supported</div>,
+    [AnnotationMode.SentenceAnnotation]: (
+      <SentenceAnnotationComparison
+        sdocData={sdocData}
+        style={{ marginLeft: "-16px", marginBottom: "-24px", marginRight: "-16px" }}
+        virtualizerScrollElementRef={boxRef}
+      />
+    ),
     [AnnotationMode.Reader]: <div>Not supported</div>,
   },
 });
