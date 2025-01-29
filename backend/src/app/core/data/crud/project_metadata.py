@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
+from app.core.data.doc_type import DocType
 from app.core.data.dto.project_metadata import (
     ProjectMetadataCreate,
     ProjectMetadataUpdate,
@@ -102,6 +103,40 @@ class CRUDProjectMetadata(
             .all()
         )
         return db_objs
+
+    def read_by_project_and_key_and_metatype_and_doctype(
+        self, db: Session, project_id: int, key: str, metatype: str, doctype: str
+    ) -> Optional[ProjectMetadataORM]:
+        return (
+            db.query(self.model)
+            .filter(
+                self.model.project_id == project_id,
+                self.model.key == key,
+                self.model.metatype == metatype,
+                self.model.doctype == doctype,
+            )
+            .first()
+        )
+
+    def exists_by_project_and_key_and_metatype_and_doctype(
+        self,
+        db: Session,
+        project_id: int,
+        key: str,
+        metatype: MetaType,
+        doctype: DocType,
+    ) -> bool:
+        return (
+            db.query(self.model)
+            .filter(
+                self.model.project_id == project_id,
+                self.model.key == key,
+                self.model.metatype == metatype,
+                self.model.doctype == doctype,
+            )
+            .first()
+            is not None
+        )
 
     def read_by_project(
         self,

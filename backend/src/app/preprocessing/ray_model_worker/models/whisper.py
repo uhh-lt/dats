@@ -15,6 +15,9 @@ from faster_whisper import WhisperModel as wm
 from ray import serve
 from ray_config import build_ray_model_deployment_config, conf
 from scipy.io import wavfile
+from utils import (
+    get_sdoc_path_for_project_and_sdoc_name,
+)
 
 logger = logging.getLogger("ray.serve")
 
@@ -32,7 +35,7 @@ class WhisperModel:
         logger.info(f"Loading Whisper model {WHISPER_MODEL} on {DEVICE}")
         self.model = wm(WHISPER_MODEL, DEVICE, download_root=DOWNLOAD_DIR)
 
-    def _load_uncompressed_audio(self, uncompressed_audio_fp: str) -> np.ndarray:
+    def _load_uncompressed_audio(self, uncompressed_audio_fp: str | Path) -> np.ndarray:
         fp = Path(uncompressed_audio_fp)
         assert fp.exists(), f"File {fp} does not exist."
         assert fp.suffix == ".wav", f"File {fp} is not a wav file."
@@ -44,7 +47,10 @@ class WhisperModel:
         return audionp
 
     def transcribe_fpi(self, input: WhisperFilePathInput) -> WhisperTranscriptionOutput:
-        audionp = self._load_uncompressed_audio(input.uncompressed_audio_fp)
+        filepath = get_sdoc_path_for_project_and_sdoc_name(
+            proj_id=input.project_id, sdoc_name=input.uncompressed_audio_fp
+        )
+        audionp = self._load_uncompressed_audio(filepath)
 
         logger.debug(
             (

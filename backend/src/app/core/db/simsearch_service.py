@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -68,23 +67,20 @@ class SimSearchService(metaclass=SingletonMeta):
         else:
             return encoded_query.numpy()
 
-    def _get_image_path_from_sdoc_id(self, sdoc_id: int) -> Path:
+    def _get_image_name_from_sdoc_id(self, sdoc_id: int) -> SourceDocumentRead:
         with self.sqls.db_session() as db:
             sdoc = SourceDocumentRead.model_validate(crud_sdoc.read(db=db, id=sdoc_id))
             assert (
                 sdoc.doctype == DocType.image
             ), f"SourceDocument with {sdoc_id=} is not an image!"
-        return self.repo.get_path_to_sdoc_file(sdoc=sdoc, raise_if_not_exists=True)
+        return sdoc
 
     def _encode_image(self, image_sdoc_id: int) -> np.ndarray:
-        query_image_path = self._get_image_path_from_sdoc_id(sdoc_id=image_sdoc_id)
-        # FIXME HACK FOR LOCAL RUN
-        query_image_path = Path(
-            str(query_image_path).replace(conf.repo.root_directory, "/tmp/dats")
-        )
-
+        image = self._get_image_name_from_sdoc_id(sdoc_id=image_sdoc_id)
         encoded_query = self.rms.clip_image_embedding(
-            ClipImageEmbeddingInput(image_fps=[str(query_image_path)])
+            ClipImageEmbeddingInput(
+                image_fps=[image.filename], project_ids=[image.project_id]
+            )
         )
         return encoded_query.numpy().squeeze()
 

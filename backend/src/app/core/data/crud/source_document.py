@@ -3,7 +3,7 @@ from typing import List, Optional
 from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
 
-from app.core.data.crud.crud_base import CRUDBase
+from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
 from app.core.data.dto.source_document import (
     SDocStatus,
     SourceDocumentCreate,
@@ -49,13 +49,15 @@ class CRUDSourceDocument(
             raise SourceDocumentPreprocessingUnfinishedError(sdoc_id=sdoc_id)
         return status
 
-    def read_data(self, db: Session, *, id: int) -> Optional[SourceDocumentDataRead]:
+    def read_data(self, db: Session, *, id: int) -> SourceDocumentDataRead:
         db_obj = (
             db.query(SourceDocumentDataORM)
             .filter(SourceDocumentDataORM.id == id)
             .first()
         )
-        return SourceDocumentDataRead.model_validate(db_obj) if db_obj else None
+        if db_obj is None:
+            raise NoSuchElementError(self.model, id=id)
+        return SourceDocumentDataRead.model_validate(db_obj)
 
     def read_data_batch(
         self, db: Session, *, ids: List[int]

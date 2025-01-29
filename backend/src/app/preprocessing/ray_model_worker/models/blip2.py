@@ -6,6 +6,9 @@ from PIL import Image
 from ray import serve
 from ray_config import build_ray_model_deployment_config, conf
 from transformers import Blip2ForConditionalGeneration, Blip2Processor
+from utils import (
+    get_sdoc_path_for_project_and_sdoc_name,
+)
 
 logger = logging.getLogger("ray.serve")
 
@@ -27,9 +30,13 @@ else:
 class Blip2Model:
     def __init__(self):
         logger.debug(f"Loading Blip2Processor {MODEL} ...")
-        image_processor: Blip2Processor = Blip2Processor.from_pretrained(
-            MODEL, revision=REVISION
-        )
+        assert isinstance(
+            MODEL, str
+        ), f"Expected model to be of type string, but got {type(MODEL)} instead."
+        image_processor = Blip2Processor.from_pretrained(MODEL, revision=REVISION)
+        assert isinstance(
+            image_processor, Blip2Processor
+        ), f"Expected model to be of type string, but got {type(image_processor)} instead."
 
         device_map = {"": 0}
         load_in_8bit = False
@@ -68,7 +75,11 @@ class Blip2Model:
 
     def image_captioning(self, input: Blip2FilePathInput) -> Blip2Output:
         # load the image
-        with Image.open(input.image_fp) as img:
+        with Image.open(
+            get_sdoc_path_for_project_and_sdoc_name(
+                proj_id=input.project_id, sdoc_name=input.image_fp
+            )
+        ) as img:
             if img.mode != "RGB":
                 img = img.convert("RGB")
             pixel_values = self.feature_extractor(

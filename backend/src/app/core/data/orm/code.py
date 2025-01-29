@@ -25,9 +25,7 @@ if TYPE_CHECKING:
 class CodeORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String, nullable=False, index=True)
-    is_system: Mapped[Optional[str]] = mapped_column(
-        Boolean, index=False, nullable=False
-    )
+    is_system: Mapped[Boolean] = mapped_column(Boolean, index=False, nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String, index=False)
     color: Mapped[Optional[str]] = mapped_column(String, index=False)
     created: Mapped[Optional[datetime]] = mapped_column(

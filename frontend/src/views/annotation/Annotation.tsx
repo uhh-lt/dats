@@ -47,15 +47,27 @@ const annotatorComponent = (
     [AnnotationMode.Reader]: <ImageViewer sdocData={sdocData} />,
   },
   [DocType.AUDIO]: {
-    [AnnotationMode.Annotation]: <div>Annotation is not (yet) supported for Audio Documents.</div>,
-    [AnnotationMode.SentenceAnnotation]: <div>Annotation is not (yet) supported for Audio Documents.</div>,
+    [AnnotationMode.Annotation]: <TextAnnotator sdocData={sdocData} />,
+    [AnnotationMode.SentenceAnnotation]: (
+      <SentenceAnnotator
+        sdocData={sdocData}
+        style={{ marginLeft: "-16px", marginBottom: "-24px", marginRight: "-16px" }}
+        virtualizerScrollElementRef={boxRef}
+      />
+    ),
     [AnnotationMode.Reader]: (
       <AudioVideoViewer sdocData={sdocData} showEntities={true} width={"100%"} height={"64px"} />
     ),
   },
   [DocType.VIDEO]: {
-    [AnnotationMode.Annotation]: <div>Annotation is not (yet) supported for Video Documents.</div>,
-    [AnnotationMode.SentenceAnnotation]: <div>Annotation is not (yet) supported for Video Documents.</div>,
+    [AnnotationMode.Annotation]: <TextAnnotator sdocData={sdocData} />,
+    [AnnotationMode.SentenceAnnotation]: (
+      <SentenceAnnotator
+        sdocData={sdocData}
+        style={{ marginLeft: "-16px", marginBottom: "-24px", marginRight: "-16px" }}
+        virtualizerScrollElementRef={boxRef}
+      />
+    ),
     [AnnotationMode.Reader]: <AudioVideoViewer sdocData={sdocData} showEntities={true} width={800} height={600} />,
   },
 });
@@ -82,12 +94,24 @@ const comparatorComponent = (
   },
   [DocType.AUDIO]: {
     [AnnotationMode.Annotation]: <div>Not supported</div>,
-    [AnnotationMode.SentenceAnnotation]: <div>Not supported</div>,
+    [AnnotationMode.SentenceAnnotation]: (
+      <SentenceAnnotationComparison
+        sdocData={sdocData}
+        style={{ marginLeft: "-16px", marginBottom: "-24px", marginRight: "-16px" }}
+        virtualizerScrollElementRef={boxRef}
+      />
+    ),
     [AnnotationMode.Reader]: <div>Not supported</div>,
   },
   [DocType.VIDEO]: {
     [AnnotationMode.Annotation]: <div>Not supported</div>,
-    [AnnotationMode.SentenceAnnotation]: <div>Not supported</div>,
+    [AnnotationMode.SentenceAnnotation]: (
+      <SentenceAnnotationComparison
+        sdocData={sdocData}
+        style={{ marginLeft: "-16px", marginBottom: "-24px", marginRight: "-16px" }}
+        virtualizerScrollElementRef={boxRef}
+      />
+    ),
     [AnnotationMode.Reader]: <div>Not supported</div>,
   },
 });

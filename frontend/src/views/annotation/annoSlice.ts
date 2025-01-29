@@ -154,6 +154,7 @@ export const annoSlice = createSlice({
       }
       state.compareWithUserId = action.payload;
       state.isCompareMode = true;
+      state.annotationMode = AnnotationMode.SentenceAnnotation;
       console.log("compareWithUser", action.payload);
       console.log("visibleUserId", state.visibleUserId);
     },

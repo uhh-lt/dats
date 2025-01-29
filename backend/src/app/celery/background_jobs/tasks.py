@@ -4,6 +4,7 @@ from typing import Tuple
 from app.celery.background_jobs.cota import start_cota_refinement_job_
 from app.celery.background_jobs.crawl import start_crawler_job_
 from app.celery.background_jobs.export import start_export_job_
+from app.celery.background_jobs.import_ import start_import_job_
 from app.celery.background_jobs.llm import start_llm_job_
 from app.celery.background_jobs.preprocess import (
     execute_audio_preprocessing_pipeline_,
@@ -18,6 +19,7 @@ from app.celery.background_jobs.trainer import (
 from app.celery.celery_worker import celery_worker
 from app.core.data.dto.crawler_job import CrawlerJobRead
 from app.core.data.dto.export_job import ExportJobRead
+from app.core.data.dto.import_job import ImportJobRead
 from app.core.data.dto.llm_job import LLMJobRead
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 
@@ -46,6 +48,11 @@ def start_export_job(export_job: ExportJobRead) -> None:
 
 
 @celery_worker.task(acks_late=True)
+def start_import_job(import_job: ImportJobRead) -> None:
+    start_import_job_(import_job=import_job)
+
+
+@celery_worker.task(acks_late=True)
 def start_crawler_job(crawler_job: CrawlerJobRead) -> Tuple[Path, int]:
     archive_file_path, project_id = start_crawler_job_(crawler_job=crawler_job)
     return archive_file_path, project_id
@@ -61,8 +68,10 @@ def start_llm_job(llm_job: LLMJobRead) -> None:
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
-def execute_text_preprocessing_pipeline_task(cargo: PipelineCargo) -> None:
-    execute_text_preprocessing_pipeline_(cargo=cargo)
+def execute_text_preprocessing_pipeline_task(
+    cargo: PipelineCargo, is_init: bool = True
+) -> None:
+    execute_text_preprocessing_pipeline_(cargo=cargo, is_init=is_init)
 
 
 @celery_worker.task(
@@ -70,8 +79,10 @@ def execute_text_preprocessing_pipeline_task(cargo: PipelineCargo) -> None:
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
-def execute_image_preprocessing_pipeline_task(cargo: PipelineCargo) -> None:
-    execute_image_preprocessing_pipeline_(cargo=cargo)
+def execute_image_preprocessing_pipeline_task(
+    cargo: PipelineCargo, is_init: bool = True
+) -> None:
+    execute_image_preprocessing_pipeline_(cargo=cargo, is_init=is_init)
 
 
 @celery_worker.task(
@@ -79,8 +90,11 @@ def execute_image_preprocessing_pipeline_task(cargo: PipelineCargo) -> None:
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
-def execute_audio_preprocessing_pipeline_task(cargo: PipelineCargo) -> None:
-    execute_audio_preprocessing_pipeline_(cargo=cargo)
+def execute_audio_preprocessing_pipeline_task(
+    cargo: PipelineCargo,
+    is_init: bool = True,
+) -> None:
+    execute_audio_preprocessing_pipeline_(cargo=cargo, is_init=is_init)
 
 
 @celery_worker.task(
@@ -88,8 +102,11 @@ def execute_audio_preprocessing_pipeline_task(cargo: PipelineCargo) -> None:
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
-def execute_video_preprocessing_pipeline_task(cargo: PipelineCargo) -> None:
-    execute_video_preprocessing_pipeline_(cargo=cargo)
+def execute_video_preprocessing_pipeline_task(
+    cargo: PipelineCargo,
+    is_init: bool = True,
+) -> None:
+    execute_video_preprocessing_pipeline_(cargo=cargo, is_init=is_init)
 
 
 @celery_worker.task(

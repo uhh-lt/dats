@@ -203,6 +203,18 @@ class RepoService(metaclass=SingletonMeta):
             else:
                 return filename.name
 
+    def restore_sdoc_metadata_filename(self, metadata_filename: str | Path) -> str:
+        """
+        This method restores the name: [MY_SDOC_FILE_BASENAME]_[MY_SDOC_FILE_EXTENSION].[MY_METADATA_FILE_EXTENSION]
+        to [MY_SDOC_FILE_BASENAME].[MY_METADATA_FILE_EXTENSION]
+        """
+        if isinstance(metadata_filename, str):
+            metadata_filename = Path(metadata_filename)
+        metadata_filename_split = metadata_filename.stem.split("_")
+        extension = metadata_filename_split[-1]
+        basename = "".join(metadata_filename_split[:-1])
+        return f"{basename}.{extension}"
+
     def get_path_to_sdoc_file(
         self,
         sdoc: SourceDocumentRead,
@@ -246,6 +258,22 @@ class RepoService(metaclass=SingletonMeta):
         return self._get_project_repo_sdocs_root_path(proj_id=proj_id).joinpath(
             f"{filename}"
         )
+
+    def get_dst_path_for_temp_file(self, filename: Union[str, Path]) -> Path:
+        filename = Path(self.truncate_filename(filename))
+        return self.temp_files_root.joinpath(f"{filename}")
+
+    def _project_sdoc_file_exists(
+        self, proj_id: int, filename: Union[str, Path]
+    ) -> bool:
+        return (
+            self._get_project_repo_sdocs_root_path(proj_id=proj_id)
+            .joinpath(f"{filename}")
+            .exists()
+        )
+
+    def _temp_file_exists(self, filename: Union[str, Path]) -> bool:
+        return self.get_dst_path_for_temp_file(filename).exists()
 
     def create_directory_structure_for_project(self, proj_id: int) -> Optional[Path]:
         paths = [
@@ -414,11 +442,27 @@ class RepoService(metaclass=SingletonMeta):
         )
 
         # move the file
-        logger.info(
-            f"Moving {src_file} to Project {proj_id} SDoc files at {in_project_dst}!"
-        )
         src_file.rename(in_project_dst)
         return in_project_dst
+
+    def store_uploaded_file(
+        self, uploaded_file: UploadFile, filepath: Path, fn: Path | str
+    ) -> Path:
+        real_file_size = 0
+        with open(filepath, "wb") as f:
+            for chunk in uploaded_file.file:
+                real_file_size += len(chunk)
+                if real_file_size > conf.api.max_upload_file_size:
+                    raise HTTPException(
+                        status_code=413,
+                        detail=(
+                            f"File {fn} is too large!"
+                            f" Maximum allowed size in bytes: {conf.api.max_upload_file_size}"
+                        ),
+                    )
+                f.write(chunk)
+            f.close()
+        return filepath
 
     def store_uploaded_file_in_project_repo(
         self, proj_id: int, uploaded_file: UploadFile
@@ -436,20 +480,9 @@ class RepoService(metaclass=SingletonMeta):
             logger.info(
                 f"Storing Uploaded File {fn} in Project {proj_id} Repo at {in_project_dst.relative_to(self.repo_root)} ..."
             )
-            real_file_size = 0
-            with open(in_project_dst, "wb") as f:
-                for chunk in uploaded_file.file:
-                    real_file_size += len(chunk)
-                    if real_file_size > conf.api.max_upload_file_size:
-                        raise HTTPException(
-                            status_code=413,
-                            detail=(
-                                f"File {fn} is too large!"
-                                f" Maximum allowed size in bytes: {conf.api.max_upload_file_size}"
-                            ),
-                        )
-                    f.write(chunk)
-                f.close()
+            self.store_uploaded_file(
+                uploaded_file=uploaded_file, filepath=in_project_dst, fn=fn
+            )
 
             return in_project_dst
         except HTTPException as e:

@@ -762,7 +762,7 @@ def test_span_annotation_and_memo(client, api_code, api_user, api_document) -> N
 
 
 @pytest.mark.order(after=["test_upload_documents", "test_codes_create"])
-def test_bbox_annotatation_and_memo(client, api_code, api_user, api_document) -> None:
+def test_bbox_annotation_and_memo(client, api_code, api_user, api_document) -> None:
     alice = api_user.user_list["alice"]
     project_image_doc1 = api_document.document_list[image_doc1[1]]
     code1 = api_code.code_list["code1"]

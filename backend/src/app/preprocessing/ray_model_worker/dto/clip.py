@@ -5,7 +5,8 @@ from pydantic import BaseModel, Field
 
 
 class ClipImageEmbeddingInput(BaseModel):
-    image_fps: List[str] = Field(examples=["/path/to/image.png"])
+    image_fps: List[str] = Field(examples=["image.png"])
+    project_ids: List[int] = Field(examples=[1, 2, 3])
 
 
 class ClipTextEmbeddingInput(BaseModel):

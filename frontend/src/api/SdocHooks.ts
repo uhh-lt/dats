@@ -171,25 +171,6 @@ const useGetMetadataByKey = (sdocId: number | null | undefined, key: string) =>
     enabled: !!sdocId,
   });
 
-interface WordLevelTranscription {
-  text: string;
-  start_ms: number;
-  end_ms: number;
-}
-
-const useGetWordLevelTranscriptions = (sdocId: number | null | undefined) =>
-  useQuery<WordLevelTranscription[], Error>({
-    queryKey: [QueryKey.SDOC_WORD_LEVEL_TRANSCRIPTIONS, sdocId],
-    queryFn: async () => {
-      const metadata = await SourceDocumentService.readMetadataByKey({
-        sdocId: sdocId!,
-        metadataKey: "word_level_transcriptions",
-      });
-      return JSON.parse(metadata.str_value!) as WordLevelTranscription[];
-    },
-    enabled: !!sdocId,
-  });
-
 // annotations
 const useGetAnnotators = (sdocId: number | null | undefined) =>
   useQuery<number[], Error>({
@@ -270,7 +251,6 @@ const SdocHooks = {
   useGetURL,
   useGetThumbnailURL,
   useGetMetadata,
-  useGetWordLevelTranscriptions,
   useGetMetadataByKey,
 };
 

@@ -326,7 +326,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
           <g ref={gDragRef} style={{ cursor: isZooming ? "move" : "crosshair" }}>
             <image
               ref={imgRef}
-              href={encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + sdocData.html)}
+              href={encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + sdocData.repo_url)}
               style={{ outline: "1px solid black" }}
             />
             <rect

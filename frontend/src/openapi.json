@@ -6299,6 +6299,84 @@
           }
         }
       }
+    },
+    "/import/{proj_id}/codes": {
+      "post": {
+        "tags": ["import"],
+        "summary": "Starts the import codes job on given project id.",
+        "operationId": "start_import_codes_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": { "schema": { "$ref": "#/components/schemas/Body_import-start_import_codes_job" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ImportJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/import/{proj_id}/tags": {
+      "post": {
+        "tags": ["import"],
+        "summary": "Starts the import tags job on given project.",
+        "operationId": "start_import_tags_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": { "schema": { "$ref": "#/components/schemas/Body_import-start_import_tags_job" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ImportJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/import": {
+      "post": {
+        "tags": ["import"],
+        "summary": "Starts the import project job on given project",
+        "operationId": "start_import_project_job",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": { "schema": { "$ref": "#/components/schemas/Body_import-start_import_project_job" } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ImportJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
     }
   },
   "components": {
@@ -6802,6 +6880,45 @@
         "type": "object",
         "required": ["sdoc_ids", "unlink_tag_ids", "link_tag_ids"],
         "title": "Body_documentTag-update_document_tags_batch"
+      },
+      "Body_import-start_import_codes_job": {
+        "properties": {
+          "uploaded_file": {
+            "type": "string",
+            "format": "binary",
+            "title": "Uploaded File",
+            "description": "CSV file of codes that gets uploaded into project"
+          }
+        },
+        "type": "object",
+        "required": ["uploaded_file"],
+        "title": "Body_import-start_import_codes_job"
+      },
+      "Body_import-start_import_project_job": {
+        "properties": {
+          "uploaded_file": {
+            "type": "string",
+            "format": "binary",
+            "title": "Uploaded File",
+            "description": "Zip file of project metadata that gets uploaded into project"
+          }
+        },
+        "type": "object",
+        "required": ["uploaded_file"],
+        "title": "Body_import-start_import_project_job"
+      },
+      "Body_import-start_import_tags_job": {
+        "properties": {
+          "uploaded_file": {
+            "type": "string",
+            "format": "binary",
+            "title": "Uploaded File",
+            "description": "CSV file of codes that gets uploaded into project"
+          }
+        },
+        "type": "object",
+        "required": ["uploaded_file"],
+        "title": "Body_import-start_import_tags_job"
       },
       "Body_memo-search_memos": {
         "properties": {
@@ -7656,6 +7773,7 @@
           "specific_export_job_parameters": {
             "oneOf": [
               { "$ref": "#/components/schemas/SingleProjectAllDataExportJobParams" },
+              { "$ref": "#/components/schemas/SingleProjectAllUserExportJobParams" },
               { "$ref": "#/components/schemas/SingleProjectAllTagsExportJobParams" },
               { "$ref": "#/components/schemas/SingleProjectAllCodesExportJobParams" },
               { "$ref": "#/components/schemas/SingleProjectSelectedSdocsParams" },
@@ -7677,6 +7795,7 @@
                 "SINGLE_PROJECT_ALL_CODES": "#/components/schemas/SingleProjectAllCodesExportJobParams",
                 "SINGLE_PROJECT_ALL_DATA": "#/components/schemas/SingleProjectAllDataExportJobParams",
                 "SINGLE_PROJECT_ALL_TAGS": "#/components/schemas/SingleProjectAllTagsExportJobParams",
+                "SINGLE_PROJECT_ALL_USER": "#/components/schemas/SingleProjectAllUserExportJobParams",
                 "SINGLE_PROJECT_SELECTED_SDOCS": "#/components/schemas/SingleProjectSelectedSdocsParams",
                 "SINGLE_PROJECT_SELECTED_SENTENCE_ANNOTATIONS": "#/components/schemas/SingleProjectSelectedSentenceAnnotationsParams",
                 "SINGLE_PROJECT_SELECTED_SPAN_ANNOTATIONS": "#/components/schemas/SingleProjectSelectedSpanAnnotationsParams",
@@ -7723,6 +7842,7 @@
         "type": "string",
         "enum": [
           "SINGLE_PROJECT_ALL_DATA",
+          "SINGLE_PROJECT_ALL_USER",
           "SINGLE_PROJECT_ALL_TAGS",
           "SINGLE_PROJECT_ALL_CODES",
           "SINGLE_PROJECT_SELECTED_SDOCS",
@@ -8187,6 +8307,44 @@
         "title": "IDListOperator"
       },
       "IDOperator": { "type": "string", "enum": ["ID_EQUALS", "ID_NOT_EQUALS"], "title": "IDOperator" },
+      "ImportJobParameters": {
+        "properties": {
+          "proj_id": { "type": "integer", "title": "Proj Id", "description": "ID of the Project" },
+          "user_id": { "type": "integer", "title": "User Id", "description": "ID of the User, who started the job." },
+          "filename": { "type": "string", "title": "Filename", "description": "Filename of the csv or zip of csvs." },
+          "import_job_type": {
+            "$ref": "#/components/schemas/ImportJobType",
+            "description": "The type of the import job (what to import)"
+          }
+        },
+        "type": "object",
+        "required": ["proj_id", "user_id", "filename", "import_job_type"],
+        "title": "ImportJobParameters"
+      },
+      "ImportJobRead": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/BackgroundJobStatus",
+            "description": "Status of the ImportJob",
+            "default": "Waiting"
+          },
+          "id": { "type": "string", "title": "Id", "description": "ID of the ImportJob" },
+          "parameters": {
+            "$ref": "#/components/schemas/ImportJobParameters",
+            "description": "The parameters of the import job that defines what to import!"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the ImportJob"
+          }
+        },
+        "type": "object",
+        "required": ["id", "parameters", "created"],
+        "title": "ImportJobRead"
+      },
+      "ImportJobType": { "type": "string", "enum": ["PROJECT", "CODES", "TAGS"], "title": "ImportJobType" },
       "KeywordStat": {
         "properties": {
           "keyword": { "type": "string", "title": "Keyword", "description": "The counted keyword." },
@@ -9329,6 +9487,19 @@
         "required": ["project_id", "export_job_type"],
         "title": "SingleProjectAllTagsExportJobParams"
       },
+      "SingleProjectAllUserExportJobParams": {
+        "properties": {
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "The ID of the Project to export from"
+          },
+          "export_job_type": { "type": "string", "const": "SINGLE_PROJECT_ALL_USER", "title": "Export Job Type" }
+        },
+        "type": "object",
+        "required": ["project_id", "export_job_type"],
+        "title": "SingleProjectAllUserExportJobParams"
+      },
       "SingleProjectSelectedSdocsParams": {
         "properties": {
           "project_id": {
@@ -9529,6 +9700,11 @@
             "title": "Project Id",
             "description": "ID of the Project the SourceDocument belongs to"
           },
+          "repo_url": {
+            "type": "string",
+            "title": "Repo Url",
+            "description": "Relative path to the SourceDocument in the repository"
+          },
           "html": { "type": "string", "title": "Html", "description": "Processed HTML of the SourceDocument" },
           "tokens": {
             "items": { "type": "string" },
@@ -9552,10 +9728,27 @@
             "type": "array",
             "title": "Sentences",
             "description": "List of sentences in the SourceDocument"
+          },
+          "word_level_transcriptions": {
+            "anyOf": [
+              { "items": { "$ref": "#/components/schemas/WordLevelTranscription" }, "type": "array" },
+              { "type": "null" }
+            ],
+            "title": "Word Level Transcriptions",
+            "description": "word level transcriptions, with tokens, start times and end times"
           }
         },
         "type": "object",
-        "required": ["id", "project_id", "html", "tokens", "token_character_offsets", "sentences"],
+        "required": [
+          "id",
+          "project_id",
+          "repo_url",
+          "html",
+          "tokens",
+          "token_character_offsets",
+          "sentences",
+          "word_level_transcriptions"
+        ],
         "title": "SourceDocumentDataRead"
       },
       "SourceDocumentDocumentTagLinks": {
@@ -10615,6 +10808,16 @@
         "type": "object",
         "required": ["word", "word_percent", "count", "sdocs", "sdocs_percent"],
         "title": "WordFrequencyStat"
+      },
+      "WordLevelTranscription": {
+        "properties": {
+          "text": { "type": "string", "title": "Text" },
+          "start_ms": { "type": "integer", "title": "Start Ms" },
+          "end_ms": { "type": "integer", "title": "End Ms" }
+        },
+        "type": "object",
+        "required": ["text", "start_ms", "end_ms"],
+        "title": "WordLevelTranscription"
       },
       "ZeroShotParams": {
         "properties": {

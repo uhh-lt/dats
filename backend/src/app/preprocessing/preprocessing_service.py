@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import magic
 from fastapi import HTTPException, UploadFile
@@ -198,6 +198,49 @@ class PreprocessingService(metaclass=SingletonMeta):
                 )
         return cargos
 
+    def _create_pipeline_cargos_from_preprocessing_job_with_data(
+        self,
+        ppj: PreprocessingJobRead,
+        sdoc_specific_payloads: Dict[str, Dict[str, Any]],
+    ) -> Dict[DocType, List[PipelineCargo]]:
+        # create the PipelineCargos for the different DocTypes
+        cargos: Dict[DocType, List[PipelineCargo]] = dict()
+        # init them with empty lists
+        for doc_type in DocType:
+            cargos[doc_type] = []
+        # append cargo for each payload and respective metadata/annotations
+        for payload in ppj.payloads:
+            filename = payload.filename
+            assert (
+                filename in sdoc_specific_payloads
+            ), f"Expected filename {filename} to be in dict, but was not in {sdoc_specific_payloads.keys()}, {payload.source_document_id}"
+
+            # generate cargo with one payload
+            cargo = PipelineCargo(ppj_payload=payload, ppj_id=ppj.id)
+            cargo.data["metadata"] = sdoc_specific_payloads[filename]["metadata"]
+            cargo.data["sdoc_link"] = sdoc_specific_payloads[filename]["sdoc_link"]
+            cargo.data["tags"] = sdoc_specific_payloads[filename]["tags"]
+            cargo.data["annotations"] = sdoc_specific_payloads[filename]["annotations"]
+            cargo.data["sentence_annotations"] = sdoc_specific_payloads[filename][
+                "sentence_annotations"
+            ]
+            if payload.doc_type == DocType.image:
+                cargo.data["bboxes"] = sdoc_specific_payloads[filename]["bboxes"]
+
+            # add transcript if in payload
+            if (
+                payload.doc_type in [DocType.audio, DocType.video]
+                and "word_level_transcriptions" in sdoc_specific_payloads[filename]
+            ):
+                cargo.data["word_level_transcriptions"] = sdoc_specific_payloads[
+                    filename
+                ]["word_level_transcriptions"]
+
+            cargos[payload.doc_type].append(cargo)
+
+            logger.info(f"Generated cargos for import are {cargos}")
+        return cargos
+
     def abort_preprocessing_job(self, ppj_id: str) -> PreprocessingJobRead:
         logger.info(f"Aborting PreprocessingJob {ppj_id}...")
         with self.sqls.db_session() as db:
@@ -206,8 +249,7 @@ class PreprocessingService(metaclass=SingletonMeta):
         if ppj.status != BackgroundJobStatus.RUNNING:
             raise HTTPException(
                 detail=(
-                    f"Cannot abort PreprocessingJob {ppj_id} "
-                    "because it is not running!"
+                    f"Cannot abort PreprocessingJob {ppj_id} because it is not running!"
                 ),
                 status_code=400,
             )
@@ -315,34 +357,40 @@ class PreprocessingService(metaclass=SingletonMeta):
             self._pipelines[doc_type] = PreprocessingPipeline(doc_type=doc_type)
         return self._pipelines[doc_type]
 
-    def get_text_pipeline(self) -> PreprocessingPipeline:
+    def get_text_pipeline(self, is_init: bool = True) -> PreprocessingPipeline:
         from app.preprocessing.pipeline import build_text_pipeline
 
         if DocType.text not in self._pipelines:
-            pipeline = build_text_pipeline()
+            pipeline = build_text_pipeline(is_init)
             self._pipelines[DocType.text] = pipeline
         return self._pipelines[DocType.text]
 
-    def get_image_pipeline(self) -> PreprocessingPipeline:
+    def get_image_pipeline(self, is_init: bool) -> PreprocessingPipeline:
         from app.preprocessing.pipeline import build_image_pipeline
 
         if DocType.image not in self._pipelines:
-            pipeline = build_image_pipeline()
+            pipeline = build_image_pipeline(is_init=is_init)
             self._pipelines[DocType.image] = pipeline
         return self._pipelines[DocType.image]
 
-    def get_audio_pipeline(self) -> PreprocessingPipeline:
+    def get_audio_pipeline(
+        self,
+        is_init: bool = True,
+    ) -> PreprocessingPipeline:
         from app.preprocessing.pipeline import build_audio_pipeline
 
         if DocType.audio not in self._pipelines:
-            pipeline = build_audio_pipeline()
+            pipeline = build_audio_pipeline(is_init=is_init)
             self._pipelines[DocType.audio] = pipeline
         return self._pipelines[DocType.audio]
 
-    def get_video_pipeline(self) -> PreprocessingPipeline:
+    def get_video_pipeline(
+        self,
+        is_init: bool = True,
+    ) -> PreprocessingPipeline:
         from app.preprocessing.pipeline import build_video_pipeline
 
         if DocType.video not in self._pipelines:
-            pipeline = build_video_pipeline()
+            pipeline = build_video_pipeline(is_init=is_init)
             self._pipelines[DocType.video] = pipeline
         return self._pipelines[DocType.video]

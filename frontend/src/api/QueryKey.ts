@@ -66,8 +66,6 @@ export const QueryKey = {
   SDOC_SENTENCE_ANNOTATOR: "sdocSentenceAnnotator",
   // all metadata of a document (by sdoc id)
   SDOC_METADATAS: "sdocMetadatas",
-  // word frequencies of a document (by sdoc id)
-  SDOC_WORD_LEVEL_TRANSCRIPTIONS: "sdocTranscriptions",
   // metadata with given key of a document (by sdoc id, metadata key)
   SDOC_METADATA_BY_KEY: "sdocMetadataByKey",
   // url of a document (by sdoc id)
