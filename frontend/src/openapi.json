@@ -6354,61 +6354,6 @@
         }
       }
     },
-    "/import/{proj_id}/project_project_metadata": {
-      "post": {
-        "tags": ["import"],
-        "summary": "Starts the import project project metadata job on given project",
-        "operationId": "start_import_project_project_metadata_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": { "$ref": "#/components/schemas/Body_import-start_import_project_project_metadata_job" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ImportJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/import/project_metadata": {
-      "post": {
-        "tags": ["import"],
-        "summary": "Starts the import project metadata job on given project",
-        "operationId": "start_import_project_metadata_job",
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": { "$ref": "#/components/schemas/Body_import-start_import_project_metadata_job" }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ImportJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
     "/import": {
       "post": {
         "tags": ["import"],
@@ -6961,32 +6906,6 @@
         "type": "object",
         "required": ["uploaded_file"],
         "title": "Body_import-start_import_project_job"
-      },
-      "Body_import-start_import_project_metadata_job": {
-        "properties": {
-          "uploaded_file": {
-            "type": "string",
-            "format": "binary",
-            "title": "Uploaded File",
-            "description": "Json file of project metadata that gets uploaded into project"
-          }
-        },
-        "type": "object",
-        "required": ["uploaded_file"],
-        "title": "Body_import-start_import_project_metadata_job"
-      },
-      "Body_import-start_import_project_project_metadata_job": {
-        "properties": {
-          "uploaded_file": {
-            "type": "string",
-            "format": "binary",
-            "title": "Uploaded File",
-            "description": "CSV file of project project metadata that gets uploaded into project"
-          }
-        },
-        "type": "object",
-        "required": ["uploaded_file"],
-        "title": "Body_import-start_import_project_project_metadata_job"
       },
       "Body_import-start_import_tags_job": {
         "properties": {
@@ -8425,25 +8344,7 @@
         "required": ["id", "parameters", "created"],
         "title": "ImportJobRead"
       },
-      "ImportJobType": {
-        "type": "string",
-        "enum": [
-          "SINGLE_PROJECT_ALL_DATA",
-          "SINGLE_PROJECT_ALL_USER",
-          "SINGLE_PROJECT_ALL_TAGS",
-          "SINGLE_PROJECT_SELECTED_SDOCS",
-          "SINGLE_USER_ALL_DATA",
-          "SINGLE_PROJECT_ALL_METADATA",
-          "SINGLE_PROJECT_ALL_PROJECT_PROJECT_METADATA",
-          "SINGLE_PROJECT",
-          "SINGLE_USER_ALL_CODES",
-          "SINGLE_USER_ALL_MEMOS",
-          "SINGLE_USER_LOGBOOK",
-          "SINGLE_DOC_ALL_USER_ANNOTATIONS",
-          "SINGLE_DOC_SINGLE_USER_ANNOTATIONS"
-        ],
-        "title": "ImportJobType"
-      },
+      "ImportJobType": { "type": "string", "enum": ["PROJECT", "CODES", "TAGS"], "title": "ImportJobType" },
       "KeywordStat": {
         "properties": {
           "keyword": { "type": "string", "title": "Keyword", "description": "The counted keyword." },
