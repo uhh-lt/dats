@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Set, Tuple
 from pydantic import Field
 
 from app.preprocessing.pipeline.model.preprodoc_base import PreProDocBase
+from app.preprocessing.pipeline.model.text.autosentanno import AutoSentAnno
 from app.preprocessing.pipeline.model.text.autospan import AutoSpan
 from app.preprocessing.pipeline.model.text.sentence import Sentence
 from app.preprocessing.ray_model_worker.dto.spacy import SpacyPipelineOutput
@@ -23,5 +24,6 @@ class PreProTextDoc(PreProDocBase):
     keywords: List[str] = Field(default_factory=list)
     word_freqs: Dict[str, int] = Field(default_factory=dict)
     spans: Dict[str, Set[AutoSpan]] = Field(default_factory=dict)
+    sent_annos: Dict[str, Set[AutoSentAnno]] = Field(default_factory=dict)
     sentences: List[Sentence] = Field(default_factory=list)
     extracted_images: List[Path] = Field(default_factory=list)

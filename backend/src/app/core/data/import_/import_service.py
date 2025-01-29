@@ -61,6 +61,7 @@ from app.core.data.repo.repo_service import (
 from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
 from app.preprocessing.pipeline.model.image.autobbox import AutoBBox
+from app.preprocessing.pipeline.model.text.autosentanno import AutoSentAnno
 from app.preprocessing.pipeline.model.text.autospan import AutoSpan
 from app.preprocessing.ray_model_service import RayModelService
 from app.util.singleton_meta import SingletonMeta
@@ -674,8 +675,8 @@ class ImportService(metaclass=SingletonMeta):
                     "sdoc_filename":{
                         "sdoc": filename.html,
                         "sdoc_metadatas": filename.metadata.json
-                        "sdoc_annotations": filename.annotations.csv
-                        "sdoc_word_level_transcription": filename.transcript.json
+                        "sdoc_annotations": filename.csv
+                        "sdoc_transcript": filename.transcript.json
                     }
                 }
             """
@@ -738,8 +739,9 @@ class ImportService(metaclass=SingletonMeta):
                     proj_id, sdoc_filepath
                 )
                 logger.info(f"moving sdoc filepath {sdoc_filepath}")
-                annotations: Set[AutoSpan] = set()
-                bboxes: Set[AutoBBox] = set()
+                span_annos: Set[AutoSpan] = set()
+                sent_annos: Set[AutoSentAnno] = set()
+                bbox_annos: Set[AutoBBox] = set()
                 tags: List[int] = []
                 sdoc_link: List[SourceDocumentLinkCreate] = []
                 # init the empty
@@ -797,61 +799,71 @@ class ImportService(metaclass=SingletonMeta):
                 sdoc_annotations_filepath = sdoc_package["sdoc_annotations"]
                 sdoc_annotations_df = pd.read_csv(sdoc_annotations_filepath)
                 logger.info(f"The doctype is {sdoc_doctype}")
-                # if sdoc_doctype == DocType.text:
-                # create AutoSpans for NER
                 for _, row in sdoc_annotations_df.iterrows():
-                    if row["user_email"] in user_email_id_mapping:
-                        email: Optional[str] = (
-                            str(row["user_email"])
-                            if isinstance(row["user_email"], str)
-                            else None
-                        )
-                        if (
-                            email and bool(pd.notna(row["text"]))
-                        ):  # this should always be true because of if email in email_id_mapping
-                            auto = AutoSpan.model_validate(
-                                {
-                                    "code": row["code_name"],
-                                    "start": row["text_begin_char"],
-                                    "end": row["text_end_char"],
-                                    "text": row["text"],
-                                    "start_token": row["text_begin_token"],
-                                    "end_token": row["text_end_token"],
-                                    "user_id": user_email_id_mapping[email],
-                                }
-                            )
-                            annotations.add(auto)
-                logger.info(f"Generate sdoc annotations {annotations}")
+                    # all annotations have user_email
+                    # all annotations have code_name
+                    if bool(pd.isna(row["user_email"])) or bool(
+                        pd.isna(row["code_name"])
+                    ):
+                        continue
 
-                if sdoc_doctype == DocType.image:
-                    # create boundig boxes for object detection
-                    for _, row in sdoc_annotations_df.iterrows():
-                        email: Optional[str] = (
-                            str(row["user_email"])
-                            if isinstance(row["user_email"], str)
-                            else None
+                    # user has to exist
+                    if row["user_email"] not in user_email_id_mapping:
+                        continue
+
+                    user_id = user_email_id_mapping[str(row["user_email"])]
+
+                    # span annotations
+                    if (
+                        bool(pd.notna(row["text"]))
+                        and bool(pd.notna(row["text_begin_char"]))
+                        and bool(pd.notna(row["text_end_char"]))
+                        and bool(pd.notna(row["text_begin_token"]))
+                        and bool(pd.notna(row["text_end_token"]))
+                    ):
+                        auto = AutoSpan(
+                            text=str(row["text"]),
+                            start=int(row["text_begin_char"]),
+                            end=int(row["text_end_char"]),
+                            start_token=int(row["text_begin_token"]),
+                            end_token=int(row["text_end_token"]),
+                            user_id=user_id,
+                            code=str(row["code_name"]),
                         )
-                        if (
-                            email
-                            and bool(pd.notna(row["bbox_x_min"]))
-                            and bool(pd.notna(row["bbox_y_min"]))
-                            and bool(pd.notna(row["bbox_x_max"]))
-                            and bool(pd.notna(row["bbox_y_max"]))
-                        ):
-                            logger.info(
-                                f"x_min {row['bbox_x_min']}, y_min: {row['bbox_y_min']}, x_max: {row['bbox_x_max']}, y_max: {row['bbox_y_max']}"
-                            )
-                            bbox = AutoBBox.model_validate(
-                                {
-                                    "code": row["code_name"],
-                                    "x_min": row["bbox_x_min"],
-                                    "y_min": row["bbox_y_min"],
-                                    "x_max": row["bbox_x_max"],
-                                    "y_max": row["bbox_y_max"],
-                                    "user_id": user_email_id_mapping[email],
-                                }
-                            )
-                            bboxes.add(bbox)
+                        span_annos.add(auto)
+
+                    # sentence annotations
+                    if bool(pd.notna(row["text_begin_sent"])) and bool(
+                        pd.notna(row["text_end_sent"])
+                    ):
+                        auto = AutoSentAnno(
+                            start=int(row["text_begin_sent"]),
+                            end=int(row["text_end_sent"]),
+                            user_id=user_id,
+                            code=str(row["code_name"]),
+                        )
+                        sent_annos.add(auto)
+
+                    # bbox annotations
+                    if (
+                        bool(pd.notna(row["bbox_x_min"]))
+                        and bool(pd.notna(row["bbox_y_min"]))
+                        and bool(pd.notna(row["bbox_x_max"]))
+                        and bool(pd.notna(row["bbox_y_max"]))
+                    ):
+                        bbox = AutoBBox(
+                            x_min=int(row["bbox_x_min"]),
+                            y_min=int(row["bbox_y_min"]),
+                            x_max=int(row["bbox_x_max"]),
+                            y_max=int(row["bbox_y_max"]),
+                            user_id=user_id,
+                            code=str(row["code_name"]),
+                        )
+                        bbox_annos.add(bbox)
+
+                logger.info(f"Generate sdoc span annotations {span_annos}")
+                logger.info(f"Generate sdoc sentence annotations {sent_annos}")
+                logger.info(f"Generate sdoc bbox annotations {bbox_annos}")
 
                 # create sdoc link create dtos
                 for linked_sdoc in sdoc_links[
@@ -871,8 +883,9 @@ class ImportService(metaclass=SingletonMeta):
 
                 sdoc_specific_payloads[sdoc_filepath.name] = {
                     "metadata": metadata,
-                    "annotations": annotations,
-                    "bboxes": bboxes,
+                    "annotations": span_annos,
+                    "sentence_annotations": sent_annos,
+                    "bboxes": bbox_annos,
                     "tags": tags,
                     "sdoc_link": sdoc_link,
                 }
@@ -1002,8 +1015,8 @@ class ImportService(metaclass=SingletonMeta):
             "sdoc_filename":{
                 "sdoc": filename.html,
                 "sdoc_metadatas": filename.metadata.json
-                "sdoc_annotations": filename.annotations.csv
-                "sdoc_word_level_transcription": filename.transcript.json
+                "sdoc_annotations": filename.csv
+                "sdoc_transcript": filename.transcript.json
             }
         }
         """

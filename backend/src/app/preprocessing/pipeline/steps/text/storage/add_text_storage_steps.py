@@ -6,6 +6,9 @@ from app.preprocessing.pipeline.steps.text.storage.persist_sdoc_links import (
 from app.preprocessing.pipeline.steps.text.storage.persist_sdoc_word_frequencies import (
     persist_sdoc_word_frequencies,
 )
+from app.preprocessing.pipeline.steps.text.storage.persist_sentence_annotations import (
+    persist_sentence_annotations,
+)
 from app.preprocessing.pipeline.steps.text.storage.persist_span_annotations import (
     persist_span_annotations,
 )
@@ -23,6 +26,12 @@ def add_text_storage_steps(pipeline: PreprocessingPipeline) -> None:
     # persist SpanAnnotations
     pipeline.register_step(
         func=persist_span_annotations,
+        required_data=["pptd"],
+    )
+
+    # persist SentenceAnnotations
+    pipeline.register_step(
+        func=persist_sentence_annotations,
         required_data=["pptd"],
     )
 

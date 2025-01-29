@@ -220,11 +220,14 @@ class PreprocessingService(metaclass=SingletonMeta):
             cargo.data["metadata"] = sdoc_specific_payloads[filename]["metadata"]
             cargo.data["sdoc_link"] = sdoc_specific_payloads[filename]["sdoc_link"]
             cargo.data["tags"] = sdoc_specific_payloads[filename]["tags"]
-            # add transcript if in payload
-
             cargo.data["annotations"] = sdoc_specific_payloads[filename]["annotations"]
+            cargo.data["sentence_annotations"] = sdoc_specific_payloads[filename][
+                "sentence_annotations"
+            ]
             if payload.doc_type == DocType.image:
                 cargo.data["bboxes"] = sdoc_specific_payloads[filename]["bboxes"]
+
+            # add transcript if in payload
             if (
                 payload.doc_type in [DocType.audio, DocType.video]
                 and "word_level_transcriptions" in sdoc_specific_payloads[filename]
