@@ -4,8 +4,6 @@
 /* eslint-disable */
 import type { Body_import_start_import_codes_job } from "../models/Body_import_start_import_codes_job";
 import type { Body_import_start_import_project_job } from "../models/Body_import_start_import_project_job";
-import type { Body_import_start_import_project_metadata_job } from "../models/Body_import_start_import_project_metadata_job";
-import type { Body_import_start_import_project_project_metadata_job } from "../models/Body_import_start_import_project_project_metadata_job";
 import type { Body_import_start_import_tags_job } from "../models/Body_import_start_import_tags_job";
 import type { ImportJobRead } from "../models/ImportJobRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -55,51 +53,6 @@ export class ImportService {
       path: {
         proj_id: projId,
       },
-      formData: formData,
-      mediaType: "multipart/form-data",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Starts the import project project metadata job on given project
-   * @returns ImportJobRead Successful Response
-   * @throws ApiError
-   */
-  public static startImportProjectProjectMetadataJob({
-    projId,
-    formData,
-  }: {
-    projId: number;
-    formData: Body_import_start_import_project_project_metadata_job;
-  }): CancelablePromise<ImportJobRead> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/import/{proj_id}/project_project_metadata",
-      path: {
-        proj_id: projId,
-      },
-      formData: formData,
-      mediaType: "multipart/form-data",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Starts the import project metadata job on given project
-   * @returns ImportJobRead Successful Response
-   * @throws ApiError
-   */
-  public static startImportProjectMetadataJob({
-    formData,
-  }: {
-    formData: Body_import_start_import_project_metadata_job;
-  }): CancelablePromise<ImportJobRead> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/import/project_metadata",
       formData: formData,
       mediaType: "multipart/form-data",
       errors: {
