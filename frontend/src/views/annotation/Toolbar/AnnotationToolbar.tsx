@@ -1,4 +1,5 @@
 import ChromeReaderModeIcon from "@mui/icons-material/ChromeReaderMode";
+import CropOriginalIcon from "@mui/icons-material/CropOriginal";
 import DoNotDisturbIcon from "@mui/icons-material/DoNotDisturb";
 import FormatOverlineIcon from "@mui/icons-material/FormatOverline";
 import FormatStrikethroughIcon from "@mui/icons-material/FormatStrikethrough";
@@ -18,9 +19,9 @@ import { CompareWithSelector } from "./CompareWithSelector.tsx";
 
 const docTypeToIcon: Record<DocType, React.ReactNode> = {
   [DocType.TEXT]: <ShortTextIcon />,
-  [DocType.IMAGE]: <SubjectIcon />,
-  [DocType.AUDIO]: <SubjectIcon />,
-  [DocType.VIDEO]: <SubjectIcon />,
+  [DocType.IMAGE]: <CropOriginalIcon />,
+  [DocType.AUDIO]: <ShortTextIcon />,
+  [DocType.VIDEO]: <ShortTextIcon />,
 };
 
 interface AnnotationToolbarProps {
@@ -37,7 +38,7 @@ function AnnotationToolbar({ sdoc }: AnnotationToolbarProps) {
   // ensure that annotation mode is correct
   useEffect(() => {
     if (!sdoc) return;
-    if (sdoc.doctype !== DocType.TEXT && annotationMode === AnnotationMode.SentenceAnnotation) {
+    if (sdoc.doctype === DocType.IMAGE && annotationMode === AnnotationMode.SentenceAnnotation) {
       dispatch(AnnoActions.onChangeAnnotationMode(AnnotationMode.Annotation));
     }
   }, [sdoc, annotationMode, dispatch]);
@@ -64,7 +65,7 @@ function AnnotationToolbar({ sdoc }: AnnotationToolbarProps) {
             size="small"
             color="primary"
           >
-            {sdoc.doctype === DocType.TEXT && (
+            {sdoc.doctype !== DocType.IMAGE && (
               <Tooltip title="Sentence Annotation" placement="bottom">
                 <ToggleButton value={AnnotationMode.SentenceAnnotation}>
                   <SubjectIcon />
