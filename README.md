@@ -112,15 +112,17 @@ DATS is still under development, so please feel free to give us feedback, tell u
 - For feedback, please write [us](https://www.inf.uni-hamburg.de/en/inst/ab/lt/people/tim-fischer.html)
 - To report bugs, please open an issue on [GitHub](https://github.com/uhh-lt/dats/issues)
 
-## Features
+<br/>
 
-### Data collection
+# Features
+
+## Data collection
 
 DATS can handle most data formats for text, image, audio, and video documents.
 You can easily upload your files to DATS.
 It also offers an integrated crawler implemented with Scrapy and Beautifulsoup to scrape websites and their images in case additional material is required.
 
-### Data pre-processing
+## Data pre-processing
 
 <!-- <div align="center" style="margin: 10px">
     <img src="./assets/feature-preprocessing.png" alt="Pre-processing" />
@@ -136,39 +138,31 @@ This process extracts metadata and enriches the material with additional informa
 - Image captioning
 - Automatic speech recognition (transcription)
 
-This powerful feature enables you to precisely filter documents by keywords, entities, and other criteria later on.
+This feature enables you to precisely filter documents by keywords, entities, and other criteria later on.
 
-### Data management
+## Data management
 
-![Data-management](assets/feature-data-management.png)
-
-<div style="width: 67%; float: left">
+<img src="assets/feature-data-management.png" alt="Data Management in DATS" title="Data Management in DATS" />
 
 DATS makes it easy to organize and analyze your data.
 Each document can be assigned metadata – some of which DATS detects automatically – to help you categorize and find what you need.
 You can also add your own tags to documents.
 
-Powerful filtering and search options let you quickly sift through your data.
+Filtering and search options let you quickly sift through your data.
 Find documents containing specific keywords, entities (like people, organizations, or locations), or other criteria.
 This flexible system keeps you in control of your data and ensures you can quickly find the information that matters most to your research.
+
+<img src="assets/feature-llm-assistance-tagging.png" alt="AI Assistance in DATS for Document Tagging" title="AI Assistance in DATS for Document Tagging" height="400px" />
 
 DATS offers an AI Assistant that can help you streamline your data management tasks.
 The AI Assistant can suggest tags and extract metadata for your documents, making it even easier to organize data.
 
 Read more about LLM Assistance in our publlication [Exploring Large Language Models for Qualitative Data Analysis](https://aclanthology.org/2024.nlp4dh-1.41/).
 
-</div>
-
-<div style="width: 33%; float: left;">
-
-![LLM-Assistance-Tags](assets/feature-llm-assistance-tagging.png)
-
-</div>
-
-### Exploration
+## Exploration
 
 DATS makes exploring your data easy and intuitive.
-Its powerful similarity search allows you to quickly find related documents, even across different modalities.
+Its similarity search allows you to quickly find related documents, even across different modalities.
 
 Found an interesting article? DATS can instantly find others like it.
 Discovered a key image? DATS can locate similar images, or even text documents that relate to the same concept.
@@ -182,7 +176,7 @@ This frequency analysis feature allows you to:
 - Discover new avenues for research: Identify potentially relevant keywords or entities you hadn't previously considered.
 - Refine your searches: Use the frequency list to add new search terms or filters, leading you to new documents and a deeper understanding of your corpus.
 
-### Annotation
+## Annotation
 
 DATS provides tools for text (span & sentence) and image annotation.
 Annotating audio and video documents directly is not (yet) supported.
@@ -194,7 +188,7 @@ For example, the sentence annotator enables you to:
 - Develop a code hierarchy: Create a structured taxonomy of codes and sub-codes to organize your analysis. DATS's interface - allows you to easily manage and update this code hierarchy as your research evolves.
 - Collaborate with others: Codes and annotations are shared with colleagues, fostering teamwork and discussion.
 
-![Sentence-Annotation](assets/feature-sentence-annotation.png)
+<img src="assets/feature-sentence-annotation.png" alt="Sentence Annotation in DATS with AI Assistance" title="Sentence Annotation in DATS with AI Assistance" />
 
 The AI Assistant integrated in DATS can also help you with the annotation process.
 It can suggest relevant text annotations, which you can then review and accept or reject.
@@ -202,16 +196,16 @@ This can save you a lot of time and effort, especially if you are working with a
 
 Read more about the Sentence Annotation feature in our publication [Semi-automatic Sequential Sentence Classification in the Discourse Analysis Tool Suite](https://www.inf.uni-hamburg.de/en/inst/ab/lt/people/tim-fischer.html).
 
-### Analysis
+## Analysis
 
 DATS offers various tools for qualitative and quantitative analysis including Word- and Code-Frequency, or timeline analyses.
 The more-advanced Concept-over-time analysis is explained below.
 
-#### Concept-over-time Analysis
+### Concept-over-time Analysis
 
-![Concept-Over-Time-Analysis](assets/feature-cota-timeline.png)
+<img src="assets/feature-cota-timeline.png" alt="Concept Over Time Analysis in DATS" title="Concept Over Time Analysis in DATS" />
 
-DATS includes Concept Over Time Analysis, a powerful feature that allows you to visualize how concepts evolve over time within your data.
+DATS includes Concept Over Time Analysis, a feature that allows you to visualize how concepts evolve over time within your data.
 With the Concept Over Time Analysis feature, you can:
 
 - Define and refine your concepts of interest.
@@ -228,7 +222,7 @@ Finally, the occurrence of the concept over time analysis are visualized.
 DATS's Concept Over Time Analysis is a valuable tool for qualitative data analysis, providing a unique perspective on the dynamics of discourse.
 Read more about COTA in our publication [Concept Over Time Analysis: Unveiling Temporal Patterns for Qualitative Data Analysis](https://aclanthology.org/2024.naacl-demo.15/).
 
-### Interpretation
+## Interpretation
 
 ![Whiteboard](assets/feature-whiteboard.png)
 
@@ -242,9 +236,9 @@ With Whiteboards, you can:
 
 To use Whiteboards, you simply drag and drop your research objects onto the canvas. You can then connect them with edges to represent relationships between them. You can also add text, shapes, and images to your Whiteboards to further annotate your data. Whiteboards are a powerful way to interact with your data, making it easier to conduct qualitative data analysis and uncover hidden connections.
 
-Read more about the Whiteboards in our publication [ Extending the Discourse Analysis Tool Suite with Whiteboards for Visual Qualitative Analysis](https://aclanthology.org/2024.lrec-main.615/).
+Read more about the Whiteboards in our publication [Extending the Discourse Analysis Tool Suite with Whiteboards for Visual Qualitative Analysis](https://aclanthology.org/2024.lrec-main.615/).
 
-### Reflection
+## Reflection
 
 DATS provides tools for reflection and documentation that are seamlessly integrated into your workflow, helping you to capture and organize your thoughts throughout the research process:
 
