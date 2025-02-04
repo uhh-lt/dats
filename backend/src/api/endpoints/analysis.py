@@ -16,9 +16,9 @@ from app.core.analysis.annotated_segments import (
     find_annotated_segments_info,
 )
 from app.core.analysis.my_new_analysis_feature import (
-    top_words_data,
+    top_words,
     top_words_ollama,
-    topic_distr_data,
+    topic_distr,
 )
 from app.core.analysis.word_frequency import (
     WordFrequencyColumns,
@@ -281,7 +281,7 @@ def return_topic_distr_data(
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
 ) -> List[dict]:
-    return topic_distr_data()
+    return topic_distr()
 
 
 @router.post(
@@ -294,7 +294,7 @@ def return_top_words_data(
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
 ) -> List[dict]:
-    return top_words_data()
+    return top_words()
 
 
 @router.post(
