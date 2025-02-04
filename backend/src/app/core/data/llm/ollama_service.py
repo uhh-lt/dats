@@ -23,6 +23,7 @@ class OllamaService(metaclass=SingletonMeta):
 
             # ensure that the configured model is available
             model = conf.ollama.model
+            print(f"Trying to use model: {model}")
             available_models = [x["name"] for x in ollamac.list()["models"]]
             if model not in available_models:
                 print(f"Model {model} is not available. Pulling it now.")
