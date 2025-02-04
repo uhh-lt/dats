@@ -1,0 +1,76 @@
+.mark {
+    position:absolute;
+    width:100%;
+    top:0;
+    left:0;
+    z-index: -1;
+}
+
+.mark.start {
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+
+.mark.end {
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+.tok {
+    position: relative;
+}
+
+.text {
+    white-space: nowrap;
+}
+
+.hovered .text {
+    font-weight: bold;
+}
+
+rect.hovered {
+    fill: #ffff0088;
+}
+
+.spangroup {
+    user-select: none;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.spangroup.inline {
+    vertical-align: top;
+    margin-left: 4px;
+}
+
+.spangroup.above {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    line-height: 12px;
+    white-space: nowrap;
+    user-select: auto;
+    z-index: -1;
+}
+
+.spangroup > span {
+    margin-right: 4px;
+}
+
+.spangroup.inline > span {
+    border: 1px solid black;
+    border-radius: 4px;
+}
+
+.hoversentence:hover {
+    background-color: rgba(0, 255, 255, 0.5);
+    cursor: pointer;
+}
+
+.filterhighlight {
+    background-color: yellow;
+}
+
+.jumphighlight {
+    background-color: lightgreen;
+}

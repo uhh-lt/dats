@@ -1,0 +1,6 @@
+/spacy_models/*
+/backend_repo/*
+/models_cache/*
+/numba_cache/*
+/ollama_cache/*
+.env

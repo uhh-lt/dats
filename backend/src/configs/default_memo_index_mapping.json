@@ -1,0 +1,39 @@
+{
+  "properties": {
+    "title": {
+      "type": "search_as_you_type",
+      "fields": {
+        "keyword": {
+          "type": "keyword"
+        }
+      }
+    },
+    "content": {
+      "type": "text"
+    },
+    "starred": {
+      "type": "boolean"
+    },
+    "project_id": {
+      "type": "long"
+    },
+    "memo_id": {
+      "type": "long"
+    },
+    "user_id": {
+      "type": "long"
+    },
+    "attached_object_id": {
+      "type": "long"
+    },
+    "attached_object_type": {
+      "type": "keyword"
+    },
+    "created": {
+      "type": "date"
+    },
+    "updated": {
+      "type": "date"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+.filterTree .MuiTreeItem-content.Mui-focused {
+  background-color: inherit;
+}
+
+.filterTree .MuiTreeItem-content.Mui-focused:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.filterTree .filterExpression .MuiTreeItem-content.Mui-focused {
+  background-color: inherit;
+}
+
+.filterTree .MuiCollapse-wrapper {
+  border-left: 1px dashed black;
+}
+
+.filterTree .filterExpression .MuiTreeItem-content {
+  cursor: inherit;
+}
+
+.filterTree .filterExpression .MuiTreeItem-content:hover {
+  background-color: inherit;
+}
+
+.filterTree .MuiTreeItem-content .MuiTreeItem-iconContainer {
+  padding-top: 14px;
+}

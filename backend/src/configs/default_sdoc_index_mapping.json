@@ -1,0 +1,19 @@
+{
+  "properties": {
+    "filename": {
+      "type": "keyword"
+    },
+    "content": {
+      "type": "text"
+    },
+    "sdoc_id": {
+      "type": "long"
+    },
+    "project_id": {
+      "type": "long"
+    },
+    "created": {
+      "type": "date"
+    }
+  }
+}

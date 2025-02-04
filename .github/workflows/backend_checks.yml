@@ -1,0 +1,79 @@
+name: backend checks
+on:
+  push:
+    branches:
+      - main
+      - mwp_v1
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/**"
+      - "docker/**"
+      - "tools/**"
+
+jobs:
+  backend-checks:
+    runs-on: self-hosted
+    env:
+      API_WORKERS: 1
+      RAY_CONFIG: "config_gpu.yaml"
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Prepare environment
+        run: |
+          ./bin/setup-folders.sh
+          ./bin/setup-envs.sh --project_name action-runner --port_prefix 131
+          sed -i 's/\(DATS_BACKEND_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
+          sed -i 's/\(DATS_RAY_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
+          echo "SPACY_CACHE_DIR=$HOME/spacy_models" >> docker/.env
+          echo "MODELS_CACHE_DIR=$HOME/models_cache" >> docker/.env
+          mkdir -p $HOME/spacy_models
+          mkdir -p $HOME/models_cache
+      - name: Build & Start Docker Containers
+        working-directory: docker
+        run: |
+          COMPOSE_PROFILES="weaviate,ray,background,backend" docker compose build
+          COMPOSE_PROFILES="weaviate,ray,background" docker compose up --wait --quiet-pull
+      - name: Check 1 - pytest runs without errors
+        working-directory: docker
+        run: |
+          docker compose run dats-backend-api /opt/envs/dats/bin/python -m pytest
+      - name: Check 2 - Database migrates without errors database
+        working-directory: docker
+        run: |
+          docker compose run -e PYTHONPATH='/dats_code/src' dats-backend-api /opt/envs/dats/bin/python migration/run_migrations.py
+      - name: Check 3 - Database schema is up-to-date after migration
+        working-directory: docker
+        run: |
+          docker compose run dats-backend-api /opt/envs/dats/bin/alembic check
+      - name: Start Remaining Docker Containers
+        working-directory: docker
+        run: |
+          COMPOSE_PROFILES="weaviate,ray,background,backend" docker compose up --wait --quiet-pull
+      - name: Check 4 - Test End-2-End importer script
+        working-directory: tools/importer
+        env:
+          TESTDATA_PASSWORD: ${{ secrets.TESTDATA_PASSWORD }}
+        run: |
+          pip install -r requirements.txt
+          wget -q http://ltdata1.informatik.uni-hamburg.de/dwts/totalitarismo.zip
+          unzip -q -P "$TESTDATA_PASSWORD" totalitarismo.zip
+          python dats_importer.py --input_dir json --backend_url http://localhost:13120/ --is_json --doctype text
+          python dats_importer.py --input_dir images --backend_url http://localhost:13120/ --doctype image
+      - name: Check 5 - pyright runs without errors
+        run: |
+          micromamba env create -f backend/environment.yml --yes
+          micromamba run -n dats pip install -r backend/src/app/preprocessing/ray_model_worker/requirements.txt
+          micromamba run -n dats pip install ray==2.32.0
+          micromamba run -n dats pyright
+      - name: Cleanup
+        working-directory: docker
+        if: always()
+        run: |
+          docker compose down -v --remove-orphans
+          micromamba env remove -n dats --yes
+          BACKEND_IMAGE=uhhlt/dats_backend:$(grep -oP 'DATS_BACKEND_DOCKER_VERSION=\K.*' .env)
+          RAY_IMAGE=uhhlt/dats_ray:$(grep -oP 'DATS_RAY_DOCKER_VERSION=\K.*' .env)
+          docker rmi $BACKEND_IMAGE $RAY_IMAGE

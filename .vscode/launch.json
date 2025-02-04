@@ -1,0 +1,72 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "backend",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/src/main.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/backend/src",
+      "justMyCode": true,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/backend/src",
+        "HUGGINGFACE_HUB_CACHE": "${workspaceFolder}/docker/models_cache",
+        "TRANSFORMERS_CACHE": "${workspaceFolder}/docker/models_cache",
+        "TORCH_HOME": "${workspaceFolder}/docker/models_cache"
+      },
+      "envFile": "${workspaceFolder}/backend/.env"
+    },
+    {
+      "name": "frontend",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/frontend",
+      "envFile": "${workspaceFolder}/frontend/.env.development"
+    },
+    {
+      "name": "celery",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "micromamba activate dats && celery -A app.celery.background_jobs.tasks worker -Q bgJobsQ,celery -P threads -l info -c 1 --without-gossip --without-mingle --without-heartbeat",
+      "cwd": "${workspaceFolder}/backend/src",
+      "envFile": "${workspaceFolder}/backend/.env"
+    },
+    {
+      "name": "Pyright",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "micromamba activate dats && pyright",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Python: run_migrations.py",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/src/migration/run_migrations.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/backend/src",
+      "justMyCode": true,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/backend/src"
+      }
+    },
+    {
+      "name": "Alembic: check",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "micromamba activate dats && alembic check",
+      "cwd": "${workspaceFolder}/backend/src",
+      "envFile": "${workspaceFolder}/backend/.env"
+    },
+    {
+      "name": "Alembic: revision",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "micromamba activate dats && alembic revision --autogenerate -m \"vscode launcher\"",
+      "cwd": "${workspaceFolder}/backend/src",
+      "envFile": "${workspaceFolder}/backend/.env"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+Generic single-database configuration.
+
+Alembic compares the current DB against the SQLAlchemy schema.
+
+Run `alembic check` to see if a migration needs to be generated.
+
+Run `alembic revision --autogenerate -m "short description"` to generate a migration file.

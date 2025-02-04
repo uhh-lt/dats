@@ -1,0 +1,115 @@
+name: frontend checks
+on:
+  push:
+    branches:
+      - main
+      - mwp_v1
+  pull_request:
+    paths:
+      - ".github/**"
+      - "docker/**"
+      - "frontend/**"
+
+jobs:
+  frontend-checks:
+    runs-on: self-hosted
+    env:
+      API_WORKERS: 1
+      VITE_APP_SERVER: http://localhost:13120
+      COMPOSE_PROFILES: "weaviate,ray,background,backend,frontend"
+      RAY_CONFIG: "config_gpu.yaml"
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      BACKEND_HAS_NEW_REQUIREMENTS: false
+      RAY_HAS_NEW_REQUIREMENTS: false
+    steps:
+      - uses: actions/checkout@v3
+      - name: Checkout PR
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr checkout ${{ github.event.pull_request.number }}
+      - name: Check for new backend requirements
+        id: check_backend_requirements
+        if: github.event_name == 'pull_request'
+        run: |
+          base_branch=$(git merge-base origin/${{ github.event.pull_request.base.ref }} HEAD)
+          if git diff --name-only $base_branch HEAD | grep -q -e '^backend/requirements.txt' -e '^backend/environment.yml'; then
+            echo "BACKEND_HAS_NEW_REQUIREMENTS=true" >> $GITHUB_ENV
+          fi
+      - name: Check for new backend requirements on push
+        id: check_backend_requirements2
+        if: github.event_name == 'push'
+        run: |
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q -e '^backend/requirements.txt' -e '^backend/environment.yml'; then
+            echo "BACKEND_HAS_NEW_REQUIREMENTS=true" >> $GITHUB_ENV
+          fi
+      - name: Check for new ray requirements
+        id: check_ray_requirements
+        if: github.event_name == 'pull_request'
+        run: |
+          base_branch=$(git merge-base origin/${{ github.event.pull_request.base.ref }} HEAD)
+          if git diff --name-only $base_branch HEAD | grep -q -e '^backend/src/app/preprocessing/ray_model_worker/requirements.txt'; then
+            echo "RAY_HAS_NEW_REQUIREMENTS=true" >> $GITHUB_ENV
+          fi
+      - name: Check for new ray requirements on push
+        id: check_ray_requirements2
+        if: github.event_name == 'push'
+        run: |
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q -e '^backend/src/app/preprocessing/ray_model_worker/requirements.txt'; then
+            echo "RAY_HAS_NEW_REQUIREMENTS=true" >> $GITHUB_ENV
+          fi
+      - name: Prepare environment
+        run: |
+          ./bin/setup-folders.sh
+          ./bin/setup-envs.sh --project_name action-runner --port_prefix 131
+          sed -i 's/\(DATS_FRONTEND_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
+          if [ "${{ env.RAY_HAS_NEW_REQUIREMENTS }}" = "true" ]; then
+            sed -i 's/\(DATS_RAY_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
+          fi
+          if [ "${{ env.BACKEND_HAS_NEW_REQUIREMENTS }}" = "true" ]; then
+            sed -i 's/\(DATS_BACKEND_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
+          fi
+          echo "SPACY_CACHE_DIR=$HOME/spacy_models" >> docker/.env
+          echo "MODELS_CACHE_DIR=$HOME/models_cache" >> docker/.env
+          mkdir -p $HOME/spacy_models
+          mkdir -p $HOME/models_cache
+      - name: Build & Start Docker Containers
+        working-directory: docker
+        run: |
+          if [ "${{ env.RAY_HAS_NEW_REQUIREMENTS }}" = "true" ]; then
+            docker compose build ray
+          fi
+          if [ "${{ env.BACKEND_HAS_NEW_REQUIREMENTS }}" = "true" ]; then
+            docker compose build dats-backend-api
+          fi
+          docker compose build dats-frontend
+          docker compose up --wait --quiet-pull
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Check 1 - api client is up-to-date
+        working-directory: frontend
+        run: |
+          npm run update-api
+          npm run generate-api
+      - name: Add and commit changes
+        uses: EndBug/add-and-commit@v9
+        if: github.event_name == 'pull_request'
+        with:
+          add: "frontend/src/api"
+          message: "Update OpenAPI spec and client"
+          pathspec_error_handling: exitImmediately
+          default_author: github_actions
+      - name: Cleanup
+        working-directory: docker
+        if: always()
+        run: |
+          docker compose down -v
+          FRONTEND_IMAGE=uhhlt/dats_frontend:$(grep -oP 'DATS_FRONTEND_DOCKER_VERSION=\K.*' .env)
+          docker rmi $FRONTEND_IMAGE

@@ -1,0 +1,24 @@
+# ignore all env files
+.env
+.env.example
+.env.testing
+.env.testing.example
+
+# ignore custom directories
+src/dev_notebooks
+src/data
+src/experiments
+sample_data
+notebooks
+
+# ignore caches
+.pytest_cache
+
+# others
+.dockerignore
+.gitignore
+.idea
+.run
+Dockerfile
+Makefile
+README.md

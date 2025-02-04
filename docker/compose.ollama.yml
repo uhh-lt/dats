@@ -1,0 +1,26 @@
+# docker compose -f compose.ollama.yml up -d
+
+services:
+  ollama:
+    image: ollama/ollama:0.5.7
+    ports:
+      - ${OLLAMA_EXPOSED:-13133}:11434
+    environment:
+      - OLLAMA_KEEP_ALIVE=-1
+    tty: true
+    restart: unless-stopped
+    volumes:
+      - ./ollama_cache:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: [ "0" ]
+              capabilities: [ gpu ]
+    networks:
+      - ollama_network
+
+networks:
+  ollama_network:
+    name: ollama_network

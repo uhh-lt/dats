@@ -1,0 +1,16 @@
+{
+  "dependencies": {
+    "@mozilla/readability": "^0.4.2",
+    "express": "^4.18.2",
+    "jsdom": "^16.7.0",
+    "minimist": "^1.2.7"
+  },
+  "eslintConfig": {
+    "parserOptions": {
+      "ecmaVersion": "latest"
+    },
+    "env": {
+      "es6": true
+    }
+  }
+}

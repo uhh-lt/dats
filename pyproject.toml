@@ -1,0 +1,18 @@
+[tool.ruff]
+src = ["backend/src"]
+
+[tool.ruff.lint]
+
+# I: isort-compatible import sorting
+# W291: Trailing whitespace
+# W292: Add newline to end of file
+extend-select = ["I", "W292", "W291"]
+
+[tool.pyright]
+include = ["backend/src", "tools"]
+exclude = ["**/__pycache__",
+    "backend/src/dev_notebooks",
+]
+extraPaths = ["backend/src"]
+reportIncompatibleMethodOverride = false
+reportIncompatibleVariableOverride = false
