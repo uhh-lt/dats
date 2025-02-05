@@ -145,7 +145,8 @@ class DoclingTool(ToolBase):
         self.doc_converter = DocumentConverter(
             format_options={
                 InputFormat.PDF: PdfFormatOption(
-                    pipeline_options=self.pipeline_options, backend=DoclingParseV2DocumentBackend
+                    pipeline_options=self.pipeline_options,
+                    backend=DoclingParseV2DocumentBackend,
                 )
             }
         )
