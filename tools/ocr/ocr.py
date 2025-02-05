@@ -4,8 +4,11 @@ This module defines tools for extracting tables from PDFs, converting them to HT
 """
 
 from abc import ABC, abstractmethod
-from typing import Any
+from enum import Enum
+from pathlib import Path
+from typing import Any, Optional
 
+import typer
 from docling.backend.docling_parse_v2_backend import DoclingParseV2DocumentBackend
 from docling.datamodel.base_models import InputFormat
 from docling.datamodel.pipeline_options import (
@@ -24,6 +27,8 @@ from img2table.ocr import TesseractOCR
 from unstructured.documents.elements import Table
 from unstructured.partition.pdf import partition_pdf
 
+app = typer.Typer()
+
 
 class ToolBase(ABC):
     """Abstract base class for PDF table extraction tools.
@@ -37,7 +42,7 @@ class ToolBase(ABC):
         pass
 
     @abstractmethod
-    def convert_to_html(self, tables: Any) -> list[str]:
+    def convert_to_html(self, tables: Any) -> Optional[str]:
         """Convert the extracted table data to HTML format."""
         pass
 
@@ -63,7 +68,7 @@ class UnstructuredTool(ToolBase):
                 tables.append(el)
         return tables
 
-    def convert_to_html(self, tables: Table) -> Any:
+    def convert_to_html(self, tables: Table) -> Optional[str]:
         """Convert extracted table data using Unstructured Tool to HTML format."""
         try:
             tables_html = tables.metadata.text_as_html
@@ -98,7 +103,7 @@ class GMFTTool(ToolBase):
         """Extract tables from a PDF file using GMFT."""
         return self.ingest_pdf(pdf_file)
 
-    def convert_to_html(self, tables: list[CroppedTable]) -> Any:
+    def convert_to_html(self, tables: list[CroppedTable]) -> Optional[str]:
         """Convert extracted table data using GMFT Tool to HTML format."""
         ft = self.formatter.extract(tables)
         try:
@@ -123,7 +128,7 @@ class Img2TableTool(ToolBase):
         )
         return extracted_tables[0]
 
-    def convert_to_html(self, tables: Any) -> Any:
+    def convert_to_html(self, tables: Any) -> Optional[str]:
         """Convert extracted table data using Img2Table Tool to HTML format."""
         try:
             tables_html = tables.html_repr()
@@ -172,16 +177,55 @@ class DoclingTool(ToolBase):
         return tables_html
 
 
-def initialize_tools(tools: list[str] = ["all"]) -> dict:
+class OCRMethod(str, Enum):
+    """Enum for specifying the OCR method to use for table extraction."""
+
+    unstructured = "unstructured"
+    gmft = "gmft"
+    img2table = "img2table"
+    docling = "docling"
+
+
+def initialize_tool(tool: OCRMethod) -> ToolBase:
     """Initialize and return selected table extraction tools. Default is all tools."""
-    available_tools = {
-        "unstructured": UnstructuredTool(),
-        "gmft": GMFTTool(),
-        "img2table": Img2TableTool(),
-        "docling": DoclingTool(),
-    }
 
-    if tools == ["all"]:
-        return available_tools
+    match tool:
+        case OCRMethod.unstructured:
+            return UnstructuredTool()
+        case OCRMethod.gmft:
+            return GMFTTool()
+        case OCRMethod.img2table:
+            return Img2TableTool()
+        case OCRMethod.docling:
+            return DoclingTool()
+        case _:
+            raise ValueError(f"Invalid tool: {tool}")
 
-    return {name: tool for name, tool in available_tools.items() if name in tools}
+
+@app.command()
+def main(method: OCRMethod, input_dir: Path, output_dir: Path):
+    tool = initialize_tool(method)
+
+    # ensure input dir is a directory
+    if not input_dir.is_dir():
+        raise ValueError(f"{input_dir} is not a directory")
+
+    # ensure output dir exists
+    output_dir.mkdir(exist_ok=True)
+
+    # iterate over all pdf files in input_dir
+    for pdf_file in input_dir.glob("*.pdf"):
+        tables = tool.extract_tables(str(pdf_file.absolute()))
+        tables_html = tool.convert_to_html(tables)
+
+        if tables_html is None:
+            print(f"Error processing {pdf_file.stem}")
+            continue
+
+        # write html to file
+        with open(output_dir / f"{pdf_file.stem}.html", "w") as f:
+            f.write(tables_html)
+
+
+if __name__ == "__main__":
+    app()

@@ -49,3 +49,5 @@ repos:
             "--cache-location",
             "frontend/node_modules/.cache/prettier",
           ]
+
+exclude: ^tools/
