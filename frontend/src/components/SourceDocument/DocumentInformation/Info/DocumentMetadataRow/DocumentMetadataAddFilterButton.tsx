@@ -3,9 +3,9 @@ import { IconButtonProps } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import { useCallback } from "react";
-import { SourceDocumentMetadataReadResolved } from "../../../../api/openapi/models/SourceDocumentMetadataReadResolved.ts";
-import { useAppDispatch } from "../../../../plugins/ReduxHooks.ts";
-import { SearchActions } from "../../../../views/search/DocumentSearch/searchSlice.ts";
+import { SourceDocumentMetadataReadResolved } from "../../../../../api/openapi/models/SourceDocumentMetadataReadResolved.ts";
+import { useAppDispatch } from "../../../../../plugins/ReduxHooks.ts";
+import { SearchActions } from "../../../../../views/search/DocumentSearch/searchSlice.ts";
 
 interface DocumentMetadataAddFilterButtonProps {
   metadata: SourceDocumentMetadataReadResolved;

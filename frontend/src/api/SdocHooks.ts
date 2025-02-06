@@ -51,6 +51,7 @@ const useGetLinkedSdocIds = (sdocId: number | null | undefined) =>
         sdocId: sdocId!,
       }),
     enabled: !!sdocId,
+    staleTime: Infinity,
   });
 
 const useDeleteDocuments = () =>

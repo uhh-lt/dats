@@ -1,7 +1,7 @@
 import { Box, Stack } from "@mui/material";
-import TagHooks from "../../../api/TagHooks.ts";
-import TagUnlinkButton from "../../Tag/TagExplorer/TagUnlinkButton.tsx";
-import TagRenderer from "../../Tag/TagRenderer.tsx";
+import TagHooks from "../../../../api/TagHooks.ts";
+import TagUnlinkButton from "../../../Tag/TagExplorer/TagUnlinkButton.tsx";
+import TagRenderer from "../../../Tag/TagRenderer.tsx";
 
 interface DocumentTagRow {
   sdocId: number;

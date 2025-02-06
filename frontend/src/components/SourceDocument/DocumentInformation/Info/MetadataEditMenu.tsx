@@ -15,11 +15,11 @@ import {
   Tooltip,
 } from "@mui/material";
 import React, { useCallback, useState } from "react";
-import ProjectMetadataHooks from "../../../api/ProjectMetadataHooks.ts";
-import { MetaType } from "../../../api/openapi/models/MetaType.ts";
-import { SourceDocumentMetadataReadResolved } from "../../../api/openapi/models/SourceDocumentMetadataReadResolved.ts";
-import ConfirmationAPI from "../../ConfirmationDialog/ConfirmationAPI.ts";
-import { useOpenSnackbar } from "../../SnackbarDialog/useOpenSnackbar.ts";
+import ProjectMetadataHooks from "../../../../api/ProjectMetadataHooks.ts";
+import { MetaType } from "../../../../api/openapi/models/MetaType.ts";
+import { SourceDocumentMetadataReadResolved } from "../../../../api/openapi/models/SourceDocumentMetadataReadResolved.ts";
+import ConfirmationAPI from "../../../ConfirmationDialog/ConfirmationAPI.ts";
+import { useOpenSnackbar } from "../../../SnackbarDialog/useOpenSnackbar.ts";
 import MetadataTypeSelectorMenu from "./MetadataTypeSelectorMenu.tsx";
 import { metaTypeToIcon } from "./metaTypeToIcon.tsx";
 
