@@ -66,8 +66,6 @@ export const QueryKey = {
   SDOC_METADATAS: "sdocMetadatas",
   // metadata with given key of a document (by sdoc id, metadata key)
   SDOC_METADATA_BY_KEY: "sdocMetadataByKey",
-  // url of a document (by sdoc id)
-  SDOC_URL: "sdocURL",
   // thumbnail url of a document (by sdoc id)
   SDOC_THUMBNAIL_URL: "sdocThumbnailURL",
   // linked sdoc ids of a document (by sdoc id)

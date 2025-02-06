@@ -43,6 +43,16 @@ const useGetDocumentIdByFilename = (filename: string | undefined, projectId: num
     staleTime: Infinity,
   });
 
+const useGetSdocIdByTagId = (tagId: number | null | undefined) =>
+  useQuery<number[], Error>({
+    queryKey: [QueryKey.SDOCS_BY_TAG_ID, tagId],
+    queryFn: () =>
+      DocumentTagService.getSdocIdsByTagId({
+        tagId: tagId!,
+      }),
+    enabled: !!tagId,
+  });
+
 const useGetLinkedSdocIds = (sdocId: number | null | undefined) =>
   useQuery<number[], Error>({
     queryKey: [QueryKey.SDOC_LINKS, sdocId],
@@ -63,17 +73,6 @@ const useDeleteDocuments = () =>
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
     },
-  });
-
-// tags
-const useGetByTagId = (tagId: number | null | undefined) =>
-  useQuery<number[], Error>({
-    queryKey: [QueryKey.SDOCS_BY_TAG_ID, tagId],
-    queryFn: () =>
-      DocumentTagService.getSdocIdsByTagId({
-        tagId: tagId!,
-      }),
-    enabled: !!tagId,
   });
 
 // memo
@@ -107,21 +106,6 @@ const useUpdateName = () =>
     },
   });
 
-// metadata
-const useGetURL = (sdocId: number | null | undefined, webp: boolean = false) =>
-  useQuery<string, Error>({
-    queryKey: [QueryKey.SDOC_URL, sdocId, webp],
-    queryFn: () =>
-      SourceDocumentService.getFileUrl({
-        sdocId: sdocId!,
-        relative: true,
-        webp: webp,
-      }),
-    enabled: !!sdocId,
-    select: (url) => encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + url),
-    staleTime: Infinity,
-  });
-
 const useGetThumbnailURL = (sdocId: number | null | undefined) =>
   useQuery<string, Error>({
     queryKey: [QueryKey.SDOC_THUMBNAIL_URL, sdocId],
@@ -137,6 +121,7 @@ const useGetThumbnailURL = (sdocId: number | null | undefined) =>
     staleTime: Infinity,
   });
 
+// metadata
 const useGetMetadata = (sdocId: number | null | undefined) =>
   useQuery<SourceDocumentMetadataReadResolved[], Error>({
     queryKey: [QueryKey.SDOC_METADATAS, sdocId],
@@ -222,7 +207,7 @@ const SdocHooks = {
   useDeleteDocuments,
   useGetDocumentIdByFilename,
   // tags
-  useGetByTagId,
+  useGetSdocIdByTagId,
   // annotations
   useGetAnnotators,
   useGetSpanAnnotationsBatch,
@@ -234,7 +219,6 @@ const SdocHooks = {
   // name
   useUpdateName,
   // metadata
-  useGetURL,
   useGetThumbnailURL,
   useGetMetadata,
   useGetMetadataByKey,
