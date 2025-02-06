@@ -3,7 +3,7 @@ import { TabContext, TabPanel } from "@mui/lab";
 import { Box, BoxProps, Button, CircularProgress, List, Stack, Tab, Tabs } from "@mui/material";
 import { useState } from "react";
 import SdocHooks from "../../../api/SdocHooks.ts";
-import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
+import TagHooks from "../../../api/TagHooks.ts";
 import TagMenuButton from "../../Tag/TagMenu/TagMenuButton.tsx";
 import DocumentMemos from "./DocumentMemos.tsx";
 import DocumentMetadataRow from "./DocumentMetadataRow/DocumentMetadataRow.tsx";
@@ -25,7 +25,7 @@ export default function DocumentInformation({
 }: DocumentInformationProps & Omit<BoxProps, "className">) {
   // global server state (react-query)
   const metadata = SdocHooks.useGetMetadata(sdocId);
-  const documentTags = SdocHooks.useGetAllDocumentTags(sdocId);
+  const documentTagIds = TagHooks.useGetAllTagIdsBySdocId(sdocId);
   const linkedSdocIds = SdocHooks.useGetLinkedSdocIds(sdocId);
 
   // tabs
@@ -73,15 +73,15 @@ export default function DocumentInformation({
               selectedSdocIds={[sdocId]}
             />
             <Stack direction="column" spacing={0.5}>
-              {documentTags.isLoading && (
+              {documentTagIds.isLoading && (
                 <Box textAlign={"center"} pt={2}>
                   <CircularProgress />
                 </Box>
               )}
-              {documentTags.isError && <span>{documentTags.error.message}</span>}
-              {documentTags.isSuccess &&
-                documentTags.data.map((tag: DocumentTagRead) => (
-                  <DocumentTagRow key={`sdoc-${sdocId}-tag${tag.id}`} sdocId={sdocId} tag={tag} />
+              {documentTagIds.isError && <span>{documentTagIds.error.message}</span>}
+              {documentTagIds.isSuccess &&
+                documentTagIds.data.map((tagId) => (
+                  <DocumentTagRow key={`sdoc-${sdocId}-tag${tagId}`} sdocId={sdocId} tagId={tagId} />
                 ))}
             </Stack>
           </TabPanel>

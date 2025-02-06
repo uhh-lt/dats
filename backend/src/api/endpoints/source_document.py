@@ -23,7 +23,6 @@ from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationRead,
     BBoxAnnotationReadResolved,
 )
-from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import (
     MemoRead,
 )
@@ -230,22 +229,19 @@ def get_annotators(
 
 @router.get(
     "/{sdoc_id}/tags",
-    response_model=List[DocumentTagRead],
-    summary="Returns all DocumentTags linked with the SourceDocument.",
+    response_model=List[int],
+    summary="Returns all DocumentTagIDs linked with the SourceDocument.",
 )
 def get_all_tags(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[DocumentTagRead]:
+) -> List[int]:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
-    return [
-        DocumentTagRead.model_validate(doc_tag_db_obj)
-        for doc_tag_db_obj in sdoc_db_obj.document_tags
-    ]
+    return [doc_tag_db_obj.id for doc_tag_db_obj in sdoc_db_obj.document_tags]
 
 
 @router.get(

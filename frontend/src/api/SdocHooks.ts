@@ -3,7 +3,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import queryClient from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { BBoxAnnotationReadResolved } from "./openapi/models/BBoxAnnotationReadResolved.ts";
-import { DocumentTagRead } from "./openapi/models/DocumentTagRead.ts";
 import { MemoRead } from "./openapi/models/MemoRead.ts";
 import { SentenceAnnotatorResult } from "./openapi/models/SentenceAnnotatorResult.ts";
 import { SourceDocumentDataRead } from "./openapi/models/SourceDocumentDataRead.ts";
@@ -77,16 +76,6 @@ const useGetByTagId = (tagId: number | null | undefined) =>
         tagId: tagId!,
       }),
     enabled: !!tagId,
-  });
-
-const useGetAllDocumentTags = (sdocId: number | null | undefined) =>
-  useQuery<DocumentTagRead[], Error>({
-    queryKey: [QueryKey.SDOC_TAGS, sdocId],
-    queryFn: () =>
-      SourceDocumentService.getAllTags({
-        sdocId: sdocId!,
-      }),
-    enabled: !!sdocId,
   });
 
 // memo
@@ -236,7 +225,6 @@ const SdocHooks = {
   useGetDocumentIdByFilename,
   // tags
   useGetByTagId,
-  useGetAllDocumentTags,
   // annotations
   useGetAnnotators,
   useGetSpanAnnotationsBatch,

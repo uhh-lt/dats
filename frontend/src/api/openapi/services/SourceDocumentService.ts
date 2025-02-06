@@ -4,7 +4,6 @@
 /* eslint-disable */
 import type { BBoxAnnotationRead } from "../models/BBoxAnnotationRead";
 import type { BBoxAnnotationReadResolved } from "../models/BBoxAnnotationReadResolved";
-import type { DocumentTagRead } from "../models/DocumentTagRead";
 import type { MemoRead } from "../models/MemoRead";
 import type { SentenceAnnotatorResult } from "../models/SentenceAnnotatorResult";
 import type { SourceDocumentDataRead } from "../models/SourceDocumentDataRead";
@@ -225,11 +224,11 @@ export class SourceDocumentService {
     });
   }
   /**
-   * Returns all DocumentTags linked with the SourceDocument.
-   * @returns DocumentTagRead Successful Response
+   * Returns all DocumentTagIDs linked with the SourceDocument.
+   * @returns number Successful Response
    * @throws ApiError
    */
-  public static getAllTags({ sdocId }: { sdocId: number }): CancelablePromise<Array<DocumentTagRead>> {
+  public static getAllTags({ sdocId }: { sdocId: number }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/tags",

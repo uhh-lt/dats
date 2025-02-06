@@ -102,8 +102,8 @@ function SpanAnnotationTable({
         case SpanColumns.SP_DOCUMENT_DOCUMENT_TAG_ID_LIST:
           return {
             ...colDef,
-            accessorFn: (row) => row.tags,
-            Cell: ({ row }) => <SdocTagsRenderer tags={row.original.tags} />,
+            accessorFn: (row) => row.tag_ids,
+            Cell: ({ row }) => <SdocTagsRenderer tagIds={row.original.tag_ids} />,
           } as MRT_ColumnDef<SpanAnnotationRow>;
         case SpanColumns.SP_CODE_ID:
           return {

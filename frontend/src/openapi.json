@@ -1068,7 +1068,7 @@
     "/sdoc/{sdoc_id}/tags": {
       "get": {
         "tags": ["sourceDocument"],
-        "summary": "Returns all DocumentTags linked with the SourceDocument.",
+        "summary": "Returns all DocumentTagIDs linked with the SourceDocument.",
         "operationId": "get_all_tags",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1081,7 +1081,7 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/DocumentTagRead" },
+                  "items": { "type": "integer" },
                   "title": "Response Sourcedocument-Get All Tags"
                 }
               }
@@ -3135,65 +3135,6 @@
         }
       }
     },
-    "/search/code_stats_by_search": {
-      "post": {
-        "tags": ["search"],
-        "summary": "Returns SpanEntityStats for the given search parameters.",
-        "operationId": "search_code_stats",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "code_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Code Id" } },
-          {
-            "name": "sort_by_global",
-            "in": "query",
-            "required": false,
-            "schema": { "type": "boolean", "default": false, "title": "Sort By Global" }
-          },
-          {
-            "name": "project_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          },
-          {
-            "name": "search_query",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "string", "title": "Search Query" }
-          },
-          {
-            "name": "expert_mode",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "boolean", "title": "Expert Mode" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/Body_search-search_code_stats" } }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/SpanEntityStat" },
-                  "title": "Response Search-Search Code Stats"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/search/code_stats_by_sdocs": {
       "post": {
         "tags": ["search"],
@@ -3224,70 +3165,6 @@
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/SpanEntityStat" },
                   "title": "Response Search-Filter Code Stats"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/search/keyword_stats_by_search": {
-      "post": {
-        "tags": ["search"],
-        "summary": "Returns KeywordStats for the given seach parameters.",
-        "operationId": "search_keyword_stats",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          },
-          {
-            "name": "sort_by_global",
-            "in": "query",
-            "required": false,
-            "schema": { "type": "boolean", "default": false, "title": "Sort By Global" }
-          },
-          {
-            "name": "top_k",
-            "in": "query",
-            "required": false,
-            "schema": { "type": "integer", "default": 50, "title": "Top K" }
-          },
-          {
-            "name": "search_query",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "string", "title": "Search Query" }
-          },
-          {
-            "name": "expert_mode",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "boolean", "title": "Expert Mode" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/Body_search-search_keyword_stats" } }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/KeywordStat" },
-                  "title": "Response Search-Search Keyword Stats"
                 }
               }
             }
@@ -3340,64 +3217,6 @@
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/KeywordStat" },
                   "title": "Response Search-Filter Keyword Stats"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/search/tag_stats_by_search": {
-      "post": {
-        "tags": ["search"],
-        "summary": "Returns Stat for the given search parameters.",
-        "operationId": "search_tag_stats",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "sort_by_global",
-            "in": "query",
-            "required": false,
-            "schema": { "type": "boolean", "default": false, "title": "Sort By Global" }
-          },
-          {
-            "name": "project_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          },
-          {
-            "name": "search_query",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "string", "title": "Search Query" }
-          },
-          {
-            "name": "expert_mode",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "boolean", "title": "Expert Mode" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/Body_search-search_tag_stats" } }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/TagStat" },
-                  "title": "Response Search-Search Tag Stats"
                 }
               }
             }
@@ -6732,11 +6551,11 @@
             "$ref": "#/components/schemas/SourceDocumentRead",
             "description": "SourceDocument the BBoxAnnotation refers to"
           },
-          "tags": {
-            "items": { "$ref": "#/components/schemas/DocumentTagRead" },
+          "tag_ids": {
+            "items": { "type": "integer" },
             "type": "array",
-            "title": "Tags",
-            "description": "The DocumentTags of the SourceDocument."
+            "title": "Tag Ids",
+            "description": "The DocumentTagIDs of the SourceDocument."
           },
           "memo": {
             "anyOf": [{ "$ref": "#/components/schemas/MemoRead" }, { "type": "null" }],
@@ -6744,7 +6563,7 @@
           }
         },
         "type": "object",
-        "required": ["id", "x", "y", "width", "height", "url", "code", "user_id", "sdoc", "tags", "memo"],
+        "required": ["id", "x", "y", "width", "height", "url", "code", "user_id", "sdoc", "tag_ids", "memo"],
         "title": "BBoxAnnotationRow"
       },
       "BBoxAnnotationSearchResult": {
@@ -6966,24 +6785,6 @@
         "required": ["query", "filter"],
         "title": "Body_search-find_similar_sentences"
       },
-      "Body_search-search_code_stats": {
-        "properties": {
-          "filter": { "$ref": "#/components/schemas/Filter_SdocColumns_" },
-          "sorts": { "items": { "$ref": "#/components/schemas/Sort_SdocColumns_" }, "type": "array", "title": "Sorts" }
-        },
-        "type": "object",
-        "required": ["filter", "sorts"],
-        "title": "Body_search-search_code_stats"
-      },
-      "Body_search-search_keyword_stats": {
-        "properties": {
-          "filter": { "$ref": "#/components/schemas/Filter_SdocColumns_" },
-          "sorts": { "items": { "$ref": "#/components/schemas/Sort_SdocColumns_" }, "type": "array", "title": "Sorts" }
-        },
-        "type": "object",
-        "required": ["filter", "sorts"],
-        "title": "Body_search-search_keyword_stats"
-      },
       "Body_search-search_sdocs": {
         "properties": {
           "filter": { "$ref": "#/components/schemas/Filter_SdocColumns_" },
@@ -6992,15 +6793,6 @@
         "type": "object",
         "required": ["filter", "sorts"],
         "title": "Body_search-search_sdocs"
-      },
-      "Body_search-search_tag_stats": {
-        "properties": {
-          "filter": { "$ref": "#/components/schemas/Filter_SdocColumns_" },
-          "sorts": { "items": { "$ref": "#/components/schemas/Sort_SdocColumns_" }, "type": "array", "title": "Sorts" }
-        },
-        "type": "object",
-        "required": ["filter", "sorts"],
-        "title": "Body_search-search_tag_stats"
       },
       "BooleanOperator": {
         "type": "string",
@@ -9298,11 +9090,11 @@
             "$ref": "#/components/schemas/SourceDocumentRead",
             "description": "SourceDocument the SentenceAnnotation refers to"
           },
-          "tags": {
-            "items": { "$ref": "#/components/schemas/DocumentTagRead" },
+          "tag_ids": {
+            "items": { "type": "integer" },
             "type": "array",
-            "title": "Tags",
-            "description": "The DocumentTags of the SourceDocument."
+            "title": "Tag Ids",
+            "description": "The DocumentTagIDs of the SourceDocument."
           },
           "memo": {
             "anyOf": [{ "$ref": "#/components/schemas/MemoRead" }, { "type": "null" }],
@@ -9310,7 +9102,7 @@
           }
         },
         "type": "object",
-        "required": ["id", "text", "code", "user_id", "sdoc", "tags", "memo"],
+        "required": ["id", "text", "code", "user_id", "sdoc", "tag_ids", "memo"],
         "title": "SentenceAnnotationRow"
       },
       "SentenceAnnotationSearchResult": {
@@ -10208,11 +10000,11 @@
             "$ref": "#/components/schemas/SourceDocumentRead",
             "description": "SourceDocument the SpanAnnotation refers to"
           },
-          "tags": {
-            "items": { "$ref": "#/components/schemas/DocumentTagRead" },
+          "tag_ids": {
+            "items": { "type": "integer" },
             "type": "array",
-            "title": "Tags",
-            "description": "The DocumentTags of the SourceDocument."
+            "title": "Tag Ids",
+            "description": "The DocumentTagIDs of the SourceDocument."
           },
           "memo": {
             "anyOf": [{ "$ref": "#/components/schemas/MemoRead" }, { "type": "null" }],
@@ -10220,7 +10012,7 @@
           }
         },
         "type": "object",
-        "required": ["id", "span_text", "code", "user_id", "sdoc", "tags", "memo"],
+        "required": ["id", "span_text", "code", "user_id", "sdoc", "tag_ids", "memo"],
         "title": "SpanAnnotationRow"
       },
       "SpanAnnotationSearchResult": {
