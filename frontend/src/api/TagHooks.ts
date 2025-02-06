@@ -1,23 +1,48 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import queryClient from "../plugins/ReactQueryClient.ts";
+import { useAppSelector } from "../plugins/ReduxHooks.ts";
+import { RootState } from "../store/store.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { DocumentTagRead } from "./openapi/models/DocumentTagRead.ts";
 import { MemoRead } from "./openapi/models/MemoRead.ts";
 import { DocumentTagService } from "./openapi/services/DocumentTagService.ts";
+import { ProjectService } from "./openapi/services/ProjectService.ts";
 
 // tags
+interface UseProjectTagsQueryParams<T> {
+  select?: (data: DocumentTagRead[]) => T;
+  enabled?: boolean;
+}
+
+const useProjectTagsQuery = <T = DocumentTagRead[]>({ select, enabled }: UseProjectTagsQueryParams<T>) => {
+  const projectId = useAppSelector((state: RootState) => state.project.projectId);
+  return useQuery({
+    queryKey: [QueryKey.PROJECT_TAGS, projectId],
+    queryFn: () =>
+      ProjectService.getProjectTags({
+        projId: projectId!,
+      }),
+    staleTime: 1000 * 60 * 5,
+    select,
+    enabled: !!projectId && enabled,
+  });
+};
+
 const useGetTag = (tagId: number | null | undefined) =>
-  useQuery<DocumentTagRead, Error>({
-    queryKey: [QueryKey.TAG, tagId],
-    queryFn: () => DocumentTagService.getById({ tagId: tagId! }),
+  useProjectTagsQuery({
+    select: (data) => data.find((tag) => tag.id === tagId)!,
     enabled: !!tagId,
   });
+
+const useGetAllTags = () => useProjectTagsQuery({});
 
 const useCreateTag = () =>
   useMutation({
     mutationFn: DocumentTagService.createNewDocTag,
     onSuccess: (tag) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_TAGS, tag.project_id] });
+      queryClient.setQueryData<DocumentTagRead[]>([QueryKey.PROJECT_TAGS, tag.project_id], (oldData) =>
+        oldData ? [...oldData, tag] : [tag],
+      );
       queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
     },
   });
@@ -26,8 +51,9 @@ const useUpdateTag = () =>
   useMutation({
     mutationFn: DocumentTagService.updateById,
     onSuccess: (tag) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.TAG, tag.id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_TAGS, tag.project_id] });
+      queryClient.setQueryData<DocumentTagRead[]>([QueryKey.PROJECT_TAGS, tag.project_id], (oldData) =>
+        oldData ? oldData.map((t) => (t.id === tag.id ? tag : t)) : oldData,
+      );
     },
   });
 
@@ -35,9 +61,10 @@ const useDeleteTag = () =>
   useMutation({
     mutationFn: DocumentTagService.deleteById,
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_TAGS, data.project_id] });
+      queryClient.setQueryData<DocumentTagRead[]>([QueryKey.PROJECT_TAGS, data.project_id], (oldData) =>
+        oldData ? oldData.filter((tag) => tag.id !== data.id) : oldData,
+      );
       queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_TAGS] }); // todo welche sdocs sind eigentlich genau affected?
-      // Invalidate cache of tag statistics query
       queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
     },
   });
@@ -121,6 +148,7 @@ const useGetTagDocumentCounts = (sdocIds: number[]) =>
   });
 
 const TagHooks = {
+  useGetAllTags,
   useGetTag,
   useCreateTag,
   useUpdateTag,

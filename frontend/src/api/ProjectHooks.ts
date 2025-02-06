@@ -3,7 +3,6 @@ import queryClient from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
 
 import { useAuth } from "../auth/useAuth.ts";
-import { DocumentTagRead } from "./openapi/models/DocumentTagRead.ts";
 import { MemoRead } from "./openapi/models/MemoRead.ts";
 import { PreprocessingJobRead } from "./openapi/models/PreprocessingJobRead.ts";
 import { ProjectCreate } from "./openapi/models/ProjectCreate.ts";
@@ -12,20 +11,6 @@ import { ProjectRead } from "./openapi/models/ProjectRead.ts";
 import { ProjectUpdate } from "./openapi/models/ProjectUpdate.ts";
 import { UserRead } from "./openapi/models/UserRead.ts";
 import { ProjectService } from "./openapi/services/ProjectService.ts";
-
-//tags
-const useGetAllTags = (projectId: number) =>
-  useQuery<DocumentTagRead[], Error>({
-    queryKey: [QueryKey.PROJECT_TAGS, projectId],
-    queryFn: () =>
-      ProjectService.getProjectTags({
-        projId: projectId,
-      }),
-    select: (tag) => {
-      const arrayForSort = [...tag];
-      return arrayForSort.sort((a, b) => a.id - b.id);
-    },
-  });
 
 const useGetProject = (projectId: number | null | undefined) =>
   useQuery<ProjectRead, Error>({
@@ -166,8 +151,6 @@ const useGetMetadata = (projectId: number) =>
 const useFindDuplicateTextDocuments = () => useMutation({ mutationFn: ProjectService.findDuplicateTextSdocs });
 
 const ProjectHooks = {
-  // tags
-  useGetAllTags,
   // project
   useGetProject,
   useCreateProject,

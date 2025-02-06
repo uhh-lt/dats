@@ -38,12 +38,11 @@ const useProjectCodesQuery = <T = CodeRead[]>({ select, enabled }: UseProjectCod
   });
 };
 
-const useGetCode = (codeId: number | null | undefined) => {
-  return useProjectCodesQuery({
+const useGetCode = (codeId: number | null | undefined) =>
+  useProjectCodesQuery({
     select: (data) => data.find((code) => code.id === codeId)!,
     enabled: !!codeId,
   });
-};
 
 const useSelectEnabledCodes = () => {
   const disabledCodeIds = useAppSelector((state: RootState) => state.annotations.disabledCodeIds);
@@ -64,9 +63,8 @@ const useCreateCode = () =>
   useMutation({
     mutationFn: CodeService.createNewCode,
     onSuccess: (data, variables) => {
-      queryClient.setQueryData(
-        [QueryKey.PROJECT_CODES, variables.requestBody.project_id],
-        (oldData: CodeRead[] | undefined) => (oldData ? [...oldData, data] : [data]),
+      queryClient.setQueryData<CodeRead[]>([QueryKey.PROJECT_CODES, variables.requestBody.project_id], (oldData) =>
+        oldData ? [...oldData, data] : [data],
       );
     },
   });
@@ -75,7 +73,7 @@ const useUpdateCode = () =>
   useMutation({
     mutationFn: CodeService.updateById,
     onSuccess: (data) => {
-      queryClient.setQueryData([QueryKey.PROJECT_CODES, data.project_id], (oldData: CodeRead[] | undefined) =>
+      queryClient.setQueryData<CodeRead[]>([QueryKey.PROJECT_CODES, data.project_id], (oldData) =>
         oldData ? oldData.map((code) => (code.id === data.id ? data : code)) : oldData,
       );
     },
@@ -85,7 +83,7 @@ const useDeleteCode = () =>
   useMutation({
     mutationFn: CodeService.deleteById,
     onSuccess: (data) => {
-      queryClient.setQueryData([QueryKey.PROJECT_CODES, data.project_id], (oldData: CodeRead[] | undefined) =>
+      queryClient.setQueryData<CodeRead[]>([QueryKey.PROJECT_CODES, data.project_id], (oldData) =>
         oldData ? oldData.filter((code) => code.id !== data.id) : oldData,
       );
     },

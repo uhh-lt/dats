@@ -79,9 +79,6 @@ export const QueryKey = {
   // all sdocs that are tagged with the given tag (by tag id)
   SDOCS_BY_TAG_ID: "sdocsByTagId",
 
-  // a single tag (by tag id)
-  TAG: "tag",
-
   // a single span annotation (by span annotation id)
   SPAN_ANNOTATION: "annotation",
   // span annotations of a code of the logged-in user (by code id)

@@ -32,7 +32,6 @@ import ReactFlow, {
 import "reactflow/dist/style.css";
 import BboxAnnotationHooks from "../../api/BboxAnnotationHooks.ts";
 import CodeHooks from "../../api/CodeHooks.ts";
-import ProjectHooks from "../../api/ProjectHooks.ts";
 import SentenceAnnotationHooks from "../../api/SentenceAnnotationHooks.ts";
 import SpanAnnotationHooks from "../../api/SpanAnnotationHooks.ts";
 import TagHooks from "../../api/TagHooks.ts";
@@ -170,7 +169,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
 
   // global server state (react query)
   const projectCodes = CodeHooks.useGetAllCodes();
-  const projectTags = ProjectHooks.useGetAllTags(projectId);
+  const projectTags = TagHooks.useGetAllTags();
 
   // mutations
   const bulkLinkDocumentTagsMutation = TagHooks.useBulkLinkDocumentTags();
