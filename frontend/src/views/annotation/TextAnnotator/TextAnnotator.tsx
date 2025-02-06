@@ -34,6 +34,7 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
   // global client state (redux)
   const visibleUserId = useAppSelector((state) => state.annotations.visibleUserId);
   const mostRecentCode = useAppSelector((state) => state.annotations.mostRecentCode);
+  const selectedCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
   const tagStyle = useAppSelector((state) => state.annotations.tagStyle);
   const dispatch = useAppDispatch();
 
@@ -108,6 +109,15 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
     }
     // the selection is valid
 
+    if (!mostRecentCode && !selectedCodeId) {
+      openSnackbar({
+        severity: "warning",
+        text: "Select a code in the Code Explorer (left) first!",
+      });
+      selection.empty();
+      return;
+    }
+
     // get the selected begin and end token
     let selectionStartElement = selection?.anchorNode?.parentElement;
     let selectionEndElement = selection?.focusNode?.parentElement;
@@ -138,7 +148,7 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
       .join(" ");
 
     const requestBody: SpanAnnotationCreate = {
-      code_id: mostRecentCode?.id || -1,
+      code_id: mostRecentCode?.id || selectedCodeId || -1,
       sdoc_id: sdocData.id,
       begin: tokenData[begin_token].beginChar,
       end: tokenData[end_token].endChar,
