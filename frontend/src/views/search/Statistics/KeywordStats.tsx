@@ -7,18 +7,28 @@ import StatsDisplayButton from "./StatsDisplayButton.tsx";
 import { useFilterStats } from "./useFilterStats.ts";
 
 interface KeywordStatsProps {
+  currentTab: string;
+  sdocIds?: number[];
   projectId: number;
   handleClick: (keyword: string) => void;
   parentRef: React.RefObject<HTMLDivElement>;
   filterBy: string;
 }
 
-function KeywordStats({ projectId, sdocIds, ...props }: KeywordStatsProps & { sdocIds?: number[] }) {
+function KeywordStats(props: KeywordStatsProps) {
+  if (props.currentTab !== `keywords`) {
+    return null;
+  } else {
+    return <KeywordStatsContent {...props} />;
+  }
+}
+
+function KeywordStatsContent({ projectId, sdocIds, ...props }: KeywordStatsProps) {
   const keywordStats = SearchHooks.useFilterKeywordStats(projectId, sdocIds);
   return (
     <>
       {keywordStats.isSuccess ? (
-        <KeywordStatsContent keywordStats={keywordStats.data} {...props} />
+        <KeywordStatsWithData keywordStats={keywordStats.data} {...props} />
       ) : keywordStats.isError ? (
         <TabPanel value="keywords" style={{ padding: 0 }}>
           Error: {keywordStats.error.message}
@@ -43,7 +53,7 @@ interface KeywordStatsContentProps {
   filterBy: string;
 }
 
-function KeywordStatsContent({ keywordStats, handleClick, parentRef, filterBy }: KeywordStatsContentProps) {
+function KeywordStatsWithData({ keywordStats, handleClick, parentRef, filterBy }: KeywordStatsContentProps) {
   const filteredKeywordStats = useFilterStats(keywordStats, filterBy);
 
   // The virtualizer

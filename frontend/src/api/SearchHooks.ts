@@ -70,6 +70,7 @@ const useFilterCodeStats = (codeId: number, sdocIds: number[] | null | undefined
         sortByGlobal: sortStatsByGlobal,
       }),
     enabled: !!sdocIds,
+    staleTime: 1000 * 60 * 5,
   });
 };
 
@@ -86,6 +87,7 @@ const useFilterKeywordStats = (projectId: number, sdocIds: number[] | null | und
         sortByGlobal: sortStatsByGlobal,
       }),
     enabled: !!sdocIds,
+    staleTime: 1000 * 60 * 5,
   });
 };
 
@@ -101,6 +103,7 @@ const useFilterTagStats = (sdocIds: number[] | null | undefined) => {
         sortByGlobal: sortStatsByGlobal,
       }),
     enabled: !!sdocIds,
+    staleTime: 1000 * 60 * 5,
   });
 };
 

@@ -8,6 +8,7 @@ import StatsDisplayButton, { StatsDisplayButtonProps } from "./StatsDisplayButto
 import { useFilterStats } from "./useFilterStats.ts";
 
 interface DocumentTagStatsProps {
+  currentTab: string;
   projectId: number;
   sdocIds?: number[];
   handleClick: (tagId: number) => void;
@@ -15,12 +16,20 @@ interface DocumentTagStatsProps {
   filterBy: string;
 }
 
-function DocumentTagStats({ ...props }: DocumentTagStatsProps) {
+function DocumentTagStats(props: DocumentTagStatsProps) {
+  if (props.currentTab !== `tags`) {
+    return null;
+  } else {
+    return <DocumentTagStatsContent {...props} />;
+  }
+}
+
+function DocumentTagStatsContent({ ...props }: DocumentTagStatsProps) {
   const tagStats = SearchHooks.useFilterTagStats(props.sdocIds);
   return (
     <>
       {tagStats.isSuccess ? (
-        <DocumentTagStatsContent tagStats={tagStats.data} {...props} />
+        <DocumentTagStatsWithData tagStats={tagStats.data} {...props} />
       ) : tagStats.isError ? (
         <TabPanel value="tags" style={{ padding: 0 }}>
           Error: {tagStats.error.message}
@@ -40,7 +49,7 @@ function DocumentTagStats({ ...props }: DocumentTagStatsProps) {
 
 export default DocumentTagStats;
 
-function DocumentTagStatsContent({
+function DocumentTagStatsWithData({
   tagStats,
   handleClick,
   parentRef,

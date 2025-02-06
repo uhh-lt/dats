@@ -1,5 +1,5 @@
 import { Divider, Typography } from "@mui/material";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
 import { SpanEntityStat } from "../../../api/openapi/models/SpanEntityStat.ts";
@@ -50,6 +50,13 @@ function Search() {
     [dispatch],
   );
 
+  // search results
+  const [sdocIds, setSdocIds] = useState<number[]>([]);
+  const handleSearchResultsChange = useCallback((sdocIds: number[]) => {
+    console.log("Search results changed", sdocIds);
+    setSdocIds(sdocIds);
+  }, []);
+
   // render
   return (
     <TwoSidebarsLayout
@@ -59,13 +66,14 @@ function Search() {
           <Divider />
           <SearchStatistics
             sx={{ height: "50%" }}
+            sdocIds={sdocIds}
             handleKeywordClick={handleAddKeywordFilter}
             handleTagClick={handleAddTagFilter}
             handleCodeClick={handleAddCodeFilter}
           />
         </>
       }
-      content={<SearchDocumentTable projectId={projectId} />}
+      content={<SearchDocumentTable projectId={projectId} onSearchResultsChange={handleSearchResultsChange} />}
       rightSidebar={
         <DocumentInformation
           sdocId={selectedDocumentId}

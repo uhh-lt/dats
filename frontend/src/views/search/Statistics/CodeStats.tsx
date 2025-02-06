@@ -16,13 +16,16 @@ interface CodeStatsProps {
   filterBy: string;
 }
 
-function CodeStats({ sdocIds, codeId, currentTab, ...props }: CodeStatsProps) {
-  const codeStats = SearchHooks.useFilterCodeStats(codeId, sdocIds);
-
-  if (currentTab !== `${codeId}`) {
+function CodeStats(props: CodeStatsProps) {
+  if (props.currentTab !== `${props.codeId}`) {
     return null;
+  } else {
+    return <CodeStatsContent {...props} />;
   }
+}
 
+function CodeStatsContent({ codeId, sdocIds, ...props }: CodeStatsProps) {
+  const codeStats = SearchHooks.useFilterCodeStats(codeId, sdocIds);
   return (
     <TabPanel value={`${codeId}`} sx={{ p: 0 }}>
       {codeStats.isSuccess ? (
@@ -40,6 +43,7 @@ function CodeStats({ sdocIds, codeId, currentTab, ...props }: CodeStatsProps) {
 
 interface CodeStatsWithDataProps {
   codeStats: SpanEntityStat[];
+
   handleClick: (stat: SpanEntityStat) => void;
   parentRef: React.RefObject<HTMLDivElement>;
   filterBy: string;
