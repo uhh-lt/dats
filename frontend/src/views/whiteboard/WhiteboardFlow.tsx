@@ -169,7 +169,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // global server state (react query)
-  const projectCodes = ProjectHooks.useGetAllCodes(projectId, true);
+  const projectCodes = CodeHooks.useGetAllCodes();
   const projectTags = ProjectHooks.useGetAllTags(projectId);
 
   // mutations

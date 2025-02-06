@@ -4,9 +4,9 @@ import CodeHooks from "../../../api/CodeHooks.ts";
 import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
 import { dataToTree } from "../../TreeExplorer/TreeUtils.ts";
 
-const useComputeCodeTree = () => {
+const useComputeProjectCodeTree = () => {
   // global server state
-  const allCodes = CodeHooks.useGetEnabledCodes();
+  const allCodes = CodeHooks.useGetAllCodes();
 
   // computed
   const codeTree: Node<IDataTree> | null = useMemo(() => {
@@ -21,4 +21,4 @@ const useComputeCodeTree = () => {
   return { codeTree, allCodes };
 };
 
-export default useComputeCodeTree;
+export default useComputeProjectCodeTree;

@@ -3,7 +3,6 @@ import queryClient from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
 
 import { useAuth } from "../auth/useAuth.ts";
-import { CodeRead } from "./openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "./openapi/models/DocumentTagRead.ts";
 import { MemoRead } from "./openapi/models/MemoRead.ts";
 import { PreprocessingJobRead } from "./openapi/models/PreprocessingJobRead.ts";
@@ -13,7 +12,6 @@ import { ProjectRead } from "./openapi/models/ProjectRead.ts";
 import { ProjectUpdate } from "./openapi/models/ProjectUpdate.ts";
 import { UserRead } from "./openapi/models/UserRead.ts";
 import { ProjectService } from "./openapi/services/ProjectService.ts";
-import { useSelectEnabledCodes } from "./utils.ts";
 
 //tags
 const useGetAllTags = (projectId: number) =>
@@ -131,19 +129,6 @@ const useRemoveUser = () =>
     },
   });
 
-// codes
-const useGetAllCodes = (projectId: number, returnAll: boolean = false) => {
-  const selectEnabledCodes = useSelectEnabledCodes();
-  return useQuery<CodeRead[], Error>({
-    queryKey: [QueryKey.PROJECT_CODES, projectId],
-    queryFn: () =>
-      ProjectService.getProjectCodes({
-        projId: projectId,
-      }),
-    select: returnAll ? undefined : selectEnabledCodes,
-  });
-};
-
 // memo
 const useGetOrCreateMemo = (projectId: number | null | undefined) =>
   useQuery<MemoRead, Error>({
@@ -194,8 +179,6 @@ const ProjectHooks = {
   useGetAllUsers,
   useAddUser,
   useRemoveUser,
-  // codes
-  useGetAllCodes,
   // memo
   useGetOrCreateMemo,
   useGetAllUserMemos,

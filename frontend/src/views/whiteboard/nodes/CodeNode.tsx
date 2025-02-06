@@ -1,10 +1,8 @@
 import { CardContent, CardHeader, Divider, MenuItem, Typography } from "@mui/material";
 import { useEffect, useMemo, useRef } from "react";
-import { useParams } from "react-router-dom";
 import { NodeProps, useReactFlow } from "reactflow";
 import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks.ts";
 import CodeHooks from "../../../api/CodeHooks.ts";
-import ProjectHooks from "../../../api/ProjectHooks.ts";
 import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import CodeRenderer from "../../../components/Code/CodeRenderer.tsx";
@@ -30,7 +28,6 @@ import BaseCardNode from "./BaseCardNode.tsx";
 
 function CodeNode(props: NodeProps<CodeNodeData>) {
   // global client state
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
   const dispatch = useAppDispatch();
 
   // whiteboard state (react-flow)
@@ -52,7 +49,7 @@ function CodeNode(props: NodeProps<CodeNodeData>) {
   // we need a new route to get all child codes
   // then we need to invalidate these child codes, on code update
   // also! we need a mechanism in the backend to detect loops in the code tree, and prevent them
-  const projectCodes = ProjectHooks.useGetAllCodes(projectId, true);
+  const projectCodes = CodeHooks.useGetAllCodes();
   const childCodes = useMemo(() => {
     return projectCodes.data?.filter((projectcode) => projectcode.parent_id === props.data.codeId) ?? [];
   }, [props.data.codeId, projectCodes.data]);

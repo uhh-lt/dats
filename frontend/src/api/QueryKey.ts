@@ -79,9 +79,6 @@ export const QueryKey = {
   // all sdocs that are tagged with the given tag (by tag id)
   SDOCS_BY_TAG_ID: "sdocsByTagId",
 
-  // a single code (by code id)
-  CODE: "code",
-
   // a single tag (by tag id)
   TAG: "tag",
 

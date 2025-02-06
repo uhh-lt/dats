@@ -1,6 +1,7 @@
 import { Autocomplete, Button, ButtonGroup, Chip, MenuItem, Stack, TextField } from "@mui/material";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
+import CodeHooks from "../../api/CodeHooks.ts";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
 import { FilterOperator } from "../../api/openapi/models/FilterOperator.ts";
@@ -174,11 +175,8 @@ function TagIdValueSelector({ filterExpression, onChangeValue }: SharedFilterVal
 }
 
 function CodeIdValueSelector({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) {
-  // global client state
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
-
   // global server state (react-query)
-  const projectCodes = ProjectHooks.useGetAllCodes(projectId);
+  const projectCodes = CodeHooks.useGetEnabledCodes();
 
   return (
     <TextField
@@ -242,11 +240,8 @@ function UserIdValueSelector({ filterExpression, onChangeValue }: SharedFilterVa
 }
 
 function SpanAnnotationValueSelector({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) {
-  // global client state
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
-
   // global server state (react-query)
-  const projectCodes = ProjectHooks.useGetAllCodes(projectId);
+  const projectCodes = CodeHooks.useGetAllCodes();
 
   const [value, setValue] = useState<string[]>(() => {
     // check if value is string[][] or string[], then make sure that value is string[]

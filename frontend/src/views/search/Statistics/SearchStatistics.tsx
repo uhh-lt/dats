@@ -5,7 +5,7 @@ import { TabContext } from "@mui/lab";
 import { Box, BoxProps, IconButton, Stack, Tab, Tabs, TextField, Tooltip } from "@mui/material";
 import React, { useCallback, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import ProjectHooks from "../../../api/ProjectHooks.ts";
+import CodeHooks from "../../../api/CodeHooks.ts";
 import { SpanEntityStat } from "../../../api/openapi/models/SpanEntityStat.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { SearchActions } from "../DocumentSearch/searchSlice.ts";
@@ -43,7 +43,7 @@ function SearchStatistics({
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // query all codes of the current project
-  const projectCodes = ProjectHooks.useGetAllCodes(projectId);
+  const projectCodes = CodeHooks.useGetEnabledCodes();
 
   // menu
   const handleMenuItemClick = useCallback((navigateTo: string) => {
