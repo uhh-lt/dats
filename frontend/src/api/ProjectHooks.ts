@@ -26,9 +26,6 @@ const useGetProject = (projectId: number | null | undefined) =>
 const useUploadDocument = () =>
   useMutation({
     mutationFn: ProjectService.uploadProjectSdoc,
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_SDOCS, variables.projId] });
-    },
     meta: {
       successMessage: (data: PreprocessingJobRead) =>
         `Successfully uploaded ${data.payloads.length} documents and started PreprocessingJob ${data.id} in the background!`,

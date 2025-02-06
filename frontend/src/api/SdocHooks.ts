@@ -14,7 +14,7 @@ import { ProjectService } from "./openapi/services/ProjectService.ts";
 import { SourceDocumentService } from "./openapi/services/SourceDocumentService.ts";
 import { useSelectEnabledBboxAnnotations, useSelectEnabledSpanAnnotations } from "./utils.ts";
 
-// sdoc
+// SDOC QUERIES
 const useGetDocument = (sdocId: number | null | undefined) =>
   useQuery<SourceDocumentRead, Error>({
     queryKey: [QueryKey.SDOC, sdocId],
@@ -60,11 +60,8 @@ const useDeleteDocuments = () =>
       const promises = sdocIds.map((sdocId) => SourceDocumentService.deleteById({ sdocId: sdocId }));
       return Promise.all(promises);
     },
-    onSuccess: (sdocs) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
-      sdocs.forEach((sdoc) => {
-        queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_SDOCS, sdoc.project_id] });
-      });
     },
   });
 
