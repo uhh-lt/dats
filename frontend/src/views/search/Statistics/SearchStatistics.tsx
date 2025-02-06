@@ -127,7 +127,6 @@ function SearchStatistics({
               currentTab={tab}
               key={code.id}
               codeId={code.id}
-              projectId={projectId}
               handleClick={handleCodeClick}
               parentRef={parentRef}
               filterBy={filterStatsBy}

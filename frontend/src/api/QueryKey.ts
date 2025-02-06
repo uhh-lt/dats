@@ -125,11 +125,8 @@ export const QueryKey = {
   // all project WHITEBOARDs (by project id)
   WHITEBOARDS_PROJECT: "whiteboardsProject",
 
-  SEARCH_ENTITY_STATISTICS: "searchEntityStatistics",
   FILTER_ENTITY_STATISTICS: "filterEntityStatistics",
-  SEARCH_KEYWORD_STATISTICS: "searchKeywordStatistics",
   FILTER_KEYWORD_STATISTICS: "filterKeywordStatistics",
-  SEARCH_TAG_STATISTICS: "searchTagStatistics",
   FILTER_TAG_STATISTICS: "filterTagStatistics",
 
   ANALYSIS_CODE_FREQUENCIES: "analysisCodeFrequencies",

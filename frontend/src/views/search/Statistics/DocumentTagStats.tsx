@@ -1,5 +1,4 @@
 import { TabPanel } from "@mui/lab";
-import { UseQueryResult } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useMemo } from "react";
 import SearchHooks from "../../../api/SearchHooks.ts";
@@ -10,40 +9,14 @@ import { useFilterStats } from "./useFilterStats.ts";
 
 interface DocumentTagStatsProps {
   projectId: number;
+  sdocIds?: number[];
   handleClick: (tagId: number) => void;
   parentRef: React.RefObject<HTMLDivElement>;
   filterBy: string;
 }
 
-/**
- * The tag statistics component.
- * If `sdocIds` is provided, it will filter the tag stats by the given sdocIds.
- * Otherwise, it will show the tag stats based on search parameters,
- */
-function DocumentTagStats({ sdocIds, ...props }: DocumentTagStatsProps & { sdocIds?: number[] }) {
-  if (sdocIds) {
-    return <DocumentTagStatsFilter sdocIds={sdocIds} {...props} />;
-  } else {
-    return <DocumentTagStatsSearch {...props} />;
-  }
-}
-
-function DocumentTagStatsFilter({ sdocIds, ...props }: DocumentTagStatsProps & { sdocIds: number[] }) {
-  // global server state (react-query)
-  const tagStats = SearchHooks.useFilterTagStats(sdocIds);
-  return <DocumentTagStatsLoader tagStats={tagStats} {...props} />;
-}
-
-function DocumentTagStatsSearch(props: DocumentTagStatsProps) {
-  // global server state (react-query)
-  const tagStats = SearchHooks.useSearchTagStats(props.projectId);
-  return <DocumentTagStatsLoader tagStats={tagStats} {...props} />;
-}
-
-function DocumentTagStatsLoader({
-  tagStats,
-  ...props
-}: DocumentTagStatsProps & { tagStats: UseQueryResult<TagStat[]> }) {
+function DocumentTagStats({ ...props }: DocumentTagStatsProps) {
+  const tagStats = SearchHooks.useFilterTagStats(props.sdocIds);
   return (
     <>
       {tagStats.isSuccess ? (
@@ -103,7 +76,6 @@ function DocumentTagStatsContent({
           <DocumentTagStatButtonContent
             tagId={tagStat.tag.id}
             key={virtualItem.key}
-            term={""}
             count={tagStat.filtered_count}
             totalCount={tagStat.global_count}
             maxCount={maxValue}
@@ -116,7 +88,10 @@ function DocumentTagStatsContent({
   );
 }
 
-function DocumentTagStatButtonContent({ tagId, ...props }: { tagId: number } & StatsDisplayButtonProps) {
+function DocumentTagStatButtonContent({
+  tagId,
+  ...props
+}: { tagId: number } & Omit<StatsDisplayButtonProps, "term" | "disabled">) {
   const tag = TagHooks.useGetTag(tagId);
 
   return (

@@ -1,13 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey.ts";
 
-import { MyFilter } from "../components/FilterDialog/filterUtils.ts";
 import { useAppSelector } from "../plugins/ReduxHooks.ts";
 import { KeywordStat } from "./openapi/models/KeywordStat.ts";
-import { SdocColumns } from "./openapi/models/SdocColumns.ts";
 import { SimSearchImageHit } from "./openapi/models/SimSearchImageHit.ts";
 import { SimSearchSentenceHit } from "./openapi/models/SimSearchSentenceHit.ts";
-import { SortDirection } from "./openapi/models/SortDirection.ts";
 import { SpanEntityStat } from "./openapi/models/SpanEntityStat.ts";
 import { TagStat } from "./openapi/models/TagStat.ts";
 import { SearchService } from "./openapi/services/SearchService.ts";
@@ -60,14 +57,7 @@ export class ImageSimilaritySearchResults extends SimilaritySearchResults<SimSea
   }
 }
 
-export enum SearchResultsType {
-  // type DOCUMENTS returns data: number[]
-  DOCUMENTS,
-  // type SENTENCES returns data: sdocId -> SimSearchSentenceHit[]
-  SENTENCES,
-}
-
-const useFilterCodeStats = (codeId: number, sdocIds: number[]) => {
+const useFilterCodeStats = (codeId: number, sdocIds: number[] | null | undefined) => {
   // global client state (redux)
   const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
 
@@ -76,40 +66,14 @@ const useFilterCodeStats = (codeId: number, sdocIds: number[]) => {
     queryFn: () =>
       SearchService.filterCodeStats({
         codeId,
-        requestBody: sdocIds,
+        requestBody: sdocIds!,
         sortByGlobal: sortStatsByGlobal,
       }),
+    enabled: !!sdocIds,
   });
 };
 
-const useSearchCodeStats = (codeId: number, projectId: number) => {
-  // global client state (redux)
-  const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
-  const searchQuery = useAppSelector((state) => state.search.searchQuery);
-  const sortingModel = useAppSelector((state) => state.search.sortingModel);
-  const filter = useAppSelector((state) => state.search.filter["root"]);
-
-  return useQuery<SpanEntityStat[], Error>({
-    queryKey: [QueryKey.SEARCH_ENTITY_STATISTICS, projectId, codeId, searchQuery, filter, sortStatsByGlobal],
-    queryFn: () =>
-      SearchService.searchCodeStats({
-        codeId,
-        projectId,
-        expertMode: false,
-        searchQuery: searchQuery || "",
-        requestBody: {
-          filter: filter as MyFilter<SdocColumns>,
-          sorts: sortingModel.map((sort) => ({
-            column: sort.id as SdocColumns,
-            direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
-          })),
-        },
-        sortByGlobal: sortStatsByGlobal,
-      }),
-  });
-};
-
-const useFilterKeywordStats = (projectId: number, sdocIds: number[]) => {
+const useFilterKeywordStats = (projectId: number, sdocIds: number[] | null | undefined) => {
   // global client state (redux)
   const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
 
@@ -118,39 +82,14 @@ const useFilterKeywordStats = (projectId: number, sdocIds: number[]) => {
     queryFn: () =>
       SearchService.filterKeywordStats({
         projectId,
-        requestBody: sdocIds,
+        requestBody: sdocIds!,
         sortByGlobal: sortStatsByGlobal,
       }),
+    enabled: !!sdocIds,
   });
 };
 
-const useSearchKeywordStats = (projectId: number) => {
-  // global client state (redux)
-  const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
-  const searchQuery = useAppSelector((state) => state.search.searchQuery);
-  const sortingModel = useAppSelector((state) => state.search.sortingModel);
-  const filter = useAppSelector((state) => state.search.filter["root"]);
-
-  return useQuery<KeywordStat[], Error>({
-    queryKey: [QueryKey.SEARCH_KEYWORD_STATISTICS, projectId, searchQuery, filter, sortStatsByGlobal],
-    queryFn: () =>
-      SearchService.searchKeywordStats({
-        projectId,
-        expertMode: false,
-        searchQuery: searchQuery || "",
-        requestBody: {
-          filter: filter as MyFilter<SdocColumns>,
-          sorts: sortingModel.map((sort) => ({
-            column: sort.id as SdocColumns,
-            direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
-          })),
-        },
-        sortByGlobal: sortStatsByGlobal,
-      }),
-  });
-};
-
-const useFilterTagStats = (sdocIds: number[]) => {
+const useFilterTagStats = (sdocIds: number[] | null | undefined) => {
   // global client state (redux)
   const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
 
@@ -158,42 +97,14 @@ const useFilterTagStats = (sdocIds: number[]) => {
     queryKey: [QueryKey.FILTER_TAG_STATISTICS, sdocIds, sortStatsByGlobal],
     queryFn: () =>
       SearchService.filterTagStats({
-        requestBody: sdocIds,
+        requestBody: sdocIds!,
         sortByGlobal: sortStatsByGlobal,
       }),
-  });
-};
-
-const useSearchTagStats = (projectId: number) => {
-  // global client state (redux)
-  const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
-  const searchQuery = useAppSelector((state) => state.search.searchQuery);
-  const sortingModel = useAppSelector((state) => state.search.sortingModel);
-  const filter = useAppSelector((state) => state.search.filter["root"]);
-
-  return useQuery<TagStat[], Error>({
-    queryKey: [QueryKey.SEARCH_TAG_STATISTICS, projectId, searchQuery, filter, sortStatsByGlobal],
-    queryFn: () =>
-      SearchService.searchTagStats({
-        projectId,
-        expertMode: false,
-        searchQuery: searchQuery || "",
-        requestBody: {
-          filter: filter as MyFilter<SdocColumns>,
-          sorts: sortingModel.map((sort) => ({
-            column: sort.id as SdocColumns,
-            direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
-          })),
-        },
-        sortByGlobal: sortStatsByGlobal,
-      }),
+    enabled: !!sdocIds,
   });
 };
 
 const SearchHooks = {
-  useSearchCodeStats,
-  useSearchKeywordStats,
-  useSearchTagStats,
   useFilterCodeStats,
   useFilterKeywordStats,
   useFilterTagStats,
