@@ -302,14 +302,7 @@ function BBoxAnnotationTable({
     <Card className="myFlexContainer" {...cardProps}>
       <CardHeader
         title={title}
-        action={
-          <UserSelectorSingle
-            title="Annotations"
-            projectId={projectId}
-            userId={selectedUserId}
-            onUserIdChange={setSelectedUserId}
-          />
-        }
+        action={<UserSelectorSingle title="Annotations" userId={selectedUserId} onUserIdChange={setSelectedUserId} />}
       />
       <CardContent className="myFlexFillAllContainer" style={{ padding: 0 }}>
         <MaterialReactTable table={table} />

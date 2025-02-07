@@ -9,16 +9,7 @@ import { MemoRead } from "./openapi/models/MemoRead.ts";
 import { CodeService } from "./openapi/services/CodeService.ts";
 import { ProjectService } from "./openapi/services/ProjectService.ts";
 
-// memo
-const useGetUserMemo = (codeId: number | null | undefined) =>
-  useQuery<MemoRead, Error>({
-    queryKey: [QueryKey.MEMO_CODE, codeId],
-    queryFn: () => CodeService.getUserMemo({ codeId: codeId! }),
-    retry: false,
-    enabled: !!codeId,
-  });
-
-// code
+// CODE QUERIES
 interface UseProjectCodesQueryParams<T> {
   select?: (data: CodeRead[]) => T;
   enabled?: boolean;
@@ -59,6 +50,7 @@ const useGetEnabledCodes = () => {
   return useProjectCodesQuery({ select: selectEnabledCodes });
 };
 
+// CODE MUTATIONS
 const useCreateCode = () =>
   useMutation({
     mutationFn: CodeService.createNewCode,
@@ -87,6 +79,15 @@ const useDeleteCode = () =>
         oldData ? oldData.filter((code) => code.id !== data.id) : oldData,
       );
     },
+  });
+
+// memo
+const useGetUserMemo = (codeId: number | null | undefined) =>
+  useQuery<MemoRead, Error>({
+    queryKey: [QueryKey.MEMO_CODE, codeId],
+    queryFn: () => CodeService.getUserMemo({ codeId: codeId! }),
+    retry: false,
+    enabled: !!codeId,
   });
 
 const CodeHooks = {

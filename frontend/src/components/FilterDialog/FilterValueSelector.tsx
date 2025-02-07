@@ -1,9 +1,8 @@
 import { Autocomplete, Button, ButtonGroup, Chip, MenuItem, Stack, TextField } from "@mui/material";
 import { useState } from "react";
-import { useParams } from "react-router-dom";
 import CodeHooks from "../../api/CodeHooks.ts";
-import ProjectHooks from "../../api/ProjectHooks.ts";
 import TagHooks from "../../api/TagHooks.ts";
+import UserHooks from "../../api/UserHooks.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
 import { FilterOperator } from "../../api/openapi/models/FilterOperator.ts";
 import { FilterValueType } from "../../api/openapi/models/FilterValueType.ts";
@@ -204,11 +203,8 @@ function CodeIdValueSelector({ filterExpression, onChangeValue }: SharedFilterVa
 }
 
 function UserIdValueSelector({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) {
-  // global client state
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
-
   // global server state (react-query)
-  const projectUsers = ProjectHooks.useGetAllUsers(projectId);
+  const projectUsers = UserHooks.useGetAllUsers();
 
   return (
     <TextField

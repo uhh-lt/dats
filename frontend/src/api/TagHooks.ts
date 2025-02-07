@@ -88,7 +88,6 @@ const useDeleteTag = () =>
         .getQueryCache()
         .findAll({ queryKey: [QueryKey.SDOC_TAGS] })
         .forEach((query) => {
-          console.log(query.queryKey);
           queryClient.setQueryData<number[]>(query.queryKey, (oldData) =>
             oldData ? oldData.filter((tagId) => tagId !== data.id) : oldData,
           );

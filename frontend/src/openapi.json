@@ -282,29 +282,6 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/user/recent_activity": {
-      "get": {
-        "tags": ["user"],
-        "summary": "Returns the top k sdoc ids that the logged-in User recently modified (annotated)",
-        "operationId": "recent_activity",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [{ "name": "k", "in": "query", "required": true, "schema": { "type": "integer", "title": "K" } }],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": { "type": "array", "items": { "type": "integer" }, "title": "Response User-Recent Activity" }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/project": {
       "put": {
         "tags": ["project"],
@@ -444,16 +421,19 @@
         }
       }
     },
-    "/project/{proj_id}/user/{user_id}": {
+    "/project/{proj_id}/user": {
       "patch": {
         "tags": ["project"],
         "summary": "Associates an existing User to the Project with the given ID if it exists",
         "operationId": "associate_user_to_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
         ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectAddUser" } } }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -465,28 +445,6 @@
           }
         }
       },
-      "delete": {
-        "tags": ["project"],
-        "summary": "Dissociates the Users with the Project with the given ID if it exists",
-        "operationId": "dissociate_user_from_project",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/project/{proj_id}/user": {
       "get": {
         "tags": ["project"],
         "summary": "Returns all Users of the Project with the given ID",
@@ -507,6 +465,28 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/project/{proj_id}/user/{user_id}": {
+      "delete": {
+        "tags": ["project"],
+        "summary": "Dissociates the Users with the Project with the given ID if it exists",
+        "operationId": "dissociate_user_from_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -8715,6 +8695,14 @@
         "type": "object",
         "required": ["id", "project_id", "created", "updated", "payloads"],
         "title": "PreprocessingJobRead"
+      },
+      "ProjectAddUser": {
+        "properties": {
+          "email": { "type": "string", "format": "email", "title": "Email", "description": "E-Mail of the User" }
+        },
+        "type": "object",
+        "required": ["email"],
+        "title": "ProjectAddUser"
       },
       "ProjectCreate": {
         "properties": {

@@ -17,6 +17,7 @@ from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.crud.source_document import crud_sdoc
+from app.core.data.crud.user import crud_user
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import (
@@ -26,7 +27,12 @@ from app.core.data.dto.memo import (
     MemoRead,
 )
 from app.core.data.dto.preprocessing_job import PreprocessingJobRead
-from app.core.data.dto.project import ProjectCreate, ProjectRead, ProjectUpdate
+from app.core.data.dto.project import (
+    ProjectAddUser,
+    ProjectCreate,
+    ProjectRead,
+    ProjectUpdate,
+)
 from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.dto.user import UserRead
 from app.core.data.orm.source_document import SourceDocumentORM
@@ -171,20 +177,21 @@ def delete_project_sdocs(
 
 
 @router.patch(
-    "/{proj_id}/user/{user_id}",
+    "/{proj_id}/user",
     response_model=UserRead,
     summary="Associates an existing User to the Project with the given ID if it exists",
 )
 def associate_user_to_project(
     *,
     proj_id: int,
-    user_id: int,
+    user: ProjectAddUser,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
 ) -> UserRead:
     authz_user.assert_in_project(proj_id)
 
-    user_db_obj = crud_project.associate_user(db=db, proj_id=proj_id, user_id=user_id)
+    user_db_obj = crud_user.read_by_email(db=db, email=user.email)
+    crud_project.associate_user(db=db, proj_id=proj_id, user_id=user_db_obj.id)
     return UserRead.model_validate(user_db_obj)
 
 

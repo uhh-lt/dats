@@ -1,8 +1,4 @@
 export const QueryKey = {
-  // all projects
-  PROJECTS: "projects",
-  // a single project (by project id)
-  PROJECT: "project",
   // all users of a project (by project id)
   PROJECT_USERS: "projectUsers",
   // all codes of a project (by project id)
@@ -16,11 +12,7 @@ export const QueryKey = {
   // all llm jobs of a project (by project id)
   PROJECT_LLM_JOBS: "projectLLMJobs",
 
-  // all users
-  USERS: "users",
-  // a single user (by user id)
-  USER: "user",
-  // all projects of the logged-in user
+  // all projects of the logged-in user (no parameters)
   USER_PROJECTS: "userProjects",
   // all memos of a user (by project id)
   USER_MEMOS: "userMemos",
