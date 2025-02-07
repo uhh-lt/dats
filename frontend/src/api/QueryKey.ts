@@ -1,23 +1,49 @@
 export const QueryKey = {
-  // all users of a project (by project id)
+  // managed by UserHooks
+  // all UserRead[] of a Project (by project id)
   PROJECT_USERS: "projectUsers",
-  // all codes of a project (by project id)
+
+  // managed by CodeHooks
+  // all CodeRead[] of a Project (by project id)
   PROJECT_CODES: "projectCodes",
-  // all tags of a project (by project id)
+
+  // managed by TagHooks
+  // all DocumentTagRead[] of a Project (by project id)
   PROJECT_TAGS: "projectTags",
-  // all crawler jobs of a project (by project id)
+  // all DocumentTagRead Ids of a SourceDocument (by sdoc id)
+  SDOC_TAGS: "sdocTags",
+  // Record[docTagId, docTagCount] of SourceDocuments (by sdoc ids)
+  TAG_SDOC_COUNT: "sdocTagCount",
+
+  // managed by ProjectHooks
+  // all ProjectRead[] of the logged-in user (no parameters)
+  USER_PROJECTS: "userProjects",
+
+  // managed by SdocHooks:
+  // a single SourceDocumentRead (by sdoc id)
+  SDOC: "sdoc",
+  // a single SourceDocumentDataRead (by sdoc id)
+  SDOC_DATA: "sdocData",
+  // id of a single SourceDocument (by project id and filename)
+  SDOC_ID: "sdocId",
+  // linked sdoc ids of a document (by sdoc id)
+  SDOC_LINKS: "sdocLinks",
+  // thumbnail url of a document (by sdoc id)
+  SDOC_THUMBNAIL_URL: "sdocThumbnailURL",
+  // all SourceDocument Ids tagged with the given tag (by tag id)
+  SDOC_IDS_BY_TAG_ID: "sdocIdsByTagId",
+
+  // managed by MemoHooks:
+
+  // all crawler jobs of a Project (by project id)
   PROJECT_CRAWLER_JOBS: "projectCrawlerJobs",
-  // all prepro jobs of a project (by project id)
+  // all prepro jobs of a Project (by project id)
   PROJECT_PREPROCESSING_JOBS: "projectPreprocessingJobs",
-  // all llm jobs of a project (by project id)
+  // all llm jobs of a Project (by project id)
   PROJECT_LLM_JOBS: "projectLLMJobs",
 
-  // all projects of the logged-in user (no parameters)
-  USER_PROJECTS: "userProjects",
   // all memos of a user (by project id)
   USER_MEMOS: "userMemos",
-  // recently k annotated sdocs of the logged-in user (by k)
-  USER_ACTIVITY: "userActivity",
 
   // a memo (by memo id)
   MEMO: "memo",
@@ -36,16 +62,8 @@ export const QueryKey = {
   // the logged-in user's memo (by project id)
   MEMO_PROJECT: "projectMemo",
 
-  // a single document (by sdoc id)
-  SDOC: "sdoc",
-  // a single document's data (by sdoc id)
-  SDOC_DATA: "sdocData",
-  // all tags of a document (by sdoc id)
-  SDOC_TAGS: "sdocTags",
   // all memos of a document (by sdoc id)
   SDOC_MEMOS: "sdocMemos",
-  // Count how many source documents each tag has
-  TAG_SDOC_COUNT: "sdocTagCount",
   // annotators (user ids) of a document (by sdoc id)
   SDOC_ANNOTATORS: "sdocAnnotators",
   // span annotations of a document (by sdoc id, user ids)
@@ -58,14 +76,6 @@ export const QueryKey = {
   SDOC_METADATAS: "sdocMetadatas",
   // metadata with given key of a document (by sdoc id, metadata key)
   SDOC_METADATA_BY_KEY: "sdocMetadataByKey",
-  // thumbnail url of a document (by sdoc id)
-  SDOC_THUMBNAIL_URL: "sdocThumbnailURL",
-  // linked sdoc ids of a document (by sdoc id)
-  SDOC_LINKS: "sdocLinks",
-  // id of a single SourceDocument (by project id and filename)
-  SDOC_ID: "sdocId",
-  // all sdocs that are tagged with the given tag (by tag id)
-  SDOCS_BY_TAG_ID: "sdocsByTagId",
 
   // a single span annotation (by span annotation id)
   SPAN_ANNOTATION: "annotation",
@@ -101,7 +111,7 @@ export const QueryKey = {
 
   // a single COTA (by COTA id)
   COTA: "cota",
-  // all cotas of a project of the logged-in user (by project id)
+  // all cotas of a Project of the logged-in user (by project id)
   COTAS_PROJECT_USER: "cotasProjectUser",
   // a single COTARefinementJob (by refinement job id)
   COTA_REFINEMENT_JOB: "cotaRefinementJob",
@@ -129,13 +139,13 @@ export const QueryKey = {
   // preprojob (by prepro job id)
   PREPRO_JOB: "preProJob",
 
-  // export (by export job id)
+  // exportjob (by export job id)
   EXPORT_JOB: "exportJob",
 
-  // crawler (by crawler job id)
+  // crawlerjob (by crawler job id)
   CRAWLER_JOB: "crawlerJob",
 
-  // crawler (by llm job id)
+  // llmjob (by llm job id)
   LLM_JOB: "llmJob",
 
   // tables

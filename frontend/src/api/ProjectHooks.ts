@@ -110,7 +110,6 @@ const useGetAllUserMemos = (projectId: number | null | undefined) =>
     enabled: !!projectId,
   });
 
-// metadata TODO: I Dont need this right?
 const useGetMetadata = (projectId: number) =>
   useQuery<ProjectMetadataRead[], Error>({
     queryKey: [QueryKey.PROJECT_METADATAS, projectId],

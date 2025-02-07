@@ -20,6 +20,7 @@ const useGetDocument = (sdocId: number | null | undefined) =>
     queryKey: [QueryKey.SDOC, sdocId],
     queryFn: () => SourceDocumentService.getById({ sdocId: sdocId! }),
     enabled: !!sdocId,
+    staleTime: Infinity,
   });
 
 const useGetDocumentData = (sdocId: number | null | undefined) =>
@@ -43,16 +44,6 @@ const useGetDocumentIdByFilename = (filename: string | undefined, projectId: num
     staleTime: Infinity,
   });
 
-const useGetSdocIdByTagId = (tagId: number | null | undefined) =>
-  useQuery<number[], Error>({
-    queryKey: [QueryKey.SDOCS_BY_TAG_ID, tagId],
-    queryFn: () =>
-      DocumentTagService.getSdocIdsByTagId({
-        tagId: tagId!,
-      }),
-    enabled: !!tagId,
-  });
-
 const useGetLinkedSdocIds = (sdocId: number | null | undefined) =>
   useQuery<number[], Error>({
     queryKey: [QueryKey.SDOC_LINKS, sdocId],
@@ -62,48 +53,6 @@ const useGetLinkedSdocIds = (sdocId: number | null | undefined) =>
       }),
     enabled: !!sdocId,
     staleTime: Infinity,
-  });
-
-const useDeleteDocuments = () =>
-  useMutation({
-    mutationFn: ({ sdocIds }: { sdocIds: number[] }) => {
-      const promises = sdocIds.map((sdocId) => SourceDocumentService.deleteById({ sdocId: sdocId }));
-      return Promise.all(promises);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
-    },
-  });
-
-// memo
-const useGetMemos = (sdocId: number | null | undefined) =>
-  useQuery<MemoRead[], Error>({
-    queryKey: [QueryKey.SDOC_MEMOS, sdocId],
-    queryFn: () =>
-      SourceDocumentService.getMemos({
-        sdocId: sdocId!,
-      }),
-    retry: false,
-    enabled: !!sdocId,
-  });
-
-const useGetMemo = (sdocId: number | null | undefined) =>
-  useQuery<MemoRead, Error>({
-    queryKey: [QueryKey.MEMO_SDOC, sdocId],
-    queryFn: () =>
-      SourceDocumentService.getUserMemo({
-        sdocId: sdocId!,
-      }),
-    retry: false,
-    enabled: !!sdocId,
-  });
-
-const useUpdateName = () =>
-  useMutation({
-    mutationFn: SourceDocumentService.updateSdoc,
-    onSuccess: (sdoc) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC, sdoc.id] });
-    },
   });
 
 const useGetThumbnailURL = (sdocId: number | null | undefined) =>
@@ -119,6 +68,36 @@ const useGetThumbnailURL = (sdocId: number | null | undefined) =>
     enabled: !!sdocId,
     select: (thumbnail_url) => encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + thumbnail_url),
     staleTime: Infinity,
+  });
+
+const useGetSdocIdsByTagId = (tagId: number | null | undefined) =>
+  useQuery<number[], Error>({
+    queryKey: [QueryKey.SDOC_IDS_BY_TAG_ID, tagId],
+    queryFn: () =>
+      DocumentTagService.getSdocIdsByTagId({
+        tagId: tagId!,
+      }),
+    enabled: !!tagId,
+  });
+
+// SDOC MUTATIONS
+const useDeleteDocuments = () =>
+  useMutation({
+    mutationFn: ({ sdocIds }: { sdocIds: number[] }) => {
+      const promises = sdocIds.map((sdocId) => SourceDocumentService.deleteById({ sdocId: sdocId }));
+      return Promise.all(promises);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
+    },
+  });
+
+const useUpdateName = () =>
+  useMutation({
+    mutationFn: SourceDocumentService.updateSdoc,
+    onSuccess: (data) => {
+      queryClient.setQueryData<SourceDocumentRead>([QueryKey.SDOC, data.id], data);
+    },
   });
 
 // metadata
@@ -199,6 +178,29 @@ const useGetSentenceAnnotator = (sdocId: number | null | undefined, userId: numb
   });
 };
 
+// memo
+const useGetMemos = (sdocId: number | null | undefined) =>
+  useQuery<MemoRead[], Error>({
+    queryKey: [QueryKey.SDOC_MEMOS, sdocId],
+    queryFn: () =>
+      SourceDocumentService.getMemos({
+        sdocId: sdocId!,
+      }),
+    retry: false,
+    enabled: !!sdocId,
+  });
+
+const useGetMemo = (sdocId: number | null | undefined) =>
+  useQuery<MemoRead, Error>({
+    queryKey: [QueryKey.MEMO_SDOC, sdocId],
+    queryFn: () =>
+      SourceDocumentService.getUserMemo({
+        sdocId: sdocId!,
+      }),
+    retry: false,
+    enabled: !!sdocId,
+  });
+
 const SdocHooks = {
   // sdoc
   useGetDocument,
@@ -207,7 +209,7 @@ const SdocHooks = {
   useDeleteDocuments,
   useGetDocumentIdByFilename,
   // tags
-  useGetSdocIdByTagId,
+  useGetSdocIdsByTagId,
   // annotations
   useGetAnnotators,
   useGetSpanAnnotationsBatch,
