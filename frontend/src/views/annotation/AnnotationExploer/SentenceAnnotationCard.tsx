@@ -1,7 +1,6 @@
 import { Card, CardActionArea, CardContent, CardHeader, Divider, Stack, Typography } from "@mui/material";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { SentenceAnnotationReadResolved } from "../../../api/openapi/models/SentenceAnnotationReadResolved.ts";
-import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
 import CodeRenderer from "../../../components/Code/CodeRenderer.tsx";
 import UserName from "../../../components/User/UserName.tsx";
 import AnnotationCardActionsMenu from "./AnnotationCardActionMenu.tsx";
@@ -61,7 +60,6 @@ function SentenceAnnotationCard({
             annotationType={AttachedObjectType.SPAN_ANNOTATION}
             codeName={annotation.code.name}
             annotationText={"Sentence"}
-            useGetAnnotationMemo={SpanAnnotationHooks.useGetUserMemo}
           />
         </>
       )}

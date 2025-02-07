@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { NodeProps, useReactFlow } from "reactflow";
 import CodeHooks from "../../../api/CodeHooks.ts";
+import MemoHooks from "../../../api/MemoHooks.ts";
 import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import CodeRenderer from "../../../components/Code/CodeRenderer.tsx";
@@ -43,7 +44,7 @@ function SpanAnnotationNode(props: NodeProps<SpanAnnotationNodeData>) {
   // global server state (react-query)
   const annotation = SpanAnnotationHooks.useGetAnnotation(props.data.spanAnnotationId);
   const code = CodeHooks.useGetCode(annotation.data?.code.id);
-  const memo = SpanAnnotationHooks.useGetUserMemo(props.data.spanAnnotationId);
+  const memo = MemoHooks.useGetUserMemo(AttachedObjectType.SPAN_ANNOTATION, props.data.spanAnnotationId);
 
   // effects
   useEffect(() => {

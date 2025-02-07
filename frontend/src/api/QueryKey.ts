@@ -34,6 +34,12 @@ export const QueryKey = {
   SDOC_IDS_BY_TAG_ID: "sdocIdsByTagId",
 
   // managed by MemoHooks:
+  // a single MemoRead (by memo id)
+  MEMO: "memo",
+  // a single MemoRead of the logged in user (by attachedObjectType, attachedObjectId)
+  USER_MEMO: "userMemo",
+  // all MemoRead[] of the attached object (by attachedObjectType, attachedObjectId)
+  OBJECT_MEMOS: "objectMemos",
 
   // all crawler jobs of a Project (by project id)
   PROJECT_CRAWLER_JOBS: "projectCrawlerJobs",
@@ -42,28 +48,6 @@ export const QueryKey = {
   // all llm jobs of a Project (by project id)
   PROJECT_LLM_JOBS: "projectLLMJobs",
 
-  // all memos of a user (by project id)
-  USER_MEMOS: "userMemos",
-
-  // a memo (by memo id)
-  MEMO: "memo",
-  // the logged-in user's memo (by code id)
-  MEMO_CODE: "codeMemo",
-  // the logged-in user's memo (by tag id)
-  MEMO_TAG: "tagMemo",
-  // the logged-in user's memo (by sdoc id)
-  MEMO_SDOC: "sdocMemo",
-  // the logged-in user's memo (by span id)
-  MEMO_SPAN_ANNOTATION: "spanAnnotationMemo",
-  // the logged-in user's memo (by bbox id)
-  MEMO_BBOX_ANNOTATION: "bboxAnnotationMemo",
-  // the logged-in user's memo (by sentence anno id)
-  MEMO_SENTENCE_ANNOTATION: "sentenceAnnotationMemo",
-  // the logged-in user's memo (by project id)
-  MEMO_PROJECT: "projectMemo",
-
-  // all memos of a document (by sdoc id)
-  SDOC_MEMOS: "sdocMemos",
   // annotators (user ids) of a document (by sdoc id)
   SDOC_ANNOTATORS: "sdocAnnotators",
   // span annotations of a document (by sdoc id, user ids)

@@ -2,6 +2,7 @@ import { CardContent, CardHeader, CardMedia, CircularProgress, Divider, MenuItem
 import { intersection } from "lodash";
 import { useEffect, useRef } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
+import MemoHooks from "../../../api/MemoHooks.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import TagHooks from "../../../api/TagHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
@@ -36,7 +37,7 @@ function SdocNode(props: NodeProps<SdocNodeData>) {
   // global server state (react-query)
   const sdoc = SdocHooks.useGetDocument(props.data.sdocId);
   const tagIds = TagHooks.useGetAllTagIdsBySdocId(props.data.sdocId);
-  const memo = SdocHooks.useGetMemo(props.data.sdocId);
+  const memo = MemoHooks.useGetUserMemo(AttachedObjectType.SOURCE_DOCUMENT, props.data.sdocId);
 
   const docType = sdoc.data?.doctype;
 

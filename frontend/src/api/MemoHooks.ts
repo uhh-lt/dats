@@ -4,7 +4,9 @@ import { QueryKey } from "./QueryKey.ts";
 import { AttachedObjectType } from "./openapi/models/AttachedObjectType.ts";
 import { MemoRead } from "./openapi/models/MemoRead.ts";
 import { MemoService } from "./openapi/services/MemoService.ts";
+import { ProjectService } from "./openapi/services/ProjectService.ts";
 
+// MEMO QUERIES
 const useGetMemo = (memoId: number | null | undefined) =>
   useQuery<MemoRead, Error>({
     queryKey: [QueryKey.MEMO, memoId],
@@ -12,63 +14,66 @@ const useGetMemo = (memoId: number | null | undefined) =>
     enabled: !!memoId,
   });
 
-const updateInvalidation = (data: MemoRead) => {
-  queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMOS, data.project_id] });
-  queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO, data.id] });
-  queryClient.setQueryData<MemoRead>([QueryKey.MEMO, data.id], data);
-  switch (data.attached_object_type) {
-    case AttachedObjectType.PROJECT:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_PROJECT, data.attached_object_id] });
-      queryClient.setQueryData<MemoRead>([QueryKey.MEMO_PROJECT, data.attached_object_id], data);
-      break;
-    case AttachedObjectType.SOURCE_DOCUMENT:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_MEMOS, data.attached_object_id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC, data.attached_object_id] });
-      queryClient.setQueryData<MemoRead>([QueryKey.MEMO_SDOC, data.attached_object_id], data);
-      break;
-    case AttachedObjectType.DOCUMENT_TAG:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_TAG, data.attached_object_id] });
-      queryClient.setQueryData<MemoRead>([QueryKey.MEMO_TAG, data.attached_object_id], data);
-      break;
-    case AttachedObjectType.CODE:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_CODE, data.attached_object_id] });
-      queryClient.setQueryData<MemoRead>([QueryKey.MEMO_CODE, data.attached_object_id], data);
-      break;
-    case AttachedObjectType.SPAN_ANNOTATION:
-      queryClient.invalidateQueries({
-        queryKey: [QueryKey.MEMO_SPAN_ANNOTATION, data.attached_object_id],
-      });
-      queryClient.setQueryData<MemoRead>([QueryKey.MEMO_SPAN_ANNOTATION, data.attached_object_id], data);
-      break;
-    case AttachedObjectType.BBOX_ANNOTATION:
-      queryClient.invalidateQueries({
-        queryKey: [QueryKey.MEMO_BBOX_ANNOTATION, data.attached_object_id],
-      });
-      queryClient.setQueryData<MemoRead>([QueryKey.MEMO_BBOX_ANNOTATION, data.attached_object_id], data);
-      break;
-    case AttachedObjectType.SPAN_GROUP:
-      console.error("Span group memo update not implemented");
-      break;
-  }
-};
+const useGetUserMemo = (attachedObjectType: AttachedObjectType, attachedObjectId: number | null | undefined) =>
+  useQuery<MemoRead, Error>({
+    queryKey: [QueryKey.USER_MEMO, attachedObjectType, attachedObjectId],
+    queryFn: () =>
+      MemoService.getUserMemoByAttachedObjectId({ attachedObjectType, attachedObjectId: attachedObjectId! }),
+    enabled: !!attachedObjectId,
+    retry: false,
+  });
 
+const useGetOrCreateProjectUserMemo = (projectId: number | null | undefined) =>
+  useQuery<MemoRead, Error>({
+    queryKey: [QueryKey.USER_MEMO, AttachedObjectType.PROJECT, projectId],
+    queryFn: () =>
+      ProjectService.getOrCreateUserMemo({
+        projId: projectId!,
+      }),
+    retry: false,
+    enabled: !!projectId,
+  });
+
+const useGetObjectMemos = (attachedObjectType: AttachedObjectType, attachedObjectId: number | null | undefined) =>
+  useQuery<MemoRead[], Error>({
+    queryKey: [QueryKey.OBJECT_MEMOS, attachedObjectType, attachedObjectId],
+    queryFn: () => MemoService.getMemosByAttachedObjectId({ attachedObjectType, attachedObjectId: attachedObjectId! }),
+    enabled: !!attachedObjectId,
+    retry: false,
+  });
+
+// MEMO MUTATIONS
 const useCreateMemo = () =>
   useMutation({
     mutationFn: MemoService.addMemo,
     onSuccess: (data) => {
-      if (data.attached_object_type !== AttachedObjectType.PROJECT) {
-        updateInvalidation(data);
-      }
+      queryClient.setQueryData<MemoRead>([QueryKey.MEMO, data.id], data);
+      queryClient.setQueryData<MemoRead>(
+        [QueryKey.USER_MEMO, data.attached_object_type, data.attached_object_id],
+        data,
+      );
+      queryClient.setQueryData<MemoRead[]>(
+        [QueryKey.OBJECT_MEMOS, data.attached_object_type, data.attached_object_id],
+        (oldData) => (oldData ? [...oldData, data] : [data]),
+      );
     },
   });
+
+const updateInvalidation = (data: MemoRead) => {
+  queryClient.setQueryData<MemoRead>([QueryKey.MEMO, data.id], data);
+  queryClient.setQueryData<MemoRead>([QueryKey.USER_MEMO, data.attached_object_type, data.attached_object_id], data);
+  queryClient.setQueryData<MemoRead[]>(
+    [QueryKey.OBJECT_MEMOS, data.attached_object_type, data.attached_object_id],
+    (oldData) => (oldData ? oldData.map((memo) => (memo.id === data.id ? data : memo)) : [data]),
+  );
+};
 
 const useUpdateMemo = () =>
   useMutation({
     mutationFn: MemoService.updateById,
     onSuccess: (data) => {
-      if (data.attached_object_type !== AttachedObjectType.PROJECT) {
-        updateInvalidation(data);
-      }
+      updateInvalidation(data);
+      queryClient.invalidateQueries({ queryKey: ["search-memo-table-data"] });
     },
   });
 
@@ -87,34 +92,12 @@ const useStarMemos = () =>
   });
 
 const deleteInvalidation = (data: MemoRead) => {
-  queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMOS, data.project_id] });
-  switch (data.attached_object_type) {
-    case AttachedObjectType.PROJECT:
-      break;
-    case AttachedObjectType.SOURCE_DOCUMENT:
-      queryClient.removeQueries({ queryKey: [QueryKey.MEMO_SDOC, data.attached_object_id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_MEMOS, data.attached_object_id] });
-      break;
-    case AttachedObjectType.DOCUMENT_TAG:
-      queryClient.removeQueries({ queryKey: [QueryKey.MEMO_TAG, data.attached_object_id] });
-      break;
-    case AttachedObjectType.CODE:
-      queryClient.removeQueries({ queryKey: [QueryKey.MEMO_CODE, data.attached_object_id] });
-      break;
-    case AttachedObjectType.SPAN_ANNOTATION:
-      queryClient.invalidateQueries({
-        queryKey: [QueryKey.MEMO_SPAN_ANNOTATION, data.attached_object_id],
-      });
-      break;
-    case AttachedObjectType.BBOX_ANNOTATION:
-      queryClient.invalidateQueries({
-        queryKey: [QueryKey.MEMO_BBOX_ANNOTATION, data.attached_object_id],
-      });
-      break;
-    case AttachedObjectType.SPAN_GROUP:
-      console.error("Span group memo update not implemented");
-      break;
-  }
+  queryClient.removeQueries({ queryKey: [QueryKey.MEMO, data.id] });
+  queryClient.removeQueries({ queryKey: [QueryKey.USER_MEMO, data.attached_object_type, data.attached_object_id] });
+  queryClient.setQueryData<MemoRead[]>(
+    [QueryKey.OBJECT_MEMOS, data.attached_object_type, data.attached_object_id],
+    (oldData) => (oldData ? oldData.filter((memo) => memo.id !== data.id) : oldData),
+  );
 };
 
 const useDeleteMemo = () =>
@@ -122,6 +105,7 @@ const useDeleteMemo = () =>
     mutationFn: MemoService.deleteById,
     onSuccess: (data) => {
       deleteInvalidation(data);
+      queryClient.invalidateQueries({ queryKey: ["search-memo-table-data"] });
     },
   });
 
@@ -132,16 +116,19 @@ const useDeleteMemos = () =>
       return Promise.all(promises);
     },
     onSuccess: (memos) => {
-      memos.forEach((memo) => {
-        deleteInvalidation(memo);
+      memos.forEach((data) => {
+        deleteInvalidation(data);
       });
       queryClient.invalidateQueries({ queryKey: ["search-memo-table-data"] });
     },
   });
 
 const MemoHooks = {
-  useCreateMemo,
   useGetMemo,
+  useGetObjectMemos,
+  useGetOrCreateProjectUserMemo,
+  useGetUserMemo,
+  useCreateMemo,
   useUpdateMemo,
   useStarMemos,
   useDeleteMemo,

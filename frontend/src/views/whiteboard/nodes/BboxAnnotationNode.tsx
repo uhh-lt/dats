@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
 import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks.ts";
 import CodeHooks from "../../../api/CodeHooks.ts";
+import MemoHooks from "../../../api/MemoHooks.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import CodeRenderer from "../../../components/Code/CodeRenderer.tsx";
@@ -44,7 +45,7 @@ function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
   const annotation = BboxAnnotationHooks.useGetAnnotation(props.data.bboxAnnotationId);
   const code = CodeHooks.useGetCode(annotation.data?.code.id);
   const sdocData = SdocHooks.useGetDocumentData(annotation.data?.sdoc_id);
-  const memo = BboxAnnotationHooks.useGetUserMemo(props.data.bboxAnnotationId);
+  const memo = MemoHooks.useGetUserMemo(AttachedObjectType.BBOX_ANNOTATION, props.data.bboxAnnotationId);
 
   // effects
   useEffect(() => {

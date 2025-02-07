@@ -4,7 +4,6 @@ import { useAppSelector } from "../plugins/ReduxHooks.ts";
 import { RootState } from "../store/store.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { DocumentTagRead } from "./openapi/models/DocumentTagRead.ts";
-import { MemoRead } from "./openapi/models/MemoRead.ts";
 import { DocumentTagService } from "./openapi/services/DocumentTagService.ts";
 import { ProjectService } from "./openapi/services/ProjectService.ts";
 import { SourceDocumentService } from "./openapi/services/SourceDocumentService.ts";
@@ -174,15 +173,6 @@ const useBulkUpdateDocumentTags = () =>
     },
   });
 
-// memos
-const useGetMemo = (tagId: number | null | undefined) =>
-  useQuery<MemoRead, Error>({
-    queryKey: [QueryKey.MEMO_TAG, tagId],
-    queryFn: () => DocumentTagService.getUserMemo({ tagId: tagId! }),
-    retry: false,
-    enabled: !!tagId,
-  });
-
 const TagHooks = {
   useGetAllTags,
   useGetAllTagIdsBySdocId,
@@ -195,8 +185,6 @@ const TagHooks = {
   useBulkLinkDocumentTags,
   useBulkUnlinkDocumentTags,
   useGetTagDocumentCounts,
-  //memos
-  useGetMemo,
 };
 
 export default TagHooks;

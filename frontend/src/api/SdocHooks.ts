@@ -3,7 +3,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import queryClient from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { BBoxAnnotationReadResolved } from "./openapi/models/BBoxAnnotationReadResolved.ts";
-import { MemoRead } from "./openapi/models/MemoRead.ts";
 import { SentenceAnnotatorResult } from "./openapi/models/SentenceAnnotatorResult.ts";
 import { SourceDocumentDataRead } from "./openapi/models/SourceDocumentDataRead.ts";
 import { SourceDocumentMetadataReadResolved } from "./openapi/models/SourceDocumentMetadataReadResolved.ts";
@@ -178,29 +177,6 @@ const useGetSentenceAnnotator = (sdocId: number | null | undefined, userId: numb
   });
 };
 
-// memo
-const useGetMemos = (sdocId: number | null | undefined) =>
-  useQuery<MemoRead[], Error>({
-    queryKey: [QueryKey.SDOC_MEMOS, sdocId],
-    queryFn: () =>
-      SourceDocumentService.getMemos({
-        sdocId: sdocId!,
-      }),
-    retry: false,
-    enabled: !!sdocId,
-  });
-
-const useGetMemo = (sdocId: number | null | undefined) =>
-  useQuery<MemoRead, Error>({
-    queryKey: [QueryKey.MEMO_SDOC, sdocId],
-    queryFn: () =>
-      SourceDocumentService.getUserMemo({
-        sdocId: sdocId!,
-      }),
-    retry: false,
-    enabled: !!sdocId,
-  });
-
 const SdocHooks = {
   // sdoc
   useGetDocument,
@@ -215,9 +191,6 @@ const SdocHooks = {
   useGetSpanAnnotationsBatch,
   useGetBBoxAnnotationsBatch,
   useGetSentenceAnnotator,
-  // memo
-  useGetMemo,
-  useGetMemos,
   // name
   useUpdateName,
   // metadata

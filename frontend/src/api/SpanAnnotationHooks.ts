@@ -1,7 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import queryClient from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
-import { MemoRead } from "./openapi/models/MemoRead.ts";
 import { SpanAnnotationReadResolved } from "./openapi/models/SpanAnnotationReadResolved.ts";
 import { SpanAnnotationUpdate } from "./openapi/models/SpanAnnotationUpdate.ts";
 import { SpanAnnotationService } from "./openapi/services/SpanAnnotationService.ts";
@@ -73,15 +72,6 @@ const useDeleteSpan = () =>
     },
   });
 
-// memo
-const useGetUserMemo = (spanId: number | null | undefined) =>
-  useQuery<MemoRead, Error>({
-    queryKey: [QueryKey.MEMO_SPAN_ANNOTATION, spanId],
-    queryFn: () => SpanAnnotationService.getUserMemo({ spanId: spanId! }),
-    enabled: !!spanId,
-    retry: false,
-  });
-
 const SpanAnnotationHooks = {
   useCreateBulkAnnotations,
   useGetAnnotation,
@@ -89,8 +79,6 @@ const SpanAnnotationHooks = {
   useUpdateSpan,
   useUpdateBulkSpan,
   useDeleteSpan,
-  // memo
-  useGetUserMemo,
 };
 
 export default SpanAnnotationHooks;

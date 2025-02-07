@@ -8,7 +8,6 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
@@ -77,7 +76,6 @@ function BBoxAnnotationCard({
           <AnnotationCardMemo
             annotationId={annotation.id}
             annotationType={AttachedObjectType.BBOX_ANNOTATION}
-            useGetAnnotationMemo={BboxAnnotationHooks.useGetUserMemo}
             annotationText="Image"
             codeName={annotation.code.name}
           />

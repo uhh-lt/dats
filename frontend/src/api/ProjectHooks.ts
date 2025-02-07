@@ -2,7 +2,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import queryClient from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
 
-import { MemoRead } from "./openapi/models/MemoRead.ts";
 import { PreprocessingJobRead } from "./openapi/models/PreprocessingJobRead.ts";
 import { ProjectCreate } from "./openapi/models/ProjectCreate.ts";
 import { ProjectMetadataRead } from "./openapi/models/ProjectMetadataRead.ts";
@@ -87,29 +86,6 @@ const useUploadDocument = () =>
     },
   });
 
-// memo
-const useGetOrCreateMemo = (projectId: number | null | undefined) =>
-  useQuery<MemoRead, Error>({
-    queryKey: [QueryKey.MEMO_PROJECT, projectId],
-    queryFn: () =>
-      ProjectService.getOrCreateUserMemo({
-        projId: projectId!,
-      }),
-    retry: false,
-    enabled: !!projectId,
-  });
-
-const useGetAllUserMemos = (projectId: number | null | undefined) =>
-  useQuery<MemoRead[], Error>({
-    queryKey: [QueryKey.USER_MEMOS, projectId],
-    queryFn: () =>
-      ProjectService.getUserMemosOfProject({
-        projId: projectId!,
-      }),
-    retry: false,
-    enabled: !!projectId,
-  });
-
 const useGetMetadata = (projectId: number) =>
   useQuery<ProjectMetadataRead[], Error>({
     queryKey: [QueryKey.PROJECT_METADATAS, projectId],
@@ -131,9 +107,6 @@ const ProjectHooks = {
   useDeleteProject,
   // sdoc
   useUploadDocument,
-  // memo
-  useGetOrCreateMemo,
-  useGetAllUserMemos,
   // metadata
   useGetMetadata,
   // duplicates

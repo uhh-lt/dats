@@ -2,7 +2,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import queryClient from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { CancelablePromise } from "./openapi/core/CancelablePromise.ts";
-import { MemoRead } from "./openapi/models/MemoRead.ts";
 import { SentenceAnnotationRead } from "./openapi/models/SentenceAnnotationRead.ts";
 import { SentenceAnnotationReadResolved } from "./openapi/models/SentenceAnnotationReadResolved.ts";
 import { SentenceAnnotationService } from "./openapi/services/SentenceAnnotationService.ts";
@@ -60,23 +59,12 @@ const useDeleteSentenceAnno = () =>
     },
   });
 
-// memo
-const useGetUserMemo = (sentenceAnnoId: number | undefined) =>
-  useQuery<MemoRead, Error>({
-    queryKey: [QueryKey.MEMO_SENTENCE_ANNOTATION, sentenceAnnoId],
-    queryFn: () => SentenceAnnotationService.getUserMemo({ sentenceAnnoId: sentenceAnnoId! }),
-    enabled: !!sentenceAnnoId,
-    retry: false,
-  });
-
 const SentenceAnnotationHooks = {
   useGetAnnotation,
   useGetByCodeAndUser,
   useUpdateSentenceAnno,
   useUpdateBulkSentenceAnno,
   useDeleteSentenceAnno,
-  // memo
-  useGetUserMemo,
 };
 
 export default SentenceAnnotationHooks;

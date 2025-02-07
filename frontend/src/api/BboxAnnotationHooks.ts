@@ -4,7 +4,6 @@ import { QueryKey } from "./QueryKey.ts";
 import { CancelablePromise } from "./openapi/core/CancelablePromise.ts";
 import { BBoxAnnotationRead } from "./openapi/models/BBoxAnnotationRead.ts";
 import { BBoxAnnotationReadResolved } from "./openapi/models/BBoxAnnotationReadResolved.ts";
-import { MemoRead } from "./openapi/models/MemoRead.ts";
 import { BboxAnnotationService } from "./openapi/services/BboxAnnotationService.ts";
 
 export const FAKE_BBOX_ID = -1;
@@ -47,22 +46,11 @@ const useDeleteBBox = () =>
     },
   });
 
-// memo
-const useGetUserMemo = (bboxId: number | undefined) =>
-  useQuery<MemoRead, Error>({
-    queryKey: [QueryKey.MEMO_BBOX_ANNOTATION, bboxId],
-    queryFn: () => BboxAnnotationService.getUserMemo({ bboxId: bboxId! }),
-    enabled: !!bboxId,
-    retry: false,
-  });
-
 const BboxAnnotationHooks = {
   useGetAnnotation,
   useGetByCodeAndUser,
   useUpdateBBox,
   useDeleteBBox,
-  // memo
-  useGetUserMemo,
 };
 
 export default BboxAnnotationHooks;
