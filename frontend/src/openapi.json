@@ -648,35 +648,6 @@
         }
       }
     },
-    "/project/{proj_id}/memo": {
-      "get": {
-        "tags": ["project"],
-        "summary": "Returns the Memos of the current User for the Project with the given ID.",
-        "operationId": "get_memos",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/MemoRead" },
-                  "title": "Response Project-Get Memos"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/project/{proj_id}/memo/user": {
       "get": {
         "tags": ["project"],
@@ -1066,56 +1037,6 @@
                 }
               }
             }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/sdoc/{sdoc_id}/memo": {
-      "get": {
-        "tags": ["sourceDocument"],
-        "summary": "Returns all Memo attached to the SourceDocument with the given ID if it exists.",
-        "operationId": "get_memos",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/MemoRead" },
-                  "title": "Response Sourcedocument-Get Memos"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/sdoc/{sdoc_id}/memo/user": {
-      "get": {
-        "tags": ["sourceDocument"],
-        "summary": "Returns the Memo attached to the SourceDocument with the given ID of the logged-in User if it exists.",
-        "operationId": "get_user_memo",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -1681,56 +1602,6 @@
         }
       }
     },
-    "/doctag/{tag_id}/memo": {
-      "get": {
-        "tags": ["documentTag"],
-        "summary": "Returns the Memos attached to the DocumentTag with the given ID if it exists.",
-        "operationId": "get_memos",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "tag_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Tag Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/MemoRead" },
-                  "title": "Response Documenttag-Get Memos"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/doctag/{tag_id}/memo/user": {
-      "get": {
-        "tags": ["documentTag"],
-        "summary": "Returns the Memo attached to the document tag with the given ID of the logged-in User if it exists.",
-        "operationId": "get_user_memo",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "tag_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Tag Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/doctag/{tag_id}/sdocs": {
       "get": {
         "tags": ["documentTag"],
@@ -2174,56 +2045,6 @@
         }
       }
     },
-    "/span/{span_id}/memo": {
-      "get": {
-        "tags": ["spanAnnotation"],
-        "summary": "Returns the Memos attached to the SpanAnnotation with the given ID if it exists.",
-        "operationId": "get_memos",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "span_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Span Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/MemoRead" },
-                  "title": "Response Spanannotation-Get Memos"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/span/{span_id}/memo/user": {
-      "get": {
-        "tags": ["spanAnnotation"],
-        "summary": "Returns the Memo attached to the SpanAnnotation with the given ID of the logged-in User if it exists.",
-        "operationId": "get_user_memo",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "span_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Span Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/span/code/{code_id}/user": {
       "get": {
         "tags": ["spanAnnotation"],
@@ -2616,56 +2437,6 @@
         }
       }
     },
-    "/bbox/{bbox_id}/memo": {
-      "get": {
-        "tags": ["bboxAnnotation"],
-        "summary": "Returns the Memos attached to the BBoxAnnotation with the given ID if it exists.",
-        "operationId": "get_memos",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "bbox_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Bbox Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/MemoRead" },
-                  "title": "Response Bboxannotation-Get Memos"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/bbox/{bbox_id}/memo/user": {
-      "get": {
-        "tags": ["bboxAnnotation"],
-        "summary": "Returns the Memo attached to the BBoxAnnotation with the given ID of the logged-in User if it exists.",
-        "operationId": "get_user_memo",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "bbox_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Bbox Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/bbox/code/{code_id}/user": {
       "get": {
         "tags": ["bboxAnnotation"],
@@ -2780,56 +2551,6 @@
         }
       }
     },
-    "/code/{code_id}/memo": {
-      "get": {
-        "tags": ["code"],
-        "summary": "Returns the Memo attached to the Code with the given ID if it exists.",
-        "operationId": "get_memos",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "code_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Code Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/MemoRead" },
-                  "title": "Response Code-Get Memos"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/code/{code_id}/memo/user": {
-      "get": {
-        "tags": ["code"],
-        "summary": "Returns the Memo attached to the Code with the given ID of the logged-in User if it exists.",
-        "operationId": "get_user_memo",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "code_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Code Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/memo": {
       "put": {
         "tags": ["memo"],
@@ -2916,6 +2637,78 @@
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "memo_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Memo Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/memo/attached_obj/{attached_obj_type}/to/{attached_obj_id}": {
+      "get": {
+        "tags": ["memo"],
+        "summary": "Returns all Memos attached to the object if it exists",
+        "operationId": "get_memos_by_attached_object_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "attached_object_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Attached Object Id" }
+          },
+          {
+            "name": "attached_object_type",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/AttachedObjectType" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/MemoRead" },
+                  "title": "Response Memo-Get Memos By Attached Object Id"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/memo/attached_obj/{attached_obj_type}/to/{attached_obj_id}/user": {
+      "get": {
+        "tags": ["memo"],
+        "summary": "Returns the logged-in User's Memo attached to the object if it exists",
+        "operationId": "get_user_memo_by_attached_object_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "attached_object_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Attached Object Id" }
+          },
+          {
+            "name": "attached_object_type",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/AttachedObjectType" }
+          }
         ],
         "responses": {
           "200": {
@@ -6002,66 +5795,6 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/sentence/{sentence_anno_id}/memo": {
-      "get": {
-        "tags": ["sentenceAnnotation"],
-        "summary": "Returns the Memos attached to the SentenceAnnotation with the given ID if it exists.",
-        "operationId": "get_memos",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "sentence_anno_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Sentence Anno Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/MemoRead" },
-                  "title": "Response Sentenceannotation-Get Memos"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/sentence/{sentence_anno_id}/memo/user": {
-      "get": {
-        "tags": ["sentenceAnnotation"],
-        "summary": "Returns the Memo attached to the SentenceAnnotation with the given ID of the logged-in User if it exists.",
-        "operationId": "get_user_memo",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "sentence_anno_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Sentence Anno Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoRead" } } }
           },
           "422": {
             "description": "Validation Error",

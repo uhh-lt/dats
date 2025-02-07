@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { CodeRead } from "../models/CodeRead";
-import type { MemoRead } from "../models/MemoRead";
 import type { SpanAnnotationCreate } from "../models/SpanAnnotationCreate";
 import type { SpanAnnotationRead } from "../models/SpanAnnotationRead";
 import type { SpanAnnotationReadResolved } from "../models/SpanAnnotationReadResolved";
@@ -274,40 +273,6 @@ export class SpanAnnotationService {
       path: {
         span_id: spanId,
         group_id: groupId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the Memos attached to the SpanAnnotation with the given ID if it exists.
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static getMemos({ spanId }: { spanId: number }): CancelablePromise<Array<MemoRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/span/{span_id}/memo",
-      path: {
-        span_id: spanId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the Memo attached to the SpanAnnotation with the given ID of the logged-in User if it exists.
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static getUserMemo({ spanId }: { spanId: number }): CancelablePromise<MemoRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/span/{span_id}/memo/user",
-      path: {
-        span_id: spanId,
       },
       errors: {
         422: `Validation Error`,

@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { CodeRead } from "../models/CodeRead";
-import type { MemoRead } from "../models/MemoRead";
 import type { SentenceAnnotationCreate } from "../models/SentenceAnnotationCreate";
 import type { SentenceAnnotationRead } from "../models/SentenceAnnotationRead";
 import type { SentenceAnnotationReadResolved } from "../models/SentenceAnnotationReadResolved";
@@ -209,40 +208,6 @@ export class SentenceAnnotationService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sentence/{sentence_anno_id}/code",
-      path: {
-        sentence_anno_id: sentenceAnnoId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the Memos attached to the SentenceAnnotation with the given ID if it exists.
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static getMemos({ sentenceAnnoId }: { sentenceAnnoId: number }): CancelablePromise<Array<MemoRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/sentence/{sentence_anno_id}/memo",
-      path: {
-        sentence_anno_id: sentenceAnnoId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the Memo attached to the SentenceAnnotation with the given ID of the logged-in User if it exists.
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static getUserMemo({ sentenceAnnoId }: { sentenceAnnoId: number }): CancelablePromise<MemoRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/sentence/{sentence_anno_id}/memo/user",
       path: {
         sentence_anno_id: sentenceAnnoId,
       },

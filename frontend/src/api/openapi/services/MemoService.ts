@@ -101,6 +101,54 @@ export class MemoService {
     });
   }
   /**
+   * Returns all Memos attached to the object if it exists
+   * @returns MemoRead Successful Response
+   * @throws ApiError
+   */
+  public static getMemosByAttachedObjectId({
+    attachedObjectId,
+    attachedObjectType,
+  }: {
+    attachedObjectId: number;
+    attachedObjectType: AttachedObjectType;
+  }): CancelablePromise<Array<MemoRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/memo/attached_obj/{attached_obj_type}/to/{attached_obj_id}",
+      query: {
+        attached_object_id: attachedObjectId,
+        attached_object_type: attachedObjectType,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the logged-in User's Memo attached to the object if it exists
+   * @returns MemoRead Successful Response
+   * @throws ApiError
+   */
+  public static getUserMemoByAttachedObjectId({
+    attachedObjectId,
+    attachedObjectType,
+  }: {
+    attachedObjectId: number;
+    attachedObjectType: AttachedObjectType;
+  }): CancelablePromise<MemoRead> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/memo/attached_obj/{attached_obj_type}/to/{attached_obj_id}/user",
+      query: {
+        attached_object_id: attachedObjectId,
+        attached_object_type: attachedObjectType,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Returns Memo Table Info.
    * @returns ColumnInfo_MemoColumns_ Successful Response
    * @throws ApiError

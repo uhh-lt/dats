@@ -7,7 +7,6 @@ import type { BBoxAnnotationRead } from "../models/BBoxAnnotationRead";
 import type { BBoxAnnotationReadResolved } from "../models/BBoxAnnotationReadResolved";
 import type { BBoxAnnotationUpdate } from "../models/BBoxAnnotationUpdate";
 import type { CodeRead } from "../models/CodeRead";
-import type { MemoRead } from "../models/MemoRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -132,40 +131,6 @@ export class BboxAnnotationService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/bbox/{bbox_id}/code",
-      path: {
-        bbox_id: bboxId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the Memos attached to the BBoxAnnotation with the given ID if it exists.
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static getMemos({ bboxId }: { bboxId: number }): CancelablePromise<Array<MemoRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/bbox/{bbox_id}/memo",
-      path: {
-        bbox_id: bboxId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the Memo attached to the BBoxAnnotation with the given ID of the logged-in User if it exists.
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static getUserMemo({ bboxId }: { bboxId: number }): CancelablePromise<MemoRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/bbox/{bbox_id}/memo/user",
       path: {
         bbox_id: bboxId,
       },

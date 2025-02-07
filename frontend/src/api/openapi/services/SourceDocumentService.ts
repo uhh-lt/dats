@@ -4,7 +4,6 @@
 /* eslint-disable */
 import type { BBoxAnnotationRead } from "../models/BBoxAnnotationRead";
 import type { BBoxAnnotationReadResolved } from "../models/BBoxAnnotationReadResolved";
-import type { MemoRead } from "../models/MemoRead";
 import type { SentenceAnnotatorResult } from "../models/SentenceAnnotatorResult";
 import type { SourceDocumentDataRead } from "../models/SourceDocumentDataRead";
 import type { SourceDocumentMetadataReadResolved } from "../models/SourceDocumentMetadataReadResolved";
@@ -232,40 +231,6 @@ export class SourceDocumentService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/tags",
-      path: {
-        sdoc_id: sdocId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns all Memo attached to the SourceDocument with the given ID if it exists.
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static getMemos({ sdocId }: { sdocId: number }): CancelablePromise<Array<MemoRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/sdoc/{sdoc_id}/memo",
-      path: {
-        sdoc_id: sdocId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the Memo attached to the SourceDocument with the given ID of the logged-in User if it exists.
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static getUserMemo({ sdocId }: { sdocId: number }): CancelablePromise<MemoRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/sdoc/{sdoc_id}/memo/user",
       path: {
         sdoc_id: sdocId,
       },

@@ -298,23 +298,6 @@ export class ProjectService {
     });
   }
   /**
-   * Returns the Memos of the current User for the Project with the given ID.
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static getMemos({ projId }: { projId: number }): CancelablePromise<Array<MemoRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/project/{proj_id}/memo",
-      path: {
-        proj_id: projId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Gets or creates the Memo attached to the Project with the given ID of the logged-in User.
    * @returns MemoRead Successful Response
    * @throws ApiError
