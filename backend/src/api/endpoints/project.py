@@ -7,7 +7,7 @@ from api.dependencies import (
     get_current_user,
     get_db_session,
 )
-from api.util import get_object_memo_for_user, get_object_memos
+from api.util import get_object_memo_for_user
 from app.core.analysis.duplicate_finder.duplicate_finder import find_duplicates
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud.code import crud_code
@@ -322,23 +322,6 @@ def get_user_memos_of_project(
     return [
         crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj) for db_obj in db_objs
     ]
-
-
-@router.get(
-    "/{proj_id}/memo",
-    response_model=List[MemoRead],
-    summary="Returns the Memos of the current User for the Project with the given ID.",
-)
-def get_memos(
-    *,
-    db: Session = Depends(get_db_session),
-    proj_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> List[MemoRead]:
-    authz_user.assert_in_project(proj_id)
-
-    db_obj = crud_project.read(db=db, id=proj_id)
-    return get_object_memos(db_obj=db_obj)
 
 
 @router.get(

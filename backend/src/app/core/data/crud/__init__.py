@@ -49,3 +49,14 @@ class Crud(Enum):
     COTA_ANALYSIS = crud_cota
     USER = crud_user
     WHITEBOARD = crud_whiteboard
+
+
+class MemoCrud(Enum):
+    PROJECT = crud_project
+    SOURCE_DOCUMENT = crud_sdoc
+    DOCUMENT_TAG = crud_document_tag
+    CODE = crud_code
+    SPAN_ANNOTATION = crud_span_anno
+    BBOX_ANNOTATION = crud_bbox_anno
+    SENTENCE_ANNOTATION = crud_sentence_anno
+    SPAN_GROUP = crud_span_group

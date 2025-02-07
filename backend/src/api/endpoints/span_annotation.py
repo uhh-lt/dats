@@ -4,15 +4,11 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session, resolve_code_param
-from api.util import get_object_memo_for_user, get_object_memos
 from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.dto.code import CodeRead
-from app.core.data.dto.memo import (
-    MemoRead,
-)
 from app.core.data.dto.span_annotation import (
     SpanAnnotationCreate,
     SpanAnnotationRead,
@@ -279,42 +275,6 @@ def remove_from_group(
         db=db, span_id=span_id, group_id=group_id
     )
     return SpanAnnotationRead.model_validate(sdoc_db_obj)
-
-
-@router.get(
-    "/{span_id}/memo",
-    response_model=List[MemoRead],
-    summary="Returns the Memos attached to the SpanAnnotation with the given ID if it exists.",
-)
-def get_memos(
-    *,
-    db: Session = Depends(get_db_session),
-    span_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> List[MemoRead]:
-    authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
-
-    db_obj = crud_span_anno.read(db=db, id=span_id)
-    return get_object_memos(db_obj=db_obj)
-
-
-@router.get(
-    "/{span_id}/memo/user",
-    response_model=MemoRead,
-    summary=(
-        "Returns the Memo attached to the SpanAnnotation with the given ID of the logged-in User if it exists."
-    ),
-)
-def get_user_memo(
-    *,
-    db: Session = Depends(get_db_session),
-    span_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> MemoRead:
-    authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
-
-    db_obj = crud_span_anno.read(db=db, id=span_id)
-    return get_object_memo_for_user(db_obj=db_obj, user_id=authz_user.user.id)
 
 
 @router.get(

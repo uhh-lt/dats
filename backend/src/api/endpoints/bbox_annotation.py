@@ -8,7 +8,6 @@ from api.dependencies import (
     get_db_session,
     resolve_code_param,
 )
-from api.util import get_object_memo_for_user, get_object_memos
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
@@ -19,9 +18,6 @@ from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationUpdate,
 )
 from app.core.data.dto.code import CodeRead
-from app.core.data.dto.memo import (
-    MemoRead,
-)
 
 router = APIRouter(
     prefix="/bbox", dependencies=[Depends(get_current_user)], tags=["bboxAnnotation"]
@@ -126,43 +122,6 @@ def get_code(
 
     bbox_db_obj = crud_bbox_anno.read(db=db, id=bbox_id)
     return CodeRead.model_validate(bbox_db_obj.code)
-
-
-@router.get(
-    "/{bbox_id}/memo",
-    response_model=List[MemoRead],
-    summary="Returns the Memos attached to the BBoxAnnotation with the given ID if it exists.",
-)
-def get_memos(
-    *,
-    db: Session = Depends(get_db_session),
-    bbox_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> List[MemoRead]:
-    authz_user.assert_in_same_project_as(Crud.BBOX_ANNOTATION, bbox_id)
-
-    db_obj = crud_bbox_anno.read(db=db, id=bbox_id)
-    # TODO how to authorize memo access here?
-    return get_object_memos(db_obj=db_obj)
-
-
-@router.get(
-    "/{bbox_id}/memo/user",
-    response_model=MemoRead,
-    summary=(
-        "Returns the Memo attached to the BBoxAnnotation with the given ID of the logged-in User if it exists."
-    ),
-)
-def get_user_memo(
-    *,
-    db: Session = Depends(get_db_session),
-    bbox_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> MemoRead:
-    authz_user.assert_in_same_project_as(Crud.BBOX_ANNOTATION, bbox_id)
-
-    db_obj = crud_bbox_anno.read(db=db, id=bbox_id)
-    return get_object_memo_for_user(db_obj=db_obj, user_id=authz_user.user.id)
 
 
 @router.get(

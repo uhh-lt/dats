@@ -10,7 +10,6 @@ from api.dependencies import (
     resolve_code_param,
     skip_limit_params,
 )
-from api.util import get_object_memo_for_user, get_object_memos
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
@@ -22,9 +21,6 @@ from app.core.data.crud.span_group import crud_span_group
 from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationRead,
     BBoxAnnotationReadResolved,
-)
-from app.core.data.dto.memo import (
-    MemoRead,
 )
 from app.core.data.dto.sentence_annotation import (
     SentenceAnnotationReadResolved,
@@ -242,42 +238,6 @@ def get_all_tags(
 
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     return [doc_tag_db_obj.id for doc_tag_db_obj in sdoc_db_obj.document_tags]
-
-
-@router.get(
-    "/{sdoc_id}/memo",
-    response_model=List[MemoRead],
-    summary="Returns all Memo attached to the SourceDocument with the given ID if it exists.",
-)
-def get_memos(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> List[MemoRead]:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
-
-    db_obj = crud_sdoc.read(db=db, id=sdoc_id)
-    return get_object_memos(db_obj=db_obj)
-
-
-@router.get(
-    "/{sdoc_id}/memo/user",
-    response_model=MemoRead,
-    summary=(
-        "Returns the Memo attached to the SourceDocument with the given ID of the logged-in User if it exists."
-    ),
-)
-def get_user_memo(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> MemoRead:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
-
-    db_obj = crud_sdoc.read(db=db, id=sdoc_id)
-    return get_object_memo_for_user(db_obj=db_obj, user_id=authz_user.user.id)
 
 
 @router.get(

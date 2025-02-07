@@ -120,6 +120,10 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
                 oh_create_dto = ObjectHandleCreate(
                     span_annotation_id=attached_object_id
                 )
+            case AttachedObjectType.sentence_annotation:
+                oh_create_dto = ObjectHandleCreate(
+                    sentence_annotation_id=attached_object_id
+                )
             case AttachedObjectType.span_group:
                 oh_create_dto = ObjectHandleCreate(span_group_id=attached_object_id)
             case AttachedObjectType.bbox_annotation:
