@@ -152,23 +152,24 @@ function AnnotationExplorer<T extends AnnotationReadResolved>({
       </Box>
       <Divider />
       <Box alignItems="center" p={1}>
-        {Object.values(codes).map((code) => {
-          const isSelected = filterCodeIds.includes(code.id);
-          return (
-            <ToggleButton
-              color="primary"
-              key={code.id}
-              value={code.id}
-              selected={isSelected}
-              onChange={() => {
-                toggleFilterCodeId(code.id);
-              }}
-              sx={{ p: 0, m: 0.5 }}
-            >
-              <Square style={{ color: code.color }} fontSize={isSelected ? "medium" : "small"} />
-            </ToggleButton>
-          );
-        })}
+        {codes &&
+          Object.values(codes).map((code) => {
+            const isSelected = filterCodeIds.includes(code.id);
+            return (
+              <ToggleButton
+                color="primary"
+                key={code.id}
+                value={code.id}
+                selected={isSelected}
+                onChange={() => {
+                  toggleFilterCodeId(code.id);
+                }}
+                sx={{ p: 0, m: 0.5 }}
+              >
+                <Square style={{ color: code.color }} fontSize={isSelected ? "medium" : "small"} />
+              </ToggleButton>
+            );
+          })}
       </Box>
     </Box>
   );
