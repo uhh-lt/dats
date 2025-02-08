@@ -49,7 +49,7 @@ function BBoxAnnotationCard({
         <CardContent sx={{ p: 1, pb: "0px !important", textAlign: "center" }}>
           {sdocData.isSuccess ? (
             <ImageCropper
-              imageUrl={encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + sdocData.data.html)}
+              imageUrl={encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + sdocData.data.repo_url)}
               x={annotation.x_min}
               y={annotation.y_min}
               width={annotation.x_max - annotation.x_min}

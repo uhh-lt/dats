@@ -26,7 +26,7 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
   const dispatch = useAppDispatch();
 
   // mutations
-  const updateAnnotationMutation = BboxAnnotationHooks.useUpdateBBox();
+  const updateAnnotationMutation = BboxAnnotationHooks.useUpdateBBoxAnnotation();
 
   // actions
   const handleClose = () => {
@@ -42,7 +42,7 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
 
     updateAnnotationMutation.mutate(
       {
-        bboxId: annotation.id,
+        bboxToUpdate: annotation,
         requestBody: {
           code_id: selectedCodeId,
         },

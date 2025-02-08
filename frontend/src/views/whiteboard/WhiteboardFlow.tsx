@@ -176,7 +176,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   const updateCodeMutation = CodeHooks.useUpdateCode();
   const updateSpanAnnotationMutation = SpanAnnotationHooks.useUpdateSpan();
   const updateSentenceAnnotationMutation = SentenceAnnotationHooks.useUpdateSentenceAnno();
-  const updateBBoxAnnotationMutation = BboxAnnotationHooks.useUpdateBBox();
+  const updateBBoxAnnotationMutation = BboxAnnotationHooks.useUpdateBBoxAnnotation();
 
   // refs
   const flowRef = useRef<HTMLDivElement>(null);
@@ -310,22 +310,12 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
         // codes can be manually connected to annotations
         if (isCodeNode(sourceNode) && isBBoxAnnotationNode(targetNode)) {
           const mutation = updateBBoxAnnotationMutation.mutate;
-          mutation(
-            {
-              bboxId: targetNode.data.bboxAnnotationId,
-              requestBody: {
-                code_id: sourceNode.data.codeId,
-              },
+          mutation({
+            bboxToUpdate: targetNode.data.bboxAnnotationId,
+            requestBody: {
+              code_id: sourceNode.data.codeId,
             },
-            {
-              onSuccess() {
-                openSnackbar({
-                  text: "Updated bbox annotation",
-                  severity: "success",
-                });
-              },
-            },
-          );
+          });
         }
       } else {
         setEdges((e) => addEdge(connection, e));

@@ -1166,72 +1166,7 @@
         }
       }
     },
-    "/sdoc/{sdoc_id}/user/bbox_annotations": {
-      "get": {
-        "tags": ["sourceDocument"],
-        "summary": "Returns all BBoxAnnotations of the logged-in User if it exists",
-        "operationId": "get_all_bbox_annotations",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [{ "type": "integer", "maximum": 10000000, "minimum": 0 }, { "type": "null" }],
-              "title": "Skip",
-              "description": "The number of elements to skip (offset)"
-            },
-            "description": "The number of elements to skip (offset)"
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [{ "type": "integer", "maximum": 1000, "minimum": 1 }, { "type": "null" }],
-              "title": "Limit",
-              "description": "The maximum number of returned elements"
-            },
-            "description": "The maximum number of returned elements"
-          },
-          {
-            "name": "resolve",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "title": "Resolve Code",
-              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
-              "default": true
-            },
-            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    { "type": "array", "items": { "$ref": "#/components/schemas/BBoxAnnotationRead" } },
-                    { "type": "array", "items": { "$ref": "#/components/schemas/BBoxAnnotationReadResolved" } }
-                  ],
-                  "title": "Response Sourcedocument-Get All Bbox Annotations"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/sdoc/{sdoc_id}/bbox_annotations/bulk": {
+    "/sdoc/{sdoc_id}/bbox_annotations/{user_id}": {
       "get": {
         "tags": ["sourceDocument"],
         "summary": "Returns all BBoxAnnotations of the Users with the given ID if it exists",
@@ -1239,12 +1174,7 @@
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
-          {
-            "name": "user_id",
-            "in": "query",
-            "required": false,
-            "schema": { "type": "array", "items": { "type": "integer" }, "title": "User Id" }
-          },
+          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } },
           {
             "name": "skip",
             "in": "query",

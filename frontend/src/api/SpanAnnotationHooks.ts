@@ -3,7 +3,9 @@ import queryClient from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { SpanAnnotationReadResolved } from "./openapi/models/SpanAnnotationReadResolved.ts";
 import { SpanAnnotationUpdate } from "./openapi/models/SpanAnnotationUpdate.ts";
+import { SourceDocumentService } from "./openapi/services/SourceDocumentService.ts";
 import { SpanAnnotationService } from "./openapi/services/SpanAnnotationService.ts";
+import { useSelectEnabledSpanAnnotations } from "./utils.ts";
 
 export const FAKE_ANNOTATION_ID = -1;
 
@@ -22,6 +24,22 @@ const useGetAnnotation = (spanId: number | null | undefined) =>
       }) as Promise<SpanAnnotationReadResolved>,
     enabled: !!spanId,
   });
+
+const useGetSpanAnnotationsBatch = (sdocId: number | null | undefined, userIds: number[] | null | undefined) => {
+  // filter out all disabled code ids
+  const selectEnabledAnnotations = useSelectEnabledSpanAnnotations();
+  return useQuery<SpanAnnotationReadResolved[], Error>({
+    queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, sdocId, userIds],
+    queryFn: () =>
+      SourceDocumentService.getAllSpanAnnotationsBulk({
+        sdocId: sdocId!,
+        userId: userIds!,
+        resolve: true,
+      }) as Promise<SpanAnnotationReadResolved[]>,
+    enabled: !!sdocId && !!userIds,
+    select: selectEnabledAnnotations,
+  });
+};
 
 const useGetByCodeAndUser = (codeId: number | null | undefined) =>
   useQuery<SpanAnnotationReadResolved[], Error>({
@@ -74,6 +92,7 @@ const useDeleteSpan = () =>
 
 const SpanAnnotationHooks = {
   useCreateBulkAnnotations,
+  useGetSpanAnnotationsBatch,
   useGetAnnotation,
   useGetByCodeAndUser,
   useUpdateSpan,

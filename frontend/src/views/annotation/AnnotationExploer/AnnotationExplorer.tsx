@@ -3,6 +3,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import { Box, CircularProgress, Divider, Stack, TextField, ToggleButton } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMemo, useRef, useState } from "react";
+import CodeHooks from "../../../api/CodeHooks.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { useDebounce } from "../../../utils/useDebounce.ts";
@@ -28,18 +29,22 @@ function AnnotationExplorer<T extends AnnotationReadResolved>({
   const filter = useDebounce(filterValue, 300);
 
   // code filtering
-  const codes = useMemo(
-    () =>
-      annotations?.reduce(
-        (acc, annotation) => {
-          acc[annotation.code.id] = annotation.code;
+  const projectCodes = CodeHooks.useGetAllCodes();
+  const [filterCodeIds, setFilterCodeIds] = useState<number[]>([]);
+  const codes = useMemo(() => {
+    const annotationCodeIds = new Set(annotations?.map((annotation) => annotation.code.id));
+    const relevantCodeIds = new Set([...annotationCodeIds, ...filterCodeIds]);
+    return projectCodes.data
+      ?.filter((code) => relevantCodeIds.has(code.id))
+      ?.reduce(
+        (acc, code) => {
+          acc[code.id] = code;
           return acc;
         },
         {} as Record<number, CodeRead>,
-      ) || {},
-    [annotations],
-  );
-  const [filterCodeIds, setFilterCodeIds] = useState<number[]>([]);
+      );
+  }, [projectCodes.data, annotations, filterCodeIds]);
+
   const toggleFilterCodeId = (codeId: number) => {
     if (filterCodeIds.includes(codeId)) {
       setFilterCodeIds(filterCodeIds.filter((id) => id !== codeId));

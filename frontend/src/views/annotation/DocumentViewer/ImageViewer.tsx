@@ -3,6 +3,7 @@ import { Box, Button } from "@mui/material";
 import * as d3 from "d3";
 import { useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
 import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead.ts";
@@ -46,7 +47,7 @@ function ImageViewerWithData({ sdocData, height, width }: ImageViewerProps & { h
   const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
 
   // global server state (react query)
-  const annotations = SdocHooks.useGetBBoxAnnotationsBatch(sdocData.id, visibleUserId ? [visibleUserId] : undefined);
+  const annotations = BboxAnnotationHooks.useGetBBoxAnnotationsBatch(sdocData.id, visibleUserId);
 
   const annotationData = useMemo(() => {
     return (annotations.data || []).filter((bbox) => !hiddenCodeIds.includes(bbox.code.id));

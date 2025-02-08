@@ -1,12 +1,12 @@
 import { useMemo } from "react";
-import SdocHooks from "../../../api/SdocHooks.ts";
+import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
 import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import { IToken } from "./IToken.ts";
 
 function useComputeTokenData({ sdocData, userIds }: { sdocData: SourceDocumentDataRead; userIds: number[] }) {
   // global server state (react query)
-  const annotations = SdocHooks.useGetSpanAnnotationsBatch(sdocData.id, userIds);
+  const annotations = SpanAnnotationHooks.useGetSpanAnnotationsBatch(sdocData.id, userIds);
 
   // computed
   // todo: maybe implement with selector?

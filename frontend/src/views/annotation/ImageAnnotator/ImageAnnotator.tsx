@@ -2,18 +2,17 @@ import { Button, ButtonGroup, Toolbar, Typography } from "@mui/material";
 import * as d3 from "d3";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
 import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
-import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { Annotation } from "../Annotation.ts";
 import AnnotationMenu, { CodeSelectorHandle } from "../AnnotationMenu/AnnotationMenu.tsx";
 import { ICode } from "../ICode.ts";
 import SVGBBox from "./SVGBBox.tsx";
 import SVGBBoxText from "./SVGBBoxText.tsx";
-import { useCreateBBoxAnnotation, useDeleteBBoxAnnotation, useUpdateBBoxAnnotation } from "./imageAnnotationHooks.ts";
 
 interface ImageAnnotatorProps {
   sdocData: SourceDocumentDataRead;
@@ -47,10 +46,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
   const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
 
   // global server state (react query)
-  const annotations = SdocHooks.useGetBBoxAnnotationsBatch(sdocData.id, visibleUserId ? [visibleUserId] : undefined);
-
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
+  const annotations = BboxAnnotationHooks.useGetBBoxAnnotationsBatch(sdocData.id, visibleUserId);
 
   // computed (filter hidden code ids)
   const data = useMemo(() => {
@@ -62,9 +58,9 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
   const [selectedBbox, setSelectedBbox] = useState<BBoxAnnotationReadResolved | null>(null);
 
   // mutations for create, update, delete
-  const createMutation = useCreateBBoxAnnotation(visibleUserId ? [visibleUserId] : []);
-  const updateMutation = useUpdateBBoxAnnotation(visibleUserId ? [visibleUserId] : []);
-  const deleteMutation = useDeleteBBoxAnnotation(visibleUserId ? [visibleUserId] : []);
+  const createMutation = BboxAnnotationHooks.useCreateBBoxAnnotation();
+  const updateMutation = BboxAnnotationHooks.useUpdateBBoxAnnotation();
+  const deleteMutation = BboxAnnotationHooks.useDeleteBBoxAnnotation();
 
   // click handling
   const handleClick = useCallback(
@@ -212,48 +208,24 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
     const y = parseInt(myRect.attr("y"));
     const width = parseInt(myRect.attr("width"));
     const height = parseInt(myRect.attr("height"));
-    createMutation.mutate(
-      {
-        requestBody: {
-          code_id: code.id,
-          sdoc_id: sdocData.id,
-          x_min: x,
-          x_max: x + width,
-          y_min: y,
-          y_max: y + height,
-        },
-      },
-      {
-        onSuccess: (bboxAnnotation) => {
-          openSnackbar({
-            text: `Created Bounding Box Annotation ${bboxAnnotation.id}`,
-            severity: "success",
-          });
-        },
-      },
-    );
+    createMutation.mutate({
+      code_id: code.id,
+      sdoc_id: sdocData.id,
+      x_min: x,
+      x_max: x + width,
+      y_min: y,
+      y_max: y + height,
+    });
   };
 
   const onCodeSelectorEditCode = (_annotationToEdit: Annotation, code: ICode) => {
     if (selectedBbox) {
-      updateMutation.mutate(
-        {
-          bboxToUpdate: selectedBbox,
-          resolve: true,
-          requestBody: {
-            code_id: code.id,
-          },
+      updateMutation.mutate({
+        bboxToUpdate: selectedBbox,
+        requestBody: {
+          code_id: code.id,
         },
-        {
-          onSuccess: (updatedBboxAnnotation) => {
-            openSnackbar({
-              text: `Updated Bounding Box Annotation ${updatedBboxAnnotation.id}`,
-              severity: "success",
-            });
-          },
-        },
-      );
-      // console.log("Edit", code);
+      });
     } else {
       console.error("This should never happen! (onCodeSelectorEditCode)");
     }
@@ -264,17 +236,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
       ConfirmationAPI.openConfirmationDialog({
         text: `Do you really want to remove the BBoxAnnotation ${selectedBbox.id}? You can reassign it later!`,
         onAccept: () => {
-          deleteMutation.mutate(
-            { bboxToDelete: selectedBbox },
-            {
-              onSuccess: (data) => {
-                openSnackbar({
-                  text: `Deleted Bounding Box Annotation ${data.id}`,
-                  severity: "success",
-                });
-              },
-            },
-          );
+          deleteMutation.mutate({ bboxToDelete: selectedBbox });
         },
       });
     } else {

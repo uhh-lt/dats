@@ -2,16 +2,13 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 
 import queryClient from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
-import { BBoxAnnotationReadResolved } from "./openapi/models/BBoxAnnotationReadResolved.ts";
 import { SentenceAnnotatorResult } from "./openapi/models/SentenceAnnotatorResult.ts";
 import { SourceDocumentDataRead } from "./openapi/models/SourceDocumentDataRead.ts";
 import { SourceDocumentMetadataReadResolved } from "./openapi/models/SourceDocumentMetadataReadResolved.ts";
 import { SourceDocumentRead } from "./openapi/models/SourceDocumentRead.ts";
-import { SpanAnnotationReadResolved } from "./openapi/models/SpanAnnotationReadResolved.ts";
 import { DocumentTagService } from "./openapi/services/DocumentTagService.ts";
 import { ProjectService } from "./openapi/services/ProjectService.ts";
 import { SourceDocumentService } from "./openapi/services/SourceDocumentService.ts";
-import { useSelectEnabledBboxAnnotations, useSelectEnabledSpanAnnotations } from "./utils.ts";
 
 // SDOC QUERIES
 const useGetDocument = (sdocId: number | null | undefined) =>
@@ -132,38 +129,6 @@ const useGetAnnotators = (sdocId: number | null | undefined) =>
     enabled: !!sdocId,
   });
 
-const useGetSpanAnnotationsBatch = (sdocId: number | null | undefined, userIds: number[] | null | undefined) => {
-  // filter out all disabled code ids
-  const selectEnabledAnnotations = useSelectEnabledSpanAnnotations();
-  return useQuery<SpanAnnotationReadResolved[], Error>({
-    queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, sdocId, userIds],
-    queryFn: () =>
-      SourceDocumentService.getAllSpanAnnotationsBulk({
-        sdocId: sdocId!,
-        userId: userIds!,
-        resolve: true,
-      }) as Promise<SpanAnnotationReadResolved[]>,
-    enabled: !!sdocId && !!userIds,
-    select: selectEnabledAnnotations,
-  });
-};
-
-const useGetBBoxAnnotationsBatch = (sdocId: number | null | undefined, userIds: number[] | null | undefined) => {
-  // filter out all disabled code ids
-  const selectEnabledAnnotations = useSelectEnabledBboxAnnotations();
-  return useQuery<BBoxAnnotationReadResolved[], Error>({
-    queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS, sdocId, userIds],
-    queryFn: () =>
-      SourceDocumentService.getAllBboxAnnotationsBulk({
-        sdocId: sdocId!,
-        userId: userIds!,
-        resolve: true,
-      }) as Promise<BBoxAnnotationReadResolved[]>,
-    enabled: !!sdocId && !!userIds,
-    select: selectEnabledAnnotations,
-  });
-};
-
 const useGetSentenceAnnotator = (sdocId: number | null | undefined, userId: number | null | undefined) => {
   // TODO: filter out all disabled code ids
   return useQuery<SentenceAnnotatorResult, Error>({
@@ -188,8 +153,6 @@ const SdocHooks = {
   useGetSdocIdsByTagId,
   // annotations
   useGetAnnotators,
-  useGetSpanAnnotationsBatch,
-  useGetBBoxAnnotationsBatch,
   useGetSentenceAnnotator,
   // name
   useUpdateName,

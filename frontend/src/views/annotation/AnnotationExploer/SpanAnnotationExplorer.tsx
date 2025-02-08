@@ -1,5 +1,5 @@
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
-import SdocHooks from "../../../api/SdocHooks.ts";
+import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import AnnotationExplorer from "./AnnotationExplorer.tsx";
 import SpanAnnotationCard from "./SpanAnnotationCard.tsx";
@@ -9,7 +9,10 @@ const filterByText = (text: string) => (annotation: SpanAnnotationReadResolved) 
 function SpanAnnotationExplorer({ sdocId }: { sdocId: number }) {
   // data
   const visibleUserId = useAppSelector((state) => state.annotations.visibleUserId);
-  const annotations = SdocHooks.useGetSpanAnnotationsBatch(sdocId, visibleUserId ? [visibleUserId] : undefined);
+  const annotations = SpanAnnotationHooks.useGetSpanAnnotationsBatch(
+    sdocId,
+    visibleUserId ? [visibleUserId] : undefined,
+  );
 
   return (
     <AnnotationExplorer

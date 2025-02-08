@@ -303,29 +303,7 @@ def get_all_span_annotations_bulk(
 
 
 @router.get(
-    "/{sdoc_id}/user/bbox_annotations",
-    response_model=Union[List[BBoxAnnotationRead], List[BBoxAnnotationReadResolved]],
-    summary="Returns all BBoxAnnotations of the logged-in User if it exists",
-)
-def get_all_bbox_annotations(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    skip_limit: Dict[str, int] = Depends(skip_limit_params),
-    resolve_code: bool = Depends(resolve_code_param),
-    authz_user: AuthzUser = Depends(),
-) -> Union[List[BBoxAnnotationRead], List[BBoxAnnotationReadResolved]]:
-    bboxes = crud_bbox_anno.read_by_user_and_sdoc(
-        db=db, user_id=authz_user.user.id, sdoc_id=sdoc_id, **skip_limit
-    )
-    if resolve_code:
-        return [BBoxAnnotationReadResolved.model_validate(bbox) for bbox in bboxes]
-    else:
-        return [BBoxAnnotationRead.model_validate(bbox) for bbox in bboxes]
-
-
-@router.get(
-    "/{sdoc_id}/bbox_annotations/bulk",
+    "/{sdoc_id}/bbox_annotations/{user_id}",
     response_model=Union[List[BBoxAnnotationRead], List[BBoxAnnotationReadResolved]],
     summary="Returns all BBoxAnnotations of the Users with the given ID if it exists",
 )
@@ -333,15 +311,15 @@ def get_all_bbox_annotations_bulk(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
-    user_id: Annotated[List[int], Query(default_factory=list)],
+    user_id: int,
     skip_limit: Dict[str, int] = Depends(skip_limit_params),
     resolve_code: bool = Depends(resolve_code_param),
     authz_user: AuthzUser = Depends(),
 ) -> Union[List[BBoxAnnotationRead], List[BBoxAnnotationReadResolved]]:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
-    bboxes = crud_bbox_anno.read_by_users_and_sdoc(
-        db=db, user_ids=user_id, sdoc_id=sdoc_id, **skip_limit
+    bboxes = crud_bbox_anno.read_by_user_and_sdoc(
+        db=db, user_id=user_id, sdoc_id=sdoc_id, **skip_limit
     )
     if resolve_code:
         return [BBoxAnnotationReadResolved.model_validate(bbox) for bbox in bboxes]

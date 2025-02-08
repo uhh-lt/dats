@@ -318,47 +318,6 @@ export class SourceDocumentService {
     });
   }
   /**
-   * Returns all BBoxAnnotations of the logged-in User if it exists
-   * @returns any Successful Response
-   * @throws ApiError
-   */
-  public static getAllBboxAnnotations({
-    sdocId,
-    skip,
-    limit,
-    resolve = true,
-  }: {
-    sdocId: number;
-    /**
-     * The number of elements to skip (offset)
-     */
-    skip?: number | null;
-    /**
-     * The maximum number of returned elements
-     */
-    limit?: number | null;
-    /**
-     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
-     */
-    resolve?: boolean;
-  }): CancelablePromise<Array<BBoxAnnotationRead> | Array<BBoxAnnotationReadResolved>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/sdoc/{sdoc_id}/user/bbox_annotations",
-      path: {
-        sdoc_id: sdocId,
-      },
-      query: {
-        skip: skip,
-        limit: limit,
-        resolve: resolve,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Returns all BBoxAnnotations of the Users with the given ID if it exists
    * @returns any Successful Response
    * @throws ApiError
@@ -371,7 +330,7 @@ export class SourceDocumentService {
     resolve = true,
   }: {
     sdocId: number;
-    userId?: Array<number>;
+    userId: number;
     /**
      * The number of elements to skip (offset)
      */
@@ -387,12 +346,12 @@ export class SourceDocumentService {
   }): CancelablePromise<Array<BBoxAnnotationRead> | Array<BBoxAnnotationReadResolved>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdoc/{sdoc_id}/bbox_annotations/bulk",
+      url: "/sdoc/{sdoc_id}/bbox_annotations/{user_id}",
       path: {
         sdoc_id: sdocId,
+        user_id: userId,
       },
       query: {
-        user_id: userId,
         skip: skip,
         limit: limit,
         resolve: resolve,

@@ -41,6 +41,26 @@ export const QueryKey = {
   // all MemoRead[] of the attached object (by attachedObjectType, attachedObjectId)
   OBJECT_MEMOS: "objectMemos",
 
+  // managed by SpanAnnotationHooks:
+  // a single span annotation (by span annotation id)
+  SPAN_ANNOTATION: "annotation",
+  // span annotations of a code of the logged-in user (by code id)
+  SPAN_ANNOTATIONS_USER_CODE: "annotationsUserCode",
+
+  // managed by BBoxAnnotationHooks:
+  // a single BBoxAnnotationReadResolved (by bbox annotation id)
+  BBOX_ANNOTATION: "bboxAnnotation",
+  // all BBoxAnnotationReadResolved[] of a code of the logged-in user (by code id)
+  BBOX_ANNOTATIONS_USER_CODE: "bboxAnnotationsUserCode",
+  // bbox annotations of a document (by sdoc id, user ids)
+  SDOC_BBOX_ANNOTATIONS: "sdocBBoxAnnotations",
+
+  // managed by SentenceAnnotationHooks:
+  // a single sentence annotation (by sentence annotation id)
+  SENTENCE_ANNOTATION: "sentenceAnnotation",
+  // sentence annotations of a code of the logged-in user (by code id)
+  SENTENCE_ANNOTATIONS_USER_CODE: "sentenceAnnotationsUserCode",
+
   // all crawler jobs of a Project (by project id)
   PROJECT_CRAWLER_JOBS: "projectCrawlerJobs",
   // all prepro jobs of a Project (by project id)
@@ -52,27 +72,13 @@ export const QueryKey = {
   SDOC_ANNOTATORS: "sdocAnnotators",
   // span annotations of a document (by sdoc id, user ids)
   SDOC_SPAN_ANNOTATIONS: "sdocSpanAnnotations",
-  // bbox annotations of a document (by sdoc id, user ids)
-  SDOC_BBOX_ANNOTATIONS: "sdocBBoxAnnotations",
+
   // sentence annotator of a document (by sdoc id, user ids)
   SDOC_SENTENCE_ANNOTATOR: "sdocSentenceAnnotator",
   // all metadata of a document (by sdoc id)
   SDOC_METADATAS: "sdocMetadatas",
   // metadata with given key of a document (by sdoc id, metadata key)
   SDOC_METADATA_BY_KEY: "sdocMetadataByKey",
-
-  // a single span annotation (by span annotation id)
-  SPAN_ANNOTATION: "annotation",
-  // span annotations of a code of the logged-in user (by code id)
-  SPAN_ANNOTATIONS_USER_CODE: "annotationsUserCode",
-  // a single bbox annotation (by bbox annotation id)
-  BBOX_ANNOTATION: "bboxAnnotation",
-  // bbox annotations of a code of the logged-in user (by code id)
-  BBOX_ANNOTATIONS_USER_CODE: "bboxAnnotationsUserCode",
-  // a single sentence annotation (by sentence annotation id)
-  SENTENCE_ANNOTATION: "sentenceAnnotation",
-  // sentence annotations of a code of the logged-in user (by code id)
-  SENTENCE_ANNOTATIONS_USER_CODE: "sentenceAnnotationsUserCode",
 
   // project metadata (by project id)
   PROJECT_METADATAS: "projectMetadatas",

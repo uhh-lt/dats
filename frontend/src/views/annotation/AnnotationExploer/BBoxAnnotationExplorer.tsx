@@ -1,5 +1,5 @@
+import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks.ts";
 import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
-import SdocHooks from "../../../api/SdocHooks.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import AnnotationExplorer from "./AnnotationExplorer.tsx";
 import BBoxAnnotationCard from "./BBoxAnnotationCard.tsx";
@@ -11,7 +11,7 @@ const estimateSize = () => 190;
 function BBoxAnnotationExplorer({ sdocId }: { sdocId: number }) {
   // data
   const visibleUserId = useAppSelector((state) => state.annotations.visibleUserId);
-  const annotations = SdocHooks.useGetBBoxAnnotationsBatch(sdocId, visibleUserId ? [visibleUserId] : undefined);
+  const annotations = BboxAnnotationHooks.useGetBBoxAnnotationsBatch(sdocId, visibleUserId);
 
   return (
     <AnnotationExplorer

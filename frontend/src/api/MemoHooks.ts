@@ -21,6 +21,7 @@ const useGetUserMemo = (attachedObjectType: AttachedObjectType, attachedObjectId
       MemoService.getUserMemoByAttachedObjectId({ attachedObjectType, attachedObjectId: attachedObjectId! }),
     enabled: !!attachedObjectId,
     retry: false,
+    staleTime: 1000 * 60 * 5,
   });
 
 const useGetOrCreateProjectUserMemo = (projectId: number | null | undefined) =>
@@ -30,8 +31,9 @@ const useGetOrCreateProjectUserMemo = (projectId: number | null | undefined) =>
       ProjectService.getOrCreateUserMemo({
         projId: projectId!,
       }),
-    retry: false,
     enabled: !!projectId,
+    retry: false,
+    staleTime: 1000 * 60 * 5,
   });
 
 const useGetObjectMemos = (attachedObjectType: AttachedObjectType, attachedObjectId: number | null | undefined) =>
