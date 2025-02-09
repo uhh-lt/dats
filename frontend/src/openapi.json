@@ -1074,36 +1074,7 @@
         }
       }
     },
-    "/sdoc/{sdoc_id}/user/span_annotations": {
-      "get": {
-        "tags": ["sourceDocument"],
-        "summary": "Returns all SpanAnnotations of the logged-in User if it exists",
-        "operationId": "get_all_span_annotations",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
-                  "title": "Response Sourcedocument-Get All Span Annotations"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/sdoc/{sdoc_id}/span_annotations/bulk": {
+    "/sdoc/{sdoc_id}/span_annotations/{user_id}}": {
       "get": {
         "tags": ["sourceDocument"],
         "summary": "Returns all SpanAnnotations of the Users with the given ID if it exists",
@@ -1111,12 +1082,7 @@
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
-          {
-            "name": "user_id",
-            "in": "query",
-            "required": false,
-            "schema": { "type": "array", "items": { "type": "integer" }, "title": "User Id" }
-          }
+          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
         ],
         "responses": {
           "200": {

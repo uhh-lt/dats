@@ -49,7 +49,7 @@ const useGetBBoxAnnotationsBatch = (sdocId: number | null | undefined, userId: n
 };
 
 // BBOX MUTATIONS
-export const useCreateBBoxAnnotation = () => {
+const useCreateBBoxAnnotation = () => {
   const { user } = useAuth();
   return useMutation({
     mutationFn: (variables: BBoxAnnotationCreate) =>
@@ -92,11 +92,10 @@ export const useCreateBBoxAnnotation = () => {
       queryClient.setQueryData<BBoxAnnotationRead[]>(context.affectedQueryKey, context.previousBboxes);
     },
     onSuccess: (data) => {
-      const newBBox = data as BBoxAnnotationRead;
-      queryClient.setQueryData<BBoxAnnotationRead>([QueryKey.BBOX_ANNOTATION, data.id], newBBox);
+      queryClient.setQueryData<BBoxAnnotationRead>([QueryKey.BBOX_ANNOTATION, data.id], data);
       // Replace the fake bbox with the real one
       queryClient.setQueryData<BBoxAnnotationRead[]>([QueryKey.SDOC_BBOX_ANNOTATIONS, data.sdoc_id, user?.id], (old) =>
-        old ? old.map((bbox) => (bbox.id === FAKE_BBOX_ID ? newBBox : bbox)) : [newBBox],
+        old ? old.map((bbox) => (bbox.id === FAKE_BBOX_ID ? data : bbox)) : [data],
       );
     },
     meta: {
@@ -105,12 +104,9 @@ export const useCreateBBoxAnnotation = () => {
   });
 };
 
-export const useUpdateBBoxAnnotation = () =>
+const useUpdateBBoxAnnotation = () =>
   useMutation({
-    mutationFn: (variables: {
-      bboxToUpdate: BBoxAnnotationRead | BBoxAnnotationRead | number;
-      requestBody: BBoxAnnotationUpdate;
-    }) =>
+    mutationFn: (variables: { bboxToUpdate: BBoxAnnotationRead | number; requestBody: BBoxAnnotationUpdate }) =>
       BboxAnnotationService.updateById({
         bboxId: typeof variables.bboxToUpdate === "number" ? variables.bboxToUpdate : variables.bboxToUpdate.id,
         requestBody: variables.requestBody,
@@ -142,11 +138,10 @@ export const useUpdateBBoxAnnotation = () =>
       queryClient.setQueryData<BBoxAnnotationRead[]>(context.affectedQueryKey, context.previousBboxes);
     },
     onSuccess: (data) => {
-      const newBBox = data as BBoxAnnotationRead;
-      queryClient.setQueryData<BBoxAnnotationRead>([QueryKey.BBOX_ANNOTATION, newBBox.id], newBBox);
+      queryClient.setQueryData<BBoxAnnotationRead>([QueryKey.BBOX_ANNOTATION, data.id], data);
       queryClient.setQueryData<BBoxAnnotationRead[]>(
-        [QueryKey.SDOC_BBOX_ANNOTATIONS, newBBox.sdoc_id, newBBox.user_id],
-        (old) => (old ? old.map((bbox) => (bbox.id === newBBox.id ? newBBox : bbox)) : [newBBox]),
+        [QueryKey.SDOC_BBOX_ANNOTATIONS, data.sdoc_id, data.user_id],
+        (old) => (old ? old.map((bbox) => (bbox.id === data.id ? data : bbox)) : [data]),
       );
     },
     meta: {
@@ -154,9 +149,9 @@ export const useUpdateBBoxAnnotation = () =>
     },
   });
 
-export const useDeleteBBoxAnnotation = () =>
+const useDeleteBBoxAnnotation = () =>
   useMutation({
-    mutationFn: (variables: { bboxToDelete: BBoxAnnotationRead | BBoxAnnotationRead | number }) =>
+    mutationFn: (variables: { bboxToDelete: BBoxAnnotationRead | number }) =>
       BboxAnnotationService.deleteById({
         bboxId: typeof variables.bboxToDelete === "number" ? variables.bboxToDelete : variables.bboxToDelete.id,
       }),

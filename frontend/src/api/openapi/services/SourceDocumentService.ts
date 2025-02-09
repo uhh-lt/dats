@@ -255,23 +255,6 @@ export class SourceDocumentService {
     });
   }
   /**
-   * Returns all SpanAnnotations of the logged-in User if it exists
-   * @returns SpanAnnotationRead Successful Response
-   * @throws ApiError
-   */
-  public static getAllSpanAnnotations({ sdocId }: { sdocId: number }): CancelablePromise<Array<SpanAnnotationRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/sdoc/{sdoc_id}/user/span_annotations",
-      path: {
-        sdoc_id: sdocId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Returns all SpanAnnotations of the Users with the given ID if it exists
    * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
@@ -281,15 +264,13 @@ export class SourceDocumentService {
     userId,
   }: {
     sdocId: number;
-    userId?: Array<number>;
+    userId: number;
   }): CancelablePromise<Array<SpanAnnotationRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdoc/{sdoc_id}/span_annotations/bulk",
+      url: "/sdoc/{sdoc_id}/span_annotations/{user_id}}",
       path: {
         sdoc_id: sdocId,
-      },
-      query: {
         user_id: userId,
       },
       errors: {

@@ -46,6 +46,8 @@ export const QueryKey = {
   SPAN_ANNOTATION: "annotation",
   // span annotations of a code of the logged-in user (by code id)
   SPAN_ANNOTATIONS_USER_CODE: "annotationsUserCode",
+  // SpanAnnotationRead[] (by sdoc id, user ids)
+  SDOC_SPAN_ANNOTATIONS: "sdocSpanAnnotations",
 
   // managed by BBoxAnnotationHooks:
   // a single BBoxAnnotationReadResolved (by bbox annotation id)
@@ -70,8 +72,6 @@ export const QueryKey = {
 
   // annotators (user ids) of a document (by sdoc id)
   SDOC_ANNOTATORS: "sdocAnnotators",
-  // span annotations of a document (by sdoc id, user ids)
-  SDOC_SPAN_ANNOTATIONS: "sdocSpanAnnotations",
 
   // sentence annotator of a document (by sdoc id, user ids)
   SDOC_SENTENCE_ANNOTATOR: "sdocSentenceAnnotator",

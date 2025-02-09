@@ -1,6 +1,6 @@
-from typing import Annotated, Dict, List
+from typing import Dict, List
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -255,24 +255,7 @@ def get_word_frequencies(
 
 
 @router.get(
-    "/{sdoc_id}/user/span_annotations",
-    response_model=List[SpanAnnotationRead],
-    summary="Returns all SpanAnnotations of the logged-in User if it exists",
-)
-def get_all_span_annotations(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> List[SpanAnnotationRead]:
-    spans = crud_span_anno.read_by_user_and_sdoc(
-        db=db, user_id=authz_user.user.id, sdoc_id=sdoc_id
-    )
-    return [SpanAnnotationRead.model_validate(span) for span in spans]
-
-
-@router.get(
-    "/{sdoc_id}/span_annotations/bulk",
+    "/{sdoc_id}/span_annotations/{user_id}}",
     response_model=List[SpanAnnotationRead],
     summary="Returns all SpanAnnotations of the Users with the given ID if it exists",
 )
@@ -280,13 +263,13 @@ def get_all_span_annotations_bulk(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
-    user_id: Annotated[List[int], Query(default_factory=list)],
+    user_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> List[SpanAnnotationRead]:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
-    spans = crud_span_anno.read_by_users_and_sdoc(
-        db=db, user_ids=user_id, sdoc_id=sdoc_id
+    spans = crud_span_anno.read_by_user_and_sdoc(
+        db=db, user_id=user_id, sdoc_id=sdoc_id
     )
     return [SpanAnnotationRead.model_validate(span) for span in spans]
 

@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import React, { MouseEvent, useRef, useState } from "react";
 import { QueryKey } from "../../../api/QueryKey.ts";
-import { FAKE_ANNOTATION_ID } from "../../../api/SpanAnnotationHooks.ts";
+import SpanAnnotationHooks, { FAKE_ANNOTATION_ID } from "../../../api/SpanAnnotationHooks.ts";
 
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead.ts";
@@ -16,7 +16,6 @@ import DocumentRenderer from "../DocumentRenderer/DocumentRenderer.tsx";
 import useComputeTokenData from "../DocumentRenderer/useComputeTokenData.ts";
 import { ICode } from "../ICode.ts";
 import { AnnoActions, TagStyle } from "../annoSlice.ts";
-import { useCreateSpanAnnotation, useDeleteSpanAnnotation, useUpdateSpanAnnotation } from "./textAnnotationHooks.ts";
 
 const selectionIsEmpty = (selection: Selection): boolean => {
   return selection.toString().trim().length === 0;
@@ -44,14 +43,14 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
   // computed / custom hooks
   const { tokenData, annotationsPerToken, annotationMap } = useComputeTokenData({
     sdocData,
-    userIds: visibleUserId ? [visibleUserId] : [],
+    userId: visibleUserId,
   });
 
   // mutations for create, update, delete
   const queryClient = useQueryClient();
-  const createMutation = useCreateSpanAnnotation(visibleUserId ? [visibleUserId] : []);
-  const updateMutation = useUpdateSpanAnnotation(visibleUserId ? [visibleUserId] : []);
-  const deleteMutation = useDeleteSpanAnnotation(visibleUserId ? [visibleUserId] : []);
+  const createMutation = SpanAnnotationHooks.useCreateSpanAnnotation();
+  const updateMutation = SpanAnnotationHooks.useUpdateSpanAnnotation();
+  const deleteMutation = SpanAnnotationHooks.useDeleteSpanAnnotation();
 
   // handle ui events
   const handleMenu = (event: React.MouseEvent) => {
@@ -162,11 +161,7 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
 
     // when we create a new span annotation, we add a new annotation to a certain document
     // thus, we only affect the annotation document that we are adding to
-    const affectedQueryKey = [
-      QueryKey.SDOC_SPAN_ANNOTATIONS,
-      requestBody.sdoc_id,
-      visibleUserId ? [visibleUserId] : [],
-    ];
+    const affectedQueryKey = [QueryKey.SDOC_SPAN_ANNOTATIONS, requestBody.sdoc_id, visibleUserId];
 
     // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
     await queryClient.cancelQueries({ queryKey: affectedQueryKey });
@@ -253,21 +248,15 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
     if (!fakeAnnotation) return;
     createMutation.mutate(
       {
-        requestBody: {
-          ...fakeAnnotation,
-          code_id: code.id,
-        },
+        ...fakeAnnotation,
+        code_id: code.id,
       },
       {
-        onSuccess: (spanAnnotation) => {
+        onSuccess: () => {
           if (!isNewCode) {
             // if we use an existing code to annotate, we move it to the top
             dispatch(AnnoActions.moveCodeToTop(code));
           }
-          openSnackbar({
-            text: `Created Span Annotation ${spanAnnotation.id}`,
-            severity: "success",
-          });
         },
       },
     );
@@ -278,29 +267,14 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
       // i clicked away because i like the annotation as is
       if (reason === "backdropClick") {
         // add the annotation as is
-        createMutation.mutate(
-          { requestBody: fakeAnnotation },
-          {
-            onSuccess: (spanAnnotation) => {
-              openSnackbar({
-                text: `Created Span Annotation ${spanAnnotation.id}`,
-                severity: "success",
-              });
-            },
-          },
-        );
+        createMutation.mutate({ ...fakeAnnotation });
       }
       // i clicked escape because i want to cancel the annotation
       if (reason === "escapeKeyDown") {
         // delete the fake annotation (that always has id -1)
         queryClient.setQueryData<SpanAnnotationRead[]>(
-          [QueryKey.SDOC_SPAN_ANNOTATIONS, fakeAnnotation.sdoc_id, visibleUserId ? [visibleUserId] : []],
-          (old) => {
-            if (old === undefined) {
-              return undefined;
-            }
-            return old.filter((spanAnnotation) => spanAnnotation.id !== -1);
-          },
+          [QueryKey.SDOC_SPAN_ANNOTATIONS, fakeAnnotation.sdoc_id, visibleUserId],
+          (old) => old?.filter((spanAnnotation) => spanAnnotation.id !== -1),
         );
       }
     }

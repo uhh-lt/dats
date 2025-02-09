@@ -25,7 +25,7 @@ function TextViewer({ sdocData: sdocData }: TextViewerProps) {
   const sentences = sdocData.sentences;
   const { tokenData, annotationsPerToken, annotationMap } = useComputeTokenData({
     sdocData,
-    userIds: visibleUserId ? [visibleUserId] : [],
+    userId: visibleUserId,
   });
 
   // ui events

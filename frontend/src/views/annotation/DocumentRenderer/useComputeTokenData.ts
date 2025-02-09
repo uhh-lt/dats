@@ -4,9 +4,15 @@ import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocume
 import { SpanAnnotationRead } from "../../../api/openapi/models/SpanAnnotationRead.ts";
 import { IToken } from "./IToken.ts";
 
-function useComputeTokenData({ sdocData, userIds }: { sdocData: SourceDocumentDataRead; userIds: number[] }) {
+function useComputeTokenData({
+  sdocData,
+  userId,
+}: {
+  sdocData: SourceDocumentDataRead;
+  userId: number | null | undefined;
+}) {
   // global server state (react query)
-  const annotations = SpanAnnotationHooks.useGetSpanAnnotationsBatch(sdocData.id, userIds);
+  const annotations = SpanAnnotationHooks.useGetSpanAnnotationsBatch(sdocData.id, userId);
 
   // computed
   // todo: maybe implement with selector?

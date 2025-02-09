@@ -174,7 +174,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   // mutations
   const bulkLinkDocumentTagsMutation = TagHooks.useBulkLinkDocumentTags();
   const updateCodeMutation = CodeHooks.useUpdateCode();
-  const updateSpanAnnotationMutation = SpanAnnotationHooks.useUpdateSpan();
+  const updateSpanAnnotationMutation = SpanAnnotationHooks.useUpdateSpanAnnotation();
   const updateSentenceAnnotationMutation = SentenceAnnotationHooks.useUpdateSentenceAnno();
   const updateBBoxAnnotationMutation = BboxAnnotationHooks.useUpdateBBoxAnnotation();
 
@@ -270,7 +270,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
           const mutation = updateSpanAnnotationMutation.mutate;
           mutation(
             {
-              spanAnnotationId: targetNode.data.spanAnnotationId,
+              spanAnnotationToUpdate: targetNode.data.spanAnnotationId,
               requestBody: {
                 code_id: sourceNode.data.codeId,
               },

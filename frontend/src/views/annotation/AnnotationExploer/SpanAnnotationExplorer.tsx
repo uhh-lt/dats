@@ -9,10 +9,7 @@ const filterByText = (text: string) => (annotation: SpanAnnotationRead) => annot
 function SpanAnnotationExplorer({ sdocId }: { sdocId: number }) {
   // data
   const visibleUserId = useAppSelector((state) => state.annotations.visibleUserId);
-  const annotations = SpanAnnotationHooks.useGetSpanAnnotationsBatch(
-    sdocId,
-    visibleUserId ? [visibleUserId] : undefined,
-  );
+  const annotations = SpanAnnotationHooks.useGetSpanAnnotationsBatch(sdocId, visibleUserId);
 
   return (
     <AnnotationExplorer
