@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
-import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
+import { BBoxAnnotationRead } from "../../../api/openapi/models/BBoxAnnotationRead.ts";
 import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
@@ -50,12 +50,12 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
 
   // computed (filter hidden code ids)
   const data = useMemo(() => {
-    return (annotations.data || []).filter((bbox) => !hiddenCodeIds.includes(bbox.code.id));
+    return (annotations.data || []).filter((bbox) => !hiddenCodeIds.includes(bbox.code_id));
   }, [annotations.data, hiddenCodeIds]);
 
   // local client state
   const [isZooming, setIsZooming] = useState(true);
-  const [selectedBbox, setSelectedBbox] = useState<BBoxAnnotationReadResolved | null>(null);
+  const [selectedBbox, setSelectedBbox] = useState<BBoxAnnotationRead | null>(null);
 
   // mutations for create, update, delete
   const createMutation = BboxAnnotationHooks.useCreateBBoxAnnotation();
@@ -66,7 +66,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
   const handleClick = useCallback(
     (
       event: React.MouseEvent<SVGRectElement, MouseEvent> | React.MouseEvent<SVGTextElement, MouseEvent>,
-      bbox: BBoxAnnotationReadResolved,
+      bbox: BBoxAnnotationRead,
     ) => {
       event.preventDefault();
       const rect = event.currentTarget.getBoundingClientRect();

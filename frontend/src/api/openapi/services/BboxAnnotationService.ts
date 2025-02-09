@@ -4,7 +4,6 @@
 /* eslint-disable */
 import type { BBoxAnnotationCreate } from "../models/BBoxAnnotationCreate";
 import type { BBoxAnnotationRead } from "../models/BBoxAnnotationRead";
-import type { BBoxAnnotationReadResolved } from "../models/BBoxAnnotationReadResolved";
 import type { BBoxAnnotationUpdate } from "../models/BBoxAnnotationUpdate";
 import type { CodeRead } from "../models/CodeRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -13,25 +12,17 @@ import { request as __request } from "../core/request";
 export class BboxAnnotationService {
   /**
    * Creates a BBoxAnnotation
-   * @returns any Successful Response
+   * @returns BBoxAnnotationRead Successful Response
    * @throws ApiError
    */
   public static addBboxAnnotation({
     requestBody,
-    resolve = true,
   }: {
     requestBody: BBoxAnnotationCreate;
-    /**
-     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
-     */
-    resolve?: boolean;
-  }): CancelablePromise<BBoxAnnotationRead | BBoxAnnotationReadResolved> {
+  }): CancelablePromise<BBoxAnnotationRead> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/bbox",
-      query: {
-        resolve: resolve,
-      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -41,27 +32,15 @@ export class BboxAnnotationService {
   }
   /**
    * Returns the BBoxAnnotation with the given ID.
-   * @returns any Successful Response
+   * @returns BBoxAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static getById({
-    bboxId,
-    resolve = true,
-  }: {
-    bboxId: number;
-    /**
-     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
-     */
-    resolve?: boolean;
-  }): CancelablePromise<BBoxAnnotationRead | BBoxAnnotationReadResolved> {
+  public static getById({ bboxId }: { bboxId: number }): CancelablePromise<BBoxAnnotationRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/bbox/{bbox_id}",
       path: {
         bbox_id: bboxId,
-      },
-      query: {
-        resolve: resolve,
       },
       errors: {
         422: `Validation Error`,
@@ -70,29 +49,21 @@ export class BboxAnnotationService {
   }
   /**
    * Updates the BBoxAnnotation with the given ID.
-   * @returns any Successful Response
+   * @returns BBoxAnnotationRead Successful Response
    * @throws ApiError
    */
   public static updateById({
     bboxId,
     requestBody,
-    resolve = true,
   }: {
     bboxId: number;
     requestBody: BBoxAnnotationUpdate;
-    /**
-     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
-     */
-    resolve?: boolean;
-  }): CancelablePromise<BBoxAnnotationRead | BBoxAnnotationReadResolved> {
+  }): CancelablePromise<BBoxAnnotationRead> {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/bbox/{bbox_id}",
       path: {
         bbox_id: bboxId,
-      },
-      query: {
-        resolve: resolve,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -103,14 +74,10 @@ export class BboxAnnotationService {
   }
   /**
    * Deletes the BBoxAnnotation with the given ID.
-   * @returns any Successful Response
+   * @returns BBoxAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static deleteById({
-    bboxId,
-  }: {
-    bboxId: number;
-  }): CancelablePromise<BBoxAnnotationRead | BBoxAnnotationReadResolved> {
+  public static deleteById({ bboxId }: { bboxId: number }): CancelablePromise<BBoxAnnotationRead> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/bbox/{bbox_id}",

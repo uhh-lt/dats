@@ -43,7 +43,7 @@ function SpanAnnotationNode(props: NodeProps<SpanAnnotationNodeData>) {
 
   // global server state (react-query)
   const annotation = SpanAnnotationHooks.useGetAnnotation(props.data.spanAnnotationId);
-  const code = CodeHooks.useGetCode(annotation.data?.code.id);
+  const code = CodeHooks.useGetCode(annotation.data?.code_id);
   const memo = MemoHooks.useGetUserMemo(AttachedObjectType.SPAN_ANNOTATION, props.data.spanAnnotationId);
 
   // effects
@@ -203,7 +203,7 @@ function SpanAnnotationNode(props: NodeProps<SpanAnnotationNodeData>) {
             <CardHeader
               title={
                 <Stack direction="row" alignItems="center">
-                  <CodeRenderer code={annotation.data.code} />
+                  <CodeRenderer code={annotation.data.code_id} />
                   <Box sx={{ ml: 1 }}>Annotation</Box>
                 </Stack>
               }

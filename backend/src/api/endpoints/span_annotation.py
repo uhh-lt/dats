@@ -1,9 +1,9 @@
-from typing import List, Union
+from typing import List
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from api.dependencies import get_current_user, get_db_session, resolve_code_param
+from api.dependencies import get_current_user, get_db_session
 from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
@@ -12,7 +12,6 @@ from app.core.data.dto.code import CodeRead
 from app.core.data.dto.span_annotation import (
     SpanAnnotationCreate,
     SpanAnnotationRead,
-    SpanAnnotationReadResolved,
     SpanAnnotationUpdate,
     SpanAnnotationUpdateBulk,
 )
@@ -25,17 +24,16 @@ router = APIRouter(
 
 @router.put(
     "",
-    response_model=Union[SpanAnnotationRead, SpanAnnotationReadResolved],
+    response_model=SpanAnnotationRead,
     summary="Creates a SpanAnnotation",
 )
 def add_span_annotation(
     *,
     db: Session = Depends(get_db_session),
     span: SpanAnnotationCreate,
-    resolve_code: bool = Depends(resolve_code_param),
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
-) -> Union[SpanAnnotationRead, SpanAnnotationReadResolved]:
+) -> SpanAnnotationRead:
     authz_user.assert_in_same_project_as(Crud.CODE, span.code_id)
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, span.sdoc_id)
     validate.validate_objects_in_same_project(
@@ -46,25 +44,21 @@ def add_span_annotation(
     )
 
     db_obj = crud_span_anno.create(db=db, user_id=authz_user.user.id, create_dto=span)
-    if resolve_code:
-        return SpanAnnotationReadResolved.model_validate(db_obj)
-    else:
-        return SpanAnnotationRead.model_validate(db_obj)
+    return SpanAnnotationRead.model_validate(db_obj)
 
 
 @router.put(
     "/bulk/create",
-    response_model=Union[List[SpanAnnotationRead], List[SpanAnnotationReadResolved]],
+    response_model=List[SpanAnnotationRead],
     summary="Creates SpanAnnotations in Bulk",
 )
 def add_span_annotations_bulk(
     *,
     db: Session = Depends(get_db_session),
     spans: List[SpanAnnotationCreate],
-    resolve_code: bool = Depends(resolve_code_param),
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
-) -> Union[List[SpanAnnotationRead], List[SpanAnnotationReadResolved]]:
+) -> List[SpanAnnotationRead]:
     for span in spans:
         authz_user.assert_in_same_project_as(Crud.CODE, span.code_id)
         authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, span.sdoc_id)
@@ -78,36 +72,29 @@ def add_span_annotations_bulk(
     db_objs = crud_span_anno.create_bulk(
         db=db, user_id=authz_user.user.id, create_dtos=spans
     )
-    if resolve_code:
-        return [SpanAnnotationReadResolved.model_validate(db_obj) for db_obj in db_objs]
-    else:
-        return [SpanAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+    return [SpanAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
 
 
 @router.get(
     "/{span_id}",
-    response_model=Union[SpanAnnotationRead, SpanAnnotationReadResolved],
+    response_model=SpanAnnotationRead,
     summary="Returns the SpanAnnotation with the given ID.",
 )
 def get_by_id(
     *,
     db: Session = Depends(get_db_session),
     span_id: int,
-    resolve_code: bool = Depends(resolve_code_param),
     authz_user: AuthzUser = Depends(),
-) -> Union[SpanAnnotationRead, SpanAnnotationReadResolved]:
+) -> SpanAnnotationRead:
     authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
 
     db_obj = crud_span_anno.read(db=db, id=span_id)
-    if resolve_code:
-        return SpanAnnotationReadResolved.model_validate(db_obj)
-    else:
-        return SpanAnnotationRead.model_validate(db_obj)
+    return SpanAnnotationRead.model_validate(db_obj)
 
 
 @router.patch(
     "/{span_id}",
-    response_model=Union[SpanAnnotationRead, SpanAnnotationReadResolved],
+    response_model=SpanAnnotationRead,
     summary="Updates the SpanAnnotation with the given ID.",
 )
 def update_by_id(
@@ -115,10 +102,9 @@ def update_by_id(
     db: Session = Depends(get_db_session),
     span_id: int,
     span_anno: SpanAnnotationUpdate,
-    resolve_code: bool = Depends(resolve_code_param),
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
-) -> Union[SpanAnnotationRead, SpanAnnotationReadResolved]:
+) -> SpanAnnotationRead:
     authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
     authz_user.assert_in_same_project_as(Crud.CODE, span_anno.code_id)
     validate.validate_objects_in_same_project(
@@ -126,25 +112,21 @@ def update_by_id(
     )
 
     db_obj = crud_span_anno.update(db=db, id=span_id, update_dto=span_anno)
-    if resolve_code:
-        return SpanAnnotationReadResolved.model_validate(db_obj)
-    else:
-        return SpanAnnotationRead.model_validate(db_obj)
+    return SpanAnnotationRead.model_validate(db_obj)
 
 
 @router.patch(
     "/bulk/update",
-    response_model=Union[List[SpanAnnotationRead], List[SpanAnnotationReadResolved]],
+    response_model=List[SpanAnnotationRead],
     summary="Updates SpanAnnotations in Bulk",
 )
 def update_span_annotations_bulk(
     *,
     db: Session = Depends(get_db_session),
     spans: List[SpanAnnotationUpdateBulk],
-    resolve_code: bool = Depends(resolve_code_param),
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
-) -> Union[List[SpanAnnotationRead], List[SpanAnnotationReadResolved]]:
+) -> List[SpanAnnotationRead]:
     for span in spans:
         authz_user.assert_in_same_project_as(Crud.CODE, span.code_id)
         authz_user.assert_in_same_project_as(
@@ -158,15 +140,12 @@ def update_span_annotations_bulk(
         )
 
     db_objs = crud_span_anno.update_bulk(db=db, update_dtos=spans)
-    if resolve_code:
-        return [SpanAnnotationReadResolved.model_validate(db_obj) for db_obj in db_objs]
-    else:
-        return [SpanAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+    return [SpanAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
 
 
 @router.delete(
     "/{span_id}",
-    response_model=Union[SpanAnnotationRead, SpanAnnotationReadResolved],
+    response_model=SpanAnnotationRead,
     summary="Deletes the SpanAnnotation with the given ID.",
 )
 def delete_by_id(
@@ -174,7 +153,7 @@ def delete_by_id(
     db: Session = Depends(get_db_session),
     span_id: int,
     authz_user: AuthzUser = Depends(),
-) -> Union[SpanAnnotationRead, SpanAnnotationReadResolved]:
+) -> SpanAnnotationRead:
     authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
 
     db_obj = crud_span_anno.remove(db=db, id=span_id)
@@ -279,7 +258,7 @@ def remove_from_group(
 
 @router.get(
     "/code/{code_id}/user",
-    response_model=List[SpanAnnotationReadResolved],
+    response_model=List[SpanAnnotationRead],
     summary=("Returns SpanAnnotations with the given Code of the logged-in User"),
 )
 def get_by_user_code(
@@ -287,10 +266,10 @@ def get_by_user_code(
     db: Session = Depends(get_db_session),
     code_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[SpanAnnotationReadResolved]:
+) -> List[SpanAnnotationRead]:
     authz_user.assert_in_same_project_as(Crud.CODE, code_id)
 
     db_objs = crud_span_anno.read_by_code_and_user(
         db=db, code_id=code_id, user_id=authz_user.user.id
     )
-    return [SpanAnnotationReadResolved.model_validate(db_obj) for db_obj in db_objs]
+    return [SpanAnnotationRead.model_validate(db_obj) for db_obj in db_objs]

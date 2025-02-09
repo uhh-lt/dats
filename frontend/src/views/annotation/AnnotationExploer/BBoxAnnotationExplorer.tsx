@@ -1,10 +1,10 @@
 import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks.ts";
-import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
+import { BBoxAnnotationRead } from "../../../api/openapi/models/BBoxAnnotationRead.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import AnnotationExplorer from "./AnnotationExplorer.tsx";
 import BBoxAnnotationCard from "./BBoxAnnotationCard.tsx";
 
-const filterByText = (text: string) => (annotation: BBoxAnnotationReadResolved) => annotation.code.name.includes(text);
+const filterByText = (text: string) => (annotation: BBoxAnnotationRead) => `${annotation.x_max}`.includes(text);
 
 const estimateSize = () => 190;
 

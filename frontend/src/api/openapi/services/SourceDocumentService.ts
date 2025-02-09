@@ -3,14 +3,12 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { BBoxAnnotationRead } from "../models/BBoxAnnotationRead";
-import type { BBoxAnnotationReadResolved } from "../models/BBoxAnnotationReadResolved";
 import type { SentenceAnnotatorResult } from "../models/SentenceAnnotatorResult";
 import type { SourceDocumentDataRead } from "../models/SourceDocumentDataRead";
 import type { SourceDocumentMetadataReadResolved } from "../models/SourceDocumentMetadataReadResolved";
 import type { SourceDocumentRead } from "../models/SourceDocumentRead";
 import type { SourceDocumentUpdate } from "../models/SourceDocumentUpdate";
 import type { SpanAnnotationRead } from "../models/SpanAnnotationRead";
-import type { SpanAnnotationReadResolved } from "../models/SpanAnnotationReadResolved";
 import type { SpanGroupRead } from "../models/SpanGroupRead";
 import type { WordFrequencyRead } from "../models/WordFrequencyRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -258,27 +256,15 @@ export class SourceDocumentService {
   }
   /**
    * Returns all SpanAnnotations of the logged-in User if it exists
-   * @returns any Successful Response
+   * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static getAllSpanAnnotations({
-    sdocId,
-    resolve = true,
-  }: {
-    sdocId: number;
-    /**
-     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
-     */
-    resolve?: boolean;
-  }): CancelablePromise<Array<SpanAnnotationRead> | Array<SpanAnnotationReadResolved>> {
+  public static getAllSpanAnnotations({ sdocId }: { sdocId: number }): CancelablePromise<Array<SpanAnnotationRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/user/span_annotations",
       path: {
         sdoc_id: sdocId,
-      },
-      query: {
-        resolve: resolve,
       },
       errors: {
         422: `Validation Error`,
@@ -287,21 +273,16 @@ export class SourceDocumentService {
   }
   /**
    * Returns all SpanAnnotations of the Users with the given ID if it exists
-   * @returns any Successful Response
+   * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
    */
   public static getAllSpanAnnotationsBulk({
     sdocId,
     userId,
-    resolve = true,
   }: {
     sdocId: number;
     userId?: Array<number>;
-    /**
-     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
-     */
-    resolve?: boolean;
-  }): CancelablePromise<Array<SpanAnnotationRead> | Array<SpanAnnotationReadResolved>> {
+  }): CancelablePromise<Array<SpanAnnotationRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/span_annotations/bulk",
@@ -310,7 +291,6 @@ export class SourceDocumentService {
       },
       query: {
         user_id: userId,
-        resolve: resolve,
       },
       errors: {
         422: `Validation Error`,
@@ -319,7 +299,7 @@ export class SourceDocumentService {
   }
   /**
    * Returns all BBoxAnnotations of the Users with the given ID if it exists
-   * @returns any Successful Response
+   * @returns BBoxAnnotationRead Successful Response
    * @throws ApiError
    */
   public static getAllBboxAnnotationsBulk({
@@ -327,7 +307,6 @@ export class SourceDocumentService {
     userId,
     skip,
     limit,
-    resolve = true,
   }: {
     sdocId: number;
     userId: number;
@@ -339,11 +318,7 @@ export class SourceDocumentService {
      * The maximum number of returned elements
      */
     limit?: number | null;
-    /**
-     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
-     */
-    resolve?: boolean;
-  }): CancelablePromise<Array<BBoxAnnotationRead> | Array<BBoxAnnotationReadResolved>> {
+  }): CancelablePromise<Array<BBoxAnnotationRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/bbox_annotations/{user_id}",
@@ -354,7 +329,6 @@ export class SourceDocumentService {
       query: {
         skip: skip,
         limit: limit,
-        resolve: resolve,
       },
       errors: {
         422: `Validation Error`,

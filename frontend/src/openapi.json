@@ -1081,19 +1081,7 @@
         "operationId": "get_all_span_annotations",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
-          {
-            "name": "resolve",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "title": "Resolve Code",
-              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
-              "default": true
-            },
-            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
-          }
+          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
         ],
         "responses": {
           "200": {
@@ -1101,10 +1089,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    { "type": "array", "items": { "$ref": "#/components/schemas/SpanAnnotationRead" } },
-                    { "type": "array", "items": { "$ref": "#/components/schemas/SpanAnnotationReadResolved" } }
-                  ],
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
                   "title": "Response Sourcedocument-Get All Span Annotations"
                 }
               }
@@ -1130,18 +1116,6 @@
             "in": "query",
             "required": false,
             "schema": { "type": "array", "items": { "type": "integer" }, "title": "User Id" }
-          },
-          {
-            "name": "resolve",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "title": "Resolve Code",
-              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
-              "default": true
-            },
-            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
           }
         ],
         "responses": {
@@ -1150,10 +1124,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    { "type": "array", "items": { "$ref": "#/components/schemas/SpanAnnotationRead" } },
-                    { "type": "array", "items": { "$ref": "#/components/schemas/SpanAnnotationReadResolved" } }
-                  ],
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
                   "title": "Response Sourcedocument-Get All Span Annotations Bulk"
                 }
               }
@@ -1196,18 +1168,6 @@
               "description": "The maximum number of returned elements"
             },
             "description": "The maximum number of returned elements"
-          },
-          {
-            "name": "resolve",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "title": "Resolve Code",
-              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
-              "default": true
-            },
-            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
           }
         ],
         "responses": {
@@ -1216,10 +1176,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    { "type": "array", "items": { "$ref": "#/components/schemas/BBoxAnnotationRead" } },
-                    { "type": "array", "items": { "$ref": "#/components/schemas/BBoxAnnotationReadResolved" } }
-                  ],
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/BBoxAnnotationRead" },
                   "title": "Response Sourcedocument-Get All Bbox Annotations Bulk"
                 }
               }
@@ -1598,45 +1556,21 @@
         "tags": ["spanAnnotation"],
         "summary": "Creates a SpanAnnotation",
         "operationId": "add_span_annotation",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "resolve",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "title": "Resolve Code",
-              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
-              "default": true
-            },
-            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
-          }
-        ],
         "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationCreate" } } }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationCreate" } } },
+          "required": true
         },
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    { "$ref": "#/components/schemas/SpanAnnotationRead" },
-                    { "$ref": "#/components/schemas/SpanAnnotationReadResolved" }
-                  ],
-                  "title": "Response Spanannotation-Add Span Annotation"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationRead" } } }
           },
           "422": {
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/span/bulk/create": {
@@ -1644,32 +1578,17 @@
         "tags": ["spanAnnotation"],
         "summary": "Creates SpanAnnotations in Bulk",
         "operationId": "add_span_annotations_bulk",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "resolve",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "title": "Resolve Code",
-              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
-              "default": true
-            },
-            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
-          }
-        ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "array",
                 "items": { "$ref": "#/components/schemas/SpanAnnotationCreate" },
+                "type": "array",
                 "title": "Spans"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -1677,10 +1596,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    { "type": "array", "items": { "$ref": "#/components/schemas/SpanAnnotationRead" } },
-                    { "type": "array", "items": { "$ref": "#/components/schemas/SpanAnnotationReadResolved" } }
-                  ],
+                  "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
+                  "type": "array",
                   "title": "Response Spanannotation-Add Span Annotations Bulk"
                 }
               }
@@ -1690,7 +1607,8 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/span/{span_id}": {
@@ -1700,34 +1618,12 @@
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "span_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Span Id" } },
-          {
-            "name": "resolve",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "title": "Resolve Code",
-              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
-              "default": true
-            },
-            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
-          }
+          { "name": "span_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Span Id" } }
         ],
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    { "$ref": "#/components/schemas/SpanAnnotationRead" },
-                    { "$ref": "#/components/schemas/SpanAnnotationReadResolved" }
-                  ],
-                  "title": "Response Spanannotation-Get By Id"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -1741,19 +1637,7 @@
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "span_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Span Id" } },
-          {
-            "name": "resolve",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "title": "Resolve Code",
-              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
-              "default": true
-            },
-            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
-          }
+          { "name": "span_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Span Id" } }
         ],
         "requestBody": {
           "required": true,
@@ -1762,17 +1646,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    { "$ref": "#/components/schemas/SpanAnnotationRead" },
-                    { "$ref": "#/components/schemas/SpanAnnotationReadResolved" }
-                  ],
-                  "title": "Response Spanannotation-Update By Id"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -1791,17 +1665,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    { "$ref": "#/components/schemas/SpanAnnotationRead" },
-                    { "$ref": "#/components/schemas/SpanAnnotationReadResolved" }
-                  ],
-                  "title": "Response Spanannotation-Delete By Id"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -1815,32 +1679,17 @@
         "tags": ["spanAnnotation"],
         "summary": "Updates SpanAnnotations in Bulk",
         "operationId": "update_span_annotations_bulk",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "resolve",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "title": "Resolve Code",
-              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
-              "default": true
-            },
-            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
-          }
-        ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "array",
                 "items": { "$ref": "#/components/schemas/SpanAnnotationUpdateBulk" },
+                "type": "array",
                 "title": "Spans"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -1848,10 +1697,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    { "type": "array", "items": { "$ref": "#/components/schemas/SpanAnnotationRead" } },
-                    { "type": "array", "items": { "$ref": "#/components/schemas/SpanAnnotationReadResolved" } }
-                  ],
+                  "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
+                  "type": "array",
                   "title": "Response Spanannotation-Update Span Annotations Bulk"
                 }
               }
@@ -1861,7 +1708,8 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/span/{span_id}/code": {
@@ -1991,7 +1839,7 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/SpanAnnotationReadResolved" },
+                  "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
                   "title": "Response Spanannotation-Get By User Code"
                 }
               }
@@ -2144,18 +1992,6 @@
             "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Span Group Id" }
-          },
-          {
-            "name": "resolve",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "title": "Resolve Code",
-              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
-              "default": true
-            },
-            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
           }
         ],
         "responses": {
@@ -2165,12 +2001,7 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": {
-                    "anyOf": [
-                      { "$ref": "#/components/schemas/SpanAnnotationRead" },
-                      { "$ref": "#/components/schemas/SpanAnnotationReadResolved" }
-                    ]
-                  },
+                  "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
                   "title": "Response Spangroup-Get All Annotations"
                 }
               }
@@ -2188,45 +2019,21 @@
         "tags": ["bboxAnnotation"],
         "summary": "Creates a BBoxAnnotation",
         "operationId": "add_bbox_annotation",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "resolve",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "title": "Resolve Code",
-              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
-              "default": true
-            },
-            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
-          }
-        ],
         "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BBoxAnnotationCreate" } } }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BBoxAnnotationCreate" } } },
+          "required": true
         },
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    { "$ref": "#/components/schemas/BBoxAnnotationRead" },
-                    { "$ref": "#/components/schemas/BBoxAnnotationReadResolved" }
-                  ],
-                  "title": "Response Bboxannotation-Add Bbox Annotation"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BBoxAnnotationRead" } } }
           },
           "422": {
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/bbox/{bbox_id}": {
@@ -2236,34 +2043,12 @@
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "bbox_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Bbox Id" } },
-          {
-            "name": "resolve",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "title": "Resolve Code",
-              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
-              "default": true
-            },
-            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
-          }
+          { "name": "bbox_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Bbox Id" } }
         ],
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    { "$ref": "#/components/schemas/BBoxAnnotationRead" },
-                    { "$ref": "#/components/schemas/BBoxAnnotationReadResolved" }
-                  ],
-                  "title": "Response Bboxannotation-Get By Id"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BBoxAnnotationRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -2277,19 +2062,7 @@
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "bbox_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Bbox Id" } },
-          {
-            "name": "resolve",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "title": "Resolve Code",
-              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
-              "default": true
-            },
-            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
-          }
+          { "name": "bbox_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Bbox Id" } }
         ],
         "requestBody": {
           "required": true,
@@ -2298,17 +2071,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    { "$ref": "#/components/schemas/BBoxAnnotationRead" },
-                    { "$ref": "#/components/schemas/BBoxAnnotationReadResolved" }
-                  ],
-                  "title": "Response Bboxannotation-Update By Id"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BBoxAnnotationRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -2327,17 +2090,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    { "$ref": "#/components/schemas/BBoxAnnotationRead" },
-                    { "$ref": "#/components/schemas/BBoxAnnotationReadResolved" }
-                  ],
-                  "title": "Response Bboxannotation-Delete By Id"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BBoxAnnotationRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -5392,45 +5145,21 @@
         "tags": ["sentenceAnnotation"],
         "summary": "Creates a SentenceAnnotation",
         "operationId": "add_sentence_annotation",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "resolve",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "title": "Resolve Code",
-              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
-              "default": true
-            },
-            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
-          }
-        ],
         "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotationCreate" } } }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotationCreate" } } },
+          "required": true
         },
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    { "$ref": "#/components/schemas/SentenceAnnotationRead" },
-                    { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" }
-                  ],
-                  "title": "Response Sentenceannotation-Add Sentence Annotation"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotationRead" } } }
           },
           "422": {
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/sentence/bulk/create": {
@@ -5438,32 +5167,17 @@
         "tags": ["sentenceAnnotation"],
         "summary": "Creates SentenceAnnotations in Bulk",
         "operationId": "add_sentence_annotations_bulk",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "resolve",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "title": "Resolve Code",
-              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
-              "default": true
-            },
-            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
-          }
-        ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "array",
                 "items": { "$ref": "#/components/schemas/SentenceAnnotationCreate" },
+                "type": "array",
                 "title": "Sentence Annotations"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -5471,10 +5185,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    { "type": "array", "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" } },
-                    { "type": "array", "items": { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" } }
-                  ],
+                  "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" },
+                  "type": "array",
                   "title": "Response Sentenceannotation-Add Sentence Annotations Bulk"
                 }
               }
@@ -5484,7 +5196,8 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/sentence/{sentence_anno_id}": {
@@ -5499,34 +5212,12 @@
             "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Sentence Anno Id" }
-          },
-          {
-            "name": "resolve",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "title": "Resolve Code",
-              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
-              "default": true
-            },
-            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
           }
         ],
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    { "$ref": "#/components/schemas/SentenceAnnotationRead" },
-                    { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" }
-                  ],
-                  "title": "Response Sentenceannotation-Get By Id"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotationRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -5545,18 +5236,6 @@
             "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Sentence Anno Id" }
-          },
-          {
-            "name": "resolve",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "title": "Resolve Code",
-              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
-              "default": true
-            },
-            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
           }
         ],
         "requestBody": {
@@ -5566,17 +5245,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    { "$ref": "#/components/schemas/SentenceAnnotationRead" },
-                    { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" }
-                  ],
-                  "title": "Response Sentenceannotation-Update By Id"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotationRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -5600,17 +5269,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    { "$ref": "#/components/schemas/SentenceAnnotationRead" },
-                    { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" }
-                  ],
-                  "title": "Response Sentenceannotation-Delete By Id"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotationRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -5624,32 +5283,17 @@
         "tags": ["sentenceAnnotation"],
         "summary": "Updates SentenceAnnotation in Bulk",
         "operationId": "update_sent_anno_annotations_bulk",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "resolve",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "title": "Resolve Code",
-              "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity",
-              "default": true
-            },
-            "description": "If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity"
-          }
-        ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "array",
                 "items": { "$ref": "#/components/schemas/SentenceAnnotationUpdateBulk" },
+                "type": "array",
                 "title": "Sent Annos"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -5657,10 +5301,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    { "type": "array", "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" } },
-                    { "type": "array", "items": { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" } }
-                  ],
+                  "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" },
+                  "type": "array",
                   "title": "Response Sentenceannotation-Update Sent Anno Annotations Bulk"
                 }
               }
@@ -5670,7 +5312,8 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/sentence/bulk/delete": {
@@ -6005,7 +5648,7 @@
           },
           "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
           "suggested_annotations": {
-            "items": { "$ref": "#/components/schemas/SpanAnnotationReadResolved" },
+            "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
             "type": "array",
             "title": "Suggested Annotations",
             "description": "Suggested annotations"
@@ -6132,53 +5775,6 @@
         "type": "object",
         "required": ["x_min", "x_max", "y_min", "y_max", "id", "code_id", "user_id", "sdoc_id", "created", "updated"],
         "title": "BBoxAnnotationRead"
-      },
-      "BBoxAnnotationReadResolved": {
-        "properties": {
-          "x_min": {
-            "type": "integer",
-            "title": "X Min",
-            "description": "Absolute x_min coordinate of the BBoxAnnotation"
-          },
-          "x_max": {
-            "type": "integer",
-            "title": "X Max",
-            "description": "Absolute x_max coordinate of the BBoxAnnotation"
-          },
-          "y_min": {
-            "type": "integer",
-            "title": "Y Min",
-            "description": "Absolute y_min coordinate of the BBoxAnnotation"
-          },
-          "y_max": {
-            "type": "integer",
-            "title": "Y Max",
-            "description": "Absolute y_max coordinate of the BBoxAnnotation"
-          },
-          "id": { "type": "integer", "title": "Id", "description": "ID of the BBoxAnnotation" },
-          "code": { "$ref": "#/components/schemas/CodeRead", "description": "Code the BBoxAnnotation refers to" },
-          "user_id": { "type": "integer", "title": "User Id", "description": "User the SpanAnnotation belongs to" },
-          "sdoc_id": {
-            "type": "integer",
-            "title": "Sdoc Id",
-            "description": "SourceDocument the SpanAnnotation refers to"
-          },
-          "created": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created",
-            "description": "Created timestamp of the BBoxAnnotation"
-          },
-          "updated": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated",
-            "description": "Updated timestamp of the BBoxAnnotation"
-          }
-        },
-        "type": "object",
-        "required": ["x_min", "x_max", "y_min", "y_max", "id", "code", "user_id", "sdoc_id", "created", "updated"],
-        "title": "BBoxAnnotationReadResolved"
       },
       "BBoxAnnotationRow": {
         "properties": {
@@ -8674,43 +8270,6 @@
         ],
         "title": "SentenceAnnotationRead"
       },
-      "SentenceAnnotationReadResolved": {
-        "properties": {
-          "sentence_id_start": {
-            "type": "integer",
-            "title": "Sentence Id Start",
-            "description": "Start sentence ID of the SentenceAnnotation"
-          },
-          "sentence_id_end": {
-            "type": "integer",
-            "title": "Sentence Id End",
-            "description": "End sentence ID of the SentenceAnnotation"
-          },
-          "id": { "type": "integer", "title": "Id", "description": "ID of the SentenceAnnotation" },
-          "code": { "$ref": "#/components/schemas/CodeRead", "description": "Code the SentenceAnnotation refers to" },
-          "user_id": { "type": "integer", "title": "User Id", "description": "User the SpanAnnotation belongs to" },
-          "sdoc_id": {
-            "type": "integer",
-            "title": "Sdoc Id",
-            "description": "SourceDocument the SpanAnnotation refers to"
-          },
-          "created": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created",
-            "description": "Created timestamp of the SentenceAnnotation"
-          },
-          "updated": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated",
-            "description": "Updated timestamp of the SentenceAnnotation"
-          }
-        },
-        "type": "object",
-        "required": ["sentence_id_start", "sentence_id_end", "id", "code", "user_id", "sdoc_id", "created", "updated"],
-        "title": "SentenceAnnotationReadResolved"
-      },
       "SentenceAnnotationResult": {
         "properties": {
           "status": { "$ref": "#/components/schemas/BackgroundJobStatus", "description": "Status of the Result" },
@@ -8721,7 +8280,7 @@
           },
           "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
           "suggested_annotations": {
-            "items": { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" },
+            "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" },
             "type": "array",
             "title": "Suggested Annotations",
             "description": "Suggested annotations"
@@ -8799,7 +8358,7 @@
         "properties": {
           "sentence_annotations": {
             "additionalProperties": {
-              "items": { "$ref": "#/components/schemas/SentenceAnnotationReadResolved" },
+              "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" },
               "type": "array"
             },
             "type": "object",
@@ -9544,11 +9103,7 @@
             "description": "End of the SpanAnnotation in tokens"
           },
           "id": { "type": "integer", "title": "Id", "description": "ID of the SpanAnnotation" },
-          "span_text_id": {
-            "type": "integer",
-            "title": "Span Text Id",
-            "description": "The SpanText the SpanAnnotation spans."
-          },
+          "text": { "type": "string", "title": "Text", "description": "The SpanText the SpanAnnotation spans." },
           "code_id": { "type": "integer", "title": "Code Id", "description": "Code the SpanAnnotation refers to" },
           "user_id": { "type": "integer", "title": "User Id", "description": "User the SpanAnnotation belongs to" },
           "sdoc_id": {
@@ -9576,7 +9131,7 @@
           "begin_token",
           "end_token",
           "id",
-          "span_text_id",
+          "text",
           "code_id",
           "user_id",
           "sdoc_id",
@@ -9584,58 +9139,6 @@
           "updated"
         ],
         "title": "SpanAnnotationRead"
-      },
-      "SpanAnnotationReadResolved": {
-        "properties": {
-          "begin": { "type": "integer", "title": "Begin", "description": "Begin of the SpanAnnotation in characters" },
-          "end": { "type": "integer", "title": "End", "description": "End of the SpanAnnotation in characters" },
-          "begin_token": {
-            "type": "integer",
-            "title": "Begin Token",
-            "description": "Begin of the SpanAnnotation in tokens"
-          },
-          "end_token": {
-            "type": "integer",
-            "title": "End Token",
-            "description": "End of the SpanAnnotation in tokens"
-          },
-          "id": { "type": "integer", "title": "Id", "description": "ID of the SpanAnnotation" },
-          "text": { "type": "string", "title": "Text", "description": "The SpanText the SpanAnnotation spans." },
-          "code": { "$ref": "#/components/schemas/CodeRead", "description": "Code the SpanAnnotation refers to" },
-          "user_id": { "type": "integer", "title": "User Id", "description": "User the SpanAnnotation belongs to" },
-          "sdoc_id": {
-            "type": "integer",
-            "title": "Sdoc Id",
-            "description": "SourceDocument the SpanAnnotation refers to"
-          },
-          "created": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created",
-            "description": "Created timestamp of the SpanAnnotation"
-          },
-          "updated": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated",
-            "description": "Updated timestamp of the SpanAnnotation"
-          }
-        },
-        "type": "object",
-        "required": [
-          "begin",
-          "end",
-          "begin_token",
-          "end_token",
-          "id",
-          "text",
-          "code",
-          "user_id",
-          "sdoc_id",
-          "created",
-          "updated"
-        ],
-        "title": "SpanAnnotationReadResolved"
       },
       "SpanAnnotationRow": {
         "properties": {

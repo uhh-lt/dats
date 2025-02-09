@@ -1,7 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { SentenceAnnotationRead } from "../../../api/openapi/models/SentenceAnnotationRead.ts";
-import { SentenceAnnotationReadResolved } from "../../../api/openapi/models/SentenceAnnotationReadResolved.ts";
 import { SentenceAnnotatorResult } from "../../../api/openapi/models/SentenceAnnotatorResult.ts";
 import { SentenceAnnotationService } from "../../../api/openapi/services/SentenceAnnotationService.ts";
 import { QueryKey } from "../../../api/QueryKey.ts";
@@ -10,21 +9,12 @@ import queryClient from "../../../plugins/ReactQueryClient.ts";
 
 export const useCreateSentenceAnnotation = (currentUserId: number) =>
   useMutation({
-    mutationFn: async ({ code, sdocId, start, end }: { code: CodeRead; sdocId: number; start: number; end: number }) =>
-      SentenceAnnotationService.addSentenceAnnotation({
-        requestBody: {
-          code_id: code.id,
-          sdoc_id: sdocId,
-          sentence_id_start: start,
-          sentence_id_end: end,
-        },
-        resolve: true,
-      }),
+    mutationFn: SentenceAnnotationService.addSentenceAnnotation,
     // optimistic updates
-    onMutate: async (variables) => {
+    onMutate: async ({ requestBody }) => {
       // when we create a new sentence annotation, we add a new annotation to a certain annotation document
       // thus, we only affect the annotation document that we are adding to
-      const affectedQueryKey = [QueryKey.SDOC_SENTENCE_ANNOTATOR, variables.sdocId, currentUserId];
+      const affectedQueryKey = [QueryKey.SDOC_SENTENCE_ANNOTATOR, requestBody.sdoc_id, currentUserId];
 
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
@@ -39,16 +29,13 @@ export const useCreateSentenceAnnotation = (currentUserId: number) =>
         const newSentenceAnnotations = Object.entries(old.sentence_annotations).reduce(
           (acc, [sentId, annotations]) => {
             const sentenceId = parseInt(sentId);
-            if (sentenceId >= variables.start && sentenceId <= variables.end) {
+            if (sentenceId >= requestBody.sentence_id_start && sentenceId <= requestBody.sentence_id_end) {
               acc[sentId] = [
                 ...annotations,
                 {
+                  ...requestBody,
                   id: FAKE_SENTENCE_ANNOTATION_ID,
-                  sdoc_id: variables.sdocId,
                   user_id: currentUserId,
-                  code: variables.code,
-                  sentence_id_start: variables.start,
-                  sentence_id_end: variables.end,
                   created: new Date().toISOString(),
                   updated: new Date().toISOString(),
                 },
@@ -58,7 +45,7 @@ export const useCreateSentenceAnnotation = (currentUserId: number) =>
             acc[sentId] = annotations;
             return acc;
           },
-          {} as Record<string, SentenceAnnotationReadResolved[]>,
+          {} as Record<string, SentenceAnnotationRead[]>,
         );
         return { sentence_annotations: newSentenceAnnotations };
       });
@@ -80,27 +67,13 @@ export const useCreateSentenceAnnotation = (currentUserId: number) =>
 
 export const useCreateBulkSentenceAnnotation = (currentUserId: number) =>
   useMutation({
-    mutationFn: async ({
-      sdocId,
-      annotations,
-    }: {
-      sdocId: number;
-      annotations: { code: CodeRead; start: number; end: number }[];
-    }) =>
-      SentenceAnnotationService.addSentenceAnnotationsBulk({
-        requestBody: annotations.map((annotation) => ({
-          code_id: annotation.code.id,
-          sdoc_id: sdocId,
-          sentence_id_start: annotation.start,
-          sentence_id_end: annotation.end,
-        })),
-        resolve: true,
-      }),
+    mutationFn: SentenceAnnotationService.addSentenceAnnotationsBulk,
     // optimistic updates
-    onMutate: async (variables) => {
+    onMutate: async ({ requestBody: annotations }) => {
+      if (annotations.length === 0) return;
       // when we create a new sentence annotation, we add a new annotation to a certain annotation document
       // thus, we only affect the annotation document that we are adding to
-      const affectedQueryKey = [QueryKey.SDOC_SENTENCE_ANNOTATOR, variables.sdocId, currentUserId];
+      const affectedQueryKey = [QueryKey.SDOC_SENTENCE_ANNOTATOR, annotations[0].sdoc_id, currentUserId];
 
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
@@ -118,17 +91,14 @@ export const useCreateBulkSentenceAnnotation = (currentUserId: number) =>
             acc[sentId] = annotations;
 
             const sentenceId = parseInt(sentId);
-            variables.annotations.forEach((newAnnotation) => {
-              if (sentenceId >= newAnnotation.start && sentenceId <= newAnnotation.end) {
+            annotations.forEach((newAnnotation) => {
+              if (sentenceId >= newAnnotation.sentence_id_start && sentenceId <= newAnnotation.sentence_id_end) {
                 acc[sentId] = [
                   ...acc[sentId],
                   {
+                    ...newAnnotation,
                     id: fakeID,
-                    sdoc_id: variables.sdocId,
                     user_id: currentUserId,
-                    code: newAnnotation.code,
-                    sentence_id_start: newAnnotation.start,
-                    sentence_id_end: newAnnotation.end,
                     created: new Date().toISOString(),
                     updated: new Date().toISOString(),
                   },
@@ -139,7 +109,7 @@ export const useCreateBulkSentenceAnnotation = (currentUserId: number) =>
 
             return acc;
           },
-          {} as Record<string, SentenceAnnotationReadResolved[]>,
+          {} as Record<string, SentenceAnnotationRead[]>,
         );
         return { sentence_annotations: newSentenceAnnotations };
       });
@@ -161,16 +131,14 @@ export const useCreateBulkSentenceAnnotation = (currentUserId: number) =>
 export const useUpdateSentenceAnnotation = () =>
   useMutation({
     mutationFn: (variables: {
-      sentenceAnnoToUpdate: SentenceAnnotationRead | SentenceAnnotationReadResolved;
+      sentenceAnnoToUpdate: SentenceAnnotationRead | SentenceAnnotationRead;
       code: CodeRead;
-      resolve?: boolean | undefined;
     }) =>
       SentenceAnnotationService.updateById({
         sentenceAnnoId: variables.sentenceAnnoToUpdate.id,
         requestBody: {
           code_id: variables.code.id,
         },
-        resolve: variables.resolve,
       }),
     // optimistic update
     onMutate: async (updateData) => {
@@ -206,7 +174,7 @@ export const useUpdateSentenceAnnotation = () =>
             });
             return acc;
           },
-          {} as Record<string, SentenceAnnotationReadResolved[]>,
+          {} as Record<string, SentenceAnnotationRead[]>,
         );
         return { sentence_annotations: newSentenceAnnotations };
       });
@@ -231,7 +199,7 @@ export const useUpdateSentenceAnnotation = () =>
 
 export const useDeleteSentenceAnnotation = () =>
   useMutation({
-    mutationFn: (variables: { sentenceAnnotationToDelete: SentenceAnnotationRead | SentenceAnnotationReadResolved }) =>
+    mutationFn: (variables: { sentenceAnnotationToDelete: SentenceAnnotationRead | SentenceAnnotationRead }) =>
       SentenceAnnotationService.deleteById({ sentenceAnnoId: variables.sentenceAnnotationToDelete.id }),
     // optimistic updates
     onMutate: async ({ sentenceAnnotationToDelete }) => {
@@ -260,7 +228,7 @@ export const useDeleteSentenceAnnotation = () =>
             acc[sentId] = annotations.filter((annotation) => annotation.id !== sentenceAnnotationToDelete.id);
             return acc;
           },
-          {} as Record<string, SentenceAnnotationReadResolved[]>,
+          {} as Record<string, SentenceAnnotationRead[]>,
         );
 
         return { sentence_annotations: newSentenceAnnotations };
@@ -285,9 +253,7 @@ export const useDeleteBulkSentenceAnnotation = (currentUserId: number) =>
   useMutation({
     mutationFn: (variables: {
       sdocId: number;
-      sentenceAnnotationToDelete:
-        | Omit<SentenceAnnotationRead, "sdocId">[]
-        | Omit<SentenceAnnotationReadResolved, "sdocId">[];
+      sentenceAnnotationToDelete: Omit<SentenceAnnotationRead, "sdocId">[] | Omit<SentenceAnnotationRead, "sdocId">[];
     }) =>
       SentenceAnnotationService.deleteBulkById({
         requestBody: variables.sentenceAnnotationToDelete.map((anno) => anno.id),
@@ -318,7 +284,7 @@ export const useDeleteBulkSentenceAnnotation = (currentUserId: number) =>
             acc[sentId] = annotations.filter((annotation) => !idsToDelete.includes(annotation.id));
             return acc;
           },
-          {} as Record<string, SentenceAnnotationReadResolved[]>,
+          {} as Record<string, SentenceAnnotationRead[]>,
         );
 
         return { sentence_annotations: newSentenceAnnotations };

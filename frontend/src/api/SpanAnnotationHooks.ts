@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import queryClient from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
-import { SpanAnnotationReadResolved } from "./openapi/models/SpanAnnotationReadResolved.ts";
+import { SpanAnnotationRead } from "./openapi/models/SpanAnnotationRead.ts";
 import { SpanAnnotationUpdate } from "./openapi/models/SpanAnnotationUpdate.ts";
 import { SourceDocumentService } from "./openapi/services/SourceDocumentService.ts";
 import { SpanAnnotationService } from "./openapi/services/SpanAnnotationService.ts";
@@ -15,34 +15,32 @@ const useCreateBulkAnnotations = () =>
   });
 
 const useGetAnnotation = (spanId: number | null | undefined) =>
-  useQuery<SpanAnnotationReadResolved, Error>({
+  useQuery<SpanAnnotationRead, Error>({
     queryKey: [QueryKey.SPAN_ANNOTATION, spanId],
     queryFn: () =>
       SpanAnnotationService.getById({
         spanId: spanId!,
-        resolve: true,
-      }) as Promise<SpanAnnotationReadResolved>,
+      }) as Promise<SpanAnnotationRead>,
     enabled: !!spanId,
   });
 
 const useGetSpanAnnotationsBatch = (sdocId: number | null | undefined, userIds: number[] | null | undefined) => {
   // filter out all disabled code ids
   const selectEnabledAnnotations = useSelectEnabledSpanAnnotations();
-  return useQuery<SpanAnnotationReadResolved[], Error>({
+  return useQuery<SpanAnnotationRead[], Error>({
     queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, sdocId, userIds],
     queryFn: () =>
       SourceDocumentService.getAllSpanAnnotationsBulk({
         sdocId: sdocId!,
         userId: userIds!,
-        resolve: true,
-      }) as Promise<SpanAnnotationReadResolved[]>,
+      }) as Promise<SpanAnnotationRead[]>,
     enabled: !!sdocId && !!userIds,
     select: selectEnabledAnnotations,
   });
 };
 
 const useGetByCodeAndUser = (codeId: number | null | undefined) =>
-  useQuery<SpanAnnotationReadResolved[], Error>({
+  useQuery<SpanAnnotationRead[], Error>({
     queryKey: [QueryKey.SPAN_ANNOTATIONS_USER_CODE, codeId],
     queryFn: () =>
       SpanAnnotationService.getByUserCode({
@@ -53,15 +51,10 @@ const useGetByCodeAndUser = (codeId: number | null | undefined) =>
 
 const useUpdateSpan = () =>
   useMutation({
-    mutationFn: (variables: {
-      spanAnnotationId: number;
-      requestBody: SpanAnnotationUpdate;
-      resolve?: boolean | undefined;
-    }) =>
+    mutationFn: (variables: { spanAnnotationId: number; requestBody: SpanAnnotationUpdate }) =>
       SpanAnnotationService.updateById({
         spanId: variables.spanAnnotationId,
         requestBody: variables.requestBody,
-        resolve: variables.resolve,
       }),
     onSuccess(data) {
       queryClient.invalidateQueries({ queryKey: ["annotation-table-data"] }); // TODO: This is not optimal, shoudl be projectId, selectedUserId... We do this because of SpanAnnotationTable

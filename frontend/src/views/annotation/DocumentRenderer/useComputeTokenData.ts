@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
 import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead.ts";
-import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import { SpanAnnotationRead } from "../../../api/openapi/models/SpanAnnotationRead.ts";
 import { IToken } from "./IToken.ts";
 
 function useComputeTokenData({ sdocData, userIds }: { sdocData: SourceDocumentDataRead; userIds: number[] }) {
@@ -27,12 +27,12 @@ function useComputeTokenData({ sdocData, userIds }: { sdocData: SourceDocumentDa
     return result;
   }, [sdocData]);
 
-  // annotationMap stores annotationId -> SpanAnnotationReadResolved
+  // annotationMap stores annotationId -> SpanAnnotationRead
   // annotationsPerToken map stores tokenId -> spanAnnotationId[]
   const { annotationMap, annotationsPerToken } = useMemo(() => {
     if (!annotations.data) return { annotationMap: undefined, annotationsPerToken: undefined };
 
-    const annotationMap = new Map<number, SpanAnnotationReadResolved>();
+    const annotationMap = new Map<number, SpanAnnotationRead>();
     const annotationsPerToken = new Map<number, number[]>();
     annotations.data.forEach((annotation) => {
       for (let i = annotation.begin_token; i <= annotation.end_token - 1; i++) {

@@ -235,7 +235,7 @@ function UserIdValueSelector({ filterExpression, onChangeValue }: SharedFilterVa
 
 function SpanAnnotationValueSelector({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) {
   // global server state (react-query)
-  const projectCodes = CodeHooks.useGetAllCodes();
+  const projectCodes = CodeHooks.useGetAllCodesList();
 
   const [value, setValue] = useState<string[]>(() => {
     // check if value is string[][] or string[], then make sure that value is string[]

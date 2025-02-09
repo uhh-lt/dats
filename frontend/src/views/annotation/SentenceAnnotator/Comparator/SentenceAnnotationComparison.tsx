@@ -1,8 +1,9 @@
 import { Box, BoxProps } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMemo, useRef, useState } from "react";
+import CodeHooks from "../../../../api/CodeHooks.ts";
 import { CodeRead } from "../../../../api/openapi/models/CodeRead.ts";
-import { SentenceAnnotationReadResolved } from "../../../../api/openapi/models/SentenceAnnotationReadResolved.ts";
+import { SentenceAnnotationRead } from "../../../../api/openapi/models/SentenceAnnotationRead.ts";
 import { SourceDocumentDataRead } from "../../../../api/openapi/models/SourceDocumentDataRead.ts";
 import { useAuth } from "../../../../auth/useAuth.ts";
 import { useOpenSnackbar } from "../../../../components/SnackbarDialog/useOpenSnackbar.ts";
@@ -41,6 +42,7 @@ function SentenceAnnotationComparison({
   const rightUserId = useAppSelector((state) => state.annotations.compareWithUserId);
 
   // global server state (react-query)
+  const codeMap = CodeHooks.useGetAllCodesMap();
   const annotatorLeft = useGetSentenceAnnotator({ sdocId: sdocData.id, userId: leftUserId });
   const annotatorRight = useGetSentenceAnnotator({ sdocId: sdocData.id, userId: rightUserId });
 
@@ -65,7 +67,7 @@ function SentenceAnnotationComparison({
   const updateMutation = useUpdateSentenceAnnotation();
   const handleCodeSelectorDeleteAnnotation = (annotation: Annotation) => {
     deleteMutation.mutate(
-      { sentenceAnnotationToDelete: annotation as SentenceAnnotationReadResolved },
+      { sentenceAnnotationToDelete: annotation as SentenceAnnotationRead },
       {
         onSuccess: (sentenceAnnotation) => {
           openSnackbar({
@@ -79,7 +81,7 @@ function SentenceAnnotationComparison({
   const handleCodeSelectorEditCode = (annotation: Annotation, code: ICode) => {
     updateMutation.mutate(
       {
-        sentenceAnnoToUpdate: annotation as SentenceAnnotationReadResolved,
+        sentenceAnnoToUpdate: annotation as SentenceAnnotationRead,
         code: {
           id: code.id,
           name: code.name,
@@ -106,10 +108,12 @@ function SentenceAnnotationComparison({
     setLastClickedIndex(null);
     createMutation.mutate(
       {
-        code,
-        sdocId: sdocData.id,
-        start: selectedSentences[0],
-        end: selectedSentences[selectedSentences.length - 1],
+        requestBody: {
+          code_id: code.id,
+          sdoc_id: sdocData.id,
+          sentence_id_start: selectedSentences[0],
+          sentence_id_end: selectedSentences[selectedSentences.length - 1],
+        },
       },
       {
         onSuccess: (sentenceAnnotation) => {
@@ -130,10 +134,12 @@ function SentenceAnnotationComparison({
     if (selectedSentences.length > 0 && reason === "backdropClick" && mostRecentCode) {
       createMutation.mutate(
         {
-          code: mostRecentCode,
-          sdocId: sdocData.id,
-          start: selectedSentences[0],
-          end: selectedSentences[selectedSentences.length - 1],
+          requestBody: {
+            code_id: mostRecentCode.id,
+            sdoc_id: sdocData.id,
+            sentence_id_start: selectedSentences[0],
+            sentence_id_end: selectedSentences[selectedSentences.length - 1],
+          },
         },
         {
           onSuccess: (sentenceAnnotation) => {
@@ -164,7 +170,7 @@ function SentenceAnnotationComparison({
     if (otherAnnotator.annotatorResult === undefined) return;
 
     // identify differences: which annotations are only in the other person's annotations
-    const newAnnotations: SentenceAnnotationReadResolved[] = [];
+    const newAnnotations: SentenceAnnotationRead[] = [];
     // 1. iterate over all sentences & their annotations
     Object.entries(otherAnnotator.annotatorResult.sentence_annotations).forEach(([sentenceId, otherAnnotations]) => {
       const sentId = parseInt(sentenceId);
@@ -192,13 +198,7 @@ function SentenceAnnotationComparison({
 
     createBulkMutation.mutate(
       {
-        annotations: newAnnotations.map((annotation) => ({
-          code: annotation.code,
-          sdocId: annotation.sdoc_id,
-          start: annotation.sentence_id_start,
-          end: annotation.sentence_id_end,
-        })),
-        sdocId: sdocData.id,
+        requestBody: newAnnotations,
       },
       {
         onSuccess: () => {
@@ -219,7 +219,7 @@ function SentenceAnnotationComparison({
     if (otherAnnotator.annotatorResult === undefined) return;
 
     // identify same annotations: which annotations are only in the other person's annotations and in mine
-    const sameAnnotations: SentenceAnnotationReadResolved[] = [];
+    const sameAnnotations: SentenceAnnotationRead[] = [];
     // 1. iterate over all sentences & their annotations
     Object.entries(otherAnnotator.annotatorResult.sentence_annotations).forEach(([sentenceId, otherAnnotations]) => {
       const sentId = parseInt(sentenceId);
@@ -262,13 +262,10 @@ function SentenceAnnotationComparison({
   };
 
   // single processing events
-  const handleApplyAnnotation = (annotation: SentenceAnnotationReadResolved) => {
+  const handleApplyAnnotation = (annotation: SentenceAnnotationRead) => {
     createMutation.mutate(
       {
-        code: annotation.code,
-        sdocId: annotation.sdoc_id,
-        start: annotation.sentence_id_start,
-        end: annotation.sentence_id_end,
+        requestBody: annotation,
       },
       {
         onSuccess: (sentenceAnnotation) => {
@@ -281,7 +278,7 @@ function SentenceAnnotationComparison({
     );
   };
 
-  const handleRevertAnnotation = (annotation: SentenceAnnotationReadResolved) => {
+  const handleRevertAnnotation = (annotation: SentenceAnnotationRead) => {
     deleteMutation.mutate(
       { sentenceAnnotationToDelete: annotation },
       {
@@ -298,7 +295,7 @@ function SentenceAnnotationComparison({
   // event handlers
   const handleAnnotationClick = (
     event: React.MouseEvent<HTMLDivElement, MouseEvent>,
-    sentenceAnnotation: SentenceAnnotationReadResolved,
+    sentenceAnnotation: SentenceAnnotationRead,
   ) => {
     // highlight annotation
     setHoverSentAnnoId(sentenceAnnotation.id);
@@ -384,6 +381,7 @@ function SentenceAnnotationComparison({
   // rendering
   const numSentenceDigits = useMemo(() => Math.ceil(Math.log10(sdocData.sentences.length + 1)), [sdocData.sentences]);
 
+  if (!codeMap.data) return null;
   return (
     <>
       <AnnotationMenu
@@ -467,6 +465,7 @@ function SentenceAnnotationComparison({
                   annotatorRight={annotatorRight}
                   isAnnotationAllowedLeft={leftUserId === user!.id}
                   isAnnotationAllowedRight={rightUserId === user!.id}
+                  codeMap={codeMap.data}
                 />
               </div>
             );

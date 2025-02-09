@@ -6,7 +6,7 @@ import { dataToTree } from "../../TreeExplorer/TreeUtils.ts";
 
 const useComputeProjectCodeTree = () => {
   // global server state
-  const allCodes = CodeHooks.useGetAllCodes();
+  const allCodes = CodeHooks.useGetAllCodesList();
 
   // computed
   const codeTree: Node<IDataTree> | null = useMemo(() => {

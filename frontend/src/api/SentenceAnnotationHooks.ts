@@ -3,19 +3,17 @@ import queryClient from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { CancelablePromise } from "./openapi/core/CancelablePromise.ts";
 import { SentenceAnnotationRead } from "./openapi/models/SentenceAnnotationRead.ts";
-import { SentenceAnnotationReadResolved } from "./openapi/models/SentenceAnnotationReadResolved.ts";
 import { SentenceAnnotationService } from "./openapi/services/SentenceAnnotationService.ts";
 
 export const FAKE_SENTENCE_ANNOTATION_ID = -1;
 
 const useGetAnnotation = (sentenceAnnoId: number | undefined) =>
-  useQuery<SentenceAnnotationReadResolved, Error>({
+  useQuery<SentenceAnnotationRead, Error>({
     queryKey: [QueryKey.SENTENCE_ANNOTATION, sentenceAnnoId],
     queryFn: () =>
       SentenceAnnotationService.getById({
         sentenceAnnoId: sentenceAnnoId!,
-        resolve: true,
-      }) as CancelablePromise<SentenceAnnotationReadResolved>,
+      }) as CancelablePromise<SentenceAnnotationRead>,
     enabled: !!sentenceAnnoId,
   });
 

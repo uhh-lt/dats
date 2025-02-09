@@ -6,7 +6,7 @@ import { FAKE_ANNOTATION_ID } from "../../../api/SpanAnnotationHooks.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead.ts";
 import { SpanAnnotationCreate } from "../../../api/openapi/models/SpanAnnotationCreate.ts";
-import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import { SpanAnnotationRead } from "../../../api/openapi/models/SpanAnnotationRead.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
@@ -172,7 +172,7 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
     await queryClient.cancelQueries({ queryKey: affectedQueryKey });
 
     // Add a fake annotation
-    queryClient.setQueryData<SpanAnnotationReadResolved[]>(affectedQueryKey, (old) => {
+    queryClient.setQueryData<SpanAnnotationRead[]>(affectedQueryKey, (old) => {
       const spanAnnotation = {
         ...requestBody,
         id: FAKE_ANNOTATION_ID,
@@ -218,7 +218,7 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
       text: `Do you really want to remove the SpanAnnotation ${annotation.id}? You can reassign it later!`,
       onAccept: () => {
         deleteMutation.mutate(
-          { spanAnnotationToDelete: annotation as SpanAnnotationReadResolved },
+          { spanAnnotationToDelete: annotation as SpanAnnotationRead },
           {
             onSuccess: (spanAnnotation) => {
               openSnackbar({
@@ -234,7 +234,7 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
   const handleCodeSelectorEditCode = (annotation: Annotation, code: ICode) => {
     updateMutation.mutate(
       {
-        spanAnnotationToUpdate: annotation as SpanAnnotationReadResolved,
+        spanAnnotationToUpdate: annotation as SpanAnnotationRead,
         requestBody: {
           code_id: code.id,
         },
@@ -293,7 +293,7 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
       // i clicked escape because i want to cancel the annotation
       if (reason === "escapeKeyDown") {
         // delete the fake annotation (that always has id -1)
-        queryClient.setQueryData<SpanAnnotationReadResolved[]>(
+        queryClient.setQueryData<SpanAnnotationRead[]>(
           [QueryKey.SDOC_SPAN_ANNOTATIONS, fakeAnnotation.sdoc_id, visibleUserId ? [visibleUserId] : []],
           (old) => {
             if (old === undefined) {

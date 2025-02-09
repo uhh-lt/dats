@@ -5,7 +5,6 @@
 import type { CodeRead } from "../models/CodeRead";
 import type { SentenceAnnotationCreate } from "../models/SentenceAnnotationCreate";
 import type { SentenceAnnotationRead } from "../models/SentenceAnnotationRead";
-import type { SentenceAnnotationReadResolved } from "../models/SentenceAnnotationReadResolved";
 import type { SentenceAnnotationUpdate } from "../models/SentenceAnnotationUpdate";
 import type { SentenceAnnotationUpdateBulk } from "../models/SentenceAnnotationUpdateBulk";
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -14,25 +13,17 @@ import { request as __request } from "../core/request";
 export class SentenceAnnotationService {
   /**
    * Creates a SentenceAnnotation
-   * @returns any Successful Response
+   * @returns SentenceAnnotationRead Successful Response
    * @throws ApiError
    */
   public static addSentenceAnnotation({
     requestBody,
-    resolve = true,
   }: {
     requestBody: SentenceAnnotationCreate;
-    /**
-     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
-     */
-    resolve?: boolean;
-  }): CancelablePromise<SentenceAnnotationRead | SentenceAnnotationReadResolved> {
+  }): CancelablePromise<SentenceAnnotationRead> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/sentence",
-      query: {
-        resolve: resolve,
-      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -42,25 +33,17 @@ export class SentenceAnnotationService {
   }
   /**
    * Creates SentenceAnnotations in Bulk
-   * @returns any Successful Response
+   * @returns SentenceAnnotationRead Successful Response
    * @throws ApiError
    */
   public static addSentenceAnnotationsBulk({
     requestBody,
-    resolve = true,
   }: {
     requestBody: Array<SentenceAnnotationCreate>;
-    /**
-     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
-     */
-    resolve?: boolean;
-  }): CancelablePromise<Array<SentenceAnnotationRead> | Array<SentenceAnnotationReadResolved>> {
+  }): CancelablePromise<Array<SentenceAnnotationRead>> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/sentence/bulk/create",
-      query: {
-        resolve: resolve,
-      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -70,27 +53,15 @@ export class SentenceAnnotationService {
   }
   /**
    * Returns the SentenceAnnotation with the given ID.
-   * @returns any Successful Response
+   * @returns SentenceAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static getById({
-    sentenceAnnoId,
-    resolve = true,
-  }: {
-    sentenceAnnoId: number;
-    /**
-     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
-     */
-    resolve?: boolean;
-  }): CancelablePromise<SentenceAnnotationRead | SentenceAnnotationReadResolved> {
+  public static getById({ sentenceAnnoId }: { sentenceAnnoId: number }): CancelablePromise<SentenceAnnotationRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sentence/{sentence_anno_id}",
       path: {
         sentence_anno_id: sentenceAnnoId,
-      },
-      query: {
-        resolve: resolve,
       },
       errors: {
         422: `Validation Error`,
@@ -99,29 +70,21 @@ export class SentenceAnnotationService {
   }
   /**
    * Updates the SentenceAnnotation with the given ID.
-   * @returns any Successful Response
+   * @returns SentenceAnnotationRead Successful Response
    * @throws ApiError
    */
   public static updateById({
     sentenceAnnoId,
     requestBody,
-    resolve = true,
   }: {
     sentenceAnnoId: number;
     requestBody: SentenceAnnotationUpdate;
-    /**
-     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
-     */
-    resolve?: boolean;
-  }): CancelablePromise<SentenceAnnotationRead | SentenceAnnotationReadResolved> {
+  }): CancelablePromise<SentenceAnnotationRead> {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/sentence/{sentence_anno_id}",
       path: {
         sentence_anno_id: sentenceAnnoId,
-      },
-      query: {
-        resolve: resolve,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -132,14 +95,10 @@ export class SentenceAnnotationService {
   }
   /**
    * Deletes the SentenceAnnotation with the given ID.
-   * @returns any Successful Response
+   * @returns SentenceAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static deleteById({
-    sentenceAnnoId,
-  }: {
-    sentenceAnnoId: number;
-  }): CancelablePromise<SentenceAnnotationRead | SentenceAnnotationReadResolved> {
+  public static deleteById({ sentenceAnnoId }: { sentenceAnnoId: number }): CancelablePromise<SentenceAnnotationRead> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/sentence/{sentence_anno_id}",
@@ -153,25 +112,17 @@ export class SentenceAnnotationService {
   }
   /**
    * Updates SentenceAnnotation in Bulk
-   * @returns any Successful Response
+   * @returns SentenceAnnotationRead Successful Response
    * @throws ApiError
    */
   public static updateSentAnnoAnnotationsBulk({
     requestBody,
-    resolve = true,
   }: {
     requestBody: Array<SentenceAnnotationUpdateBulk>;
-    /**
-     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
-     */
-    resolve?: boolean;
-  }): CancelablePromise<Array<SentenceAnnotationRead> | Array<SentenceAnnotationReadResolved>> {
+  }): CancelablePromise<Array<SentenceAnnotationRead>> {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/sentence/bulk/update",
-      query: {
-        resolve: resolve,
-      },
       body: requestBody,
       mediaType: "application/json",
       errors: {

@@ -43,7 +43,7 @@ function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
 
   // global server state (react-query)
   const annotation = BboxAnnotationHooks.useGetAnnotation(props.data.bboxAnnotationId);
-  const code = CodeHooks.useGetCode(annotation.data?.code.id);
+  const code = CodeHooks.useGetCode(annotation.data?.code_id);
   const sdocData = SdocHooks.useGetDocumentData(annotation.data?.sdoc_id);
   const memo = MemoHooks.useGetUserMemo(AttachedObjectType.BBOX_ANNOTATION, props.data.bboxAnnotationId);
 
@@ -193,13 +193,13 @@ function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
             <CardHeader
               title={
                 <Stack direction="row" alignItems="center">
-                  <CodeRenderer code={annotation.data.code} />
+                  <CodeRenderer code={annotation.data.code_id} />
                   <Box sx={{ ml: 1 }}>Annotation</Box>
                 </Stack>
               }
             />
             <CardContent className="bbox-content" style={{ padding: 2, textAlign: "center" }}>
-              {annotation.isSuccess && sdocData.isSuccess ? (
+              {annotation.isSuccess && sdocData.isSuccess && code.data ? (
                 <ImageCropper
                   imageUrl={encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + sdocData.data?.html)}
                   x={annotation.data.x_min}
@@ -209,7 +209,7 @@ function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
                   height={annotation.data.y_max - annotation.data.y_min}
                   targetHeight={annotation.data.y_max - annotation.data.y_min}
                   style={{
-                    border: "4px solid " + annotation.data.code.color,
+                    border: "4px solid " + code.data.color,
                   }}
                 />
               ) : annotation.isError || sdocData.isError ? (

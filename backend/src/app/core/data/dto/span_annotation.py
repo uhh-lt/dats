@@ -2,7 +2,6 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .code import CodeRead
 from .dto_base import UpdateDTOBase
 
 
@@ -42,19 +41,8 @@ class SpanAnnotationUpdateBulk(BaseModel, UpdateDTOBase):
 # Properties for reading (as in ORM)
 class SpanAnnotationRead(SpanAnnotationBaseDTO):
     id: int = Field(description="ID of the SpanAnnotation")
-    span_text_id: int = Field(description="The SpanText the SpanAnnotation spans.")
-    code_id: int = Field(description="Code the SpanAnnotation refers to")
-    user_id: int = Field(description="User the SpanAnnotation belongs to")
-    sdoc_id: int = Field(description="SourceDocument the SpanAnnotation refers to")
-    created: datetime = Field(description="Created timestamp of the SpanAnnotation")
-    updated: datetime = Field(description="Updated timestamp of the SpanAnnotation")
-    model_config = ConfigDict(from_attributes=True)
-
-
-class SpanAnnotationReadResolved(SpanAnnotationBaseDTO):
-    id: int = Field(description="ID of the SpanAnnotation")
     text: str = Field(description="The SpanText the SpanAnnotation spans.")
-    code: CodeRead = Field(description="Code the SpanAnnotation refers to")
+    code_id: int = Field(description="Code the SpanAnnotation refers to")
     user_id: int = Field(description="User the SpanAnnotation belongs to")
     sdoc_id: int = Field(description="SourceDocument the SpanAnnotation refers to")
     created: datetime = Field(description="Created timestamp of the SpanAnnotation")

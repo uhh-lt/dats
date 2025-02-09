@@ -1,6 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
 import { SpanAnnotationRead } from "../../../api/openapi/models/SpanAnnotationRead.ts";
-import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import { SpanAnnotationUpdate } from "../../../api/openapi/models/SpanAnnotationUpdate.ts";
 import { SpanAnnotationService } from "../../../api/openapi/services/SpanAnnotationService.ts";
 import { QueryKey } from "../../../api/QueryKey.ts";
@@ -20,26 +19,20 @@ export const useCreateSpanAnnotation = (visibleUserIds: number[]) =>
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
 
       // Snapshot the previous value
-      const previousSpanAnnotations = queryClient.getQueryData<SpanAnnotationReadResolved[]>(affectedQueryKey);
+      const previousSpanAnnotations = queryClient.getQueryData<SpanAnnotationRead[]>(affectedQueryKey);
 
       // Optimistically update to the new value
-      queryClient.setQueryData<SpanAnnotationReadResolved[]>(affectedQueryKey, (old) => {
+      queryClient.setQueryData<SpanAnnotationRead[]>(affectedQueryKey, (old) => {
         const fakeAnnotationIndex = old?.findIndex((a) => a.id === FAKE_ANNOTATION_ID);
         if (fakeAnnotationIndex !== undefined && fakeAnnotationIndex !== -1) {
           const fakeAnnotation = old![fakeAnnotationIndex];
           // we already created a fake annotation, that is correct as is
-          if (fakeAnnotation.code.id === newSpanAnnotation.requestBody.code_id) {
+          if (fakeAnnotation.code_id === newSpanAnnotation.requestBody.code_id) {
             return old;
           }
           // we already created a fake annotation, but the code is different
           const result = Array.from(old!);
-          result[fakeAnnotationIndex] = {
-            ...fakeAnnotation,
-            code: {
-              ...fakeAnnotation.code,
-              id: newSpanAnnotation.requestBody.code_id,
-            },
-          };
+          result[fakeAnnotationIndex] = fakeAnnotation;
           return result;
         }
         // we have not created a fake annotation yet
@@ -70,7 +63,7 @@ export const useCreateSpanAnnotation = (visibleUserIds: number[]) =>
     onError: (_error: Error, _newSpanAnnotation, context) => {
       if (!context) return;
       // If the mutation fails, use the context returned from onMutate to roll back
-      queryClient.setQueryData<SpanAnnotationReadResolved[]>(context.affectedQueryKey, context.previousSpanAnnotations);
+      queryClient.setQueryData<SpanAnnotationRead[]>(context.affectedQueryKey, context.previousSpanAnnotations);
     },
     // Always re-fetch after error or success:
     onSettled: (_data, _error, _variables, context) => {
@@ -82,14 +75,12 @@ export const useCreateSpanAnnotation = (visibleUserIds: number[]) =>
 export const useUpdateSpanAnnotation = (visibleUserIds: number[]) =>
   useMutation({
     mutationFn: (variables: {
-      spanAnnotationToUpdate: SpanAnnotationRead | SpanAnnotationReadResolved;
+      spanAnnotationToUpdate: SpanAnnotationRead | SpanAnnotationRead;
       requestBody: SpanAnnotationUpdate;
-      resolve?: boolean | undefined;
     }) =>
       SpanAnnotationService.updateById({
         spanId: variables.spanAnnotationToUpdate.id,
         requestBody: variables.requestBody,
-        resolve: variables.resolve,
       }),
     // todo: rework to only update QueryKey.SPAN_ANNOTATION (we need to change the rendering for this...)
     // optimistic update
@@ -106,10 +97,10 @@ export const useUpdateSpanAnnotation = (visibleUserIds: number[]) =>
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
 
       // Snapshot the previous value
-      const previousAnnos = queryClient.getQueryData<SpanAnnotationReadResolved[]>(affectedQueryKey);
+      const previousAnnos = queryClient.getQueryData<SpanAnnotationRead[]>(affectedQueryKey);
 
       // Optimistically update to the new value
-      queryClient.setQueryData<SpanAnnotationReadResolved[]>(affectedQueryKey, (old) => {
+      queryClient.setQueryData<SpanAnnotationRead[]>(affectedQueryKey, (old) => {
         if (!old) {
           return undefined;
         }
@@ -122,10 +113,7 @@ export const useUpdateSpanAnnotation = (visibleUserIds: number[]) =>
         const result = Array.from(old);
         result[oldSpanAnnotationIndex] = {
           ...oldSpanAnnotation,
-          code: {
-            ...oldSpanAnnotation.code,
-            id: updateData.requestBody.code_id,
-          },
+          code_id: updateData.requestBody.code_id,
         };
         return result;
       });
@@ -136,7 +124,7 @@ export const useUpdateSpanAnnotation = (visibleUserIds: number[]) =>
     onError: (_error: Error, _updatedSpanAnnotation, context) => {
       if (!context) return;
       // If the mutation fails, use the context returned from onMutate to roll back
-      queryClient.setQueryData<SpanAnnotationReadResolved[]>(context.affectedQueryKey, context.previousAnnos);
+      queryClient.setQueryData<SpanAnnotationRead[]>(context.affectedQueryKey, context.previousAnnos);
     },
     // Always re-fetch after error or success:
     onSettled: (updatedSpanAnnotation, _error, _variables, context) => {
@@ -150,7 +138,7 @@ export const useUpdateSpanAnnotation = (visibleUserIds: number[]) =>
 
 export const useDeleteSpanAnnotation = (visibleUserIds: number[]) =>
   useMutation({
-    mutationFn: (variables: { spanAnnotationToDelete: SpanAnnotationRead | SpanAnnotationReadResolved }) =>
+    mutationFn: (variables: { spanAnnotationToDelete: SpanAnnotationRead | SpanAnnotationRead }) =>
       SpanAnnotationService.deleteById({ spanId: variables.spanAnnotationToDelete.id }),
     // optimistic updates
     onMutate: async ({ spanAnnotationToDelete }) => {
@@ -162,10 +150,10 @@ export const useDeleteSpanAnnotation = (visibleUserIds: number[]) =>
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
 
       // Snapshot the previous value
-      const previousSpanAnnotations = queryClient.getQueryData<SpanAnnotationReadResolved[]>(affectedQueryKey);
+      const previousSpanAnnotations = queryClient.getQueryData<SpanAnnotationRead[]>(affectedQueryKey);
 
       // Optimistically update to the new value
-      queryClient.setQueryData<SpanAnnotationReadResolved[]>(affectedQueryKey, (old) => {
+      queryClient.setQueryData<SpanAnnotationRead[]>(affectedQueryKey, (old) => {
         if (old === undefined) {
           return undefined;
         }
@@ -179,7 +167,7 @@ export const useDeleteSpanAnnotation = (visibleUserIds: number[]) =>
     onError: (_error: Error, _spanAnnotationToDelete, context) => {
       if (!context) return;
       // If the mutation fails, use the context returned from onMutate to roll back
-      queryClient.setQueryData<SpanAnnotationReadResolved[]>(context.affectedQueryKey, context.previousSpanAnnotations);
+      queryClient.setQueryData<SpanAnnotationRead[]>(context.affectedQueryKey, context.previousSpanAnnotations);
     },
     // Always re-fetch after error or success:
     onSettled: (_data, _error, _variables, context) => {

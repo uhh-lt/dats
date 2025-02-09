@@ -1,4 +1,4 @@
-from typing import Annotated, Dict, List, Union
+from typing import Annotated, Dict, List
 
 from fastapi import APIRouter, Depends, Query
 from loguru import logger
@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session
 from api.dependencies import (
     get_current_user,
     get_db_session,
-    resolve_code_param,
     skip_limit_params,
 )
 from app.core.authorization.authz_user import AuthzUser
@@ -20,10 +19,9 @@ from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.span_group import crud_span_group
 from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationRead,
-    BBoxAnnotationReadResolved,
 )
 from app.core.data.dto.sentence_annotation import (
-    SentenceAnnotationReadResolved,
+    SentenceAnnotationRead,
     SentenceAnnotatorResult,
 )
 from app.core.data.dto.source_document import (
@@ -36,7 +34,6 @@ from app.core.data.dto.source_document_metadata import (
 )
 from app.core.data.dto.span_annotation import (
     SpanAnnotationRead,
-    SpanAnnotationReadResolved,
 )
 from app.core.data.dto.span_group import SpanGroupRead
 from app.core.data.dto.word_frequency import WordFrequencyRead
@@ -259,28 +256,24 @@ def get_word_frequencies(
 
 @router.get(
     "/{sdoc_id}/user/span_annotations",
-    response_model=Union[List[SpanAnnotationRead], List[SpanAnnotationReadResolved]],
+    response_model=List[SpanAnnotationRead],
     summary="Returns all SpanAnnotations of the logged-in User if it exists",
 )
 def get_all_span_annotations(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
-    resolve_code: bool = Depends(resolve_code_param),
     authz_user: AuthzUser = Depends(),
-) -> Union[List[SpanAnnotationRead], List[SpanAnnotationReadResolved]]:
+) -> List[SpanAnnotationRead]:
     spans = crud_span_anno.read_by_user_and_sdoc(
         db=db, user_id=authz_user.user.id, sdoc_id=sdoc_id
     )
-    if resolve_code:
-        return [SpanAnnotationReadResolved.model_validate(span) for span in spans]
-    else:
-        return [SpanAnnotationRead.model_validate(span) for span in spans]
+    return [SpanAnnotationRead.model_validate(span) for span in spans]
 
 
 @router.get(
     "/{sdoc_id}/span_annotations/bulk",
-    response_model=Union[List[SpanAnnotationRead], List[SpanAnnotationReadResolved]],
+    response_model=List[SpanAnnotationRead],
     summary="Returns all SpanAnnotations of the Users with the given ID if it exists",
 )
 def get_all_span_annotations_bulk(
@@ -288,23 +281,19 @@ def get_all_span_annotations_bulk(
     db: Session = Depends(get_db_session),
     sdoc_id: int,
     user_id: Annotated[List[int], Query(default_factory=list)],
-    resolve_code: bool = Depends(resolve_code_param),
     authz_user: AuthzUser = Depends(),
-) -> Union[List[SpanAnnotationRead], List[SpanAnnotationReadResolved]]:
+) -> List[SpanAnnotationRead]:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
     spans = crud_span_anno.read_by_users_and_sdoc(
         db=db, user_ids=user_id, sdoc_id=sdoc_id
     )
-    if resolve_code:
-        return [SpanAnnotationReadResolved.model_validate(span) for span in spans]
-    else:
-        return [SpanAnnotationRead.model_validate(span) for span in spans]
+    return [SpanAnnotationRead.model_validate(span) for span in spans]
 
 
 @router.get(
     "/{sdoc_id}/bbox_annotations/{user_id}",
-    response_model=Union[List[BBoxAnnotationRead], List[BBoxAnnotationReadResolved]],
+    response_model=List[BBoxAnnotationRead],
     summary="Returns all BBoxAnnotations of the Users with the given ID if it exists",
 )
 def get_all_bbox_annotations_bulk(
@@ -313,18 +302,14 @@ def get_all_bbox_annotations_bulk(
     sdoc_id: int,
     user_id: int,
     skip_limit: Dict[str, int] = Depends(skip_limit_params),
-    resolve_code: bool = Depends(resolve_code_param),
     authz_user: AuthzUser = Depends(),
-) -> Union[List[BBoxAnnotationRead], List[BBoxAnnotationReadResolved]]:
+) -> List[BBoxAnnotationRead]:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
     bboxes = crud_bbox_anno.read_by_user_and_sdoc(
         db=db, user_id=user_id, sdoc_id=sdoc_id, **skip_limit
     )
-    if resolve_code:
-        return [BBoxAnnotationReadResolved.model_validate(bbox) for bbox in bboxes]
-    else:
-        return [BBoxAnnotationRead.model_validate(bbox) for bbox in bboxes]
+    return [BBoxAnnotationRead.model_validate(bbox) for bbox in bboxes]
 
 
 @router.get(
@@ -349,14 +334,14 @@ def get_sentence_annotator(
 
     # read sentence annotations
     sentence_annos = [
-        SentenceAnnotationReadResolved.model_validate(sent_anno)
+        SentenceAnnotationRead.model_validate(sent_anno)
         for sent_anno in crud_sentence_anno.read_by_users_and_sdoc(
             db=db, user_ids=[user_id], sdoc_id=sdoc_id, **skip_limit
         )
     ]
 
     # build result object: sentence_id -> [sentence_annotations]
-    result: Dict[int, List[SentenceAnnotationReadResolved]] = {
+    result: Dict[int, List[SentenceAnnotationRead]] = {
         idx: [] for idx in range(len(sdoc_data.sentences))
     }
     for sent_anno in sentence_annos:

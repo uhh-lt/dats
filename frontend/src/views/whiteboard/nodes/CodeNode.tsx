@@ -50,7 +50,7 @@ function CodeNode(props: NodeProps<CodeNodeData>) {
   // we need a new route to get all child codes
   // then we need to invalidate these child codes, on code update
   // also! we need a mechanism in the backend to detect loops in the code tree, and prevent them
-  const projectCodes = CodeHooks.useGetAllCodes();
+  const projectCodes = CodeHooks.useGetAllCodesList();
   const childCodes = useMemo(() => {
     return projectCodes.data?.filter((projectcode) => projectcode.parent_id === props.data.codeId) ?? [];
   }, [props.data.codeId, projectCodes.data]);

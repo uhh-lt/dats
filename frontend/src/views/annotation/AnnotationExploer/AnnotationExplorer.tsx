@@ -9,16 +9,16 @@ import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { useDebounce } from "../../../utils/useDebounce.ts";
 import { AnnoActions } from "../annoSlice.ts";
 import { AnnotationCardProps } from "./types/AnnotationCardProps.ts";
-import { AnnotationReadResolved } from "./types/AnnotationReadResolved.ts";
+import { AnnotationRead } from "./types/AnnotationRead.ts";
 
-interface AnnotationExplorerProps<T extends AnnotationReadResolved> {
+interface AnnotationExplorerProps<T extends AnnotationRead> {
   annotations: T[] | undefined;
   filterByText: (text: string) => (annotation: T) => boolean; // this has to be a useCallback / constant function!
   renderAnnotationCard: (props: AnnotationCardProps<T>) => JSX.Element;
   estimateSize?: () => number;
 }
 
-function AnnotationExplorer<T extends AnnotationReadResolved>({
+function AnnotationExplorer<T extends AnnotationRead>({
   annotations,
   filterByText,
   renderAnnotationCard,
@@ -29,10 +29,10 @@ function AnnotationExplorer<T extends AnnotationReadResolved>({
   const filter = useDebounce(filterValue, 300);
 
   // code filtering
-  const projectCodes = CodeHooks.useGetAllCodes();
+  const projectCodes = CodeHooks.useGetAllCodesList();
   const [filterCodeIds, setFilterCodeIds] = useState<number[]>([]);
   const codes = useMemo(() => {
-    const annotationCodeIds = new Set(annotations?.map((annotation) => annotation.code.id));
+    const annotationCodeIds = new Set(annotations?.map((annotation) => annotation.code_id));
     const relevantCodeIds = new Set([...annotationCodeIds, ...filterCodeIds]);
     return projectCodes.data
       ?.filter((code) => relevantCodeIds.has(code.id))
@@ -57,7 +57,7 @@ function AnnotationExplorer<T extends AnnotationReadResolved>({
   const filteredAnnotations = useMemo(() => {
     const filteredAnnotations = annotations?.filter(filterByText(filter)) || [];
     if (filterCodeIds.length > 0) {
-      return filteredAnnotations.filter((annotation) => filterCodeIds.includes(annotation.code.id));
+      return filteredAnnotations.filter((annotation) => filterCodeIds.includes(annotation.code_id));
     }
     return filteredAnnotations;
   }, [annotations, filter, filterCodeIds, filterByText]);
