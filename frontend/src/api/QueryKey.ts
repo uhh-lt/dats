@@ -65,9 +65,13 @@ export const QueryKey = {
   // sentence annotator of a document (by sdoc id, user id)
   SDOC_SENTENCE_ANNOTATOR: "sdocSentenceAnnotator",
 
-  // managed by WhiteboardHooks
+  // managed by WhiteboardHooks:
   // all project WHITEBOARDs (by project id)
   WHITEBOARDS_PROJECT: "whiteboardsProject",
+
+  // managed by TimelineAnalysisHooks:
+  // All analyses from the logged-in user in a given project (by project id)
+  TIMELINE_ANALYSIS_PROJECT_USER: "timelineAnalysisProjectUser",
 
   // all crawler jobs of a Project (by project id)
   PROJECT_CRAWLER_JOBS: "projectCrawlerJobs",
@@ -95,10 +99,6 @@ export const QueryKey = {
   TABLE: "table",
   // all tables of the project of the logged-in user (by project id)
   TABLES_PROJECT_USER: "tablesProjectUser",
-  // A single timeline analysis (by id)
-  TIMELINE_ANALYSIS: "timelineAnalysis",
-  // All analyses from the logged-in user in a given project (by project id)
-  TIMELINE_ANALYSIS_PROJECT_USER: "timelineAnalysisProjectUser",
 
   // a single COTA (by COTA id)
   COTA: "cota",
