@@ -1,7 +1,7 @@
 import { TabPanel } from "@mui/lab";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useMemo } from "react";
-import SearchHooks from "../../../api/SearchHooks.ts";
+import SearchHooks from "../../../api/SearchStatisticsHooks.ts";
 import TagHooks from "../../../api/TagHooks.ts";
 import { TagStat } from "../../../api/openapi/models/TagStat.ts";
 import StatsDisplayButton, { StatsDisplayButtonProps } from "./StatsDisplayButton.tsx";

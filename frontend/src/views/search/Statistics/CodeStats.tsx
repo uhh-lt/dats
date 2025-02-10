@@ -2,7 +2,7 @@ import { TabPanel } from "@mui/lab";
 import { Box, CircularProgress } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useMemo } from "react";
-import SearchHooks from "../../../api/SearchHooks.ts";
+import SearchHooks from "../../../api/SearchStatisticsHooks.ts";
 import { SpanEntityStat } from "../../../api/openapi/models/SpanEntityStat.ts";
 import StatsDisplayButton from "./StatsDisplayButton.tsx";
 import { useFilterStats } from "./useFilterStats.ts";
