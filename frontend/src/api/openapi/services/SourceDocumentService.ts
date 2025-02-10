@@ -5,7 +5,7 @@
 import type { BBoxAnnotationRead } from "../models/BBoxAnnotationRead";
 import type { SentenceAnnotatorResult } from "../models/SentenceAnnotatorResult";
 import type { SourceDocumentDataRead } from "../models/SourceDocumentDataRead";
-import type { SourceDocumentMetadataReadResolved } from "../models/SourceDocumentMetadataReadResolved";
+import type { SourceDocumentMetadataRead } from "../models/SourceDocumentMetadataRead";
 import type { SourceDocumentRead } from "../models/SourceDocumentRead";
 import type { SourceDocumentUpdate } from "../models/SourceDocumentUpdate";
 import type { SpanAnnotationRead } from "../models/SpanAnnotationRead";
@@ -160,14 +160,10 @@ export class SourceDocumentService {
   }
   /**
    * Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists
-   * @returns SourceDocumentMetadataReadResolved Successful Response
+   * @returns SourceDocumentMetadataRead Successful Response
    * @throws ApiError
    */
-  public static getAllMetadata({
-    sdocId,
-  }: {
-    sdocId: number;
-  }): CancelablePromise<Array<SourceDocumentMetadataReadResolved>> {
+  public static getAllMetadata({ sdocId }: { sdocId: number }): CancelablePromise<Array<SourceDocumentMetadataRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/metadata",
@@ -181,7 +177,7 @@ export class SourceDocumentService {
   }
   /**
    * Returns the SourceDocumentMetadata with the given Key if it exists.
-   * @returns SourceDocumentMetadataReadResolved Successful Response
+   * @returns SourceDocumentMetadataRead Successful Response
    * @throws ApiError
    */
   public static readMetadataByKey({
@@ -190,7 +186,7 @@ export class SourceDocumentService {
   }: {
     sdocId: number;
     metadataKey: string;
-  }): CancelablePromise<SourceDocumentMetadataReadResolved> {
+  }): CancelablePromise<SourceDocumentMetadataRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/metadata/{metadata_key}",

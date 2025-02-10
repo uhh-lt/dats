@@ -17,17 +17,17 @@ import {
 import React, { useCallback, useState } from "react";
 import MetadataHooks from "../../../../api/MetadataHooks.ts";
 import { MetaType } from "../../../../api/openapi/models/MetaType.ts";
-import { SourceDocumentMetadataReadResolved } from "../../../../api/openapi/models/SourceDocumentMetadataReadResolved.ts";
+import { ProjectMetadataRead } from "../../../../api/openapi/models/ProjectMetadataRead.ts";
 import ConfirmationAPI from "../../../ConfirmationDialog/ConfirmationAPI.ts";
 import { useOpenSnackbar } from "../../../SnackbarDialog/useOpenSnackbar.ts";
 import MetadataTypeSelectorMenu from "./MetadataTypeSelectorMenu.tsx";
 import { metaTypeToIcon } from "./metaTypeToIcon.tsx";
 
 interface MetadataEditMenuProps {
-  metadata: SourceDocumentMetadataReadResolved;
+  projectMetadata: ProjectMetadataRead;
 }
 
-function MetadataEditMenu({ metadata }: MetadataEditMenuProps) {
+function MetadataEditMenu({ projectMetadata }: MetadataEditMenuProps) {
   // open close popover
   const [position, setPosition] = useState<PopoverPosition | undefined>();
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -39,20 +39,20 @@ function MetadataEditMenu({ metadata }: MetadataEditMenuProps) {
   };
 
   // metadata name
-  const [name, setName] = useState(metadata.project_metadata.key);
+  const [name, setName] = useState(projectMetadata.key);
   const handleChangeName = (event: React.ChangeEvent<HTMLInputElement>) => {
     setName(event.target.value);
   };
 
   // metadata description
-  const [description, setDescription] = useState(metadata.project_metadata.description);
+  const [description, setDescription] = useState(projectMetadata.description);
   const handleChangeDescription = (event: React.ChangeEvent<HTMLInputElement>) => {
     setDescription(event.target.value);
   };
 
   // change type
   const [isTypeMenuOpen, setIsTypeMenuOpen] = useState(false);
-  const [metatype, setMetatype] = useState(metadata.project_metadata.metatype);
+  const [metatype, setMetatype] = useState(projectMetadata.metatype);
   const handleChangeType = (newType: string) => {
     setMetatype(newType as MetaType);
   };
@@ -65,26 +65,26 @@ function MetadataEditMenu({ metadata }: MetadataEditMenuProps) {
 
     // only update if data has changed!
     if (
-      metadata.project_metadata.metatype !== metatype ||
-      metadata.project_metadata.key !== name ||
-      metadata.project_metadata.description !== description
+      projectMetadata.metatype !== metatype ||
+      projectMetadata.key !== name ||
+      projectMetadata.description !== description
     ) {
       const mutation = updateMutation.mutate;
       const actuallyMutate = () =>
         mutation({
-          metadataId: metadata.project_metadata.id,
+          metadataId: projectMetadata.id,
           requestBody: {
             metatype: metatype,
             key: name,
             description: description,
           },
         });
-      if (metadata.project_metadata.metatype !== metatype) {
+      if (projectMetadata.metatype !== metatype) {
         ConfirmationAPI.openConfirmationDialog({
           text: "Changing the type of this metadata will remove its existing entries. This action cannot be undone. Do you want to proceed?",
           onAccept: actuallyMutate,
           onReject() {
-            setMetatype(metadata.project_metadata.metatype);
+            setMetatype(projectMetadata.metatype);
           },
         });
       } else {
@@ -98,12 +98,12 @@ function MetadataEditMenu({ metadata }: MetadataEditMenuProps) {
   const deleteMutation = MetadataHooks.useDeleteProjectMetadata();
   const handleDeleteMetadata = useCallback(() => {
     ConfirmationAPI.openConfirmationDialog({
-      text: `Do you really want to delete the ProjectMetadata ${metadata.project_metadata.id}? This will remove metadata from all corresponding documents. This action cannot be undone!`,
+      text: `Do you really want to delete the ProjectMetadata ${projectMetadata.id}? This will remove metadata from all corresponding documents. This action cannot be undone!`,
       onAccept: () => {
         const mutation = deleteMutation.mutate;
         mutation(
           {
-            metadataId: metadata.project_metadata.id,
+            metadataId: projectMetadata.id,
           },
           {
             onSuccess: (data) => {
@@ -116,19 +116,19 @@ function MetadataEditMenu({ metadata }: MetadataEditMenuProps) {
         );
       },
     });
-  }, [deleteMutation.mutate, metadata.project_metadata.id, openSnackbar]);
+  }, [deleteMutation.mutate, projectMetadata.id, openSnackbar]);
 
   return (
     <>
-      <Tooltip title={metadata.project_metadata.description} placement="left">
+      <Tooltip title={projectMetadata.description} placement="left">
         <span style={{ flexGrow: 1, flexBasis: 1, justifyContent: "start" }}>
           <Button
             onClick={handleClick}
             color="inherit"
-            startIcon={metaTypeToIcon[metadata.project_metadata.metatype]}
-            disabled={metadata.project_metadata.read_only}
+            startIcon={metaTypeToIcon[projectMetadata.metatype]}
+            disabled={projectMetadata.read_only}
           >
-            {metadata.project_metadata.key}
+            {projectMetadata.key}
           </Button>
         </span>
       </Tooltip>

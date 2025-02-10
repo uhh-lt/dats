@@ -5,8 +5,8 @@ import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import MetadataHooks from "../../../../../api/MetadataHooks.ts";
 
 import { MetaType } from "../../../../../api/openapi/models/MetaType.ts";
+import { ProjectMetadataRead } from "../../../../../api/openapi/models/ProjectMetadataRead.ts";
 import { SourceDocumentMetadataRead } from "../../../../../api/openapi/models/SourceDocumentMetadataRead.ts";
-import { SourceDocumentMetadataReadResolved } from "../../../../../api/openapi/models/SourceDocumentMetadataReadResolved.ts";
 import { SourceDocumentMetadataUpdate } from "../../../../../api/openapi/models/SourceDocumentMetadataUpdate.ts";
 import { dateToLocaleYYYYMMDDString } from "../../../../../utils/DateUtils.ts";
 import FormChipList from "../../../../FormInputs/FormChipList.tsx";
@@ -21,11 +21,25 @@ import DocumentMetadataGoToButton from "./DocumentMetadataGoToButton.tsx";
 import { isValidHttpUrl } from "./utils.ts";
 
 interface DocumentMetadataRowProps {
-  metadata: SourceDocumentMetadataReadResolved;
+  metadata: SourceDocumentMetadataRead;
   filterName?: string;
 }
 
 function DocumentMetadataRow({ metadata, filterName }: DocumentMetadataRowProps) {
+  const projectMetadata = MetadataHooks.useGetProjectMetadata(metadata.project_metadata_id);
+  if (projectMetadata.isSuccess) {
+    return (
+      <DocumentMetadataRowContent metadata={metadata} projectMetadata={projectMetadata.data} filterName={filterName} />
+    );
+  }
+  return null;
+}
+
+function DocumentMetadataRowContent({
+  metadata,
+  projectMetadata,
+  filterName,
+}: DocumentMetadataRowProps & { projectMetadata: ProjectMetadataRead }) {
   // use react hook form
   const {
     handleSubmit,
@@ -89,7 +103,7 @@ function DocumentMetadataRow({ metadata, filterName }: DocumentMetadataRowProps)
   const handleError: SubmitErrorHandler<SourceDocumentMetadataUpdate> = useCallback((data) => console.error(data), []);
 
   let inputField: JSX.Element;
-  switch (metadata.project_metadata.metatype) {
+  switch (projectMetadata.metatype) {
     case MetaType.STRING:
       inputField = (
         <FormText
@@ -99,7 +113,7 @@ function DocumentMetadataRow({ metadata, filterName }: DocumentMetadataRowProps)
             error: Boolean(errors.str_value),
             helperText: <ErrorMessage errors={errors} name="str_value" />,
             variant: "standard",
-            disabled: metadata.project_metadata.read_only,
+            disabled: projectMetadata.read_only,
             onBlur: () => handleSubmit(handleUpdateMetadata, handleError)(),
             sx: {
               flexGrow: 1,
@@ -118,7 +132,7 @@ function DocumentMetadataRow({ metadata, filterName }: DocumentMetadataRowProps)
             error: Boolean(errors.int_value),
             helperText: <ErrorMessage errors={errors} name="int_value" />,
             variant: "standard",
-            disabled: metadata.project_metadata.read_only,
+            disabled: projectMetadata.read_only,
             onBlur: () => handleSubmit(handleUpdateMetadata, handleError)(),
             sx: {
               flexGrow: 1,
@@ -147,7 +161,7 @@ function DocumentMetadataRow({ metadata, filterName }: DocumentMetadataRowProps)
             error: Boolean(errors.date_value),
             helperText: <ErrorMessage errors={errors} name="date_value" />,
             variant: "standard",
-            disabled: metadata.project_metadata.read_only,
+            disabled: projectMetadata.read_only,
             onBlur: () => handleSubmit(handleUpdateMetadata, handleError)(),
             sx: {
               flexGrow: 1,
@@ -168,12 +182,12 @@ function DocumentMetadataRow({ metadata, filterName }: DocumentMetadataRowProps)
               flexGrow: 1,
               flexBasis: 1,
             },
-            disabled: metadata.project_metadata.read_only,
+            disabled: projectMetadata.read_only,
           }}
           textFieldProps={{
             fullWidth: true,
             variant: "standard",
-            placeholder: metadata.project_metadata.key,
+            placeholder: projectMetadata.key,
             onBlur: () => handleSubmit(handleUpdateMetadata, handleError)(),
             error: Boolean(errors.list_value),
             helperText: <ErrorMessage errors={errors} name="list_value" />,
@@ -185,10 +199,17 @@ function DocumentMetadataRow({ metadata, filterName }: DocumentMetadataRowProps)
 
   return (
     <Stack direction="row" alignItems="flex-end" mt={1}>
-      <MetadataEditMenu metadata={metadata} />
+      <MetadataEditMenu projectMetadata={projectMetadata} />
       {inputField}
       {isLink && <DocumentMetadataGoToButton link={metadata.str_value!} size="small" />}
-      {filterName && <DocumentMetadataAddFilterButton metadata={metadata} filterName={filterName} size="small" />}
+      {filterName && (
+        <DocumentMetadataAddFilterButton
+          metadata={metadata}
+          projectMetadata={projectMetadata}
+          filterName={filterName}
+          size="small"
+        />
+      )}
     </Stack>
   );
 }

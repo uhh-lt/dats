@@ -30,7 +30,7 @@ from app.core.data.dto.source_document import (
 )
 from app.core.data.dto.source_document_data import SourceDocumentDataRead
 from app.core.data.dto.source_document_metadata import (
-    SourceDocumentMetadataReadResolved,
+    SourceDocumentMetadataRead,
 )
 from app.core.data.dto.span_annotation import (
     SpanAnnotationRead,
@@ -164,7 +164,7 @@ def get_file_url(
 
 @router.get(
     "/{sdoc_id}/metadata",
-    response_model=List[SourceDocumentMetadataReadResolved],
+    response_model=List[SourceDocumentMetadataRead],
     summary="Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists",
 )
 def get_all_metadata(
@@ -172,19 +172,19 @@ def get_all_metadata(
     db: Session = Depends(get_db_session),
     sdoc_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[SourceDocumentMetadataReadResolved]:
+) -> List[SourceDocumentMetadataRead]:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     return [
-        SourceDocumentMetadataReadResolved.model_validate(meta)
+        SourceDocumentMetadataRead.model_validate(meta)
         for meta in sdoc_db_obj.metadata_
     ]
 
 
 @router.get(
     "/{sdoc_id}/metadata/{metadata_key}",
-    response_model=SourceDocumentMetadataReadResolved,
+    response_model=SourceDocumentMetadataRead,
     summary="Returns the SourceDocumentMetadata with the given Key if it exists.",
 )
 def read_metadata_by_key(
@@ -193,13 +193,13 @@ def read_metadata_by_key(
     sdoc_id: int,
     metadata_key: str,
     authz_user: AuthzUser = Depends(),
-) -> SourceDocumentMetadataReadResolved:
+) -> SourceDocumentMetadataRead:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
     metadata_db_obj = crud_sdoc_meta.read_by_sdoc_and_key(
         db=db, sdoc_id=sdoc_id, key=metadata_key
     )
-    return SourceDocumentMetadataReadResolved.model_validate(metadata_db_obj)
+    return SourceDocumentMetadataRead.model_validate(metadata_db_obj)
 
 
 @router.get(

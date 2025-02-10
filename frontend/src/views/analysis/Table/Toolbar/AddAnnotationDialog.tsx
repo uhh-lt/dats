@@ -19,7 +19,7 @@ function AddAnnotationDialog({ projectId, buttonProps, shouldOpen, ...props }: A
   const [open, setOpen] = useState(false);
 
   // global server state
-  const metadata = MetadataHooks.useGetProjectMetadata(projectId);
+  const metadata = MetadataHooks.useGetProjectMetadataList();
 
   // actions
   const handleOpen = () => {

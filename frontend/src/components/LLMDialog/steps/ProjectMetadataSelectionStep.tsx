@@ -23,7 +23,7 @@ function ProjectMetadataSelectionStep() {
   const dispatch = useAppDispatch();
 
   // global server state
-  const projectMetadata = MetadataHooks.useGetProjectMetadata(projectId);
+  const projectMetadata = MetadataHooks.useGetProjectMetadataList();
   const filteredProjectMetadata = useMemo(() => {
     if (!projectMetadata.data) return [];
     return projectMetadata.data.filter((metadata) => metadata.doctype === DocType.TEXT && metadata.read_only === false);
@@ -71,7 +71,6 @@ function ProjectMetadataSelectionStep() {
       </DialogContent>
       <ProjectMetadataTable
         projectMetadata={filteredProjectMetadata}
-        projectId={projectId}
         rowSelectionModel={rowSelectionModel}
         onRowSelectionChange={setRowSelectionModel}
         renderBottomToolbarCustomActions={(props) => (

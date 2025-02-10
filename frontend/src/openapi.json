@@ -945,7 +945,7 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/SourceDocumentMetadataReadResolved" },
+                  "items": { "$ref": "#/components/schemas/SourceDocumentMetadataRead" },
                   "title": "Response Sourcedocument-Get All Metadata"
                 }
               }
@@ -977,7 +977,7 @@
           "200": {
             "description": "Successful Response",
             "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentMetadataReadResolved" } }
+              "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentMetadataRead" } }
             }
           },
           "422": {
@@ -2808,7 +2808,7 @@
           "200": {
             "description": "Successful Response",
             "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentMetadataReadResolved" } }
+              "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentMetadataRead" } }
             }
           },
           "422": {

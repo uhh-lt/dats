@@ -35,7 +35,6 @@ export interface ProjectMetadataTableActionProps {
 }
 
 interface SharedProjectMetadataTableProps {
-  projectId: number;
   // selection
   enableMultiRowSelection?: boolean;
   rowSelectionModel: MRT_RowSelectionState;
@@ -61,7 +60,7 @@ function ProjectMetadataTable(props: ProjectMetadataTableProps) {
 
 function ProjectMetadataTableWithoutMetadata(props: SharedProjectMetadataTableProps) {
   // global server state
-  const projectMetadata = MetadataHooks.useGetProjectMetadata(props.projectId);
+  const projectMetadata = MetadataHooks.useGetProjectMetadataList();
 
   if (projectMetadata.isSuccess) {
     return <ProjectMetadataTableContent {...props} projectMetadata={projectMetadata.data} />;

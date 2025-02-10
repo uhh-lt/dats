@@ -23,7 +23,7 @@ function CotaSettings({ cota }: CotaSettingsProps) {
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // global server state (react-query)
-  const projectMetadata = MetadataHooks.useGetProjectMetadata(projectId);
+  const projectMetadata = MetadataHooks.useGetProjectMetadataList();
   const filteredProjectMetadata = projectMetadata.data?.filter(
     (metadata) => metadata.doctype === DocType.TEXT && metadata.metatype === MetaType.DATE,
   );

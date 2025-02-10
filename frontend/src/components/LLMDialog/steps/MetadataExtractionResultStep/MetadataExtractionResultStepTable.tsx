@@ -220,7 +220,15 @@ function MetadataExtractionResultStepTable({ data }: { data: MetadataExtractionR
         },
         Cell: ({ row }) => {
           const metadata = row.original.metadataDict[projectMetadata.id];
-          return <SdocMetadataRendererWithData sdocMetadata={metadata.currentValue} />;
+          return (
+            <SdocMetadataRendererWithData
+              sdocMetadata={{
+                ...metadata.currentValue,
+                project_metadata_id: metadata.currentValue.project_metadata.id,
+              }}
+              projectMetadata={projectMetadata}
+            />
+          );
         },
       });
       result.push({
@@ -243,7 +251,13 @@ function MetadataExtractionResultStepTable({ data }: { data: MetadataExtractionR
         Cell: ({ row }) => {
           const metadata = row.original.metadataDict[projectMetadata.id];
           return metadata.suggestedValue ? (
-            <SdocMetadataRendererWithData sdocMetadata={metadata.suggestedValue} />
+            <SdocMetadataRendererWithData
+              sdocMetadata={{
+                ...metadata.suggestedValue,
+                project_metadata_id: metadata.suggestedValue.project_metadata.id,
+              }}
+              projectMetadata={projectMetadata}
+            />
           ) : (
             <>empty</>
           );

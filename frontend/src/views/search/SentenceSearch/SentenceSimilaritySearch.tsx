@@ -27,7 +27,7 @@ function SentenceSimilaritySearch() {
   const dispatch = useAppDispatch();
 
   // filter
-  const projectMetadata = MetadataHooks.useGetProjectMetadata(projectId);
+  const projectMetadata = MetadataHooks.useGetProjectMetadataList();
 
   // computed (local client state)
   const keywordMetadataIds = useMemo(() => {
