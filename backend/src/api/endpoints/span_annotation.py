@@ -11,6 +11,7 @@ from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.span_annotation import (
     SpanAnnotationCreate,
+    SpanAnnotationDeleted,
     SpanAnnotationRead,
     SpanAnnotationUpdate,
     SpanAnnotationUpdateBulk,
@@ -145,7 +146,7 @@ def update_span_annotations_bulk(
 
 @router.delete(
     "/{span_id}",
-    response_model=SpanAnnotationRead,
+    response_model=SpanAnnotationDeleted,
     summary="Deletes the SpanAnnotation with the given ID.",
 )
 def delete_by_id(
@@ -153,11 +154,11 @@ def delete_by_id(
     db: Session = Depends(get_db_session),
     span_id: int,
     authz_user: AuthzUser = Depends(),
-) -> SpanAnnotationRead:
+) -> SpanAnnotationDeleted:
     authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
 
     db_obj = crud_span_anno.remove(db=db, id=span_id)
-    return SpanAnnotationRead.model_validate(db_obj)
+    return SpanAnnotationDeleted.model_validate(db_obj)
 
 
 @router.get(
@@ -199,7 +200,7 @@ def get_all_groups(
 
 @router.delete(
     "/{span_id}/groups",
-    response_model=SpanAnnotationRead,
+    response_model=SpanAnnotationDeleted,
     summary="Removes the SpanAnnotation from all SpanGroups",
 )
 def remove_from_all_groups(
@@ -207,11 +208,11 @@ def remove_from_all_groups(
     db: Session = Depends(get_db_session),
     span_id: int,
     authz_user: AuthzUser = Depends(),
-) -> SpanAnnotationRead:
+) -> SpanAnnotationDeleted:
     authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
 
     span_db_obj = crud_span_anno.remove_from_all_span_groups(db=db, span_id=span_id)
-    return SpanAnnotationRead.model_validate(span_db_obj)
+    return SpanAnnotationDeleted.model_validate(span_db_obj)
 
 
 @router.patch(
