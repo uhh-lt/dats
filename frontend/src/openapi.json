@@ -1631,7 +1631,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationRead" } } }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationDeleted" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -1738,7 +1738,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationRead" } } }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationDeleted" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -9053,6 +9053,56 @@
         "type": "object",
         "required": ["begin", "end", "begin_token", "end_token", "span_text", "code_id", "sdoc_id"],
         "title": "SpanAnnotationCreate"
+      },
+      "SpanAnnotationDeleted": {
+        "properties": {
+          "begin": { "type": "integer", "title": "Begin", "description": "Begin of the SpanAnnotation in characters" },
+          "end": { "type": "integer", "title": "End", "description": "End of the SpanAnnotation in characters" },
+          "begin_token": {
+            "type": "integer",
+            "title": "Begin Token",
+            "description": "Begin of the SpanAnnotation in tokens"
+          },
+          "end_token": {
+            "type": "integer",
+            "title": "End Token",
+            "description": "End of the SpanAnnotation in tokens"
+          },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the SpanAnnotation" },
+          "code_id": { "type": "integer", "title": "Code Id", "description": "Code the SpanAnnotation refers to" },
+          "user_id": { "type": "integer", "title": "User Id", "description": "User the SpanAnnotation belongs to" },
+          "sdoc_id": {
+            "type": "integer",
+            "title": "Sdoc Id",
+            "description": "SourceDocument the SpanAnnotation refers to"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the SpanAnnotation"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated",
+            "description": "Updated timestamp of the SpanAnnotation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "begin",
+          "end",
+          "begin_token",
+          "end_token",
+          "id",
+          "code_id",
+          "user_id",
+          "sdoc_id",
+          "created",
+          "updated"
+        ],
+        "title": "SpanAnnotationDeleted"
       },
       "SpanAnnotationRead": {
         "properties": {

@@ -4,6 +4,7 @@
 /* eslint-disable */
 import type { CodeRead } from "../models/CodeRead";
 import type { SpanAnnotationCreate } from "../models/SpanAnnotationCreate";
+import type { SpanAnnotationDeleted } from "../models/SpanAnnotationDeleted";
 import type { SpanAnnotationRead } from "../models/SpanAnnotationRead";
 import type { SpanAnnotationUpdate } from "../models/SpanAnnotationUpdate";
 import type { SpanAnnotationUpdateBulk } from "../models/SpanAnnotationUpdateBulk";
@@ -96,10 +97,10 @@ export class SpanAnnotationService {
   }
   /**
    * Deletes the SpanAnnotation with the given ID.
-   * @returns SpanAnnotationRead Successful Response
+   * @returns SpanAnnotationDeleted Successful Response
    * @throws ApiError
    */
-  public static deleteById({ spanId }: { spanId: number }): CancelablePromise<SpanAnnotationRead> {
+  public static deleteById({ spanId }: { spanId: number }): CancelablePromise<SpanAnnotationDeleted> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/span/{span_id}",
@@ -167,10 +168,10 @@ export class SpanAnnotationService {
   }
   /**
    * Removes the SpanAnnotation from all SpanGroups
-   * @returns SpanAnnotationRead Successful Response
+   * @returns SpanAnnotationDeleted Successful Response
    * @throws ApiError
    */
-  public static removeFromAllGroups({ spanId }: { spanId: number }): CancelablePromise<SpanAnnotationRead> {
+  public static removeFromAllGroups({ spanId }: { spanId: number }): CancelablePromise<SpanAnnotationDeleted> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/span/{span_id}/groups",
