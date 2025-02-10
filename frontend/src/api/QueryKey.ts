@@ -30,8 +30,10 @@ export const QueryKey = {
   SDOC_LINKS: "sdocLinks",
   // thumbnail url of a document (by sdoc id)
   SDOC_THUMBNAIL_URL: "sdocThumbnailURL",
-  // all SourceDocument Ids tagged with the given tag (by tag id)
+  // all SourceDocument ids tagged with the given tag (by tag id)
   SDOC_IDS_BY_TAG_ID: "sdocIdsByTagId",
+  // annotators (user ids) of a document (by sdoc id)
+  SDOC_ANNOTATORS: "sdocAnnotators",
 
   // managed by MemoHooks:
   // a single MemoRead (by memo id)
@@ -42,9 +44,9 @@ export const QueryKey = {
   OBJECT_MEMOS: "objectMemos",
 
   // managed by SpanAnnotationHooks:
-  // a single span annotation (by span annotation id)
+  // a single SpanAnnotationRead (by span annotation id)
   SPAN_ANNOTATION: "annotation",
-  // span annotations of a code of the logged-in user (by code id)
+  // SpanAnnotationRead[] of a code of the logged-in user (by code id)
   SPAN_ANNOTATIONS_USER_CODE: "annotationsUserCode",
   // SpanAnnotationRead[] (by sdoc id, user id)
   SDOC_SPAN_ANNOTATIONS: "sdocSpanAnnotations",
@@ -52,9 +54,9 @@ export const QueryKey = {
   // managed by BBoxAnnotationHooks:
   // a single BBoxAnnotationRead (by bbox annotation id)
   BBOX_ANNOTATION: "bboxAnnotation",
-  // all BBoxAnnotationRead[] of a code of the logged-in user (by code id)
+  // BBoxAnnotationRead[] of a code of the logged-in user (by code id)
   BBOX_ANNOTATIONS_USER_CODE: "bboxAnnotationsUserCode",
-  // bbox annotations of a document (by sdoc id, user id)
+  // BBoxAnnotationRead[] of a document (by sdoc id, user id)
   SDOC_BBOX_ANNOTATIONS: "sdocBBoxAnnotations",
 
   // managed by SentenceAnnotationHooks:
@@ -63,15 +65,16 @@ export const QueryKey = {
   // sentence annotator of a document (by sdoc id, user id)
   SDOC_SENTENCE_ANNOTATOR: "sdocSentenceAnnotator",
 
+  // managed by WhiteboardHooks
+  // all project WHITEBOARDs (by project id)
+  WHITEBOARDS_PROJECT: "whiteboardsProject",
+
   // all crawler jobs of a Project (by project id)
   PROJECT_CRAWLER_JOBS: "projectCrawlerJobs",
   // all prepro jobs of a Project (by project id)
   PROJECT_PREPROCESSING_JOBS: "projectPreprocessingJobs",
   // all llm jobs of a Project (by project id)
   PROJECT_LLM_JOBS: "projectLLMJobs",
-
-  // annotators (user ids) of a document (by sdoc id)
-  SDOC_ANNOTATORS: "sdocAnnotators",
 
   // all metadata of a document (by sdoc id)
   SDOC_METADATAS: "sdocMetadatas",
@@ -105,11 +108,6 @@ export const QueryKey = {
   COTA_REFINEMENT_JOB: "cotaRefinementJob",
   // the most recent COTARefinementJob of a cota (by cota id)
   COTA_MOST_RECENT_REFINEMENT_JOB: "cotaMostRecentRefinementJob",
-
-  // a single WHITEBOARD (by WHITEBOARD id)
-  WHITEBOARD: "whiteboard",
-  // all project WHITEBOARDs (by project id)
-  WHITEBOARDS_PROJECT: "whiteboardsProject",
 
   FILTER_ENTITY_STATISTICS: "filterEntityStatistics",
   FILTER_KEYWORD_STATISTICS: "filterKeywordStatistics",

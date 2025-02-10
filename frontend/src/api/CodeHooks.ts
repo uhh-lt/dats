@@ -63,10 +63,9 @@ const useCreateCode = () =>
   useMutation({
     mutationFn: CodeService.createNewCode,
     onSuccess: (data, variables) => {
-      queryClient.setQueryData<CodeMap>([QueryKey.PROJECT_CODES, variables.requestBody.project_id], (oldData) => ({
-        ...oldData,
-        [data.id]: data,
-      }));
+      queryClient.setQueryData<CodeMap>([QueryKey.PROJECT_CODES, variables.requestBody.project_id], (oldData) =>
+        oldData ? { ...oldData, [data.id]: data } : { [data.id]: data },
+      );
     },
   });
 
@@ -74,10 +73,9 @@ const useUpdateCode = () =>
   useMutation({
     mutationFn: CodeService.updateById,
     onSuccess: (data) => {
-      queryClient.setQueryData<CodeMap>([QueryKey.PROJECT_CODES, data.project_id], (oldData) => ({
-        ...oldData,
-        [data.id]: data,
-      }));
+      queryClient.setQueryData<CodeMap>([QueryKey.PROJECT_CODES, data.project_id], (oldData) =>
+        oldData ? { ...oldData, [data.id]: data } : { [data.id]: data },
+      );
     },
   });
 
