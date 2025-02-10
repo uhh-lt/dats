@@ -85,13 +85,6 @@ export const QueryKey = {
   // the most recent COTARefinementJobRead of a cota (by cota id)
   COTA_MOST_RECENT_REFINEMENT_JOB: "cotaMostRecentRefinementJob",
 
-  // all crawler jobs of a Project (by project id)
-  PROJECT_CRAWLER_JOBS: "projectCrawlerJobs",
-  // all prepro jobs of a Project (by project id)
-  PROJECT_PREPROCESSING_JOBS: "projectPreprocessingJobs",
-  // all llm jobs of a Project (by project id)
-  PROJECT_LLM_JOBS: "projectLLMJobs",
-
   // all metadata of a document (by sdoc id)
   SDOC_METADATAS: "sdocMetadatas",
   // metadata with given key of a document (by sdoc id, metadata key)
@@ -100,6 +93,44 @@ export const QueryKey = {
   // project metadata (by project id)
   PROJECT_METADATAS: "projectMetadatas",
 
+  FILTER_ENTITY_STATISTICS: "filterEntityStatistics",
+  FILTER_KEYWORD_STATISTICS: "filterKeywordStatistics",
+  FILTER_TAG_STATISTICS: "filterTagStatistics",
+
+  ANNOSCALING_SUGGEST: "annoscalingSuggest",
+
+  // tables
+  SEARCH_TABLE: "search-document-table-data",
+
+  // table info (info about the columns and their types)
+  TABLE_INFO: "tableInfo",
+
+  // TODO: Here is potential to refactor backend & frontend: BackgroundJobService
+  // managed by ExportHooks:
+  // exportjob (by export job id)
+  EXPORT_JOB: "exportJob",
+
+  // managed by CrawlerHooks:
+  // crawlerjob (by crawler job id)
+  CRAWLER_JOB: "crawlerJob",
+  // all crawler jobs of a Project (by project id)
+  PROJECT_CRAWLER_JOBS: "projectCrawlerJobs",
+
+  // managed by PreProHooks:
+  // preprojob (by prepro job id)
+  PREPRO_JOB: "preProJob",
+  // all prepro jobs of a Project (by project id)
+  PROJECT_PREPROCESSING_JOBS: "projectPreprocessingJobs",
+  // preprocessing status of the project (by project id)
+  PREPRO_PROJECT_STATUS: "preproProjectStatus",
+
+  // managed by LLMHooks:
+  // llmjob (by llm job id)
+  LLM_JOB: "llmJob",
+  // all llm jobs of a Project (by project id)
+  PROJECT_LLM_JOBS: "projectLLMJobs",
+
+  // TO BE DELETED:
   // a single feedback (by feedback id)
   FEEDBACK: "feedback",
   // all feedback
@@ -107,35 +138,9 @@ export const QueryKey = {
   // all logged-in user's feedbacks
   FEEDBACKS_USER: "feedbacksUser",
 
+  // TO BE DELETED:
   // a single TABLE (by TABLE id)
   TABLE: "table",
   // all tables of the project of the logged-in user (by project id)
   TABLES_PROJECT_USER: "tablesProjectUser",
-
-  FILTER_ENTITY_STATISTICS: "filterEntityStatistics",
-  FILTER_KEYWORD_STATISTICS: "filterKeywordStatistics",
-  FILTER_TAG_STATISTICS: "filterTagStatistics",
-
-  ANNOSCALING_SUGGEST: "annoscalingSuggest",
-
-  // preprocessing status of the project (by project id)
-  PREPRO_PROJECT_STATUS: "preproProjectStatus",
-
-  // preprojob (by prepro job id)
-  PREPRO_JOB: "preProJob",
-
-  // exportjob (by export job id)
-  EXPORT_JOB: "exportJob",
-
-  // crawlerjob (by crawler job id)
-  CRAWLER_JOB: "crawlerJob",
-
-  // llmjob (by llm job id)
-  LLM_JOB: "llmJob",
-
-  // tables
-  SEARCH_TABLE: "search-document-table-data",
-
-  // table info (info about the columns and their types)
-  TABLE_INFO: "tableInfo",
 };
