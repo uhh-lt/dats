@@ -94,8 +94,9 @@ const useCreateBBoxAnnotation = () => {
     onSuccess: (data) => {
       queryClient.setQueryData<BBoxAnnotationRead>([QueryKey.BBOX_ANNOTATION, data.id], data);
       // Replace the fake bbox with the real one
-      queryClient.setQueryData<BBoxAnnotationRead[]>([QueryKey.SDOC_BBOX_ANNOTATIONS, data.sdoc_id, user?.id], (old) =>
-        old ? old.map((bbox) => (bbox.id === FAKE_BBOX_ID ? data : bbox)) : [data],
+      queryClient.setQueryData<BBoxAnnotationRead[]>(
+        [QueryKey.SDOC_BBOX_ANNOTATIONS, data.sdoc_id, data.user_id],
+        (old) => (old ? old.map((bbox) => (bbox.id === FAKE_BBOX_ID ? data : bbox)) : [data]),
       );
     },
     meta: {

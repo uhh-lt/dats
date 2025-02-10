@@ -2,7 +2,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 
 import queryClient from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
-import { SentenceAnnotatorResult } from "./openapi/models/SentenceAnnotatorResult.ts";
 import { SourceDocumentDataRead } from "./openapi/models/SourceDocumentDataRead.ts";
 import { SourceDocumentMetadataReadResolved } from "./openapi/models/SourceDocumentMetadataReadResolved.ts";
 import { SourceDocumentRead } from "./openapi/models/SourceDocumentRead.ts";
@@ -129,19 +128,6 @@ const useGetAnnotators = (sdocId: number | null | undefined) =>
     enabled: !!sdocId,
   });
 
-const useGetSentenceAnnotator = (sdocId: number | null | undefined, userId: number | null | undefined) => {
-  // TODO: filter out all disabled code ids
-  return useQuery<SentenceAnnotatorResult, Error>({
-    queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR, sdocId, userId],
-    queryFn: () =>
-      SourceDocumentService.getSentenceAnnotator({
-        sdocId: sdocId!,
-        userId: userId!,
-      }),
-    enabled: !!sdocId && !!userId,
-  });
-};
-
 const SdocHooks = {
   // sdoc
   useGetDocument,
@@ -153,7 +139,6 @@ const SdocHooks = {
   useGetSdocIdsByTagId,
   // annotations
   useGetAnnotators,
-  useGetSentenceAnnotator,
   // name
   useUpdateName,
   // metadata

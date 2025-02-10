@@ -98,8 +98,9 @@ const useCreateSpanAnnotation = () => {
     onSuccess: (data) => {
       queryClient.setQueryData<SpanAnnotationRead>([QueryKey.SPAN_ANNOTATION, data.id], data);
       // Replace the fake span with the real one
-      queryClient.setQueryData<SpanAnnotationRead[]>([QueryKey.SDOC_SPAN_ANNOTATIONS, data.sdoc_id, user?.id], (old) =>
-        old ? old.map((span) => (span.id === FAKE_ANNOTATION_ID ? data : span)) : [data],
+      queryClient.setQueryData<SpanAnnotationRead[]>(
+        [QueryKey.SDOC_SPAN_ANNOTATIONS, data.sdoc_id, data.user_id],
+        (old) => (old ? old.map((span) => (span.id === FAKE_ANNOTATION_ID ? data : span)) : [data]),
       );
     },
     meta: {
@@ -160,7 +161,7 @@ const useUpdateSpanAnnotation = () =>
       queryClient.invalidateQueries({ queryKey: ["annotation-table-data"] }); // TODO: This is not optimal, shoudl be projectId, selectedUserId... We do this because of SpanAnnotationTable
     },
     meta: {
-      successMessage: (data: SpanAnnotationRead) => `Updated Span Box Annotation ${data.id}`,
+      successMessage: (data: SpanAnnotationRead) => `Updated Span Annotation ${data.id}`,
     },
   });
 

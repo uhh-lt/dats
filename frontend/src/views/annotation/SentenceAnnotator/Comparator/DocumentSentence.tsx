@@ -394,15 +394,21 @@ function AnnotationApplyPart({
                         <SquareIcon style={{ color: code.color }} fontSize="small" />
                         <IconButton
                           sx={{ p: 0.5 }}
-                          disabled={!!sameAnnotation}
-                          onClick={() => onApplyAnnotation(annotation)}
+                          disabled={!sameAnnotation}
+                          onClick={() => onRevertAnnotation(sameAnnotation!)}
+                          onMouseEnter={() =>
+                            onAnnotationMouseEnter(sameAnnotation ? sameAnnotation.id : annotation.id)
+                          }
                         >
                           <ClearIcon fontSize="small" />
                         </IconButton>
                         <IconButton
                           sx={{ p: 0.5, ml: -0.5 }}
-                          disabled={!sameAnnotation}
-                          onClick={() => onRevertAnnotation(sameAnnotation!)}
+                          disabled={!!sameAnnotation}
+                          onClick={() => onApplyAnnotation(annotation)}
+                          onMouseEnter={() =>
+                            onAnnotationMouseEnter(sameAnnotation ? sameAnnotation.id : annotation.id)
+                          }
                         >
                           <ArrowForwardIcon fontSize="small" />
                         </IconButton>

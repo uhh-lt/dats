@@ -12,13 +12,8 @@ import { AnnoActions } from "../../annoSlice.ts";
 import { Annotation } from "../../Annotation.ts";
 import AnnotationMenu, { CodeSelectorHandle } from "../../AnnotationMenu/AnnotationMenu.tsx";
 import { ICode } from "../../ICode.ts";
-import {
-  useCreateBulkSentenceAnnotation,
-  useCreateSentenceAnnotation,
-  useDeleteBulkSentenceAnnotation,
-  useDeleteSentenceAnnotation,
-  useUpdateSentenceAnnotation,
-} from "../sentenceAnnotationHooks.ts";
+
+import SentenceAnnotationHooks from "../../../../api/SentenceAnnotationHooks.ts";
 import { useGetSentenceAnnotator } from "../useGetSentenceAnnotator.ts";
 import { isAnnotationSame } from "./comparisonUtils.ts";
 import DocumentSentence from "./DocumentSentence.tsx";
@@ -60,48 +55,21 @@ function SentenceAnnotationComparison({
   const annotationMenuRef = useRef<CodeSelectorHandle>(null);
   const dispatch = useAppDispatch();
   const openSnackbar = useOpenSnackbar();
-  const createMutation = useCreateSentenceAnnotation(user!.id);
-  const createBulkMutation = useCreateBulkSentenceAnnotation(user!.id);
-  const deleteMutation = useDeleteSentenceAnnotation();
-  const deleteBulkMutation = useDeleteBulkSentenceAnnotation(user!.id);
-  const updateMutation = useUpdateSentenceAnnotation();
+  const createMutation = SentenceAnnotationHooks.useCreateSentenceAnnotation();
+  const createBulkMutation = SentenceAnnotationHooks.useCreateBulkSentenceAnnotation();
+  const deleteMutation = SentenceAnnotationHooks.useDeleteSentenceAnnotation();
+  const deleteBulkMutation = SentenceAnnotationHooks.useDeleteBulkSentenceAnnotation();
+  const updateMutation = SentenceAnnotationHooks.useUpdateSentenceAnnotation();
   const handleCodeSelectorDeleteAnnotation = (annotation: Annotation) => {
-    deleteMutation.mutate(
-      { sentenceAnnotationToDelete: annotation as SentenceAnnotationRead },
-      {
-        onSuccess: (sentenceAnnotation) => {
-          openSnackbar({
-            text: `Deleted Sentence Annotation ${sentenceAnnotation.id}`,
-            severity: "success",
-          });
-        },
-      },
-    );
+    deleteMutation.mutate(annotation as SentenceAnnotationRead);
   };
   const handleCodeSelectorEditCode = (annotation: Annotation, code: ICode) => {
-    updateMutation.mutate(
-      {
-        sentenceAnnoToUpdate: annotation as SentenceAnnotationRead,
-        code: {
-          id: code.id,
-          name: code.name,
-          color: code.color,
-          description: "",
-          project_id: sdocData.project_id,
-          created: "",
-          updated: "",
-          is_system: false,
-        },
+    updateMutation.mutate({
+      sentenceAnnoToUpdate: annotation as SentenceAnnotationRead,
+      update: {
+        code_id: code.id,
       },
-      {
-        onSuccess: (sentenceAnnotation) => {
-          openSnackbar({
-            text: `Updated Sentence Annotation ${sentenceAnnotation.id}`,
-            severity: "success",
-          });
-        },
-      },
-    );
+    });
   };
   const handleCodeSelectorAddCode = (code: CodeRead, isNewCode: boolean) => {
     setSelectedSentences([]);
@@ -116,15 +84,11 @@ function SentenceAnnotationComparison({
         },
       },
       {
-        onSuccess: (sentenceAnnotation) => {
+        onSuccess: () => {
           if (!isNewCode) {
             // if we use an existing code to annotate, we move it to the top
             dispatch(AnnoActions.moveCodeToTop(code));
           }
-          openSnackbar({
-            text: `Created Sentence Annotation ${sentenceAnnotation.id}`,
-            severity: "success",
-          });
         },
       },
     );
@@ -132,24 +96,14 @@ function SentenceAnnotationComparison({
   const handleCodeSelectorClose = (reason?: "backdropClick" | "escapeKeyDown") => {
     // i clicked away because i like the annotation as is
     if (selectedSentences.length > 0 && reason === "backdropClick" && mostRecentCode) {
-      createMutation.mutate(
-        {
-          requestBody: {
-            code_id: mostRecentCode.id,
-            sdoc_id: sdocData.id,
-            sentence_id_start: selectedSentences[0],
-            sentence_id_end: selectedSentences[selectedSentences.length - 1],
-          },
+      createMutation.mutate({
+        requestBody: {
+          code_id: mostRecentCode.id,
+          sdoc_id: sdocData.id,
+          sentence_id_start: selectedSentences[0],
+          sentence_id_end: selectedSentences[selectedSentences.length - 1],
         },
-        {
-          onSuccess: (sentenceAnnotation) => {
-            openSnackbar({
-              text: `Created Sentence Annotation ${sentenceAnnotation.id}`,
-              severity: "success",
-            });
-          },
-        },
-      );
+      });
     }
     // i clicked escape because i want to cancel the annotation
     if (reason === "escapeKeyDown") {
@@ -245,20 +199,14 @@ function SentenceAnnotationComparison({
       return;
     }
 
-    deleteBulkMutation.mutate(
-      {
-        sdocId: sdocData.id,
-        sentenceAnnotationToDelete: sameAnnotations,
+    deleteBulkMutation.mutate(sameAnnotations, {
+      onSuccess: () => {
+        openSnackbar({
+          text: `Reverted All Sentence Annotations`,
+          severity: "success",
+        });
       },
-      {
-        onSuccess: () => {
-          openSnackbar({
-            text: `Reverted All Sentence Annotations`,
-            severity: "success",
-          });
-        },
-      },
-    );
+    });
   };
 
   // single processing events
@@ -279,17 +227,14 @@ function SentenceAnnotationComparison({
   };
 
   const handleRevertAnnotation = (annotation: SentenceAnnotationRead) => {
-    deleteMutation.mutate(
-      { sentenceAnnotationToDelete: annotation },
-      {
-        onSuccess: (sentenceAnnotation) => {
-          openSnackbar({
-            text: `Reverted Sentence Annotation ${sentenceAnnotation.id}`,
-            severity: "success",
-          });
-        },
+    deleteMutation.mutate(annotation, {
+      onSuccess: (sentenceAnnotation) => {
+        openSnackbar({
+          text: `Reverted Sentence Annotation ${sentenceAnnotation.id}`,
+          severity: "success",
+        });
       },
-    );
+    });
   };
 
   // event handlers

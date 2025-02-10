@@ -175,7 +175,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   const bulkLinkDocumentTagsMutation = TagHooks.useBulkLinkDocumentTags();
   const updateCodeMutation = CodeHooks.useUpdateCode();
   const updateSpanAnnotationMutation = SpanAnnotationHooks.useUpdateSpanAnnotation();
-  const updateSentenceAnnotationMutation = SentenceAnnotationHooks.useUpdateSentenceAnno();
+  const updateSentenceAnnotationMutation = SentenceAnnotationHooks.useUpdateSentenceAnnotation();
   const updateBBoxAnnotationMutation = BboxAnnotationHooks.useUpdateBBoxAnnotation();
 
   // refs
@@ -268,43 +268,23 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
         // codes can be manually connected to annotations
         if (isCodeNode(sourceNode) && isSpanAnnotationNode(targetNode)) {
           const mutation = updateSpanAnnotationMutation.mutate;
-          mutation(
-            {
-              spanAnnotationToUpdate: targetNode.data.spanAnnotationId,
-              requestBody: {
-                code_id: sourceNode.data.codeId,
-              },
+          mutation({
+            spanAnnotationToUpdate: targetNode.data.spanAnnotationId,
+            requestBody: {
+              code_id: sourceNode.data.codeId,
             },
-            {
-              onSuccess() {
-                openSnackbar({
-                  text: "Updated span annotation",
-                  severity: "success",
-                });
-              },
-            },
-          );
+          });
         }
 
         // codes can be manually connected to annotations
         if (isCodeNode(sourceNode) && isSentenceAnnotationNode(targetNode)) {
           const mutation = updateSentenceAnnotationMutation.mutate;
-          mutation(
-            {
-              sentenceAnnoId: targetNode.data.sentenceAnnotationId,
-              requestBody: {
-                code_id: sourceNode.data.codeId,
-              },
+          mutation({
+            sentenceAnnoToUpdate: targetNode.data.sentenceAnnotationId,
+            update: {
+              code_id: sourceNode.data.codeId,
             },
-            {
-              onSuccess() {
-                openSnackbar({
-                  text: "Updated sentence annotation",
-                  severity: "success",
-                });
-              },
-            },
-          );
+          });
         }
 
         // codes can be manually connected to annotations

@@ -5,18 +5,13 @@ import CodeHooks from "../../../../api/CodeHooks.ts";
 import { CodeRead } from "../../../../api/openapi/models/CodeRead.ts";
 import { SentenceAnnotationRead } from "../../../../api/openapi/models/SentenceAnnotationRead.ts";
 import { SourceDocumentDataRead } from "../../../../api/openapi/models/SourceDocumentDataRead.ts";
-import { useAuth } from "../../../../auth/useAuth.ts";
-import { useOpenSnackbar } from "../../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 import { AnnoActions } from "../../annoSlice.ts";
 import { Annotation } from "../../Annotation.ts";
 import AnnotationMenu, { CodeSelectorHandle } from "../../AnnotationMenu/AnnotationMenu.tsx";
 import { ICode } from "../../ICode.ts";
-import {
-  useCreateSentenceAnnotation,
-  useDeleteSentenceAnnotation,
-  useUpdateSentenceAnnotation,
-} from "../sentenceAnnotationHooks.ts";
+
+import SentenceAnnotationHooks from "../../../../api/SentenceAnnotationHooks.ts";
 import { useGetSentenceAnnotator } from "../useGetSentenceAnnotator.ts";
 import DocumentSentence from "./DocumentSentence.tsx";
 
@@ -26,9 +21,6 @@ interface SentenceAnnotatorProps {
 }
 
 function SentenceAnnotator({ sdocData, virtualizerScrollElementRef, ...props }: SentenceAnnotatorProps & BoxProps) {
-  // auth state
-  const user = useAuth().user;
-
   // global client state (redux)
   const visibleUserId = useAppSelector((state) => state.annotations.visibleUserId);
 
@@ -50,47 +42,19 @@ function SentenceAnnotator({ sdocData, virtualizerScrollElementRef, ...props }: 
   // annotation menu
   const annotationMenuRef = useRef<CodeSelectorHandle>(null);
   const dispatch = useAppDispatch();
-  const openSnackbar = useOpenSnackbar();
-  const createMutation = useCreateSentenceAnnotation(user?.id || -1);
-  const deleteMutation = useDeleteSentenceAnnotation();
-  const updateMutation = useUpdateSentenceAnnotation();
+  const createMutation = SentenceAnnotationHooks.useCreateSentenceAnnotation();
+  const deleteMutation = SentenceAnnotationHooks.useDeleteSentenceAnnotation();
+  const updateMutation = SentenceAnnotationHooks.useUpdateSentenceAnnotation();
   const handleCodeSelectorDeleteAnnotation = (annotation: Annotation) => {
-    deleteMutation.mutate(
-      { sentenceAnnotationToDelete: annotation as SentenceAnnotationRead },
-      {
-        onSuccess: (sentenceAnnotation) => {
-          openSnackbar({
-            text: `Deleted Sentence Annotation ${sentenceAnnotation.id}`,
-            severity: "success",
-          });
-        },
-      },
-    );
+    deleteMutation.mutate(annotation as SentenceAnnotationRead);
   };
   const handleCodeSelectorEditCode = (annotation: Annotation, code: ICode) => {
-    updateMutation.mutate(
-      {
-        sentenceAnnoToUpdate: annotation as SentenceAnnotationRead,
-        code: {
-          id: code.id,
-          name: code.name,
-          color: code.color,
-          description: "",
-          project_id: sdocData.project_id,
-          created: "",
-          updated: "",
-          is_system: false,
-        },
+    updateMutation.mutate({
+      sentenceAnnoToUpdate: annotation as SentenceAnnotationRead,
+      update: {
+        code_id: code.id,
       },
-      {
-        onSuccess: (sentenceAnnotation) => {
-          openSnackbar({
-            text: `Updated Sentence Annotation ${sentenceAnnotation.id}`,
-            severity: "success",
-          });
-        },
-      },
-    );
+    });
   };
   const handleCodeSelectorAddCode = (code: CodeRead, isNewCode: boolean) => {
     setSelectedSentences([]);
@@ -105,15 +69,11 @@ function SentenceAnnotator({ sdocData, virtualizerScrollElementRef, ...props }: 
         },
       },
       {
-        onSuccess: (sentenceAnnotation) => {
+        onSuccess: () => {
           if (!isNewCode) {
             // if we use an existing code to annotate, we move it to the top
             dispatch(AnnoActions.moveCodeToTop(code));
           }
-          openSnackbar({
-            text: `Created Sentence Annotation ${sentenceAnnotation.id}`,
-            severity: "success",
-          });
         },
       },
     );
@@ -121,24 +81,14 @@ function SentenceAnnotator({ sdocData, virtualizerScrollElementRef, ...props }: 
   const handleCodeSelectorClose = (reason?: "backdropClick" | "escapeKeyDown") => {
     // i clicked away because i like the annotation as is
     if (selectedSentences.length > 0 && reason === "backdropClick" && mostRecentCode) {
-      createMutation.mutate(
-        {
-          requestBody: {
-            code_id: mostRecentCode.id,
-            sdoc_id: sdocData.id,
-            sentence_id_start: selectedSentences[0],
-            sentence_id_end: selectedSentences[selectedSentences.length - 1],
-          },
+      createMutation.mutate({
+        requestBody: {
+          code_id: mostRecentCode.id,
+          sdoc_id: sdocData.id,
+          sentence_id_start: selectedSentences[0],
+          sentence_id_end: selectedSentences[selectedSentences.length - 1],
         },
-        {
-          onSuccess: (sentenceAnnotation) => {
-            openSnackbar({
-              text: `Created Sentence Annotation ${sentenceAnnotation.id}`,
-              severity: "success",
-            });
-          },
-        },
-      );
+      });
     }
     // i clicked escape because i want to cancel the annotation
     if (reason === "escapeKeyDown") {

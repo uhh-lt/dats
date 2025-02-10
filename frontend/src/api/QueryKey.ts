@@ -46,22 +46,22 @@ export const QueryKey = {
   SPAN_ANNOTATION: "annotation",
   // span annotations of a code of the logged-in user (by code id)
   SPAN_ANNOTATIONS_USER_CODE: "annotationsUserCode",
-  // SpanAnnotationRead[] (by sdoc id, user ids)
+  // SpanAnnotationRead[] (by sdoc id, user id)
   SDOC_SPAN_ANNOTATIONS: "sdocSpanAnnotations",
 
   // managed by BBoxAnnotationHooks:
-  // a single BBoxAnnotationReadResolved (by bbox annotation id)
+  // a single BBoxAnnotationRead (by bbox annotation id)
   BBOX_ANNOTATION: "bboxAnnotation",
-  // all BBoxAnnotationReadResolved[] of a code of the logged-in user (by code id)
+  // all BBoxAnnotationRead[] of a code of the logged-in user (by code id)
   BBOX_ANNOTATIONS_USER_CODE: "bboxAnnotationsUserCode",
-  // bbox annotations of a document (by sdoc id, user ids)
+  // bbox annotations of a document (by sdoc id, user id)
   SDOC_BBOX_ANNOTATIONS: "sdocBBoxAnnotations",
 
   // managed by SentenceAnnotationHooks:
-  // a single sentence annotation (by sentence annotation id)
+  // a single SentenceAnnotationRead (by sentence annotation id)
   SENTENCE_ANNOTATION: "sentenceAnnotation",
-  // sentence annotations of a code of the logged-in user (by code id)
-  SENTENCE_ANNOTATIONS_USER_CODE: "sentenceAnnotationsUserCode",
+  // sentence annotator of a document (by sdoc id, user id)
+  SDOC_SENTENCE_ANNOTATOR: "sdocSentenceAnnotator",
 
   // all crawler jobs of a Project (by project id)
   PROJECT_CRAWLER_JOBS: "projectCrawlerJobs",
@@ -73,8 +73,6 @@ export const QueryKey = {
   // annotators (user ids) of a document (by sdoc id)
   SDOC_ANNOTATORS: "sdocAnnotators",
 
-  // sentence annotator of a document (by sdoc id, user ids)
-  SDOC_SENTENCE_ANNOTATOR: "sdocSentenceAnnotator",
   // all metadata of a document (by sdoc id)
   SDOC_METADATAS: "sdocMetadatas",
   // metadata with given key of a document (by sdoc id, metadata key)
