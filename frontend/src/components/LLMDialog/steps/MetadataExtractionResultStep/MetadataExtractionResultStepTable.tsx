@@ -11,11 +11,11 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useMemo, useState } from "react";
+import MetadataHooks from "../../../../api/MetadataHooks.ts";
 import { MetadataExtractionResult } from "../../../../api/openapi/models/MetadataExtractionResult.ts";
 import { ProjectMetadataRead } from "../../../../api/openapi/models/ProjectMetadataRead.ts";
 import { SourceDocumentMetadataBulkUpdate } from "../../../../api/openapi/models/SourceDocumentMetadataBulkUpdate.ts";
 import { SourceDocumentMetadataReadResolved } from "../../../../api/openapi/models/SourceDocumentMetadataReadResolved.ts";
-import SdocMetadataHooks from "../../../../api/SdocMetadataHooks.ts";
 import { useAppDispatch } from "../../../../plugins/ReduxHooks.ts";
 import { CRUDDialogActions } from "../../../dialogSlice.ts";
 import { SdocMetadataRendererWithData } from "../../../Metadata/SdocMetadataRenderer.tsx";
@@ -158,7 +158,7 @@ function MetadataExtractionResultStepTable({ data }: { data: MetadataExtractionR
     dispatch(CRUDDialogActions.closeLLMDialog());
   };
 
-  const updateBulkMetadataMutation = SdocMetadataHooks.useUpdateBulkMetadata();
+  const updateBulkMetadataMutation = MetadataHooks.useUpdateBulkSdocMetadata();
   const handleUpdateBulkMetadata = () => {
     // find all the metadata where the useSuggested flag is true
     const metadataToUpdate: SourceDocumentMetadataBulkUpdate[] = theRows.reduce((acc, row) => {

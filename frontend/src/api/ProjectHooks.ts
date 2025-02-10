@@ -4,7 +4,6 @@ import { QueryKey } from "./QueryKey.ts";
 
 import { PreprocessingJobRead } from "./openapi/models/PreprocessingJobRead.ts";
 import { ProjectCreate } from "./openapi/models/ProjectCreate.ts";
-import { ProjectMetadataRead } from "./openapi/models/ProjectMetadataRead.ts";
 import { ProjectRead } from "./openapi/models/ProjectRead.ts";
 import { ProjectService } from "./openapi/services/ProjectService.ts";
 import { UserService } from "./openapi/services/UserService.ts";
@@ -86,15 +85,6 @@ const useUploadDocument = () =>
     },
   });
 
-const useGetMetadata = (projectId: number) =>
-  useQuery<ProjectMetadataRead[], Error>({
-    queryKey: [QueryKey.PROJECT_METADATAS, projectId],
-    queryFn: () =>
-      ProjectService.getAllMetadata({
-        projId: projectId,
-      }),
-  });
-
 // duplicates
 const useFindDuplicateTextDocuments = () => useMutation({ mutationFn: ProjectService.findDuplicateTextSdocs });
 
@@ -107,8 +97,6 @@ const ProjectHooks = {
   useDeleteProject,
   // sdoc
   useUploadDocument,
-  // metadata
-  useGetMetadata,
   // duplicates
   useFindDuplicateTextDocuments,
 };

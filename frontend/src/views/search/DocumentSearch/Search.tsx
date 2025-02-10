@@ -1,7 +1,7 @@
 import { Divider, Typography } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import ProjectHooks from "../../../api/ProjectHooks.ts";
+import MetadataHooks from "../../../api/MetadataHooks.ts";
 import { SpanEntityStat } from "../../../api/openapi/models/SpanEntityStat.ts";
 import DocumentInformation from "../../../components/SourceDocument/DocumentInformation/DocumentInformation.tsx";
 import TagExplorer from "../../../components/Tag/TagExplorer/TagExplorer.tsx";
@@ -22,7 +22,7 @@ function Search() {
   const dispatch = useAppDispatch();
 
   // filter
-  const projectMetadata = ProjectHooks.useGetMetadata(projectId);
+  const projectMetadata = MetadataHooks.useGetProjectMetadata(projectId);
 
   // computed (local client state)
   const keywordMetadataIds = useMemo(() => {

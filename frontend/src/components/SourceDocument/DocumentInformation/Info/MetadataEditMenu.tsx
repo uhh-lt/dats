@@ -15,7 +15,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import React, { useCallback, useState } from "react";
-import ProjectMetadataHooks from "../../../../api/ProjectMetadataHooks.ts";
+import MetadataHooks from "../../../../api/MetadataHooks.ts";
 import { MetaType } from "../../../../api/openapi/models/MetaType.ts";
 import { SourceDocumentMetadataReadResolved } from "../../../../api/openapi/models/SourceDocumentMetadataReadResolved.ts";
 import ConfirmationAPI from "../../../ConfirmationDialog/ConfirmationAPI.ts";
@@ -58,7 +58,7 @@ function MetadataEditMenu({ metadata }: MetadataEditMenuProps) {
   };
 
   // closing / confirming changes
-  const updateMutation = ProjectMetadataHooks.useUpdateMetadata();
+  const updateMutation = MetadataHooks.useUpdateProjectMetadata();
 
   const handleClose = () => {
     setPosition(undefined);
@@ -95,7 +95,7 @@ function MetadataEditMenu({ metadata }: MetadataEditMenuProps) {
 
   // deletion
   const openSnackbar = useOpenSnackbar();
-  const deleteMutation = ProjectMetadataHooks.useDeleteMetadata();
+  const deleteMutation = MetadataHooks.useDeleteProjectMetadata();
   const handleDeleteMetadata = useCallback(() => {
     ConfirmationAPI.openConfirmationDialog({
       text: `Do you really want to delete the ProjectMetadata ${metadata.project_metadata.id}? This will remove metadata from all corresponding documents. This action cannot be undone!`,

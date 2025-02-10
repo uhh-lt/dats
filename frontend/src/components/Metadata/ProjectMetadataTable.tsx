@@ -7,8 +7,8 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useMemo } from "react";
+import MetadataHooks from "../../api/MetadataHooks.ts";
 import { ProjectMetadataRead } from "../../api/openapi/models/ProjectMetadataRead.ts";
-import ProjectHooks from "../../api/ProjectHooks.ts";
 
 const columns: MRT_ColumnDef<ProjectMetadataRead>[] = [
   {
@@ -61,7 +61,7 @@ function ProjectMetadataTable(props: ProjectMetadataTableProps) {
 
 function ProjectMetadataTableWithoutMetadata(props: SharedProjectMetadataTableProps) {
   // global server state
-  const projectMetadata = ProjectHooks.useGetMetadata(props.projectId);
+  const projectMetadata = MetadataHooks.useGetProjectMetadata(props.projectId);
 
   if (projectMetadata.isSuccess) {
     return <ProjectMetadataTableContent {...props} projectMetadata={projectMetadata.data} />;

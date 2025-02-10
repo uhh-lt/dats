@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import SdocHooks from "../../api/SdocHooks.ts";
+import MetadataHooks from "../../api/MetadataHooks.ts";
 import { MetaType } from "../../api/openapi/models/MetaType.ts";
 import { SourceDocumentMetadataReadResolved } from "../../api/openapi/models/SourceDocumentMetadataReadResolved.ts";
 import { dateToLocaleDateString } from "../../utils/DateUtils.ts";
@@ -10,7 +10,7 @@ interface SdocMetadataRendererProps {
 }
 
 function SdocMetadataRenderer({ sdocId, projectMetadataId }: SdocMetadataRendererProps) {
-  const sdocMetadatas = SdocHooks.useGetMetadata(sdocId);
+  const sdocMetadatas = MetadataHooks.useGetSdocMetadata(sdocId);
 
   // todo: this transformation causes a rerender :/
   const sdocMetadata = useMemo(() => {

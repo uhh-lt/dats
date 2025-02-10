@@ -85,13 +85,14 @@ export const QueryKey = {
   // the most recent COTARefinementJobRead of a cota (by cota id)
   COTA_MOST_RECENT_REFINEMENT_JOB: "cotaMostRecentRefinementJob",
 
+  // managed by MetadataHooks:
+  // project metadata (by project id)
+  PROJECT_METADATAS: "projectMetadatas",
+
   // all metadata of a document (by sdoc id)
   SDOC_METADATAS: "sdocMetadatas",
   // metadata with given key of a document (by sdoc id, metadata key)
   SDOC_METADATA_BY_KEY: "sdocMetadataByKey",
-
-  // project metadata (by project id)
-  PROJECT_METADATAS: "projectMetadatas",
 
   FILTER_ENTITY_STATISTICS: "filterEntityStatistics",
   FILTER_KEYWORD_STATISTICS: "filterKeywordStatistics",

@@ -2,7 +2,7 @@ import AddCircleIcon from "@mui/icons-material/AddCircle";
 import { Button, PopoverPosition } from "@mui/material";
 import React, { useCallback, useState } from "react";
 import { useParams } from "react-router-dom";
-import ProjectMetadataHooks from "../../../../api/ProjectMetadataHooks.ts";
+import MetadataHooks from "../../../../api/MetadataHooks.ts";
 import SdocHooks from "../../../../api/SdocHooks.ts";
 import { MetaType } from "../../../../api/openapi/models/MetaType.ts";
 import { useOpenSnackbar } from "../../../SnackbarDialog/useOpenSnackbar.ts";
@@ -29,7 +29,7 @@ function MetadataCreateButton({ sdocId }: MetadataCreateButtonProps) {
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
   const sdoc = SdocHooks.useGetDocument(sdocId);
   const openSnackbar = useOpenSnackbar();
-  const createMutation = ProjectMetadataHooks.useCreateMetadata();
+  const createMutation = MetadataHooks.useCreateProjectMetadata();
   const handleCreateMetadata = useCallback(
     (metaType: string) => {
       if (!sdoc.data) {

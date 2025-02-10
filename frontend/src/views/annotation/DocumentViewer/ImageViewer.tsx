@@ -4,7 +4,7 @@ import * as d3 from "d3";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks.ts";
-import SdocHooks from "../../../api/SdocHooks.ts";
+import MetadataHooks from "../../../api/MetadataHooks.ts";
 import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { ImageSearchActions } from "../../search/ImageSearch/imageSearchSlice.ts";
@@ -16,8 +16,8 @@ interface ImageViewerProps {
 }
 
 function ImageViewer(props: ImageViewerProps) {
-  const heightMetadata = SdocHooks.useGetMetadataByKey(props.sdocData.id, "height");
-  const widthMetadata = SdocHooks.useGetMetadataByKey(props.sdocData.id, "width");
+  const heightMetadata = MetadataHooks.useGetSdocMetadataByKey(props.sdocData.id, "height");
+  const widthMetadata = MetadataHooks.useGetSdocMetadataByKey(props.sdocData.id, "width");
 
   if (heightMetadata.isSuccess && widthMetadata.isSuccess) {
     return (

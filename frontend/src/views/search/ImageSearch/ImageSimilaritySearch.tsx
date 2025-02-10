@@ -2,7 +2,7 @@ import { Divider, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import ProjectHooks from "../../../api/ProjectHooks.ts";
+import MetadataHooks from "../../../api/MetadataHooks.ts";
 import { SdocColumns } from "../../../api/openapi/models/SdocColumns.ts";
 import { SimSearchImageHit } from "../../../api/openapi/models/SimSearchImageHit.ts";
 import { SpanEntityStat } from "../../../api/openapi/models/SpanEntityStat.ts";
@@ -29,7 +29,7 @@ function ImageSimilaritySearch() {
   const dispatch = useAppDispatch();
 
   // filter
-  const projectMetadata = ProjectHooks.useGetMetadata(projectId);
+  const projectMetadata = MetadataHooks.useGetProjectMetadata(projectId);
 
   // computed (local client state)
   const keywordMetadataIds = useMemo(() => {

@@ -2,7 +2,7 @@ import { ErrorMessage } from "@hookform/error-message";
 import { Stack } from "@mui/material";
 import { useCallback } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import SdocMetadataHooks from "../../../../../api/SdocMetadataHooks.ts";
+import MetadataHooks from "../../../../../api/MetadataHooks.ts";
 
 import { MetaType } from "../../../../../api/openapi/models/MetaType.ts";
 import { SourceDocumentMetadataRead } from "../../../../../api/openapi/models/SourceDocumentMetadataRead.ts";
@@ -48,7 +48,7 @@ function DocumentMetadataRow({ metadata, filterName }: DocumentMetadataRowProps)
   const openSnackbar = useOpenSnackbar();
 
   // mutation
-  const updateMutation = SdocMetadataHooks.useUpdateMetadata();
+  const updateMutation = MetadataHooks.useUpdateSdocMetadata();
 
   // form handling
   const handleUpdateMetadata: SubmitHandler<SourceDocumentMetadataUpdate> = useCallback(

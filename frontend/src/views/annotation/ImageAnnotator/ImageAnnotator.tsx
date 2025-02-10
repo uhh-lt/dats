@@ -3,7 +3,7 @@ import * as d3 from "d3";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks.ts";
-import SdocHooks from "../../../api/SdocHooks.ts";
+import MetadataHooks from "../../../api/MetadataHooks.ts";
 import { BBoxAnnotationRead } from "../../../api/openapi/models/BBoxAnnotationRead.ts";
 import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
@@ -19,7 +19,7 @@ interface ImageAnnotatorProps {
 }
 
 function ImageAnnotator(props: ImageAnnotatorProps) {
-  const heightMetadata = SdocHooks.useGetMetadataByKey(props.sdocData.id, "height");
+  const heightMetadata = MetadataHooks.useGetSdocMetadataByKey(props.sdocData.id, "height");
 
   if (heightMetadata.isSuccess) {
     return <ImageAnnotatorWithHeight sdocData={props.sdocData} height={heightMetadata.data.int_value!} />;

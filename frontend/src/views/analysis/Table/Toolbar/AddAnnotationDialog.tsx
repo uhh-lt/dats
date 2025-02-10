@@ -1,8 +1,8 @@
 import { Box, Button, ButtonProps, CircularProgress, Dialog } from "@mui/material";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { useState } from "react";
+import MetadataHooks from "../../../../api/MetadataHooks.ts";
 import { ProjectMetadataRead } from "../../../../api/openapi/models/ProjectMetadataRead.ts";
-import ProjectHooks from "../../../../api/ProjectHooks.ts";
 import SpanAnnotationTable from "../../../../components/SpanAnnotation/SpanAnnotationTable/SpanAnnotationTable.tsx";
 
 const filterName = "spanAnnotationDialogTable";
@@ -19,7 +19,7 @@ function AddAnnotationDialog({ projectId, buttonProps, shouldOpen, ...props }: A
   const [open, setOpen] = useState(false);
 
   // global server state
-  const metadata = ProjectHooks.useGetMetadata(projectId);
+  const metadata = MetadataHooks.useGetProjectMetadata(projectId);
 
   // actions
   const handleOpen = () => {

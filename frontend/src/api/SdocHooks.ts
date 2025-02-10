@@ -3,7 +3,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import queryClient from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { SourceDocumentDataRead } from "./openapi/models/SourceDocumentDataRead.ts";
-import { SourceDocumentMetadataReadResolved } from "./openapi/models/SourceDocumentMetadataReadResolved.ts";
 import { SourceDocumentRead } from "./openapi/models/SourceDocumentRead.ts";
 import { DocumentTagService } from "./openapi/services/DocumentTagService.ts";
 import { ProjectService } from "./openapi/services/ProjectService.ts";
@@ -95,28 +94,6 @@ const useUpdateName = () =>
     },
   });
 
-// metadata
-const useGetMetadata = (sdocId: number | null | undefined) =>
-  useQuery<SourceDocumentMetadataReadResolved[], Error>({
-    queryKey: [QueryKey.SDOC_METADATAS, sdocId],
-    queryFn: () =>
-      SourceDocumentService.getAllMetadata({
-        sdocId: sdocId!,
-      }),
-    enabled: !!sdocId,
-  });
-
-const useGetMetadataByKey = (sdocId: number | null | undefined, key: string) =>
-  useQuery<SourceDocumentMetadataReadResolved, Error>({
-    queryKey: [QueryKey.SDOC_METADATA_BY_KEY, sdocId, key],
-    queryFn: () =>
-      SourceDocumentService.readMetadataByKey({
-        sdocId: sdocId!,
-        metadataKey: key,
-      }),
-    enabled: !!sdocId,
-  });
-
 // annotations
 const useGetAnnotators = (sdocId: number | null | undefined) =>
   useQuery<number[], Error>({
@@ -141,10 +118,8 @@ const SdocHooks = {
   useGetAnnotators,
   // name
   useUpdateName,
-  // metadata
+  // thumbnail
   useGetThumbnailURL,
-  useGetMetadata,
-  useGetMetadataByKey,
 };
 
 export default SdocHooks;
