@@ -4,7 +4,7 @@ export const QueryKey = {
   PROJECT_USERS: "projectUsers",
 
   // managed by CodeHooks
-  // all CodeRead[] of a Project (by project id)
+  // CodeMap of a Project (by project id)
   PROJECT_CODES: "projectCodes",
 
   // managed by TagHooks
@@ -62,15 +62,15 @@ export const QueryKey = {
   // managed by SentenceAnnotationHooks:
   // a single SentenceAnnotationRead (by sentence annotation id)
   SENTENCE_ANNOTATION: "sentenceAnnotation",
-  // sentence annotator of a document (by sdoc id, user id)
+  // SentenceAnnotator of a document (by sdoc id, user id)
   SDOC_SENTENCE_ANNOTATOR: "sdocSentenceAnnotator",
 
   // managed by WhiteboardHooks:
-  // all project WHITEBOARDs (by project id)
+  // WhiteboardMap of a project (by project id)
   WHITEBOARDS_PROJECT: "whiteboardsProject",
 
   // managed by TimelineAnalysisHooks:
-  // All analyses from the logged-in user in a given project (by project id)
+  // TimelineMap of a project of the logged-in user (by project id)
   TIMELINE_ANALYSIS_PROJECT_USER: "timelineAnalysisProjectUser",
 
   // managed by CodeFrequencyHooks:
@@ -78,6 +78,12 @@ export const QueryKey = {
   ANALYSIS_CODE_FREQUENCIES: "analysisCodeFrequencies",
   // CodeOccurrence[] (by project id, user ids, code id)
   ANALYSIS_CODE_OCCURRENCES: "analysisCodeOccurrences",
+
+  // managed by CotaHooks:
+  // CotaMap of a project of the logged-in user (by project id)
+  COTAS_PROJECT_USER: "cotasProjectUser",
+  // the most recent COTARefinementJobRead of a cota (by cota id)
+  COTA_MOST_RECENT_REFINEMENT_JOB: "cotaMostRecentRefinementJob",
 
   // all crawler jobs of a Project (by project id)
   PROJECT_CRAWLER_JOBS: "projectCrawlerJobs",
@@ -105,15 +111,6 @@ export const QueryKey = {
   TABLE: "table",
   // all tables of the project of the logged-in user (by project id)
   TABLES_PROJECT_USER: "tablesProjectUser",
-
-  // a single COTA (by COTA id)
-  COTA: "cota",
-  // all cotas of a Project of the logged-in user (by project id)
-  COTAS_PROJECT_USER: "cotasProjectUser",
-  // a single COTARefinementJob (by refinement job id)
-  COTA_REFINEMENT_JOB: "cotaRefinementJob",
-  // the most recent COTARefinementJob of a cota (by cota id)
-  COTA_MOST_RECENT_REFINEMENT_JOB: "cotaMostRecentRefinementJob",
 
   FILTER_ENTITY_STATISTICS: "filterEntityStatistics",
   FILTER_KEYWORD_STATISTICS: "filterKeywordStatistics",
