@@ -55,7 +55,7 @@ const useCreateProjectMetadata = () =>
         old ? { ...old, [data.id]: data } : { [data.id]: data },
       );
       queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATAS] }); // sdoc metadata queries need to be refetched, as there is new metadata now!
-      queryClient.invalidateQueries({ queryKey: ["tableInfo"] }); // tableInfo queries need to be refetched, as there is new metadata now!
+      queryClient.invalidateQueries({ queryKey: [QueryKey.TABLE_INFO] }); // tableInfo queries need to be refetched, as there is new metadata now!
     },
     meta: {
       successMessage: (data: ProjectMetadataRead) => `Added metadata to Project ${data.project_id}`,
@@ -88,7 +88,7 @@ const useDeleteProjectMetadata = () =>
         return newData;
       });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATAS] }); // sdoc metadata queries need to be refetched, as metadata was deleted
-      queryClient.invalidateQueries({ queryKey: ["tableInfo"] }); // tableInfo queries need to be refetched, as metadata was deleted
+      queryClient.invalidateQueries({ queryKey: [QueryKey.TABLE_INFO] }); // tableInfo queries need to be refetched, as metadata was deleted
     },
   });
 

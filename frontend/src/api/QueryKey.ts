@@ -104,7 +104,8 @@ export const QueryKey = {
   // tables
   SEARCH_TABLE: "search-document-table-data",
 
-  // table info (info about the columns and their types)
+  // managed by various useInit*FilterSlice:
+  // table info (by filterSliceName, projectId) (info about the columns and their types)
   TABLE_INFO: "tableInfo",
 
   // TODO: Here is potential to refactor backend & frontend: BackgroundJobService
