@@ -73,6 +73,12 @@ export const QueryKey = {
   // All analyses from the logged-in user in a given project (by project id)
   TIMELINE_ANALYSIS_PROJECT_USER: "timelineAnalysisProjectUser",
 
+  // managed by CodeFrequencyHooks:
+  // CodeFrequency[] (by project id, user ids, code ids, doc types)
+  ANALYSIS_CODE_FREQUENCIES: "analysisCodeFrequencies",
+  // CodeOccurrence[] (by project id, user ids, code id)
+  ANALYSIS_CODE_OCCURRENCES: "analysisCodeOccurrences",
+
   // all crawler jobs of a Project (by project id)
   PROJECT_CRAWLER_JOBS: "projectCrawlerJobs",
   // all prepro jobs of a Project (by project id)
@@ -112,10 +118,6 @@ export const QueryKey = {
   FILTER_ENTITY_STATISTICS: "filterEntityStatistics",
   FILTER_KEYWORD_STATISTICS: "filterKeywordStatistics",
   FILTER_TAG_STATISTICS: "filterTagStatistics",
-
-  ANALYSIS_CODE_FREQUENCIES: "analysisCodeFrequencies",
-  ANALYSIS_CODE_OCCURRENCES: "analysisCodeOccurrences",
-  ANALYSIS_ANNOTATION_OCCURRENCES: "analysisAnnotationOccurrences",
 
   ANNOSCALING_SUGGEST: "annoscalingSuggest",
 
