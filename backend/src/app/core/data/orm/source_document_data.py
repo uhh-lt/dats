@@ -67,3 +67,15 @@ class SourceDocumentDataORM(ORMBase):
     def sentence_token_ends(self):
         char2tok = {c: i for i, c in enumerate(self.token_ends)}
         return [char2tok[e] for e in self.sentence_ends]
+
+    @property
+    def token_sentence_ids(self):
+        sentence_ids = []
+        current_sent = 0
+        current_sent_end = self.sentence_ends[current_sent]
+        for c in self.token_starts:
+            while c >= current_sent_end:
+                current_sent = +1
+                current_sent_end = self.sentence_ends[current_sent]
+            sentence_ids.append(current_sent)
+        return sentence_ids

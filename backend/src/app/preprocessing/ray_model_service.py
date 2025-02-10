@@ -18,6 +18,7 @@ from app.preprocessing.ray_model_worker.dto.detr import (
     DETRFilePathInput,
     DETRObjectDetectionOutput,
 )
+from app.preprocessing.ray_model_worker.dto.quote import QuoteJobInput, QuoteJobOutput
 from app.preprocessing.ray_model_worker.dto.spacy import SpacyInput, SpacyPipelineOutput
 from app.preprocessing.ray_model_worker.dto.whisper import (
     WhisperFilePathInput,
@@ -29,7 +30,7 @@ from config import conf
 
 class RayModelService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.base_url = f"{conf.ray.protocol}://" f"{conf.ray.host}:" f"{conf.ray.port}"
+        cls.base_url = f"{conf.ray.protocol}://{conf.ray.host}:{conf.ray.port}"
         logger.info(f"RayModelService base_url: {cls.base_url}")
 
         try:
@@ -118,3 +119,7 @@ class RayModelService(metaclass=SingletonMeta):
             "/cota/finetune_apply_compute", input.model_dump()
         )
         return RayCOTAJobResponse.model_validate(response.json())
+
+    def quote_prediction(self, input: QuoteJobInput) -> QuoteJobOutput:
+        response = self._make_post_request("/quote/predict", input.model_dump())
+        return QuoteJobOutput.model_validate(response.json())
