@@ -110,16 +110,16 @@ def get_by_id(
 def get_memos_by_attached_object_id(
     *,
     db: Session = Depends(get_db_session),
-    attached_object_id: int,
-    attached_object_type: AttachedObjectType,
+    attached_obj_id: int,
+    attached_obj_type: AttachedObjectType,
     authz_user: AuthzUser = Depends(),
 ) -> List[MemoRead]:
-    crud = attachedObject2Crud.get(attached_object_type)
+    crud = attachedObject2Crud.get(attached_obj_type)
     if crud is None:
         raise ValueError("Invalid attached_object_type")
 
     # get project id of the attached object
-    attached_object = crud.value.read(db=db, id=attached_object_id)
+    attached_object = crud.value.read(db=db, id=attached_obj_id)
     proj_id = get_parent_project_id(attached_object)
     if proj_id is None:
         raise ValueError("Attached object has no project")
@@ -138,16 +138,16 @@ def get_memos_by_attached_object_id(
 def get_user_memo_by_attached_object_id(
     *,
     db: Session = Depends(get_db_session),
-    attached_object_id: int,
-    attached_object_type: AttachedObjectType,
+    attached_obj_id: int,
+    attached_obj_type: AttachedObjectType,
     authz_user: AuthzUser = Depends(),
 ) -> MemoRead:
-    crud = attachedObject2Crud.get(attached_object_type)
+    crud = attachedObject2Crud.get(attached_obj_type)
     if crud is None:
         raise ValueError("Invalid attached_object_type")
 
     # get project id of the attached object
-    attached_object = crud.value.read(db=db, id=attached_object_id)
+    attached_object = crud.value.read(db=db, id=attached_obj_id)
     proj_id = get_parent_project_id(attached_object)
     if proj_id is None:
         raise ValueError("Attached object has no project")
