@@ -20,9 +20,6 @@ import TimelineAnalysis from "../views/analysis/TimelineAnalysis/TimelineAnalysi
 import TimelineAnalysisDashboard from "../views/analysis/TimelineAnalysis/TimelineAnalysisDashboard.tsx";
 import WordFrequency from "../views/analysis/WordFrequency/WordFrequency.tsx";
 import Annotation from "../views/annotation/Annotation.tsx";
-import Feedback from "../views/feedback/Feedback.tsx";
-import FeedbackAll from "../views/feedback/FeedbackAll.tsx";
-import FeedbackUser from "../views/feedback/FeedbackUser.tsx";
 import Logbook from "../views/logbook/Logbook.tsx";
 import Profile from "../views/profile/Profile.tsx";
 import Projects from "../views/projects/Projects.tsx";
@@ -81,20 +78,6 @@ const router = createBrowserRouter([
             <Profile />
           </RequireAuth>
         ),
-      },
-      {
-        path: "/feedback",
-        element: <Feedback />,
-        children: [
-          {
-            path: "/feedback",
-            element: <FeedbackAll />,
-          },
-          {
-            path: "/feedback/:userId",
-            element: <FeedbackUser />,
-          },
-        ],
       },
       { path: "*", element: <NotFound /> },
     ],

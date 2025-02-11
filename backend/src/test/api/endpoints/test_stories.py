@@ -947,15 +947,6 @@ def test_bbox_annotation_and_memo(client, api_code, api_user, api_document) -> N
 
 
 @pytest.mark.order(after="test_project_add_user")
-def test_feedback(client, api_user) -> None:
-    bob = api_user.user_list["bob"]
-    feedback = {"user_content": "I really love this app!"}
-    # Bob creates feedback
-    response_fail = client.put("feedback", headers=bob["AuthHeader"], json=feedback)
-    assert response_fail.status_code == 200
-
-
-@pytest.mark.order(after="test_project_add_user")
 def test_project_metadata(client, api_user, api_project) -> None:
     alice = api_user.user_list["alice"]
     project1 = api_project.project_list["project1"]
