@@ -1,81 +1,85 @@
-import { Stack, Typography } from "@mui/material";
+import { Card, CardContent, CardHeader, CardProps, Stack, Typography } from "@mui/material";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   MRT_ColumnDef,
+  MRT_RowSelectionState,
   MRT_RowVirtualizer,
-  MRT_ShowHideColumnsButton,
-  MRT_ToggleDensePaddingButton,
+  MRT_SortingState,
+  MRT_TableOptions,
+  MRT_VisibilityState,
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useEffect, useMemo, useRef, type UIEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type UIEvent } from "react";
 import { ElasticSearchDocumentHit } from "../../../api/openapi/models/ElasticSearchDocumentHit.ts";
 import { MemoColumns } from "../../../api/openapi/models/MemoColumns.ts";
 import { PaginatedElasticSearchDocumentHits } from "../../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { MemoService } from "../../../api/openapi/services/MemoService.ts";
-import { useAuth } from "../../../auth/useAuth.ts";
-import ExporterButton from "../../../components/Exporter/ExporterButton.tsx";
-import ReduxFilterDialog from "../../../components/FilterDialog/ReduxFilterDialog.tsx";
-import { MyFilter, createEmptyFilter } from "../../../components/FilterDialog/filterUtils.ts";
-import MemoDeleteButton from "../../../components/Memo/MemoDeleteButton.tsx";
-import MemoRenderer from "../../../components/Memo/MemoRenderer.tsx";
-import MemoStarButton from "../../../components/Memo/MemoStarButton.tsx";
+import { QueryKey } from "../../../api/QueryKey.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { RootState } from "../../../store/store.ts";
-import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
 import { useTableInfiniteScroll } from "../../../utils/useTableInfiniteScroll.ts";
-import { LogbookActions } from "../logbookSlice.ts";
-import SearchMemoOptionsMenu from "./SearchMemoOptionsMenu.tsx";
-import { useInitLogbookFilterSlice } from "./useInitLogbookFilterSlice.ts";
+import { MyFilter, createEmptyFilter } from "../../FilterDialog/filterUtils.ts";
+import MemoRenderer from "../MemoRenderer.tsx";
+import MemoTableOptionsMenu from "./MemoTableOptionsMenu.tsx";
+import MemoToolbarLeft from "./MemoToolbarLeft.tsx";
+import { MemoToolbarProps } from "./MemoToolbarProps.ts";
+import MemoToolbarRight from "./MemoToolbarRight.tsx";
+import { useInitMemoFilterSlice } from "./useInitMemoFilterSlice.ts";
 
-const filterStateSelector = (state: RootState) => state.logbook;
-const filterName = "root";
 const fetchSize = 20;
 const flatMapData = (page: PaginatedElasticSearchDocumentHits) => page.hits;
 
-interface SearchMemoTableProps {
+export interface MemoTableProps {
+  title?: string;
   projectId: number;
+  filterName: string;
+  // selection
+  rowSelectionModel: MRT_RowSelectionState;
+  onRowSelectionChange: MRT_TableOptions<ElasticSearchDocumentHit>["onRowSelectionChange"];
+  // sorting
+  sortingModel: MRT_SortingState;
+  onSortingChange: MRT_TableOptions<ElasticSearchDocumentHit>["onSortingChange"];
+  // column visibility
+  columnVisibilityModel: MRT_VisibilityState;
+  onColumnVisibilityChange: MRT_TableOptions<ElasticSearchDocumentHit>["onColumnVisibilityChange"];
+  // components
+  cardProps?: CardProps;
+  positionToolbarAlertBanner?: MRT_TableOptions<ElasticSearchDocumentHit>["positionToolbarAlertBanner"];
+  renderToolbarInternalActions?: (props: MemoToolbarProps) => React.ReactNode;
+  renderTopToolbarCustomActions?: (props: MemoToolbarProps) => React.ReactNode;
+  renderBottomToolbarCustomActions?: (props: MemoToolbarProps) => React.ReactNode;
 }
 
-function SearchMemoTable({ projectId }: SearchMemoTableProps) {
-  // global client state (react router)
-  const { user } = useAuth();
+function SearchMemoTable({
+  title,
+  projectId,
+  filterName,
+  rowSelectionModel,
+  onRowSelectionChange,
+  sortingModel,
+  onSortingChange,
+  columnVisibilityModel,
+  onColumnVisibilityChange,
+  cardProps,
+  renderToolbarInternalActions = MemoToolbarRight,
+  renderTopToolbarCustomActions = MemoToolbarLeft,
+  renderBottomToolbarCustomActions,
+}: MemoTableProps) {
+  // local state
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isSearchContent, setIsSearchContent] = useState<boolean>(false);
 
-  // global client state (redux) connected to table state
-  const [searchQuery, setSearchQuery] = useReduxConnector(
-    (state) => state.logbook.searchQuery,
-    LogbookActions.onSearchQueryChange,
-  );
-  const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
-    (state) => state.logbook.rowSelectionModel,
-    LogbookActions.onRowSelectionChange,
-  );
-  const [sortingModel, setSortingModel] = useReduxConnector(
-    (state) => state.logbook.sortingModel,
-    LogbookActions.onSortChange,
-  );
-  const [columnVisibilityModel, setColumnVisibilityModel] = useReduxConnector(
-    (state) => state.logbook.columnVisibilityModel,
-    LogbookActions.onColumnVisibilityChange,
-  );
-  const [columnSizingModel, setColumnSizingModel] = useReduxConnector(
-    (state) => state.logbook.columnSizingModel,
-    LogbookActions.onColumnSizingChange,
-  );
-  const [gridDensity, setGridDensityModel] = useReduxConnector(
-    (state) => state.logbook.gridDensityModel,
-    LogbookActions.onGridDensityChange,
-  );
-  const selectedMemoIds = Object.keys(rowSelectionModel).map((id) => parseInt(id));
+  // filtering
+  const filter = useAppSelector((state) => state.memoFilter.filter[filterName]) || createEmptyFilter(filterName);
 
   // virtualization
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
 
   // table columns
-  const tableInfo = useInitLogbookFilterSlice({ projectId });
+  const tableInfo = useInitMemoFilterSlice({ projectId });
   const columns = useMemo(() => {
-    if (!tableInfo || !user) return [];
+    if (!tableInfo) return [];
 
     const result = tableInfo.map((column) => {
       const colDef: MRT_ColumnDef<ElasticSearchDocumentHit> = {
@@ -127,14 +131,12 @@ function SearchMemoTable({ projectId }: SearchMemoTableProps) {
 
     // unwanted columns are set to null, so we filter those out
     return [...result, attachedToCell];
-  }, [tableInfo, user]);
+  }, [tableInfo]);
 
   // table data
-  const filter = useAppSelector((state) => state.logbook.filter[filterName]) || createEmptyFilter(filterName);
-  const isSearchContent = useAppSelector((state) => state.logbook.isSearchContent);
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchDocumentHits>({
     queryKey: [
-      "search-memo-table-data",
+      QueryKey.MEMO_TABLE,
       projectId,
       searchQuery, // refetch when searchQuery changes
       filter, // refetch when columnFilters changes
@@ -194,8 +196,6 @@ function SearchMemoTable({ projectId }: SearchMemoTableProps) {
       rowSelection: rowSelectionModel,
       sorting: sortingModel,
       columnVisibility: columnVisibilityModel,
-      columnSizing: columnSizingModel,
-      density: gridDensity,
       isLoading: isLoading || columns.length === 0,
       showAlertBanner: isError,
       showProgressBars: isFetching,
@@ -204,11 +204,11 @@ function SearchMemoTable({ projectId }: SearchMemoTableProps) {
     // search query
     autoResetAll: false,
     manualFiltering: true, // turn of client-side filtering
-    // enableGlobalFilter: true,
+    enableGlobalFilter: true,
     onGlobalFilterChange: setSearchQuery,
     // selection
     enableRowSelection: true,
-    onRowSelectionChange: setRowSelectionModel,
+    onRowSelectionChange,
     // virtualization
     enableRowVirtualization: true,
     rowVirtualizerInstanceRef: rowVirtualizerInstanceRef,
@@ -219,15 +219,12 @@ function SearchMemoTable({ projectId }: SearchMemoTableProps) {
     enablePagination: false,
     // sorting
     manualSorting: false,
-    onSortingChange: setSortingModel,
-    // density
-    onDensityChange: setGridDensityModel,
+    onSortingChange,
     // column visiblility
-    onColumnVisibilityChange: setColumnVisibilityModel,
+    onColumnVisibilityChange,
     // column resizing
     enableColumnResizing: true,
     columnResizeMode: "onEnd",
-    onColumnSizingChange: setColumnSizingModel,
 
     // mui components
     muiTablePaperProps: {
@@ -246,45 +243,53 @@ function SearchMemoTable({ projectId }: SearchMemoTableProps) {
       : undefined,
     // toolbar
     positionToolbarAlertBanner: "head-overlay",
-    renderTopToolbarCustomActions: () => (
-      <Stack direction={"row"} spacing={1} alignItems="center">
-        <ReduxFilterDialog
-          anchorEl={tableContainerRef.current}
-          buttonProps={{ size: "small" }}
-          filterName={filterName}
-          filterStateSelector={filterStateSelector}
-          filterActions={LogbookActions}
+    renderTopToolbarCustomActions: renderTopToolbarCustomActions
+      ? (props) =>
+          renderTopToolbarCustomActions({
+            table: props.table,
+            filterName,
+            anchor: tableContainerRef,
+            selectedMemos: flatData.filter((row) => rowSelectionModel[row.document_id]),
+          })
+      : undefined,
+    renderToolbarInternalActions: (props) => (
+      <Stack direction="row" spacing={1} alignItems="center">
+        <MemoTableOptionsMenu
+          isSearchContent={isSearchContent}
+          onChangeIsSearchContent={(newValue) => setIsSearchContent(newValue)}
         />
-        {selectedMemoIds.length > 0 && (
-          <>
-            <MemoDeleteButton memoIds={selectedMemoIds} />
-            <MemoStarButton memoIds={selectedMemoIds} isStarred={true} />
-            <MemoStarButton memoIds={selectedMemoIds} isStarred={false} />
-          </>
-        )}
+        {renderToolbarInternalActions({
+          table: props.table,
+          filterName,
+          anchor: tableContainerRef,
+          selectedMemos: flatData.filter((row) => rowSelectionModel[row.document_id]),
+        })}
       </Stack>
     ),
-    renderToolbarInternalActions: () => (
-      <Stack direction={"row"} spacing={1} alignItems="center">
-        <SearchMemoOptionsMenu />
-        <MRT_ShowHideColumnsButton table={table} />
-        <MRT_ToggleDensePaddingButton table={table} />
-        <ExporterButton
-          tooltip="Export memos"
-          exporterInfo={{ type: "Memos", singleUser: true, users: [], sdocId: -1 }}
-        />
-      </Stack>
-    ),
-    renderBottomToolbarCustomActions: () => (
+    renderBottomToolbarCustomActions: (props) => (
       <Stack direction={"row"} spacing={1} alignItems="center">
         <Typography>
           Fetched {totalFetched} of {totalResults} total memos.
         </Typography>
+        {renderBottomToolbarCustomActions &&
+          renderBottomToolbarCustomActions({
+            table: props.table,
+            filterName,
+            anchor: tableContainerRef,
+            selectedMemos: flatData.filter((row) => rowSelectionModel[row.document_id]),
+          })}
       </Stack>
     ),
   });
 
-  return <MaterialReactTable table={table} />;
+  return (
+    <Card className="myFlexContainer" {...cardProps}>
+      {title ? <CardHeader title={title} /> : null}
+      <CardContent className="myFlexFillAllContainer" style={{ padding: 0 }}>
+        <MaterialReactTable table={table} />
+      </CardContent>
+    </Card>
+  );
 }
 
 export default SearchMemoTable;

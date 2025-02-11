@@ -4,7 +4,7 @@ import FormatListBulletedOutlinedIcon from "@mui/icons-material/FormatListBullet
 import NumbersIcon from "@mui/icons-material/Numbers";
 import SubjectIcon from "@mui/icons-material/Subject";
 import { ReactElement } from "react";
-import { MetaType } from "../../../api/openapi/models/MetaType.ts";
+import { MetaType } from "../../../../api/openapi/models/MetaType.ts";
 
 export const metaTypeToIcon: Record<MetaType, ReactElement> = {
   [MetaType.STRING]: <SubjectIcon />,

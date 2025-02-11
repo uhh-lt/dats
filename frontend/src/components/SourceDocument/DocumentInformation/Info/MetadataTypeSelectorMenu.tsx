@@ -9,8 +9,8 @@ import {
   UseAutocompleteProps,
   createFilterOptions,
 } from "@mui/material";
-import { MetaType } from "../../../api/openapi/models/MetaType.ts";
-import { useDebounce } from "../../../utils/useDebounce.ts";
+import { MetaType } from "../../../../api/openapi/models/MetaType.ts";
+import { useDebounce } from "../../../../utils/useDebounce.ts";
 import { metaTypeToIcon } from "./metaTypeToIcon.tsx";
 
 const filter = createFilterOptions<string>();

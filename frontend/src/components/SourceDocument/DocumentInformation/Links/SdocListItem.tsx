@@ -1,7 +1,7 @@
 import { ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 import { Link } from "react-router-dom";
-import SdocHooks from "../../../api/SdocHooks.ts";
-import { docTypeToIcon } from "../../../utils/docTypeToIcon.tsx";
+import SdocHooks from "../../../../api/SdocHooks.ts";
+import { docTypeToIcon } from "../../../../utils/docTypeToIcon.tsx";
 
 interface SdocListItemProps {
   sdocId: number;

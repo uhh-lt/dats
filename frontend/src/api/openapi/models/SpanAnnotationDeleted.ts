@@ -2,8 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { CodeRead } from "./CodeRead";
-export type SpanAnnotationReadResolved = {
+export type SpanAnnotationDeleted = {
   /**
    * Begin of the SpanAnnotation in characters
    */
@@ -25,13 +24,9 @@ export type SpanAnnotationReadResolved = {
    */
   id: number;
   /**
-   * The SpanText the SpanAnnotation spans.
-   */
-  text: string;
-  /**
    * Code the SpanAnnotation refers to
    */
-  code: CodeRead;
+  code_id: number;
   /**
    * User the SpanAnnotation belongs to
    */
