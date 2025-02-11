@@ -47,12 +47,18 @@ def upgrade() -> None:
         # 3. Use the repo service to get the URL of the Source Document
         urls = []
         for sdoc in sdocs:
-            url = RepoService().get_sdoc_url(
-                sdoc=SourceDocumentRead.model_validate(sdoc),
-                relative=True,
-                webp=sdoc.doctype == DocType.image,
-                thumbnail=False,
-            )
+            try:
+                url = RepoService().get_sdoc_url(
+                    sdoc=SourceDocumentRead.model_validate(sdoc),
+                    relative=True,
+                    webp=sdoc.doctype == DocType.image,
+                    thumbnail=False,
+                )
+            except Exception as e:
+                print(
+                    f"Error getting URL for project {sdoc.project_id} sdoc {sdoc.id}: {e}"
+                )
+                url = ""
             urls.append(url)
 
         # 4. Update the repo_url field in the Source Document Data table
