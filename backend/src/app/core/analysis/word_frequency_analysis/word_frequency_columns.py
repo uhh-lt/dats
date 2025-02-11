@@ -3,11 +3,12 @@ from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg
 
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.document_tag import DocumentTagORM
+from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.data.orm.word_frequency import WordFrequencyORM
-from app.core.db.sql_utils import aggregate_ids
+from app.core.db.sql_utils import aggregate_ids, aggregate_two_ids
 from app.core.search.column_info import AbstractColumns
 from app.core.search.filtering_operators import FilterOperator, FilterValueType
 from app.core.search.search_builder import SearchBuilder
@@ -154,8 +155,9 @@ class WordFrequencyColumns(str, AbstractColumns):
                 )
             case WordFrequencyColumns.CODE_ID_LIST:
                 query_builder._add_subquery_column(
-                    aggregate_ids(
+                    aggregate_two_ids(
                         SpanAnnotationORM.code_id,
+                        SentenceAnnotationORM.code_id,
                         label=WordFrequencyColumns.CODE_ID_LIST.value,
                     )
                 )
@@ -166,9 +168,17 @@ class WordFrequencyColumns(str, AbstractColumns):
                 )
                 query_builder._join_subquery(
                     SpanAnnotationORM,
-                    AnnotationDocumentORM.source_document_id == SourceDocumentORM.id,
+                    SpanAnnotationORM.annotation_document_id
+                    == AnnotationDocumentORM.id,
                     isouter=True,
                 )
+                query_builder._join_subquery(
+                    SentenceAnnotationORM,
+                    SentenceAnnotationORM.annotation_document_id
+                    == AnnotationDocumentORM.id,
+                    isouter=True,
+                )
+
             case WordFrequencyColumns.USER_ID_LIST:
                 query_builder._add_subquery_column(
                     aggregate_ids(
