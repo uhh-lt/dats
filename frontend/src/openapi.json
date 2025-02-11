@@ -2914,103 +2914,6 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/feedback": {
-      "put": {
-        "tags": ["feedback"],
-        "summary": "Creates a new Feedback and returns it with the generated ID.",
-        "operationId": "create_feedback",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FeedbackCreate" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FeedbackRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/feedback/by_id/{feedback_id}": {
-      "get": {
-        "tags": ["feedback"],
-        "summary": "Returns the Feedback with the given ID.",
-        "operationId": "get_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "feedback_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string", "title": "Feedback Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FeedbackRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/feedback/all": {
-      "get": {
-        "tags": ["feedback"],
-        "summary": "Returns all Feedback items of the current user. If logged in as the system user, return feedback of all users.",
-        "operationId": "get_all",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": { "$ref": "#/components/schemas/FeedbackRead" },
-                  "type": "array",
-                  "title": "Response Feedback-Get All"
-                }
-              }
-            }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/feedback/reply_to/{feedback_id}": {
-      "post": {
-        "tags": ["feedback"],
-        "summary": "Sends an e-mail to the User that created the Feedback with the given message.",
-        "operationId": "reply_to",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "feedback_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string", "title": "Feedback Id" }
-          },
-          { "name": "message", "in": "query", "required": true, "schema": { "type": "string", "title": "Message" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "type": "string", "title": "Response Feedback-Reply To" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/analysis/code_frequencies": {
       "post": {
         "tags": ["analysis"],
@@ -6852,30 +6755,6 @@
           "SINGLE_DOC_SINGLE_USER_ANNOTATIONS"
         ],
         "title": "ExportJobType"
-      },
-      "FeedbackCreate": {
-        "properties": {
-          "user_content": { "type": "string", "title": "User Content", "description": "User message of the Feedback" }
-        },
-        "type": "object",
-        "required": ["user_content"],
-        "title": "FeedbackCreate"
-      },
-      "FeedbackRead": {
-        "properties": {
-          "user_content": { "type": "string", "title": "User Content", "description": "User message of the Feedback" },
-          "id": { "type": "string", "title": "Id", "description": "ID of the Feedback" },
-          "user_id": { "type": "integer", "title": "User Id", "description": "User who created the Feedback" },
-          "created": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created",
-            "description": "Created timestamp of the Feedback"
-          }
-        },
-        "type": "object",
-        "required": ["user_content", "id", "user_id", "created"],
-        "title": "FeedbackRead"
       },
       "FewShotParams": {
         "properties": {

@@ -148,14 +148,6 @@ export const QueryKey = {
   PROJECT_LLM_JOBS: "projectLLMJobs",
 
   // TO BE DELETED:
-  // a single feedback (by feedback id)
-  FEEDBACK: "feedback",
-  // all feedback
-  FEEDBACKS: "feedbacks",
-  // all logged-in user's feedbacks
-  FEEDBACKS_USER: "feedbacksUser",
-
-  // TO BE DELETED:
   // a single TABLE (by TABLE id)
   TABLE: "table",
   // all tables of the project of the logged-in user (by project id)
