@@ -44,7 +44,6 @@ from api.endpoints import (
     crawler,
     document_tag,
     export,
-    feedback,
     general,
     import_,
     llm,
@@ -256,7 +255,6 @@ app.include_router(code.router)
 app.include_router(memo.router)
 app.include_router(search.router)
 app.include_router(source_document_metadata.router)
-app.include_router(feedback.router)
 app.include_router(analysis.router)
 app.include_router(prepro.router)
 app.include_router(export.router)
