@@ -106,18 +106,18 @@ export class MemoService {
    * @throws ApiError
    */
   public static getMemosByAttachedObjectId({
-    attachedObjectId,
-    attachedObjectType,
+    attachedObjId,
+    attachedObjType,
   }: {
-    attachedObjectId: number;
-    attachedObjectType: AttachedObjectType;
+    attachedObjId: number;
+    attachedObjType: AttachedObjectType;
   }): CancelablePromise<Array<MemoRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/memo/attached_obj/{attached_obj_type}/to/{attached_obj_id}",
-      query: {
-        attached_object_id: attachedObjectId,
-        attached_object_type: attachedObjectType,
+      path: {
+        attached_obj_id: attachedObjId,
+        attached_obj_type: attachedObjType,
       },
       errors: {
         422: `Validation Error`,
@@ -130,18 +130,18 @@ export class MemoService {
    * @throws ApiError
    */
   public static getUserMemoByAttachedObjectId({
-    attachedObjectId,
-    attachedObjectType,
+    attachedObjId,
+    attachedObjType,
   }: {
-    attachedObjectId: number;
-    attachedObjectType: AttachedObjectType;
+    attachedObjId: number;
+    attachedObjType: AttachedObjectType;
   }): CancelablePromise<MemoRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/memo/attached_obj/{attached_obj_type}/to/{attached_obj_id}/user",
-      query: {
-        attached_object_id: attachedObjectId,
-        attached_object_type: attachedObjectType,
+      path: {
+        attached_obj_id: attachedObjId,
+        attached_obj_type: attachedObjType,
       },
       errors: {
         422: `Validation Error`,

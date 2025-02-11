@@ -14,12 +14,11 @@ const useGetMemo = (memoId: number | null | undefined) =>
     enabled: !!memoId,
   });
 
-const useGetUserMemo = (attachedObjectType: AttachedObjectType, attachedObjectId: number | null | undefined) =>
+const useGetUserMemo = (attachedObjType: AttachedObjectType, attachedObjId: number | null | undefined) =>
   useQuery<MemoRead, Error>({
-    queryKey: [QueryKey.USER_MEMO, attachedObjectType, attachedObjectId],
-    queryFn: () =>
-      MemoService.getUserMemoByAttachedObjectId({ attachedObjectType, attachedObjectId: attachedObjectId! }),
-    enabled: !!attachedObjectId,
+    queryKey: [QueryKey.USER_MEMO, attachedObjType, attachedObjId],
+    queryFn: () => MemoService.getUserMemoByAttachedObjectId({ attachedObjType, attachedObjId: attachedObjId! }),
+    enabled: !!attachedObjId,
     retry: false,
     staleTime: 1000 * 60 * 5,
   });
@@ -36,11 +35,11 @@ const useGetOrCreateProjectUserMemo = (projectId: number | null | undefined) =>
     staleTime: 1000 * 60 * 5,
   });
 
-const useGetObjectMemos = (attachedObjectType: AttachedObjectType, attachedObjectId: number | null | undefined) =>
+const useGetObjectMemos = (attachedObjType: AttachedObjectType, attachedObjId: number | null | undefined) =>
   useQuery<MemoRead[], Error>({
-    queryKey: [QueryKey.OBJECT_MEMOS, attachedObjectType, attachedObjectId],
-    queryFn: () => MemoService.getMemosByAttachedObjectId({ attachedObjectType, attachedObjectId: attachedObjectId! }),
-    enabled: !!attachedObjectId,
+    queryKey: [QueryKey.OBJECT_MEMOS, attachedObjType, attachedObjId],
+    queryFn: () => MemoService.getMemosByAttachedObjectId({ attachedObjType, attachedObjId: attachedObjId! }),
+    enabled: !!attachedObjId,
     retry: false,
   });
 

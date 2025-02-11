@@ -2307,14 +2307,14 @@
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
-            "name": "attached_object_id",
-            "in": "query",
+            "name": "attached_obj_id",
+            "in": "path",
             "required": true,
-            "schema": { "type": "integer", "title": "Attached Object Id" }
+            "schema": { "type": "integer", "title": "Attached Obj Id" }
           },
           {
-            "name": "attached_object_type",
-            "in": "query",
+            "name": "attached_obj_type",
+            "in": "path",
             "required": true,
             "schema": { "$ref": "#/components/schemas/AttachedObjectType" }
           }
@@ -2347,14 +2347,14 @@
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
-            "name": "attached_object_id",
-            "in": "query",
+            "name": "attached_obj_id",
+            "in": "path",
             "required": true,
-            "schema": { "type": "integer", "title": "Attached Object Id" }
+            "schema": { "type": "integer", "title": "Attached Obj Id" }
           },
           {
-            "name": "attached_object_type",
-            "in": "query",
+            "name": "attached_obj_type",
+            "in": "path",
             "required": true,
             "schema": { "$ref": "#/components/schemas/AttachedObjectType" }
           }
