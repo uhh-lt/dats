@@ -146,10 +146,4 @@ export const QueryKey = {
   LLM_JOB: "llmJob",
   // all llm jobs of a Project (by project id)
   PROJECT_LLM_JOBS: "projectLLMJobs",
-
-  // TO BE DELETED:
-  // a single TABLE (by TABLE id)
-  TABLE: "table",
-  // all tables of the project of the logged-in user (by project id)
-  TABLES_PROJECT_USER: "tablesProjectUser",
 };
