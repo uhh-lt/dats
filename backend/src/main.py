@@ -35,7 +35,6 @@ if not STARTUP_DONE:
 
 from api.endpoints import (
     analysis,
-    analysis_table,
     annoscaling,
     authentication,
     bbox_annotation,
@@ -259,7 +258,6 @@ app.include_router(analysis.router)
 app.include_router(prepro.router)
 app.include_router(export.router)
 app.include_router(crawler.router)
-app.include_router(analysis_table.router)
 app.include_router(annoscaling.router)
 app.include_router(whiteboard.router)
 app.include_router(project_metadata.router)
