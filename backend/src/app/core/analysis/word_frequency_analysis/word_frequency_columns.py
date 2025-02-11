@@ -2,12 +2,10 @@ from sqlalchemy import String, cast, func
 from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg
 
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
-from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
-from app.core.data.orm.user import UserORM
 from app.core.data.orm.word_frequency import WordFrequencyORM
 from app.core.db.sql_utils import aggregate_ids
 from app.core.search.column_info import AbstractColumns
@@ -157,27 +155,30 @@ class WordFrequencyColumns(str, AbstractColumns):
             case WordFrequencyColumns.CODE_ID_LIST:
                 query_builder._add_subquery_column(
                     aggregate_ids(
-                        CodeORM.id, label=WordFrequencyColumns.CODE_ID_LIST.value
+                        SpanAnnotationORM.code_id,
+                        label=WordFrequencyColumns.CODE_ID_LIST.value,
                     )
                 )
                 query_builder._join_subquery(
-                    SourceDocumentORM.annotation_documents,
+                    AnnotationDocumentORM,
+                    AnnotationDocumentORM.source_document_id == SourceDocumentORM.id,
                     isouter=True,
                 )
                 query_builder._join_subquery(
-                    SpanAnnotationORM.code,
+                    SpanAnnotationORM,
+                    AnnotationDocumentORM.source_document_id == SourceDocumentORM.id,
                     isouter=True,
                 )
             case WordFrequencyColumns.USER_ID_LIST:
                 query_builder._add_subquery_column(
-                    aggregate_ids(UserORM.id, WordFrequencyColumns.USER_ID_LIST.value)
+                    aggregate_ids(
+                        AnnotationDocumentORM.user_id,
+                        WordFrequencyColumns.USER_ID_LIST.value,
+                    )
                 )
                 query_builder._join_subquery(
-                    SourceDocumentORM.annotation_documents,
-                    isouter=True,
-                )
-                query_builder._join_subquery(
-                    AnnotationDocumentORM.user,
+                    AnnotationDocumentORM,
+                    AnnotationDocumentORM.source_document_id == SourceDocumentORM.id,
                     isouter=True,
                 )
             case WordFrequencyColumns.SPAN_ANNOTATIONS:
@@ -185,26 +186,31 @@ class WordFrequencyColumns(str, AbstractColumns):
                     cast(
                         array_agg(
                             func.distinct(
-                                array([cast(CodeORM.id, String), SpanTextORM.text])
+                                array(
+                                    [
+                                        cast(SpanAnnotationORM.code_id, String),
+                                        SpanTextORM.text,
+                                    ]
+                                )
                             ),
                         ),
                         ARRAY(String, dimensions=2),
                     ).label(WordFrequencyColumns.SPAN_ANNOTATIONS.value)
                 )
                 query_builder._join_subquery(
-                    SourceDocumentORM.annotation_documents,
+                    AnnotationDocumentORM,
+                    AnnotationDocumentORM.source_document_id == SourceDocumentORM.id,
                     isouter=True,
                 )
                 query_builder._join_subquery(
-                    AnnotationDocumentORM.span_annotations,
+                    SpanAnnotationORM,
+                    SpanAnnotationORM.annotation_document_id
+                    == AnnotationDocumentORM.id,
                     isouter=True,
                 )
                 query_builder._join_subquery(
-                    SpanAnnotationORM.span_text,
-                    isouter=True,
-                )
-                query_builder._join_subquery(
-                    SpanAnnotationORM.code,
+                    SpanTextORM,
+                    SpanTextORM.id == SpanAnnotationORM.span_text_id,
                     isouter=True,
                 )
 
