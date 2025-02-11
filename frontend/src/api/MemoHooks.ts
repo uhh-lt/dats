@@ -75,7 +75,7 @@ const useUpdateMemo = () =>
     mutationFn: MemoService.updateById,
     onSuccess: (data) => {
       updateInvalidation(data);
-      queryClient.invalidateQueries({ queryKey: ["search-memo-table-data"] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_TABLE] });
     },
   });
 
@@ -89,7 +89,7 @@ const useStarMemos = () =>
       memos.forEach((memo) => {
         updateInvalidation(memo);
       });
-      queryClient.invalidateQueries({ queryKey: ["search-memo-table-data"] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_TABLE] });
     },
   });
 
@@ -107,7 +107,7 @@ const useDeleteMemo = () =>
     mutationFn: MemoService.deleteById,
     onSuccess: (data) => {
       deleteInvalidation(data);
-      queryClient.invalidateQueries({ queryKey: ["search-memo-table-data"] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_TABLE] });
     },
   });
 
@@ -121,7 +121,7 @@ const useDeleteMemos = () =>
       memos.forEach((data) => {
         deleteInvalidation(data);
       });
-      queryClient.invalidateQueries({ queryKey: ["search-memo-table-data"] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_TABLE] });
     },
   });
 

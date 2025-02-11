@@ -203,7 +203,7 @@ const useUpdateSentenceAnnotation = () =>
       queryClient.setQueryData<SentenceAnnotatorResult>(context.affectedQueryKey, context.previousAnnos);
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["sentence-annotation-table-data"] }); // TODO: This is not optimal, shoudl be projectId, selectedUserId... We do this because of SentenceAnnotationTable
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SENT_ANNO_TABLE] }); // TODO: This is not optimal, shoudl be projectId, selectedUserId... We do this because of SentenceAnnotationTable
       queryClient.setQueryData<SentenceAnnotationRead>([QueryKey.SENTENCE_ANNOTATION, data.id], data);
       queryClient.setQueryData<SentenceAnnotatorResult>(
         [QueryKey.SDOC_SENTENCE_ANNOTATOR, data.sdoc_id, data.user_id],
@@ -231,7 +231,7 @@ const useUpdateBulkSentenceAnno = () =>
   useMutation({
     mutationFn: SentenceAnnotationService.updateSentAnnoAnnotationsBulk,
     onSuccess(data) {
-      queryClient.invalidateQueries({ queryKey: ["sentence-annotation-table-data"] }); // TODO: This is not optimal, shoudl be projectId, selectedUserId... We do this because of SentenceAnnotationTable
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SENT_ANNO_TABLE] }); // TODO: This is not optimal, shoudl be projectId, selectedUserId... We do this because of SentenceAnnotationTable
       data.forEach((annotation) => {
         queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR, annotation.sdoc_id] });
         queryClient.invalidateQueries({ queryKey: [QueryKey.SENTENCE_ANNOTATION, annotation.id] });

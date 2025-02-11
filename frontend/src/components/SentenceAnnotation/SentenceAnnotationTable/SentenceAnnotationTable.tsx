@@ -11,6 +11,7 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useEffect, useMemo, useRef } from "react";
+import { QueryKey } from "../../../api/QueryKey.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { SentAnnoColumns } from "../../../api/openapi/models/SentAnnoColumns.ts";
 import { SentenceAnnotationRow } from "../../../api/openapi/models/SentenceAnnotationRow.ts";
@@ -170,7 +171,7 @@ function SentenceAnnotationTable({
   // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<SentenceAnnotationSearchResult>({
     queryKey: [
-      "sentence-annotation-table-data",
+      QueryKey.SENT_ANNO_TABLE,
       projectId,
       filter, //refetch when columnFilters changes
       sortingModel, //refetch when sorting changes

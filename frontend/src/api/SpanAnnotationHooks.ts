@@ -158,7 +158,7 @@ const useUpdateSpanAnnotation = () =>
         [QueryKey.SDOC_SPAN_ANNOTATIONS, data.sdoc_id, data.user_id],
         (old) => (old ? old.map((span) => (span.id === data.id ? data : span)) : [data]),
       );
-      queryClient.invalidateQueries({ queryKey: ["annotation-table-data"] }); // TODO: This is not optimal, shoudl be projectId, selectedUserId... We do this because of SpanAnnotationTable
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNO_TABLE] }); // TODO: This is not optimal, shoudl be projectId, selectedUserId... We do this because of SpanAnnotationTable
     },
     meta: {
       successMessage: (data: SpanAnnotationRead) => `Updated Span Annotation ${data.id}`,
@@ -169,7 +169,7 @@ const useUpdateBulkSpan = () =>
   useMutation({
     mutationFn: SpanAnnotationService.updateSpanAnnotationsBulk,
     onSuccess(data) {
-      queryClient.invalidateQueries({ queryKey: ["annotation-table-data"] }); // TODO: This is not optimal, shoudl be projectId, selectedUserId... We do this because of SpanAnnotationTable
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNO_TABLE] }); // TODO: This is not optimal, shoudl be projectId, selectedUserId... We do this because of SpanAnnotationTable
       data.forEach((annotation) => {
         queryClient.setQueryData<SpanAnnotationRead>([QueryKey.SPAN_ANNOTATION, annotation.id], annotation);
       });

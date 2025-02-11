@@ -1,4 +1,8 @@
 export const QueryKey = {
+  // managed by AuthProvider
+  // the logged-in user (by access token)
+  ME: "me",
+
   // managed by UserHooks
   // all UserRead[] of a Project (by project id)
   PROJECT_USERS: "projectUsers",
@@ -103,6 +107,16 @@ export const QueryKey = {
 
   // tables
   SEARCH_TABLE: "search-document-table-data",
+  SDOC_TABLE: "document-table-data",
+  MEMO_TABLE: "search-memo-table-data",
+  SPAN_ANNO_TABLE: "span-annotation-table-data",
+  BBOX_TABLE: "bbox-annotation-table-data",
+  SENT_ANNO_TABLE: "sentence-annotation-table-data",
+  WORD_FREQUENCY_TABLE: "wordfrequency-table-data",
+
+  // search
+  IMG_SIMSEARCH: "image-similarity-search",
+  SENT_SIMSEARCH: "sentence-similarity-search",
 
   // managed by various useInit*FilterSlice:
   // table info (by filterSliceName, projectId) (info about the columns and their types)

@@ -16,6 +16,7 @@ import { MemoColumns } from "../../../api/openapi/models/MemoColumns.ts";
 import { PaginatedElasticSearchDocumentHits } from "../../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { MemoService } from "../../../api/openapi/services/MemoService.ts";
+import { QueryKey } from "../../../api/QueryKey.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { useTableInfiniteScroll } from "../../../utils/useTableInfiniteScroll.ts";
 import { MyFilter, createEmptyFilter } from "../../FilterDialog/filterUtils.ts";
@@ -135,7 +136,7 @@ function SearchMemoTable({
   // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchDocumentHits>({
     queryKey: [
-      "search-memo-table-data",
+      QueryKey.MEMO_TABLE,
       projectId,
       searchQuery, // refetch when searchQuery changes
       filter, // refetch when columnFilters changes
