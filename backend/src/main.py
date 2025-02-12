@@ -48,6 +48,7 @@ from api.endpoints import (
     import_,
     llm,
     memo,
+    ml,
     prepro,
     project,
     project_metadata,
@@ -269,6 +270,7 @@ app.include_router(timeline_analysis.router)
 app.include_router(llm.router)
 app.include_router(sentence_annotation.router)
 app.include_router(import_.router)
+app.include_router(ml.router)
 
 
 def main() -> None:
