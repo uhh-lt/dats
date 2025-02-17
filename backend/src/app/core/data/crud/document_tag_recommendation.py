@@ -1,3 +1,7 @@
+from typing import List, Optional
+
+from sqlalchemy.orm import Session
+
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.document_tag_recommendation import (
     DocumentTagRecommendationCreateIntern,
@@ -34,7 +38,23 @@ class CrudDocumentTagRecommendationLink(
         DocumentTagRecommendationLinkUpdate,
     ]
 ):
-    pass
+    def read_by_task_id(
+        self,
+        db: Session,
+        *,
+        task_id: int,
+        skip: Optional[int] = None,
+        limit: Optional[int] = None,
+    ) -> List[DocumentTagRecommendationLinkORM]:
+        query = db.query(self.model)
+        query = query.filter(self.model.recommendation_task_id == task_id)
+
+        if skip is not None:
+            query = query.offset(skip)
+        if limit is not None:
+            query = query.limit(limit)
+
+        return query.all()
 
 
 crud_document_tag_recommendation_link = CrudDocumentTagRecommendationLink(

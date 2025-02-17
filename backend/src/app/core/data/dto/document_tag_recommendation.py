@@ -45,12 +45,14 @@ class DocumentTagRecommendationRead(DocumentTagRecommendationBaseDTO):
 
 
 class DocumentTagRecommendationLinkBaseDTO(BaseModel):
-    task_id: int = Field(description="Identifier of the Document Tag recommendation.")
+    recommendation_task_id: int = Field(
+        description="Identifier of the Document Tag recommendation."
+    )
     source_document_id: int = Field(description="ID of the source document")
     predicted_tag_id: int = Field(description="ID of the predicted tag")
     prediction_score: float = Field(description="Prediction score of the tag")
     is_accepted: Optional[bool] = Field(
-        description="Acceptance status of the recommendation", default=None
+        description="Acceptance status of the recommendation", default=False
     )
 
 

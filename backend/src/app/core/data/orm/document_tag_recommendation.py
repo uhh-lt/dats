@@ -58,16 +58,17 @@ class DocumentTagRecommendationORM(ORMBase):
 
 
 class DocumentTagRecommendationLinkORM(ORMBase):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     recommendation_task_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("documenttagrecommendation.task_id", ondelete="CASCADE"),
-        primary_key=True,
+        primary_key=False,
     )
     source_document_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("sourcedocument.id", ondelete="CASCADE"), primary_key=True
+        Integer, ForeignKey("sourcedocument.id", ondelete="CASCADE"), primary_key=False
     )
     predicted_tag_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("documenttag.id", ondelete="CASCADE"), primary_key=True
+        Integer, ForeignKey("documenttag.id", ondelete="CASCADE"), primary_key=False
     )
     prediction_score: Mapped[float] = mapped_column(Float, index=True, nullable=True)
     is_accepted: Mapped[bool] = mapped_column(Boolean, index=True, nullable=True)

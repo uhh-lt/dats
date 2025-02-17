@@ -5,7 +5,7 @@ from celery import Task, group
 from celery.result import GroupResult
 
 from app.core.data.classification.document_classification_service import (
-    ClassificationService as ClassificationService,
+    DocumentClassificationService as DocumentClassificationService,
 )
 from app.core.data.crawler.crawler_service import CrawlerService
 from app.core.data.dto.crawler_job import CrawlerJobParameters, CrawlerJobRead
@@ -187,4 +187,5 @@ def prepare_and_start_document_classification_job_async(
         start_document_classification_job,
     )
 
+    assert isinstance(start_document_classification_job, Task), "Not a Celery Task"
     start_document_classification_job(task_id=task_id, project_id=project_id)

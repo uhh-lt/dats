@@ -234,5 +234,40 @@ class CRUDSourceDocument(
             if linked_sdoc_id is not None
         ]
 
+    def read_all_without_tags(
+        self, db: Session, *, project_id: int
+    ) -> List[SourceDocumentORM]:
+        return (
+            db.query(SourceDocumentORM)
+            .filter(SourceDocumentORM.project_id == project_id)
+            .outerjoin(SourceDocumentORM.document_tags)
+            .filter(SourceDocumentORM.document_tags == None)  # noqa: E711
+            .all()
+        )
+
+    def read_all_with_tags(
+        self, db: Session, *, project_id: int
+    ) -> List[SourceDocumentORM]:
+        return (
+            db.query(SourceDocumentORM)
+            .filter(SourceDocumentORM.project_id == project_id)
+            .join(SourceDocumentORM.document_tags)
+            .filter(SourceDocumentORM.document_tags != None)  # noqa: E711
+            .all()
+        )
+
+    def read_document(self, db: Session, *, id: int) -> SourceDocumentRead:
+        db_obj = db.query(SourceDocumentORM).filter(SourceDocumentORM.id == id).first()
+        return SourceDocumentRead.model_validate(db_obj)
+
+    def read_document_batch(
+        self, db: Session, *, ids: List[int]
+    ) -> List[SourceDocumentRead]:
+        db_objs = (
+            db.query(SourceDocumentORM).filter(SourceDocumentORM.id.in_(ids)).all()
+        )
+        id2doc = {doc.id: doc for doc in db_objs}
+        return [SourceDocumentRead.model_validate(id2doc.get(doc_id)) for doc_id in ids]
+
 
 crud_sdoc = CRUDSourceDocument(SourceDocumentORM)

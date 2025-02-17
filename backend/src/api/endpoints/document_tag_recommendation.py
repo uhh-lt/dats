@@ -1,4 +1,6 @@
-from fastapi import APIRouter, BackgroundTasks, Depends
+from typing import List
+
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
@@ -6,6 +8,9 @@ from app.celery.background_jobs import (
     prepare_and_start_document_classification_job_async,
 )
 from app.core.authorization.authz_user import AuthzUser
+from app.core.data.classification.document_classification_service import (
+    DocumentClassificationService,
+)
 from app.core.data.crud.document_tag_recommendation import (
     crud_document_tag_recommendation,
 )
@@ -14,6 +19,8 @@ from app.core.data.dto.document_tag_recommendation import (
     DocumentTagRecommendationCreateIntern,
     DocumentTagRecommendationRead,
 )
+
+dcs: DocumentClassificationService = DocumentClassificationService()
 
 router = APIRouter(
     prefix="/doctagrecommendation",
@@ -32,7 +39,6 @@ def create_new_doc_tag_rec_task(
     db: Session = Depends(get_db_session),
     doc_tag_rec: DocumentTagRecommendationCreate,
     authz_user: AuthzUser = Depends(),
-    background_tasks: BackgroundTasks,
 ) -> DocumentTagRecommendationRead:
     authz_user.assert_in_project(doc_tag_rec.project_id)
 
@@ -51,4 +57,53 @@ def create_new_doc_tag_rec_task(
     return response
 
 
-# To-Do: Update of tag recommendation
+@router.get(
+    "/{task_id}",
+    response_model=List[dict],
+    summary="Retrieve all document tag recommendations for the given task ID.",
+)
+def get_recommendations_from_task_endpoint(task_id: int) -> List[dict]:
+    """
+    Retrieves document tag recommendations based on the specified task ID.
+
+    ### Response Format:
+    The endpoint returns a list of recommendations, where each recommendation
+    is represented as a dictionary with the following structure:
+
+    ```python
+    {
+        "recommendation_id": int,  # Unique identifier for the recommendation
+        "source_document": str,    # Name of the source document
+        "predicted_tag_id": int,   # ID of the predicted tag
+        "predicted_tag": str,      # Name of the predicted tag
+        "prediction_score": float  # Confidence score of the prediction
+    }
+    ```
+
+    ### Error Handling:
+    - Returns HTTP 404 if no recommendations are found for the given task ID.
+    """
+    recommendations = dcs.get_recommendations_from_task(task_id)
+    if not recommendations:
+        raise HTTPException(status_code=404, detail="No recommendations found.")
+    return recommendations
+
+
+@router.patch(
+    "/accept_recommendations",
+    response_model=int,
+    summary="The endpoint receives IDs of correctly tagged document recommendations and sets `is_accepted` to `true`, while setting the corresponding document tags.",
+)
+def update_document_tag_recommendations(
+    *,
+    accepted_recommendation_ids: List[int],
+) -> int:
+    modifications = dcs.validate_recommendations(
+        recommendation_ids=accepted_recommendation_ids
+    )
+    if modifications == -1:
+        raise HTTPException(
+            status_code=400, detail="An error occurred while updating recommendations."
+        )
+
+    return modifications
