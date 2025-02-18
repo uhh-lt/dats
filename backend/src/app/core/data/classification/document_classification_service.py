@@ -126,7 +126,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
                 # Fetch document tag recommendations associated with the task ID
                 document_tag_recommendations = (
                     crud_document_tag_recommendation_link.read_by_task_id(
-                        db=db, task_id=task_id
+                        db=db, task_id=task_id, exclude_accepted=True
                     )
                 )
                 # Extract source document IDs and predicted tag IDs from the recommendations

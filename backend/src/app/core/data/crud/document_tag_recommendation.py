@@ -45,10 +45,13 @@ class CrudDocumentTagRecommendationLink(
         task_id: int,
         skip: Optional[int] = None,
         limit: Optional[int] = None,
+        exclude_accepted: bool = False,
     ) -> List[DocumentTagRecommendationLinkORM]:
         query = db.query(self.model)
         query = query.filter(self.model.recommendation_task_id == task_id)
 
+        if exclude_accepted:
+            query = query.filter(self.model.is_accepted == False)  # noqa: E712
         if skip is not None:
             query = query.offset(skip)
         if limit is not None:
