@@ -13,6 +13,10 @@ class MLJobType(StrEnum):
 
 class QuotationAttributionParams(BaseModel):
     ml_job_type: Literal[MLJobType.QUOTATION_ATTRIBUTION]
+
+
+class QuotationAttributionParams(BaseModel):
+    ml_job_type: Literal[MLJobType.QUOTATION_ATTRIBUTION]
     recompute: bool = Field(
         default=False, description="Whether to recompute already processed documents"
     )
