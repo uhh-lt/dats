@@ -844,6 +844,7 @@ class LLMService(metaclass=SingletonMeta):
                             code_id=code_id,
                             created=datetime.now(),
                             updated=datetime.now(),
+                            group_ids=[],
                         )
                     )
                     annotation_id += 1

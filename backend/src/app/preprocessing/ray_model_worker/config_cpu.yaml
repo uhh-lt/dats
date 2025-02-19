@@ -181,10 +181,16 @@ cota:
 
 seqsenttagger:
   batch_size: 16
+  device: cpu
+  deployment:
+    ray_actor_options:
+      num_gpus: .0
+    autoscaling_config:
+      min_replicas: 1
+      max_replicas: 1
 
 quote:
   model: "fynnos/quotect-mt5-base"
-  tmp_dir: "/tmp"
   max_length: 4096
   num_beams: 1
   device: cpu

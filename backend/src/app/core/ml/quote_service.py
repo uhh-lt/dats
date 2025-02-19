@@ -50,7 +50,7 @@ class QuoteService(metaclass=SingletonMeta):
 
     def perform_quotation_detection(
         self, project_id: int, filter_criterion: ColumnElement, recompute=False
-    ):
+    ) -> int:
         with self.sqls.db_session() as db:
             codes = _CodeQuoteId(
                 quote=self._get_code_id(db, "QUOTE", project_id),
@@ -65,11 +65,14 @@ class QuoteService(metaclass=SingletonMeta):
                 cue=self._get_code_id(db, "CUE", project_id),
             )
 
+        total_processed = 0
         num_processed = -1
         while num_processed != 0:
             num_processed = self._process_batch(
                 filter_criterion, project_id, codes, recompute
             )
+            total_processed = +num_processed
+        return total_processed
 
     def _process_batch(
         self,
