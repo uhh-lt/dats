@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from app.core.data.orm.code import CodeORM
     from app.core.data.orm.document_tag import DocumentTagORM
     from app.core.data.orm.document_tag_recommendation import (
-        DocumentTagRecommendationORM,
+        DocumentTagRecommendationJobORM,
     )
     from app.core.data.orm.memo import MemoORM
     from app.core.data.orm.object_handle import ObjectHandleORM
@@ -77,9 +77,9 @@ class ProjectORM(ORMBase):
         "UserORM", secondary="ProjectUserLinkTable".lower(), back_populates="projects"
     )
 
-    document_tag_recommendations: Mapped[List["DocumentTagRecommendationORM"]] = (
+    document_tag_recommendations: Mapped[List["DocumentTagRecommendationJobORM"]] = (
         relationship(
-            "DocumentTagRecommendationORM",
+            "DocumentTagRecommendationJobORM",
             back_populates="project",
             passive_deletes=True,
         )

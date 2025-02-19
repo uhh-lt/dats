@@ -185,67 +185,6 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
 
         return dict((tag_id, count) for tag_id, count in rows)
 
-    def get_tags_by_project(self, db: Session, proj_id: int) -> List[DocumentTagORM]:
-        """
-        Retrieves all tags associated with a specific project.
-
-        Args:
-            db (Session): The current database session used for querying.
-            proj_id (int): The ID of the project for which tags are to be retrieved.
-
-        Returns:
-            List[DocumentTagORM]: A list of DocumentTagORM objects representing all tags
-            associated with the specified project.
-        """
-        return db.query(self.model).filter(self.model.project_id == proj_id).all()
-
-    def get_tag(self, db: Session, tag_id: int, proj_id: int) -> DocumentTagORM:
-        """
-        Retrieves a tag by its ID and ensures it belongs to the given project.
-
-        Args:
-            db (Session): The current database session used for querying.
-            tag_id (int): The ID of the tag to be retrieved.
-            proj_id (int): The ID of the project to which the tag should belong.
-
-        Returns:
-            DocumentTagORM: The tag object corresponding to the given ID.
-
-        Raises:
-            ValueError: If no tag with the given ID exists or if it does not belong to the project.
-        """
-
-        tag = (
-            db.query(self.model)
-            .filter(self.model.id == tag_id, self.model.project_id == proj_id)
-            .first()
-        )
-        if not tag:
-            raise ValueError(f"Tag with ID {tag_id} not found in project {proj_id}")
-        return tag
-
-    def get_tags_batch(self, db: Session, *, ids: List[int]) -> List[DocumentTagORM]:
-        """
-        Retrieves a batch of DocumentTagORM objects based on the provided list of tag IDs.
-
-        Args:
-            db (Session): The current database session used for querying.
-            ids (List[int]): A list of DocumentTag IDs to retrieve.
-
-        Returns:
-            List[DocumentTagORM]: A list of DocumentTagORM objects corresponding to the
-            provided IDs, preserving the order of the input list.
-        """
-        if not ids:
-            return []
-
-        tags = db.query(self.model).filter(self.model.id.in_(ids)).all()
-
-        # Mapping: tag_id -> tag Object
-        tag_map = {tag.id: tag for tag in tags}
-
-        return [tag_map[tag_id] for tag_id in ids]
-
     def get_tags_for_documents(
         self, db: Session, *, sdoc_ids: List[int]
     ) -> Dict[int, List[DocumentTagORM]]:

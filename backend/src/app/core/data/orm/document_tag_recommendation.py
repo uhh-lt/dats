@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from app.core.data.orm.user import UserORM
 
 
-class DocumentTagRecommendationORM(ORMBase):
+class DocumentTagRecommendationJobORM(ORMBase):
     task_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     model_name: Mapped[str] = mapped_column(String, nullable=True, index=True)
     created: Mapped[datetime] = mapped_column(
@@ -61,7 +61,7 @@ class DocumentTagRecommendationLinkORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     recommendation_task_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("documenttagrecommendation.task_id", ondelete="CASCADE"),
+        ForeignKey("documenttagrecommendationjob.task_id", ondelete="CASCADE"),
         primary_key=False,
     )
     source_document_id: Mapped[int] = mapped_column(
@@ -74,8 +74,8 @@ class DocumentTagRecommendationLinkORM(ORMBase):
     is_accepted: Mapped[bool] = mapped_column(Boolean, index=True, nullable=True)
 
     # relationships
-    recommendation: Mapped["DocumentTagRecommendationORM"] = relationship(
-        "DocumentTagRecommendationORM",
+    recommendation: Mapped["DocumentTagRecommendationJobORM"] = relationship(
+        "DocumentTagRecommendationJobORM",
         back_populates="document_tag_recommendation_links",
     )
     source_document: Mapped["SourceDocumentORM"] = relationship(

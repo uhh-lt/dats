@@ -10,7 +10,7 @@ from app.core.data.classification.document_classification_service import (
 from app.core.data.crawler.crawler_service import CrawlerService
 from app.core.data.dto.crawler_job import CrawlerJobParameters, CrawlerJobRead
 from app.core.data.dto.document_tag_recommendation import (
-    DocumentTagRecommendationRead as DocumentTagRecommendationRead,
+    DocumentTagRecommendationJobRead as DocumentTagRecommendationJobRead,
 )
 from app.core.data.dto.export_job import ExportJobParameters, ExportJobRead
 from app.core.data.dto.import_job import ImportJobParameters, ImportJobRead

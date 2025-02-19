@@ -3,12 +3,12 @@ from typing import List
 from pydantic import BaseModel, Field
 
 from app.core.data.dto.background_job_base import BackgroundJobStatus
-from app.core.data.dto.source_document_data import SourceDocumentDataRead
+from app.core.data.dto.source_document import SourceDocumentRead
 
 
 class DocumentClassificationJobParameters:
     project_id: int = Field(description="Project Id of documents to be classified.")
-    sDocsData: List[SourceDocumentDataRead] = Field(
+    sdoc_datas: List[SourceDocumentRead] = Field(
         description="List of documents that will be classified in the job."
     )
 

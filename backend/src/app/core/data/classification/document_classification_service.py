@@ -1,17 +1,18 @@
 from collections import defaultdict
-from itertools import zip_longest
 from typing import List
 
 from loguru import logger
 
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.document_tag_recommendation import (
+    crud_document_tag_recommendation,
     crud_document_tag_recommendation_link,
 )
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.document_tag_recommendation import (
     DocumentTagRecommendationLinkCreate,
     DocumentTagRecommendationLinkUpdate,
+    DocumentTagRecommendationSummary,
 )
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.db.simsearch_service import SimSearchService
@@ -37,6 +38,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         """
         cls.sqls: SQLService = SQLService()
         cls.sim: SimSearchService = SimSearchService()
+        cls.used_model = "Similiarity Search"
         return super(DocumentClassificationService, cls).__new__(cls)
 
     def classify_untagged_documents(self, task_id: int, project_id: int):
@@ -82,7 +84,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
             # Process each similar (untagged) document
             for similar_doc in filtered_similar_docs:
                 # Read the untagged document from the database
-                sdoc = crud_sdoc.read_document(db=db, id=similar_doc.sdoc_id)
+                sdoc = crud_sdoc.read(db=db, id=similar_doc.sdoc_id)
 
                 # Retrieve the tags from the compared (tagged) document using its ID as key.
                 # If no tags are found, skip this similar_doc.
@@ -97,96 +99,119 @@ class DocumentClassificationService(metaclass=SingletonMeta):
                             recommendation_task_id=task_id,
                             source_document_id=sdoc.id,
                             predicted_tag_id=tag.id,
-                            is_accepted=False,
+                            is_accepted=None,
                             prediction_score=similar_doc.score,
                         )
                     )
 
-            dtos = self.deduplicate_document_classifications(dtos)
+            dtos = self._deduplicate_document_classifications(dtos)
 
             # Insert all generated tag recommendation DTOs into the database at once.
             crud_document_tag_recommendation_link.create_multi(db=db, create_dtos=dtos)
+            crud_document_tag_recommendation.set_recommendation_job_model(
+                db=db, task_id=task_id, model_name=self.used_model
+            )
 
         except Exception as e:
             logger.error(f"Failed to complete document classification: {e}")
 
-    def get_recommendations_from_task(self, task_id: int) -> List[dict]:
+    def get_recommendations_from_task(
+        self, task_id: int
+    ) -> List[DocumentTagRecommendationSummary]:
         """
-        Retrieves and formats document tag recommendations based on the given task ID.
+        Retrieves and formats unreviewed document tag recommendations based on the given task ID.
 
         Args:
             task_id (int): The ID of the recommendation task.
 
         Returns:
-            List[dict]: A list of dictionaries containing recommendation details,
+            List[DocumentTagRecommendationSummary]: A list of DocumentTagRecommendationSummary DTOs containing recommendation details,
         """
         recommendations_list = []
         try:
             with self.sqls.db_session() as db:
-                # Fetch document tag recommendations associated with the task ID
+                # Fetch unreviewed document tag recommendations associated with the task ID
                 document_tag_recommendations = (
                     crud_document_tag_recommendation_link.read_by_task_id(
-                        db=db, task_id=task_id, exclude_accepted=True
+                        db=db, task_id=task_id, exclude_reviewed=True
                     )
                 )
-                # Extract source document IDs and predicted tag IDs from the recommendations
+
+                # Extract IDs for source documents and predicted tags
                 sdoc_ids = [
-                    doc_tag_rec.source_document_id
-                    for doc_tag_rec in document_tag_recommendations
+                    rec.source_document_id for rec in document_tag_recommendations
                 ]
                 predicted_tag_ids = [
-                    doc_tag_rec.predicted_tag_id
-                    for doc_tag_rec in document_tag_recommendations
+                    rec.predicted_tag_id for rec in document_tag_recommendations
                 ]
-                # Retrieve the predicted tags in batch based on extracted IDs
-                predicted_tags = crud_document_tag.get_tags_batch(
+
+                # Retrieve the predicted tags and source documents in Batch
+                predicted_tags = crud_document_tag.read_by_ids(
                     db=db, ids=predicted_tag_ids
                 )
-                # Fetch source documents in batch based on the collected document IDs
-                sdocs = crud_sdoc.read_document_batch(db, ids=sdoc_ids)
+                sdocs = crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)
 
-                # Combine recommendations, source documents, and predicted tags into structured output
-                for rec, sdoc, tag in zip_longest(
-                    document_tag_recommendations, sdocs, predicted_tags
-                ):
+                # Build dicts to map IDs to objects
+                sdocs_dict = {sdoc.id: sdoc for sdoc in sdocs}
+                predicted_tags_dict = {tag.id: tag for tag in predicted_tags}
+
+                for rec in document_tag_recommendations:
+                    sdoc = sdocs_dict.get(rec.source_document_id)
+                    tag = predicted_tags_dict.get(rec.predicted_tag_id)
                     recommendations_list.append(
-                        {
-                            "recommendation_id": rec.id,
-                            "source_document": sdoc.filename,
-                            "predicted_tag_id": rec.predicted_tag_id,
-                            "predicted_tag": tag.name,
-                            "prediction_score": rec.prediction_score,
-                        }
+                        DocumentTagRecommendationSummary(
+                            recommendation_id=rec.id,
+                            source_document=sdoc.filename if sdoc else None,  # type: ignore
+                            predicted_tag_id=rec.predicted_tag_id,
+                            predicted_tag=tag.name if tag else None,  # type: ignore
+                            prediction_score=rec.prediction_score,
+                        )
                     )
 
         except Exception as e:
             logger.error(f"Error while loading the document tag recommendations: {e}")
         return recommendations_list
 
-    def validate_recommendations(self, recommendation_ids: List[int]) -> int:
+    def validate_recommendations(
+        self,
+        accepted_recommendation_ids: List[int],
+        declined_recommendation_ids: List[int],
+    ) -> int:
         """
-        Validates and accepts document tag recommendations by their IDs.
+        Validates and accepts/declines document tag recommendations by their IDs.
 
         This method marks the specified recommendations as accepted and updates the associated
         source documents with the predicted tags. It also returns the number of modifications
         made to the document tags as a result of this operation.
 
         Args:
-            recommendation_ids (List[int]): A list of recommendation IDs to validate.
+            accepted_recommendation_ids (List[int]): A list of recommendation IDs to accept.
+            declined_recommendation_ids (List[int]): A list of recommendation IDs to decline.
+
 
         Returns:
             int: The number of document tags updated in the database, or -1 if an error occurred.
         """
-        dtos = [
+        accepted_dtos = [
             DocumentTagRecommendationLinkUpdate(is_accepted=True)
-            for _ in recommendation_ids
+            for _ in accepted_recommendation_ids
+        ]
+        declined_dtos = [
+            DocumentTagRecommendationLinkUpdate(is_accepted=False)
+            for _ in declined_recommendation_ids
         ]
         try:
             with self.sqls.db_session() as db:
+                # Mark recommendations as declined
+                crud_document_tag_recommendation_link.update_multi(
+                    db=db, ids=declined_recommendation_ids, update_dtos=declined_dtos
+                )
                 # Mark recommendations as accepted and obtain them
                 accepted_recommendations = (
                     crud_document_tag_recommendation_link.update_multi(
-                        db=db, ids=recommendation_ids, update_dtos=dtos
+                        db=db,
+                        ids=accepted_recommendation_ids,
+                        update_dtos=accepted_dtos,
                     )
                 )
 
@@ -215,13 +240,13 @@ class DocumentClassificationService(metaclass=SingletonMeta):
                 logger.info(
                     f"Document tags updated with {modifications} modifications."
                 )
-                return modifications
+                return modifications + len(declined_recommendation_ids)
 
         except Exception as e:
             logger.error(f"Error while validating document tag recommendations: {e}")
             return -1
 
-    def deduplicate_document_classifications(
+    def _deduplicate_document_classifications(
         self, dtos: List[DocumentTagRecommendationLinkCreate]
     ) -> List[DocumentTagRecommendationLinkCreate]:
         """

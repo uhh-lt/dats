@@ -4,30 +4,35 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.document_tag_recommendation import (
-    DocumentTagRecommendationCreateIntern,
+    DocumentTagRecommendationJobCreateIntern,
+    DocumentTagRecommendationJobUpdate,
     DocumentTagRecommendationLinkCreate,
     DocumentTagRecommendationLinkUpdate,
-    DocumentTagRecommendationUpdate,
 )
 from app.core.data.orm.document_tag_recommendation import (
+    DocumentTagRecommendationJobORM,
     DocumentTagRecommendationLinkORM,
-    DocumentTagRecommendationORM,
 )
 
 
-class CRUDDocumentTagRecommendation(
+class CRUDDocumentTagRecommendationJob(
     CRUDBase[
-        DocumentTagRecommendationORM,
-        DocumentTagRecommendationCreateIntern,
-        DocumentTagRecommendationUpdate,
+        DocumentTagRecommendationJobORM,
+        DocumentTagRecommendationJobCreateIntern,
+        DocumentTagRecommendationJobUpdate,
     ]
 ):
     # use base class update, read, create functions
-    pass
+
+    def set_recommendation_job_model(self, db: Session, task_id: int, model_name: str):
+        db.query(self.model).filter(self.model.task_id == task_id).update(
+            {"model_name": model_name}
+        )
+        db.commit()
 
 
-crud_document_tag_recommendation = CRUDDocumentTagRecommendation(
-    DocumentTagRecommendationORM
+crud_document_tag_recommendation = CRUDDocumentTagRecommendationJob(
+    DocumentTagRecommendationJobORM
 )
 
 
@@ -45,13 +50,13 @@ class CrudDocumentTagRecommendationLink(
         task_id: int,
         skip: Optional[int] = None,
         limit: Optional[int] = None,
-        exclude_accepted: bool = False,
+        exclude_reviewed: bool = False,
     ) -> List[DocumentTagRecommendationLinkORM]:
         query = db.query(self.model)
         query = query.filter(self.model.recommendation_task_id == task_id)
 
-        if exclude_accepted:
-            query = query.filter(self.model.is_accepted == False)  # noqa: E712
+        if exclude_reviewed:
+            query = query.filter(self.model.is_accepted == None)  # noqa: E711
         if skip is not None:
             query = query.offset(skip)
         if limit is not None:

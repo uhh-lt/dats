@@ -178,6 +178,7 @@ class WeaviateService(VectorIndexService):
                         "sdoc_id": sdoc_id,
                         "sentence_id": sent_id,
                     }
+
                 else:
                     data_object = {
                         "project_id": proj_id,
@@ -573,13 +574,9 @@ class WeaviateService(VectorIndexService):
                     },
                 )
             case IndexType.IMAGE:
-                raise ValueError(
-                    "Please define object class name and id for the given index type."
-                )
+                raise ValueError("Images are not supported.")
             case IndexType.NAMED_ENTITY:
-                raise ValueError(
-                    "Please define object class name and id for the given index type."
-                )
+                raise ValueError("Named Entities are not supported.")
 
         response = (
             self._client.query.get(object_class_name, [id])
@@ -588,7 +585,7 @@ class WeaviateService(VectorIndexService):
             .do()
         )
         if len(response["data"]["Get"][object_class_name]) == 0:
-            msg = f"No Sentences for SDoc {sdoc_id} found!"
+            msg = f"No {object_class_name} embedding for SDoc {sdoc_id} found!"
             logger.error(msg)
             raise KeyError(msg)
 
@@ -643,7 +640,7 @@ class WeaviateService(VectorIndexService):
                                     {
                                         "path": ["sentence_id"],
                                         "operator": "Equal",
-                                        "valueIntA": sentence_id,
+                                        "valueInt": sentence_id,
                                     },
                                     {
                                         "path": ["sdoc_id"],

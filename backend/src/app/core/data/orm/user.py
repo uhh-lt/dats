@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from app.core.data.orm.annotation_document import AnnotationDocumentORM
     from app.core.data.orm.concept_over_time_analysis import ConceptOverTimeAnalysisORM
     from app.core.data.orm.document_tag_recommendation import (
-        DocumentTagRecommendationORM,
+        DocumentTagRecommendationJobORM,
     )
     from app.core.data.orm.memo import MemoORM
     from app.core.data.orm.object_handle import ObjectHandleORM
@@ -63,9 +63,11 @@ class UserORM(ORMBase):
         "RefreshTokenORM", back_populates="user", passive_deletes=True
     )
 
-    document_tag_recommendations: Mapped[List["DocumentTagRecommendationORM"]] = (
+    document_tag_recommendations: Mapped[List["DocumentTagRecommendationJobORM"]] = (
         relationship(
-            "DocumentTagRecommendationORM", back_populates="user", passive_deletes=True
+            "DocumentTagRecommendationJobORM",
+            back_populates="user",
+            passive_deletes=True,
         )
     )
 

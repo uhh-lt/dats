@@ -15,40 +15,41 @@ from app.core.data.crud.document_tag_recommendation import (
     crud_document_tag_recommendation,
 )
 from app.core.data.dto.document_tag_recommendation import (
-    DocumentTagRecommendationCreate,
-    DocumentTagRecommendationCreateIntern,
-    DocumentTagRecommendationRead,
+    DocumentTagRecommendationJobCreate,
+    DocumentTagRecommendationJobCreateIntern,
+    DocumentTagRecommendationJobRead,
+    DocumentTagRecommendationSummary,
 )
 
 dcs: DocumentClassificationService = DocumentClassificationService()
 
 router = APIRouter(
-    prefix="/doctagrecommendation",
+    prefix="/doctagrecommendationjob",
     dependencies=[Depends(get_current_user)],
-    tags=["documentTagRecommendation"],
+    tags=["documentTagRecommendationJob"],
 )
 
 
 @router.put(
     "",
-    response_model=DocumentTagRecommendationRead,
+    response_model=DocumentTagRecommendationJobRead,
     summary="Creates a new Document Tag Recommendation Task and returns it.",
 )
 def create_new_doc_tag_rec_task(
     *,
     db: Session = Depends(get_db_session),
-    doc_tag_rec: DocumentTagRecommendationCreate,
+    doc_tag_rec: DocumentTagRecommendationJobCreate,
     authz_user: AuthzUser = Depends(),
-) -> DocumentTagRecommendationRead:
+) -> DocumentTagRecommendationJobRead:
     authz_user.assert_in_project(doc_tag_rec.project_id)
 
     db_obj = crud_document_tag_recommendation.create(
         db=db,
-        create_dto=DocumentTagRecommendationCreateIntern(
+        create_dto=DocumentTagRecommendationJobCreateIntern(
             project_id=doc_tag_rec.project_id, user_id=authz_user.user.id
         ),
     )
-    response = DocumentTagRecommendationRead.model_validate(db_obj)
+    response = DocumentTagRecommendationJobRead.model_validate(db_obj)
     prepare_and_start_document_classification_job_async(
         db_obj.task_id,
         doc_tag_rec.project_id,
@@ -59,16 +60,18 @@ def create_new_doc_tag_rec_task(
 
 @router.get(
     "/{task_id}",
-    response_model=List[dict],
+    response_model=List[DocumentTagRecommendationSummary],
     summary="Retrieve all document tag recommendations for the given task ID.",
 )
-def get_recommendations_from_task_endpoint(task_id: int) -> List[dict]:
+def get_recommendations_from_task_endpoint(
+    task_id: int,
+) -> List[DocumentTagRecommendationSummary]:
     """
     Retrieves document tag recommendations based on the specified task ID.
 
     ### Response Format:
     The endpoint returns a list of recommendations, where each recommendation
-    is represented as a dictionary with the following structure:
+    is represented as a DocumentTagRecommendationSummary DTO with the following structure:
 
     ```python
     {
@@ -90,16 +93,18 @@ def get_recommendations_from_task_endpoint(task_id: int) -> List[dict]:
 
 
 @router.patch(
-    "/accept_recommendations",
+    "/update_recommendations",
     response_model=int,
-    summary="The endpoint receives IDs of correctly tagged document recommendations and sets `is_accepted` to `true`, while setting the corresponding document tags.",
+    summary="The endpoint receives IDs of wrongly and correctly tagged document recommendations and sets `is_accepted` to `true` or `false`, while setting the corresponding document tags if `true`.",
 )
-def update_document_tag_recommendations(
+def update_recommendations(
     *,
     accepted_recommendation_ids: List[int],
+    declined_recommendation_ids: List[int],
 ) -> int:
     modifications = dcs.validate_recommendations(
-        recommendation_ids=accepted_recommendation_ids
+        accepted_recommendation_ids=accepted_recommendation_ids,
+        declined_recommendation_ids=declined_recommendation_ids,
     )
     if modifications == -1:
         raise HTTPException(
