@@ -185,6 +185,7 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
         created: "",
         updated: "",
         user_id: 0,
+        group_ids: [],
       };
       return old === undefined ? [spanAnnotation] : [...old, spanAnnotation];
     });

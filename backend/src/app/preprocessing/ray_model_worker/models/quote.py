@@ -29,7 +29,7 @@ class QuoteModel:
         ]
         jsons = self.model.predict(input_docs)
         results = []
-        for doc, js in zip(input.documents, jsons):
+        for js in jsons:
             quotes = []
             for anno in js["annotations"]:
                 quote = [
