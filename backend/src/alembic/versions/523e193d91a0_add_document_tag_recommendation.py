@@ -1,4 +1,4 @@
-"""vscode launcher
+"""Add document tag recommendation
 
 Revision ID: 523e193d91a0
 Revises: 241cfa625db2

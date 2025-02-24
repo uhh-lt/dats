@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 
 from sqlalchemy.orm import Session
 
@@ -48,20 +48,13 @@ class CrudDocumentTagRecommendationLink(
         db: Session,
         *,
         task_id: int,
-        skip: Optional[int] = None,
-        limit: Optional[int] = None,
         exclude_reviewed: bool = False,
     ) -> List[DocumentTagRecommendationLinkORM]:
         query = db.query(self.model)
         query = query.filter(self.model.recommendation_task_id == task_id)
 
         if exclude_reviewed:
-            query = query.filter(self.model.is_accepted == None)  # noqa: E711
-        if skip is not None:
-            query = query.offset(skip)
-        if limit is not None:
-            query = query.limit(limit)
-
+            query = query.filter(self.model.is_accepted.is_(None))
         return query.all()
 
 
