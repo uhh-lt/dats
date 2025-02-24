@@ -54,7 +54,7 @@ class CrudDocumentTagRecommendationLink(
         query = query.filter(self.model.recommendation_task_id == task_id)
 
         if exclude_reviewed:
-            query = query.filter(self.model.is_accepted.is_(None))
+            query = query.filter(self.model.is_accepted == None)  # noqa: E711
         return query.all()
 
 
