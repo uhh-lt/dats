@@ -14,7 +14,6 @@ from app.core.data.dto.document_tag_recommendation import (
     DocumentTagRecommendationLinkUpdate,
     DocumentTagRecommendationSummary,
 )
-from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.db.simsearch_service import SimSearchService
 from app.core.db.sql_service import SQLService
 from app.util.singleton_meta import SingletonMeta
@@ -58,7 +57,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
             with self.sqls.db_session() as db:
                 # Fetch all documents that already have tags for the given project
                 sdocs_with_tags = [
-                    SourceDocumentRead.model_validate(sdoc)
+                    sdoc
                     for sdoc in crud_sdoc.read_all_with_tags(
                         db=db, project_id=project_id
                     )
@@ -80,13 +79,8 @@ class DocumentClassificationService(metaclass=SingletonMeta):
             filtered_similar_docs = [
                 doc for doc in similar_docs if doc.sdoc_id not in sdoc_ids
             ]
-
             # Process each similar (untagged) document
-            for similar_doc in filtered_similar_docs:
-                # Read the untagged document from the database
-                sdoc = crud_sdoc.read(db=db, id=similar_doc.sdoc_id)
-
-                # Retrieve the tags from the compared (tagged) document using its ID as key.
+            for similar_doc in filtered_similar_docs:  # Retrieve the tags from the compared (tagged) document using its ID as key.
                 # If no tags are found, skip this similar_doc.
                 tags = sdocs_and_tags.get(similar_doc.compared_sdoc_id, None)
                 if not tags:
@@ -97,7 +91,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
                     dtos.append(
                         DocumentTagRecommendationLinkCreate(
                             recommendation_task_id=task_id,
-                            source_document_id=sdoc.id,
+                            source_document_id=similar_doc.sdoc_id,
                             predicted_tag_id=tag.id,
                             is_accepted=None,
                             prediction_score=similar_doc.score,
