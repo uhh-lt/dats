@@ -44,7 +44,7 @@ def get_ml_job(*, ml_job_id: str, authz_user: AuthzUser = Depends()) -> MLJobRea
     response_model=List[MLJobRead],
     summary="Returns all MLJobRead for the given project ID if it exists",
 )
-def get_all_lm_jobs(
+def get_all_ml_jobs(
     *, project_id: int, authz_user: AuthzUser = Depends()
 ) -> List[MLJobRead]:
     authz_user.assert_in_project(project_id)

@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Union
 
-from sqlalchemy import or_
+from sqlalchemy import and_, or_
 
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.ml_job import (
@@ -12,7 +12,11 @@ from app.core.data.dto.ml_job import (
     MLJobUpdate,
     QuotationAttributionParams,
 )
-from app.core.data.orm.source_document_job import SourceDocumentJobORM
+from app.core.data.orm.source_document_job_status import (
+    JobStatus,
+    JobType,
+    SourceDocumentJobStatusORM,
+)
 from app.core.db.redis_service import RedisService
 from app.core.ml.quote_service import QuoteService
 from app.util.singleton_meta import SingletonMeta
@@ -39,11 +43,6 @@ class MLService(metaclass=SingletonMeta):
         return super(MLService, cls).__new__(cls)
 
     def prepare_ml_job(self, ml_params: MLJobParameters) -> MLJobRead:
-        # if not self._assert_all_requested_data_exists(ml_params=ml_params):
-        #     raise MLJobPreparationError(
-        #         cause="Not all requested data for the ML job exists!"
-        #     )
-
         mlj_create = MLJobCreate(
             parameters=ml_params,
         )
@@ -66,8 +65,14 @@ class MLService(metaclass=SingletonMeta):
             ml_job_id, MLJobUpdate(status=BackgroundJobStatus.RUNNING)
         )
 
+        timestamp_column = SourceDocumentJobStatusORM.timestamp
+        unfinished_status = SourceDocumentJobStatusORM.status.in_(
+            (JobStatus.ERROR, JobStatus.ABORTED, JobStatus.UNQUEUED, None)
+        )
+        inactive_status = SourceDocumentJobStatusORM.status.notin_(
+            (JobStatus.WAITING, JobStatus.RUNNING)
+        )
         try:
-            filter_column = None
             match mlj.parameters.ml_job_type:
                 case MLJobType.QUOTATION_ATTRIBUTION:
                     if isinstance(
@@ -75,12 +80,27 @@ class MLService(metaclass=SingletonMeta):
                         QuotationAttributionParams,
                     ):
                         recompute = mlj.parameters.specific_ml_job_parameters.recompute
-                        filter_column = SourceDocumentJobORM.quotation_attribution_at
-                        filter_criterion = (
-                            or_(filter_column < start_time, filter_column == None)  # noqa: E711
-                            if recompute
-                            else filter_column == None  # noqa: E711
+                        valid_type = or_(
+                            SourceDocumentJobStatusORM.type
+                            == JobType.QUOTATION_ATTRIBUTION,
+                            SourceDocumentJobStatusORM.type == None,
                         )
+                        filter_criterion = (
+                            and_(
+                                valid_type,
+                                inactive_status,
+                                or_(
+                                    timestamp_column < start_time,
+                                    timestamp_column == None,  # noqa: E711
+                                ),
+                            )
+                            if recompute
+                            else and_(
+                                valid_type,
+                                or_(unfinished_status, timestamp_column == None),
+                            )  # noqa: E711
+                        )
+
                         QuoteService().perform_quotation_detection(
                             mlj.parameters.project_id, filter_criterion, recompute
                         )

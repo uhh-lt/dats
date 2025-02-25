@@ -278,12 +278,10 @@ def get_sdoc_groups_with_annotations(
     span_group_db_obj = crud_span_group.read_by_user_and_sdoc(
         db, user_id=user_id, sdoc_id=sdoc_id
     )
-    # spans = [group.span_annotations for group in span_group_db_obj]
     return [
         SpanGroupWithAnnotationsRead.model_validate(group)
         for group in span_group_db_obj
     ]
-    # return [ SpanAnnotationRead.model_validate(span) for span in spans]
 
 
 @router.get(
