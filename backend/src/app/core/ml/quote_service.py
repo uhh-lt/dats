@@ -7,16 +7,20 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.code import crud_code
-from app.core.data.crud.source_document_job import crud_sdoc_job
+from app.core.data.crud.source_document_job_status import crud_sdoc_job_status
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.span_group import crud_span_group
 from app.core.data.crud.user import SYSTEM_USER_ID
-from app.core.data.dto.source_document_job import SourceDocumentJobCreate
+from app.core.data.dto.source_document_job_status import SourceDocumentJobStatusCreate
 from app.core.data.dto.span_annotation import SpanAnnotationCreateIntern
 from app.core.data.dto.span_group import SpanGroupCreateIntern
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.source_document_data import SourceDocumentDataORM
-from app.core.data.orm.source_document_job import SourceDocumentJobORM
+from app.core.data.orm.source_document_job_status import (
+    JobStatus,
+    JobType,
+    SourceDocumentJobStatusORM,
+)
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.db.sql_service import SQLService
 from app.preprocessing.ray_model_service import RayModelService
@@ -84,10 +88,10 @@ class QuoteService(metaclass=SingletonMeta):
         with self.sqls.db_session() as db:
             query = (
                 db.query(SourceDocumentDataORM)
-                .join(
-                    SourceDocumentJobORM,
-                    SourceDocumentJobORM.id == SourceDocumentDataORM.id,
-                    isouter=True,
+                .outerjoin(
+                    SourceDocumentJobStatusORM,
+                    SourceDocumentJobStatusORM.id == SourceDocumentDataORM.id,
+                    full=True,
                 )
                 .filter(filter_criterion)
                 .limit(10)
@@ -145,13 +149,10 @@ class QuoteService(metaclass=SingletonMeta):
                     )
                     .scalar_subquery()
                 )
-                deleted = (
-                    db.query(SpanAnnotationORM)
-                    .where(SpanAnnotationORM.id.in_(subquery))
-                    .delete()
-                )
+                db.query(SpanAnnotationORM).where(
+                    SpanAnnotationORM.id.in_(subquery)
+                ).delete()
 
-                print("removed existing quote annotations:", deleted)
             span_dtos: List[SpanAnnotationCreateIntern] = []
             group_dtos: List[SpanGroupCreateIntern] = []
             group2annos: List[Tuple[int, int]] = []
@@ -187,11 +188,14 @@ class QuoteService(metaclass=SingletonMeta):
                 for g, (s, e) in zip(groups, group2annos)
             }
             crud_span_group.link_groups_spans_batch(db, links=links)
-            crud_sdoc_job.create_multi(
+            crud_sdoc_job_status.create_multi(
                 db,
                 create_dtos=[
-                    SourceDocumentJobCreate(
-                        id=doc.id, quotation_attribution_at=datetime.now()
+                    SourceDocumentJobStatusCreate(
+                        id=doc.id,
+                        type=JobType.QUOTATION_ATTRIBUTION,
+                        status=JobStatus.FINISHED,
+                        timestamp=datetime.now(),
                     )
                     for doc in quote_output.documents
                 ],
