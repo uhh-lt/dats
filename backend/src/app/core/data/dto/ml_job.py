@@ -22,22 +22,22 @@ class MLJobParameters(BaseModel):
     ml_job_type: MLJobType = Field(description="The type of the MLJob")
     project_id: int = Field(description="The ID of the Project to analyse")
     specific_ml_job_parameters: Union[QuotationAttributionParams, None] = Field(
-        description="Specific parameters for the LLMJob w.r.t it's type",
+        description="Specific parameters for the MLJob w.r.t it's type",
         discriminator="ml_job_type",
     )
 
 
 class MLJobBase(BaseModel):
     status: BackgroundJobStatus = Field(
-        default=BackgroundJobStatus.WAITING, description="Status of the LLMJob"
+        default=BackgroundJobStatus.WAITING, description="Status of the MLJob"
     )
     error: Optional[str] = Field(default=None, description="Error message (if any)")
 
 
 class MLJobRead(MLJobBase):
     id: str = Field(description="ID of the MLJob")
-    created: datetime = Field(description="Created timestamp of the LLMJob")
-    updated: datetime = Field(description="Updated timestamp of the LLMJob")
+    created: datetime = Field(description="Created timestamp of the MLJob")
+    updated: datetime = Field(description="Updated timestamp of the MLJob")
     parameters: MLJobParameters
 
 

@@ -83,7 +83,7 @@ class MLService(metaclass=SingletonMeta):
                         valid_type = or_(
                             SourceDocumentJobStatusORM.type
                             == JobType.QUOTATION_ATTRIBUTION,
-                            SourceDocumentJobStatusORM.type == None,
+                            SourceDocumentJobStatusORM.type == None,  # noqa: E711
                         )
                         filter_criterion = (
                             and_(
@@ -97,7 +97,7 @@ class MLService(metaclass=SingletonMeta):
                             if recompute
                             else and_(
                                 valid_type,
-                                or_(unfinished_status, timestamp_column == None),
+                                or_(unfinished_status, timestamp_column == None),  # noqa: E711
                             )  # noqa: E711
                         )
 
