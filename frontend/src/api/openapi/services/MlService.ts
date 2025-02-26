@@ -46,7 +46,7 @@ export class MlService {
    * @returns MLJobRead Successful Response
    * @throws ApiError
    */
-  public static getAllLmJobs({ projectId }: { projectId: number }): CancelablePromise<Array<MLJobRead>> {
+  public static getAllMlJobs({ projectId }: { projectId: number }): CancelablePromise<Array<MLJobRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/ml/project/{project_id}",

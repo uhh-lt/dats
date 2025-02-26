@@ -5269,7 +5269,7 @@
       "get": {
         "tags": ["ml"],
         "summary": "Returns all MLJobRead for the given project ID if it exists",
-        "operationId": "get_all_lm_jobs",
+        "operationId": "get_all_ml_jobs",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -5287,7 +5287,7 @@
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/MLJobRead" },
-                  "title": "Response Ml-Get All Lm Jobs"
+                  "title": "Response Ml-Get All Ml Jobs"
                 }
               }
             }
