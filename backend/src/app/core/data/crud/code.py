@@ -39,18 +39,22 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
                     is_system=True,
                 )
 
-                if not self.exists_by_name_and_project(
+                existing_code_id = self.get_by_name_and_project(
                     db,
                     code_name=create_dto.name,
                     proj_id=create_dto.project_id,
-                ):
+                )
+
+                if existing_code_id is None:
                     db_code = self.create(db=db, create_dto=create_dto)
+                    existing_code_id = db_code.id
                     created.append(db_code)
 
-                    if "children" in code_dict[code_name]:
-                        __create_recursively(
-                            code_dict[code_name]["children"], parent_code_id=db_code.id
-                        )
+                if "children" in code_dict[code_name]:
+                    __create_recursively(
+                        code_dict[code_name]["children"],
+                        parent_code_id=existing_code_id,
+                    )
 
         __create_recursively(conf.system_codes)
 
@@ -74,15 +78,15 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
             is not None
         )
 
-    def exists_by_name_and_project(
+    def get_by_name_and_project(
         self, db: Session, *, code_name: str, proj_id: int
-    ) -> bool:
-        return (
+    ) -> int | None:
+        code_id = (
             db.query(self.model.id)
             .filter(self.model.name == code_name, self.model.project_id == proj_id)
             .first()
-            is not None
         )
+        return code_id[0] if code_id else None
 
     def remove_by_project(self, db: Session, *, proj_id: int) -> List[int]:
         # find all codes to be removed
