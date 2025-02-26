@@ -49,7 +49,7 @@ const useGetAllMLJobs = (projectId: number) => {
   return useQuery<MLJobRead[], Error>({
     queryKey: [QueryKey.PROJECT_ML_JOBS, projectId],
     queryFn: () =>
-      MlService.getAllLmJobs({
+      MlService.getAllMlJobs({
         projectId: projectId!,
       }),
     enabled: !!projectId,
