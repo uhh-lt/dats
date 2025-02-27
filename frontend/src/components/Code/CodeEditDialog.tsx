@@ -3,7 +3,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack } from "@mui/material";
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import CodeHooks from "../../api/CodeHooks.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
@@ -18,6 +18,8 @@ import FormColorPicker from "../FormInputs/FormColorPicker.tsx";
 import FormMenu from "../FormInputs/FormMenu.tsx";
 import FormText from "../FormInputs/FormText.tsx";
 import FormTextMultiline from "../FormInputs/FormTextMultiline.tsx";
+import { CodeReadWithLevel } from "../TreeExplorer/CodeReadWithLevel.ts";
+import { buildCodeWithLevel } from "./buildCodeWithLevel.ts";
 import CodeRenderer from "./CodeRenderer.tsx";
 
 type CodeEditValues = {
@@ -180,28 +182,34 @@ function CodeEditDialogContent({
     },
   });
 
-  // computed
-  const parentCodes = useMemo(() => codes.filter((code) => !code.is_system), [codes]);
+  // // computed
+  // const parentCodes = useMemo(() => codes.filter((code) => !code.is_system), [codes]);
 
-  // render
-  let menuItems: React.ReactNode[];
-  if (!code || code.is_system) {
-    menuItems = codes
-      .filter((c) => c.id !== code?.id)
-      .map((code) => (
-        <MenuItem key={code.id} value={code.id}>
-          <CodeRenderer code={code} />
-        </MenuItem>
-      ));
-  } else {
-    menuItems = parentCodes
-      .filter((c) => c.id !== code?.id)
-      .map((code) => (
-        <MenuItem key={code.id} value={code.id}>
-          <CodeRenderer code={code} />
-        </MenuItem>
-      ));
-  }
+  // // render
+  // let menuItems: React.ReactNode[];
+  // if (!code || code.is_system) {
+  //   menuItems = codes
+  //     .filter((c) => c.id !== code?.id)
+  //     .map((code) => (
+  //       <MenuItem key={code.id} value={code.id}>
+  //         <CodeRenderer code={code} />
+  //       </MenuItem>
+  //     ));
+  // } else {
+  //   menuItems = parentCodes
+  //     .filter((c) => c.id !== code?.id)
+  //     .map((code) => (
+  //       <MenuItem key={code.id} value={code.id}>
+  //         <CodeRenderer code={code} />
+  //       </MenuItem>
+  //     ));
+  // }
+
+  const parentCodes = useMemo(() => codes.filter((c) => !c.is_system && c.id !== code.id), [codes, code.id]);
+
+  const codeTree: CodeReadWithLevel[] = useMemo(() => {
+    return buildCodeWithLevel(parentCodes, null, 0);
+  }, [parentCodes]);
 
   return (
     <Dialog open={isOpen} onClose={handleClose} maxWidth="md" fullWidth>
@@ -223,7 +231,11 @@ function CodeEditDialogContent({
               <MenuItem key={-1} value={-1}>
                 No parent
               </MenuItem>
-              {menuItems}
+              {codeTree.map((cw) => (
+                <MenuItem key={cw.data.id} value={cw.data.id} style={{ paddingLeft: cw.level * 10 + 6 }}>
+                  <CodeRenderer code={cw.data} />
+                </MenuItem>
+              ))}
             </FormMenu>
             <FormText
               name="name"

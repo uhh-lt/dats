@@ -15,8 +15,10 @@ import FormColorPicker from "../FormInputs/FormColorPicker.tsx";
 import FormMenu from "../FormInputs/FormMenu.tsx";
 import FormText from "../FormInputs/FormText.tsx";
 import FormTextMultiline from "../FormInputs/FormTextMultiline.tsx";
+import { CodeReadWithLevel } from "../TreeExplorer/CodeReadWithLevel.ts";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 import CodeRenderer from "./CodeRenderer.tsx";
+import { buildCodeWithLevel } from "./buildCodeWithLevel.ts";
 
 export type CodeCreateSuccessHandler = ((code: CodeRead, isNewCode: boolean) => void) | undefined;
 
@@ -144,6 +146,11 @@ function CodeCreateForm({ projectId, codeToCreate, parentCodes, onClose }: CodeC
 
   const handleErrorCodeCreateDialog: SubmitErrorHandler<CodeCreateValues> = (data) => console.error(data);
 
+  // code tree
+  const codeTree: CodeReadWithLevel[] = useMemo(() => {
+    return buildCodeWithLevel(parentCodes, null, 0);
+  }, [parentCodes]);
+
   // rendering
   return (
     <form onSubmit={handleSubmit(handleSubmitCodeCreateDialog, handleErrorCodeCreateDialog)}>
@@ -163,12 +170,11 @@ function CodeCreateForm({ projectId, codeToCreate, parentCodes, onClose }: CodeC
             <MenuItem key={-1} value={-1}>
               No parent
             </MenuItem>
-            {parentCodes &&
-              parentCodes.map((code) => (
-                <MenuItem key={code.id} value={code.id}>
-                  <CodeRenderer code={code} />
-                </MenuItem>
-              ))}
+            {codeTree.map((cw) => (
+              <MenuItem key={cw.data.id} value={cw.data.id} style={{ paddingLeft: cw.level * 10 + 6 }}>
+                <CodeRenderer code={cw.data} />
+              </MenuItem>
+            ))}
           </FormMenu>
           <FormText
             name="name"

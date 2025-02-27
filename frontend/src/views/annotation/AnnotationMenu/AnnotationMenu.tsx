@@ -45,6 +45,8 @@ export interface CodeSelectorHandle {
   isOpen: boolean;
 }
 
+// todo: we do not need this, use ICodeWithLevel instead
+// if we need title, just extend ICodeWithLevel
 interface ICodeFilterWithLevel extends CodeRead {
   level: number;
   title: string;
@@ -222,7 +224,7 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
                 return (
                   <li {...props} key={option.id} style={{ paddingLeft: indent }}>
                     <Box style={{ width: 20, height: 20, backgroundColor: option.color, marginRight: 8 }}></Box>{" "}
-                    {option.title}
+                    {option.name}
                   </li>
                 );
               }}
