@@ -14,6 +14,7 @@ export const useComputeCodesForSelection = () => {
 
   // computed
   const codesForSelection = useMemo(() => {
+    // todo create new interface ICodeWithLevel.ts and use it here
     type CodeWithLevel = { data: CodeRead; level: number };
     let codesForSelection: CodeWithLevel[] = [];
 
