@@ -14,7 +14,7 @@ export type MLJobParameters = {
    */
   project_id: number;
   /**
-   * Specific parameters for the LLMJob w.r.t it's type
+   * Specific parameters for the MLJob w.r.t it's type
    */
   specific_ml_job_parameters: QuotationAttributionParams | null;
 };
