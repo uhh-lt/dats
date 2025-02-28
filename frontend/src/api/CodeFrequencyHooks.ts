@@ -48,7 +48,7 @@ const useReturnTopWordsData = () =>
 
 const useReturnTopWordsOllama = (topic_id: number) => {
   console.log("CALL");
-  return useQuery<Array<Record<string, unknown>>, Error>({
+  return useQuery<Record<string, unknown>, Error>({
     queryKey: ["UseDTOHook", topic_id],
     queryFn: () => AnalysisService.returnTopWordsOllama({ topicId: topic_id }),
   });

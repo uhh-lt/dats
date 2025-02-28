@@ -391,7 +391,7 @@ export class AnalysisService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static returnTopWordsOllama({ topicId }: { topicId: number }): CancelablePromise<Array<Record<string, any>>> {
+  public static returnTopWordsOllama({ topicId }: { topicId: number }): CancelablePromise<Record<string, any>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/analysis/top_words_ollama",

@@ -3761,11 +3761,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "type": "object" },
-                  "title": "Response Analysis-Return Top Words Ollama"
-                }
+                "schema": { "type": "object", "title": "Response Analysis-Return Top Words Ollama" }
               }
             }
           },

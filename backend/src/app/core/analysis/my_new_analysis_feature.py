@@ -1,14 +1,20 @@
 import json
 import os
-from typing import List
+from typing import Mapping
 
 from bertopic import BERTopic
+from pydantic import BaseModel
 
 from app.core.data.llm.ollama_service import OllamaService
 
 top_words_data = []
 topic_distr_data = []
 ollama_service = OllamaService()
+
+
+class OllamaTopicResponse(BaseModel):
+    topic_name: str
+    reasoning: str
 
 
 def top_words():
@@ -23,83 +29,26 @@ def get_prompt(index: int):
     top_words_string = ""
     for point in top_words()[index]:
         top_words_string += top_words()[index][point]["word"] + " "
-    q_prompt = (
-        f"you are a digital humanity expert on Walter Kempowski "
-        f"and very professional on topic modeling using bertopic."
-        f"giving the following words from bertopic: "
-        f"{top_words_string}."
-        f"interpret what this topic is about for 3-5 potential results."
-        f"I need the result format as follows:"
-        f"The top words for this topic are: {top_words_string}"
-        f"The interpretation of the top words are below:"
-        f"#1. topic name --> summary of the topic from the top words"
-    )
-    v_prompt = (
-        f"You are an expert in the field of digital humanities and topic modeling (especially BERTopic)."
-        f"You are working on Walter Kempowski and his project 'Ortslinien'."
-        f"Here are a few things you should know about Walter Kempowski and the 'Ortslinien' project: "
-        f"Walter Kempowski (1929-2007) was a contemporary German author, collage artist and archivist."
-        f"In his last major project, Ortslinien, which he began in 1997, Walter Kempowski left the medium "
-        f"of books and worked on the computer to connect text, image, sound and film files, each of which "
-        f"was compared over a period of 200 years, day by day.Kempowski left behind several data folders labeled “OL” (for “Ortslinien”) "
-        f"-these folders contain the materials that were to become part of Ortslinien and provide an insight into the structure Kempowski planned for the work."
-        f"According to the documents left behind by Kempowski, the title Ortslinien is a mathematical term for sets of points and refers to "
-        f"'lines or areas on which all points lie that satisfy given conditions'."
-        f"The individual points in Kempowski's project include texts, photos, films, paintings and pieces of music or film collected by the author."
-        f"Dating plays a central role in all the documents (collected from a wide variety of sources) insofar as it was Kempowski's "
-        f"intention to make the various media tangible on a kind of timeline and thus convey a 'spatial sense of time'."
-        f"Your colleagues have already carried out topic modeling using BERTopic and you are now to suggest names for the topics based on the top words."
-        f"the top words are the following: '{top_words_string}'"
-        f"Suggest 3-5 potential topics for each top words list."
-        f"I need the result in the following format: "
-        f"First, repeat the Top Words in the format: The top words for this topic are: top words."
-        f"Second, name the topic and give a brief explanation of why this topic name was chosen."
-    )
-    v2_prompt = (
-        f"You are an expert in the field of digital humanities and topic modeling (especially BERTopic)."
-        f"Your colleagues have already carried out topic modeling using BERTopic and you are now to suggest names for the topics based on the top words."
-        f"Suggest 3-5 potential topics for each top words list."
-        f"the top words are the following: '{top_words_string}'"
-        f"I need the result in the following format: "
-        f"First, repeat the Top Words in the format: The top words for this topic are: top words."
-        f"Second, name the topic and give a brief explanation of why this topic name was chosen."
-    )
-    fusion_prompt = (
-        f"You are an expert in the field of digital humanities and topic modeling (especially BERTopic)."
-        f"You are working on Walter Kempowski and his project 'Ortslinien'."
-        f"Here are a few things you should know about Walter Kempowski and the 'Ortslinien' project: "
-        f"Walter Kempowski (1929-2007) was a contemporary German author, collage artist and archivist."
-        f"In his last major project, Ortslinien, which he began in 1997, Walter Kempowski left the medium "
-        f"of books and worked on the computer to connect text, image, sound and film files, each of which "
-        f"was compared over a period of 200 years, day by day.Kempowski left behind several data folders labeled “OL” (for “Ortslinien”) "
-        f"-these folders contain the materials that were to become part of Ortslinien and provide an insight into the structure Kempowski planned for the work."
-        f"According to the documents left behind by Kempowski, the title Ortslinien is a mathematical term for sets of points and refers to "
-        f"'lines or areas on which all points lie that satisfy given conditions'."
-        f"The individual points in Kempowski's project include texts, photos, films, paintings and pieces of music or film collected by the author."
-        f"Dating plays a central role in all the documents (collected from a wide variety of sources) insofar as it was Kempowski's "
-        f"intention to make the various media tangible on a kind of timeline and thus convey a 'spatial sense of time'."
-        f"Your colleagues have already carried out topic modeling using BERTopic and you are now to suggest names for the topics based on the top words."
-        f"the top words are the following: '{top_words_string}'"
-        f"interpret what this topic is about for 3-5 potential results."
-        f"I need the result format as follows:"
-        f"The top words for this topic are: {top_words_string}"
-        f"The interpretation of the top words are below:"
-        f"#1. topic name --> summary of the topic from the top words"
-    )
 
-    empty_system_prompt = ""
+    user_prompt = (
+        "Walter Kempowski (1929-2007) was a contemporary German author, collage artist, and archivist."
+        "In his final major project, Ortslinien (initiated in 1997), he moved beyond traditional books to integrate text, images, sound, and film."
+        "Kempowski organized his work into data folders labeled 'OL' (for Ortslinien), which reveal his planned structure for connecting these varied "
+        "media types. His notes explain that Ortslinien is a mathematical term describing sets of points—'lines or areas on which all points lie that "
+        "satisfy given conditions'—used here as an analogy for the interconnected elements of his work. The project's "
+        "diverse materials (texts, photos, films, paintings, musical pieces) are arranged along a timeline to evoke a 'spatial sense of time.' Your colleagues have already run topic modeling on this dataset using BERTopic."
+        f"Based on the following top words for a specific topic: '{top_words_string}' please provide a clear interpretation of what this topic might "
+        "represent and suggest an appropriate topic name."
+    )
 
     system_prompt = (
-        "You are to find common words and umbrella terms for a given list of words"
+        "You are an expert in digital humanities with extensive experience in topic modeling, particularly using BERTopic."
+        "Your current analysis focuses on Walter Kempowski's Ortslinien project—a complex work that intertwines various media "
+        "to create a spatial narrative of time. When responding, please adhere to the following format: "
+        "{ 'topic_name': '<Your chosen umbrella term for the topic>', 'reasoning': '<A detailed explanation of your interpretation and the connection to the provided top words>' }"
     )
-    user_prompt = (
-        "'''"
-        + top_words_string
-        + "'''"
-        + " return a list of 5 umbrella terms for the previous words as a comma seperated list, no explanation"
-    )
-    print(q_prompt, v_prompt, v2_prompt, system_prompt, user_prompt)
-    return [empty_system_prompt, fusion_prompt]
+
+    return [system_prompt, user_prompt]
 
 
 def load_bertopic_model():
@@ -108,11 +57,12 @@ def load_bertopic_model():
 
     for i in range(len(topic_info) - 1):
         current_topic = topic_model.get_topic(i)
+        assert isinstance(current_topic, Mapping), "Current topic is not a Mapping"
         topic_x_data = {}
         for j in range(len(current_topic)):
             word_data = {
-                "word": current_topic[j][0],
-                "score": float(current_topic[j][1]),
+                "word": current_topic[f"{j}"][0],
+                "score": float(current_topic[f"{j}"][1]),
             }
             topic_x_data[f"{j}"] = word_data
         top_words_data.append(topic_x_data)
@@ -125,14 +75,16 @@ def load_bertopic_model():
 load_bertopic_model()
 
 
-def top_words_ollama(topic_id: int) -> List[dict]:
-    ollama_responses = [
-        {
-            "prompt": "v2_prompt",
-            "response": ollama_service.chat(*get_prompt(topic_id)),
-            "top_words": [top_words()[topic_id]],
-        }
-    ]
+def top_words_ollama(topic_id: int) -> dict:
+    response = ollama_service.chat(
+        *get_prompt(topic_id), response_model=OllamaTopicResponse
+    )
+    ollama_responses = {
+        "prompt": "noah_v1",
+        "reasoning": response.reasoning,
+        "topic_name": response.topic_name,
+        "top_words": [top_words()[topic_id]],
+    }
 
     file_name = "app/core/analysis/ollama_responses.json"
     if os.path.exists(file_name):

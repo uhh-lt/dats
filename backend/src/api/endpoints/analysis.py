@@ -19,9 +19,6 @@ from app.core.analysis.word_frequency_analysis.word_frequency import (
     word_frequency_export,
     word_frequency_info,
 )
-from app.core.analysis.word_frequency_analysis.word_frequency_columns import (
-    WordFrequencyColumns,
-)
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.doc_type import DocType
 from app.core.data.dto.analysis import (
@@ -356,7 +353,7 @@ def return_top_words_data(
 
 @router.post(
     "/top_words_ollama",
-    response_model=List[dict],
+    response_model=dict,
     summary="Return top words + ollama response",
 )
 def return_top_words_ollama(
@@ -364,5 +361,5 @@ def return_top_words_ollama(
     topic_id: int,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
-) -> List[dict]:
+) -> dict:
     return top_words_ollama(topic_id)

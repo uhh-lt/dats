@@ -1,14 +1,13 @@
 import * as d3 from "d3";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 interface TopicDistrData {
   data: Record<string, number>[];
 }
 
 const TopicDistrChart: React.FC<TopicDistrData> = ({ data }) => {
-  const [width, setWidth] = useState<number>(window.innerWidth);
-
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const [width, setWidth] = useState<number>(window.innerWidth);
 
   // Declare the chart dimensions and margins.
   const height = window.innerHeight * 0.7;
@@ -30,13 +29,19 @@ const TopicDistrChart: React.FC<TopicDistrData> = ({ data }) => {
     .domain([0, d3.max(data, (d) => d.count) ?? 0])
     .range([height - marginBottom, marginTop]);
 
-  React.useEffect(() => {
-    // handles a window resize which in turn resizes the charts width
+  // Window resize effect
+  useEffect(() => {
     const handleResize = () => {
       setWidth(window.innerWidth);
     };
     window.addEventListener("resize", handleResize);
 
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
     const svg = d3.select(svgRef.current);
 
     // clear previous content
@@ -53,7 +58,7 @@ const TopicDistrChart: React.FC<TopicDistrData> = ({ data }) => {
       .style("border-radius", "5px")
       .style("pointer-events", "none")
       .style("visibility", "hidden")
-      .style("font-size", "12px")
+      .style("font-size", "16px")
       .style("color", "black");
 
     // select the svg to add content
@@ -91,7 +96,7 @@ const TopicDistrChart: React.FC<TopicDistrData> = ({ data }) => {
       .attr("x", width / 2)
       .attr("y", marginTop * 0.7)
       .attr("text-anchor", "middle")
-      .style("font-size", "16px")
+      .style("font-size", "18px")
       .text("Topic Distribution");
 
     // set x-axis label
@@ -101,7 +106,7 @@ const TopicDistrChart: React.FC<TopicDistrData> = ({ data }) => {
       .attr("x", width / 2)
       .attr("y", height - marginBottom * 0.2)
       .attr("text-anchor", "middle")
-      .style("font-size", "16px")
+      .style("font-size", "18px")
       .text("Topic");
 
     // set y-axis label
@@ -112,7 +117,7 @@ const TopicDistrChart: React.FC<TopicDistrData> = ({ data }) => {
       .attr("x", -(height / 2))
       .attr("y", marginLeft * 0.7)
       .attr("text-anchor", "middle")
-      .style("font-size", "16px")
+      .style("font-size", "18px")
       .text("Number of Documents");
 
     // setup border
@@ -131,19 +136,16 @@ const TopicDistrChart: React.FC<TopicDistrData> = ({ data }) => {
     svg
       .append("g")
       .attr("transform", `translate(0,${height - marginBottom})`)
-      .call(d3.axisBottom(x).tickSizeOuter(0));
+      .call(d3.axisBottom(x).tickSizeOuter(0))
+      .style("font-size", "14px");
 
     // setup y-axis
     svg
       .append("g")
       .attr("transform", `translate(${marginLeft},0)`)
       .call(d3.axisLeft(y).tickFormat((y) => y.toString()))
-      .call((g) => g.select(".domain").remove());
-
-    // clean-up
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
+      .call((g) => g.select(".domain").remove())
+      .style("font-size", "16px");
   }, [data, height, marginBottom, marginLeft, marginRight, marginTop, width, x, y]);
 
   return (

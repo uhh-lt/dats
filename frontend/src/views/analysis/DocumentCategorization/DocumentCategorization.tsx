@@ -2,7 +2,7 @@ import {
   Card,
   CardContent,
   FormControl,
-  Grid,
+  Grid2,
   InputLabel,
   MenuItem,
   Select,
@@ -10,13 +10,9 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import AnalysisHooks from "../../../api/AnalysisHooks.ts";
+import AnalysisHooks from "../../../api/CodeFrequencyHooks.ts";
 import TopWordsBarChart from "./TopWordsBarChart.tsx";
 import TopicDistrChart from "./TopicDistrBarChart.tsx";
-
-interface ollamaResponseInterface {
-  data: { prompt: string; response: string; top_words: string[] };
-}
 
 function DocumentCategorization() {
   const topic_distr_data = AnalysisHooks.useReturnTopicDistrData();
@@ -73,8 +69,8 @@ function DocumentCategorization() {
           </Select>
         </FormControl>
 
-        <Grid container spacing={2}>
-          <Grid item xs={6} style={{ textAlign: "center" }}>
+        <Grid2 container spacing={2} sx={{ maxHeight: height * 0.75, overflowY: "auto" }}>
+          <Grid2 size={9} style={{ textAlign: "center" }}>
             Top Words Graph
             {top_words_data.isLoading && <div>Loading...</div>}
             {top_words_data.isSuccess ? (
@@ -85,8 +81,18 @@ function DocumentCategorization() {
             ) : (
               <div></div>
             )}
-          </Grid>
-          <Grid item xs={6} style={{ textAlign: "center" }}>
+          </Grid2>
+          <Grid2 size={3} sx={{ textAlign: "left", overflowY: "auto" }}>
+            {ollamaResponse.isLoading && <div style={{ textAlign: "center" }}>Loading...</div>}
+            {ollamaResponse.isSuccess ? (
+              <div style={{ whiteSpace: "pre-line", height: height * 0.2 }}>
+                {ollamaResponse.data["reasoning"] as string}
+              </div>
+            ) : (
+              <div></div>
+            )}
+          </Grid2>
+          <Grid2 size={9} style={{ textAlign: "center" }}>
             Topic Distr / Main Docs where Topic is found
             {topic_distr_data.isLoading && <div>Loading...</div>}
             {topic_distr_data.isSuccess ? (
@@ -94,21 +100,11 @@ function DocumentCategorization() {
             ) : (
               <div></div>
             )}
-          </Grid>
-          <Grid item xs={6} style={{ textAlign: "center" }}>
+          </Grid2>
+          <Grid2 size={3} style={{ textAlign: "center" }}>
             TODO: Display ChatGPT Result
-          </Grid>
-          <Grid item xs={6} sx={{ textAlign: "left", overflowY: "auto" }}>
-            {ollamaResponse.isLoading && <div style={{ textAlign: "center" }}>Loading...</div>}
-            {ollamaResponse.isSuccess ? (
-              <div style={{ whiteSpace: "pre-line", height: height * 0.2 }}>
-                {(ollamaResponse.data[0].response as ollamaResponseInterface).toString()}
-              </div>
-            ) : (
-              <div></div>
-            )}
-          </Grid>
-        </Grid>
+          </Grid2>
+        </Grid2>
       </Card>
     </div>
   );
