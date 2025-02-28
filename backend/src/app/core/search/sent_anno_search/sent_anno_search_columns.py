@@ -29,7 +29,7 @@ class SentAnnoColumns(str, AbstractColumns):
             case SentAnnoColumns.DOCUMENT_TAG_ID_LIST:
                 return subquery_dict[SentAnnoColumns.DOCUMENT_TAG_ID_LIST.value]
             case SentAnnoColumns.CODE_ID:
-                return CodeORM.id
+                return SentenceAnnotationORM.code_id
             # case SentAnnoColumns.TEXT:
             #     return SpanTextORM.text
             case SentAnnoColumns.MEMO_CONTENT:

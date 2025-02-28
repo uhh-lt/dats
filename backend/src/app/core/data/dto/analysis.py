@@ -90,11 +90,6 @@ class BBoxAnnotationSearchResult(BaseModel):
     data: List[BBoxAnnotationRow] = Field(description="The Annotations.")
 
 
-class TimelineAnalysisResult(BaseModel):
-    date: str = Field(description="The date.")
-    sdoc_ids: List[int] = Field(description="The SourceDoument IDs.")
-
-
 class WordFrequencyStat(BaseModel):
     word: str = Field(description="The word.")
     word_percent: float = Field(description="The percentage of the word.")
