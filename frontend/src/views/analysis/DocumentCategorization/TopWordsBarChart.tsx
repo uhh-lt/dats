@@ -101,7 +101,7 @@ const TopWordsBarChart: React.FC<TopWordsProps> = ({ data, topicNum }) => {
       .attr("x", width / 2)
       .attr("y", height - marginBottom * 0.2)
       .attr("text-anchor", "middle")
-      .style("font-size", "16px")
+      .style("font-size", "18px")
       .text("Score");
 
     // Text inside bars
@@ -114,7 +114,7 @@ const TopWordsBarChart: React.FC<TopWordsProps> = ({ data, topicNum }) => {
       .join("text")
       .attr("x", (d) => x(d.score) * 0.995)
       .attr("y", (d) => (y(d.word) ?? 0) + y.bandwidth() / 2)
-      .style("font-size", "11px")
+      .style("font-size", "16px")
       .attr("dy", "0.35em")
       .attr("dx", -4)
       .text((d) => formatScore(d.score))
@@ -144,13 +144,13 @@ const TopWordsBarChart: React.FC<TopWordsProps> = ({ data, topicNum }) => {
       .attr("transform", `translate(0,${height - marginBottom})`)
       .call(d3.axisBottom(x).ticks(width / 200))
       .call((g) => g.select(".domain").remove())
-      .style("font-size", "12px");
+      .style("font-size", "16px");
 
     svg
       .append("g")
       .attr("transform", `translate(${marginLeft},0)`)
       .call(d3.axisLeft(y).tickSizeOuter(0))
-      .style("font-size", "14px");
+      .style("font-size", "18px");
   }, [topicNum, data, formatScore, height, marginBottom, marginLeft, marginRight, marginTop, width, x, y]);
 
   return (
