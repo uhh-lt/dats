@@ -6,7 +6,7 @@ import type { BackgroundJobStatus } from "./BackgroundJobStatus";
 import type { MLJobParameters } from "./MLJobParameters";
 export type MLJobRead = {
   /**
-   * Status of the LLMJob
+   * Status of the MLJob
    */
   status?: BackgroundJobStatus;
   /**
@@ -18,11 +18,11 @@ export type MLJobRead = {
    */
   id: string;
   /**
-   * Created timestamp of the LLMJob
+   * Created timestamp of the MLJob
    */
   created: string;
   /**
-   * Updated timestamp of the LLMJob
+   * Updated timestamp of the MLJob
    */
   updated: string;
   parameters: MLJobParameters;
