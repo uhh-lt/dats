@@ -1,9 +1,13 @@
 import { createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
+import { BBoxColumns } from "../../../api/openapi/models/BBoxColumns.ts";
 import { LogicalOperator } from "../../../api/openapi/models/LogicalOperator.ts";
+import { SdocColumns } from "../../../api/openapi/models/SdocColumns.ts";
+import { SentAnnoColumns } from "../../../api/openapi/models/SentAnnoColumns.ts";
+import { SpanColumns } from "../../../api/openapi/models/SpanColumns.ts";
 import { StringOperator } from "../../../api/openapi/models/StringOperator.ts";
-import { TimelineAnalysisColumns } from "../../../api/openapi/models/TimelineAnalysisColumns.ts";
-import { TimelineAnalysisConcept_Output } from "../../../api/openapi/models/TimelineAnalysisConcept_Output.ts";
+import { TimelineAnalysisConcept } from "../../../api/openapi/models/TimelineAnalysisConcept.ts";
+import { TimelineAnalysisType } from "../../../api/openapi/models/TimelineAnalysisType.ts";
 import {
   createInitialFilterState,
   filterReducer,
@@ -19,44 +23,80 @@ export interface TimelineAnalysisState {
   lastOpenedTimelineAnalysisId: number | undefined;
   metadataCheckerOpen: boolean;
   conceptEditorOpen: boolean;
-  currentConcept: TimelineAnalysisConcept_Output;
+  currentConcept: TimelineAnalysisConcept;
   provenanceDate: string | undefined;
   provenanceConcept: string | undefined;
   isBarPlot: boolean;
 }
 
-const defaultFilterExpression: MyFilterExpression = {
-  id: uuidv4(),
-  column: TimelineAnalysisColumns.TA_SOURCE_DOCUMENT_FILENAME,
-  operator: StringOperator.STRING_CONTAINS,
-  value: "",
+const defaultAnalysisType = TimelineAnalysisType.DOCUMENT;
+const defaultFilterExpressions: Record<TimelineAnalysisType, MyFilterExpression> = {
+  [TimelineAnalysisType.DOCUMENT]: {
+    id: uuidv4(),
+    column: SdocColumns.SD_SOURCE_DOCUMENT_FILENAME,
+    operator: StringOperator.STRING_CONTAINS,
+    value: "",
+  },
+  [TimelineAnalysisType.SENTENCE_ANNOTATION]: {
+    id: uuidv4(),
+    column: SentAnnoColumns.SENT_ANNO_SOURCE_SOURCE_DOCUMENT_FILENAME,
+    operator: StringOperator.STRING_CONTAINS,
+    value: "",
+  },
+  [TimelineAnalysisType.BBOX_ANNOTATION]: {
+    id: uuidv4(),
+    column: BBoxColumns.BB_SOURCE_SOURCE_DOCUMENT_FILENAME,
+    operator: StringOperator.STRING_CONTAINS,
+    value: "",
+  },
+  [TimelineAnalysisType.SPAN_ANNOTATION]: {
+    id: uuidv4(),
+    column: SpanColumns.SP_SOURCE_SOURCE_DOCUMENT_FILENAME,
+    operator: StringOperator.STRING_CONTAINS,
+    value: "",
+  },
 };
 
 const initialState: FilterState & TimelineAnalysisState = {
-  ...createInitialFilterState(defaultFilterExpression),
+  ...createInitialFilterState(defaultFilterExpressions[defaultAnalysisType]),
   // project state:
   lastOpenedTimelineAnalysisId: undefined,
   metadataCheckerOpen: false,
   conceptEditorOpen: false,
   currentConcept: {
+    timeline_analysis_type: defaultAnalysisType,
     id: uuidv4(),
     name: "",
     color: "#ff0000",
     visible: true,
     description: "",
-    filter: {
-      id: uuidv4(),
-      items: [],
-      logic_operator: LogicalOperator.AND,
+    ta_specific_filter: {
+      timeline_analysis_type: defaultAnalysisType,
+      filter: {
+        id: uuidv4(),
+        items: [],
+        logic_operator: LogicalOperator.AND,
+      },
     },
+    results: [],
+    filter_hash: -1,
   },
   provenanceDate: undefined,
   provenanceConcept: undefined,
   isBarPlot: false,
 };
 
-const resetTimelineAnalysisState = (state: Draft<FilterState & TimelineAnalysisState>, projectId: number) => {
-  resetProjectFilterState({ state, defaultFilterExpression, sliceName: "timelineAnalysis", projectId });
+const resetTimelineAnalysisState = (
+  state: Draft<FilterState & TimelineAnalysisState>,
+  projectId: number,
+  timelineAnalysisType: TimelineAnalysisType,
+) => {
+  resetProjectFilterState({
+    state,
+    defaultFilterExpression: defaultFilterExpressions[timelineAnalysisType],
+    sliceName: "timelineAnalysis",
+    projectId,
+  });
   state.lastOpenedTimelineAnalysisId = initialState.lastOpenedTimelineAnalysisId;
   state.metadataCheckerOpen = initialState.metadataCheckerOpen;
   state.conceptEditorOpen = initialState.conceptEditorOpen;
@@ -74,7 +114,7 @@ export const timelineAnalysisSlice = createSlice({
     setMetadataCheckerOpen: (state, action: PayloadAction<boolean>) => {
       state.metadataCheckerOpen = action.payload;
     },
-    setCurrentConcept: (state, action: PayloadAction<TimelineAnalysisConcept_Output>) => {
+    setCurrentConcept: (state, action: PayloadAction<TimelineAnalysisConcept>) => {
       state.currentConcept = {
         ...action.payload,
         color: ColorUtils.rgbStringToHex(action.payload.color) || action.payload.color,
@@ -89,7 +129,7 @@ export const timelineAnalysisSlice = createSlice({
     setProvenanceConcept: (state, action: PayloadAction<string | undefined>) => {
       state.provenanceConcept = action.payload;
     },
-    onStartConceptEdit: (state, action: PayloadAction<{ concept: TimelineAnalysisConcept_Output }>) => {
+    onStartConceptEdit: (state, action: PayloadAction<{ concept: TimelineAnalysisConcept }>) => {
       state.conceptEditorOpen = true;
       state.currentConcept = {
         ...action.payload.concept,
@@ -107,10 +147,13 @@ export const timelineAnalysisSlice = createSlice({
     onTogglePlotType: (state) => {
       state.isBarPlot = !state.isBarPlot;
     },
-    onOpenTimelineAnalysis: (state, action: PayloadAction<{ analysisId: number; projectId: number }>) => {
+    onOpenTimelineAnalysis: (
+      state,
+      action: PayloadAction<{ analysisId: number; analysisType: TimelineAnalysisType; projectId: number }>,
+    ) => {
       if (state.lastOpenedTimelineAnalysisId !== action.payload.analysisId) {
         console.log("Timeline Analysis changed! Resetting 'timelineAnalysis' state.");
-        resetTimelineAnalysisState(state, action.payload.projectId);
+        resetTimelineAnalysisState(state, action.payload.projectId, action.payload.analysisType);
       }
       state.lastOpenedTimelineAnalysisId = action.payload.analysisId;
     },
@@ -118,7 +161,7 @@ export const timelineAnalysisSlice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(ProjectActions.changeProject, (state, action) => {
       console.log("Project changed! Resetting 'timelineAnalysis' state.");
-      resetTimelineAnalysisState(state, action.payload);
+      resetTimelineAnalysisState(state, action.payload, defaultAnalysisType);
     });
   },
 });

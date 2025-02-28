@@ -5,10 +5,10 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { Box, ListItem, Tooltip } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import ListItemText from "@mui/material/ListItemText";
-import { TimelineAnalysisConcept_Output } from "../../../api/openapi/models/TimelineAnalysisConcept_Output.ts";
+import { TimelineAnalysisConcept } from "../../../api/openapi/models/TimelineAnalysisConcept.ts";
 
 interface ConceptListItemProps {
-  concept: TimelineAnalysisConcept_Output;
+  concept: TimelineAnalysisConcept;
   onEditClick: (conceptId: string) => void;
   onDeleteClick: (conceptId: string) => void;
   onToggleVisibilityClick: (conceptId: string) => void;

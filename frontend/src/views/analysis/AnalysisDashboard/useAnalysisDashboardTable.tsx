@@ -14,12 +14,12 @@ import {
   createRow,
   useMaterialReactTable,
 } from "material-react-table";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import UserName from "../../../components/User/UserName.tsx";
 import { dateToLocaleString } from "../../../utils/DateUtils.ts";
 
-export type AnaylsisDashboardRow = {
+export type AnalysisDashboardRow = {
   id: number;
   title: string;
   updated: string;
@@ -31,13 +31,13 @@ export type AnalysisCreateOption = {
   label: string;
 };
 
-export type HandleCreateAnalysis = (
+export type HandleCreateAnalysis<T extends AnalysisDashboardRow = AnalysisDashboardRow> = (
   createOption?: AnalysisCreateOption,
-) => MRT_TableOptions<AnaylsisDashboardRow>["onCreatingRowSave"];
+) => MRT_TableOptions<T>["onCreatingRowSave"];
 
-export interface UseAnaylsisDashboardTableProps {
+export interface UseAnaylsisDashboardTableProps<T extends AnalysisDashboardRow> {
   analysisName: string;
-  data: AnaylsisDashboardRow[];
+  data: T[];
   isLoadingData: boolean;
   isFetchingData: boolean;
   isLoadingDataError: boolean;
@@ -47,37 +47,40 @@ export interface UseAnaylsisDashboardTableProps {
   isDuplicatingAnalysis: boolean;
   deletingAnalysisId?: number;
   duplicatingAnalysisId?: number;
-  onOpenAnalysis: (analysisId: number) => void;
-  handleDuplicateAnalysis: (row: MRT_Row<AnaylsisDashboardRow>) => void;
-  handleDeleteAnalysis: (row: MRT_Row<AnaylsisDashboardRow>) => void;
-  handleCreateAnalysis: HandleCreateAnalysis;
-  handleEditAnalysis: MRT_TableOptions<AnaylsisDashboardRow>["onEditingRowSave"];
+  onOpenAnalysis: (analysisRow: T) => void;
+  handleDuplicateAnalysis: (row: MRT_Row<T>) => void;
+  handleDeleteAnalysis: (row: MRT_Row<T>) => void;
+  handleCreateAnalysis: HandleCreateAnalysis<T>;
+  handleEditAnalysis: MRT_TableOptions<T>["onEditingRowSave"];
   analysisCreateOptions?: AnalysisCreateOption[];
 }
 
-const columns: MRT_ColumnDef<AnaylsisDashboardRow>[] = [
-  { accessorKey: "id", header: "ID", enableEditing: false },
-  {
-    accessorKey: "title",
-    header: "Name",
-    enableEditing: true,
-  },
-  {
-    id: "updated",
-    header: "Last modified",
-    accessorFn: (params) => dateToLocaleString(params.updated as string),
-    enableEditing: false,
-  },
-  {
-    accessorKey: "user_id",
-    header: "Owner",
-    enableEditing: false,
-    Cell: ({ row }) => (row.original.user_id === -1 ? "..." : <UserName userId={row.original.user_id} />),
-  },
-];
-
-export const useAnalysisDashboardTable = (props: UseAnaylsisDashboardTableProps) => {
+export const useAnalysisDashboardTable = <T extends AnalysisDashboardRow>(props: UseAnaylsisDashboardTableProps<T>) => {
   const navigate = useNavigate();
+
+  const columns = useMemo(() => {
+    const columns: MRT_ColumnDef<T>[] = [
+      { accessorKey: "id", header: "ID", enableEditing: false },
+      {
+        accessorKey: "title",
+        header: "Name",
+        enableEditing: true,
+      },
+      {
+        id: "updated",
+        header: "Last modified",
+        accessorFn: (params) => dateToLocaleString(params.updated as string),
+        enableEditing: false,
+      },
+      {
+        accessorKey: "user_id",
+        header: "Owner",
+        enableEditing: false,
+        Cell: ({ row }) => (row.original.user_id === -1 ? "..." : <UserName userId={row.original.user_id} />),
+      },
+    ];
+    return columns;
+  }, []);
 
   // create option menu
   const [analysisCreateOption, setAnalysisCreateOption] = useState<AnalysisCreateOption | undefined>(undefined);
@@ -89,19 +92,19 @@ export const useAnalysisDashboardTable = (props: UseAnaylsisDashboardTableProps)
   const handleCloseMenu = () => {
     setAnchorEl(null);
   };
-  const showCreateAnalysisRow = (table: MRT_TableInstance<AnaylsisDashboardRow>) => {
+  const showCreateAnalysisRow = (table: MRT_TableInstance<T>) => {
     table.setCreatingRow(
       createRow(table, {
         id: -1,
         title: "",
         updated: new Date().toISOString(),
         user_id: -1,
-      }),
+      } as T),
     );
     table.setEditingRow(null); //exit editing mode
   };
 
-  return useMaterialReactTable<AnaylsisDashboardRow>({
+  return useMaterialReactTable<T>({
     data: props.data,
     columns: columns,
     getRowId: (row) => `${row.id}`,
@@ -133,7 +136,7 @@ export const useAnalysisDashboardTable = (props: UseAnaylsisDashboardTableProps)
           tableState.editingRow || tableState.creatingRow || props.deletingAnalysisId === row.original.id
             ? undefined
             : () => {
-                props.onOpenAnalysis(row.original.id);
+                props.onOpenAnalysis(row.original);
                 navigate(`./${row.original.id}`);
               },
       };

@@ -5,7 +5,7 @@ import ConfirmationAPI from "../../components/ConfirmationDialog/ConfirmationAPI
 import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import AnalysisDashboard from "../analysis/AnalysisDashboard/AnalysisDashboard.tsx";
 import {
-  AnaylsisDashboardRow,
+  AnalysisDashboardRow,
   HandleCreateAnalysis,
   useAnalysisDashboardTable,
 } from "../analysis/AnalysisDashboard/useAnalysisDashboardTable.tsx";
@@ -40,7 +40,7 @@ function WhiteboardDashboard() {
   const openSnackbar = useOpenSnackbar();
 
   // CRUD actions
-  const handleDuplicateClick = (row: MRT_Row<AnaylsisDashboardRow>) => {
+  const handleDuplicateClick = (row: MRT_Row<AnalysisDashboardRow>) => {
     duplicateWhiteboard(
       {
         whiteboardId: row.original.id,
@@ -56,7 +56,7 @@ function WhiteboardDashboard() {
     );
   };
 
-  const handleDeleteClick = (row: MRT_Row<AnaylsisDashboardRow>) => {
+  const handleDeleteClick = (row: MRT_Row<AnalysisDashboardRow>) => {
     ConfirmationAPI.openConfirmationDialog({
       text: `Do you really want to remove the whiteboard ${row.original.id}? This action cannot be undone!`,
       onAccept: () => {
@@ -98,7 +98,7 @@ function WhiteboardDashboard() {
         },
       );
     };
-  const handleUpdateWhiteboard: MRT_TableOptions<AnaylsisDashboardRow>["onEditingRowSave"] = ({
+  const handleUpdateWhiteboard: MRT_TableOptions<AnalysisDashboardRow>["onEditingRowSave"] = ({
     row,
     values,
     table,

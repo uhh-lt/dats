@@ -3,16 +3,16 @@ import { MRT_TableInstance, MaterialReactTable } from "material-react-table";
 import { useContext } from "react";
 import NoSidebarLayout from "../../../layouts/NoSidebarLayout.tsx";
 import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
-import { AnaylsisDashboardRow } from "./useAnalysisDashboardTable.tsx";
+import { AnalysisDashboardRow } from "./useAnalysisDashboardTable.tsx";
 
-interface AnalysisDashboardProps {
+interface AnalysisDashboardProps<T extends AnalysisDashboardRow> {
   pageTitle: string;
   headerTitle: string;
   subheaderTitle?: string;
-  table: MRT_TableInstance<AnaylsisDashboardRow>;
+  table: MRT_TableInstance<T>;
 }
 
-export default function AnalysisDashboard(props: AnalysisDashboardProps) {
+export default function AnalysisDashboard<T extends AnalysisDashboardRow>(props: AnalysisDashboardProps<T>) {
   const appBarContainerRef = useContext(AppBarContext);
 
   return (

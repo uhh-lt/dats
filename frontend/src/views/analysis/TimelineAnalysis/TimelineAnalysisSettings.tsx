@@ -13,7 +13,6 @@ import { DocType } from "../../../api/openapi/models/DocType.ts";
 import { MetaType } from "../../../api/openapi/models/MetaType.ts";
 import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
-import { TimelineAnalysisResultType } from "../../../api/openapi/models/TimelineAnalysisResultType.ts";
 import SdocsWithDateCounter from "../../../components/Metadata/SdocsWithDateCounter/SdocsWithDateCounter.tsx";
 
 interface TimelineAnalysisSettingsProps {
@@ -87,17 +86,6 @@ function TimelineAnalysisSettingsContent({
       },
     });
   };
-  const handleChangeResultType = (event: React.ChangeEvent<HTMLInputElement>) => {
-    updateTimelineAnalysisMutation.mutate({
-      timelineAnalysisId: timelineAnalysis.id,
-      requestBody: {
-        settings: {
-          ...timelineAnalysis.settings,
-          result_type: event.target.value as TimelineAnalysisResultType,
-        },
-      },
-    });
-  };
 
   return (
     <Stack spacing={3}>
@@ -147,19 +135,6 @@ function TimelineAnalysisSettingsContent({
             {metadata.key}
           </MenuItem>
         ))}
-      </TextField>
-
-      <TextField
-        select
-        fullWidth
-        label={"Result type"}
-        variant="outlined"
-        value={timelineAnalysis.settings.result_type}
-        onChange={handleChangeResultType}
-        helperText="Specify the type of the results."
-        disabled
-      >
-        <MenuItem value={"document"}>Document</MenuItem>
       </TextField>
     </Stack>
   );

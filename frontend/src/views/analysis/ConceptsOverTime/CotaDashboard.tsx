@@ -7,7 +7,7 @@ import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnack
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import AnalysisDashboard from "../AnalysisDashboard/AnalysisDashboard.tsx";
 import {
-  AnaylsisDashboardRow,
+  AnalysisDashboardRow,
   HandleCreateAnalysis,
   useAnalysisDashboardTable,
 } from "../AnalysisDashboard/useAnalysisDashboardTable.tsx";
@@ -24,7 +24,7 @@ function CotaDashboard() {
     isFetching: isFetchingAnalysis,
     isError: isLoadingAnalysisError,
   } = CotaHooks.useGetUserCotaList();
-  const userAnalysisTableData: AnaylsisDashboardRow[] = useMemo(
+  const userAnalysisTableData: AnalysisDashboardRow[] = useMemo(
     () =>
       userAnalysis?.map((analysis) => ({
         id: analysis.id,
@@ -73,7 +73,7 @@ function CotaDashboard() {
       );
     };
 
-  const handleDuplicateAnalysis = (row: MRT_Row<AnaylsisDashboardRow>) => {
+  const handleDuplicateAnalysis = (row: MRT_Row<AnalysisDashboardRow>) => {
     duplicateCota(
       {
         cotaId: row.original.id,
@@ -89,7 +89,7 @@ function CotaDashboard() {
     );
   };
 
-  const handleDeleteAnalysis = (row: MRT_Row<AnaylsisDashboardRow>) => {
+  const handleDeleteAnalysis = (row: MRT_Row<AnalysisDashboardRow>) => {
     ConfirmationAPI.openConfirmationDialog({
       text: `Do you really want to remove the analysis ${row.original.id}? This action cannot be undone!`,
       onAccept: () => {
@@ -110,7 +110,7 @@ function CotaDashboard() {
     });
   };
 
-  const handleEditAnalysis: MRT_TableOptions<AnaylsisDashboardRow>["onEditingRowSave"] = ({ values, table, row }) => {
+  const handleEditAnalysis: MRT_TableOptions<AnalysisDashboardRow>["onEditingRowSave"] = ({ values, table, row }) => {
     updateCota(
       {
         cotaId: row.original.id,
@@ -143,7 +143,7 @@ function CotaDashboard() {
     isDeletingAnalysis: isDeletingCota,
     deletingAnalysisId: deletingVariables?.cotaId,
     duplicatingAnalysisId: duplicatingVariables?.cotaId,
-    onOpenAnalysis: (analysisId) => dispatch(CotaActions.onOpenCota({ analysisId })),
+    onOpenAnalysis: (analysis) => dispatch(CotaActions.onOpenCota({ analysisId: analysis.id })),
     handleCreateAnalysis,
     handleEditAnalysis,
     handleDeleteAnalysis,

@@ -1,15 +1,15 @@
 import { ErrorMessage } from "@hookform/error-message";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack } from "@mui/material";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { TimelineAnalysisConcept_Output } from "../../../api/openapi/models/TimelineAnalysisConcept_Output.ts";
+import { TimelineAnalysisConcept } from "../../../api/openapi/models/TimelineAnalysisConcept.ts";
 import FormColorPicker from "../../../components/FormInputs/FormColorPicker.tsx";
 import FormText from "../../../components/FormInputs/FormText.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import ConceptFilterEditor from "./ConceptFilterEditor.tsx";
 
 interface ConceptEditorProps {
-  onUpdate: (concept: TimelineAnalysisConcept_Output) => void;
-  onCancel: (concept: TimelineAnalysisConcept_Output) => void;
+  onUpdate: (concept: TimelineAnalysisConcept) => void;
+  onCancel: (concept: TimelineAnalysisConcept) => void;
 }
 
 function ConceptEditor({ onUpdate, onCancel }: ConceptEditorProps) {
@@ -30,8 +30,8 @@ function ConceptEditor({ onUpdate, onCancel }: ConceptEditorProps) {
 }
 
 interface ConceptEditorFormProps {
-  concept: TimelineAnalysisConcept_Output;
-  onUpdate: (concept: TimelineAnalysisConcept_Output) => void;
+  concept: TimelineAnalysisConcept;
+  onUpdate: (concept: TimelineAnalysisConcept) => void;
   onClose: () => void;
 }
 
@@ -41,15 +41,15 @@ function ConceptEditorForm({ concept, onUpdate, onClose }: ConceptEditorFormProp
     handleSubmit,
     formState: { errors },
     control,
-  } = useForm<TimelineAnalysisConcept_Output>({
+  } = useForm<TimelineAnalysisConcept>({
     defaultValues: concept,
   });
 
   // form handling
-  const handleUpdate: SubmitHandler<TimelineAnalysisConcept_Output> = (data) => {
+  const handleUpdate: SubmitHandler<TimelineAnalysisConcept> = (data) => {
     onUpdate(data);
   };
-  const handleError: SubmitErrorHandler<TimelineAnalysisConcept_Output> = (data) => console.error(data);
+  const handleError: SubmitErrorHandler<TimelineAnalysisConcept> = (data) => console.error(data);
 
   return (
     <form onSubmit={handleSubmit(handleUpdate, handleError)}>
