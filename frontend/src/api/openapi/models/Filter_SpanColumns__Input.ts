@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { FilterExpression_SdocColumns_ } from "./FilterExpression_SdocColumns_";
+import type { FilterExpression_SpanColumns_ } from "./FilterExpression_SpanColumns_";
 import type { LogicalOperator } from "./LogicalOperator";
-export type Filter_SdocColumns_ = {
+export type Filter_SpanColumns__Input = {
   id: string;
-  items: Array<FilterExpression_SdocColumns_ | Filter_SdocColumns_>;
+  items: Array<FilterExpression_SpanColumns_ | Filter_SpanColumns__Input>;
   logic_operator: LogicalOperator;
 };

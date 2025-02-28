@@ -3,8 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Filter_BBoxColumns__Input } from "./Filter_BBoxColumns__Input";
-import type { Sort_BBoxColumns_ } from "./Sort_BBoxColumns_";
-export type Body_analysis_bbox_annotation_search = {
+export type BBoxAnnoTimelineAnalysisFilter_Input = {
+  timeline_analysis_type: string;
+  /**
+   * The filter of the Concept
+   */
   filter: Filter_BBoxColumns__Input;
-  sorts: Array<Sort_BBoxColumns_>;
 };

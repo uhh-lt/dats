@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { TimelineAnalysisConcept_Input } from "./TimelineAnalysisConcept_Input";
+import type { TimelineAnalysisConceptUpdate } from "./TimelineAnalysisConceptUpdate";
 import type { TimelineAnalysisSettings } from "./TimelineAnalysisSettings";
 export type TimelineAnalysisUpdate = {
   /**
@@ -16,5 +16,5 @@ export type TimelineAnalysisUpdate = {
   /**
    * List of Concepts that are part of the TimelineAnalysis
    */
-  concepts?: Array<TimelineAnalysisConcept_Input> | null;
+  concepts?: Array<TimelineAnalysisConceptUpdate> | null;
 };
