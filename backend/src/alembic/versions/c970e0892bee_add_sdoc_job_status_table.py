@@ -1,7 +1,7 @@
 """add sdoc job status table and missing codes to existing projects
 
 Revision ID: c970e0892bee
-Revises: 241cfa625db2
+Revises: 523e193d91a0
 Create Date: 2025-02-26 15:28:35.202746
 
 """
@@ -16,7 +16,7 @@ from app.core.data.crud.code import crud_code
 
 # revision identifiers, used by Alembic.
 revision: str = "c970e0892bee"
-down_revision: Union[str, None] = "241cfa625db2"
+down_revision: Union[str, None] = "523e193d91a0"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
