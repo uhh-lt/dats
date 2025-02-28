@@ -11,6 +11,7 @@ class MLJobType(StrEnum):
     QUOTATION_ATTRIBUTION = "QUOTATION_ATTRIBUTION"
     DOC_TAG_RECOMMENDATION = "DOC_TAG_RECOMMENDATION"
     COREFERENCE_RESOLUTION = "COREFERENCE_RESOLUTION"
+    # TODO Bertopic Job
 
 
 class QuotationAttributionParams(BaseModel):
@@ -35,6 +36,9 @@ class CoreferenceResolutionParams(BaseModel):
     )
 
 
+# TODO neue class bertopuclmjobParams
+
+
 class MLJobParameters(BaseModel):
     ml_job_type: MLJobType = Field(description="The type of the MLJob")
     project_id: int = Field(description="The ID of the Project to analyse")
@@ -47,6 +51,12 @@ class MLJobParameters(BaseModel):
         description="Specific parameters for the MLJob w.r.t it's type",
         discriminator="ml_job_type",
     )
+
+
+# TODO 22 -> union von beiden jobparams
+
+
+# TODO 22 -> union von beiden jobparams
 
 
 class MLJobBase(BaseModel):

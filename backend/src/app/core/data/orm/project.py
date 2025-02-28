@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from app.core.data.orm.preprocessing_job_payload import PreprocessingJobPayloadORM
     from app.core.data.orm.project_metadata import ProjectMetadataORM
     from app.core.data.orm.source_document import SourceDocumentORM
+    from app.core.data.orm.topic_info import TopicInfoORM
     from app.core.data.orm.user import UserORM
     from app.core.data.orm.whiteboard import WhiteboardORM
 
@@ -41,6 +42,10 @@ class ProjectORM(ORMBase):
 
     source_documents: Mapped[List["SourceDocumentORM"]] = relationship(
         "SourceDocumentORM", back_populates="project", passive_deletes=True
+    )
+
+    topic_infos: Mapped[List["TopicInfoORM"]] = relationship(
+        "TopicInfoORM", back_populates="project", passive_deletes=True
     )
 
     memos: Mapped[List["MemoORM"]] = relationship(
