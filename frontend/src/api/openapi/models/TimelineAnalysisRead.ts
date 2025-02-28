@@ -2,13 +2,18 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { TimelineAnalysisConcept_Output } from "./TimelineAnalysisConcept_Output";
+import type { TimelineAnalysisConcept } from "./TimelineAnalysisConcept";
 import type { TimelineAnalysisSettings } from "./TimelineAnalysisSettings";
+import type { TimelineAnalysisType } from "./TimelineAnalysisType";
 export type TimelineAnalysisRead = {
   /**
    * Name of the TimelineAnalysis
    */
   name: string;
+  /**
+   * The type of the TimelineAnalysis
+   */
+  timeline_analysis_type: TimelineAnalysisType;
   /**
    * ID of the TimelineAnalysis
    */
@@ -28,7 +33,7 @@ export type TimelineAnalysisRead = {
   /**
    * List of Concepts that are part of the TimelineAnalysis
    */
-  concepts: Array<TimelineAnalysisConcept_Output>;
+  concepts: Array<TimelineAnalysisConcept>;
   /**
    * Created timestamp of the TimelineAnalysis
    */

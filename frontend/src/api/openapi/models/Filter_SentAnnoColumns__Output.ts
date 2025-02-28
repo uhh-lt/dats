@@ -4,8 +4,8 @@
 /* eslint-disable */
 import type { FilterExpression_SentAnnoColumns_ } from "./FilterExpression_SentAnnoColumns_";
 import type { LogicalOperator } from "./LogicalOperator";
-export type Filter_SentAnnoColumns_ = {
+export type Filter_SentAnnoColumns__Output = {
   id: string;
-  items: Array<FilterExpression_SentAnnoColumns_ | Filter_SentAnnoColumns_>;
+  items: Array<FilterExpression_SentAnnoColumns_ | Filter_SentAnnoColumns__Output>;
   logic_operator: LogicalOperator;
 };

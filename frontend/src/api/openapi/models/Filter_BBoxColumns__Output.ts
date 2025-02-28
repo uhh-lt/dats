@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { FilterExpression_SpanColumns_ } from "./FilterExpression_SpanColumns_";
+import type { FilterExpression_BBoxColumns_ } from "./FilterExpression_BBoxColumns_";
 import type { LogicalOperator } from "./LogicalOperator";
-export type Filter_SpanColumns_ = {
+export type Filter_BBoxColumns__Output = {
   id: string;
-  items: Array<FilterExpression_SpanColumns_ | Filter_SpanColumns_>;
+  items: Array<FilterExpression_BBoxColumns_ | Filter_BBoxColumns__Output>;
   logic_operator: LogicalOperator;
 };

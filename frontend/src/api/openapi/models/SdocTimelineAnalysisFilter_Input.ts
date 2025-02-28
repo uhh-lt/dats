@@ -3,8 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Filter_SdocColumns__Input } from "./Filter_SdocColumns__Input";
-import type { Sort_SdocColumns_ } from "./Sort_SdocColumns_";
-export type Body_search_search_sdocs = {
+export type SdocTimelineAnalysisFilter_Input = {
+  timeline_analysis_type: string;
+  /**
+   * The filter of the Concept
+   */
   filter: Filter_SdocColumns__Input;
-  sorts: Array<Sort_SdocColumns_>;
 };

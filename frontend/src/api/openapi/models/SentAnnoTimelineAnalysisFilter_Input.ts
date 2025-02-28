@@ -3,8 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Filter_SentAnnoColumns__Input } from "./Filter_SentAnnoColumns__Input";
-import type { Sort_SentAnnoColumns_ } from "./Sort_SentAnnoColumns_";
-export type Body_analysis_sentence_annotation_search = {
+export type SentAnnoTimelineAnalysisFilter_Input = {
+  timeline_analysis_type: string;
+  /**
+   * The filter of the Concept
+   */
   filter: Filter_SentAnnoColumns__Input;
-  sorts: Array<Sort_SentAnnoColumns_>;
 };
