@@ -1,36 +1,95 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Union
+from typing import List, Literal, Optional, Union
 
 import srsly
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.functional_validators import field_validator
 
-from app.core.analysis.timeline_analysis.timeline_analysis_columns import (
-    TimelineAnalysisColumns,
-)
 from app.core.data.dto.analysis import DateGroupBy
 from app.core.data.dto.dto_base import UpdateDTOBase
+from app.core.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
 from app.core.search.filtering import Filter
+from app.core.search.sdoc_search.sdoc_search_columns import SdocColumns
+from app.core.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
+from app.core.search.span_anno_search.span_anno_search_columns import SpanColumns
 
 ####################
 # Base Types
 ####################
 
 
+class TimelineAnalysisResult(BaseModel):
+    date: str = Field(description="The date.")
+    data_ids: List[int] = Field(description="The SourceDoument IDs.")
+
+
+class TimelineAnalysisType(str, Enum):
+    DOCUMENT = "document"
+    SENT_ANNO = "sentence_annotation"
+    SPAN_ANNO = "span_annotation"
+    BBOX_ANNO = "bbox_annotation"
+
+
+class SdocTimelineAnalysisFilter(BaseModel):
+    timeline_analysis_type: Literal[TimelineAnalysisType.DOCUMENT]
+    filter: Filter[SdocColumns] = Field(description="The filter of the Concept")
+
+
+class SentAnnoTimelineAnalysisFilter(BaseModel):
+    timeline_analysis_type: Literal[TimelineAnalysisType.SENT_ANNO]
+    filter: Filter[SentAnnoColumns] = Field(description="The filter of the Concept")
+
+
+class SpanAnnoTimelineAnalysisFilter(BaseModel):
+    timeline_analysis_type: Literal[TimelineAnalysisType.SPAN_ANNO]
+    filter: Filter[SpanColumns] = Field(description="The filter of the Concept")
+
+
+class BBoxAnnoTimelineAnalysisFilter(BaseModel):
+    timeline_analysis_type: Literal[TimelineAnalysisType.BBOX_ANNO]
+    filter: Filter[BBoxColumns] = Field(description="The filter of the Concept")
+
+
 class TimelineAnalysisConcept(BaseModel):
+    timeline_analysis_type: TimelineAnalysisType = Field(
+        description="Type of the Timeline Analysis"
+    )
     id: str = Field(description="ID of the Concept")
     name: str = Field(description="Name of the Concept")
     description: str = Field(description="Description of the Concept")
     color: str = Field(description="Color of the Concept")
     visible: bool = Field(description="Visibility of the Concept")
-    filter: Filter[TimelineAnalysisColumns] = Field(
-        description="The filter of the Concept"
+    ta_specific_filter: Union[
+        SdocTimelineAnalysisFilter,
+        SentAnnoTimelineAnalysisFilter,
+        SpanAnnoTimelineAnalysisFilter,
+        BBoxAnnoTimelineAnalysisFilter,
+    ] = Field(
+        description="List of Concepts that are part of the TimelineAnalysis",
+        discriminator="timeline_analysis_type",
+    )
+    filter_hash: int = Field(description="Hash of the filter to identify changes")
+    results: List[TimelineAnalysisResult] = Field(
+        description="List of Results of the TimelineAnalysis"
     )
 
 
-class TimelineAnalysisResultType(Enum):
-    DOCUMENT = "document"
+class TimelineAnalysisConceptUpdate(BaseModel):
+    id: str = Field(description="ID of the Concept")
+    name: str = Field(description="Name of the Concept")
+    description: str = Field(description="Description of the Concept")
+    color: str = Field(description="Color of the Concept")
+    visible: bool = Field(description="Visibility of the Concept")
+    ta_specific_filter: Union[
+        SdocTimelineAnalysisFilter,
+        SentAnnoTimelineAnalysisFilter,
+        SpanAnnoTimelineAnalysisFilter,
+        BBoxAnnoTimelineAnalysisFilter,
+    ] = Field(
+        description="List of Concepts that are part of the TimelineAnalysis",
+        discriminator="timeline_analysis_type",
+    )
 
 
 class TimelineAnalysisSettings(BaseModel):
@@ -38,10 +97,6 @@ class TimelineAnalysisSettings(BaseModel):
     date_metadata_id: Optional[int] = Field(
         description="ID of the Project Date Metadata that is used for the TimelineAnalysis",
         default=None,
-    )
-    result_type: TimelineAnalysisResultType = Field(
-        description="ResultType of the TimelineAnalysis",
-        default=TimelineAnalysisResultType.DOCUMENT,
     )
 
 
@@ -52,6 +107,9 @@ class TimelineAnalysisSettings(BaseModel):
 
 class TimelineAnalysisBaseDTO(BaseModel):
     name: str = Field(description="Name of the TimelineAnalysis")
+    timeline_analysis_type: TimelineAnalysisType = Field(
+        description="The type of the TimelineAnalysis"
+    )
 
 
 class TimelineAnalysisCreate(TimelineAnalysisBaseDTO):
@@ -61,7 +119,7 @@ class TimelineAnalysisCreate(TimelineAnalysisBaseDTO):
 class TimelineAnalysisCreateIntern(TimelineAnalysisCreate, UpdateDTOBase):
     user_id: int = Field(description="User the TimelineAnalysis belongs to")
     settings: Optional[str] = Field(
-        description="JSON Representation of the Timeline Settings of the TimelineAnalysis.",
+        description="JSON Representation of the TimelineAnalysisSettings.",
         default=None,
     )
     concepts: Optional[str] = Field(
@@ -82,7 +140,7 @@ class TimelineAnalysisUpdate(BaseModel, UpdateDTOBase):
         description="Settings of the TimelineAnalysis.",
         default=None,
     )
-    concepts: Optional[List[TimelineAnalysisConcept]] = Field(
+    concepts: Optional[List[TimelineAnalysisConceptUpdate]] = Field(
         description="List of Concepts that are part of the TimelineAnalysis",
         default=None,
     )
