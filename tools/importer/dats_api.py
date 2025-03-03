@@ -248,11 +248,10 @@ class DATSAPI:
         payloads_status = [
             payload["status"] for payload in preprocessing_job["payloads"]
         ]
-        finished_docs = payloads_status.count("Finished")
+        num_finished_docs = payloads_status.count("Finished")
         is_finished = not ("Waiting" in payloads_status or "Running" in payloads_status)
 
         with tqdm(total=total, desc="Document Preprocessing: ", position=1) as pbar:
-            pbar.update(finished_docs)
             while not is_finished:
                 sleep(5)
 
@@ -263,12 +262,36 @@ class DATSAPI:
                 payloads_status = [
                     payload["status"] for payload in preprocessing_job["payloads"]
                 ]
-                finished_docs = payloads_status.count("Finished")
+                num_finished_docs_new = payloads_status.count("Finished")
                 is_finished = not (
                     "Waiting" in payloads_status or "Running" in payloads_status
                 )
 
-                pbar.update(finished_docs)
+                pbar.update(num_finished_docs_new - num_finished_docs)
+                num_finished_docs = num_finished_docs_new
+        finished_sdoc_ids = []
+        for payload in preprocessing_job["payloads"]:
+            if payload["status"] == "Finished":
+                finished_sdoc_ids.append(payload["source_document_id"])
+        logger.info(f"Uploaded {len(finished_sdoc_ids)} files sucessfully!")
+        return finished_sdoc_ids
+
+    def set_sdoc_name(self, sdoc_id: int, name: str):
+        r = requests.patch(
+            self.BASE_PATH + f"sdoc/{sdoc_id}",
+            data=json.dumps({"name": name}),
+            headers={"Authorization": f"Bearer {self.access_token}"},
+        )
+        r.raise_for_status()
+        logger.info(f"Set SDoc {sdoc_id} Name to {name}!")
+
+    def get_sdoc_data(self, sdoc_id: int) -> dict[str, Any]:
+        r = requests.get(
+            self.BASE_PATH + f"sdoc/data/{sdoc_id}",
+            headers={"Authorization": f"Bearer {self.access_token}"},
+        )
+        r.raise_for_status()
+        return r.json()
 
     # TAGS
 
