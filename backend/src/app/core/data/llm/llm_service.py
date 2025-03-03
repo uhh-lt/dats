@@ -521,7 +521,7 @@ class LLMService(metaclass=SingletonMeta):
                 )
 
                 # prompt the model
-                response = self.ollamas.chat(
+                response = self.ollamas.llm_chat(
                     system_prompt=system_prompt,
                     user_prompt=user_prompt,
                     response_model=OllamaDocumentTaggingResult,
@@ -652,7 +652,7 @@ class LLMService(metaclass=SingletonMeta):
                 )
 
                 # prompt the model
-                response = self.ollamas.chat(
+                response = self.ollamas.llm_chat(
                     system_prompt=system_prompt,
                     user_prompt=user_prompt,
                     response_model=OllamaMetadataExtractionResults,
@@ -787,7 +787,7 @@ class LLMService(metaclass=SingletonMeta):
                 )
 
                 # prompt the model
-                response = self.ollamas.chat(
+                response = self.ollamas.llm_chat(
                     system_prompt=system_prompt,
                     user_prompt=user_prompt,
                     response_model=OllamaAnnotationResults,
@@ -981,7 +981,7 @@ class LLMService(metaclass=SingletonMeta):
                 )
 
                 # prompt the model
-                response = self.ollamas.chat(
+                response = self.ollamas.llm_chat(
                     system_prompt=system_prompt,
                     user_prompt=user_prompt,
                     response_model=OllamaSentenceAnnotationResults,
