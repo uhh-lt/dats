@@ -64,14 +64,14 @@ function TimelineAnalysisDashboard() {
 
   // CRUD actions
   const handleCreateAnalysis: HandleCreateAnalysis<TimelineAnaylsisDashboardRow> =
-    () =>
+    (createOption) =>
     ({ values, table }) => {
       createTimelineAnalysis(
         {
           requestBody: {
             project_id: projectId,
             name: values.title,
-            timeline_analysis_type: TimelineAnalysisType.DOCUMENT,
+            timeline_analysis_type: (createOption?.option as TimelineAnalysisType) || TimelineAnalysisType.DOCUMENT,
           },
         },
         {
@@ -172,6 +172,24 @@ function TimelineAnalysisDashboard() {
     handleEditAnalysis,
     handleDeleteAnalysis,
     handleDuplicateAnalysis,
+    analysisCreateOptions: [
+      {
+        option: TimelineAnalysisType.DOCUMENT,
+        label: "Documents",
+      },
+      {
+        option: TimelineAnalysisType.SENTENCE_ANNOTATION,
+        label: "Sentence Annotations",
+      },
+      {
+        option: TimelineAnalysisType.SPAN_ANNOTATION,
+        label: "Span Annotations",
+      },
+      {
+        option: TimelineAnalysisType.BBOX_ANNOTATION,
+        label: "Image Annotations",
+      },
+    ],
   });
 
   return (
