@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import quote
 
 import requests
+from loguru import logger
 from tqdm import tqdm
 
 
@@ -44,7 +45,7 @@ class DATSAPI:
         self.access_token = data["access_token"]
         self.refresh_token = data["refresh_token"]
         self.token_type = data["token_type"]
-        print("Logged in!")
+        logger.info("Logged in!")
 
     def refresh_login(self):
         headers = {
@@ -59,7 +60,7 @@ class DATSAPI:
         self.access_token = data["access_token"]
         self.refresh_token = data["refresh_token"]
         self.token_type = data["token_type"]
-        print("Refreshed login!")
+        logger.info("Refreshed login!")
 
     def me(self):
         r = requests.get(
@@ -80,7 +81,7 @@ class DATSAPI:
         )
         r.raise_for_status()
         project = r.json()
-        print(f"Created project with id {project['id']}.")
+        logger.info(f"Created project with id {project['id']}.")
         return project
 
     def get_proj_by_id(self, proj_id: int):
@@ -195,7 +196,7 @@ class DATSAPI:
     ) -> Dict[str, Any] | None:
         # upload files
         if filter_duplicate_files_before_upload:
-            print("Filtering files to upload ...")
+            logger.info("Filtering files to upload ...")
             # filter the files so that only new files with a non-existing filename get uploaded
             filtered_files = []
             for file in files:
@@ -205,7 +206,7 @@ class DATSAPI:
                 )
                 if sdoc_id is None:
                     filtered_files.append(file)
-            print(f"Filtered {len(files) - len(filtered_files)} files !")
+            logger.info(f"Filtered {len(files) - len(filtered_files)} files !")
             files = filtered_files
 
         if len(files) > 0:
@@ -216,9 +217,9 @@ class DATSAPI:
             )
             r.raise_for_status()
             return r.json()
-            print(f"Started uploading {len(files)} files.")
+            logger.info(f"Started uploading {len(files)} files.")
         else:
-            print("No files to upload!")
+            logger.info("No files to upload!")
             return None
 
     def upload_file_batch(
@@ -226,7 +227,7 @@ class DATSAPI:
         project_id: int,
         file_batch: List[Tuple[str, Tuple[str, bytes, str]]],
         filter_duplicate_files_before_upload: bool,
-    ):
+    ) -> list[int]:
         # file upload
         preprocessing_job = self.upload_files(
             proj_id=project_id,
@@ -234,7 +235,7 @@ class DATSAPI:
             filter_duplicate_files_before_upload=filter_duplicate_files_before_upload,
         )
         if preprocessing_job is None:
-            print("Upload skipped!")
+            logger.info("Upload skipped!")
             return
 
         total = len(preprocessing_job["payloads"])
@@ -286,7 +287,7 @@ class DATSAPI:
         )
         r.raise_for_status()
         tag = r.json()
-        print(f"Created tag {tag['id']}")
+        logger.info(f"Created tag {tag['id']}")
         return tag
 
     def read_all_tags(self, proj_id: int):
@@ -307,7 +308,7 @@ class DATSAPI:
 
     def bulk_apply_tags(self, sdoc_ids: List[int], tag_ids: List[int]):
         if len(sdoc_ids) == 0 or len(tag_ids) == 0:
-            print(f"Could not apply tags {tag_ids} to documents {sdoc_ids}!")
+            logger.info(f"Could not apply tags {tag_ids} to documents {sdoc_ids}!")
             return
 
         r = requests.patch(
@@ -318,7 +319,7 @@ class DATSAPI:
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()
-        print(f"Applied tags {tag_ids} to documents {sdoc_ids}!")
+        logger.info(f"Applied tags {tag_ids} to documents {sdoc_ids}!")
 
     # METADATA
     def create_project_metadata(
@@ -341,7 +342,7 @@ class DATSAPI:
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()
-        print(f"Create project metadata {r.json()}!")
+        logger.info(f"Create project metadata {r.json()}!")
         return r.json()
 
     def read_all_project_metadata(self, proj_id: int):
@@ -395,39 +396,39 @@ if __name__ == "__main__":
     # create project
     project_name = "test"
     project = dats.create_project(title=project_name, description=project_name)
-    print("created project", project)
+    logger.info("created project", project)
 
     # get project
     project = dats.get_proj_by_title(title=project_name)
     assert project is not None
-    print("got project by title", project)
+    logger.info("got project by title", project)
 
     # get project
     project = dats.get_proj_by_id(proj_id=project["id"])
-    print("got project by id", project)
+    logger.info("got project by id", project)
 
     # get all projects
     projects = dats.read_all_projects()
-    print("got all projects", projects)
+    logger.info("got all projects", projects)
 
     # get project status
     status = dats.read_project_status(proj_id=project["id"])
-    print("got project status", status)
+    logger.info("got project status", status)
 
     # create tag
     tag = dats.create_tag(
         name="test tag", description="my test tag", color="blue", proj_id=project["id"]
     )
-    print("created tag", tag)
+    logger.info("created tag", tag)
 
     # get tag
     tag = dats.get_tag_by_name(proj_id=project["id"], name="test tag")
     assert tag is not None
-    print("got tag", tag)
+    logger.info("got tag", tag)
 
     # get tags
     tags = dats.read_all_tags(proj_id=project["id"])
-    print("got tags", tags)
+    logger.info("got tags", tags)
 
     # status before upload
     status = dats.read_project_status(proj_id=project["id"])
@@ -452,18 +453,18 @@ if __name__ == "__main__":
         file_batch=files,
         filter_duplicate_files_before_upload=True,
     )
-    print("Upload success!")
+    logger.info("Upload success!")
 
     # get all sdocs
     sdoc_ids = dats.read_all_sdoc_ids(proj_id=project["id"])
-    print("got all sdocs ids", sdoc_ids)
+    logger.info("got all sdocs ids", sdoc_ids)
 
     # bulk apply tags
     dats.bulk_apply_tags(sdoc_ids=sdoc_ids, tag_ids=[tag["id"]])
 
     # read all sdocs by tags
     sdoc_ids = dats.read_all_sdoc_ids_by_tags(proj_id=project["id"], tags=[tag["id"]])
-    print("got all sdocs ids by tags", sdoc_ids)
+    logger.info("got all sdocs ids by tags", sdoc_ids)
 
     # create project metadata
     project_metadata = dats.create_project_metadata(
@@ -480,11 +481,11 @@ if __name__ == "__main__":
         doctype="image",
         description="sdoc_id",
     )
-    print("created project metadata", project_metadata)
+    logger.info("created project metadata", project_metadata)
 
     # get all project metadata
     project_metadatas = dats.read_all_project_metadata(proj_id=project["id"])
-    print("got all project metadata", project_metadatas)
+    logger.info("got all project metadata", project_metadatas)
 
     # update sdoc metadata
     for sdoc_id in sdoc_ids:
@@ -494,4 +495,4 @@ if __name__ == "__main__":
             key="sdoc_id",
             metatype="STRING",
         )
-        print("updated sdoc metadata", sdoc_metadata)
+        logger.info("updated sdoc metadata", sdoc_metadata)
