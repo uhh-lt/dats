@@ -28,7 +28,7 @@ class TopicInfoBase(BaseModel):
         description="List of Concepts that are part of the TopicInfo"
     )
     name: str = Field(description="ID of the TopicInfo")
-    score: float = Field(description="ID of the TopicInfo")
+    doc_count: int = Field(description="ID of the TopicInfo")
 
 
 class TopicInfoCreate(TopicInfoBase):
