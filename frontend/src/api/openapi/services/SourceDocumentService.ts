@@ -3,17 +3,14 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { BBoxAnnotationRead } from "../models/BBoxAnnotationRead";
-import type { BBoxAnnotationReadResolved } from "../models/BBoxAnnotationReadResolved";
-import type { DocumentTagRead } from "../models/DocumentTagRead";
-import type { MemoRead } from "../models/MemoRead";
 import type { SentenceAnnotatorResult } from "../models/SentenceAnnotatorResult";
 import type { SourceDocumentDataRead } from "../models/SourceDocumentDataRead";
-import type { SourceDocumentMetadataReadResolved } from "../models/SourceDocumentMetadataReadResolved";
+import type { SourceDocumentMetadataRead } from "../models/SourceDocumentMetadataRead";
 import type { SourceDocumentRead } from "../models/SourceDocumentRead";
 import type { SourceDocumentUpdate } from "../models/SourceDocumentUpdate";
 import type { SpanAnnotationRead } from "../models/SpanAnnotationRead";
-import type { SpanAnnotationReadResolved } from "../models/SpanAnnotationReadResolved";
 import type { SpanGroupRead } from "../models/SpanGroupRead";
+import type { SpanGroupWithAnnotationsRead } from "../models/SpanGroupWithAnnotationsRead";
 import type { WordFrequencyRead } from "../models/WordFrequencyRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -164,14 +161,10 @@ export class SourceDocumentService {
   }
   /**
    * Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists
-   * @returns SourceDocumentMetadataReadResolved Successful Response
+   * @returns SourceDocumentMetadataRead Successful Response
    * @throws ApiError
    */
-  public static getAllMetadata({
-    sdocId,
-  }: {
-    sdocId: number;
-  }): CancelablePromise<Array<SourceDocumentMetadataReadResolved>> {
+  public static getAllMetadata({ sdocId }: { sdocId: number }): CancelablePromise<Array<SourceDocumentMetadataRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/metadata",
@@ -185,7 +178,7 @@ export class SourceDocumentService {
   }
   /**
    * Returns the SourceDocumentMetadata with the given Key if it exists.
-   * @returns SourceDocumentMetadataReadResolved Successful Response
+   * @returns SourceDocumentMetadataRead Successful Response
    * @throws ApiError
    */
   public static readMetadataByKey({
@@ -194,7 +187,7 @@ export class SourceDocumentService {
   }: {
     sdocId: number;
     metadataKey: string;
-  }): CancelablePromise<SourceDocumentMetadataReadResolved> {
+  }): CancelablePromise<SourceDocumentMetadataRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/metadata/{metadata_key}",
@@ -225,48 +218,14 @@ export class SourceDocumentService {
     });
   }
   /**
-   * Returns all DocumentTags linked with the SourceDocument.
-   * @returns DocumentTagRead Successful Response
+   * Returns all DocumentTagIDs linked with the SourceDocument.
+   * @returns number Successful Response
    * @throws ApiError
    */
-  public static getAllTags({ sdocId }: { sdocId: number }): CancelablePromise<Array<DocumentTagRead>> {
+  public static getAllTags({ sdocId }: { sdocId: number }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/tags",
-      path: {
-        sdoc_id: sdocId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns all Memo attached to the SourceDocument with the given ID if it exists.
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static getMemos({ sdocId }: { sdocId: number }): CancelablePromise<Array<MemoRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/sdoc/{sdoc_id}/memo",
-      path: {
-        sdoc_id: sdocId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the Memo attached to the SourceDocument with the given ID of the logged-in User if it exists.
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static getUserMemo({ sdocId }: { sdocId: number }): CancelablePromise<MemoRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/sdoc/{sdoc_id}/memo/user",
       path: {
         sdoc_id: sdocId,
       },
@@ -293,60 +252,23 @@ export class SourceDocumentService {
     });
   }
   /**
-   * Returns all SpanAnnotations of the logged-in User if it exists
-   * @returns any Successful Response
-   * @throws ApiError
-   */
-  public static getAllSpanAnnotations({
-    sdocId,
-    resolve = true,
-  }: {
-    sdocId: number;
-    /**
-     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
-     */
-    resolve?: boolean;
-  }): CancelablePromise<Array<SpanAnnotationRead> | Array<SpanAnnotationReadResolved>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/sdoc/{sdoc_id}/user/span_annotations",
-      path: {
-        sdoc_id: sdocId,
-      },
-      query: {
-        resolve: resolve,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Returns all SpanAnnotations of the Users with the given ID if it exists
-   * @returns any Successful Response
+   * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
    */
   public static getAllSpanAnnotationsBulk({
     sdocId,
     userId,
-    resolve = true,
   }: {
     sdocId: number;
-    userId?: Array<number>;
-    /**
-     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
-     */
-    resolve?: boolean;
-  }): CancelablePromise<Array<SpanAnnotationRead> | Array<SpanAnnotationReadResolved>> {
+    userId: number;
+  }): CancelablePromise<Array<SpanAnnotationRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdoc/{sdoc_id}/span_annotations/bulk",
+      url: "/sdoc/{sdoc_id}/span_annotations/{user_id}}",
       path: {
         sdoc_id: sdocId,
-      },
-      query: {
         user_id: userId,
-        resolve: resolve,
       },
       errors: {
         422: `Validation Error`,
@@ -354,40 +276,25 @@ export class SourceDocumentService {
     });
   }
   /**
-   * Returns all BBoxAnnotations of the logged-in User if it exists
-   * @returns any Successful Response
+   * Returns all SpanGroupWithAnnotations of the User in the sDoc
+   * @returns SpanGroupWithAnnotationsRead Successful Response
    * @throws ApiError
    */
-  public static getAllBboxAnnotations({
+  public static getSdocGroupsWithAnnotations({
+    userId,
     sdocId,
-    skip,
-    limit,
-    resolve = true,
   }: {
+    userId: number;
     sdocId: number;
-    /**
-     * The number of elements to skip (offset)
-     */
-    skip?: number | null;
-    /**
-     * The maximum number of returned elements
-     */
-    limit?: number | null;
-    /**
-     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
-     */
-    resolve?: boolean;
-  }): CancelablePromise<Array<BBoxAnnotationRead> | Array<BBoxAnnotationReadResolved>> {
+  }): CancelablePromise<Array<SpanGroupWithAnnotationsRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdoc/{sdoc_id}/user/bbox_annotations",
+      url: "/sdoc/{sdoc}/span_groups/{user_id}",
       path: {
-        sdoc_id: sdocId,
+        user_id: userId,
       },
       query: {
-        skip: skip,
-        limit: limit,
-        resolve: resolve,
+        sdoc_id: sdocId,
       },
       errors: {
         422: `Validation Error`,
@@ -396,7 +303,7 @@ export class SourceDocumentService {
   }
   /**
    * Returns all BBoxAnnotations of the Users with the given ID if it exists
-   * @returns any Successful Response
+   * @returns BBoxAnnotationRead Successful Response
    * @throws ApiError
    */
   public static getAllBboxAnnotationsBulk({
@@ -404,10 +311,9 @@ export class SourceDocumentService {
     userId,
     skip,
     limit,
-    resolve = true,
   }: {
     sdocId: number;
-    userId?: Array<number>;
+    userId: number;
     /**
      * The number of elements to skip (offset)
      */
@@ -416,22 +322,17 @@ export class SourceDocumentService {
      * The maximum number of returned elements
      */
     limit?: number | null;
-    /**
-     * If true, the code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
-     */
-    resolve?: boolean;
-  }): CancelablePromise<Array<BBoxAnnotationRead> | Array<BBoxAnnotationReadResolved>> {
+  }): CancelablePromise<Array<BBoxAnnotationRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdoc/{sdoc_id}/bbox_annotations/bulk",
+      url: "/sdoc/{sdoc_id}/bbox_annotations/{user_id}",
       path: {
         sdoc_id: sdocId,
+        user_id: userId,
       },
       query: {
-        user_id: userId,
         skip: skip,
         limit: limit,
-        resolve: resolve,
       },
       errors: {
         422: `Validation Error`,
