@@ -76,12 +76,13 @@ function TimelineAnalysisSettingsContent({
     });
   };
   const handleChangeMetadataId = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(event.target.value);
     updateTimelineAnalysisMutation.mutate({
       timelineAnalysisId: timelineAnalysis.id,
       requestBody: {
         settings: {
           ...timelineAnalysis.settings,
-          date_metadata_id: parseInt(event.target.value),
+          date_metadata_id: value === -1 ? null : value,
         },
       },
     });
