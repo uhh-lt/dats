@@ -52,9 +52,6 @@ def update_timeline_analysis(
     ta = TimelineAnalysisRead.model_validate(db_obj)
 
     # check if we even need to update concepts
-    if ta.settings.date_metadata_id is None:
-        return db_obj
-
     if update_dto.concepts is None and update_dto.settings is None:
         return db_obj
     elif update_dto.concepts is None:
@@ -133,7 +130,8 @@ def __compute_timeline_analysis(
 ) -> List[TimelineAnalysisResult]:
     logger.info(f"Computing timeline analysis for concept {concept.id}")
 
-    assert timeline_analysis.settings.date_metadata_id is not None, "No date metadata"
+    if timeline_analysis.settings.date_metadata_id is None:
+        return []
 
     match concept.timeline_analysis_type:
         case TimelineAnalysisType.DOCUMENT:
@@ -299,7 +297,7 @@ def __sent_anno_timeline_analysis(
                 # Todo: Maybe add more here, same stuffa s in sent_anno_search?
                 *group_by.apply(subquery.c["date"]),  # type: ignore
             )
-            .join(subquery, SourceDocumentORM.id == subquery.c.id)
+            .join(subquery, SentenceAnnotationORM.id == subquery.c.id)
             .group_by(*group_by.apply(column=subquery.c["date"]))  # type: ignore
         )
 
