@@ -4,17 +4,30 @@ import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
 import { useMemo } from "react";
+import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
 import SdocTableSimple from "../../../components/SourceDocument/SdocTableSimple.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 
 interface TimeAnalysisProvenanceProps {
-  provenanceData: Record<string, Record<string, number[]>>;
+  timelineAnalysis: TimelineAnalysisRead;
 }
 
-function TimeAnalysisProvenance({ provenanceData }: TimeAnalysisProvenanceProps) {
+function TimeAnalysisProvenance({ timelineAnalysis }: TimeAnalysisProvenanceProps) {
   // redux
   const date = useAppSelector((state) => state.timelineAnalysis.provenanceDate);
   const concept = useAppSelector((state) => state.timelineAnalysis.provenanceConcept);
+
+  // compute provenance: a record of date -> concept -> sdocIds
+  const provenanceData: Record<string, Record<string, number[]>> = useMemo(() => {
+    const date2concept2sdocIds: Record<string, Record<string, number[]>> = {};
+    timelineAnalysis.concepts.forEach((concept) => {
+      concept.results.forEach((result) => {
+        date2concept2sdocIds[result.date] = date2concept2sdocIds[result.date] || {};
+        date2concept2sdocIds[result.date][concept.name] = result.data_ids;
+      });
+    });
+    return date2concept2sdocIds;
+  }, [timelineAnalysis]);
 
   const provenance = useMemo(() => {
     if (!date || !concept || !provenanceData[date] || !provenanceData[date][concept]) {

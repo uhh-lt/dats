@@ -8,7 +8,6 @@ import ConceptList from "./ConceptList.tsx";
 import TimeAnalysisProvenance from "./TimeAnalysisProvenance.tsx";
 import TimelineAnalysisViz from "./TimeAnalysisViz.tsx";
 import TimelineAnalysisSettings from "./TimelineAnalysisSettings.tsx";
-import { useTimelineAnalysis } from "./useTimelineAnalysis.ts";
 
 function TimelineAnalysis() {
   // global client state
@@ -43,9 +42,6 @@ interface TimelineAnalysisContentProps {
 }
 
 function TimelineAnalysisContent({ timelineAnalysis }: TimelineAnalysisContentProps) {
-  // custom hooks
-  const anaylsisResults = useTimelineAnalysis(timelineAnalysis);
-
   return (
     <Grid2 container className="h100" columnSpacing={2} padding={2} bgcolor={"grey.200"}>
       <Grid2 size={{ md: 3 }} className="myFlexContainer h100">
@@ -58,13 +54,10 @@ function TimelineAnalysisContent({ timelineAnalysis }: TimelineAnalysisContentPr
       </Grid2>
       <Grid2 size={{ md: 9 }} className="h100">
         <Box style={{ height: "50%" }} sx={{ pb: 1 }}>
-          <TimelineAnalysisViz
-            chartData={anaylsisResults.isSuccess ? anaylsisResults.counts : undefined}
-            timelineAnalysis={timelineAnalysis}
-          />
+          <TimelineAnalysisViz timelineAnalysis={timelineAnalysis} />
         </Box>
         <Box style={{ height: "50%" }} sx={{ pt: 1 }}>
-          <TimeAnalysisProvenance provenanceData={anaylsisResults.date2concept2ids} />
+          <TimeAnalysisProvenance timelineAnalysis={timelineAnalysis} />
         </Box>
       </Grid2>
     </Grid2>

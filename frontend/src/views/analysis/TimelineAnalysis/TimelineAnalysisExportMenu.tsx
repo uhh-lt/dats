@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 import CsvDownloader from "react-csv-downloader";
 import { Datas } from "react-csv-downloader/dist/esm/lib/csv";
 import { exportChart } from "../../../utils/ExportUtils.ts";
-import { TimelineAnalysisCount } from "./useTimelineAnalysis.ts";
+import { TimelineAnalysisCount } from "./TimelineAnalysisCount.ts";
 
 interface TimelineAnalysisExportMenuProps {
   chartName: string;

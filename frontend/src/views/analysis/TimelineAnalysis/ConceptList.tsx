@@ -7,7 +7,6 @@ import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
-import { useParams } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
 
@@ -27,13 +26,11 @@ interface ConceptListProps {
 }
 
 function ConceptList({ timelineAnalysis }: ConceptListProps) {
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
-
   // global client state (redux)
   const dispatch = useAppDispatch();
 
   // init filter slice
-  useInitTimelineAnalysisFilterSlice({ projectId });
+  useInitTimelineAnalysisFilterSlice({ timelineAnalysis });
 
   // actions
   const updateTimelineAnalysisMutation = TimelineAnalysisHooks.useUpdateTimelineAnalysis();
@@ -50,7 +47,7 @@ function ConceptList({ timelineAnalysis }: ConceptListProps) {
             color: "#000000",
             description: "",
             ta_specific_filter: {
-              timeline_analysis_type: "sdoc",
+              timeline_analysis_type: timelineAnalysis.timeline_analysis_type,
               filter: {
                 id: uuidv4(),
                 items: [],

@@ -1,22 +1,71 @@
 import { useQuery } from "@tanstack/react-query";
-import { TimelineAnalysisService } from "../../../api/openapi/services/TimelineAnalysisService.ts";
-import { tableInfoQueryKey } from "../../../components/FilterDialog/filterSlice.ts";
+import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
+import { TimelineAnalysisType } from "../../../api/openapi/models/TimelineAnalysisType.ts";
+import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
+import { SearchService } from "../../../api/openapi/services/SearchService.ts";
+import { QueryKey } from "../../../api/QueryKey.ts";
 import { ColumnInfo } from "../../../components/FilterDialog/filterUtils.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { AppDispatch } from "../../../store/store.ts";
 import { TimelineAnalysisActions } from "./timelineAnalysisSlice.ts";
 
-const useGetTimelineAnalysisInfo = (projectId: number, dispatch: AppDispatch) =>
+const useGetTimelineAnalysisInfo = (timelineAnalysis: TimelineAnalysisRead, dispatch: AppDispatch) =>
   useQuery<ColumnInfo[]>({
-    queryKey: tableInfoQueryKey("timelineAnalysis", projectId),
+    queryKey: [
+      QueryKey.TABLE_INFO,
+      "timelineAnalysis",
+      timelineAnalysis.project_id,
+      timelineAnalysis.timeline_analysis_type,
+      timelineAnalysis.id,
+    ],
     queryFn: async () => {
-      const result = await TimelineAnalysisService.info({ projectId });
-      const columnInfo = result.map((info) => {
-        return {
-          ...info,
-          column: info.column.toString(),
-        };
-      });
+      const projectId = timelineAnalysis.project_id;
+      let columnInfo: ColumnInfo[] = [];
+      switch (timelineAnalysis.timeline_analysis_type) {
+        case TimelineAnalysisType.DOCUMENT: {
+          const sdocInfo = await SearchService.searchSdocsInfo({ projectId });
+          columnInfo = sdocInfo.map((info) => {
+            return {
+              ...info,
+              column: info.column.toString(),
+            };
+          });
+          break;
+        }
+        case TimelineAnalysisType.BBOX_ANNOTATION: {
+          const bboxInfo = await AnalysisService.bboxAnnotationSearchInfo({ projectId });
+          columnInfo = bboxInfo.map((info) => {
+            return {
+              ...info,
+              column: info.column.toString(),
+            };
+          });
+          break;
+        }
+        case TimelineAnalysisType.SENTENCE_ANNOTATION: {
+          const sentAnnoInfo = await AnalysisService.sentenceAnnotationSearchInfo({ projectId });
+          columnInfo = sentAnnoInfo.map((info) => {
+            return {
+              ...info,
+              column: info.column.toString(),
+            };
+          });
+          break;
+        }
+        case TimelineAnalysisType.SPAN_ANNOTATION: {
+          const spanAnnoInfo = await AnalysisService.spanAnnotationSearchInfo({ projectId });
+          columnInfo = spanAnnoInfo.map((info) => {
+            return {
+              ...info,
+              column: info.column.toString(),
+            };
+          });
+          break;
+        }
+        default:
+          break;
+      }
+
       const columnInfoMap: Record<string, ColumnInfo> = columnInfo.reduce((acc, info) => {
         return {
           ...acc,
@@ -29,12 +78,16 @@ const useGetTimelineAnalysisInfo = (projectId: number, dispatch: AppDispatch) =>
     staleTime: Infinity,
   });
 
-export const useInitTimelineAnalysisFilterSlice = ({ projectId }: { projectId: number }) => {
+export const useInitTimelineAnalysisFilterSlice = ({
+  timelineAnalysis,
+}: {
+  timelineAnalysis: TimelineAnalysisRead;
+}) => {
   // global client state (redux)
   const dispatch = useAppDispatch();
 
   // global server state (react-query)
-  const { data: columnData } = useGetTimelineAnalysisInfo(projectId, dispatch);
+  const { data: columnData } = useGetTimelineAnalysisInfo(timelineAnalysis, dispatch);
 
   return columnData;
 };
