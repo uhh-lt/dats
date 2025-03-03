@@ -130,8 +130,11 @@ elasticsearch:
 ollama:
   host: ${oc.env:OLLAMA_HOST, ollama}
   port: ${oc.env:OLLAMA_PORT, 11434}
-  model: ${oc.env:OLLAMA_MODEL, gemma2:9b-instruct-fp16}
-  context_size: 8192
+  model:
+    llm: ${oc.env:OLLAMA_LLM_MODEL, gemma2:9b-instruct-fp16}
+    vlm: ${oc.env:OLLAMA_VLM_MODEL, llama3.2-vision:11b-instruct-q4_K_M}
+  context_size:
+    llm: 8192
 
 llm_assistant:
   sentence_annotation:
