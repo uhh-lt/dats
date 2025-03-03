@@ -37,22 +37,34 @@ def update_timeline_analysis(
     db: Session, id: int, update_dto: TimelineAnalysisUpdate
 ) -> TimelineAnalysisORM:
     # update everything except the concepts
+    update_data = update_dto.model_dump(
+        exclude_unset=True, exclude={"concepts", "settings"}
+    )
+    if update_dto.settings is not None:
+        update_data["settings"] = srsly.json_dumps(
+            jsonable_encoder(update_dto.settings)
+        )
     db_obj = crud_timeline_analysis.update(
         db,
         id=id,
-        update_dto=TimelineAnalysisUpdateIntern(
-            name=update_dto.name,
-            concepts=None,
-            settings=None
-            if update_dto.settings is None
-            else srsly.json_dumps(jsonable_encoder(update_dto.settings)),
-        ),
+        update_dto=TimelineAnalysisUpdateIntern(**update_data),
     )
     ta = TimelineAnalysisRead.model_validate(db_obj)
 
     # check if we even need to update concepts
-    if update_dto.concepts is None or ta.settings.date_metadata_id is None:
+    if ta.settings.date_metadata_id is None:
         return db_obj
+
+    if update_dto.concepts is None and update_dto.settings is None:
+        return db_obj
+    elif update_dto.concepts is None:
+        update_concepts = ta.concepts
+    elif update_dto.settings is None:
+        update_concepts = update_dto.concepts
+    else:
+        update_concepts = update_dto.concepts
+
+    logger.info(f"Updating timeline analysis {id} concepts")
 
     current_concepts: Dict[str, TimelineAnalysisConcept] = {
         concept.id: concept for concept in ta.concepts
@@ -67,14 +79,18 @@ def update_timeline_analysis(
             ta_specific_filter=concept.ta_specific_filter,
             color=concept.color,
             filter_hash=hash(
-                {
-                    "filter": concept.ta_specific_filter.filter,
-                    "settings": ta.settings,
-                }
+                srsly.json_dumps(
+                    jsonable_encoder(
+                        {
+                            "filter": concept.ta_specific_filter.filter,
+                            "settings": ta.settings,
+                        }
+                    )
+                )
             ),
             results=[],
         )
-        for concept in update_dto.concepts
+        for concept in update_concepts
     }
 
     # compute new results (if necessary)
@@ -104,7 +120,7 @@ def update_timeline_analysis(
         db,
         id=id,
         update_dto=TimelineAnalysisUpdateIntern(
-            concepts=srsly.json_dumps(jsonable_encoder(new_concepts)),
+            concepts=srsly.json_dumps(jsonable_encoder(list(new_concepts.values()))),
         ),
     )
 
