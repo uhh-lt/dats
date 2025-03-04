@@ -1,4 +1,5 @@
 import BarChartIcon from "@mui/icons-material/BarChart";
+import ReplayIcon from "@mui/icons-material/Replay";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import { Box, Card, CardContent, CardHeader, CircularProgress, IconButton, Tooltip, Typography } from "@mui/material";
 import React, { useMemo } from "react";
@@ -17,6 +18,7 @@ import {
   YAxis,
 } from "recharts";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
+import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { TimelineAnalysisCount } from "./TimelineAnalysisCount.ts";
 import TimelineAnalysisExportMenu from "./TimelineAnalysisExportMenu.tsx";
@@ -34,6 +36,13 @@ function TimelineAnalysisViz({ timelineAnalysis }: TimelineAnalysisVizProps) {
   const dispatch = useAppDispatch();
 
   // event handlers
+  const recomputeMutation = TimelineAnalysisHooks.useRecomputeTimelineAnalysis();
+  const recomputeTimelineAnalysis = () => {
+    recomputeMutation.mutate({
+      timelineAnalysisId: timelineAnalysis.id,
+    });
+  };
+
   const handleClick = (date: string, conceptName: string) => {
     dispatch(TimelineAnalysisActions.setProvenanceDate(date));
     dispatch(TimelineAnalysisActions.setProvenanceConcept(conceptName));
@@ -151,6 +160,13 @@ function TimelineAnalysisViz({ timelineAnalysis }: TimelineAnalysisVizProps) {
         className="myFlexFitContentContainer"
         action={
           <>
+            <Tooltip title="Recompute Timeline Analysis">
+              <span>
+                <IconButton onClick={() => recomputeTimelineAnalysis()} disabled={recomputeMutation.isPending}>
+                  {recomputeMutation.isPending ? <CircularProgress size={20} /> : <ReplayIcon />}
+                </IconButton>
+              </span>
+            </Tooltip>
             <TimelineAnalysisExportMenu
               chartData={chartData}
               chartName={(isBarPlot ? "barchart-" : "linechart-") + timelineAnalysis.name}

@@ -118,6 +118,27 @@ export class TimelineAnalysisService {
     });
   }
   /**
+   * Recomputes the TimelineAnalysis with the given ID if it exists
+   * @returns TimelineAnalysisRead Successful Response
+   * @throws ApiError
+   */
+  public static recomputeById({
+    timelineAnalysisId,
+  }: {
+    timelineAnalysisId: number;
+  }): CancelablePromise<TimelineAnalysisRead> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/timelineAnalysis/recompute/{timeline_analysis_id}",
+      path: {
+        timeline_analysis_id: timelineAnalysisId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Duplicates the TimelineAnalysis with the given ID if it exists
    * @returns TimelineAnalysisRead Successful Response
    * @throws ApiError

@@ -4689,6 +4689,32 @@
         }
       }
     },
+    "/timelineAnalysis/recompute/{timeline_analysis_id}": {
+      "post": {
+        "tags": ["timelineAnalysis"],
+        "summary": "Recomputes the TimelineAnalysis with the given ID if it exists",
+        "operationId": "recompute_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "timeline_analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Timeline Analysis Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/timelineAnalysis/duplicate/{timeline_analysis_id}": {
       "post": {
         "tags": ["timelineAnalysis"],
