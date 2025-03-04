@@ -5,7 +5,11 @@ import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
 import { useMemo } from "react";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
+import { TimelineAnalysisType } from "../../../api/openapi/models/TimelineAnalysisType.ts";
+import BBoxAnnotationTableSimple from "../../../components/BBoxAnnotation/BBoxAnnotationTableSimple.tsx";
+import SentenceAnnotationTableSimple from "../../../components/SentenceAnnotation/SentenceAnnotationTableSimple.tsx";
 import SdocTableSimple from "../../../components/SourceDocument/SdocTableSimple.tsx";
+import SpanAnnotationTableSimple from "../../../components/SpanAnnotation/SpanAnnotationTableSimple.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 
 interface TimeAnalysisProvenanceProps {
@@ -50,7 +54,17 @@ function TimeAnalysisProvenance({ timelineAnalysis }: TimeAnalysisProvenanceProp
         subheader="Investigate the Timeline Analysis."
       />
       <CardContent className="myFlexFillAllContainer" style={{ padding: 0 }}>
-        <SdocTableSimple sdocIds={provenance} />
+        {timelineAnalysis.timeline_analysis_type === TimelineAnalysisType.DOCUMENT ? (
+          <SdocTableSimple sdocIds={provenance} />
+        ) : timelineAnalysis.timeline_analysis_type === TimelineAnalysisType.SENTENCE_ANNOTATION ? (
+          <SentenceAnnotationTableSimple sentAnnoIds={provenance} />
+        ) : timelineAnalysis.timeline_analysis_type === TimelineAnalysisType.SPAN_ANNOTATION ? (
+          <SpanAnnotationTableSimple spanAnnoIds={provenance} />
+        ) : timelineAnalysis.timeline_analysis_type === TimelineAnalysisType.BBOX_ANNOTATION ? (
+          <BBoxAnnotationTableSimple bboxAnnoIds={provenance} />
+        ) : (
+          <div>Unknown Analysis Type</div>
+        )}
       </CardContent>
     </Card>
   );

@@ -25,28 +25,12 @@ interface SentenceAnnotationRendererProps {
 
 function SentenceAnnotationRenderer({
   sentenceAnnotation,
-  showCode = true,
-  showSpanText = true,
   ...props
 }: SentenceAnnotationRendererProps & SentenceAnnotationRendererSharedProps) {
   if (typeof sentenceAnnotation === "number") {
-    return (
-      <SentenceAnnotationRendererWithoutData
-        sentenceAnnotationId={sentenceAnnotation}
-        showCode={showCode}
-        showSpanText={showSpanText}
-        {...props}
-      />
-    );
+    return <SentenceAnnotationRendererWithoutData sentenceAnnotationId={sentenceAnnotation} {...props} />;
   } else {
-    return (
-      <SentenceAnnotationRendererWithData
-        sentenceAnnotation={sentenceAnnotation}
-        showCode={showCode}
-        showSpanText={showSpanText}
-        {...props}
-      />
-    );
+    return <SentenceAnnotationRendererWithData sentenceAnnotation={sentenceAnnotation} {...props} />;
   }
 }
 
