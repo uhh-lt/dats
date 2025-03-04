@@ -27,6 +27,7 @@ from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_group import SpanGroupORM
 from app.core.data.orm.span_text import SpanTextORM
+from app.core.data.orm.topic_info import TopicInfoORM
 from app.core.data.orm.user import UserORM
 from app.core.data.orm.whiteboard import WhiteboardORM
 from app.core.data.orm.word_frequency import WordFrequencyORM
