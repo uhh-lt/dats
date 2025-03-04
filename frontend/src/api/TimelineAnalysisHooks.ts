@@ -61,6 +61,16 @@ const useUpdateTimelineAnalysis = () =>
     },
   });
 
+const useRecomputeTimelineAnalysis = () =>
+  useMutation({
+    mutationFn: TimelineAnalysisService.recomputeById,
+    onSuccess(data) {
+      queryClient.setQueryData<TimelineMap>([QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id], (prev) =>
+        prev ? { ...prev, [data.id]: data } : { [data.id]: data },
+      );
+    },
+  });
+
 const useDuplicateTimelineAnalysis = () =>
   useMutation({
     mutationFn: TimelineAnalysisService.duplicateById,
@@ -89,6 +99,7 @@ const TimelineAnalysisHooks = {
   useGetTimelineAnalysis,
   useCreateTimelineAnalysis,
   useUpdateTimelineAnalysis,
+  useRecomputeTimelineAnalysis,
   useDuplicateTimelineAnalysis,
   useDeleteTimelineAnalysis,
 };

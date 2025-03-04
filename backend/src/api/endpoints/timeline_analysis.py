@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
 from app.core.analysis.timeline_analysis.timeline import (
+    recompute_timeline_analysis,
     update_timeline_analysis,
 )
 from app.core.authorization.authz_user import AuthzUser
@@ -100,6 +101,23 @@ def update_by_id(
     db_obj = update_timeline_analysis(
         db=db, id=timeline_analysis_id, update_dto=timeline_analysis
     )
+    return TimelineAnalysisRead.model_validate(db_obj)
+
+
+@router.post(
+    "/recompute/{timeline_analysis_id}",
+    response_model=TimelineAnalysisRead,
+    summary="Recomputes the TimelineAnalysis with the given ID if it exists",
+)
+def recompute_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    timeline_analysis_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> TimelineAnalysisRead:
+    authz_user.assert_in_same_project_as(Crud.TIMELINE_ANALYSIS, timeline_analysis_id)
+
+    db_obj = recompute_timeline_analysis(db=db, id=timeline_analysis_id)
     return TimelineAnalysisRead.model_validate(db_obj)
 
 

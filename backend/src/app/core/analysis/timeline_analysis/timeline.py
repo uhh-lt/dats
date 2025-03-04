@@ -124,6 +124,35 @@ def update_timeline_analysis(
     return db_obj
 
 
+def recompute_timeline_analysis(db: Session, id: int) -> TimelineAnalysisORM:
+    db_obj = crud_timeline_analysis.read(
+        db,
+        id=id,
+    )
+    ta = TimelineAnalysisRead.model_validate(db_obj)
+
+    # compute new results
+    concepts: Dict[str, TimelineAnalysisConcept] = {
+        concept.id: concept for concept in ta.concepts
+    }
+    for concept_id, concept in concepts.items():
+        concept.results = __compute_timeline_analysis(
+            timeline_analysis=ta,
+            concept=concept,
+        )
+
+    # update the concepts
+    db_obj = crud_timeline_analysis.update(
+        db,
+        id=id,
+        update_dto=TimelineAnalysisUpdateIntern(
+            concepts=srsly.json_dumps(jsonable_encoder(list(concepts.values()))),
+        ),
+    )
+
+    return db_obj
+
+
 def __compute_timeline_analysis(
     timeline_analysis: TimelineAnalysisRead,
     concept: TimelineAnalysisConcept,
