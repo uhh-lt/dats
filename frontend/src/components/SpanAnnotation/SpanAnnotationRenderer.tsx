@@ -25,28 +25,12 @@ interface SpanAnnotationRendererProps {
 
 function SpanAnnotationRenderer({
   spanAnnotation,
-  showCode = true,
-  showSpanText = true,
   ...props
 }: SpanAnnotationRendererProps & SpanAnnotationRendererSharedProps) {
   if (typeof spanAnnotation === "number") {
-    return (
-      <SpanAnnotationRendererWithoutData
-        spanAnnotationId={spanAnnotation}
-        showCode={showCode}
-        showSpanText={showSpanText}
-        {...props}
-      />
-    );
+    return <SpanAnnotationRendererWithoutData spanAnnotationId={spanAnnotation} {...props} />;
   } else {
-    return (
-      <SpanAnnotationRendererWithData
-        spanAnnotation={spanAnnotation}
-        showCode={showCode}
-        showSpanText={showSpanText}
-        {...props}
-      />
-    );
+    return <SpanAnnotationRendererWithData spanAnnotation={spanAnnotation} {...props} />;
   }
 }
 

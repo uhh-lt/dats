@@ -73,11 +73,13 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
           <DialogTitle style={{ paddingBottom: 0 }}>Preview</DialogTitle>
           <Box px={3} mb={2}>
             Before:
-            <BBoxAnnotationRenderer bboxAnnotation={annotation} />
+            <BBoxAnnotationRenderer bboxAnnotation={annotation} showCode showSpanText />
             After:
             {selectedCodeId ? (
               <BBoxAnnotationRenderer
                 bboxAnnotation={selectedCodeId ? { ...annotation, code_id: selectedCodeId } : annotation}
+                showCode
+                showSpanText
               />
             ) : (
               <>
