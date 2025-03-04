@@ -53,6 +53,7 @@ export interface UseAnaylsisDashboardTableProps<T extends AnalysisDashboardRow> 
   handleCreateAnalysis: HandleCreateAnalysis<T>;
   handleEditAnalysis: MRT_TableOptions<T>["onEditingRowSave"];
   analysisCreateOptions?: AnalysisCreateOption[];
+  additionalColumns?: MRT_ColumnDef<T>[];
 }
 
 export const useAnalysisDashboardTable = <T extends AnalysisDashboardRow>(props: UseAnaylsisDashboardTableProps<T>) => {
@@ -78,9 +79,10 @@ export const useAnalysisDashboardTable = <T extends AnalysisDashboardRow>(props:
         enableEditing: false,
         Cell: ({ row }) => (row.original.user_id === -1 ? "..." : <UserName userId={row.original.user_id} />),
       },
+      ...(props.additionalColumns ?? []),
     ];
     return columns;
-  }, []);
+  }, [props.additionalColumns]);
 
   // create option menu
   const [analysisCreateOption, setAnalysisCreateOption] = useState<AnalysisCreateOption | undefined>(undefined);

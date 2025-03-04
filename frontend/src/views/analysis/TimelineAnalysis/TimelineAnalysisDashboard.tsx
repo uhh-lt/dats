@@ -1,4 +1,4 @@
-import { MRT_Row, MRT_TableOptions } from "material-react-table";
+import { MRT_ColumnDef, MRT_Row, MRT_TableOptions } from "material-react-table";
 import { useMemo } from "react";
 import { useParams } from "react-router";
 import { TimelineAnalysisType } from "../../../api/openapi/models/TimelineAnalysisType.ts";
@@ -17,6 +17,15 @@ import { TimelineAnalysisActions } from "./timelineAnalysisSlice.ts";
 interface TimelineAnaylsisDashboardRow extends AnalysisDashboardRow {
   type: TimelineAnalysisType;
 }
+
+const additionalColumns: MRT_ColumnDef<TimelineAnaylsisDashboardRow>[] = [
+  {
+    id: "type",
+    header: "Type",
+    accessorFn: (params) => params.type,
+    enableEditing: false,
+  },
+];
 
 function TimelineAnalysisDashboard() {
   // global client state
@@ -190,6 +199,7 @@ function TimelineAnalysisDashboard() {
         label: "Image Annotations",
       },
     ],
+    additionalColumns,
   });
 
   return (
