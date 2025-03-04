@@ -111,8 +111,11 @@ class OllamaService(metaclass=SingletonMeta):
         system_prompt: str,
         user_prompt: str,
         b64_images: list[str],
-        response_model: Type[T],
-    ) -> T:
+        response_model: Type[T] | None = None,
+    ) -> T | str:
+        response_model_schema = None
+        if response_model is not None:
+            response_model_schema = response_model.model_json_schema()
         response = self.__client.chat(
             model=self.__model["vlm"],
             messages=[
@@ -126,9 +129,10 @@ class OllamaService(metaclass=SingletonMeta):
                     "images": b64_images,
                 },
             ],
-            format=response_model.model_json_schema(),
+            format=response_model_schema,
         )
         if response.message.content is None:
             raise Exception(f"Ollama response is None: {response}")
-
+        if response_model is None:
+            return response.message.content
         return response_model.model_validate_json(response.message.content)
