@@ -194,6 +194,7 @@ export const useAnalysisDashboardTable = <T extends AnalysisDashboardRow>(props:
     enableRowVirtualization: true,
     enableBottomToolbar: false,
     // actions
+    displayColumnDefOptions: { "mrt-row-actions": { size: 150 } },
     renderRowActions: ({ row, table }) => (
       <Box sx={{ display: "flex", gap: "0.5rem" }}>
         <Tooltip title="Edit">
