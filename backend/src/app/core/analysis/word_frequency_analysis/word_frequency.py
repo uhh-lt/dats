@@ -51,17 +51,15 @@ def word_frequency(
     with SQLService().db_session() as db:
         # count all words, all sdocs query (uses filtering)
         builder = SearchBuilder(db=db, filter=filter, sorts=[])
-        subquery = builder.build_subquery(
-            subquery=(
-                db.query(
-                    SourceDocumentORM.id.label("id"),
-                )
-                .filter(
-                    SourceDocumentORM.project_id == project_id,
-                )
-                .group_by(SourceDocumentORM.id)
+        subquery = builder.init_subquery(
+            db.query(
+                SourceDocumentORM.id.label("id"),
             )
-        )
+            .filter(
+                SourceDocumentORM.project_id == project_id,
+            )
+            .group_by(SourceDocumentORM.id)
+        ).build_subquery()
 
         global_word_count_agg = func.sum(WordFrequencyORM.count).label(
             "global_word_count"
@@ -69,13 +67,11 @@ def word_frequency(
         global_sdoc_count_agg = func.count(distinct(WordFrequencyORM.sdoc_id)).label(
             "global_sdoc_count"
         )
-        builder.build_query(
-            query=(
-                db.query(global_word_count_agg, global_sdoc_count_agg).join(
-                    subquery, WordFrequencyORM.sdoc_id == subquery.c.id
-                )
+        builder.init_query(
+            db.query(global_word_count_agg, global_sdoc_count_agg).join(
+                subquery, WordFrequencyORM.sdoc_id == subquery.c.id
             )
-        )
+        ).build_query()
         result_rows, total_results = builder.execute_query(
             page_number=None, page_size=None
         )
@@ -97,40 +93,36 @@ def word_frequency(
 
         # main query (uses filtering, sorting and pagination)
         builder = SearchBuilder(db=db, filter=filter, sorts=sorts)
-        subquery = builder.build_subquery(
-            subquery=(
-                db.query(
-                    SourceDocumentORM.id.label("id"),
-                )
-                .filter(
-                    SourceDocumentORM.project_id == project_id,
-                )
-                .group_by(SourceDocumentORM.id)
+        subquery = builder.init_subquery(
+            db.query(
+                SourceDocumentORM.id.label("id"),
             )
-        )
+            .filter(
+                SourceDocumentORM.project_id == project_id,
+            )
+            .group_by(SourceDocumentORM.id)
+        ).build_subquery()
         word_count_acc = func.sum(WordFrequencyORM.count).label(
             WordFrequencyColumns.WORD_FREQUENCY
         )
         sdocs_count_agg = func.count(distinct(WordFrequencyORM.sdoc_id)).label(
             WordFrequencyColumns.SOURCE_DOCUMENT_FREQUENCY
         )
-        builder.build_query(
-            query=(
-                db.query(
-                    word_count_acc,
-                    WordFrequencyORM.word,
-                    (word_count_acc / global_word_count).label(
-                        WordFrequencyColumns.WORD_PERCENT
-                    ),
-                    sdocs_count_agg,
-                    (sdocs_count_agg / global_sdoc_count).label(
-                        WordFrequencyColumns.SOURCE_DOCUMENT_PERCENT
-                    ),
-                )
-                .join(subquery, WordFrequencyORM.sdoc_id == subquery.c.id)
-                .group_by(WordFrequencyORM.word)
+        builder.init_query(
+            db.query(
+                word_count_acc,
+                WordFrequencyORM.word,
+                (word_count_acc / global_word_count).label(
+                    WordFrequencyColumns.WORD_PERCENT
+                ),
+                sdocs_count_agg,
+                (sdocs_count_agg / global_sdoc_count).label(
+                    WordFrequencyColumns.SOURCE_DOCUMENT_PERCENT
+                ),
             )
-        )
+            .join(subquery, WordFrequencyORM.sdoc_id == subquery.c.id)
+            .group_by(WordFrequencyORM.word)
+        ).build_query()
         result_rows, total_results = builder.execute_query(
             page_number=page, page_size=page_size
         )

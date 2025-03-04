@@ -121,14 +121,27 @@ class SentAnnoColumns(str, AbstractColumns):
 
     def add_query_filter_statements(self, query_builder: SearchBuilder):
         match self:
+            case SentAnnoColumns.SOURCE_DOCUMENT_FILENAME:
+                query_builder._join_query(
+                    AnnotationDocumentORM,
+                    AnnotationDocumentORM.id
+                    == SentenceAnnotationORM.annotation_document_id,
+                )._join_query(
+                    SourceDocumentORM,
+                    SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+                )
             case SentAnnoColumns.MEMO_CONTENT:
-                # TODO, i need join_query for this, subquery is for aggregates, query for normal columns
-                assert query_builder.query is not None, "Query is not initialized"
-                query_builder.query = query_builder.query.join(
+                query_builder._join_query(
                     SentenceAnnotationORM.object_handle, isouter=True
-                ).join(
+                )._join_query(
                     ObjectHandleORM.attached_memos.and_(
                         MemoORM.user_id == AnnotationDocumentORM.user_id
                     ),
                     isouter=True,
+                )
+            case SentAnnoColumns.USER_ID:
+                query_builder._join_query(
+                    AnnotationDocumentORM,
+                    AnnotationDocumentORM.id
+                    == SentenceAnnotationORM.annotation_document_id,
                 )

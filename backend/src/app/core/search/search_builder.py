@@ -33,7 +33,8 @@ class SearchBuilder:
         self.db = db
         self.filter = filter
         self.sorts = sorts
-        self.joined_tables: List[str] = []
+        self.joined_subquery_tables: List[str] = []
+        self.joined_query_tables: List[str] = []
         self.selected_columns: List[str] = []
         self.subquery: Optional[Union[Query, Subquery]] = None
         self.query: Optional[Query] = None
@@ -57,6 +58,32 @@ class SearchBuilder:
         self.selected_columns.append(str_repr)
         self.subquery = self.subquery.add_column(column)
 
+    def _join_query(
+        self,
+        target: _JoinTargetArgument,
+        onclause: _OnClauseArgument | None = None,
+        *,
+        isouter: bool = False,
+        full: bool = False,
+    ) -> "SearchBuilder":
+        if self.query is None:
+            raise ValueError("Query is not initialized!")
+
+        # make sure that this was not joined before
+        str_repr = str(target) + str(onclause) + str(isouter) + str(full)
+        if str_repr in self.joined_query_tables:
+            return self
+
+        self.joined_query_tables.append(str_repr)
+        self.query = self.query.join(
+            target,
+            onclause=onclause,
+            isouter=isouter,
+            full=full,
+        )
+
+        return self
+
     def _join_subquery(
         self,
         target: _JoinTargetArgument,
@@ -64,7 +91,7 @@ class SearchBuilder:
         *,
         isouter: bool = False,
         full: bool = False,
-    ):
+    ) -> "SearchBuilder":
         if self.subquery is None:
             raise ValueError("Subquery is not initialized!")
 
@@ -73,16 +100,18 @@ class SearchBuilder:
 
         # make sure that this was not joined before
         str_repr = str(target) + str(onclause) + str(isouter) + str(full)
-        if str_repr in self.joined_tables:
-            return
+        if str_repr in self.joined_subquery_tables:
+            return self
 
-        self.joined_tables.append(str_repr)
+        self.joined_subquery_tables.append(str_repr)
         self.subquery = self.subquery.join(
             target,
             onclause=onclause,
             isouter=isouter,
             full=full,
         )
+
+        return self
 
     def _add_subquery_metadata_filter_statements(self, project_metadata_id: int):
         if self.subquery is None:
@@ -122,11 +151,20 @@ class SearchBuilder:
             .group_by(metadata.id)
         )
 
-    def build_subquery(self, subquery: Query) -> Subquery:
+    def init_subquery(self, subquery: Query) -> "SearchBuilder":
         if self.subquery is not None:
-            raise ValueError("Subquery was built already!")
+            raise ValueError("Subquery was initialized already!")
 
         self.subquery = subquery
+
+        return self
+
+    def build_subquery(self) -> Subquery:
+        if self.subquery is None:
+            raise ValueError("Subquery was not initialized!")
+
+        if isinstance(self.subquery, Subquery):
+            raise ValueError("Subquery is already built!")
 
         for column in self.affected_columns:
             if isinstance(column, int):
@@ -137,11 +175,17 @@ class SearchBuilder:
         self.subquery = self.subquery.subquery()
         return self.subquery
 
-    def build_query(self, query: Query) -> Query:
+    def init_query(self, query: Query) -> "SearchBuilder":
         if self.query is not None:
-            raise ValueError("Query was built already!")
+            raise ValueError("Query was initialized already!")
 
         self.query = query
+
+        return self
+
+    def build_query(self) -> Query:
+        if self.query is None:
+            raise ValueError("Query was not initialized!")
 
         for column in self.affected_columns:
             if isinstance(column, int):

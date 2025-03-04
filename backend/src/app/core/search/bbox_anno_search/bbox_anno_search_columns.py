@@ -24,7 +24,7 @@ class BBoxColumns(str, AbstractColumns):
             case BBoxColumns.DOCUMENT_TAG_ID_LIST:
                 return subquery_dict[BBoxColumns.DOCUMENT_TAG_ID_LIST.value]
             case BBoxColumns.CODE_ID:
-                return CodeORM.id
+                return BBoxAnnotationORM.code_id
             case BBoxColumns.MEMO_CONTENT:
                 return MemoORM.content
 
@@ -96,12 +96,19 @@ class BBoxColumns(str, AbstractColumns):
 
     def add_query_filter_statements(self, query_builder: SearchBuilder):
         match self:
+            case BBoxColumns.SOURCE_DOCUMENT_FILENAME:
+                query_builder._join_query(
+                    AnnotationDocumentORM,
+                    AnnotationDocumentORM.id
+                    == BBoxAnnotationORM.annotation_document_id,
+                )._join_query(
+                    SourceDocumentORM,
+                    SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+                )
             case BBoxColumns.MEMO_CONTENT:
-                # TODO, i need join_query for this, subquery is for aggregates, query for normal columns
-                assert query_builder.query is not None, "Query is not initialized"
-                query_builder.query = query_builder.query.join(
+                query_builder._join_query(
                     BBoxAnnotationORM.object_handle, isouter=True
-                ).join(
+                )._join_query(
                     ObjectHandleORM.attached_memos.and_(
                         MemoORM.user_id == AnnotationDocumentORM.user_id
                     ),
