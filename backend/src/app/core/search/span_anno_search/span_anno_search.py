@@ -48,33 +48,37 @@ def find_span_annotations(
     with SQLService().db_session() as db:
         builder = SearchBuilder(db, filter, sorts)
         # build the initial subquery that queries all necessary data for the desired output
-        subquery = builder.build_subquery(
-            subquery=(
-                db.query(
-                    SpanAnnotationORM.id,
-                ).group_by(
-                    SpanAnnotationORM.id,
-                )
+        subquery = builder.init_subquery(
+            db.query(
+                SpanAnnotationORM.id,
+            ).group_by(
+                SpanAnnotationORM.id,
             )
-        )
-        builder.build_query(
-            query=(
-                db.query(
-                    SpanAnnotationORM.id,
-                    SpanTextORM.text,
-                    AnnotationDocumentORM.user_id,
-                )
-                .add_entity(CodeORM)
-                .add_entity(SourceDocumentORM)
-                .join(SpanAnnotationORM.annotation_document)
-                .join(SpanAnnotationORM.span_text)
-                .join(SpanAnnotationORM.code)
-                .join(AnnotationDocumentORM.source_document)
-                .join(subquery, SpanAnnotationORM.id == subquery.c.id)
-                .filter(SourceDocumentORM.project_id == project_id)
-                .filter(CodeORM.enabled == True)  # noqa: E712
+        ).build_subquery()
+        builder.init_query(
+            db.query(
+                SpanAnnotationORM.id,
+                SpanTextORM.text,
+                AnnotationDocumentORM.user_id,
             )
-        )
+            .add_entity(CodeORM)
+            .add_entity(SourceDocumentORM)
+            .join(subquery, SpanAnnotationORM.id == subquery.c.id)
+            .filter(SourceDocumentORM.project_id == project_id)
+            .filter(CodeORM.enabled == True)  # noqa: E712
+        )._join_query(
+            AnnotationDocumentORM,
+            AnnotationDocumentORM.id == SpanAnnotationORM.annotation_document_id,
+        )._join_query(
+            SourceDocumentORM,
+            SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+        )._join_query(
+            CodeORM,
+            CodeORM.id == SpanAnnotationORM.code_id,
+        )._join_query(
+            SpanTextORM,
+            SpanTextORM.id == SpanAnnotationORM.span_text_id,
+        ).build_query()
         result_rows, total_results = builder.execute_query(
             page_number=page,
             page_size=page_size,

@@ -170,34 +170,35 @@ def __sdoc_timeline_analysis(
         builder = SearchBuilder(db, filter, sorts=[])
 
         date_metadata = aliased(SourceDocumentMetadataORM)
-        subquery = builder.build_subquery(
-            subquery=(
+        subquery = (
+            builder.init_subquery(
                 db.query(
                     SourceDocumentORM.id,
                     date_metadata.date_value.label("date"),
-                )
-                .join(
-                    date_metadata,
-                    (SourceDocumentORM.id == date_metadata.source_document_id)
-                    & (date_metadata.project_metadata_id == project_metadata_id)
-                    & (date_metadata.date_value.isnot(None)),
                 )
                 .group_by(SourceDocumentORM.id, date_metadata.date_value)
                 .filter(
                     SourceDocumentORM.project_id == project_id,
                 )
             )
+            ._join_subquery(
+                date_metadata,
+                (SourceDocumentORM.id == date_metadata.source_document_id)
+                & (date_metadata.project_metadata_id == project_metadata_id)
+                & (date_metadata.date_value.isnot(None)),
+            )
+            .build_subquery()
         )
 
         sdoc_ids_agg = aggregate_ids(SourceDocumentORM.id, label="sdoc_ids")
-        builder.build_query(
-            query=db.query(
+        builder.init_query(
+            db.query(
                 sdoc_ids_agg,
                 *group_by.apply(subquery.c["date"]),  # type: ignore
             )
             .join(subquery, SourceDocumentORM.id == subquery.c.id)
             .group_by(*group_by.apply(column=subquery.c["date"]))  # type: ignore
-        )
+        ).build_query()
 
         result_rows, total_results = builder.execute_query(
             page_number=None,
@@ -267,39 +268,46 @@ def __sent_anno_timeline_analysis(
 
     with SQLService().db_session() as db:
         builder = SearchBuilder(db, filter, sorts=[])
-
         date_metadata = aliased(SourceDocumentMetadataORM)
-        subquery = builder.build_subquery(
-            subquery=(
+        subquery = (
+            builder.init_subquery(
                 db.query(
                     SentenceAnnotationORM.id,
                     date_metadata.date_value.label("date"),
-                )
-                .join(SentenceAnnotationORM.annotation_document)
-                .join(AnnotationDocumentORM.source_document)
-                .join(
-                    date_metadata,
-                    (SourceDocumentORM.id == date_metadata.source_document_id)
-                    & (date_metadata.project_metadata_id == project_metadata_id)
-                    & (date_metadata.date_value.isnot(None)),
                 )
                 .group_by(SentenceAnnotationORM.id, date_metadata.date_value)
                 .filter(
                     SourceDocumentORM.project_id == project_id,
                 )
             )
+            ._join_subquery(
+                AnnotationDocumentORM,
+                AnnotationDocumentORM.id
+                == SentenceAnnotationORM.annotation_document_id,
+            )
+            ._join_subquery(
+                SourceDocumentORM,
+                SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+            )
+            ._join_subquery(
+                date_metadata,
+                (SourceDocumentORM.id == date_metadata.source_document_id)
+                & (date_metadata.project_metadata_id == project_metadata_id)
+                & (date_metadata.date_value.isnot(None)),
+            )
+            .build_subquery()
         )
 
         sent_anno_ids = aggregate_ids(SentenceAnnotationORM.id, label="sent_anno_ids")
-        builder.build_query(
-            query=db.query(
+        builder.init_query(
+            db.query(
                 sent_anno_ids,
                 # Todo: Maybe add more here, same stuffa s in sent_anno_search?
                 *group_by.apply(subquery.c["date"]),  # type: ignore
             )
             .join(subquery, SentenceAnnotationORM.id == subquery.c.id)
             .group_by(*group_by.apply(column=subquery.c["date"]))  # type: ignore
-        )
+        ).build_query()
 
         result_rows, total_results = builder.execute_query(
             page_number=None,

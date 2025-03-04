@@ -50,33 +50,35 @@ def find_sentence_annotations(
     with SQLService().db_session() as db:
         builder = SearchBuilder(db, filter, sorts)
         # build the initial subquery that queries all necessary data for the desired output
-        subquery = builder.build_subquery(
-            subquery=(
-                db.query(
-                    SentenceAnnotationORM.id,
-                ).group_by(
-                    SentenceAnnotationORM.id,
-                )
+        subquery = builder.init_subquery(
+            db.query(
+                SentenceAnnotationORM.id,
+            ).group_by(
+                SentenceAnnotationORM.id,
             )
-        )
-        builder.build_query(
-            query=(
-                db.query(
-                    SentenceAnnotationORM.id,
-                    SentenceAnnotationORM.sentence_id_start,
-                    SentenceAnnotationORM.sentence_id_end,
-                    AnnotationDocumentORM.user_id,
-                )
-                .add_entity(CodeORM)
-                .add_entity(SourceDocumentORM)
-                .join(SentenceAnnotationORM.annotation_document)
-                .join(SentenceAnnotationORM.code)
-                .join(AnnotationDocumentORM.source_document)
-                .join(subquery, SentenceAnnotationORM.id == subquery.c.id)
-                .filter(SourceDocumentORM.project_id == project_id)
-                .filter(CodeORM.enabled == True)  # noqa: E712
+        ).build_subquery()
+        builder.init_query(
+            db.query(
+                SentenceAnnotationORM.id,
+                SentenceAnnotationORM.sentence_id_start,
+                SentenceAnnotationORM.sentence_id_end,
+                AnnotationDocumentORM.user_id,
             )
-        )
+            .add_entity(CodeORM)
+            .add_entity(SourceDocumentORM)
+            .join(subquery, SentenceAnnotationORM.id == subquery.c.id)
+            .filter(SourceDocumentORM.project_id == project_id)
+            .filter(CodeORM.enabled == True)  # noqa: E712
+        )._join_query(
+            AnnotationDocumentORM,
+            AnnotationDocumentORM.id == SentenceAnnotationORM.annotation_document_id,
+        )._join_query(
+            SourceDocumentORM,
+            SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+        )._join_query(
+            CodeORM,
+            CodeORM.id == SentenceAnnotationORM.code_id,
+        ).build_query()
         result_rows, total_results = builder.execute_query(
             page_number=page,
             page_size=page_size,

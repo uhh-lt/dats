@@ -28,7 +28,7 @@ class SpanColumns(str, AbstractColumns):
             case SpanColumns.DOCUMENT_TAG_ID_LIST:
                 return subquery_dict[SpanColumns.DOCUMENT_TAG_ID_LIST.value]
             case SpanColumns.CODE_ID:
-                return CodeORM.id
+                return SpanAnnotationORM.code_id
             case SpanColumns.SPAN_TEXT:
                 return SpanTextORM.text
             case SpanColumns.MEMO_CONTENT:
@@ -120,14 +120,32 @@ class SpanColumns(str, AbstractColumns):
 
     def add_query_filter_statements(self, query_builder: SearchBuilder):
         match self:
+            case SpanColumns.SOURCE_DOCUMENT_FILENAME:
+                query_builder._join_query(
+                    AnnotationDocumentORM,
+                    AnnotationDocumentORM.id
+                    == SpanAnnotationORM.annotation_document_id,
+                )._join_query(
+                    SourceDocumentORM,
+                    SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+                )
+            case SpanColumns.SPAN_TEXT:
+                query_builder._join_query(
+                    SpanTextORM,
+                    SpanTextORM.id == SpanAnnotationORM.span_text_id,
+                )
             case SpanColumns.MEMO_CONTENT:
-                # TODO, i need join_query for this, subquery is for aggregates, query for normal columns
-                assert query_builder.query is not None, "Query is not initialized"
-                query_builder.query = query_builder.query.join(
+                query_builder._join_query(
                     SpanAnnotationORM.object_handle, isouter=True
-                ).join(
+                )._join_query(
                     ObjectHandleORM.attached_memos.and_(
                         MemoORM.user_id == AnnotationDocumentORM.user_id
                     ),
                     isouter=True,
+                )
+            case SpanColumns.USER_ID:
+                query_builder._join_query(
+                    AnnotationDocumentORM,
+                    AnnotationDocumentORM.id
+                    == SpanAnnotationORM.annotation_document_id,
                 )
