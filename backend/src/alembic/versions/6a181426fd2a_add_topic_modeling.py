@@ -1,7 +1,7 @@
-"""vscode launcher
+"""add topic modeling
 
 Revision ID: 6a181426fd2a
-Revises: 462d6b81af38
+Revises: c970e0892bee
 Create Date: 2025-03-04 12:34:44.618806
 
 """
@@ -14,7 +14,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "6a181426fd2a"
-down_revision: Union[str, None] = "462d6b81af38"
+down_revision: Union[str, None] = "c970e0892bee"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
