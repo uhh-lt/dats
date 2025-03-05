@@ -9,7 +9,7 @@ from app.core.data.dto.background_job_base import BackgroundJobStatus
 
 class MLJobType(StrEnum):
     QUOTATION_ATTRIBUTION = "QUOTATION_ATTRIBUTION"
-    # TODO Bertopic Job
+    TOPIC_MODELING = "TOPIC_MODELING"
 
 
 class QuotationAttributionParams(BaseModel):
@@ -23,22 +23,22 @@ class QuotationAttributionParams(BaseModel):
     )
 
 
-# TODO neue class bertopuclmjobParams
+class TopicModelingParams(BaseModel):
+    ml_job_type: Literal[MLJobType.TOPIC_MODELING]
+    recompute: bool = Field(
+        default=False, description="Whether to recompute already processed documents"
+    )
 
 
 class MLJobParameters(BaseModel):
     ml_job_type: MLJobType = Field(description="The type of the MLJob")
     project_id: int = Field(description="The ID of the Project to analyse")
-    specific_ml_job_parameters: Union[QuotationAttributionParams, None] = Field(
+    specific_ml_job_parameters: Union[
+        QuotationAttributionParams, TopicModelingParams, None
+    ] = Field(
         description="Specific parameters for the MLJob w.r.t it's type",
         discriminator="ml_job_type",
     )
-
-
-# TODO 22 -> union von beiden jobparams
-
-
-# TODO 22 -> union von beiden jobparams
 
 
 class MLJobBase(BaseModel):
