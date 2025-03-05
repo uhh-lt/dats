@@ -236,7 +236,7 @@ class DATSAPI:
         )
         if preprocessing_job is None:
             logger.info("Upload skipped!")
-            return
+            return []
 
         total = len(preprocessing_job["payloads"])
 
