@@ -11,7 +11,7 @@ class MLJobType(StrEnum):
     QUOTATION_ATTRIBUTION = "QUOTATION_ATTRIBUTION"
     DOC_TAG_RECOMMENDATION = "DOC_TAG_RECOMMENDATION"
     COREFERENCE_RESOLUTION = "COREFERENCE_RESOLUTION"
-    # TODO Bertopic Job
+    TOPIC_MODELING = "TOPIC_MODELING"
 
 
 class QuotationAttributionParams(BaseModel):
@@ -36,7 +36,22 @@ class CoreferenceResolutionParams(BaseModel):
     )
 
 
-# TODO neue class bertopuclmjobParams
+class DocTagRecommendationParams(BaseModel):
+    ml_job_type: Literal[MLJobType.DOC_TAG_RECOMMENDATION]
+
+
+class CoreferenceResolutionParams(BaseModel):
+    ml_job_type: Literal[MLJobType.COREFERENCE_RESOLUTION]
+    recompute: bool = Field(
+        default=False, description="Whether to recompute already processed documents"
+    )
+
+
+class TopicModelingParams(BaseModel):
+    ml_job_type: Literal[MLJobType.TOPIC_MODELING]
+    recompute: bool = Field(
+        default=False, description="Whether to recompute already processed documents"
+    )
 
 
 class MLJobParameters(BaseModel):
@@ -46,17 +61,12 @@ class MLJobParameters(BaseModel):
         QuotationAttributionParams,
         DocTagRecommendationParams,
         CoreferenceResolutionParams,
+        TopicModelingParams,
         None,
     ] = Field(
         description="Specific parameters for the MLJob w.r.t it's type",
         discriminator="ml_job_type",
     )
-
-
-# TODO 22 -> union von beiden jobparams
-
-
-# TODO 22 -> union von beiden jobparams
 
 
 class MLJobBase(BaseModel):
