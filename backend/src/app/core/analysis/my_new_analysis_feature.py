@@ -1,8 +1,6 @@
 import json
 import os
-from typing import Mapping
 
-from bertopic import BERTopic
 from pydantic import BaseModel
 
 from app.core.data.llm.ollama_service import OllamaService
@@ -52,24 +50,27 @@ def get_prompt(index: int):
 
 
 def load_bertopic_model():
-    topic_model = BERTopic.load("app/core/analysis/bertopic_model")
-    topic_info = topic_model.get_topic_info()
+    pass
+    # topic_model = BERTopic.load("app/core/analysis/bertopic_model")
+    # topic_info = topic_model.get_topic_info()
 
-    for i in range(len(topic_info) - 1):
-        current_topic = topic_model.get_topic(i)
-        assert isinstance(current_topic, Mapping), "Current topic is not a Mapping"
-        topic_x_data = {}
-        for j in range(len(current_topic)):
-            word_data = {
-                "word": current_topic[f"{j}"][0],
-                "score": float(current_topic[f"{j}"][1]),
-            }
-            topic_x_data[f"{j}"] = word_data
-        top_words_data.append(topic_x_data)
 
-    for i in range(1, len(topic_info)):
-        topic_data = {"count": int(topic_info["Count"][i])}
-        topic_distr_data.append(topic_data)
+#
+# for i in range(len(topic_info) - 1):
+#    current_topic = topic_model.get_topic(i)
+#    assert isinstance(current_topic, Mapping), "Current topic is not a Mapping"
+#    topic_x_data = {}
+#    for j in range(len(current_topic)):
+#        word_data = {
+#            "word": current_topic[f"{j}"][0],
+#            "score": float(current_topic[f"{j}"][1]),
+#        }
+#        topic_x_data[f"{j}"] = word_data
+#    top_words_data.append(topic_x_data)
+#
+# for i in range(1, len(topic_info)):
+#    topic_data = {"count": int(topic_info["Count"][i])}
+#    topic_distr_data.append(topic_data)
 
 
 load_bertopic_model()
