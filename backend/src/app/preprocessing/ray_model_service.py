@@ -4,7 +4,6 @@ import requests
 from loguru import logger
 from requests import Response
 
-from app.preprocessing.ray_model_worker.dto.blip2 import Blip2FilePathInput, Blip2Output
 from app.preprocessing.ray_model_worker.dto.clip import (
     ClipEmbeddingOutput,
     ClipImageEmbeddingInput,
@@ -101,12 +100,6 @@ class RayModelService(metaclass=SingletonMeta):
     ) -> DETRObjectDetectionOutput:
         response = self._make_post_request("/detr/object_detection", input.model_dump())
         return DETRObjectDetectionOutput.model_validate(response.json())
-
-    def blip2_image_captioning(self, input: Blip2FilePathInput) -> Blip2Output:
-        response = self._make_post_request(
-            "/blip2/image_captioning", input.model_dump()
-        )
-        return Blip2Output.model_validate(response.json())
 
     def clip_text_embedding(self, input: ClipTextEmbeddingInput) -> ClipEmbeddingOutput:
         response = self._make_post_request("/clip/embedding/text", input.model_dump())
