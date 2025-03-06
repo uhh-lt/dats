@@ -69,8 +69,8 @@ def build_image_pipeline(
     from app.preprocessing.pipeline.steps.image.copy_keyword_to_ppid_metadata import (
         copy_keyword_to_ppid_metadata,
     )
-    from app.preprocessing.pipeline.steps.image.create_pptd_from_caption import (
-        create_pptd_from_caption,
+    from app.preprocessing.pipeline.steps.image.create_pptd_from_description import (
+        create_pptd_from_description,
     )
     from app.preprocessing.pipeline.steps.image.init.create_ppid import (
         create_ppid,
@@ -86,7 +86,7 @@ def build_image_pipeline(
     add_image_processing_steps(pipeline=pipeline)
 
     pipeline.register_step(
-        func=create_pptd_from_caption,
+        func=create_pptd_from_description,
         required_data=["ppid"],
     )
 

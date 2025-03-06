@@ -1,6 +1,6 @@
 from app.core.data.llm.ollama_service import OllamaService
 from app.core.data.llm.prompts.image_captioning_prompt import (
-    IMG_CAPTION_USER_PROMPT,
+    IMG_DESCRIPTION_USER_PROMPT,
 )
 from app.preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
@@ -12,14 +12,14 @@ from app.preprocessing.pipeline.steps.image.process.util import (
 ollama = OllamaService()
 
 
-def generate_image_caption(cargo: PipelineCargo) -> PipelineCargo:
+def generate_image_description(cargo: PipelineCargo) -> PipelineCargo:
     ppid: PreProImageDoc = cargo.data["ppid"]
-    if "caption" not in ppid.metadata:
+    if "description" not in ppid.metadata:
         image = load_image(ppid.filepath)
         image_b64 = image_to_base64(image)
         caption, _ = ollama.vlm_chat(
-            user_prompt=IMG_CAPTION_USER_PROMPT, b64_images=[image_b64]
+            user_prompt=IMG_DESCRIPTION_USER_PROMPT, b64_images=[image_b64]
         )
-        ppid.metadata["caption"] = caption
+        ppid.metadata["description"] = caption
 
     return cargo
