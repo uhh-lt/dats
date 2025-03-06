@@ -339,45 +339,64 @@ system_codes:
       # text codes from spacy NER models (spans)
       NAMED_ENTITY:
         desc: "A named entity"
+        enabled: True
         children:
           CARDINAL:
             desc: "Numerals that do not fall under another type"
+            enabled: False
           DATE:
             desc: "Absolute or relative dates or periods"
+            enabled: True
           EVENT:
             desc: "Named hurricanes, battles, wars, sports events, etc."
+            enabled: True
           FAC:
             desc: "Buildings, airports, highways, bridges, etc."
+            enabled: False
           GPE:
             desc: "Countries, cities, states"
+            enabled: True
           LANGUAGE:
             desc: "Any named language"
+            enabled: False
           LAW:
             desc: "Named documents made into laws."
+            enabled: False
           LOC:
             desc: "Non-GPE locations, mountain ranges, bodies of water"
           MONEY:
             desc: "Monetary values, including unit"
+            enabled: False
           NORP:
             desc: "Nationalities or religious or political groups"
+            enabled: False
           ORDINAL:
             desc: "'first', 'second', etc."
+            enabled: False
           ORG:
             desc: "Companies, agencies, institutions, etc."
+            enabled: True
           PERCENT:
             desc: "Percentage, including '%'"
+            enabled: False
           PERSON:
             desc: "People, including fictional"
+            enabled: True
           PRODUCT:
             desc: "Objects, vehicles, foods, etc. (not services)"
+            enabled: False
           QUANTITY:
             desc: "Measurements, as of weight or distance"
+            enabled: False
           TIME:
             desc: "Times smaller than a day"
+            enabled: False
           WORK_OF_ART:
             desc: "Titles of books, songs, etc."
+            enabled: True
           MISC:
             desc: "Miscellaneous entities, e.g. events, nationalities, products or works of art"
+            enabled: False
       # image codes from COCO 2017 (bbox)
       ACCESSORY:
         desc: Super Object Category from COCO 2017

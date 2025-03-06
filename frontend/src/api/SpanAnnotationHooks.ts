@@ -7,7 +7,6 @@ import { SpanAnnotationRead } from "./openapi/models/SpanAnnotationRead.ts";
 import { SpanAnnotationUpdate } from "./openapi/models/SpanAnnotationUpdate.ts";
 import { SourceDocumentService } from "./openapi/services/SourceDocumentService.ts";
 import { SpanAnnotationService } from "./openapi/services/SpanAnnotationService.ts";
-import { useSelectEnabledSpanAnnotations } from "./utils.ts";
 
 export const FAKE_ANNOTATION_ID = -1;
 
@@ -33,8 +32,6 @@ const useGetByCodeAndUser = (codeId: number | null | undefined) =>
   });
 
 const useGetSpanAnnotationsBatch = (sdocId: number | null | undefined, userId: number | null | undefined) => {
-  // filter out all disabled code ids
-  const selectEnabledAnnotations = useSelectEnabledSpanAnnotations();
   return useQuery<SpanAnnotationRead[], Error>({
     queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, sdocId, userId],
     queryFn: () =>
@@ -43,7 +40,6 @@ const useGetSpanAnnotationsBatch = (sdocId: number | null | undefined, userId: n
         userId: userId!,
       }) as Promise<SpanAnnotationRead[]>,
     enabled: !!sdocId && !!userId,
-    select: selectEnabledAnnotations,
   });
 };
 

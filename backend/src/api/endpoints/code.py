@@ -61,8 +61,7 @@ def update_by_id(
     authz_user: AuthzUser = Depends(),
 ) -> CodeRead:
     authz_user.assert_in_same_project_as(Crud.CODE, code_id)
-
-    db_obj = crud_code.update(db=db, id=code_id, update_dto=code)
+    db_obj = crud_code.update_with_children(db=db, code_id=code_id, update_dto=code)
     return CodeRead.model_validate(db_obj)
 
 

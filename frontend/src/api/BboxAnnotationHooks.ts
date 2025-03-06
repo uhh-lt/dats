@@ -8,7 +8,6 @@ import { BBoxAnnotationRead } from "./openapi/models/BBoxAnnotationRead.ts";
 import { BBoxAnnotationUpdate } from "./openapi/models/BBoxAnnotationUpdate.ts";
 import { BboxAnnotationService } from "./openapi/services/BboxAnnotationService.ts";
 import { SourceDocumentService } from "./openapi/services/SourceDocumentService.ts";
-import { useSelectEnabledBboxAnnotations } from "./utils.ts";
 
 export const FAKE_BBOX_ID = -1;
 
@@ -34,8 +33,6 @@ const useGetByCodeAndUser = (codeId: number | undefined) =>
   });
 
 const useGetBBoxAnnotationsBatch = (sdocId: number | null | undefined, userId: number | null | undefined) => {
-  // filter out all disabled code ids
-  const selectEnabledAnnotations = useSelectEnabledBboxAnnotations();
   return useQuery<BBoxAnnotationRead[], Error>({
     queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS, sdocId, userId],
     queryFn: () =>
@@ -44,7 +41,6 @@ const useGetBBoxAnnotationsBatch = (sdocId: number | null | undefined, userId: n
         userId: userId!,
       }) as Promise<BBoxAnnotationRead[]>,
     enabled: !!sdocId && !!userId,
-    select: selectEnabledAnnotations,
   });
 };
 

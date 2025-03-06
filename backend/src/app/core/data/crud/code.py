@@ -37,6 +37,7 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
                     project_id=proj_id,
                     parent_id=parent_code_id,
                     is_system=True,
+                    enabled=code_dict[code_name].get("enabled", True),
                 )
 
                 existing_code_id = self.get_by_name_and_project(
@@ -99,6 +100,37 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         db.commit()
 
         return ids
+
+    def get_with_children(self, db: Session, *, code_id) -> List[CodeORM]:
+        topq = (
+            db.query(self.model.id)
+            .filter(self.model.id == code_id)
+            .cte("cte", recursive=True)
+        )
+        bottomq = db.query(self.model.id).join(topq, self.model.parent_id == topq.c.id)
+        recursive_q = topq.union(bottomq)  # type: ignore
+        return (
+            db.query(self.model)
+            .filter(self.model.id.in_(db.query(recursive_q.c.id)))
+            .all()
+        )
+
+    def update_with_children(
+        self, db: Session, *, code_id, update_dto: CodeUpdate
+    ) -> CodeORM:
+        if update_dto.enabled is None:
+            return self.update(db, id=code_id, update_dto=update_dto)
+        codes = self.get_with_children(db, code_id=code_id)
+        obj_data = jsonable_encoder(codes[0].as_dict())
+        update_data = update_dto.model_dump(exclude_unset=True)
+        for field in obj_data:
+            if field in update_data:
+                setattr(codes[0], field, update_data[field])
+        for code in codes:
+            code.enabled = update_dto.enabled
+        db.add_all(codes)
+        db.commit()
+        return codes[0]
 
 
 crud_code = CRUDCode(CodeORM)

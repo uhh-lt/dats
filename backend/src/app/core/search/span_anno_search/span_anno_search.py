@@ -2,10 +2,7 @@ from typing import List, Optional
 
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.doc_type import DocType
-from app.core.data.dto.analysis import (
-    SpanAnnotationRow,
-    SpanAnnotationSearchResult,
-)
+from app.core.data.dto.analysis import SpanAnnotationRow, SpanAnnotationSearchResult
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.dto.source_document import SourceDocumentRead
@@ -15,15 +12,11 @@ from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.db.sql_service import SQLService
-from app.core.search.column_info import (
-    ColumnInfo,
-)
+from app.core.search.column_info import ColumnInfo
 from app.core.search.filtering import Filter
 from app.core.search.search_builder import SearchBuilder
 from app.core.search.sorting import Sort
-from app.core.search.span_anno_search.span_anno_search_columns import (
-    SpanColumns,
-)
+from app.core.search.span_anno_search.span_anno_search_columns import SpanColumns
 
 
 def find_span_annotations_info(
@@ -79,6 +72,7 @@ def find_span_annotations(
                 .join(AnnotationDocumentORM.source_document)
                 .join(subquery, SpanAnnotationORM.id == subquery.c.id)
                 .filter(SourceDocumentORM.project_id == project_id)
+                .filter(CodeORM.enabled == True)  # noqa: E712
             )
         )
         result_rows, total_results = builder.execute_query(

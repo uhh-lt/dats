@@ -294,13 +294,12 @@ def get_all_bbox_annotations_bulk(
     db: Session = Depends(get_db_session),
     sdoc_id: int,
     user_id: int,
-    skip_limit: Dict[str, int] = Depends(skip_limit_params),
     authz_user: AuthzUser = Depends(),
 ) -> List[BBoxAnnotationRead]:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
     bboxes = crud_bbox_anno.read_by_user_and_sdoc(
-        db=db, user_id=user_id, sdoc_id=sdoc_id, **skip_limit
+        db=db, user_id=user_id, sdoc_id=sdoc_id
     )
     return [BBoxAnnotationRead.model_validate(bbox) for bbox in bboxes]
 

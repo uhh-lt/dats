@@ -42,11 +42,7 @@ const useGetCode = (codeId: number | null | undefined) =>
   });
 
 const useSelectEnabledCodes = () => {
-  const disabledCodeIds = useAppSelector((state: RootState) => state.annotations.disabledCodeIds);
-  return useCallback(
-    (data: CodeMap) => Object.values(data).filter((code) => disabledCodeIds.indexOf(code.id) === -1),
-    [disabledCodeIds],
-  );
+  return useCallback((data: CodeMap) => Object.values(data).filter((code) => code.enabled), []);
 };
 
 const useGetAllCodesList = () => useProjectCodesQuery({ select: (data) => Object.values(data) });
@@ -72,10 +68,14 @@ const useCreateCode = () =>
 const useUpdateCode = () =>
   useMutation({
     mutationFn: CodeService.updateById,
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       queryClient.setQueryData<CodeMap>([QueryKey.PROJECT_CODES, data.project_id], (oldData) =>
         oldData ? { ...oldData, [data.id]: data } : { [data.id]: data },
       );
+      // if the user changed the enabled status, refetch all codes
+      if (!(variables.requestBody.enabled === undefined || variables.requestBody.enabled === null)) {
+        queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CODES, data.project_id] });
+      }
     },
   });
 

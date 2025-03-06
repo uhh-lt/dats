@@ -1,7 +1,4 @@
-from typing import (
-    Dict,
-    Optional,
-)
+from typing import Dict, Optional
 
 import pandas as pd
 from loguru import logger
@@ -76,6 +73,7 @@ def create_code_if_not_exists(
             parent_id=parent_code_id,
             project_id=proj_id,
             is_system=False,
+            enabled=True,
             **({"color": color} if color is not None else {}),
         )
         code = crud_code.create(db=db, create_dto=create_code)

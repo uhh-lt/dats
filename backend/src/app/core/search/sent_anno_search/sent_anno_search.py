@@ -14,9 +14,7 @@ from app.core.data.orm.code import CodeORM
 from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.db.sql_service import SQLService
-from app.core.search.column_info import (
-    ColumnInfo,
-)
+from app.core.search.column_info import ColumnInfo
 from app.core.search.filtering import Filter
 from app.core.search.search_builder import SearchBuilder
 from app.core.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
@@ -76,6 +74,7 @@ def find_sentence_annotations(
                 .join(AnnotationDocumentORM.source_document)
                 .join(subquery, SentenceAnnotationORM.id == subquery.c.id)
                 .filter(SourceDocumentORM.project_id == project_id)
+                .filter(CodeORM.enabled == True)  # noqa: E712
             )
         )
         result_rows, total_results = builder.execute_query(
