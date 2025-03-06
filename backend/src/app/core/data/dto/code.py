@@ -14,6 +14,10 @@ class CodeBaseDTO(BaseModel):
     color: str = Field(description="Color of the Code")
     description: str = Field(description="Description of the Code")
     parent_id: Optional[int] = Field(description="Parent of the Code", default=None)
+    enabled: bool = Field(
+        default=True,
+        description="While false, the code is neither created in pre-processing nor shown in the UI (except in settings to enable it again)",
+    )
 
 
 # Properties for creation
@@ -31,6 +35,10 @@ class CodeUpdate(BaseModel, UpdateDTOBase):
         description="Description of the Code", default=None
     )
     parent_id: Optional[int] = Field(description="Parent of the Code", default=None)
+    enabled: Optional[bool] = Field(
+        default=None,
+        description="While false, the code is neither created in pre-processing nor shown in the UI (except in settings to enable it again)",
+    )
 
 
 # Properties for reading (as in ORM)

@@ -1547,6 +1547,92 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
+    "/doctagrecommendationjob": {
+      "put": {
+        "tags": ["documentTagRecommendationJob"],
+        "summary": "Creates a new Document Tag Recommendation Task and returns it.",
+        "operationId": "create_new_doc_tag_rec_task",
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/DocumentTagRecommendationJobCreate" } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/DocumentTagRecommendationJobRead" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/doctagrecommendationjob/{task_id}": {
+      "get": {
+        "tags": ["documentTagRecommendationJob"],
+        "summary": "Retrieve all document tag recommendations for the given task ID.",
+        "description": "Retrieves document tag recommendations based on the specified task ID.\n\n### Response Format:\nThe endpoint returns a list of recommendations, where each recommendation\nis represented as a DocumentTagRecommendationSummary DTO with the following structure:\n\n```python\n{\n    \"recommendation_id\": int,  # Unique identifier for the recommendation\n    \"source_document\": str,    # Name of the source document\n    \"predicted_tag_id\": int,   # ID of the predicted tag\n    \"predicted_tag\": str,      # Name of the predicted tag\n    \"prediction_score\": float  # Confidence score of the prediction\n}\n```\n\n### Error Handling:\n- Returns HTTP 404 if no recommendations are found for the given task ID.",
+        "operationId": "get_recommendations_from_task_endpoint",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "task_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Task Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/DocumentTagRecommendationSummary" },
+                  "title": "Response Documenttagrecommendationjob-Get Recommendations From Task Endpoint"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/doctagrecommendationjob/update_recommendations": {
+      "patch": {
+        "tags": ["documentTagRecommendationJob"],
+        "summary": "The endpoint receives IDs of wrongly and correctly tagged document recommendations and sets `is_accepted` to `true` or `false`, while setting the corresponding document tags if `true`.",
+        "operationId": "update_recommendations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Body_documentTagRecommendationJob-update_recommendations" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "integer", "title": "Response Documenttagrecommendationjob-Update Recommendations" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/span": {
       "put": {
         "tags": ["spanAnnotation"],
@@ -5691,6 +5777,23 @@
         "required": ["sdoc_ids", "unlink_tag_ids", "link_tag_ids"],
         "title": "Body_documentTag-update_document_tags_batch"
       },
+      "Body_documentTagRecommendationJob-update_recommendations": {
+        "properties": {
+          "accepted_recommendation_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Accepted Recommendation Ids"
+          },
+          "declined_recommendation_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Declined Recommendation Ids"
+          }
+        },
+        "type": "object",
+        "required": ["accepted_recommendation_ids", "declined_recommendation_ids"],
+        "title": "Body_documentTagRecommendationJob-update_recommendations"
+      },
       "Body_import-start_import_codes_job": {
         "properties": {
           "uploaded_file": {
@@ -6089,6 +6192,12 @@
             "title": "Parent Id",
             "description": "Parent of the Code"
           },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "While false, the code is neither created in pre-processing nor shown in the UI (except in settings to enable it again)",
+            "default": true
+          },
           "project_id": { "type": "integer", "title": "Project Id", "description": "Project the Code belongs to" },
           "is_system": { "type": "boolean", "title": "Is System", "description": "Is the Code a system code" }
         },
@@ -6137,6 +6246,12 @@
             "title": "Parent Id",
             "description": "Parent of the Code"
           },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "While false, the code is neither created in pre-processing nor shown in the UI (except in settings to enable it again)",
+            "default": true
+          },
           "id": { "type": "integer", "title": "Id", "description": "ID of the Code" },
           "project_id": { "type": "integer", "title": "Project Id", "description": "Project the Code belongs to" },
           "created": {
@@ -6178,6 +6293,11 @@
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
             "title": "Parent Id",
             "description": "Parent of the Code"
+          },
+          "enabled": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "title": "Enabled",
+            "description": "While false, the code is neither created in pre-processing nor shown in the UI (except in settings to enable it again)"
           }
         },
         "type": "object",
@@ -6434,6 +6554,70 @@
         "type": "object",
         "required": ["name", "color", "id", "project_id", "created", "updated"],
         "title": "DocumentTagRead"
+      },
+      "DocumentTagRecommendationJobCreate": {
+        "properties": {
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "ID of the project this recommendation belongs to"
+          }
+        },
+        "type": "object",
+        "required": ["project_id"],
+        "title": "DocumentTagRecommendationJobCreate"
+      },
+      "DocumentTagRecommendationJobRead": {
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "title": "User Id",
+            "description": "ID of the user who created the recommendation"
+          },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "ID of the project this recommendation belongs to"
+          },
+          "task_id": { "type": "integer", "title": "Task Id", "description": "ID of the recommendation task" },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Creation timestamp of the recommendation task."
+          }
+        },
+        "type": "object",
+        "required": ["user_id", "project_id", "task_id", "created"],
+        "title": "DocumentTagRecommendationJobRead"
+      },
+      "DocumentTagRecommendationSummary": {
+        "properties": {
+          "recommendation_id": {
+            "type": "integer",
+            "title": "Recommendation Id",
+            "description": "Unique identifier for the recommendation"
+          },
+          "source_document": {
+            "type": "string",
+            "title": "Source Document",
+            "description": "Filename of the source document"
+          },
+          "predicted_tag_id": {
+            "type": "integer",
+            "title": "Predicted Tag Id",
+            "description": "ID of the predicted tag"
+          },
+          "predicted_tag": { "type": "string", "title": "Predicted Tag", "description": "Name of the predicted tag" },
+          "prediction_score": {
+            "type": "number",
+            "title": "Prediction Score",
+            "description": "Confidence score of the predicition"
+          }
+        },
+        "type": "object",
+        "required": ["recommendation_id", "source_document", "predicted_tag_id", "predicted_tag", "prediction_score"],
+        "title": "DocumentTagRecommendationSummary"
       },
       "DocumentTagUpdate": {
         "properties": {
@@ -7388,7 +7572,7 @@
               { "type": "null" }
             ],
             "title": "Specific Ml Job Parameters",
-            "description": "Specific parameters for the LLMJob w.r.t it's type"
+            "description": "Specific parameters for the MLJob w.r.t it's type"
           }
         },
         "type": "object",
@@ -7399,7 +7583,7 @@
         "properties": {
           "status": {
             "$ref": "#/components/schemas/BackgroundJobStatus",
-            "description": "Status of the LLMJob",
+            "description": "Status of the MLJob",
             "default": "Waiting"
           },
           "error": {
@@ -7412,13 +7596,13 @@
             "type": "string",
             "format": "date-time",
             "title": "Created",
-            "description": "Created timestamp of the LLMJob"
+            "description": "Created timestamp of the MLJob"
           },
           "updated": {
             "type": "string",
             "format": "date-time",
             "title": "Updated",
-            "description": "Updated timestamp of the LLMJob"
+            "description": "Updated timestamp of the MLJob"
           },
           "parameters": { "$ref": "#/components/schemas/MLJobParameters" }
         },

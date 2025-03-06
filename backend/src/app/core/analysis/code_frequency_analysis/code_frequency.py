@@ -4,10 +4,7 @@ from sqlalchemy import and_, func
 
 from app.core.data.crud.project import crud_project
 from app.core.data.doc_type import DocType
-from app.core.data.dto.analysis import (
-    CodeFrequency,
-    CodeOccurrence,
-)
+from app.core.data.dto.analysis import CodeFrequency, CodeOccurrence
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.source_document_data import SourceDocumentDataRead
@@ -31,7 +28,7 @@ def find_code_frequencies(
     with SQLService().db_session() as db:
         # 1. find all codes of interest (that is the given code_ids and all their childrens code_ids)
         proj_db_obj = crud_project.read(db=db, id=project_id)
-        all_codes = proj_db_obj.codes
+        all_codes = [code for code in proj_db_obj.codes if code.enabled]
 
         parent_code_id2child_code_ids = {}
         for code in all_codes:
