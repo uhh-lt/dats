@@ -43,7 +43,13 @@ const annotatorComponent = (
   },
   [DocType.IMAGE]: {
     [AnnotationMode.Annotation]: <ImageAnnotator sdocData={sdocData} />,
-    [AnnotationMode.SentenceAnnotation]: <ImageAnnotator sdocData={sdocData} />,
+    [AnnotationMode.SentenceAnnotation]: (
+      <SentenceAnnotator
+        sdocData={sdocData}
+        style={{ marginLeft: "-16px", marginBottom: "-24px", marginRight: "-16px" }}
+        virtualizerScrollElementRef={boxRef}
+      />
+    ),
     [AnnotationMode.Reader]: <ImageViewer sdocData={sdocData} />,
   },
   [DocType.AUDIO]: {
