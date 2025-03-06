@@ -131,8 +131,8 @@ ollama:
   host: ${oc.env:OLLAMA_HOST, 127.0.0.1}
   port: ${oc.env:OLLAMA_PORT, 13133}
   model:
-    llm: ${oc.env:OLLAMA_LLM_MODEL, gemma2:9b-instruct-fp16}
-    vlm: ${oc.env:OLLAMA_VLM_MODEL, llama3.2-vision:11b-instruct-q4_K_M}
+    llm: ${oc.env:OLLAMA_LLM_MODEL, gemma2:latest}
+    vlm: ${oc.env:OLLAMA_VLM_MODEL, granite3.2-vision:2b-fp16}
   context_size:
     llm: 8192
 

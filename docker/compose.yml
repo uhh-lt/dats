@@ -212,7 +212,8 @@ services:
       RAY_PROTOCOL: ${RAY_PROTOCOL:-http}
       OLLAMA_HOST: ${OLLAMA_HOST:-ollama}
       OLLAMA_PORT: ${OLLAMA_PORT:-11434}
-      OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma2:9b-instruct-fp16}
+      OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-gemma2:latest}
+      OLLAMA_VLM_MODEL: ${OLLAMA_VLM_MODEL:-granite3.2-vision:2b-fp16}
       HUGGINGFACE_HUB_CACHE: /models_cache
       TRANSFORMERS_CACHE: /models_cache
       TORCH_HOME: /models_cache
@@ -278,8 +279,8 @@ services:
       RAY_PROTOCOL: ${RAY_PROTOCOL:-http}
       OLLAMA_HOST: ${OLLAMA_HOST:-ollama}
       OLLAMA_PORT: ${OLLAMA_PORT:-11434}
-      OLLAMA_LLM_MODEL: ${OLLAMA_MODEL:-gemma2:9b-instruct-fp16}
-      OLLAMA_VLM_MODEL: ${OLLAMA_MODEL:-llama3.2-vision:11b-instruct-q4_K_M}
+      OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-gemma2:latest}
+      OLLAMA_VLM_MODEL: ${OLLAMA_VLM_MODEL:-granite3.2-vision:2b-fp16}
     volumes:
       - ../backend/src:/dats_code/src
       - ./backend_repo:/tmp/dats
