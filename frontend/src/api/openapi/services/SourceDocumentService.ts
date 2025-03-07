@@ -309,19 +309,9 @@ export class SourceDocumentService {
   public static getAllBboxAnnotationsBulk({
     sdocId,
     userId,
-    skip,
-    limit,
   }: {
     sdocId: number;
     userId: number;
-    /**
-     * The number of elements to skip (offset)
-     */
-    skip?: number | null;
-    /**
-     * The maximum number of returned elements
-     */
-    limit?: number | null;
   }): CancelablePromise<Array<BBoxAnnotationRead>> {
     return __request(OpenAPI, {
       method: "GET",
@@ -329,10 +319,6 @@ export class SourceDocumentService {
       path: {
         sdoc_id: sdocId,
         user_id: userId,
-      },
-      query: {
-        skip: skip,
-        limit: limit,
       },
       errors: {
         422: `Validation Error`,
