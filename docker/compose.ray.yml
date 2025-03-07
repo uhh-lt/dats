@@ -1,0 +1,48 @@
+# docker compose -f compose.ray.yml up -d
+
+services:
+  ray:
+    image: uhhlt/dats_ray:${DATS_RAY_DOCKER_VERSION:-debian_dev_latest}
+    ports:
+      - ${RAY_API_EXPOSED:-13130}:8000
+      - ${RAY_DASHBOARD_EXPOSED:-13131}:8265
+    build:
+      context: ../backend/src/app/preprocessing/ray_model_worker
+      dockerfile: Dockerfile
+    healthcheck:
+      test: [ "CMD-SHELL", "python /dats_code_ray/check_ray_health.py" ]
+      start_period: 60s
+      interval: 60s
+      timeout: 60s
+      retries: 20
+    command: /dats_code_ray/ray_model_worker_entrypoint.sh
+    user: ${UID:-1000}:${GID:-1000}
+    environment:
+      DATS_BACKEND_CONFIG: /dats_code/src/configs/production.yaml
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      RAY_CONFIG: ${RAY_CONFIG:-config_gpu.yaml}
+      HUGGINGFACE_HUB_CACHE: /models_cache
+      TRANSFORMERS_CACHE: /models_cache
+      TORCH_HOME: /models_cache
+      NUMBA_CACHE_DIR: /numba_cache
+    volumes:
+      - ../backend/src/app/preprocessing/ray_model_worker:/dats_code_ray
+      - "${SPACY_CACHE_DIR:-./spacy_models}:/spacy_models"
+      - ./backend_repo:/tmp/dats
+      - "${MODELS_CACHE_DIR:-./models_cache}:/models_cache"
+      - ./numba_cache:/numba_cache
+      - ./ray_repo:/tmp/dats/ray
+    shm_size: 12gb
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: [ "1" ]
+              capabilities: [ gpu ]
+    networks:
+      - ray_network-flo-dev
+
+networks:
+  ray_network-flo-dev:
+    name: ray_network-flo-dev

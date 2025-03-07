@@ -32,12 +32,3 @@ services:
       - ES_JAVA_OPTS=-Xms8g -Xmx8g
     volumes:
       - "./elasticsearch_data:/usr/share/elasticsearch/data"
-
-  ray:
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              device_ids: [ "0" ] # use first gpu for production
-              capabilities: [ gpu ]

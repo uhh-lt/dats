@@ -128,45 +128,6 @@ services:
     networks:
       - dats_network
 
-  ray:
-    image: uhhlt/dats_ray:${DATS_RAY_DOCKER_VERSION:-debian_dev_latest}
-    build:
-      context: ../backend/src/app/preprocessing/ray_model_worker
-      dockerfile: Dockerfile
-    healthcheck:
-      test: [ "CMD-SHELL", "python /dats_code_ray/check_ray_health.py" ]
-      start_period: 60s
-      interval: 60s
-      timeout: 60s
-      retries: 20
-    command: /dats_code_ray/ray_model_worker_entrypoint.sh
-    user: ${UID:-1000}:${GID:-1000}
-    environment:
-      DATS_BACKEND_CONFIG: /dats_code/src/configs/production.yaml
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-      RAY_CONFIG: ${RAY_CONFIG:-config_gpu.yaml}
-      HUGGINGFACE_HUB_CACHE: /models_cache
-      TRANSFORMERS_CACHE: /models_cache
-      TORCH_HOME: /models_cache
-      NUMBA_CACHE_DIR: /numba_cache
-    volumes:
-      - "${SPACY_CACHE_DIR:-./spacy_models}:/spacy_models"
-      - ./backend_repo:/tmp/dats
-      - "${MODELS_CACHE_DIR:-./models_cache}:/models_cache"
-      - ./numba_cache:/numba_cache
-    shm_size: 12gb
-    networks:
-      - dats_network
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              device_ids: [ "1" ]
-              capabilities: [ gpu ]
-    profiles:
-      - ray
-
   celery-background-jobs-worker:
     image: uhhlt/dats_backend:${DATS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
     build:
@@ -220,12 +181,10 @@ services:
       elasticsearch:
         condition: service_healthy
         restart: true
-      ray:
-        condition: service_healthy
-        restart: true
     networks:
       - dats_network
       - ollama_network
+      - ray_network
     profiles:
       - background
 
@@ -280,9 +239,6 @@ services:
       elasticsearch:
         condition: service_healthy
         restart: true
-      ray:
-        condition: service_healthy
-        restart: true
       celery-background-jobs-worker:
         condition: service_healthy
         restart: true
@@ -291,6 +247,7 @@ services:
     networks:
       - dats_network
       - ollama_network
+      - ray_network
     profiles:
       - backend
 
@@ -321,5 +278,10 @@ services:
 networks:
   dats_network:
   ollama_network:
+    # name: ollama_network
     name: ollama_network
+    external: true
+  ray_network:
+    # name: ray_network
+    name: ray_network
     external: true
