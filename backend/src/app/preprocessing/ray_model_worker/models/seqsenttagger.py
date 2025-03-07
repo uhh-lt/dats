@@ -213,8 +213,7 @@ cc = conf.seqsenttagger
 
 DEVICE = cc.device
 BATCH_SIZE = cc.batch_size
-
-SHARED_REPO_ROOT: Path = Path(conf.repo_root)
+ROOT_DIR: Path = Path(cc.root_dir)
 
 logger = logging.getLogger("ray.serve")
 
@@ -356,10 +355,10 @@ class SeqSentTaggerModel:
         return pred_tags
 
     def __get_temp_files_root_path(self) -> Path:
-        return SHARED_REPO_ROOT.joinpath("temporary_files")
+        return ROOT_DIR.joinpath("temporary_files")
 
     def __get_project_repo_root_path(self, proj_id: int) -> Path:
-        return SHARED_REPO_ROOT.joinpath(f"projects/{proj_id}/")
+        return ROOT_DIR.joinpath(f"projects/{proj_id}/")
 
     def __get_models_root_path(self, proj_id: int) -> Path:
         return self.__get_project_repo_root_path(proj_id=proj_id).joinpath("models")
