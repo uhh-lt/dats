@@ -2,6 +2,8 @@ services:
   postgres:
     volumes:
       - "./pg_data:/var/lib/postgresql/data"
+    shm_size: 2gb
+    command: -c full_page_writes=off -c wal_init_zero=off -c wal_recycle=off
 
   rabbitmq:
     volumes:
