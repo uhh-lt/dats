@@ -6,6 +6,9 @@ from PIL import Image
 
 
 def load_image(img_path: Path | str) -> Image.Image:
+    img_path = Path(img_path)
+    if not img_path.exists():
+        raise FileNotFoundError(f"Image file not found at {img_path}")
     return Image.open(img_path).convert("RGB")
 
 

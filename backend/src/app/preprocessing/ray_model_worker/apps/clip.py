@@ -23,12 +23,12 @@ class ClipApi:
 
     @api.post("/embedding/text", response_model=ClipEmbeddingOutput)
     async def text_embedding(self, input: ClipTextEmbeddingInput):
-        predict_result = await self.clip.text_embedding.remote(input)
+        predict_result = await self.clip.text_embedding.remote(input)  # type: ignore
         return predict_result
 
     @api.post("/embedding/image", response_model=ClipEmbeddingOutput)
     async def image_embedding(self, input: ClipImageEmbeddingInput):
-        predict_result = await self.clip.image_embedding.remote(input)
+        predict_result = await self.clip.image_embedding.remote(input)  # type: ignore
         return predict_result
 
 
