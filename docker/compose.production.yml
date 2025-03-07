@@ -1,9 +1,35 @@
 services:
+  postgres:
+    volumes:
+      - "./pg_data:/var/lib/postgresql/data"
+
+  rabbitmq:
+    volumes:
+      - "./rabbitmq_data:/var/lib/rabbitmq/data"
+
+  redis:
+    volumes:
+      - "./redis_data:/var/lib/redis/data"
+
+  typesense:
+    volumes:
+      - "./typesense_data:/data"
+
+  qdrant:
+    volumes:
+      - "./qdrant_data:/qdrant/storage"
+
+  weaviate:
+    volumes:
+      - "./weaviate_data:/var/lib/weaviate"
+
   elasticsearch:
     environment:
       - xpack.security.enabled=false # no auth
       - discovery.type=single-node # single node cluster
       - ES_JAVA_OPTS=-Xms8g -Xmx8g
+    volumes:
+      - "./elasticsearch_data:/usr/share/elasticsearch/data"
 
   ray:
     deploy:

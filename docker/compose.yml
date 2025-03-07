@@ -9,10 +9,8 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-datsuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dats123}
-    volumes:
-      - "postgres_data_demo:/var/lib/postgresql/data"
     networks:
-      - dats_demo_network
+      - dats_network
 
   rabbitmq:
     image: "rabbitmq:3-management-alpine"
@@ -24,10 +22,8 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-datsuser}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-dats123}
-    volumes:
-      - "rabbitmq_data_demo:/var/lib/rabbitmq/data"
     networks:
-      - dats_demo_network
+      - dats_network
 
   redis:
     image: "redis:7-alpine"
@@ -38,24 +34,18 @@ services:
       retries: 5
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-dats123}
-    volumes:
-      - "redis_data_demo:/var/lib/redis/data"
     command: redis-server --requirepass "${REDIS_PASSWORD:-dats123}" --save 60 1
     networks:
-      - dats_demo_network
+      - dats_network
 
   typesense:
     image: typesense/typesense:27.1
     restart: on-failure
-    ports:
-      - "${TYPESENSE_EXPOSED:-8108}:8108"
-    volumes:
-      - typesense_data_demo:/data
     environment:
       - TYPESENSE_API_KEY=${TYPESENSE_API_KEY:-dats123}
       - TYPESENSE_DATA_DIR=/data
     networks:
-      - dats_demo_network
+      - dats_network
     healthcheck:
       test: [ "CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/8108' || exit 1" ]
       interval: 30s
@@ -66,13 +56,8 @@ services:
 
   qdrant:
     image: qdrant/qdrant:v1.9.2
-    ports:
-      - "${QDRANT_EXPOSED:-6333}:6333"
-      - "${QDRANT_GRPC_EXPOSED:-6334}:6334"
-    volumes:
-      - qdrant_data_demo:/qdrant/storage
     networks:
-      - dats_demo_network
+      - dats_network
     healthcheck:
       test: [ "CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/6333' || exit 1" ]
       interval: 30s
@@ -96,7 +81,6 @@ services:
       timeout: 10s
       retries: 5
     volumes:
-      - "weaviate_data_demo:/var/lib/weaviate"
       - "../backups/weaviate:/mount/backups"
     restart: on-failure:0
     environment:
@@ -109,7 +93,7 @@ services:
       ENABLE_MODULES: "backup-filesystem"
       BACKUP_FILESYSTEM_PATH: "/mount/backups"
     networks:
-      - dats_demo_network
+      - dats_network
     profiles:
       - weaviate
 
@@ -139,11 +123,10 @@ services:
         soft: 65536
         hard: 65536
     volumes:
-      - elasticsearch_data_demo:/usr/share/elasticsearch/data
       - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
       - ../backups/elasticsearch:/mount/backups
     networks:
-      - dats_demo_network
+      - dats_network
 
   ray:
     image: uhhlt/dats_ray:${DATS_RAY_DOCKER_VERSION:-debian_dev_latest}
@@ -167,14 +150,13 @@ services:
       TORCH_HOME: /models_cache
       NUMBA_CACHE_DIR: /numba_cache
     volumes:
-      - ../backend/src/app/preprocessing/ray_model_worker:/dats_code_ray
       - "${SPACY_CACHE_DIR:-./spacy_models}:/spacy_models"
       - ./backend_repo:/tmp/dats
       - "${MODELS_CACHE_DIR:-./models_cache}:/models_cache"
       - ./numba_cache:/numba_cache
     shm_size: 12gb
     networks:
-      - dats_demo_network
+      - dats_network
     deploy:
       resources:
         reservations:
@@ -219,7 +201,6 @@ services:
       TORCH_HOME: /models_cache
       NUMBA_CACHE_DIR: /numba_cache
     volumes:
-      - ../backend/src:/dats_code/src
       - ./backend_repo:/tmp/dats
       - "${MODELS_CACHE_DIR:-./models_cache}:/models_cache"
       - ./numba_cache:/numba_cache
@@ -243,7 +224,7 @@ services:
         condition: service_healthy
         restart: true
     networks:
-      - dats_demo_network
+      - dats_network
       - ollama_network
     profiles:
       - background
@@ -282,7 +263,6 @@ services:
       OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-gemma2:latest}
       OLLAMA_VLM_MODEL: ${OLLAMA_VLM_MODEL:-granite3.2-vision:2b-fp16}
     volumes:
-      - ../backend/src:/dats_code/src
       - ./backend_repo:/tmp/dats
     depends_on:
       postgres:
@@ -309,7 +289,7 @@ services:
     ports:
       - "${API_EXPOSED:-13120}:5500"
     networks:
-      - dats_demo_network
+      - dats_network
       - ollama_network
     profiles:
       - backend
@@ -334,28 +314,12 @@ services:
     ports:
       - "${FRONTEND_EXPOSED:-13100}:3000"
     networks:
-      - dats_demo_network
+      - dats_network
     profiles:
       - frontend
 
-volumes:
-  rabbitmq_data_demo:
-    driver: local
-  redis_data_demo:
-    driver: local
-  postgres_data_demo:
-    driver: local
-  elasticsearch_data_demo:
-    driver: local
-  weaviate_data_demo:
-    driver: local
-  typesense_data_demo:
-    driver: local
-  qdrant_data_demo:
-    driver: local
-
 networks:
-  dats_demo_network:
+  dats_network:
   ollama_network:
     name: ollama_network
     external: true

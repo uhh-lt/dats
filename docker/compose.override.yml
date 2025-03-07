@@ -1,21 +1,44 @@
 services:
   postgres:
+    volumes:
+      - "postgres_data:/var/lib/postgresql/data"
     ports:
       - "${POSTGRES_EXPOSED:-13122}:5432"
 
   rabbitmq:
+    volumes:
+      - "rabbitmq_data:/var/lib/rabbitmq/data"
     ports:
       - "${RABBIT_EXPOSED:-13123}:5672"
 
   redis:
+    volumes:
+      - "redis_data:/var/lib/redis/data"
     ports:
       - "${REDIS_EXPOSED:-13124}:6379"
 
+  typesense:
+    volumes:
+      - typesense_data:/data
+    ports:
+      - "${TYPESENSE_EXPOSED:-8108}:8108"
+
+  qdrant:
+    volumes:
+      - qdrant_data:/qdrant/storage
+    ports:
+      - "${QDRANT_EXPOSED:-6333}:6333"
+      - "${QDRANT_GRPC_EXPOSED:-6334}:6334"
+
   weaviate:
+    volumes:
+      - "weaviate_data:/var/lib/weaviate"
     ports:
       - "${WEAVIATE_EXPOSED:-13132}:8080"
 
   elasticsearch:
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
     ports:
       - "${ELASTICSEARCH_EXPOSED:-13125}:9200"
 
@@ -32,7 +55,7 @@ services:
     ports:
       - "${KIBANA_EXPOSED:-13126}:5601"
     networks:
-      - dats_demo_network
+      - dats_network
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -46,17 +69,41 @@ services:
     ports:
       - "${CONTENT_SERVER_EXPOSED:-13121}:80"
     networks:
-      - dats_demo_network
+      - dats_network
 
   ray:
+    volumes:
+      - ../backend/src/app/preprocessing/ray_model_worker:/dats_code_ray
     ports:
       - "${RAY_API_EXPOSED:-13130}:8000"
       - "${RAY_DASHBOARD_EXPOSED:-13131}:8265"
 
   celery-background-jobs-worker:
+    volumes:
+      - ../backend/src:/dats_code/src
     environment:
       INSTALL_JUPYTER: ${CELERY_INSTALL_JUPYTER:-false}
       CELERY_DEBUG_MODE: ${CELERY_DEBUG_MODE:-0}
     ports:
       - "${JUPYTER_CELERY_EXPOSED:-13129}:8888"
       - "${CELERY_DEBUG_PORT:-45678}:6900"
+
+  dats-backend-api:
+    volumes:
+      - ../backend/src:/dats_code/src
+
+volumes:
+  rabbitmq_data:
+    driver: local
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+  weaviate_data:
+    driver: local
+  typesense_data:
+    driver: local
+  qdrant_data:
+    driver: local
