@@ -12,9 +12,10 @@ class ObjectBBox(BaseModel):
     confidence: float = Field(examples=[0.9])
 
 
-class DETRFilePathInput(BaseModel):
-    image_fp: str = Field(examples=["image.png"])
-    project_id: int = Field(examples=[1])
+class DETRImageInput(BaseModel):
+    base64_image: str = Field(
+        examples=["base64_image"], description="The base64 encoded image."
+    )
 
 
 class DETRObjectDetectionOutput(BaseModel):
