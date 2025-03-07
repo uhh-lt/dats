@@ -56,7 +56,7 @@ download_and_install_spacy_model "$IT_MODEL_BASE" "$IT_MODEL" "$IT_CHECKSUM_SHA_
 # export MKL_NUM_THREADS=1
 
 # generate the ray spec file
-python generate_ray_model_worker_specs.py || exit 1
+python generate_ray_model_worker_specs.py --spec_out_fp /tmp/spec.yaml || exit 1
 
 export CUPY_CACHE_DIR=/tmp/cupy_cache
 
@@ -64,4 +64,4 @@ export CUPY_CACHE_DIR=/tmp/cupy_cache
 ray start --head --dashboard-host '0.0.0.0'
 
 # serve the models
-serve run spec.yaml
+serve run /tmp/spec.yaml
