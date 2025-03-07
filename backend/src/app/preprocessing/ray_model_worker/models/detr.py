@@ -2,14 +2,11 @@ import logging
 from typing import List, Tuple
 
 import torch
-from dto.detr import DETRFilePathInput, DETRObjectDetectionOutput, ObjectBBox
-from PIL import Image
+from dto.detr import DETRImageInput, DETRObjectDetectionOutput, ObjectBBox
 from ray import serve
 from ray_config import build_ray_model_deployment_config, conf
 from transformers import DetrFeatureExtractor, DetrForObjectDetection
-from utils import (
-    get_sdoc_path_for_project_and_sdoc_name,
-)
+from utils import base64_to_image
 
 cc = conf.detr
 
@@ -42,19 +39,14 @@ class DETRModel:
         self.feature_extractor = feature_extractor
         self.object_detection_model = object_detection_model
 
-    def object_detection(self, input: DETRFilePathInput) -> DETRObjectDetectionOutput:
-        with Image.open(
-            get_sdoc_path_for_project_and_sdoc_name(
-                proj_id=input.project_id, sdoc_name=input.image_fp
-            )
-        ) as img:
-            if img.mode != "RGB":
-                img = img.convert("RGB")
-            inputs = self.feature_extractor(img, return_tensors="pt").to(DEVICE)
-            with torch.no_grad():
-                outputs = self.object_detection_model(**inputs)
-            img_size = torch.tensor([tuple(reversed(img.size))]).to(DEVICE)
-            output_dict = self.feature_extractor.post_process(outputs, img_size)[0]
+    def object_detection(self, input: DETRImageInput) -> DETRObjectDetectionOutput:
+        img = base64_to_image(input.base64_image)
+        inputs = self.feature_extractor(img, return_tensors="pt").to(DEVICE)
+        with torch.no_grad():
+            outputs = self.object_detection_model(**inputs)
+        img_size = torch.tensor([tuple(reversed(img.size))]).to(DEVICE)
+        output_dict = self.feature_extractor.post_process(outputs, img_size)[0]
+        img.close()
 
         # Flo: apply the confidence threshold
         keep = output_dict["scores"] > CONFIDENCE_THRESHOLD
