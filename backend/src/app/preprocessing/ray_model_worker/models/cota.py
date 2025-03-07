@@ -10,7 +10,6 @@ from ray_config import build_ray_model_deployment_config, conf
 from setfit import SetFitModel, Trainer, TrainingArguments
 from sklearn.linear_model import LogisticRegression
 from umap.umap_ import UMAP
-from utils import get_project_repo_root_path
 
 cc = conf.cota
 
@@ -18,7 +17,7 @@ MODEL = cc.model
 DEVICE = cc.device
 BATCH_SIZE = cc.batch_size
 
-SHARED_REPO_ROOT: Path = Path(conf.repo_root)
+COTA_ROOT_DIR: Path = Path(cc.root_dir)
 
 logger = logging.getLogger("ray.serve")
 
@@ -183,7 +182,8 @@ class CotaModel:
         # 3.1 reduce the dimensionality of the refined embeddings with UMAP
 
         visual_refined_embeddings = self.__apply_umap(
-            embs=search_space_embeddings, n_components=2, return_list=True
+            embs=search_space_embeddings,
+            n_components=2,
         )
         return visual_refined_embeddings, concept_similarities
 
@@ -213,7 +213,7 @@ class CotaModel:
         return annotations
 
     def __get_models_root_path(self, proj_id: int) -> Path:
-        return get_project_repo_root_path(proj_id=proj_id).joinpath("models")
+        return COTA_ROOT_DIR / f"{proj_id}" / "models"
 
     def __get_model_dir(
         self,
@@ -230,9 +230,11 @@ class CotaModel:
         self,
         embs: np.ndarray,
         n_components: int,
-        return_list: bool = True,
     ) -> List[List[float]]:
         reducer = UMAP(n_components=n_components)
         reduced_embs = reducer.fit_transform(embs)
-        assert isinstance(reduced_embs, np.ndarray)
+        if not isinstance(reduced_embs, np.ndarray):
+            raise RuntimeError(
+                f"UMAP did not return a numpy array, but {type(reduced_embs)}"
+            )
         return reduced_embs.tolist()

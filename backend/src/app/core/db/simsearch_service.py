@@ -12,6 +12,7 @@ from app.core.data.dto.search import (
 )
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.repo.repo_service import RepoService
+from app.core.data.repo.utils import image_to_base64, load_image
 from app.core.db.index_type import IndexType
 from app.core.db.sql_service import SQLService
 from app.core.db.vector_index_service import VectorIndexService
@@ -81,10 +82,14 @@ class SimSearchService(metaclass=SingletonMeta):
         return sdoc
 
     def _encode_image(self, image_sdoc_id: int) -> np.ndarray:
-        image = self._get_image_name_from_sdoc_id(sdoc_id=image_sdoc_id)
+        image_sdoc = self._get_image_name_from_sdoc_id(sdoc_id=image_sdoc_id)
+        image_fp = self.repo.get_path_to_sdoc_file(image_sdoc, raise_if_not_exists=True)
+        image = load_image(image_fp)
+        base64_image = image_to_base64(image)
+
         encoded_query = self.rms.clip_image_embedding(
             ClipImageEmbeddingInput(
-                image_fps=[image.filename], project_ids=[image.project_id]
+                base64_images=[base64_image],
             )
         )
         return encoded_query.numpy().squeeze()

@@ -19,7 +19,7 @@ class CotaApi:
 
     @api.post("/finetune_apply_compute", response_model=RayCOTAJobResponse)
     async def finetune_apply_compute(self, input: RayCOTAJobInput):
-        return await self.cota.finetune_apply_compute.remote(input)
+        return await self.cota.finetune_apply_compute.remote(input)  # type: ignore
 
 
 app = CotaApi.bind(

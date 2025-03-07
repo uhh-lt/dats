@@ -2,12 +2,12 @@ from app.core.data.llm.ollama_service import OllamaService
 from app.core.data.llm.prompts.image_captioning_prompt import (
     IMG_DESCRIPTION_USER_PROMPT,
 )
-from app.preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
-from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
-from app.preprocessing.pipeline.steps.image.process.util import (
+from app.core.data.repo.utils import (
     image_to_base64,
     load_image,
 )
+from app.preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
+from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 
 ollama = OllamaService()
 

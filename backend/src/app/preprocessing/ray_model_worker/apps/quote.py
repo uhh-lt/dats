@@ -19,7 +19,7 @@ class QuoteApi:
 
     @api.post("/predict", response_model=QuoteJobOutput)
     async def predict(self, input: QuoteJobInput) -> QuoteJobOutput:
-        predict_result = await self.quotect.predict.remote(input)
+        predict_result = await self.quotect.predict.remote(input)  # type: ignore
         return predict_result
 
 

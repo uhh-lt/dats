@@ -19,7 +19,7 @@ class SpacyApi:
 
     @api.post("/pipeline", response_model=SpacyPipelineOutput)
     async def pipeline(self, input: SpacyInput) -> SpacyPipelineOutput:
-        predict_result = await self.spacy.pipeline.remote(input)
+        predict_result = await self.spacy.pipeline.remote(input)  # type: ignore
         return predict_result
 
 
