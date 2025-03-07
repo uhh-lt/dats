@@ -71,13 +71,6 @@ services:
     networks:
       - dats_network
 
-  ray:
-    volumes:
-      - ../backend/src/app/preprocessing/ray_model_worker:/dats_code_ray
-    ports:
-      - "${RAY_API_EXPOSED:-13130}:8000"
-      - "${RAY_DASHBOARD_EXPOSED:-13131}:8265"
-
   celery-background-jobs-worker:
     volumes:
       - ../backend/src:/dats_code/src
