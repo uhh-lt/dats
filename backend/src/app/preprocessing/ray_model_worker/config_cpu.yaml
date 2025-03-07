@@ -1,4 +1,4 @@
-repo_root: /tmp/dats #the root to the backend repo where files are shared across services.
+root_dir: ${oc.env:RAY_ROOT, /tmp/dats/ray}
 
 spacy:
   # note that the spacy models have to be installed in the env to use it! (docker!)
@@ -163,6 +163,7 @@ cota:
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
+  root_dir: /tmp/dats/ray/cota
 
 seqsenttagger:
   batch_size: 16
@@ -173,6 +174,7 @@ seqsenttagger:
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
+  root_dir: /tmp/dats/ray/seqsenttagger
 
 quote:
   model: "fynnos/quotect-mt5-base"
