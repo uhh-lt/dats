@@ -1,9 +1,8 @@
-from typing import TYPE_CHECKING, Callable, List
+from typing import Callable, List
 
 from pydantic import BaseModel, Field
 
-if TYPE_CHECKING:
-    from app.core.analysis.cota.pipeline.cargo import Cargo
+from app.core.analysis.cota.pipeline.cargo import Cargo
 
 
 class PipelineStep(BaseModel):
