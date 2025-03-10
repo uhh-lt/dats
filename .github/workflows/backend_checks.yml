@@ -3,11 +3,10 @@ on:
   push:
     branches:
       - main
-      - mwp_v1
   pull_request:
     paths:
       - "backend/**"
-      - ".github/**"
+      - ".github/backend_checks.yml"
       - "docker/**"
       - "tools/**"
 
@@ -16,7 +15,6 @@ jobs:
     runs-on: self-hosted
     env:
       API_WORKERS: 1
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -25,9 +23,7 @@ jobs:
           ./bin/setup-folders.sh
           ./bin/setup-envs.sh --project_name action-runner --port_prefix 131
           sed -i 's/\(DATS_BACKEND_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
-          echo "SPACY_CACHE_DIR=$HOME/spacy_models" >> docker/.env
           echo "MODELS_CACHE_DIR=$HOME/models_cache" >> docker/.env
-          mkdir -p $HOME/spacy_models
           mkdir -p $HOME/models_cache
       - name: Build & Start Docker Containers
         working-directory: docker
