@@ -1,7 +1,9 @@
 import logging
+import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Set, TypedDict
+from uuid import uuid4
 
 import torch
 from dto.seqsenttagger import (
@@ -221,12 +223,17 @@ logger = logging.getLogger("ray.serve")
 @serve.deployment(**build_ray_model_deployment_config("seqsenttagger"))
 class SeqSentTaggerModel:
     def train_apply(self, input: SeqSentTaggerJobInput) -> SeqSentTaggerJobResponse:
+        # 0 create tmp id
+        tmp_id = str(uuid4())
+
         # 1 finetune
-        trained_model_ckpt_path = self.__train_model(input)
+        trained_model_ckpt_path = self.__train_model(input, tmp_id)
 
         # 2 apply model
         preds = self.__test_model(
-            test_data=input.test_data, model_path=trained_model_ckpt_path
+            test_data=input.test_data,
+            model_path=trained_model_ckpt_path,
+            tmp_id=tmp_id,
         )
 
         return SeqSentTaggerJobResponse(
@@ -235,7 +242,7 @@ class SeqSentTaggerModel:
             ]
         )
 
-    def __train_model(self, input: SeqSentTaggerJobInput) -> Path:
+    def __train_model(self, input: SeqSentTaggerJobInput, tmp_id: str) -> Path:
         # Split the training data into train and validation
         train_size = int(0.8 * len(input.training_data))
         train_data = input.training_data[:train_size]
@@ -279,9 +286,7 @@ class SeqSentTaggerModel:
         )  # Stop if val_loss doesn't improve for 3 epochs
 
         model_name = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        model_path = self.__get_model_dir(
-            proj_id=input.project_id, model_name=model_name
-        )
+        model_path = self.__get_model_dir(model_name=model_name, tmp_id=tmp_id)
         checkpoint = ModelCheckpoint(
             dirpath=model_path,
             filename="best-model",
@@ -292,7 +297,7 @@ class SeqSentTaggerModel:
 
         # Logger
         tb_logger = loggers.TensorBoardLogger(
-            save_dir=self.__get_temp_files_root_path()
+            save_dir=self.__get_logger_dir(tmp_id=tmp_id)
         )
 
         # Trainer
@@ -314,7 +319,7 @@ class SeqSentTaggerModel:
         return model_path / "best-model.ckpt"
 
     def __test_model(
-        self, test_data: List[SeqSentTaggerDoc], model_path: Path
+        self, test_data: List[SeqSentTaggerDoc], model_path: Path, tmp_id: str
     ) -> List[List[str]]:
         # 1. Create the test data
         test_dataset = SentenceTaggingDataset(test_data)
@@ -331,7 +336,7 @@ class SeqSentTaggerModel:
 
         # 3. Evaluate the model
         tb_logger = loggers.TensorBoardLogger(
-            save_dir=self.__get_temp_files_root_path() / "lightning_logs"
+            save_dir=self.__get_logger_dir(tmp_id=tmp_id)
         )
         trainer = Trainer(
             logger=tb_logger,
@@ -352,24 +357,20 @@ class SeqSentTaggerModel:
             pred_tags.append([model.id2tag[i] for i in pred])
         logger.info(f"Showing the first prediction as strings: {pred_tags[0]}")
 
+        # 5. Remove the temporary files
+        shutil.rmtree(ROOT_DIR / tmp_id)
+        logger.info(f"Removed temporary files at {ROOT_DIR / tmp_id}")
+
         return pred_tags
 
-    def __get_temp_files_root_path(self) -> Path:
-        return ROOT_DIR.joinpath("temporary_files")
-
-    def __get_project_repo_root_path(self, proj_id: int) -> Path:
-        return ROOT_DIR.joinpath(f"projects/{proj_id}/")
-
-    def __get_models_root_path(self, proj_id: int) -> Path:
-        return self.__get_project_repo_root_path(proj_id=proj_id).joinpath("models")
+    def __get_logger_dir(self, tmp_id: str) -> Path:
+        return ROOT_DIR / tmp_id / "lightning_logs"
 
     def __get_model_dir(
         self,
-        proj_id: int,
+        tmp_id: str,
         model_name: str,
         model_prefix: str = "SeqSentTagger_",
     ) -> Path:
-        name = (
-            self.__get_models_root_path(proj_id=proj_id) / f"{model_prefix}{model_name}"
-        )
+        name = ROOT_DIR / tmp_id / "models" / f"{model_prefix}{model_name}"
         return name
