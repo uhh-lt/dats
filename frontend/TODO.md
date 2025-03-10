@@ -2,7 +2,7 @@
 
 - CodeCreateDialog look at menu items # DONE
 - CodeEditDialog look at menu items # DONE
-- FilterValueSelector, CodeValueSelector
+- FilterValueSelector, CodeValueSelector # DONE
 
 if possible, try to create one function for all above use cases and reuse it
 
