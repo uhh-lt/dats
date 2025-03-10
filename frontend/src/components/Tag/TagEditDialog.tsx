@@ -3,7 +3,6 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack } from "@mui/material";
-import React from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import TagHooks from "../../api/TagHooks.ts";
 import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
@@ -16,11 +15,12 @@ import FormColorPicker from "../FormInputs/FormColorPicker.tsx";
 import FormMenu from "../FormInputs/FormMenu.tsx";
 import FormText from "../FormInputs/FormText.tsx";
 import FormTextMultiline from "../FormInputs/FormTextMultiline.tsx";
+import { DocumentTagReadWithLevel } from "../TreeExplorer/TagReadWithLevel.ts";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 import TagRenderer from "./TagRenderer.tsx";
 
 interface TagEditDialogProps {
-  tags: DocumentTagRead[];
+  tags: DocumentTagReadWithLevel[];
 }
 
 /**
@@ -106,7 +106,7 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
         <TagEditDialogContent
           key={tag.data.id}
           tag={tag.data}
-          tags={tags}
+          tagsWithLevel={tags}
           isOpen={open}
           handleClose={handleClose}
           handleTagUpdate={handleTagUpdate}
@@ -129,12 +129,12 @@ interface TagEditDialogContentProps {
   isDeleteLoading: boolean;
   handleError: SubmitErrorHandler<DocumentTagUpdate>;
   tag: DocumentTagRead;
-  tags: DocumentTagRead[];
+  tagsWithLevel: DocumentTagReadWithLevel[];
 }
 
 function TagEditDialogContent({
   tag,
-  tags,
+  tagsWithLevel,
   isOpen,
   handleClose,
   handleTagUpdate,
@@ -157,13 +157,13 @@ function TagEditDialogContent({
     },
   });
 
-  const menuItems: React.ReactNode[] = tags
-    .filter((t) => t.id !== tag.id)
-    .map((t) => (
-      <MenuItem key={t.id} value={t.id}>
-        <TagRenderer tag={t} />
-      </MenuItem>
-    ));
+  // const menuItems: React.ReactNode[] = tags
+  //   .filter((t) => t.id !== tag.id)
+  //   .map((t) => (
+  //     <MenuItem key={t.id} value={t.id}>
+  //       <TagRenderer tag={t} />
+  //     </MenuItem>
+  //   ));
 
   return (
     <Dialog open={isOpen} onClose={handleClose} maxWidth="md" fullWidth>
@@ -191,7 +191,15 @@ function TagEditDialogContent({
               <MenuItem key={-1} value={-1}>
                 No parent
               </MenuItem>
-              {menuItems}
+              {tagsWithLevel.map((tagWithLevel) => (
+                <MenuItem
+                  key={tagWithLevel.data.id}
+                  value={tagWithLevel.data.id}
+                  style={{ paddingLeft: tagWithLevel.level * 10 + 6 }}
+                >
+                  <TagRenderer tag={tagWithLevel.data} />
+                </MenuItem>
+              ))}
             </FormMenu>
             <FormText
               name="name"
