@@ -4,4 +4,5 @@
 /* eslint-disable */
 export enum MLJobType {
   QUOTATION_ATTRIBUTION = "QUOTATION_ATTRIBUTION",
+  TOPIC_MODELING = "TOPIC_MODELING",
 }
