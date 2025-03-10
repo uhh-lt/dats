@@ -7919,6 +7919,7 @@
               {
                 "oneOf": [
                   { "$ref": "#/components/schemas/QuotationAttributionParams" },
+                  { "$ref": "#/components/schemas/TopicModelingParams" },
                   { "$ref": "#/components/schemas/DocTagRecommendationParams" },
                   { "$ref": "#/components/schemas/CoreferenceResolutionParams" }
                 ],
@@ -7927,7 +7928,9 @@
                   "mapping": {
                     "COREFERENCE_RESOLUTION": "#/components/schemas/CoreferenceResolutionParams",
                     "DOC_TAG_RECOMMENDATION": "#/components/schemas/DocTagRecommendationParams",
-                    "QUOTATION_ATTRIBUTION": "#/components/schemas/QuotationAttributionParams"
+
+                    "QUOTATION_ATTRIBUTION": "#/components/schemas/QuotationAttributionParams",
+                    "TOPIC_MODELING": "#/components/schemas/TopicModelingParams"
                   }
                 }
               },
@@ -7977,7 +7980,7 @@
       },
       "MLJobType": {
         "type": "string",
-        "enum": ["QUOTATION_ATTRIBUTION", "DOC_TAG_RECOMMENDATION", "COREFERENCE_RESOLUTION"],
+        "enum": ["QUOTATION_ATTRIBUTION", "TOPIC_MODELING", "DOC_TAG_RECOMMENDATION", "COREFERENCE_RESOLUTION"],
         "title": "MLJobType"
       },
       "MemoColumns": {
@@ -9875,6 +9878,38 @@
         },
         "type": "object",
         "title": "TimelineAnalysisUpdate"
+      },
+      "TopicModelingParams": {
+        "properties": {
+          "ml_job_type": { "type": "string", "const": "TOPIC_MODELING", "title": "Ml Job Type" },
+          "nr_topics": {
+            "type": "integer",
+            "title": "Nr Topics",
+            "description": "Specifying the number of topics will reduce the initial number of topics to the value specified",
+            "default": false
+          },
+          "min_topic_size": {
+            "type": "integer",
+            "title": "Min Topic Size",
+            "description": "Minimum amount of files needed where the topics exists in order to be a topic",
+            "default": false
+          },
+          "top_n_words": {
+            "type": "integer",
+            "title": "Top N Words",
+            "description": "The number of words per topic to extract.",
+            "default": false
+          },
+          "recompute": {
+            "type": "boolean",
+            "title": "Recompute",
+            "description": "Whether to recompute already processed documents",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": ["ml_job_type"],
+        "title": "TopicModelingParams"
       },
       "TrainerJobParameters": {
         "properties": {

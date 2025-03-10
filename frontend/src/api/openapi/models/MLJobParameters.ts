@@ -6,6 +6,7 @@ import type { CoreferenceResolutionParams } from "./CoreferenceResolutionParams"
 import type { DocTagRecommendationParams } from "./DocTagRecommendationParams";
 import type { MLJobType } from "./MLJobType";
 import type { QuotationAttributionParams } from "./QuotationAttributionParams";
+import type { TopicModelingParams } from "./TopicModelingParams";
 export type MLJobParameters = {
   /**
    * The type of the MLJob
@@ -19,6 +20,6 @@ export type MLJobParameters = {
    * Specific parameters for the MLJob w.r.t it's type
    */
   specific_ml_job_parameters:
-    | (QuotationAttributionParams | DocTagRecommendationParams | CoreferenceResolutionParams)
+    | ((QuotationAttributionParams | DocTagRecommendationParams | CoreferenceResolutionParams) | TopicModelingParams)
     | null;
 };
