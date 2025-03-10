@@ -278,10 +278,8 @@ services:
 networks:
   dats_network:
   ollama_network:
-    # name: ollama_network
     name: ollama_network
     external: true
   ray_network:
-    # name: ray_network
     name: ray_network
     external: true
