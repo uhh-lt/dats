@@ -5,7 +5,7 @@ import { ReactFlowProvider } from "reactflow";
 import WhiteboardHooks from "../../api/WhiteboardHooks.ts";
 import { useAuth } from "../../auth/useAuth.ts";
 import EditableTypography from "../../components/EditableTypography.tsx";
-import { AppBarContext } from "../../layouts/TwoBarLayout.tsx";
+import { AppBarContext } from "../../layouts/AppBarContext.ts";
 import WhiteboardFlow from "./WhiteboardFlow.tsx";
 
 function Whiteboard() {

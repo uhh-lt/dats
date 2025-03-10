@@ -6,14 +6,13 @@ import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
 import React from "react";
 import { useParams } from "react-router-dom";
-import ProjectHooks from "../../../api/ProjectHooks.ts";
+import MetadataHooks from "../../../api/MetadataHooks.ts";
 import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
 import { DateGroupBy } from "../../../api/openapi/models/DateGroupBy.ts";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
 import { MetaType } from "../../../api/openapi/models/MetaType.ts";
 import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
-import { TimelineAnalysisResultType } from "../../../api/openapi/models/TimelineAnalysisResultType.ts";
 import SdocsWithDateCounter from "../../../components/Metadata/SdocsWithDateCounter/SdocsWithDateCounter.tsx";
 
 interface TimelineAnalysisSettingsProps {
@@ -24,7 +23,7 @@ function TimelineAnalysisSettings({ timelineAnalysis }: TimelineAnalysisSettings
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // global server state (react-query)
-  const projectMetadata = ProjectHooks.useGetMetadata(projectId);
+  const projectMetadata = MetadataHooks.useGetProjectMetadataList();
   const filteredProjectMetadata = projectMetadata.data?.filter(
     (metadata) => metadata.doctype === DocType.TEXT && metadata.metatype === MetaType.DATE,
   );
@@ -77,23 +76,13 @@ function TimelineAnalysisSettingsContent({
     });
   };
   const handleChangeMetadataId = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(event.target.value);
     updateTimelineAnalysisMutation.mutate({
       timelineAnalysisId: timelineAnalysis.id,
       requestBody: {
         settings: {
           ...timelineAnalysis.settings,
-          date_metadata_id: parseInt(event.target.value),
-        },
-      },
-    });
-  };
-  const handleChangeResultType = (event: React.ChangeEvent<HTMLInputElement>) => {
-    updateTimelineAnalysisMutation.mutate({
-      timelineAnalysisId: timelineAnalysis.id,
-      requestBody: {
-        settings: {
-          ...timelineAnalysis.settings,
-          result_type: event.target.value as TimelineAnalysisResultType,
+          date_metadata_id: value === -1 ? null : value,
         },
       },
     });
@@ -147,19 +136,6 @@ function TimelineAnalysisSettingsContent({
             {metadata.key}
           </MenuItem>
         ))}
-      </TextField>
-
-      <TextField
-        select
-        fullWidth
-        label={"Result type"}
-        variant="outlined"
-        value={timelineAnalysis.settings.result_type}
-        onChange={handleChangeResultType}
-        helperText="Specify the type of the results."
-        disabled
-      >
-        <MenuItem value={"document"}>Document</MenuItem>
       </TextField>
     </Stack>
   );

@@ -20,6 +20,10 @@ export type CodeRead = {
    */
   parent_id?: number | null;
   /**
+   * While false, the code is neither created in pre-processing nor shown in the UI (except in settings to enable it again)
+   */
+  enabled?: boolean;
+  /**
    * ID of the Code
    */
   id: number;

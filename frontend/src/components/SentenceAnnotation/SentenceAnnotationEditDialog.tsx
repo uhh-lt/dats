@@ -76,13 +76,13 @@ function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEditDialo
           <DialogTitle style={{ paddingBottom: 0 }}>Preview</DialogTitle>
           <Box px={3} mb={2}>
             Before:
-            <SentenceAnnotationRenderer sentenceAnnotation={annotationIds[0]} />
+            <SentenceAnnotationRenderer sentenceAnnotation={annotationIds[0]} showCode showSpanText />
             After:
             {selectedCodeId ? (
               <Stack direction="row" alignItems="center">
                 <CodeRenderer code={selectedCodeId} />
                 {": "}
-                <SentenceAnnotationRenderer sentenceAnnotation={annotationIds[0]} showCode={false} />
+                <SentenceAnnotationRenderer sentenceAnnotation={annotationIds[0]} showSpanText />
               </Stack>
             ) : (
               <>

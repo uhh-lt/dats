@@ -1,5 +1,3 @@
-repo_root: ${oc.env:SHARED_REPO_ROOT, /tmp/dats} #the root to the backend repo where files are shared across services.
-
 spacy:
   # note that the spacy models have to be installed in the env to use it! (docker!)
   models:
@@ -28,7 +26,7 @@ whisper:
 
   deployment:
     ray_actor_options:
-      num_gpus: .15
+      num_gpus: .125
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
@@ -38,7 +36,7 @@ detr:
   device: cuda
   deployment:
     ray_actor_options:
-      num_gpus: .15
+      num_gpus: .125
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
@@ -138,21 +136,6 @@ detr:
       - hair drier
       - toothbrush
 
-blip2:
-  model: "salesforce/blip2-opt-2.7b"
-  revision: "51572668da0eb669e01a189dc22abe6088589a24"
-  device: cuda
-  precision_bit: 8
-  image_captioning:
-    max_caption_length: 16
-    num_beams: 4
-  deployment:
-    ray_actor_options:
-      num_gpus: .15
-    autoscaling_config:
-      min_replicas: 1
-      max_replicas: 1
-
 clip:
   text_encoder:
     model: "sentence-transformers/clip-ViT-B-32-multilingual-v1"
@@ -164,7 +147,7 @@ clip:
     device: cuda
   deployment:
     ray_actor_options:
-      num_gpus: .15
+      num_gpus: .125
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
@@ -175,17 +158,31 @@ cota:
   device: cuda
   deployment:
     ray_actor_options:
-      num_gpus: .15
+      num_gpus: .125
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
+  root_dir: /tmp/dats/ray/cota
 
 seqsenttagger:
   batch_size: 16
   device: gpu
   deployment:
     ray_actor_options:
-      num_gpus: .15
+      num_gpus: .125
+    autoscaling_config:
+      min_replicas: 1
+      max_replicas: 1
+  root_dir: /tmp/dats/ray/seqsenttagger
+
+quote:
+  model: "fynnos/quotect-mt5-base"
+  max_length: 4096
+  num_beams: 1
+  device: cuda
+  deployment:
+    ray_actor_options:
+      num_gpus: .125
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1

@@ -10,5 +10,5 @@ export type TimelineAnalysisResult = {
   /**
    * The SourceDoument IDs.
    */
-  sdoc_ids: Array<number>;
+  data_ids: Array<number>;
 };

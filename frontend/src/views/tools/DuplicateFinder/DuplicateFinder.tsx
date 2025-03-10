@@ -15,8 +15,8 @@ import ProjectHooks from "../../../api/ProjectHooks.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
 import SdocTagsRenderer from "../../../components/SourceDocument/SdocTagRenderer.tsx";
+import { AppBarContext } from "../../../layouts/AppBarContext.ts";
 import NoSidebarLayout from "../../../layouts/NoSidebarLayout.tsx";
-import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
 
 interface DuplicateDocumentData {
   sdocId: string;

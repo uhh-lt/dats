@@ -2,7 +2,7 @@ import { Box, Grid2, Portal, Typography } from "@mui/material";
 import { useContext } from "react";
 import { useParams } from "react-router-dom";
 import SpanAnnotationEditDialog from "../../../components/SpanAnnotation/SpanAnnotationEditDialog.tsx";
-import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
+import { AppBarContext } from "../../../layouts/AppBarContext.ts";
 import SpanAnnotationAnalysisTable from "./SpanAnnotationAnalysisTable.tsx";
 
 function SpanAnnotationAnalysis() {

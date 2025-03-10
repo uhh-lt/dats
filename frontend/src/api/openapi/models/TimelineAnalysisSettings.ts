@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { DateGroupBy } from "./DateGroupBy";
-import type { TimelineAnalysisResultType } from "./TimelineAnalysisResultType";
 export type TimelineAnalysisSettings = {
   /**
    * Group by date
@@ -13,8 +12,4 @@ export type TimelineAnalysisSettings = {
    * ID of the Project Date Metadata that is used for the TimelineAnalysis
    */
   date_metadata_id?: number | null;
-  /**
-   * ResultType of the TimelineAnalysis
-   */
-  result_type?: TimelineAnalysisResultType;
 };

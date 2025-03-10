@@ -32,8 +32,8 @@ def filter_memo_ids(
 ) -> Tuple[List[int], int]:
     with SQLService().db_session() as db:
         builder = SearchBuilder(db=db, filter=filter, sorts=sorts)
-        builder.build_query(
-            query=db.query(
+        builder.init_query(
+            db.query(
                 MemoORM.id,
             )
             .join(MemoORM.attached_to)
@@ -41,7 +41,7 @@ def filter_memo_ids(
                 MemoORM.project_id == project_id,
                 ObjectHandleORM.project_id.is_(None),  # never search project memos
             )
-        )
+        ).build_query()
         result_rows, total_results = builder.execute_query(
             page_number=page_number, page_size=page_size
         )

@@ -6,7 +6,6 @@ import FormatStrikethroughIcon from "@mui/icons-material/FormatStrikethrough";
 import ShortTextIcon from "@mui/icons-material/ShortText";
 import SubjectIcon from "@mui/icons-material/Subject";
 import { ToggleButton, ToggleButtonGroup, Toolbar, Tooltip } from "@mui/material";
-import { useEffect } from "react";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
 import LLMAssistanceButton from "../../../components/LLMDialog/LLMAssistanceButton.tsx";
@@ -35,14 +34,6 @@ function AnnotationToolbar({ sdoc }: AnnotationToolbarProps) {
   const tagStyle = useAppSelector((state) => state.annotations.tagStyle);
   const dispatch = useAppDispatch();
 
-  // ensure that annotation mode is correct
-  useEffect(() => {
-    if (!sdoc) return;
-    if (sdoc.doctype === DocType.IMAGE && annotationMode === AnnotationMode.SentenceAnnotation) {
-      dispatch(AnnoActions.onChangeAnnotationMode(AnnotationMode.Annotation));
-    }
-  }, [sdoc, annotationMode, dispatch]);
-
   return (
     <Toolbar
       disableGutters
@@ -65,13 +56,11 @@ function AnnotationToolbar({ sdoc }: AnnotationToolbarProps) {
             size="small"
             color="primary"
           >
-            {sdoc.doctype !== DocType.IMAGE && (
-              <Tooltip title="Sentence Annotation" placement="bottom">
-                <ToggleButton value={AnnotationMode.SentenceAnnotation}>
-                  <SubjectIcon />
-                </ToggleButton>
-              </Tooltip>
-            )}
+            <Tooltip title="Sentence Annotation" placement="bottom">
+              <ToggleButton value={AnnotationMode.SentenceAnnotation}>
+                <SubjectIcon />
+              </ToggleButton>
+            </Tooltip>
             <Tooltip title="Annotation" placement="bottom">
               <ToggleButton value={AnnotationMode.Annotation}>{docTypeToIcon[sdoc.doctype]}</ToggleButton>
             </Tooltip>
@@ -115,7 +104,7 @@ function AnnotationToolbar({ sdoc }: AnnotationToolbarProps) {
               </Tooltip>
             </ToggleButtonGroup>
           )}
-          {sdoc.doctype !== DocType.IMAGE && <LLMAssistanceButton sdocIds={[sdoc.id]} projectId={sdoc.project_id} />}
+          <LLMAssistanceButton sdocIds={[sdoc.id]} projectId={sdoc.project_id} />
         </>
       ) : null}
     </Toolbar>

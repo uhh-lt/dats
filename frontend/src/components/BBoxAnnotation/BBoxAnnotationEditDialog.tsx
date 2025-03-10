@@ -26,7 +26,7 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
   const dispatch = useAppDispatch();
 
   // mutations
-  const updateAnnotationMutation = BboxAnnotationHooks.useUpdateBBox();
+  const updateAnnotationMutation = BboxAnnotationHooks.useUpdateBBoxAnnotation();
 
   // actions
   const handleClose = () => {
@@ -42,7 +42,7 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
 
     updateAnnotationMutation.mutate(
       {
-        bboxId: annotation.id,
+        bboxToUpdate: annotation,
         requestBody: {
           code_id: selectedCodeId,
         },
@@ -73,13 +73,13 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
           <DialogTitle style={{ paddingBottom: 0 }}>Preview</DialogTitle>
           <Box px={3} mb={2}>
             Before:
-            <BBoxAnnotationRenderer bboxAnnotation={annotation} />
+            <BBoxAnnotationRenderer bboxAnnotation={annotation} showCode showSpanText />
             After:
             {selectedCodeId ? (
               <BBoxAnnotationRenderer
-                bboxAnnotation={
-                  selectedCodeId ? { ...annotation, code: { ...annotation.code, id: selectedCodeId } } : annotation
-                }
+                bboxAnnotation={selectedCodeId ? { ...annotation, code_id: selectedCodeId } : annotation}
+                showCode
+                showSpanText
               />
             ) : (
               <>
@@ -99,7 +99,7 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
           startIcon={<SaveIcon />}
           fullWidth
           onClick={handleUpdateAnnotation}
-          disabled={!selectedCodeId || selectedCodeId === annotation?.code.id}
+          disabled={!selectedCodeId || selectedCodeId === annotation?.code_id}
           loading={updateAnnotationMutation.isPending}
           loadingPosition="start"
         >

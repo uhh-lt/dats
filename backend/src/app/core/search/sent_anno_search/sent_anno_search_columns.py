@@ -29,7 +29,7 @@ class SentAnnoColumns(str, AbstractColumns):
             case SentAnnoColumns.DOCUMENT_TAG_ID_LIST:
                 return subquery_dict[SentAnnoColumns.DOCUMENT_TAG_ID_LIST.value]
             case SentAnnoColumns.CODE_ID:
-                return CodeORM.id
+                return SentenceAnnotationORM.code_id
             # case SentAnnoColumns.TEXT:
             #     return SpanTextORM.text
             case SentAnnoColumns.MEMO_CONTENT:
@@ -106,22 +106,42 @@ class SentAnnoColumns(str, AbstractColumns):
                         label=SentAnnoColumns.DOCUMENT_TAG_ID_LIST.value,
                     )
                 )
-                query_builder._join_subquery(SentenceAnnotationORM.annotation_document)
-                query_builder._join_subquery(AnnotationDocumentORM.source_document)
+                query_builder._join_subquery(
+                    AnnotationDocumentORM,
+                    AnnotationDocumentORM.id
+                    == SentenceAnnotationORM.annotation_document_id,
+                )
+                query_builder._join_subquery(
+                    SourceDocumentORM,
+                    SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+                )
                 query_builder._join_subquery(
                     SourceDocumentORM.document_tags, isouter=True
                 )
 
     def add_query_filter_statements(self, query_builder: SearchBuilder):
         match self:
+            case SentAnnoColumns.SOURCE_DOCUMENT_FILENAME:
+                query_builder._join_query(
+                    AnnotationDocumentORM,
+                    AnnotationDocumentORM.id
+                    == SentenceAnnotationORM.annotation_document_id,
+                )._join_query(
+                    SourceDocumentORM,
+                    SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+                )
             case SentAnnoColumns.MEMO_CONTENT:
-                # TODO, i need join_query for this, subquery is for aggregates, query for normal columns
-                assert query_builder.query is not None, "Query is not initialized"
-                query_builder.query = query_builder.query.join(
+                query_builder._join_query(
                     SentenceAnnotationORM.object_handle, isouter=True
-                ).join(
+                )._join_query(
                     ObjectHandleORM.attached_memos.and_(
                         MemoORM.user_id == AnnotationDocumentORM.user_id
                     ),
                     isouter=True,
+                )
+            case SentAnnoColumns.USER_ID:
+                query_builder._join_query(
+                    AnnotationDocumentORM,
+                    AnnotationDocumentORM.id
+                    == SentenceAnnotationORM.annotation_document_id,
                 )

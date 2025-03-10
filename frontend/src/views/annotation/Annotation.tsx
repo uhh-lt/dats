@@ -9,8 +9,8 @@ import CodeExplorer from "../../components/Code/CodeExplorer/CodeExplorer.tsx";
 import EditableTypography from "../../components/EditableTypography.tsx";
 import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import DocumentInformation from "../../components/SourceDocument/DocumentInformation/DocumentInformation.tsx";
+import { AppBarContext } from "../../layouts/AppBarContext.ts";
 import OneSidebarLayout from "../../layouts/OneSidebarLayout.tsx";
-import { AppBarContext } from "../../layouts/TwoBarLayout.tsx";
 import TwoSidebarsLayout from "../../layouts/TwoSidebarsLayout.tsx";
 import { useAppSelector } from "../../plugins/ReduxHooks.ts";
 import BBoxAnnotationExplorer from "./AnnotationExploer/BBoxAnnotationExplorer.tsx";
@@ -43,7 +43,13 @@ const annotatorComponent = (
   },
   [DocType.IMAGE]: {
     [AnnotationMode.Annotation]: <ImageAnnotator sdocData={sdocData} />,
-    [AnnotationMode.SentenceAnnotation]: <ImageAnnotator sdocData={sdocData} />,
+    [AnnotationMode.SentenceAnnotation]: (
+      <SentenceAnnotator
+        sdocData={sdocData}
+        style={{ marginLeft: "-16px", marginBottom: "-24px", marginRight: "-16px" }}
+        virtualizerScrollElementRef={boxRef}
+      />
+    ),
     [AnnotationMode.Reader]: <ImageViewer sdocData={sdocData} />,
   },
   [DocType.AUDIO]: {

@@ -8,9 +8,11 @@ from app.core.data.orm.orm_base import ORMBase
 from app.core.data.orm.timeline_analysis import TimelineAnalysisORM
 
 if TYPE_CHECKING:
-    from app.core.data.orm.analysis_table import AnalysisTableORM
     from app.core.data.orm.annotation_document import AnnotationDocumentORM
     from app.core.data.orm.concept_over_time_analysis import ConceptOverTimeAnalysisORM
+    from app.core.data.orm.document_tag_recommendation import (
+        DocumentTagRecommendationJobORM,
+    )
     from app.core.data.orm.memo import MemoORM
     from app.core.data.orm.object_handle import ObjectHandleORM
     from app.core.data.orm.project import ProjectORM
@@ -45,10 +47,6 @@ class UserORM(ORMBase):
         "MemoORM", back_populates="user", passive_deletes=True
     )
 
-    analysis_tables: Mapped[List["AnalysisTableORM"]] = relationship(
-        "AnalysisTableORM", back_populates="user", passive_deletes=True
-    )
-
     timeline_analysis: Mapped[List["TimelineAnalysisORM"]] = relationship(
         "TimelineAnalysisORM", back_populates="user", passive_deletes=True
     )
@@ -63,6 +61,14 @@ class UserORM(ORMBase):
 
     refresh_tokens: Mapped[List["RefreshTokenORM"]] = relationship(
         "RefreshTokenORM", back_populates="user", passive_deletes=True
+    )
+
+    document_tag_recommendations: Mapped[List["DocumentTagRecommendationJobORM"]] = (
+        relationship(
+            "DocumentTagRecommendationJobORM",
+            back_populates="user",
+            passive_deletes=True,
+        )
     )
 
     # many to many

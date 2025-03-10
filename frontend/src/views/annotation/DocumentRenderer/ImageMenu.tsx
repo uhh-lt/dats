@@ -12,7 +12,6 @@ export interface ImageMenuHandle {
   close: () => void;
 }
 
-// eslint-disable-next-line no-empty-pattern
 const ImageMenu = forwardRef<ImageMenuHandle>((_, ref) => {
   const navigate = useNavigate();
 

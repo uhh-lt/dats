@@ -82,8 +82,7 @@ class COTARefinementPipeline:
         stop_t = time.perf_counter()
 
         logger.info(
-            f"Executing the COTARefinementPipeline took"
-            f" {stop_t - start_t:0.4f} seconds"
+            f"Executing the COTARefinementPipeline took {stop_t - start_t:0.4f} seconds"
         )
 
         return job
@@ -163,7 +162,7 @@ class COTARefinementPipeline:
                     logger.error(msg)
                     raise ValueError(msg)
 
-            logger.info((f"Running: {step} for " f"COTARefinementJob {cargo.job.id} "))
+            logger.info((f"Running: {step} for COTARefinementJob {cargo.job.id} "))
             cargo = self._update_cota_job(
                 cargo=cargo,
                 current_step_name=step.name,
@@ -182,7 +181,7 @@ class COTARefinementPipeline:
             msg = (
                 f"An error occurred while executing the COTARefinementPipelineStep {step}"
                 f"for COTARefinementJob {cargo.job.id} "
-                f"Error: {e}"
+                f"Error: {type(e)} {e}"
             )
             logger.error(msg)
             cargo = self._update_cota_job(

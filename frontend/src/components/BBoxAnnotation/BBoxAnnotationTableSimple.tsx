@@ -1,0 +1,107 @@
+import { Stack } from "@mui/material";
+import {
+  MRT_ColumnDef,
+  MRT_ShowHideColumnsButton,
+  MRT_ToggleDensePaddingButton,
+  MaterialReactTable,
+  useMaterialReactTable,
+} from "material-react-table";
+import { useMemo } from "react";
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
+import { useAuth } from "../../auth/useAuth.ts";
+import MemoRenderer2 from "../Memo/MemoRenderer2.tsx";
+import BBoxAnnotationRenderer from "./BBoxAnnotationRenderer.tsx";
+
+interface BBoxAnnotationTableRow {
+  bboxAnnoId: number;
+}
+
+function BBoxAnnotationTableSimple({ bboxAnnoIds }: { bboxAnnoIds: number[] }) {
+  // global client state (react router)
+  const { user } = useAuth();
+
+  // computed
+  const data = useMemo(() => bboxAnnoIds.map((bboxAnnoId) => ({ bboxAnnoId })), [bboxAnnoIds]);
+  const columns: MRT_ColumnDef<BBoxAnnotationTableRow>[] = useMemo(
+    () => [
+      {
+        id: "Text",
+        header: "Text",
+        Cell: ({ row }) => <BBoxAnnotationRenderer bboxAnnotation={row.original.bboxAnnoId} showSpanText />,
+      },
+      {
+        id: "Code",
+        header: "Code",
+        Cell: ({ row }) => <BBoxAnnotationRenderer bboxAnnotation={row.original.bboxAnnoId} showCode />,
+      },
+      {
+        id: "Filename",
+        header: "Document",
+        Cell: ({ row }) => (
+          <BBoxAnnotationRenderer
+            bboxAnnotation={row.original.bboxAnnoId}
+            showSdoc
+            sdocRendererProps={{ renderFilename: true, link: true }}
+          />
+        ),
+      },
+      {
+        id: "Tags",
+        header: "Tags",
+        Cell: ({ row }) => <BBoxAnnotationRenderer bboxAnnotation={row.original.bboxAnnoId} showSdocTags />,
+      },
+      {
+        id: "Memo",
+        header: "Memo",
+        description: "Your comments on the document",
+        Cell: ({ row }) =>
+          user ? (
+            <MemoRenderer2
+              attachedObjectType={AttachedObjectType.SPAN_ANNOTATION}
+              attachedObjectId={row.original.bboxAnnoId}
+              showTitle={false}
+              showContent
+              showIcon={false}
+            />
+          ) : null,
+      },
+    ],
+    [user],
+  );
+
+  // table
+  const table = useMaterialReactTable<BBoxAnnotationTableRow>({
+    data: data,
+    columns: columns,
+    getRowId: (row) => `${row.bboxAnnoId}`,
+    // style
+    muiTablePaperProps: {
+      elevation: 0,
+      style: { height: "100%", display: "flex", flexDirection: "column" },
+    },
+    muiTableContainerProps: {
+      style: { flexGrow: 1 },
+    },
+    // virtualization (scrolling instead of pagination)
+    enablePagination: false,
+    enableRowVirtualization: true,
+    // hide columns per default
+    initialState: {
+      columnVisibility: {
+        id: false,
+      },
+    },
+    // toolbar
+    enableBottomToolbar: false,
+    renderToolbarInternalActions: ({ table }) => (
+      <Stack direction="row" spacing={1}>
+        <MRT_ShowHideColumnsButton table={table} />
+        <MRT_ToggleDensePaddingButton table={table} />
+      </Stack>
+    ),
+  });
+
+  return <MaterialReactTable table={table} />;
+}
+
+export default BBoxAnnotationTableSimple;
