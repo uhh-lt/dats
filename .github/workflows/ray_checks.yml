@@ -28,7 +28,7 @@ jobs:
         working-directory: docker
         run: |
           docker compose -f compose.ray.yml build
-          docker compose -f compose.ray.yml up --wait --quiet-pull
+          docker compose -f compose.ray.yml up --wait
       - name: Cleanup
         working-directory: docker
         if: always()
