@@ -1,0 +1,38 @@
+name: ray checks
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    paths:
+      - "backend/src/app/preprocessing/ray_model_worker/**"
+      - ".github/ray_checks.yml"
+
+jobs:
+  ray-checks:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Prepare environment
+        run: |
+          ./bin/setup-folders.sh
+          ./bin/setup-envs.sh --project_name action-runner --port_prefix 131
+          sed -i 's/\(DATS_RAY_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
+          echo "SPACY_CACHE_DIR=$HOME/spacy_models" >> docker/.env
+          echo "MODELS_CACHE_DIR=$HOME/models_cache" >> docker/.env
+          mkdir -p $HOME/spacy_models
+          mkdir -p $HOME/models_cache
+          sed -i 's/ray_network/ray_network_${{ github.run_id }}/g' docker/compose.ray.yml
+      - name: Build & Start Docker Containers
+        working-directory: docker
+        run: |
+          docker compose -f compose.ray.yml build
+          docker compose -f compose.ray.yml up --wait --quiet-pull
+      - name: Cleanup
+        working-directory: docker
+        if: always()
+        run: |
+          docker compose -f compose.ray.yml down -v
+          RAY_IMAGE=uhhlt/dats_ray:$(grep -oP 'DATS_RAY_DOCKER_VERSION=\K.*' .env)
+          docker rmi $RAY_IMAGE
