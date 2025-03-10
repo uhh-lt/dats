@@ -182,7 +182,7 @@ class COTARefinementPipeline:
             msg = (
                 f"An error occurred while executing the COTARefinementPipelineStep {step}"
                 f"for COTARefinementJob {cargo.job.id} "
-                f"Error: {e}"
+                f"Error: {type(e)} {e}"
             )
             logger.error(msg)
             cargo = self._update_cota_job(
