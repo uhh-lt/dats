@@ -150,11 +150,6 @@ services:
       RABBITMQ_USER: ${RABBITMQ_USER:-datsuser}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-dats123}
       REDIS_PASSWORD: ${REDIS_PASSWORD:-dats123}
-      RAY_HOST: ${RAY_HOST:-ray}
-      RAY_PORT: ${RAY_PORT:-8000}
-      RAY_PROTOCOL: ${RAY_PROTOCOL:-http}
-      OLLAMA_HOST: ${OLLAMA_HOST:-ollama}
-      OLLAMA_PORT: ${OLLAMA_PORT:-11434}
       OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-gemma2:latest}
       OLLAMA_VLM_MODEL: ${OLLAMA_VLM_MODEL:-granite3.2-vision:2b-fp16}
       HUGGINGFACE_HUB_CACHE: /models_cache
@@ -214,11 +209,6 @@ services:
       RABBITMQ_USER: ${RABBITMQ_USER:-datsuser}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-dats123}
       REDIS_PASSWORD: ${REDIS_PASSWORD:-dats123}
-      RAY_HOST: ${RAY_HOST:-ray}
-      RAY_PORT: ${RAY_PORT:-8000}
-      RAY_PROTOCOL: ${RAY_PROTOCOL:-http}
-      OLLAMA_HOST: ${OLLAMA_HOST:-ollama}
-      OLLAMA_PORT: ${OLLAMA_PORT:-11434}
       OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-gemma2:latest}
       OLLAMA_VLM_MODEL: ${OLLAMA_VLM_MODEL:-granite3.2-vision:2b-fp16}
     volumes:

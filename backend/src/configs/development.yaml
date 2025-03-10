@@ -29,8 +29,8 @@ assistant_user:
   password: ${oc.env:SYSTEM_USER_PASSWORD, "12SYSTEM34"}
 
 ray:
-  protocol: ${oc.env:RAY_PROTOCOL, http}
-  host: ${oc.env:RAY_HOST, localhost}
+  protocol: http
+  host: localhost
   port: ${oc.env:RAY_PORT, 13130}
 
 repo:
@@ -128,7 +128,7 @@ elasticsearch:
     memos: configs/default_memo_index_settings.json
 
 ollama:
-  host: ${oc.env:OLLAMA_HOST, 127.0.0.1}
+  host: localhost
   port: ${oc.env:OLLAMA_PORT, 13133}
   model:
     llm: ${oc.env:OLLAMA_LLM_MODEL, gemma2:latest}
