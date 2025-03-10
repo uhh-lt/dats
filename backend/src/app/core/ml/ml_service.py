@@ -11,6 +11,7 @@ from app.core.data.dto.ml_job import (
     MLJobType,
     MLJobUpdate,
     QuotationAttributionParams,
+    TopicModelingParams,
 )
 from app.core.data.orm.source_document_job_status import (
     JobStatus,
@@ -22,6 +23,7 @@ from app.core.ml.doc_tag_recommendation.doc_tag_recommendation_service import (
     DocumentClassificationService,
 )
 from app.core.ml.quote_service import QuoteService
+from app.core.ml.topic_service import TopicService
 from app.util.singleton_meta import SingletonMeta
 from sqlalchemy import and_, or_
 
@@ -131,6 +133,20 @@ class MLService(metaclass=SingletonMeta):
                             mlj.parameters.project_id, filter_criterion, recompute
                         )
 
+                case MLJobType.TOPIC_MODELING:
+                    # TODO NOAH implement TopicService().perform_topic_modeling()
+                    if isinstance(
+                        mlj.parameters.specific_ml_job_parameters,
+                        TopicModelingParams,
+                    ):
+                        # löschen von topic models in der datenbank um neue daten zu generieren
+                        # recompute = mlj.parameters.specific_ml_job_parameters.recompute
+                        TopicService().perform_topic_modeling(
+                            mlj.parameters.project_id,
+                            mlj.parameters.specific_ml_job_parameters.nr_topics,
+                            mlj.parameters.specific_ml_job_parameters.min_topic_size,
+                            mlj.parameters.specific_ml_job_parameters.top_n_words,
+                        )
             mlj = self._update_ml_job(
                 ml_job_id, MLJobUpdate(status=BackgroundJobStatus.FINISHED)
             )

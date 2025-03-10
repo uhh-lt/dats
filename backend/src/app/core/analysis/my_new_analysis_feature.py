@@ -2,7 +2,10 @@ import json
 import os
 
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
+from app.core.data.crud.project import crud_project
+from app.core.data.dto.topic_info import TopicInfoRead
 from app.core.data.llm.ollama_service import OllamaService
 
 top_words_data = []
@@ -15,7 +18,12 @@ class OllamaTopicResponse(BaseModel):
     reasoning: str
 
 
-def top_words():
+def top_words(db: Session):
+    project_id = 1
+    project = crud_project.read(db=db, id=project_id)
+    # umwandeln von orm zu dict/list json object
+    topic_infos = [TopicInfoRead.model_validate(x) for x in project.topic_infos]
+    topic_infos[0].topic_words
     return top_words_data
 
 
@@ -25,8 +33,8 @@ def topic_distr() -> list[dict]:
 
 def get_prompt(index: int):
     top_words_string = ""
-    for point in top_words()[index]:
-        top_words_string += top_words()[index][point]["word"] + " "
+    for point in top_words_data[index]:
+        top_words_string += top_words_data[index][point]["word"] + " "
 
     user_prompt = (
         "Walter Kempowski (1929-2007) was a contemporary German author, collage artist, and archivist."
@@ -84,7 +92,7 @@ def top_words_ollama(topic_id: int) -> dict:
         "prompt": "noah_v1",
         "reasoning": response.reasoning,
         "topic_name": response.topic_name,
-        "top_words": [top_words()[topic_id]],
+        "top_words": [top_words_data[topic_id]],
     }
 
     file_name = "app/core/analysis/ollama_responses.json"

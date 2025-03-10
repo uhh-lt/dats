@@ -21,7 +21,9 @@ class TopicService(metaclass=SingletonMeta):
         cls.ws: WeaviateService = WeaviateService()
         return super(TopicService, cls).__new__(cls)
 
-    def perform_topic_modeling(self, project_id: int):
+    def perform_topic_modeling(
+        self, project_id: int, nr_topics: int, min_topic_size: int, top_n_words: int
+    ):
         # TODO 1: Alle daten finden die fürs topic modeling wichtig sind finden
         # Get textdata
         preprocessed_text_data = []
@@ -79,7 +81,6 @@ class TopicService(metaclass=SingletonMeta):
             assert isinstance(
                 topic_n_info, DataFrame
             ), "Current topic_n_info is not a DataFrame"
-            # TODO: change overall score to count -> amount of documents where a specific topic can be found
             crud_topic_info.create(
                 db=db,
                 create_dto=TopicInfoCreate(

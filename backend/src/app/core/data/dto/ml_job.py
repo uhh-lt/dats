@@ -49,6 +49,17 @@ class CoreferenceResolutionParams(BaseModel):
 
 class TopicModelingParams(BaseModel):
     ml_job_type: Literal[MLJobType.TOPIC_MODELING]
+    nr_topics: int = Field(
+        default=False,
+        description="Specifying the number of topics will reduce the initial number of topics to the value specified",
+    )
+    min_topic_size: int = Field(
+        default=False,
+        description="Minimum amount of files needed where the topics exists in order to be a topic",
+    )
+    top_n_words: int = Field(
+        default=False, description="The number of words per topic to extract."
+    )
     recompute: bool = Field(
         default=False, description="Whether to recompute already processed documents"
     )
