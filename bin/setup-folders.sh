@@ -5,7 +5,6 @@ mkdir -p ../docker/models_cache
 mkdir -p ../docker/spacy_models
 mkdir -p ../docker/numba_cache
 mkdir -p ../docker/ollama_cache
-mkdir -p ../docker/ray_repo
 
 # for production
 mkdir -p ../docker/elasticsearch_data
