@@ -15,10 +15,9 @@ import FormColorPicker from "../FormInputs/FormColorPicker.tsx";
 import FormMenu from "../FormInputs/FormMenu.tsx";
 import FormText from "../FormInputs/FormText.tsx";
 import FormTextMultiline from "../FormInputs/FormTextMultiline.tsx";
-import { CodeReadWithLevel } from "../TreeExplorer/CodeReadWithLevel.ts";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 import CodeRenderer from "./CodeRenderer.tsx";
-import { buildCodeWithLevel } from "./buildCodeWithLevel.ts";
+import { useCodesWithLevel } from "./useCodesWithLevel.ts";
 
 export type CodeCreateSuccessHandler = ((code: CodeRead, isNewCode: boolean) => void) | undefined;
 
@@ -147,10 +146,7 @@ function CodeCreateForm({ projectId, codeToCreate, parentCodes, onClose }: CodeC
   const handleErrorCodeCreateDialog: SubmitErrorHandler<CodeCreateValues> = (data) => console.error(data);
 
   // code tree
-  const codeTree: CodeReadWithLevel[] = useMemo(() => {
-    return buildCodeWithLevel(parentCodes, null, 0);
-  }, [parentCodes]);
-
+  const codeTree = useCodesWithLevel(parentCodes);
   // rendering
   return (
     <form onSubmit={handleSubmit(handleSubmitCodeCreateDialog, handleErrorCodeCreateDialog)}>

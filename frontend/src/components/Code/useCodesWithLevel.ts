@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { CodeReadWithLevel } from "../TreeExplorer/CodeReadWithLevel.ts";
 
@@ -16,4 +17,10 @@ export function buildCodeWithLevel(
     });
 
   return result;
+}
+
+export function useCodesWithLevel(parentCodes: CodeRead[]) {
+  return useMemo(() => {
+    return buildCodeWithLevel(parentCodes, null, 0);
+  }, [parentCodes]);
 }
