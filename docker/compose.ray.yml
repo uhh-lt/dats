@@ -26,7 +26,7 @@ services:
       TORCH_HOME: /models_cache
       NUMBA_CACHE_DIR: /numba_cache
     volumes:
-      - ../backend/src/app/preprocessing/ray_model_worker:/dats_code_ray
+      # - ../backend/src/app/preprocessing/ray_model_worker:/dats_code_ray  # uncomment for dev
       - "${SPACY_CACHE_DIR:-./spacy_models}:/spacy_models"
       - "${MODELS_CACHE_DIR:-./models_cache}:/models_cache"
       - ./numba_cache:/numba_cache
