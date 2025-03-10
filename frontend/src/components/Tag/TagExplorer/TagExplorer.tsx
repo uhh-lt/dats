@@ -7,6 +7,7 @@ import ExporterButton from "../../Exporter/ExporterButton.tsx";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
 import TagEditDialog from "../TagEditDialog.tsx";
 import TagMenuCreateButton from "../TagMenu/TagMenuCreateButton.tsx";
+import { useTagsWithLevel } from "../useTagsWithLevel.ts";
 import TagExplorerMenu from "./TagExplorerMenu.tsx";
 import useComputeTagTree from "./useComputeTagTree.ts";
 
@@ -17,6 +18,9 @@ interface TagExplorerNewProps {
 function TagExplorer({ onTagClick, ...props }: TagExplorerNewProps & BoxProps) {
   // custom hooks
   const { tagTree, allTags } = useComputeTagTree();
+
+  // Tags with level (Building recursively the tag tree)
+  const tagsWithLevel = useTagsWithLevel(allTags.data || []);
 
   // tag expansion
   const dispatch = useAppDispatch();
@@ -61,7 +65,7 @@ function TagExplorer({ onTagClick, ...props }: TagExplorerNewProps & BoxProps) {
               </>
             )}
           />
-          <TagEditDialog tags={allTags.data} />
+          <TagEditDialog tags={tagsWithLevel} />
         </>
       )}
     </Box>

@@ -43,6 +43,7 @@ import SentenceAnnotationEditDialog from "../../components/SentenceAnnotation/Se
 import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import SpanAnnotationEditDialog from "../../components/SpanAnnotation/SpanAnnotationEditDialog.tsx";
 import TagEditDialog from "../../components/Tag/TagEditDialog.tsx";
+import { useTagsWithLevel } from "../../components/Tag/useTagsWithLevel.ts";
 import { downloadFile } from "../../utils/ExportUtils.ts";
 import StraightConnectionLine from "./connectionlines/StraightConnectionLine.tsx";
 import CustomEdge from "./edges/CustomEdge.tsx";
@@ -171,6 +172,9 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   // global server state (react query)
   const projectCodes = CodeHooks.useGetAllCodesList();
   const projectTags = TagHooks.useGetAllTags();
+
+  // Building Tags Tree (recursively)
+  const tagsWithLevel = useTagsWithLevel(projectTags.data || []);
 
   // mutations
   const bulkLinkDocumentTagsMutation = TagHooks.useBulkLinkDocumentTags();
@@ -559,7 +563,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
       <SpanAnnotationEditDialog projectId={projectId} />
       <SentenceAnnotationEditDialog projectId={projectId} />
       <BBoxAnnotationEditDialog projectId={projectId} />
-      {projectTags.isSuccess && <TagEditDialog tags={projectTags.data} />}
+      {projectTags.isSuccess && <TagEditDialog tags={tagsWithLevel} />}
       {projectCodes.isSuccess && <CodeEditDialog codes={projectCodes.data} />}
     </>
   );
