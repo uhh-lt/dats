@@ -13,7 +13,7 @@ api = FastAPI()
 
 @serve.deployment(num_replicas=1, route_prefix="/detr")
 @serve.ingress(api)
-class DbertApi:
+class DETRApi:
     def __init__(self, detr_model_handle: DeploymentHandle) -> None:
         self.detr = detr_model_handle
 
@@ -23,6 +23,6 @@ class DbertApi:
         return predict_result
 
 
-app = DbertApi.bind(
+app = DETRApi.bind(
     detr_model_handle=DETRModel.bind(),
 )
