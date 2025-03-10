@@ -18,9 +18,8 @@ import FormColorPicker from "../FormInputs/FormColorPicker.tsx";
 import FormMenu from "../FormInputs/FormMenu.tsx";
 import FormText from "../FormInputs/FormText.tsx";
 import FormTextMultiline from "../FormInputs/FormTextMultiline.tsx";
-import { CodeReadWithLevel } from "../TreeExplorer/CodeReadWithLevel.ts";
-import { buildCodeWithLevel } from "./buildCodeWithLevel.ts";
 import CodeRenderer from "./CodeRenderer.tsx";
+import { useCodesWithLevel } from "./useCodesWithLevel.ts";
 
 type CodeEditValues = {
   parentCodeId: number | undefined;
@@ -207,9 +206,7 @@ function CodeEditDialogContent({
 
   const parentCodes = useMemo(() => codes.filter((c) => !c.is_system && c.id !== code.id), [codes, code.id]);
 
-  const codeTree: CodeReadWithLevel[] = useMemo(() => {
-    return buildCodeWithLevel(parentCodes, null, 0);
-  }, [parentCodes]);
+  const codeTree = useCodesWithLevel(parentCodes);
 
   return (
     <Dialog open={isOpen} onClose={handleClose} maxWidth="md" fullWidth>

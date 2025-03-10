@@ -1,7 +1,7 @@
 # Lets add this new menu style to other components:
 
 - CodeCreateDialog look at menu items # DONE
-- CodeEditDialog look at menu items
+- CodeEditDialog look at menu items # DONE
 - FilterValueSelector, CodeValueSelector
 
 if possible, try to create one function for all above use cases and reuse it
