@@ -7,7 +7,6 @@ import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import TagHooks from "../../api/TagHooks.ts";
 import { DocumentTagCreate } from "../../api/openapi/models/DocumentTagCreate.ts";
-import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
 import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { contrastiveColors } from "../../utils/colors.ts";
@@ -16,8 +15,10 @@ import FormColorPicker from "../FormInputs/FormColorPicker.tsx";
 import FormMenu from "../FormInputs/FormMenu.tsx";
 import FormText from "../FormInputs/FormText.tsx";
 import FormTextMultiline from "../FormInputs/FormTextMultiline.tsx";
+import { DocumentTagReadWithLevel } from "../TreeExplorer/TagReadWithLevel.ts";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 import TagRenderer from "./TagRenderer.tsx";
+import { useTagsWithLevel } from "./useTagsWithLevel.ts";
 
 /**
  * A dialog that allows to create a DocumentTag.
@@ -30,6 +31,9 @@ function TagCreateDialog() {
 
   // global state (redux)
   const tags = TagHooks.useGetAllTags();
+
+  // Tags with level
+  const tagsWithLevel = useTagsWithLevel(tags.data || []);
 
   // global client state (redux)
   const isTagCreateDialogOpen = useAppSelector((state) => state.dialog.isTagCreateDialogOpen);
@@ -101,7 +105,7 @@ function TagCreateDialog() {
     <TagCreateDialogContent
       key={`${tagName}-${parentTagId}`} // re-render dialog when tag changes
       tag={tag}
-      tags={tags.data || []}
+      tagsWithLevel={tagsWithLevel}
       isOpen={isTagCreateDialogOpen}
       handleClose={handleClose}
       handleTagCreation={handleTagCreation}
@@ -118,12 +122,12 @@ interface TagCreateDialogContentProps {
   isCreateLoading: boolean;
   handleError: SubmitErrorHandler<DocumentTagCreate>;
   tag?: DocumentTagCreate;
-  tags: DocumentTagRead[];
+  tagsWithLevel: DocumentTagReadWithLevel[];
 }
 
 function TagCreateDialogContent({
   tag,
-  tags,
+  tagsWithLevel,
   isOpen,
   handleClose,
   handleTagCreation,
@@ -171,9 +175,13 @@ function TagCreateDialogContent({
               }}
             >
               <MenuItem value={-1}>No parent</MenuItem>
-              {tags.map((tag) => (
-                <MenuItem key={tag.id} value={tag.id}>
-                  <TagRenderer tag={tag} />
+              {tagsWithLevel.map((tagWithLevel) => (
+                <MenuItem
+                  key={tagWithLevel.data.id}
+                  value={tagWithLevel.data.id}
+                  style={{ paddingLeft: tagWithLevel.level * 10 + 6 }}
+                >
+                  <TagRenderer tag={tagWithLevel.data} />
                 </MenuItem>
               ))}
             </FormMenu>

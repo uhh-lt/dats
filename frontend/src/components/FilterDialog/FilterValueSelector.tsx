@@ -9,7 +9,9 @@ import { FilterValueType } from "../../api/openapi/models/FilterValueType.ts";
 import { dateToLocaleYYYYMMDDString, isValidDateString } from "../../utils/DateUtils.ts";
 import { docTypeToIcon } from "../../utils/docTypeToIcon.tsx";
 import CodeRenderer from "../Code/CodeRenderer.tsx";
+import { useCodesWithLevel } from "../Code/useCodesWithLevel.ts";
 import TagRenderer from "../Tag/TagRenderer.tsx";
+import { useTagsWithLevel } from "../Tag/useTagsWithLevel.ts";
 import UserRenderer from "../User/UserRenderer.tsx";
 import { ColumnInfo, MyFilterExpression } from "./filterUtils.ts";
 
@@ -144,6 +146,9 @@ function TagIdValueSelector({ filterExpression, onChangeValue }: SharedFilterVal
   // global server state (react-query)
   const projectTags = TagHooks.useGetAllTags();
 
+  // transform flat list into hierarchical strcutre
+  const tagsWithLevel = useTagsWithLevel(projectTags.data || []);
+
   return (
     <TextField
       key={filterExpression.id}
@@ -162,9 +167,13 @@ function TagIdValueSelector({ filterExpression, onChangeValue }: SharedFilterVal
       <MenuItem key={-1} value={-1}>
         <i>None</i>
       </MenuItem>
-      {projectTags.data?.map((tag) => (
-        <MenuItem key={tag.id} value={tag.id}>
-          <TagRenderer tag={tag} />
+      {tagsWithLevel.map((tagWithLevel) => (
+        <MenuItem
+          key={tagWithLevel.data.id}
+          value={tagWithLevel.data.id}
+          style={{ paddingLeft: tagWithLevel.level * 10 + 6 }}
+        >
+          <TagRenderer tag={tagWithLevel.data} />
         </MenuItem>
       ))}
     </TextField>
@@ -175,6 +184,8 @@ function CodeIdValueSelector({ filterExpression, onChangeValue }: SharedFilterVa
   // global server state (react-query)
   const projectCodes = CodeHooks.useGetEnabledCodes();
 
+  const codeTree = useCodesWithLevel(projectCodes.data || []);
+
   return (
     <TextField
       key={filterExpression.id}
@@ -193,9 +204,13 @@ function CodeIdValueSelector({ filterExpression, onChangeValue }: SharedFilterVa
       <MenuItem key={-1} value={-1}>
         <i>None</i>
       </MenuItem>
-      {projectCodes.data?.map((code) => (
-        <MenuItem key={code.id} value={code.id}>
-          <CodeRenderer code={code} />
+      {codeTree.map((codeWithLevel) => (
+        <MenuItem
+          key={codeWithLevel.data.id}
+          value={codeWithLevel.data.id}
+          style={{ paddingLeft: codeWithLevel.level * 10 + 6 }}
+        >
+          <CodeRenderer code={codeWithLevel.data} />
         </MenuItem>
       ))}
     </TextField>
