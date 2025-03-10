@@ -28,10 +28,8 @@ services:
     volumes:
       - ../backend/src/app/preprocessing/ray_model_worker:/dats_code_ray
       - "${SPACY_CACHE_DIR:-./spacy_models}:/spacy_models"
-      - ./backend_repo:/tmp/dats
       - "${MODELS_CACHE_DIR:-./models_cache}:/models_cache"
       - ./numba_cache:/numba_cache
-      - ./ray_repo:/tmp/dats/ray
     shm_size: 12gb
     deploy:
       resources:
@@ -41,8 +39,8 @@ services:
               device_ids: [ "1" ]
               capabilities: [ gpu ]
     networks:
-      - ray_network-flo-dev
+      - ray_network
 
 networks:
-  ray_network-flo-dev:
-    name: ray_network-flo-dev
+  ray_network:
+    name: ray_network
