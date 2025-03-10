@@ -80,6 +80,10 @@ docker compose -f compose.ollama.yml up -d
 ```
 
 ```bash
+docker compose -f compose.ray.yml up -d
+```
+
+```bash
 docker compose -f compose.yml -f compose.production.yml up --wait
 ```
 
