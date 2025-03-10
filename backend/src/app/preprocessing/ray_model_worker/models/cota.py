@@ -1,4 +1,5 @@
 import logging
+import shutil
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -35,6 +36,11 @@ class CotaModel:
         visual_refined_embeddings, concept_similarities = self.__compute_results(
             input, embeddings
         )
+
+        # 4 remove the model files
+        model_path = self.__get_model_dir(str(input.id))
+        shutil.rmtree(model_path)
+
         response: RayCOTAJobResponse = RayCOTAJobResponse(
             visual_refined_embeddings=visual_refined_embeddings,
             concept_similarities=concept_similarities,
@@ -94,10 +100,7 @@ class CotaModel:
         model = SetFitModel.from_pretrained(MODEL, device=DEVICE)
 
         # 3. init training
-        model_name = str(input.id)
-        model_path = self.__get_model_dir(
-            proj_id=input.project_id, model_name=model_name
-        )
+        model_path = self.__get_model_dir(model_id=str(input.id))
         args = TrainingArguments(
             batch_size=BATCH_SIZE,
             num_epochs=1,
@@ -122,12 +125,6 @@ class CotaModel:
         # 4. train
         trainer.train()
 
-        # 5. store model
-        model_name = f"{input.id}-best-model"
-        model_path = self.__get_model_dir(
-            proj_id=input.project_id, model_name=model_name
-        )
-        model.save_pretrained(model_path)
         return model, sentences
 
     def __apply_st(
@@ -212,19 +209,12 @@ class CotaModel:
                 annotations[sentence.concept_annotation].append(idx)
         return annotations
 
-    def __get_models_root_path(self, proj_id: int) -> Path:
-        return COTA_ROOT_DIR / f"{proj_id}" / "models"
-
     def __get_model_dir(
         self,
-        proj_id: int,
-        model_name: str,
+        model_id: str,
         model_prefix: str = "cota_",
     ) -> Path:
-        name = (
-            self.__get_models_root_path(proj_id=proj_id) / f"{model_prefix}{model_name}"
-        )
-        return name
+        return COTA_ROOT_DIR / f"{model_prefix}{model_id}"
 
     def __apply_umap(
         self,
