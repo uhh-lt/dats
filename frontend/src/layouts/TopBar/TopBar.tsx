@@ -4,7 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import { LoginStatus } from "../../auth/LoginStatus.ts";
 import { useAuth } from "../../auth/useAuth.ts";
-import { AppBarContext } from "../TwoBarLayout.tsx";
+import { AppBarContext } from "../AppBarContext.ts";
 import TemporaryDrawer from "./TemporaryDrawer.tsx";
 import UserProfileMenu from "./UserProfileMenu.tsx";
 

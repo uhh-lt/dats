@@ -1,7 +1,7 @@
 import { Box, Portal, Typography } from "@mui/material";
 import { useContext } from "react";
+import { AppBarContext } from "../../layouts/AppBarContext.ts";
 import NoSidebarLayout from "../../layouts/NoSidebarLayout.tsx";
-import { AppBarContext } from "../../layouts/TwoBarLayout.tsx";
 import AnalysisCard from "./AnalysisCard.tsx";
 
 function Analysis() {

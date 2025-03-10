@@ -29,8 +29,9 @@ import MLHooks from "../../../api/MLHooks.ts";
 import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobStatus.ts";
 import { MLJobRead } from "../../../api/openapi/models/MLJobRead.ts";
 import { MLJobType } from "../../../api/openapi/models/MLJobType.ts";
+import { AppBarContext } from "../../../layouts/AppBarContext.ts";
 import NoSidebarLayout from "../../../layouts/NoSidebarLayout.tsx";
-import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
+
 function MlAutomation() {
   const appBarContainerRef = useContext(AppBarContext);
 

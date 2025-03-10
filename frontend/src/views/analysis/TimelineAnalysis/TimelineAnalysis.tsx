@@ -3,7 +3,7 @@ import { useContext } from "react";
 import { useParams } from "react-router-dom";
 import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
-import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
+import { AppBarContext } from "../../../layouts/AppBarContext.ts";
 import ConceptList from "./ConceptList.tsx";
 import TimeAnalysisProvenance from "./TimeAnalysisProvenance.tsx";
 import TimelineAnalysisViz from "./TimeAnalysisViz.tsx";

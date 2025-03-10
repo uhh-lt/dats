@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
 import useComputeCodeTree from "../../../components/Code/CodeExplorer/useComputeCodeTree.ts";
 import UserSelectorMulti from "../../../components/User/UserSelectorMulti.tsx";
-import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
+import { AppBarContext } from "../../../layouts/AppBarContext.ts";
 import CodeFrequencyView from "./CodeFrequencyView.tsx";
 import CodeOccurrenceTable from "./CodeOccurrenceTable.tsx";
 import DocTypeSelectorMulti from "./DocTypeSelectorMulti.tsx";

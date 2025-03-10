@@ -1,5 +1,5 @@
 import { Box, CssBaseline } from "@mui/material";
-import React, { useRef } from "react";
+import { useRef } from "react";
 import { Outlet, useParams } from "react-router-dom";
 import CodeCreateDialog from "../components/Code/CodeCreateDialog.tsx";
 import ConfirmationDialog from "../components/ConfirmationDialog/ConfirmationDialog.tsx";
@@ -10,12 +10,11 @@ import ProjectIdUpdater from "../components/Project/ProjectIdUpdater.tsx";
 import ProjectSettingsDialog from "../components/ProjectSettings/ProjectSettingsDialog.tsx";
 import SnackbarDialog from "../components/SnackbarDialog/SnackbarDialog.tsx";
 import TagCreateDialog from "../components/Tag/TagCreateDialog.tsx";
+import { AppBarContext } from "./AppBarContext.ts";
 import BottomBar from "./BottomBar/BottomBar.tsx";
 import DialMenu from "./DialMenu/DialMenu.tsx";
 import "./Layout.css";
 import TopBar from "./TopBar/TopBar.tsx";
-
-export const AppBarContext = React.createContext<React.MutableRefObject<HTMLDivElement | null> | null>(null);
 
 function TwoBarLayout() {
   const { projectId } = useParams() as { projectId: string };

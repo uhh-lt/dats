@@ -3,7 +3,7 @@ import Portal from "@mui/material/Portal";
 import { useContext } from "react";
 import { useParams } from "react-router-dom";
 import MemoTable from "../../components/Memo/MemoTable/MemoTable.tsx";
-import { AppBarContext } from "../../layouts/TwoBarLayout.tsx";
+import { AppBarContext } from "../../layouts/AppBarContext.ts";
 import { useReduxConnector } from "../../utils/useReduxConnector.ts";
 import LogbookEditor from "./LogbookEditor.tsx";
 import { LogbookActions } from "./logbookSlice.ts";

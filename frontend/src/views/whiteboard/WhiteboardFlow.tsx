@@ -5,7 +5,7 @@ import { Box, Paper, Stack, Typography } from "@mui/material";
 import { toPng } from "html-to-image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useBlocker, useParams } from "react-router-dom";
-import ReactFlow, {
+import {
   Background,
   Connection,
   ConnectionMode,
@@ -22,6 +22,7 @@ import ReactFlow, {
   OnConnect,
   OnSelectionChangeFunc,
   Panel,
+  ReactFlow,
   ReactFlowState,
   XYPosition,
   addEdge,

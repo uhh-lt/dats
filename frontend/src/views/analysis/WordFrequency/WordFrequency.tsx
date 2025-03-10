@@ -1,6 +1,6 @@
 import { Box, Grid2, Portal, Typography } from "@mui/material";
 import { useContext } from "react";
-import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
+import { AppBarContext } from "../../../layouts/AppBarContext.ts";
 import WordFrequencyTable from "./WordFrequencyTable.tsx";
 
 function WordFrequency() {

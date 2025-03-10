@@ -81,7 +81,7 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
     }
 
     return result;
-  }, [crawlerJobs.data, preProJobs.data, llmJobs.data]);
+  }, [crawlerJobs.data, preProJobs.data, llmJobs.data, mlJobs.data]);
 
   // rendering
   const renderBackgroundJobs = (status: BackgroundJobStatus) => {

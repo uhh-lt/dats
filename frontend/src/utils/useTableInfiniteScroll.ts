@@ -23,7 +23,7 @@ export const useTransformInfiniteData = <T extends TableData, U>({
 };
 
 interface UseTableFetchMoreOnScrollProps {
-  tableContainerRef: React.RefObject<HTMLDivElement>;
+  tableContainerRef: React.RefObject<HTMLDivElement | null>;
   isFetching: boolean;
   fetchNextPage: () => void;
   totalFetched: number;

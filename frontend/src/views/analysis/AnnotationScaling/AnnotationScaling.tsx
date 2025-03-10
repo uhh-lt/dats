@@ -18,7 +18,7 @@ import AnnoscalingHooks from "../../../api/AnnoscalingHooks.ts";
 import CodeHooks from "../../../api/CodeHooks.ts";
 import { AnnoscalingResult } from "../../../api/openapi/models/AnnoscalingResult.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
+import { AppBarContext } from "../../../layouts/AppBarContext.ts";
 import AnnotationScalingList from "./AnnotationScalingList.tsx";
 
 function AnnotationScaling() {

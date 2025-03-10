@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, Portal, Typography } from "@mui/material";
 import { MRT_TableInstance, MaterialReactTable } from "material-react-table";
 import { useContext } from "react";
+import { AppBarContext } from "../../../layouts/AppBarContext.ts";
 import NoSidebarLayout from "../../../layouts/NoSidebarLayout.tsx";
-import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
 import { AnalysisDashboardRow } from "./useAnalysisDashboardTable.tsx";
 
 interface AnalysisDashboardProps<T extends AnalysisDashboardRow> {
