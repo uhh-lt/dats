@@ -11,7 +11,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", "src/api/openapi"] },
+  { ignores: ["*/dist", "*/src/api/openapi"] },
   {
     languageOptions: {
       ecmaVersion: 2020,
