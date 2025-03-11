@@ -1,6 +1,6 @@
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { LoadingButton } from "@mui/lab";
-import { Box, Button, DialogActions, DialogContent, Typography } from "@mui/material";
+import { Box, Button, DialogActions, Typography } from "@mui/material";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useMemo, useState } from "react";
 import LLMHooks from "../../../api/LLMHooks.ts";
@@ -61,14 +61,12 @@ function ProjectMetadataSelectionStep() {
 
   return (
     <>
-      <DialogContent>
-        <LLMUtterance>
-          <Typography>
-            You selected {selectedDocuments.length} document(s) for automatic metadata extraction. Please select all
-            metadata that I should try to extract from the documents.
-          </Typography>
-        </LLMUtterance>
-      </DialogContent>
+      <LLMUtterance p={3}>
+        <Typography>
+          You selected {selectedDocuments.length} document(s) for automatic metadata extraction. Please select all
+          metadata that I should try to extract from the documents.
+        </Typography>
+      </LLMUtterance>
       <ProjectMetadataTable
         projectMetadata={filteredProjectMetadata}
         rowSelectionModel={rowSelectionModel}

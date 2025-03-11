@@ -98,19 +98,17 @@ function DocumentTagResultStepContent({
 
   return (
     <>
-      <DialogContent>
-        <LLMUtterance>
-          <Typography>
-            Here are the results! You can find my suggestions in the column <i>Suggested Tags</i>. Now, you decide what
-            to do with them:
-          </Typography>
-          <ul style={{ margin: 0 }}>
-            <li>Use your current tags (discarding my suggestions)</li>
-            <li>Use my suggested tags (discarding the current tags)</li>
-            <li>Merge both your current tags and my suggested tags</li>
-          </ul>
-        </LLMUtterance>
-      </DialogContent>
+      <LLMUtterance p={3}>
+        <Typography>
+          Here are the results! You can find my suggestions in the column <i>Suggested Tags</i>. Now, you decide what to
+          do with them:
+        </Typography>
+        <ul style={{ margin: 0 }}>
+          <li>Use your current tags (discarding my suggestions)</li>
+          <li>Use my suggested tags (discarding the current tags)</li>
+          <li>Merge both your current tags and my suggested tags</li>
+        </ul>
+      </LLMUtterance>
       <DocumentTagResultStepTable rows={rows} onUpdateRows={setRows} />
       <DialogActions>
         <Button onClick={handleClose}>Discard results & close</Button>

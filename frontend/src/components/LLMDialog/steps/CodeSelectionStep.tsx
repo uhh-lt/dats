@@ -1,6 +1,6 @@
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { LoadingButton } from "@mui/lab";
-import { Box, Button, DialogActions, DialogContent, Typography } from "@mui/material";
+import { Box, Button, DialogActions, Typography } from "@mui/material";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useState } from "react";
 import LLMHooks from "../../../api/LLMHooks.ts";
@@ -54,21 +54,19 @@ function CodeSelectionStep() {
 
   return (
     <>
-      <DialogContent>
-        <LLMUtterance>
-          {llmJobType === TaskType.SENTENCE_ANNOTATION ? (
-            <Typography>
-              You selected {selectedDocuments.length} document(s) for automatic sentence annotation. Please select all
-              codes that I should use to annotate sentences.
-            </Typography>
-          ) : (
-            <Typography>
-              You selected {selectedDocuments.length} document(s) for automatic annotation. Please select all codes that
-              I should use to annotate text passages.
-            </Typography>
-          )}
-        </LLMUtterance>
-      </DialogContent>
+      <LLMUtterance p={3}>
+        {llmJobType === TaskType.SENTENCE_ANNOTATION ? (
+          <Typography>
+            You selected {selectedDocuments.length} document(s) for automatic sentence annotation. Please select all
+            codes that I should use to annotate sentences.
+          </Typography>
+        ) : (
+          <Typography>
+            You selected {selectedDocuments.length} document(s) for automatic annotation. Please select all codes that I
+            should use to annotate text passages.
+          </Typography>
+        )}
+      </LLMUtterance>
       <CodeTable
         projectId={projectId}
         rowSelectionModel={rowSelectionModel}

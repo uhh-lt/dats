@@ -1,6 +1,6 @@
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { LoadingButton } from "@mui/lab";
-import { Box, Button, DialogActions, DialogContent, Typography } from "@mui/material";
+import { Box, Button, DialogActions, Typography } from "@mui/material";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useState } from "react";
 import LLMHooks from "../../../api/LLMHooks.ts";
@@ -47,14 +47,12 @@ function DocumentTagSelectionStep() {
 
   return (
     <>
-      <DialogContent>
-        <LLMUtterance>
-          <Typography>
-            You selected {selectedDocuments.length} document(s) for automatic document tagging. Please select all tags
-            that I should use to classify the documents.
-          </Typography>
-        </LLMUtterance>
-      </DialogContent>
+      <LLMUtterance p={3}>
+        <Typography>
+          You selected {selectedDocuments.length} document(s) for automatic document tagging. Please select all tags
+          that I should use to classify the documents.
+        </Typography>
+      </LLMUtterance>
       <TagTable
         projectId={projectId}
         rowSelectionModel={rowSelectionModel}

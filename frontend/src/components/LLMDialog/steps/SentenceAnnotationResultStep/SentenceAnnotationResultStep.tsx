@@ -76,21 +76,19 @@ function SentenceAnnotationResultStepContent({
 
   return (
     <>
-      <DialogContent>
-        <LLMUtterance>
-          <Typography>
-            I am done with annotating the sentences. You can now view the results in the Sentence Annotator. My
-            suggestions for the next steps are the following:
-          </Typography>
-          <ul style={{ margin: 0 }}>
-            <li>Open a document in the Annotator</li>
-            <li>Change to the sentence annotation mode</li>
-            <li>Use the "Compare with" feature to compare your annotations with mine</li>
-            <li>Apply correct & validated annotations to your document, so that I can learn from your feedback</li>
-          </ul>
-          <Typography mt={0.5}>You should look through all documents I annotated.</Typography>
-        </LLMUtterance>
-      </DialogContent>
+      <LLMUtterance p={3}>
+        <Typography>
+          I am done with annotating the sentences. You can now view the results in the Sentence Annotator. My
+          suggestions for the next steps are the following:
+        </Typography>
+        <ul style={{ margin: 0 }}>
+          <li>Open a document in the Annotator</li>
+          <li>Change to the sentence annotation mode</li>
+          <li>Use the "Compare with" feature to compare your annotations with mine</li>
+          <li>Apply correct & validated annotations to your document, so that I can learn from your feedback</li>
+        </ul>
+        <Typography mt={0.5}>You should look through all documents I annotated.</Typography>
+      </LLMUtterance>
       <DialogActions>
         <Button onClick={handleClose}>Close dialog</Button>
         <Button variant="contained" onClick={handleOpenFirstDocument}>
