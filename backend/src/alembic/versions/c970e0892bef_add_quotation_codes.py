@@ -74,7 +74,7 @@ missing_codes = {
 
 def create_code(db: Session, create_dto: CodeCreate) -> int:
     insert_stmt = sa.text("""
-        INSERT INTO codes (name, color, description, parent_id, project_id, is_system)
+        INSERT INTO code (name, color, description, parent_id, project_id, is_system)
         VALUES (:name, :color, :description, :parent_id, :project_id, :is_system)
         RETURNING id
     """)
@@ -90,9 +90,7 @@ def create_code(db: Session, create_dto: CodeCreate) -> int:
         },
     )
     db.commit()
-    created_code = result.fetchone()
-    assert created_code is not None, "Code creation failed"
-    return created_code[0]["id"]
+    return result.scalar()  # type: ignore
 
 
 def create_codes_recursively(
