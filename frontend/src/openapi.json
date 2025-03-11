@@ -4851,7 +4851,9 @@
         ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobParameters" } } }
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_llm-create_prompt_templates" } }
+          }
         },
         "responses": {
           "200": {
@@ -5808,6 +5810,18 @@
         "type": "object",
         "required": ["uploaded_file"],
         "title": "Body_import-start_import_tags_job"
+      },
+      "Body_llm-create_prompt_templates": {
+        "properties": {
+          "llm_job_params": { "$ref": "#/components/schemas/LLMJobParameters" },
+          "example_ids": {
+            "anyOf": [{ "items": { "type": "integer" }, "type": "array" }, { "type": "null" }],
+            "title": "Example Ids"
+          }
+        },
+        "type": "object",
+        "required": ["llm_job_params"],
+        "title": "Body_llm-create_prompt_templates"
       },
       "Body_memo-search_memos": {
         "properties": {
