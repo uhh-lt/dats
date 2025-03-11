@@ -218,6 +218,22 @@ class CRUDSpanAnnotation(
 
         return span_anno
 
+    def remove_bulk(self, db: Session, *, ids: List[int]) -> List[SpanAnnotationORM]:
+        span_annos = []
+        for id in ids:
+            span_annos.append(self.remove(db, id=id))
+
+        # find the annotation document ids
+        adoc_ids = {
+            sentence_anno.annotation_document_id for sentence_anno in span_annos
+        }
+
+        # update the annotation documents' timestamp
+        for adoc_id in adoc_ids:
+            crud_adoc.update_timestamp(db=db, id=adoc_id)
+
+        return span_annos
+
     def remove_by_adoc(self, db: Session, *, adoc_id: int) -> List[int]:
         # find all span annotations to be removed
         query = db.query(self.model).filter(
