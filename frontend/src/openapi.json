@@ -8166,6 +8166,18 @@
         "required": ["timeline_analysis_type", "filter"],
         "title": "SentAnnoTimelineAnalysisFilter"
       },
+      "SentAnnoTimelineAnalysisSettings": {
+        "properties": {
+          "count_sentences": {
+            "type": "boolean",
+            "title": "Count Sentences",
+            "description": "Counts the number of sentences if True, counts the number of annotations otherwise",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "SentAnnoTimelineAnalysisSettings"
+      },
       "SentenceAnnotationCreate": {
         "properties": {
           "sentence_id_start": {
@@ -9592,11 +9604,12 @@
             "items": { "type": "integer" },
             "type": "array",
             "title": "Data Ids",
-            "description": "The SourceDoument IDs."
-          }
+            "description": "The data IDs used for provenance."
+          },
+          "count": { "type": "integer", "title": "Count", "description": "The count / value used for plotting." }
         },
         "type": "object",
-        "required": ["date", "data_ids"],
+        "required": ["date", "data_ids", "count"],
         "title": "TimelineAnalysisResult"
       },
       "TimelineAnalysisSettings": {
@@ -9606,6 +9619,10 @@
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
             "title": "Date Metadata Id",
             "description": "ID of the Project Date Metadata that is used for the TimelineAnalysis"
+          },
+          "ta_specific_settings": {
+            "anyOf": [{ "$ref": "#/components/schemas/SentAnnoTimelineAnalysisSettings" }, { "type": "null" }],
+            "description": "Settings specific to the TimelineAnalysis"
           }
         },
         "type": "object",

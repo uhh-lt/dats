@@ -1,5 +1,15 @@
 import InfoIcon from "@mui/icons-material/Info";
-import { CircularProgress, MenuItem, Stack, TextField } from "@mui/material";
+import {
+  Checkbox,
+  CircularProgress,
+  FormControl,
+  FormControlLabel,
+  FormGroup,
+  FormLabel,
+  MenuItem,
+  Stack,
+  TextField,
+} from "@mui/material";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
@@ -13,6 +23,7 @@ import { DocType } from "../../../api/openapi/models/DocType.ts";
 import { MetaType } from "../../../api/openapi/models/MetaType.ts";
 import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
+import { TimelineAnalysisType } from "../../../api/openapi/models/TimelineAnalysisType.ts";
 import SdocsWithDateCounter from "../../../components/Metadata/SdocsWithDateCounter/SdocsWithDateCounter.tsx";
 
 interface TimelineAnalysisSettingsProps {
@@ -87,6 +98,20 @@ function TimelineAnalysisSettingsContent({
       },
     });
   };
+  const handleChangeCountSentences = (_: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
+    if (timelineAnalysis.timeline_analysis_type !== TimelineAnalysisType.SENTENCE_ANNOTATION) return;
+    updateTimelineAnalysisMutation.mutate({
+      timelineAnalysisId: timelineAnalysis.id,
+      requestBody: {
+        settings: {
+          ...timelineAnalysis.settings,
+          ta_specific_settings: {
+            count_sentences: checked,
+          },
+        },
+      },
+    });
+  };
 
   return (
     <Stack spacing={3}>
@@ -137,6 +162,23 @@ function TimelineAnalysisSettingsContent({
           </MenuItem>
         ))}
       </TextField>
+
+      {timelineAnalysis.timeline_analysis_type === TimelineAnalysisType.SENTENCE_ANNOTATION && (
+        <FormControl component="fieldset" variant="standard">
+          <FormLabel component="legend">Sentence Annotation Settings</FormLabel>
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={timelineAnalysis.settings.ta_specific_settings?.count_sentences}
+                  onChange={handleChangeCountSentences}
+                />
+              }
+              label="Count sentences?"
+            />
+          </FormGroup>
+        </FormControl>
+      )}
     </Stack>
   );
 }

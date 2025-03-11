@@ -55,7 +55,7 @@ function TimelineAnalysisViz({ timelineAnalysis }: TimelineAnalysisVizProps) {
       if (!concept.visible) return;
       concept.results.forEach((result) => {
         date2concept2counts[result.date] = date2concept2counts[result.date] || {};
-        date2concept2counts[result.date][concept.name] = result.data_ids.length;
+        date2concept2counts[result.date][concept.name] = result.count;
       });
     });
     return Object.entries(date2concept2counts).map(([date, concept2counts]) => {

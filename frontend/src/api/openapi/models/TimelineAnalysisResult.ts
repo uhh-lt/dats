@@ -8,7 +8,11 @@ export type TimelineAnalysisResult = {
    */
   date: string;
   /**
-   * The SourceDoument IDs.
+   * The data IDs used for provenance.
    */
   data_ids: Array<number>;
+  /**
+   * The count / value used for plotting.
+   */
+  count: number;
 };
