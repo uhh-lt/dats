@@ -8,6 +8,7 @@ from loguru import logger
 from sqlalchemy import func
 from sqlalchemy.orm import Session, aliased
 
+from app.core.data.crud.sentence_annotation import crud_sentence_anno
 from app.core.data.crud.timeline_analysis import crud_timeline_analysis
 from app.core.data.dto.analysis import DateGroupBy
 from app.core.data.dto.timeline_analysis import (
@@ -220,7 +221,7 @@ def __compute_timeline_analysis(
         def preprend_zero(x: int):
             return "0" + str(x) if x < 10 else str(x)
 
-        # map from date (YYYY, YYYY-MM, or YYYY-MM-DD) to num sdocs
+        # map from date (YYYY, YYYY-MM, or YYYY-MM-DD) to list of data_ids
         result_dict = {
             "-".join(map(lambda x: preprend_zero(x), row[1:])): row[0]
             for row in result_rows
@@ -265,9 +266,34 @@ def __compute_timeline_analysis(
             TimelineAnalysisResult(
                 data_ids=result_dict[date] if date in result_dict else [],
                 date=date,
+                count=len(result_dict[date]) if date in result_dict else 0,
             )
             for date in date_list
         ]
+
+        # handle special case for sentence annotations: count sentences vs count annotations
+        if (
+            timeline_analysis.timeline_analysis_type == TimelineAnalysisType.SENT_ANNO
+            and timeline_analysis.settings.ta_specific_settings is not None
+            and timeline_analysis.settings.ta_specific_settings.count_sentences
+        ):
+            # Create a mapping of sent_anno_id to number of sentences
+            sent_anno_ids = [data_id for x in result for data_id in x.data_ids]
+            sent_annos = crud_sentence_anno.read_by_ids(db=db, ids=sent_anno_ids)
+            sent_annos2num_sents = {
+                sent_anno.id: sent_anno.sentence_id_end
+                - sent_anno.sentence_id_start
+                + 1
+                for sent_anno in sent_annos
+            }
+
+            # Update the count of the result
+            for res in result:
+                res.count = sum(
+                    sent_annos2num_sents.get(sent_anno_id, 0)
+                    for sent_anno_id in res.data_ids
+                )
+
         return result
 
 

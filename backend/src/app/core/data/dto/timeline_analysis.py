@@ -21,7 +21,8 @@ from app.core.search.span_anno_search.span_anno_search_columns import SpanColumn
 
 class TimelineAnalysisResult(BaseModel):
     date: str = Field(description="The date.")
-    data_ids: List[int] = Field(description="The SourceDoument IDs.")
+    data_ids: List[int] = Field(description="The data IDs used for provenance.")
+    count: int = Field(description="The count / value used for plotting.")
 
 
 class TimelineAnalysisType(str, Enum):
@@ -92,10 +93,21 @@ class TimelineAnalysisConceptUpdate(BaseModel):
     )
 
 
+class SentAnnoTimelineAnalysisSettings(BaseModel):
+    count_sentences: bool = Field(
+        description="Counts the number of sentences if True, counts the number of annotations otherwise",
+        default=False,
+    )
+
+
 class TimelineAnalysisSettings(BaseModel):
     group_by: DateGroupBy = Field(description="Group by date", default=DateGroupBy.YEAR)
     date_metadata_id: Optional[int] = Field(
         description="ID of the Project Date Metadata that is used for the TimelineAnalysis",
+        default=None,
+    )
+    ta_specific_settings: Union[SentAnnoTimelineAnalysisSettings, None] = Field(
+        description="Settings specific to the TimelineAnalysis",
         default=None,
     )
 
