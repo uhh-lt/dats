@@ -132,7 +132,7 @@ function CodeTable({
     enableMultiRowSelection: enableMultiRowSelection,
     onRowSelectionChange,
     // toolbar
-    enableBottomToolbar: true,
+    enableBottomToolbar: !!renderBottomToolbarCustomActions,
     renderTopToolbarCustomActions: renderTopToolbarCustomActions
       ? (props) =>
           renderTopToolbarCustomActions({
