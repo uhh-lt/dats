@@ -1,9 +1,11 @@
+import { Stack } from "@mui/material";
 import { useParams } from "react-router-dom";
 import SpanAnnotationTable, {
   SpanAnnotationTableProps,
 } from "../../../components/SpanAnnotation/SpanAnnotationTable/SpanAnnotationTable.tsx";
 import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
 import BulkChangeSpanAnnotationCodeButton from "./BulkChangeSpanAnnotationCodeButton.tsx";
+import BulkDeleteSpanAnnotationsButton from "./BulkDeleteSpanAnnotationsButton.tsx";
 import { SpanAnnotationsActions } from "./spanAnnotationAnalysisSlice.ts";
 import SpanAnnotationAnalysisTableToolbar from "./SpanAnnotationAnalysisTableToolbar.tsx";
 
@@ -40,7 +42,10 @@ function SpanAnnotationAnalysisTable({ cardProps }: SpanAnnotationAnalysisTableP
       columnVisibilityModel={columnVisibilityModel}
       onColumnVisibilityChange={setColumnVisibilityModel}
       renderTopToolbarCustomActions={(props) => (
-        <BulkChangeSpanAnnotationCodeButton {...props} filterName={filterName} />
+        <Stack direction="row" spacing={1}>
+          <BulkChangeSpanAnnotationCodeButton {...props} />
+          <BulkDeleteSpanAnnotationsButton {...props} />
+        </Stack>
       )}
       renderToolbarInternalActions={SpanAnnotationAnalysisTableToolbar}
       cardProps={cardProps}

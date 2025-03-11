@@ -1,12 +1,12 @@
 import EditIcon from "@mui/icons-material/Edit";
-import { IconButton, Stack, Tooltip } from "@mui/material";
+import { IconButton, Tooltip } from "@mui/material";
 import { useCallback } from "react";
 import { SEATToolbarProps } from "../../../components/SentenceAnnotation/SentenceAnnotationTable/SEATToolbar.tsx";
 import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { SentAnnotationsActions } from "./sentAnnotationAnalysisSlice.ts";
 
-function BulkChangeSentAnnotationCodeButton({ selectedAnnotations }: SEATToolbarProps & { filterName: string }) {
+function BulkChangeSentAnnotationCodeButton({ selectedAnnotations }: SEATToolbarProps) {
   // global client state (redux)
   const dispatch = useAppDispatch();
 
@@ -25,15 +25,21 @@ function BulkChangeSentAnnotationCodeButton({ selectedAnnotations }: SEATToolbar
   };
 
   return (
-    <Stack direction={"row"} spacing={1} alignItems="center" p={0.5} height={48}>
+    <>
       {selectedAnnotations.length > 0 && (
-        <Tooltip title={`Change code of ${selectedAnnotations.length} sentence annotations`} placement="top">
+        <Tooltip
+          title={
+            `Change code of ${selectedAnnotations.length} sentence annotation` +
+            (selectedAnnotations.length > 1 ? "s" : "")
+          }
+          placement="top"
+        >
           <IconButton onClick={handleChangeCodeClick}>
             <EditIcon />
           </IconButton>
         </Tooltip>
       )}
-    </Stack>
+    </>
   );
 }
 

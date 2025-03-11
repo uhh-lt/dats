@@ -133,6 +133,26 @@ export class SpanAnnotationService {
     });
   }
   /**
+   * Deletes all SpanAnnotations with the given IDs.
+   * @returns SpanAnnotationDeleted Successful Response
+   * @throws ApiError
+   */
+  public static deleteBulkById({
+    requestBody,
+  }: {
+    requestBody: Array<number>;
+  }): CancelablePromise<Array<SpanAnnotationDeleted>> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/span/bulk/delete",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Returns the Code of the SpanAnnotation with the given ID if it exists.
    * @returns CodeRead Successful Response
    * @throws ApiError

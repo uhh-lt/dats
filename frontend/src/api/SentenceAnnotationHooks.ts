@@ -233,7 +233,9 @@ const useUpdateBulkSentenceAnno = () =>
     onSuccess(data) {
       queryClient.invalidateQueries({ queryKey: [QueryKey.SENT_ANNO_TABLE] }); // TODO: This is not optimal, shoudl be projectId, selectedUserId... We do this because of SentenceAnnotationTable
       data.forEach((annotation) => {
-        queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR, annotation.sdoc_id] });
+        queryClient.invalidateQueries({
+          queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR, annotation.sdoc_id, annotation.user_id],
+        });
         queryClient.invalidateQueries({ queryKey: [QueryKey.SENTENCE_ANNOTATION, annotation.id] });
       });
     },
@@ -274,6 +276,23 @@ const useDeleteSentenceAnnotation = () =>
   });
 
 const useDeleteBulkSentenceAnnotation = () =>
+  useMutation({
+    mutationFn: SentenceAnnotationService.deleteBulkById,
+    onSuccess(data) {
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SENT_ANNO_TABLE] }); // TODO: This is not optimal, should be projectId, selectedUserId... We do this because of SentenceAnnotationTable
+      data.forEach((annotation) => {
+        queryClient.invalidateQueries({
+          queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR, annotation.sdoc_id, annotation.user_id],
+        });
+        queryClient.removeQueries({ queryKey: [QueryKey.SENTENCE_ANNOTATION, annotation.id] });
+      });
+    },
+    meta: {
+      successMessage: (data: SentenceAnnotationRead[]) => `Deleted ${data.length} Sentence Annotations`,
+    },
+  });
+
+const useDeleteBulkSentenceAnnotationSingleSdoc = () =>
   useMutation({
     mutationFn: (sentAnnosToDelete: SentenceAnnotationRead[]) =>
       SentenceAnnotationService.deleteBulkById({
@@ -332,6 +351,7 @@ const SentenceAnnotationHooks = {
   useUpdateBulkSentenceAnno,
   useDeleteSentenceAnnotation,
   useDeleteBulkSentenceAnnotation,
+  useDeleteBulkSentenceAnnotationSingleSdoc,
 };
 
 export default SentenceAnnotationHooks;

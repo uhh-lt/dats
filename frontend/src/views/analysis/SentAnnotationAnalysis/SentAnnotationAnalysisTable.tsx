@@ -1,10 +1,12 @@
 import { useParams } from "react-router-dom";
 
+import { Stack } from "@mui/material";
 import SentenceAnnotationTable, {
   SentenceAnnotationTableProps,
 } from "../../../components/SentenceAnnotation/SentenceAnnotationTable/SentenceAnnotationTable.tsx";
 import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
 import BulkChangeSentAnnotationCodeButton from "./BulkChangeSentAnnotationCodeButton.tsx";
+import BulkDeleteSentAnnotationsButton from "./BulkDeleteSentAnnotationsButton.tsx";
 import { SentAnnotationsActions } from "./sentAnnotationAnalysisSlice.ts";
 import SentAnnotationAnalysisTableToolbar from "./SentAnnotationAnalysisTableToolbar.tsx";
 
@@ -41,7 +43,10 @@ function SentAnnotationAnalysisTable({ cardProps }: SentAnnotationAnalysisTableP
       columnVisibilityModel={columnVisibilityModel}
       onColumnVisibilityChange={setColumnVisibilityModel}
       renderTopToolbarCustomActions={(props) => (
-        <BulkChangeSentAnnotationCodeButton {...props} filterName={filterName} />
+        <Stack direction="row" spacing={1}>
+          <BulkChangeSentAnnotationCodeButton {...props} />
+          <BulkDeleteSentAnnotationsButton {...props} />
+        </Stack>
       )}
       renderToolbarInternalActions={SentAnnotationAnalysisTableToolbar}
       cardProps={cardProps}
