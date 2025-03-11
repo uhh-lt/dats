@@ -107,7 +107,6 @@ class MLService(metaclass=SingletonMeta):
                             mlj.parameters.project_id, filter_criterion, recompute
                         )
                 case MLJobType.TOPIC_MODELING:
-                    # TODO NOAH implement TopicService().perform_topic_modeling()
                     if isinstance(
                         mlj.parameters.specific_ml_job_parameters,
                         TopicModelingParams,
@@ -119,6 +118,7 @@ class MLService(metaclass=SingletonMeta):
                             mlj.parameters.specific_ml_job_parameters.nr_topics,
                             mlj.parameters.specific_ml_job_parameters.min_topic_size,
                             mlj.parameters.specific_ml_job_parameters.top_n_words,
+                            mlj.parameters.specific_ml_job_parameters.recompute,
                         )
             mlj = self._update_ml_job(
                 ml_job_id, MLJobUpdate(status=BackgroundJobStatus.FINISHED)

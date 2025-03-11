@@ -348,7 +348,7 @@ def return_top_words_data(
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
 ) -> List[dict]:
-    return top_words()
+    return top_words(db=db)
 
 
 @router.post(
