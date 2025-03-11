@@ -3,6 +3,7 @@ import { useAuth } from "../auth/useAuth.ts";
 import queryClient from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { SpanAnnotationCreate } from "./openapi/models/SpanAnnotationCreate.ts";
+import { SpanAnnotationDeleted } from "./openapi/models/SpanAnnotationDeleted.ts";
 import { SpanAnnotationRead } from "./openapi/models/SpanAnnotationRead.ts";
 import { SpanAnnotationUpdate } from "./openapi/models/SpanAnnotationUpdate.ts";
 import { SourceDocumentService } from "./openapi/services/SourceDocumentService.ts";
@@ -239,6 +240,23 @@ const useDeleteSpanAnnotation = () =>
     },
   });
 
+const useDeleteBulkSpanAnnotation = () =>
+  useMutation({
+    mutationFn: SpanAnnotationService.deleteBulkById,
+    onSuccess(data) {
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNO_TABLE] });
+      data.forEach((annotation) => {
+        queryClient.invalidateQueries({
+          queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, annotation.sdoc_id, annotation.user_id],
+        });
+        queryClient.removeQueries({ queryKey: [QueryKey.SPAN_ANNOTATION, annotation.id] });
+      });
+    },
+    meta: {
+      successMessage: (data: SpanAnnotationDeleted[]) => `Deleted ${data.length} Span Annotations`,
+    },
+  });
+
 const SpanAnnotationHooks = {
   useCreateSpanAnnotation,
   useCreateBulkAnnotations,
@@ -248,6 +266,7 @@ const SpanAnnotationHooks = {
   useUpdateSpanAnnotation,
   useUpdateBulkSpan,
   useDeleteSpanAnnotation,
+  useDeleteBulkSpanAnnotation,
 };
 
 export default SpanAnnotationHooks;

@@ -58,7 +58,7 @@ function SentenceAnnotationComparison({
   const createMutation = SentenceAnnotationHooks.useCreateSentenceAnnotation();
   const createBulkMutation = SentenceAnnotationHooks.useCreateBulkSentenceAnnotation();
   const deleteMutation = SentenceAnnotationHooks.useDeleteSentenceAnnotation();
-  const deleteBulkMutation = SentenceAnnotationHooks.useDeleteBulkSentenceAnnotation();
+  const deleteBulkMutation = SentenceAnnotationHooks.useDeleteBulkSentenceAnnotationSingleSdoc();
   const updateMutation = SentenceAnnotationHooks.useUpdateSentenceAnnotation();
   const handleCodeSelectorDeleteAnnotation = (annotation: Annotation) => {
     deleteMutation.mutate(annotation as SentenceAnnotationRead);

@@ -1772,6 +1772,40 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
+    "/span/bulk/delete": {
+      "delete": {
+        "tags": ["spanAnnotation"],
+        "summary": "Deletes all SpanAnnotations with the given IDs.",
+        "operationId": "delete_bulk_by_id",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "items": { "type": "integer" }, "type": "array", "title": "Span Anno Ids" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/SpanAnnotationDeleted" },
+                  "type": "array",
+                  "title": "Response Spanannotation-Delete Bulk By Id"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/span/{span_id}/code": {
       "get": {
         "tags": ["spanAnnotation"],
