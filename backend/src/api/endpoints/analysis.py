@@ -335,7 +335,7 @@ def return_topic_distr_data(
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
 ) -> List[dict]:
-    return topic_distr()
+    return topic_distr(db=db)
 
 
 @router.post(

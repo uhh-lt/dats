@@ -19,15 +19,28 @@ class OllamaTopicResponse(BaseModel):
 
 
 def top_words(db: Session):
+    # TODO NOAH add project_id as a parameter to the hook & reset top_words_data / topic_distr_data
     project_id = 1
     project = crud_project.read(db=db, id=project_id)
     # umwandeln von orm zu dict/list json object
     topic_infos = [TopicInfoRead.model_validate(x) for x in project.topic_infos]
-    topic_infos[0].topic_words
+
+    for topic_info in topic_infos:
+        topic_x_data = {}
+        # alle wörter durchgehen
+        for index, top_word in enumerate(topic_info.topic_words):
+            topic_x_data[str(index)] = top_word.model_dump()
+        top_words_data.append(topic_x_data)
     return top_words_data
 
 
-def topic_distr() -> list[dict]:
+def topic_distr(db: Session) -> list[dict]:
+    project_id = 1
+    project = crud_project.read(db=db, id=project_id)
+    topic_infos = [TopicInfoRead.model_validate(x) for x in project.topic_infos]
+
+    for topic_info in topic_infos:
+        topic_distr_data.append({"count": topic_info.doc_count})
     return topic_distr_data
 
 
@@ -67,14 +80,6 @@ def load_bertopic_model():
 # for i in range(len(topic_info) - 1):
 #    current_topic = topic_model.get_topic(i)
 #    assert isinstance(current_topic, Mapping), "Current topic is not a Mapping"
-#    topic_x_data = {}
-#    for j in range(len(current_topic)):
-#        word_data = {
-#            "word": current_topic[f"{j}"][0],
-#            "score": float(current_topic[f"{j}"][1]),
-#        }
-#        topic_x_data[f"{j}"] = word_data
-#    top_words_data.append(topic_x_data)
 #
 # for i in range(1, len(topic_info)):
 #    topic_data = {"count": int(topic_info["Count"][i])}

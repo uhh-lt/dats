@@ -33,14 +33,16 @@ import MLHooks from "../../../api/MLHooks.ts";
 import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobStatus.ts";
 import { MLJobRead } from "../../../api/openapi/models/MLJobRead.ts";
 import { MLJobType } from "../../../api/openapi/models/MLJobType.ts";
+import TopWordsBarChart from "./TopWordsBarChart.tsx";
+import TopicDistrChart from "./TopicDistrBarChart.tsx";
 
 function DocumentCategorization() {
-  //const topic_distr_data = AnalysisHooks.useReturnTopicDistrData();
+  const topic_distr_data = AnalysisHooks.useReturnTopicDistrData();
   const top_words_data = AnalysisHooks.useReturnTopWordsData();
 
   const [currentTopic, setCurrentTopic] = useState(0);
   //const [selectedTopic, setSelectedTopic] = useState(0);
-  const ollamaResponse = AnalysisHooks.useReturnTopWordsOllama(currentTopic);
+  //const ollamaResponse = AnalysisHooks.useReturnTopWordsOllama(currentTopic);
 
   const [height, setHeight] = useState<number>(window.innerHeight);
 
@@ -57,9 +59,9 @@ function DocumentCategorization() {
   }, []);
 
   // Handle Ollama response changes
-  useEffect(() => {
-    console.log("ollamaResponse data updated: ", ollamaResponse.data);
-  }, [ollamaResponse]);
+  //useEffect(() => {
+  //  console.log("ollamaResponse data updated: ", ollamaResponse.data);
+  //}, [ollamaResponse]);
 
   const handleChange = (event: SelectChangeEvent<number>) => {
     setCurrentTopic(event.target.value as number);
@@ -208,12 +210,25 @@ function DocumentCategorization() {
               ,
             </List>
           </Grid2>
-          <Grid2 size={8} style={{ textAlign: "center" }}>
-            Top Words Graph
+          <Grid2 size={6} style={{ textAlign: "center" }}>
+            {top_words_data.isLoading && <div>Loading...</div>}
+            {top_words_data.isSuccess ? (
+              <TopWordsBarChart
+                data={top_words_data.data as Record<string, { word: string; score: number }>[]}
+                topicNum={currentTopic}
+              ></TopWordsBarChart>
+            ) : (
+              <div></div>
+            )}
           </Grid2>
           <Grid2 size={2} sx={{ textAlign: "left", overflowY: "auto" }}></Grid2>
-          <Grid2 size={8} style={{ textAlign: "center" }}>
-            Topic Distr / Main Docs where Topic is found
+          <Grid2 size={6} style={{ textAlign: "center" }}>
+            {topic_distr_data.isLoading && <div>Loading...</div>}
+            {topic_distr_data.isSuccess ? (
+              <TopicDistrChart data={topic_distr_data.data as Record<string, number>[]}></TopicDistrChart>
+            ) : (
+              <div></div>
+            )}
           </Grid2>
         </Grid2>
       </Card>
