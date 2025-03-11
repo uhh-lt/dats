@@ -93,9 +93,6 @@ function LLMDialog() {
   const method = useAppSelector((state) => state.dialog.llmMethod);
   const step = useAppSelector((state) => state.dialog.llmStep);
 
-  console.log(method);
-  console.log(step);
-
   return (
     <Dialog open={open} maxWidth="lg" fullWidth>
       <DialogTitle>LLM Assistant {method && <> - {title[method]}</>}</DialogTitle>
