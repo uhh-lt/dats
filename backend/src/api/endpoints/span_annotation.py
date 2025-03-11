@@ -161,6 +161,23 @@ def delete_by_id(
     return SpanAnnotationDeleted.model_validate(db_obj)
 
 
+@router.delete(
+    "/bulk/delete",
+    response_model=List[SpanAnnotationDeleted],
+    summary="Deletes all SpanAnnotations with the given IDs.",
+)
+def delete_bulk_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    span_anno_ids: List[int],
+    authz_user: AuthzUser = Depends(),
+) -> List[SpanAnnotationDeleted]:
+    authz_user.assert_in_same_project_as_many(Crud.SPAN_ANNOTATION, span_anno_ids)
+
+    db_objs = crud_span_anno.remove_bulk(db=db, ids=span_anno_ids)
+    return [SpanAnnotationDeleted.model_validate(db_obj) for db_obj in db_objs]
+
+
 @router.get(
     "/{span_id}/code",
     response_model=CodeRead,
