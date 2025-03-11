@@ -63,7 +63,6 @@ function PromptEditorStep() {
       {
         onSuccess(data) {
           dispatch(CRUDDialogActions.llmDialogUpdatePromptEditor({ prompts: data }));
-          console.log(data);
           setPrompts(data);
         },
       },
