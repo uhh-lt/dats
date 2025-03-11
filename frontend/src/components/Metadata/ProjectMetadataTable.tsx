@@ -120,7 +120,7 @@ function ProjectMetadataTableContent({
     enableMultiRowSelection,
     onRowSelectionChange,
     // toolbar
-    enableBottomToolbar: true,
+    enableBottomToolbar: !!renderBottomToolbarCustomActions,
     renderTopToolbarCustomActions: renderTopToolbarCustomActions
       ? (props) =>
           renderTopToolbarCustomActions({
