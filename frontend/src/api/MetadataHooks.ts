@@ -82,12 +82,27 @@ const useDeleteProjectMetadata = () =>
   useMutation({
     mutationFn: ProjectMetadataService.deleteById,
     onSuccess: (data) => {
+      queryClient
+        .getQueryCache()
+        .findAll({ queryKey: [QueryKey.SDOC_METADATAS] })
+        .forEach((query) => {
+          queryClient.setQueryData<SdocMetadataMap>(query.queryKey, (oldData) => {
+            const newData = { ...oldData };
+            const metadataToDelete = Object.values(newData).find(
+              (metadata) => metadata.project_metadata_id === data.id,
+            );
+            if (!metadataToDelete) return newData;
+            delete newData[metadataToDelete.id];
+            return newData;
+          });
+        });
+
       queryClient.setQueryData<ProjectMetadataMap>([QueryKey.PROJECT_METADATAS, data.project_id], (old) => {
         const newData = { ...old };
         delete newData[data.id];
         return newData;
       });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATAS] }); // sdoc metadata queries need to be refetched, as metadata was deleted
+
       queryClient.invalidateQueries({ queryKey: [QueryKey.TABLE_INFO] }); // tableInfo queries need to be refetched, as metadata was deleted
     },
   });
