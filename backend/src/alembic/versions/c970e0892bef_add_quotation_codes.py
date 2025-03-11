@@ -72,6 +72,20 @@ missing_codes = {
 }
 
 
+def find_system_code_id(db: Session, project_id: int) -> int:
+    result = db.execute(
+        sa.text(
+            """
+            SELECT id
+            FROM code
+            WHERE project_id = :project_id AND name = 'SYSTEM_CODE'
+            """
+        ),
+        {"project_id": project_id},
+    )
+    return result.scalar()  # type: ignore
+
+
 def create_code(db: Session, create_dto: CodeCreate) -> int:
     insert_stmt = sa.text("""
         INSERT INTO code (name, color, description, parent_id, project_id, is_system)
@@ -129,7 +143,13 @@ def upgrade() -> None:
     db = sessionmaker(bind=conn)()
     for row in projects:
         print(f"Creating missing codes for project {row[0]}")
-        create_codes_recursively(db=db, code_dict=missing_codes, proj_id=row[0])
+        system_code_id = find_system_code_id(db=db, project_id=row[0])
+        create_codes_recursively(
+            db=db,
+            code_dict=missing_codes,
+            proj_id=row[0],
+            parent_code_id=system_code_id,
+        )
 
 
 def downgrade() -> None:
