@@ -12,7 +12,7 @@ from app.core.data.crud.user import (
     ASSISTANT_FEWSHOT_ID,
     ASSISTANT_TRAINED_ID,
     ASSISTANT_ZEROSHOT_ID,
-    SYSTEM_USER_ID,
+    SYSTEM_USER_IDS,
 )
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.llm_job import (
@@ -83,13 +83,6 @@ from app.util.singleton_meta import SingletonMeta
 from config import conf
 
 lac = conf.llm_assistant
-
-SYSTEM_USER_IDS = [
-    SYSTEM_USER_ID,
-    ASSISTANT_ZEROSHOT_ID,
-    ASSISTANT_FEWSHOT_ID,
-    ASSISTANT_TRAINED_ID,
-]
 
 
 class LLMJobPreparationError(Exception):

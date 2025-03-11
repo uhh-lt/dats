@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.project import crud_project
-from app.core.data.crud.user import SYSTEM_USER_ID
+from app.core.data.crud.user import SYSTEM_USER_IDS
 from app.core.data.llm.prompts.prompt_builder import PromptBuilder
 from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
 from config import conf
@@ -130,7 +130,7 @@ class SentenceAnnotationPromptBuilder(PromptBuilder):
                     db=self.db, code_ids=code_ids
                 )
                 if sa.user_id
-                != SYSTEM_USER_ID  # Filter out annotations of the system user
+                not in SYSTEM_USER_IDS  # Filter out annotations of the system users
             ]
             code_id2sentence_annotations: Dict[int, List[SentenceAnnotationORM]] = {}
             for sa in sentence_annotations:
