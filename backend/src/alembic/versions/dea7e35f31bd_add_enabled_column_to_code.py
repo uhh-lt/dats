@@ -1,7 +1,7 @@
 """add_enabled_column_to_code
 
 Revision ID: dea7e35f31bd
-Revises: c970e0892bee
+Revises: c970e0892bef
 Create Date: 2025-03-06 12:26:04.598391
 
 """
@@ -14,7 +14,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "dea7e35f31bd"
-down_revision: Union[str, None] = "c970e0892bee"
+down_revision: Union[str, None] = "c970e0892bef"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
