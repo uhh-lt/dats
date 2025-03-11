@@ -21,10 +21,8 @@ docker compose -f compose.ollama.yml down
 docker compose -f compose.ray.yml down
 
 # Pull latest changes
-git stash
 git switch main
 git pull
-git stash pop
 
 # update .env file
 cd ~/dats_prod || exit
@@ -36,5 +34,5 @@ docker compose -f compose.ollama.yml pull
 docker compose -f compose.ollama.yml up --wait
 docker compose -f compose.ray.yml pull
 docker compose -f compose.ray.yml up --wait
-docker compose -f compose.yml -f compose.production.yml pulll
+docker compose -f compose.yml -f compose.production.yml pull
 docker compose -f compose.yml -f compose.production.yml up --wait
