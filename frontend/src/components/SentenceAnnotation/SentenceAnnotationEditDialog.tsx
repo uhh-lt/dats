@@ -1,6 +1,7 @@
+import { ArrowRight } from "@mui/icons-material";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
-import { Box, Button, ButtonProps, Dialog, DialogActions, DialogTitle, Divider, Stack } from "@mui/material";
+import { Box, Button, ButtonProps, Dialog, DialogActions, DialogTitle, Stack, Typography } from "@mui/material";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useState } from "react";
 import SentenceAnnotationHooks from "../../api/SentenceAnnotationHooks.ts";
@@ -24,6 +25,7 @@ function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEditDialo
   // global client state (redux)
   const open = useAppSelector((state) => state.dialog.isSentenceAnnotationEditDialogOpen);
   const annotationIds = useAppSelector((state) => state.dialog.sentenceAnnotationIds);
+  const onEdit = useAppSelector((state) => state.dialog.spanAnnotationEditDialogOnEdit);
   const dispatch = useAppDispatch();
 
   // mutations
@@ -51,6 +53,7 @@ function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEditDialo
       {
         onSuccess: () => {
           handleClose();
+          if (onEdit) onEdit();
           openSnackbar({
             text: `Updated annotation!`,
             severity: "success",
@@ -69,15 +72,14 @@ function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEditDialo
         projectId={projectId}
         rowSelectionModel={rowSelectionModel}
         onRowSelectionChange={setRowSelectionModel}
+        enableMultiRowSelection={false}
       />
       {annotationIds.length > 0 && (
         <>
-          <Divider />
-          <DialogTitle style={{ paddingBottom: 0 }}>Preview</DialogTitle>
-          <Box px={3} mb={2}>
-            Before:
+          <Stack direction={"row"} spacing={1} alignItems="center" p={2}>
+            <Typography variant="h6">Preview</Typography>
             <SentenceAnnotationRenderer sentenceAnnotation={annotationIds[0]} showCode showSpanText />
-            After:
+            <ArrowRight />
             {selectedCodeId ? (
               <Stack direction="row" alignItems="center">
                 <CodeRenderer code={selectedCodeId} />
@@ -85,28 +87,25 @@ function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEditDialo
                 <SentenceAnnotationRenderer sentenceAnnotation={annotationIds[0]} showSpanText />
               </Stack>
             ) : (
-              <>
-                <br />
-                Select a code to preview the change.
-              </>
+              <span>Select a code to preview the change.</span>
             )}
-          </Box>
+          </Stack>
         </>
       )}
 
       <DialogActions>
         <Button onClick={handleClose}>Close</Button>
+        <Box flexGrow={1} />
         <LoadingButton
           variant="contained"
           color="success"
           startIcon={<SaveIcon />}
-          fullWidth
           onClick={handleUpdateAnnotations}
           disabled={!selectedCodeId}
           loading={updateAnnotationBulkMutation.isPending}
           loadingPosition="start"
         >
-          Update Annotation
+          Update Annotation{annotationIds.length > 1 && "s"}
         </LoadingButton>
       </DialogActions>
     </Dialog>

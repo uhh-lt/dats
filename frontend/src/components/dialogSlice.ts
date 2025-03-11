@@ -32,9 +32,11 @@ interface DialogState {
   // span
   isSpanAnnotationEditDialogOpen: boolean;
   spanAnnotationIds: number[];
-  // span
+  spanAnnotationEditDialogOnEdit?: () => void;
+  // sentence
   isSentenceAnnotationEditDialogOpen: boolean;
   sentenceAnnotationIds: number[];
+  sentenceAnnotationEditDialogOnEdit?: () => void;
   // bbox
   isBBoxAnnotationEditDialogOpen: boolean;
   isBBoxAnnotationCreateDialogOpen: boolean;
@@ -78,6 +80,7 @@ const initialState: DialogState = {
   // span
   isSpanAnnotationEditDialogOpen: false,
   spanAnnotationIds: [],
+  spanAnnotationEditDialogOnEdit: undefined,
   // sentence
   isSentenceAnnotationEditDialogOpen: false,
   sentenceAnnotationIds: [],
@@ -123,21 +126,31 @@ export const dialogSlice = createSlice({
   name: "dialog",
   initialState,
   reducers: {
-    openSpanAnnotationEditDialog: (state, action: PayloadAction<{ spanAnnotationIds: number[] }>) => {
+    openSpanAnnotationEditDialog: (
+      state,
+      action: PayloadAction<{ spanAnnotationIds: number[]; onEdit?: () => void }>,
+    ) => {
       state.isSpanAnnotationEditDialogOpen = true;
       state.spanAnnotationIds = action.payload.spanAnnotationIds;
+      state.spanAnnotationEditDialogOnEdit = action.payload.onEdit;
     },
     closeSpanAnnotationEditDialog: (state) => {
       state.isSpanAnnotationEditDialogOpen = false;
       state.spanAnnotationIds = [];
+      state.spanAnnotationEditDialogOnEdit = undefined;
     },
-    openSentenceAnnotationEditDialog: (state, action: PayloadAction<{ sentenceAnnotationIds: number[] }>) => {
+    openSentenceAnnotationEditDialog: (
+      state,
+      action: PayloadAction<{ sentenceAnnotationIds: number[]; onEdit?: () => void }>,
+    ) => {
       state.isSentenceAnnotationEditDialogOpen = true;
       state.sentenceAnnotationIds = action.payload.sentenceAnnotationIds;
+      state.sentenceAnnotationEditDialogOnEdit = action.payload.onEdit;
     },
     closeSentenceAnnotationEditDialog: (state) => {
       state.isSentenceAnnotationEditDialogOpen = false;
       state.sentenceAnnotationIds = [];
+      state.sentenceAnnotationEditDialogOnEdit = undefined;
     },
     openTagEditDialog: (state, action: PayloadAction<{ tagId: number }>) => {
       state.isTagEditDialogOpen = true;
