@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends
 
@@ -72,12 +72,15 @@ def create_prompt_templates(
     *,
     llm_job_params: LLMJobParameters,
     approach_type: ApproachType,
+    example_ids: Optional[List[int]] = None,
     authz_user: AuthzUser = Depends(),
 ) -> List[LLMPromptTemplates]:
     authz_user.assert_in_project(llm_job_params.project_id)
 
     return llms.create_prompt_templates(
-        llm_job_params=llm_job_params, approach_type=approach_type
+        llm_job_params=llm_job_params,
+        approach_type=approach_type,
+        example_ids=example_ids,
     )
 
 
