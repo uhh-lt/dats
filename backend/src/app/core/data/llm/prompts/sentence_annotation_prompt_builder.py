@@ -1,5 +1,5 @@
 import random
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -117,32 +117,50 @@ class SentenceAnnotationPromptBuilder(PromptBuilder):
         return "\n".join(examples)
 
     def _build_user_prompt_template(
-        self, language: str, code_ids: List[int], **kwargs
+        self,
+        *,
+        language: str,
+        code_ids: List[int],
+        example_ids: Optional[List[int]] = None,
+        **kwargs,
     ) -> str:
         if self.is_fewshot:
             from app.core.data.crud.sentence_annotation import crud_sentence_anno
             from app.core.data.crud.source_document import crud_sdoc
 
             # find sentence annotations
-            sentence_annotations = [
-                sa
-                for sa in crud_sentence_anno.read_by_codes(
-                    db=self.db, code_ids=code_ids
+            if example_ids is None:
+                sentence_annotations = [
+                    sa
+                    for sa in crud_sentence_anno.read_by_codes(
+                        db=self.db, code_ids=code_ids
+                    )
+                    if sa.user_id
+                    not in SYSTEM_USER_IDS  # Filter out annotations of the system users
+                ]
+            # or use the provided examples
+            else:
+                sentence_annotations = crud_sentence_anno.read_by_ids(
+                    db=self.db, ids=example_ids
                 )
-                if sa.user_id
-                not in SYSTEM_USER_IDS  # Filter out annotations of the system users
-            ]
-            code_id2sentence_annotations: Dict[int, List[SentenceAnnotationORM]] = {}
+
+            code_id2sentence_annotations: Dict[int, List[SentenceAnnotationORM]] = {
+                code_id: [] for code_id in code_ids
+            }
             for sa in sentence_annotations:
                 if sa.code_id not in code_id2sentence_annotations:
                     code_id2sentence_annotations[sa.code_id] = []
                 code_id2sentence_annotations[sa.code_id].append(sa)
 
-            # check that there are at least 4 examples per code
-            for code_id, annotations in code_id2sentence_annotations.items():
-                assert (
-                    len(annotations) >= sent_anno_conf.few_shot_threshold
-                ), f"Code {code_id} has less than {sent_anno_conf.few_shot_threshold} annotations!"
+            # select configured number of examples
+            if example_ids is None:
+                for code_id, annotations in code_id2sentence_annotations.items():
+                    assert (
+                        len(annotations) >= sent_anno_conf.few_shot_threshold
+                    ), f"Code {code_id} has less than {sent_anno_conf.few_shot_threshold} annotations!"
+                    code_id2sentence_annotations[code_id] = random.sample(
+                        annotations, sent_anno_conf.few_shot_threshold
+                    )
 
             # find corrsponding sdoc datas
             sdoc_ids = [sa.sdoc_id for sa in sentence_annotations]
@@ -164,7 +182,7 @@ class SentenceAnnotationPromptBuilder(PromptBuilder):
                                     sa.sentence_id_start : sa.sentence_id_end + 1
                                 ]
                             )
-                            for sa in code_id2sentence_annotations[code_id][0:4]
+                            for sa in code_id2sentence_annotations[code_id]
                         ]
                     )
                     + "\n"

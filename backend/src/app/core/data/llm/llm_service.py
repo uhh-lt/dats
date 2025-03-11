@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Callable, Dict, List, Type, Union
+from typing import Callable, Dict, List, Optional, Type, Union
 
 from loguru import logger
 from sqlalchemy.orm import Session
@@ -390,7 +390,10 @@ class LLMService(metaclass=SingletonMeta):
         )
 
     def create_prompt_templates(
-        self, llm_job_params: LLMJobParameters, approach_type: ApproachType
+        self,
+        llm_job_params: LLMJobParameters,
+        approach_type: ApproachType,
+        example_ids: Optional[List[int]] = None,
     ) -> List[LLMPromptTemplates]:
         with self.sqls.db_session() as db:
             # get the llm method based on the jobtype
@@ -407,9 +410,10 @@ class LLMService(metaclass=SingletonMeta):
                 is_fewshot=approach_type == ApproachType.LLM_FEW_SHOT,
             )
             return prompt_builder.build_prompt_templates(
+                example_ids=example_ids,
                 **llm_job_params.specific_task_parameters.model_dump(
                     exclude={"llm_job_type"}
-                )
+                ),
             )
 
     def construct_prompt_dict(
