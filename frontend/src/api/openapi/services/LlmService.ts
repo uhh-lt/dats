@@ -4,6 +4,7 @@
 /* eslint-disable */
 import type { ApproachRecommendation } from "../models/ApproachRecommendation";
 import type { ApproachType } from "../models/ApproachType";
+import type { Body_llm_create_prompt_templates } from "../models/Body_llm_create_prompt_templates";
 import type { LLMJobParameters } from "../models/LLMJobParameters";
 import type { LLMJobParameters2_Input } from "../models/LLMJobParameters2_Input";
 import type { LLMJobRead } from "../models/LLMJobRead";
@@ -73,7 +74,7 @@ export class LlmService {
     requestBody,
   }: {
     approachType: ApproachType;
-    requestBody: LLMJobParameters;
+    requestBody: Body_llm_create_prompt_templates;
   }): CancelablePromise<Array<LLMPromptTemplates>> {
     return __request(OpenAPI, {
       method: "POST",

@@ -268,6 +268,15 @@ export const dialogSlice = createSlice({
       state.llmPrompts = action.payload.prompts;
       state.llmApproach = action.payload.approach;
     },
+    llmDialogUpdatePromptEditor: (
+      state,
+      action: PayloadAction<{
+        prompts: LLMPromptTemplates[];
+      }>,
+    ) => {
+      state.llmStep = 3;
+      state.llmPrompts = action.payload.prompts;
+    },
     // -> For model training, go to the training parameters editor
     llmDialogGoToTrainingParameterEditor: (
       state,

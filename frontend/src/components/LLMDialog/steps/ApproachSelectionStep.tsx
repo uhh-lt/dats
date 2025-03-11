@@ -60,14 +60,16 @@ function ApproachSelectionStep() {
           {
             approachType: approachType,
             requestBody: {
-              llm_job_type: llmMethod,
-              project_id: projectId,
-              specific_task_parameters: {
+              llm_job_params: {
                 llm_job_type: llmMethod,
-                tag_ids: tags.map((tag) => tag.id),
-                project_metadata_ids: metadata.map((m) => m.id),
-                code_ids: codes.map((code) => code.id),
-                sdoc_ids: sdocIds,
+                project_id: projectId,
+                specific_task_parameters: {
+                  llm_job_type: llmMethod,
+                  tag_ids: tags.map((tag) => tag.id),
+                  project_metadata_ids: metadata.map((m) => m.id),
+                  code_ids: codes.map((code) => code.id),
+                  sdoc_ids: sdocIds,
+                },
               },
             },
           },

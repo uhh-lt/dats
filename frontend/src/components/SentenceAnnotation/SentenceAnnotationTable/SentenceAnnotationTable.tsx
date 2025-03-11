@@ -283,7 +283,7 @@ function SentenceAnnotationTable({
         selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
       }),
     renderBottomToolbarCustomActions: (props) => (
-      <Stack direction={"row"} spacing={1} alignItems="center">
+      <Stack direction={"row"} spacing={1} alignItems="center" width="100%">
         <Typography>
           Fetched {totalFetched} of {totalResults} total rows.
         </Typography>
