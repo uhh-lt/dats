@@ -1,8 +1,7 @@
-from typing import List, Mapping, Tuple
+from typing import List, Tuple
 
 from bertopic import BERTopic
-from pandas import DataFrame
-from umap.umap_ import UMAP
+from umap import UMAP
 
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
@@ -10,6 +9,7 @@ from app.core.data.crud.topic_info import crud_topic_info
 from app.core.data.dto.span_annotation import SpanAnnotationCreateIntern
 from app.core.data.dto.topic_info import TopicInfoCreate, TopicWordInfo
 from app.core.data.orm.source_document_data import SourceDocumentDataORM
+from app.core.data.orm.topic_info import TopicInfoORM
 from app.core.db.sql_service import SQLService
 from app.core.db.weaviate_service import WeaviateService
 from app.util.singleton_meta import SingletonMeta
@@ -22,9 +22,14 @@ class TopicService(metaclass=SingletonMeta):
         return super(TopicService, cls).__new__(cls)
 
     def perform_topic_modeling(
-        self, project_id: int, nr_topics: int, min_topic_size: int, top_n_words: int
+        self,
+        project_id: int,
+        nr_topics: int,
+        min_topic_size: int,
+        top_n_words: int,
+        recompute: bool = False,
     ):
-        # TODO 1: Alle daten finden die fürs topic modeling wichtig sind finden
+        # TODO NOAH check auf empty files
         # Get textdata
         preprocessed_text_data = []
         with self.sqls.db_session() as db:
@@ -48,11 +53,6 @@ class TopicService(metaclass=SingletonMeta):
         # Initialize UMAP for dimensionality reduction
         umap_model = UMAP(n_neighbors=15, n_components=5, min_dist=0.0, metric="cosine")
 
-        # Initialize BERTopic
-        nr_topics = 50
-        min_topic_size = 10
-        top_n_words = 20
-
         # TODO rename params -> bertopic names
         topic_model = BERTopic(
             language="multilingual",
@@ -73,26 +73,34 @@ class TopicService(metaclass=SingletonMeta):
         print("BERTopic model fitting completed.")
         # TODO 3: Ergebnisse abspeichern -> Datenbank
         # loop durch alle topics und create jeweils
-        for i in range(nr_topics):
-            # TODO: change to extract all info through get_topic_info?
-            topic_n = topic_model.get_topic(i)
-            topic_n_info = topic_model.get_topic_info(i)
-            assert isinstance(topic_n, Mapping), "Current topic_info is not a Mapping"
-            assert isinstance(
-                topic_n_info, DataFrame
-            ), "Current topic_n_info is not a DataFrame"
-            crud_topic_info.create(
-                db=db,
-                create_dto=TopicInfoCreate(
-                    project_id=project_id,
-                    name=str(i),
-                    doc_count=topic_n_info["Count"].values[0],
-                    topic_words=[
-                        TopicWordInfo(word=topic_word[0], score=float(topic_word[1]))
-                        for topic_word in topic_n
-                    ],
-                ),
+        # TODO: change to extract all info through get_topic_info?
+        if recompute:
+            # delete data in db from this project
+            subquery = (
+                db.query(TopicInfoORM.id)
+                .filter(TopicInfoORM.project_id == project_id)
+                .scalar_subquery()
             )
+            db.query(TopicInfoORM).where(TopicInfoORM.id.in_(subquery)).delete()
+
+        topic_n = topic_model.get_topics()
+
+        for index, topic in topic_n.items():
+            if index != -1:
+                topic_n_info = topic_model.get_topic_info(index)  # type: ignore
+
+                crud_topic_info.create(
+                    db=db,
+                    create_dto=TopicInfoCreate(
+                        project_id=project_id,
+                        name=str(index),
+                        doc_count=topic_n_info["Count"].values[0],
+                        topic_words=[
+                            TopicWordInfo(word=topic_word[0], score=topic_word[1])  # type: ignore
+                            for topic_word in topic
+                        ],
+                    ),
+                )
 
     def _make_topic_info(
         self,

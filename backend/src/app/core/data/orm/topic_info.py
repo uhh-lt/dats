@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     DateTime,
-    Float,
     ForeignKey,
     Integer,
     String,
@@ -20,7 +19,7 @@ if TYPE_CHECKING:
 class TopicInfoORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String, nullable=True, index=True)
-    score: Mapped[float] = mapped_column(Float, nullable=True, index=True)
+    doc_count: Mapped[int] = mapped_column(Integer, nullable=True, index=True)
     # JSON representation of a list of TopicWordInfo (see DTO)
     topic_words: Mapped[str] = mapped_column(
         String,
