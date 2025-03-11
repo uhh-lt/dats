@@ -87,9 +87,9 @@ function DocumentCategorization() {
           specific_ml_job_parameters: {
             recompute: recompute,
             ml_job_type: MLJobType.TOPIC_MODELING,
-            nr_topics: 10,
-            min_topic_size: 10,
-            top_n_words: 10,
+            nr_topics: 2,
+            min_topic_size: 2,
+            top_n_words: 5,
           },
         },
       },
