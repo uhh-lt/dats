@@ -57,7 +57,7 @@ const useAddUserToProject = () =>
     mutationFn: ProjectService.associateUserToProject,
     onSuccess: (data, variables) => {
       queryClient.setQueryData<UserRead[]>([QueryKey.PROJECT_USERS, variables.projId], (oldData) =>
-        oldData ? oldData.map((user) => (user.id === data.id ? data : user)) : oldData,
+        oldData ? [...oldData, data] : [data],
       );
     },
     meta: {
