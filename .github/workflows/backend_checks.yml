@@ -17,8 +17,12 @@ jobs:
       API_WORKERS: 1
       RAY_HAS_CHANGED: false
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+      - name: Checkout PR
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr checkout ${{ github.event.pull_request.number }}
       - name: Check for changes in ray_model_worker (pull request)
         id: check_ray_model_worker_changes_pr
         if: github.event_name == 'pull_request'
@@ -27,11 +31,6 @@ jobs:
           if git diff --name-only $base_branch HEAD | grep -q -e '^backend/src/app/preprocessing/ray_model_worker/'; then
             echo "RAY_HAS_CHANGED=true" >> $GITHUB_ENV
           fi
-      - name: Checkout PR
-        if: github.event_name == 'pull_request'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh pr checkout ${{ github.event.pull_request.number }}
       - name: Check for changes in ray_model_worker (push)
         id: check_ray_model_worker_changes_push
         if: github.event_name == 'push'
