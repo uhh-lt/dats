@@ -19,6 +19,7 @@ class OllamaTopicResponse(BaseModel):
 
 
 def top_words(db: Session):
+    top_words_data = []
     # TODO NOAH add project_id as a parameter to the hook & reset top_words_data / topic_distr_data
     project_id = 1
     project = crud_project.read(db=db, id=project_id)
@@ -35,6 +36,7 @@ def top_words(db: Session):
 
 
 def topic_distr(db: Session) -> list[dict]:
+    topic_distr_data = []
     project_id = 1
     project = crud_project.read(db=db, id=project_id)
     topic_infos = [TopicInfoRead.model_validate(x) for x in project.topic_infos]
