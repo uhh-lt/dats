@@ -5,19 +5,28 @@ import {
   Button,
   DialogActions,
   DialogContent,
+  Divider,
   FormControl,
   InputLabel,
   MenuItem,
   Select,
   SelectChangeEvent,
+  Stack,
   Typography,
 } from "@mui/material";
 import React, { useState } from "react";
 import LLMHooks from "../../../api/LLMHooks.ts";
 import { ApproachType } from "../../../api/openapi/models/ApproachType.ts";
+import { TaskType } from "../../../api/openapi/models/TaskType.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import CodeRenderer from "../../Code/CodeRenderer.tsx";
 import { CRUDDialogActions } from "../../dialogSlice.ts";
 import LLMUtterance from "./LLMUtterance.tsx";
+
+enum DeletionStrategy {
+  DELETE_EXISTING = "DELETE_EXISTING",
+  KEEP_EXISTING = "KEEP_EXISTING",
+}
 
 const explanations: Record<ApproachType, string> = {
   [ApproachType.LLM_ZERO_SHOT]:
@@ -44,6 +53,23 @@ function ApproachSelectionStep() {
   const handleChange = (event: SelectChangeEvent) => {
     setApproachType(event.target.value as ApproachType);
   };
+
+  // deletion strategy
+  const existingAssistantAnnotations = LLMHooks.useCountExistingAssistantAnnotations({
+    taskType: llmMethod,
+    approachType,
+    sdocIds,
+    codeIds: codes.map((code) => code.id),
+  });
+  const hasExistingAnnotations =
+    existingAssistantAnnotations.isSuccess &&
+    Object.values(existingAssistantAnnotations.data).some((count) => count > 0);
+  const [deleteExistingAnnotations, setDeleteExistingAnnotations] = useState(DeletionStrategy.DELETE_EXISTING);
+  const handleChangeDeletionStrategy = (event: SelectChangeEvent) => {
+    setDeleteExistingAnnotations(event.target.value as DeletionStrategy);
+  };
+
+  console.log(deleteExistingAnnotations === DeletionStrategy.DELETE_EXISTING);
 
   // initiate next step (get the generated prompts)
   const createPromptTemplatesMutation = LLMHooks.useCreatePromptTemplates();
@@ -75,7 +101,13 @@ function ApproachSelectionStep() {
           },
           {
             onSuccess(data) {
-              dispatch(CRUDDialogActions.llmDialogGoToPromptEditor({ prompts: data, approach: approachType }));
+              dispatch(
+                CRUDDialogActions.llmDialogGoToPromptEditor({
+                  prompts: data,
+                  approach: approachType,
+                  deleteExistingAnnotations: deleteExistingAnnotations === DeletionStrategy.DELETE_EXISTING,
+                }),
+              );
             },
           },
         );
@@ -114,8 +146,6 @@ function ApproachSelectionStep() {
     (available) => available,
   ).length;
 
-  console.log(approachRecommendation.reasoning);
-
   return (
     <>
       <DialogContent>
@@ -149,6 +179,36 @@ function ApproachSelectionStep() {
         <LLMUtterance>
           <Typography>{explanations[approachType as ApproachType]}</Typography>
         </LLMUtterance>
+        {llmMethod === TaskType.SENTENCE_ANNOTATION && existingAssistantAnnotations.data && hasExistingAnnotations && (
+          <>
+            <Divider sx={{ my: 2 }} />
+            <LLMUtterance>
+              <Typography>
+                <b>Warning!</b> I noticed that I already annotated the documents you selected. I checked the number of
+                my annotations for each code and found:
+              </Typography>
+              {Object.entries(existingAssistantAnnotations.data).map(([code, count]) => (
+                <Stack direction="row" key={code}>
+                  <CodeRenderer code={parseInt(code)} />: {count}
+                </Stack>
+              ))}
+              <Typography>How should we deal with my existing annotations?</Typography>
+            </LLMUtterance>
+            <FormControl sx={{ ml: 12.5, my: 2 }}>
+              <InputLabel id="deletion-strategy">Deletion</InputLabel>
+              <Select
+                labelId="deletion-strategy"
+                id="deletion-strategy"
+                value={deleteExistingAnnotations}
+                label="Delete"
+                onChange={handleChangeDeletionStrategy}
+              >
+                <MenuItem value={DeletionStrategy.DELETE_EXISTING}>Delete existing annotations</MenuItem>
+                <MenuItem value={DeletionStrategy.KEEP_EXISTING}>Keep existing annotations</MenuItem>
+              </Select>
+            </FormControl>
+          </>
+        )}
       </DialogContent>
       <DialogActions>
         <Box flexGrow={1} />

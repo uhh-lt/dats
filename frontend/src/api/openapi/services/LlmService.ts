@@ -4,11 +4,13 @@
 /* eslint-disable */
 import type { ApproachRecommendation } from "../models/ApproachRecommendation";
 import type { ApproachType } from "../models/ApproachType";
+import type { Body_llm_count_existing_assistant_annotations } from "../models/Body_llm_count_existing_assistant_annotations";
 import type { Body_llm_create_prompt_templates } from "../models/Body_llm_create_prompt_templates";
 import type { LLMJobParameters } from "../models/LLMJobParameters";
 import type { LLMJobParameters2_Input } from "../models/LLMJobParameters2_Input";
 import type { LLMJobRead } from "../models/LLMJobRead";
 import type { LLMPromptTemplates } from "../models/LLMPromptTemplates";
+import type { TaskType } from "../models/TaskType";
 import type { TrainingParameters } from "../models/TrainingParameters";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -122,6 +124,34 @@ export class LlmService {
     return __request(OpenAPI, {
       method: "POST",
       url: "/llm/determine_approach",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Based on the approach, count the number of existing assistant annotations
+   * @returns number Successful Response
+   * @throws ApiError
+   */
+  public static countExistingAssistantAnnotations({
+    taskType,
+    approachType,
+    requestBody,
+  }: {
+    taskType: TaskType;
+    approachType: ApproachType;
+    requestBody: Body_llm_count_existing_assistant_annotations;
+  }): CancelablePromise<Record<string, number>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/llm/count_existing_assistant_annotations",
+      query: {
+        task_type: taskType,
+        approach_type: approachType,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
