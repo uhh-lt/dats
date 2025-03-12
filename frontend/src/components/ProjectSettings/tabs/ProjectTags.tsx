@@ -6,15 +6,11 @@ import TagEditDialog from "../../Tag/TagEditDialog.tsx";
 import TagEditButton from "../../Tag/TagExplorer/TagEditButton.tsx";
 import useComputeTagTree from "../../Tag/TagExplorer/useComputeTagTree.ts";
 import TagMenuCreateButton from "../../Tag/TagMenu/TagMenuCreateButton.tsx";
-import { useTagsWithLevel } from "../../Tag/useTagsWithLevel.ts";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
 
 function ProjectTags() {
   // custom hooks
   const { tagTree, allTags } = useComputeTagTree();
-
-  // Tags with level (Building recursively the tag tree)
-  const tagsWithLevel = useTagsWithLevel(allTags.data || []);
 
   // local client state
   const [expandedTagIds, setExpandedTagIds] = useState<string[]>([]);
@@ -48,7 +44,7 @@ function ProjectTags() {
               </>
             )}
           />
-          <TagEditDialog tags={tagsWithLevel} />
+          <TagEditDialog tags={allTags.data} />
         </>
       )}
       <TagCreateDialog />
