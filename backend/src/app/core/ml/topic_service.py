@@ -31,20 +31,25 @@ class TopicService(metaclass=SingletonMeta):
     ):
         # TODO NOAH check auf empty files
         # Get textdata
-        preprocessed_text_data = []
+        text_data = []
         with self.sqls.db_session() as db:
             project = crud_project.read(db=db, id=project_id)
-            sdoc_filenames = [x.filename for x in project.source_documents]
-            sdoc_ids = [x.id for x in project.source_documents]
+            sdoc_filenames = [
+                x.filename for x in project.source_documents if x.data.content.strip()
+            ]
+            sdoc_ids = [
+                x.id for x in project.source_documents if x.data.content.strip()
+            ]
             print(sdoc_filenames)
 
             # read all files
             doc_datas = crud_sdoc.read_data_batch(db=db, ids=sdoc_ids)
             for doc_data in doc_datas:
-                assert isinstance(
-                    doc_data, SourceDocumentDataORM
-                ), "Current document data is not a SourceDocumentDataORM"
-                preprocessed_text_data.append(doc_data.content)
+                # check for None
+                if doc_data:
+                    # check for empty content
+                    if doc_data.content.strip():
+                        text_data.append(doc_data.content)
 
         # get text embeddings
         text_embeddings = self.ws.get_document_embeddings(search_ids=sdoc_ids)
@@ -66,9 +71,7 @@ class TopicService(metaclass=SingletonMeta):
         # Fit the model on the preprocessed text data and embeddings
         print("Fitting BERTopic model...")
 
-        topics, probabilities = topic_model.fit_transform(
-            preprocessed_text_data, text_embeddings
-        )
+        topics, probabilities = topic_model.fit_transform(text_data, text_embeddings)
 
         print("BERTopic model fitting completed.")
         # TODO 3: Ergebnisse abspeichern -> Datenbank
