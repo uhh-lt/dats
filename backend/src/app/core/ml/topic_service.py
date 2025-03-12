@@ -1,6 +1,10 @@
+from html import unescape
 from typing import List, Tuple
 
+import spacy
 from bertopic import BERTopic
+from spacy.language import Language
+from spacy_langdetect import LanguageDetector
 from umap import UMAP
 
 from app.core.data.crud.project import crud_project
@@ -13,6 +17,11 @@ from app.core.data.orm.topic_info import TopicInfoORM
 from app.core.db.sql_service import SQLService
 from app.core.db.weaviate_service import WeaviateService
 from app.util.singleton_meta import SingletonMeta
+
+
+@Language.factory("language_detector")
+def get_lang_detector(nlp, name):
+    return LanguageDetector()
 
 
 class TopicService(metaclass=SingletonMeta):
@@ -51,6 +60,21 @@ class TopicService(metaclass=SingletonMeta):
                     if doc_data.content.strip():
                         text_data.append(doc_data.content)
 
+        nlp = spacy.load("de_core_news_lg")
+        print("nlp loaded...")
+
+        nlp.add_pipe("language_detector", last=True)
+
+        stopwords_file = (
+            "/home/9scheld/dats/backend/src/app/core/ml/multi-languages.txt"
+        )
+        with open(stopwords_file, "r", encoding="utf-8") as file:
+            custom_stopwords = list(file.read().splitlines())
+        print(custom_stopwords[0:50])
+        preprocessed_text_data = [
+            self.preprocess_text(doc, nlp, custom_stopwords) for doc in text_data
+        ]
+
         # get text embeddings
         text_embeddings = self.ws.get_document_embeddings(search_ids=sdoc_ids)
 
@@ -71,7 +95,9 @@ class TopicService(metaclass=SingletonMeta):
         # Fit the model on the preprocessed text data and embeddings
         print("Fitting BERTopic model...")
 
-        topics, probabilities = topic_model.fit_transform(text_data, text_embeddings)
+        topics, probabilities = topic_model.fit_transform(
+            preprocessed_text_data, text_embeddings
+        )
 
         print("BERTopic model fitting completed.")
         # TODO 3: Ergebnisse abspeichern -> Datenbank
@@ -104,6 +130,32 @@ class TopicService(metaclass=SingletonMeta):
                         ],
                     ),
                 )
+
+    def preprocess_text(self, text: str, nlp: Language, custom_stopwords: List[str]):
+        text = unescape(text)
+
+        doc = nlp(text.lower())
+
+        # Check if language detection exists before accessing
+        if not doc._.has("language") or doc._.language is None:
+            return ""
+
+        # Only process if detected language is German or English
+        if doc._.language["language"] in ["de", "en"]:
+            tokens = [
+                token.lemma_
+                for token in doc
+                if not token.is_stop  # Remove spaCy's stopwords
+                and not token.is_punct  # Remove punctuation
+                and not any(
+                    char.isdigit() for char in token.text
+                )  # Remove tokens with numbers
+                and token.lemma_ not in custom_stopwords  # Remove custom stopwords
+                and len(token) > 2  # Filter out very short tokens
+            ]
+            return " ".join(tokens)
+
+        return ""  # Ensure function always returns a string
 
     def _make_topic_info(
         self,
