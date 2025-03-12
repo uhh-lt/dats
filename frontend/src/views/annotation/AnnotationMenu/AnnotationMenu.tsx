@@ -20,16 +20,14 @@ import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectTy
 import { BBoxAnnotationRead } from "../../../api/openapi/models/BBoxAnnotationRead.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { SentenceAnnotationRead } from "../../../api/openapi/models/SentenceAnnotationRead.ts";
+import { useCodesWithLevel } from "../../../components/Code/useCodesWithLevel.ts";
 import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
 import MemoButton from "../../../components/Memo/MemoButton.tsx";
+import { CodeReadWithLevel } from "../../../components/TreeExplorer/CodeReadWithLevel.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { Annotation, Annotations } from "../Annotation.ts";
 import { ICode } from "../ICode.ts";
 import { useComputeCodesForSelection } from "./useComputeCodesForSelection.ts";
-
-// interface ICodeFilter extends CodeRead {
-//   title: string;
-// }
 
 const filter = createFilterOptions<ICodeFilterWithLevel>();
 
@@ -45,10 +43,7 @@ export interface CodeSelectorHandle {
   isOpen: boolean;
 }
 
-// todo: we do not need this, use ICodeWithLevel instead
-// if we need title, just extend ICodeWithLevel
-interface ICodeFilterWithLevel extends CodeRead {
-  level: number;
+interface ICodeFilterWithLevel extends CodeReadWithLevel {
   title: string;
 }
 
@@ -68,13 +63,13 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
     const [autoCompleteValue, setAutoCompleteValue] = useState<ICodeFilterWithLevel | null>(null);
 
     // computed
+    const codeTree = useCodesWithLevel(codes);
     const codeOptions: ICodeFilterWithLevel[] = useMemo(() => {
-      return codes.map((c: { data: CodeRead; level: number }) => ({
-        ...c.data,
-        level: c.level,
+      return codeTree.map((c) => ({
+        ...c,
         title: c.data.name,
       }));
-    }, [codes]);
+    }, [codeTree]);
 
     // exposed methods (via ref)
     useImperativeHandle(ref, () => ({
@@ -124,17 +119,19 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
       }
 
       // if code does not exist, open the code creation dialog
-      if (newValue.id === -1) {
-        dispatch(CRUDDialogActions.openCodeCreateDialog({ codeName: newValue.name, codeCreateSuccessHandler: submit }));
+      if (newValue.data.id === -1) {
+        dispatch(
+          CRUDDialogActions.openCodeCreateDialog({ codeName: newValue.data.name, codeCreateSuccessHandler: submit }),
+        );
         return;
       }
 
-      submit(newValue, false);
+      submit(newValue.data, false);
     };
 
     const handleEdit = (annotationToEdit: Annotation, code: CodeRead) => {
       setEditingAnnotation(annotationToEdit);
-      setAutoCompleteValue({ ...code, title: code.name, level: 0 });
+      setAutoCompleteValue({ data: code, title: code.name, level: 0 });
       setShowCodeSelection(true);
     };
 
@@ -193,18 +190,20 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
 
                 const { inputValue } = params;
                 // Suggest the creation of a new value
-                const isExisting = options.some((option: ICodeFilterWithLevel) => inputValue === option.name);
+                const isExisting = options.some((option: ICodeFilterWithLevel) => inputValue === option.title);
                 if (inputValue.trim() !== "" && !isExisting) {
                   filtered.push({
+                    data: {
+                      name: inputValue.trim(),
+                      id: -1,
+                      color: "",
+                      created: "",
+                      updated: "",
+                      description: "",
+                      project_id: -1,
+                      is_system: false,
+                    },
                     title: `Add "${inputValue.trim()}"`,
-                    name: inputValue.trim(),
-                    id: -1,
-                    color: "",
-                    created: "",
-                    updated: "",
-                    description: "",
-                    project_id: -1,
-                    is_system: false,
                     level: 0,
                   });
                 }
@@ -217,14 +216,14 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
                 if (typeof option === "string") {
                   return option;
                 }
-                return option.name;
+                return option.title;
               }}
               renderOption={(props, option) => {
                 const indent = option.level * 10 + 10;
                 return (
-                  <li {...props} key={option.id} style={{ paddingLeft: indent }}>
-                    <Box style={{ width: 20, height: 20, backgroundColor: option.color, marginRight: 8 }}></Box>{" "}
-                    {option.name}
+                  <li {...props} key={option.data.id} style={{ paddingLeft: indent }}>
+                    <Box style={{ width: 20, height: 20, backgroundColor: option.data.color, marginRight: 8 }}></Box>{" "}
+                    {option.title}
                   </li>
                 );
               }}

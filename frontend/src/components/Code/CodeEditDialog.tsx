@@ -45,11 +45,10 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
   // snackbar
   const openSnackbar = useOpenSnackbar();
 
+  // form handling
   const handleClose = () => {
     dispatch(CRUDDialogActions.closeCodeEditDialog());
   };
-
-  // form handling
   const handleCodeUpdate: SubmitHandler<CodeEditValues> = (data) => {
     if (code) {
       // only allow updating of color for SYSTEM CODES
@@ -129,15 +128,15 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
       {code && (
         <CodeEditDialogContent
           key={code.id} // rerender component if code id changes
+          code={code}
+          codes={codes}
           isOpen={open}
           handleClose={handleClose}
           handleCodeUpdate={handleCodeUpdate}
           isUpdateLoading={updateCodeMutation.isPending}
-          handleError={handleError}
           handleCodeDelete={handleCodeDelete}
           isDeleteLoading={deleteCodeMutation.isPending}
-          code={code}
-          codes={codes}
+          handleError={handleError}
         />
       )}
     </>
@@ -157,15 +156,15 @@ interface CodeEditDialogContentProps {
 }
 
 function CodeEditDialogContent({
+  code,
+  codes,
   isOpen,
   handleClose,
   handleCodeUpdate,
   isUpdateLoading,
-  handleError,
   handleCodeDelete,
   isDeleteLoading,
-  code,
-  codes,
+  handleError,
 }: CodeEditDialogContentProps) {
   // use react hook form
   const {
@@ -181,31 +180,7 @@ function CodeEditDialogContent({
     },
   });
 
-  // // computed
-  // const parentCodes = useMemo(() => codes.filter((code) => !code.is_system), [codes]);
-
-  // // render
-  // let menuItems: React.ReactNode[];
-  // if (!code || code.is_system) {
-  //   menuItems = codes
-  //     .filter((c) => c.id !== code?.id)
-  //     .map((code) => (
-  //       <MenuItem key={code.id} value={code.id}>
-  //         <CodeRenderer code={code} />
-  //       </MenuItem>
-  //     ));
-  // } else {
-  //   menuItems = parentCodes
-  //     .filter((c) => c.id !== code?.id)
-  //     .map((code) => (
-  //       <MenuItem key={code.id} value={code.id}>
-  //         <CodeRenderer code={code} />
-  //       </MenuItem>
-  //     ));
-  // }
-
   const parentCodes = useMemo(() => codes.filter((c) => !c.is_system && c.id !== code.id), [codes, code.id]);
-
   const codeTree = useCodesWithLevel(parentCodes);
 
   return (

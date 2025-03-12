@@ -2,7 +2,6 @@ import { cloneDeep } from "lodash";
 import { Node } from "ts-tree-structure";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
-import { CodeReadWithLevel } from "./CodeReadWithLevel.ts";
 import { IDataTree } from "./IDataTree.ts";
 
 interface FilterProps {
@@ -52,23 +51,13 @@ function dataToTreeRecursion(root: IDataTree, nodes: IDataTree[]): IDataTree {
   return root;
 }
 
-// todo: create CodeReadWithLevel.ts Interface and use it as return type
-export function flatTreeWithRoot(tree: IDataTree | null): { data: DocumentTagRead | CodeReadWithLevel }[] {
+export function flatTreeWithRoot(tree: IDataTree | null): (DocumentTagRead | CodeRead)[] {
   if (!tree) {
     return [];
   }
 
-  const result: { data: DocumentTagRead | CodeRead; level: number }[] = [];
-
-  function traverse(node: IDataTree, level: number) {
-    result.push({ data: node.data, level });
-    if (node.children) {
-      node.children.forEach((child) => traverse(child, level + 1));
-    }
-  }
-
-  traverse(tree, 0);
-  return result;
+  const allChildren = flatTree(tree);
+  return [tree.data, ...allChildren];
 }
 
 export function flatTree(tree: IDataTree | null): (DocumentTagRead | CodeRead)[] {

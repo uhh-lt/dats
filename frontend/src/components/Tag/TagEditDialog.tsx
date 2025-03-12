@@ -15,12 +15,12 @@ import FormColorPicker from "../FormInputs/FormColorPicker.tsx";
 import FormMenu from "../FormInputs/FormMenu.tsx";
 import FormText from "../FormInputs/FormText.tsx";
 import FormTextMultiline from "../FormInputs/FormTextMultiline.tsx";
-import { DocumentTagReadWithLevel } from "../TreeExplorer/TagReadWithLevel.ts";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 import TagRenderer from "./TagRenderer.tsx";
+import { useTagsWithLevel } from "./useTagsWithLevel.ts";
 
 interface TagEditDialogProps {
-  tags: DocumentTagReadWithLevel[];
+  tags: DocumentTagRead[];
 }
 
 /**
@@ -76,7 +76,7 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
     }
   };
   const handleError: SubmitErrorHandler<DocumentTagUpdate> = (data) => console.error(data);
-  const handleDelete = () => {
+  const handleTagDelete = () => {
     if (tag.data) {
       ConfirmationAPI.openConfirmationDialog({
         text: `Do you really want to delete the tag "${tag.data.name}"? This action cannot be undone!`,
@@ -106,12 +106,12 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
         <TagEditDialogContent
           key={tag.data.id}
           tag={tag.data}
-          tagsWithLevel={tags}
+          tags={tags}
           isOpen={open}
           handleClose={handleClose}
           handleTagUpdate={handleTagUpdate}
           isUpdateLoading={updateTagMutation.isPending}
-          handleTagDelete={handleDelete}
+          handleTagDelete={handleTagDelete}
           isDeleteLoading={deleteTagMutation.isPending}
           handleError={handleError}
         />
@@ -129,12 +129,12 @@ interface TagEditDialogContentProps {
   isDeleteLoading: boolean;
   handleError: SubmitErrorHandler<DocumentTagUpdate>;
   tag: DocumentTagRead;
-  tagsWithLevel: DocumentTagReadWithLevel[];
+  tags: DocumentTagRead[];
 }
 
 function TagEditDialogContent({
   tag,
-  tagsWithLevel,
+  tags,
   isOpen,
   handleClose,
   handleTagUpdate,
@@ -157,13 +157,7 @@ function TagEditDialogContent({
     },
   });
 
-  // const menuItems: React.ReactNode[] = tags
-  //   .filter((t) => t.id !== tag.id)
-  //   .map((t) => (
-  //     <MenuItem key={t.id} value={t.id}>
-  //       <TagRenderer tag={t} />
-  //     </MenuItem>
-  //   ));
+  const tagTree = useTagsWithLevel(tags);
 
   return (
     <Dialog open={isOpen} onClose={handleClose} maxWidth="md" fullWidth>
@@ -191,7 +185,7 @@ function TagEditDialogContent({
               <MenuItem key={-1} value={-1}>
                 No parent
               </MenuItem>
-              {tagsWithLevel.map((tagWithLevel) => (
+              {tagTree.map((tagWithLevel) => (
                 <MenuItem
                   key={tagWithLevel.data.id}
                   value={tagWithLevel.data.id}
