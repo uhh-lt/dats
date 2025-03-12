@@ -380,6 +380,38 @@ class LLMService(metaclass=SingletonMeta):
             case _:
                 raise UnsupportedLLMJobTypeError(llm_job_params.llm_job_type)
 
+    def count_existing_assistant_annotations(
+        self,
+        task_type: TaskType,
+        code_ids: List[int],
+        sdoc_ids: List[int],
+        approach_type: ApproachType,
+    ) -> Dict[int, int]:
+        match task_type:
+            case TaskType.SENTENCE_ANNOTATION:
+                # 1. Find existing annotations
+                with self.sqls.db_session() as db:
+                    approachtype2userid = {
+                        ApproachType.LLM_ZERO_SHOT: ASSISTANT_ZEROSHOT_ID,
+                        ApproachType.LLM_FEW_SHOT: ASSISTANT_FEWSHOT_ID,
+                        ApproachType.MODEL_TRAINING: ASSISTANT_TRAINED_ID,
+                    }
+                    existing_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
+                        db=db,
+                        user_id=approachtype2userid[approach_type],
+                        sdoc_ids=sdoc_ids,
+                        code_ids=code_ids,
+                    )
+
+                # 2. Count the number of existing annotations per code
+                code_id2num_existing_annos = {code_id: 0 for code_id in code_ids}
+                for existing_anno in existing_annotations:
+                    code_id2num_existing_annos[existing_anno.code_id] += 1
+
+                return code_id2num_existing_annos
+            case _:
+                return {}
+
     def create_training_parameters(
         self, llm_job_params: LLMJobParameters
     ) -> TrainingParameters:
@@ -915,19 +947,20 @@ class LLMService(metaclass=SingletonMeta):
         sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=task_parameters.sdoc_ids)
 
         # Delete all existing sentence annotations for the sdocs
-        previous_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
-            db=db,
-            user_id=ASSISTANT_FEWSHOT_ID if is_fewshot else ASSISTANT_ZEROSHOT_ID,
-            sdoc_ids=task_parameters.sdoc_ids,
-            code_ids=task_parameters.code_ids,
-        )
+        if task_parameters.delete_existing_annotations:
+            previous_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
+                db=db,
+                user_id=ASSISTANT_FEWSHOT_ID if is_fewshot else ASSISTANT_ZEROSHOT_ID,
+                sdoc_ids=task_parameters.sdoc_ids,
+                code_ids=task_parameters.code_ids,
+            )
 
-        msg = f"Deleting {len(previous_annotations)} previous sentence annotations."
-        logger.info(msg)
+            msg = f"Deleting {len(previous_annotations)} previous sentence annotations."
+            logger.info(msg)
 
-        crud_sentence_anno.remove_bulk(
-            db=db, ids=[sa.id for sa in previous_annotations]
-        )
+            crud_sentence_anno.remove_bulk(
+                db=db, ids=[sa.id for sa in previous_annotations]
+            )
 
         # automatic annotation
         annotation_id = 0
@@ -1312,24 +1345,32 @@ class LLMService(metaclass=SingletonMeta):
         logger.info(msg)
 
         # Step: 4 - Delete all existing sentence annotations for the test sdocs
-        with self.sqls.db_session() as db:
-            previous_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
-                db=db,
-                user_id=ASSISTANT_TRAINED_ID,
-                sdoc_ids=task_parameters.sdoc_ids,
-                code_ids=task_parameters.code_ids,
-            )
+        if task_parameters.delete_existing_annotations:
+            with self.sqls.db_session() as db:
+                previous_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
+                    db=db,
+                    user_id=ASSISTANT_TRAINED_ID,
+                    sdoc_ids=task_parameters.sdoc_ids,
+                    code_ids=task_parameters.code_ids,
+                )
 
-            msg = f"Deleting {len(previous_annotations)} previous sentence annotations."
+                msg = f"Deleting {len(previous_annotations)} previous sentence annotations."
+                self._next_llm_job_step(
+                    llm_job_id=llm_job_id,
+                    description=msg,
+                )
+                logger.info(msg)
+
+                crud_sentence_anno.remove_bulk(
+                    db=db, ids=[sa.id for sa in previous_annotations]
+                )
+        else:
+            msg = "Keeping existing annotations."
             self._next_llm_job_step(
                 llm_job_id=llm_job_id,
                 description=msg,
             )
             logger.info(msg)
-
-            crud_sentence_anno.remove_bulk(
-                db=db, ids=[sa.id for sa in previous_annotations]
-            )
 
         # Step: 5 - Apply the new predictions
         msg = "Applying suggested annotations."
