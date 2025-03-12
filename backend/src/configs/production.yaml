@@ -131,8 +131,8 @@ ollama:
   host: ollama
   port: 11434
   model:
-    llm: ${oc.env:OLLAMA_LLM_MODEL, gemma2:latest}
-    vlm: ${oc.env:OLLAMA_VLM_MODEL, granite3.2-vision:2b-fp16}
+    llm: ${oc.env:OLLAMA_LLM_MODEL, gemma3:27b}
+    vlm: ${oc.env:OLLAMA_VLM_MODEL, gemma3:27b}
   context_size:
     llm: 8192
 

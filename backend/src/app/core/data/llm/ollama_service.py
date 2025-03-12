@@ -125,6 +125,7 @@ class OllamaService(metaclass=SingletonMeta):
 
     def _start_vlm_chat_session(self) -> str:
         session_id = str(uuid4())
+        logger.info(f"Started new VLM chat session {session_id}.")
         self.__vlm_chat_sessions[session_id] = []
         self.__vlm_chat_session_timestamps[session_id] = time.time()
 
