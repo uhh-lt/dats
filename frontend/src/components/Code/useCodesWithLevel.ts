@@ -19,8 +19,8 @@ export function buildCodeWithLevel(
   return result;
 }
 
-export function useCodesWithLevel(parentCodes: CodeRead[]) {
+export function useCodesWithLevel(codes: CodeRead[]) {
   return useMemo(() => {
-    return buildCodeWithLevel(parentCodes, null, 0);
-  }, [parentCodes]);
+    return buildCodeWithLevel(codes, null, 0);
+  }, [codes]);
 }
