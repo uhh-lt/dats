@@ -150,8 +150,8 @@ services:
       RABBITMQ_USER: ${RABBITMQ_USER:-datsuser}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-dats123}
       REDIS_PASSWORD: ${REDIS_PASSWORD:-dats123}
-      OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-gemma2:latest}
-      OLLAMA_VLM_MODEL: ${OLLAMA_VLM_MODEL:-granite3.2-vision:2b-fp16}
+      OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-gemma3:27b}
+      OLLAMA_VLM_MODEL: ${OLLAMA_VLM_MODEL:-gemma3:27b}
       HUGGINGFACE_HUB_CACHE: /models_cache
       TRANSFORMERS_CACHE: /models_cache
       TORCH_HOME: /models_cache
@@ -209,8 +209,8 @@ services:
       RABBITMQ_USER: ${RABBITMQ_USER:-datsuser}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-dats123}
       REDIS_PASSWORD: ${REDIS_PASSWORD:-dats123}
-      OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-gemma2:latest}
-      OLLAMA_VLM_MODEL: ${OLLAMA_VLM_MODEL:-granite3.2-vision:2b-fp16}
+      OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-gemma3:27b}
+      OLLAMA_VLM_MODEL: ${OLLAMA_VLM_MODEL:-gemma3:27b}
     volumes:
       - ./backend_repo:/tmp/dats
     depends_on:
