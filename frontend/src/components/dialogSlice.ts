@@ -57,6 +57,7 @@ interface DialogState {
   llmCodes: CodeRead[];
   llmApproach: ApproachType;
   llmApproachRecommendation: ApproachRecommendation;
+  llmDeleteExistingAnnotations: boolean;
   llmPrompts: LLMPromptTemplates[];
   llmParameters: TrainingParameters;
   llmJobId?: string;
@@ -112,6 +113,7 @@ const initialState: DialogState = {
     recommended_approach: ApproachType.LLM_ZERO_SHOT,
     reasoning: "",
   },
+  llmDeleteExistingAnnotations: false,
   llmPrompts: [],
   llmParameters: {
     batch_size: 1,
@@ -255,18 +257,20 @@ export const dialogSlice = createSlice({
       state.llmMetadata = action.payload.metadata;
       state.llmCodes = action.payload.codes;
     },
-    // Step 3: Select the approach (zero-shot, few-shot, or model training)
+    // Step 3: Select the approach and deletion strategy (zero-shot, few-shot, or model training)
     // -> For zero-shot and few-shot, go to the prompt editor
     llmDialogGoToPromptEditor: (
       state,
       action: PayloadAction<{
         approach: ApproachType;
         prompts: LLMPromptTemplates[];
+        deleteExistingAnnotations: boolean;
       }>,
     ) => {
       state.llmStep = 3;
       state.llmPrompts = action.payload.prompts;
       state.llmApproach = action.payload.approach;
+      state.llmDeleteExistingAnnotations = action.payload.deleteExistingAnnotations;
     },
     llmDialogUpdatePromptEditor: (
       state,
@@ -338,6 +342,7 @@ export const dialogSlice = createSlice({
       state.llmParameters = initialState.llmParameters;
       state.llmApproach = initialState.llmApproach;
       state.llmApproachRecommendation = initialState.llmApproachRecommendation;
+      state.llmDeleteExistingAnnotations = initialState.llmDeleteExistingAnnotations;
       state.llmJobId = initialState.llmJobId;
       state.llmJobResult = initialState.llmJobResult;
     },

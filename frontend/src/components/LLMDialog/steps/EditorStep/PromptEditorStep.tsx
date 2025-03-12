@@ -28,7 +28,10 @@ function PromptEditorStep() {
   const codes = useAppSelector((state) => state.dialog.llmCodes);
   const sdocIds = useAppSelector((state) => state.dialog.llmDocumentIds);
   const recommendedPrompts = useAppSelector((state) => state.dialog.llmPrompts);
+  const deleteExistingAnnotations = useAppSelector((state) => state.dialog.llmDeleteExistingAnnotations);
   const dispatch = useAppDispatch();
+
+  console.log(deleteExistingAnnotations);
 
   // local state (to manage tabs)
   const [tab, setTab] = useState(recommendedPrompts[0].language);
@@ -107,6 +110,7 @@ function PromptEditorStep() {
             tag_ids: tags.map((tag) => tag.id),
             project_metadata_ids: metadata.map((m) => m.id),
             code_ids: codes.map((code) => code.id),
+            delete_existing_annotations: deleteExistingAnnotations,
           },
         },
       },

@@ -4919,6 +4919,54 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
+    "/llm/count_existing_assistant_annotations": {
+      "post": {
+        "tags": ["llm"],
+        "summary": "Based on the approach, count the number of existing assistant annotations",
+        "operationId": "count_existing_assistant_annotations",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "task_type",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/TaskType" }
+          },
+          {
+            "name": "approach_type",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/ApproachType" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Body_llm-count_existing_assistant_annotations" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": { "type": "integer" },
+                  "title": "Response Llm-Count Existing Assistant Annotations"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/sentence": {
       "put": {
         "tags": ["sentenceAnnotation"],
@@ -5810,6 +5858,15 @@
         "type": "object",
         "required": ["uploaded_file"],
         "title": "Body_import-start_import_tags_job"
+      },
+      "Body_llm-count_existing_assistant_annotations": {
+        "properties": {
+          "sdoc_ids": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" },
+          "code_ids": { "items": { "type": "integer" }, "type": "array", "title": "Code Ids" }
+        },
+        "type": "object",
+        "required": ["sdoc_ids", "code_ids"],
+        "title": "Body_llm-count_existing_assistant_annotations"
       },
       "Body_llm-create_prompt_templates": {
         "properties": {
@@ -8242,6 +8299,12 @@
             "type": "array",
             "title": "Code Ids",
             "description": "IDs of the codes to use for the sentence annotation"
+          },
+          "delete_existing_annotations": {
+            "type": "boolean",
+            "title": "Delete Existing Annotations",
+            "description": "Delete existing annotations before creating new ones",
+            "default": true
           }
         },
         "type": "object",
