@@ -1,13 +1,14 @@
 import { Action, ThunkAction, configureStore } from "@reduxjs/toolkit";
 import { FLUSH, PAUSE, PERSIST, PURGE, REGISTER, REHYDRATE } from "redux-persist";
 import bboxFilterReducer from "../components/BBoxAnnotation/BBoxAnnotationTable/bboxFilterSlice.ts";
+import dialogReducer from "../components/dialogSlice.ts";
 import memoFilterReducer from "../components/Memo/MemoTable/memoFilterSlice.ts";
 import projectReducer from "../components/Project/projectSlice.ts";
 import seatFilterReducer from "../components/SentenceAnnotation/SentenceAnnotationTable/seatFilterSlice.ts";
 import documentTableFilterReducer from "../components/SourceDocument/SdocTable/documentTableFilterSlice.ts";
 import satFilterReducer from "../components/SpanAnnotation/SpanAnnotationTable/satFilterSlice.ts";
-import dialogReducer from "../components/dialogSlice.ts";
 import layoutReducer from "../layouts/layoutSlice.ts";
+import tabReducer from "../layouts/TabBar/tabSlice.ts";
 import cotaReducer from "../views/analysis/ConceptsOverTime/cotaSlice.ts";
 import sentAnnotationAnalysisReducer from "../views/analysis/SentAnnotationAnalysis/sentAnnotationAnalysisSlice.ts";
 import spanAnnotationAnalysisReducer from "../views/analysis/SpanAnnotationAnalysis/spanAnnotationAnalysisSlice.ts";
@@ -30,6 +31,7 @@ export const store = configureStore({
     layout: layoutReducer,
     project: projectReducer,
     // non-persisted reducers
+    tabs: tabReducer,
     logbook: logbookReducer,
     spanAnnotationAnalysis: spanAnnotationAnalysisReducer,
     sentAnnotationAnalysis: sentAnnotationAnalysisReducer,

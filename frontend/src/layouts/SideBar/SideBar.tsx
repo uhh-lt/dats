@@ -162,7 +162,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
         {isInProject && (
           <List sx={{ py: 0 }}>
             <ListItem disablePadding sx={{ display: "block" }}>
-              <Tooltip title="Search" placement="right" arrow disableHoverListener={isExpanded}>
+              <Tooltip title="Search (⌘⇧S)" placement="right" arrow disableHoverListener={isExpanded}>
                 <ListItemButton
                   onClick={handleSearchMenuClick}
                   sx={{
@@ -182,7 +182,11 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                   >
                     <SearchIcon />
                   </ListItemIcon>
-                  {isExpanded && <ListItemText primary="Search" />}
+                  {isExpanded && (
+                    <ListItemText>
+                      <span style={{ textDecoration: "underline" }}>S</span>earch
+                    </ListItemText>
+                  )}
                 </ListItemButton>
               </Tooltip>
               <Menu
@@ -215,7 +219,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
             </ListItem>
 
             <ListItem disablePadding sx={{ display: "block" }}>
-              <Tooltip title="Annotation" placement="right" arrow disableHoverListener={isExpanded}>
+              <Tooltip title="Annotation (⌘⇧A)" placement="right" arrow disableHoverListener={isExpanded}>
                 <ListItemButton
                   component={Link}
                   to={`/project/${projectId}/annotation`}
@@ -236,13 +240,17 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                   >
                     <FormatColorTextIcon />
                   </ListItemIcon>
-                  {isExpanded && <ListItemText primary="Annotation" />}
+                  {isExpanded && (
+                    <ListItemText>
+                      <span style={{ textDecoration: "underline" }}>A</span>nnotation
+                    </ListItemText>
+                  )}
                 </ListItemButton>
               </Tooltip>
             </ListItem>
 
             <ListItem disablePadding sx={{ display: "block" }}>
-              <Tooltip title="Analysis" placement="right" arrow disableHoverListener={isExpanded}>
+              <Tooltip title="Analysis (⌘⇧Y)" placement="right" arrow disableHoverListener={isExpanded}>
                 <ListItemButton
                   component={Link}
                   to={`/project/${projectId}/analysis`}
@@ -263,13 +271,17 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                   >
                     <BarChartIcon />
                   </ListItemIcon>
-                  {isExpanded && <ListItemText primary="Analysis" />}
+                  {isExpanded && (
+                    <ListItemText>
+                      Anal<span style={{ textDecoration: "underline" }}>y</span>sis
+                    </ListItemText>
+                  )}
                 </ListItemButton>
               </Tooltip>
             </ListItem>
 
             <ListItem disablePadding sx={{ display: "block" }}>
-              <Tooltip title="Whiteboard" placement="right" arrow disableHoverListener={isExpanded}>
+              <Tooltip title="Whiteboard (⌘⇧B)" placement="right" arrow disableHoverListener={isExpanded}>
                 <ListItemButton
                   component={Link}
                   to={`/project/${projectId}/whiteboard`}
@@ -290,13 +302,17 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                   >
                     <AccountTreeIcon />
                   </ListItemIcon>
-                  {isExpanded && <ListItemText primary="Whiteboard" />}
+                  {isExpanded && (
+                    <ListItemText>
+                      White<span style={{ textDecoration: "underline" }}>b</span>oard
+                    </ListItemText>
+                  )}
                 </ListItemButton>
               </Tooltip>
             </ListItem>
 
             <ListItem disablePadding sx={{ display: "block" }}>
-              <Tooltip title="Logbook" placement="right" arrow disableHoverListener={isExpanded}>
+              <Tooltip title="Logbook (⌘⇧L)" placement="right" arrow disableHoverListener={isExpanded}>
                 <ListItemButton
                   component={Link}
                   to={`/project/${projectId}/logbook`}
@@ -317,7 +333,11 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                   >
                     <MenuBookIcon />
                   </ListItemIcon>
-                  {isExpanded && <ListItemText primary="Logbook" />}
+                  {isExpanded && (
+                    <ListItemText>
+                      <span style={{ textDecoration: "underline" }}>L</span>ogbook
+                    </ListItemText>
+                  )}
                 </ListItemButton>
               </Tooltip>
             </ListItem>
@@ -408,7 +428,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
           </ListItem>
 
           <ListItem disablePadding sx={{ display: "block" }}>
-            <Tooltip title="Wiki" placement="right" arrow disableHoverListener={isExpanded}>
+            <Tooltip title="Wiki (⌘⇧W)" placement="right" arrow disableHoverListener={isExpanded}>
               <ListItemButton
                 component="a"
                 href="https://github.com/uhh-lt/dats/wiki"
@@ -430,14 +450,18 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                 >
                   <AutoStoriesIcon />
                 </ListItemIcon>
-                {isExpanded && <ListItemText primary="Wiki" />}
+                {isExpanded && (
+                  <ListItemText>
+                    <span style={{ textDecoration: "underline" }}>W</span>iki
+                  </ListItemText>
+                )}
               </ListItemButton>
             </Tooltip>
           </ListItem>
 
           {isInProject && (
             <ListItem disablePadding sx={{ display: "block" }}>
-              <Tooltip title="Settings" placement="right" arrow disableHoverListener={isExpanded}>
+              <Tooltip title="Settings (⌘⇧,)" placement="right" arrow disableHoverListener={isExpanded}>
                 <ListItemButton
                   onClick={handleSettingsClick}
                   sx={{

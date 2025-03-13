@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { DropResult } from "react-beautiful-dnd";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { getTabInfoFromPath } from "../tabInfo";
+import { TabActions } from "../tabSlice";
 import { TabData } from "../types";
 
 interface TabManagementHook {
@@ -15,103 +17,103 @@ interface TabManagementHook {
 export const useTabManagement = (): TabManagementHook => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [tabs, setTabs] = useState<TabData[]>([]);
-  const [activeTabIndex, setActiveTabIndex] = useState<number | null>(null);
+  const dispatch = useAppDispatch();
 
-  // Track navigation and update tabs
+  const tabs = useAppSelector((state) => state.tabs.tabs);
+  const activeTabIndex = useAppSelector((state) => state.tabs.activeTabIndex);
+  const lastPathRef = useRef(location.pathname);
+  const navigationSourceRef = useRef<"tab_change" | "link_click" | null>(null);
+  const isProcessingRef = useRef(false);
+
+  // Handle location changes (link clicks)
   useEffect(() => {
-    const currentPath = location.pathname;
+    if (isProcessingRef.current) {
+      return;
+    }
 
-    setTabs((prevTabs) => {
-      const existingTabIndex = prevTabs.findIndex((tab) => tab.path === currentPath);
+    if (lastPathRef.current === location.pathname) {
+      return;
+    }
 
-      if (existingTabIndex === -1) {
-        // Create a new tab for this path
-        const { label, icon } = getTabInfoFromPath(currentPath);
+    // Mark that we're processing a navigation
+    isProcessingRef.current = true;
 
-        const newTab: TabData = {
-          id: `tab-${Date.now()}`, // unique ID for each tab
-          path: currentPath,
-          label,
-          icon,
-        };
+    try {
+      // Handle link navigation
+      if (navigationSourceRef.current !== "tab_change") {
+        const existingTabIndex = tabs.findIndex((tab) => tab.path === location.pathname);
 
-        return [...prevTabs, newTab];
+        if (existingTabIndex !== -1) {
+          dispatch(TabActions.setActiveTab(existingTabIndex));
+        } else {
+          // Create new tab for link navigation
+          const { label, icon } = getTabInfoFromPath(location.pathname);
+          const newTab: TabData = {
+            id: `tab-${Date.now()}`,
+            path: location.pathname,
+            label,
+            icon,
+          };
+          dispatch(TabActions.addTab(newTab));
+        }
       }
-      return prevTabs;
-    });
-
-    // Update active tab index based on current path
-    const existingTabIndex = tabs.findIndex((tab) => tab.path === currentPath);
-    if (existingTabIndex !== -1) {
-      // Tab already exists, just make it active
-      setActiveTabIndex(existingTabIndex);
-    } else {
-      setActiveTabIndex(tabs.length > 0 ? tabs.length : 0); // Set the new tab as active
+    } finally {
+      // Reset processing state and update lastPath
+      lastPathRef.current = location.pathname;
+      navigationSourceRef.current = null;
+      isProcessingRef.current = false;
     }
-  }, [location.pathname, tabs]);
+  }, [location.pathname, tabs, dispatch]);
 
-  // Handle tab click - navigate to corresponding page
-  const handleTabClick = (index: number) => {
-    if (tabs[index]) {
-      navigate(tabs[index].path);
-      setActiveTabIndex(index);
-    }
-  };
-
-  // Handle tab close
-  const handleCloseTab = (index: number) => {
-    // Don't close if it's the last tab
-    if (tabs.length <= 1) return;
-
-    const newTabs = [...tabs];
-    newTabs.splice(index, 1);
-    setTabs(newTabs);
-
-    // If we closed the active tab, navigate to the previous tab
-    if (activeTabIndex === index) {
-      const newIndex = index > 0 ? index - 1 : 0;
-      navigate(newTabs[newIndex].path);
-      setActiveTabIndex(newIndex);
-    }
-    // If we closed a tab before the active one, adjust the active index
-    else if (activeTabIndex !== null && index < activeTabIndex) {
-      setActiveTabIndex(activeTabIndex - 1);
-    }
-  };
-
-  // Handle drag end for tab reordering
-  const handleDragEnd = (result: DropResult) => {
-    if (!result.destination) {
-      return; // Dropped outside the list
+  // Handle active tab changes - intentionally not watching location.pathname
+  useEffect(() => {
+    if (isProcessingRef.current) {
+      return;
     }
 
-    const { source, destination } = result;
-
-    if (source.index === destination.index) {
-      return; // No change in position
-    }
-
-    // Reorder tabs
-    const newTabs = [...tabs];
-    const [movedTab] = newTabs.splice(source.index, 1);
-    newTabs.splice(destination.index, 0, movedTab);
-
-    setTabs(newTabs);
-
-    // Update active tab index if it was moved
-    if (activeTabIndex === source.index) {
-      setActiveTabIndex(destination.index);
-    }
-    // Handle case where active tab index needs adjustment due to reordering
-    else if (activeTabIndex !== null) {
-      if (source.index < activeTabIndex && destination.index >= activeTabIndex) {
-        setActiveTabIndex(activeTabIndex - 1);
-      } else if (source.index > activeTabIndex && destination.index <= activeTabIndex) {
-        setActiveTabIndex(activeTabIndex + 1);
+    if (activeTabIndex !== null && tabs[activeTabIndex]) {
+      const targetPath = tabs[activeTabIndex].path;
+      if (targetPath !== location.pathname) {
+        navigationSourceRef.current = "tab_change";
+        navigate(targetPath);
       }
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTabIndex, tabs, navigate]); // Intentionally omitting location.pathname
+
+  const handleTabClick = useCallback(
+    (index: number) => {
+      if (!isProcessingRef.current && tabs[index]) {
+        navigationSourceRef.current = "tab_change";
+        dispatch(TabActions.setActiveTab(index));
+      }
+    },
+    [tabs, dispatch],
+  );
+
+  const handleCloseTab = useCallback(
+    (index: number) => {
+      dispatch(TabActions.removeTab(index));
+    },
+    [dispatch],
+  );
+
+  const handleDragEnd = useCallback(
+    (result: DropResult) => {
+      if (!result.destination) return;
+
+      const { source, destination } = result;
+      if (source.index === destination.index) return;
+
+      dispatch(
+        TabActions.reorderTabs({
+          sourceIndex: source.index,
+          destinationIndex: destination.index,
+        }),
+      );
+    },
+    [dispatch],
+  );
 
   return {
     tabs,
