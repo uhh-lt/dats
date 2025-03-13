@@ -1,6 +1,6 @@
 import { TabContext, TabPanel } from "@mui/lab";
-import { Box, Card, CardContent, Container, Portal, Tab, Tabs, Typography } from "@mui/material";
-import React, { useContext, useRef, useState } from "react";
+import { Box, Card, CardContent, Container, Tab, Tabs } from "@mui/material";
+import React, { useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
@@ -9,7 +9,6 @@ import CodeExplorer from "../../components/Code/CodeExplorer/CodeExplorer.tsx";
 import EditableTypography from "../../components/EditableTypography.tsx";
 import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import DocumentInformation from "../../components/SourceDocument/DocumentInformation/DocumentInformation.tsx";
-import { AppBarContext } from "../../layouts/AppBarContext.ts";
 import OneSidebarLayout from "../../layouts/OneSidebarLayout.tsx";
 import TwoSidebarsLayout from "../../layouts/TwoSidebarsLayout.tsx";
 import { useAppSelector } from "../../plugins/ReduxHooks.ts";
@@ -257,10 +256,10 @@ function Annotation() {
     </Box>
   );
 
-  // layout: use one sidebar layout in compare mode
-  let layout: JSX.Element = <></>;
+  // rendering
+
   if (isCompareMode) {
-    layout = (
+    return (
       <OneSidebarLayout
         leftSidebar={explorer}
         content={
@@ -272,7 +271,7 @@ function Annotation() {
       />
     );
   } else {
-    layout = (
+    return (
       <TwoSidebarsLayout
         leftSidebar={explorer}
         content={
@@ -285,19 +284,6 @@ function Annotation() {
       />
     );
   }
-
-  // rendering
-  const appBarContainerRef = useContext(AppBarContext);
-  return (
-    <>
-      <Portal container={appBarContainerRef?.current}>
-        <Typography variant="h6" component="div">
-          {sdoc.isSuccess ? `Annotator: ${sdoc.data.filename}` : "Annotator"}
-        </Typography>
-      </Portal>
-      {layout}
-    </>
-  );
 }
 
 export default Annotation;

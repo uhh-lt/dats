@@ -1,17 +1,14 @@
-import { CircularProgress, Portal, Typography } from "@mui/material";
-import { useContext } from "react";
+import { Box, CircularProgress, Typography } from "@mui/material";
 import { useParams } from "react-router-dom";
 import { ReactFlowProvider } from "reactflow";
 import WhiteboardHooks from "../../api/WhiteboardHooks.ts";
 import { useAuth } from "../../auth/useAuth.ts";
 import EditableTypography from "../../components/EditableTypography.tsx";
-import { AppBarContext } from "../../layouts/AppBarContext.ts";
 import WhiteboardFlow from "./WhiteboardFlow.tsx";
 
 function Whiteboard() {
   // global client state
   const { user } = useAuth();
-  const appBarContainerRef = useContext(AppBarContext);
   const urlParams = useParams() as { projectId: string; whiteboardId: string };
   const projectId = parseInt(urlParams.projectId);
   const whiteboardId = parseInt(urlParams.whiteboardId);
@@ -36,7 +33,7 @@ function Whiteboard() {
 
   return (
     <>
-      <Portal container={appBarContainerRef?.current}>
+      <Box>
         {readonly ? (
           <Typography variant="h6">{whiteboard.data?.title} - READONLY</Typography>
         ) : (
@@ -47,7 +44,7 @@ function Whiteboard() {
             whiteColor={true}
           />
         )}
-      </Portal>
+      </Box>
       {whiteboard.isSuccess ? (
         <ReactFlowProvider>
           <WhiteboardFlow key={`${projectId}-${whiteboardId}`} whiteboard={whiteboard.data} readonly={readonly} />

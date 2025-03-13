@@ -1,10 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import RequireAuth from "../auth/RequireAuth.tsx";
 import NoBarLayout from "../layouts/NoBarLayout.tsx";
-import OneBarLayout from "../layouts/OneBarLayout.tsx";
-import TwoBarLayout from "../layouts/TwoBarLayout.tsx";
-import About from "../views/About.tsx";
-import Imprint from "../views/Imprint.tsx";
+import SideBarLayout from "../layouts/SideBarLayout.tsx";
 import Login from "../views/Login.tsx";
 import NotFound from "../views/NotFound.tsx";
 import Analysis from "../views/analysis/Analysis.tsx";
@@ -52,7 +49,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/",
-    element: <OneBarLayout />,
+    element: <SideBarLayout isInProject={false} />,
     children: [
       {
         path: "/projects",
@@ -61,14 +58,6 @@ const router = createBrowserRouter([
             <Projects />
           </RequireAuth>
         ),
-      },
-      {
-        path: "/about",
-        element: <About />,
-      },
-      {
-        path: "/imprint",
-        element: <Imprint />,
       },
       {
         path: "/me",
@@ -85,7 +74,7 @@ const router = createBrowserRouter([
     path: "/project/:projectId",
     element: (
       <RequireAuth>
-        <TwoBarLayout />
+        <SideBarLayout isInProject={true} />
       </RequireAuth>
     ),
     children: [
