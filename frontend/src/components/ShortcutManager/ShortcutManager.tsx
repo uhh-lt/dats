@@ -6,11 +6,6 @@ export function ShortcutManager() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // First check for Cmd+W/Ctrl+W to prevent browser tab closing
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "w") {
-        event.preventDefault();
-      }
-
       // Shortcuts are already sorted by number of modifiers from useShortcuts hook
       for (const shortcut of shortcuts) {
         const { keys } = shortcut;
