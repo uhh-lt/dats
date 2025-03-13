@@ -9,6 +9,7 @@ import ImageSearchIcon from "@mui/icons-material/ImageSearch";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
+import SettingsIcon from "@mui/icons-material/Settings";
 import ShortTextIcon from "@mui/icons-material/ShortText";
 import StackedBarChartIcon from "@mui/icons-material/StackedBarChart";
 import {
@@ -39,6 +40,8 @@ import MenuBookIcon from "@mui/icons-material/MenuBook";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { UserRead } from "../../api/openapi/models/UserRead.ts";
 import { LoginStatus } from "../../auth/LoginStatus.ts";
+import { CRUDDialogActions } from "../../components/dialogSlice.ts";
+import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
 
 interface SideBarProps {
   loginStatus: LoginStatus;
@@ -92,6 +95,12 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
   };
   const handleUserMenuClose = () => {
     setUserMenuAnchorEl(null);
+  };
+
+  // project settings
+  const dispatch = useAppDispatch();
+  const handleSettingsClick = () => {
+    dispatch(CRUDDialogActions.openProjectSettings());
   };
 
   return (
@@ -425,6 +434,34 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
               </ListItemButton>
             </Tooltip>
           </ListItem>
+
+          {isInProject && (
+            <ListItem disablePadding sx={{ display: "block" }}>
+              <Tooltip title="Settings" placement="right" arrow disableHoverListener={isExpanded}>
+                <ListItemButton
+                  onClick={handleSettingsClick}
+                  sx={{
+                    minHeight: 48,
+                    justifyContent: isExpanded ? "initial" : "center",
+                    px: 2.5,
+                    backgroundColor: "primary.main",
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 0,
+                      mr: isExpanded ? 3 : "auto",
+                      justifyContent: "center",
+                      color: "primary.contrastText",
+                    }}
+                  >
+                    <SettingsIcon />
+                  </ListItemIcon>
+                  {isExpanded && <ListItemText primary="Settings" />}
+                </ListItemButton>
+              </Tooltip>
+            </ListItem>
+          )}
 
           {loginStatus === LoginStatus.LOGGED_IN && user && (
             <ListItem disablePadding sx={{ display: "block" }}>
