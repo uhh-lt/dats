@@ -1,7 +1,9 @@
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import CloseIcon from "@mui/icons-material/Close";
+import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
+import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import { Box, Divider, IconButton, styled, Tab } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   DragDropContext,
   Draggable,
@@ -96,6 +98,18 @@ const TabWrapper = styled("div")(({ theme }) => ({
     cursor: "grabbing",
     zIndex: 10000,
   },
+}));
+
+// Scroll button styling
+const ScrollButton = styled(IconButton)(({ theme }) => ({
+  width: "48px",
+  height: "48px",
+  borderRadius: 0,
+  color: theme.palette.common.white,
+  "&.Mui-disabled": {
+    color: theme.palette.grey[400],
+  },
+  zIndex: 2,
 }));
 
 // Close button styling
@@ -265,6 +279,95 @@ function TabBar() {
   const [tabs, setTabs] = useState<TabData[]>([]);
   const [activeTabIndex, setActiveTabIndex] = useState<number | null>(null);
 
+  // Scroll state
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  // Update scroll buttons visibility based on scroll position
+  const updateScrollButtonVisibility = () => {
+    if (tabsContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = tabsContainerRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth);
+      setScrollPosition(scrollLeft);
+    }
+  };
+
+  // Scroll handler functions
+  const handleScrollLeft = () => {
+    if (tabsContainerRef.current) {
+      const container = tabsContainerRef.current;
+      const targetScrollPosition = Math.max(0, scrollPosition - 200);
+      container.scrollTo({
+        left: targetScrollPosition,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  const handleScrollRight = () => {
+    if (tabsContainerRef.current) {
+      const container = tabsContainerRef.current;
+      const targetScrollPosition = Math.min(container.scrollWidth - container.clientWidth, scrollPosition + 200);
+      container.scrollTo({
+        left: targetScrollPosition,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  // Simplified - Always scroll active tab into view
+
+  // Attach scroll event listener to track scroll position
+  useEffect(() => {
+    const container = tabsContainerRef.current;
+    if (container) {
+      container.addEventListener("scroll", updateScrollButtonVisibility);
+      // Initial check
+      updateScrollButtonVisibility();
+    }
+
+    return () => {
+      if (container) {
+        container.removeEventListener("scroll", updateScrollButtonVisibility);
+      }
+    };
+  }, []);
+
+  // Check for scroll button visibility when tabs change
+  useEffect(() => {
+    if (tabs.length > 0) {
+      updateScrollButtonVisibility();
+    }
+  }, [tabs]);
+
+  // Scroll active tab into view whenever activeTabIndex changes
+  useEffect(() => {
+    const scrollActiveTabIntoView = () => {
+      if (activeTabIndex !== null && tabsContainerRef.current && tabs.length > 0) {
+        // Get all tab elements
+        const tabElements = tabsContainerRef.current.querySelectorAll('[role="tab"]');
+        if (tabElements.length > activeTabIndex) {
+          const activeTabElement = tabElements[activeTabIndex];
+          console.log(activeTabElement);
+          if (activeTabElement) {
+            activeTabElement.scrollIntoView({
+              behavior: "smooth",
+              block: "nearest",
+              inline: "center",
+            });
+          }
+        }
+      }
+    };
+
+    if (activeTabIndex !== null) {
+      setTimeout(scrollActiveTabIntoView, 50);
+    }
+  }, [activeTabIndex, tabs]);
+
   // Track navigation and update tabs
   useEffect(() => {
     const currentPath = location.pathname;
@@ -368,11 +471,26 @@ function TabBar() {
         borderColor: "divider",
         bgcolor: (theme) => theme.palette.primary.main,
         height: 48,
+        position: "relative",
       }}
     >
       <Divider orientation="vertical" />
+
+      {/* Left scroll button - always visible but disabled when needed */}
+      <ScrollButton onClick={handleScrollLeft} disabled={!canScrollLeft} aria-label="scroll tabs left" size="small">
+        <KeyboardArrowLeftIcon />
+      </ScrollButton>
+
       <DragDropContext onDragEnd={handleDragEnd}>
-        <Box sx={{ height: 48, display: "flex", flexGrow: 1, overflow: "auto" }}>
+        <Box
+          sx={{
+            height: 48,
+            display: "flex",
+            flexGrow: 1,
+            overflow: "hidden", // Hide scrollbar but allow programmatic scrolling
+            position: "relative",
+          }}
+        >
           <StrictModeDroppable
             droppableId="tabs"
             direction="horizontal"
@@ -382,14 +500,23 @@ function TabBar() {
           >
             {(provided) => (
               <div
-                ref={provided.innerRef}
+                ref={(el) => {
+                  provided.innerRef(el);
+                  //@ts-expect-error Ignore TS error for now
+                  tabsContainerRef.current = el;
+                }}
                 {...provided.droppableProps}
                 style={{
                   display: "flex",
                   flexGrow: 1,
                   height: "100%",
                   alignItems: "flex-end",
+                  overflowX: "auto",
+                  scrollbarWidth: "none", // Firefox
+                  msOverflowStyle: "none", // IE and Edge
                 }}
+                className="hide-scrollbar" // Use existing class for Chrome, Safari, and Opera
+                onScroll={updateScrollButtonVisibility}
               >
                 {tabs.length === 0 && (
                   <StyledTab key={-1} label={"Loading"} value={0} icon={<AutorenewIcon fontSize="small" />} />
@@ -411,6 +538,11 @@ function TabBar() {
           </StrictModeDroppable>
         </Box>
       </DragDropContext>
+
+      {/* Right scroll button - always visible but disabled when needed */}
+      <ScrollButton onClick={handleScrollRight} disabled={!canScrollRight} aria-label="scroll tabs right" size="small">
+        <KeyboardArrowRightIcon />
+      </ScrollButton>
     </Box>
   );
 }
