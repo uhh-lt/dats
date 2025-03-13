@@ -18,8 +18,8 @@ import "./Layout.css";
 import SideBar from "./SideBar/SideBar.tsx";
 import TabBar from "./TabBar/TabBar.tsx";
 
-function SideBarLayout({ isInProject }: { isInProject: boolean }) {
-  const { projectId } = useParams() as { projectId: string };
+function SideBarLayout() {
+  const { projectId } = useParams() as { projectId: string | undefined };
   const { loginStatus, logout, user } = useAuth();
 
   // sidebar state
@@ -31,6 +31,7 @@ function SideBarLayout({ isInProject }: { isInProject: boolean }) {
   return (
     <>
       <CssBaseline />
+      <ProjectIdUpdater />
       <Box sx={{ height: "100vh", display: "flex", flexDirection: "row" }}>
         <SideBar
           isExpanded={isExpanded}
@@ -38,7 +39,7 @@ function SideBarLayout({ isInProject }: { isInProject: boolean }) {
           loginStatus={loginStatus}
           user={user}
           handleLogout={logout}
-          isInProject={isInProject}
+          isInProject={!!projectId}
         />
         <Box
           sx={{
@@ -48,7 +49,7 @@ function SideBarLayout({ isInProject }: { isInProject: boolean }) {
             flexDirection: "column",
           }}
         >
-          {isInProject && <TabBar />}
+          {!!projectId && <TabBar />}
           <Box
             component="main"
             sx={{
@@ -63,9 +64,8 @@ function SideBarLayout({ isInProject }: { isInProject: boolean }) {
           </Box>
         </Box>
       </Box>
-      {parseInt(projectId) && (
+      {projectId && (
         <>
-          <ProjectIdUpdater />
           <DialMenu />
           <MemoDialog />
           <SnackbarDialog />

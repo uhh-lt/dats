@@ -1,4 +1,3 @@
-import AutorenewIcon from "@mui/icons-material/Autorenew";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import { Box, Divider } from "@mui/material";
@@ -15,7 +14,7 @@ import { DraggableTab } from "./components/DraggableTab";
 import { StrictModeDroppable } from "./components/StrictModeDroppable";
 
 // Import styled components
-import { ScrollButton, StyledTab } from "./styles";
+import { ScrollButton } from "./styles";
 
 function TabBar() {
   // Container ref for scrolling
@@ -23,7 +22,6 @@ function TabBar() {
 
   // Use custom hooks
   const { tabs, activeTabIndex, handleTabClick, handleCloseTab, handleDragEnd } = useTabManagement();
-
   const { canScrollLeft, canScrollRight, handleScrollLeft, handleScrollRight, updateScrollButtonVisibility } =
     useTabScroll(tabsContainerRef, activeTabIndex, tabs);
 
@@ -51,7 +49,7 @@ function TabBar() {
             height: 48,
             display: "flex",
             flexGrow: 1,
-            overflow: "hidden", // Hide scrollbar but allow programmatic scrolling
+            overflow: "hidden",
             position: "relative",
           }}
         >
@@ -88,10 +86,6 @@ function TabBar() {
                 className="hide-scrollbar" // Use existing class for Chrome, Safari, and Opera
                 onScroll={updateScrollButtonVisibility}
               >
-                {tabs.length === 0 && (
-                  <StyledTab key={-1} label={"Loading"} value={0} icon={<AutorenewIcon fontSize="small" />} />
-                )}
-
                 {tabs.map((tab, index) => (
                   <DraggableTab
                     key={tab.id}

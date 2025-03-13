@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef } from "react";
 import { DropResult } from "react-beautiful-dnd";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { getTabInfoFromPath } from "../tabInfo";
-import { TabActions } from "../tabSlice";
+import { selectProjectTabs, TabActions } from "../tabSlice";
 import { TabData } from "../types";
 
 interface TabManagementHook {
@@ -15,12 +15,14 @@ interface TabManagementHook {
 }
 
 export const useTabManagement = (): TabManagementHook => {
+  // global client state (react-router)
+  const projectId = parseInt((useParams() as { projectId: string }).projectId);
+
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  const tabs = useAppSelector((state) => state.tabs.tabs);
-  const activeTabIndex = useAppSelector((state) => state.tabs.activeTabIndex);
+  const { tabs, activeTabIndex } = useAppSelector(selectProjectTabs(projectId));
   const lastPathRef = useRef(location.pathname);
   const navigationSourceRef = useRef<"tab_change" | "link_click" | null>(null);
   const isProcessingRef = useRef(false);
@@ -31,9 +33,9 @@ export const useTabManagement = (): TabManagementHook => {
       return;
     }
 
-    if (lastPathRef.current === location.pathname) {
-      return;
-    }
+    // if (lastPathRef.current === location.pathname) {
+    //   return;
+    // }
 
     // Mark that we're processing a navigation
     isProcessingRef.current = true;
@@ -44,7 +46,7 @@ export const useTabManagement = (): TabManagementHook => {
         const existingTabIndex = tabs.findIndex((tab) => tab.path === location.pathname);
 
         if (existingTabIndex !== -1) {
-          dispatch(TabActions.setActiveTab(existingTabIndex));
+          dispatch(TabActions.setActiveTab({ tabId: existingTabIndex, projectId }));
         } else {
           // Create new tab for link navigation
           const { label, icon } = getTabInfoFromPath(location.pathname);
@@ -54,7 +56,7 @@ export const useTabManagement = (): TabManagementHook => {
             label,
             icon,
           };
-          dispatch(TabActions.addTab(newTab));
+          dispatch(TabActions.addTab({ tabData: newTab, projectId }));
         }
       }
     } finally {
@@ -63,7 +65,7 @@ export const useTabManagement = (): TabManagementHook => {
       navigationSourceRef.current = null;
       isProcessingRef.current = false;
     }
-  }, [location.pathname, tabs, dispatch]);
+  }, [location.pathname, tabs, dispatch, projectId]);
 
   // Handle active tab changes - intentionally not watching location.pathname
   useEffect(() => {
@@ -85,17 +87,17 @@ export const useTabManagement = (): TabManagementHook => {
     (index: number) => {
       if (!isProcessingRef.current && tabs[index]) {
         navigationSourceRef.current = "tab_change";
-        dispatch(TabActions.setActiveTab(index));
+        dispatch(TabActions.setActiveTab({ tabId: index, projectId }));
       }
     },
-    [tabs, dispatch],
+    [tabs, dispatch, projectId],
   );
 
   const handleCloseTab = useCallback(
     (index: number) => {
-      dispatch(TabActions.removeTab(index));
+      dispatch(TabActions.removeTab({ tabId: index, projectId }));
     },
-    [dispatch],
+    [dispatch, projectId],
   );
 
   const handleDragEnd = useCallback(
@@ -109,10 +111,11 @@ export const useTabManagement = (): TabManagementHook => {
         TabActions.reorderTabs({
           sourceIndex: source.index,
           destinationIndex: destination.index,
+          projectId,
         }),
       );
     },
-    [dispatch],
+    [dispatch, projectId],
   );
 
   return {

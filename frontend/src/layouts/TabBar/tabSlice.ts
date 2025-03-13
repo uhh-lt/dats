@@ -1,88 +1,126 @@
 import { Draft, PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { ProjectActions } from "../../components/Project/projectSlice.ts";
+import { RootState } from "../../store/store.ts";
 import { TabData } from "./types";
 
 export interface TabState {
-  tabs: TabData[];
-  activeTabIndex: number | null;
+  tabsByProject: Record<
+    number,
+    {
+      tabs: TabData[];
+      activeTabIndex: number | null;
+    }
+  >;
 }
 
 const initialState: TabState = {
-  tabs: [],
-  activeTabIndex: null,
+  tabsByProject: {},
 };
 
-const resetTabState = (state: Draft<TabState>) => {
-  state.tabs = initialState.tabs;
-  state.activeTabIndex = initialState.activeTabIndex;
+const getOrCreateTabState = (state: Draft<TabState>, projectId: number) => {
+  if (!state.tabsByProject[projectId]) {
+    state.tabsByProject[projectId] = {
+      tabs: [],
+      activeTabIndex: null,
+    };
+  }
+  return state.tabsByProject[projectId];
+};
+
+const resetTabState = (state: Draft<TabState>, projectId: number) => {
+  if (!state.tabsByProject[projectId]) {
+    state.tabsByProject[projectId] = {
+      tabs: [],
+      activeTabIndex: null,
+    };
+  }
 };
 
 export const tabSlice = createSlice({
   name: "tabs",
   initialState,
   reducers: {
-    setTabs: (state, action: PayloadAction<TabData[]>) => {
-      state.tabs = action.payload;
-    },
-    addTab: (state, action: PayloadAction<TabData>) => {
-      const existingTabIndex = state.tabs.findIndex((tab) => tab.path === action.payload.path);
+    addTab: (state, action: PayloadAction<{ tabData: TabData; projectId: number }>) => {
+      const projectState = getOrCreateTabState(state, action.payload.projectId);
+      const existingTabIndex = projectState.tabs.findIndex((tab) => tab.path === action.payload.tabData.path);
       if (existingTabIndex === -1) {
-        state.tabs.push(action.payload);
-        state.activeTabIndex = state.tabs.length - 1;
+        projectState.tabs.push(action.payload.tabData);
+        projectState.activeTabIndex = projectState.tabs.length - 1;
       } else {
-        state.activeTabIndex = existingTabIndex;
+        projectState.activeTabIndex = existingTabIndex;
       }
     },
-    removeTab: (state, action: PayloadAction<number>) => {
-      if (state.tabs.length <= 1) return;
+    removeTab: (state, action: PayloadAction<{ tabId: number; projectId: number }>) => {
+      const projectState = getOrCreateTabState(state, action.payload.projectId);
+      if (projectState.tabs.length <= 1) return;
 
-      state.tabs.splice(action.payload, 1);
+      projectState.tabs.splice(action.payload.tabId, 1);
 
-      if (state.activeTabIndex === action.payload) {
-        state.activeTabIndex = action.payload > 0 ? action.payload - 1 : 0;
-      } else if (state.activeTabIndex !== null && action.payload < state.activeTabIndex) {
-        state.activeTabIndex -= 1;
+      if (projectState.activeTabIndex === action.payload.tabId) {
+        projectState.activeTabIndex = action.payload.tabId > 0 ? action.payload.tabId - 1 : 0;
+      } else if (projectState.activeTabIndex !== null && action.payload.tabId < projectState.activeTabIndex) {
+        projectState.activeTabIndex -= 1;
       }
     },
-    setActiveTab: (state, action: PayloadAction<number>) => {
-      state.activeTabIndex = action.payload;
+    setActiveTab: (state, action: PayloadAction<{ tabId: number; projectId: number }>) => {
+      const projectState = getOrCreateTabState(state, action.payload.projectId);
+      projectState.activeTabIndex = action.payload.tabId;
     },
-    reorderTabs: (state, action: PayloadAction<{ sourceIndex: number; destinationIndex: number }>) => {
+    reorderTabs: (
+      state,
+      action: PayloadAction<{ sourceIndex: number; destinationIndex: number; projectId: number }>,
+    ) => {
+      const projectState = getOrCreateTabState(state, action.payload.projectId);
       const { sourceIndex, destinationIndex } = action.payload;
-      const [movedTab] = state.tabs.splice(sourceIndex, 1);
-      state.tabs.splice(destinationIndex, 0, movedTab);
+      const [movedTab] = projectState.tabs.splice(sourceIndex, 1);
+      projectState.tabs.splice(destinationIndex, 0, movedTab);
 
-      if (state.activeTabIndex === sourceIndex) {
-        state.activeTabIndex = destinationIndex;
-      } else if (state.activeTabIndex !== null) {
-        if (sourceIndex < state.activeTabIndex && destinationIndex >= state.activeTabIndex) {
-          state.activeTabIndex -= 1;
-        } else if (sourceIndex > state.activeTabIndex && destinationIndex <= state.activeTabIndex) {
-          state.activeTabIndex += 1;
+      if (projectState.activeTabIndex === sourceIndex) {
+        projectState.activeTabIndex = destinationIndex;
+      } else if (projectState.activeTabIndex !== null) {
+        if (sourceIndex < projectState.activeTabIndex && destinationIndex >= projectState.activeTabIndex) {
+          projectState.activeTabIndex -= 1;
+        } else if (sourceIndex > projectState.activeTabIndex && destinationIndex <= projectState.activeTabIndex) {
+          projectState.activeTabIndex += 1;
         }
       }
     },
-    goToLeftTab: (state) => {
-      if (state.activeTabIndex === null || state.tabs.length <= 1) return;
-      state.activeTabIndex = state.activeTabIndex > 0 ? state.activeTabIndex - 1 : state.tabs.length - 1;
+    goToLeftTab: (state, action: PayloadAction<{ projectId: number }>) => {
+      const projectState = getOrCreateTabState(state, action.payload.projectId);
+      if (projectState.activeTabIndex === null || projectState.tabs.length <= 1) return;
+      projectState.activeTabIndex =
+        projectState.activeTabIndex > 0 ? projectState.activeTabIndex - 1 : projectState.tabs.length - 1;
     },
-    goToRightTab: (state) => {
-      if (state.activeTabIndex === null || state.tabs.length <= 1) return;
-      state.activeTabIndex = state.activeTabIndex < state.tabs.length - 1 ? state.activeTabIndex + 1 : 0;
+    goToRightTab: (state, action: PayloadAction<{ projectId: number }>) => {
+      const projectState = getOrCreateTabState(state, action.payload.projectId);
+      if (projectState.activeTabIndex === null || projectState.tabs.length <= 1) return;
+      projectState.activeTabIndex =
+        projectState.activeTabIndex < projectState.tabs.length - 1 ? projectState.activeTabIndex + 1 : 0;
     },
-    closeActiveTab: (state) => {
-      if (state.activeTabIndex === null || state.tabs.length <= 1) return;
-      state.tabs.splice(state.activeTabIndex, 1);
-      state.activeTabIndex = state.activeTabIndex > 0 ? state.activeTabIndex - 1 : 0;
+    closeActiveTab: (state, action: PayloadAction<{ projectId: number }>) => {
+      const projectState = getOrCreateTabState(state, action.payload.projectId);
+      if (projectState.activeTabIndex === null || projectState.tabs.length <= 1) return;
+      projectState.tabs.splice(projectState.activeTabIndex, 1);
+      projectState.activeTabIndex = projectState.activeTabIndex > 0 ? projectState.activeTabIndex - 1 : 0;
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(ProjectActions.changeProject, (state) => {
+    builder.addCase(ProjectActions.changeProject, (state, action) => {
       console.log("Project changed! Resetting 'tab' state.");
-      resetTabState(state);
+      resetTabState(state, action.payload);
     });
   },
 });
+
+export const selectProjectTabs = (projectId: number) => (state: RootState) => {
+  if (!state.tabs.tabsByProject[projectId]) {
+    return {
+      tabs: [],
+      activeTabIndex: null,
+    };
+  }
+  return state.tabs.tabsByProject[projectId];
+};
 
 export const TabActions = tabSlice.actions;
 export default tabSlice.reducer;

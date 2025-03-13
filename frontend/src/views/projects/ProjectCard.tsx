@@ -1,17 +1,31 @@
 import { Card, CardActionArea, CardActions, CardContent, CircularProgress, Grid2, Typography } from "@mui/material";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import PreProHooks from "../../api/PreProHooks.ts";
 import { ProjectRead } from "../../api/openapi/models/ProjectRead.ts";
+import { useAppSelector } from "../../plugins/ReduxHooks.ts";
 
 interface ProjectCardProps {
   project: ProjectRead;
 }
 export function ProjectCard({ project }: ProjectCardProps) {
   const preProStatus = PreProHooks.useGetPreProProjectStatus(project.id);
+
+  const projectTabs = useAppSelector((state) => state.tabs.tabsByProject);
+
+  // open project
+  const navigate = useNavigate();
+  const openProject = () => {
+    if (!projectTabs[project.id] || projectTabs[project.id].activeTabIndex === null) {
+      navigate(`/project/${project.id}/search`);
+    } else {
+      navigate(projectTabs[project.id].tabs[projectTabs[project.id].activeTabIndex!].path);
+    }
+  };
+
   return (
     <Grid2 size={{ sm: 3 }}>
       <Card>
-        <CardActionArea component={Link} to={`/project/${project.id}/search`}>
+        <CardActionArea onClick={openProject}>
           <CardContent sx={{ padding: "0px !important" }}>
             <Typography variant="body2" color="textPrimary" bgcolor="lightgray" p={2} height={100}>
               {project.description}
@@ -33,12 +47,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
           )}
         </CardActionArea>
         <CardActions>
-          <Typography
-            variant="subtitle1"
-            component={Link}
-            to={`/project/${project.id}/search`}
-            sx={{ flexGrow: 1, textDecoration: "none", color: "inherit" }}
-          >
+          <Typography variant="subtitle1" sx={{ flexGrow: 1, textDecoration: "none", color: "inherit" }}>
             {project.title}
           </Typography>
         </CardActions>
