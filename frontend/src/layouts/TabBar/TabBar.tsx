@@ -2,7 +2,15 @@ import AutorenewIcon from "@mui/icons-material/Autorenew";
 import CloseIcon from "@mui/icons-material/Close";
 import { Box, Divider, IconButton, styled, Tab } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { DragDropContext, Draggable, Droppable, DropResult } from "react-beautiful-dnd";
+import {
+  DragDropContext,
+  Draggable,
+  DraggableProvided,
+  DraggableRubric,
+  DraggableStateSnapshot,
+  Droppable,
+  DropResult,
+} from "react-beautiful-dnd";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getTabInfoFromPath } from "./tabInfo.tsx";
 
@@ -14,8 +22,9 @@ interface TabData {
   icon?: React.ReactElement;
 }
 
-// Custom styled tab component for a Thunderbird-like appearance
+// Styled components for tabs
 const StyledTab = styled(Tab)(({ theme }) => ({
+  minHeight: "42px",
   padding: "8px 8px 10px 8px",
   fontSize: theme.typography.body2.fontSize,
   borderRight: `1px solid ${theme.palette.divider}`,
@@ -55,13 +64,13 @@ const StyledTab = styled(Tab)(({ theme }) => ({
   },
 }));
 
-// Wrapper div for draggable tabs that also handles hover styling
+// Tab wrapper styling
 const TabWrapper = styled("div")(({ theme }) => ({
   display: "flex",
   position: "relative",
   cursor: "grab",
-  height: "auto",
-  // Apply hover styling to the tab wrapper
+
+  // Hover styling
   "&:hover": {
     "& .MuiTab-root::before": {
       backgroundColor: theme.palette.grey[600],
@@ -70,7 +79,7 @@ const TabWrapper = styled("div")(({ theme }) => ({
       opacity: 1,
     },
   },
-  // Style for active tab
+  // Active tab styling
   "&.active-tab": {
     "& .MuiTab-root": {
       opacity: 1,
@@ -80,7 +89,7 @@ const TabWrapper = styled("div")(({ theme }) => ({
       },
     },
   },
-  // Style for dragging tab
+  // Dragging tab styling
   "&.dragging": {
     boxShadow: "0 5px 10px rgba(0,0,0,0.2)",
     opacity: 0.9,
@@ -89,100 +98,41 @@ const TabWrapper = styled("div")(({ theme }) => ({
   },
 }));
 
-// Tab wrapper with draggable functionality
-const DraggableTab = ({
-  tab,
-  index,
-  isActive,
-  onTabClick,
-  onCloseClick,
-}: {
-  tab: TabData;
-  index: number;
-  isActive: boolean;
-  onTabClick: () => void;
-  onCloseClick: () => void;
-}) => {
-  return (
-    <Draggable key={tab.id} draggableId={tab.id} index={index} disableInteractiveElementBlocking>
-      {(provided, snapshot) => {
-        // Fix for tab placement during drag
-        const dragStyle = {
-          ...provided.draggableProps.style,
-          // Constrain the height during dragging
-          height: snapshot.isDragging ? "36px" : undefined,
-        };
+// Close button styling
+const CloseButton = styled(IconButton)(({ theme }) => ({
+  marginLeft: theme.spacing(1),
+  opacity: 0.5,
+  "&:hover": {
+    opacity: 1,
+  },
+  padding: "2px",
+  height: 18,
+  width: 18,
+  pointerEvents: "auto",
+}));
 
-        return (
-          <TabWrapper
-            ref={provided.innerRef}
-            {...provided.draggableProps}
-            {...provided.dragHandleProps}
-            style={dragStyle}
-            onClick={onTabClick}
-            className={`${snapshot.isDragging ? "dragging" : ""} ${isActive ? "active-tab" : ""}`}
-          >
-            <StyledTab
-              label={
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    width: "100%",
-                    justifyContent: "space-between",
-                    pointerEvents: "none",
-                  }}
-                >
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    {tab.icon}
-                    <span
-                      style={{
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        marginLeft: "8px",
-                      }}
-                    >
-                      {tab.label}
-                    </span>
-                  </Box>
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onCloseClick();
-                    }}
-                    sx={{
-                      ml: 1,
-                      opacity: 0.5,
-                      "&:hover": { opacity: 1 },
-                      padding: "2px",
-                      height: 18,
-                      width: 18,
-                      pointerEvents: "auto",
-                    }}
-                  >
-                    <CloseIcon fontSize="small" sx={{ fontSize: 16 }} />
-                  </IconButton>
-                </Box>
-              }
-              value={index}
-              sx={{
-                pointerEvents: "none",
-                width: "100%",
-                boxSizing: "border-box",
-                // Remove hover styles from here as they're now on the wrapper
-                "&:hover": {},
-              }}
-              onClick={undefined}
-              className={isActive ? "Mui-selected" : ""}
-            />
-          </TabWrapper>
-        );
-      }}
-    </Draggable>
-  );
-};
+// Container for the tab content
+const TabContent = styled(Box)({
+  display: "flex",
+  alignItems: "center",
+  width: "100%",
+  justifyContent: "space-between",
+  pointerEvents: "none",
+});
+
+// Container for the tab label and icon
+const TabLabel = styled(Box)({
+  display: "flex",
+  alignItems: "center",
+});
+
+// Label text styling
+const LabelText = styled("span")({
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+  marginLeft: "8px",
+});
 
 // Wrapper component for react-beautiful-dnd to work with React 18 StrictMode
 const StrictModeDroppable = ({ children, ...props }: React.ComponentProps<typeof Droppable>) => {
@@ -203,6 +153,112 @@ const StrictModeDroppable = ({ children, ...props }: React.ComponentProps<typeof
   return <Droppable {...props}>{children}</Droppable>;
 };
 
+// Tab wrapper with draggable functionality
+const DraggableTab = ({
+  tab,
+  index,
+  isActive,
+  onTabClick,
+  onCloseClick,
+}: {
+  tab: TabData;
+  index: number;
+  isActive: boolean;
+  onTabClick: () => void;
+  onCloseClick: () => void;
+}) => {
+  return (
+    <Draggable key={tab.id} draggableId={tab.id} index={index} disableInteractiveElementBlocking>
+      {(provided, snapshot) => {
+        return (
+          <TabWrapper
+            ref={provided.innerRef}
+            {...provided.draggableProps}
+            {...provided.dragHandleProps}
+            onClick={onTabClick}
+            className={`${snapshot.isDragging ? "dragging" : ""} ${isActive ? "active-tab" : ""}`}
+          >
+            <StyledTab
+              label={
+                <TabContent>
+                  <TabLabel>
+                    {tab.icon}
+                    <LabelText>{tab.label}</LabelText>
+                  </TabLabel>
+                  <CloseButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onCloseClick();
+                    }}
+                  >
+                    <CloseIcon fontSize="small" sx={{ fontSize: 16 }} />
+                  </CloseButton>
+                </TabContent>
+              }
+              value={index}
+              sx={{
+                pointerEvents: "none",
+                width: "100%",
+                boxSizing: "border-box",
+                "&:hover": {}, // Remove hover styles from here as they're now on the wrapper
+              }}
+              onClick={undefined}
+              className={isActive ? "Mui-selected" : ""}
+            />
+          </TabWrapper>
+        );
+      }}
+    </Draggable>
+  );
+};
+
+// Clone renderer for the dragged tab
+const renderDragClone = (
+  provided: DraggableProvided,
+  _: DraggableStateSnapshot,
+  rubric: DraggableRubric,
+  tabs: TabData[],
+  activeTabIndex: number | null,
+) => {
+  const tab = tabs[rubric.source.index];
+  const isActiveTab = activeTabIndex === rubric.source.index;
+
+  return (
+    <div
+      ref={provided.innerRef}
+      {...provided.draggableProps}
+      {...provided.dragHandleProps}
+      style={{
+        ...provided.draggableProps.style,
+        display: "flex",
+        width: "auto",
+        minWidth: "100px",
+        boxShadow: "0 5px 10px rgba(0,0,0,0.2)",
+      }}
+    >
+      <StyledTab
+        label={
+          <TabContent>
+            <TabLabel>
+              {tab.icon}
+              <LabelText>{tab.label}</LabelText>
+            </TabLabel>
+            <CloseIcon fontSize="small" sx={{ fontSize: 16, ml: 1, opacity: 0.5 }} />
+          </TabContent>
+        }
+        sx={{
+          width: "100%",
+          boxSizing: "border-box",
+          padding: "8px 8px 10px 8px",
+        }}
+        className={isActiveTab ? "Mui-selected" : ""}
+      />
+    </div>
+  );
+};
+
+// Main TabBar component
 function TabBar() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -242,6 +298,7 @@ function TabBar() {
     }
   }, [location.pathname, tabs]);
 
+  // Handle tab click - navigate to corresponding page
   const handleTabClick = (index: number) => {
     if (tabs[index]) {
       navigate(tabs[index].path);
@@ -249,6 +306,7 @@ function TabBar() {
     }
   };
 
+  // Handle tab close
   const handleCloseTab = (index: number) => {
     // Don't close if it's the last tab
     if (tabs.length <= 1) return;
@@ -309,62 +367,18 @@ function TabBar() {
         borderBottom: 1,
         borderColor: "divider",
         bgcolor: (theme) => theme.palette.primary.main,
-        height: 48, // Make tab bar slightly taller than tabs
+        height: 48,
       }}
     >
       <Divider orientation="vertical" />
       <DragDropContext onDragEnd={handleDragEnd}>
-        <Box sx={{ display: "flex", flexGrow: 1, overflow: "auto" }}>
+        <Box sx={{ height: 48, display: "flex", flexGrow: 1, overflow: "auto" }}>
           <StrictModeDroppable
             droppableId="tabs"
             direction="horizontal"
-            renderClone={(provided, snapshot, rubric) => {
-              const tab = tabs[rubric.source.index];
-              const isActiveTab = activeTabIndex === rubric.source.index;
-
-              return (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.draggableProps}
-                  {...provided.dragHandleProps}
-                  style={{
-                    ...provided.draggableProps.style,
-                    height: "36px",
-                    display: "flex",
-                    width: "auto",
-                    minWidth: "100px",
-                    boxShadow: "0 5px 10px rgba(0,0,0,0.2)",
-                  }}
-                  className={isActiveTab ? "active-clone" : ""}
-                >
-                  <StyledTab
-                    label={
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          width: "100%",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                          {tab.icon}
-                          <span style={{ marginLeft: "8px" }}>{tab.label}</span>
-                        </Box>
-                        <CloseIcon fontSize="small" sx={{ fontSize: 16, ml: 1, opacity: 0.5 }} />
-                      </Box>
-                    }
-                    sx={{
-                      width: "100%",
-                      height: "36px",
-                      boxSizing: "border-box",
-                      padding: "8px 8px 10px 8px",
-                    }}
-                    className={isActiveTab ? "Mui-selected" : ""}
-                  />
-                </div>
-              );
-            }}
+            renderClone={(provided, snapshot, rubric) =>
+              renderDragClone(provided, snapshot, rubric, tabs, activeTabIndex)
+            }
           >
             {(provided) => (
               <div
