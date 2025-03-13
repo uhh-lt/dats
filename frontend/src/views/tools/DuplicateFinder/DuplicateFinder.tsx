@@ -1,6 +1,6 @@
 import TroubleshootIcon from "@mui/icons-material/Troubleshoot";
 import { LoadingButton } from "@mui/lab";
-import { Box, Button, Card, CardContent, CardHeader, Portal, TextField, Typography } from "@mui/material";
+import { Box, Button, Card, CardContent, CardHeader, TextField } from "@mui/material";
 import {
   MRT_ColumnDef,
   MRT_RowSelectionState,
@@ -9,13 +9,12 @@ import {
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useContext, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
 import SdocTagsRenderer from "../../../components/SourceDocument/SdocTagRenderer.tsx";
-import { AppBarContext } from "../../../layouts/AppBarContext.ts";
 import NoSidebarLayout from "../../../layouts/NoSidebarLayout.tsx";
 
 interface DuplicateDocumentData {
@@ -42,7 +41,6 @@ const columns: MRT_ColumnDef<DuplicateDocumentData>[] = [
 
 function ProjectDuplicateDocuments() {
   const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
-  const appBarContainerRef = useContext(AppBarContext);
 
   // local state
   const [maxDifferentWords, setMaxDifferentWords] = useState<number>(10);
@@ -180,11 +178,6 @@ function ProjectDuplicateDocuments() {
 
   return (
     <NoSidebarLayout>
-      <Portal container={appBarContainerRef?.current}>
-        <Typography variant="h6" component="div">
-          Tools
-        </Typography>
-      </Portal>
       <Card
         sx={{ width: "100%", minHeight: "225.5px" }}
         elevation={2}

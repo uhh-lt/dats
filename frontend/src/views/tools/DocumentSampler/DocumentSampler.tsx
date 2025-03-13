@@ -1,12 +1,11 @@
-import { Box, Portal, Stack, Typography } from "@mui/material";
+import { Box, Stack } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
-import { useCallback, useContext, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import TagHooks from "../../../api/TagHooks.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import { SampledSdocsResults } from "../../../api/openapi/models/SampledSdocsResults.ts";
 import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
-import { AppBarContext } from "../../../layouts/AppBarContext.ts";
 import OneSidebarLayout from "../../../layouts/OneSidebarLayout.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import DocumentsBarChart from "./DocumentsBarChart.tsx";
@@ -16,8 +15,6 @@ import TagGroupCreator from "./TagGroupCreator.tsx";
 import { DocumentSamplerActions } from "./documentSamplerSlice.ts";
 
 function DocumentSampler() {
-  const appBarContainerRef = useContext(AppBarContext);
-
   // global client state (react router)
   const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
 
@@ -76,31 +73,24 @@ function DocumentSampler() {
   };
 
   return (
-    <>
-      <Portal container={appBarContainerRef?.current}>
-        <Typography variant="h6" component="div">
-          Document Sampler
-        </Typography>
-      </Portal>
-      <OneSidebarLayout
-        leftSidebar={
-          <Box className="h100 myFlexContainer">
-            <TagGroupCreator
-              tags={tags.data || []}
-              aggregationGroups={aggregationGroups}
-              cardProps={{ className: "myFlexFillAllContainer", sx: { mb: 2 }, elevation: 0 }}
-            />
-            <SamplingStrategySelector cardProps={{ elevation: 0 }} />
-          </Box>
-        }
-        content={
-          <Stack className="h100" p={2} spacing={2}>
-            <DocumentsBarChart cardProps={{ sx: { height: "50%" } }} onChartRefresh={onAggregate} />
-            <DocumentsTable cardProps={{ sx: { height: "50%" } }} onTableRefresh={onAggregate} />
-          </Stack>
-        }
-      />
-    </>
+    <OneSidebarLayout
+      leftSidebar={
+        <Box className="h100 myFlexContainer">
+          <TagGroupCreator
+            tags={tags.data || []}
+            aggregationGroups={aggregationGroups}
+            cardProps={{ className: "myFlexFillAllContainer", sx: { mb: 2 }, elevation: 0 }}
+          />
+          <SamplingStrategySelector cardProps={{ elevation: 0 }} />
+        </Box>
+      }
+      content={
+        <Stack className="h100" p={2} spacing={2}>
+          <DocumentsBarChart cardProps={{ sx: { height: "50%" } }} onChartRefresh={onAggregate} />
+          <DocumentsTable cardProps={{ sx: { height: "50%" } }} onTableRefresh={onAggregate} />
+        </Stack>
+      }
+    />
   );
 }
 

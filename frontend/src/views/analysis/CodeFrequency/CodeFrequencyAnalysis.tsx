@@ -1,17 +1,14 @@
-import { Card, CardHeader, Grid2, Portal, Stack, Typography } from "@mui/material";
-import { useContext, useState } from "react";
+import { Card, CardHeader, Grid2, Stack } from "@mui/material";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
 import useComputeCodeTree from "../../../components/Code/CodeExplorer/useComputeCodeTree.ts";
 import UserSelectorMulti from "../../../components/User/UserSelectorMulti.tsx";
-import { AppBarContext } from "../../../layouts/AppBarContext.ts";
 import CodeFrequencyView from "./CodeFrequencyView.tsx";
 import CodeOccurrenceTable from "./CodeOccurrenceTable.tsx";
 import DocTypeSelectorMulti from "./DocTypeSelectorMulti.tsx";
 
 function CodeFrequencyAnalysis() {
-  const appBarContainerRef = useContext(AppBarContext);
-
   // global client state (react-router)
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
@@ -27,11 +24,6 @@ function CodeFrequencyAnalysis() {
     <Grid2 container columnSpacing={1} className="h100" px={2} pt={2} bgcolor="grey.200">
       {codeTree ? (
         <>
-          <Portal container={appBarContainerRef?.current}>
-            <Typography variant="h6" component="div">
-              Frequency Analysis
-            </Typography>
-          </Portal>
           <Grid2 size={{ xs: 6 }} className="h100" sx={{ overflowY: "auto", pr: 1, py: 1 }}>
             <Stack spacing={2}>
               <Stack direction="row" gap={2}>

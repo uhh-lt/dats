@@ -1,9 +1,7 @@
-import { Box, CircularProgress, Grid2, Portal, Typography } from "@mui/material";
-import { useContext } from "react";
+import { Box, CircularProgress, Grid2 } from "@mui/material";
 import { useParams } from "react-router-dom";
 import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
-import { AppBarContext } from "../../../layouts/AppBarContext.ts";
 import ConceptList from "./ConceptList.tsx";
 import TimeAnalysisProvenance from "./TimeAnalysisProvenance.tsx";
 import TimelineAnalysisViz from "./TimeAnalysisViz.tsx";
@@ -11,7 +9,6 @@ import TimelineAnalysisSettings from "./TimelineAnalysisSettings.tsx";
 
 function TimelineAnalysis() {
   // global client state
-  const appBarContainerRef = useContext(AppBarContext);
   const urlParams = useParams() as { projectId: string; analysisId: string };
   const projectId = parseInt(urlParams.projectId);
   const analysisId = parseInt(urlParams.analysisId);
@@ -21,11 +18,6 @@ function TimelineAnalysis() {
 
   return (
     <>
-      <Portal container={appBarContainerRef?.current}>
-        <Typography variant="h6" component="div">
-          {timelineAnalysis.data?.name || ""}
-        </Typography>
-      </Portal>
       {timelineAnalysis.isSuccess ? (
         <TimelineAnalysisContent key={`${projectId}-${analysisId}`} timelineAnalysis={timelineAnalysis.data} />
       ) : timelineAnalysis.isLoading ? (
