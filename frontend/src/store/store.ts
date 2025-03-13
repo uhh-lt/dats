@@ -3,7 +3,6 @@ import { FLUSH, PAUSE, PERSIST, PURGE, REGISTER, REHYDRATE } from "redux-persist
 import bboxFilterReducer from "../components/BBoxAnnotation/BBoxAnnotationTable/bboxFilterSlice.ts";
 import memoFilterReducer from "../components/Memo/MemoTable/memoFilterSlice.ts";
 import projectReducer from "../components/Project/projectSlice.ts";
-import quickCommandMenuReducer from "../components/QuickCommandMenu/quickCommandMenuSlice.ts";
 import seatFilterReducer from "../components/SentenceAnnotation/SentenceAnnotationTable/seatFilterSlice.ts";
 import documentTableFilterReducer from "../components/SourceDocument/SdocTable/documentTableFilterSlice.ts";
 import satFilterReducer from "../components/SpanAnnotation/SpanAnnotationTable/satFilterSlice.ts";
@@ -30,7 +29,6 @@ export const store = configureStore({
     sentenceSearch: sentenceSearchReducer,
     layout: layoutReducer,
     project: projectReducer,
-    quickCommandMenu: quickCommandMenuReducer,
     // non-persisted reducers
     logbook: logbookReducer,
     spanAnnotationAnalysis: spanAnnotationAnalysisReducer,

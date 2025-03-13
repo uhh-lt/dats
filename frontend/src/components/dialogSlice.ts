@@ -62,6 +62,8 @@ interface DialogState {
   llmParameters: TrainingParameters;
   llmJobId?: string;
   llmJobResult: LLMJobResult | null | undefined;
+  // quick command menu
+  isQuickCommandMenuOpen: boolean;
 }
 
 const initialState: DialogState = {
@@ -122,6 +124,8 @@ const initialState: DialogState = {
   },
   llmJobId: undefined,
   llmJobResult: undefined,
+  // quick command menu
+  isQuickCommandMenuOpen: false,
 };
 
 export const dialogSlice = createSlice({
@@ -361,6 +365,16 @@ export const dialogSlice = createSlice({
         state.llmMetadata = initialState.llmMetadata;
         state.llmCodes = initialState.llmCodes;
       }
+    },
+    // quick command menu
+    openQuickCommandMenu: (state) => {
+      state.isQuickCommandMenuOpen = true;
+    },
+    closeQuickCommandMenu: (state) => {
+      state.isQuickCommandMenuOpen = false;
+    },
+    toggleQuickCommandMenu: (state) => {
+      state.isQuickCommandMenuOpen = !state.isQuickCommandMenuOpen;
     },
   },
 });

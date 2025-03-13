@@ -9,17 +9,28 @@ import {
   TextField,
   alpha,
 } from "@mui/material";
-import { SyntheticEvent, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { SyntheticEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { CRUDDialogActions } from "../dialogSlice.ts";
 import { CommandItem } from "./CommandItem";
-import { useQuickCommandMenu } from "./useQuickCommandMenu";
+import { generateDefaultCommands } from "./defaultCommands.tsx";
 
 const QuickCommandMenu = () => {
-  const { isOpen, closeMenu, commands } = useQuickCommandMenu();
-  const [isAutocompleteOpen, setIsAutocompleteOpen] = useState(false);
-  const navigate = useNavigate();
-  const anchorRef = useRef<HTMLDivElement>(null);
+  // generate commands
+  const { projectId } = useParams() as { projectId: string };
+  const commands = useMemo(() => {
+    return generateDefaultCommands(projectId);
+  }, [projectId]);
 
+  // open close the menu
+  const dispatch = useAppDispatch();
+  const isOpen = useAppSelector((state) => state.dialog.isQuickCommandMenuOpen);
+  const closeMenu = () => dispatch(CRUDDialogActions.closeQuickCommandMenu());
+  const [isAutocompleteOpen, setIsAutocompleteOpen] = useState(false);
+
+  // open close autocomplete
+  const anchorRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => {
@@ -28,6 +39,8 @@ const QuickCommandMenu = () => {
     }
   }, [isOpen]);
 
+  // handle comands
+  const navigate = useNavigate();
   const handleCommandSelect = (_event: SyntheticEvent, command: CommandItem | null) => {
     if (command) {
       if (command.action) {

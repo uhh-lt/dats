@@ -4,13 +4,13 @@ import { Outlet, useParams } from "react-router-dom";
 import { useAuth } from "../auth/useAuth.ts";
 import CodeCreateDialog from "../components/Code/CodeCreateDialog.tsx";
 import ConfirmationDialog from "../components/ConfirmationDialog/ConfirmationDialog.tsx";
+import { CRUDDialogActions } from "../components/dialogSlice.ts";
 import ExporterDialog from "../components/Exporter/ExporterDialog.tsx";
 import LLMDialog from "../components/LLMDialog/LLMDialog.tsx";
 import MemoDialog from "../components/Memo/MemoDialog/MemoDialog.tsx";
 import ProjectIdUpdater from "../components/Project/ProjectIdUpdater.tsx";
 import ProjectSettingsDialog from "../components/ProjectSettings/ProjectSettingsDialog.tsx";
 import QuickCommandMenu from "../components/QuickCommandMenu/QuickCommandMenu.tsx";
-import { setProjectId, toggleMenu } from "../components/QuickCommandMenu/quickCommandMenuSlice.ts";
 import SnackbarDialog from "../components/SnackbarDialog/SnackbarDialog.tsx";
 import TagCreateDialog from "../components/Tag/TagCreateDialog.tsx";
 import { useAppDispatch } from "../plugins/ReduxHooks.ts";
@@ -30,17 +30,12 @@ function SideBarLayout({ isInProject }: { isInProject: boolean }) {
     setSidebarExpanded(!isExpanded);
   };
 
-  // Update project ID in quick command menu state
-  useEffect(() => {
-    dispatch(setProjectId(projectId));
-  }, [dispatch, projectId]);
-
   // Setup command palette keyboard shortcut
   useEffect(() => {
     const handleKeyDown = (event: globalThis.KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === "p") {
         event.preventDefault();
-        dispatch(toggleMenu());
+        dispatch(CRUDDialogActions.toggleQuickCommandMenu());
       }
     };
 
