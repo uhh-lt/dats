@@ -49,7 +49,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/",
-    element: <SideBarLayout isInProject={false} />,
+    element: <SideBarLayout />,
     children: [
       {
         path: "/projects",
@@ -74,7 +74,7 @@ const router = createBrowserRouter([
     path: "/project/:projectId",
     element: (
       <RequireAuth>
-        <SideBarLayout isInProject={true} />
+        <SideBarLayout />
       </RequireAuth>
     ),
     children: [

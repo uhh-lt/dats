@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { CRUDDialogActions } from "../components/dialogSlice";
 import { TabActions } from "../layouts/TabBar/tabSlice";
 import { useAppDispatch } from "../plugins/ReduxHooks";
@@ -36,6 +36,9 @@ export function createShortcut(
 }
 
 export function useShortcuts() {
+  // global client state (react-router)
+  const projectId = parseInt((useParams() as { projectId: string }).projectId);
+
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -72,17 +75,35 @@ export function useShortcuts() {
       }),
 
       // Tab navigation shortcuts
-      createShortcut("goToLeftTab", "ArrowLeft", "Go to Left Tab", () => dispatch(TabActions.goToLeftTab()), {
-        ctrlmeta: true,
-        shift: true,
-      }),
-      createShortcut("goToRightTab", "ArrowRight", "Go to Right Tab", () => dispatch(TabActions.goToRightTab()), {
-        ctrlmeta: true,
-        shift: true,
-      }),
-      createShortcut("closeActiveTab", "w", "Close Active Tab", () => dispatch(TabActions.closeActiveTab()), {
-        ctrlmeta: true,
-      }),
+      createShortcut(
+        "goToLeftTab",
+        "ArrowLeft",
+        "Go to Left Tab",
+        () => dispatch(TabActions.goToLeftTab({ projectId })),
+        {
+          ctrlmeta: true,
+          shift: true,
+        },
+      ),
+      createShortcut(
+        "goToRightTab",
+        "ArrowRight",
+        "Go to Right Tab",
+        () => dispatch(TabActions.goToRightTab({ projectId })),
+        {
+          ctrlmeta: true,
+          shift: true,
+        },
+      ),
+      createShortcut(
+        "closeActiveTab",
+        "w",
+        "Close Active Tab",
+        () => dispatch(TabActions.closeActiveTab({ projectId })),
+        {
+          ctrlmeta: true,
+        },
+      ),
 
       // Documentation shortcuts
       createShortcut("openWiki", "w", "Open Wiki", () => window.open("https://github.com/uhh-lt/dats/wiki", "_blank"), {
@@ -96,7 +117,7 @@ export function useShortcuts() {
       const bModifiers = (b.keys.ctrlmeta ? 1 : 0) + (b.keys.shift ? 1 : 0) + (b.keys.alt ? 1 : 0);
       return bModifiers - aModifiers; // Sort in descending order
     });
-  }, [dispatch, navigate]);
+  }, [dispatch, navigate, projectId]);
 
   return sortedShortcuts;
 }
