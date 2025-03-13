@@ -1,19 +1,10 @@
-import AnalyticsIcon from "@mui/icons-material/Analytics";
-import ArticleIcon from "@mui/icons-material/Article";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import CloseIcon from "@mui/icons-material/Close";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import EditIcon from "@mui/icons-material/Edit";
-import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
-import HomeIcon from "@mui/icons-material/Home";
-import LayersIcon from "@mui/icons-material/Layers";
-import MenuBookIcon from "@mui/icons-material/MenuBook";
-import SearchIcon from "@mui/icons-material/Search";
-import SettingsIcon from "@mui/icons-material/Settings";
-import TuneIcon from "@mui/icons-material/Tune";
-import { Box, Divider, IconButton, Tab, Tabs, styled } from "@mui/material";
+import { Box, Divider, IconButton, styled, Tab } from "@mui/material";
 import React, { useEffect, useState } from "react";
+import { DragDropContext, Draggable, Droppable, DropResult } from "react-beautiful-dnd";
 import { useLocation, useNavigate } from "react-router-dom";
+import { getTabInfoFromPath } from "./tabInfo.tsx";
 
 // Interface for tab data
 interface TabData {
@@ -46,12 +37,6 @@ const StyledTab = styled(Tab)(({ theme }) => ({
     backgroundColor: "transparent",
     transition: "background-color 0.2s",
   },
-  "&:hover": {
-    opacity: 1,
-    "&::before": {
-      backgroundColor: theme.palette.grey[600],
-    },
-  },
   "&.Mui-selected": {
     opacity: 1,
     backgroundColor: theme.palette.background.default,
@@ -70,153 +55,152 @@ const StyledTab = styled(Tab)(({ theme }) => ({
   },
 }));
 
-// Custom tab component with icon and close button
-function CustomTab(props: {
-  label: string;
-  icon?: React.ReactElement;
-  onClose: (event: React.MouseEvent) => void;
-  [key: string]: unknown;
-}) {
-  const { label, onClose, icon, ...other } = props;
+// Wrapper div for draggable tabs that also handles hover styling
+const TabWrapper = styled("div")(({ theme }) => ({
+  display: "flex",
+  position: "relative",
+  cursor: "grab",
+  height: "auto",
+  // Apply hover styling to the tab wrapper
+  "&:hover": {
+    "& .MuiTab-root::before": {
+      backgroundColor: theme.palette.grey[600],
+    },
+    "& .MuiTab-root": {
+      opacity: 1,
+    },
+  },
+  // Style for active tab
+  "&.active-tab": {
+    "& .MuiTab-root": {
+      opacity: 1,
+      backgroundColor: theme.palette.background.default,
+      "&::before": {
+        backgroundColor: theme.palette.primary.main,
+      },
+    },
+  },
+  // Style for dragging tab
+  "&.dragging": {
+    boxShadow: "0 5px 10px rgba(0,0,0,0.2)",
+    opacity: 0.9,
+    cursor: "grabbing",
+    zIndex: 10000,
+  },
+}));
 
-  const handleClose = (event: React.MouseEvent) => {
-    event.stopPropagation();
-    if (onClose) onClose(event);
-  };
-
+// Tab wrapper with draggable functionality
+const DraggableTab = ({
+  tab,
+  index,
+  isActive,
+  onTabClick,
+  onCloseClick,
+}: {
+  tab: TabData;
+  index: number;
+  isActive: boolean;
+  onTabClick: () => void;
+  onCloseClick: () => void;
+}) => {
   return (
-    <StyledTab
-      {...other}
-      label={
-        <Box sx={{ display: "flex", alignItems: "center", width: "100%", justifyContent: "space-between" }}>
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            {icon}
-            <span
-              style={{
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                marginLeft: "8px",
-              }}
-            >
-              {label}
-            </span>
-          </Box>
-          <IconButton
-            size="small"
-            onClick={handleClose}
-            sx={{
-              ml: 1,
-              opacity: 0.5,
-              "&:hover": { opacity: 1 },
-              padding: "2px",
-              height: 18,
-              width: 18,
-            }}
-          >
-            <CloseIcon fontSize="small" sx={{ fontSize: 16 }} />
-          </IconButton>
-        </Box>
-      }
-    />
-  );
-}
-
-// Helper function to get tab info based on path
-const getTabInfoFromPath = (path: string): { label: string; icon: React.ReactElement } => {
-  // Extract path segments
-  const segments = path.split("/").filter(Boolean);
-
-  if (segments.length === 0) {
-    return { label: "Home", icon: <HomeIcon fontSize="small" /> };
-  }
-
-  // Handle project routes differently
-  if (segments[0] === "project" && segments.length >= 2) {
-    // Project-specific routes
-    if (segments.length === 2) {
-      return { label: `Project ${segments[1]}`, icon: <DashboardIcon fontSize="small" /> };
-    }
-
-    // Based on the third segment (after 'project' and projectId)
-    switch (segments[2]) {
-      case "search":
-        return { label: "Search", icon: <SearchIcon fontSize="small" /> };
-      case "annotation":
-        if (segments.length > 3) {
-          return { label: `Document ${segments[3]}`, icon: <ArticleIcon fontSize="small" /> };
-        }
-        return { label: "Annotation", icon: <EditIcon fontSize="small" /> };
-      case "analysis":
-        if (segments.length > 3) {
-          const analysisType = segments[3];
-          switch (analysisType) {
-            case "frequency":
-              return { label: "Code Frequency", icon: <AnalyticsIcon fontSize="small" /> };
-            case "timeline":
-              return { label: "Timeline Analysis", icon: <AnalyticsIcon fontSize="small" /> };
-            case "span-annotations":
-              return { label: "Span Annotations", icon: <AnalyticsIcon fontSize="small" /> };
-            case "sentence-annotations":
-              return { label: "Sentence Annotations", icon: <AnalyticsIcon fontSize="small" /> };
-            case "word-frequency":
-              return { label: "Word Frequency", icon: <AnalyticsIcon fontSize="small" /> };
-            case "concepts-over-time-analysis":
-              return { label: "Concepts Over Time", icon: <AnalyticsIcon fontSize="small" /> };
-            case "annotation-scaling":
-              return { label: "Annotation Scaling", icon: <AnalyticsIcon fontSize="small" /> };
-            default:
-              return { label: `Analysis: ${analysisType}`, icon: <AnalyticsIcon fontSize="small" /> };
-          }
-        }
-        return { label: "Analysis", icon: <AnalyticsIcon fontSize="small" /> };
-      case "whiteboard":
-        if (segments.length > 3) {
-          return { label: `Whiteboard ${segments[3]}`, icon: <LayersIcon fontSize="small" /> };
-        }
-        return { label: "Whiteboards", icon: <LayersIcon fontSize="small" /> };
-      case "logbook":
-        return { label: "Logbook", icon: <MenuBookIcon fontSize="small" /> };
-      case "tools":
-        if (segments.length > 3) {
-          const toolType = segments[3];
-          switch (toolType) {
-            case "duplicate-finder":
-              return { label: "Duplicate Finder", icon: <TuneIcon fontSize="small" /> };
-            case "document-sampler":
-              return { label: "Document Sampler", icon: <TuneIcon fontSize="small" /> };
-            case "ml-automation":
-              return { label: "ML Automation", icon: <TuneIcon fontSize="small" /> };
-            default:
-              return { label: toolType.replace(/-/g, " "), icon: <TuneIcon fontSize="small" /> };
-          }
-        }
-        return { label: "Tools", icon: <TuneIcon fontSize="small" /> };
-      case "settings":
-        return { label: "Project Settings", icon: <SettingsIcon fontSize="small" /> };
-      default:
-        // For other project routes
-        return {
-          label: segments[2].charAt(0).toUpperCase() + segments[2].slice(1),
-          icon: <ArticleIcon fontSize="small" />,
+    <Draggable key={tab.id} draggableId={tab.id} index={index} disableInteractiveElementBlocking>
+      {(provided, snapshot) => {
+        // Fix for tab placement during drag
+        const dragStyle = {
+          ...provided.draggableProps.style,
+          // Constrain the height during dragging
+          height: snapshot.isDragging ? "36px" : undefined,
         };
-    }
+
+        return (
+          <TabWrapper
+            ref={provided.innerRef}
+            {...provided.draggableProps}
+            {...provided.dragHandleProps}
+            style={dragStyle}
+            onClick={onTabClick}
+            className={`${snapshot.isDragging ? "dragging" : ""} ${isActive ? "active-tab" : ""}`}
+          >
+            <StyledTab
+              label={
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    width: "100%",
+                    justifyContent: "space-between",
+                    pointerEvents: "none",
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    {tab.icon}
+                    <span
+                      style={{
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        marginLeft: "8px",
+                      }}
+                    >
+                      {tab.label}
+                    </span>
+                  </Box>
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onCloseClick();
+                    }}
+                    sx={{
+                      ml: 1,
+                      opacity: 0.5,
+                      "&:hover": { opacity: 1 },
+                      padding: "2px",
+                      height: 18,
+                      width: 18,
+                      pointerEvents: "auto",
+                    }}
+                  >
+                    <CloseIcon fontSize="small" sx={{ fontSize: 16 }} />
+                  </IconButton>
+                </Box>
+              }
+              value={index}
+              sx={{
+                pointerEvents: "none",
+                width: "100%",
+                boxSizing: "border-box",
+                // Remove hover styles from here as they're now on the wrapper
+                "&:hover": {},
+              }}
+              onClick={undefined}
+              className={isActive ? "Mui-selected" : ""}
+            />
+          </TabWrapper>
+        );
+      }}
+    </Draggable>
+  );
+};
+
+// Wrapper component for react-beautiful-dnd to work with React 18 StrictMode
+const StrictModeDroppable = ({ children, ...props }: React.ComponentProps<typeof Droppable>) => {
+  const [enabled, setEnabled] = useState(false);
+
+  useEffect(() => {
+    const animation = requestAnimationFrame(() => setEnabled(true));
+    return () => {
+      cancelAnimationFrame(animation);
+      setEnabled(false);
+    };
+  }, []);
+
+  if (!enabled) {
+    return null;
   }
 
-  // Non-project routes
-  switch (segments[0]) {
-    case "dashboard":
-      return { label: "Dashboard", icon: <DashboardIcon fontSize="small" /> };
-    case "projects":
-      return { label: "Projects", icon: <FormatListBulletedIcon fontSize="small" /> };
-    case "me":
-      return { label: "Profile", icon: <ArticleIcon fontSize="small" /> };
-    default:
-      return {
-        label: segments[0].charAt(0).toUpperCase() + segments[0].slice(1),
-        icon: <ArticleIcon fontSize="small" />,
-      };
-  }
+  return <Droppable {...props}>{children}</Droppable>;
 };
 
 function TabBar() {
@@ -248,21 +232,20 @@ function TabBar() {
       return prevTabs;
     });
 
+    // Update active tab index based on current path
     const existingTabIndex = tabs.findIndex((tab) => tab.path === currentPath);
     if (existingTabIndex !== -1) {
       // Tab already exists, just make it active
       setActiveTabIndex(existingTabIndex);
-      console.log("Tab already exists, just make it active");
     } else {
-      setActiveTabIndex(tabs.length - 1 >= 0 ? tabs.length - 1 : 0); // Set the new tab as active
+      setActiveTabIndex(tabs.length > 0 ? tabs.length : 0); // Set the new tab as active
     }
   }, [location.pathname, tabs]);
 
-  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
-    // Navigate to the path associated with the selected tab
-    if (tabs[newValue]) {
-      navigate(tabs[newValue].path);
-      setActiveTabIndex(newValue);
+  const handleTabClick = (index: number) => {
+    if (tabs[index]) {
+      navigate(tabs[index].path);
+      setActiveTabIndex(index);
     }
   };
 
@@ -286,6 +269,39 @@ function TabBar() {
     }
   };
 
+  // Handle drag end for tab reordering
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) {
+      return; // Dropped outside the list
+    }
+
+    const { source, destination } = result;
+
+    if (source.index === destination.index) {
+      return; // No change in position
+    }
+
+    // Reorder tabs
+    const newTabs = [...tabs];
+    const [movedTab] = newTabs.splice(source.index, 1);
+    newTabs.splice(destination.index, 0, movedTab);
+
+    setTabs(newTabs);
+
+    // Update active tab index if it was moved
+    if (activeTabIndex === source.index) {
+      setActiveTabIndex(destination.index);
+    }
+    // Handle case where active tab index needs adjustment due to reordering
+    else if (activeTabIndex !== null) {
+      if (source.index < activeTabIndex && destination.index >= activeTabIndex) {
+        setActiveTabIndex(activeTabIndex - 1);
+      } else if (source.index > activeTabIndex && destination.index <= activeTabIndex) {
+        setActiveTabIndex(activeTabIndex + 1);
+      }
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -297,51 +313,90 @@ function TabBar() {
       }}
     >
       <Divider orientation="vertical" />
-      <Tabs
-        value={activeTabIndex !== null ? activeTabIndex : 0}
-        onChange={handleTabChange}
-        variant="scrollable"
-        scrollButtons
-        aria-label="document tabs"
-        slotProps={{
-          scrollButtons: {
-            sx: {
-              color: "white",
-              minWidth: 48,
-            },
-          },
-          indicator: {
-            style: {
-              display: "none", // Hide the default indicator
-            },
-          },
-        }}
-        sx={{
-          flexGrow: 1,
-          "& .MuiTab-root": {
-            marginTop: 0.5,
-          },
-        }}
-      >
-        {tabs.length === 0 && (
-          <CustomTab
-            key={-1}
-            label={"Loading"}
-            icon={<AutorenewIcon fontSize="small" />}
-            onClose={() => handleCloseTab(0)}
-            id={`tab-0`}
-          />
-        )}
-        {tabs.map((tab, index) => (
-          <CustomTab
-            key={tab.id}
-            label={tab.label}
-            icon={tab.icon}
-            onClose={() => handleCloseTab(index)}
-            id={`tab-${tab.id}`}
-          />
-        ))}
-      </Tabs>
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Box sx={{ display: "flex", flexGrow: 1, overflow: "auto" }}>
+          <StrictModeDroppable
+            droppableId="tabs"
+            direction="horizontal"
+            renderClone={(provided, snapshot, rubric) => {
+              const tab = tabs[rubric.source.index];
+              const isActiveTab = activeTabIndex === rubric.source.index;
+
+              return (
+                <div
+                  ref={provided.innerRef}
+                  {...provided.draggableProps}
+                  {...provided.dragHandleProps}
+                  style={{
+                    ...provided.draggableProps.style,
+                    height: "36px",
+                    display: "flex",
+                    width: "auto",
+                    minWidth: "100px",
+                    boxShadow: "0 5px 10px rgba(0,0,0,0.2)",
+                  }}
+                  className={isActiveTab ? "active-clone" : ""}
+                >
+                  <StyledTab
+                    label={
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          width: "100%",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                          {tab.icon}
+                          <span style={{ marginLeft: "8px" }}>{tab.label}</span>
+                        </Box>
+                        <CloseIcon fontSize="small" sx={{ fontSize: 16, ml: 1, opacity: 0.5 }} />
+                      </Box>
+                    }
+                    sx={{
+                      width: "100%",
+                      height: "36px",
+                      boxSizing: "border-box",
+                      padding: "8px 8px 10px 8px",
+                    }}
+                    className={isActiveTab ? "Mui-selected" : ""}
+                  />
+                </div>
+              );
+            }}
+          >
+            {(provided) => (
+              <div
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                style={{
+                  display: "flex",
+                  flexGrow: 1,
+                  height: "100%",
+                  alignItems: "flex-end",
+                }}
+              >
+                {tabs.length === 0 && (
+                  <StyledTab key={-1} label={"Loading"} value={0} icon={<AutorenewIcon fontSize="small" />} />
+                )}
+
+                {tabs.map((tab, index) => (
+                  <DraggableTab
+                    key={tab.id}
+                    tab={tab}
+                    index={index}
+                    isActive={activeTabIndex === index}
+                    onTabClick={() => handleTabClick(index)}
+                    onCloseClick={() => handleCloseTab(index)}
+                  />
+                ))}
+                {provided.placeholder}
+              </div>
+            )}
+          </StrictModeDroppable>
+        </Box>
+      </DragDropContext>
     </Box>
   );
 }
