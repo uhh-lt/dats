@@ -1,5 +1,5 @@
 import { Box, CssBaseline } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Outlet, useParams } from "react-router-dom";
 import { useAuth } from "../auth/useAuth.ts";
 import CodeCreateDialog from "../components/Code/CodeCreateDialog.tsx";
@@ -9,8 +9,11 @@ import LLMDialog from "../components/LLMDialog/LLMDialog.tsx";
 import MemoDialog from "../components/Memo/MemoDialog/MemoDialog.tsx";
 import ProjectIdUpdater from "../components/Project/ProjectIdUpdater.tsx";
 import ProjectSettingsDialog from "../components/ProjectSettings/ProjectSettingsDialog.tsx";
+import QuickCommandMenu from "../components/QuickCommandMenu/QuickCommandMenu.tsx";
+import { setProjectId, toggleMenu } from "../components/QuickCommandMenu/quickCommandMenuSlice.ts";
 import SnackbarDialog from "../components/SnackbarDialog/SnackbarDialog.tsx";
 import TagCreateDialog from "../components/Tag/TagCreateDialog.tsx";
+import { useAppDispatch } from "../plugins/ReduxHooks.ts";
 import DialMenu from "./DialMenu/DialMenu.tsx";
 import "./Layout.css";
 import SideBar from "./SideBar/SideBar.tsx";
@@ -19,12 +22,31 @@ import TabBar from "./TabBar/TabBar.tsx";
 function SideBarLayout({ isInProject }: { isInProject: boolean }) {
   const { projectId } = useParams() as { projectId: string };
   const { loginStatus, logout, user } = useAuth();
+  const dispatch = useAppDispatch();
 
   // sidebar state
   const [isExpanded, setSidebarExpanded] = useState(false);
   const handleToggleSidebar = () => {
     setSidebarExpanded(!isExpanded);
   };
+
+  // Update project ID in quick command menu state
+  useEffect(() => {
+    dispatch(setProjectId(projectId));
+  }, [dispatch, projectId]);
+
+  // Setup command palette keyboard shortcut
+  useEffect(() => {
+    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === "p") {
+        event.preventDefault();
+        dispatch(toggleMenu());
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [dispatch]);
 
   return (
     <>
@@ -73,6 +95,7 @@ function SideBarLayout({ isInProject }: { isInProject: boolean }) {
           <ExporterDialog />
           <ProjectSettingsDialog />
           <LLMDialog />
+          <QuickCommandMenu />
         </>
       )}
     </>
