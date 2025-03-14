@@ -15,7 +15,7 @@ import ProjectHooks from "../../../api/ProjectHooks.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
 import SdocTagsRenderer from "../../../components/SourceDocument/SdocTagRenderer.tsx";
-import NoSidebarLayout from "../../../layouts/NoSidebarLayout.tsx";
+import ContentContainerLayout from "../../../layouts/ContentLayouts/ContentContainerLayout.tsx";
 
 interface DuplicateDocumentData {
   sdocId: string;
@@ -177,7 +177,7 @@ function ProjectDuplicateDocuments() {
   });
 
   return (
-    <NoSidebarLayout>
+    <ContentContainerLayout>
       <Card
         sx={{ width: "100%", minHeight: "225.5px" }}
         elevation={2}
@@ -217,7 +217,7 @@ function ProjectDuplicateDocuments() {
           </div>
         </CardContent>
       </Card>
-    </NoSidebarLayout>
+    </ContentContainerLayout>
   );
 }
 

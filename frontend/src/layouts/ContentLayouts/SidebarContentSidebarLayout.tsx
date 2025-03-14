@@ -1,9 +1,9 @@
 import { Grid2 } from "@mui/material";
 import { ReactNode } from "react";
-import { useAppDispatch, useAppSelector } from "../plugins/ReduxHooks.ts";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { LayoutActions } from "../layoutSlice.ts";
 import LayoutManipulationButtons from "./LayoutManipulationButtons.tsx";
-import { LayoutActions } from "./layoutSlice.ts";
-function TwoSidebarsLayout({
+function SidebarContentSidebarLayout({
   leftSidebar,
   content,
   rightSidebar,
@@ -73,4 +73,4 @@ function TwoSidebarsLayout({
   );
 }
 
-export default TwoSidebarsLayout;
+export default SidebarContentSidebarLayout;

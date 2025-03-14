@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader } from "@mui/material";
 import { MRT_TableInstance, MaterialReactTable } from "material-react-table";
-import NoSidebarLayout from "../../../layouts/NoSidebarLayout.tsx";
+import ContentContainerLayout from "../../../layouts/ContentLayouts/ContentContainerLayout.tsx";
 import { AnalysisDashboardRow } from "./useAnalysisDashboardTable.tsx";
 
 interface AnalysisDashboardProps<T extends AnalysisDashboardRow> {
@@ -12,7 +12,7 @@ interface AnalysisDashboardProps<T extends AnalysisDashboardRow> {
 
 export default function AnalysisDashboard<T extends AnalysisDashboardRow>(props: AnalysisDashboardProps<T>) {
   return (
-    <NoSidebarLayout>
+    <ContentContainerLayout>
       <Card
         sx={{ width: "100%", minHeight: "225.5px" }}
         elevation={2}
@@ -25,6 +25,6 @@ export default function AnalysisDashboard<T extends AnalysisDashboardRow>(props:
           </div>
         </CardContent>
       </Card>
-    </NoSidebarLayout>
+    </ContentContainerLayout>
   );
 }

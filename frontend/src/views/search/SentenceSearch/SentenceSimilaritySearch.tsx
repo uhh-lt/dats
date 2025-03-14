@@ -11,7 +11,7 @@ import { QueryKey } from "../../../api/QueryKey.ts";
 import { MyFilter, createEmptyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 import DocumentInformation from "../../../components/SourceDocument/DocumentInformation/DocumentInformation.tsx";
 import TagExplorer from "../../../components/Tag/TagExplorer/TagExplorer.tsx";
-import TwoSidebarsLayout from "../../../layouts/TwoSidebarsLayout.tsx";
+import SidebarContentSidebarLayout from "../../../layouts/ContentLayouts/SidebarContentSidebarLayout.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { SearchActions } from "../DocumentSearch/searchSlice.ts";
 import SearchStatistics from "../Statistics/SearchStatistics.tsx";
@@ -85,7 +85,7 @@ function SentenceSimilaritySearch() {
 
   // render
   return (
-    <TwoSidebarsLayout
+    <SidebarContentSidebarLayout
       leftSidebar={
         <>
           <TagExplorer sx={{ height: "50%", pt: 0 }} onTagClick={handleAddTagFilter} />

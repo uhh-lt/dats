@@ -1,7 +1,7 @@
 import { Grid2 } from "@mui/material";
 import { ReactNode } from "react";
 
-function OneSidebarLayout({ leftSidebar, content }: { leftSidebar: ReactNode; content: ReactNode }) {
+function SidebarContentLayout({ leftSidebar, content }: { leftSidebar: ReactNode; content: ReactNode }) {
   return (
     <Grid2 container className="h100">
       <Grid2
@@ -32,4 +32,4 @@ function OneSidebarLayout({ leftSidebar, content }: { leftSidebar: ReactNode; co
   );
 }
 
-export default OneSidebarLayout;
+export default SidebarContentLayout;

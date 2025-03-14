@@ -1,7 +1,7 @@
 import { Box, Container } from "@mui/material";
 import { ReactNode } from "react";
 
-function NoSidebarLayout({ children }: { children: ReactNode }) {
+function ContentContainerLayout({ children }: { children: ReactNode }) {
   return (
     <Box bgcolor={"grey.200"} className="h100">
       <Container
@@ -16,4 +16,4 @@ function NoSidebarLayout({ children }: { children: ReactNode }) {
   );
 }
 
-export default NoSidebarLayout;
+export default ContentContainerLayout;

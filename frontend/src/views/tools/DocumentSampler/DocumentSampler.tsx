@@ -6,7 +6,7 @@ import TagHooks from "../../../api/TagHooks.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import { SampledSdocsResults } from "../../../api/openapi/models/SampledSdocsResults.ts";
 import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
-import OneSidebarLayout from "../../../layouts/OneSidebarLayout.tsx";
+import SidebarContentLayout from "../../../layouts/ContentLayouts/SidebarContentLayout.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import DocumentsBarChart from "./DocumentsBarChart.tsx";
 import DocumentsTable from "./DocumentsTable.tsx";
@@ -73,7 +73,7 @@ function DocumentSampler() {
   };
 
   return (
-    <OneSidebarLayout
+    <SidebarContentLayout
       leftSidebar={
         <Box className="h100 myFlexContainer">
           <TagGroupCreator

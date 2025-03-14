@@ -1,15 +1,14 @@
-import { Box, Grid2 } from "@mui/material";
+import { Box } from "@mui/material";
+import ContentLayout from "../../../layouts/ContentLayouts/ContentLayout.tsx";
 import WordFrequencyTable from "./WordFrequencyTable.tsx";
 
 function WordFrequency() {
   return (
-    <Box bgcolor={"grey.200"} className="h100">
-      <Grid2 container className="h100" columnSpacing={2} padding={2} bgcolor={"grey.200"}>
-        <Grid2 size={{ md: 12 }} className="myFlexContainer h100">
-          <WordFrequencyTable />
-        </Grid2>
-      </Grid2>
-    </Box>
+    <ContentLayout>
+      <Box className="myFlexContainer h100">
+        <WordFrequencyTable />
+      </Box>
+    </ContentLayout>
   );
 }
 

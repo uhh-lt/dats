@@ -9,8 +9,8 @@ import CodeExplorer from "../../components/Code/CodeExplorer/CodeExplorer.tsx";
 import EditableTypography from "../../components/EditableTypography.tsx";
 import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import DocumentInformation from "../../components/SourceDocument/DocumentInformation/DocumentInformation.tsx";
-import OneSidebarLayout from "../../layouts/OneSidebarLayout.tsx";
-import TwoSidebarsLayout from "../../layouts/TwoSidebarsLayout.tsx";
+import SidebarContentLayout from "../../layouts/ContentLayouts/SidebarContentLayout.tsx";
+import SidebarContentSidebarLayout from "../../layouts/ContentLayouts/SidebarContentSidebarLayout.tsx";
 import { useAppSelector } from "../../plugins/ReduxHooks.ts";
 import BBoxAnnotationExplorer from "./AnnotationExploer/BBoxAnnotationExplorer.tsx";
 import SentenceAnnotationExplorer from "./AnnotationExploer/SentenceAnnotationExplorer.tsx";
@@ -260,7 +260,7 @@ function Annotation() {
 
   if (isCompareMode) {
     return (
-      <OneSidebarLayout
+      <SidebarContentLayout
         leftSidebar={explorer}
         content={
           <>
@@ -272,7 +272,7 @@ function Annotation() {
     );
   } else {
     return (
-      <TwoSidebarsLayout
+      <SidebarContentSidebarLayout
         leftSidebar={explorer}
         content={
           <>
