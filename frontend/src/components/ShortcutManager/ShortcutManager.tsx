@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useShortcuts } from "../../hooks/useShortcuts";
+import { useShortcuts } from "./useShortcuts";
 
 export function ShortcutManager() {
   const shortcuts = useShortcuts();

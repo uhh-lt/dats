@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { CRUDDialogActions } from "../components/dialogSlice";
-import { TabActions } from "../layouts/TabBar/tabSlice";
-import { useAppDispatch } from "../plugins/ReduxHooks";
+import { TabActions } from "../../layouts/TabBar/tabSlice";
+import { useAppDispatch } from "../../plugins/ReduxHooks";
+import { CRUDDialogActions } from "../dialogSlice";
 
 export interface Shortcut {
   id: string;
