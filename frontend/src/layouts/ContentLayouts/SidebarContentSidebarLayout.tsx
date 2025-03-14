@@ -2,7 +2,7 @@ import { Box } from "@mui/material";
 import { ReactNode } from "react";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { LayoutActions } from "../layoutSlice.ts";
-import { ResizablePanel } from "./ResizablePanel.tsx";
+import { ResizablePanel } from "../ResizePanel/ResizablePanel.tsx";
 
 function SidebarContentSidebarLayout({
   leftSidebar,
