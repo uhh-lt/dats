@@ -2,13 +2,13 @@ import ChromeReaderModeIcon from "@mui/icons-material/ChromeReaderMode";
 import DoNotDisturbIcon from "@mui/icons-material/DoNotDisturb";
 import FormatOverlineIcon from "@mui/icons-material/FormatOverline";
 import FormatStrikethroughIcon from "@mui/icons-material/FormatStrikethrough";
-import SubjectIcon from "@mui/icons-material/Subject";
 import { ToggleButton, ToggleButtonGroup, Toolbar, Tooltip } from "@mui/material";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
 import LLMAssistanceButton from "../../../components/LLMDialog/LLMAssistanceButton.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { docTypeToIcon } from "../../../utils/icons/docTypeToIcon.tsx";
+import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 import { AnnoActions, TagStyle } from "../annoSlice.ts";
 import AnnotationMode from "../AnnotationMode.ts";
 import { AnnotatorSelector } from "../AnnotatorSelector.tsx";
@@ -50,7 +50,7 @@ function AnnotationToolbar({ sdoc }: AnnotationToolbarProps) {
           >
             <Tooltip title="Sentence Annotation" placement="bottom">
               <ToggleButton value={AnnotationMode.SentenceAnnotation}>
-                <SubjectIcon />
+                {getIconComponent(Icon.SENTENCE_ANNOTATION)}
               </ToggleButton>
             </Tooltip>
             <Tooltip title="Annotation" placement="bottom">

@@ -150,8 +150,8 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.TAG]: (iconProps) => <LabelIcon {...iconProps} />,
   [Icon.MEMO]: (iconProps) => <CommentIcon {...iconProps} />,
   [Icon.DOCUMENT]: (iconProps) => <ArticleIcon {...iconProps} />,
-  [Icon.SPAN_ANNOTATION]: (iconProps) => <NotesIcon {...iconProps} />,
-  [Icon.SENTENCE_ANNOTATION]: (iconProps) => <NotesIcon {...iconProps} />,
+  [Icon.SPAN_ANNOTATION]: (iconProps) => <ShortTextIcon {...iconProps} />,
+  [Icon.SENTENCE_ANNOTATION]: (iconProps) => <SubjectIcon {...iconProps} />,
   [Icon.BBOX_ANNOTATION]: (iconProps) => <ArticleIcon {...iconProps} />,
 
   // Document types
@@ -186,7 +186,7 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.ANNOTATION_SCALING]: (iconProps) => <ScaleIcon {...iconProps} />,
   [Icon.WORD_FREQUENCY]: (iconProps) => <TextFormatIcon {...iconProps} />,
   [Icon.CODE_FREQUENCY]: (iconProps) => <BarChartIcon {...iconProps} />,
-  [Icon.SENTENCE_ANNOTATION_TABLE]: (iconProps) => <NotesIcon {...iconProps} />,
+  [Icon.SENTENCE_ANNOTATION_TABLE]: (iconProps) => <SubjectIcon {...iconProps} />,
   [Icon.SPAN_ANNOTATION_TABLE]: (iconProps) => <ShortTextIcon {...iconProps} />,
 
   // TOOLS
@@ -208,7 +208,7 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.USER]: (iconProps) => <AccountCircleIcon {...iconProps} />,
 
   // Metadata types
-  [Icon.META_STRING]: (iconProps) => <SubjectIcon {...iconProps} />,
+  [Icon.META_STRING]: (iconProps) => <NotesIcon {...iconProps} />,
   [Icon.META_NUMBER]: (iconProps) => <NumbersIcon {...iconProps} />,
   [Icon.META_DATE]: (iconProps) => <CalendarMonthIcon {...iconProps} />,
   [Icon.META_BOOLEAN]: (iconProps) => <CheckBoxOutlinedIcon {...iconProps} />,

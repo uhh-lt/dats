@@ -24,7 +24,7 @@ function TagMenuButton({ popoverOrigin, type, selectedSdocIds }: TagMenuButtonPr
           <IconButton onClick={handleClick}>{getIconComponent(Icon.TAG)}</IconButton>
         </Tooltip>
       ) : (
-        <Button variant="text" size="small" onClick={handleClick} startIcon={getIconComponent(Icon.CREATE)}>
+        <Button variant="text" size="small" onClick={handleClick} startIcon={getIconComponent(Icon.ADD)}>
           Add Tags
         </Button>
       )}
