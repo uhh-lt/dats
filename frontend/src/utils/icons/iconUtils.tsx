@@ -4,6 +4,7 @@ import AddIcon from "@mui/icons-material/Add";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import ArticleIcon from "@mui/icons-material/Article";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import AutoGraphIcon from "@mui/icons-material/AutoGraph";
 import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
@@ -26,6 +27,7 @@ import NotesIcon from "@mui/icons-material/Notes";
 import NumbersIcon from "@mui/icons-material/Numbers";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import ScaleIcon from "@mui/icons-material/Scale";
+import ScatterPlotIcon from "@mui/icons-material/ScatterPlot";
 import SearchIcon from "@mui/icons-material/Search";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ShortTextIcon from "@mui/icons-material/ShortText";
@@ -178,14 +180,14 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.LLM_ASSISTANT]: (iconProps) => <SmartToyIcon {...iconProps} />,
 
   // ANALYSIS
-  [Icon.ANALYSIS]: (iconProps) => <TimelineIcon {...iconProps} />,
-  [Icon.COTA]: (iconProps) => <TimelineIcon {...iconProps} />,
+  [Icon.ANALYSIS]: (iconProps) => <AutoGraphIcon {...iconProps} />,
+  [Icon.COTA]: (iconProps) => <ScatterPlotIcon {...iconProps} />,
   [Icon.TIMELINE_ANALYSIS]: (iconProps) => <TimelineIcon {...iconProps} />,
   [Icon.ANNOTATION_SCALING]: (iconProps) => <ScaleIcon {...iconProps} />,
   [Icon.WORD_FREQUENCY]: (iconProps) => <TextFormatIcon {...iconProps} />,
   [Icon.CODE_FREQUENCY]: (iconProps) => <BarChartIcon {...iconProps} />,
   [Icon.SENTENCE_ANNOTATION_TABLE]: (iconProps) => <NotesIcon {...iconProps} />,
-  [Icon.SPAN_ANNOTATION_TABLE]: (iconProps) => <NotesIcon {...iconProps} />,
+  [Icon.SPAN_ANNOTATION_TABLE]: (iconProps) => <ShortTextIcon {...iconProps} />,
 
   // TOOLS
   [Icon.TOOLS]: (iconProps) => <TuneIcon {...iconProps} />,
