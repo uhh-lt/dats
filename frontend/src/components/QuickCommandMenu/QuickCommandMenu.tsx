@@ -9,19 +9,17 @@ import {
   TextField,
   alpha,
 } from "@mui/material";
-import { SyntheticEvent, useEffect, useMemo, useRef, useState } from "react";
+import { SyntheticEvent, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 import { CommandItem } from "./CommandItem";
-import { generateDefaultCommands } from "./defaultCommands.tsx";
+import { useDefaultCommands } from "./useDefaultCommands.tsx";
 
 const QuickCommandMenu = () => {
   // generate commands
   const { projectId } = useParams() as { projectId: string };
-  const commands = useMemo(() => {
-    return generateDefaultCommands(projectId);
-  }, [projectId]);
+  const commands = useDefaultCommands(projectId);
 
   // open close the menu
   const dispatch = useAppDispatch();
