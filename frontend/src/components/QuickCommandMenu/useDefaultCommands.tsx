@@ -1,0 +1,190 @@
+import { Settings } from "@mui/icons-material";
+import { useMemo } from "react";
+import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
+import { CRUDDialogActions } from "../dialogSlice.ts";
+import { CommandItem } from "./CommandItem.ts";
+
+export const useDefaultCommands = (projectId: string | undefined): CommandItem[] => {
+  const dispatch = useAppDispatch();
+
+  return useMemo(
+    () => [
+      // Create commands
+      {
+        id: "create-code",
+        title: "Create Code",
+        description: "Create a new code in the current project",
+        category: "Create",
+        icon: getIconComponent(Icon.CREATE),
+        action: () => {
+          dispatch(CRUDDialogActions.openCodeCreateDialog({}));
+        },
+        keywords: ["new", "code", "create", "add"],
+      },
+      {
+        id: "create-tag",
+        title: "Create Tag",
+        description: "Create a new tag in the current project",
+        category: "Create",
+        icon: getIconComponent(Icon.CREATE),
+        action: () => {
+          dispatch(CRUDDialogActions.openTagCreateDialog({}));
+        },
+        keywords: ["new", "tag", "create", "add"],
+      },
+
+      // Navigation commands
+      {
+        id: "document-search",
+        title: "Document Search",
+        description: "Search through documents",
+        category: "Navigation",
+        icon: getIconComponent(Icon.DOCUMENT_SEARCH),
+        route: `/project/${projectId}/search`,
+        keywords: ["find", "search", "documents", "navigate"],
+      },
+      {
+        id: "image-search",
+        title: "Image Search",
+        description: "Search through images",
+        category: "Navigation",
+        icon: getIconComponent(Icon.IMAGE_SEARCH),
+        route: `/project/${projectId}/imagesearch`,
+        keywords: ["find", "search", "images", "navigate"],
+      },
+      {
+        id: "sentence-search",
+        title: "Sentence Search",
+        description: "Search through sentences",
+        category: "Navigation",
+        icon: getIconComponent(Icon.SENTENCE_SEARCH),
+        route: `/project/${projectId}/sentencesearch`,
+        keywords: ["find", "search", "sentences", "navigate"],
+      },
+      {
+        id: "annotation-view",
+        title: "Annotation View",
+        description: "Go to annotation view",
+        category: "Navigation",
+        icon: getIconComponent(Icon.ANNOTATION),
+        route: `/project/${projectId}/annotation`,
+        keywords: ["annotate", "annotation", "tag", "code"],
+      },
+      {
+        id: "logbook",
+        title: "Open Logbook",
+        description: "Go to project logbook",
+        category: "Navigation",
+        icon: getIconComponent(Icon.LOGBOOK),
+        route: `/project/${projectId}/logbook`,
+        keywords: ["log", "notes", "journal", "memo"],
+      },
+      // Analysis commands
+      {
+        id: "analysis",
+        title: "Analysis Dashboard",
+        description: "Go to analysis dashboard",
+        category: "Analysis",
+        icon: getIconComponent(Icon.ANALYSIS),
+        route: `/project/${projectId}/analysis`,
+        keywords: ["go", "to", "navigate", "analysis", "dashboard"],
+      },
+      {
+        id: "timeline-analysis",
+        title: "Timeline Analysis",
+        description: "Go to timeline analysis dashboard",
+        category: "Analysis",
+        icon: getIconComponent(Icon.TIMELINE_ANALYSIS),
+        route: `/project/${projectId}/analysis/timeline`,
+        keywords: ["go", "to", "navigate", "timeline", "analysis"],
+      },
+      {
+        id: "concept-over-time-analysis",
+        title: "Concept Over Time Analysis",
+        description: "Go to concept over time analysis dashboard",
+        category: "Analysis",
+        icon: getIconComponent(Icon.COTA),
+        route: `/project/${projectId}/analysis/concepts-over-time-analysis`,
+        keywords: ["go", "to", "navigate", "concept", "over", "time", "analysis"],
+      },
+      {
+        id: "word-frequency",
+        title: "Word Frequency",
+        description: "Go to word frequency analysis",
+        category: "Analysis",
+        icon: getIconComponent(Icon.WORD_FREQUENCY),
+        route: `/project/${projectId}/analysis/word-frequency`,
+        keywords: ["go", "to", "navigate", "word", "frequency", "analysis"],
+      },
+      {
+        id: "code-frequency",
+        title: "Code Frequency",
+        description: "Go to code frequency analysis",
+        category: "Analysis",
+        icon: getIconComponent(Icon.CODE_FREQUENCY),
+        route: `/project/${projectId}/analysis/code-frequency`,
+        keywords: ["go", "to", "navigate", "code", "frequency", "analysis"],
+      },
+      {
+        id: "span-annotation-table",
+        title: "Span Annotation Table",
+        description: "Go to span annotation table",
+        category: "Analysis",
+        icon: getIconComponent(Icon.SPAN_ANNOTATION_TABLE),
+        route: `/project/${projectId}/analysis/span-annotation-table`,
+        keywords: ["go", "to", "navigate", "span", "annotation", "table"],
+      },
+      {
+        id: "sentence-annotation-table",
+        title: "Sentence Annotation Table",
+        description: "Go to sentence annotation table",
+        category: "Analysis",
+        icon: getIconComponent(Icon.SENTENCE_ANNOTATION_TABLE),
+        route: `/project/${projectId}/analysis/sentence-annotation-table`,
+        keywords: ["go", "to", "navigate", "sentence", "annotation", "table"],
+      },
+      // TOOLS
+      {
+        id: "ml-automation",
+        title: "ML Automation",
+        description: "Configure and run ML automation tasks",
+        category: "Tools",
+        icon: getIconComponent(Icon.ML_AUTOMATION),
+        route: `/project/${projectId}/tools/ml-automation`,
+        keywords: ["machine learning", "automation", "ai", "ml"],
+      },
+      {
+        id: "duplicate-finder",
+        title: "Duplicate Finder",
+        description: "Go to duplicate finder",
+        category: "Tools",
+        icon: getIconComponent(Icon.DUPLICATE_FINDER),
+        route: `/project/${projectId}/tools/duplicate-finder`,
+        keywords: ["go", "to", "navigate", "duplicate", "finder"],
+      },
+      {
+        id: "document-sampler",
+        title: "Document Sampler",
+        description: "Go to document sampler",
+        category: "Tools",
+        icon: getIconComponent(Icon.DOCUMENT_SAMPLER),
+        route: `/project/${projectId}/tools/document-sampler`,
+        keywords: ["go", "to", "navigate", "document", "sampler"],
+      },
+      // Settings commands
+      {
+        id: "project-settings",
+        title: "Project Settings",
+        description: "Open project settings",
+        category: "Settings",
+        icon: <Settings />,
+        action: () => {
+          dispatch(CRUDDialogActions.openProjectSettings());
+        },
+        keywords: ["settings", "config", "configuration", "project"],
+      },
+    ],
+    [dispatch, projectId],
+  );
+};
