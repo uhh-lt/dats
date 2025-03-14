@@ -1,17 +1,8 @@
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
-import AutoStoriesIcon from "@mui/icons-material/AutoStories";
-import DescriptionIcon from "@mui/icons-material/Description";
-import FileCopyIcon from "@mui/icons-material/FileCopy";
 import HomeIcon from "@mui/icons-material/Home";
-import ImageSearchIcon from "@mui/icons-material/ImageSearch";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
-import SearchIcon from "@mui/icons-material/Search";
-import SettingsIcon from "@mui/icons-material/Settings";
-import ShortTextIcon from "@mui/icons-material/ShortText";
-import StackedBarChartIcon from "@mui/icons-material/StackedBarChart";
 import {
   Box,
   Card,
@@ -33,15 +24,12 @@ import {
 import { useState } from "react";
 import { OpenAPI } from "../../api/openapi/core/OpenAPI.ts";
 
-import AccountTreeIcon from "@mui/icons-material/AccountTree";
-import BarChartIcon from "@mui/icons-material/BarChart";
-import FormatColorTextIcon from "@mui/icons-material/FormatColorText";
-import MenuBookIcon from "@mui/icons-material/MenuBook";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { UserRead } from "../../api/openapi/models/UserRead.ts";
 import { LoginStatus } from "../../auth/LoginStatus.ts";
 import { CRUDDialogActions } from "../../components/dialogSlice.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
 
 interface SideBarProps {
   loginStatus: LoginStatus;
@@ -180,7 +168,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                       color: "primary.contrastText",
                     }}
                   >
-                    <SearchIcon />
+                    {getIconComponent(Icon.SEARCH)}
                   </ListItemIcon>
                   {isExpanded && (
                     <ListItemText>
@@ -198,21 +186,15 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                 transformOrigin={{ vertical: "top", horizontal: "left" }}
               >
                 <MenuItem component={Link} to={`/project/${projectId}/search`}>
-                  <ListItemIcon>
-                    <DescriptionIcon />
-                  </ListItemIcon>
+                  <ListItemIcon>{getIconComponent(Icon.DOCUMENT_SEARCH)}</ListItemIcon>
                   <ListItemText>Document Search</ListItemText>
                 </MenuItem>
                 <MenuItem component={Link} to={`/project/${projectId}/imagesearch`}>
-                  <ListItemIcon>
-                    <ImageSearchIcon />
-                  </ListItemIcon>
+                  <ListItemIcon>{getIconComponent(Icon.IMAGE_SEARCH)}</ListItemIcon>
                   <ListItemText>Image Search</ListItemText>
                 </MenuItem>
                 <MenuItem component={Link} to={`/project/${projectId}/sentencesearch`}>
-                  <ListItemIcon>
-                    <ShortTextIcon />
-                  </ListItemIcon>
+                  <ListItemIcon>{getIconComponent(Icon.SENTENCE_SEARCH)}</ListItemIcon>
                   <ListItemText>Sentence Search</ListItemText>
                 </MenuItem>
               </Menu>
@@ -238,7 +220,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                       color: "primary.contrastText",
                     }}
                   >
-                    <FormatColorTextIcon />
+                    {getIconComponent(Icon.ANNOTATION)}
                   </ListItemIcon>
                   {isExpanded && (
                     <ListItemText>
@@ -269,7 +251,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                       color: "primary.contrastText",
                     }}
                   >
-                    <BarChartIcon />
+                    {getIconComponent(Icon.ANALYSIS)}
                   </ListItemIcon>
                   {isExpanded && (
                     <ListItemText>
@@ -300,7 +282,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                       color: "primary.contrastText",
                     }}
                   >
-                    <AccountTreeIcon />
+                    {getIconComponent(Icon.WHITEBOARD)}
                   </ListItemIcon>
                   {isExpanded && (
                     <ListItemText>
@@ -331,7 +313,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                       color: "primary.contrastText",
                     }}
                   >
-                    <MenuBookIcon />
+                    {getIconComponent(Icon.LOGBOOK)}
                   </ListItemIcon>
                   {isExpanded && (
                     <ListItemText>
@@ -361,7 +343,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                       color: "primary.contrastText",
                     }}
                   >
-                    <AutoAwesomeIcon />
+                    {getIconComponent(Icon.TOOLS)}
                   </ListItemIcon>
                   {isExpanded && <ListItemText primary="Tools" />}
                 </ListItemButton>
@@ -375,21 +357,15 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                 transformOrigin={{ vertical: "top", horizontal: "left" }}
               >
                 <MenuItem component={Link} to={`/project/${projectId}/tools/ml-automation`}>
-                  <ListItemIcon>
-                    <AutoAwesomeIcon />
-                  </ListItemIcon>
+                  <ListItemIcon>{getIconComponent(Icon.ML_AUTOMATION)}</ListItemIcon>
                   <ListItemText primary="ML Automation" />
                 </MenuItem>
                 <MenuItem component={Link} to={`/project/${projectId}/tools/duplicate-finder`}>
-                  <ListItemIcon>
-                    <FileCopyIcon />
-                  </ListItemIcon>
+                  <ListItemIcon>{getIconComponent(Icon.DUPLICATE_FINDER)}</ListItemIcon>
                   <ListItemText primary="Duplicate Finder" />
                 </MenuItem>
                 <MenuItem component={Link} to={`/project/${projectId}/tools/document-sampler`}>
-                  <ListItemIcon>
-                    <StackedBarChartIcon />
-                  </ListItemIcon>
+                  <ListItemIcon>{getIconComponent(Icon.DOCUMENT_SAMPLER)}</ListItemIcon>
                   <ListItemText primary="Document Sampler" />
                 </MenuItem>
               </Menu>
@@ -448,7 +424,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                     color: "primary.contrastText",
                   }}
                 >
-                  <AutoStoriesIcon />
+                  {getIconComponent(Icon.WIKI)}
                 </ListItemIcon>
                 {isExpanded && (
                   <ListItemText>
@@ -479,7 +455,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                       color: "primary.contrastText",
                     }}
                   >
-                    <SettingsIcon />
+                    {getIconComponent(Icon.SETTINGS)}
                   </ListItemIcon>
                   {isExpanded && <ListItemText primary="Settings" />}
                 </ListItemButton>
@@ -512,7 +488,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                       color: "primary.contrastText",
                     }}
                   >
-                    <AccountCircleIcon />
+                    {getIconComponent(Icon.USER)}
                   </ListItemIcon>
                   {isExpanded && <ListItemText primary={user.first_name + " " + user.last_name} />}
                 </ListItemButton>
