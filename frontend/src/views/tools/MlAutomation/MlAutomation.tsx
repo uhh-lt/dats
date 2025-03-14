@@ -27,7 +27,7 @@ import MLHooks from "../../../api/MLHooks.ts";
 import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobStatus.ts";
 import { MLJobRead } from "../../../api/openapi/models/MLJobRead.ts";
 import { MLJobType } from "../../../api/openapi/models/MLJobType.ts";
-import NoSidebarLayout from "../../../layouts/NoSidebarLayout.tsx";
+import ContentContainerLayout from "../../../layouts/ContentLayouts/ContentContainerLayout.tsx";
 
 function MlAutomation() {
   // global client state (react router)
@@ -68,7 +68,7 @@ function MlAutomation() {
   };
 
   return (
-    <NoSidebarLayout>
+    <ContentContainerLayout>
       <Card sx={{ minHeight: "225.5px" }} elevation={2} className="myFlexFillAllContainer myFlexContainer">
         <CardHeader
           title="ML Automations"
@@ -154,7 +154,7 @@ function MlAutomation() {
           </Grid2>
         </CardContent>
       </Card>
-    </NoSidebarLayout>
+    </ContentContainerLayout>
   );
 }
 

@@ -1,7 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import RequireAuth from "../auth/RequireAuth.tsx";
-import NoBarLayout from "../layouts/NoBarLayout.tsx";
-import SideBarLayout from "../layouts/SideBarLayout.tsx";
+import NoBarLayout from "../layouts/PageLayouts/NoBarLayout.tsx";
+import SideBarLayout from "../layouts/PageLayouts/SideBarLayout.tsx";
 import Login from "../views/Login.tsx";
 import NotFound from "../views/NotFound.tsx";
 import Analysis from "../views/analysis/Analysis.tsx";

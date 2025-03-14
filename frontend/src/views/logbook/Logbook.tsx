@@ -1,6 +1,6 @@
-import { Grid2 } from "@mui/material";
 import { useParams } from "react-router-dom";
 import MemoTable from "../../components/Memo/MemoTable/MemoTable.tsx";
+import ContentContentLayout from "../../layouts/ContentLayouts/ContentContentLayout.tsx";
 import { useReduxConnector } from "../../utils/useReduxConnector.ts";
 import LogbookEditor from "./LogbookEditor.tsx";
 import { LogbookActions } from "./logbookSlice.ts";
@@ -25,28 +25,24 @@ function Logbook() {
   );
 
   return (
-    <>
-      <Grid2 container spacing={2} className="h100" bgcolor={"grey.200"} p={2}>
-        <Grid2 size={{ md: 6 }} className="h100">
-          <MemoTable
-            projectId={projectId}
-            filterName={filterName}
-            rowSelectionModel={rowSelectionModel}
-            onRowSelectionChange={setRowSelectionModel}
-            sortingModel={sortingModel}
-            onSortingChange={setSortingModel}
-            columnVisibilityModel={columnVisibilityModel}
-            onColumnVisibilityChange={setColumnVisibilityModel}
-            cardProps={{
-              className: "myFlexContainer h100",
-            }}
-          />
-        </Grid2>
-        <Grid2 size={{ md: 6 }} className="h100">
-          <LogbookEditor projectId={projectId} />
-        </Grid2>
-      </Grid2>
-    </>
+    <ContentContentLayout
+      leftContent={
+        <MemoTable
+          projectId={projectId}
+          filterName={filterName}
+          rowSelectionModel={rowSelectionModel}
+          onRowSelectionChange={setRowSelectionModel}
+          sortingModel={sortingModel}
+          onSortingChange={setSortingModel}
+          columnVisibilityModel={columnVisibilityModel}
+          onColumnVisibilityChange={setColumnVisibilityModel}
+          cardProps={{
+            className: "myFlexContainer h100",
+          }}
+        />
+      }
+      rightContent={<LogbookEditor projectId={projectId} />}
+    />
   );
 }
 

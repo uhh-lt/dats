@@ -1,10 +1,10 @@
 import { Box } from "@mui/material";
-import NoSidebarLayout from "../../layouts/NoSidebarLayout.tsx";
+import ContentContainerLayout from "../../layouts/ContentLayouts/ContentContainerLayout.tsx";
 import AnalysisCard from "./AnalysisCard.tsx";
 
 function Analysis() {
   return (
-    <NoSidebarLayout>
+    <ContentContainerLayout>
       <Box display="flex" gap={2} flexWrap="wrap">
         <AnalysisCard
           to={"frequency"}
@@ -55,7 +55,7 @@ function Analysis() {
           color={"#77dd77"}
         />
       </Box>
-    </NoSidebarLayout>
+    </ContentContainerLayout>
   );
 }
 

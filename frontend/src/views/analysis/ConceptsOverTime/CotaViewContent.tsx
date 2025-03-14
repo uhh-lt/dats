@@ -1,5 +1,6 @@
-import { Box, Grid2 } from "@mui/material";
+import { Box } from "@mui/material";
 import { COTARead } from "../../../api/openapi/models/COTARead.ts";
+import SidebarContentLayout from "../../../layouts/ContentLayouts/SidebarContentLayout.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import CotaConceptList from "./CotaConceptList.tsx";
 import CotaControl from "./CotaControl.tsx";
@@ -17,24 +18,28 @@ function CotaViewContent({ cota }: CotaViewContentProps) {
   const isTimelineView = useAppSelector((state) => state.cota.isTimelineView);
 
   return (
-    <Grid2 container className="h100" columnSpacing={2} padding={2} bgcolor={"grey.200"}>
-      <Grid2 size={{ md: 3 }} className="myFlexContainer h100">
-        <Box className="myFlexFitContentContainer" sx={{ mb: 2 }}>
-          {isTimelineView ? <CotaTimelineSettings cota={cota} /> : <CotaControl cota={cota} />}
+    <SidebarContentLayout
+      leftSidebar={
+        <Box className="myFlexContainer h100">
+          <Box className="myFlexFitContentContainer" sx={{ mb: 2 }}>
+            {isTimelineView ? <CotaTimelineSettings cota={cota} /> : <CotaControl cota={cota} />}
+          </Box>
+          <Box className="myFlexFillAllContainerNoScroll">
+            <CotaConceptList cota={cota} />
+          </Box>
         </Box>
-        <Box className="myFlexFillAllContainerNoScroll">
-          <CotaConceptList cota={cota} />
-        </Box>
-      </Grid2>
-      <Grid2 size={{ md: 9 }} className="h100">
-        <Box style={{ height: "50%" }} sx={{ pb: 1 }}>
-          {isTimelineView ? <CotaTimelinePlot cota={cota} /> : <CotaScatterPlotly cota={cota} />}
-        </Box>
-        <Box style={{ height: "50%" }} sx={{ pt: 1 }}>
-          <CotaSentenceAnnotator2 cota={cota} />
-        </Box>
-      </Grid2>
-    </Grid2>
+      }
+      content={
+        <>
+          <Box style={{ height: "50%" }} sx={{ pb: 1 }}>
+            {isTimelineView ? <CotaTimelinePlot cota={cota} /> : <CotaScatterPlotly cota={cota} />}
+          </Box>
+          <Box style={{ height: "50%" }} sx={{ pt: 1 }}>
+            <CotaSentenceAnnotator2 cota={cota} />
+          </Box>
+        </>
+      }
+    />
   );
 }
 

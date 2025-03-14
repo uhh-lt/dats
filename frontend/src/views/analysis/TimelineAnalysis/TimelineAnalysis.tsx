@@ -1,7 +1,8 @@
-import { Box, CircularProgress, Grid2 } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import { useParams } from "react-router-dom";
 import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
+import SidebarContentLayout from "../../../layouts/ContentLayouts/SidebarContentLayout.tsx";
 import ConceptList from "./ConceptList.tsx";
 import TimeAnalysisProvenance from "./TimeAnalysisProvenance.tsx";
 import TimelineAnalysisViz from "./TimeAnalysisViz.tsx";
@@ -35,24 +36,28 @@ interface TimelineAnalysisContentProps {
 
 function TimelineAnalysisContent({ timelineAnalysis }: TimelineAnalysisContentProps) {
   return (
-    <Grid2 container className="h100" columnSpacing={2} padding={2} bgcolor={"grey.200"}>
-      <Grid2 size={{ md: 3 }} className="myFlexContainer h100">
-        <Box className="myFlexFitContentContainer" sx={{ mb: 2 }}>
-          <TimelineAnalysisSettings timelineAnalysis={timelineAnalysis} />
+    <SidebarContentLayout
+      leftSidebar={
+        <Box className="myFlexContainer h100">
+          <Box className="myFlexFitContentContainer" sx={{ mb: 2 }}>
+            <TimelineAnalysisSettings timelineAnalysis={timelineAnalysis} />
+          </Box>
+          <Box className="myFlexFillAllContainerNoScroll">
+            <ConceptList timelineAnalysis={timelineAnalysis} />
+          </Box>
         </Box>
-        <Box className="myFlexFillAllContainerNoScroll">
-          <ConceptList timelineAnalysis={timelineAnalysis} />
+      }
+      content={
+        <Box className="h100">
+          <Box style={{ height: "50%" }} sx={{ pb: 1 }}>
+            <TimelineAnalysisViz timelineAnalysis={timelineAnalysis} />
+          </Box>
+          <Box style={{ height: "50%" }} sx={{ pt: 1 }}>
+            <TimeAnalysisProvenance timelineAnalysis={timelineAnalysis} />
+          </Box>
         </Box>
-      </Grid2>
-      <Grid2 size={{ md: 9 }} className="h100">
-        <Box style={{ height: "50%" }} sx={{ pb: 1 }}>
-          <TimelineAnalysisViz timelineAnalysis={timelineAnalysis} />
-        </Box>
-        <Box style={{ height: "50%" }} sx={{ pt: 1 }}>
-          <TimeAnalysisProvenance timelineAnalysis={timelineAnalysis} />
-        </Box>
-      </Grid2>
-    </Grid2>
+      }
+    />
   );
 }
 
