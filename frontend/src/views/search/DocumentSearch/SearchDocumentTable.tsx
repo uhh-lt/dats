@@ -295,7 +295,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
   }, [projectId, searchQuery, filter, sortingModel]);
 
   return (
-    <>
+    <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <Toolbar
         variant="dense"
         sx={{
@@ -352,7 +352,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
           </Stack>
         </Box>
       </Card>
-    </>
+    </Box>
   );
 }
 

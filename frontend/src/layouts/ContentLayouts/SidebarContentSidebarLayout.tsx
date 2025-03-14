@@ -1,8 +1,9 @@
-import { Grid2 } from "@mui/material";
+import { Box } from "@mui/material";
 import { ReactNode } from "react";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { LayoutActions } from "../layoutSlice.ts";
-import LayoutManipulationButtons from "./LayoutManipulationButtons.tsx";
+import { ResizablePanel } from "./ResizablePanel.tsx";
+
 function SidebarContentSidebarLayout({
   leftSidebar,
   content,
@@ -12,64 +13,41 @@ function SidebarContentSidebarLayout({
   content: ReactNode;
   rightSidebar: ReactNode;
 }) {
-  const leftSidebarSize = useAppSelector((state) => state.layout.leftSidebarSize);
-  const rightSidebarSize = useAppSelector((state) => state.layout.rightSidebarSize);
-  const contentSize = useAppSelector((state) => state.layout.contentSize);
+  const leftSidebarWidth = useAppSelector((state) => state.layout.leftSidebarWidth);
+  const rightSidebarWidth = useAppSelector((state) => state.layout.rightSidebarWidth);
   const dispatch = useAppDispatch();
 
   return (
-    <Grid2 container className="h100">
-      {leftSidebarSize > 0 && (
-        <Grid2
-          size={{ md: leftSidebarSize }}
-          className="h100"
-          sx={{
-            zIndex: (theme) => theme.zIndex.appBar,
-            bgcolor: (theme) => theme.palette.background.paper,
-            borderRight: "1px solid #e8eaed",
-            boxShadow: 4,
-          }}
-        >
-          {leftSidebar}
-        </Grid2>
-      )}
-      <Grid2
-        size={{ md: contentSize }}
-        className="myFlexContainer h100"
+    <Box sx={{ display: "flex", width: "100%", height: "100%", overflow: "hidden" }}>
+      <ResizablePanel
+        width={leftSidebarWidth}
+        onResize={(width) => dispatch(LayoutActions.setLeftSidebarWidth(width))}
+        position="left"
+      >
+        {leftSidebar}
+      </ResizablePanel>
+
+      <Box
         sx={{
+          flex: 1,
+          minWidth: 0, // This prevents flex child from overflowing
+          height: "100%",
           bgcolor: (theme) => theme.palette.grey[200],
           overflowY: "auto",
           overflowX: "hidden",
-          position: "relative",
         }}
       >
-        <LayoutManipulationButtons
-          onDecreaseClick={() => dispatch(LayoutActions.onDecreaseLeft())}
-          onIncreaseClick={() => dispatch(LayoutActions.onIncreaseLeft())}
-          isLeft={true}
-        />
-        <LayoutManipulationButtons
-          onDecreaseClick={() => dispatch(LayoutActions.onDecreaseRight())}
-          onIncreaseClick={() => dispatch(LayoutActions.onIncreaseRight())}
-          isLeft={false}
-        />
         {content}
-      </Grid2>
-      {rightSidebarSize > 0 && (
-        <Grid2
-          size={{ md: rightSidebarSize }}
-          className="h100"
-          sx={{
-            zIndex: (theme) => theme.zIndex.appBar,
-            bgcolor: (theme) => theme.palette.background.paper,
-            borderLeft: "1px solid #e8eaed",
-            boxShadow: 4,
-          }}
-        >
-          {rightSidebar}
-        </Grid2>
-      )}
-    </Grid2>
+      </Box>
+
+      <ResizablePanel
+        width={rightSidebarWidth}
+        onResize={(width) => dispatch(LayoutActions.setRightSidebarWidth(width))}
+        position="right"
+      >
+        {rightSidebar}
+      </ResizablePanel>
+    </Box>
   );
 }
 
