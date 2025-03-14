@@ -1,7 +1,7 @@
 import CloseIcon from "@mui/icons-material/Close";
 import React from "react";
 import { DraggableProvided, DraggableRubric, DraggableStateSnapshot } from "react-beautiful-dnd";
-import { getIconComponent } from "../../../utils/IconUtils.tsx";
+import { getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 import { LabelText, StyledTab, TabContent, TabLabel } from "../styles";
 import { TabData } from "../types";
 

@@ -15,7 +15,7 @@ import { ModelTrainingParams } from "../../../api/openapi/models/ModelTrainingPa
 import { ZeroShotParams } from "../../../api/openapi/models/ZeroShotParams.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { dateToLocaleString } from "../../../utils/DateUtils.ts";
-import { docTypeToIcon } from "../../../utils/docTypeToIcon.tsx";
+import { docTypeToIcon } from "../../../utils/icons/docTypeToIcon.tsx";
 import { CRUDDialogActions } from "../../dialogSlice.ts";
 import BackgroundJobListItem from "./BackgroundJobListItem.tsx";
 import { statusToTypographyColor } from "./StatusToTypographyColor.ts";

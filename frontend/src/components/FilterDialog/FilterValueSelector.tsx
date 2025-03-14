@@ -7,7 +7,7 @@ import { DocType } from "../../api/openapi/models/DocType.ts";
 import { FilterOperator } from "../../api/openapi/models/FilterOperator.ts";
 import { FilterValueType } from "../../api/openapi/models/FilterValueType.ts";
 import { dateToLocaleYYYYMMDDString, isValidDateString } from "../../utils/DateUtils.ts";
-import { docTypeToIcon } from "../../utils/docTypeToIcon.tsx";
+import { docTypeToIcon } from "../../utils/icons/docTypeToIcon.tsx";
 import CodeRenderer from "../Code/CodeRenderer.tsx";
 import { useCodesWithLevel } from "../Code/useCodesWithLevel.ts";
 import TagRenderer from "../Tag/TagRenderer.tsx";

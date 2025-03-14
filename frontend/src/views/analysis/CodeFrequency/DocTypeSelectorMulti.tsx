@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import React from "react";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
-import { docTypeToIcon } from "../../../utils/docTypeToIcon.tsx";
+import { docTypeToIcon } from "../../../utils/icons/docTypeToIcon.tsx";
 
 interface DocTypeSelectorMultiProps {
   docTypes: DocType[];

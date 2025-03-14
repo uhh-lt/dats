@@ -18,10 +18,10 @@ import React, { useCallback, useState } from "react";
 import MetadataHooks from "../../../../api/MetadataHooks.ts";
 import { MetaType } from "../../../../api/openapi/models/MetaType.ts";
 import { ProjectMetadataRead } from "../../../../api/openapi/models/ProjectMetadataRead.ts";
+import { metaTypeToIcon } from "../../../../utils/icons/metaTypeToIcon.tsx";
 import ConfirmationAPI from "../../../ConfirmationDialog/ConfirmationAPI.ts";
 import { useOpenSnackbar } from "../../../SnackbarDialog/useOpenSnackbar.ts";
 import MetadataTypeSelectorMenu from "./MetadataTypeSelectorMenu.tsx";
-import { metaTypeToIcon } from "./metaTypeToIcon.tsx";
 
 interface MetadataEditMenuProps {
   projectMetadata: ProjectMetadataRead;

@@ -1,9 +1,9 @@
-import CommentIcon from "@mui/icons-material/Comment";
 import StarIcon from "@mui/icons-material/Star";
 import StarOutlineIcon from "@mui/icons-material/StarOutline";
 import { Stack, StackProps } from "@mui/material";
 import MemoHooks from "../../api/MemoHooks.ts";
 import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
+import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
 import UserRenderer from "../User/UserRenderer.tsx";
 import AttachedObjectRenderer from "./AttachedObjectRenderer.tsx";
 
@@ -88,7 +88,7 @@ export function MemoRendererWithData({
 }: { memo: MemoRead } & MemoRendererSharedProps & StackProps) {
   return (
     <Stack direction="row" alignItems="center" {...props}>
-      {showIcon && <CommentIcon sx={{ mr: 1 }} />}
+      {showIcon && getIconComponent(Icon.MEMO, { sx: { mr: 1 } })}
       {showTitle && memo.title}
       {showContent && memo.content}
       {showUser && <UserRenderer user={memo.user_id} />}

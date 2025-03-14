@@ -15,7 +15,7 @@ import CodeHooks from "../../../api/CodeHooks.ts";
 import { CodeOccurrence } from "../../../api/openapi/models/CodeOccurrence.ts";
 import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
 import UserName from "../../../components/User/UserName.tsx";
-import { docTypeToIcon } from "../../../utils/docTypeToIcon.tsx";
+import { docTypeToIcon } from "../../../utils/icons/docTypeToIcon.tsx";
 
 const columns: MRT_ColumnDef<CodeOccurrence>[] = [
   {
