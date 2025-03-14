@@ -21,17 +21,10 @@ function getDefaultLabel(base: string): string {
 }
 
 export function TabTitle({ tab }: TabTitleProps) {
-  console.log(tab);
-
   // Only fetch data if we have an ID and it's a type we need to fetch for
   const sdoc = SdocHooks.useGetDocument(tab.base === "annotation" ? parseInt(tab.data_id!) : undefined);
-
-  console.log(sdoc);
-
   const whiteboard = WhiteboardHooks.useGetWhiteboard(tab.base === "whiteboard" ? parseInt(tab.data_id!) : undefined);
-
   const cota = CotaHooks.useGetCota(tab.base === "concepts-over-time-analysis" ? parseInt(tab.data_id!) : undefined);
-
   const timeline = TimelineAnalysisHooks.useGetTimelineAnalysis(
     tab.base === "timeline" ? parseInt(tab.data_id!) : undefined,
   );
