@@ -1,34 +1,36 @@
-import { Grid2 } from "@mui/material";
+import { Box } from "@mui/material";
 import { ReactNode } from "react";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { LayoutActions } from "../layoutSlice.ts";
+import { HorizontalResizablePanel } from "../ResizePanel/HorizontalResizablePanel.tsx";
 
 function SidebarContentLayout({ leftSidebar, content }: { leftSidebar: ReactNode; content: ReactNode }) {
+  const leftSidebarWidth = useAppSelector((state) => state.layout.leftSidebarWidth);
+  const dispatch = useAppDispatch();
+
   return (
-    <Grid2 container className="h100">
-      <Grid2
-        size={{ md: 3 }}
-        className="h100"
-        sx={{
-          zIndex: (theme) => theme.zIndex.appBar,
-          bgcolor: (theme) => theme.palette.background.paper,
-          borderRight: "1px solid #e8eaed",
-          boxShadow: 4,
-        }}
+    <Box sx={{ display: "flex", width: "100%", height: "100%", overflow: "hidden" }}>
+      <HorizontalResizablePanel
+        width={leftSidebarWidth}
+        onResize={(width) => dispatch(LayoutActions.setLeftSidebarWidth(width))}
+        position="left"
       >
         {leftSidebar}
-      </Grid2>
-      <Grid2
-        size={{ md: 9 }}
-        className="myFlexContainer h100"
+      </HorizontalResizablePanel>
+
+      <Box
         sx={{
+          flex: 1,
+          minWidth: 0, // This prevents flex child from overflowing
+          height: "100%",
           bgcolor: (theme) => theme.palette.grey[200],
           overflowY: "auto",
           overflowX: "hidden",
-          position: "relative",
         }}
       >
         {content}
-      </Grid2>
-    </Grid2>
+      </Box>
+    </Box>
   );
 }
 
