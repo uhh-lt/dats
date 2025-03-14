@@ -33,10 +33,6 @@ export const useTabManagement = (): TabManagementHook => {
       return;
     }
 
-    // if (lastPathRef.current === location.pathname) {
-    //   return;
-    // }
-
     // Mark that we're processing a navigation
     isProcessingRef.current = true;
 
@@ -49,12 +45,10 @@ export const useTabManagement = (): TabManagementHook => {
           dispatch(TabActions.setActiveTab({ tabId: existingTabIndex, projectId }));
         } else {
           // Create new tab for link navigation
-          const { label, icon } = getTabInfoFromPath(location.pathname);
+          const tabData = getTabInfoFromPath(location.pathname);
           const newTab: TabData = {
             id: `tab-${Date.now()}`,
-            path: location.pathname,
-            label,
-            icon,
+            ...tabData,
           };
           dispatch(TabActions.addTab({ tabData: newTab, projectId }));
         }
