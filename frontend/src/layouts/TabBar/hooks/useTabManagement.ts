@@ -33,6 +33,10 @@ export const useTabManagement = (): TabManagementHook => {
       return;
     }
 
+    if (lastPathRef.current === location.pathname) {
+      return;
+    }
+
     // Mark that we're processing a navigation
     isProcessingRef.current = true;
 

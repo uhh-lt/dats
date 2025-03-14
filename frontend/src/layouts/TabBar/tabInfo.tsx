@@ -17,6 +17,8 @@ function getIconForBase(base: string): Icon {
       return Icon.LOGBOOK;
     case "settings":
       return Icon.SETTINGS;
+    case "analysis":
+      return Icon.ANALYSIS;
     case "concepts-over-time-analysis":
       return Icon.COTA;
     case "timeline":
