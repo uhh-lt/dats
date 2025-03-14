@@ -1,6 +1,7 @@
 import CloseIcon from "@mui/icons-material/Close";
 import React from "react";
 import { DraggableProvided, DraggableRubric, DraggableStateSnapshot } from "react-beautiful-dnd";
+import { getIconComponent } from "../../../utils/IconUtils.tsx";
 import { LabelText, StyledTab, TabContent, TabLabel } from "../styles";
 import { TabData } from "../types";
 
@@ -33,7 +34,7 @@ export const DragCloneRenderer: React.FC<DragCloneRendererProps> = ({ provided, 
         label={
           <TabContent>
             <TabLabel>
-              {tab.icon}
+              {tab.icon && getIconComponent(tab.icon)}
               <LabelText>{tab.label}</LabelText>
             </TabLabel>
             <CloseIcon fontSize="small" sx={{ fontSize: 16, ml: 1, opacity: 0.5 }} />
