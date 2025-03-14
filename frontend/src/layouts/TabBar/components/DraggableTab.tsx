@@ -1,6 +1,7 @@
 import CloseIcon from "@mui/icons-material/Close";
 import React from "react";
 import { Draggable } from "react-beautiful-dnd";
+import { getIconComponent } from "../../../utils/IconUtils.tsx";
 import { CloseButton, LabelText, StyledTab, TabContent, TabLabel, TabWrapper } from "../styles";
 import { TabData } from "../types";
 
@@ -28,7 +29,7 @@ export const DraggableTab: React.FC<DraggableTabProps> = ({ tab, index, isActive
               label={
                 <TabContent>
                   <TabLabel>
-                    {tab.icon}
+                    {tab.icon && getIconComponent(tab.icon)}
                     <LabelText>{tab.label}</LabelText>
                   </TabLabel>
                   <CloseButton
