@@ -1,34 +1,37 @@
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import AddIcon from "@mui/icons-material/Add";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import ArticleIcon from "@mui/icons-material/Article";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import CheckBoxOutlinedIcon from "@mui/icons-material/CheckBoxOutlined";
 import CommentIcon from "@mui/icons-material/Comment";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/Delete";
+import DescriptionIcon from "@mui/icons-material/Description";
 import EditIcon from "@mui/icons-material/Edit";
 import FileCopyIcon from "@mui/icons-material/FileCopy";
 import FolderIcon from "@mui/icons-material/Folder";
+import FormatColorTextIcon from "@mui/icons-material/FormatColorText";
 import FormatListBulletedOutlinedIcon from "@mui/icons-material/FormatListBulletedOutlined";
 import HomeIcon from "@mui/icons-material/Home";
 import ImageIcon from "@mui/icons-material/Image";
 import ImageSearchIcon from "@mui/icons-material/ImageSearch";
 import LabelIcon from "@mui/icons-material/Label";
-import LayersIcon from "@mui/icons-material/Layers";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import NotesIcon from "@mui/icons-material/Notes";
 import NumbersIcon from "@mui/icons-material/Numbers";
-import PersonIcon from "@mui/icons-material/Person";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import ScaleIcon from "@mui/icons-material/Scale";
 import SearchIcon from "@mui/icons-material/Search";
 import SettingsIcon from "@mui/icons-material/Settings";
-import ShuffleIcon from "@mui/icons-material/Shuffle";
+import ShortTextIcon from "@mui/icons-material/ShortText";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import SquareIcon from "@mui/icons-material/Square";
+import StackedBarChartIcon from "@mui/icons-material/StackedBarChart";
 import SubjectIcon from "@mui/icons-material/Subject";
 import TextFormatIcon from "@mui/icons-material/TextFormat";
 import TimelineIcon from "@mui/icons-material/Timeline";
@@ -128,6 +131,7 @@ export enum Icon {
   // MISC
   VISIBILITY = "visibility",
   VISIBILITY_OFF = "visibility_off",
+  WIKI = "wiki",
 }
 
 // Define a type for icon component factory functions
@@ -163,12 +167,12 @@ const iconMap: Record<Icon, IconFactory> = {
 
   // SEARCH
   [Icon.SEARCH]: (iconProps) => <SearchIcon {...iconProps} />,
-  [Icon.DOCUMENT_SEARCH]: (iconProps) => <SearchIcon {...iconProps} />,
+  [Icon.DOCUMENT_SEARCH]: (iconProps) => <DescriptionIcon {...iconProps} />,
   [Icon.IMAGE_SEARCH]: (iconProps) => <ImageSearchIcon {...iconProps} />,
-  [Icon.SENTENCE_SEARCH]: (iconProps) => <TextFormatIcon {...iconProps} />,
+  [Icon.SENTENCE_SEARCH]: (iconProps) => <ShortTextIcon {...iconProps} />,
 
   // Annotation
-  [Icon.ANNOTATION]: (iconProps) => <EditIcon {...iconProps} />,
+  [Icon.ANNOTATION]: (iconProps) => <FormatColorTextIcon {...iconProps} />,
 
   // ASSISTANT
   [Icon.LLM_ASSISTANT]: (iconProps) => <SmartToyIcon {...iconProps} />,
@@ -185,12 +189,12 @@ const iconMap: Record<Icon, IconFactory> = {
 
   // TOOLS
   [Icon.TOOLS]: (iconProps) => <TuneIcon {...iconProps} />,
-  [Icon.DUPLICATE_FINDER]: (iconProps) => <ContentCopyIcon {...iconProps} />,
-  [Icon.DOCUMENT_SAMPLER]: (iconProps) => <ShuffleIcon {...iconProps} />,
+  [Icon.DUPLICATE_FINDER]: (iconProps) => <FileCopyIcon {...iconProps} />,
+  [Icon.DOCUMENT_SAMPLER]: (iconProps) => <StackedBarChartIcon {...iconProps} />,
   [Icon.ML_AUTOMATION]: (iconProps) => <AutoAwesomeIcon {...iconProps} />,
 
   // Whiteboard
-  [Icon.WHITEBOARD]: (iconProps) => <LayersIcon {...iconProps} />,
+  [Icon.WHITEBOARD]: (iconProps) => <AccountTreeIcon {...iconProps} />,
 
   // Logbook
   [Icon.LOGBOOK]: (iconProps) => <MenuBookIcon {...iconProps} />,
@@ -199,7 +203,7 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.SETTINGS]: (iconProps) => <SettingsIcon {...iconProps} />,
 
   // USER
-  [Icon.USER]: (iconProps) => <PersonIcon {...iconProps} />,
+  [Icon.USER]: (iconProps) => <AccountCircleIcon {...iconProps} />,
 
   // Metadata types
   [Icon.META_STRING]: (iconProps) => <SubjectIcon {...iconProps} />,
@@ -226,6 +230,7 @@ const iconMap: Record<Icon, IconFactory> = {
   // MISC
   [Icon.VISIBILITY]: (iconProps) => <VisibilityIcon {...iconProps} />,
   [Icon.VISIBILITY_OFF]: (iconProps) => <VisibilityOffIcon {...iconProps} />,
+  [Icon.WIKI]: (iconProps) => <AutoStoriesIcon {...iconProps} />,
 };
 
 /**

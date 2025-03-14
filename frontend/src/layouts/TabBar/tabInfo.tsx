@@ -5,6 +5,10 @@ function getIconForBase(base: string): Icon {
   switch (base) {
     case "search":
       return Icon.SEARCH;
+    case "sentencesearch":
+      return Icon.SENTENCE_SEARCH;
+    case "imagesearch":
+      return Icon.IMAGE_SEARCH;
     case "annotation":
       return Icon.DOCUMENT;
     case "whiteboard":
