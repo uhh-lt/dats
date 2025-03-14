@@ -1,4 +1,4 @@
-import { Divider, Typography } from "@mui/material";
+import { Box, Divider, Typography } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import MetadataHooks from "../../../api/MetadataHooks.ts";
@@ -61,17 +61,17 @@ function Search() {
   return (
     <SidebarContentSidebarLayout
       leftSidebar={
-        <>
+        <Box className="h100">
           <TagExplorer sx={{ height: "50%", pt: 0 }} onTagClick={handleAddTagFilter} />
           <Divider />
           <SearchStatistics
-            sx={{ height: "50%" }}
+            sx={{ height: "calc(50% - 1px)" }}
             sdocIds={sdocIds}
             handleKeywordClick={handleAddKeywordFilter}
             handleTagClick={handleAddTagFilter}
             handleCodeClick={handleAddCodeFilter}
           />
-        </>
+        </Box>
       }
       content={<SearchDocumentTable projectId={projectId} onSearchResultsChange={handleSearchResultsChange} />}
       rightSidebar={
