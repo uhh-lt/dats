@@ -1,5 +1,3 @@
-import LabelIcon from "@mui/icons-material/Label";
-import SearchIcon from "@mui/icons-material/Search";
 import {
   Box,
   Checkbox,
@@ -20,6 +18,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import TagHooks from "../../../api/TagHooks.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
+import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 import { CheckboxState } from "./CheckboxState.ts";
 import TagMenuCreationButton from "./TagMenuCreateButton.tsx";
 
@@ -214,11 +213,7 @@ function TagMenuContent({
             placeholder="Add tag..."
             slotProps={{
               input: {
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
+                endAdornment: <InputAdornment position="end">{getIconComponent(Icon.SEARCH)}</InputAdornment>,
               },
             }}
           />
@@ -250,7 +245,7 @@ function TagMenuContent({
               >
                 <ListItemButton onClick={() => handleClickTag(tag.id)} dense>
                   <ListItemIcon sx={{ minWidth: "32px" }}>
-                    <LabelIcon style={{ color: tag.color }} />
+                    {getIconComponent(Icon.TAG, { style: { color: tag.color } })}
                   </ListItemIcon>
                   <ListItemText id={labelId} primary={tag.name} />
                 </ListItemButton>

@@ -1,9 +1,8 @@
-import AddCircleIcon from "@mui/icons-material/AddCircle";
-import LabelIcon from "@mui/icons-material/Label";
 import { Button, PopoverOrigin } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import React, { useState } from "react";
+import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 import TagMenu from "./TagMenu.tsx";
 
 interface TagMenuButtonProps {
@@ -22,12 +21,10 @@ function TagMenuButton({ popoverOrigin, type, selectedSdocIds }: TagMenuButtonPr
     <>
       {type !== "addBtn" ? (
         <Tooltip title="Tags">
-          <IconButton onClick={handleClick}>
-            <LabelIcon />
-          </IconButton>
+          <IconButton onClick={handleClick}>{getIconComponent(Icon.TAG)}</IconButton>
         </Tooltip>
       ) : (
-        <Button variant="text" size="small" onClick={handleClick} startIcon={<AddCircleIcon />}>
+        <Button variant="text" size="small" onClick={handleClick} startIcon={getIconComponent(Icon.CREATE)}>
           Add Tags
         </Button>
       )}

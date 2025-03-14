@@ -1,7 +1,7 @@
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { IconButton, IconButtonProps, Menu } from "@mui/material";
 import { useState } from "react";
 import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
+import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
 import MemoDeleteMenuItem from "./MemoDeleteMenuItem.tsx";
 import MemoStarMenuItem from "./MemoStarMenuItem.tsx";
 
@@ -41,7 +41,7 @@ export default function MemoActionsMenu({
   return (
     <>
       <IconButton onClick={handleClick} disabled={!memo} {...iconButtonProps}>
-        <MoreVertIcon />
+        {getIconComponent(Icon.CONTEXT_MENU)}
       </IconButton>
       {memo && (
         <Menu anchorEl={anchorEl} open={open} onClose={() => setAnchorEl(null)}>

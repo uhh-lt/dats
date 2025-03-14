@@ -1,6 +1,6 @@
-import CommentIcon from "@mui/icons-material/Comment";
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import React from "react";
+import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
 import MemoDialogAPI, { MemoEvent } from "./MemoDialog/MemoDialogAPI.ts";
 
 interface MemoButtonProps {
@@ -24,7 +24,7 @@ export default function MemoButton({
     <Tooltip title="Memo">
       <span>
         <IconButton onClick={handleClickOpen} {...(props as IconButtonProps)}>
-          <CommentIcon />
+          {getIconComponent(Icon.MEMO)}
         </IconButton>
       </span>
     </Tooltip>

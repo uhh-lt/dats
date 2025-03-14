@@ -23,7 +23,7 @@ function DialMenu() {
   }, [location.pathname]);
 
   const handleRedirect = () => {
-    if (!location.pathname.includes("imprint")) window.open(USER_GUIDE_BASE_URL + wikiTargetRoute.route, "_blank");
+    window.open(USER_GUIDE_BASE_URL + wikiTargetRoute.route, "_blank");
   };
 
   return (
@@ -39,7 +39,7 @@ function DialMenu() {
           tooltipTitle={
             <>
               Hint: {wikiTargetRoute.description}
-              {location.pathname.includes("imprint") ? "Imprint" : ". " + HELP_MESSAGE_SUFFIX}
+              {". " + HELP_MESSAGE_SUFFIX}
             </>
           }
           onClick={handleRedirect}

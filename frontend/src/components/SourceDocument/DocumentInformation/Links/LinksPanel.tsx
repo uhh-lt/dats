@@ -1,7 +1,7 @@
-import AddCircleIcon from "@mui/icons-material/AddCircle";
 import { TabPanel } from "@mui/lab";
 import { Box, Button, CircularProgress, List, Stack } from "@mui/material";
 import SdocHooks from "../../../../api/SdocHooks.ts";
+import { Icon, getIconComponent } from "../../../../utils/icons/iconUtils.tsx";
 import SdocListItem from "./SdocListItem.tsx";
 
 interface LinksPanelProps {
@@ -22,7 +22,7 @@ function LinkPanelContent({ sdocId }: LinksPanelProps) {
 
   return (
     <TabPanel value="links" sx={{ p: 1 }} className="h100">
-      <Button variant="text" size="small" startIcon={<AddCircleIcon />} disabled>
+      <Button variant="text" size="small" startIcon={getIconComponent(Icon.ADD)}>
         Link documents
       </Button>
       <Stack direction="column" spacing={0.5}>

@@ -1,6 +1,6 @@
-import CommentIcon from "@mui/icons-material/Comment";
 import { ListItemIcon, ListItemText, MenuItem } from "@mui/material";
 import React from "react";
+import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
 import MemoDialogAPI, { MemoEvent } from "./MemoDialog/MemoDialogAPI.ts";
 
 interface MemoMenuItemProps {
@@ -21,9 +21,7 @@ export default function MemoMenuItem({
 
   return (
     <MenuItem onClick={handleClickOpen}>
-      <ListItemIcon>
-        <CommentIcon fontSize="small" />
-      </ListItemIcon>
+      <ListItemIcon>{getIconComponent(Icon.MEMO, { fontSize: "small" })}</ListItemIcon>
       <ListItemText>Memo</ListItemText>
     </MenuItem>
   );

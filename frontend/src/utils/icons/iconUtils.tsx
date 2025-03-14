@@ -1,3 +1,5 @@
+import AddIcon from "@mui/icons-material/Add";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
 import ArticleIcon from "@mui/icons-material/Article";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import BarChartIcon from "@mui/icons-material/BarChart";
@@ -5,14 +7,18 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import CheckBoxOutlinedIcon from "@mui/icons-material/CheckBoxOutlined";
 import CommentIcon from "@mui/icons-material/Comment";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
+import FileCopyIcon from "@mui/icons-material/FileCopy";
 import FolderIcon from "@mui/icons-material/Folder";
 import FormatListBulletedOutlinedIcon from "@mui/icons-material/FormatListBulletedOutlined";
 import HomeIcon from "@mui/icons-material/Home";
+import ImageIcon from "@mui/icons-material/Image";
 import ImageSearchIcon from "@mui/icons-material/ImageSearch";
 import LabelIcon from "@mui/icons-material/Label";
 import LayersIcon from "@mui/icons-material/Layers";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import NotesIcon from "@mui/icons-material/Notes";
 import NumbersIcon from "@mui/icons-material/Numbers";
 import PersonIcon from "@mui/icons-material/Person";
@@ -21,14 +27,16 @@ import ScaleIcon from "@mui/icons-material/Scale";
 import SearchIcon from "@mui/icons-material/Search";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ShuffleIcon from "@mui/icons-material/Shuffle";
+import SmartToyIcon from "@mui/icons-material/SmartToy";
 import SquareIcon from "@mui/icons-material/Square";
 import SubjectIcon from "@mui/icons-material/Subject";
 import TextFormatIcon from "@mui/icons-material/TextFormat";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import TuneIcon from "@mui/icons-material/Tune";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { SvgIconProps } from "@mui/material";
 import React from "react";
-
 export enum Icon {
   HOME = "home",
 
@@ -64,6 +72,9 @@ export enum Icon {
   // Annotation
   ANNOTATION = "annotation",
 
+  // ASSISTANT
+  LLM_ASSISTANT = "llm_assistant",
+
   // ANALYSIS
   ANALYSIS = "analysis",
   COTA = "cota",
@@ -87,7 +98,7 @@ export enum Icon {
   LOGBOOK = "logbook",
 
   // SETTINGS
-  PROJECT_SETTINGS = "project_settings",
+  SETTINGS = "project_settings",
 
   // USER
   USER = "user",
@@ -98,6 +109,25 @@ export enum Icon {
   META_DATE = "meta_date",
   META_BOOLEAN = "meta_boolean",
   META_LIST = "meta_list",
+
+  // CRUD
+  CREATE = "create",
+  ADD = "add",
+  EDIT = "edit",
+  DELETE = "delete",
+  DUPLICATE = "duplicate",
+
+  // EXPORT
+  EXPORT = "export",
+  EXPORT_CSV = "export_csv",
+  EXPORT_IMAGE = "export_image",
+
+  // MENUS
+  CONTEXT_MENU = "context_menu",
+
+  // MISC
+  VISIBILITY = "visibility",
+  VISIBILITY_OFF = "visibility_off",
 }
 
 // Define a type for icon component factory functions
@@ -140,6 +170,9 @@ const iconMap: Record<Icon, IconFactory> = {
   // Annotation
   [Icon.ANNOTATION]: (iconProps) => <EditIcon {...iconProps} />,
 
+  // ASSISTANT
+  [Icon.LLM_ASSISTANT]: (iconProps) => <SmartToyIcon {...iconProps} />,
+
   // ANALYSIS
   [Icon.ANALYSIS]: (iconProps) => <TimelineIcon {...iconProps} />,
   [Icon.COTA]: (iconProps) => <TimelineIcon {...iconProps} />,
@@ -163,7 +196,7 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.LOGBOOK]: (iconProps) => <MenuBookIcon {...iconProps} />,
 
   // SETTINGS
-  [Icon.PROJECT_SETTINGS]: (iconProps) => <SettingsIcon {...iconProps} />,
+  [Icon.SETTINGS]: (iconProps) => <SettingsIcon {...iconProps} />,
 
   // USER
   [Icon.USER]: (iconProps) => <PersonIcon {...iconProps} />,
@@ -174,6 +207,25 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.META_DATE]: (iconProps) => <CalendarMonthIcon {...iconProps} />,
   [Icon.META_BOOLEAN]: (iconProps) => <CheckBoxOutlinedIcon {...iconProps} />,
   [Icon.META_LIST]: (iconProps) => <FormatListBulletedOutlinedIcon {...iconProps} />,
+
+  // CRUD
+  [Icon.CREATE]: (iconProps) => <AddIcon {...iconProps} />,
+  [Icon.ADD]: (iconProps) => <AddCircleIcon {...iconProps} />,
+  [Icon.EDIT]: (iconProps) => <EditIcon {...iconProps} />,
+  [Icon.DELETE]: (iconProps) => <DeleteIcon {...iconProps} />,
+  [Icon.DUPLICATE]: (iconProps) => <FileCopyIcon {...iconProps} />,
+
+  // EXPORT
+  [Icon.EXPORT]: (iconProps) => <SaveAltIcon {...iconProps} />,
+  [Icon.EXPORT_CSV]: (iconProps) => <FileCopyIcon {...iconProps} />,
+  [Icon.EXPORT_IMAGE]: (iconProps) => <ImageIcon {...iconProps} />,
+
+  // MENUS
+  [Icon.CONTEXT_MENU]: (iconProps) => <MoreVertIcon {...iconProps} />,
+
+  // MISC
+  [Icon.VISIBILITY]: (iconProps) => <VisibilityIcon {...iconProps} />,
+  [Icon.VISIBILITY_OFF]: (iconProps) => <VisibilityOffIcon {...iconProps} />,
 };
 
 /**

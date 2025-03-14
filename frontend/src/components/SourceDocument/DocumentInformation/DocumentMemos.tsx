@@ -1,10 +1,10 @@
-import AddCircleIcon from "@mui/icons-material/AddCircle";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import { Box, Button, CircularProgress, IconButton, Stack } from "@mui/material";
 import { useState } from "react";
 import MemoHooks from "../../../api/MemoHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
+import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 import MemoBlockEditor from "../../Memo/MemoBlockEditor.tsx";
 import MemoCard from "../../Memo/MemoCard.tsx";
 
@@ -75,7 +75,7 @@ function DocumentMemoList({ sdocId, onClick }: { sdocId: number; onClick: (memoI
             <Button
               variant="text"
               size="small"
-              startIcon={<AddCircleIcon />}
+              startIcon={getIconComponent(Icon.ADD)}
               sx={{ mb: 1 }}
               onClick={handleAddMemo}
               disabled={!user || isPending}

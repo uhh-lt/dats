@@ -1,6 +1,6 @@
-import SettingsIcon from "@mui/icons-material/Settings";
 import { Box, FormControlLabel, IconButton, Popover, Switch, Tooltip } from "@mui/material";
 import { useState } from "react";
+import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 
 interface SearchMemoOptionsMenuProps {
   isSearchContent: boolean;
@@ -16,7 +16,7 @@ function MemoTableOptionsMenu({ isSearchContent, onChangeIsSearchContent }: Sear
     <>
       <Tooltip title="Search options">
         <IconButton onClick={(event) => setAnchorEl(anchorEl ? null : event.currentTarget)}>
-          <SettingsIcon />
+          {getIconComponent(Icon.SETTINGS)}
         </IconButton>
       </Tooltip>
       <Popover

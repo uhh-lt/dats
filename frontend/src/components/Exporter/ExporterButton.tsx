@@ -1,6 +1,6 @@
-import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import { useCallback } from "react";
+import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
 import ExporterAPI from "./ExporterAPI.ts";
 import { ExporterInfo } from "./ExporterDialog.tsx";
 
@@ -19,7 +19,7 @@ function ExporterButton({ tooltip, exporterInfo: exporterConfig, iconButtonProps
     <Tooltip title={tooltip}>
       <span>
         <IconButton onClick={handleClick} {...iconButtonProps}>
-          <SaveAltIcon />
+          {getIconComponent(Icon.EXPORT)}
         </IconButton>
       </span>
     </Tooltip>

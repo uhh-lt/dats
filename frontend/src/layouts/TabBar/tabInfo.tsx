@@ -71,7 +71,7 @@ export const getTabInfoFromPath = (path: string): { label: string; icon: Icon } 
         }
         return { label: "Tools", icon: Icon.TOOLS };
       case "settings":
-        return { label: "Project Settings", icon: Icon.PROJECT_SETTINGS };
+        return { label: "Project Settings", icon: Icon.SETTINGS };
       default:
         // For other project routes
         return {

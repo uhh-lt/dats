@@ -1,5 +1,5 @@
-import SmartToyIcon from "@mui/icons-material/SmartToy";
 import { Box, Stack, StackProps } from "@mui/material";
+import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 
 function LLMUtterance({
   children,
@@ -7,7 +7,7 @@ function LLMUtterance({
 }: { children?: React.ReactNode } & Omit<StackProps, "direction" | "alignItems">) {
   return (
     <Stack direction="row" alignItems="center" {...props}>
-      <SmartToyIcon fontSize="large" color="primary" />
+      {getIconComponent(Icon.LLM_ASSISTANT, { fontSize: "large", color: "primary" })}
       <Box className="speech-bubble" sx={{ ml: 8 }}>
         {children}
       </Box>

@@ -1,6 +1,6 @@
-import AddIcon from "@mui/icons-material/Add";
 import { ListItemButton, ListItemButtonProps, ListItemIcon, ListItemText } from "@mui/material";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
+import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 import { CRUDDialogActions } from "../../dialogSlice.ts";
 
 interface TagActionButtonCreateProps {
@@ -20,9 +20,7 @@ function TagMenuCreationButton({ tagName, ...props }: TagActionButtonCreateProps
 
   return (
     <ListItemButton onClick={handleClick} {...props}>
-      <ListItemIcon>
-        <AddIcon />
-      </ListItemIcon>
+      <ListItemIcon>{getIconComponent(Icon.CREATE)}</ListItemIcon>
       <ListItemText primary={tagName.length > 0 ? `"${tagName}" (Create new)` : "Create new tag"} />
     </ListItemButton>
   );

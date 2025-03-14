@@ -1,10 +1,10 @@
-import AddCircleIcon from "@mui/icons-material/AddCircle";
 import { Button, PopoverPosition } from "@mui/material";
 import React, { useCallback, useState } from "react";
 import { useParams } from "react-router-dom";
 import MetadataHooks from "../../../../api/MetadataHooks.ts";
 import SdocHooks from "../../../../api/SdocHooks.ts";
 import { MetaType } from "../../../../api/openapi/models/MetaType.ts";
+import { Icon, getIconComponent } from "../../../../utils/icons/iconUtils.tsx";
 import { useOpenSnackbar } from "../../../SnackbarDialog/useOpenSnackbar.ts";
 import MetadataTypeSelectorMenu from "./MetadataTypeSelectorMenu.tsx";
 
@@ -63,7 +63,7 @@ function MetadataCreateButton({ sdocId }: MetadataCreateButtonProps) {
 
   return (
     <>
-      <Button variant="text" size="small" startIcon={<AddCircleIcon />} onClick={handleClick}>
+      <Button variant="text" size="small" startIcon={getIconComponent(Icon.ADD)} onClick={handleClick}>
         Add Metadata
       </Button>
       <MetadataTypeSelectorMenu

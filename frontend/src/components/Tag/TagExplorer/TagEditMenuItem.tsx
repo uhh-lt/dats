@@ -1,7 +1,7 @@
-import EditIcon from "@mui/icons-material/Edit";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
+import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 import { CRUDDialogActions } from "../../dialogSlice.ts";
 
 interface TagEditMenuItemProps {
@@ -19,9 +19,7 @@ function TagEditMenuItem({ tag, onClick, ...props }: TagEditMenuItemProps & Menu
 
   return (
     <MenuItem onClick={handleClickOpen} {...props}>
-      <ListItemIcon>
-        <EditIcon fontSize="small" />
-      </ListItemIcon>
+      <ListItemIcon>{getIconComponent(Icon.EDIT, { fontSize: "small" })}</ListItemIcon>
       <ListItemText>Edit tag</ListItemText>
     </MenuItem>
   );

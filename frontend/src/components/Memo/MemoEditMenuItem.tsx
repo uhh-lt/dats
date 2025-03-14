@@ -1,6 +1,6 @@
-import EditIcon from "@mui/icons-material/Edit";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import React from "react";
+import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
 import MemoDialogAPI, { MemoEvent } from "./MemoDialog/MemoDialogAPI.ts";
 
 interface MemoEditMenuItemProps {
@@ -22,9 +22,7 @@ function MemoEditMenuItem({
 
   return (
     <MenuItem onClick={handleClickOpen} disabled={!memoId} {...props}>
-      <ListItemIcon>
-        <EditIcon fontSize="small" />
-      </ListItemIcon>
+      <ListItemIcon>{getIconComponent(Icon.EDIT, { fontSize: "small" })}</ListItemIcon>
       <ListItemText>Edit memo</ListItemText>
     </MenuItem>
   );
