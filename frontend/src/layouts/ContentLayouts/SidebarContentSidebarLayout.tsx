@@ -2,7 +2,7 @@ import { Box } from "@mui/material";
 import { ReactNode } from "react";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { LayoutActions } from "../layoutSlice.ts";
-import { ResizablePanel } from "../ResizePanel/ResizablePanel.tsx";
+import { HorizontalResizablePanel } from "../ResizePanel/HorizontalResizablePanel.tsx";
 
 function SidebarContentSidebarLayout({
   leftSidebar,
@@ -19,13 +19,13 @@ function SidebarContentSidebarLayout({
 
   return (
     <Box sx={{ display: "flex", width: "100%", height: "100%", overflow: "hidden" }}>
-      <ResizablePanel
+      <HorizontalResizablePanel
         width={leftSidebarWidth}
         onResize={(width) => dispatch(LayoutActions.setLeftSidebarWidth(width))}
         position="left"
       >
         {leftSidebar}
-      </ResizablePanel>
+      </HorizontalResizablePanel>
 
       <Box
         sx={{
@@ -40,13 +40,13 @@ function SidebarContentSidebarLayout({
         {content}
       </Box>
 
-      <ResizablePanel
+      <HorizontalResizablePanel
         width={rightSidebarWidth}
         onResize={(width) => dispatch(LayoutActions.setRightSidebarWidth(width))}
         position="right"
       >
         {rightSidebar}
-      </ResizablePanel>
+      </HorizontalResizablePanel>
     </Box>
   );
 }

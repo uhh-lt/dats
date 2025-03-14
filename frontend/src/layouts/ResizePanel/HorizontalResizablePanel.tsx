@@ -1,6 +1,6 @@
 import { Box } from "@mui/material";
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
-import "./ResizablePanel.css";
+import "./HorizontalResizablePanel.css";
 
 interface ResizablePanelProps {
   children: ReactNode;
@@ -13,7 +13,7 @@ interface ResizablePanelProps {
 
 const COLLAPSED_WIDTH = 4; // Width when fully collapsed
 
-export function ResizablePanel({
+export function HorizontalResizablePanel({
   children,
   width,
   minWidth = 200,
