@@ -10,7 +10,7 @@ function getIconForBase(base: string): Icon {
     case "imagesearch":
       return Icon.IMAGE_SEARCH;
     case "annotation":
-      return Icon.DOCUMENT;
+      return Icon.ANNOTATION;
     case "whiteboard":
       return Icon.WHITEBOARD;
     case "logbook":
