@@ -27,7 +27,7 @@ interface DocumentMetadataRowProps {
 
 function DocumentMetadataRow({ metadata, filterName }: DocumentMetadataRowProps) {
   const projectMetadata = MetadataHooks.useGetProjectMetadata(metadata.project_metadata_id);
-  if (projectMetadata.isSuccess) {
+  if (projectMetadata.data) {
     return (
       <DocumentMetadataRowContent metadata={metadata} projectMetadata={projectMetadata.data} filterName={filterName} />
     );
