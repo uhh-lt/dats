@@ -1,16 +1,22 @@
-import { Grid2 } from "@mui/material";
+import { Box } from "@mui/material";
 import { ReactNode } from "react";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
+import { LayoutActions } from "../layoutSlice";
+import { HorizontalPercentageResizablePanel } from "../ResizePanel/HorizontalPercentageResizablePanel.tsx";
 
 function ContentContentLayout({ leftContent, rightContent }: { leftContent: ReactNode; rightContent: ReactNode }) {
+  const horizontalContentPercentage = useAppSelector((state) => state.layout.horizontalContentPercentage);
+  const dispatch = useAppDispatch();
+
   return (
-    <Grid2 container columnSpacing={1} className="h100" px={2} pt={2} bgcolor="grey.200">
-      <Grid2 size={{ xs: 6 }} className="h100" sx={{ overflowY: "auto", pr: 1, py: 1 }}>
-        {leftContent}
-      </Grid2>
-      <Grid2 size={{ xs: 6 }} className="h100" sx={{ py: 1 }}>
-        {rightContent}
-      </Grid2>
-    </Grid2>
+    <Box sx={{ width: "100%", height: "100%", overflow: "hidden", bgcolor: "grey.200", p: 2 }}>
+      <HorizontalPercentageResizablePanel
+        leftContent={<Box sx={{ height: "100%", overflowY: "auto", pr: 1, py: 1 }}>{leftContent}</Box>}
+        rightContent={<Box sx={{ height: "100%", overflowY: "auto", pl: 1, py: 1 }}>{rightContent}</Box>}
+        horizontalContentPercentage={horizontalContentPercentage}
+        onResize={(percentage) => dispatch(LayoutActions.setHorizontalContentPercentage(percentage))}
+      />
+    </Box>
   );
 }
 

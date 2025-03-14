@@ -1,4 +1,4 @@
-import { Box, Divider, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import MetadataHooks from "../../../api/MetadataHooks.ts";
@@ -6,6 +6,8 @@ import { SpanEntityStat } from "../../../api/openapi/models/SpanEntityStat.ts";
 import DocumentInformation from "../../../components/SourceDocument/DocumentInformation/DocumentInformation.tsx";
 import TagExplorer from "../../../components/Tag/TagExplorer/TagExplorer.tsx";
 import SidebarContentSidebarLayout from "../../../layouts/ContentLayouts/SidebarContentSidebarLayout.tsx";
+import { LayoutActions } from "../../../layouts/layoutSlice.ts";
+import { VerticalPercentageResizablePanel } from "../../../layouts/ResizePanel/VerticalPercentageResizablePanel.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import SearchStatistics from "../Statistics/SearchStatistics.tsx";
 import SearchDocumentTable from "./SearchDocumentTable.tsx";
@@ -57,21 +59,27 @@ function Search() {
     setSdocIds(sdocIds);
   }, []);
 
+  // vertical content percentage
+  const verticalContentPercentage = useAppSelector((state) => state.layout.verticalContentPercentage);
+
   // render
   return (
     <SidebarContentSidebarLayout
       leftSidebar={
-        <Box className="h100">
-          <TagExplorer sx={{ height: "50%", pt: 0 }} onTagClick={handleAddTagFilter} />
-          <Divider />
-          <SearchStatistics
-            sx={{ height: "calc(50% - 1px)" }}
-            sdocIds={sdocIds}
-            handleKeywordClick={handleAddKeywordFilter}
-            handleTagClick={handleAddTagFilter}
-            handleCodeClick={handleAddCodeFilter}
-          />
-        </Box>
+        <VerticalPercentageResizablePanel
+          topContent={<TagExplorer onTagClick={handleAddTagFilter} />}
+          bottomContent={
+            <SearchStatistics
+              sx={{ height: "100%" }}
+              sdocIds={sdocIds}
+              handleKeywordClick={handleAddKeywordFilter}
+              handleTagClick={handleAddTagFilter}
+              handleCodeClick={handleAddCodeFilter}
+            />
+          }
+          verticalContentPercentage={verticalContentPercentage}
+          onResize={(percentage) => dispatch(LayoutActions.setVerticalContentPercentage(percentage))}
+        />
       }
       content={<SearchDocumentTable projectId={projectId} onSearchResultsChange={handleSearchResultsChange} />}
       rightSidebar={
