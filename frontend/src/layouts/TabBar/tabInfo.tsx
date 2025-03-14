@@ -1,4 +1,4 @@
-import { Icon } from "../../utils/IconUtils.tsx";
+import { Icon } from "../../utils/icons/iconUtils.tsx";
 
 // Helper function to get tab info based on path
 export const getTabInfoFromPath = (path: string): { label: string; icon: Icon } => {
@@ -13,7 +13,7 @@ export const getTabInfoFromPath = (path: string): { label: string; icon: Icon } 
   if (segments[0] === "project" && segments.length >= 2) {
     // Project-specific routes
     if (segments.length === 2) {
-      return { label: `Project ${segments[1]}`, icon: Icon.DASHBOARD };
+      return { label: `Project ${segments[1]}`, icon: Icon.PROJECT };
     }
 
     // Based on the third segment (after 'project' and projectId)
@@ -22,7 +22,7 @@ export const getTabInfoFromPath = (path: string): { label: string; icon: Icon } 
         return { label: "Search", icon: Icon.SEARCH };
       case "annotation":
         if (segments.length > 3) {
-          return { label: `Document ${segments[3]}`, icon: Icon.ARTICLE };
+          return { label: `Document ${segments[3]}`, icon: Icon.DOCUMENT };
         }
         return { label: "Annotation", icon: Icon.ANNOTATION };
       case "analysis":
@@ -30,24 +30,24 @@ export const getTabInfoFromPath = (path: string): { label: string; icon: Icon } 
           const analysisType = segments[3];
           switch (analysisType) {
             case "frequency":
-              return { label: "Code Frequency", icon: Icon.ANALYTICS };
+              return { label: "Code Frequency", icon: Icon.CODE_FREQUENCY };
             case "timeline":
-              return { label: "Timeline Analysis", icon: Icon.ANALYTICS };
+              return { label: "Timeline Analysis", icon: Icon.TIMELINE_ANALYSIS };
             case "span-annotations":
-              return { label: "Span Annotations", icon: Icon.ANALYTICS };
+              return { label: "Span Annotations", icon: Icon.SPAN_ANNOTATION_TABLE };
             case "sentence-annotations":
-              return { label: "Sentence Annotations", icon: Icon.ANALYTICS };
+              return { label: "Sentence Annotations", icon: Icon.SENTENCE_ANNOTATION_TABLE };
             case "word-frequency":
-              return { label: "Word Frequency", icon: Icon.ANALYTICS };
+              return { label: "Word Frequency", icon: Icon.WORD_FREQUENCY };
             case "concepts-over-time-analysis":
-              return { label: "Concepts Over Time", icon: Icon.ANALYTICS };
+              return { label: "Concepts Over Time", icon: Icon.COTA };
             case "annotation-scaling":
-              return { label: "Annotation Scaling", icon: Icon.ANALYTICS };
+              return { label: "Annotation Scaling", icon: Icon.ANNOTATION_SCALING };
             default:
-              return { label: `Analysis: ${analysisType}`, icon: Icon.ANALYTICS };
+              return { label: `Analysis: ${analysisType}`, icon: Icon.TIMELINE_ANALYSIS };
           }
         }
-        return { label: "Analysis", icon: Icon.ANALYTICS };
+        return { label: "Analysis", icon: Icon.ANALYSIS };
       case "whiteboard":
         if (segments.length > 3) {
           return { label: `Whiteboard ${segments[3]}`, icon: Icon.WHITEBOARD };
@@ -60,39 +60,37 @@ export const getTabInfoFromPath = (path: string): { label: string; icon: Icon } 
           const toolType = segments[3];
           switch (toolType) {
             case "duplicate-finder":
-              return { label: "Duplicate Finder", icon: Icon.TUNE };
+              return { label: "Duplicate Finder", icon: Icon.DUPLICATE_FINDER };
             case "document-sampler":
-              return { label: "Document Sampler", icon: Icon.TUNE };
+              return { label: "Document Sampler", icon: Icon.DOCUMENT_SAMPLER };
             case "ml-automation":
-              return { label: "ML Automation", icon: Icon.TUNE };
+              return { label: "ML Automation", icon: Icon.ML_AUTOMATION };
             default:
-              return { label: toolType.replace(/-/g, " "), icon: Icon.TUNE };
+              return { label: toolType.replace(/-/g, " "), icon: Icon.TOOLS };
           }
         }
-        return { label: "Tools", icon: Icon.TUNE };
+        return { label: "Tools", icon: Icon.TOOLS };
       case "settings":
-        return { label: "Project Settings", icon: Icon.SETTINGS };
+        return { label: "Project Settings", icon: Icon.PROJECT_SETTINGS };
       default:
         // For other project routes
         return {
           label: segments[2].charAt(0).toUpperCase() + segments[2].slice(1),
-          icon: Icon.ARTICLE,
+          icon: Icon.PROJECT,
         };
     }
   }
 
   // Non-project routes
   switch (segments[0]) {
-    case "dashboard":
-      return { label: "Dashboard", icon: Icon.DASHBOARD };
     case "projects":
-      return { label: "Projects", icon: Icon.LIST };
+      return { label: "Projects", icon: Icon.PROJECT };
     case "me":
-      return { label: "Profile", icon: Icon.ARTICLE };
+      return { label: "Profile", icon: Icon.USER };
     default:
       return {
         label: segments[0].charAt(0).toUpperCase() + segments[0].slice(1),
-        icon: Icon.ARTICLE,
+        icon: Icon.PROJECT,
       };
   }
 };

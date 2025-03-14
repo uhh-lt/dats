@@ -1,7 +1,7 @@
-import SquareIcon from "@mui/icons-material/Square";
 import { Stack } from "@mui/material";
 import CodeHooks from "../../api/CodeHooks.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
+import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
 
 interface CodeRendererProps {
   code: number | CodeRead;
@@ -30,7 +30,7 @@ function CodeRendererWithoutData({ codeId }: { codeId: number }) {
 function CodeRendererWithData({ code }: { code: CodeRead }) {
   return (
     <Stack direction="row" alignItems="center">
-      <SquareIcon style={{ color: code.color }} />
+      {getIconComponent(Icon.CODE, { style: { color: code.color } })}
       {code.name}
     </Stack>
   );

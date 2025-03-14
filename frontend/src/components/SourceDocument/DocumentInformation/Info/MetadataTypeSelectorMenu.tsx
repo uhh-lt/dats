@@ -10,8 +10,8 @@ import {
   createFilterOptions,
 } from "@mui/material";
 import { MetaType } from "../../../../api/openapi/models/MetaType.ts";
+import { metaTypeToIcon } from "../../../../utils/icons/metaTypeToIcon.tsx";
 import { useDebounce } from "../../../../utils/useDebounce.ts";
-import { metaTypeToIcon } from "./metaTypeToIcon.tsx";
 
 const filter = createFilterOptions<string>();
 
