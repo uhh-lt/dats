@@ -1,6 +1,6 @@
-import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import { exportChart } from "../utils/ExportUtils.ts";
+import { Icon, getIconComponent } from "../utils/icons/iconUtils.tsx";
 
 interface ExportChartButtonProps {
   chartName: string;
@@ -12,12 +12,11 @@ function ExportChartButton({
   chartIdentifier,
   ...props
 }: ExportChartButtonProps & Omit<IconButtonProps, "onClick">) {
-  // render
   return (
     <Tooltip title={"Export chart/plot"}>
       <span>
         <IconButton onClick={() => exportChart(chartIdentifier, chartName)} {...props}>
-          <SaveAltIcon />
+          {getIconComponent(Icon.EXPORT)}
         </IconButton>
       </span>
     </Tooltip>

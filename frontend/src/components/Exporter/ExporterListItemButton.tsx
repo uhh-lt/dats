@@ -1,7 +1,7 @@
 import { ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
-import SaveAltIcon from "@mui/icons-material/SaveAlt";
-import ExporterAPI from "./ExporterAPI.ts";
 import { useCallback } from "react";
+import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
+import ExporterAPI from "./ExporterAPI.ts";
 
 function ExporterListItemButton() {
   const handleClick = useCallback(() => {
@@ -11,9 +11,7 @@ function ExporterListItemButton() {
   return (
     <ListItem disablePadding>
       <ListItemButton onClick={handleClick}>
-        <ListItemIcon>
-          <SaveAltIcon />
-        </ListItemIcon>
+        <ListItemIcon>{getIconComponent(Icon.EXPORT)}</ListItemIcon>
         <ListItemText primary="Export" />
       </ListItemButton>
     </ListItem>

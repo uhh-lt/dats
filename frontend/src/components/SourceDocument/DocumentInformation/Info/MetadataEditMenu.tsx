@@ -1,5 +1,3 @@
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import DeleteIcon from "@mui/icons-material/Delete";
 import {
   Box,
   Button,
@@ -18,6 +16,7 @@ import React, { useCallback, useState } from "react";
 import MetadataHooks from "../../../../api/MetadataHooks.ts";
 import { MetaType } from "../../../../api/openapi/models/MetaType.ts";
 import { ProjectMetadataRead } from "../../../../api/openapi/models/ProjectMetadataRead.ts";
+import { Icon, getIconComponent } from "../../../../utils/icons/iconUtils.tsx";
 import { metaTypeToIcon } from "../../../../utils/icons/metaTypeToIcon.tsx";
 import ConfirmationAPI from "../../../ConfirmationDialog/ConfirmationAPI.ts";
 import { useOpenSnackbar } from "../../../SnackbarDialog/useOpenSnackbar.ts";
@@ -170,17 +169,13 @@ function MetadataEditMenu({ projectMetadata }: MetadataEditMenuProps) {
         <Divider />
         <ListItem disablePadding>
           <ListItemButton disabled>
-            <ListItemIcon>
-              <ContentCopyIcon />
-            </ListItemIcon>
+            <ListItemIcon>{getIconComponent(Icon.DUPLICATE)}</ListItemIcon>
             <ListItemText>Duplicate metadata</ListItemText>
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
           <ListItemButton onClick={handleDeleteMetadata}>
-            <ListItemIcon>
-              <DeleteIcon />
-            </ListItemIcon>
+            <ListItemIcon>{getIconComponent(Icon.DELETE)}</ListItemIcon>
             <ListItemText>Delete metadata</ListItemText>
           </ListItemButton>
         </ListItem>

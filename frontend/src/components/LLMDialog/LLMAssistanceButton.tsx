@@ -1,5 +1,5 @@
-import SmartToyIcon from "@mui/icons-material/SmartToy";
 import { IconButton, Tooltip } from "@mui/material";
+import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
 import { useOpenLLMDialog } from "./useOpenLLMDialog.ts";
 
 function LLMAssistanceButton({ sdocIds, projectId }: { sdocIds: number[]; projectId: number }) {
@@ -8,7 +8,7 @@ function LLMAssistanceButton({ sdocIds, projectId }: { sdocIds: number[]; projec
   return (
     <Tooltip title="Open LLM Assistant">
       <IconButton onClick={() => openLLmDialog({ selectedDocumentIds: sdocIds, projectId: projectId })}>
-        <SmartToyIcon />
+        {getIconComponent(Icon.LLM_ASSISTANT)}
       </IconButton>
     </Tooltip>
   );

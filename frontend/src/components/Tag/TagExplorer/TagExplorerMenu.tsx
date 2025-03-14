@@ -1,7 +1,7 @@
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { IconButton, IconButtonProps, Menu } from "@mui/material";
 import { useState } from "react";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 import MemoMenuItem from "../../Memo/MemoMenuItem.tsx";
 import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
 import TagEditMenuItem from "./TagEditMenuItem.tsx";
@@ -25,7 +25,7 @@ function TagExplorerMenu({ tag, ...props }: TagExplorerMenuProps & Omit<IconButt
   return (
     <>
       <IconButton onClick={handleClick} {...(props as IconButtonProps)}>
-        <MoreVertIcon />
+        {getIconComponent(Icon.CONTEXT_MENU)}
       </IconButton>
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
         <TagEditMenuItem tag={tag.data} onClick={handleClose} />
