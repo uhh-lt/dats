@@ -1,6 +1,6 @@
 import { Box } from "@mui/material";
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
-import "./HorizontalResizablePanel.css";
+import "./ResizablePanel.css";
 
 interface ResizablePanelProps {
   children: ReactNode;
