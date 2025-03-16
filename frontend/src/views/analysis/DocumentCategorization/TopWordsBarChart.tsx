@@ -1,28 +1,29 @@
+import { UseQueryResult } from "@tanstack/react-query";
 import * as d3 from "d3";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-interface TopWordsProps {
-  data: Record<string, { word: string; score: number }>[];
-  topicNum: number;
-}
-
-const TopWordsBarChart: React.FC<TopWordsProps> = ({ data, topicNum }) => {
+const TopWordsBarChart: React.FC<{ topicNum: number; dataHook: UseQueryResult<Record<string, unknown>[], Error> }> = ({
+  topicNum,
+  dataHook,
+}) => {
+  dataHook.refetch();
+  const data = dataHook.data as Record<string, { word: string; score: number }>[];
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [width, setWidth] = useState<number>(window.innerWidth);
 
   let maxScore = 0;
   for (const topic of data) {
-    for (const word in topic) {
-      if (topic[word]["score"] > maxScore) {
-        maxScore = topic[word]["score"];
+    Object.values(topic).forEach((value) => {
+      if (value.score > maxScore) {
+        maxScore = value.score;
       }
-    }
+    });
   }
 
   let currentMaxScore = 0;
   for (const word in data[topicNum]) {
-    if (data[topicNum][word]["score"] > currentMaxScore) {
-      currentMaxScore = data[topicNum][word]["score"];
+    if (data[topicNum][word].score > currentMaxScore) {
+      currentMaxScore = data[topicNum][word].score;
     }
   }
 
@@ -155,7 +156,8 @@ const TopWordsBarChart: React.FC<TopWordsProps> = ({ data, topicNum }) => {
 
   return (
     <div>
-      <svg ref={svgRef}></svg>
+      {dataHook.isLoading && <div>Loading...</div>}
+      {dataHook.isSuccess ? <svg ref={svgRef}></svg> : <div></div>}
     </div>
   );
 };
