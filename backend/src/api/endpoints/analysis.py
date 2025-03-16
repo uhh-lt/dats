@@ -362,4 +362,4 @@ def return_top_words_ollama(
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
 ) -> dict:
-    return top_words_ollama(topic_id)
+    return top_words_ollama(topic_id, db=db)

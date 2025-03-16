@@ -1,8 +1,11 @@
+import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
+import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import FormatQuoteIcon from "@mui/icons-material/FormatQuote";
 import NotStartedIcon from "@mui/icons-material/NotStarted";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import {
   Avatar,
+  Box,
   Button,
   Card,
   CardContent,
@@ -11,8 +14,8 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Fab,
   FormControl,
-  Grid2,
   IconButton,
   InputLabel,
   List,
@@ -23,6 +26,7 @@ import {
   MenuItem,
   Select,
   SelectChangeEvent,
+  TextField,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -37,12 +41,24 @@ import TopWordsBarChart from "./TopWordsBarChart.tsx";
 import TopicDistrChart from "./TopicDistrBarChart.tsx";
 
 function DocumentCategorization() {
-  const topic_distr_data = AnalysisHooks.useReturnTopicDistrData();
   const top_words_data = AnalysisHooks.useReturnTopWordsData();
+  const topic_distr_hook = AnalysisHooks.useReturnTopicDistrData();
 
   const [currentTopic, setCurrentTopic] = useState(0);
   //const [selectedTopic, setSelectedTopic] = useState(0);
-  //const ollamaResponse = AnalysisHooks.useReturnTopWordsOllama(currentTopic);
+  const ollamaResponse = AnalysisHooks.useReturnTopWordsOllama(currentTopic);
+
+  const [currentCarouselField, setCarouselField] = useState(0);
+
+  const [currentNrTopics, setNrTopics] = useState(5);
+  const [currentMinTopicSize, setMinTopicSize] = useState(5);
+  const [currentTopNWords, setTopNWords] = useState(5);
+
+  enum TextInputId {
+    NrTopics = "nr_topics",
+    MinTopicSize = "min_topic_size",
+    TopNWords = "top_n_words",
+  }
 
   const [height, setHeight] = useState<number>(window.innerHeight);
 
@@ -63,10 +79,6 @@ function DocumentCategorization() {
   //  console.log("ollamaResponse data updated: ", ollamaResponse.data);
   //}, [ollamaResponse]);
 
-  const handleChange = (event: SelectChangeEvent<number>) => {
-    setCurrentTopic(event.target.value as number);
-  };
-
   // global client state (react router)
   const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
 
@@ -81,6 +93,7 @@ function DocumentCategorization() {
   };
 
   const handleStartTopicModeling = (recompute: boolean = false) => {
+    console.log(`Start of Topic Modeling in DocumentCategorization: ${currentNrTopics}`);
     startMlJob.mutate(
       {
         requestBody: {
@@ -89,9 +102,9 @@ function DocumentCategorization() {
           specific_ml_job_parameters: {
             recompute: recompute,
             ml_job_type: MLJobType.TOPIC_MODELING,
-            nr_topics: 2,
-            min_topic_size: 2,
-            top_n_words: 5,
+            nr_topics: currentNrTopics,
+            min_topic_size: currentMinTopicSize,
+            top_n_words: currentTopNWords,
           },
         },
       },
@@ -110,6 +123,40 @@ function DocumentCategorization() {
     setOpen(false);
   };
 
+  const handleTextInput = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, id: string) => {
+    const value = event.target.value;
+
+    if (!isNaN(Number(value)) || value === "") {
+      switch (id) {
+        case TextInputId.NrTopics:
+          return setNrTopics(Number(value));
+        case TextInputId.MinTopicSize:
+          return setMinTopicSize(Number(value));
+        case TextInputId.TopNWords:
+          return setTopNWords(Number(value));
+        default:
+          return console.log("TextFieldId not Found!");
+      }
+    }
+  };
+
+  const diagramList = [
+    <TopWordsBarChart topicNum={currentTopic} dataHook={top_words_data} />,
+    <TopicDistrChart topicNum={currentTopic} dataHook={topic_distr_hook} />,
+  ];
+
+  const handleChange = (event: SelectChangeEvent<number>) => {
+    setCurrentTopic(event.target.value as number);
+  };
+
+  const changeCarouselCard = (change: number) => {
+    if (currentCarouselField + change < 0) {
+      setCarouselField(diagramList.length - 1);
+    } else {
+      setCarouselField((currentCarouselField + change) % diagramList.length);
+    }
+  };
+
   return (
     <div>
       <Card>
@@ -118,119 +165,157 @@ function DocumentCategorization() {
             Document Categorization using LLM's and Topic Modeling
           </Typography>
         </CardContent>
-        <FormControl fullWidth>
-          <InputLabel id="dynamic-dropdown-label">Select Key</InputLabel>
-          <Select labelId="dynamic-dropdown-label" value={currentTopic} onChange={handleChange}>
-            {top_words_data.isLoading && <div>Loading...</div>}
-            {top_words_data.isSuccess ? (
-              Object.keys(top_words_data.data).map((key) => (
-                <MenuItem key={key} value={key}>
-                  {key}
-                </MenuItem>
-              ))
-            ) : (
-              <div></div>
-            )}
-          </Select>
-        </FormControl>
-
-        <Grid2 container spacing={2} sx={{ maxHeight: height * 0.75, overflowY: "auto" }}>
-          <Grid2 size={6}>
-            <List dense={false}>
-              <ListItem>
-                <ListItemAvatar>
-                  <Avatar>
-                    <FormatQuoteIcon />
-                  </Avatar>
-                </ListItemAvatar>
-                <ListItemText
-                  primary="Topic Modeling with BERTopic"
-                  secondary={"Generates topics based on uploaded text data"}
-                />
-                <ListItemIcon>
-                  <Tooltip title="Performs topic modeling">
+        <Box
+          sx={{
+            width: "80%",
+            margin: "auto",
+            padding: 2,
+          }}
+        >
+          <List dense={false}>
+            <ListItem>
+              <ListItemAvatar>
+                <Avatar>
+                  <FormatQuoteIcon />
+                </Avatar>
+              </ListItemAvatar>
+              <ListItemText
+                primary="Topic Modeling with BERTopic"
+                secondary={"Generates topics based on uploaded text data"}
+              />
+              <TextField
+                id="nr_topics"
+                label="Amount of Topics"
+                type="number"
+                onChange={(event) => handleTextInput(event, "nr_topics")}
+              ></TextField>
+              <TextField
+                id="min_topic_size"
+                label="Topic size"
+                type="number"
+                onChange={(event) => handleTextInput(event, "min_topic_size")}
+              ></TextField>
+              <TextField
+                id="top_n_words"
+                label="Amount of Words"
+                type="number"
+                onChange={(event) => handleTextInput(event, "top_n_words")}
+              ></TextField>
+              <ListItemIcon>
+                <Tooltip title="Performs topic modeling">
+                  <IconButton
+                    onClick={() => handleStartTopicModeling(false)}
+                    loading={
+                      startMlJob.isPending ||
+                      pollMlJob.data?.status == BackgroundJobStatus.RUNNING ||
+                      pollMlJob.data?.status == BackgroundJobStatus.WAITING
+                    }
+                    color="success"
+                  >
+                    <NotStartedIcon />
+                  </IconButton>
+                </Tooltip>
+                <React.Fragment>
+                  <Tooltip title="Re-compute all documents by deleting all previous automatic quote annotations">
                     <IconButton
-                      onClick={() => handleStartTopicModeling(false)}
+                      onClick={handleClickOpen}
                       loading={
                         startMlJob.isPending ||
                         pollMlJob.data?.status == BackgroundJobStatus.RUNNING ||
                         pollMlJob.data?.status == BackgroundJobStatus.WAITING
                       }
-                      color="success"
+                      color="error"
                     >
-                      <NotStartedIcon />
+                      <RestartAltIcon />
                     </IconButton>
                   </Tooltip>
-                  <React.Fragment>
-                    <Tooltip title="Re-compute all documents by deleting all previous automatic quote annotations">
-                      <IconButton
-                        onClick={handleClickOpen}
-                        loading={
-                          startMlJob.isPending ||
-                          pollMlJob.data?.status == BackgroundJobStatus.RUNNING ||
-                          pollMlJob.data?.status == BackgroundJobStatus.WAITING
-                        }
+                  <Dialog
+                    open={open}
+                    onClose={handleClose}
+                    aria-labelledby="alert-dialog-title"
+                    aria-describedby="alert-dialog-description"
+                  >
+                    <DialogTitle id="alert-dialog-title">{"Potential dataloss ahead! Are you sure?"}</DialogTitle>
+                    <DialogContent>
+                      <DialogContentText id="alert-dialog-description">
+                        Remove all automatic quotation annotations including any manually created, linked data such as
+                        memos?
+                      </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                      <Button onClick={handleClose} variant="outlined">
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          handleStartTopicModeling(true);
+                          handleClose();
+                        }}
                         color="error"
+                        variant="contained"
                       >
-                        <RestartAltIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Dialog
-                      open={open}
-                      onClose={handleClose}
-                      aria-labelledby="alert-dialog-title"
-                      aria-describedby="alert-dialog-description"
-                    >
-                      <DialogTitle id="alert-dialog-title">{"Potential dataloss ahead! Are you sure?"}</DialogTitle>
-                      <DialogContent>
-                        <DialogContentText id="alert-dialog-description">
-                          Remove all automatic quotation annotations including any manually created, linked data such as
-                          memos?
-                        </DialogContentText>
-                      </DialogContent>
-                      <DialogActions>
-                        <Button onClick={handleClose} variant="outlined">
-                          Cancel
-                        </Button>
-                        <Button
-                          onClick={() => {
-                            handleStartTopicModeling(true);
-                            handleClose();
-                          }}
-                          color="error"
-                          variant="contained"
-                        >
-                          Delete & re-compute
-                        </Button>
-                      </DialogActions>
-                    </Dialog>
-                  </React.Fragment>
-                </ListItemIcon>
-              </ListItem>
-              ,
-            </List>
-          </Grid2>
-          <Grid2 size={6} style={{ textAlign: "center" }}>
-            {top_words_data.isLoading && <div>Loading...</div>}
-            {top_words_data.isSuccess ? (
-              <TopWordsBarChart
-                data={top_words_data.data as Record<string, { word: string; score: number }>[]}
-                topicNum={currentTopic}
-              ></TopWordsBarChart>
+                        Delete & re-compute
+                      </Button>
+                    </DialogActions>
+                  </Dialog>
+                </React.Fragment>
+              </ListItemIcon>
+            </ListItem>
+          </List>
+          <FormControl fullWidth>
+            <InputLabel id="dynamic-dropdown-label">Select Key</InputLabel>
+            <Select labelId="dynamic-dropdown-label" value={currentTopic} onChange={handleChange}>
+              {top_words_data.isLoading && <div>Loading...</div>}
+              {top_words_data.isSuccess ? (
+                Object.keys(top_words_data.data).map((key) => (
+                  <MenuItem key={key} value={key}>
+                    {key}
+                  </MenuItem>
+                ))
+              ) : (
+                <div></div>
+              )}
+            </Select>
+          </FormControl>
+          <Box
+            sx={{
+              margin: "auto",
+              padding: 2,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Fab color="primary" size="small" onClick={() => changeCarouselCard(-1)}>
+              <ArrowLeftIcon />
+            </Fab>
+            {diagramList[currentCarouselField].props.dataHook.isLoading && <div>Loading...</div>}
+            {diagramList[currentCarouselField].props.dataHook.isSuccess ? (
+              diagramList[currentCarouselField]
             ) : (
               <div></div>
             )}
-          </Grid2>
-          <Grid2 size={2} sx={{ textAlign: "left", overflowY: "auto" }}></Grid2>
-          <Grid2 size={6} style={{ textAlign: "center" }}>
-            {topic_distr_data.isLoading && <div>Loading...</div>}
-            {topic_distr_data.isSuccess ? (
-              <TopicDistrChart data={topic_distr_data.data as Record<string, number>[]}></TopicDistrChart>
+            <Fab color="primary" size="small" onClick={() => changeCarouselCard(1)}>
+              <ArrowRightIcon />
+            </Fab>
+          </Box>
+          <Box
+            sx={{
+              width: "80%",
+              margin: "auto",
+              padding: 2,
+            }}
+          >
+            {ollamaResponse.isLoading && <div style={{ textAlign: "center" }}>Loading...</div>}
+            {ollamaResponse.isSuccess ? (
+              <div style={{ whiteSpace: "pre-line", height: height * 0.2 }}>
+                {ollamaResponse.data["reasoning"] as string}
+              </div>
             ) : (
               <div></div>
             )}
-          </Grid2>
-        </Grid2>
+          </Box>
+        </Box>
       </Card>
     </div>
   );

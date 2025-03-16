@@ -8,8 +8,6 @@ from app.core.data.crud.project import crud_project
 from app.core.data.dto.topic_info import TopicInfoRead
 from app.core.data.llm.ollama_service import OllamaService
 
-top_words_data = []
-topic_distr_data = []
 ollama_service = OllamaService()
 
 
@@ -46,7 +44,8 @@ def topic_distr(db: Session) -> list[dict]:
     return topic_distr_data
 
 
-def get_prompt(index: int):
+def get_prompt(index: int, top_words_data: list):
+    print(top_words_data)
     top_words_string = ""
     for point in top_words_data[index]:
         top_words_string += top_words_data[index][point]["word"] + " "
@@ -72,28 +71,12 @@ def get_prompt(index: int):
     return [system_prompt, user_prompt]
 
 
-def load_bertopic_model():
-    pass
-    # topic_model = BERTopic.load("app/core/analysis/bertopic_model")
-    # topic_info = topic_model.get_topic_info()
+def top_words_ollama(topic_id: int, db: Session) -> dict:
+    top_words_data = top_words(db)
 
-
-#
-# for i in range(len(topic_info) - 1):
-#    current_topic = topic_model.get_topic(i)
-#    assert isinstance(current_topic, Mapping), "Current topic is not a Mapping"
-#
-# for i in range(1, len(topic_info)):
-#    topic_data = {"count": int(topic_info["Count"][i])}
-#    topic_distr_data.append(topic_data)
-
-
-load_bertopic_model()
-
-
-def top_words_ollama(topic_id: int) -> dict:
     response = ollama_service.chat(
-        *get_prompt(topic_id), response_model=OllamaTopicResponse
+        *get_prompt(topic_id, top_words_data=top_words_data),
+        response_model=OllamaTopicResponse,
     )
     ollama_responses = {
         "prompt": "noah_v1",
