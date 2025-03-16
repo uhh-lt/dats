@@ -1,11 +1,15 @@
+import { UseQueryResult } from "@tanstack/react-query";
 import * as d3 from "d3";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-interface TopicDistrData {
-  data: Record<string, number>[];
-}
-
-const TopicDistrChart: React.FC<TopicDistrData> = ({ data }) => {
+const TopicDistrChart: React.FC<{ topicNum: number; dataHook: UseQueryResult<Record<string, unknown>[], Error> }> = ({
+  topicNum,
+  dataHook,
+}) => {
+  console.log(topicNum);
+  dataHook.refetch();
+  const data = dataHook.data as Record<string, number>[];
+  console.log(data);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [width, setWidth] = useState<number>(window.innerWidth);
 
@@ -150,7 +154,8 @@ const TopicDistrChart: React.FC<TopicDistrData> = ({ data }) => {
 
   return (
     <div>
-      <svg ref={svgRef}></svg>
+      {dataHook.isLoading && <div>Loading...</div>}
+      {dataHook.isSuccess ? <svg ref={svgRef}></svg> : <div></div>}
     </div>
   );
 };

@@ -70,7 +70,7 @@ class TopicService(metaclass=SingletonMeta):
         )
         with open(stopwords_file, "r", encoding="utf-8") as file:
             custom_stopwords = list(file.read().splitlines())
-        print(custom_stopwords[0:50])
+
         preprocessed_text_data = [
             self.preprocess_text(doc, nlp, custom_stopwords) for doc in text_data
         ]
