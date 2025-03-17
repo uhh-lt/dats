@@ -1,7 +1,6 @@
 import AddIcon from "@mui/icons-material/Add";
 import InfoIcon from "@mui/icons-material/Info";
 import { ListItem, ListItemButton, ListItemIcon } from "@mui/material";
-import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
@@ -15,6 +14,7 @@ import { LogicalOperator } from "../../../api/openapi/models/LogicalOperator.ts"
 import { TimelineAnalysisConcept } from "../../../api/openapi/models/TimelineAnalysisConcept.ts";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
 import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
+import CardContainer from "../../../components/MUI/CardContainer.tsx";
 import { useAppDispatch, useAppStore } from "../../../plugins/ReduxHooks.ts";
 import ConceptEditor from "./ConceptEditor.tsx";
 import ConceptListItem from "./ConceptListItem.tsx";
@@ -136,7 +136,7 @@ function ConceptList({ timelineAnalysis }: ConceptListProps) {
 
   return (
     <>
-      <Card className="myFlexContainer h100">
+      <CardContainer className="myFlexContainer h100">
         <CardHeader
           className="myFlexFitContentContainer"
           action={
@@ -168,7 +168,7 @@ function ConceptList({ timelineAnalysis }: ConceptListProps) {
             ))}
           </List>
         </CardContent>
-      </Card>
+      </CardContainer>
       <ConceptEditor onUpdate={handleApplyConceptChanges} onCancel={handleCancelConceptChanges} />
     </>
   );

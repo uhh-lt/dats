@@ -24,7 +24,7 @@ function CodeFrequencyAnalysis() {
   return (
     <ContentContentLayout
       leftContent={
-        <Stack spacing={2}>
+        <Stack spacing={2} p={2}>
           <Stack direction="row" gap={2}>
             <UserSelectorMulti
               userIds={selectedUserIds}

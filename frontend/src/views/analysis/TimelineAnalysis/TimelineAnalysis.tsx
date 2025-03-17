@@ -1,8 +1,10 @@
-import { Box, CircularProgress } from "@mui/material";
+import { CircularProgress } from "@mui/material";
 import { useParams } from "react-router-dom";
 import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
 import SidebarContentLayout from "../../../layouts/ContentLayouts/SidebarContentLayout.tsx";
+import { VerticalPercentageResizablePanel } from "../../../layouts/ResizePanel/VerticalPercentageResizablePanel.tsx";
+import { useVerticalPercentage } from "../../../layouts/ResizePanel/hooks/useVerticalPercentage.ts";
 import ConceptList from "./ConceptList.tsx";
 import TimeAnalysisProvenance from "./TimeAnalysisProvenance.tsx";
 import TimelineAnalysisViz from "./TimeAnalysisViz.tsx";
@@ -35,27 +37,26 @@ interface TimelineAnalysisContentProps {
 }
 
 function TimelineAnalysisContent({ timelineAnalysis }: TimelineAnalysisContentProps) {
+  const { percentage: leftPercentage, handleResize: handleLeftResize } = useVerticalPercentage("timeline-left-sidebar");
+  const { percentage: mainPercentage, handleResize: handleMainResize } = useVerticalPercentage("timeline-main-content");
+
   return (
     <SidebarContentLayout
       leftSidebar={
-        <Box className="myFlexContainer h100">
-          <Box className="myFlexFitContentContainer" sx={{ mb: 2 }}>
-            <TimelineAnalysisSettings timelineAnalysis={timelineAnalysis} />
-          </Box>
-          <Box className="myFlexFillAllContainerNoScroll">
-            <ConceptList timelineAnalysis={timelineAnalysis} />
-          </Box>
-        </Box>
+        <VerticalPercentageResizablePanel
+          topContent={<TimelineAnalysisSettings timelineAnalysis={timelineAnalysis} />}
+          bottomContent={<ConceptList timelineAnalysis={timelineAnalysis} />}
+          onResize={handleLeftResize}
+          verticalContentPercentage={leftPercentage}
+        />
       }
       content={
-        <Box className="h100">
-          <Box style={{ height: "50%" }} sx={{ pb: 1 }}>
-            <TimelineAnalysisViz timelineAnalysis={timelineAnalysis} />
-          </Box>
-          <Box style={{ height: "50%" }} sx={{ pt: 1 }}>
-            <TimeAnalysisProvenance timelineAnalysis={timelineAnalysis} />
-          </Box>
-        </Box>
+        <VerticalPercentageResizablePanel
+          topContent={<TimelineAnalysisViz timelineAnalysis={timelineAnalysis} />}
+          bottomContent={<TimeAnalysisProvenance timelineAnalysis={timelineAnalysis} />}
+          onResize={handleMainResize}
+          verticalContentPercentage={mainPercentage}
+        />
       }
     />
   );

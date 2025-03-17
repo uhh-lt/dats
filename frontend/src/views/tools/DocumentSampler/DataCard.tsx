@@ -1,4 +1,5 @@
-import { Box, Card, CardContent, CardContentProps, CardHeader, CardProps, Typography } from "@mui/material";
+import { Box, CardContent, CardContentProps, CardHeader, CardProps, Typography } from "@mui/material";
+import CardContainer from "../../../components/MUI/CardContainer.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { ChartDataPoint } from "./ChartDataPoint.ts";
 import StartRefreshButton from "./StartRefreshButton.tsx";
@@ -18,7 +19,7 @@ function DataCard({
   title,
   description,
   action,
-  cardProps,
+  cardProps = {},
   cardContentProps,
   onDataRefresh,
   renderData,
@@ -28,7 +29,7 @@ function DataCard({
   const isOutdated = useAppSelector(selectIsValuesOutdated);
 
   return (
-    <Card className="myFlexContainer" {...cardProps}>
+    <CardContainer className={`myFlexContainer ${cardProps.className}`}>
       <CardHeader className="myFlexFitContentContainer" action={action} title={title} subheader={description} />
       <CardContent className="myFlexFillAllContainer" style={{ position: "relative" }} {...cardContentProps}>
         {chartData.length === 0 ? (
@@ -70,7 +71,7 @@ function DataCard({
           </>
         )}
       </CardContent>
-    </Card>
+    </CardContainer>
   );
 }
 

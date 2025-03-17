@@ -1,6 +1,6 @@
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
-import { Box, Divider } from "@mui/material";
+import { Box } from "@mui/material";
 import { useRef } from "react";
 import { DragDropContext } from "react-beautiful-dnd";
 
@@ -29,15 +29,13 @@ function TabBar() {
     <Box
       sx={{
         display: "flex",
-        borderBottom: 1,
-        borderColor: "divider",
+        borderBottom: "1px solid",
+        borderColor: "primary.dark",
         bgcolor: (theme) => theme.palette.primary.main,
-        height: 48,
+        height: 48.5,
         position: "relative",
       }}
     >
-      <Divider orientation="vertical" />
-
       {/* Left scroll button - always visible but disabled when needed */}
       <ScrollButton onClick={handleScrollLeft} disabled={!canScrollLeft} aria-label="scroll tabs left" size="small">
         <KeyboardArrowLeftIcon />

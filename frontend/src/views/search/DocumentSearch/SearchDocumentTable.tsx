@@ -1,4 +1,4 @@
-import { Box, Button, Card, Divider, Stack, Toolbar, Typography } from "@mui/material";
+import { Box, Button, Divider, Stack, Typography } from "@mui/material";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import parse from "html-react-parser";
 import {
@@ -22,6 +22,8 @@ import { useAuth } from "../../../auth/useAuth.ts";
 import ReduxFilterDialog from "../../../components/FilterDialog/ReduxFilterDialog.tsx";
 import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 import LLMAssistanceButton from "../../../components/LLMDialog/LLMAssistanceButton.tsx";
+import CardContainer from "../../../components/MUI/CardContainer.tsx";
+import DATSToolbar from "../../../components/MUI/DATSToolbar.tsx";
 import SdocMetadataRenderer from "../../../components/Metadata/SdocMetadataRenderer.tsx";
 import DeleteSdocsButton from "../../../components/SourceDocument/DeleteSdocsButton.tsx";
 import DownloadSdocsButton from "../../../components/SourceDocument/DownloadSdocsButton.tsx";
@@ -296,18 +298,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <Toolbar
-        variant="dense"
-        sx={{
-          zIndex: (theme) => theme.zIndex.appBar + 1,
-          bgcolor: (theme) => theme.palette.background.paper,
-          borderBottom: "1px solid #e8eaed",
-          boxShadow: 4,
-          justifyContent: "center",
-          gap: 1,
-        }}
-        ref={toolbarRef}
-      >
+      <DATSToolbar variant="dense" ref={toolbarRef}>
         <ReduxFilterDialog
           anchorEl={toolbarRef.current}
           buttonProps={{ size: "small" }}
@@ -333,8 +324,8 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
         <SearchOptionsMenu />
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleDensePaddingButton table={table} />
-      </Toolbar>
-      <Card elevation={8} sx={{ height: "100%", display: "flex", flexDirection: "column", m: 2 }}>
+      </DATSToolbar>
+      <CardContainer sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
         <MRT_TableContainer
           table={table}
           style={{ flexGrow: 1 }}
@@ -351,7 +342,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
             </Button>
           </Stack>
         </Box>
-      </Card>
+      </CardContainer>
     </Box>
   );
 }

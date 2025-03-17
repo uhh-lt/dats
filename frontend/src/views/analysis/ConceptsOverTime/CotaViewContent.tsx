@@ -1,6 +1,7 @@
-import { Box } from "@mui/material";
 import { COTARead } from "../../../api/openapi/models/COTARead.ts";
 import SidebarContentLayout from "../../../layouts/ContentLayouts/SidebarContentLayout.tsx";
+import { useVerticalPercentage } from "../../../layouts/ResizePanel/hooks/useVerticalPercentage.ts";
+import { VerticalPercentageResizablePanel } from "../../../layouts/ResizePanel/VerticalPercentageResizablePanel.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import CotaConceptList from "./CotaConceptList.tsx";
 import CotaControl from "./CotaControl.tsx";
@@ -17,27 +18,27 @@ function CotaViewContent({ cota }: CotaViewContentProps) {
   // global client state (redux)
   const isTimelineView = useAppSelector((state) => state.cota.isTimelineView);
 
+  // vertical percentages
+  const { percentage: sidebarPercentage, handleResize: handleSidebarResize } =
+    useVerticalPercentage("cota-left-sidebar");
+  const { percentage: mainPercentage, handleResize: handleMainResize } = useVerticalPercentage("cota-main-content");
   return (
     <SidebarContentLayout
       leftSidebar={
-        <Box className="myFlexContainer h100">
-          <Box className="myFlexFitContentContainer" sx={{ mb: 2 }}>
-            {isTimelineView ? <CotaTimelineSettings cota={cota} /> : <CotaControl cota={cota} />}
-          </Box>
-          <Box className="myFlexFillAllContainerNoScroll">
-            <CotaConceptList cota={cota} />
-          </Box>
-        </Box>
+        <VerticalPercentageResizablePanel
+          topContent={isTimelineView ? <CotaTimelineSettings cota={cota} /> : <CotaControl cota={cota} />}
+          bottomContent={<CotaConceptList cota={cota} />}
+          verticalContentPercentage={sidebarPercentage}
+          onResize={handleSidebarResize}
+        />
       }
       content={
-        <>
-          <Box style={{ height: "50%" }} sx={{ pb: 1 }}>
-            {isTimelineView ? <CotaTimelinePlot cota={cota} /> : <CotaScatterPlotly cota={cota} />}
-          </Box>
-          <Box style={{ height: "50%" }} sx={{ pt: 1 }}>
-            <CotaSentenceAnnotator2 cota={cota} />
-          </Box>
-        </>
+        <VerticalPercentageResizablePanel
+          topContent={isTimelineView ? <CotaTimelinePlot cota={cota} /> : <CotaScatterPlotly cota={cota} />}
+          bottomContent={<CotaSentenceAnnotator2 cota={cota} />}
+          onResize={handleMainResize}
+          verticalContentPercentage={mainPercentage}
+        />
       }
     />
   );

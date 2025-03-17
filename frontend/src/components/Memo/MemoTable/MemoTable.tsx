@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardProps, Stack, Typography } from "@mui/material";
+import { CardContent, CardHeader, CardProps, Stack, Typography } from "@mui/material";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   MRT_ColumnDef,
@@ -20,6 +20,7 @@ import { QueryKey } from "../../../api/QueryKey.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { useTableInfiniteScroll } from "../../../utils/useTableInfiniteScroll.ts";
 import { MyFilter, createEmptyFilter } from "../../FilterDialog/filterUtils.ts";
+import CardContainer from "../../MUI/CardContainer.tsx";
 import MemoRenderer from "../MemoRenderer.tsx";
 import MemoTableOptionsMenu from "./MemoTableOptionsMenu.tsx";
 import MemoToolbarLeft from "./MemoToolbarLeft.tsx";
@@ -61,7 +62,7 @@ function SearchMemoTable({
   onSortingChange,
   columnVisibilityModel,
   onColumnVisibilityChange,
-  cardProps,
+  cardProps = {},
   renderToolbarInternalActions = MemoToolbarRight,
   renderTopToolbarCustomActions = MemoToolbarLeft,
   renderBottomToolbarCustomActions,
@@ -283,12 +284,12 @@ function SearchMemoTable({
   });
 
   return (
-    <Card className="myFlexContainer" {...cardProps}>
+    <CardContainer className={`myFlexContainer ${cardProps.className}`}>
       {title ? <CardHeader title={title} /> : null}
       <CardContent className="myFlexFillAllContainer" style={{ padding: 0 }}>
         <MaterialReactTable table={table} />
       </CardContent>
-    </Card>
+    </CardContainer>
   );
 }
 

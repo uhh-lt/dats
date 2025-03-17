@@ -35,9 +35,8 @@ function TagGroupCreator({ tags, aggregationGroups, cardProps = {} }: TagGroupCr
     .map((tag) => tag.id);
   const groupsAreEmpty = Object.keys(aggregationGroups).length === 0;
 
-  cardProps["className"] = cardProps["className"] + " myFlexContainer";
   return (
-    <Card {...cardProps}>
+    <Card {...cardProps} className={`myFlexContainer ${cardProps.className}`}>
       <CardHeader
         className="myFlexFitContentContainer"
         action={

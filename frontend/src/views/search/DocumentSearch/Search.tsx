@@ -6,7 +6,7 @@ import { SpanEntityStat } from "../../../api/openapi/models/SpanEntityStat.ts";
 import DocumentInformation from "../../../components/SourceDocument/DocumentInformation/DocumentInformation.tsx";
 import TagExplorer from "../../../components/Tag/TagExplorer/TagExplorer.tsx";
 import SidebarContentSidebarLayout from "../../../layouts/ContentLayouts/SidebarContentSidebarLayout.tsx";
-import { LayoutActions } from "../../../layouts/layoutSlice.ts";
+import { useVerticalPercentage } from "../../../layouts/ResizePanel/hooks/useVerticalPercentage.ts";
 import { VerticalPercentageResizablePanel } from "../../../layouts/ResizePanel/VerticalPercentageResizablePanel.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import SearchStatistics from "../Statistics/SearchStatistics.tsx";
@@ -59,8 +59,9 @@ function Search() {
     setSdocIds(sdocIds);
   }, []);
 
-  // vertical content percentage
-  const verticalContentPercentage = useAppSelector((state) => state.layout.verticalContentPercentage);
+  // vertical sidebar percentage
+  const { percentage: sidebarPercentage, handleResize: handleSidebarResize } =
+    useVerticalPercentage("search-left-sidebar");
 
   // render
   return (
@@ -77,8 +78,8 @@ function Search() {
               handleCodeClick={handleAddCodeFilter}
             />
           }
-          verticalContentPercentage={verticalContentPercentage}
-          onResize={(percentage) => dispatch(LayoutActions.setVerticalContentPercentage(percentage))}
+          verticalContentPercentage={sidebarPercentage}
+          onResize={handleSidebarResize}
         />
       }
       content={<SearchDocumentTable projectId={projectId} onSearchResultsChange={handleSearchResultsChange} />}

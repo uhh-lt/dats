@@ -37,7 +37,7 @@ function Logbook() {
           columnVisibilityModel={columnVisibilityModel}
           onColumnVisibilityChange={setColumnVisibilityModel}
           cardProps={{
-            className: "myFlexContainer h100",
+            className: "h100",
           }}
         />
       }

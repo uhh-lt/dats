@@ -1,4 +1,4 @@
-import { Box, Card, Toolbar } from "@mui/material";
+import { Box } from "@mui/material";
 import {
   MRT_ColumnDef,
   MRT_GlobalFilterTextField,
@@ -14,6 +14,8 @@ import { SdocColumns } from "../../../api/openapi/models/SdocColumns.ts";
 import { SimSearchSentenceHit } from "../../../api/openapi/models/SimSearchSentenceHit.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import ReduxFilterDialog from "../../../components/FilterDialog/ReduxFilterDialog.tsx";
+import CardContainer from "../../../components/MUI/CardContainer.tsx";
+import DATSToolbar from "../../../components/MUI/DATSToolbar.tsx";
 import SdocMetadataRenderer from "../../../components/Metadata/SdocMetadataRenderer.tsx";
 import DeleteSdocsButton from "../../../components/SourceDocument/DeleteSdocsButton.tsx";
 import DownloadSdocsButton from "../../../components/SourceDocument/DownloadSdocsButton.tsx";
@@ -239,19 +241,8 @@ function SentenceSimilaritySearchTable({
   });
 
   return (
-    <>
-      <Toolbar
-        variant="dense"
-        sx={{
-          zIndex: (theme) => theme.zIndex.appBar + 1,
-          bgcolor: (theme) => theme.palette.background.paper,
-          borderBottom: "1px solid #e8eaed",
-          boxShadow: 4,
-          justifyContent: "center",
-          gap: 1,
-        }}
-        ref={toolbarRef}
-      >
+    <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <DATSToolbar variant="dense" ref={toolbarRef}>
         <ReduxFilterDialog
           anchorEl={toolbarRef.current}
           buttonProps={{ size: "small" }}
@@ -276,11 +267,11 @@ function SentenceSimilaritySearchTable({
         <SentenceSimilaritySearchOptionsMenu />
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleDensePaddingButton table={table} />
-      </Toolbar>
-      <Card elevation={8} sx={{ height: "100%", display: "flex", flexDirection: "column", m: 2 }}>
+      </DATSToolbar>
+      <CardContainer sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
         <MRT_TableContainer table={table} style={{ flexGrow: 1 }} />
-      </Card>
-    </>
+      </CardContainer>
+    </Box>
   );
 }
 

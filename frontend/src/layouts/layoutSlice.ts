@@ -5,14 +5,14 @@ import storage from "redux-persist/lib/storage";
 export interface LayoutState {
   leftSidebarWidth: number;
   rightSidebarWidth: number;
-  verticalContentPercentage: number;
+  verticalPercentages: Record<string, number>;
   horizontalContentPercentage: number;
 }
 
 const initialState: LayoutState = {
   leftSidebarWidth: 300,
   rightSidebarWidth: 300,
-  verticalContentPercentage: 50,
+  verticalPercentages: {},
   horizontalContentPercentage: 50,
 };
 
@@ -26,8 +26,8 @@ export const layoutSlice = createSlice({
     setRightSidebarWidth: (state, action) => {
       state.rightSidebarWidth = action.payload;
     },
-    setVerticalContentPercentage: (state, action) => {
-      state.verticalContentPercentage = action.payload;
+    setVerticalPercentage: (state, action: { payload: { componentName: string; percentage: number } }) => {
+      state.verticalPercentages[action.payload.componentName] = action.payload.percentage;
     },
     setHorizontalContentPercentage: (state, action) => {
       state.horizontalContentPercentage = action.payload;

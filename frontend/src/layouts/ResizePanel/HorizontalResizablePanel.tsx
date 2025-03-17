@@ -1,6 +1,7 @@
 import { Box } from "@mui/material";
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import "./styles/ResizablePanel.css";
+import { createDividerStyles } from "./styles/resizePanelStyles.ts";
 
 interface ResizablePanelProps {
   children: ReactNode;
@@ -94,8 +95,6 @@ export function HorizontalResizablePanel({
         width,
         height: "100%",
         bgcolor: "background.paper",
-        borderRight: position === "left" ? "1px solid #e8eaed" : undefined,
-        borderLeft: position === "right" ? "1px solid #e8eaed" : undefined,
         display: "flex",
         flexDirection: "column",
         transition: isDragging ? undefined : "width 0.15s ease-out",
@@ -106,31 +105,10 @@ export function HorizontalResizablePanel({
         ref={dragHandleRef}
         className={`resizer-handle${isDragging ? " resizing" : ""}`}
         sx={{
-          position: "absolute",
+          ...createDividerStyles(isDragging, isCollapsed, true),
           top: 0,
           // Place handle on right side for left panel, left side for right panel
           [position === "left" ? "right" : "left"]: -4,
-          width: 8,
-          height: "100%",
-          cursor: "ew-resize",
-          zIndex: 2,
-          "&:hover": {
-            "&::after": {
-              opacity: 0.5,
-            },
-          },
-          "&::after": {
-            content: '""',
-            position: "absolute",
-            top: 0,
-            bottom: 0,
-            left: "50%",
-            width: 2,
-            bgcolor: isCollapsed ? "primary.main" : isDragging ? "primary.main" : "grey.300",
-            opacity: isCollapsed ? 0.5 : isDragging ? 1 : 0,
-            transform: "translateX(-50%)",
-            transition: "opacity 0.2s",
-          },
         }}
       />
     </Box>

@@ -94,17 +94,18 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
   return (
     <Drawer
       variant="permanent"
-      sx={{
+      sx={(theme) => ({
         width: isExpanded ? 200 : 49,
         flexShrink: 0,
         "& .MuiDrawer-paper": {
           width: isExpanded ? 200 : 49,
           boxSizing: "border-box",
           overflowX: "hidden",
-          borderRight: "none",
+          borderRight: "1px solid",
+          borderColor: theme.palette.primary.dark,
           // transition: "width 0.2s ease-in-out",
         },
-      }}
+      })}
     >
       <Stack
         sx={{
@@ -144,7 +145,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
           </ListItem>
         </List>
 
-        <Divider />
+        <Divider sx={{ borderColor: "primary.dark" }} />
 
         {/* Main navigation section */}
         {isInProject && (

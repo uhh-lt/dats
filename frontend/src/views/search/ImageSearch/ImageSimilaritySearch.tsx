@@ -1,4 +1,4 @@
-import { Divider, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { useParams } from "react-router-dom";
@@ -12,6 +12,8 @@ import { MyFilter, createEmptyFilter } from "../../../components/FilterDialog/fi
 import DocumentInformation from "../../../components/SourceDocument/DocumentInformation/DocumentInformation.tsx";
 import TagExplorer from "../../../components/Tag/TagExplorer/TagExplorer.tsx";
 import SidebarContentSidebarLayout from "../../../layouts/ContentLayouts/SidebarContentSidebarLayout.tsx";
+import { useVerticalPercentage } from "../../../layouts/ResizePanel/hooks/useVerticalPercentage.ts";
+import { VerticalPercentageResizablePanel } from "../../../layouts/ResizePanel/VerticalPercentageResizablePanel.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { SearchActions } from "../DocumentSearch/searchSlice.ts";
 import SearchStatistics from "../Statistics/SearchStatistics.tsx";
@@ -87,24 +89,31 @@ function ImageSimilaritySearch() {
   // extract sdoc ids from results, but they have to be unique
   const sdocIds = useMemo(() => data?.map((hit) => hit.sdoc_id) || [], [data]);
 
+  // vertical sidebar percentage
+  const { percentage: sidebarPercentage, handleResize: handleSidebarResize } =
+    useVerticalPercentage("search-left-sidebar");
+
   // render
   return (
     <SidebarContentSidebarLayout
       leftSidebar={
-        <>
-          <TagExplorer sx={{ height: "50%", pt: 0 }} onTagClick={handleAddTagFilter} />
-          <Divider />
-          <SearchStatistics
-            sx={{ height: "50%" }}
-            sdocIds={sdocIds}
-            handleKeywordClick={handleAddKeywordFilter}
-            handleTagClick={handleAddTagFilter}
-            handleCodeClick={handleAddCodeFilter}
-          />
-        </>
+        <VerticalPercentageResizablePanel
+          topContent={<TagExplorer onTagClick={handleAddTagFilter} />}
+          bottomContent={
+            <SearchStatistics
+              sx={{ height: "100%" }}
+              sdocIds={sdocIds}
+              handleKeywordClick={handleAddKeywordFilter}
+              handleTagClick={handleAddTagFilter}
+              handleCodeClick={handleAddCodeFilter}
+            />
+          }
+          verticalContentPercentage={sidebarPercentage}
+          onResize={handleSidebarResize}
+        />
       }
       content={
-        <>
+        <Box className="myFlexContainer h100">
           <ImageSimilaritySearchToolbar searchResultDocumentIds={sdocIds} />
           <ImageSimilarityView
             projectId={projectId}
@@ -117,7 +126,7 @@ function ImageSimilaritySearch() {
               sx: { p: 1 },
             }}
           />
-        </>
+        </Box>
       }
       rightSidebar={
         <DocumentInformation

@@ -1,4 +1,3 @@
-import { Box, Stack } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { useParams } from "react-router-dom";
@@ -7,6 +6,8 @@ import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts"
 import { SampledSdocsResults } from "../../../api/openapi/models/SampledSdocsResults.ts";
 import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
 import SidebarContentLayout from "../../../layouts/ContentLayouts/SidebarContentLayout.tsx";
+import { VerticalPercentageResizablePanel } from "../../../layouts/ResizePanel/VerticalPercentageResizablePanel.tsx";
+import { useVerticalPercentage } from "../../../layouts/ResizePanel/hooks/useVerticalPercentage.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import DocumentsBarChart from "./DocumentsBarChart.tsx";
 import DocumentsTable from "./DocumentsTable.tsx";
@@ -72,23 +73,35 @@ function DocumentSampler() {
     });
   };
 
+  // vertical percentages
+  const { percentage: sidebarPercentage, handleResize: handleSidebarResize } =
+    useVerticalPercentage("document-sampler-sidebar");
+  const { percentage: contentPercentage, handleResize: handleContentResize } =
+    useVerticalPercentage("document-sampler-content");
+
   return (
     <SidebarContentLayout
       leftSidebar={
-        <Box className="h100 myFlexContainer">
-          <TagGroupCreator
-            tags={tags.data || []}
-            aggregationGroups={aggregationGroups}
-            cardProps={{ className: "myFlexFillAllContainer", sx: { mb: 2 }, elevation: 0 }}
-          />
-          <SamplingStrategySelector cardProps={{ elevation: 0 }} />
-        </Box>
+        <VerticalPercentageResizablePanel
+          topContent={
+            <TagGroupCreator
+              tags={tags.data || []}
+              aggregationGroups={aggregationGroups}
+              cardProps={{ className: "h100" }}
+            />
+          }
+          bottomContent={<SamplingStrategySelector cardProps={{ elevation: 0 }} />}
+          verticalContentPercentage={sidebarPercentage}
+          onResize={handleSidebarResize}
+        />
       }
       content={
-        <Stack className="h100" p={2} spacing={2}>
-          <DocumentsBarChart cardProps={{ sx: { height: "50%" } }} onChartRefresh={onAggregate} />
-          <DocumentsTable cardProps={{ sx: { height: "50%" } }} onTableRefresh={onAggregate} />
-        </Stack>
+        <VerticalPercentageResizablePanel
+          topContent={<DocumentsBarChart onChartRefresh={onAggregate} cardProps={{ className: "h100" }} />}
+          bottomContent={<DocumentsTable onTableRefresh={onAggregate} cardProps={{ className: "h100" }} />}
+          verticalContentPercentage={contentPercentage}
+          onResize={handleContentResize}
+        />
       }
     />
   );
