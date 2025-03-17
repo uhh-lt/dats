@@ -6,6 +6,7 @@ from app.core.analysis.code_frequency_analysis.code_frequency import (
 )
 from app.core.analysis.document_sampler.document_sampler import document_sampler_by_tags
 from app.core.analysis.my_new_analysis_feature import (
+    document_info,
     top_words,
     top_words_ollama,
     topic_distr,
@@ -363,3 +364,18 @@ def return_top_words_ollama(
     authz_user: AuthzUser = Depends(),
 ) -> dict:
     return top_words_ollama(topic_id, db=db)
+
+
+@router.post(
+    "/topic_documents",
+    response_model=List[dict],
+    summary="Returns a dictionary containing the top documents for each topic",
+)
+def return_topic_document_data(
+    *,
+    project_id: int,
+    topic_id: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
+) -> List[dict]:
+    return document_info(topic_id=topic_id, db=db, project_id=project_id)

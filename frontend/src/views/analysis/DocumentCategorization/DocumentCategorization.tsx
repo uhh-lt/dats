@@ -37,15 +37,19 @@ import MLHooks from "../../../api/MLHooks.ts";
 import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobStatus.ts";
 import { MLJobRead } from "../../../api/openapi/models/MLJobRead.ts";
 import { MLJobType } from "../../../api/openapi/models/MLJobType.ts";
+import TopDocumentsBarChart from "./TopDocumentsBarChart.tsx";
 import TopWordsBarChart from "./TopWordsBarChart.tsx";
 import TopicDistrChart from "./TopicDistrBarChart.tsx";
 
 function DocumentCategorization() {
+  const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
+
   const top_words_data = AnalysisHooks.useReturnTopWordsData();
   const topic_distr_hook = AnalysisHooks.useReturnTopicDistrData();
 
   const [currentTopic, setCurrentTopic] = useState(0);
   //const [selectedTopic, setSelectedTopic] = useState(0);
+  const topic_document_data = AnalysisHooks.useReturnTopicDocuments(projectId, currentTopic);
   const ollamaResponse = AnalysisHooks.useReturnTopWordsOllama(currentTopic);
 
   const [currentCarouselField, setCarouselField] = useState(0);
@@ -73,14 +77,6 @@ function DocumentCategorization() {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
-
-  // Handle Ollama response changes
-  //useEffect(() => {
-  //  console.log("ollamaResponse data updated: ", ollamaResponse.data);
-  //}, [ollamaResponse]);
-
-  // global client state (react router)
-  const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
 
   const [currentJobId, setCurrentJobId] = useState<string | undefined>(undefined);
 
@@ -143,6 +139,7 @@ function DocumentCategorization() {
   const diagramList = [
     <TopWordsBarChart topicNum={currentTopic} dataHook={top_words_data} />,
     <TopicDistrChart topicNum={currentTopic} dataHook={topic_distr_hook} />,
+    <TopDocumentsBarChart topicNum={currentTopic} dataHook={topic_document_data} />,
   ];
 
   const handleChange = (event: SelectChangeEvent<number>) => {

@@ -3772,6 +3772,41 @@
         }
       }
     },
+    "/analysis/topic_documents": {
+      "post": {
+        "tags": ["analysis"],
+        "summary": "Returns a dictionary containing the top documents for each topic",
+        "operationId": "return_topic_document_data",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "topic_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Topic Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "type": "object" },
+                  "title": "Response Analysis-Return Topic Document Data"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/prepro/{prepro_job_id}": {
       "get": {
         "tags": ["prepro"],

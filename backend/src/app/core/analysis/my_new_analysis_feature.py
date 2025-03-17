@@ -47,6 +47,20 @@ def topic_distr(db: Session) -> list[dict]:
     return topic_distr_data
 
 
+def document_info(project_id: int, db: Session, topic_id: int) -> list[dict]:
+    document_info_data = []
+    project = crud_project.read(db=db, id=project_id)
+    topic_infos = [TopicInfoRead.model_validate(x) for x in project.topic_infos]
+
+    for key, topic_info in enumerate(topic_infos):
+        print(key, ":", topic_info.topic_documents)
+
+    for topic_document in topic_infos[topic_id].topic_documents:
+        document_info_data.append(topic_document.model_dump())
+
+    return document_info_data
+
+
 def get_prompt(index: int, top_words_data: list):
     print(top_words_data)
     top_words_string = ""

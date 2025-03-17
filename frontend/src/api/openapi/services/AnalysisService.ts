@@ -403,4 +403,28 @@ export class AnalysisService {
       },
     });
   }
+  /**
+   * Returns a dictionary containing the top documents for each topic
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static returnTopicDocumentData({
+    projectId,
+    topicId,
+  }: {
+    projectId: number;
+    topicId: number;
+  }): CancelablePromise<Array<Record<string, any>>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/analysis/topic_documents",
+      query: {
+        project_id: projectId,
+        topic_id: topicId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }
