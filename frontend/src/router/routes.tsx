@@ -103,7 +103,7 @@ const router = createBrowserRouter([
         element: <Analysis />,
       },
       {
-        path: "/project/:projectId/analysis/frequency",
+        path: "/project/:projectId/analysis/code-frequency",
         element: <CodeFrequencyAnalysis />,
       },
       {

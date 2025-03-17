@@ -7,7 +7,7 @@ function Analysis() {
     <ContentContainerLayout>
       <Box display="flex" gap={2} flexWrap="wrap">
         <AnalysisCard
-          to={"frequency"}
+          to={"code-frequency"}
           title={"Code Frequency Analysis"}
           description={"Analyse the frequencies and occurrences of all codes in this project."}
           color={"#77dd77"}
