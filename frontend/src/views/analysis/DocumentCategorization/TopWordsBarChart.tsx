@@ -8,6 +8,10 @@ const TopWordsBarChart: React.FC<{ topicNum: number; dataHook: UseQueryResult<Re
 }) => {
   dataHook.refetch();
   const data = dataHook.data as Record<string, { word: string; score: number }>[];
+
+  console.log(typeof data);
+  console.log(data);
+
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [width, setWidth] = useState<number>(window.innerWidth);
 

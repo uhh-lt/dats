@@ -1,8 +1,8 @@
 """add topic info
 
-Revision ID: 7c177a2d7177
-Revises: c970e0892bee
-Create Date: 2025-03-11 13:23:56.447578
+Revision ID: 01953786e8a3
+Revises: 7c177a2d7177
+Create Date: 2025-03-17 09:39:54.735639
 
 """
 
@@ -13,8 +13,8 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "7c177a2d7177"
-down_revision: Union[str, None] = "c970e0892bee"
+revision: str = "01953786e8a3"
+down_revision: Union[str, None] = "7c177a2d7177"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -27,6 +27,7 @@ def upgrade() -> None:
         sa.Column("name", sa.String(), nullable=True),
         sa.Column("doc_count", sa.Integer(), nullable=True),
         sa.Column("topic_words", sa.String(), server_default="[]", nullable=False),
+        sa.Column("topic_documents", sa.String(), server_default="[]", nullable=False),
         sa.Column(
             "created", sa.DateTime(), server_default=sa.text("now()"), nullable=False
         ),
