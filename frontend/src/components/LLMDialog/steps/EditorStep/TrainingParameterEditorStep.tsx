@@ -21,6 +21,7 @@ function TrainingParameterEditorStep() {
   const codes = useAppSelector((state) => state.dialog.llmCodes);
   const sdocIds = useAppSelector((state) => state.dialog.llmDocumentIds);
   const recommendedParameters = useAppSelector((state) => state.dialog.llmParameters);
+  const deleteExistingAnnotations = useAppSelector((state) => state.dialog.llmDeleteExistingAnnotations);
   const dispatch = useAppDispatch();
 
   // local state
@@ -52,6 +53,7 @@ function TrainingParameterEditorStep() {
             tag_ids: tags.map((tag) => tag.id),
             project_metadata_ids: metadata.map((m) => m.id),
             code_ids: codes.map((code) => code.id),
+            delete_existing_annotations: deleteExistingAnnotations,
           },
         },
       },

@@ -3,4 +3,11 @@
 /models_cache/*
 /numba_cache/*
 /ollama_cache/*
+/pg_data/*
+/rabbitmq_data/*
+/redis_data/*
+/typesense_data/*
+/qdrant_data/*
+/weaviate_data/*
+/elasticsearch_data/*
 .env

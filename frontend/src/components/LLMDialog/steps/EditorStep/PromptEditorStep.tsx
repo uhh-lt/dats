@@ -5,10 +5,12 @@ import { Box, Button, DialogActions, DialogContent, Stack, Tab, Typography } fro
 import { useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import LLMHooks from "../../../../api/LLMHooks.ts";
+import { ApproachType } from "../../../../api/openapi/models/ApproachType.ts";
 import { LLMPromptTemplates } from "../../../../api/openapi/models/LLMPromptTemplates.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 import { CRUDDialogActions } from "../../../dialogSlice.ts";
 import FormTextMultiline from "../../../FormInputs/FormTextMultiline.tsx";
+import SelectSentenceAnnotationsDialog from "../../../SentenceAnnotation/SelectSentenceAnnotationsDialog.tsx";
 import LLMUtterance from "../LLMUtterance.tsx";
 
 type PromptEditorValues = {
@@ -26,7 +28,10 @@ function PromptEditorStep() {
   const codes = useAppSelector((state) => state.dialog.llmCodes);
   const sdocIds = useAppSelector((state) => state.dialog.llmDocumentIds);
   const recommendedPrompts = useAppSelector((state) => state.dialog.llmPrompts);
+  const deleteExistingAnnotations = useAppSelector((state) => state.dialog.llmDeleteExistingAnnotations);
   const dispatch = useAppDispatch();
+
+  console.log(deleteExistingAnnotations);
 
   // local state (to manage tabs)
   const [tab, setTab] = useState(recommendedPrompts[0].language);
@@ -34,6 +39,38 @@ function PromptEditorStep() {
     setTab(newValue);
   };
   const [prompts, setPrompts] = useState<LLMPromptTemplates[]>(recommendedPrompts);
+
+  // example selection (for few-shot learning)
+  const createPromptTemplatesMutation = LLMHooks.useCreatePromptTemplates();
+  const handleSelectExamples = (annotationIds: number[]) => {
+    if (!method) return;
+
+    createPromptTemplatesMutation.mutate(
+      {
+        approachType: approach,
+        requestBody: {
+          llm_job_params: {
+            llm_job_type: method,
+            project_id: projectId,
+            specific_task_parameters: {
+              llm_job_type: method,
+              tag_ids: tags.map((tag) => tag.id),
+              project_metadata_ids: metadata.map((m) => m.id),
+              code_ids: codes.map((code) => code.id),
+              sdoc_ids: sdocIds,
+            },
+          },
+          example_ids: annotationIds,
+        },
+      },
+      {
+        onSuccess(data) {
+          dispatch(CRUDDialogActions.llmDialogUpdatePromptEditor({ prompts: data }));
+          setPrompts(data);
+        },
+      },
+    );
+  };
 
   // react form handlers
   const handleChangePrompt = (language: string) => (formData: PromptEditorValues) => {
@@ -73,6 +110,7 @@ function PromptEditorStep() {
             tag_ids: tags.map((tag) => tag.id),
             project_metadata_ids: metadata.map((m) => m.id),
             code_ids: codes.map((code) => code.id),
+            delete_existing_annotations: deleteExistingAnnotations,
           },
         },
       },
@@ -106,13 +144,21 @@ function PromptEditorStep() {
             </TabList>
           </Box>
           {prompts.map((prompt) => (
-            <TabPanel key={prompt.language} value={prompt.language} sx={{ px: 0 }}>
+            <TabPanel key={prompt.system_prompt + prompt.user_prompt} value={prompt.language} sx={{ px: 0 }}>
               <PromptEditorStepForm prompt={prompt} handleSavePrompt={handleChangePrompt(prompt.language)} />
             </TabPanel>
           ))}
         </TabContext>
       </DialogContent>
       <DialogActions>
+        {approach === ApproachType.LLM_FEW_SHOT && (
+          <SelectSentenceAnnotationsDialog
+            title={"Select few-shot sentence annotation examples"}
+            projectId={projectId}
+            onConfirmSelection={handleSelectExamples}
+          />
+        )}
+        <Box flexGrow={1} />
         <Button onClick={() => dispatch(CRUDDialogActions.previousLLMDialogStep())}>Back</Button>
         <LoadingButton
           variant="contained"

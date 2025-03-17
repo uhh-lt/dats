@@ -1,10 +1,10 @@
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { LoadingButton } from "@mui/lab";
-import { Box, Button, DialogActions, DialogContent, Typography } from "@mui/material";
+import { Box, Button, DialogActions, Typography } from "@mui/material";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useMemo, useState } from "react";
 import LLMHooks from "../../../api/LLMHooks.ts";
-import ProjectHooks from "../../../api/ProjectHooks.ts";
+import MetadataHooks from "../../../api/MetadataHooks.ts";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
 import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
 import { TaskType } from "../../../api/openapi/models/TaskType.ts";
@@ -23,7 +23,7 @@ function ProjectMetadataSelectionStep() {
   const dispatch = useAppDispatch();
 
   // global server state
-  const projectMetadata = ProjectHooks.useGetMetadata(projectId);
+  const projectMetadata = MetadataHooks.useGetProjectMetadataList();
   const filteredProjectMetadata = useMemo(() => {
     if (!projectMetadata.data) return [];
     return projectMetadata.data.filter((metadata) => metadata.doctype === DocType.TEXT && metadata.read_only === false);
@@ -61,17 +61,14 @@ function ProjectMetadataSelectionStep() {
 
   return (
     <>
-      <DialogContent>
-        <LLMUtterance>
-          <Typography>
-            You selected {selectedDocuments.length} document(s) for automatic metadata extraction. Please select all
-            metadata that I should try to extract from the documents.
-          </Typography>
-        </LLMUtterance>
-      </DialogContent>
+      <LLMUtterance p={3}>
+        <Typography>
+          You selected {selectedDocuments.length} document(s) for automatic metadata extraction. Please select all
+          metadata that I should try to extract from the documents.
+        </Typography>
+      </LLMUtterance>
       <ProjectMetadataTable
         projectMetadata={filteredProjectMetadata}
-        projectId={projectId}
         rowSelectionModel={rowSelectionModel}
         onRowSelectionChange={setRowSelectionModel}
         renderBottomToolbarCustomActions={(props) => (

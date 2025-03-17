@@ -1,12 +1,14 @@
 import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
-import { BBoxAnnotationReadResolved } from "../../api/openapi/models/BBoxAnnotationReadResolved.ts";
+import { BBoxAnnotationRead } from "../../api/openapi/models/BBoxAnnotationRead.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
 import { ProjectRead } from "../../api/openapi/models/ProjectRead.ts";
+import { SentenceAnnotationRead } from "../../api/openapi/models/SentenceAnnotationRead.ts";
 import { SourceDocumentRead } from "../../api/openapi/models/SourceDocumentRead.ts";
-import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import { SpanAnnotationRead } from "../../api/openapi/models/SpanAnnotationRead.ts";
 import BBoxAnnotationRenderer from "../BBoxAnnotation/BBoxAnnotationRenderer.tsx";
 import CodeRenderer from "../Code/CodeRenderer.tsx";
+import SentenceAnnotationRenderer from "../SentenceAnnotation/SentenceAnnotationRenderer.tsx";
 import ProjectRenderer from "../SourceDocument/ProjectRenderer.tsx";
 import SdocRenderer from "../SourceDocument/SdocRenderer.tsx";
 import SpanAnnotationRenderer from "../SpanAnnotation/SpanAnnotationRenderer.tsx";
@@ -17,8 +19,8 @@ interface AttachedObjectRendererProps {
     | DocumentTagRead
     | SourceDocumentRead
     | CodeRead
-    | SpanAnnotationReadResolved
-    | BBoxAnnotationReadResolved
+    | SpanAnnotationRead
+    | BBoxAnnotationRead
     | ProjectRead
     | number;
   attachedObjectType: AttachedObjectType;
@@ -28,10 +30,26 @@ interface AttachedObjectRendererProps {
 function AttachedObjectRenderer({ attachedObject, attachedObjectType, link }: AttachedObjectRendererProps) {
   switch (attachedObjectType) {
     case AttachedObjectType.BBOX_ANNOTATION:
-      return <BBoxAnnotationRenderer bboxAnnotation={attachedObject as BBoxAnnotationReadResolved | number} />;
+      return (
+        <BBoxAnnotationRenderer bboxAnnotation={attachedObject as BBoxAnnotationRead | number} showCode showSpanText />
+      );
     case AttachedObjectType.SPAN_ANNOTATION:
       return (
-        <SpanAnnotationRenderer spanAnnotation={attachedObject as SpanAnnotationReadResolved | number} link={link} />
+        <SpanAnnotationRenderer
+          spanAnnotation={attachedObject as SpanAnnotationRead | number}
+          link={link}
+          showCode
+          showSpanText
+        />
+      );
+    case AttachedObjectType.SENTENCE_ANNOTATION:
+      return (
+        <SentenceAnnotationRenderer
+          sentenceAnnotation={attachedObject as SentenceAnnotationRead | number}
+          link={link}
+          showCode
+          showSpanText
+        />
       );
     case AttachedObjectType.DOCUMENT_TAG:
       return <TagRenderer tag={attachedObject as DocumentTagRead | number} />;

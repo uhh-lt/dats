@@ -6,7 +6,6 @@ import { useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import CodeHooks from "../../api/CodeHooks.ts";
-import ProjectHooks from "../../api/ProjectHooks.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
@@ -18,6 +17,7 @@ import FormText from "../FormInputs/FormText.tsx";
 import FormTextMultiline from "../FormInputs/FormTextMultiline.tsx";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 import CodeRenderer from "./CodeRenderer.tsx";
+import { useCodesWithLevel } from "./useCodesWithLevel.ts";
 
 export type CodeCreateSuccessHandler = ((code: CodeRead, isNewCode: boolean) => void) | undefined;
 
@@ -33,7 +33,7 @@ function CodeCreateDialog() {
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // global server state (react query)
-  const codes = ProjectHooks.useGetAllCodes(projectId);
+  const codes = CodeHooks.useGetEnabledCodes();
 
   // computed
   const parentCodes = useMemo(() => codes.data?.filter((code) => !code.is_system) || [], [codes.data]);
@@ -145,6 +145,8 @@ function CodeCreateForm({ projectId, codeToCreate, parentCodes, onClose }: CodeC
 
   const handleErrorCodeCreateDialog: SubmitErrorHandler<CodeCreateValues> = (data) => console.error(data);
 
+  // code tree
+  const codeTree = useCodesWithLevel(parentCodes);
   // rendering
   return (
     <form onSubmit={handleSubmit(handleSubmitCodeCreateDialog, handleErrorCodeCreateDialog)}>
@@ -164,12 +166,11 @@ function CodeCreateForm({ projectId, codeToCreate, parentCodes, onClose }: CodeC
             <MenuItem key={-1} value={-1}>
               No parent
             </MenuItem>
-            {parentCodes &&
-              parentCodes.map((code) => (
-                <MenuItem key={code.id} value={code.id}>
-                  <CodeRenderer code={code} />
-                </MenuItem>
-              ))}
+            {codeTree.map((cw) => (
+              <MenuItem key={cw.data.id} value={cw.data.id} style={{ paddingLeft: cw.level * 10 + 6 }}>
+                <CodeRenderer code={cw.data} />
+              </MenuItem>
+            ))}
           </FormMenu>
           <FormText
             name="name"

@@ -1,7 +1,7 @@
 import { Box, Portal, Typography } from "@mui/material";
 import { useContext } from "react";
+import { AppBarContext } from "../../layouts/AppBarContext.ts";
 import NoSidebarLayout from "../../layouts/NoSidebarLayout.tsx";
-import { AppBarContext } from "../../layouts/TwoBarLayout.tsx";
 import AnalysisCard from "./AnalysisCard.tsx";
 
 function Analysis() {
@@ -64,8 +64,6 @@ function Analysis() {
           description={"Semi-automatically scale annotations"}
           color={"#77dd77"}
         />
-
-        <AnalysisCard to={"table"} title={"Table"} description={"Analyse with tables."} color={"#77dd77"} />
       </Box>
     </NoSidebarLayout>
   );

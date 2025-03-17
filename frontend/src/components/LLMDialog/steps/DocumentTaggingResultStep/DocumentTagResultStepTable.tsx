@@ -156,7 +156,7 @@ function DocumentTagResultStepTable({
       },
     },
     // toolbars
-    enableBottomToolbar: true,
+    enableBottomToolbar: false,
     renderTopToolbarCustomActions: ({ table }) => (
       <Stack direction="row" alignItems="center" gap={0.5} mx={1}>
         <Typography variant="body1" mr={1}>

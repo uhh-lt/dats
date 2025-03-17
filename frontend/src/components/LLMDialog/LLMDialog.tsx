@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogTitle, Step, StepLabel, Stepper } from "@mui/material";
+import { Dialog, DialogTitle, Divider, Step, StepLabel, Stepper } from "@mui/material";
 import { TaskType } from "../../api/openapi/models/TaskType.ts";
 import { useAppSelector } from "../../plugins/ReduxHooks.ts";
 import AnnotationResultStep from "./steps/AnnotationResultStep/AnnotationResultStep.tsx";
@@ -93,22 +93,18 @@ function LLMDialog() {
   const method = useAppSelector((state) => state.dialog.llmMethod);
   const step = useAppSelector((state) => state.dialog.llmStep);
 
-  console.log(method);
-  console.log(step);
-
   return (
     <Dialog open={open} maxWidth="lg" fullWidth>
       <DialogTitle>LLM Assistant {method && <> - {title[method]}</>}</DialogTitle>
 
-      <DialogContent sx={{ px: 2 }}>
-        <Stepper activeStep={step}>
-          {steps[method || TaskType.DOCUMENT_TAGGING].map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
-      </DialogContent>
+      <Stepper activeStep={step} sx={{ px: 2, pb: 2 }}>
+        {steps[method || TaskType.DOCUMENT_TAGGING].map((label) => (
+          <Step key={label}>
+            <StepLabel>{label}</StepLabel>
+          </Step>
+        ))}
+      </Stepper>
+      <Divider />
 
       {contentDict[step][method || TaskType.DOCUMENT_TAGGING]}
     </Dialog>

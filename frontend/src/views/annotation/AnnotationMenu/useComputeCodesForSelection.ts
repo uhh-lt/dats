@@ -7,7 +7,6 @@ import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 export const useComputeCodesForSelection = () => {
   // global server state
   const { codeTree, allCodes } = useComputeCodeTree();
-
   // global client state
   const selectedCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
   const mostRecentCode = useAppSelector((state) => state.annotations.mostRecentCode);
@@ -34,9 +33,7 @@ export const useComputeCodesForSelection = () => {
       codesForSelection.splice(idx, 1);
       codesForSelection.unshift(code);
     }
-
     return codesForSelection;
   }, [allCodes, codeTree, mostRecentCode, selectedCodeId]);
-
   return codesForSelection;
 };

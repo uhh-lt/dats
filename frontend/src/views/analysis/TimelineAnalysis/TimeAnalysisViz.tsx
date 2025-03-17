@@ -1,7 +1,8 @@
 import BarChartIcon from "@mui/icons-material/BarChart";
+import ReplayIcon from "@mui/icons-material/Replay";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import { Box, Card, CardContent, CardHeader, CircularProgress, IconButton, Tooltip, Typography } from "@mui/material";
-import React from "react";
+import React, { useMemo } from "react";
 import {
   Bar,
   BarChart,
@@ -17,17 +18,17 @@ import {
   YAxis,
 } from "recharts";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
+import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { TimelineAnalysisCount } from "./TimelineAnalysisCount.ts";
 import TimelineAnalysisExportMenu from "./TimelineAnalysisExportMenu.tsx";
 import { TimelineAnalysisActions } from "./timelineAnalysisSlice.ts";
-import { TimelineAnalysisCount } from "./useTimelineAnalysis.ts";
 
 interface TimelineAnalysisVizProps {
-  chartData: TimelineAnalysisCount[] | undefined;
   timelineAnalysis: TimelineAnalysisRead;
 }
 
-function TimelineAnalysisViz({ chartData, timelineAnalysis }: TimelineAnalysisVizProps) {
+function TimelineAnalysisViz({ timelineAnalysis }: TimelineAnalysisVizProps) {
   // redux
   const provenanceDate = useAppSelector((state) => state.timelineAnalysis.provenanceDate);
   const provenanceConcept = useAppSelector((state) => state.timelineAnalysis.provenanceConcept);
@@ -35,10 +36,32 @@ function TimelineAnalysisViz({ chartData, timelineAnalysis }: TimelineAnalysisVi
   const dispatch = useAppDispatch();
 
   // event handlers
+  const recomputeMutation = TimelineAnalysisHooks.useRecomputeTimelineAnalysis();
+  const recomputeTimelineAnalysis = () => {
+    recomputeMutation.mutate({
+      timelineAnalysisId: timelineAnalysis.id,
+    });
+  };
+
   const handleClick = (date: string, conceptName: string) => {
     dispatch(TimelineAnalysisActions.setProvenanceDate(date));
     dispatch(TimelineAnalysisActions.setProvenanceConcept(conceptName));
   };
+
+  // compute chart data
+  const chartData: TimelineAnalysisCount[] = useMemo(() => {
+    const date2concept2counts: Record<string, Record<string, number>> = {};
+    timelineAnalysis.concepts.forEach((concept) => {
+      if (!concept.visible) return;
+      concept.results.forEach((result) => {
+        date2concept2counts[result.date] = date2concept2counts[result.date] || {};
+        date2concept2counts[result.date][concept.name] = result.count;
+      });
+    });
+    return Object.entries(date2concept2counts).map(([date, concept2counts]) => {
+      return { date, ...concept2counts };
+    });
+  }, [timelineAnalysis]);
 
   // render
   let content: React.ReactNode;
@@ -137,6 +160,13 @@ function TimelineAnalysisViz({ chartData, timelineAnalysis }: TimelineAnalysisVi
         className="myFlexFitContentContainer"
         action={
           <>
+            <Tooltip title="Recompute Timeline Analysis">
+              <span>
+                <IconButton onClick={() => recomputeTimelineAnalysis()} disabled={recomputeMutation.isPending}>
+                  {recomputeMutation.isPending ? <CircularProgress size={20} /> : <ReplayIcon />}
+                </IconButton>
+              </span>
+            </Tooltip>
             <TimelineAnalysisExportMenu
               chartData={chartData}
               chartName={(isBarPlot ? "barchart-" : "linechart-") + timelineAnalysis.name}

@@ -3,7 +3,6 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack } from "@mui/material";
-import React from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import TagHooks from "../../api/TagHooks.ts";
 import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
@@ -18,6 +17,7 @@ import FormText from "../FormInputs/FormText.tsx";
 import FormTextMultiline from "../FormInputs/FormTextMultiline.tsx";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 import TagRenderer from "./TagRenderer.tsx";
+import { useTagsWithLevel } from "./useTagsWithLevel.ts";
 
 interface TagEditDialogProps {
   tags: DocumentTagRead[];
@@ -76,7 +76,7 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
     }
   };
   const handleError: SubmitErrorHandler<DocumentTagUpdate> = (data) => console.error(data);
-  const handleDelete = () => {
+  const handleTagDelete = () => {
     if (tag.data) {
       ConfirmationAPI.openConfirmationDialog({
         text: `Do you really want to delete the tag "${tag.data.name}"? This action cannot be undone!`,
@@ -111,7 +111,7 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
           handleClose={handleClose}
           handleTagUpdate={handleTagUpdate}
           isUpdateLoading={updateTagMutation.isPending}
-          handleTagDelete={handleDelete}
+          handleTagDelete={handleTagDelete}
           isDeleteLoading={deleteTagMutation.isPending}
           handleError={handleError}
         />
@@ -157,13 +157,7 @@ function TagEditDialogContent({
     },
   });
 
-  const menuItems: React.ReactNode[] = tags
-    .filter((t) => t.id !== tag.id)
-    .map((t) => (
-      <MenuItem key={t.id} value={t.id}>
-        <TagRenderer tag={t} />
-      </MenuItem>
-    ));
+  const tagTree = useTagsWithLevel(tags);
 
   return (
     <Dialog open={isOpen} onClose={handleClose} maxWidth="md" fullWidth>
@@ -191,7 +185,15 @@ function TagEditDialogContent({
               <MenuItem key={-1} value={-1}>
                 No parent
               </MenuItem>
-              {menuItems}
+              {tagTree.map((tagWithLevel) => (
+                <MenuItem
+                  key={tagWithLevel.data.id}
+                  value={tagWithLevel.data.id}
+                  style={{ paddingLeft: tagWithLevel.level * 10 + 6 }}
+                >
+                  <TagRenderer tag={tagWithLevel.data} />
+                </MenuItem>
+              ))}
             </FormMenu>
             <FormText
               name="name"

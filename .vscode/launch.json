@@ -18,6 +18,20 @@
       "envFile": "${workspaceFolder}/backend/.env"
     },
     {
+      "name": "Pytest Backend",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/backend/src",
+        "RESET_DATABASE_FOR_TESTING": "1"
+      },
+      "cwd": "${workspaceFolder}/backend/src",
+      "envFile": "${workspaceFolder}/backend/.env"
+    },
+    {
       "name": "frontend",
       "type": "node-terminal",
       "request": "launch",

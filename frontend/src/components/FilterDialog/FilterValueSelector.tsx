@@ -1,14 +1,17 @@
 import { Autocomplete, Button, ButtonGroup, Chip, MenuItem, Stack, TextField } from "@mui/material";
 import { useState } from "react";
-import { useParams } from "react-router-dom";
-import ProjectHooks from "../../api/ProjectHooks.ts";
+import CodeHooks from "../../api/CodeHooks.ts";
+import TagHooks from "../../api/TagHooks.ts";
+import UserHooks from "../../api/UserHooks.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
 import { FilterOperator } from "../../api/openapi/models/FilterOperator.ts";
 import { FilterValueType } from "../../api/openapi/models/FilterValueType.ts";
 import { dateToLocaleYYYYMMDDString, isValidDateString } from "../../utils/DateUtils.ts";
 import { docTypeToIcon } from "../../utils/docTypeToIcon.tsx";
 import CodeRenderer from "../Code/CodeRenderer.tsx";
+import { useCodesWithLevel } from "../Code/useCodesWithLevel.ts";
 import TagRenderer from "../Tag/TagRenderer.tsx";
+import { useTagsWithLevel } from "../Tag/useTagsWithLevel.ts";
 import UserRenderer from "../User/UserRenderer.tsx";
 import { ColumnInfo, MyFilterExpression } from "./filterUtils.ts";
 
@@ -140,11 +143,11 @@ function FilterValueSelector({ filterExpression, onChangeValue, column2Info }: F
 }
 
 function TagIdValueSelector({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) {
-  // global client state
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
-
   // global server state (react-query)
-  const projectTags = ProjectHooks.useGetAllTags(projectId);
+  const projectTags = TagHooks.useGetAllTags();
+
+  // transform flat list into hierarchical strcutre
+  const tagsWithLevel = useTagsWithLevel(projectTags.data || []);
 
   return (
     <TextField
@@ -164,9 +167,13 @@ function TagIdValueSelector({ filterExpression, onChangeValue }: SharedFilterVal
       <MenuItem key={-1} value={-1}>
         <i>None</i>
       </MenuItem>
-      {projectTags.data?.map((tag) => (
-        <MenuItem key={tag.id} value={tag.id}>
-          <TagRenderer tag={tag} />
+      {tagsWithLevel.map((tagWithLevel) => (
+        <MenuItem
+          key={tagWithLevel.data.id}
+          value={tagWithLevel.data.id}
+          style={{ paddingLeft: tagWithLevel.level * 10 + 6 }}
+        >
+          <TagRenderer tag={tagWithLevel.data} />
         </MenuItem>
       ))}
     </TextField>
@@ -174,11 +181,10 @@ function TagIdValueSelector({ filterExpression, onChangeValue }: SharedFilterVal
 }
 
 function CodeIdValueSelector({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) {
-  // global client state
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
-
   // global server state (react-query)
-  const projectCodes = ProjectHooks.useGetAllCodes(projectId);
+  const projectCodes = CodeHooks.useGetEnabledCodes();
+
+  const codeTree = useCodesWithLevel(projectCodes.data || []);
 
   return (
     <TextField
@@ -198,9 +204,13 @@ function CodeIdValueSelector({ filterExpression, onChangeValue }: SharedFilterVa
       <MenuItem key={-1} value={-1}>
         <i>None</i>
       </MenuItem>
-      {projectCodes.data?.map((code) => (
-        <MenuItem key={code.id} value={code.id}>
-          <CodeRenderer code={code} />
+      {codeTree.map((codeWithLevel) => (
+        <MenuItem
+          key={codeWithLevel.data.id}
+          value={codeWithLevel.data.id}
+          style={{ paddingLeft: codeWithLevel.level * 10 + 6 }}
+        >
+          <CodeRenderer code={codeWithLevel.data} />
         </MenuItem>
       ))}
     </TextField>
@@ -208,11 +218,8 @@ function CodeIdValueSelector({ filterExpression, onChangeValue }: SharedFilterVa
 }
 
 function UserIdValueSelector({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) {
-  // global client state
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
-
   // global server state (react-query)
-  const projectUsers = ProjectHooks.useGetAllUsers(projectId);
+  const projectUsers = UserHooks.useGetAllUsers();
 
   return (
     <TextField
@@ -242,11 +249,8 @@ function UserIdValueSelector({ filterExpression, onChangeValue }: SharedFilterVa
 }
 
 function SpanAnnotationValueSelector({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) {
-  // global client state
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
-
   // global server state (react-query)
-  const projectCodes = ProjectHooks.useGetAllCodes(projectId);
+  const projectCodes = CodeHooks.useGetAllCodesList();
 
   const [value, setValue] = useState<string[]>(() => {
     // check if value is string[][] or string[], then make sure that value is string[]

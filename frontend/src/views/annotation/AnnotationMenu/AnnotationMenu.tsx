@@ -17,21 +17,19 @@ import {
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from "react";
 import CodeHooks from "../../../api/CodeHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
+import { BBoxAnnotationRead } from "../../../api/openapi/models/BBoxAnnotationRead.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import { SentenceAnnotationReadResolved } from "../../../api/openapi/models/SentenceAnnotationReadResolved.ts";
+import { SentenceAnnotationRead } from "../../../api/openapi/models/SentenceAnnotationRead.ts";
+import { useCodesWithLevel } from "../../../components/Code/useCodesWithLevel.ts";
 import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
 import MemoButton from "../../../components/Memo/MemoButton.tsx";
+import { CodeReadWithLevel } from "../../../components/TreeExplorer/CodeReadWithLevel.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { Annotation, Annotations } from "../Annotation.ts";
 import { ICode } from "../ICode.ts";
 import { useComputeCodesForSelection } from "./useComputeCodesForSelection.ts";
 
-interface ICodeFilter extends CodeRead {
-  title: string;
-}
-
-const filter = createFilterOptions<ICodeFilter>();
+const filter = createFilterOptions<ICodeFilterWithLevel>();
 
 interface CodeSelectorProps {
   onClose?: (reason?: "backdropClick" | "escapeKeyDown") => void;
@@ -43,6 +41,10 @@ interface CodeSelectorProps {
 export interface CodeSelectorHandle {
   open: (position: PopoverPosition, annotations?: Annotations) => void;
   isOpen: boolean;
+}
+
+interface ICodeFilterWithLevel extends CodeReadWithLevel {
+  title: string;
 }
 
 const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
@@ -58,17 +60,16 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
     const [isAutoCompleteOpen, setIsAutoCompleteOpen] = useState(false);
     const [annotationsToEdit, setAnnotationsToEdit] = useState<Annotations | undefined>(undefined);
     const [editingAnnotation, setEditingAnnotation] = useState<Annotation | undefined>(undefined);
-    const [autoCompleteValue, setAutoCompleteValue] = useState<ICodeFilter | null>(null);
+    const [autoCompleteValue, setAutoCompleteValue] = useState<ICodeFilterWithLevel | null>(null);
 
     // computed
-    const codeOptions: ICodeFilter[] = useMemo(() => {
-      return codes.map((c) => {
-        return {
-          ...c,
-          title: c.name,
-        };
-      });
-    }, [codes]);
+    const codeTree = useCodesWithLevel(codes);
+    const codeOptions: ICodeFilterWithLevel[] = useMemo(() => {
+      return codeTree.map((c) => ({
+        ...c,
+        title: c.data.name,
+      }));
+    }, [codeTree]);
 
     // exposed methods (via ref)
     useImperativeHandle(ref, () => ({
@@ -104,7 +105,10 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
     }, [showCodeSelection]);
 
     // event handlers
-    const handleChange: UseAutocompleteProps<ICodeFilter, false, false, true>["onChange"] = (_event, newValue) => {
+    const handleChange: UseAutocompleteProps<ICodeFilterWithLevel, false, false, true>["onChange"] = (
+      _event,
+      newValue,
+    ) => {
       if (typeof newValue === "string") {
         alert("HOW DID YOU DO THIS? (Please tell Tim)");
         return;
@@ -115,17 +119,19 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
       }
 
       // if code does not exist, open the code creation dialog
-      if (newValue.id === -1) {
-        dispatch(CRUDDialogActions.openCodeCreateDialog({ codeName: newValue.name, codeCreateSuccessHandler: submit }));
+      if (newValue.data.id === -1) {
+        dispatch(
+          CRUDDialogActions.openCodeCreateDialog({ codeName: newValue.data.name, codeCreateSuccessHandler: submit }),
+        );
         return;
       }
 
-      submit(newValue, false);
+      submit(newValue.data, false);
     };
 
     const handleEdit = (annotationToEdit: Annotation, code: CodeRead) => {
       setEditingAnnotation(annotationToEdit);
-      setAutoCompleteValue({ ...code, title: code.name });
+      setAutoCompleteValue({ data: code, title: code.name, level: 0 });
       setShowCodeSelection(true);
     };
 
@@ -166,7 +172,7 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
             {annotationsToEdit.map((annotation) => (
               <CodeSelectorListItem
                 key={annotation.id}
-                codeId={annotation.code.id}
+                codeId={annotation.code_id}
                 annotation={annotation}
                 handleDelete={handleDelete}
                 handleEdit={handleEdit}
@@ -176,7 +182,7 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
           </List>
         ) : (
           <>
-            <Autocomplete
+            <Autocomplete<ICodeFilterWithLevel, false, false, true>
               value={autoCompleteValue}
               onChange={handleChange}
               filterOptions={(options, params) => {
@@ -184,18 +190,21 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
 
                 const { inputValue } = params;
                 // Suggest the creation of a new value
-                const isExisting = options.some((option: ICode) => inputValue === option.name);
+                const isExisting = options.some((option: ICodeFilterWithLevel) => inputValue === option.title);
                 if (inputValue.trim() !== "" && !isExisting) {
                   filtered.push({
+                    data: {
+                      name: inputValue.trim(),
+                      id: -1,
+                      color: "",
+                      created: "",
+                      updated: "",
+                      description: "",
+                      project_id: -1,
+                      is_system: false,
+                    },
                     title: `Add "${inputValue.trim()}"`,
-                    name: inputValue.trim(),
-                    id: -1,
-                    color: "",
-                    created: "",
-                    updated: "",
-                    description: "",
-                    project_id: -1,
-                    is_system: false,
+                    level: 0,
                   });
                 }
 
@@ -203,18 +212,21 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
               }}
               options={codeOptions}
               getOptionLabel={(option) => {
-                // Value selected with enter, right from the input
+                // Value selected with enter, right from input
                 if (typeof option === "string") {
                   return option;
                 }
-                return option.name;
+                return option.title;
               }}
-              renderOption={(props, option) => (
-                <li {...props} key={option.id}>
-                  <Box style={{ width: 20, height: 20, backgroundColor: option.color, marginRight: 8 }}></Box>{" "}
-                  {option.title}
-                </li>
-              )}
+              renderOption={(props, option) => {
+                const indent = option.level * 10 + 10;
+                return (
+                  <li {...props} key={option.data.id} style={{ paddingLeft: indent }}>
+                    <Box style={{ width: 20, height: 20, backgroundColor: option.data.color, marginRight: 8 }}></Box>{" "}
+                    {option.title}
+                  </li>
+                );
+              }}
               sx={{ width: 300 }}
               renderInput={(params) => <TextField autoFocus {...params} />}
               autoHighlight
@@ -242,12 +254,12 @@ interface CodeSelectorListItemProps {
   handleEdit: (annotationToEdit: Annotation, newCode: CodeRead) => void;
 }
 
-const isBboxAnnotation = (annotation: Annotation): annotation is BBoxAnnotationReadResolved => {
-  return (annotation as BBoxAnnotationReadResolved).x_min !== undefined;
+const isBboxAnnotation = (annotation: Annotation): annotation is BBoxAnnotationRead => {
+  return (annotation as BBoxAnnotationRead).x_min !== undefined;
 };
 
-const isSentenceAnnotation = (annotation: Annotation): annotation is SentenceAnnotationReadResolved => {
-  return (annotation as SentenceAnnotationReadResolved).sentence_id_start !== undefined;
+const isSentenceAnnotation = (annotation: Annotation): annotation is SentenceAnnotationRead => {
+  return (annotation as SentenceAnnotationRead).sentence_id_start !== undefined;
 };
 
 function CodeSelectorListItem({

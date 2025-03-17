@@ -2,7 +2,7 @@ import { Box, Grid2, Portal, Typography } from "@mui/material";
 import { useContext } from "react";
 import { useParams } from "react-router-dom";
 import SentenceAnnotationEditDialog from "../../../components/SentenceAnnotation/SentenceAnnotationEditDialog.tsx";
-import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
+import { AppBarContext } from "../../../layouts/AppBarContext.ts";
 import SentAnnotationAnalysisTable from "./SentAnnotationAnalysisTable.tsx";
 
 function SentAnnotationAnalysis() {

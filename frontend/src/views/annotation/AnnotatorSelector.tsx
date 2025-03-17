@@ -48,6 +48,7 @@ export function AnnotatorSelector({ sdocId }: AnnotatorSelector) {
       <InputLabel id="annotation-user-select-label">Annotations</InputLabel>
       <Select
         labelId="annotation-user-select-label"
+        label="Annotations"
         fullWidth
         sx={{ minWidth: 150 }}
         value={visibleUserId}
