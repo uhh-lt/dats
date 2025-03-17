@@ -1,5 +1,5 @@
 import { Box } from "@mui/material";
-import { ReactNode, useCallback, useRef } from "react";
+import { ReactNode, useCallback, useRef, useState } from "react";
 import { useMouseEventHandlers } from "./hooks/useMouseEventHandlers";
 import "./styles/ResizablePanel.css";
 import { createContainerStyles, createDividerStyles, createPanelStyles } from "./styles/resizePanelStyles";
@@ -29,14 +29,14 @@ export function PercentageResizablePanel({
   const isSecondCollapsed = contentPercentage >= 100 - minPercentage / 2;
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const isDraggingRef = useRef<boolean>(false);
+  const [isDragging, setIsDragging] = useState(false);
   const startPosRef = useRef<number>(0);
   const startPercentageRef = useRef<number>(contentPercentage);
   const currentPercentageRef = useRef<number>(contentPercentage);
 
   const handleMouseDown = useCallback(
     (e: MouseEvent) => {
-      isDraggingRef.current = true;
+      setIsDragging(true);
       startPosRef.current = isHorizontal ? e.clientX : e.clientY;
       startPercentageRef.current = currentPercentageRef.current;
       document.body.style.cursor = isHorizontal ? "ew-resize" : "ns-resize";
@@ -46,7 +46,7 @@ export function PercentageResizablePanel({
 
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
-      if (!isDraggingRef.current || !containerRef.current) return;
+      if (!isDragging || !containerRef.current) return;
 
       const containerSize = isHorizontal ? containerRef.current.clientWidth : containerRef.current.clientHeight;
 
@@ -67,11 +67,11 @@ export function PercentageResizablePanel({
         onResize(clampedPercentage);
       }
     },
-    [maxPercentage, minPercentage, onResize, isHorizontal],
+    [isDragging, isHorizontal, minPercentage, maxPercentage, onResize],
   );
 
   const handleMouseUp = useCallback(() => {
-    isDraggingRef.current = false;
+    setIsDragging(false);
     document.body.style.cursor = "";
   }, []);
 
@@ -85,24 +85,27 @@ export function PercentageResizablePanel({
   return (
     <Box ref={containerRef} sx={createContainerStyles(isHorizontal)}>
       {!isFirstCollapsed && (
-        <Box sx={createPanelStyles(`${contentPercentage}%`, isDraggingRef.current, isHorizontal)}>
+        <Box sx={createPanelStyles(`${contentPercentage}%`, isHorizontal)}>
           <div className="panel-content">{firstContent}</div>
         </Box>
       )}
 
       <Box
         ref={dragHandleRef}
-        className={`resizer-handle${isDraggingRef.current ? " resizing" : ""}`}
+        className={`resizer-handle${isDragging ? " resizing" : ""}`}
         sx={{
-          ...createDividerStyles(isDraggingRef.current, isFirstCollapsed || isSecondCollapsed, isHorizontal),
-          top: !isHorizontal ? `${contentPercentage}%` : null,
-          left: isHorizontal ? `${contentPercentage}%` : null,
+          ...createDividerStyles(isDragging, isFirstCollapsed || isSecondCollapsed, isHorizontal),
+          [isHorizontal ? "left" : "top"]: isSecondCollapsed
+            ? `calc(${contentPercentage}% - 4px)`
+            : isFirstCollapsed
+              ? `calc(${contentPercentage}% + 0px)`
+              : `${contentPercentage}%`,
           transform: isHorizontal ? "translateX(-50%)" : "translateY(-50%)",
         }}
       />
 
       {!isSecondCollapsed && (
-        <Box sx={createPanelStyles(`${100 - contentPercentage}%`, isDraggingRef.current, isHorizontal)}>
+        <Box sx={createPanelStyles(`${100 - contentPercentage}%`, isHorizontal)}>
           <div className="panel-content">{secondContent}</div>
         </Box>
       )}

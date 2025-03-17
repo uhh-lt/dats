@@ -2,7 +2,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import LabelIcon from "@mui/icons-material/Label";
 import { LoadingButton } from "@mui/lab";
 import { MenuItem, Select, Stack } from "@mui/material";
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
 import TagHooks from "../../../api/TagHooks.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
@@ -24,8 +24,12 @@ function BulkDocTagger() {
   // snackbar
   const openSnackbar = useOpenSnackbar();
 
-  // actions
-  const bulkTagDocuments = () => {
+  // Memoized callbacks
+  const handleSelectChange = useCallback((event: { target: { value: string } }) => {
+    setSelectedDocumentTagId(parseInt(event.target.value));
+  }, []);
+
+  const bulkTagDocuments = useCallback(() => {
     linkDocumentTags(
       {
         requestBody: {
@@ -38,20 +42,20 @@ function BulkDocTagger() {
       {
         onSuccess: () => {
           openSnackbar({
-            text: `Tagged sampled documents!`,
+            text: "Tagged sampled documents!",
             severity: "success",
           });
         },
       },
     );
-  };
+  }, [chartData, isFixedSamplingStrategy, linkDocumentTags, openSnackbar, selectedDocumentTagId]);
 
   return (
     <Stack direction="row" spacing={1}>
       <Select
         size="small"
         value={selectedDocumentTagId?.toString() || "-1"}
-        onChange={(event) => setSelectedDocumentTagId(parseInt(event.target.value))}
+        onChange={handleSelectChange}
         SelectDisplayProps={{ style: { display: "inline-flex", alignItems: "center" } }}
       >
         <MenuItem value="-1">Select a tag...</MenuItem>
@@ -63,7 +67,7 @@ function BulkDocTagger() {
         ))}
       </Select>
       <LoadingButton
-        onClick={() => bulkTagDocuments()}
+        onClick={bulkTagDocuments}
         disabled={selectedDocumentTagId === -1 || chartData.length === 0}
         loading={isLinkingDocumentTags}
         loadingPosition="start"
@@ -75,4 +79,4 @@ function BulkDocTagger() {
   );
 }
 
-export default BulkDocTagger;
+export default memo(BulkDocTagger);

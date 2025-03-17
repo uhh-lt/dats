@@ -76,7 +76,7 @@ function DocumentSampler() {
     });
   }, [aggregateSdocsByTags, aggregationGroups, fixedSamplingValue, projectId, relativeSamplingValue]);
 
-  // vertical percentages
+  // Get percentages from Redux with defaultPercentage
   const { percentage: sidebarPercentage, handleResize: handleSidebarResize } = useVerticalPercentage(SIDEBAR_NAME);
   const { percentage: contentPercentage, handleResize: handleContentResize } = useVerticalPercentage(CONTENT_NAME);
 
@@ -91,7 +91,7 @@ function DocumentSampler() {
               cardProps={{ className: "h100" }}
             />
           }
-          secondContent={<SamplingStrategySelector cardProps={{ elevation: 0 }} />}
+          secondContent={<SamplingStrategySelector cardProps={{ className: "h100" }} />}
           contentPercentage={sidebarPercentage}
           onResize={handleSidebarResize}
         />

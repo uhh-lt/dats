@@ -2,8 +2,8 @@ import { useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { LayoutActions } from "../../layoutSlice";
 
-export function useVerticalPercentage(componentName: string, defaultPercentage: number = 50) {
-  const percentage = useAppSelector((state) => state.layout.verticalPercentages[componentName] ?? defaultPercentage);
+export function useVerticalPercentage(componentName: string) {
+  const percentage = useAppSelector((state) => state.layout.verticalPercentages[componentName]);
 
   const dispatch = useAppDispatch();
   const handleResize = useCallback(

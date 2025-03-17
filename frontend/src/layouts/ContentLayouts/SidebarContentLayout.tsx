@@ -1,22 +1,25 @@
 import { Box } from "@mui/material";
-import { ReactNode } from "react";
+import { ReactNode, useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { LayoutActions } from "../layoutSlice.ts";
-import { HorizontalResizablePanel } from "../ResizePanel/HorizontalResizablePanel.tsx";
+import { PixelResizablePanel } from "../ResizePanel/PixelResizablePanel.tsx";
 
 function SidebarContentLayout({ leftSidebar, content }: { leftSidebar: ReactNode; content: ReactNode }) {
   const leftSidebarWidth = useAppSelector((state) => state.layout.leftSidebarWidth);
   const dispatch = useAppDispatch();
 
+  const handleResize = useCallback(
+    (width: number) => {
+      dispatch(LayoutActions.setLeftSidebarWidth(width));
+    },
+    [dispatch],
+  );
+
   return (
     <Box sx={{ display: "flex", width: "100%", height: "100%", overflow: "hidden" }}>
-      <HorizontalResizablePanel
-        width={leftSidebarWidth}
-        onResize={(width) => dispatch(LayoutActions.setLeftSidebarWidth(width))}
-        position="left"
-      >
+      <PixelResizablePanel size={leftSidebarWidth} onResize={handleResize} position="left" isHorizontal>
         {leftSidebar}
-      </HorizontalResizablePanel>
+      </PixelResizablePanel>
 
       <Box
         sx={{

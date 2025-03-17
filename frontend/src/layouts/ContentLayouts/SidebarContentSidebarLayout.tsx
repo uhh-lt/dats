@@ -1,8 +1,8 @@
 import { Box } from "@mui/material";
-import { ReactNode } from "react";
+import { ReactNode, useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { LayoutActions } from "../layoutSlice.ts";
-import { HorizontalResizablePanel } from "../ResizePanel/HorizontalResizablePanel.tsx";
+import { PixelResizablePanel } from "../ResizePanel/PixelResizablePanel.tsx";
 
 function SidebarContentSidebarLayout({
   leftSidebar,
@@ -17,15 +17,25 @@ function SidebarContentSidebarLayout({
   const rightSidebarWidth = useAppSelector((state) => state.layout.rightSidebarWidth);
   const dispatch = useAppDispatch();
 
+  const handleLeftSidebarResize = useCallback(
+    (newSize: number) => {
+      dispatch(LayoutActions.setLeftSidebarWidth(newSize));
+    },
+    [dispatch],
+  );
+
+  const handleRightSidebarResize = useCallback(
+    (newSize: number) => {
+      dispatch(LayoutActions.setRightSidebarWidth(newSize));
+    },
+    [dispatch],
+  );
+
   return (
     <Box sx={{ display: "flex", width: "100%", height: "100%", overflow: "hidden" }}>
-      <HorizontalResizablePanel
-        width={leftSidebarWidth}
-        onResize={(width) => dispatch(LayoutActions.setLeftSidebarWidth(width))}
-        position="left"
-      >
+      <PixelResizablePanel size={leftSidebarWidth} onResize={handleLeftSidebarResize} position="left" isHorizontal>
         {leftSidebar}
-      </HorizontalResizablePanel>
+      </PixelResizablePanel>
 
       <Box
         sx={{
@@ -39,13 +49,9 @@ function SidebarContentSidebarLayout({
         {content}
       </Box>
 
-      <HorizontalResizablePanel
-        width={rightSidebarWidth}
-        onResize={(width) => dispatch(LayoutActions.setRightSidebarWidth(width))}
-        position="right"
-      >
+      <PixelResizablePanel size={rightSidebarWidth} onResize={handleRightSidebarResize} position="right" isHorizontal>
         {rightSidebar}
-      </HorizontalResizablePanel>
+      </PixelResizablePanel>
     </Box>
   );
 }

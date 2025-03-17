@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 interface MouseEventHandlersConfig {
   dragHandleRef: React.RefObject<HTMLElement>;
@@ -13,21 +13,32 @@ export function useMouseEventHandlers({
   handleMouseMove,
   handleMouseUp,
 }: MouseEventHandlersConfig) {
+  // Store handlers in a ref to maintain stable references
+  const handlersRef = useRef({ handleMouseDown, handleMouseMove, handleMouseUp });
+
+  // Update ref values when handlers change
+  handlersRef.current.handleMouseDown = handleMouseDown;
+  handlersRef.current.handleMouseMove = handleMouseMove;
+  handlersRef.current.handleMouseUp = handleMouseUp;
+
   useEffect(() => {
-    console.log("add event listeners");
     const dragHandle = dragHandleRef.current;
-    if (dragHandle) {
-      dragHandle.addEventListener("mousedown", handleMouseDown);
-    }
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
+    console.log("add resize event listener");
+    if (!dragHandle) return;
+
+    // Create stable event handler functions that read from ref
+    const onMouseDown = (e: MouseEvent) => handlersRef.current.handleMouseDown(e);
+    const onMouseMove = (e: MouseEvent) => handlersRef.current.handleMouseMove(e);
+    const onMouseUp = (e: MouseEvent) => handlersRef.current.handleMouseUp(e);
+
+    dragHandle.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
 
     return () => {
-      if (dragHandle) {
-        dragHandle.removeEventListener("mousedown", handleMouseDown);
-      }
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
+      dragHandle.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
     };
-  }, [dragHandleRef, handleMouseDown, handleMouseMove, handleMouseUp]);
+  }, [dragHandleRef]); // Only recreate listeners when dragHandleRef changes
 }

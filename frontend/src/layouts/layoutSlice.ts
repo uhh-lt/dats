@@ -27,7 +27,13 @@ export const layoutSlice = createSlice({
       state.rightSidebarWidth = action.payload;
     },
     setVerticalPercentage: (state, action: { payload: { componentName: string; percentage: number } }) => {
-      state.verticalPercentages[action.payload.componentName] = action.payload.percentage;
+      // round the percentage to prevent floating point errors
+      const roundedPercentage = Math.round(action.payload.percentage);
+
+      // only update the state if the percentage has changed
+      if (roundedPercentage !== state.verticalPercentages[action.payload.componentName]) {
+        state.verticalPercentages[action.payload.componentName] = roundedPercentage;
+      }
     },
     setHorizontalContentPercentage: (state, action) => {
       state.horizontalContentPercentage = action.payload;

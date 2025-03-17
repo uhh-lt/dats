@@ -13,7 +13,9 @@ import {
   Stack,
   TextField,
   Tooltip,
+  UseAutocompleteProps,
 } from "@mui/material";
+import { memo, useCallback } from "react";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import EditableTypography from "../../../components/EditableTypography.tsx";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
@@ -26,14 +28,43 @@ interface TagGroupCreatorProps {
 }
 
 function TagGroupCreator({ tags, aggregationGroups, cardProps = {} }: TagGroupCreatorProps) {
-  // global client state (redux)
   const dispatch = useAppDispatch();
 
-  // local state
   const selectedTagIds = Object.values(aggregationGroups)
     .flat()
     .map((tag) => tag.id);
   const groupsAreEmpty = Object.keys(aggregationGroups).length === 0;
+
+  // Memoize callbacks
+  const handleAddGroup = useCallback(() => {
+    dispatch(DocumentSamplerActions.onAddNewGroup());
+  }, [dispatch]);
+
+  const handleReset = useCallback(() => {
+    dispatch(DocumentSamplerActions.onReset());
+  }, [dispatch]);
+
+  const handleGroupNameChange = useCallback(
+    (oldName: string) => (newName: string) => {
+      dispatch(DocumentSamplerActions.onGroupNameChange({ oldName, newName }));
+    },
+    [dispatch],
+  );
+
+  const handleUpdateGroupTags = useCallback(
+    (groupName: string): UseAutocompleteProps<DocumentTagRead, true, false, false>["onChange"] =>
+      (_, newValue: DocumentTagRead[]) => {
+        dispatch(DocumentSamplerActions.onUpdateGroupTags({ groupName, tags: newValue }));
+      },
+    [dispatch],
+  );
+
+  const handleDeleteGroup = useCallback(
+    (groupName: string) => () => {
+      dispatch(DocumentSamplerActions.onDeleteGroup(groupName));
+    },
+    [dispatch],
+  );
 
   return (
     <Card {...cardProps} className={`myFlexContainer ${cardProps.className}`}>
@@ -44,20 +75,14 @@ function TagGroupCreator({ tags, aggregationGroups, cardProps = {} }: TagGroupCr
             <InfoIcon />
           </IconButton>
         }
-        title={"Document Aggregation"}
-        subheader={`Specify groups of tags to aggregate documents.`}
+        title="Document Aggregation"
+        subheader="Specify groups of tags to aggregate documents."
       />
       <CardContent className="myFlexFillAllContainer">
         <Stack direction="row" spacing={1}>
-          <Button
-            onClick={() => {
-              dispatch(DocumentSamplerActions.onAddNewGroup());
-            }}
-          >
-            Add Group
-          </Button>
+          <Button onClick={handleAddGroup}>Add Group</Button>
           <Box sx={{ flexGrow: 1 }} />
-          <Button disabled={groupsAreEmpty} onClick={() => dispatch(DocumentSamplerActions.onReset())}>
+          <Button disabled={groupsAreEmpty} onClick={handleReset}>
             Reset
           </Button>
         </Stack>
@@ -73,9 +98,7 @@ function TagGroupCreator({ tags, aggregationGroups, cardProps = {} }: TagGroupCr
           >
             <EditableTypography
               value={groupName}
-              onChange={(newValue) => {
-                dispatch(DocumentSamplerActions.onGroupNameChange({ oldName: groupName, newName: newValue }));
-              }}
+              onChange={handleGroupNameChange(groupName)}
               variant="h6"
               whiteColor={false}
               stackProps={{
@@ -86,9 +109,7 @@ function TagGroupCreator({ tags, aggregationGroups, cardProps = {} }: TagGroupCr
             <Autocomplete
               multiple
               value={groupTags}
-              onChange={(_, newValue) => {
-                dispatch(DocumentSamplerActions.onUpdateGroupTags({ groupName, tags: newValue }));
-              }}
+              onChange={handleUpdateGroupTags(groupName)}
               options={tags}
               getOptionLabel={(option) => option.name}
               getOptionDisabled={(option) => selectedTagIds.includes(option.id)}
@@ -101,12 +122,7 @@ function TagGroupCreator({ tags, aggregationGroups, cardProps = {} }: TagGroupCr
             />
             <Tooltip title="Delete">
               <span>
-                <IconButton
-                  onClick={() => {
-                    dispatch(DocumentSamplerActions.onDeleteGroup(groupName));
-                  }}
-                  sx={{ mr: 1.5 }}
-                >
+                <IconButton onClick={handleDeleteGroup(groupName)} sx={{ mr: 1.5 }}>
                   <DeleteIcon />
                 </IconButton>
               </span>
@@ -118,4 +134,4 @@ function TagGroupCreator({ tags, aggregationGroups, cardProps = {} }: TagGroupCr
   );
 }
 
-export default TagGroupCreator;
+export default memo(TagGroupCreator);

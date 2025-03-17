@@ -1,4 +1,5 @@
 import { Box, CardContent, CardContentProps, CardHeader, CardProps, Typography } from "@mui/material";
+import { memo } from "react";
 import CardContainer from "../../../components/MUI/CardContainer.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { ChartDataPoint } from "./ChartDataPoint.ts";
@@ -75,4 +76,4 @@ function DataCard({
   );
 }
 
-export default DataCard;
+export default memo(DataCard);

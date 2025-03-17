@@ -55,7 +55,7 @@ export const createContainerStyles = (isHorizontal = true): SxProps<Theme> => ({
   position: "relative",
 });
 
-export const createPanelStyles = (size: string | number, isDragging: boolean, isHorizontal = true): SxProps<Theme> => ({
+export const createPanelStyles = (size: string | number, isHorizontal = true): SxProps<Theme> => ({
   ...(isHorizontal
     ? {
         width: size,
@@ -68,6 +68,5 @@ export const createPanelStyles = (size: string | number, isDragging: boolean, is
   overflow: "hidden",
   display: "flex",
   flexDirection: "column",
-  transition: isDragging ? undefined : `${isHorizontal ? "width" : "height"} 0.15s ease-out`,
   flex: "1 1 auto",
 });
