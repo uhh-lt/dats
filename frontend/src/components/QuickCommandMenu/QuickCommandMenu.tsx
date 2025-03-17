@@ -9,7 +9,7 @@ import {
   TextField,
   alpha,
 } from "@mui/material";
-import { SyntheticEvent, useEffect, useRef, useState } from "react";
+import { SyntheticEvent, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { CRUDDialogActions } from "../dialogSlice.ts";
@@ -25,17 +25,7 @@ const QuickCommandMenu = () => {
   const dispatch = useAppDispatch();
   const isOpen = useAppSelector((state) => state.dialog.isQuickCommandMenuOpen);
   const closeMenu = () => dispatch(CRUDDialogActions.closeQuickCommandMenu());
-  const [isAutocompleteOpen, setIsAutocompleteOpen] = useState(false);
-
-  // open close autocomplete
   const anchorRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => {
-        setIsAutocompleteOpen(true);
-      }, 250);
-    }
-  }, [isOpen]);
 
   // handle comands
   const navigate = useNavigate();
@@ -62,16 +52,14 @@ const QuickCommandMenu = () => {
       }}
       PaperProps={{
         ref: anchorRef,
+        className: "myFlexContainer",
         sx: {
           width: "600px",
           maxWidth: "90vw",
-          borderBottomLeftRadius: 0,
-          borderBottomRightRadius: 0,
           boxShadow: (theme) => `0 0 10px ${alpha(theme.palette.common.black, 0.2)}`,
           backgroundColor: (theme) => theme.palette.background.paper,
           "& .MuiAutocomplete-listbox": {
-            borderBottomLeftRadius: 0,
-            borderBottomRightRadius: 0,
+            maxHeight: "50vh",
           },
         },
       }}
@@ -82,14 +70,14 @@ const QuickCommandMenu = () => {
       }}
     >
       <Autocomplete
-        open={isAutocompleteOpen}
-        onClose={() => {
-          setIsAutocompleteOpen(false);
+        open={isOpen}
+        onClose={(_, reason) => {
+          if (reason === "blur" || reason === "toggleInput") return;
           closeMenu();
         }}
         autoHighlight
         autoFocus
-        disablePortal={false}
+        disablePortal={true}
         options={commands}
         onChange={handleCommandSelect}
         groupBy={(option) => option.category}
@@ -118,6 +106,7 @@ const QuickCommandMenu = () => {
                     <Search />
                   </InputAdornment>
                 ),
+                endAdornment: null,
               },
             }}
             sx={{
@@ -142,10 +131,17 @@ const QuickCommandMenu = () => {
           },
         }}
         slotProps={{
+          popper: {
+            className: "myFlexFillAllContainer",
+            sx: {
+              position: "relative !important",
+              transform: "none !important",
+              width: "100% !important",
+            },
+          },
           paper: {
             sx: {
-              borderTopRightRadius: 0,
-              borderTopLeftRadius: 0,
+              borderRadius: 0,
             },
           },
         }}
