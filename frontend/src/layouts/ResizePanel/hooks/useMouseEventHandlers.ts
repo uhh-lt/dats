@@ -14,6 +14,7 @@ export function useMouseEventHandlers({
   handleMouseUp,
 }: MouseEventHandlersConfig) {
   useEffect(() => {
+    console.log("add event listeners");
     const dragHandle = dragHandleRef.current;
     if (dragHandle) {
       dragHandle.addEventListener("mousedown", handleMouseDown);

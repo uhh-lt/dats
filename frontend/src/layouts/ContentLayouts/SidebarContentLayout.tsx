@@ -23,7 +23,6 @@ function SidebarContentLayout({ leftSidebar, content }: { leftSidebar: ReactNode
           flex: 1,
           minWidth: 0, // This prevents flex child from overflowing
           height: "100%",
-          bgcolor: (theme) => theme.palette.grey[200],
           overflowY: "auto",
           overflowX: "hidden",
         }}

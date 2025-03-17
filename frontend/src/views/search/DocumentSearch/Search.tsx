@@ -71,7 +71,6 @@ function Search() {
           topContent={<TagExplorer onTagClick={handleAddTagFilter} />}
           bottomContent={
             <SearchStatistics
-              sx={{ height: "100%" }}
               sdocIds={sdocIds}
               handleKeywordClick={handleAddKeywordFilter}
               handleTagClick={handleAddTagFilter}

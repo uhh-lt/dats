@@ -1,6 +1,5 @@
 import { Box } from "@mui/material";
 import { ReactNode, useRef } from "react";
-import { useCollapseStates } from "./hooks/useCollapseStates";
 import { useDragResize } from "./hooks/useDragResize";
 import { useMouseEventHandlers } from "./hooks/useMouseEventHandlers";
 import "./styles/ResizablePanel.css";
@@ -25,10 +24,8 @@ export function VerticalPercentageResizablePanel({
 }: VerticalPercentageResizablePanelProps) {
   const dragHandleRef = useRef<HTMLDivElement>(null);
 
-  const { isFirstCollapsed: isTopCollapsed, isSecondCollapsed: isBottomCollapsed } = useCollapseStates({
-    currentPercentage: verticalContentPercentage,
-    minPercentage,
-  });
+  const isTopCollapsed = verticalContentPercentage <= minPercentage / 2;
+  const isBottomCollapsed = verticalContentPercentage >= 100 - minPercentage / 2;
 
   const { isDragging, containerRef, handleMouseDown, handleMouseMove, handleMouseUp } = useDragResize({
     initialPercentage: verticalContentPercentage,
@@ -55,9 +52,11 @@ export function VerticalPercentageResizablePanel({
 
   return (
     <Box ref={containerRef} sx={createContainerStyles(false)}>
-      <Box sx={createPanelStyles(`${verticalContentPercentage}%`, isTopCollapsed, isDragging, false)}>
-        <div className="panel-content">{topContent}</div>
-      </Box>
+      {!isTopCollapsed && (
+        <Box sx={createPanelStyles(`${verticalContentPercentage}%`, isDragging, false)}>
+          <div className="panel-content">{topContent}</div>
+        </Box>
+      )}
 
       <Box
         ref={dragHandleRef}
@@ -69,9 +68,11 @@ export function VerticalPercentageResizablePanel({
         }}
       />
 
-      <Box sx={createPanelStyles(`${100 - verticalContentPercentage}%`, isBottomCollapsed, isDragging, false)}>
-        <div className="panel-content">{bottomContent}</div>
-      </Box>
+      {!isBottomCollapsed && (
+        <Box sx={createPanelStyles(`${100 - verticalContentPercentage}%`, isDragging, false)}>
+          <div className="panel-content">{bottomContent}</div>
+        </Box>
+      )}
     </Box>
   );
 }

@@ -15,6 +15,9 @@ import SamplingStrategySelector from "./SamplingStrategySelector.tsx";
 import TagGroupCreator from "./TagGroupCreator.tsx";
 import { DocumentSamplerActions } from "./documentSamplerSlice.ts";
 
+const SIDEBAR_NAME = "document-sampler-sidebar";
+const CONTENT_NAME = "document-sampler-content";
+
 function DocumentSampler() {
   // global client state (react router)
   const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
@@ -64,20 +67,18 @@ function DocumentSampler() {
   });
 
   // actions
-  const onAggregate = () => {
+  const onAggregate = useCallback(() => {
     aggregateSdocsByTags({
       projectId,
       n: fixedSamplingValue,
       frac: relativeSamplingValue,
       requestBody: Object.values(aggregationGroups).map((tags) => tags.map((tag) => tag.id)),
     });
-  };
+  }, [aggregateSdocsByTags, aggregationGroups, fixedSamplingValue, projectId, relativeSamplingValue]);
 
   // vertical percentages
-  const { percentage: sidebarPercentage, handleResize: handleSidebarResize } =
-    useVerticalPercentage("document-sampler-sidebar");
-  const { percentage: contentPercentage, handleResize: handleContentResize } =
-    useVerticalPercentage("document-sampler-content");
+  const { percentage: sidebarPercentage, handleResize: handleSidebarResize } = useVerticalPercentage(SIDEBAR_NAME);
+  const { percentage: contentPercentage, handleResize: handleContentResize } = useVerticalPercentage(CONTENT_NAME);
 
   return (
     <SidebarContentLayout

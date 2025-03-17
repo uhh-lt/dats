@@ -31,14 +31,14 @@ export const createDividerStyles = (
           top: 0,
           bottom: 0,
           left: "50%",
-          width: "2px",
+          width: isAnyCollapsed ? "8px" : "2px",
           transform: "translateX(-50%)",
         }
       : {
           left: 0,
           right: 0,
           top: "50%",
-          height: "2px",
+          height: isAnyCollapsed ? "8px" : "2px",
           transform: "translateY(-50%)",
         }),
     bgcolor: isAnyCollapsed ? "primary.main" : isDragging ? "primary.main" : "primary.dark",
@@ -53,15 +53,9 @@ export const createContainerStyles = (isHorizontal = true): SxProps<Theme> => ({
   width: "100%",
   height: "100%",
   position: "relative",
-  bgcolor: "grey.200",
 });
 
-export const createPanelStyles = (
-  size: string | number,
-  isCollapsed: boolean,
-  isDragging: boolean,
-  isHorizontal = true,
-): SxProps<Theme> => ({
+export const createPanelStyles = (size: string | number, isDragging: boolean, isHorizontal = true): SxProps<Theme> => ({
   ...(isHorizontal
     ? {
         width: size,
@@ -75,6 +69,5 @@ export const createPanelStyles = (
   display: "flex",
   flexDirection: "column",
   transition: isDragging ? undefined : `${isHorizontal ? "width" : "height"} 0.15s ease-out`,
-  visibility: isCollapsed ? "collapse" : "visible",
-  flex: isCollapsed ? "0 0 0" : "1 1 auto",
+  flex: "1 1 auto",
 });

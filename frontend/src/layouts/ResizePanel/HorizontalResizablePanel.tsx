@@ -1,5 +1,6 @@
 import { Box } from "@mui/material";
-import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { ReactNode, useCallback, useRef, useState } from "react";
+import { useMouseEventHandlers } from "./hooks/useMouseEventHandlers.ts";
 import "./styles/ResizablePanel.css";
 import { createDividerStyles } from "./styles/resizePanelStyles.ts";
 
@@ -23,11 +24,11 @@ export function HorizontalResizablePanel({
   position,
 }: ResizablePanelProps) {
   const [isDragging, setIsDragging] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(width <= COLLAPSED_WIDTH);
   const dragHandleRef = useRef<HTMLDivElement>(null);
   const startXRef = useRef<number>(0);
   const startWidthRef = useRef<number>(width);
   const currentWidthRef = useRef<number>(width);
+  const isCollapsed = width <= COLLAPSED_WIDTH;
 
   const handleMouseDown = useCallback((e: MouseEvent) => {
     setIsDragging(true);
@@ -47,9 +48,7 @@ export function HorizontalResizablePanel({
       if (newWidth < minWidth / 2) {
         // Use half of minWidth as collapse threshold
         newWidth = COLLAPSED_WIDTH;
-        setIsCollapsed(true);
       } else {
-        setIsCollapsed(false);
         // Clamp width between min and max when not collapsed
         newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
       }
@@ -65,28 +64,12 @@ export function HorizontalResizablePanel({
     document.body.style.cursor = "";
   }, []);
 
-  useEffect(() => {
-    const dragHandle = dragHandleRef.current;
-    if (dragHandle) {
-      dragHandle.addEventListener("mousedown", handleMouseDown);
-    }
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-
-    return () => {
-      if (dragHandle) {
-        dragHandle.removeEventListener("mousedown", handleMouseDown);
-      }
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [handleMouseDown, handleMouseMove, handleMouseUp]);
-
-  // Update the current width ref and collapsed state when the width prop changes
-  useEffect(() => {
-    currentWidthRef.current = width;
-    setIsCollapsed(width <= COLLAPSED_WIDTH);
-  }, [width]);
+  useMouseEventHandlers({
+    dragHandleRef,
+    handleMouseDown,
+    handleMouseMove,
+    handleMouseUp,
+  });
 
   return (
     <Box

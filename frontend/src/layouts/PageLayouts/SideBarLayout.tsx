@@ -32,7 +32,7 @@ function SideBarLayout() {
     <>
       <CssBaseline />
       <ProjectIdUpdater />
-      <Box sx={{ height: "100vh", display: "flex", flexDirection: "row" }}>
+      <Box sx={{ height: "100vh", display: "flex", flexDirection: "row", backgroundColor: "grey.200" }}>
         <SideBar
           isExpanded={isExpanded}
           onToggle={handleToggleSidebar}
