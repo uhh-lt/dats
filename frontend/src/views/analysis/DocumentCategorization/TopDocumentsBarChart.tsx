@@ -2,10 +2,10 @@ import { UseQueryResult } from "@tanstack/react-query";
 import * as d3 from "d3";
 import { useEffect, useRef, useState } from "react";
 
-const TopicDistrChart: React.FC<{ topicNum: number; dataHook: UseQueryResult<Record<string, unknown>[], Error> }> = ({
-  topicNum,
-  dataHook,
-}) => {
+const TopDocumentsBarChart: React.FC<{
+  topicNum: number;
+  dataHook: UseQueryResult<Record<string, unknown>[], Error>;
+}> = ({ topicNum, dataHook }) => {
   console.log(topicNum);
   dataHook.refetch();
   const data = dataHook.data as Record<string, number>[];
@@ -22,14 +22,18 @@ const TopicDistrChart: React.FC<{ topicNum: number; dataHook: UseQueryResult<Rec
   // Declare the x (horizontal position) scale.
   const x = d3
     .scaleBand()
-    .domain(data.map((_, i) => i.toString())) // descending frequency
+    .domain(
+      data.map((d) => {
+        return d.doc_name.toString();
+      }),
+    ) // descending frequency
     .range([marginLeft, width - marginRight])
     .padding(0.1);
 
   // Declare the y (vertical position) scale.
   const y = d3
     .scaleLinear()
-    .domain([0, d3.max(data, (d) => d.count) ?? 0])
+    .domain([0, d3.max(data, (d) => d.probability) ?? 0])
     .range([height - marginBottom, marginTop]);
 
   // Window resize effect
@@ -78,12 +82,12 @@ const TopicDistrChart: React.FC<{ topicNum: number; dataHook: UseQueryResult<Rec
       .selectAll()
       .data(data)
       .join("rect")
-      .attr("x", (_, i) => x(i.toString()) ?? 0)
-      .attr("y", (d) => y(d.count))
-      .attr("height", (d) => y(0) - y(d.count))
+      .attr("x", (d) => x(d.doc_name.toString()) ?? 0)
+      .attr("y", (d) => y(d.probability))
+      .attr("height", (d) => y(0) - y(d.probability))
       .attr("width", x.bandwidth())
       .on("mouseover", (_, d) => {
-        tooltip.style("visibility", "visible").text(d.count);
+        tooltip.style("visibility", "visible").text(d.probability);
       })
       .on("mousemove", (event) => {
         tooltip.style("top", `${event.pageY - 10}px`).style("left", `${event.pageX + 10}px`);
@@ -100,7 +104,7 @@ const TopicDistrChart: React.FC<{ topicNum: number; dataHook: UseQueryResult<Rec
       .attr("y", marginTop * 0.7)
       .attr("text-anchor", "middle")
       .style("font-size", "18px")
-      .text("Topic Distribution");
+      .text(`Top X Documents (not yet) Ordered by Probability for Topic ${topicNum}`);
 
     // set x-axis label
     svg
@@ -110,7 +114,7 @@ const TopicDistrChart: React.FC<{ topicNum: number; dataHook: UseQueryResult<Rec
       .attr("y", height - marginBottom * 0.2)
       .attr("text-anchor", "middle")
       .style("font-size", "18px")
-      .text("Topic");
+      .text("Document Names (not yet sorted by probability)");
 
     // set y-axis label
     svg
@@ -121,7 +125,7 @@ const TopicDistrChart: React.FC<{ topicNum: number; dataHook: UseQueryResult<Rec
       .attr("y", marginLeft * 0.7)
       .attr("text-anchor", "middle")
       .style("font-size", "18px")
-      .text("Number of Documents");
+      .text("Probability");
 
     // setup border
     svg
@@ -149,7 +153,7 @@ const TopicDistrChart: React.FC<{ topicNum: number; dataHook: UseQueryResult<Rec
       .call(d3.axisLeft(y).tickFormat((y) => y.toString()))
       .call((g) => g.select(".domain").remove())
       .style("font-size", "16px");
-  }, [data, height, marginBottom, marginLeft, marginRight, marginTop, width, x, y]);
+  }, [data, height, marginBottom, marginLeft, marginRight, marginTop, topicNum, width, x, y]);
 
   return (
     <div>
@@ -159,4 +163,4 @@ const TopicDistrChart: React.FC<{ topicNum: number; dataHook: UseQueryResult<Rec
   );
 };
 
-export default TopicDistrChart;
+export default TopDocumentsBarChart;

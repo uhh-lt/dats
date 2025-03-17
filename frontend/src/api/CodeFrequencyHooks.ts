@@ -47,10 +47,16 @@ const useReturnTopWordsData = () =>
   });
 
 const useReturnTopWordsOllama = (topic_id: number) => {
-  console.log("CALL");
   return useQuery<Record<string, unknown>, Error>({
     queryKey: ["UseDTOHook", topic_id],
     queryFn: () => AnalysisService.returnTopWordsOllama({ topicId: topic_id }),
+  });
+};
+
+const useReturnTopicDocuments = (project_id: number, topic_id: number) => {
+  return useQuery<Array<Record<string, unknown>>, Error>({
+    queryKey: ["TopicDocuments", project_id, topic_id],
+    queryFn: () => AnalysisService.returnTopicDocumentData({ topicId: topic_id, projectId: project_id }),
   });
 };
 
@@ -60,6 +66,7 @@ const AnalysisHooks = {
   useReturnTopicDistrData,
   useReturnTopWordsData,
   useReturnTopWordsOllama,
+  useReturnTopicDocuments,
 };
 
 export default AnalysisHooks;
