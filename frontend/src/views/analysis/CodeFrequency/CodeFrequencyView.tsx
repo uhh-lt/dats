@@ -1,6 +1,6 @@
 import BarChartIcon from "@mui/icons-material/BarChart";
 import PieChartIcon from "@mui/icons-material/PieChart";
-import { CardContent, CardHeader, CircularProgress, IconButton, Tooltip } from "@mui/material";
+import { Card, CardContent, CardHeader, CircularProgress, IconButton, Tooltip } from "@mui/material";
 import React, { Dispatch, SetStateAction, useMemo, useState } from "react";
 import {
   Bar,
@@ -21,7 +21,6 @@ import { CodeFrequency } from "../../../api/openapi/models/CodeFrequency.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
 import ExportChartButton from "../../../components/ExportChartButton.tsx";
-import CardContainer from "../../../components/MUI/CardContainer.tsx";
 import { IDataTree } from "../../../components/TreeExplorer/IDataTree.ts";
 
 const renderCustomizedLabel = (data: { value: string; percent: number }) => {
@@ -66,7 +65,7 @@ function CodeFrequencyView({ projectId, userIds, docTypes, data, setSelectedCode
 
   return (
     <>
-      <CardContainer>
+      <Card variant="outlined">
         <CardHeader
           action={
             <>
@@ -156,7 +155,7 @@ function CodeFrequencyView({ projectId, userIds, docTypes, data, setSelectedCode
             <>An Error occurred: {chartData.error.message}</>
           ) : null}
         </CardContent>
-      </CardContainer>
+      </Card>
       {selectedData && (
         <CodeFrequencyView
           key={selectedData.model.data.id}

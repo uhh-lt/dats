@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
 import useComputeCodeTree from "../../../components/Code/CodeExplorer/useComputeCodeTree.ts";
+import CardContainer from "../../../components/MUI/CardContainer.tsx";
 import UserSelectorMulti from "../../../components/User/UserSelectorMulti.tsx";
 import ContentContentLayout from "../../../layouts/ContentLayouts/ContentContentLayout.tsx";
 import CodeFrequencyView from "./CodeFrequencyView.tsx";
@@ -66,9 +67,9 @@ function CodeFrequencyAnalysis() {
           {selectedCode ? (
             <CodeOccurrenceTable projectId={projectId} codeId={selectedCode} userIds={selectedUserIds} />
           ) : (
-            <Card className="h100" variant="outlined">
+            <CardContainer className="h100">
               <CardHeader title={`Click on a bar / slice to see occurrences!`} />
-            </Card>
+            </CardContainer>
           )}
         </>
       }

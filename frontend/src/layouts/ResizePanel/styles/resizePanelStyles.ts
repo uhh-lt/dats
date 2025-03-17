@@ -53,7 +53,7 @@ export const createContainerStyles = (isHorizontal = true): SxProps<Theme> => ({
   width: "100%",
   height: "100%",
   position: "relative",
-  bgcolor: "background.paper",
+  bgcolor: "grey.200",
 });
 
 export const createPanelStyles = (

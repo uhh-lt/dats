@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader } from "@mui/material";
+import { CardContent, CardHeader } from "@mui/material";
 import {
   MRT_ColumnDef,
   MRT_RowVirtualizer,
@@ -13,6 +13,7 @@ import React, { useRef } from "react";
 import AnalysisHooks from "../../../api/CodeFrequencyHooks.ts";
 import CodeHooks from "../../../api/CodeHooks.ts";
 import { CodeOccurrence } from "../../../api/openapi/models/CodeOccurrence.ts";
+import CardContainer from "../../../components/MUI/CardContainer.tsx";
 import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
 import UserName from "../../../components/User/UserName.tsx";
 import { docTypeToIcon } from "../../../utils/icons/docTypeToIcon.tsx";
@@ -109,7 +110,7 @@ function CodeOccurrenceTable({ projectId, codeId, userIds }: CodeOccurrenceTable
   });
 
   return (
-    <Card className="h100 myFlexContainer" variant="outlined">
+    <CardContainer className="h100 myFlexContainer">
       <CardHeader
         className="myFlexFitContentContainer"
         title={`Occurrences of code '${code.data?.name || ""}'`}
@@ -128,7 +129,7 @@ function CodeOccurrenceTable({ projectId, codeId, userIds }: CodeOccurrenceTable
       <CardContent className="myFlexFillAllContainer" style={{ padding: 0 }}>
         <MaterialReactTable table={table} />
       </CardContent>
-    </Card>
+    </CardContainer>
   );
 }
 

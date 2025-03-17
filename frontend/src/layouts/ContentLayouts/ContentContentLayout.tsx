@@ -9,14 +9,12 @@ function ContentContentLayout({ leftContent, rightContent }: { leftContent: Reac
   const dispatch = useAppDispatch();
 
   return (
-    <Box sx={{ width: "100%", height: "100%", overflow: "hidden" }}>
-      <HorizontalPercentageResizablePanel
-        leftContent={<Box sx={{ height: "100%", overflowY: "auto" }}>{leftContent}</Box>}
-        rightContent={<Box sx={{ height: "100%", overflowY: "auto" }}>{rightContent}</Box>}
-        horizontalContentPercentage={horizontalContentPercentage}
-        onResize={(percentage) => dispatch(LayoutActions.setHorizontalContentPercentage(percentage))}
-      />
-    </Box>
+    <HorizontalPercentageResizablePanel
+      leftContent={<Box sx={{ height: "100%", overflowY: "auto" }}>{leftContent}</Box>}
+      rightContent={<Box sx={{ height: "100%", overflowY: "auto" }}>{rightContent}</Box>}
+      horizontalContentPercentage={horizontalContentPercentage}
+      onResize={(percentage) => dispatch(LayoutActions.setHorizontalContentPercentage(percentage))}
+    />
   );
 }
 
