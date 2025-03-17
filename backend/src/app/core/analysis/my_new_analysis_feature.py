@@ -30,6 +30,9 @@ def top_words(db: Session):
         for index, top_word in enumerate(topic_info.topic_words):
             topic_x_data[str(index)] = top_word.model_dump()
         top_words_data.append(topic_x_data)
+
+    if not top_words_data:
+        top_words_data.append({"0": {"word": "No Data", "score": 1.0}})
     return top_words_data
 
 

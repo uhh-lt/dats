@@ -28,6 +28,13 @@ class TopicInfoORM(ORMBase):
         index=False,
     )
 
+    topic_documents: Mapped[str] = mapped_column(
+        String,
+        server_default="[]",
+        nullable=False,
+        index=False,
+    )
+
     created: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), index=True
     )
