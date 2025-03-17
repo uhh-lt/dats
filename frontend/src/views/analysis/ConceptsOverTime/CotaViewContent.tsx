@@ -1,7 +1,7 @@
 import { COTARead } from "../../../api/openapi/models/COTARead.ts";
 import SidebarContentLayout from "../../../layouts/ContentLayouts/SidebarContentLayout.tsx";
 import { useVerticalPercentage } from "../../../layouts/ResizePanel/hooks/useVerticalPercentage.ts";
-import { VerticalPercentageResizablePanel } from "../../../layouts/ResizePanel/VerticalPercentageResizablePanel.tsx";
+import { PercentageResizablePanel } from "../../../layouts/ResizePanel/PercentageResizablePanel.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import CotaConceptList from "./CotaConceptList.tsx";
 import CotaControl from "./CotaControl.tsx";
@@ -25,19 +25,19 @@ function CotaViewContent({ cota }: CotaViewContentProps) {
   return (
     <SidebarContentLayout
       leftSidebar={
-        <VerticalPercentageResizablePanel
-          topContent={isTimelineView ? <CotaTimelineSettings cota={cota} /> : <CotaControl cota={cota} />}
-          bottomContent={<CotaConceptList cota={cota} />}
-          verticalContentPercentage={sidebarPercentage}
+        <PercentageResizablePanel
+          firstContent={isTimelineView ? <CotaTimelineSettings cota={cota} /> : <CotaControl cota={cota} />}
+          secondContent={<CotaConceptList cota={cota} />}
+          contentPercentage={sidebarPercentage}
           onResize={handleSidebarResize}
         />
       }
       content={
-        <VerticalPercentageResizablePanel
-          topContent={isTimelineView ? <CotaTimelinePlot cota={cota} /> : <CotaScatterPlotly cota={cota} />}
-          bottomContent={<CotaSentenceAnnotator2 cota={cota} />}
+        <PercentageResizablePanel
+          firstContent={isTimelineView ? <CotaTimelinePlot cota={cota} /> : <CotaScatterPlotly cota={cota} />}
+          secondContent={<CotaSentenceAnnotator2 cota={cota} />}
           onResize={handleMainResize}
-          verticalContentPercentage={mainPercentage}
+          contentPercentage={mainPercentage}
         />
       }
     />

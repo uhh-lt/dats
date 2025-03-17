@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
 import SidebarContentLayout from "../../../layouts/ContentLayouts/SidebarContentLayout.tsx";
-import { VerticalPercentageResizablePanel } from "../../../layouts/ResizePanel/VerticalPercentageResizablePanel.tsx";
+import { PercentageResizablePanel } from "../../../layouts/ResizePanel/PercentageResizablePanel.tsx";
 import { useVerticalPercentage } from "../../../layouts/ResizePanel/hooks/useVerticalPercentage.ts";
 import ConceptList from "./ConceptList.tsx";
 import TimeAnalysisProvenance from "./TimeAnalysisProvenance.tsx";
@@ -43,19 +43,19 @@ function TimelineAnalysisContent({ timelineAnalysis }: TimelineAnalysisContentPr
   return (
     <SidebarContentLayout
       leftSidebar={
-        <VerticalPercentageResizablePanel
-          topContent={<TimelineAnalysisSettings timelineAnalysis={timelineAnalysis} />}
-          bottomContent={<ConceptList timelineAnalysis={timelineAnalysis} />}
+        <PercentageResizablePanel
+          firstContent={<TimelineAnalysisSettings timelineAnalysis={timelineAnalysis} />}
+          secondContent={<ConceptList timelineAnalysis={timelineAnalysis} />}
           onResize={handleLeftResize}
-          verticalContentPercentage={leftPercentage}
+          contentPercentage={leftPercentage}
         />
       }
       content={
-        <VerticalPercentageResizablePanel
-          topContent={<TimelineAnalysisViz timelineAnalysis={timelineAnalysis} />}
-          bottomContent={<TimeAnalysisProvenance timelineAnalysis={timelineAnalysis} />}
+        <PercentageResizablePanel
+          firstContent={<TimelineAnalysisViz timelineAnalysis={timelineAnalysis} />}
+          secondContent={<TimeAnalysisProvenance timelineAnalysis={timelineAnalysis} />}
           onResize={handleMainResize}
-          verticalContentPercentage={mainPercentage}
+          contentPercentage={mainPercentage}
         />
       }
     />

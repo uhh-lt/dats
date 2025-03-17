@@ -13,7 +13,7 @@ import DocumentInformation from "../../../components/SourceDocument/DocumentInfo
 import TagExplorer from "../../../components/Tag/TagExplorer/TagExplorer.tsx";
 import SidebarContentSidebarLayout from "../../../layouts/ContentLayouts/SidebarContentSidebarLayout.tsx";
 import { useVerticalPercentage } from "../../../layouts/ResizePanel/hooks/useVerticalPercentage.ts";
-import { VerticalPercentageResizablePanel } from "../../../layouts/ResizePanel/VerticalPercentageResizablePanel.tsx";
+import { PercentageResizablePanel } from "../../../layouts/ResizePanel/PercentageResizablePanel.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { SearchActions } from "../DocumentSearch/searchSlice.ts";
 import SearchStatistics from "../Statistics/SearchStatistics.tsx";
@@ -93,9 +93,9 @@ function SentenceSimilaritySearch() {
   return (
     <SidebarContentSidebarLayout
       leftSidebar={
-        <VerticalPercentageResizablePanel
-          topContent={<TagExplorer onTagClick={handleAddTagFilter} />}
-          bottomContent={
+        <PercentageResizablePanel
+          firstContent={<TagExplorer onTagClick={handleAddTagFilter} />}
+          secondContent={
             <SearchStatistics
               sx={{ height: "100%" }}
               sdocIds={sdocIds}
@@ -104,7 +104,7 @@ function SentenceSimilaritySearch() {
               handleCodeClick={handleAddCodeFilter}
             />
           }
-          verticalContentPercentage={sidebarPercentage}
+          contentPercentage={sidebarPercentage}
           onResize={handleSidebarResize}
         />
       }

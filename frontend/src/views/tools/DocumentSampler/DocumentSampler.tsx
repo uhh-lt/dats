@@ -6,7 +6,7 @@ import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts"
 import { SampledSdocsResults } from "../../../api/openapi/models/SampledSdocsResults.ts";
 import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
 import SidebarContentLayout from "../../../layouts/ContentLayouts/SidebarContentLayout.tsx";
-import { VerticalPercentageResizablePanel } from "../../../layouts/ResizePanel/VerticalPercentageResizablePanel.tsx";
+import { PercentageResizablePanel } from "../../../layouts/ResizePanel/PercentageResizablePanel.tsx";
 import { useVerticalPercentage } from "../../../layouts/ResizePanel/hooks/useVerticalPercentage.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import DocumentsBarChart from "./DocumentsBarChart.tsx";
@@ -83,24 +83,24 @@ function DocumentSampler() {
   return (
     <SidebarContentLayout
       leftSidebar={
-        <VerticalPercentageResizablePanel
-          topContent={
+        <PercentageResizablePanel
+          firstContent={
             <TagGroupCreator
               tags={tags.data || []}
               aggregationGroups={aggregationGroups}
               cardProps={{ className: "h100" }}
             />
           }
-          bottomContent={<SamplingStrategySelector cardProps={{ elevation: 0 }} />}
-          verticalContentPercentage={sidebarPercentage}
+          secondContent={<SamplingStrategySelector cardProps={{ elevation: 0 }} />}
+          contentPercentage={sidebarPercentage}
           onResize={handleSidebarResize}
         />
       }
       content={
-        <VerticalPercentageResizablePanel
-          topContent={<DocumentsBarChart onChartRefresh={onAggregate} cardProps={{ className: "h100" }} />}
-          bottomContent={<DocumentsTable onTableRefresh={onAggregate} cardProps={{ className: "h100" }} />}
-          verticalContentPercentage={contentPercentage}
+        <PercentageResizablePanel
+          firstContent={<DocumentsBarChart onChartRefresh={onAggregate} cardProps={{ className: "h100" }} />}
+          secondContent={<DocumentsTable onTableRefresh={onAggregate} cardProps={{ className: "h100" }} />}
+          contentPercentage={contentPercentage}
           onResize={handleContentResize}
         />
       }
