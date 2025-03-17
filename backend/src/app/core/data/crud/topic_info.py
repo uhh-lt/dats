@@ -21,15 +21,18 @@ class CRUDTopicInfo(
     def create(self, db: Session, create_dto: TopicInfoCreate):
         create_dto_as_in_db = TopicInfoCreateIntern(
             **create_dto.model_dump(
-                exclude={
-                    "topic_words",
-                },
+                exclude={"topic_words", "topic_documents"},
                 exclude_none=True,
             ),
         )
 
         topic_word_str = srsly.json_dumps(jsonable_encoder(create_dto.topic_words))
         create_dto_as_in_db.topic_words = topic_word_str
+
+        topic_documents_str = srsly.json_dumps(
+            jsonable_encoder(create_dto.topic_documents)
+        )
+        create_dto_as_in_db.topic_documents = topic_documents_str
 
         # update the in db
         db_obj = super().create(db=db, create_dto=create_dto_as_in_db)

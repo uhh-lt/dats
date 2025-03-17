@@ -11,7 +11,11 @@ from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.topic_info import crud_topic_info
 from app.core.data.dto.span_annotation import SpanAnnotationCreateIntern
-from app.core.data.dto.topic_info import TopicInfoCreate, TopicWordInfo
+from app.core.data.dto.topic_info import (
+    TopicDocumentInfo,
+    TopicInfoCreate,
+    TopicWordInfo,
+)
 from app.core.data.orm.source_document_data import SourceDocumentDataORM
 from app.core.data.orm.topic_info import TopicInfoORM
 from app.core.db.sql_service import SQLService
@@ -49,7 +53,6 @@ class TopicService(metaclass=SingletonMeta):
             sdoc_ids = [
                 x.id for x in project.source_documents if x.data.content.strip()
             ]
-            print(sdoc_filenames)
 
             # read all files
             doc_datas = crud_sdoc.read_data_batch(db=db, ids=sdoc_ids)
@@ -118,6 +121,17 @@ class TopicService(metaclass=SingletonMeta):
             if index != -1:
                 topic_n_info = topic_model.get_topic_info(index)  # type: ignore
 
+                # add new data -> list of document names and their respective probabilities
+                topic_doc_probabilities = []
+                for key, value in enumerate(topics):
+                    if value == index:
+                        # get the document name and the probability
+                        sdoc_filenames[key]
+                        if probabilities is not None:
+                            topic_doc_probabilities.append(
+                                [sdoc_filenames[key], probabilities[key][index]]
+                            )
+
                 crud_topic_info.create(
                     db=db,
                     create_dto=TopicInfoCreate(
@@ -125,8 +139,18 @@ class TopicService(metaclass=SingletonMeta):
                         name=str(index),
                         doc_count=topic_n_info["Count"].values[0],
                         topic_words=[
-                            TopicWordInfo(word=topic_word[0], score=topic_word[1])  # type: ignore
+                            TopicWordInfo(
+                                word=topic_word[0],  # type: ignore
+                                score=topic_word[1],  # type: ignore
+                            )
                             for topic_word in topic
+                        ],
+                        topic_documents=[
+                            TopicDocumentInfo(
+                                doc_name=topic_doc_prob[0],
+                                probability=topic_doc_prob[1],
+                            )
+                            for topic_doc_prob in topic_doc_probabilities
                         ],
                     ),
                 )
