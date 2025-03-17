@@ -103,6 +103,19 @@ export const tabSlice = createSlice({
       projectState.tabs.splice(projectState.activeTabIndex, 1);
       projectState.activeTabIndex = projectState.activeTabIndex > 0 ? projectState.activeTabIndex - 1 : 0;
     },
+    closeAllTabs: (state, action: PayloadAction<{ projectId: number }>) => {
+      const projectState = getOrCreateTabState(state, action.payload.projectId);
+      projectState.tabs = [];
+      projectState.activeTabIndex = null;
+    },
+    closeTabsToRight: (state, action: PayloadAction<{ projectId: number; fromIndex: number }>) => {
+      const projectState = getOrCreateTabState(state, action.payload.projectId);
+      if (action.payload.fromIndex >= projectState.tabs.length - 1) return;
+      projectState.tabs.splice(action.payload.fromIndex + 1);
+      if (projectState.activeTabIndex !== null && projectState.activeTabIndex > action.payload.fromIndex) {
+        projectState.activeTabIndex = action.payload.fromIndex;
+      }
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(ProjectActions.changeProject, (state, action) => {

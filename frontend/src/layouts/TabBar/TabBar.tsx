@@ -3,6 +3,7 @@ import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import { Box } from "@mui/material";
 import { useRef } from "react";
 import { DragDropContext } from "react-beautiful-dnd";
+import { useParams } from "react-router-dom";
 
 // Import custom hooks
 import { useTabManagement } from "./hooks/useTabManagement";
@@ -12,13 +13,15 @@ import { useTabScroll } from "./hooks/useTabScroll";
 import { DragCloneRenderer } from "./components/DragCloneRenderer";
 import { DraggableTab } from "./components/DraggableTab";
 import { StrictModeDroppable } from "./components/StrictModeDroppable";
+import { TabMenuButton } from "./components/TabMenuButton";
 
 // Import styled components
-import { ScrollButton } from "./styles";
+import { TabIconButton } from "./styles";
 
 function TabBar() {
   // Container ref for scrolling
   const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const { projectId } = useParams<{ projectId: string }>();
 
   // Use custom hooks
   const { tabs, activeTabIndex, handleTabClick, handleCloseTab, handleDragEnd } = useTabManagement();
@@ -36,10 +39,9 @@ function TabBar() {
         position: "relative",
       }}
     >
-      {/* Left scroll button - always visible but disabled when needed */}
-      <ScrollButton onClick={handleScrollLeft} disabled={!canScrollLeft} aria-label="scroll tabs left" size="small">
+      <TabIconButton onClick={handleScrollLeft} disabled={!canScrollLeft} aria-label="scroll tabs left" size="small">
         <KeyboardArrowLeftIcon />
-      </ScrollButton>
+      </TabIconButton>
 
       <DragDropContext onDragEnd={handleDragEnd}>
         <Box
@@ -101,10 +103,10 @@ function TabBar() {
         </Box>
       </DragDropContext>
 
-      {/* Right scroll button - always visible but disabled when needed */}
-      <ScrollButton onClick={handleScrollRight} disabled={!canScrollRight} aria-label="scroll tabs right" size="small">
+      <TabIconButton onClick={handleScrollRight} disabled={!canScrollRight} aria-label="scroll tabs right" size="small">
         <KeyboardArrowRightIcon />
-      </ScrollButton>
+      </TabIconButton>
+      <TabMenuButton projectId={parseInt(projectId || "0")} activeTabIndex={activeTabIndex} totalTabs={tabs.length} />
     </Box>
   );
 }

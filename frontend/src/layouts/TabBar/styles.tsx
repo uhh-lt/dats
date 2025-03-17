@@ -77,7 +77,7 @@ export const TabWrapper = styled("div")(({ theme }) => ({
 }));
 
 // Scroll button styling
-export const ScrollButton = styled(IconButton)(({ theme }) => ({
+export const TabIconButton = styled(IconButton)(({ theme }) => ({
   width: "48px",
   height: "48px",
   borderRadius: 0,
