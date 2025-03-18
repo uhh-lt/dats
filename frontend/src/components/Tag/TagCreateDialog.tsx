@@ -7,7 +7,6 @@ import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import TagHooks from "../../api/TagHooks.ts";
 import { DocumentTagCreate } from "../../api/openapi/models/DocumentTagCreate.ts";
-import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { contrastiveColors } from "../../utils/colors.ts";
 import { SearchActions } from "../../views/search/DocumentSearch/searchSlice.ts";
@@ -60,9 +59,6 @@ function TagCreateDialog() {
   // mutations
   const createTagMutation = TagHooks.useCreateTag();
 
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
-
   // form actions
   const handleTagCreation: SubmitHandler<DocumentTagCreate> = (data) => {
     createTagMutation.mutate(
@@ -77,11 +73,6 @@ function TagCreateDialog() {
       },
       {
         onSuccess: (data) => {
-          openSnackbar({
-            text: `Added tag ${data.name}`,
-            severity: "success",
-          });
-
           // if we add a new tag successfully, we want to show the tag in the tag explorer
           // this means, we have to expand the parent tags, so the new tag is visible
           const tagsToExpand = [];

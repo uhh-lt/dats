@@ -67,6 +67,9 @@ const useCreateTag = () =>
       );
       queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
     },
+    meta: {
+      successMessage: (tag: DocumentTagRead) => `Created tag ${tag.name}`,
+    },
   });
 
 const useUpdateTag = () =>
