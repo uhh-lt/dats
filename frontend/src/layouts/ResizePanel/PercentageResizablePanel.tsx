@@ -1,7 +1,6 @@
 import { memo, ReactNode, useCallback, useRef, useState } from "react";
 import DragHandler from "./DragHandler.tsx";
 import { useMouseEventHandlers } from "./hooks/useMouseEventHandlers";
-import "./styles/ResizablePanel.css";
 import { Container, Panel } from "./styles/styledComponents.ts";
 
 interface PercentageResizablePanelProps {

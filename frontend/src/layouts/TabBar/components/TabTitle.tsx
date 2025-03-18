@@ -5,7 +5,7 @@ import SdocHooks from "../../../api/SdocHooks";
 import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
 import WhiteboardHooks from "../../../api/WhiteboardHooks";
 import { getIconComponent } from "../../../utils/icons/iconUtils";
-import { LabelText, TabLabel } from "../styles";
+import { LabelText, TabLabel } from "../styles/styledComponents.tsx";
 import { TabData } from "../types/TabData.ts";
 
 interface TabTitleProps {

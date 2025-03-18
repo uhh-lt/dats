@@ -1,6 +1,5 @@
-import { Box } from "@mui/material";
 import { RefObject, memo } from "react";
-import { createDividerStyles } from "./styles/resizePanelStyles";
+import { StyledDragHandler } from "./styles/styledComponents";
 
 interface DragHandlerProps {
   dragHandleRef: RefObject<HTMLDivElement>;
@@ -18,47 +17,12 @@ interface DragHandlerProps {
 
 function DragHandler({ dragHandleRef, isDragging, isCollapsed, isHorizontal, style }: DragHandlerProps) {
   return (
-    <Box
+    <StyledDragHandler
       ref={dragHandleRef}
-      className={`resizer-handle${isDragging ? " resizing" : ""}${isCollapsed ? " collapsed" : ""}`}
-      sx={{
-        ...createDividerStyles(isDragging, isCollapsed, isHorizontal),
-        ...style,
-        ...(isCollapsed && {
-          "&::after": {
-            content: '""',
-            position: "absolute",
-            backgroundColor: "action.active",
-            transition: "all 0.2s ease",
-            opacity: 0.5,
-            ...(isHorizontal
-              ? {
-                  width: "4px",
-                  height: "32px",
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                }
-              : {
-                  width: "32px",
-                  height: "4px",
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                }),
-          },
-          "&:hover::after": {
-            opacity: 1,
-            ...(isHorizontal
-              ? {
-                  height: "48px",
-                }
-              : {
-                  width: "48px",
-                }),
-          },
-        }),
-      }}
+      isDragging={isDragging}
+      isCollapsed={isCollapsed}
+      isHorizontal={isHorizontal}
+      sx={style}
     />
   );
 }

@@ -1,7 +1,7 @@
 import CloseIcon from "@mui/icons-material/Close";
 import React, { memo, useCallback } from "react";
 import { Draggable } from "react-beautiful-dnd";
-import { CloseButton, StyledTab, TabContent, TabWrapper } from "../styles";
+import { CloseButton, StyledTab, TabContent, TabWrapper } from "../styles/styledComponents.tsx";
 import { TabData } from "../types/TabData.ts";
 import TabTitle from "./TabTitle.tsx";
 

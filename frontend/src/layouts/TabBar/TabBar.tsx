@@ -12,7 +12,7 @@ import DragCloneRenderer from "./components/DragCloneRenderer.tsx";
 import DraggableTab from "./components/DraggableTab.tsx";
 import StrictModeDroppable from "./components/StrictModeDroppable.tsx";
 import TabMenuButton from "./components/TabMenuButton.tsx";
-import { TabIconButton } from "./styles";
+import { TabIconButton } from "./styles/styledComponents.tsx";
 
 function TabBar() {
   // Container ref for scrolling

@@ -2,7 +2,6 @@ import { Box } from "@mui/material";
 import { memo, ReactNode, useCallback, useRef, useState } from "react";
 import DragHandler from "./DragHandler.tsx";
 import { useMouseEventHandlers } from "./hooks/useMouseEventHandlers.ts";
-import "./styles/ResizablePanel.css";
 
 interface PixelResizablePanelProps {
   children: ReactNode;
