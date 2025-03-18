@@ -8,7 +8,7 @@ import {
   Select,
   SelectChangeEvent,
 } from "@mui/material";
-import React from "react";
+import React, { memo, useCallback } from "react";
 import UserHooks from "../../api/UserHooks.ts";
 import UserName from "./UserName.tsx";
 
@@ -23,11 +23,25 @@ function UserSelectorMulti({ userIds, onUserIdChange, title, ...props }: UserSel
   const projectUsers = UserHooks.useGetAllUsers();
 
   // handlers (for ui)
-  const handleChange = (event: SelectChangeEvent<number[]>) => {
-    onUserIdChange(event.target.value as number[]);
-  };
+  const handleChange = useCallback(
+    (event: SelectChangeEvent<number[]>) => {
+      onUserIdChange(event.target.value as number[]);
+    },
+    [onUserIdChange],
+  );
 
   // render
+  const renderValue = useCallback(
+    (userIds: number[]) =>
+      userIds.map((userId, index) => (
+        <React.Fragment key={userId}>
+          <UserName userId={userId} />
+          {index < userIds.length - 1 && ", "}
+        </React.Fragment>
+      )),
+    [],
+  );
+
   return (
     <FormControl {...props}>
       <InputLabel id="multi-user-select-label">{title}</InputLabel>
@@ -39,14 +53,7 @@ function UserSelectorMulti({ userIds, onUserIdChange, title, ...props }: UserSel
         onChange={handleChange}
         disabled={!projectUsers.isSuccess}
         fullWidth
-        renderValue={(userIds) =>
-          userIds.map((userId, index) => (
-            <React.Fragment key={userId}>
-              <UserName userId={userId} />
-              {index < userIds.length - 1 && ", "}
-            </React.Fragment>
-          ))
-        }
+        renderValue={renderValue}
       >
         {projectUsers.isSuccess &&
           projectUsers.data.map((user) => (
@@ -62,4 +69,4 @@ function UserSelectorMulti({ userIds, onUserIdChange, title, ...props }: UserSel
   );
 }
 
-export default UserSelectorMulti;
+export default memo(UserSelectorMulti);
