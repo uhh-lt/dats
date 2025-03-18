@@ -17,7 +17,6 @@ import { isEqual } from "lodash";
 import React, { useEffect, useMemo, useState } from "react";
 import TagHooks from "../../../api/TagHooks.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
-import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 import { CheckboxState } from "./CheckboxState.ts";
 import TagMenuCreationButton from "./TagMenuCreateButton.tsx";
@@ -91,9 +90,6 @@ function TagMenuContent({
     setSearch(event.target.value);
   };
 
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
-
   // actions
   const handleCheck = (tagId: number) => {
     setChecked(
@@ -109,64 +105,35 @@ function TagMenuContent({
 
   const handleClickTag = (tagId: number) => {
     if (initialChecked.get(tagId) === CheckboxState.CHECKED) {
-      removeTagsMutation.mutate(
-        {
-          requestBody: {
-            source_document_ids: sdocIds,
-            document_tag_ids: [tagId],
-          },
+      removeTagsMutation.mutate({
+        requestBody: {
+          source_document_ids: sdocIds,
+          document_tag_ids: [tagId],
         },
-        {
-          onSuccess: () => {
-            openSnackbar({
-              text: `Removed tags!`,
-              severity: "success",
-            });
-          },
-        },
-      );
+      });
     } else {
-      addTagsMutation.mutate(
-        {
-          requestBody: {
-            source_document_ids: sdocIds,
-            document_tag_ids: [tagId],
-          },
+      addTagsMutation.mutate({
+        requestBody: {
+          source_document_ids: sdocIds,
+          document_tag_ids: [tagId],
         },
-        {
-          onSuccess: () => {
-            openSnackbar({
-              text: `Added tags!`,
-              severity: "success",
-            });
-          },
-        },
-      );
+      });
     }
     handleClose();
   };
+
   const handleApplyTags = () => {
-    updateTagsMutation.mutate(
-      {
-        requestBody: {
-          sdoc_ids: sdocIds,
-          link_tag_ids: Array.from(checked)
-            .filter(([, state]) => state === CheckboxState.CHECKED)
-            .map(([tagId]) => tagId),
-          unlink_tag_ids: Array.from(checked)
-            .filter(([, state]) => state === CheckboxState.NOT_CHECKED)
-            .map(([tagId]) => tagId),
-        },
+    updateTagsMutation.mutate({
+      requestBody: {
+        sdoc_ids: sdocIds,
+        link_tag_ids: Array.from(checked)
+          .filter(([, state]) => state === CheckboxState.CHECKED)
+          .map(([tagId]) => tagId),
+        unlink_tag_ids: Array.from(checked)
+          .filter(([, state]) => state === CheckboxState.NOT_CHECKED)
+          .map(([tagId]) => tagId),
       },
-      {
-        onSuccess: () => {
-          openSnackbar({
-            text: `Updated tags!`,
-            severity: "success",
-          });
-        },
-      },
-    );
+    });
     handleClose();
   };
 
