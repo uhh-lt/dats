@@ -1,8 +1,8 @@
 import { Box } from "@mui/material";
 import { ReactNode, useCallback, useRef, useState } from "react";
+import { DragHandler } from "./DragHandler.tsx";
 import { useMouseEventHandlers } from "./hooks/useMouseEventHandlers.ts";
 import "./styles/ResizablePanel.css";
-import { createDividerStyles } from "./styles/resizePanelStyles.ts";
 
 interface PixelResizablePanelProps {
   children: ReactNode;
@@ -105,21 +105,22 @@ export function PixelResizablePanel({
       }}
     >
       {!isCollapsed && <div className="panel-content">{children}</div>}
-      <Box
-        ref={dragHandleRef}
-        className={`resizer-handle${isDragging ? " resizing" : ""}`}
-        sx={{
-          ...createDividerStyles(isDragging, isCollapsed, isHorizontal),
-          ...(isHorizontal
+      <DragHandler
+        dragHandleRef={dragHandleRef}
+        isDragging={isDragging}
+        isCollapsed={isCollapsed}
+        isHorizontal={isHorizontal}
+        position={
+          isHorizontal
             ? {
                 top: 0,
-                [isLeftOrTop ? "right" : "left"]: isCollapsed ? 0 : -4,
+                [isLeftOrTop ? "right" : "left"]: -4,
               }
             : {
                 left: 0,
-                [isLeftOrTop ? "bottom" : "top"]: isCollapsed ? 0 : -4,
-              }),
-        }}
+                [isLeftOrTop ? "bottom" : "top"]: -4,
+              }
+        }
       />
     </Box>
   );
