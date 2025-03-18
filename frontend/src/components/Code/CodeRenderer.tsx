@@ -1,4 +1,5 @@
 import { Stack } from "@mui/material";
+import { memo } from "react";
 import CodeHooks from "../../api/CodeHooks.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
@@ -7,15 +8,16 @@ interface CodeRendererProps {
   code: number | CodeRead;
 }
 
-function CodeRenderer({ code }: CodeRendererProps) {
-  if (typeof code === "number") {
-    return <CodeRendererWithoutData codeId={code} />;
-  } else {
-    return <CodeRendererWithData code={code} />;
-  }
-}
+const CodeRendererWithData = memo(({ code }: { code: CodeRead }) => {
+  return (
+    <Stack direction="row" alignItems="center">
+      {getIconComponent(Icon.CODE, { style: { color: code.color } })}
+      {code.name}
+    </Stack>
+  );
+});
 
-function CodeRendererWithoutData({ codeId }: { codeId: number }) {
+const CodeRendererWithoutData = memo(({ codeId }: { codeId: number }) => {
   const code = CodeHooks.useGetCode(codeId);
 
   if (code.isSuccess) {
@@ -25,15 +27,14 @@ function CodeRendererWithoutData({ codeId }: { codeId: number }) {
   } else {
     return <div>Loading...</div>;
   }
+});
+
+function CodeRenderer({ code }: CodeRendererProps) {
+  if (typeof code === "number") {
+    return <CodeRendererWithoutData codeId={code} />;
+  } else {
+    return <CodeRendererWithData code={code} />;
+  }
 }
 
-function CodeRendererWithData({ code }: { code: CodeRead }) {
-  return (
-    <Stack direction="row" alignItems="center">
-      {getIconComponent(Icon.CODE, { style: { color: code.color } })}
-      {code.name}
-    </Stack>
-  );
-}
-
-export default CodeRenderer;
+export default memo(CodeRenderer);

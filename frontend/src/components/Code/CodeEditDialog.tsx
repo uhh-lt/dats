@@ -3,7 +3,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack } from "@mui/material";
-import { useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import CodeHooks from "../../api/CodeHooks.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
@@ -42,55 +42,61 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
   const deleteCodeMutation = CodeHooks.useDeleteCode();
 
   // form handling
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     dispatch(CRUDDialogActions.closeCodeEditDialog());
-  };
-  const handleCodeUpdate: SubmitHandler<CodeEditValues> = (data) => {
-    if (code) {
-      // only allow updating of color for SYSTEM CODES
-      let requestBody: CodeUpdate = {
-        color: data.color,
-      };
+  }, [dispatch]);
 
-      if (!code.is_system) {
-        requestBody = {
-          ...requestBody,
-          name: data.name,
-          description: data.description,
-          parent_id: data.parentCodeId === -1 ? null : data.parentCodeId,
+  const handleCodeUpdate = useCallback<SubmitHandler<CodeEditValues>>(
+    (data) => {
+      if (code) {
+        // only allow updating of color for SYSTEM CODES
+        let requestBody: CodeUpdate = {
+          color: data.color,
         };
-      }
 
-      updateCodeMutation.mutate(
-        {
-          requestBody,
-          codeId: code.id,
-        },
-        {
-          onSuccess: (data: CodeRead) => {
-            // check if we updated the parent code
-            if (data.parent_id !== code.parent_id) {
-              // if we edited a code successfully, we want to show the code in the code explorer
-              // this means, we might have to expand the parent codes, so the new code is visible
-              const codesToExpand = [];
-              let parentCodeId = data.parent_id;
-              while (parentCodeId) {
-                const currentParentCodeId = parentCodeId;
+        if (!code.is_system) {
+          requestBody = {
+            ...requestBody,
+            name: data.name,
+            description: data.description,
+            parent_id: data.parentCodeId === -1 ? null : data.parentCodeId,
+          };
+        }
 
-                codesToExpand.push(parentCodeId);
-                parentCodeId = codes.find((code) => code.id === currentParentCodeId)?.parent_id;
-              }
-              dispatch(AnnoActions.expandCodes(codesToExpand.map((id) => id.toString())));
-            }
-
-            handleClose();
+        updateCodeMutation.mutate(
+          {
+            requestBody,
+            codeId: code.id,
           },
-        },
-      );
-    }
-  };
-  const handleError: SubmitErrorHandler<CodeEditValues> = (data) => console.error(data);
-  const handleCodeDelete = () => {
+          {
+            onSuccess: (data: CodeRead) => {
+              // check if we updated the parent code
+              if (data.parent_id !== code.parent_id) {
+                // if we edited a code successfully, we want to show the code in the code explorer
+                // this means, we might have to expand the parent codes, so the new code is visible
+                const codesToExpand = [];
+                let parentCodeId = data.parent_id;
+                while (parentCodeId) {
+                  const currentParentCodeId = parentCodeId;
+
+                  codesToExpand.push(parentCodeId);
+                  parentCodeId = codes.find((code) => code.id === currentParentCodeId)?.parent_id;
+                }
+                dispatch(AnnoActions.expandCodes(codesToExpand.map((id) => id.toString())));
+              }
+
+              handleClose();
+            },
+          },
+        );
+      }
+    },
+    [code, updateCodeMutation, codes, dispatch, handleClose],
+  );
+
+  const handleError = useCallback<SubmitErrorHandler<CodeEditValues>>((data) => console.error(data), []);
+
+  const handleCodeDelete = useCallback(() => {
     // disallow deleting of SYSTEM CODES
     if (code && !code.is_system) {
       ConfirmationAPI.openConfirmationDialog({
@@ -109,7 +115,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
     } else {
       throw new Error("Invalid invocation of method handleCodeDelete! Only call when code.data is available!");
     }
-  };
+  }, [code, deleteCodeMutation, handleClose]);
 
   return (
     <>
@@ -269,4 +275,4 @@ function CodeEditDialogContent({
   );
 }
 
-export default CodeEditDialog;
+export default memo(CodeEditDialog);

@@ -1,6 +1,6 @@
 import SquareIcon from "@mui/icons-material/Square";
 import { Box } from "@mui/material";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import CodeCreateDialog from "../../Code/CodeCreateDialog.tsx";
 import CodeCreateListItemButton from "../../Code/CodeCreateListItemButton.tsx";
@@ -8,8 +8,19 @@ import CodeEditButton from "../../Code/CodeEditButton.tsx";
 import CodeEditDialog from "../../Code/CodeEditDialog.tsx";
 import CodeToggleEnabledButton from "../../Code/CodeToggleEnabledButton.tsx";
 import CodeToggleVisibilityButton from "../../Code/CodeToggleVisibilityButton.tsx";
+import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
 import useComputeProjectCodeTree from "./useComputeProjectCodeTree.ts";
+
+const CodeActions = memo((node: IDataTree) => {
+  return (
+    <>
+      <CodeEditButton code={node.data as CodeRead} />
+      <CodeToggleVisibilityButton code={node} />
+      <CodeToggleEnabledButton code={node} />
+    </>
+  );
+});
 
 function ProjectCodes() {
   // custom hooks
@@ -36,13 +47,7 @@ function ProjectCodes() {
             expandedItems={expandedCodeIds}
             onExpandedItemsChange={setExpandedCodeIds}
             // actions
-            renderActions={(node) => (
-              <>
-                <CodeEditButton code={node.data as CodeRead} />
-                <CodeToggleVisibilityButton code={node} />
-                <CodeToggleEnabledButton code={node} />
-              </>
-            )}
+            renderActions={CodeActions}
             // components
             listActions={<CodeCreateListItemButton parentCodeId={undefined} />}
             filterActions={<CodeToggleEnabledButton code={codeTree?.model} />}
@@ -55,4 +60,4 @@ function ProjectCodes() {
   );
 }
 
-export default ProjectCodes;
+export default memo(ProjectCodes);

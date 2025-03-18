@@ -1,7 +1,7 @@
 import SquareIcon from "@mui/icons-material/Square";
 import { Box, BoxProps, Typography } from "@mui/material";
 import * as React from "react";
-import { useCallback, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { AnnoActions, isHiddenCodeId } from "../../../views/annotation/annoSlice.ts";
 import ExporterButton from "../../Exporter/ExporterButton.tsx";
@@ -12,7 +12,7 @@ import CodeEditDialog from "../CodeEditDialog.tsx";
 import CodeExplorerMenu from "./CodeExplorerMenu.tsx";
 import useComputeCodeTree from "./useComputeCodeTree.ts";
 
-const listActions = (
+const ListActions = memo(() => (
   <>
     <CodeCreateListItemButton parentCodeId={undefined} />
     <ExporterButton
@@ -21,7 +21,31 @@ const listActions = (
       iconButtonProps={{ color: "inherit" }}
     />
   </>
-);
+));
+
+const CodeNodeRenderer = memo((node: IDataTree) => {
+  const isHidden = useAppSelector(isHiddenCodeId(node.data.id));
+  const dispatch = useAppDispatch();
+
+  const handleMouseEnter = useCallback(() => {
+    dispatch(AnnoActions.setHoveredCodeId(node.data.id));
+  }, [dispatch, node.data.id]);
+
+  const handleMouseLeave = useCallback(() => {
+    dispatch(AnnoActions.setHoveredCodeId(undefined));
+  }, [dispatch]);
+
+  return (
+    <Typography
+      variant="body2"
+      sx={{ fontWeight: "inherit", flexGrow: 1, ...(isHidden && { textDecoration: "line-through" }) }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      {node.data.name}
+    </Typography>
+  );
+});
 
 function CodeExplorer(props: BoxProps) {
   // custom hooks
@@ -43,14 +67,17 @@ function CodeExplorer(props: BoxProps) {
     [dispatch],
   );
 
-  const handleSelectedCodeChange = (_event: React.SyntheticEvent, nodeIds: string[] | string | null) => {
-    if (nodeIds === null) {
-      dispatch(AnnoActions.setSelectedCodeId(undefined));
-    } else {
-      const id = parseInt(Array.isArray(nodeIds) ? nodeIds[0] : nodeIds);
-      dispatch(AnnoActions.setSelectedCodeId(selectedCodeId === id ? undefined : id));
-    }
-  };
+  const handleSelectedCodeChange = useCallback(
+    (_event: React.SyntheticEvent, nodeIds: string[] | string | null) => {
+      if (nodeIds === null) {
+        dispatch(AnnoActions.setSelectedCodeId(undefined));
+      } else {
+        const id = parseInt(Array.isArray(nodeIds) ? nodeIds[0] : nodeIds);
+        dispatch(AnnoActions.setSelectedCodeId(selectedCodeId === id ? undefined : id));
+      }
+    },
+    [dispatch, selectedCodeId],
+  );
 
   return (
     <Box {...props}>
@@ -72,11 +99,11 @@ function CodeExplorer(props: BoxProps) {
             selectedItems={selectedCodeId}
             onSelectedItemsChange={handleSelectedCodeChange}
             // render node
-            renderNode={(node) => <CodeNodeRenderer node={node} />}
+            renderNode={CodeNodeRenderer}
             // actions
-            renderActions={(node) => <CodeExplorerMenu code={node} />}
+            renderActions={CodeExplorerMenu}
             // components
-            listActions={listActions}
+            listActions={<ListActions />}
           />
           <CodeEditDialog codes={allCodes.data} />
         </>
@@ -85,20 +112,4 @@ function CodeExplorer(props: BoxProps) {
   );
 }
 
-function CodeNodeRenderer({ node }: { node: IDataTree }) {
-  const isHidden = useAppSelector(isHiddenCodeId(node.data.id));
-  const dispatch = useAppDispatch();
-
-  return (
-    <Typography
-      variant="body2"
-      sx={{ fontWeight: "inherit", flexGrow: 1, ...(isHidden && { textDecoration: "line-through" }) }}
-      onMouseEnter={() => dispatch(AnnoActions.setHoveredCodeId(node.data.id))}
-      onMouseLeave={() => dispatch(AnnoActions.setHoveredCodeId(undefined))}
-    >
-      {node.data.name}
-    </Typography>
-  );
-}
-
-export default CodeExplorer;
+export default memo(CodeExplorer);

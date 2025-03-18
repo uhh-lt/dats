@@ -1,5 +1,5 @@
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
-import React from "react";
+import React, { memo, useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 import { AnnoActions, isHiddenCodeId } from "../../../views/annotation/annoSlice.ts";
@@ -16,16 +16,19 @@ function CodeToggleVisibilityMenuItem({ code, onClick, ...props }: CodeToggleVis
   const isCodeHidden = useAppSelector(isHiddenCodeId(code.data.id));
   const dispatch = useAppDispatch();
 
-  const handleClick = (event: React.MouseEvent) => {
-    event.stopPropagation();
-    // toggle visibility of the code and all its children
-    const codeIds = [code.data.id];
-    if (code.children) {
-      codeIds.push(...flatTree(code).map((c) => c.id));
-    }
-    dispatch(AnnoActions.toggleCodeVisibility(codeIds));
-    if (onClick) onClick();
-  };
+  const handleClick = useCallback(
+    (event: React.MouseEvent) => {
+      event.stopPropagation();
+      // toggle visibility of the code and all its children
+      const codeIds = [code.data.id];
+      if (code.children) {
+        codeIds.push(...flatTree(code).map((c) => c.id));
+      }
+      dispatch(AnnoActions.toggleCodeVisibility(codeIds));
+      if (onClick) onClick();
+    },
+    [code, dispatch, onClick],
+  );
 
   return (
     <MenuItem onClick={handleClick} {...props}>
@@ -37,4 +40,4 @@ function CodeToggleVisibilityMenuItem({ code, onClick, ...props }: CodeToggleVis
   );
 }
 
-export default CodeToggleVisibilityMenuItem;
+export default memo(CodeToggleVisibilityMenuItem);

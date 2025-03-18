@@ -6,7 +6,7 @@ import {
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 
 import SquareIcon from "@mui/icons-material/Square";
@@ -37,9 +37,9 @@ const columns: MRT_ColumnDef<CodeTableRow>[] = [
     accessorKey: "color",
     header: "Color",
     enableColumnFilter: false,
-    Cell: ({ row }) => {
+    Cell: memo(({ row }) => {
       return <SquareIcon style={{ color: row.original.color, blockSize: 24 }} />;
-    },
+    }),
   },
   {
     accessorKey: "name",
@@ -97,6 +97,42 @@ function CodeTable({
     return { projectCodesMap, projectCodesRows };
   }, [projectCodes.data]);
 
+  // rendering
+  const renderTopToolbarCustomActionsCallback = useCallback(
+    (props: { table: MRT_TableInstance<CodeTableRow> }) =>
+      renderTopToolbarCustomActions
+        ? renderTopToolbarCustomActions({
+            table: props.table,
+            selectedCodes: Object.keys(rowSelectionModel).map((codeId) => projectCodesMap[codeId]),
+          })
+        : undefined,
+    [renderTopToolbarCustomActions, rowSelectionModel, projectCodesMap],
+  );
+
+  const renderToolbarInternalActionsCallback = useCallback(
+    (props: { table: MRT_TableInstance<CodeTableRow> }) =>
+      renderToolbarInternalActions
+        ? renderToolbarInternalActions({
+            table: props.table,
+            selectedCodes: Object.values(projectCodesMap).filter((row) => rowSelectionModel[row.id]),
+          })
+        : undefined,
+    [renderToolbarInternalActions, projectCodesMap, rowSelectionModel],
+  );
+
+  const renderBottomToolbarCustomActionsCallback = useCallback(
+    (props: { table: MRT_TableInstance<CodeTableRow> }) =>
+      renderBottomToolbarCustomActions
+        ? renderBottomToolbarCustomActions({
+            table: props.table,
+            selectedCodes: Object.values(projectCodesMap).filter((row) => rowSelectionModel[row.id]),
+          })
+        : undefined,
+    [renderBottomToolbarCustomActions, projectCodesMap, rowSelectionModel],
+  );
+
+  const getSubRows = useCallback((originalRow: CodeTableRow) => originalRow.subRows, []);
+
   // table
   const table = useMaterialReactTable<CodeTableRow>({
     data: projectCodesRows,
@@ -129,31 +165,13 @@ function CodeTable({
     enableRowVirtualization: true,
     // selection
     enableRowSelection: true,
-    enableMultiRowSelection: enableMultiRowSelection,
+    enableMultiRowSelection,
     onRowSelectionChange,
     // toolbar
     enableBottomToolbar: !!renderBottomToolbarCustomActions,
-    renderTopToolbarCustomActions: renderTopToolbarCustomActions
-      ? (props) =>
-          renderTopToolbarCustomActions({
-            table: props.table,
-            selectedCodes: Object.keys(rowSelectionModel).map((codeId) => projectCodesMap[codeId]),
-          })
-      : undefined,
-    renderToolbarInternalActions: renderToolbarInternalActions
-      ? (props) =>
-          renderToolbarInternalActions({
-            table: props.table,
-            selectedCodes: Object.values(projectCodesMap).filter((row) => rowSelectionModel[row.id]),
-          })
-      : undefined,
-    renderBottomToolbarCustomActions: renderBottomToolbarCustomActions
-      ? (props) =>
-          renderBottomToolbarCustomActions({
-            table: props.table,
-            selectedCodes: Object.values(projectCodesMap).filter((row) => rowSelectionModel[row.id]),
-          })
-      : undefined,
+    renderTopToolbarCustomActions: renderTopToolbarCustomActionsCallback,
+    renderToolbarInternalActions: renderToolbarInternalActionsCallback,
+    renderBottomToolbarCustomActions: renderBottomToolbarCustomActionsCallback,
     // hide columns per default
     initialState: {
       columnVisibility: {
@@ -162,11 +180,11 @@ function CodeTable({
     },
     // tree structure
     enableExpanding: true,
-    getSubRows: (originalRow) => originalRow.subRows,
+    getSubRows,
     filterFromLeafRows: true, //search for child rows and preserve parent rows
     enableSubRowSelection: false,
   });
 
   return <MaterialReactTable table={table} />;
 }
-export default CodeTable;
+export default memo(CodeTable);

@@ -2,25 +2,28 @@ import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
 import { IconButton, IconButtonProps } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
-import React from "react";
+import React, { memo, useCallback } from "react";
 import CodeHooks from "../../api/CodeHooks.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { IDataTree } from "../TreeExplorer/IDataTree.ts";
 
 function CodeToggleEnabledButton({ code, ...props }: IconButtonProps & { code: IDataTree | null | undefined }) {
   const isDisabled = (code?.data as CodeRead).enabled === false;
-
   const updateCodeMutation = CodeHooks.useUpdateCode();
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-    event.stopPropagation();
-    if (!code) return;
-    updateCodeMutation.mutate({
-      codeId: code.data.id,
-      requestBody: {
-        enabled: !(code.data as CodeRead).enabled,
-      },
-    });
-  };
+
+  const handleClick = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+      event.stopPropagation();
+      if (!code) return;
+      updateCodeMutation.mutate({
+        codeId: code.data.id,
+        requestBody: {
+          enabled: !(code.data as CodeRead).enabled,
+        },
+      });
+    },
+    [code, updateCodeMutation],
+  );
 
   return (
     <Tooltip title={isDisabled ? "Enable code project-wide" : "Disable code project-wide"}>
@@ -33,4 +36,4 @@ function CodeToggleEnabledButton({ code, ...props }: IconButtonProps & { code: I
   );
 }
 
-export default CodeToggleEnabledButton;
+export default memo(CodeToggleEnabledButton);

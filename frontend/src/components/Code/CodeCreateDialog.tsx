@@ -2,7 +2,7 @@ import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, rgbToHex } from "@mui/material";
-import { useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import CodeHooks from "../../api/CodeHooks.ts";
@@ -44,9 +44,9 @@ function CodeCreateDialog() {
   const dispatch = useAppDispatch();
 
   // ui event handlers
-  const handleCloseCodeCreateDialog = () => {
+  const handleCloseCodeCreateDialog = useCallback(() => {
     dispatch(CRUDDialogActions.closeCodeCreateDialog());
-  };
+  }, [dispatch]);
 
   // initialize code to create when code changes
   const codeToCreate = useMemo(() => {
@@ -97,47 +97,54 @@ function CodeCreateForm({ projectId, codeToCreate, parentCodes, onClose }: CodeC
   const createCodeMutation = CodeHooks.useCreateCode();
 
   // react form handlers
-  const handleSubmitCodeCreateDialog: SubmitHandler<CodeCreateValues> = (data) => {
-    let pcid: number | undefined = undefined;
-    if (typeof data.parentCodeId === "string") {
-      pcid = parseInt(data.parentCodeId);
-    } else {
-      pcid = data.parentCodeId;
-    }
-    createCodeMutation.mutate(
-      {
-        requestBody: {
-          name: data.name,
-          description: data.description,
-          color: data.color,
-          project_id: projectId,
-          parent_id: pcid === -1 ? null : pcid,
-          is_system: false,
+  const handleSubmitCodeCreateDialog = useCallback<SubmitHandler<CodeCreateValues>>(
+    (data) => {
+      let pcid: number | undefined = undefined;
+      if (typeof data.parentCodeId === "string") {
+        pcid = parseInt(data.parentCodeId);
+      } else {
+        pcid = data.parentCodeId;
+      }
+      createCodeMutation.mutate(
+        {
+          requestBody: {
+            name: data.name,
+            description: data.description,
+            color: data.color,
+            project_id: projectId,
+            parent_id: pcid === -1 ? null : pcid,
+            is_system: false,
+          },
         },
-      },
-      {
-        onSuccess: (data) => {
-          // if we add a new code successfully, we want to show the code in the code explorer
-          // this means, we have to expand the parent codes, so the new code is visible
-          const codesToExpand = [];
-          let parentCodeId = data.parent_id;
-          while (parentCodeId) {
-            const currentParentCodeId = parentCodeId;
-            codesToExpand.push(parentCodeId);
-            parentCodeId = parentCodes.find((code) => code.id === currentParentCodeId)?.parent_id;
-          }
-          dispatch(AnnoActions.expandCodes(codesToExpand.map((id) => id.toString())));
-          if (onSuccessHandler) onSuccessHandler(data, true);
-          onClose();
+        {
+          onSuccess: (data) => {
+            // if we add a new code successfully, we want to show the code in the code explorer
+            // this means, we have to expand the parent codes, so the new code is visible
+            const codesToExpand = [];
+            let parentCodeId = data.parent_id;
+            while (parentCodeId) {
+              const currentParentCodeId = parentCodeId;
+              codesToExpand.push(parentCodeId);
+              parentCodeId = parentCodes.find((code) => code.id === currentParentCodeId)?.parent_id;
+            }
+            dispatch(AnnoActions.expandCodes(codesToExpand.map((id) => id.toString())));
+            if (onSuccessHandler) onSuccessHandler(data, true);
+            onClose();
+          },
         },
-      },
-    );
-  };
+      );
+    },
+    [createCodeMutation, dispatch, onSuccessHandler, parentCodes, projectId, onClose],
+  );
 
-  const handleErrorCodeCreateDialog: SubmitErrorHandler<CodeCreateValues> = (data) => console.error(data);
+  const handleErrorCodeCreateDialog = useCallback<SubmitErrorHandler<CodeCreateValues>>(
+    (data) => console.error(data),
+    [],
+  );
 
   // code tree
   const codeTree = useCodesWithLevel(parentCodes);
+
   // rendering
   return (
     <form onSubmit={handleSubmit(handleSubmitCodeCreateDialog, handleErrorCodeCreateDialog)}>
@@ -222,4 +229,6 @@ function CodeCreateForm({ projectId, codeToCreate, parentCodes, onClose }: CodeC
   );
 }
 
-export default CodeCreateDialog;
+const MemoizedCodeCreateDialog = memo(CodeCreateDialog);
+
+export default MemoizedCodeCreateDialog;

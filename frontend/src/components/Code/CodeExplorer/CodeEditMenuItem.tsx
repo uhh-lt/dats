@@ -1,5 +1,5 @@
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
-import React from "react";
+import React, { memo, useCallback } from "react";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
@@ -13,11 +13,14 @@ interface CodeEditMenuItemProps {
 function CodeEditMenuItem({ code, onClick, ...props }: CodeEditMenuItemProps & Omit<MenuItemProps, "onClick">) {
   const dispatch = useAppDispatch();
 
-  const handleClickOpen = (event: React.MouseEvent) => {
-    event.stopPropagation();
-    dispatch(CRUDDialogActions.openCodeEditDialog({ code }));
-    onClick();
-  };
+  const handleClickOpen = useCallback(
+    (event: React.MouseEvent) => {
+      event.stopPropagation();
+      dispatch(CRUDDialogActions.openCodeEditDialog({ code }));
+      onClick();
+    },
+    [code, dispatch, onClick],
+  );
 
   return (
     <MenuItem onClick={handleClickOpen} {...props}>
@@ -27,4 +30,4 @@ function CodeEditMenuItem({ code, onClick, ...props }: CodeEditMenuItemProps & O
   );
 }
 
-export default CodeEditMenuItem;
+export default memo(CodeEditMenuItem);
