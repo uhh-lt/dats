@@ -1,16 +1,12 @@
-import { IconButton, IconButtonProps, Menu } from "@mui/material";
+import { IconButton, Menu } from "@mui/material";
 import { memo, useCallback, useState } from "react";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 import MemoMenuItem from "../../Memo/MemoMenuItem.tsx";
-import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
+import { DataTreeActionRendererProps } from "../../TreeExplorer/DataTreeView.tsx";
 import TagEditMenuItem from "./TagEditMenuItem.tsx";
 
-interface TagExplorerMenuProps {
-  tag: IDataTree;
-}
-
-function TagExplorerMenu({ tag, ...props }: TagExplorerMenuProps & Omit<IconButtonProps, "onClick">) {
+function TagExplorerActionMenu({ node: tag }: DataTreeActionRendererProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -26,9 +22,7 @@ function TagExplorerMenu({ tag, ...props }: TagExplorerMenuProps & Omit<IconButt
 
   return (
     <>
-      <IconButton onClick={handleClick} {...props}>
-        {getIconComponent(Icon.CONTEXT_MENU)}
-      </IconButton>
+      <IconButton onClick={handleClick}>{getIconComponent(Icon.CONTEXT_MENU)}</IconButton>
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
         <TagEditMenuItem tag={tag.data} onClick={handleClose} />
         <MemoMenuItem
@@ -41,4 +35,4 @@ function TagExplorerMenu({ tag, ...props }: TagExplorerMenuProps & Omit<IconButt
   );
 }
 
-export default memo(TagExplorerMenu);
+export default memo(TagExplorerActionMenu);

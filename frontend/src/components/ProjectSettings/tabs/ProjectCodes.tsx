@@ -8,11 +8,11 @@ import CodeEditButton from "../../Code/CodeEditButton.tsx";
 import CodeEditDialog from "../../Code/CodeEditDialog.tsx";
 import CodeToggleEnabledButton from "../../Code/CodeToggleEnabledButton.tsx";
 import CodeToggleVisibilityButton from "../../Code/CodeToggleVisibilityButton.tsx";
-import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
+import { DataTreeActionRendererProps } from "../../TreeExplorer/DataTreeView.tsx";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
 import useComputeProjectCodeTree from "./useComputeProjectCodeTree.ts";
 
-const CodeActions = memo((node: IDataTree) => {
+const CodeActionRenderer = memo(({ node }: DataTreeActionRendererProps) => {
   return (
     <>
       <CodeEditButton code={node.data as CodeRead} />
@@ -46,8 +46,8 @@ function ProjectCodes() {
             // expansion
             expandedItems={expandedCodeIds}
             onExpandedItemsChange={setExpandedCodeIds}
-            // actions
-            renderActions={CodeActions}
+            // renderers
+            ActionRenderer={CodeActionRenderer}
             // components
             listActions={<CodeCreateListItemButton parentCodeId={undefined} />}
             filterActions={<CodeToggleEnabledButton code={codeTree?.model} />}

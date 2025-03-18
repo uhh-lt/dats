@@ -4,15 +4,16 @@ import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectTy
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 import MemoMenuItem from "../../Memo/MemoMenuItem.tsx";
-import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
+import { DataTreeActionRendererProps } from "../../TreeExplorer/DataTreeView.tsx";
 import CodeEditMenuItem from "./CodeEditMenuItem.tsx";
 import CodeToggleVisibilityMenuItem from "./CodeToggleVisibilityMenuItem.tsx";
 
-function CodeExplorerMenu(code: IDataTree) {
+function CodeExplorerActionMenu({ node: code }: DataTreeActionRendererProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
   const handleClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
     setAnchorEl(event.currentTarget);
   }, []);
 
@@ -36,4 +37,4 @@ function CodeExplorerMenu(code: IDataTree) {
   );
 }
 
-export default memo(CodeExplorerMenu);
+export default memo(CodeExplorerActionMenu);

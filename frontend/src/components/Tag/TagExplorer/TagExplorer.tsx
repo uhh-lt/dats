@@ -4,14 +4,13 @@ import { memo, useCallback, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { SearchActions } from "../../../views/search/DocumentSearch/searchSlice.ts";
 import ExporterButton from "../../Exporter/ExporterButton.tsx";
-import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
 import TagEditDialog from "../TagEditDialog.tsx";
 import TagMenuCreateButton from "../TagMenu/TagMenuCreateButton.tsx";
-import TagExplorerMenu from "./TagExplorerMenu.tsx";
+import TagExplorerActionMenu from "./TagExplorerActionMenu.tsx";
 import useComputeTagTree from "./useComputeTagTree.ts";
 
-interface TagExplorerNewProps {
+interface TagExplorerProps {
   onTagClick?: (tagId: number) => void;
 }
 
@@ -26,7 +25,7 @@ const listActions = (
   </>
 );
 
-function TagExplorer({ onTagClick, ...props }: TagExplorerNewProps & BoxProps) {
+function TagExplorer({ onTagClick, ...props }: TagExplorerProps & BoxProps) {
   // custom hooks
   const { tagTree, allTags } = useComputeTagTree();
 
@@ -54,8 +53,6 @@ function TagExplorer({ onTagClick, ...props }: TagExplorerNewProps & BoxProps) {
     [onTagClick],
   );
 
-  const renderActions = useCallback((node: IDataTree) => <TagExplorerMenu tag={node} />, []);
-
   return (
     <Box {...props}>
       {allTags.isSuccess && tagTree && (
@@ -74,7 +71,8 @@ function TagExplorer({ onTagClick, ...props }: TagExplorerNewProps & BoxProps) {
             onExpandedItemsChange={handleExpandedTagIdsChange}
             // actions
             onItemClick={onTagClick ? handleTagClick : undefined}
-            renderActions={renderActions}
+            // renderers
+            ActionRenderer={TagExplorerActionMenu}
             // components
             listActions={listActions}
           />

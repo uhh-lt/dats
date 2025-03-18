@@ -1,15 +1,15 @@
 import SquareIcon from "@mui/icons-material/Square";
-import { Box, BoxProps, Typography } from "@mui/material";
+import { Box, BoxProps } from "@mui/material";
 import * as React from "react";
 import { memo, useCallback, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { AnnoActions, isHiddenCodeId } from "../../../views/annotation/annoSlice.ts";
+import { AnnoActions } from "../../../views/annotation/annoSlice.ts";
 import ExporterButton from "../../Exporter/ExporterButton.tsx";
-import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
 import CodeCreateListItemButton from "../CodeCreateListItemButton.tsx";
 import CodeEditDialog from "../CodeEditDialog.tsx";
-import CodeExplorerMenu from "./CodeExplorerMenu.tsx";
+import CodeExplorerActionMenu from "./CodeExplorerActionMenu.tsx";
+import CodeExplorerNodeRenderer from "./CodeExplorerNodeRenderer.tsx";
 import useComputeCodeTree from "./useComputeCodeTree.ts";
 
 const ListActions = memo(() => (
@@ -22,30 +22,6 @@ const ListActions = memo(() => (
     />
   </>
 ));
-
-const CodeNodeRenderer = memo((node: IDataTree) => {
-  const isHidden = useAppSelector(isHiddenCodeId(node.data.id));
-  const dispatch = useAppDispatch();
-
-  const handleMouseEnter = useCallback(() => {
-    dispatch(AnnoActions.setHoveredCodeId(node.data.id));
-  }, [dispatch, node.data.id]);
-
-  const handleMouseLeave = useCallback(() => {
-    dispatch(AnnoActions.setHoveredCodeId(undefined));
-  }, [dispatch]);
-
-  return (
-    <Typography
-      variant="body2"
-      sx={{ fontWeight: "inherit", flexGrow: 1, ...(isHidden && { textDecoration: "line-through" }) }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      {node.data.name}
-    </Typography>
-  );
-});
 
 function CodeExplorer(props: BoxProps) {
   // custom hooks
@@ -98,10 +74,9 @@ function CodeExplorer(props: BoxProps) {
             // selection
             selectedItems={selectedCodeId}
             onSelectedItemsChange={handleSelectedCodeChange}
-            // render node
-            renderNode={CodeNodeRenderer}
-            // actions
-            renderActions={CodeExplorerMenu}
+            // renderers
+            NodeRenderer={CodeExplorerNodeRenderer}
+            ActionRenderer={CodeExplorerActionMenu}
             // components
             listActions={<ListActions />}
           />

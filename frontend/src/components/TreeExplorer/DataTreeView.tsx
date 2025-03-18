@@ -11,22 +11,30 @@ import { Typography } from "@mui/material";
 import { SimpleTreeView } from "@mui/x-tree-view/SimpleTreeView";
 import { IDataTree } from "./IDataTree.ts";
 
-export interface DataTreeViewProps {
-  data: IDataTree;
-  renderNode?: (node: IDataTree) => React.ReactNode;
-  renderActions?: (node: IDataTree) => React.ReactNode;
-  dataIcon?: React.ElementType<SvgIconProps>;
+export interface DataTreeNodeRendererProps {
+  node: IDataTree;
 }
 
-const defaultNodeRenderer = (node: IDataTree) => (
+export interface DataTreeActionRendererProps {
+  node: IDataTree;
+}
+
+const DefaultNodeRenderer = ({ node }: DataTreeNodeRendererProps) => (
   <Typography variant="body2" sx={{ fontWeight: "inherit", flexGrow: 1 }}>
     {node.data.name}
   </Typography>
 );
 
+export interface DataTreeViewProps {
+  data: IDataTree;
+  NodeRenderer?: React.ComponentType<DataTreeNodeRendererProps>;
+  ActionRenderer?: React.ComponentType<DataTreeActionRendererProps>;
+  dataIcon?: React.ElementType<SvgIconProps>;
+}
+
 function DataTreeView({
-  renderNode = defaultNodeRenderer,
-  renderActions,
+  NodeRenderer = DefaultNodeRenderer,
+  ActionRenderer,
   data,
   dataIcon,
   ...props
@@ -49,8 +57,8 @@ function DataTreeView({
                 color={node.data.color}
                 sx={{ mr: 1 }}
               />
-              {renderNode(node)}
-              {renderActions ? renderActions(node) : undefined}
+              <NodeRenderer node={node} />
+              {ActionRenderer && <ActionRenderer node={node} />}
             </Box>
           }
         >
