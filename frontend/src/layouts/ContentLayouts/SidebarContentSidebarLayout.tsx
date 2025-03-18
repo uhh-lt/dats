@@ -1,7 +1,7 @@
 import { Box } from "@mui/material";
-import { ReactNode, useCallback } from "react";
-import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
-import { LayoutActions } from "../layoutSlice.ts";
+import { ReactNode } from "react";
+import { LayoutSizeKeys } from "../layoutSlice.ts";
+import { useLayoutSize } from "../ResizePanel/hooks/useLayoutSize.ts";
 import { PixelResizablePanel } from "../ResizePanel/PixelResizablePanel.tsx";
 
 function SidebarContentSidebarLayout({
@@ -13,27 +13,16 @@ function SidebarContentSidebarLayout({
   content: ReactNode;
   rightSidebar: ReactNode;
 }) {
-  const leftSidebarWidth = useAppSelector((state) => state.layout.leftSidebarWidth);
-  const rightSidebarWidth = useAppSelector((state) => state.layout.rightSidebarWidth);
-  const dispatch = useAppDispatch();
-
-  const handleLeftSidebarResize = useCallback(
-    (newSize: number) => {
-      dispatch(LayoutActions.setLeftSidebarWidth(newSize));
-    },
-    [dispatch],
+  const { size: leftSize, handleResize: handleLeftResize } = useLayoutSize(
+    LayoutSizeKeys.SidebarContentSidebarLayoutLeft,
   );
-
-  const handleRightSidebarResize = useCallback(
-    (newSize: number) => {
-      dispatch(LayoutActions.setRightSidebarWidth(newSize));
-    },
-    [dispatch],
+  const { size: rightSize, handleResize: handleRightResize } = useLayoutSize(
+    LayoutSizeKeys.SidebarContentSidebarLayoutRight,
   );
 
   return (
     <Box sx={{ display: "flex", width: "100%", height: "100%", overflow: "hidden" }}>
-      <PixelResizablePanel size={leftSidebarWidth} onResize={handleLeftSidebarResize} position="left" isHorizontal>
+      <PixelResizablePanel size={leftSize} onResize={handleLeftResize} position="left" isHorizontal>
         {leftSidebar}
       </PixelResizablePanel>
 
@@ -49,7 +38,7 @@ function SidebarContentSidebarLayout({
         {content}
       </Box>
 
-      <PixelResizablePanel size={rightSidebarWidth} onResize={handleRightSidebarResize} position="right" isHorizontal>
+      <PixelResizablePanel size={rightSize} onResize={handleRightResize} position="right" isHorizontal>
         {rightSidebar}
       </PixelResizablePanel>
     </Box>

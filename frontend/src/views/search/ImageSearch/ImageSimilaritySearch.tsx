@@ -12,7 +12,8 @@ import { MyFilter, createEmptyFilter } from "../../../components/FilterDialog/fi
 import DocumentInformation from "../../../components/SourceDocument/DocumentInformation/DocumentInformation.tsx";
 import TagExplorer from "../../../components/Tag/TagExplorer/TagExplorer.tsx";
 import SidebarContentSidebarLayout from "../../../layouts/ContentLayouts/SidebarContentSidebarLayout.tsx";
-import { useVerticalPercentage } from "../../../layouts/ResizePanel/hooks/useVerticalPercentage.ts";
+import { LayoutPercentageKeys } from "../../../layouts/layoutSlice.ts";
+import { useLayoutPercentage } from "../../../layouts/ResizePanel/hooks/useLayoutPercentage.ts";
 import { PercentageResizablePanel } from "../../../layouts/ResizePanel/PercentageResizablePanel.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { SearchActions } from "../DocumentSearch/searchSlice.ts";
@@ -90,8 +91,7 @@ function ImageSimilaritySearch() {
   const sdocIds = useMemo(() => data?.map((hit) => hit.sdoc_id) || [], [data]);
 
   // vertical sidebar percentage
-  const { percentage: sidebarPercentage, handleResize: handleSidebarResize } =
-    useVerticalPercentage("search-left-sidebar");
+  const { percentage, handleResize } = useLayoutPercentage(LayoutPercentageKeys.SearchVerticalSidebar);
 
   // render
   return (
@@ -108,8 +108,8 @@ function ImageSimilaritySearch() {
               handleCodeClick={handleAddCodeFilter}
             />
           }
-          contentPercentage={sidebarPercentage}
-          onResize={handleSidebarResize}
+          contentPercentage={percentage}
+          onResize={handleResize}
         />
       }
       content={

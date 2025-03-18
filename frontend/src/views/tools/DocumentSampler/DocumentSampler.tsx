@@ -7,16 +7,14 @@ import { SampledSdocsResults } from "../../../api/openapi/models/SampledSdocsRes
 import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
 import SidebarContentLayout from "../../../layouts/ContentLayouts/SidebarContentLayout.tsx";
 import { PercentageResizablePanel } from "../../../layouts/ResizePanel/PercentageResizablePanel.tsx";
-import { useVerticalPercentage } from "../../../layouts/ResizePanel/hooks/useVerticalPercentage.ts";
+import { useLayoutPercentage } from "../../../layouts/ResizePanel/hooks/useLayoutPercentage.ts";
+import { LayoutPercentageKeys } from "../../../layouts/layoutSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import DocumentsBarChart from "./DocumentsBarChart.tsx";
 import DocumentsTable from "./DocumentsTable.tsx";
 import SamplingStrategySelector from "./SamplingStrategySelector.tsx";
 import TagGroupCreator from "./TagGroupCreator.tsx";
 import { DocumentSamplerActions } from "./documentSamplerSlice.ts";
-
-const SIDEBAR_NAME = "document-sampler-sidebar";
-const CONTENT_NAME = "document-sampler-content";
 
 function DocumentSampler() {
   // global client state (react router)
@@ -77,8 +75,12 @@ function DocumentSampler() {
   }, [aggregateSdocsByTags, aggregationGroups, fixedSamplingValue, projectId, relativeSamplingValue]);
 
   // Get percentages from Redux with defaultPercentage
-  const { percentage: sidebarPercentage, handleResize: handleSidebarResize } = useVerticalPercentage(SIDEBAR_NAME);
-  const { percentage: contentPercentage, handleResize: handleContentResize } = useVerticalPercentage(CONTENT_NAME);
+  const { percentage: sidebarPercentage, handleResize: handleSidebarResize } = useLayoutPercentage(
+    LayoutPercentageKeys.DocumentSamplerSidebar,
+  );
+  const { percentage: contentPercentage, handleResize: handleContentResize } = useLayoutPercentage(
+    LayoutPercentageKeys.DocumentSamplerContent,
+  );
 
   return (
     <SidebarContentLayout

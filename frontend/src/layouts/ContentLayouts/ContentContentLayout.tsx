@@ -1,18 +1,17 @@
 import { ReactNode } from "react";
-import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
-import { LayoutActions } from "../layoutSlice";
+import { LayoutPercentageKeys } from "../layoutSlice";
+import { useLayoutPercentage } from "../ResizePanel/hooks/useLayoutPercentage.ts";
 import { PercentageResizablePanel } from "../ResizePanel/PercentageResizablePanel.tsx";
 
 function ContentContentLayout({ leftContent, rightContent }: { leftContent: ReactNode; rightContent: ReactNode }) {
-  const horizontalContentPercentage = useAppSelector((state) => state.layout.horizontalContentPercentage);
-  const dispatch = useAppDispatch();
+  const { percentage, handleResize } = useLayoutPercentage(LayoutPercentageKeys.ContentContentLayout);
 
   return (
     <PercentageResizablePanel
       firstContent={leftContent}
       secondContent={rightContent}
-      contentPercentage={horizontalContentPercentage}
-      onResize={(percentage) => dispatch(LayoutActions.setHorizontalContentPercentage(percentage))}
+      contentPercentage={percentage}
+      onResize={handleResize}
       isHorizontal
     />
   );

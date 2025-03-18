@@ -1,6 +1,7 @@
 import { COTARead } from "../../../api/openapi/models/COTARead.ts";
 import SidebarContentLayout from "../../../layouts/ContentLayouts/SidebarContentLayout.tsx";
-import { useVerticalPercentage } from "../../../layouts/ResizePanel/hooks/useVerticalPercentage.ts";
+import { LayoutPercentageKeys } from "../../../layouts/layoutSlice.ts";
+import { useLayoutPercentage } from "../../../layouts/ResizePanel/hooks/useLayoutPercentage.ts";
 import { PercentageResizablePanel } from "../../../layouts/ResizePanel/PercentageResizablePanel.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import CotaConceptList from "./CotaConceptList.tsx";
@@ -19,9 +20,12 @@ function CotaViewContent({ cota }: CotaViewContentProps) {
   const isTimelineView = useAppSelector((state) => state.cota.isTimelineView);
 
   // vertical percentages
-  const { percentage: sidebarPercentage, handleResize: handleSidebarResize } =
-    useVerticalPercentage("cota-left-sidebar");
-  const { percentage: mainPercentage, handleResize: handleMainResize } = useVerticalPercentage("cota-main-content");
+  const { percentage: sidebarPercentage, handleResize: handleSidebarResize } = useLayoutPercentage(
+    LayoutPercentageKeys.CotaSidebar,
+  );
+  const { percentage: mainPercentage, handleResize: handleMainResize } = useLayoutPercentage(
+    LayoutPercentageKeys.CotaContent,
+  );
   return (
     <SidebarContentLayout
       leftSidebar={

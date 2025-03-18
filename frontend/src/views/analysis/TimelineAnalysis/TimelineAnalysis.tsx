@@ -4,7 +4,8 @@ import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
 import SidebarContentLayout from "../../../layouts/ContentLayouts/SidebarContentLayout.tsx";
 import { PercentageResizablePanel } from "../../../layouts/ResizePanel/PercentageResizablePanel.tsx";
-import { useVerticalPercentage } from "../../../layouts/ResizePanel/hooks/useVerticalPercentage.ts";
+import { useLayoutPercentage } from "../../../layouts/ResizePanel/hooks/useLayoutPercentage.ts";
+import { LayoutPercentageKeys } from "../../../layouts/layoutSlice.ts";
 import ConceptList from "./ConceptList.tsx";
 import TimeAnalysisProvenance from "./TimeAnalysisProvenance.tsx";
 import TimelineAnalysisViz from "./TimeAnalysisViz.tsx";
@@ -37,8 +38,12 @@ interface TimelineAnalysisContentProps {
 }
 
 function TimelineAnalysisContent({ timelineAnalysis }: TimelineAnalysisContentProps) {
-  const { percentage: leftPercentage, handleResize: handleLeftResize } = useVerticalPercentage("timeline-left-sidebar");
-  const { percentage: mainPercentage, handleResize: handleMainResize } = useVerticalPercentage("timeline-main-content");
+  const { percentage: leftPercentage, handleResize: handleLeftResize } = useLayoutPercentage(
+    LayoutPercentageKeys.TimelineSidebar,
+  );
+  const { percentage: mainPercentage, handleResize: handleMainResize } = useLayoutPercentage(
+    LayoutPercentageKeys.TimelineContent,
+  );
 
   return (
     <SidebarContentLayout

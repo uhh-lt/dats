@@ -98,7 +98,7 @@ export function PercentageResizablePanel({
           [isHorizontal ? "left" : "top"]: isSecondCollapsed
             ? `calc(${contentPercentage}% - 4px)`
             : isFirstCollapsed
-              ? `calc(${contentPercentage}% + 0px)`
+              ? `calc(${contentPercentage}% + 4px)`
               : `${contentPercentage}%`,
           transform: isHorizontal ? "translateX(-50%)" : "translateY(-50%)",
         }}
