@@ -1,6 +1,6 @@
 import { Box } from "@mui/material";
 import { ReactNode, useCallback, useRef, useState } from "react";
-import { DragHandler } from "./components/DragHandler";
+import { DragHandler } from "./DragHandler";
 import { useMouseEventHandlers } from "./hooks/useMouseEventHandlers";
 import "./styles/ResizablePanel.css";
 import { createContainerStyles, createPanelStyles } from "./styles/resizePanelStyles";

@@ -7,7 +7,7 @@ interface DragHandlerProps {
   isDragging: boolean;
   isCollapsed: boolean;
   isHorizontal: boolean;
-  position?: {
+  style?: {
     top?: number | string;
     left?: number | string;
     right?: number | string;
@@ -16,14 +16,48 @@ interface DragHandlerProps {
   };
 }
 
-export function DragHandler({ dragHandleRef, isDragging, isCollapsed, isHorizontal, position }: DragHandlerProps) {
+export function DragHandler({ dragHandleRef, isDragging, isCollapsed, isHorizontal, style }: DragHandlerProps) {
   return (
     <Box
       ref={dragHandleRef}
-      className={`resizer-handle${isDragging ? " resizing" : ""}`}
+      className={`resizer-handle${isDragging ? " resizing" : ""}${isCollapsed ? " collapsed" : ""}`}
       sx={{
         ...createDividerStyles(isDragging, isCollapsed, isHorizontal),
-        ...position,
+        ...style,
+        ...(isCollapsed && {
+          "&::after": {
+            content: '""',
+            position: "absolute",
+            backgroundColor: "action.active",
+            transition: "all 0.2s ease",
+            opacity: 0.5,
+            ...(isHorizontal
+              ? {
+                  width: "4px",
+                  height: "32px",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                }
+              : {
+                  width: "32px",
+                  height: "4px",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                }),
+          },
+          "&:hover::after": {
+            opacity: 1,
+            ...(isHorizontal
+              ? {
+                  height: "48px",
+                }
+              : {
+                  width: "48px",
+                }),
+          },
+        }),
       }}
     />
   );
