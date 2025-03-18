@@ -132,7 +132,7 @@ export const useDefaultCommands = (projectId: string | undefined): CommandItem[]
         description: "Go to span annotation table",
         category: "Analysis",
         icon: getIconComponent(Icon.SPAN_ANNOTATION_TABLE),
-        route: `/project/${projectId}/analysis/span-annotation-table`,
+        route: `/project/${projectId}/analysis/span-annotations`,
         keywords: ["go", "to", "navigate", "span", "annotation", "table"],
       },
       {
@@ -141,7 +141,7 @@ export const useDefaultCommands = (projectId: string | undefined): CommandItem[]
         description: "Go to sentence annotation table",
         category: "Analysis",
         icon: getIconComponent(Icon.SENTENCE_ANNOTATION_TABLE),
-        route: `/project/${projectId}/analysis/sentence-annotation-table`,
+        route: `/project/${projectId}/analysis/sentence-annotations`,
         keywords: ["go", "to", "navigate", "sentence", "annotation", "table"],
       },
       // TOOLS
