@@ -68,9 +68,10 @@ function Search() {
     <SidebarContentSidebarLayout
       leftSidebar={
         <PercentageResizablePanel
-          firstContent={<TagExplorer onTagClick={handleAddTagFilter} />}
+          firstContent={<TagExplorer className="h100" onTagClick={handleAddTagFilter} />}
           secondContent={
             <SearchStatistics
+              className="h100"
               sdocIds={sdocIds}
               handleKeywordClick={handleAddKeywordFilter}
               handleTagClick={handleAddTagFilter}
