@@ -1,21 +1,17 @@
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import { Box } from "@mui/material";
-import { useRef } from "react";
+import { memo, useRef } from "react";
 import { DragDropContext } from "react-beautiful-dnd";
 import { useParams } from "react-router-dom";
 
-// Import custom hooks
 import { useTabManagement } from "./hooks/useTabManagement";
 import { useTabScroll } from "./hooks/useTabScroll";
 
-// Import components
-import { DragCloneRenderer } from "./components/DragCloneRenderer";
-import { DraggableTab } from "./components/DraggableTab";
-import { StrictModeDroppable } from "./components/StrictModeDroppable";
-import { TabMenuButton } from "./components/TabMenuButton";
-
-// Import styled components
+import DragCloneRenderer from "./components/DragCloneRenderer.tsx";
+import DraggableTab from "./components/DraggableTab.tsx";
+import StrictModeDroppable from "./components/StrictModeDroppable.tsx";
+import TabMenuButton from "./components/TabMenuButton.tsx";
 import { TabIconButton } from "./styles";
 
 function TabBar() {
@@ -111,4 +107,4 @@ function TabBar() {
   );
 }
 
-export default TabBar;
+export default memo(TabBar);

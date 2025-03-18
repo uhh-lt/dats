@@ -1,9 +1,9 @@
 import CloseIcon from "@mui/icons-material/Close";
-import React from "react";
+import { memo } from "react";
 import { DraggableProvided, DraggableRubric, DraggableStateSnapshot } from "react-beautiful-dnd";
 import { StyledTab, TabContent } from "../styles";
 import { TabData } from "../types";
-import { TabTitle } from "./TabTitle";
+import TabTitle from "./TabTitle.tsx";
 
 interface DragCloneRendererProps {
   provided: DraggableProvided;
@@ -13,7 +13,7 @@ interface DragCloneRendererProps {
   activeTabIndex: number | null;
 }
 
-export const DragCloneRenderer: React.FC<DragCloneRendererProps> = ({ provided, rubric, tabs, activeTabIndex }) => {
+function DragCloneRenderer({ provided, rubric, tabs, activeTabIndex }: DragCloneRendererProps) {
   const tab = tabs[rubric.source.index];
   const isActiveTab = activeTabIndex === rubric.source.index;
 
@@ -46,4 +46,6 @@ export const DragCloneRenderer: React.FC<DragCloneRendererProps> = ({ provided, 
       />
     </div>
   );
-};
+}
+
+export default memo(DragCloneRenderer);

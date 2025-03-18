@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
 import SidebarContentLayout from "../../../layouts/ContentLayouts/SidebarContentLayout.tsx";
-import { PercentageResizablePanel } from "../../../layouts/ResizePanel/PercentageResizablePanel.tsx";
+import PercentageResizablePanel from "../../../layouts/ResizePanel/PercentageResizablePanel.tsx";
 import { useLayoutPercentage } from "../../../layouts/ResizePanel/hooks/useLayoutPercentage.ts";
 import { LayoutPercentageKeys } from "../../../layouts/layoutSlice.ts";
 import ConceptList from "./ConceptList.tsx";

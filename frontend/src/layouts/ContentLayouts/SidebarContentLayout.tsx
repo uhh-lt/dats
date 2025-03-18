@@ -1,8 +1,8 @@
 import { Box } from "@mui/material";
-import { ReactNode } from "react";
+import { ReactNode, memo } from "react";
 import { LayoutSizeKeys } from "../layoutSlice.ts";
 import { useLayoutSize } from "../ResizePanel/hooks/useLayoutSize.ts";
-import { PixelResizablePanel } from "../ResizePanel/PixelResizablePanel.tsx";
+import PixelResizablePanel from "../ResizePanel/PixelResizablePanel.tsx";
 
 function SidebarContentLayout({ leftSidebar, content }: { leftSidebar: ReactNode; content: ReactNode }) {
   const { size, handleResize } = useLayoutSize(LayoutSizeKeys.SidebarContentLayoutLeft);
@@ -28,4 +28,4 @@ function SidebarContentLayout({ leftSidebar, content }: { leftSidebar: ReactNode
   );
 }
 
-export default SidebarContentLayout;
+export default memo(SidebarContentLayout);

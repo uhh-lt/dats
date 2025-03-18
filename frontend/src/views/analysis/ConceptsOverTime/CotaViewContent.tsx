@@ -2,7 +2,7 @@ import { COTARead } from "../../../api/openapi/models/COTARead.ts";
 import SidebarContentLayout from "../../../layouts/ContentLayouts/SidebarContentLayout.tsx";
 import { LayoutPercentageKeys } from "../../../layouts/layoutSlice.ts";
 import { useLayoutPercentage } from "../../../layouts/ResizePanel/hooks/useLayoutPercentage.ts";
-import { PercentageResizablePanel } from "../../../layouts/ResizePanel/PercentageResizablePanel.tsx";
+import PercentageResizablePanel from "../../../layouts/ResizePanel/PercentageResizablePanel.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import CotaConceptList from "./CotaConceptList.tsx";
 import CotaControl from "./CotaControl.tsx";

@@ -1,7 +1,7 @@
-import { ReactNode } from "react";
+import { ReactNode, memo } from "react";
 import { LayoutPercentageKeys } from "../layoutSlice";
 import { useLayoutPercentage } from "../ResizePanel/hooks/useLayoutPercentage.ts";
-import { PercentageResizablePanel } from "../ResizePanel/PercentageResizablePanel.tsx";
+import PercentageResizablePanel from "../ResizePanel/PercentageResizablePanel.tsx";
 
 function ContentContentLayout({ leftContent, rightContent }: { leftContent: ReactNode; rightContent: ReactNode }) {
   const { percentage, handleResize } = useLayoutPercentage(LayoutPercentageKeys.ContentContentLayout);
@@ -17,4 +17,4 @@ function ContentContentLayout({ leftContent, rightContent }: { leftContent: Reac
   );
 }
 
-export default ContentContentLayout;
+export default memo(ContentContentLayout);

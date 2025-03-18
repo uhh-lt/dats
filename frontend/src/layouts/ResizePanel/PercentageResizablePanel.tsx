@@ -1,6 +1,6 @@
 import { Box } from "@mui/material";
-import { ReactNode, useCallback, useRef, useState } from "react";
-import { DragHandler } from "./DragHandler";
+import { memo, ReactNode, useCallback, useRef, useState } from "react";
+import DragHandler from "./DragHandler.tsx";
 import { useMouseEventHandlers } from "./hooks/useMouseEventHandlers";
 import "./styles/ResizablePanel.css";
 import { createContainerStyles, createPanelStyles } from "./styles/resizePanelStyles";
@@ -15,7 +15,7 @@ interface PercentageResizablePanelProps {
   isHorizontal?: boolean;
 }
 
-export function PercentageResizablePanel({
+function PercentageResizablePanel({
   firstContent,
   secondContent,
   contentPercentage,
@@ -25,11 +25,10 @@ export function PercentageResizablePanel({
   isHorizontal = false,
 }: PercentageResizablePanelProps) {
   const dragHandleRef = useRef<HTMLDivElement>(null);
-
   const isFirstCollapsed = contentPercentage <= minPercentage / 2;
   const isSecondCollapsed = contentPercentage >= 100 - minPercentage / 2;
-
   const containerRef = useRef<HTMLDivElement>(null);
+
   const [isDragging, setIsDragging] = useState(false);
   const startPosRef = useRef<number>(0);
   const startPercentageRef = useRef<number>(contentPercentage);
@@ -48,16 +47,13 @@ export function PercentageResizablePanel({
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
       if (!isDragging || !containerRef.current) return;
-
       const containerSize = isHorizontal ? containerRef.current.clientWidth : containerRef.current.clientHeight;
-
       const delta = (isHorizontal ? e.clientX : e.clientY) - startPosRef.current;
       const deltaPercentage = (delta / containerSize) * 100;
       const rawPercentage = startPercentageRef.current + deltaPercentage;
 
       // Clamp percentage between min and max
       const clampedPercentage = Math.max(minPercentage, Math.min(maxPercentage, rawPercentage));
-
       currentPercentageRef.current = clampedPercentage;
 
       if (rawPercentage < minPercentage / 2) {
@@ -90,7 +86,6 @@ export function PercentageResizablePanel({
           <div className="panel-content">{firstContent}</div>
         </Box>
       )}
-
       <DragHandler
         dragHandleRef={dragHandleRef}
         isDragging={isDragging}
@@ -105,7 +100,6 @@ export function PercentageResizablePanel({
           transform: isHorizontal ? "translateX(-50%)" : "translateY(-50%)",
         }}
       />
-
       {!isSecondCollapsed && (
         <Box sx={createPanelStyles(`${100 - contentPercentage}%`, isHorizontal)}>
           <div className="panel-content">{secondContent}</div>
@@ -114,3 +108,5 @@ export function PercentageResizablePanel({
     </Box>
   );
 }
+
+export default memo(PercentageResizablePanel);

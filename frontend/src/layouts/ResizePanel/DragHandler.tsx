@@ -1,5 +1,5 @@
 import { Box } from "@mui/material";
-import { RefObject } from "react";
+import { RefObject, memo } from "react";
 import { createDividerStyles } from "./styles/resizePanelStyles";
 
 interface DragHandlerProps {
@@ -16,7 +16,7 @@ interface DragHandlerProps {
   };
 }
 
-export function DragHandler({ dragHandleRef, isDragging, isCollapsed, isHorizontal, style }: DragHandlerProps) {
+function DragHandler({ dragHandleRef, isDragging, isCollapsed, isHorizontal, style }: DragHandlerProps) {
   return (
     <Box
       ref={dragHandleRef}
@@ -62,3 +62,5 @@ export function DragHandler({ dragHandleRef, isDragging, isCollapsed, isHorizont
     />
   );
 }
+
+export default memo(DragHandler);

@@ -21,10 +21,9 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
-import { OpenAPI } from "../../api/openapi/core/OpenAPI.ts";
-
+import { memo, useCallback, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
+import { OpenAPI } from "../../api/openapi/core/OpenAPI.ts";
 import { UserRead } from "../../api/openapi/models/UserRead.ts";
 import { LoginStatus } from "../../auth/LoginStatus.ts";
 import { CRUDDialogActions } from "../../components/dialogSlice.ts";
@@ -43,53 +42,57 @@ interface SideBarProps {
 function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInProject }: SideBarProps) {
   const location = useLocation();
   const { projectId } = useParams();
+  const dispatch = useAppDispatch();
 
-  // Check if a route is active
-  const isActive = (path: string) => {
-    return location.pathname.includes(path);
-  };
+  // Memoize isActive function
+  const isActive = useCallback(
+    (path: string) => {
+      return location.pathname.includes(path);
+    },
+    [location.pathname],
+  );
 
-  // Toggle sidebar expansion
-  const toggleSidebar = () => {
-    onToggle();
-  };
-
-  // tools menu
+  // Tools menu state and handlers
   const [toolsMenuAnchorEl, setToolsMenuAnchorEl] = useState<HTMLElement | null>(null);
   const openToolsMenu = Boolean(toolsMenuAnchorEl);
-  const handleToolsMenuClick = (event: React.MouseEvent<HTMLElement>) => {
-    setToolsMenuAnchorEl(event.currentTarget);
-  };
-  const handleToolsMenuClose = () => {
-    setToolsMenuAnchorEl(null);
-  };
 
-  // search menu
+  const handleToolsMenuClick = useCallback((event: React.MouseEvent<HTMLElement>) => {
+    setToolsMenuAnchorEl(event.currentTarget);
+  }, []);
+
+  const handleToolsMenuClose = useCallback(() => {
+    setToolsMenuAnchorEl(null);
+  }, []);
+
+  // Search menu state and handlers
   const [searchMenuAnchorEl, setSearchMenuAnchorEl] = useState<HTMLElement | null>(null);
   const openSearchMenu = Boolean(searchMenuAnchorEl);
-  const handleSearchMenuClick = (event: React.MouseEvent<HTMLElement>) => {
-    setSearchMenuAnchorEl(event.currentTarget);
-  };
-  const handleSearchMenuClose = () => {
-    setSearchMenuAnchorEl(null);
-  };
 
-  // user profile menu
+  const handleSearchMenuClick = useCallback((event: React.MouseEvent<HTMLElement>) => {
+    setSearchMenuAnchorEl(event.currentTarget);
+  }, []);
+
+  const handleSearchMenuClose = useCallback(() => {
+    setSearchMenuAnchorEl(null);
+  }, []);
+
+  // User menu state and handlers
   const [userMenuAnchorEl, setUserMenuAnchorEl] = useState<HTMLElement | null>(null);
   const open = Boolean(userMenuAnchorEl);
   const id = open ? "user-profile-popover" : undefined;
-  const handleUserMenuClick = (event: React.MouseEvent<HTMLElement>) => {
-    setUserMenuAnchorEl(event.currentTarget);
-  };
-  const handleUserMenuClose = () => {
-    setUserMenuAnchorEl(null);
-  };
 
-  // project settings
-  const dispatch = useAppDispatch();
-  const handleSettingsClick = () => {
+  const handleUserMenuClick = useCallback((event: React.MouseEvent<HTMLElement>) => {
+    setUserMenuAnchorEl(event.currentTarget);
+  }, []);
+
+  const handleUserMenuClose = useCallback(() => {
+    setUserMenuAnchorEl(null);
+  }, []);
+
+  // Settings handler
+  const handleSettingsClick = useCallback(() => {
     dispatch(CRUDDialogActions.openProjectSettings());
-  };
+  }, [dispatch]);
 
   return (
     <Drawer
@@ -119,7 +122,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
         <List sx={{ py: 0 }}>
           <ListItem disablePadding sx={{ display: "block" }}>
             <ListItemButton
-              onClick={toggleSidebar}
+              onClick={onToggle}
               sx={{
                 minHeight: 48,
                 justifyContent: isExpanded ? "initial" : "center",
@@ -563,4 +566,4 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
   );
 }
 
-export default SideBar;
+export default memo(SideBar);

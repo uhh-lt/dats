@@ -6,7 +6,7 @@ import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts"
 import { SampledSdocsResults } from "../../../api/openapi/models/SampledSdocsResults.ts";
 import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
 import SidebarContentLayout from "../../../layouts/ContentLayouts/SidebarContentLayout.tsx";
-import { PercentageResizablePanel } from "../../../layouts/ResizePanel/PercentageResizablePanel.tsx";
+import PercentageResizablePanel from "../../../layouts/ResizePanel/PercentageResizablePanel.tsx";
 import { useLayoutPercentage } from "../../../layouts/ResizePanel/hooks/useLayoutPercentage.ts";
 import { LayoutPercentageKeys } from "../../../layouts/layoutSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";

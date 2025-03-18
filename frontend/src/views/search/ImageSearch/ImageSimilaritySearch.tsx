@@ -14,7 +14,7 @@ import TagExplorer from "../../../components/Tag/TagExplorer/TagExplorer.tsx";
 import SidebarContentSidebarLayout from "../../../layouts/ContentLayouts/SidebarContentSidebarLayout.tsx";
 import { LayoutPercentageKeys } from "../../../layouts/layoutSlice.ts";
 import { useLayoutPercentage } from "../../../layouts/ResizePanel/hooks/useLayoutPercentage.ts";
-import { PercentageResizablePanel } from "../../../layouts/ResizePanel/PercentageResizablePanel.tsx";
+import PercentageResizablePanel from "../../../layouts/ResizePanel/PercentageResizablePanel.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { SearchActions } from "../DocumentSearch/searchSlice.ts";
 import SearchStatistics from "../Statistics/SearchStatistics.tsx";

@@ -1,5 +1,5 @@
 import { ListItemText, Menu, MenuItem } from "@mui/material";
-import { useCallback, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { CRUDDialogActions } from "../../../components/dialogSlice";
 import { useAppDispatch } from "../../../plugins/ReduxHooks";
 import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
@@ -12,35 +12,35 @@ interface TabMenuButtonProps {
   totalTabs: number;
 }
 
-export function TabMenuButton({ projectId, activeTabIndex, totalTabs }: TabMenuButtonProps) {
+function TabMenuButton({ projectId, activeTabIndex, totalTabs }: TabMenuButtonProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const dispatch = useAppDispatch();
 
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
-  };
+  }, []);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setAnchorEl(null);
-  };
+  }, []);
 
   const handleCloseAll = useCallback(() => {
     dispatch(TabActions.closeAllTabs({ projectId }));
     handleClose();
-  }, [dispatch, projectId]);
+  }, [dispatch, projectId, handleClose]);
 
   const handleCloseAllToRight = useCallback(() => {
     if (activeTabIndex !== null) {
       dispatch(TabActions.closeTabsToRight({ projectId, fromIndex: activeTabIndex }));
     }
     handleClose();
-  }, [dispatch, projectId, activeTabIndex]);
+  }, [dispatch, projectId, activeTabIndex, handleClose]);
 
   const handleOpenCommandMenu = useCallback(() => {
     handleClose();
     dispatch(CRUDDialogActions.openQuickCommandMenu());
-  }, [dispatch]);
+  }, [dispatch, handleClose]);
 
   return (
     <>
@@ -61,3 +61,5 @@ export function TabMenuButton({ projectId, activeTabIndex, totalTabs }: TabMenuB
     </>
   );
 }
+
+export default memo(TabMenuButton);

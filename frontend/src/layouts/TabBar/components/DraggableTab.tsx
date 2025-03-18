@@ -1,9 +1,9 @@
 import CloseIcon from "@mui/icons-material/Close";
-import React from "react";
+import React, { memo, useCallback } from "react";
 import { Draggable } from "react-beautiful-dnd";
 import { CloseButton, StyledTab, TabContent, TabWrapper } from "../styles";
 import { TabData } from "../types";
-import { TabTitle } from "./TabTitle";
+import TabTitle from "./TabTitle.tsx";
 
 interface DraggableTabProps {
   tab: TabData;
@@ -13,7 +13,15 @@ interface DraggableTabProps {
   onCloseClick: () => void;
 }
 
-export const DraggableTab: React.FC<DraggableTabProps> = ({ tab, index, isActive, onTabClick, onCloseClick }) => {
+function DraggableTab({ tab, index, isActive, onTabClick, onCloseClick }: DraggableTabProps) {
+  const handleCloseClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onCloseClick();
+    },
+    [onCloseClick],
+  );
+
   return (
     <Draggable key={tab.id} draggableId={tab.id} index={index} disableInteractiveElementBlocking>
       {(provided, snapshot) => {
@@ -29,13 +37,7 @@ export const DraggableTab: React.FC<DraggableTabProps> = ({ tab, index, isActive
               label={
                 <TabContent>
                   <TabTitle tab={tab} />
-                  <CloseButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onCloseClick();
-                    }}
-                  >
+                  <CloseButton size="small" onClick={handleCloseClick}>
                     <CloseIcon fontSize="small" sx={{ fontSize: 16 }} />
                   </CloseButton>
                 </TabContent>
@@ -45,7 +47,7 @@ export const DraggableTab: React.FC<DraggableTabProps> = ({ tab, index, isActive
                 pointerEvents: "none",
                 width: "100%",
                 boxSizing: "border-box",
-                "&:hover": {}, // Remove hover styles from here as they're now on the wrapper
+                "&:hover": {},
               }}
               onClick={undefined}
               className={isActive ? "Mui-selected" : ""}
@@ -55,4 +57,6 @@ export const DraggableTab: React.FC<DraggableTabProps> = ({ tab, index, isActive
       }}
     </Draggable>
   );
-};
+}
+
+export default memo(DraggableTab);

@@ -1,5 +1,5 @@
 import { CssBaseline } from "@mui/material";
-import React from "react";
+import React, { memo } from "react";
 import { Outlet } from "react-router-dom";
 import SnackbarDialog from "../../components/SnackbarDialog/SnackbarDialog.tsx";
 
@@ -13,4 +13,4 @@ function NoBarLayout() {
   );
 }
 
-export default NoBarLayout;
+export default memo(NoBarLayout);

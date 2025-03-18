@@ -1,6 +1,5 @@
 import { Box } from "@mui/material";
-import { useMemo } from "react";
-
+import { memo, useMemo } from "react";
 import CotaHooks from "../../../api/CotaHooks.ts";
 import SdocHooks from "../../../api/SdocHooks";
 import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
@@ -20,8 +19,7 @@ function getDefaultLabel(base: string): string {
     .join(" ");
 }
 
-export function TabTitle({ tab }: TabTitleProps) {
-  // Only fetch data if we have an ID and it's a type we need to fetch for
+function TabTitle({ tab }: TabTitleProps) {
   const sdoc = SdocHooks.useGetDocument(tab.base === "annotation" ? parseInt(tab.data_id!) : undefined);
   const whiteboard = WhiteboardHooks.useGetWhiteboard(tab.base === "whiteboard" ? parseInt(tab.data_id!) : undefined);
   const cota = CotaHooks.useGetCota(tab.base === "concepts-over-time-analysis" ? parseInt(tab.data_id!) : undefined);
@@ -33,7 +31,6 @@ export function TabTitle({ tab }: TabTitleProps) {
     if (!tab.data_id) {
       return getDefaultLabel(tab.base);
     }
-
     // Return appropriate title based on the base type and loaded data
     switch (tab.base) {
       case "annotation":
@@ -58,3 +55,5 @@ export function TabTitle({ tab }: TabTitleProps) {
     </Box>
   );
 }
+
+export default memo(TabTitle);

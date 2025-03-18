@@ -1,5 +1,5 @@
 import { Box, CssBaseline } from "@mui/material";
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { Outlet, useParams } from "react-router-dom";
 import { useAuth } from "../../auth/useAuth.ts";
 import CodeCreateDialog from "../../components/Code/CodeCreateDialog.tsx";
@@ -24,9 +24,9 @@ function SideBarLayout() {
 
   // sidebar state
   const [isExpanded, setSidebarExpanded] = useState(false);
-  const handleToggleSidebar = () => {
-    setSidebarExpanded(!isExpanded);
-  };
+  const handleToggleSidebar = useCallback(() => {
+    setSidebarExpanded((prev) => !prev);
+  }, []);
 
   return (
     <>
@@ -83,4 +83,4 @@ function SideBarLayout() {
   );
 }
 
-export default SideBarLayout;
+export default memo(SideBarLayout);
