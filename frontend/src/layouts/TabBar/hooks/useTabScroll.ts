@@ -2,8 +2,6 @@ import { RefObject, useCallback, useEffect, useState } from "react";
 import { TabData } from "../types/TabData";
 
 interface TabScrollHook {
-  tabsContainerRef: RefObject<HTMLDivElement>;
-  scrollPosition: number;
   canScrollLeft: boolean;
   canScrollRight: boolean;
   updateScrollButtonVisibility: () => void;
@@ -16,95 +14,109 @@ export const useTabScroll = (
   activeTabIndex: number | null,
   tabs: TabData[],
 ): TabScrollHook => {
-  const [scrollPosition, setScrollPosition] = useState(0);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
+  // Use state for scroll buttons visibility to properly trigger re-renders
+  const [scrollState, setScrollState] = useState({
+    canScrollLeft: false,
+    canScrollRight: false,
+  });
 
-  // Update scroll buttons visibility based on scroll position
-  const updateScrollButtonVisibility = useCallback(() => {
-    if (containerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = containerRef.current;
-      setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth);
-      setScrollPosition(scrollLeft);
+  // Calculate scroll states
+  const getScrollInfo = useCallback(() => {
+    if (!containerRef.current) {
+      return { canScrollLeft: false, canScrollRight: false, scrollPosition: 0 };
     }
+
+    const { scrollLeft, scrollWidth, clientWidth } = containerRef.current;
+    return {
+      canScrollLeft: scrollLeft > 0,
+      canScrollRight: scrollLeft < scrollWidth - clientWidth - 1, // -1 for rounding errors
+      scrollPosition: scrollLeft,
+    };
   }, [containerRef]);
+
+  // Update scroll buttons visibility based on current scroll state
+  // This is called from the onScroll event in the component
+  const updateScrollButtonVisibility = useCallback(() => {
+    const newScrollState = getScrollInfo();
+    setScrollState({
+      canScrollLeft: newScrollState.canScrollLeft,
+      canScrollRight: newScrollState.canScrollRight,
+    });
+  }, [getScrollInfo]);
 
   // Scroll handler functions
   const handleScrollLeft = useCallback(() => {
     if (containerRef.current) {
-      const container = containerRef.current;
-      const targetScrollPosition = Math.max(0, scrollPosition - 200);
-      container.scrollTo({
-        left: targetScrollPosition,
+      const { scrollPosition } = getScrollInfo();
+      containerRef.current.scrollTo({
+        left: Math.max(0, scrollPosition - 200),
         behavior: "smooth",
       });
     }
-  }, [containerRef, scrollPosition]);
+  }, [containerRef, getScrollInfo]);
 
   const handleScrollRight = useCallback(() => {
     if (containerRef.current) {
       const container = containerRef.current;
-      const targetScrollPosition = Math.min(container.scrollWidth - container.clientWidth, scrollPosition + 200);
+      const { scrollPosition } = getScrollInfo();
       container.scrollTo({
-        left: targetScrollPosition,
+        left: Math.min(container.scrollWidth - container.clientWidth, scrollPosition + 200),
         behavior: "smooth",
       });
     }
-  }, [containerRef, scrollPosition]);
+  }, [containerRef, getScrollInfo]);
 
-  // Attach scroll event listener to track scroll position
+  // Initialize scroll state
   useEffect(() => {
-    const container = containerRef.current;
-    if (container) {
-      container.addEventListener("scroll", updateScrollButtonVisibility);
-      // Initial check
+    updateScrollButtonVisibility();
+    // Add resize observer to update scroll buttons when container size changes
+    const resizeObserver = new ResizeObserver(() => {
       updateScrollButtonVisibility();
+    });
+
+    const containerElement = containerRef.current;
+    if (containerElement) {
+      resizeObserver.observe(containerElement);
     }
 
     return () => {
-      if (container) {
-        container.removeEventListener("scroll", updateScrollButtonVisibility);
+      if (containerElement) {
+        resizeObserver.disconnect();
       }
     };
   }, [containerRef, updateScrollButtonVisibility]);
 
-  // Check for scroll button visibility when tabs change
-  useEffect(() => {
-    if (tabs.length > 0) {
-      updateScrollButtonVisibility();
-    }
-  }, [tabs, updateScrollButtonVisibility]);
-
   // Scroll active tab into view whenever activeTabIndex changes
   useEffect(() => {
+    if (activeTabIndex === null || tabs.length === 0) return;
+
     const scrollActiveTabIntoView = () => {
-      if (activeTabIndex !== null && containerRef.current && tabs.length > 0) {
-        // Get all tab elements
-        const tabElements = containerRef.current.querySelectorAll('[role="tab"]');
-        if (tabElements.length > activeTabIndex) {
-          const activeTabElement = tabElements[activeTabIndex];
-          if (activeTabElement) {
-            activeTabElement.scrollIntoView({
-              behavior: "smooth",
-              block: "nearest",
-              inline: "center",
-            });
-          }
+      if (!containerRef.current) return;
+
+      // Get all tab elements
+      const tabElements = containerRef.current.querySelectorAll('[role="tab"]');
+      if (tabElements.length > activeTabIndex) {
+        const activeTabElement = tabElements[activeTabIndex];
+        if (activeTabElement) {
+          activeTabElement.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+            inline: "center",
+          });
         }
+
+        // Update scroll buttons after scrolling
+        setTimeout(updateScrollButtonVisibility, 300);
       }
     };
 
-    if (activeTabIndex !== null) {
-      setTimeout(scrollActiveTabIntoView, 50);
-    }
-  }, [activeTabIndex, containerRef, tabs]);
+    // Small delay to ensure DOM is ready
+    setTimeout(scrollActiveTabIntoView, 50);
+  }, [activeTabIndex, containerRef, tabs, updateScrollButtonVisibility]);
 
   return {
-    tabsContainerRef: containerRef,
-    scrollPosition,
-    canScrollLeft,
-    canScrollRight,
+    canScrollLeft: scrollState.canScrollLeft,
+    canScrollRight: scrollState.canScrollRight,
     updateScrollButtonVisibility,
     handleScrollLeft,
     handleScrollRight,
