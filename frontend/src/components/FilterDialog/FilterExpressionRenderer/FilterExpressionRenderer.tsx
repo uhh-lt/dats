@@ -1,11 +1,11 @@
 import ClearIcon from "@mui/icons-material/Clear";
 import { IconButton, Stack, Tooltip } from "@mui/material";
 import { TreeItem2 } from "@mui/x-tree-view";
-import { forwardRef } from "react";
-import FilterColumnSelector from "./FilterColumnSelector.tsx";
-import FilterOperatorSelector from "./FilterOperatorSelector.tsx";
-import FilterValueSelector from "./FilterValueSelector.tsx";
-import { ColumnInfo, FilterOperators, MyFilterExpression } from "./filterUtils.ts";
+import { forwardRef, memo, useCallback } from "react";
+import FilterValueSelector from "../FilterValueSelector/FilterValueSelector.tsx";
+import { ColumnInfo, FilterOperators, MyFilterExpression } from "../filterUtils.ts";
+import FilterColumnSelector from "./components/FilterColumnSelector.tsx";
+import FilterOperatorSelector from "./components/FilterOperatorSelector.tsx";
 
 interface FilterExpressionRendererProps {
   filterExpression: MyFilterExpression;
@@ -18,15 +18,15 @@ interface FilterExpressionRendererProps {
 
 const CustomContent = forwardRef<HTMLDivElement, FilterExpressionRendererProps>(
   ({ filterExpression, onDeleteFilter, onChangeColumn, onChangeOperator, onChangeValue, column2Info }, ref) => {
+    const handleDeleteClick = useCallback(() => {
+      onDeleteFilter(filterExpression.id);
+    }, [onDeleteFilter, filterExpression.id]);
+
     return (
       <Stack direction="row" alignItems="end" py={1} pl={4} pr={1} ref={ref}>
         <Tooltip title="Delete Filter Expression">
           <span>
-            <IconButton
-              size="small"
-              onClick={() => onDeleteFilter(filterExpression.id)}
-              sx={{ color: "inherit", mr: 1 }}
-            >
+            <IconButton size="small" onClick={handleDeleteClick} sx={{ color: "inherit", mr: 1 }}>
               <ClearIcon />
             </IconButton>
           </span>
@@ -52,14 +52,16 @@ const CustomContent = forwardRef<HTMLDivElement, FilterExpressionRendererProps>(
 );
 
 function FilterExpressionRenderer(props: FilterExpressionRendererProps) {
+  const handleClick = useCallback((event: React.MouseEvent<HTMLLIElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+  }, []);
+
   return (
     <TreeItem2
       key={props.filterExpression.id}
       itemId={props.filterExpression.id}
-      onClick={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-      }}
+      onClick={handleClick}
       className="filterExpression"
       slots={{
         content: CustomContent,
@@ -72,4 +74,4 @@ function FilterExpressionRenderer(props: FilterExpressionRendererProps) {
   );
 }
 
-export default FilterExpressionRenderer;
+export default memo(FilterExpressionRenderer);
