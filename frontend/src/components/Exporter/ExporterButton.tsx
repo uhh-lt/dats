@@ -1,5 +1,5 @@
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
 import ExporterAPI from "./ExporterAPI.ts";
 import { ExporterInfo } from "./ExporterDialog.tsx";
@@ -26,4 +26,4 @@ function ExporterButton({ tooltip, exporterInfo: exporterConfig, iconButtonProps
   );
 }
 
-export default ExporterButton;
+export default memo(ExporterButton);

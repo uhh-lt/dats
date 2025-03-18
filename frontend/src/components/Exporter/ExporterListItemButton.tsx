@@ -1,5 +1,5 @@
 import { ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
 import ExporterAPI from "./ExporterAPI.ts";
 
@@ -18,4 +18,4 @@ function ExporterListItemButton() {
   );
 }
 
-export default ExporterListItemButton;
+export default memo(ExporterListItemButton);

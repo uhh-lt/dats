@@ -17,7 +17,7 @@ import {
   ToggleButtonGroup,
   Typography,
 } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import eventBus from "../../EventBus.ts";
 import ExporterHooks from "../../api/ExporterHooks.ts";
@@ -159,12 +159,12 @@ function ExporterDialog() {
   const { user } = useAuth();
   const projectUsers = UserHooks.useGetAllUsers();
 
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     const requestBody = exporterInfoToExporterJobParameters(exporterData, projectId);
     startExport.mutate({
       requestBody,
     });
-  };
+  }, [exporterData, projectId, startExport]);
 
   // listen to open-memo event and open the dialog
   const openModal = useCallback(
@@ -205,11 +205,11 @@ function ExporterDialog() {
     };
   }, [openModal]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setOpen(false);
-  };
+  }, []);
 
-  const handleTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTypeChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setExporterData((oldData) => {
       return {
         ...oldData,
@@ -222,19 +222,19 @@ function ExporterDialog() {
           | "Annotations",
       };
     });
-  };
+  }, []);
 
-  const handleUsersChange = (selectedItems: number[]) => {
+  const handleUsersChange = useCallback((selectedItems: number[]) => {
     setExporterData((oldData) => {
       return { ...oldData, users: selectedItems };
     });
-  };
+  }, []);
 
-  const handleToggleSingleUser = () => {
+  const handleToggleSingleUser = useCallback(() => {
     setExporterData((oldData) => {
       return { ...oldData, singleUser: !oldData.singleUser };
     });
-  };
+  }, []);
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
@@ -342,4 +342,4 @@ function ExporterDialog() {
   );
 }
 
-export default ExporterDialog;
+export default memo(ExporterDialog);

@@ -10,7 +10,7 @@ import {
   TextField,
   Toolbar,
 } from "@mui/material";
-import { useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 
 interface SelectListItem {
   id: number;
@@ -41,39 +41,47 @@ function ExporterItemSelectList({ items, value, onChange, itemsPerPage, singleSe
   );
 
   // ui events
-  const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFilterChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setFilter(event.target.value);
     setPage(1);
-  };
+  }, []);
 
-  const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
+  const handlePageChange = useCallback((_event: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);
-  };
+  }, []);
 
-  const handleToggle = (id: number) => () => {
-    if (singleSelect) {
-      onChange([id]);
-    } else {
-      const currentIndex = value.indexOf(id);
-      const newValue = [...value];
-
-      if (currentIndex === -1) {
-        newValue.push(id);
+  const handleToggle = useCallback(
+    (id: number) => () => {
+      if (singleSelect) {
+        onChange([id]);
       } else {
-        newValue.splice(currentIndex, 1);
+        const currentIndex = value.indexOf(id);
+        const newValue = [...value];
+
+        if (currentIndex === -1) {
+          newValue.push(id);
+        } else {
+          newValue.splice(currentIndex, 1);
+        }
+
+        onChange(newValue);
       }
+    },
+    [singleSelect, value, onChange],
+  );
 
-      onChange(newValue);
-    }
-  };
-
-  const handleToggleAll = () => {
+  const handleToggleAll = useCallback(() => {
     if (value.length === items.length) {
       onChange([]);
     } else {
       onChange(items.map((item) => item.id));
     }
-  };
+  }, [value.length, items, onChange]);
+
+  const paginatedItems = useMemo(
+    () => filteredItems.slice((page - 1) * itemsPerPage, (page - 1) * itemsPerPage + itemsPerPage),
+    [filteredItems, page, itemsPerPage],
+  );
 
   return (
     <>
@@ -100,7 +108,7 @@ function ExporterItemSelectList({ items, value, onChange, itemsPerPage, singleSe
       </Toolbar>
       <Divider />
       <List>
-        {filteredItems.slice((page - 1) * itemsPerPage, (page - 1) * itemsPerPage + itemsPerPage).map((item) => {
+        {paginatedItems.map((item) => {
           const labelId = `checkbox-list-label-${item}`;
           return (
             <ListItem key={item.id} disablePadding>
@@ -138,4 +146,4 @@ function ExporterItemSelectList({ items, value, onChange, itemsPerPage, singleSe
   );
 }
 
-export default ExporterItemSelectList;
+export default memo(ExporterItemSelectList);
