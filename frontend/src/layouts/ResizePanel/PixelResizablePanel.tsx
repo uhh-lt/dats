@@ -1,6 +1,6 @@
 import { Box } from "@mui/material";
 import { ReactNode, useCallback, useRef, useState } from "react";
-import { DragHandler } from "./DragHandler.tsx";
+import { DragHandler } from "./components/DragHandler";
 import { useMouseEventHandlers } from "./hooks/useMouseEventHandlers.ts";
 import "./styles/ResizablePanel.css";
 
@@ -110,7 +110,7 @@ export function PixelResizablePanel({
         isDragging={isDragging}
         isCollapsed={isCollapsed}
         isHorizontal={isHorizontal}
-        position={
+        style={
           isHorizontal
             ? {
                 top: 0,
