@@ -1,9 +1,9 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import eventBus from "../../EventBus.ts";
 import { ConfirmationEvent } from "./ConfirmationAPI.ts";
 
-export default function ConfirmationDialog() {
+function ConfirmationDialog() {
   // state
   const [open, setOpen] = useState(false);
   const [confirmationEventData, setConfirmationEventData] = useState<ConfirmationEvent>();
@@ -56,3 +56,5 @@ export default function ConfirmationDialog() {
     </Dialog>
   );
 }
+
+export default memo(ConfirmationDialog);
