@@ -1,4 +1,4 @@
-import { Icon } from "../../utils/icons/iconUtils";
+import { Icon } from "../../../utils/icons/iconUtils";
 
 export interface TabData {
   id: string;

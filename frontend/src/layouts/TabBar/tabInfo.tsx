@@ -1,5 +1,5 @@
 import { Icon } from "../../utils/icons/iconUtils";
-import { TabData } from "./types";
+import { TabData } from "./types/TabData";
 
 function getIconForBase(base: string): Icon {
   switch (base) {

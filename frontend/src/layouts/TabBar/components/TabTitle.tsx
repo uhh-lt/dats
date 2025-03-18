@@ -6,7 +6,7 @@ import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
 import WhiteboardHooks from "../../../api/WhiteboardHooks";
 import { getIconComponent } from "../../../utils/icons/iconUtils";
 import { LabelText, TabLabel } from "../styles";
-import { TabData } from "../types";
+import { TabData } from "../types/TabData.ts";
 
 interface TabTitleProps {
   tab: TabData;

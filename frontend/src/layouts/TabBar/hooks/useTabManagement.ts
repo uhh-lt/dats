@@ -4,7 +4,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { getTabInfoFromPath } from "../tabInfo";
 import { selectProjectTabs, TabActions } from "../tabSlice";
-import { TabData } from "../types";
+import { TabData } from "../types/TabData";
 
 interface TabManagementHook {
   tabs: TabData[];

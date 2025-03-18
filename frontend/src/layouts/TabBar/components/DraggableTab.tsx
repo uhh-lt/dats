@@ -2,7 +2,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import React, { memo, useCallback } from "react";
 import { Draggable } from "react-beautiful-dnd";
 import { CloseButton, StyledTab, TabContent, TabWrapper } from "../styles";
-import { TabData } from "../types";
+import { TabData } from "../types/TabData.ts";
 import TabTitle from "./TabTitle.tsx";
 
 interface DraggableTabProps {
@@ -49,7 +49,6 @@ function DraggableTab({ tab, index, isActive, onTabClick, onCloseClick }: Dragga
                 boxSizing: "border-box",
                 "&:hover": {},
               }}
-              onClick={undefined}
               className={isActive ? "Mui-selected" : ""}
             />
           </TabWrapper>

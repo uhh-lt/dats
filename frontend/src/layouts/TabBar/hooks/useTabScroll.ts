@@ -1,5 +1,5 @@
 import { RefObject, useCallback, useEffect, useState } from "react";
-import { TabData } from "../types";
+import { TabData } from "../types/TabData";
 
 interface TabScrollHook {
   tabsContainerRef: RefObject<HTMLDivElement>;

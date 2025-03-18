@@ -2,7 +2,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { memo } from "react";
 import { DraggableProvided, DraggableRubric, DraggableStateSnapshot } from "react-beautiful-dnd";
 import { StyledTab, TabContent } from "../styles";
-import { TabData } from "../types";
+import { TabData } from "../types/TabData.ts";
 import TabTitle from "./TabTitle.tsx";
 
 interface DragCloneRendererProps {
