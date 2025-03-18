@@ -1,21 +1,21 @@
 import { Button, PopoverOrigin } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import React, { useState } from "react";
+import React, { memo, useCallback, useState } from "react";
 import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 import TagMenu from "./TagMenu.tsx";
 
 interface TagMenuButtonProps {
-  popoverOrigin: PopoverOrigin | undefined;
+  popoverOrigin?: PopoverOrigin;
   type?: string;
   selectedSdocIds: number[];
 }
 
 function TagMenuButton({ popoverOrigin, type, selectedSdocIds }: TagMenuButtonProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
-  };
+  }, []);
 
   return (
     <>
@@ -33,4 +33,4 @@ function TagMenuButton({ popoverOrigin, type, selectedSdocIds }: TagMenuButtonPr
   );
 }
 
-export default TagMenuButton;
+export default memo(TagMenuButton);

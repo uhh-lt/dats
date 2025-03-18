@@ -1,4 +1,5 @@
 import { ListItemButton, ListItemButtonProps, ListItemIcon, ListItemText } from "@mui/material";
+import { memo, useCallback } from "react";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 import { CRUDDialogActions } from "../../dialogSlice.ts";
@@ -11,19 +12,21 @@ interface TagActionButtonCreateProps {
  * A button that sends the 'open-tag' event to open the TagCreationDialog
  * @param tagName The name of the DocumentTag to be created. The button will display the name, and the TagCreationDialog's form will be pre-filled with this name.
  */
-function TagMenuCreationButton({ tagName, ...props }: TagActionButtonCreateProps & ListItemButtonProps) {
+function TagMenuCreateButton({ tagName, ...props }: TagActionButtonCreateProps & ListItemButtonProps) {
   const dispatch = useAppDispatch();
 
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     dispatch(CRUDDialogActions.openTagCreateDialog({ tagName }));
-  };
+  }, [dispatch, tagName]);
+
+  const buttonText = tagName.length > 0 ? `"${tagName}" (Create new)` : "Create new tag";
 
   return (
     <ListItemButton onClick={handleClick} {...props}>
       <ListItemIcon>{getIconComponent(Icon.CREATE)}</ListItemIcon>
-      <ListItemText primary={tagName.length > 0 ? `"${tagName}" (Create new)` : "Create new tag"} />
+      <ListItemText primary={buttonText} />
     </ListItemButton>
   );
 }
 
-export default TagMenuCreationButton;
+export default memo(TagMenuCreateButton);

@@ -1,4 +1,5 @@
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
+import { memo, useCallback } from "react";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
@@ -11,11 +12,14 @@ interface TagEditMenuItemProps {
 function TagEditMenuItem({ tag, onClick, ...props }: TagEditMenuItemProps & MenuItemProps) {
   const dispatch = useAppDispatch();
 
-  const handleClickOpen: React.MouseEventHandler<HTMLLIElement> = (event) => {
-    event.stopPropagation();
-    if (onClick) onClick(event);
-    dispatch(CRUDDialogActions.openTagEditDialog({ tagId: tag.id }));
-  };
+  const handleClickOpen = useCallback(
+    (event: React.MouseEvent<HTMLLIElement>) => {
+      event.stopPropagation();
+      if (onClick) onClick(event);
+      dispatch(CRUDDialogActions.openTagEditDialog({ tagId: tag.id }));
+    },
+    [dispatch, onClick, tag.id],
+  );
 
   return (
     <MenuItem onClick={handleClickOpen} {...props}>
@@ -25,4 +29,4 @@ function TagEditMenuItem({ tag, onClick, ...props }: TagEditMenuItemProps & Menu
   );
 }
 
-export default TagEditMenuItem;
+export default memo(TagEditMenuItem);

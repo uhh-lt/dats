@@ -1,6 +1,6 @@
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import TagHooks from "../../../api/TagHooks.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
@@ -49,4 +49,4 @@ function TagUnlinkButton({ sdocId, tag, ...props }: IconButtonProps & { sdocId: 
   );
 }
 
-export default TagUnlinkButton;
+export default memo(TagUnlinkButton);

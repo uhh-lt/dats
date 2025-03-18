@@ -1,5 +1,5 @@
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
-import React from "react";
+import React, { memo, useCallback } from "react";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
@@ -8,10 +8,13 @@ import { CRUDDialogActions } from "../../dialogSlice.ts";
 function TagEditButton({ tag, ...props }: IconButtonProps & { tag: DocumentTagRead }) {
   const dispatch = useAppDispatch();
 
-  const handleClickOpen = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-    event.stopPropagation();
-    dispatch(CRUDDialogActions.openTagEditDialog({ tagId: tag.id }));
-  };
+  const handleClickOpen = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      event.stopPropagation();
+      dispatch(CRUDDialogActions.openTagEditDialog({ tagId: tag.id }));
+    },
+    [dispatch, tag.id],
+  );
 
   return (
     <Tooltip title="Edit tag">
@@ -24,4 +27,4 @@ function TagEditButton({ tag, ...props }: IconButtonProps & { tag: DocumentTagRe
   );
 }
 
-export default TagEditButton;
+export default memo(TagEditButton);

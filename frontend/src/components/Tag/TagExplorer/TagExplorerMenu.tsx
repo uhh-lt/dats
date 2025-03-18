@@ -1,5 +1,5 @@
 import { IconButton, IconButtonProps, Menu } from "@mui/material";
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 import MemoMenuItem from "../../Memo/MemoMenuItem.tsx";
@@ -13,18 +13,20 @@ interface TagExplorerMenuProps {
 function TagExplorerMenu({ tag, ...props }: TagExplorerMenuProps & Omit<IconButtonProps, "onClick">) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+
+  const handleClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     setAnchorEl(event.currentTarget);
-  };
-  const handleClose: React.MouseEventHandler<HTMLLIElement> = (event) => {
+  }, []);
+
+  const handleClose = useCallback((event: React.MouseEvent<HTMLLIElement>) => {
     event.stopPropagation();
     setAnchorEl(null);
-  };
+  }, []);
 
   return (
     <>
-      <IconButton onClick={handleClick} {...(props as IconButtonProps)}>
+      <IconButton onClick={handleClick} {...props}>
         {getIconComponent(Icon.CONTEXT_MENU)}
       </IconButton>
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
@@ -39,4 +41,4 @@ function TagExplorerMenu({ tag, ...props }: TagExplorerMenuProps & Omit<IconButt
   );
 }
 
-export default TagExplorerMenu;
+export default memo(TagExplorerMenu);
