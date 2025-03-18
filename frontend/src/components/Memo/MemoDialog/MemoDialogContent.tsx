@@ -8,7 +8,6 @@ import { MemoRead } from "../../../api/openapi/models/MemoRead.ts";
 import { ProjectRead } from "../../../api/openapi/models/ProjectRead.ts";
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
 import { SpanAnnotationRead } from "../../../api/openapi/models/SpanAnnotationRead.ts";
-import { useOpenSnackbar } from "../../SnackbarDialog/useOpenSnackbar.ts";
 import { MemoCreateSuccessHandler } from "./MemoDialogAPI.ts";
 import { MemoDialogForm, MemoFormValues } from "./MemoDialogForm.tsx";
 
@@ -37,9 +36,6 @@ export function MemoDialogContent({
   const createMutation = MemoHooks.useCreateMemo();
   const updateMutation = MemoHooks.useUpdateMemo();
 
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
-
   // form handling
   const handleCreateOrUpdateCodeMemo: SubmitHandler<MemoFormValues> = (data) => {
     if (memo) {
@@ -54,10 +50,6 @@ export function MemoDialogContent({
         },
         {
           onSuccess: () => {
-            openSnackbar({
-              text: `Updated memo for ${attachedObjectType} ${attachedObject.id}`,
-              severity: "success",
-            });
             closeDialog();
           },
         },
@@ -75,10 +67,6 @@ export function MemoDialogContent({
         },
         {
           onSuccess: (data) => {
-            openSnackbar({
-              text: `Created memo for ${attachedObjectType} ${attachedObject.id}`,
-              severity: "success",
-            });
             if (onMemoCreateSuccess) onMemoCreateSuccess(data);
             closeDialog();
           },

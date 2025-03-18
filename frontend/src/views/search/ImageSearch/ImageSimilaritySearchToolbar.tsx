@@ -3,7 +3,7 @@ import { useRef } from "react";
 import ReduxFilterDialog from "../../../components/FilterDialog/ReduxFilterDialog.tsx";
 import DATSToolbar from "../../../components/MUI/DATSToolbar.tsx";
 import DeleteSdocsButton from "../../../components/SourceDocument/DeleteSdocsButton.tsx";
-import DownloadSdocsButton from "../../../components/SourceDocument/DownloadSdocsButton.tsx";
+import ExportSdocsButton from "../../../components/SourceDocument/ExportSdocsButton.tsx";
 import TagMenuButton from "../../../components/Tag/TagMenu/TagMenuButton.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
@@ -56,7 +56,7 @@ function ImageSimilaritySearchToolbar({ searchResultDocumentIds }: ImageSimilari
             popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
           />
           <DeleteSdocsButton sdocIds={selectedDocumentIds} navigateTo="../search" />
-          <DownloadSdocsButton sdocIds={selectedDocumentIds} />
+          <ExportSdocsButton sdocIds={selectedDocumentIds} />
         </>
       )}
       <Box sx={{ flexGrow: 1 }} />

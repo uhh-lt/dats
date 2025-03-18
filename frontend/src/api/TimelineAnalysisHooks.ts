@@ -49,6 +49,9 @@ const useCreateTimelineAnalysis = () =>
         prev ? { ...prev, [data.id]: data } : { [data.id]: data },
       );
     },
+    meta: {
+      successMessage: (timeline: TimelineAnalysisRead) => `Created Timeline Analysis "${timeline.name}"`,
+    },
   });
 
 const useUpdateTimelineAnalysis = () =>
@@ -58,6 +61,9 @@ const useUpdateTimelineAnalysis = () =>
       queryClient.setQueryData<TimelineMap>([QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id], (prev) =>
         prev ? { ...prev, [data.id]: data } : { [data.id]: data },
       );
+    },
+    meta: {
+      successMessage: (timeline: TimelineAnalysisRead) => `Updated Timeline Analysis "${timeline.name}"`,
     },
   });
 
@@ -69,6 +75,9 @@ const useRecomputeTimelineAnalysis = () =>
         prev ? { ...prev, [data.id]: data } : { [data.id]: data },
       );
     },
+    meta: {
+      successMessage: (timeline: TimelineAnalysisRead) => `Recomputed Timeline Analysis "${timeline.name}"`,
+    },
   });
 
 const useDuplicateTimelineAnalysis = () =>
@@ -78,6 +87,9 @@ const useDuplicateTimelineAnalysis = () =>
       queryClient.setQueryData<TimelineMap>([QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id], (prev) =>
         prev ? { ...prev, [data.id]: data } : { [data.id]: data },
       );
+    },
+    meta: {
+      successMessage: (timeline: TimelineAnalysisRead) => `Duplicated Timeline Analysis "${timeline.name}"`,
     },
   });
 
@@ -91,6 +103,9 @@ const useDeleteTimelineAnalysis = () =>
         delete newData[data.id];
         return newData;
       });
+    },
+    meta: {
+      successMessage: (timeline: TimelineAnalysisRead) => `Deleted Timeline Analysis "${timeline.name}"`,
     },
   });
 

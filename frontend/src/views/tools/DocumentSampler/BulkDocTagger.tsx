@@ -4,7 +4,6 @@ import { LoadingButton } from "@mui/lab";
 import { MenuItem, Select, Stack } from "@mui/material";
 import { memo, useCallback, useState } from "react";
 import TagHooks from "../../../api/TagHooks.ts";
-import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 
 function BulkDocTagger() {
@@ -21,34 +20,21 @@ function BulkDocTagger() {
   // mutation
   const { mutate: linkDocumentTags, isPending: isLinkingDocumentTags } = TagHooks.useBulkLinkDocumentTags();
 
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
-
-  // Memoized callbacks
+  // actions
   const handleSelectChange = useCallback((event: { target: { value: string } }) => {
     setSelectedDocumentTagId(parseInt(event.target.value));
   }, []);
 
   const bulkTagDocuments = useCallback(() => {
-    linkDocumentTags(
-      {
-        requestBody: {
-          source_document_ids: chartData
-            .map((x) => (isFixedSamplingStrategy ? x.fixedSampleSdocIds : x.relativeSampleSdocIds))
-            .flat(),
-          document_tag_ids: [selectedDocumentTagId],
-        },
+    linkDocumentTags({
+      requestBody: {
+        source_document_ids: chartData
+          .map((x) => (isFixedSamplingStrategy ? x.fixedSampleSdocIds : x.relativeSampleSdocIds))
+          .flat(),
+        document_tag_ids: [selectedDocumentTagId],
       },
-      {
-        onSuccess: () => {
-          openSnackbar({
-            text: "Tagged sampled documents!",
-            severity: "success",
-          });
-        },
-      },
-    );
-  }, [chartData, isFixedSamplingStrategy, linkDocumentTags, openSnackbar, selectedDocumentTagId]);
+    });
+  }, [chartData, isFixedSamplingStrategy, linkDocumentTags, selectedDocumentTagId]);
 
   return (
     <Stack direction="row" spacing={1}>

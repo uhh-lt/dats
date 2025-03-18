@@ -5,7 +5,6 @@ import Tooltip from "@mui/material/Tooltip";
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks.ts";
-import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
 import { SearchActions } from "../../views/search/DocumentSearch/searchSlice.ts";
 import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI.ts";
@@ -25,9 +24,6 @@ function DeleteSdocsButton({ sdocIds, navigateTo, ...props }: DeleteSdocsButtonP
   // redux
   const dispatch = useAppDispatch();
 
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
-
   // ui events
   const onClick = useCallback(() => {
     ConfirmationAPI.openConfirmationDialog({
@@ -42,11 +38,6 @@ function DeleteSdocsButton({ sdocIds, navigateTo, ...props }: DeleteSdocsButtonP
           },
           {
             onSuccess: (sdocs) => {
-              const filenames = sdocs.map((sdoc) => sdoc.filename).join(", ");
-              openSnackbar({
-                text: `Successfully deleted ${sdocs.length} document(s): ${filenames}`,
-                severity: "success",
-              });
               dispatch(SearchActions.updateSelectedDocumentsOnMultiDelete(sdocs.map((sdoc) => sdoc.id)));
               if (navigateTo) navigate(navigateTo);
             },
@@ -54,7 +45,7 @@ function DeleteSdocsButton({ sdocIds, navigateTo, ...props }: DeleteSdocsButtonP
         );
       },
     });
-  }, [deleteMutation.mutate, dispatch, navigate, navigateTo, sdocIds, openSnackbar]);
+  }, [deleteMutation.mutate, dispatch, navigate, navigateTo, sdocIds]);
 
   return (
     <Tooltip title="Delete">

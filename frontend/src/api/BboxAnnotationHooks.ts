@@ -96,7 +96,7 @@ const useCreateBBoxAnnotation = () => {
       );
     },
     meta: {
-      successMessage: (bboxAnnotation: BBoxAnnotationRead) => `Created Bounding Box Annotation ${bboxAnnotation.id}`,
+      successMessage: (bbox: BBoxAnnotationRead) => `Created Bounding Box Annotation ${bbox.id}`,
     },
   });
 };
@@ -142,7 +142,7 @@ const useUpdateBBoxAnnotation = () =>
       );
     },
     meta: {
-      successMessage: (bboxAnnotation: BBoxAnnotationRead) => `Updated Bounding Box Annotation ${bboxAnnotation.id}`,
+      successMessage: (bbox: BBoxAnnotationRead) => `Updated Bounding Box Annotation ${bbox.id}`,
     },
   });
 
@@ -176,7 +176,7 @@ const useDeleteBBoxAnnotation = () =>
       );
     },
     meta: {
-      successMessage: (bboxAnnotation: BBoxAnnotationRead) => `Deleted Bounding Box Annotation ${bboxAnnotation.id}`,
+      successMessage: (bbox: BBoxAnnotationRead) => `Deleted Bounding Box Annotation ${bbox.id}`,
     },
   });
 

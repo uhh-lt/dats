@@ -4,7 +4,6 @@ import { useParams } from "react-router";
 import { TimelineAnalysisType } from "../../../api/openapi/models/TimelineAnalysisType.ts";
 import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
-import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import AnalysisDashboard from "../AnalysisDashboard/AnalysisDashboard.tsx";
 import {
@@ -50,9 +49,6 @@ function TimelineAnalysisDashboard() {
     [userAnalysis],
   );
 
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
-
   // mutations
   const { mutate: createTimelineAnalysis, isPending: isCreatingTimelineAnalysis } =
     TimelineAnalysisHooks.useCreateTimelineAnalysis();
@@ -84,11 +80,7 @@ function TimelineAnalysisDashboard() {
           },
         },
         {
-          onSuccess(data) {
-            openSnackbar({
-              text: `Created new timeline analysis '${data.name}'`,
-              severity: "success",
-            });
+          onSuccess() {
             table.setCreatingRow(null); //exit creating mode
           },
         },
@@ -96,38 +88,18 @@ function TimelineAnalysisDashboard() {
     };
 
   const handleDuplicateAnalysis = (row: MRT_Row<TimelineAnaylsisDashboardRow>) => {
-    duplicateTimelineAnalysis(
-      {
-        timelineAnalysisId: row.original.id,
-      },
-      {
-        onSuccess(data) {
-          openSnackbar({
-            text: `Duplicated analysis '${data.name}'`,
-            severity: "success",
-          });
-        },
-      },
-    );
+    duplicateTimelineAnalysis({
+      timelineAnalysisId: row.original.id,
+    });
   };
 
   const handleDeleteAnalysis = (row: MRT_Row<TimelineAnaylsisDashboardRow>) => {
     ConfirmationAPI.openConfirmationDialog({
       text: `Do you really want to remove the analysis ${row.original.id}? This action cannot be undone!`,
       onAccept: () => {
-        deleteTimelineAnalysis(
-          {
-            timelineAnalysisId: row.original.id,
-          },
-          {
-            onSuccess(data) {
-              openSnackbar({
-                text: `Deleted analysis '${data.name}'`,
-                severity: "success",
-              });
-            },
-          },
-        );
+        deleteTimelineAnalysis({
+          timelineAnalysisId: row.original.id,
+        });
       },
     });
   };
@@ -145,11 +117,7 @@ function TimelineAnalysisDashboard() {
         },
       },
       {
-        onSuccess(data) {
-          openSnackbar({
-            text: `Updated analysis '${data.name}'`,
-            severity: "success",
-          });
+        onSuccess() {
           table.setEditingRow(null); //exit editing mode
         },
       },

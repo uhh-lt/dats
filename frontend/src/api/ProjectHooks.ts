@@ -43,8 +43,7 @@ const useCreateProject = () => {
       );
     },
     meta: {
-      successMessage: (project: ProjectRead) =>
-        "Successfully Created Project " + project.title + " with id " + project.id + "!",
+      successMessage: (project: ProjectRead) => `Successfully Created Project "${project.title}" (ID: ${project.id})`,
     },
   });
 };
@@ -58,7 +57,7 @@ const useUpdateProject = () =>
       );
     },
     meta: {
-      successMessage: (data: ProjectRead) => `Successfully Updated Project with id ${data.id}!`,
+      successMessage: (data: ProjectRead) => `Successfully Updated Project "${data.title}"`,
     },
   });
 
@@ -71,7 +70,7 @@ const useDeleteProject = () =>
       );
     },
     meta: {
-      successMessage: (data: ProjectRead) => "Successfully Deleted Project " + data.title + " with id " + data.id + "!",
+      successMessage: (data: ProjectRead) => `Successfully Deleted Project "${data.title}"`,
     },
   });
 
@@ -86,7 +85,13 @@ const useUploadDocument = () =>
   });
 
 // duplicates
-const useFindDuplicateTextDocuments = () => useMutation({ mutationFn: ProjectService.findDuplicateTextSdocs });
+const useFindDuplicateTextDocuments = () =>
+  useMutation({
+    mutationFn: ProjectService.findDuplicateTextSdocs,
+    meta: {
+      successMessage: () => "Document duplicate search completed",
+    },
+  });
 
 const ProjectHooks = {
   // project

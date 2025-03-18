@@ -59,6 +59,9 @@ const useCreateWhiteboard = () =>
         return prevWhiteboards ? { ...prevWhiteboards, [data.id]: newWhiteboard } : { [data.id]: newWhiteboard };
       });
     },
+    meta: {
+      successMessage: (whiteboard: WhiteboardRead) => `Created Whiteboard "${whiteboard.title}"`,
+    },
   });
 
 const useUpdateWhiteboard = () =>
@@ -72,6 +75,9 @@ const useUpdateWhiteboard = () =>
           : { [data.id]: updatedWhiteboard };
       });
     },
+    meta: {
+      successMessage: (whiteboard: WhiteboardRead) => `Updated Whiteboard "${whiteboard.title}"`,
+    },
   });
 
 const useDuplicateWhiteboard = () => {
@@ -83,6 +89,9 @@ const useDuplicateWhiteboard = () => {
       queryClient.setQueryData<WhiteboardMap>([QueryKey.WHITEBOARDS_PROJECT, projectId], (prevWhiteboards) =>
         prevWhiteboards ? { ...prevWhiteboards, [data.id]: duplicatedWhiteboard } : { [data.id]: duplicatedWhiteboard },
       );
+    },
+    meta: {
+      successMessage: (whiteboard: WhiteboardRead) => `Duplicated Whiteboard "${whiteboard.title}"`,
     },
   });
 };
@@ -98,6 +107,9 @@ const useDeleteWhiteboard = () => {
         delete newData[data.id];
         return newData;
       });
+    },
+    meta: {
+      successMessage: (whiteboard: WhiteboardRead) => `Deleted Whiteboard "${whiteboard.title}"`,
     },
   });
 };

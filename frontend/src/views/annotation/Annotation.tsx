@@ -7,7 +7,6 @@ import { DocType } from "../../api/openapi/models/DocType.ts";
 import { SourceDocumentDataRead } from "../../api/openapi/models/SourceDocumentDataRead.ts";
 import CodeExplorer from "../../components/Code/CodeExplorer/CodeExplorer.tsx";
 import EditableTypography from "../../components/EditableTypography.tsx";
-import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import DocumentInformation from "../../components/SourceDocument/DocumentInformation/DocumentInformation.tsx";
 import SidebarContentLayout from "../../layouts/ContentLayouts/SidebarContentLayout.tsx";
 import SidebarContentSidebarLayout from "../../layouts/ContentLayouts/SidebarContentSidebarLayout.tsx";
@@ -159,29 +158,18 @@ function Annotation() {
   const sdocData = SdocHooks.useGetDocumentData(sdocId);
 
   // rename document
-  const openSnackbar = useOpenSnackbar();
   const updateNameMutation = SdocHooks.useUpdateName();
   const handleUpdateName = (newName: string) => {
     if (sdoc.isSuccess) {
       if (newName === sdoc.data.name) {
         return;
       }
-      updateNameMutation.mutate(
-        {
-          sdocId: sdoc.data.id,
-          requestBody: {
-            name: newName,
-          },
+      updateNameMutation.mutate({
+        sdocId: sdoc.data.id,
+        requestBody: {
+          name: newName,
         },
-        {
-          onSuccess: (data) => {
-            openSnackbar({
-              text: `Updated document name to ${data.name}`,
-              severity: "success",
-            });
-          },
-        },
-      );
+      });
     }
   };
 

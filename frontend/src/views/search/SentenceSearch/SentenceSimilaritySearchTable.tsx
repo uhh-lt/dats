@@ -18,7 +18,7 @@ import CardContainer from "../../../components/MUI/CardContainer.tsx";
 import DATSToolbar from "../../../components/MUI/DATSToolbar.tsx";
 import SdocMetadataRenderer from "../../../components/Metadata/SdocMetadataRenderer.tsx";
 import DeleteSdocsButton from "../../../components/SourceDocument/DeleteSdocsButton.tsx";
-import DownloadSdocsButton from "../../../components/SourceDocument/DownloadSdocsButton.tsx";
+import ExportSdocsButton from "../../../components/SourceDocument/ExportSdocsButton.tsx";
 import SdocAnnotatorsRenderer from "../../../components/SourceDocument/SdocAnnotatorsRenderer.tsx";
 import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
 import SdocSentenceRenderer from "../../../components/SourceDocument/SdocSentenceRenderer.tsx";
@@ -259,7 +259,7 @@ function SentenceSimilaritySearchTable({
               popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
             />
             <DeleteSdocsButton sdocIds={selectedDocumentIds} navigateTo="../search" />
-            <DownloadSdocsButton sdocIds={selectedDocumentIds} />
+            <ExportSdocsButton sdocIds={selectedDocumentIds} />
           </>
         )}
         <Box sx={{ flexGrow: 1 }} />

@@ -14,7 +14,6 @@ import FormDate from "../../../../FormInputs/FormDate.tsx";
 import FormNumber from "../../../../FormInputs/FormNumber.tsx";
 import FormSwitch from "../../../../FormInputs/FormSwitch.tsx";
 import FormText from "../../../../FormInputs/FormText.tsx";
-import { useOpenSnackbar } from "../../../../SnackbarDialog/useOpenSnackbar.ts";
 import MetadataEditMenu from "../MetadataEditMenu.tsx";
 import DocumentMetadataAddFilterButton from "./DocumentMetadataAddFilterButton.tsx";
 import DocumentMetadataGoToButton from "./DocumentMetadataGoToButton.tsx";
@@ -58,9 +57,6 @@ function DocumentMetadataRowContent({
   // computed
   const isLink = metadata.str_value ? isValidHttpUrl(metadata.str_value) : false;
 
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
-
   // mutation
   const updateMutation = MetadataHooks.useUpdateSdocMetadata();
 
@@ -76,29 +72,19 @@ function DocumentMetadataRowContent({
         metadata.list_value !== data.list_value
       ) {
         const mutation = updateMutation.mutate;
-        mutation(
-          {
-            metadataId: metadata.id,
-            requestBody: {
-              str_value: data.str_value,
-              int_value: data.int_value,
-              date_value: data.date_value ? new Date(data.date_value).toISOString() : data.date_value,
-              boolean_value: data.boolean_value,
-              list_value: data.list_value,
-            },
+        mutation({
+          metadataId: metadata.id,
+          requestBody: {
+            str_value: data.str_value,
+            int_value: data.int_value,
+            date_value: data.date_value ? new Date(data.date_value).toISOString() : data.date_value,
+            boolean_value: data.boolean_value,
+            list_value: data.list_value,
           },
-          {
-            onSuccess: (metadata: SourceDocumentMetadataRead) => {
-              openSnackbar({
-                text: `Updated metadata ${metadata.id} for document ${metadata.source_document_id}`,
-                severity: "success",
-              });
-            },
-          },
-        );
+        });
       }
     },
-    [metadata, updateMutation.mutate, openSnackbar],
+    [metadata, updateMutation.mutate],
   );
   const handleError: SubmitErrorHandler<SourceDocumentMetadataUpdate> = useCallback((data) => console.error(data), []);
 

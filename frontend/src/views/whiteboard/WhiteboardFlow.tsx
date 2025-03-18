@@ -40,7 +40,6 @@ import WhiteboardHooks, { Whiteboard, WhiteboardGraph } from "../../api/Whiteboa
 import BBoxAnnotationEditDialog from "../../components/BBoxAnnotation/BBoxAnnotationEditDialog.tsx";
 import CodeEditDialog from "../../components/Code/CodeEditDialog.tsx";
 import SentenceAnnotationEditDialog from "../../components/SentenceAnnotation/SentenceAnnotationEditDialog.tsx";
-import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import SpanAnnotationEditDialog from "../../components/SpanAnnotation/SpanAnnotationEditDialog.tsx";
 import TagEditDialog from "../../components/Tag/TagEditDialog.tsx";
 import { downloadFile } from "../../utils/ExportUtils.ts";
@@ -193,9 +192,6 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   const [selectedEdges, setSelectedEdges] = useState<Edge[]>([]);
   const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
 
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
-
   const handleChangePendingAction = useCallback(
     (action: PendingAddNodeAction | undefined) => {
       resetSelection();
@@ -227,43 +223,23 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
         // tag can be manually connected to document
         if (isSdocNode(targetNode) && isTagNode(sourceNode)) {
           const mutation = bulkLinkDocumentTagsMutation.mutate;
-          mutation(
-            {
-              requestBody: {
-                document_tag_ids: [sourceNode.data.tagId],
-                source_document_ids: [targetNode.data.sdocId],
-              },
+          mutation({
+            requestBody: {
+              document_tag_ids: [sourceNode.data.tagId],
+              source_document_ids: [targetNode.data.sdocId],
             },
-            {
-              onSuccess() {
-                openSnackbar({
-                  text: "Tag added to document",
-                  severity: "success",
-                });
-              },
-            },
-          );
+          });
         }
 
         // code can be manually connected to other code
         if (isCodeNode(sourceNode) && isCodeNode(targetNode)) {
           const mutation = updateCodeMutation.mutate;
-          mutation(
-            {
-              codeId: sourceNode.data.codeId,
-              requestBody: {
-                parent_id: targetNode.data.codeId,
-              },
+          mutation({
+            codeId: sourceNode.data.codeId,
+            requestBody: {
+              parent_id: targetNode.data.codeId,
             },
-            {
-              onSuccess() {
-                openSnackbar({
-                  text: "Updated parent code",
-                  severity: "success",
-                });
-              },
-            },
-          );
+          });
         }
 
         // codes can be manually connected to annotations
@@ -305,7 +281,6 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
     [
       reactFlowInstance,
       bulkLinkDocumentTagsMutation.mutate,
-      openSnackbar,
       updateCodeMutation.mutate,
       updateSpanAnnotationMutation.mutate,
       updateBBoxAnnotationMutation.mutate,
@@ -386,24 +361,14 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   const handleSaveWhiteboard = useCallback(() => {
     const newData: WhiteboardGraph = { nodes: nodes, edges: edges };
     const mutation = updateWhiteboard.mutate;
-    mutation(
-      {
-        whiteboardId: whiteboard.id,
-        requestBody: {
-          title: whiteboard.title,
-          content: JSON.stringify(newData),
-        },
+    mutation({
+      whiteboardId: whiteboard.id,
+      requestBody: {
+        title: whiteboard.title,
+        content: JSON.stringify(newData),
       },
-      {
-        onSuccess(data) {
-          openSnackbar({
-            text: `Saved whiteboard '${data.title}'`,
-            severity: "success",
-          });
-        },
-      },
-    );
-  }, [edges, nodes, openSnackbar, updateWhiteboard.mutate, whiteboard.id, whiteboard.title]);
+    });
+  }, [edges, nodes, updateWhiteboard.mutate, whiteboard.id, whiteboard.title]);
 
   // autosave whiteboard every 3 minutes
   if (Date.now() - lastSaveTime.current > 1000 * 60 * 3) {

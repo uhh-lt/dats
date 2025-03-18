@@ -2,7 +2,6 @@ import StarIcon from "@mui/icons-material/Star";
 import StarOutlineIcon from "@mui/icons-material/StarOutline";
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import MemoHooks from "../../api/MemoHooks.ts";
-import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 
 interface MemoStarButtonProps {
   memoIds: number[];
@@ -13,25 +12,12 @@ function MemoStarButton({ memoIds, isStarred, ...props }: MemoStarButtonProps & 
   // mutation
   const starMutation = MemoHooks.useStarMemos();
 
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
-
   // ui events
   const handleClick = () => {
-    starMutation.mutate(
-      {
-        memoIds,
-        isStarred,
-      },
-      {
-        onSuccess: (memos) => {
-          openSnackbar({
-            text: `Set favorite status of ${memos.length} Memo(s) to ${isStarred ? "favorite" : "normal"}!`,
-            severity: "success",
-          });
-        },
-      },
-    );
+    starMutation.mutate({
+      memoIds,
+      isStarred,
+    });
   };
 
   return (

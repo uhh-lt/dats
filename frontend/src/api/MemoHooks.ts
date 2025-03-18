@@ -58,6 +58,9 @@ const useCreateMemo = () =>
         (oldData) => (oldData ? [...oldData, data] : [data]),
       );
     },
+    meta: {
+      successMessage: (memo: MemoRead) => `Created memo "${memo.title}"`,
+    },
   });
 
 const updateInvalidation = (data: MemoRead) => {
@@ -76,6 +79,9 @@ const useUpdateMemo = () =>
       updateInvalidation(data);
       queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_TABLE] });
     },
+    meta: {
+      successMessage: (memo: MemoRead) => `Updated memo "${memo.title}"`,
+    },
   });
 
 const useStarMemos = () =>
@@ -89,6 +95,10 @@ const useStarMemos = () =>
         updateInvalidation(memo);
       });
       queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_TABLE] });
+    },
+    meta: {
+      successMessage: (memos: MemoRead[], variables: { memoIds: number[]; isStarred: boolean }) =>
+        `${variables.isStarred ? "Starred" : "Unstarred"} ${memos.length} memo(s)`,
     },
   });
 
@@ -108,6 +118,9 @@ const useDeleteMemo = () =>
       deleteInvalidation(data);
       queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_TABLE] });
     },
+    meta: {
+      successMessage: (memo: MemoRead) => `Deleted memo "${memo.title}"`,
+    },
   });
 
 const useDeleteMemos = () =>
@@ -121,6 +134,9 @@ const useDeleteMemos = () =>
         deleteInvalidation(data);
       });
       queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_TABLE] });
+    },
+    meta: {
+      successMessage: (memos: MemoRead[]) => `Deleted ${memos.length} memo(s)`,
     },
   });
 

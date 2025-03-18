@@ -159,24 +159,11 @@ function ExporterDialog() {
   const { user } = useAuth();
   const projectUsers = UserHooks.useGetAllUsers();
 
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
-
   const handleClick = () => {
     const requestBody = exporterInfoToExporterJobParameters(exporterData, projectId);
-    startExport.mutate(
-      {
-        requestBody,
-      },
-      {
-        onSuccess: (exportJobRead) => {
-          openSnackbar({
-            text: `Created new export job ${exportJobRead.id}`,
-            severity: "success",
-          });
-        },
-      },
-    );
+    startExport.mutate({
+      requestBody,
+    });
   };
 
   // listen to open-memo event and open the dialog
@@ -192,6 +179,7 @@ function ExporterDialog() {
     [user],
   );
 
+  const openSnackbar = useOpenSnackbar();
   useEffect(() => {
     if (!exportJob.data) return;
     if (exportJob.data.status) {

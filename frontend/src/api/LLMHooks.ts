@@ -61,16 +61,25 @@ const useGetAllLLMJobs = (projectId: number) => {
 const useCreatePromptTemplates = () =>
   useMutation({
     mutationFn: LlmService.createPromptTemplates,
+    meta: {
+      successMessage: () => `Created prompt templates`,
+    },
   });
 
 const useCreateTrainingParameters = () =>
   useMutation({
     mutationFn: LlmService.createTrainingParameters,
+    meta: {
+      successMessage: () => `Created training parameters`,
+    },
   });
 
 const useDetermineApproach = () =>
   useMutation({
     mutationFn: LlmService.determineApproach,
+    meta: {
+      successMessage: (data: ApproachType) => `Determined approach type: ${data}`,
+    },
   });
 
 const useCountExistingAssistantAnnotations = ({

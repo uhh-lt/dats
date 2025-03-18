@@ -3,7 +3,6 @@ import SearchIcon from "@mui/icons-material/Search";
 import { List, ListItem, ListItemButton, ListItemIcon, ListItemText, Popover, PopoverPosition } from "@mui/material";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { ImageSearchActions } from "../../search/ImageSearch/imageSearchSlice.ts";
 
@@ -40,17 +39,10 @@ const ImageMenu = forwardRef<ImageMenuHandle>((_, ref) => {
     setIsPopoverOpen(false);
   };
 
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
-
   // ui events
   const handleImageSimilaritySearch = () => {
     if (image === undefined || image === null) {
-      // We're fucked
-      openSnackbar({
-        severity: "error",
-        text: "Something went wrong. This is a bug, please report it to the developers.",
-      });
+      console.error("Something went wrong. This is a bug, please report it to the developers.");
       return;
     }
     dispatch(ImageSearchActions.onChangeSearchQuery(image));

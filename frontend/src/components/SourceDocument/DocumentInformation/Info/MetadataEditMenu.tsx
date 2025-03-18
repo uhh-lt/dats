@@ -19,7 +19,6 @@ import { ProjectMetadataRead } from "../../../../api/openapi/models/ProjectMetad
 import { Icon, getIconComponent } from "../../../../utils/icons/iconUtils.tsx";
 import { metaTypeToIcon } from "../../../../utils/icons/metaTypeToIcon.tsx";
 import ConfirmationAPI from "../../../ConfirmationDialog/ConfirmationAPI.ts";
-import { useOpenSnackbar } from "../../../SnackbarDialog/useOpenSnackbar.ts";
 import MetadataTypeSelectorMenu from "./MetadataTypeSelectorMenu.tsx";
 
 interface MetadataEditMenuProps {
@@ -93,29 +92,18 @@ function MetadataEditMenu({ projectMetadata }: MetadataEditMenuProps) {
   };
 
   // deletion
-  const openSnackbar = useOpenSnackbar();
   const deleteMutation = MetadataHooks.useDeleteProjectMetadata();
   const handleDeleteMetadata = useCallback(() => {
     ConfirmationAPI.openConfirmationDialog({
       text: `Do you really want to delete the ProjectMetadata ${projectMetadata.id}? This will remove metadata from all corresponding documents. This action cannot be undone!`,
       onAccept: () => {
         const mutation = deleteMutation.mutate;
-        mutation(
-          {
-            metadataId: projectMetadata.id,
-          },
-          {
-            onSuccess: (data) => {
-              openSnackbar({
-                text: `Deleted Metadata ${data.id} from Project ${data.project_id}`,
-                severity: "success",
-              });
-            },
-          },
-        );
+        mutation({
+          metadataId: projectMetadata.id,
+        });
       },
     });
-  }, [deleteMutation.mutate, projectMetadata.id, openSnackbar]);
+  }, [deleteMutation.mutate, projectMetadata.id]);
 
   return (
     <>
