@@ -3,6 +3,7 @@ import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import AddIcon from "@mui/icons-material/Add";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import ArticleIcon from "@mui/icons-material/Article";
+import AudioFileIcon from "@mui/icons-material/AudioFile";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import AutoGraphIcon from "@mui/icons-material/AutoGraph";
 import AutoStoriesIcon from "@mui/icons-material/AutoStories";
@@ -38,9 +39,11 @@ import SubjectIcon from "@mui/icons-material/Subject";
 import TextFormatIcon from "@mui/icons-material/TextFormat";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import TuneIcon from "@mui/icons-material/Tune";
+import VideoFileIcon from "@mui/icons-material/VideoFile";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { SvgIconProps } from "@mui/material";
+
 import React from "react";
 export enum Icon {
   HOME = "home",
@@ -156,9 +159,9 @@ const iconMap: Record<Icon, IconFactory> = {
 
   // Document types
   [Icon.TEXT_DOCUMENT]: (iconProps) => <ArticleIcon {...iconProps} />,
-  [Icon.IMAGE_DOCUMENT]: (iconProps) => <ImageSearchIcon {...iconProps} />,
-  [Icon.AUDIO_DOCUMENT]: (iconProps) => <ImageSearchIcon {...iconProps} />,
-  [Icon.VIDEO_DOCUMENT]: (iconProps) => <ImageSearchIcon {...iconProps} />,
+  [Icon.IMAGE_DOCUMENT]: (iconProps) => <ImageIcon {...iconProps} />,
+  [Icon.AUDIO_DOCUMENT]: (iconProps) => <AudioFileIcon {...iconProps} />,
+  [Icon.VIDEO_DOCUMENT]: (iconProps) => <VideoFileIcon {...iconProps} />,
 
   // Job objects
   [Icon.CRAWLER_JOB]: (iconProps) => <SearchIcon {...iconProps} />,
