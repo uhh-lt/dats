@@ -46,27 +46,3 @@ export const createDividerStyles = (
     transition: "opacity 0.2s, background-color 0.2s",
   },
 });
-
-export const createContainerStyles = (isHorizontal = true): SxProps<Theme> => ({
-  display: "flex",
-  flexDirection: isHorizontal ? "row" : "column",
-  width: "100%",
-  height: "100%",
-  position: "relative",
-});
-
-export const createPanelStyles = (size: string | number, isHorizontal = true): SxProps<Theme> => ({
-  ...(isHorizontal
-    ? {
-        width: size,
-        height: "100%",
-      }
-    : {
-        width: "100%",
-        height: size,
-      }),
-  overflow: "hidden",
-  display: "flex",
-  flexDirection: "column",
-  flex: "1 1 auto",
-});

@@ -1,9 +1,8 @@
-import { Box } from "@mui/material";
 import { memo, ReactNode, useCallback, useRef, useState } from "react";
 import DragHandler from "./DragHandler.tsx";
 import { useMouseEventHandlers } from "./hooks/useMouseEventHandlers";
 import "./styles/ResizablePanel.css";
-import { createContainerStyles, createPanelStyles } from "./styles/resizePanelStyles";
+import { Container, Panel } from "./styles/styledComponents.ts";
 
 interface PercentageResizablePanelProps {
   firstContent: ReactNode;
@@ -80,11 +79,11 @@ function PercentageResizablePanel({
   });
 
   return (
-    <Box ref={containerRef} sx={createContainerStyles(isHorizontal)}>
+    <Container ref={containerRef} isHorizontal={isHorizontal}>
       {!isFirstCollapsed && (
-        <Box sx={createPanelStyles(`${contentPercentage}%`, isHorizontal)}>
+        <Panel size={`${contentPercentage}%`} isHorizontal={isHorizontal}>
           <div className="panel-content">{firstContent}</div>
-        </Box>
+        </Panel>
       )}
       <DragHandler
         dragHandleRef={dragHandleRef}
@@ -101,11 +100,11 @@ function PercentageResizablePanel({
         }}
       />
       {!isSecondCollapsed && (
-        <Box sx={createPanelStyles(`${100 - contentPercentage}%`, isHorizontal)}>
+        <Panel size={`${100 - contentPercentage}%`} isHorizontal={isHorizontal}>
           <div className="panel-content">{secondContent}</div>
-        </Box>
+        </Panel>
       )}
-    </Box>
+    </Container>
   );
 }
 
