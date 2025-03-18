@@ -7,7 +7,6 @@ import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import CodeHooks from "../../api/CodeHooks.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
-import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { contrastiveColors } from "../../utils/colors.ts";
 import { AnnoActions } from "../../views/annotation/annoSlice.ts";
@@ -97,9 +96,6 @@ function CodeCreateForm({ projectId, codeToCreate, parentCodes, onClose }: CodeC
   // mutations
   const createCodeMutation = CodeHooks.useCreateCode();
 
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
-
   // react form handlers
   const handleSubmitCodeCreateDialog: SubmitHandler<CodeCreateValues> = (data) => {
     let pcid: number | undefined = undefined;
@@ -121,11 +117,6 @@ function CodeCreateForm({ projectId, codeToCreate, parentCodes, onClose }: CodeC
       },
       {
         onSuccess: (data) => {
-          openSnackbar({
-            text: `Added new Code ${data.name}!`,
-            severity: "success",
-          });
-
           // if we add a new code successfully, we want to show the code in the code explorer
           // this means, we have to expand the parent codes, so the new code is visible
           const codesToExpand = [];

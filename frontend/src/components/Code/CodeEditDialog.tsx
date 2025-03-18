@@ -8,7 +8,6 @@ import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import CodeHooks from "../../api/CodeHooks.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { CodeUpdate } from "../../api/openapi/models/CodeUpdate.ts";
-import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import ColorUtils from "../../utils/ColorUtils.ts";
 import { AnnoActions } from "../../views/annotation/annoSlice.ts";
@@ -41,9 +40,6 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
   // mutations
   const updateCodeMutation = CodeHooks.useUpdateCode();
   const deleteCodeMutation = CodeHooks.useDeleteCode();
-
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
 
   // form handling
   const handleClose = () => {
@@ -88,10 +84,6 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
             }
 
             handleClose();
-            openSnackbar({
-              text: `Updated code ${data.name}`,
-              severity: "success",
-            });
           },
         },
       );
@@ -107,12 +99,8 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
           deleteCodeMutation.mutate(
             { codeId: code.id },
             {
-              onSuccess: (data: CodeRead) => {
+              onSuccess: () => {
                 handleClose();
-                openSnackbar({
-                  text: `Deleted code ${data.name}`,
-                  severity: "success",
-                });
               },
             },
           );
