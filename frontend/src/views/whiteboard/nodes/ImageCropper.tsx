@@ -1,40 +1,57 @@
+import { Box, BoxProps } from "@mui/material";
 import { memo, useEffect, useRef } from "react";
 
-interface ImageCropperProps {
+interface ImageCropperProps extends BoxProps {
   imageUrl: string;
   x: number;
   y: number;
   width: number;
   height: number;
-  targetWidth: number;
-  targetHeight: number;
-  style?: React.CSSProperties;
+  targetWidth?: number;
+  targetHeight?: number;
 }
 
-const ImageCropper = memo(({ imageUrl, x, y, width, height, targetWidth, targetHeight, style }: ImageCropperProps) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+function ImageCropper({
+  imageUrl,
+  x,
+  y,
+  width,
+  height,
+  targetWidth = width,
+  targetHeight = height,
+  ...props
+}: ImageCropperProps) {
+  const img = useRef<HTMLImageElement>(null);
 
-  // https://stackoverflow.com/questions/25753754/canvas-todataurl-security-error-the-operation-is-insecure
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (canvas) {
-      const context = canvas.getContext("2d");
-      if (context) {
-        canvas.width = targetWidth;
-        canvas.height = targetHeight;
-
-        const image = new Image();
-        image.src = imageUrl;
-
-        image.onload = () => {
-          // Draw the cropped image on the canvas
-          context.drawImage(image, x, y, width, height, 0, 0, targetWidth, targetHeight!);
-        };
-      }
+    if (img.current) {
+      img.current.style.objectPosition = `-${x}px -${y}px`;
     }
-  }, [imageUrl, x, y, width, height, targetHeight, targetWidth]);
+  }, [x, y]);
 
-  return <canvas id={"canvas"} ref={canvasRef} style={style} />;
-});
+  return (
+    <Box
+      {...props}
+      component="div"
+      style={{
+        width: targetWidth,
+        height: targetHeight,
+        overflow: "hidden",
+        display: "inline-block",
+        ...props.style,
+      }}
+    >
+      <img
+        ref={img}
+        src={imageUrl}
+        style={{
+          objectFit: "none",
+          transform: `scale(${targetWidth / width}, ${targetHeight / height})`,
+          transformOrigin: "0 0",
+        }}
+      />
+    </Box>
+  );
+}
 
-export default ImageCropper;
+export default memo(ImageCropper);

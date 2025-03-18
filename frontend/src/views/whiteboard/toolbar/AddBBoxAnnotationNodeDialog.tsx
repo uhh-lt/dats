@@ -1,6 +1,6 @@
 import { Box, Button, ButtonProps, CircularProgress, Dialog } from "@mui/material";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
-import { useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { XYPosition } from "reactflow";
 import MetadataHooks from "../../../api/MetadataHooks.ts";
 import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
@@ -24,14 +24,14 @@ function AddBBoxAnnotationNodeDialog({ projectId, buttonProps, ...props }: AddBB
   // global server state
   const metadata = MetadataHooks.useGetProjectMetadataList();
 
-  // actions
-  const handleOpen = () => {
+  // memoized handlers
+  const handleOpen = useCallback(() => {
     setOpen(true);
-  };
+  }, []);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setOpen(false);
-  };
+  }, []);
 
   return (
     <>
@@ -56,7 +56,7 @@ function AddBBoxAnnotationNodeDialog({ projectId, buttonProps, ...props }: AddBB
   );
 }
 
-function AddBBoxAnnotationNodeDialogContent({
+const AddBBoxAnnotationNodeDialogContent = memo(function AddBBoxAnnotationNodeDialogContent({
   metadata,
   projectId,
   onClick,
@@ -74,21 +74,39 @@ function AddBBoxAnnotationNodeDialogContent({
       };
     }, {}),
   );
-  const selectedAnnotationIds = Object.keys(rowSelectionModel).map((id) => parseInt(id));
 
-  // actions
-  const handleClose = () => {
+  // memoized selected annotation ids
+  const selectedAnnotationIds = useMemo(
+    () => Object.keys(rowSelectionModel).map((id) => parseInt(id)),
+    [rowSelectionModel],
+  );
+
+  // memoized handlers
+  const handleClose = useCallback(() => {
     onClose();
     setRowSelectionModel({});
-  };
+  }, [onClose]);
 
-  const handleConfirmSelection = () => {
+  const handleConfirmSelection = useCallback(() => {
     const bboxAnnotations = selectedAnnotationIds;
     const addNode: PendingAddNodeAction = (position: XYPosition, reactFlowService: ReactFlowService) =>
       reactFlowService.addNodes(createBBoxAnnotationNodes({ bboxAnnotations, position }));
     onClick(addNode);
     handleClose();
-  };
+  }, [selectedAnnotationIds, onClick, handleClose]);
+
+  const renderBottomToolbarActions = useCallback(
+    () => (
+      <>
+        <Box flexGrow={1} />
+        <Button onClick={handleClose}>Close</Button>
+        <Button onClick={handleConfirmSelection} disabled={selectedAnnotationIds.length === 0}>
+          Add {selectedAnnotationIds.length > 0 ? selectedAnnotationIds.length : null} Annotations
+        </Button>
+      </>
+    ),
+    [handleClose, handleConfirmSelection, selectedAnnotationIds.length],
+  );
 
   return (
     <BBoxAnnotationTable
@@ -102,17 +120,9 @@ function AddBBoxAnnotationNodeDialogContent({
       columnVisibilityModel={visibilityModel}
       onColumnVisibilityChange={setVisibilityModel}
       cardProps={{ elevation: 2, className: "myFlexFillAllContainer myFlexContainer" }}
-      renderBottomToolbarCustomActions={(props) => (
-        <>
-          <Box flexGrow={1} />
-          <Button onClick={handleClose}>Close</Button>
-          <Button onClick={handleConfirmSelection} disabled={props.selectedAnnotations.length === 0}>
-            Add {props.selectedAnnotations.length > 0 ? props.selectedAnnotations.length : null} Annotations
-          </Button>
-        </>
-      )}
+      renderBottomToolbarCustomActions={renderBottomToolbarActions}
     />
   );
-}
+});
 
-export default AddBBoxAnnotationNodeDialog;
+export default memo(AddBBoxAnnotationNodeDialog);

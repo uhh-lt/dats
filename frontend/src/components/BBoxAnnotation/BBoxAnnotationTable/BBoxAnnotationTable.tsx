@@ -5,12 +5,13 @@ import {
   MRT_RowSelectionState,
   MRT_RowVirtualizer,
   MRT_SortingState,
+  MRT_TableInstance,
   MRT_TableOptions,
   MRT_VisibilityState,
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useEffect, useMemo, useRef, useState, type UIEvent } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from "react";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { BBoxAnnotationRow } from "../../../api/openapi/models/BBoxAnnotationRow.ts";
 import { BBoxAnnotationSearchResult } from "../../../api/openapi/models/BBoxAnnotationSearchResult.ts";
@@ -189,9 +190,7 @@ function BBoxAnnotationTable({
         pageSize: fetchSize,
       }),
     initialPageParam: 0,
-    getNextPageParam: (_lastGroup, groups) => {
-      return groups.length;
-    },
+    getNextPageParam: (_lastGroup, groups) => groups.length,
     refetchOnWindowFocus: false,
   });
 
@@ -214,6 +213,66 @@ function BBoxAnnotationTable({
       console.error(error);
     }
   }, [projectId, selectedUserId, sortingModel]);
+
+  // Table event handlers
+  const handleTableScroll = useCallback(
+    (event: UIEvent<HTMLDivElement>) => fetchMoreOnScroll(event.target as HTMLDivElement),
+    [fetchMoreOnScroll],
+  );
+
+  // rendering
+  const renderBottomToolbarContent = useCallback(
+    (props: { table: MRT_TableInstance<BBoxAnnotationRow> }) => (
+      <Stack direction={"row"} spacing={1} alignItems="center">
+        <Typography>
+          Fetched {totalFetched} of {totalResults} total rows.
+        </Typography>
+        {renderBottomToolbarCustomActions &&
+          renderBottomToolbarCustomActions({
+            table: props.table,
+            filterName,
+            anchor: tableContainerRef,
+            selectedUserId: selectedUserId,
+            selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
+          })}
+      </Stack>
+    ),
+    [
+      totalFetched,
+      totalResults,
+      renderBottomToolbarCustomActions,
+      filterName,
+      selectedUserId,
+      flatData,
+      rowSelectionModel,
+    ],
+  );
+
+  const renderTopToolbarContent = useCallback(
+    (props: { table: MRT_TableInstance<BBoxAnnotationRow> }) =>
+      renderTopToolbarCustomActions
+        ? renderTopToolbarCustomActions({
+            table: props.table,
+            filterName,
+            anchor: tableContainerRef,
+            selectedUserId: selectedUserId,
+            selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
+          })
+        : undefined,
+    [renderTopToolbarCustomActions, filterName, selectedUserId, flatData, rowSelectionModel],
+  );
+
+  const renderToolbarInternalContent = useCallback(
+    (props: { table: MRT_TableInstance<BBoxAnnotationRow> }) =>
+      renderToolbarInternalActions({
+        table: props.table,
+        filterName,
+        anchor: tableContainerRef,
+        selectedUserId: selectedUserId,
+        selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
+      }),
+    [renderToolbarInternalActions, filterName, selectedUserId, flatData, rowSelectionModel],
+  );
 
   // table
   const table = useMaterialReactTable<BBoxAnnotationRow>({
@@ -252,8 +311,8 @@ function BBoxAnnotationTable({
       style: { height: "100%", display: "flex", flexDirection: "column" },
     },
     muiTableContainerProps: {
-      ref: tableContainerRef, //get access to the table container element
-      onScroll: (event: UIEvent<HTMLDivElement>) => fetchMoreOnScroll(event.target as HTMLDivElement), //add an event listener to the table container element
+      ref: tableContainerRef,
+      onScroll: handleTableScroll,
       style: { flexGrow: 1 },
     },
     muiToolbarAlertBannerProps: isError
@@ -264,39 +323,9 @@ function BBoxAnnotationTable({
       : undefined,
     // toolbar
     positionToolbarAlertBanner,
-    renderTopToolbarCustomActions: renderTopToolbarCustomActions
-      ? (props) =>
-          renderTopToolbarCustomActions({
-            table: props.table,
-            filterName,
-            anchor: tableContainerRef,
-            selectedUserId: selectedUserId,
-            selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
-          })
-      : undefined,
-    renderToolbarInternalActions: (props) =>
-      renderToolbarInternalActions({
-        table: props.table,
-        filterName,
-        anchor: tableContainerRef,
-        selectedUserId: selectedUserId,
-        selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
-      }),
-    renderBottomToolbarCustomActions: (props) => (
-      <Stack direction={"row"} spacing={1} alignItems="center">
-        <Typography>
-          Fetched {totalFetched} of {totalResults} total rows.
-        </Typography>
-        {renderBottomToolbarCustomActions &&
-          renderBottomToolbarCustomActions({
-            table: props.table,
-            filterName,
-            anchor: tableContainerRef,
-            selectedUserId: selectedUserId,
-            selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
-          })}
-      </Stack>
-    ),
+    renderTopToolbarCustomActions: renderTopToolbarContent,
+    renderToolbarInternalActions: renderToolbarInternalContent,
+    renderBottomToolbarCustomActions: renderBottomToolbarContent,
   });
 
   return (
@@ -312,4 +341,4 @@ function BBoxAnnotationTable({
   );
 }
 
-export default BBoxAnnotationTable;
+export default memo(BBoxAnnotationTable);

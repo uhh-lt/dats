@@ -1,6 +1,6 @@
 import { Stack } from "@mui/material";
 import { MRT_ShowHideColumnsButton, MRT_TableInstance, MRT_ToggleDensePaddingButton } from "material-react-table";
-import React from "react";
+import React, { memo } from "react";
 import { BBoxAnnotationRow } from "../../../api/openapi/models/BBoxAnnotationRow.ts";
 import { RootState } from "../../../store/store.ts";
 import ReduxFilterDialog from "../../FilterDialog/ReduxFilterDialog.tsx";
@@ -40,4 +40,4 @@ function BBoxToolbar({
   );
 }
 
-export default BBoxToolbar;
+export default memo(BBoxToolbar);
