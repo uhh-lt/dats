@@ -38,11 +38,8 @@ function ProjectTags() {
                 <TagEditButton tag={node.data} />
               </>
             )}
-            renderListActions={() => (
-              <>
-                <TagMenuCreateButton tagName="" />
-              </>
-            )}
+            // components
+            listActions={<TagMenuCreateButton tagName="" />}
           />
           <TagEditDialog tags={allTags.data} />
         </>

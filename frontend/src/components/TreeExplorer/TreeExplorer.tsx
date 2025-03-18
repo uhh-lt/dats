@@ -8,7 +8,7 @@ import { IDataTree } from "./IDataTree.ts";
 import { TreeDataFilter } from "./TreeDataFilter.tsx";
 import { filterTree, flatTree } from "./TreeUtils.ts";
 
-interface DataExplorerProps {
+export interface TreeExplorerProps {
   toolbarTitle?: string;
   // data
   dataTree: Node<IDataTree>;
@@ -30,8 +30,9 @@ interface DataExplorerProps {
   // render actions
   renderNode?: (node: IDataTree) => React.ReactNode;
   renderActions?: (node: IDataTree) => React.ReactNode;
-  renderListActions?: () => React.ReactNode;
-  renderFilterActions?: () => React.ReactNode;
+  // components
+  listActions?: React.ReactNode;
+  filterActions?: React.ReactNode;
 }
 
 function TreeExplorer({
@@ -48,11 +49,11 @@ function TreeExplorer({
   onSelectedItemsChange,
   renderNode,
   renderActions,
-  renderListActions,
-  renderFilterActions,
+  listActions = undefined,
+  filterActions = undefined,
   dataIcon,
   ...props
-}: DataExplorerProps & BoxProps) {
+}: TreeExplorerProps & BoxProps) {
   // filter feature
   const { dataTree: filteredDataTree, nodesToExpand } = useMemo(
     () =>
@@ -117,7 +118,7 @@ function TreeExplorer({
           </Toolbar>
         </AppBar>
       )}
-      {renderListActions && (
+      {listActions !== undefined && (
         <Stack
           direction="row"
           className="myFlexFitContentContainer"
@@ -127,15 +128,11 @@ function TreeExplorer({
             alignItems: "center",
           }}
         >
-          {renderListActions()}
+          {listActions}
         </Stack>
       )}
       {showFilter && (
-        <TreeDataFilter
-          actions={renderFilterActions && renderFilterActions()}
-          dataFilter={dataFilter}
-          onDataFilterChange={onDataFilterChange}
-        />
+        <TreeDataFilter actions={filterActions} dataFilter={dataFilter} onDataFilterChange={onDataFilterChange} />
       )}
       <DataTreeView
         dataIcon={dataIcon}

@@ -12,6 +12,17 @@ import CodeEditDialog from "../CodeEditDialog.tsx";
 import CodeExplorerMenu from "./CodeExplorerMenu.tsx";
 import useComputeCodeTree from "./useComputeCodeTree.ts";
 
+const listActions = (
+  <>
+    <CodeCreateListItemButton parentCodeId={undefined} />
+    <ExporterButton
+      tooltip="Export codeset"
+      exporterInfo={{ type: "Codeset", singleUser: true, users: [], sdocId: -1 }}
+      iconButtonProps={{ color: "inherit" }}
+    />
+  </>
+);
+
 function CodeExplorer(props: BoxProps) {
   // custom hooks
   const { codeTree, allCodes } = useComputeCodeTree();
@@ -64,16 +75,8 @@ function CodeExplorer(props: BoxProps) {
             renderNode={(node) => <CodeNodeRenderer node={node} />}
             // actions
             renderActions={(node) => <CodeExplorerMenu code={node} />}
-            renderListActions={() => (
-              <>
-                <CodeCreateListItemButton parentCodeId={undefined} />
-                <ExporterButton
-                  tooltip="Export codeset"
-                  exporterInfo={{ type: "Codeset", singleUser: true, users: [], sdocId: -1 }}
-                  iconButtonProps={{ color: "inherit" }}
-                />
-              </>
-            )}
+            // components
+            listActions={listActions}
           />
           <CodeEditDialog codes={allCodes.data} />
         </>

@@ -1,9 +1,10 @@
 import LabelIcon from "@mui/icons-material/Label";
 import { Box, BoxProps } from "@mui/material";
-import { useCallback, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { SearchActions } from "../../../views/search/DocumentSearch/searchSlice.ts";
 import ExporterButton from "../../Exporter/ExporterButton.tsx";
+import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
 import TagEditDialog from "../TagEditDialog.tsx";
 import TagMenuCreateButton from "../TagMenu/TagMenuCreateButton.tsx";
@@ -13,6 +14,17 @@ import useComputeTagTree from "./useComputeTagTree.ts";
 interface TagExplorerNewProps {
   onTagClick?: (tagId: number) => void;
 }
+
+const listActions = (
+  <>
+    <TagMenuCreateButton tagName="" />
+    <ExporterButton
+      tooltip="Export tagset"
+      exporterInfo={{ type: "Tagset", singleUser: false, users: [], sdocId: -1 }}
+      iconButtonProps={{ color: "inherit" }}
+    />
+  </>
+);
 
 function TagExplorer({ onTagClick, ...props }: TagExplorerNewProps & BoxProps) {
   // custom hooks
@@ -31,6 +43,19 @@ function TagExplorer({ onTagClick, ...props }: TagExplorerNewProps & BoxProps) {
   // local client state
   const [tagFilter, setTagFilter] = useState<string>("");
 
+  const handleTagFilterChange = useCallback((newFilter: string) => {
+    setTagFilter(newFilter);
+  }, []);
+
+  const handleTagClick = useCallback(
+    (_: React.MouseEvent, tagId: string) => {
+      onTagClick?.(parseInt(tagId));
+    },
+    [onTagClick],
+  );
+
+  const renderActions = useCallback((node: IDataTree) => <TagExplorerMenu tag={node} />, []);
+
   return (
     <Box {...props}>
       {allTags.isSuccess && tagTree && (
@@ -43,23 +68,15 @@ function TagExplorer({ onTagClick, ...props }: TagExplorerNewProps & BoxProps) {
             // filter
             showFilter
             dataFilter={tagFilter}
-            onDataFilterChange={setTagFilter}
+            onDataFilterChange={handleTagFilterChange}
             // expansion
             expandedItems={expandedTagIds}
             onExpandedItemsChange={handleExpandedTagIdsChange}
             // actions
-            onItemClick={onTagClick ? (_, tagId) => onTagClick(parseInt(tagId)) : undefined}
-            renderActions={(node) => <TagExplorerMenu tag={node} />}
-            renderListActions={() => (
-              <>
-                <TagMenuCreateButton tagName="" />
-                <ExporterButton
-                  tooltip="Export tagset"
-                  exporterInfo={{ type: "Tagset", singleUser: false, users: [], sdocId: -1 }}
-                  iconButtonProps={{ color: "inherit" }}
-                />
-              </>
-            )}
+            onItemClick={onTagClick ? handleTagClick : undefined}
+            renderActions={renderActions}
+            // components
+            listActions={listActions}
           />
           <TagEditDialog tags={allTags.data} />
         </>
@@ -68,4 +85,4 @@ function TagExplorer({ onTagClick, ...props }: TagExplorerNewProps & BoxProps) {
   );
 }
 
-export default TagExplorer;
+export default memo(TagExplorer);

@@ -43,16 +43,9 @@ function ProjectCodes() {
                 <CodeToggleEnabledButton code={node} />
               </>
             )}
-            renderListActions={() => (
-              <>
-                <CodeCreateListItemButton parentCodeId={undefined} />
-              </>
-            )}
-            renderFilterActions={() => (
-              <>
-                <CodeToggleEnabledButton code={codeTree?.model} />
-              </>
-            )}
+            // components
+            listActions={<CodeCreateListItemButton parentCodeId={undefined} />}
+            filterActions={<CodeToggleEnabledButton code={codeTree?.model} />}
           />
           <CodeEditDialog codes={allCodes.data} />
         </>
