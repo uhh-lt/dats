@@ -20,6 +20,7 @@ import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { SearchService } from "../../../api/openapi/services/SearchService.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import DocumentUploadButton from "../../../components/DocumentUpload/DocumentUploadButton.tsx";
+import NoDocumentsPlaceholder from "../../../components/DocumentUpload/NoDocumentsPlaceholder.tsx";
 import ReduxFilterDialog from "../../../components/FilterDialog/ReduxFilterDialog.tsx";
 import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 import LLMAssistanceButton from "../../../components/LLMDialog/LLMAssistanceButton.tsx";
@@ -269,6 +270,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
         backgroundColor: selectedDocumentId === row.original.document_id ? "lightgrey !important" : undefined,
       },
     }),
+    renderEmptyRowsFallback: filter.items.length === 0 ? () => <NoDocumentsPlaceholder /> : undefined,
     muiToolbarAlertBannerProps: isError
       ? {
           color: "error",
