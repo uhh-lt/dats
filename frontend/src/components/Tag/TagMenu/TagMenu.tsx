@@ -100,6 +100,7 @@ function TagMenuContent({
   const { mutate: addTagsMutation } = TagHooks.useBulkLinkDocumentTags();
   const { mutate: removeTagsMutation } = TagHooks.useBulkUnlinkDocumentTags();
   const handleClickTag = (tagId: number) => () => {
+    console.log("HI!");
     if (initialChecked.get(tagId) === CheckboxState.CHECKED) {
       removeTagsMutation({
         requestBody: {
@@ -213,7 +214,7 @@ function TagMenuContent({
                   />
                 }
               >
-                <ListItemButton onClick={() => handleClickTag(tag.id)} dense>
+                <ListItemButton onClick={handleClickTag(tag.id)} dense>
                   <ListItemIcon sx={{ minWidth: "32px" }}>
                     {getIconComponent(Icon.TAG, { style: { color: tag.color } })}
                   </ListItemIcon>
