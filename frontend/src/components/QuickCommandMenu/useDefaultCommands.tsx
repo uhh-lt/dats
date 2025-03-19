@@ -33,6 +33,17 @@ export const useDefaultCommands = (projectId: string | undefined): CommandItem[]
         },
         keywords: ["new", "tag", "create", "add"],
       },
+      {
+        id: "upload-docs",
+        title: "Upload Document(s)",
+        description: "Upload new documents to the current project",
+        category: "Create",
+        icon: getIconComponent(Icon.CREATE),
+        action: () => {
+          dispatch(CRUDDialogActions.openDocumentUpload());
+        },
+        keywords: ["new", "document", "create", "add", "upload"],
+      },
 
       // Navigation commands
       {
