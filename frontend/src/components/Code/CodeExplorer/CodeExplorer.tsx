@@ -1,10 +1,11 @@
 import SquareIcon from "@mui/icons-material/Square";
 import { Box, BoxProps } from "@mui/material";
 import * as React from "react";
-import { memo, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { AnnoActions } from "../../../views/annotation/annoSlice.ts";
 import ExporterButton from "../../Exporter/ExporterButton.tsx";
+import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
 import CodeCreateListItemButton from "../CodeCreateListItemButton.tsx";
 import CodeEditDialog from "../CodeEditDialog.tsx";
@@ -12,16 +13,8 @@ import CodeExplorerActionMenu from "./CodeExplorerActionMenu.tsx";
 import CodeExplorerNodeRenderer from "./CodeExplorerNodeRenderer.tsx";
 import useComputeCodeTree from "./useComputeCodeTree.ts";
 
-const ListActions = memo(() => (
-  <>
-    <CodeCreateListItemButton parentCodeId={undefined} />
-    <ExporterButton
-      tooltip="Export codeset"
-      exporterInfo={{ type: "Codeset", singleUser: true, users: [], sdocId: -1 }}
-      iconButtonProps={{ color: "inherit" }}
-    />
-  </>
-));
+const renderNode = (node: IDataTree) => <CodeExplorerNodeRenderer node={node} />;
+const renderActions = (node: IDataTree) => <CodeExplorerActionMenu node={node} />;
 
 function CodeExplorer(props: BoxProps) {
   // custom hooks
@@ -74,9 +67,10 @@ function CodeExplorer(props: BoxProps) {
             // selection
             selectedItems={selectedCodeId}
             onSelectedItemsChange={handleSelectedCodeChange}
-            // renderers
-            NodeRenderer={CodeExplorerNodeRenderer}
-            ActionRenderer={CodeExplorerActionMenu}
+            // render node
+            renderNode={renderNode}
+            // actions
+            renderActions={renderActions}
             // components
             listActions={<ListActions />}
           />
@@ -87,4 +81,17 @@ function CodeExplorer(props: BoxProps) {
   );
 }
 
-export default memo(CodeExplorer);
+function ListActions() {
+  return (
+    <>
+      <CodeCreateListItemButton parentCodeId={undefined} />
+      <ExporterButton
+        tooltip="Export codeset"
+        exporterInfo={{ type: "Codeset", singleUser: true, users: [], sdocId: -1 }}
+        iconButtonProps={{ color: "inherit" }}
+      />
+    </>
+  );
+}
+
+export default CodeExplorer;

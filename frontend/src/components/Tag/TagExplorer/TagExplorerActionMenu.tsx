@@ -1,12 +1,16 @@
 import { IconButton, Menu } from "@mui/material";
-import { memo, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 import MemoMenuItem from "../../Memo/MemoMenuItem.tsx";
-import { DataTreeActionRendererProps } from "../../TreeExplorer/DataTreeView.tsx";
+import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
 import TagEditMenuItem from "./TagEditMenuItem.tsx";
 
-function TagExplorerActionMenu({ node: tag }: DataTreeActionRendererProps) {
+interface TagExplorerActionMenuProps {
+  node: IDataTree;
+}
+
+function TagExplorerActionMenu({ node }: TagExplorerActionMenuProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -24,9 +28,9 @@ function TagExplorerActionMenu({ node: tag }: DataTreeActionRendererProps) {
     <>
       <IconButton onClick={handleClick}>{getIconComponent(Icon.CONTEXT_MENU)}</IconButton>
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-        <TagEditMenuItem tag={tag.data} onClick={handleClose} />
+        <TagEditMenuItem tag={node.data} onClick={handleClose} />
         <MemoMenuItem
-          attachedObjectId={tag.data.id}
+          attachedObjectId={node.data.id}
           attachedObjectType={AttachedObjectType.DOCUMENT_TAG}
           onClick={handleClose}
         />
@@ -35,4 +39,4 @@ function TagExplorerActionMenu({ node: tag }: DataTreeActionRendererProps) {
   );
 }
 
-export default memo(TagExplorerActionMenu);
+export default TagExplorerActionMenu;

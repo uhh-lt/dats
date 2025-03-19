@@ -4,26 +4,18 @@ import { memo, useCallback, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { SearchActions } from "../../../views/search/DocumentSearch/searchSlice.ts";
 import ExporterButton from "../../Exporter/ExporterButton.tsx";
+import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
 import TagEditDialog from "../TagEditDialog.tsx";
 import TagMenuCreateButton from "../TagMenu/TagMenuCreateButton.tsx";
 import TagExplorerActionMenu from "./TagExplorerActionMenu.tsx";
 import useComputeTagTree from "./useComputeTagTree.ts";
 
+const renderActions = (node: IDataTree) => <TagExplorerActionMenu node={node} />;
+
 interface TagExplorerProps {
   onTagClick?: (tagId: number) => void;
 }
-
-const listActions = (
-  <>
-    <TagMenuCreateButton tagName="" />
-    <ExporterButton
-      tooltip="Export tagset"
-      exporterInfo={{ type: "Tagset", singleUser: false, users: [], sdocId: -1 }}
-      iconButtonProps={{ color: "inherit" }}
-    />
-  </>
-);
 
 function TagExplorer({ onTagClick, ...props }: TagExplorerProps & BoxProps) {
   // custom hooks
@@ -72,14 +64,27 @@ function TagExplorer({ onTagClick, ...props }: TagExplorerProps & BoxProps) {
             // actions
             onItemClick={onTagClick ? handleTagClick : undefined}
             // renderers
-            ActionRenderer={TagExplorerActionMenu}
+            renderActions={renderActions}
             // components
-            listActions={listActions}
+            listActions={<ListActions />}
           />
           <TagEditDialog tags={allTags.data} />
         </>
       )}
     </Box>
+  );
+}
+
+function ListActions() {
+  return (
+    <>
+      <TagMenuCreateButton tagName="" />
+      <ExporterButton
+        tooltip="Export tagset"
+        exporterInfo={{ type: "Tagset", singleUser: false, users: [], sdocId: -1 }}
+        iconButtonProps={{ color: "inherit" }}
+      />
+    </>
   );
 }
 

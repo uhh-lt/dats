@@ -8,19 +8,17 @@ import CodeEditButton from "../../Code/CodeEditButton.tsx";
 import CodeEditDialog from "../../Code/CodeEditDialog.tsx";
 import CodeToggleEnabledButton from "../../Code/CodeToggleEnabledButton.tsx";
 import CodeToggleVisibilityButton from "../../Code/CodeToggleVisibilityButton.tsx";
-import { DataTreeActionRendererProps } from "../../TreeExplorer/DataTreeView.tsx";
+import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
 import useComputeProjectCodeTree from "./useComputeProjectCodeTree.ts";
 
-const CodeActionRenderer = memo(({ node }: DataTreeActionRendererProps) => {
-  return (
-    <>
-      <CodeEditButton code={node.data as CodeRead} />
-      <CodeToggleVisibilityButton code={node} />
-      <CodeToggleEnabledButton code={node} />
-    </>
-  );
-});
+const renderCodeActions = (node: IDataTree) => (
+  <>
+    <CodeEditButton code={node.data as CodeRead} />
+    <CodeToggleVisibilityButton code={node} />
+    <CodeToggleEnabledButton code={node} />
+  </>
+);
 
 function ProjectCodes() {
   // custom hooks
@@ -55,7 +53,7 @@ function ProjectCodes() {
             expandedItems={expandedCodeIds}
             onExpandedItemsChange={handleExpandedCodeIdsChange}
             // renderers
-            ActionRenderer={CodeActionRenderer}
+            renderActions={renderCodeActions}
             // components
             listActions={<CodeCreateListItemButton parentCodeId={undefined} />}
             filterActions={<CodeToggleEnabledButton code={codeTree?.model} />}

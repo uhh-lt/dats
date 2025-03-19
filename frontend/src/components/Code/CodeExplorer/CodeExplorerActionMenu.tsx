@@ -1,14 +1,18 @@
 import { IconButton, Menu } from "@mui/material";
-import { memo, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 import MemoMenuItem from "../../Memo/MemoMenuItem.tsx";
-import { DataTreeActionRendererProps } from "../../TreeExplorer/DataTreeView.tsx";
+import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
 import CodeEditMenuItem from "./CodeEditMenuItem.tsx";
 import CodeToggleVisibilityMenuItem from "./CodeToggleVisibilityMenuItem.tsx";
 
-function CodeExplorerActionMenu({ node: code }: DataTreeActionRendererProps) {
+interface CodeExplorerActionMenuProps {
+  node: IDataTree;
+}
+
+function CodeExplorerActionMenu({ node }: CodeExplorerActionMenuProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -25,10 +29,10 @@ function CodeExplorerActionMenu({ node: code }: DataTreeActionRendererProps) {
     <>
       <IconButton onClick={handleClick}>{getIconComponent(Icon.CONTEXT_MENU)}</IconButton>
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-        <CodeToggleVisibilityMenuItem code={code} onClick={handleClose} />
-        <CodeEditMenuItem code={code.data as CodeRead} onClick={handleClose} />
+        <CodeToggleVisibilityMenuItem code={node} onClick={handleClose} />
+        <CodeEditMenuItem code={node.data as CodeRead} onClick={handleClose} />
         <MemoMenuItem
-          attachedObjectId={code.data.id}
+          attachedObjectId={node.data.id}
           attachedObjectType={AttachedObjectType.CODE}
           onClick={handleClose}
         />
@@ -37,4 +41,4 @@ function CodeExplorerActionMenu({ node: code }: DataTreeActionRendererProps) {
   );
 }
 
-export default memo(CodeExplorerActionMenu);
+export default CodeExplorerActionMenu;

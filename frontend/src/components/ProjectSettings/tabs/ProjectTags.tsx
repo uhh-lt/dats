@@ -6,12 +6,10 @@ import TagEditDialog from "../../Tag/TagEditDialog.tsx";
 import TagEditButton from "../../Tag/TagExplorer/TagEditButton.tsx";
 import useComputeTagTree from "../../Tag/TagExplorer/useComputeTagTree.ts";
 import TagMenuCreateButton from "../../Tag/TagMenu/TagMenuCreateButton.tsx";
-import { DataTreeActionRendererProps } from "../../TreeExplorer/DataTreeView.tsx";
+import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
 
-const TagActionRenderer = memo(({ node }: DataTreeActionRendererProps) => {
-  return <TagEditButton tag={node.data} />;
-});
+const renderTagActions = (node: IDataTree) => <TagEditButton tag={node.data} />;
 
 function ProjectTags() {
   // custom hooks
@@ -46,7 +44,7 @@ function ProjectTags() {
             expandedItems={expandedTagIds}
             onExpandedItemsChange={handleExpandedTagIdsChange}
             // renderer
-            ActionRenderer={TagActionRenderer}
+            renderActions={renderTagActions}
             // components
             listActions={<TagMenuCreateButton tagName="" />}
           />

@@ -1,10 +1,14 @@
 import { Typography } from "@mui/material";
-import { memo, useCallback } from "react";
+import { useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { AnnoActions, isHiddenCodeId } from "../../../views/annotation/annoSlice.ts";
-import { DataTreeNodeRendererProps } from "../../TreeExplorer/DataTreeView.tsx";
+import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
 
-function CodeExplorerNodeRenderer({ node }: DataTreeNodeRendererProps) {
+interface CodeExplorerNodeRendererProps {
+  node: IDataTree;
+}
+
+function CodeExplorerNodeRenderer({ node }: CodeExplorerNodeRendererProps) {
   const isHidden = useAppSelector(isHiddenCodeId(node.data.id));
   const dispatch = useAppDispatch();
 
@@ -28,4 +32,4 @@ function CodeExplorerNodeRenderer({ node }: DataTreeNodeRendererProps) {
   );
 }
 
-export default memo(CodeExplorerNodeRenderer);
+export default CodeExplorerNodeRenderer;
