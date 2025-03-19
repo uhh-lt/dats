@@ -19,6 +19,7 @@ import { SdocColumns } from "../../../api/openapi/models/SdocColumns.ts";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { SearchService } from "../../../api/openapi/services/SearchService.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
+import DocumentImportButton from "../../../components/DocumentImport/DocumentImportButton.tsx";
 import ReduxFilterDialog from "../../../components/FilterDialog/ReduxFilterDialog.tsx";
 import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 import LLMAssistanceButton from "../../../components/LLMDialog/LLMAssistanceButton.tsx";
@@ -322,6 +323,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
         <Box sx={{ flexGrow: 1 }} />
         <MRT_GlobalFilterTextField table={table} />
         <SearchOptionsMenu />
+        <DocumentImportButton />
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleDensePaddingButton table={table} />
       </DATSToolbar>
