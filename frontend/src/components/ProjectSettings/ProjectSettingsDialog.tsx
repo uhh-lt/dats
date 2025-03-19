@@ -24,7 +24,6 @@ import { CRUDDialogActions } from "../dialogSlice.ts";
 import ProjectBackgroundTasks from "./backgroundtasks/ProjectBackgroundTasks.tsx";
 import ProjectCodes from "./tabs/ProjectCodes.tsx";
 import ProjectDetails from "./tabs/ProjectDetails.tsx";
-import ProjectDocuments from "./tabs/ProjectDocuments.tsx";
 import ProjectTags from "./tabs/ProjectTags.tsx";
 import ProjectUsers from "./tabs/ProjectUsers.tsx";
 
@@ -87,11 +86,10 @@ function ProjectSettingsDialog() {
           </Stack>
           <Tabs value={tab} onChange={handleChangeTab} variant="scrollable" textColor="inherit">
             <Tab label="Details" value="1" />
-            <Tab label="Documents" value="2" />
-            <Tab label="User" value="3" />
-            <Tab label="Codes" value="4" />
-            <Tab label="Tags" value="5" />
-            <Tab label="Background Tasks" value="6" />
+            <Tab label="User" value="2" />
+            <Tab label="Codes" value="3" />
+            <Tab label="Tags" value="4" />
+            <Tab label="Background Tasks" value="5" />
           </Tabs>
         </AppBar>
         {project.isLoading && <DialogContent>Loading project...</DialogContent>}
@@ -102,18 +100,15 @@ function ProjectSettingsDialog() {
               <ProjectDetails project={project.data} />
             </TabPanel>
             <TabPanel value="2" sx={{ p: 0 }} className="myFlexFillAllContainer">
-              <ProjectDocuments project={project.data} />
-            </TabPanel>
-            <TabPanel value="3" sx={{ p: 0 }} className="myFlexFillAllContainer">
               <ProjectUsers project={project.data} />
             </TabPanel>
-            <TabPanel value="4" sx={{ p: 0 }} className="myFlexFillAllContainer">
+            <TabPanel value="3" sx={{ p: 0 }} className="myFlexFillAllContainer">
               <ProjectCodes />
             </TabPanel>
-            <TabPanel value="5" sx={{ p: 0 }} className="myFlexFillAllContainer">
+            <TabPanel value="4" sx={{ p: 0 }} className="myFlexFillAllContainer">
               <ProjectTags />
             </TabPanel>
-            <TabPanel value="6" sx={{ p: 0 }} className="myFlexFillAllContainer">
+            <TabPanel value="5" sx={{ p: 0 }} className="myFlexFillAllContainer">
               <ProjectBackgroundTasks project={project.data} />
             </TabPanel>
           </React.Fragment>
