@@ -42,7 +42,7 @@ interface DialogState {
   isBBoxAnnotationCreateDialogOpen: boolean;
   bboxAnnotation?: BBoxAnnotationRead;
   // document import
-  isDocumentImportOpen: boolean;
+  isDocumentUploadOpen: boolean;
   // snackbar
   isSnackbarOpen: boolean;
   snackbarData: SnackbarEvent;
@@ -94,7 +94,7 @@ const initialState: DialogState = {
   isBBoxAnnotationCreateDialogOpen: false,
   bboxAnnotation: undefined,
   // document import
-  isDocumentImportOpen: false,
+  isDocumentUploadOpen: false,
   // snackbar
   isSnackbarOpen: false,
   snackbarData: {
@@ -219,11 +219,11 @@ export const dialogSlice = createSlice({
     closeBBoxAnnotationCreateDialog: (state) => {
       state.isBBoxAnnotationCreateDialogOpen = false;
     },
-    openDocumentImport: (state) => {
-      state.isDocumentImportOpen = true;
+    openDocumentUpload: (state) => {
+      state.isDocumentUploadOpen = true;
     },
-    closeDocumentImport: (state) => {
-      state.isDocumentImportOpen = false;
+    closeDocumentUpload: (state) => {
+      state.isDocumentUploadOpen = false;
     },
     openSnackbar: (
       state,

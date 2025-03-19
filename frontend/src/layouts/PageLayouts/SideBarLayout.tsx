@@ -4,7 +4,7 @@ import { Outlet, useParams } from "react-router-dom";
 import { useAuth } from "../../auth/useAuth.ts";
 import CodeCreateDialog from "../../components/Code/CodeCreateDialog.tsx";
 import ConfirmationDialog from "../../components/ConfirmationDialog/ConfirmationDialog.tsx";
-import DocumentImportDialog from "../../components/DocumentImport/DocumentImportDialog.tsx";
+import DocumentUploadDialog from "../../components/DocumentUpload/DocumentUploadDialog.tsx";
 import ExporterDialog from "../../components/Exporter/ExporterDialog.tsx";
 import LLMDialog from "../../components/LLMDialog/LLMDialog.tsx";
 import MemoDialog from "../../components/Memo/MemoDialog/MemoDialog.tsx";
@@ -75,7 +75,7 @@ function SideBarLayout() {
           <ConfirmationDialog />
           <ExporterDialog />
           <ProjectSettingsDialog />
-          <DocumentImportDialog />
+          <DocumentUploadDialog />
           <LLMDialog />
           <QuickCommandMenu />
           <ShortcutManager />

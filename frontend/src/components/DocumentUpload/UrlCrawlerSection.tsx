@@ -2,9 +2,10 @@ import AddIcon from "@mui/icons-material/Add";
 import PlayCircle from "@mui/icons-material/PlayCircle";
 import RemoveIcon from "@mui/icons-material/Remove";
 import { LoadingButton } from "@mui/lab";
-import { Box, IconButton, Paper, Stack, TextField, Typography } from "@mui/material";
+import { IconButton, Paper, Stack, TextField, Typography } from "@mui/material";
 import { useCallback, useState } from "react";
 import CrawlerHooks from "../../api/CrawlerHooks";
+import { DialogSection } from "../MUI/DialogSection";
 
 interface UrlCrawlerSectionProps {
   projectId: number;
@@ -78,11 +79,7 @@ export function UrlCrawlerSection({ projectId }: UrlCrawlerSectionProps) {
   }, [urls, projectId, crawlUrlsMutation]);
 
   return (
-    <Box flex={1} border={1} borderColor="divider" borderRadius={1} p={2}>
-      <Typography variant="h6" gutterBottom>
-        Import URLs
-      </Typography>
-
+    <DialogSection title="Upload URLs">
       {/* URL Input Field */}
       <Stack direction="row" spacing={1} mb={2}>
         <TextField
@@ -142,6 +139,6 @@ export function UrlCrawlerSection({ projectId }: UrlCrawlerSectionProps) {
       >
         Import {urls.length} URL{urls.length !== 1 ? "s" : ""}
       </LoadingButton>
-    </Box>
+    </DialogSection>
   );
 }

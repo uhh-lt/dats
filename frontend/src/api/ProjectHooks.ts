@@ -78,6 +78,9 @@ const useDeleteProject = () =>
 const useUploadDocument = () =>
   useMutation({
     mutationFn: ProjectService.uploadProjectSdoc,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_PREPROCESSING_JOBS, data.project_id] });
+    },
     meta: {
       successMessage: (data: PreprocessingJobRead) =>
         `Successfully uploaded ${data.payloads.length} documents and started PreprocessingJob ${data.id} in the background!`,

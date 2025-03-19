@@ -1,9 +1,9 @@
 import PlayCircle from "@mui/icons-material/PlayCircle";
 import { LoadingButton } from "@mui/lab";
-import { Box, Typography } from "@mui/material";
 import { useCallback, useState } from "react";
-import ProjectHooks from "../../api/ProjectHooks";
-import { UploadDropzone } from "./UploadDropzone";
+import ProjectHooks from "../../api/ProjectHooks.ts";
+import { DialogSection } from "../MUI/DialogSection.tsx";
+import { UploadDropzone } from "./UploadDropzone.tsx";
 
 interface FileUploadSectionProps {
   projectId: number;
@@ -33,10 +33,7 @@ export function FileUploadSection({ projectId }: FileUploadSectionProps) {
   }, [files, projectId, uploadDocumentMutation]);
 
   return (
-    <Box flex={1} border={1} borderColor="divider" borderRadius={1} p={2}>
-      <Typography variant="h6" gutterBottom>
-        Upload Files
-      </Typography>
+    <DialogSection title="Upload Files">
       <UploadDropzone onFilesChanged={handleFilesChange} files={files} />
       <LoadingButton
         variant="contained"
@@ -51,6 +48,6 @@ export function FileUploadSection({ projectId }: FileUploadSectionProps) {
       >
         Upload {files.length} File{files.length !== 1 ? "s" : ""}
       </LoadingButton>
-    </Box>
+    </DialogSection>
   );
 }

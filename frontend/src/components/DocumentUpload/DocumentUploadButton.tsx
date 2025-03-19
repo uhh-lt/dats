@@ -4,15 +4,15 @@ import { useCallback } from "react";
 import { useAppDispatch } from "../../plugins/ReduxHooks";
 import { CRUDDialogActions } from "../dialogSlice";
 
-export default function DocumentImportButton() {
+export default function DocumentUploadButton() {
   const dispatch = useAppDispatch();
 
   const handleClick = useCallback(() => {
-    dispatch(CRUDDialogActions.openDocumentImport());
+    dispatch(CRUDDialogActions.openDocumentUpload());
   }, [dispatch]);
 
   return (
-    <Tooltip title="Import Documents">
+    <Tooltip title="Upload Documents">
       <IconButton onClick={handleClick}>
         <UploadFileIcon />
       </IconButton>

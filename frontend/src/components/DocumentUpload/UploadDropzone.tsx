@@ -2,7 +2,6 @@ import { Box, Paper, Typography } from "@mui/material";
 import { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 
-// allowed mime types from the old component
 const allowedMimeTypes: Array<string> = [
   "text/plain",
   "text/html",
@@ -49,7 +48,7 @@ export function UploadDropzone({ onFilesChanged, files }: UploadDropzoneProps) {
     <Paper
       variant="outlined"
       sx={{
-        height: "200px",
+        height: "256px",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
