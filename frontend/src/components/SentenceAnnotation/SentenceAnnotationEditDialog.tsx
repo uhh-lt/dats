@@ -3,7 +3,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, ButtonProps, Dialog, DialogActions, DialogTitle, Stack, Typography } from "@mui/material";
 import { MRT_RowSelectionState } from "material-react-table";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import SentenceAnnotationHooks from "../../api/SentenceAnnotationHooks.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import CodeRenderer from "../Code/CodeRenderer.tsx";
@@ -24,22 +24,22 @@ function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEditDialo
   // global client state (redux)
   const open = useAppSelector((state) => state.dialog.isSentenceAnnotationEditDialogOpen);
   const annotationIds = useAppSelector((state) => state.dialog.sentenceAnnotationIds);
-  const onEdit = useAppSelector((state) => state.dialog.spanAnnotationEditDialogOnEdit);
+  const onEdit = useAppSelector((state) => state.dialog.sentenceAnnotationEditDialogOnEdit);
   const dispatch = useAppDispatch();
 
   // mutations
-  const updateAnnotationBulkMutation = SentenceAnnotationHooks.useUpdateBulkSentenceAnno();
+  const { mutate: updateAnnotationBulkMutation, isPending } = SentenceAnnotationHooks.useUpdateBulkSentenceAnno();
 
   // actions
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     dispatch(CRUDDialogActions.closeSentenceAnnotationEditDialog());
     setRowSelectionModel({});
-  };
+  }, [dispatch]);
 
-  const handleUpdateAnnotations = () => {
-    if (!selectedCodeId || annotationIds.length === 0) return;
+  const handleUpdateAnnotations = useCallback(() => {
+    if (!selectedCodeId) return;
 
-    updateAnnotationBulkMutation.mutate(
+    updateAnnotationBulkMutation(
       {
         requestBody: annotationIds.map((annotation) => ({
           sent_annotation_id: annotation,
@@ -49,11 +49,11 @@ function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEditDialo
       {
         onSuccess: () => {
           handleClose();
-          if (onEdit) onEdit();
+          onEdit?.();
         },
       },
     );
-  };
+  }, [selectedCodeId, annotationIds, updateAnnotationBulkMutation, onEdit, handleClose]);
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
@@ -94,7 +94,7 @@ function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEditDialo
           startIcon={<SaveIcon />}
           onClick={handleUpdateAnnotations}
           disabled={!selectedCodeId}
-          loading={updateAnnotationBulkMutation.isPending}
+          loading={isPending}
           loadingPosition="start"
         >
           Update Annotation{annotationIds.length > 1 && "s"}

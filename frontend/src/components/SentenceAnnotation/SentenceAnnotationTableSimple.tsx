@@ -2,6 +2,7 @@ import { Stack } from "@mui/material";
 import {
   MRT_ColumnDef,
   MRT_ShowHideColumnsButton,
+  MRT_TableInstance,
   MRT_ToggleDensePaddingButton,
   MaterialReactTable,
   useMaterialReactTable,
@@ -15,6 +16,13 @@ import SentenceAnnotationRenderer from "./SentenceAnnotationRenderer.tsx";
 interface SentenceAnnotationTableRow {
   sentAnnoId: number;
 }
+
+const renderToolbaInternalContent = ({ table }: { table: MRT_TableInstance<SentenceAnnotationTableRow> }) => (
+  <Stack direction="row" spacing={1}>
+    <MRT_ShowHideColumnsButton table={table} />
+    <MRT_ToggleDensePaddingButton table={table} />
+  </Stack>
+);
 
 function SentenceAnnotationTableSimple({ sentAnnoIds }: { sentAnnoIds: number[] }) {
   // global client state (react router)
@@ -93,12 +101,7 @@ function SentenceAnnotationTableSimple({ sentAnnoIds }: { sentAnnoIds: number[] 
     },
     // toolbar
     enableBottomToolbar: false,
-    renderToolbarInternalActions: ({ table }) => (
-      <Stack direction="row" spacing={1}>
-        <MRT_ShowHideColumnsButton table={table} />
-        <MRT_ToggleDensePaddingButton table={table} />
-      </Stack>
-    ),
+    renderToolbarInternalActions: renderToolbaInternalContent,
   });
 
   return <MaterialReactTable table={table} />;

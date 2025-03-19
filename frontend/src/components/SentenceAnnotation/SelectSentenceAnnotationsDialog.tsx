@@ -1,6 +1,6 @@
 import { Box, Button, ButtonProps, CircularProgress, Dialog } from "@mui/material";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
 import MetadataHooks from "../../api/MetadataHooks.ts";
 import { ProjectMetadataRead } from "../../api/openapi/models/ProjectMetadataRead.ts";
 import { SentAnnoColumns } from "../../api/openapi/models/SentAnnoColumns.ts";
@@ -23,13 +23,13 @@ function SelectSentenceAnnotationsDialog({ projectId, buttonProps, ...props }: S
   const metadata = MetadataHooks.useGetProjectMetadataList();
 
   // actions
-  const handleOpen = () => {
+  const handleOpen = useCallback(() => {
     setOpen(true);
-  };
+  }, []);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setOpen(false);
-  };
+  }, []);
 
   return (
     <>
@@ -91,16 +91,16 @@ function SelectSentenceAnnotationsDialogContent({
   );
 
   // actions
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     onClose();
     setRowSelectionModel({});
-  };
+  }, [onClose]);
 
-  const handleConfirmSelection = () => {
+  const handleConfirmSelection = useCallback(() => {
     const selectedAnnotationIds = Object.keys(rowSelectionModel).map((id) => parseInt(id));
     onConfirmSelection(selectedAnnotationIds);
     handleClose();
-  };
+  }, [handleClose, onConfirmSelection, rowSelectionModel]);
 
   return (
     <SentenceAnnotationTable
@@ -128,4 +128,4 @@ function SelectSentenceAnnotationsDialogContent({
   );
 }
 
-export default SelectSentenceAnnotationsDialog;
+export default memo(SelectSentenceAnnotationsDialog);
