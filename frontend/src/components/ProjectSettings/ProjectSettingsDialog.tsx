@@ -15,7 +15,7 @@ import {
   Typography,
 } from "@mui/material";
 import Tab from "@mui/material/Tab";
-import React, { useState } from "react";
+import React, { memo, useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
@@ -35,27 +35,27 @@ function ProjectSettingsDialog() {
   // dialog state
   const dispatch = useAppDispatch();
   const isOpen = useAppSelector((state) => state.dialog.isProjectSettingsOpen);
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     dispatch(CRUDDialogActions.closeProjectSettings());
-  };
+  }, [dispatch]);
 
   // queries
   const project = ProjectHooks.useGetProject(projId);
 
   // state
   const [tab, setTab] = useState("1");
-  const handleChangeTab = (_event: React.SyntheticEvent, newValue: string) => {
+  const handleChangeTab = useCallback((_event: React.SyntheticEvent, newValue: string) => {
     setTab(newValue);
-  };
+  }, []);
 
   const navigate = useNavigate();
-  const deleteProjectMutation = ProjectHooks.useDeleteProject();
-  const handleClickRemoveProject = () => {
+  const { mutate: deleteProject, isPending } = ProjectHooks.useDeleteProject();
+  const handleClickRemoveProject = useCallback(() => {
     if (project.data) {
       ConfirmationAPI.openConfirmationDialog({
         text: `Do you really want to delete the project "${project.data.title}"? This action cannot be undone and  will remove project and all of it's content including documents!`,
         onAccept: () => {
-          deleteProjectMutation.mutate(
+          deleteProject(
             { projId: project.data.id },
             {
               onSuccess: () => navigate(`/projects`),
@@ -64,7 +64,7 @@ function ProjectSettingsDialog() {
         },
       });
     }
-  };
+  }, [project.data, deleteProject, navigate]);
 
   return (
     <Dialog
@@ -72,7 +72,11 @@ function ProjectSettingsDialog() {
       onClose={(_, reason) => reason === "escapeKeyDown" && handleClose()}
       maxWidth="xl"
       fullWidth
-      PaperProps={{ className: "h100 myFlexFillAllContainer" }}
+      slotProps={{
+        paper: {
+          className: "h100 myFlexFillAllContainer",
+        },
+      }}
     >
       <TabContext value={tab}>
         <AppBar position="relative" color="primary" className="myFlexFitContentContainer">
@@ -123,7 +127,7 @@ function ProjectSettingsDialog() {
             sx={{ mr: 1 }}
             onClick={handleClickRemoveProject}
             disabled={!project.isSuccess}
-            loading={deleteProjectMutation.isPending}
+            loading={isPending}
             loadingPosition="start"
           >
             Delete Project
@@ -138,4 +142,4 @@ function ProjectSettingsDialog() {
   );
 }
 
-export default ProjectSettingsDialog;
+export default memo(ProjectSettingsDialog);

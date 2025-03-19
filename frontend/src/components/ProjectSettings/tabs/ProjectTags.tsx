@@ -1,6 +1,6 @@
 import LabelIcon from "@mui/icons-material/Label";
 import { Box } from "@mui/material";
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
 import TagCreateDialog from "../../Tag/TagCreateDialog.tsx";
 import TagEditDialog from "../../Tag/TagEditDialog.tsx";
 import TagEditButton from "../../Tag/TagExplorer/TagEditButton.tsx";
@@ -9,17 +9,25 @@ import TagMenuCreateButton from "../../Tag/TagMenu/TagMenuCreateButton.tsx";
 import { DataTreeActionRendererProps } from "../../TreeExplorer/DataTreeView.tsx";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
 
-const TagActionRenderer = ({ node }: DataTreeActionRendererProps) => {
+const TagActionRenderer = memo(({ node }: DataTreeActionRendererProps) => {
   return <TagEditButton tag={node.data} />;
-};
+});
 
 function ProjectTags() {
   // custom hooks
   const { tagTree, allTags } = useComputeTagTree();
 
-  // local client state
+  // local state
   const [expandedTagIds, setExpandedTagIds] = useState<string[]>([]);
   const [tagFilter, setTagFilter] = useState<string>("");
+
+  const handleTagFilterChange = useCallback((value: string) => {
+    setTagFilter(value);
+  }, []);
+
+  const handleExpandedTagIdsChange = useCallback((ids: string[]) => {
+    setExpandedTagIds(ids);
+  }, []);
 
   return (
     <Box className="h100">
@@ -33,10 +41,10 @@ function ProjectTags() {
             // filter
             showFilter
             dataFilter={tagFilter}
-            onDataFilterChange={setTagFilter}
+            onDataFilterChange={handleTagFilterChange}
             // expansion
             expandedItems={expandedTagIds}
-            onExpandedItemsChange={setExpandedTagIds}
+            onExpandedItemsChange={handleExpandedTagIdsChange}
             // renderer
             ActionRenderer={TagActionRenderer}
             // components
@@ -50,4 +58,4 @@ function ProjectTags() {
   );
 }
 
-export default ProjectTags;
+export default memo(ProjectTags);

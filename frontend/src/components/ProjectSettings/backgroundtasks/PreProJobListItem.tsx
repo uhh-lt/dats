@@ -1,4 +1,5 @@
 import { List, ListSubheader } from "@mui/material";
+import { memo, useMemo } from "react";
 import PreProHooks from "../../../api/PreProHooks.ts";
 import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobStatus.ts";
 import { PreprocessingJobRead } from "../../../api/openapi/models/PreprocessingJobRead.ts";
@@ -14,18 +15,21 @@ function PreProJobListItem({ initialPreProJob }: PreprocessingJobListItemProps) 
   // global server state (react-query)
   const preProJob = PreProHooks.usePollPreProJob(initialPreProJob.id, initialPreProJob);
 
-  // local state
-  const createdDate = dateToLocaleString(initialPreProJob.created);
-  const updatedDate = dateToLocaleString(initialPreProJob.updated);
+  // compute subtitle
+  const subTitle = useMemo(() => {
+    const createdDate = dateToLocaleString(initialPreProJob.created);
+    const updatedDate = dateToLocaleString(initialPreProJob.updated);
 
-  let subTitle = `${preProJob.data!.payloads.length} documents, started at ${createdDate}`;
-  if (preProJob.data!.status === BackgroundJobStatus.FINISHED) {
-    subTitle += `, finished at ${updatedDate}`;
-  } else if (preProJob.data!.status === BackgroundJobStatus.ABORTED) {
-    subTitle += `, aborted at ${updatedDate}`;
-  } else if (preProJob.data!.status === BackgroundJobStatus.ERRORNEOUS) {
-    subTitle += `, failed at ${updatedDate}`;
-  }
+    let title = `${preProJob.data!.payloads.length} documents, started at ${createdDate}`;
+    if (preProJob.data!.status === BackgroundJobStatus.FINISHED) {
+      title += `, finished at ${updatedDate}`;
+    } else if (preProJob.data!.status === BackgroundJobStatus.ABORTED) {
+      title += `, aborted at ${updatedDate}`;
+    } else if (preProJob.data!.status === BackgroundJobStatus.ERRORNEOUS) {
+      title += `, failed at ${updatedDate}`;
+    }
+    return title;
+  }, [initialPreProJob.created, initialPreProJob.updated, preProJob.data]);
 
   if (preProJob.isSuccess) {
     return (
@@ -53,4 +57,4 @@ function PreProJobListItem({ initialPreProJob }: PreprocessingJobListItemProps) 
   }
 }
 
-export default PreProJobListItem;
+export default memo(PreProJobListItem);

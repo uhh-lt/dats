@@ -6,7 +6,7 @@ import HourglassTopOutlinedIcon from "@mui/icons-material/HourglassTopOutlined";
 import MoreHorizOutlinedIcon from "@mui/icons-material/MoreHorizOutlined";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import { CircularProgress, Collapse, IconButton, ListItem, ListItemIcon, ListItemText, Tooltip } from "@mui/material";
-import React from "react";
+import { memo, useCallback, useState } from "react";
 import PreProHooks from "../../../api/PreProHooks.ts";
 import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobStatus.ts";
 import { statusToTypographyColor } from "./StatusToTypographyColor.ts";
@@ -19,6 +19,7 @@ interface BackgroundJobListItemProps {
   subTitle: string;
   children: React.ReactNode;
 }
+
 function BackgroundJobListItem({
   jobStatus,
   jobId,
@@ -28,13 +29,17 @@ function BackgroundJobListItem({
   children,
 }: BackgroundJobListItemProps) {
   // local state
-  const [expanded, setExpanded] = React.useState(false);
+  const [expanded, setExpanded] = useState(false);
 
-  const handleExpandClick = () => {
-    setExpanded(!expanded);
-  };
+  const handleExpandClick = useCallback(() => {
+    setExpanded((prev) => !prev);
+  }, []);
 
-  const handleAbortClick = () => PreProHooks.abortPreProJob(jobId!);
+  const handleAbortClick = useCallback(() => {
+    if (jobId) {
+      PreProHooks.abortPreProJob(jobId);
+    }
+  }, [jobId]);
 
   return (
     <>
@@ -89,4 +94,4 @@ function BackgroundJobListItem({
   );
 }
 
-export default BackgroundJobListItem;
+export default memo(BackgroundJobListItem);

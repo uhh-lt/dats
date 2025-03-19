@@ -1,4 +1,5 @@
 import { Typography } from "@mui/material";
+import { memo, useMemo } from "react";
 import MLHooks from "../../../api/MLHooks.ts";
 import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobStatus.ts";
 import { MLJobRead } from "../../../api/openapi/models/MLJobRead.ts";
@@ -13,17 +14,20 @@ function MLJobListItem({ initialMLJob }: MLJobListItemProps) {
   // global server state (react-query)
   const mlJob = MLHooks.usePollMLJob(initialMLJob.id, initialMLJob);
 
-  // compute date sting
-  const createdDate = dateToLocaleString(mlJob.data!.created);
-  const updatedDate = dateToLocaleString(mlJob.data!.updated);
-  let subTitle = `${mlJob.data!.parameters.ml_job_type}, started at ${createdDate}`;
-  if (mlJob.data!.status === BackgroundJobStatus.FINISHED) {
-    subTitle += `, finished at ${updatedDate}`;
-  } else if (mlJob.data!.status === BackgroundJobStatus.ABORTED) {
-    subTitle += `, aborted at ${updatedDate}`;
-  } else if (mlJob.data!.status === BackgroundJobStatus.ERRORNEOUS) {
-    subTitle += `, failed at ${updatedDate}`;
-  }
+  // compute subtitle
+  const subTitle = useMemo(() => {
+    const createdDate = dateToLocaleString(mlJob.data!.created);
+    const updatedDate = dateToLocaleString(mlJob.data!.updated);
+    let title = `${mlJob.data!.parameters.ml_job_type}, started at ${createdDate}`;
+    if (mlJob.data!.status === BackgroundJobStatus.FINISHED) {
+      title += `, finished at ${updatedDate}`;
+    } else if (mlJob.data!.status === BackgroundJobStatus.ABORTED) {
+      title += `, aborted at ${updatedDate}`;
+    } else if (mlJob.data!.status === BackgroundJobStatus.ERRORNEOUS) {
+      title += `, failed at ${updatedDate}`;
+    }
+    return title;
+  }, [mlJob.data]);
 
   if (mlJob.isSuccess) {
     return (
@@ -41,4 +45,4 @@ function MLJobListItem({ initialMLJob }: MLJobListItemProps) {
   }
 }
 
-export default MLJobListItem;
+export default memo(MLJobListItem);

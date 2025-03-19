@@ -1,7 +1,7 @@
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Button, List, ListItemButton, ListItemIcon, ListItemText, Stack, Tab, TextField } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useRef, useState } from "react";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import LLMHooks from "../../../api/LLMHooks.ts";
 import { ApproachType } from "../../../api/openapi/models/ApproachType.ts";
@@ -28,35 +28,36 @@ function LLMJobListItem({ initialLLMJob }: LLMJobListItemProps) {
   // global server state (react-query)
   const llmJob = LLMHooks.usePollLLMJob(initialLLMJob.id, initialLLMJob);
 
-  // compute date sting
-  const createdDate = dateToLocaleString(llmJob.data!.created);
-  const updatedDate = dateToLocaleString(llmJob.data!.updated);
-  let subTitle = `${
-    llmJob.data!.parameters.specific_task_parameters.sdoc_ids.length
-  } documents, started at ${createdDate}`;
-  if (llmJob.data!.status === BackgroundJobStatus.FINISHED) {
-    subTitle += `, finished at ${updatedDate}`;
-  } else if (llmJob.data!.status === BackgroundJobStatus.ABORTED) {
-    subTitle += `, aborted at ${updatedDate}`;
-  } else if (llmJob.data!.status === BackgroundJobStatus.ERRORNEOUS) {
-    subTitle += `, failed at ${updatedDate}`;
-  }
+  // compute date string
+  const subTitle = useMemo(() => {
+    const createdDate = dateToLocaleString(llmJob.data!.created);
+    const updatedDate = dateToLocaleString(llmJob.data!.updated);
+    let title = `${
+      llmJob.data!.parameters.specific_task_parameters.sdoc_ids.length
+    } documents, started at ${createdDate}`;
+    if (llmJob.data!.status === BackgroundJobStatus.FINISHED) {
+      title += `, finished at ${updatedDate}`;
+    } else if (llmJob.data!.status === BackgroundJobStatus.ABORTED) {
+      title += `, aborted at ${updatedDate}`;
+    } else if (llmJob.data!.status === BackgroundJobStatus.ERRORNEOUS) {
+      title += `, failed at ${updatedDate}`;
+    }
+    return title;
+  }, [llmJob.data]);
 
   // actions
   const dispatch = useAppDispatch();
-  const handleViewResults = () => {
+  const handleViewResults = useCallback(() => {
     if (!llmJob.data) return;
-
     dispatch(CRUDDialogActions.closeProjectSettings());
     dispatch(CRUDDialogActions.llmDialogOpenFromBackgroundTask(llmJob.data));
-  };
+  }, [dispatch, llmJob.data]);
 
-  // tabs
   // tab state
   const [tab, setTab] = useState("Status");
-  const handleChangeTab = (_: React.SyntheticEvent, newValue: string) => {
+  const handleChangeTab = useCallback((_: React.SyntheticEvent, newValue: string) => {
     setTab(newValue);
-  };
+  }, []);
 
   if (llmJob.isSuccess) {
     return (
@@ -72,11 +73,7 @@ function LLMJobListItem({ initialLLMJob }: LLMJobListItemProps) {
               <TabList onChange={handleChangeTab}>
                 <Tab key={"Status"} label={"Status"} value={"Status"} />
                 <Tab key={"Inputs"} label={"Inputs"} value={"Inputs"} />
-                <div
-                  style={{
-                    flexGrow: 1,
-                  }}
-                />
+                <div style={{ flexGrow: 1 }} />
                 {llmJob.data.status === BackgroundJobStatus.FINISHED ? (
                   <Button variant="contained" onClick={handleViewResults} sx={{ m: 0.5 }}>
                     View {llmJob.data.parameters.llm_job_type} results
@@ -114,16 +111,16 @@ function InputViewer({ llmJob }: { llmJob: LLMJobRead }) {
         <TrainingParameterViewer parameters={llmJob.parameters.specific_approach_parameters as ModelTrainingParams} />
       );
     default:
-      <>Approach is not supported!</>;
+      return <>Approach is not supported!</>;
   }
 }
 
 function PromptViewer({ prompts }: { prompts: LLMPromptTemplates[] }) {
   // tab state
   const [tab, setTab] = useState(prompts[0].language);
-  const handleChangeTab = (_: React.SyntheticEvent, newValue: string) => {
+  const handleChangeTab = useCallback((_: React.SyntheticEvent, newValue: string) => {
     setTab(newValue);
-  };
+  }, []);
 
   return (
     <TabContext value={tab}>
@@ -209,17 +206,8 @@ function StatusViewer({ llmJobResult }: { llmJobResult: LLMJobResult }) {
 }
 
 interface ResultStatusItem {
-  /**
-   * Status of the Result
-   */
   status: BackgroundJobStatus;
-  /**
-   * Status message of the result
-   */
   status_message: string;
-  /**
-   * ID of the source document
-   */
   sdoc_id: number;
 }
 
@@ -234,4 +222,4 @@ function LLMResultStatusItem({ result }: { result: ResultStatusItem }) {
   );
 }
 
-export default LLMJobListItem;
+export default memo(LLMJobListItem);

@@ -12,7 +12,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import React from "react";
+import { memo, useCallback, useState } from "react";
 import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobStatus.ts";
 import { PreprocessingJobPayloadRead } from "../../../api/openapi/models/PreprocessingJobPayloadRead.ts";
 import { docTypeToIcon } from "../../../utils/icons/docTypeToIcon.tsx";
@@ -24,10 +24,11 @@ interface PreProJobPayloadListItemProps {
 
 function PreProJobPayloadListItem({ ppj }: PreProJobPayloadListItemProps) {
   // local state
-  const [expanded, setExpanded] = React.useState(false);
-  const handleExpandClick = () => {
-    setExpanded(!expanded);
-  };
+  const [expanded, setExpanded] = useState(false);
+
+  const handleExpandClick = useCallback(() => {
+    setExpanded((prev) => !prev);
+  }, []);
 
   return (
     <>
@@ -134,4 +135,4 @@ function PreProJobPayloadListItem({ ppj }: PreProJobPayloadListItemProps) {
   );
 }
 
-export default PreProJobPayloadListItem;
+export default memo(PreProJobPayloadListItem);

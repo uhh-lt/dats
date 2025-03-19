@@ -3,7 +3,7 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, Divider, Stack, Toolbar, Tooltip, Typography } from "@mui/material";
 import { MRT_RowSelectionState, MRT_SortingState } from "material-react-table";
-import { ChangeEvent, useRef, useState } from "react";
+import { ChangeEvent, memo, useCallback, useRef, useState } from "react";
 import PreProHooks from "../../../api/PreProHooks.ts";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
 import LinearProgressWithLabel from "../../LinearProgressWithLabel.tsx";
@@ -54,15 +54,18 @@ function ProjectDocuments({ project }: ProjectProps) {
   const [waiting, setWaiting] = useState<boolean>(false);
   const [files, setFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+
+  const handleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setFiles(Array.from(e.target.files));
     } else {
       setFiles([]);
     }
-  };
+  }, []);
+
   const uploadDocumentMutation = ProjectHooks.useUploadDocument();
-  const handleClickUploadFile = () => {
+
+  const handleClickUploadFile = useCallback(() => {
     if (files) {
       uploadDocumentMutation.mutate(
         {
@@ -73,7 +76,6 @@ function ProjectDocuments({ project }: ProjectProps) {
         },
         {
           onSuccess: () => {
-            // FIXME: selbst mit initialen Timeout vor neuem rerender gibt das Backend für in_progress false zurück
             setTimeout(() => {
               setWaiting(false);
               uploadProgress.refetch();
@@ -88,7 +90,21 @@ function ProjectDocuments({ project }: ProjectProps) {
         },
       );
     }
-  };
+  }, [files, project.id, uploadDocumentMutation, uploadProgress]);
+
+  const renderTopToolbarCustomActions = useCallback(
+    () => (
+      <Stack direction={"row"} spacing={1} alignItems="center" height={48}>
+        {selectedSdocIds.length > 0 && (
+          <>
+            <DeleteSdocsButton sdocIds={selectedSdocIds} navigateTo="../search" />
+            <ExportSdocsButton sdocIds={selectedSdocIds} />
+          </>
+        )}
+      </Stack>
+    ),
+    [selectedSdocIds],
+  );
 
   return (
     <Box display="flex" className="myFlexContainer h100">
@@ -151,20 +167,11 @@ function ProjectDocuments({ project }: ProjectProps) {
         sortingModel={sortingModel}
         onSortingChange={setSortingModel}
         positionToolbarAlertBanner="head-overlay"
-        renderTopToolbarCustomActions={() => (
-          <Stack direction={"row"} spacing={1} alignItems="center" height={48}>
-            {selectedSdocIds.length > 0 && (
-              <>
-                <DeleteSdocsButton sdocIds={selectedSdocIds} navigateTo="../search" />
-                <ExportSdocsButton sdocIds={selectedSdocIds} />
-              </>
-            )}
-          </Stack>
-        )}
+        renderTopToolbarCustomActions={renderTopToolbarCustomActions}
       />
       <CrawlerRunDialog projectId={project.id} ref={crawlDialogRef} />
     </Box>
   );
 }
 
-export default ProjectDocuments;
+export default memo(ProjectDocuments);

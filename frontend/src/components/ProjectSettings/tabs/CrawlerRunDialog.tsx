@@ -2,7 +2,7 @@ import { ErrorMessage } from "@hookform/error-message";
 import { PlayCircle } from "@mui/icons-material";
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { forwardRef, memo, useCallback, useImperativeHandle, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import CrawlerHooks from "../../../api/CrawlerHooks.ts";
 import FormTextMultiline from "../../FormInputs/FormTextMultiline.tsx";
@@ -54,29 +54,35 @@ const CrawlerRunDialog = forwardRef<CrawlerRunDialogHandle, CrawlerRunDialogProp
   }));
 
   // methods
-  const openDialog = () => {
+  const openDialog = useCallback(() => {
     reset();
     setIsDialogOpen(true);
-  };
+  }, [reset]);
 
-  const closeDialog = () => {
+  const closeDialog = useCallback(() => {
     setIsDialogOpen(false);
-  };
+  }, []);
 
   // mutations (react-query)
-  const startCrawlerMutation = CrawlerHooks.useStartCrawlerJob();
-  const handleSubmitRun: SubmitHandler<CrawlerFormValues> = (data) => {
-    startCrawlerMutation.mutate(
-      {
-        requestBody: { project_id: projectId, urls: data.urls.split("\n") },
-      },
-      {
-        onSuccess: () => closeDialog(),
-      },
-    );
-  };
+  const { mutate: startCrawlerMutation, isPending } = CrawlerHooks.useStartCrawlerJob();
+  const handleSubmitRun: SubmitHandler<CrawlerFormValues> = useCallback(
+    (data) => {
+      startCrawlerMutation(
+        {
+          requestBody: { project_id: projectId, urls: data.urls.split("\n") },
+        },
+        {
+          onSuccess: () => closeDialog(),
+        },
+      );
+    },
+    [closeDialog, projectId, startCrawlerMutation],
+  );
 
-  const handleErrorCodeCreateDialog: SubmitErrorHandler<CrawlerFormValues> = (data) => console.error(data);
+  const handleErrorCodeCreateDialog: SubmitErrorHandler<CrawlerFormValues> = useCallback(
+    (data) => console.error(data),
+    [],
+  );
 
   return (
     <Dialog open={isDialogOpen} onClose={closeDialog} maxWidth="md" fullWidth>
@@ -118,7 +124,7 @@ const CrawlerRunDialog = forwardRef<CrawlerRunDialogHandle, CrawlerRunDialogProp
             variant="contained"
             color="success"
             type="submit"
-            loading={startCrawlerMutation.isPending}
+            loading={isPending}
             loadingPosition="start"
             startIcon={<PlayCircle />}
           >
@@ -130,4 +136,4 @@ const CrawlerRunDialog = forwardRef<CrawlerRunDialogHandle, CrawlerRunDialogProp
   );
 });
 
-export default CrawlerRunDialog;
+export default memo(CrawlerRunDialog);

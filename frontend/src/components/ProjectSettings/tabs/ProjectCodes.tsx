@@ -1,6 +1,6 @@
 import SquareIcon from "@mui/icons-material/Square";
 import { Box } from "@mui/material";
-import { memo, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import CodeCreateDialog from "../../Code/CodeCreateDialog.tsx";
 import CodeCreateListItemButton from "../../Code/CodeCreateListItemButton.tsx";
@@ -30,6 +30,14 @@ function ProjectCodes() {
   const [expandedCodeIds, setExpandedCodeIds] = useState<string[]>([]);
   const [codeFilter, setCodeFilter] = useState<string>("");
 
+  const handleCodeFilterChange = useCallback((value: string) => {
+    setCodeFilter(value);
+  }, []);
+
+  const handleExpandedCodeIdsChange = useCallback((ids: string[]) => {
+    setExpandedCodeIds(ids);
+  }, []);
+
   return (
     <Box className="h100">
       {allCodes.isSuccess && codeTree && (
@@ -42,10 +50,10 @@ function ProjectCodes() {
             // filter
             showFilter
             dataFilter={codeFilter}
-            onDataFilterChange={setCodeFilter}
+            onDataFilterChange={handleCodeFilterChange}
             // expansion
             expandedItems={expandedCodeIds}
-            onExpandedItemsChange={setExpandedCodeIds}
+            onExpandedItemsChange={handleExpandedCodeIdsChange}
             // renderers
             ActionRenderer={CodeActionRenderer}
             // components
