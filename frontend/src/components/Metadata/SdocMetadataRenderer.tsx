@@ -1,3 +1,4 @@
+import { memo } from "react";
 import MetadataHooks from "../../api/MetadataHooks.ts";
 import { MetaType } from "../../api/openapi/models/MetaType.ts";
 import { ProjectMetadataRead } from "../../api/openapi/models/ProjectMetadataRead.ts";
@@ -47,4 +48,4 @@ export function SdocMetadataRendererWithData({
   }
 }
 
-export default SdocMetadataRenderer;
+export default memo(SdocMetadataRenderer);

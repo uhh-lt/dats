@@ -6,7 +6,7 @@ import {
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import MetadataHooks from "../../api/MetadataHooks.ts";
 import { ProjectMetadataRead } from "../../api/openapi/models/ProjectMetadataRead.ts";
 
@@ -95,6 +95,42 @@ function ProjectMetadataTableContent({
     return projectMetadataMap;
   }, [projectMetadata]);
 
+  // rendering
+  const renderTopToolbarContent = useCallback(
+    (props: { table: MRT_TableInstance<ProjectMetadataRead> }) => {
+      return renderTopToolbarCustomActions
+        ? renderTopToolbarCustomActions({
+            table: props.table,
+            selectedProjectMetadata: Object.keys(rowSelectionModel).map((mId) => projectMetadataMap[mId]),
+          })
+        : undefined;
+    },
+    [projectMetadataMap, renderTopToolbarCustomActions, rowSelectionModel],
+  );
+
+  const renderToolbarInternalContent = useCallback(
+    (props: { table: MRT_TableInstance<ProjectMetadataRead> }) => {
+      return renderToolbarInternalActions
+        ? renderToolbarInternalActions({
+            table: props.table,
+            selectedProjectMetadata: Object.keys(rowSelectionModel).map((mId) => projectMetadataMap[mId]),
+          })
+        : undefined;
+    },
+    [projectMetadataMap, renderToolbarInternalActions, rowSelectionModel],
+  );
+  const renderBottomToolbarContent = useCallback(
+    (props: { table: MRT_TableInstance<ProjectMetadataRead> }) => {
+      return renderBottomToolbarCustomActions
+        ? renderBottomToolbarCustomActions({
+            table: props.table,
+            selectedProjectMetadata: Object.keys(rowSelectionModel).map((mId) => projectMetadataMap[mId]),
+          })
+        : undefined;
+    },
+    [projectMetadataMap, renderBottomToolbarCustomActions, rowSelectionModel],
+  );
+
   // table
   const table = useMaterialReactTable<ProjectMetadataRead>({
     data: projectMetadata,
@@ -121,27 +157,9 @@ function ProjectMetadataTableContent({
     onRowSelectionChange,
     // toolbar
     enableBottomToolbar: !!renderBottomToolbarCustomActions,
-    renderTopToolbarCustomActions: renderTopToolbarCustomActions
-      ? (props) =>
-          renderTopToolbarCustomActions({
-            table: props.table,
-            selectedProjectMetadata: Object.keys(rowSelectionModel).map((mId) => projectMetadataMap[mId]),
-          })
-      : undefined,
-    renderToolbarInternalActions: renderToolbarInternalActions
-      ? (props) =>
-          renderToolbarInternalActions({
-            table: props.table,
-            selectedProjectMetadata: Object.values(projectMetadataMap).filter((row) => rowSelectionModel[row.id]),
-          })
-      : undefined,
-    renderBottomToolbarCustomActions: renderBottomToolbarCustomActions
-      ? (props) =>
-          renderBottomToolbarCustomActions({
-            table: props.table,
-            selectedProjectMetadata: Object.values(projectMetadataMap).filter((row) => rowSelectionModel[row.id]),
-          })
-      : undefined,
+    renderTopToolbarCustomActions: renderTopToolbarContent,
+    renderToolbarInternalActions: renderToolbarInternalContent,
+    renderBottomToolbarCustomActions: renderBottomToolbarContent,
     // hide columns per default
     initialState: {
       columnVisibility: {
@@ -152,4 +170,4 @@ function ProjectMetadataTableContent({
 
   return <MaterialReactTable table={table} />;
 }
-export default ProjectMetadataTable;
+export default memo(ProjectMetadataTable);
