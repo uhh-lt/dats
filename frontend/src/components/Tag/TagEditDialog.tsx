@@ -3,6 +3,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack } from "@mui/material";
+import { useCallback } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import TagHooks from "../../api/TagHooks.ts";
 import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
@@ -37,17 +38,15 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
   // query
   const tag = TagHooks.useGetTag(tagId);
 
-  // mutations
-  const updateTagMutation = TagHooks.useUpdateTag();
-  const deleteTagMutation = TagHooks.useDeleteTag();
-
   // form handling
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     dispatch(CRUDDialogActions.closeTagEditDialog());
-  };
+  }, [dispatch]);
+
+  const { mutate: updateTagMutation, isPending: isUpdatePending } = TagHooks.useUpdateTag();
   const handleTagUpdate: SubmitHandler<DocumentTagUpdate> = (data) => {
     if (tag.data) {
-      updateTagMutation.mutate(
+      updateTagMutation(
         {
           requestBody: {
             name: data.name,
@@ -67,13 +66,15 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
       throw new Error("Invalid invocation of method handleTagUpdate! Only call when tag.data is available!");
     }
   };
-  const handleError: SubmitErrorHandler<DocumentTagUpdate> = (data) => console.error(data);
-  const handleTagDelete = () => {
+  const handleError: SubmitErrorHandler<DocumentTagUpdate> = useCallback((data) => console.error(data), []);
+
+  const { mutate: deleteTagMutation, isPending: isDeletePending } = TagHooks.useDeleteTag();
+  const handleTagDelete = useCallback(() => {
     if (tag.data) {
       ConfirmationAPI.openConfirmationDialog({
         text: `Do you really want to delete the tag "${tag.data.name}"? This action cannot be undone!`,
         onAccept: () => {
-          deleteTagMutation.mutate(
+          deleteTagMutation(
             { tagId: tag.data.id },
             {
               onSuccess: () => {
@@ -86,7 +87,7 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
     } else {
       throw new Error("Invalid invocation of method handleDelete! Only call when tag.data is available!");
     }
-  };
+  }, [deleteTagMutation, handleClose, tag.data]);
 
   return (
     <>
@@ -98,9 +99,9 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
           isOpen={open}
           handleClose={handleClose}
           handleTagUpdate={handleTagUpdate}
-          isUpdateLoading={updateTagMutation.isPending}
+          isUpdateLoading={isUpdatePending}
           handleTagDelete={handleTagDelete}
-          isDeleteLoading={deleteTagMutation.isPending}
+          isDeleteLoading={isDeletePending}
           handleError={handleError}
         />
       )}

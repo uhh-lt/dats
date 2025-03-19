@@ -7,7 +7,7 @@ import {
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
 import TagHooks from "../../api/TagHooks.ts";
 
@@ -143,14 +143,14 @@ function TagTable({
       ? (props) =>
           renderToolbarInternalActions({
             table: props.table,
-            selectedTags: Object.values(projectTagsMap).filter((row) => rowSelectionModel[row.id]),
+            selectedTags: Object.keys(rowSelectionModel).map((tagId) => projectTagsMap[tagId]),
           })
       : undefined,
     renderBottomToolbarCustomActions: renderBottomToolbarCustomActions
       ? (props) =>
           renderBottomToolbarCustomActions({
             table: props.table,
-            selectedTags: Object.values(projectTagsMap).filter((row) => rowSelectionModel[row.id]),
+            selectedTags: Object.keys(rowSelectionModel).map((tagId) => projectTagsMap[tagId]),
           })
       : undefined,
     // hide columns per default
@@ -168,4 +168,4 @@ function TagTable({
 
   return <MaterialReactTable table={table} />;
 }
-export default TagTable;
+export default memo(TagTable);

@@ -2,7 +2,7 @@ import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, rgbToHex } from "@mui/material";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import TagHooks from "../../api/TagHooks.ts";
@@ -52,45 +52,46 @@ function TagCreateDialog() {
   }, [tagName, parentTagId, projectId]);
 
   // actions
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     dispatch(CRUDDialogActions.closeTagCreateDialog());
-  };
-
-  // mutations
-  const createTagMutation = TagHooks.useCreateTag();
+  }, [dispatch]);
 
   // form actions
-  const handleTagCreation: SubmitHandler<DocumentTagCreate> = (data) => {
-    createTagMutation.mutate(
-      {
-        requestBody: {
-          name: data.name,
-          description: data.description || "",
-          color: data.color,
-          parent_id: data.parent_id === -1 ? null : data.parent_id,
-          project_id: projectId,
+  const { mutate: createTagMutation, isPending } = TagHooks.useCreateTag();
+  const handleTagCreation: SubmitHandler<DocumentTagCreate> = useCallback(
+    (data) => {
+      createTagMutation(
+        {
+          requestBody: {
+            name: data.name,
+            description: data.description || "",
+            color: data.color,
+            parent_id: data.parent_id === -1 ? null : data.parent_id,
+            project_id: projectId,
+          },
         },
-      },
-      {
-        onSuccess: (data) => {
-          // if we add a new tag successfully, we want to show the tag in the tag explorer
-          // this means, we have to expand the parent tags, so the new tag is visible
-          const tagsToExpand = [];
-          let parentTagId = data.parent_id;
-          while (parentTagId) {
-            const currentParentTagId = parentTagId;
+        {
+          onSuccess: (data) => {
+            // if we add a new tag successfully, we want to show the tag in the tag explorer
+            // this means, we have to expand the parent tags, so the new tag is visible
+            const tagsToExpand = [];
+            let parentTagId = data.parent_id;
+            while (parentTagId) {
+              const currentParentTagId = parentTagId;
 
-            tagsToExpand.push(parentTagId);
-            parentTagId = tags.data?.find((tag) => tag.id === currentParentTagId)?.parent_id;
-          }
-          dispatch(SearchActions.expandTags(tagsToExpand.map((id) => id.toString())));
+              tagsToExpand.push(parentTagId);
+              parentTagId = tags.data?.find((tag) => tag.id === currentParentTagId)?.parent_id;
+            }
+            dispatch(SearchActions.expandTags(tagsToExpand.map((id) => id.toString())));
 
-          handleClose();
+            handleClose();
+          },
         },
-      },
-    );
-  };
-  const handleError: SubmitErrorHandler<DocumentTagCreate> = (data) => console.error(data);
+      );
+    },
+    [createTagMutation, dispatch, handleClose, projectId, tags.data],
+  );
+  const handleError: SubmitErrorHandler<DocumentTagCreate> = useCallback((data) => console.error(data), []);
 
   return (
     <TagCreateDialogContent
@@ -100,7 +101,7 @@ function TagCreateDialog() {
       isOpen={isTagCreateDialogOpen}
       handleClose={handleClose}
       handleTagCreation={handleTagCreation}
-      isCreateLoading={createTagMutation.isPending}
+      isCreateLoading={isPending}
       handleError={handleError}
     />
   );
