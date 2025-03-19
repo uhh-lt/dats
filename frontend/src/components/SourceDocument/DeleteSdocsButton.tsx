@@ -2,7 +2,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButtonProps } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
@@ -19,7 +19,7 @@ function DeleteSdocsButton({ sdocIds, navigateTo, ...props }: DeleteSdocsButtonP
   const navigate = useNavigate();
 
   // mutations
-  const deleteMutation = SdocHooks.useDeleteDocuments();
+  const { mutate: deleteDocuments } = SdocHooks.useDeleteDocuments();
 
   // redux
   const dispatch = useAppDispatch();
@@ -31,8 +31,7 @@ function DeleteSdocsButton({ sdocIds, navigateTo, ...props }: DeleteSdocsButtonP
         ", ",
       )}? This action cannot be undone and  will remove all annotations as well as memos associated with this document!`,
       onAccept: () => {
-        const mutation = deleteMutation.mutate;
-        mutation(
+        deleteDocuments(
           {
             sdocIds: sdocIds,
           },
@@ -45,7 +44,7 @@ function DeleteSdocsButton({ sdocIds, navigateTo, ...props }: DeleteSdocsButtonP
         );
       },
     });
-  }, [deleteMutation.mutate, dispatch, navigate, navigateTo, sdocIds]);
+  }, [deleteDocuments, dispatch, navigate, navigateTo, sdocIds]);
 
   return (
     <Tooltip title="Delete">
@@ -58,4 +57,4 @@ function DeleteSdocsButton({ sdocIds, navigateTo, ...props }: DeleteSdocsButtonP
   );
 }
 
-export default DeleteSdocsButton;
+export default memo(DeleteSdocsButton);

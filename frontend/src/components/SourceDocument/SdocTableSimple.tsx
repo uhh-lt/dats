@@ -2,11 +2,12 @@ import { Stack } from "@mui/material";
 import {
   MRT_ColumnDef,
   MRT_ShowHideColumnsButton,
+  MRT_TableInstance,
   MRT_ToggleDensePaddingButton,
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
 import { useAuth } from "../../auth/useAuth.ts";
 import MemoRenderer2 from "../Memo/MemoRenderer2.tsx";
@@ -17,18 +18,25 @@ interface SdocTableRow {
   sdocId: number;
 }
 
+const renderToolbarActions = ({ table }: { table: MRT_TableInstance<SdocTableRow> }) => (
+  <Stack direction="row" spacing={1}>
+    <MRT_ShowHideColumnsButton table={table} />
+    <MRT_ToggleDensePaddingButton table={table} />
+  </Stack>
+);
+
 function SdocTableSimple({ sdocIds }: { sdocIds: number[] }) {
   // global client state (react router)
   const { user } = useAuth();
 
   // computed
   const data = useMemo(() => sdocIds.map((sdocId) => ({ sdocId })), [sdocIds]);
+
   const columns: MRT_ColumnDef<SdocTableRow>[] = useMemo(
     () => [
       {
         header: "Type",
         id: "Type",
-
         Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdocId} renderDoctypeIcon />,
       },
       {
@@ -84,15 +92,10 @@ function SdocTableSimple({ sdocIds }: { sdocIds: number[] }) {
     },
     // toolbar
     enableBottomToolbar: false,
-    renderToolbarInternalActions: ({ table }) => (
-      <Stack direction="row" spacing={1}>
-        <MRT_ShowHideColumnsButton table={table} />
-        <MRT_ToggleDensePaddingButton table={table} />
-      </Stack>
-    ),
+    renderToolbarInternalActions: renderToolbarActions,
   });
 
   return <MaterialReactTable table={table} />;
 }
 
-export default SdocTableSimple;
+export default memo(SdocTableSimple);

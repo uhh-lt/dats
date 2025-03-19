@@ -57,7 +57,6 @@ function MetadataEditMenu({ projectMetadata }: MetadataEditMenuProps) {
 
   // closing / confirming changes
   const updateMutation = MetadataHooks.useUpdateProjectMetadata();
-
   const handleClose = () => {
     setPosition(undefined);
 

@@ -1,6 +1,6 @@
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
@@ -18,7 +18,7 @@ function DeleteSdocsMenuItem({ sdocId, navigateTo, onClick, ...props }: DeleteSd
   const navigate = useNavigate();
 
   // mutations
-  const deleteMutation = SdocHooks.useDeleteDocuments();
+  const { mutate: deleteDocuments } = SdocHooks.useDeleteDocuments();
 
   // redux
   const dispatch = useAppDispatch();
@@ -26,12 +26,10 @@ function DeleteSdocsMenuItem({ sdocId, navigateTo, onClick, ...props }: DeleteSd
   // ui events
   const handleClick = useCallback(() => {
     if (!sdocId) return;
-
     ConfirmationAPI.openConfirmationDialog({
       text: `Do you really want to delete document(s) ${sdocId}? This action cannot be undone and  will remove all annotations as well as memos associated with this document!`,
       onAccept: () => {
-        const mutation = deleteMutation.mutate;
-        mutation(
+        deleteDocuments(
           {
             sdocIds: [sdocId],
           },
@@ -50,7 +48,7 @@ function DeleteSdocsMenuItem({ sdocId, navigateTo, onClick, ...props }: DeleteSd
         if (onClick) onClick();
       },
     });
-  }, [deleteMutation.mutate, dispatch, navigate, onClick, sdocId, navigateTo]);
+  }, [deleteDocuments, dispatch, navigate, onClick, sdocId, navigateTo]);
 
   return (
     <MenuItem onClick={handleClick} {...props} disabled={!sdocId}>
@@ -62,4 +60,4 @@ function DeleteSdocsMenuItem({ sdocId, navigateTo, onClick, ...props }: DeleteSd
   );
 }
 
-export default DeleteSdocsMenuItem;
+export default memo(DeleteSdocsMenuItem);

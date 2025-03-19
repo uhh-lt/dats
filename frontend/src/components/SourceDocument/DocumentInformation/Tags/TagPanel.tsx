@@ -1,5 +1,6 @@
 import { TabPanel } from "@mui/lab";
 import { Box, CircularProgress, Stack } from "@mui/material";
+import { memo } from "react";
 import TagHooks from "../../../../api/TagHooks.ts";
 import TagMenuButton from "../../../Tag/TagMenu/TagMenuButton.tsx";
 import DocumentTagRow from "./DocumentTagRow.tsx";
@@ -43,4 +44,4 @@ function TagPanelContent({ sdocId }: TagPanelProps) {
   );
 }
 
-export default TagPanel;
+export default memo(TagPanel);

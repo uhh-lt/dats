@@ -1,4 +1,5 @@
 import { ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
+import { memo } from "react";
 import { Link } from "react-router-dom";
 import SdocHooks from "../../../../api/SdocHooks.ts";
 import { docTypeToIcon } from "../../../../utils/icons/docTypeToIcon.tsx";
@@ -27,4 +28,4 @@ function SdocListItem({ sdocId }: SdocListItemProps) {
   );
 }
 
-export default SdocListItem;
+export default memo(SdocListItem);

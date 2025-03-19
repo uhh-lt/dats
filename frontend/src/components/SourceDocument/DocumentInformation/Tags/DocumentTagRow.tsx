@@ -1,4 +1,5 @@
 import { Box, Stack } from "@mui/material";
+import { memo } from "react";
 import TagHooks from "../../../../api/TagHooks.ts";
 import TagUnlinkButton from "../../../Tag/TagExplorer/TagUnlinkButton.tsx";
 import TagRenderer from "../../../Tag/TagRenderer.tsx";
@@ -30,4 +31,4 @@ function DocumentTagRow({ tagId, sdocId }: DocumentTagRow) {
   );
 }
 
-export default DocumentTagRow;
+export default memo(DocumentTagRow);

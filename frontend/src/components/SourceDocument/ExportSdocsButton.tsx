@@ -1,6 +1,6 @@
 import DownloadIcon from "@mui/icons-material/Download";
-import { CircularProgress, IconButton, Tooltip } from "@mui/material";
-import { useEffect } from "react";
+import { IconButton, Tooltip } from "@mui/material";
+import { memo, useCallback, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import ExporterHooks from "../../api/ExporterHooks.ts";
 import { BackgroundJobStatus } from "../../api/openapi/models/BackgroundJobStatus.ts";
@@ -11,18 +11,19 @@ interface DownloadSdocsButtonProps {
   sdocIds: number[];
 }
 
-export default function ExportSdocsButton({ sdocIds }: DownloadSdocsButtonProps) {
+function ExportSdocsButton({ sdocIds }: DownloadSdocsButtonProps) {
   // global client state (react-router)
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
-  const startExport = ExporterHooks.useStartExportJob();
-  const exportJob = ExporterHooks.usePollExportJob(startExport.data?.id);
+  // mutations
+  const { mutate: startExportMutation, reset: resetExport, data, isPending } = ExporterHooks.useStartExportJob();
+  const exportJob = ExporterHooks.usePollExportJob(data?.id);
 
   // snackbar
   const openSnackbar = useOpenSnackbar();
 
-  const onClick = () => {
-    startExport.mutate({
+  const onClick = useCallback(() => {
+    startExportMutation({
       requestBody: {
         export_job_type: ExportJobType.SINGLE_PROJECT_SELECTED_SDOCS,
         specific_export_job_parameters: {
@@ -32,7 +33,7 @@ export default function ExportSdocsButton({ sdocIds }: DownloadSdocsButtonProps)
         },
       },
     });
-  };
+  }, [startExportMutation, projectId, sdocIds]);
 
   useEffect(() => {
     if (!exportJob.data) return;
@@ -40,7 +41,7 @@ export default function ExportSdocsButton({ sdocIds }: DownloadSdocsButtonProps)
       if (exportJob.data.status === BackgroundJobStatus.FINISHED) {
         window.open(import.meta.env.VITE_APP_CONTENT + "/" + exportJob.data.results_url, "_blank");
         // Make sure the download doesn't start again on a re-render
-        startExport.reset();
+        resetExport();
       } else if (exportJob.data.status === BackgroundJobStatus.ERRORNEOUS) {
         openSnackbar({
           text: `Export job ${exportJob.data.id} failed`,
@@ -48,17 +49,15 @@ export default function ExportSdocsButton({ sdocIds }: DownloadSdocsButtonProps)
         });
       }
     }
-  }, [exportJob.data, startExport, openSnackbar]);
+  }, [exportJob.data, resetExport, openSnackbar]);
 
-  if (startExport.isPending || exportJob.data?.status === BackgroundJobStatus.WAITING) {
-    return <CircularProgress size={20} />;
-  } else {
-    return (
-      <Tooltip title="Download selected documents">
-        <IconButton onClick={onClick}>
-          <DownloadIcon />
-        </IconButton>
-      </Tooltip>
-    );
-  }
+  return (
+    <Tooltip title="Download selected documents">
+      <IconButton onClick={onClick} loading={isPending || exportJob.data?.status === BackgroundJobStatus.WAITING}>
+        <DownloadIcon />
+      </IconButton>
+    </Tooltip>
+  );
 }
+
+export default memo(ExportSdocsButton);

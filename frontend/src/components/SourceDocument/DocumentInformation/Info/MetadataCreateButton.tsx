@@ -1,5 +1,5 @@
 import { Button, PopoverPosition } from "@mui/material";
-import React, { useCallback, useState } from "react";
+import React, { memo, useCallback, useState } from "react";
 import { useParams } from "react-router-dom";
 import MetadataHooks from "../../../../api/MetadataHooks.ts";
 import SdocHooks from "../../../../api/SdocHooks.ts";
@@ -13,29 +13,29 @@ interface MetadataCreateButtonProps {
 
 function MetadataCreateButton({ sdocId }: MetadataCreateButtonProps) {
   const [position, setPosition] = useState<PopoverPosition | undefined>();
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+
+  const handleClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     const boundingBox = event.currentTarget.getBoundingClientRect();
     setPosition({
       left: boundingBox.left,
       top: boundingBox.top + boundingBox.height,
     });
-  };
-  const handleClose = () => {
+  }, []);
+
+  const handleClose = useCallback(() => {
     setPosition(undefined);
-  };
+  }, []);
 
   // create
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
   const sdoc = SdocHooks.useGetDocument(sdocId);
-  const createMutation = MetadataHooks.useCreateProjectMetadata();
+  const { mutate: createMetadataMutation } = MetadataHooks.useCreateProjectMetadata();
+
   const handleCreateMetadata = useCallback(
     (metaType: string) => {
-      if (!sdoc.data) {
-        return;
-      }
+      if (!sdoc.data) return;
 
-      const mutation = createMutation.mutate;
-      mutation({
+      createMetadataMutation({
         requestBody: {
           doctype: sdoc.data.doctype,
           metatype: metaType as MetaType,
@@ -46,7 +46,7 @@ function MetadataCreateButton({ sdocId }: MetadataCreateButtonProps) {
         },
       });
     },
-    [createMutation.mutate, projectId, sdoc.data],
+    [createMetadataMutation, projectId, sdoc.data],
   );
 
   return (
@@ -64,4 +64,4 @@ function MetadataCreateButton({ sdocId }: MetadataCreateButtonProps) {
   );
 }
 
-export default MetadataCreateButton;
+export default memo(MetadataCreateButton);

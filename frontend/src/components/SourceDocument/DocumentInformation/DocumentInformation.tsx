@@ -1,6 +1,6 @@
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, BoxProps, Tab, Tabs } from "@mui/material";
-import { useState } from "react";
+import { memo, useState } from "react";
 import DocumentMemos from "./DocumentMemos.tsx";
 import MetadataPanel from "./Info/MetadataPanel.tsx";
 import LinksPanel from "./Links/LinksPanel.tsx";
@@ -12,7 +12,7 @@ interface DocumentInformationProps {
   filterName?: string;
 }
 
-export default function DocumentInformation({
+function DocumentInformation({
   sdocId,
   isIdleContent,
   filterName,
@@ -52,3 +52,5 @@ export default function DocumentInformation({
     </Box>
   );
 }
+
+export default memo(DocumentInformation);

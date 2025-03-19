@@ -1,9 +1,8 @@
 import { ErrorMessage } from "@hookform/error-message";
 import { Stack } from "@mui/material";
-import { useCallback } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import MetadataHooks from "../../../../../api/MetadataHooks.ts";
-
 import { MetaType } from "../../../../../api/openapi/models/MetaType.ts";
 import { ProjectMetadataRead } from "../../../../../api/openapi/models/ProjectMetadataRead.ts";
 import { SourceDocumentMetadataRead } from "../../../../../api/openapi/models/SourceDocumentMetadataRead.ts";
@@ -58,12 +57,12 @@ function DocumentMetadataRowContent({
   const isLink = metadata.str_value ? isValidHttpUrl(metadata.str_value) : false;
 
   // mutation
-  const updateMutation = MetadataHooks.useUpdateSdocMetadata();
+  const { mutate: updateMetadataMutation } = MetadataHooks.useUpdateSdocMetadata();
 
   // form handling
   const handleUpdateMetadata: SubmitHandler<SourceDocumentMetadataUpdate> = useCallback(
     (data) => {
-      // // only update if data has changed!
+      // only update if data has changed!
       if (
         metadata.str_value !== data.str_value ||
         metadata.int_value !== data.int_value ||
@@ -71,8 +70,7 @@ function DocumentMetadataRowContent({
         metadata.boolean_value !== data.boolean_value ||
         metadata.list_value !== data.list_value
       ) {
-        const mutation = updateMutation.mutate;
-        mutation({
+        updateMetadataMutation({
           metadataId: metadata.id,
           requestBody: {
             str_value: data.str_value,
@@ -84,104 +82,107 @@ function DocumentMetadataRowContent({
         });
       }
     },
-    [metadata, updateMutation.mutate],
+    [metadata, updateMetadataMutation],
   );
+
   const handleError: SubmitErrorHandler<SourceDocumentMetadataUpdate> = useCallback((data) => console.error(data), []);
 
-  let inputField: JSX.Element;
-  switch (projectMetadata.metatype) {
-    case MetaType.STRING:
-      inputField = (
-        <FormText
-          name="str_value"
-          control={control}
-          textFieldProps={{
-            error: Boolean(errors.str_value),
-            helperText: <ErrorMessage errors={errors} name="str_value" />,
-            variant: "standard",
-            disabled: projectMetadata.read_only,
-            onBlur: () => handleSubmit(handleUpdateMetadata, handleError)(),
-            sx: {
-              flexGrow: 1,
-              flexBasis: 1,
-            },
-          }}
-        />
-      );
-      break;
-    case MetaType.NUMBER:
-      inputField = (
-        <FormNumber
-          name="int_value"
-          control={control}
-          textFieldProps={{
-            error: Boolean(errors.int_value),
-            helperText: <ErrorMessage errors={errors} name="int_value" />,
-            variant: "standard",
-            disabled: projectMetadata.read_only,
-            onBlur: () => handleSubmit(handleUpdateMetadata, handleError)(),
-            sx: {
-              flexGrow: 1,
-              flexBasis: 1,
-            },
-          }}
-        />
-      );
-      break;
-    case MetaType.BOOLEAN:
-      inputField = (
-        <FormSwitch
-          name="boolean_value"
-          control={control}
-          boxProps={{ sx: { flexGrow: 1, flexBasis: 1 } }}
-          switchProps={{ onBlur: () => handleSubmit(handleUpdateMetadata, handleError)() }}
-        />
-      );
-      break;
-    case MetaType.DATE:
-      inputField = (
-        <FormDate
-          name="date_value"
-          control={control}
-          textFieldProps={{
-            error: Boolean(errors.date_value),
-            helperText: <ErrorMessage errors={errors} name="date_value" />,
-            variant: "standard",
-            disabled: projectMetadata.read_only,
-            onBlur: () => handleSubmit(handleUpdateMetadata, handleError)(),
-            sx: {
-              flexGrow: 1,
-              flexBasis: 1,
-            },
-          }}
-        />
-      );
-      break;
-    case MetaType.LIST:
-      inputField = (
-        <FormChipList
-          name="list_value"
-          control={control}
-          rules={{ required: true }}
-          autoCompleteProps={{
-            sx: {
-              flexGrow: 1,
-              flexBasis: 1,
-            },
-            disabled: projectMetadata.read_only,
-          }}
-          textFieldProps={{
-            fullWidth: true,
-            variant: "standard",
-            placeholder: projectMetadata.key,
-            onBlur: () => handleSubmit(handleUpdateMetadata, handleError)(),
-            error: Boolean(errors.list_value),
-            helperText: <ErrorMessage errors={errors} name="list_value" />,
-          }}
-        />
-      );
-      break;
-  }
+  const handleInputBlur = useCallback(
+    () => handleSubmit(handleUpdateMetadata, handleError)(),
+    [handleSubmit, handleUpdateMetadata, handleError],
+  );
+
+  // Memoize input field based on metadata type
+  const inputField = useMemo(() => {
+    switch (projectMetadata.metatype) {
+      case MetaType.STRING:
+        return (
+          <FormText
+            name="str_value"
+            control={control}
+            textFieldProps={{
+              error: Boolean(errors.str_value),
+              helperText: <ErrorMessage errors={errors} name="str_value" />,
+              variant: "standard",
+              disabled: projectMetadata.read_only,
+              onBlur: handleInputBlur,
+              sx: {
+                flexGrow: 1,
+                flexBasis: 1,
+              },
+            }}
+          />
+        );
+      case MetaType.NUMBER:
+        return (
+          <FormNumber
+            name="int_value"
+            control={control}
+            textFieldProps={{
+              error: Boolean(errors.int_value),
+              helperText: <ErrorMessage errors={errors} name="int_value" />,
+              variant: "standard",
+              disabled: projectMetadata.read_only,
+              onBlur: handleInputBlur,
+              sx: {
+                flexGrow: 1,
+                flexBasis: 1,
+              },
+            }}
+          />
+        );
+      case MetaType.BOOLEAN:
+        return (
+          <FormSwitch
+            name="boolean_value"
+            control={control}
+            boxProps={{ sx: { flexGrow: 1, flexBasis: 1 } }}
+            switchProps={{ onBlur: handleInputBlur }}
+          />
+        );
+      case MetaType.DATE:
+        return (
+          <FormDate
+            name="date_value"
+            control={control}
+            textFieldProps={{
+              error: Boolean(errors.date_value),
+              helperText: <ErrorMessage errors={errors} name="date_value" />,
+              variant: "standard",
+              disabled: projectMetadata.read_only,
+              onBlur: handleInputBlur,
+              sx: {
+                flexGrow: 1,
+                flexBasis: 1,
+              },
+            }}
+          />
+        );
+      case MetaType.LIST:
+        return (
+          <FormChipList
+            name="list_value"
+            control={control}
+            rules={{ required: true }}
+            autoCompleteProps={{
+              sx: {
+                flexGrow: 1,
+                flexBasis: 1,
+              },
+              disabled: projectMetadata.read_only,
+            }}
+            textFieldProps={{
+              fullWidth: true,
+              variant: "standard",
+              placeholder: projectMetadata.key,
+              onBlur: handleInputBlur,
+              error: Boolean(errors.list_value),
+              helperText: <ErrorMessage errors={errors} name="list_value" />,
+            }}
+          />
+        );
+    }
+  }, [projectMetadata, control, errors, handleInputBlur]);
 
   return (
     <Stack direction="row" alignItems="flex-end" mt={1}>
@@ -200,4 +201,4 @@ function DocumentMetadataRowContent({
   );
 }
 
-export default DocumentMetadataRow;
+export default memo(DocumentMetadataRow);

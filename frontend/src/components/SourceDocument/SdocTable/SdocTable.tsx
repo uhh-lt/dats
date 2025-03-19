@@ -12,7 +12,7 @@ import {
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useEffect, useMemo, useRef, useState, type UIEvent } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from "react";
 import { QueryKey } from "../../../api/QueryKey.ts";
 import { ElasticSearchDocumentHit } from "../../../api/openapi/models/ElasticSearchDocumentHit.ts";
 import { PaginatedElasticSearchDocumentHits } from "../../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
@@ -64,7 +64,6 @@ const defaultFilterStateSelector = (state: RootState) => state.documentTableFilt
 function SdocTable(props: SdocTableProps) {
   // global client state (react router)
   const tableInfo = useInitDocumentTableFilterSlice({ projectId: props.projectId });
-
   if (tableInfo) {
     return <SdocTableContent {...props} tableInfo={tableInfo} />;
   }
@@ -95,6 +94,7 @@ function SdocTableContent({
 
   // virtualization
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
 
   // table columns
   const columns = useMemo(() => {
@@ -104,7 +104,6 @@ function SdocTableContent({
         header: column.label,
         enableSorting: column.sortable,
       };
-
       switch (column.column) {
         case SdocColumns.SD_SOURCE_DOCUMENT_TYPE:
           return {
@@ -151,7 +150,6 @@ function SdocTableContent({
           }
       }
     });
-
     // unwanted columns are set to null, so we filter those out
     return result.filter((column) => column !== null) as MRT_ColumnDef<ElasticSearchDocumentHit>[];
   }, [tableInfo]);
@@ -206,7 +204,6 @@ function SdocTableContent({
   });
 
   // infinite scrolling
-  const tableContainerRef = useRef<HTMLDivElement>(null);
   const { flatData, totalResults, totalFetched, fetchMoreOnScroll } = useTableInfiniteScroll({
     tableContainerRef,
     data,
@@ -225,6 +222,79 @@ function SdocTableContent({
     }
   }, [projectId, sortingModel]);
 
+  // Memoized callbacks for the table
+  const handleGlobalFilterChange = useCallback((value: string) => {
+    setSearchQuery(value);
+  }, []);
+
+  const renderTopToolbar = useCallback(
+    (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) => {
+      if (!renderTopToolbarCustomActions) return undefined;
+      return renderTopToolbarCustomActions({
+        table: props.table,
+        selectedDocuments: flatData.filter((row) => rowSelectionModel[row.document_id]),
+      });
+    },
+    [renderTopToolbarCustomActions, flatData, rowSelectionModel],
+  );
+
+  const renderToolbarInternal = useCallback(
+    (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) => {
+      if (renderToolbarInternalActions) {
+        return renderToolbarInternalActions({
+          table: props.table,
+          selectedDocuments: flatData.filter((row) => rowSelectionModel[row.document_id]),
+        });
+      }
+      return (
+        <SdocTableToolbar
+          table={props.table}
+          anchor={tableContainerRef}
+          filterName={filterName}
+          filterActions={filterActions}
+          filterStateSelector={filterStateSelector}
+        />
+      );
+    },
+    [renderToolbarInternalActions, flatData, rowSelectionModel, filterName, filterActions, filterStateSelector],
+  );
+
+  const renderBottomToolbar = useCallback(
+    (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) => (
+      <Stack direction={"row"} spacing={1} alignItems="center">
+        <Typography>
+          Fetched {totalFetched} of {totalResults} total documents.
+        </Typography>
+        {renderBottomToolbarCustomActions &&
+          renderBottomToolbarCustomActions({
+            table: props.table,
+            selectedDocuments: flatData.filter((row) => rowSelectionModel[row.document_id]),
+          })}
+      </Stack>
+    ),
+    [totalFetched, totalResults, renderBottomToolbarCustomActions, flatData, rowSelectionModel],
+  );
+
+  const handleScroll = useCallback(
+    (event: UIEvent<HTMLDivElement>) => fetchMoreOnScroll(event.target as HTMLDivElement),
+    [fetchMoreOnScroll],
+  );
+
+  const renderDetailPanel = useMemo(() => {
+    if (!searchQuery || searchQuery.trim().length === 0) return undefined;
+
+    return ({ row }: { row: { original: ElasticSearchDocumentHit } }) =>
+      row.original.highlights ? (
+        <Box className="search-result-highlight">
+          {row.original.highlights.map((highlight, index) => (
+            <Typography key={`sdoc-${row.original.document_id}-highlight-${index}`} m={0.5}>
+              {parse(highlight)}
+            </Typography>
+          ))}
+        </Box>
+      ) : null;
+  }, [searchQuery]);
+
   // table
   const table = useMaterialReactTable<ElasticSearchDocumentHit>({
     data: flatData,
@@ -242,7 +312,7 @@ function SdocTableContent({
     },
     // search query
     manualFiltering: true, // turn of client-side filtering
-    onGlobalFilterChange: setSearchQuery,
+    onGlobalFilterChange: handleGlobalFilterChange,
     // selection
     enableRowSelection: true,
     onRowSelectionChange,
@@ -260,27 +330,15 @@ function SdocTableContent({
     // column visiblility
     onColumnVisibilityChange: setColumnVisibilityModel,
     // detail (highlights)
-    renderDetailPanel:
-      searchQuery && searchQuery.trim().length > 0
-        ? ({ row }) =>
-            row.original.highlights ? (
-              <Box className="search-result-highlight">
-                {row.original.highlights.map((highlight, index) => (
-                  <Typography key={`sdoc-${row.original.document_id}-highlight-${index}`} m={0.5}>
-                    {parse(highlight)}
-                  </Typography>
-                ))}
-              </Box>
-            ) : null
-        : undefined,
+    renderDetailPanel,
     // mui components
     muiTablePaperProps: {
       elevation: 0,
       style: { height: "100%", display: "flex", flexDirection: "column" },
     },
     muiTableContainerProps: {
-      ref: tableContainerRef, //get access to the table container element
-      onScroll: (event: UIEvent<HTMLDivElement>) => fetchMoreOnScroll(event.target as HTMLDivElement), //add an event listener to the table container element
+      ref: tableContainerRef,
+      onScroll: handleScroll,
       style: { flexGrow: 1 },
     },
     muiToolbarAlertBannerProps: isError
@@ -291,43 +349,12 @@ function SdocTableContent({
       : undefined,
     // toolbar
     positionToolbarAlertBanner,
-    renderTopToolbarCustomActions: renderTopToolbarCustomActions
-      ? (props) =>
-          renderTopToolbarCustomActions({
-            table: props.table,
-            selectedDocuments: flatData.filter((row) => rowSelectionModel[row.document_id]),
-          })
-      : undefined,
-    renderToolbarInternalActions: renderToolbarInternalActions
-      ? (props) =>
-          renderToolbarInternalActions({
-            table: props.table,
-            selectedDocuments: flatData.filter((row) => rowSelectionModel[row.document_id]),
-          })
-      : (props) => (
-          <SdocTableToolbar
-            table={props.table}
-            anchor={tableContainerRef}
-            filterName={filterName}
-            filterActions={filterActions}
-            filterStateSelector={filterStateSelector}
-          />
-        ),
-    renderBottomToolbarCustomActions: (props) => (
-      <Stack direction={"row"} spacing={1} alignItems="center">
-        <Typography>
-          Fetched {totalFetched} of {totalResults} total documents.
-        </Typography>
-        {renderBottomToolbarCustomActions &&
-          renderBottomToolbarCustomActions({
-            table: props.table,
-            selectedDocuments: flatData.filter((row) => rowSelectionModel[row.document_id]),
-          })}
-      </Stack>
-    ),
+    renderTopToolbarCustomActions: renderTopToolbar,
+    renderToolbarInternalActions: renderToolbarInternal,
+    renderBottomToolbarCustomActions: renderBottomToolbar,
   });
 
   return <MaterialReactTable table={table} />;
 }
 
-export default SdocTable;
+export default memo(SdocTable);

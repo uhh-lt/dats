@@ -1,5 +1,6 @@
 import { TabPanel } from "@mui/lab";
 import { Box, Button, CircularProgress, List, Stack } from "@mui/material";
+import { memo } from "react";
 import SdocHooks from "../../../../api/SdocHooks.ts";
 import { Icon, getIconComponent } from "../../../../utils/icons/iconUtils.tsx";
 import SdocListItem from "./SdocListItem.tsx";
@@ -44,4 +45,4 @@ function LinkPanelContent({ sdocId }: LinksPanelProps) {
   );
 }
 
-export default LinkPanel;
+export default memo(LinkPanel);
