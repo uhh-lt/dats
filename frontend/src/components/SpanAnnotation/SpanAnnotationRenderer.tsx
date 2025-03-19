@@ -1,10 +1,11 @@
 import { Stack } from "@mui/material";
-import { Link } from "react-router-dom";
+import { useCallback } from "react";
 import SpanAnnotationHooks from "../../api/SpanAnnotationHooks.ts";
 import { SpanAnnotationRead } from "../../api/openapi/models/SpanAnnotationRead.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
 import { AnnoActions } from "../../views/annotation/annoSlice.ts";
 import CodeRenderer from "../Code/CodeRenderer.tsx";
+import LinkWrapper from "../MUI/LinkWrapper.tsx";
 import SdocMetadataRenderer from "../Metadata/SdocMetadataRenderer.tsx";
 import SdocRenderer, { SdocRendererSharedProps } from "../SourceDocument/SdocRenderer.tsx";
 import SdocTagsRenderer from "../SourceDocument/SdocTagRenderer.tsx";
@@ -60,30 +61,25 @@ function SpanAnnotationRendererWithData({
   link,
 }: { spanAnnotation: SpanAnnotationRead } & SpanAnnotationRendererSharedProps) {
   const dispatch = useAppDispatch();
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     dispatch(AnnoActions.setSelectedAnnotationId(spanAnnotation.id));
     dispatch(AnnoActions.setVisibleUserId(spanAnnotation.user_id));
-  };
-  const content = (
-    <Stack direction="row" alignItems="center">
-      {showSdoc && <SdocRenderer sdoc={spanAnnotation.sdoc_id} {...sdocRendererProps} />}
-      {showSdocTags && <SdocTagsRenderer sdocId={spanAnnotation.sdoc_id} />}
-      {showSdocProjectMetadataId && (
-        <SdocMetadataRenderer sdocId={spanAnnotation.sdoc_id} projectMetadataId={showSdocProjectMetadataId} />
-      )}
-      {showCode && <CodeRenderer code={spanAnnotation.code_id} />}
-      {showCode && showSpanText && ": "}
-      {showSpanText && spanAnnotation.text}
-    </Stack>
+  }, [dispatch, spanAnnotation.id, spanAnnotation.user_id]);
+
+  return (
+    <LinkWrapper to={`/annotation/${spanAnnotation.sdoc_id}`} onClick={handleClick} link={!!link}>
+      <Stack direction="row" alignItems="center">
+        {showSdoc && <SdocRenderer sdoc={spanAnnotation.sdoc_id} {...sdocRendererProps} />}
+        {showSdocTags && <SdocTagsRenderer sdocId={spanAnnotation.sdoc_id} />}
+        {showSdocProjectMetadataId && (
+          <SdocMetadataRenderer sdocId={spanAnnotation.sdoc_id} projectMetadataId={showSdocProjectMetadataId} />
+        )}
+        {showCode && <CodeRenderer code={spanAnnotation.code_id} />}
+        {showCode && showSpanText && ": "}
+        {showSpanText && spanAnnotation.text}
+      </Stack>
+    </LinkWrapper>
   );
-  if (link) {
-    return (
-      <Link to={`../annotation/${spanAnnotation.sdoc_id}`} onClick={handleClick}>
-        {content}
-      </Link>
-    );
-  }
-  return content;
 }
 
 export default SpanAnnotationRenderer;

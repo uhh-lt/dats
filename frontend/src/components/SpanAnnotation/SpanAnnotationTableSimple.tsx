@@ -2,11 +2,12 @@ import { Stack } from "@mui/material";
 import {
   MRT_ColumnDef,
   MRT_ShowHideColumnsButton,
+  MRT_TableInstance,
   MRT_ToggleDensePaddingButton,
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
 import { useAuth } from "../../auth/useAuth.ts";
 import MemoRenderer2 from "../Memo/MemoRenderer2.tsx";
@@ -15,6 +16,13 @@ import SpanAnnotationRenderer from "./SpanAnnotationRenderer.tsx";
 interface SpanAnnotationTableRow {
   spanAnnoId: number;
 }
+
+const renderToolbaInternalContent = ({ table }: { table: MRT_TableInstance<SpanAnnotationTableRow> }) => (
+  <Stack direction="row" spacing={1}>
+    <MRT_ShowHideColumnsButton table={table} />
+    <MRT_ToggleDensePaddingButton table={table} />
+  </Stack>
+);
 
 function SpanAnnotationTableSimple({ spanAnnoIds }: { spanAnnoIds: number[] }) {
   // global client state (react router)
@@ -93,15 +101,10 @@ function SpanAnnotationTableSimple({ spanAnnoIds }: { spanAnnoIds: number[] }) {
     },
     // toolbar
     enableBottomToolbar: false,
-    renderToolbarInternalActions: ({ table }) => (
-      <Stack direction="row" spacing={1}>
-        <MRT_ShowHideColumnsButton table={table} />
-        <MRT_ToggleDensePaddingButton table={table} />
-      </Stack>
-    ),
+    renderToolbarInternalActions: renderToolbaInternalContent,
   });
 
   return <MaterialReactTable table={table} />;
 }
 
-export default SpanAnnotationTableSimple;
+export default memo(SpanAnnotationTableSimple);
