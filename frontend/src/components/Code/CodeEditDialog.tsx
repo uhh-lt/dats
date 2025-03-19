@@ -174,7 +174,7 @@ function CodeEditDialogContent({
     },
   });
 
-  const parentCodes = useMemo(() => codes.filter((c) => !c.is_system && c.id !== code.id), [codes, code.id]);
+  const parentCodes = useMemo(() => codes.filter((c) => c.id !== code.id), [codes, code.id]);
   const codeTree = useCodesWithLevel(parentCodes);
 
   return (
