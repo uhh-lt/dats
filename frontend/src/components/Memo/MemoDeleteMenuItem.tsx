@@ -1,5 +1,6 @@
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
+import { memo, useCallback } from "react";
 import MemoHooks from "../../api/MemoHooks.ts";
 import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI.ts";
 import { MemoEvent } from "./MemoDialog/MemoDialogAPI.ts";
@@ -20,28 +21,31 @@ function MemoDeleteMenuItem({
   onClick,
   ...props
 }: MemoEvent & MemoDeleteMenuItemProps & MenuItemProps) {
-  // snackbar
-  const deleteMutation = MemoHooks.useDeleteMemo();
-  const handleDeleteMemo: React.MouseEventHandler<HTMLLIElement> = (event) => {
-    event.stopPropagation();
-    if (memoId) {
-      ConfirmationAPI.openConfirmationDialog({
-        text: `Do you really want to remove the Memo "${memoTitle}"? This action cannot be undone!`,
-        onAccept: () => {
-          deleteMutation.mutate(
-            { memoId: memoId },
-            {
-              onSuccess: () => {
-                onClick();
+  const { mutate: deleteMemo } = MemoHooks.useDeleteMemo();
+
+  const handleDeleteMemo = useCallback(
+    (event: React.MouseEvent<HTMLLIElement>) => {
+      event.stopPropagation();
+      if (memoId) {
+        ConfirmationAPI.openConfirmationDialog({
+          text: `Do you really want to remove the Memo "${memoTitle}"? This action cannot be undone!`,
+          onAccept: () => {
+            deleteMemo(
+              { memoId: memoId },
+              {
+                onSuccess: () => {
+                  onClick();
+                },
               },
-            },
-          );
-        },
-      });
-    } else {
-      throw Error("Invalid invocation of handleDeleteTagMemo. No memo to delete.");
-    }
-  };
+            );
+          },
+        });
+      } else {
+        throw Error("Invalid invocation of handleDeleteTagMemo. No memo to delete.");
+      }
+    },
+    [memoId, memoTitle, deleteMemo, onClick],
+  );
 
   return (
     <MenuItem onClick={handleDeleteMemo} disabled={!memoId} {...props}>
@@ -53,4 +57,4 @@ function MemoDeleteMenuItem({
   );
 }
 
-export default MemoDeleteMenuItem;
+export default memo(MemoDeleteMenuItem);

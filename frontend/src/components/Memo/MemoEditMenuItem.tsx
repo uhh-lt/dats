@@ -1,5 +1,5 @@
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
-import React from "react";
+import { memo, useCallback } from "react";
 import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
 import MemoDialogAPI, { MemoEvent } from "./MemoDialog/MemoDialogAPI.ts";
 
@@ -14,11 +14,14 @@ function MemoEditMenuItem({
   onClick,
   ...props
 }: MemoEvent & MemoEditMenuItemProps & MenuItemProps) {
-  const handleClickOpen: React.MouseEventHandler<HTMLLIElement> = (event) => {
-    event.stopPropagation();
-    onClick();
-    MemoDialogAPI.openMemo({ memoId, attachedObjectId, attachedObjectType });
-  };
+  const handleClickOpen = useCallback(
+    (event: React.MouseEvent<HTMLLIElement>) => {
+      event.stopPropagation();
+      onClick();
+      MemoDialogAPI.openMemo({ memoId, attachedObjectId, attachedObjectType });
+    },
+    [memoId, attachedObjectId, attachedObjectType, onClick],
+  );
 
   return (
     <MenuItem onClick={handleClickOpen} disabled={!memoId} {...props}>
@@ -28,4 +31,4 @@ function MemoEditMenuItem({
   );
 }
 
-export default MemoEditMenuItem;
+export default memo(MemoEditMenuItem);

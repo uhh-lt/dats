@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
 import { BBoxAnnotationRead } from "../../api/openapi/models/BBoxAnnotationRead.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
@@ -71,4 +72,4 @@ function AttachedObjectRenderer({ attachedObject, attachedObjectType, link }: At
   }
 }
 
-export default AttachedObjectRenderer;
+export default memo(AttachedObjectRenderer);

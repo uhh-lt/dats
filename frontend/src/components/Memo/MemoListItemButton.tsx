@@ -1,4 +1,5 @@
 import { ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
+import { memo, useCallback } from "react";
 import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
 import MemoDialogAPI, { MemoEvent } from "./MemoDialog/MemoDialogAPI.ts";
 
@@ -7,20 +8,24 @@ interface MemoMenuItemProps {
   content?: React.ReactNode;
 }
 
-export default function MemoListItemButton({
+function MemoListItemButton({
   memoId,
   attachedObjectId,
   attachedObjectType,
   onClick,
   content,
 }: MemoEvent & MemoMenuItemProps) {
-  const handleClick = (event: React.MouseEvent) => {
-    event.stopPropagation();
-    if (onClick) {
-      onClick();
-    }
-    MemoDialogAPI.openMemo({ memoId, attachedObjectId, attachedObjectType });
-  };
+  const handleClick = useCallback(
+    (event: React.MouseEvent) => {
+      event.stopPropagation();
+      if (onClick) {
+        onClick();
+      }
+      MemoDialogAPI.openMemo({ memoId, attachedObjectId, attachedObjectType });
+    },
+    [memoId, attachedObjectId, attachedObjectType, onClick],
+  );
+
   return (
     <ListItem disablePadding>
       <ListItemButton onClick={handleClick}>
@@ -30,3 +35,5 @@ export default function MemoListItemButton({
     </ListItem>
   );
 }
+
+export default memo(MemoListItemButton);

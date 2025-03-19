@@ -1,6 +1,6 @@
 import { Stack } from "@mui/material";
 import { MRT_ShowHideColumnsButton, MRT_ToggleDensePaddingButton } from "material-react-table";
-import React from "react";
+import { memo } from "react";
 import ExporterButton from "../../Exporter/ExporterButton.tsx";
 import { MemoToolbarProps } from "./MemoToolbarProps.ts";
 
@@ -23,4 +23,4 @@ function MemoToolbarRight({
   );
 }
 
-export default MemoToolbarRight;
+export default memo(MemoToolbarRight);

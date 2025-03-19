@@ -5,12 +5,13 @@ import {
   MRT_RowSelectionState,
   MRT_RowVirtualizer,
   MRT_SortingState,
+  MRT_TableInstance,
   MRT_TableOptions,
   MRT_VisibilityState,
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useEffect, useMemo, useRef, useState, type UIEvent } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from "react";
 import { ElasticSearchDocumentHit } from "../../../api/openapi/models/ElasticSearchDocumentHit.ts";
 import { MemoColumns } from "../../../api/openapi/models/MemoColumns.ts";
 import { PaginatedElasticSearchDocumentHits } from "../../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
@@ -134,7 +135,6 @@ function SearchMemoTable({
     return [...result, attachedToCell];
   }, [tableInfo]);
 
-  // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchDocumentHits>({
     queryKey: [
       QueryKey.MEMO_TABLE,
@@ -160,9 +160,7 @@ function SearchMemoTable({
         pageSize: fetchSize,
       }),
     initialPageParam: 0,
-    getNextPageParam: (_lastGroup, groups) => {
-      return groups.length;
-    },
+    getNextPageParam: (_lastGroup, groups) => groups.length,
     refetchOnWindowFocus: false,
   });
 
@@ -185,6 +183,61 @@ function SearchMemoTable({
       console.error(error);
     }
   }, [projectId, sortingModel, filter]);
+
+  const handleTableScroll = useCallback(
+    (container: HTMLDivElement) => fetchMoreOnScroll(container),
+    [fetchMoreOnScroll],
+  );
+
+  // rendering
+  const renderBottomToolbarContent = useCallback(
+    (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) => (
+      <Stack direction={"row"} spacing={1} alignItems="center">
+        <Typography>
+          Fetched {totalFetched} of {totalResults} total memos.
+        </Typography>
+        {renderBottomToolbarCustomActions &&
+          renderBottomToolbarCustomActions({
+            table: props.table,
+            filterName,
+            anchor: tableContainerRef,
+            selectedMemos: flatData.filter((row) => rowSelectionModel[row.document_id]),
+          })}
+      </Stack>
+    ),
+    [totalFetched, totalResults, renderBottomToolbarCustomActions, filterName, flatData, rowSelectionModel],
+  );
+
+  const renderTopToolbarContent = useCallback(
+    (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) =>
+      renderTopToolbarCustomActions
+        ? renderTopToolbarCustomActions({
+            table: props.table,
+            filterName,
+            anchor: tableContainerRef,
+            selectedMemos: flatData.filter((row) => rowSelectionModel[row.document_id]),
+          })
+        : undefined,
+    [renderTopToolbarCustomActions, filterName, flatData, rowSelectionModel],
+  );
+
+  const renderToolbarInternalContent = useCallback(
+    (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) => (
+      <Stack direction="row" spacing={1} alignItems="center">
+        <MemoTableOptionsMenu
+          isSearchContent={isSearchContent}
+          onChangeIsSearchContent={(newValue) => setIsSearchContent(newValue)}
+        />
+        {renderToolbarInternalActions({
+          table: props.table,
+          filterName,
+          anchor: tableContainerRef,
+          selectedMemos: flatData.filter((row) => rowSelectionModel[row.document_id]),
+        })}
+      </Stack>
+    ),
+    [filterName, flatData, isSearchContent, renderToolbarInternalActions, rowSelectionModel],
+  );
 
   // table
   const table = useMaterialReactTable<ElasticSearchDocumentHit>({
@@ -226,14 +279,13 @@ function SearchMemoTable({
     // column resizing
     enableColumnResizing: true,
     columnResizeMode: "onEnd",
-
     // mui components
     muiTablePaperProps: {
       style: { height: "100%", display: "flex", flexDirection: "column" },
     },
     muiTableContainerProps: {
-      ref: tableContainerRef, //get access to the table container element
-      onScroll: (event: UIEvent<HTMLDivElement>) => fetchMoreOnScroll(event.target as HTMLDivElement), //add an event listener to the table container element
+      ref: tableContainerRef,
+      onScroll: (event: UIEvent<HTMLDivElement>) => handleTableScroll(event.target as HTMLDivElement),
       style: { flexGrow: 1 },
     },
     muiToolbarAlertBannerProps: isError
@@ -244,43 +296,9 @@ function SearchMemoTable({
       : undefined,
     // toolbar
     positionToolbarAlertBanner: "head-overlay",
-    renderTopToolbarCustomActions: renderTopToolbarCustomActions
-      ? (props) =>
-          renderTopToolbarCustomActions({
-            table: props.table,
-            filterName,
-            anchor: tableContainerRef,
-            selectedMemos: flatData.filter((row) => rowSelectionModel[row.document_id]),
-          })
-      : undefined,
-    renderToolbarInternalActions: (props) => (
-      <Stack direction="row" spacing={1} alignItems="center">
-        <MemoTableOptionsMenu
-          isSearchContent={isSearchContent}
-          onChangeIsSearchContent={(newValue) => setIsSearchContent(newValue)}
-        />
-        {renderToolbarInternalActions({
-          table: props.table,
-          filterName,
-          anchor: tableContainerRef,
-          selectedMemos: flatData.filter((row) => rowSelectionModel[row.document_id]),
-        })}
-      </Stack>
-    ),
-    renderBottomToolbarCustomActions: (props) => (
-      <Stack direction={"row"} spacing={1} alignItems="center">
-        <Typography>
-          Fetched {totalFetched} of {totalResults} total memos.
-        </Typography>
-        {renderBottomToolbarCustomActions &&
-          renderBottomToolbarCustomActions({
-            table: props.table,
-            filterName,
-            anchor: tableContainerRef,
-            selectedMemos: flatData.filter((row) => rowSelectionModel[row.document_id]),
-          })}
-      </Stack>
-    ),
+    renderTopToolbarCustomActions: renderTopToolbarContent,
+    renderToolbarInternalActions: renderToolbarInternalContent,
+    renderBottomToolbarCustomActions: renderBottomToolbarContent,
   });
 
   return (
@@ -293,4 +311,4 @@ function SearchMemoTable({
   );
 }
 
-export default SearchMemoTable;
+export default memo(SearchMemoTable);

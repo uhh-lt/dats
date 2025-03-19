@@ -1,6 +1,7 @@
 import StarIcon from "@mui/icons-material/Star";
 import StarOutlineIcon from "@mui/icons-material/StarOutline";
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
+import { memo, useCallback } from "react";
 import MemoHooks from "../../api/MemoHooks.ts";
 
 interface MemoStarButtonProps {
@@ -9,21 +10,19 @@ interface MemoStarButtonProps {
 }
 
 function MemoStarButton({ memoIds, isStarred, ...props }: MemoStarButtonProps & IconButtonProps) {
-  // mutation
-  const starMutation = MemoHooks.useStarMemos();
+  const { mutate: starMemos, isPending } = MemoHooks.useStarMemos();
 
-  // ui events
-  const handleClick = () => {
-    starMutation.mutate({
+  const handleClick = useCallback(() => {
+    starMemos({
       memoIds,
       isStarred,
     });
-  };
+  }, [memoIds, isStarred, starMemos]);
 
   return (
     <Tooltip title={isStarred ? "Mark as favorite" : "Mark as normal"}>
       <span>
-        <IconButton onClick={handleClick} disabled={starMutation.isPending} {...props}>
+        <IconButton onClick={handleClick} disabled={isPending} {...props}>
           {isStarred ? <StarIcon /> : <StarOutlineIcon />}
         </IconButton>
       </span>
@@ -31,4 +30,4 @@ function MemoStarButton({ memoIds, isStarred, ...props }: MemoStarButtonProps & 
   );
 }
 
-export default MemoStarButton;
+export default memo(MemoStarButton);

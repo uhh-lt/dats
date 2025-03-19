@@ -1,4 +1,5 @@
 import { StackProps } from "@mui/material";
+import { memo } from "react";
 import MemoHooks from "../../api/MemoHooks.ts";
 import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
 import { MemoRendererSharedProps, MemoRendererWithData } from "./MemoRenderer.tsx";
@@ -11,15 +12,23 @@ interface MemoRenderer2Props {
 function MemoRenderer2({
   attachedObjectType,
   attachedObjectId,
-  showIcon: icon = true,
-  showTitle: title = true,
-  showContent: content = false,
+  showIcon = true,
+  showTitle = true,
+  showContent = false,
   ...props
 }: MemoRenderer2Props & MemoRendererSharedProps & StackProps) {
   const memo = MemoHooks.useGetUserMemo(attachedObjectType, attachedObjectId);
 
   if (memo.isSuccess && memo.data !== null && memo.data !== undefined) {
-    return <MemoRendererWithData memo={memo.data} showIcon={icon} showTitle={title} showContent={content} {...props} />;
+    return (
+      <MemoRendererWithData
+        memo={memo.data}
+        showIcon={showIcon}
+        showTitle={showTitle}
+        showContent={showContent}
+        {...props}
+      />
+    );
   } else if (memo.isLoading) {
     return <div>Loading...</div>;
   } else if (memo.isError) {
@@ -29,4 +38,4 @@ function MemoRenderer2({
   }
 }
 
-export default MemoRenderer2;
+export default memo(MemoRenderer2);

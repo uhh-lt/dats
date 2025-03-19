@@ -1,5 +1,5 @@
 import { CircularProgress, Dialog } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import eventBus from "../../../EventBus.ts";
 
 import MemoHooks from "../../../api/MemoHooks.ts";
@@ -7,7 +7,7 @@ import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectTy
 import { MemoRead } from "../../../api/openapi/models/MemoRead.ts";
 import useGetMemosAttachedObject from "../useGetMemosAttachedObject.ts";
 import { MemoEvent } from "./MemoDialogAPI.ts";
-import { MemoDialogContent } from "./MemoDialogContent.tsx";
+import MemoDialogContent from "./MemoDialogContent.tsx";
 
 function MemoDialog() {
   // state
@@ -27,10 +27,10 @@ function MemoDialog() {
     };
   }, [openModal]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setOpen(false);
     setMemoEventData(undefined);
-  };
+  }, []);
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth PaperProps={{ style: { height: "66%" } }}>
@@ -129,4 +129,4 @@ function MemoDialog2({
   );
 }
 
-export default MemoDialog;
+export default memo(MemoDialog);

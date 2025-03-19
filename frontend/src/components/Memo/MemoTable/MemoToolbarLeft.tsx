@@ -1,5 +1,5 @@
 import { Stack } from "@mui/material";
-import React from "react";
+import { memo, useMemo } from "react";
 import { RootState } from "../../../store/store.ts";
 import ReduxFilterDialog from "../../FilterDialog/ReduxFilterDialog.tsx";
 import MemoDeleteButton from "../MemoDeleteButton.tsx";
@@ -16,9 +16,10 @@ function MemoToolbarLeft({
   rightChildren,
   selectedMemos,
 }: MemoToolbarProps & { leftChildren?: React.ReactNode; rightChildren?: React.ReactNode }) {
-  const selectedMemoIds = selectedMemos.map((memo) => memo.document_id);
+  const selectedMemoIds = useMemo(() => selectedMemos.map((memo) => memo.document_id), [selectedMemos]);
+
   return (
-    <Stack direction={"row"} spacing={1} alignItems="center">
+    <Stack direction="row" spacing={1} alignItems="center">
       {leftChildren}
       <ReduxFilterDialog
         anchorEl={anchor.current}
@@ -39,4 +40,4 @@ function MemoToolbarLeft({
   );
 }
 
-export default MemoToolbarLeft;
+export default memo(MemoToolbarLeft);

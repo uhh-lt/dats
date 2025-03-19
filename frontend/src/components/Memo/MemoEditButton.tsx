@@ -1,11 +1,12 @@
 import { IconButton, IconButtonProps, Tooltip, Typography } from "@mui/material";
+import { memo, useCallback } from "react";
 import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
 import MemoDialogAPI, { MemoEvent } from "./MemoDialog/MemoDialogAPI.ts";
 
 function MemoEditButton({ memoId, attachedObjectType, attachedObjectId, ...props }: MemoEvent & IconButtonProps) {
-  const handleClickOpen = () => {
+  const handleClickOpen = useCallback(() => {
     MemoDialogAPI.openMemo({ memoId, attachedObjectType, attachedObjectId });
-  };
+  }, [memoId, attachedObjectType, attachedObjectId]);
 
   return (
     <Tooltip title={"Edit memo"}>
@@ -19,4 +20,4 @@ function MemoEditButton({ memoId, attachedObjectType, attachedObjectId, ...props
   );
 }
 
-export default MemoEditButton;
+export default memo(MemoEditButton);
