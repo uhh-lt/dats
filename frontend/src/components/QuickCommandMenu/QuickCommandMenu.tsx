@@ -9,36 +9,39 @@ import {
   TextField,
   alpha,
 } from "@mui/material";
-import { SyntheticEvent, useRef } from "react";
+import { SyntheticEvent, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 import { CommandItem } from "./CommandItem";
 import { useDefaultCommands } from "./useDefaultCommands.tsx";
 
-const QuickCommandMenu = () => {
+function QuickCommandMenu() {
   // generate commands
   const { projectId } = useParams() as { projectId: string };
   const commands = useDefaultCommands(projectId);
 
   // open close the menu
-  const dispatch = useAppDispatch();
-  const isOpen = useAppSelector((state) => state.dialog.isQuickCommandMenuOpen);
-  const closeMenu = () => dispatch(CRUDDialogActions.closeQuickCommandMenu());
   const anchorRef = useRef<HTMLDivElement>(null);
+  const isOpen = useAppSelector((state) => state.dialog.isQuickCommandMenuOpen);
+  const dispatch = useAppDispatch();
+  const closeMenu = useCallback(() => dispatch(CRUDDialogActions.closeQuickCommandMenu()), [dispatch]);
 
   // handle comands
   const navigate = useNavigate();
-  const handleCommandSelect = (_event: SyntheticEvent, command: CommandItem | null) => {
-    if (command) {
-      if (command.action) {
-        command.action();
-      } else if (command.route) {
-        navigate(command.route);
+  const handleCommandSelect = useCallback(
+    (_event: SyntheticEvent, command: CommandItem | null) => {
+      if (command) {
+        if (command.action) {
+          command.action();
+        } else if (command.route) {
+          navigate(command.route);
+        }
+        closeMenu();
       }
-      closeMenu();
-    }
-  };
+    },
+    [navigate, closeMenu],
+  );
 
   return (
     <Popover
@@ -50,20 +53,20 @@ const QuickCommandMenu = () => {
         vertical: "top",
         horizontal: "center",
       }}
-      PaperProps={{
-        ref: anchorRef,
-        className: "myFlexContainer",
-        sx: {
-          width: "600px",
-          maxWidth: "90vw",
-          boxShadow: (theme) => `0 0 10px ${alpha(theme.palette.common.black, 0.2)}`,
-          backgroundColor: (theme) => theme.palette.background.paper,
-          "& .MuiAutocomplete-listbox": {
-            maxHeight: "50vh",
+      slotProps={{
+        paper: {
+          ref: anchorRef,
+          className: "myFlexContainer",
+          sx: {
+            width: "600px",
+            maxWidth: "90vw",
+            boxShadow: (theme) => `0 0 10px ${alpha(theme.palette.common.black, 0.2)}`,
+            backgroundColor: (theme) => theme.palette.background.paper,
+            "& .MuiAutocomplete-listbox": {
+              maxHeight: "50vh",
+            },
           },
         },
-      }}
-      slotProps={{
         backdrop: {
           sx: { backgroundColor: "rgba(0, 0, 0, 0.2)" },
         },
@@ -148,6 +151,6 @@ const QuickCommandMenu = () => {
       />
     </Popover>
   );
-};
+}
 
 export default QuickCommandMenu;
