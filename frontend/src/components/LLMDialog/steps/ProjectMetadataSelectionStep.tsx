@@ -2,7 +2,7 @@ import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, DialogActions, Typography } from "@mui/material";
 import { MRT_RowSelectionState } from "material-react-table";
-import { useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import LLMHooks from "../../../api/LLMHooks.ts";
 import MetadataHooks from "../../../api/MetadataHooks.ts";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
@@ -30,34 +30,64 @@ function ProjectMetadataSelectionStep() {
   }, [projectMetadata.data]);
 
   // initiate next step (get the generated prompts)
-  const determineApproachMutation = LLMHooks.useDetermineApproach();
-  const handleNext = (projectMetadata: ProjectMetadataRead[]) => () => {
-    determineApproachMutation.mutate(
-      {
-        requestBody: {
-          llm_job_type: TaskType.METADATA_EXTRACTION,
-          project_id: projectId,
-          specific_task_parameters: {
+  const { mutate: determineApproachMutation, isPending } = LLMHooks.useDetermineApproach();
+
+  const handleNext = useCallback(
+    (projectMetadata: ProjectMetadataRead[]) => {
+      determineApproachMutation(
+        {
+          requestBody: {
             llm_job_type: TaskType.METADATA_EXTRACTION,
-            project_metadata_ids: projectMetadata.map((metadata) => metadata.id),
-            sdoc_ids: selectedDocuments,
+            project_id: projectId,
+            specific_task_parameters: {
+              llm_job_type: TaskType.METADATA_EXTRACTION,
+              project_metadata_ids: projectMetadata.map((metadata) => metadata.id),
+              sdoc_ids: selectedDocuments,
+            },
           },
         },
-      },
-      {
-        onSuccess(data) {
-          dispatch(
-            CRUDDialogActions.llmDialogGoToApproachSelection({
-              approach: data,
-              tags: [],
-              metadata: projectMetadata,
-              codes: [],
-            }),
-          );
+        {
+          onSuccess(data) {
+            dispatch(
+              CRUDDialogActions.llmDialogGoToApproachSelection({
+                approach: data,
+                tags: [],
+                metadata: projectMetadata,
+                codes: [],
+              }),
+            );
+          },
         },
-      },
-    );
-  };
+      );
+    },
+    [projectId, selectedDocuments, determineApproachMutation, dispatch],
+  );
+
+  const handleBack = useCallback(() => {
+    dispatch(CRUDDialogActions.previousLLMDialogStep());
+  }, [dispatch]);
+
+  const renderBottomToolbarCustomActions = useCallback(
+    (props: { selectedProjectMetadata: ProjectMetadataRead[] }) => (
+      <DialogActions sx={{ width: "100%", p: 0 }}>
+        <Box flexGrow={1} />
+        <Button disabled={isPending} onClick={handleBack}>
+          Back
+        </Button>
+        <LoadingButton
+          variant="contained"
+          startIcon={<PlayCircleIcon />}
+          loading={isPending}
+          loadingPosition="start"
+          disabled={props.selectedProjectMetadata.length === 0}
+          onClick={() => handleNext(props.selectedProjectMetadata)}
+        >
+          Next!
+        </LoadingButton>
+      </DialogActions>
+    ),
+    [isPending, handleNext, handleBack],
+  );
 
   return (
     <>
@@ -71,30 +101,10 @@ function ProjectMetadataSelectionStep() {
         projectMetadata={filteredProjectMetadata}
         rowSelectionModel={rowSelectionModel}
         onRowSelectionChange={setRowSelectionModel}
-        renderBottomToolbarCustomActions={(props) => (
-          <DialogActions sx={{ width: "100%", p: 0 }}>
-            <Box flexGrow={1} />
-            <Button
-              disabled={determineApproachMutation.isPending}
-              onClick={() => dispatch(CRUDDialogActions.previousLLMDialogStep())}
-            >
-              Back
-            </Button>
-            <LoadingButton
-              variant="contained"
-              startIcon={<PlayCircleIcon />}
-              loading={determineApproachMutation.isPending}
-              loadingPosition="start"
-              disabled={props.selectedProjectMetadata.length === 0}
-              onClick={handleNext(props.selectedProjectMetadata)}
-            >
-              Next!
-            </LoadingButton>
-          </DialogActions>
-        )}
+        renderBottomToolbarCustomActions={renderBottomToolbarCustomActions}
       />
     </>
   );
 }
 
-export default ProjectMetadataSelectionStep;
+export default memo(ProjectMetadataSelectionStep);

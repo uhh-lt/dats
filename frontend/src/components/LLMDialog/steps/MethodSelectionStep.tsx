@@ -8,6 +8,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { useCallback } from "react";
 import { TaskType } from "../../../api/openapi/models/TaskType.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { CRUDDialogActions } from "../../dialogSlice.ts";
@@ -15,12 +16,9 @@ import LLMUtterance from "./LLMUtterance.tsx";
 
 function MethodSelectionStep() {
   const dispatch = useAppDispatch();
-  const selectMethod = (method: TaskType) => () => {
-    dispatch(CRUDDialogActions.llmDialogGoToDataSelection({ method }));
-  };
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     dispatch(CRUDDialogActions.closeLLMDialog());
-  };
+  }, [dispatch]);
 
   return (
     <>
@@ -30,22 +28,22 @@ function MethodSelectionStep() {
         </LLMUtterance>
         <Stack direction="row" columnGap={2} mt={2}>
           <MethodButton
-            onClick={selectMethod(TaskType.DOCUMENT_TAGGING)}
+            method={TaskType.DOCUMENT_TAGGING}
             headline="Document Tagging"
             description="I will classify your documents!"
           />
           <MethodButton
-            onClick={selectMethod(TaskType.METADATA_EXTRACTION)}
+            method={TaskType.METADATA_EXTRACTION}
             headline="Metadata Extraction"
             description="I will extract metadata from your documents!"
           />
           <MethodButton
-            onClick={selectMethod(TaskType.ANNOTATION)}
+            method={TaskType.ANNOTATION}
             headline="Annotation"
             description="I will annotate your documents!"
           />
           <MethodButton
-            onClick={selectMethod(TaskType.SENTENCE_ANNOTATION)}
+            method={TaskType.SENTENCE_ANNOTATION}
             headline="Sentence Annotation"
             description="I will annotate your documents!"
           />
@@ -59,15 +57,20 @@ function MethodSelectionStep() {
 }
 
 interface MethodButtonProps {
-  onClick: () => void;
+  method: TaskType;
   headline: string;
   description: string;
 }
 
-function MethodButton({ onClick, headline, description }: MethodButtonProps) {
+function MethodButton({ method, headline, description }: MethodButtonProps) {
+  const dispatch = useAppDispatch();
+  const handleClick = useCallback(() => {
+    dispatch(CRUDDialogActions.llmDialogGoToDataSelection({ method }));
+  }, [dispatch, method]);
+
   return (
     <Card elevation={5} style={{ width: "100%" }} sx={{ backgroundColor: "primary.main" }}>
-      <CardActionArea onClick={onClick}>
+      <CardActionArea onClick={handleClick}>
         <CardContent style={{ textAlign: "center" }} sx={{ color: "info.contrastText", p: 3 }}>
           <h3 style={{ marginTop: 0 }}>{headline}</h3>
           {description}

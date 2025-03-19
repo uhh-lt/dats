@@ -1,4 +1,5 @@
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
+import { useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import LLMHooks from "../../../../api/LLMHooks.ts";
 import { ApproachType } from "../../../../api/openapi/models/ApproachType.ts";
@@ -55,9 +56,9 @@ function SentenceAnnotationResultStepContent({
 }) {
   // actions
   const dispatch = useAppDispatch();
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     dispatch(CRUDDialogActions.closeLLMDialog());
-  };
+  }, [dispatch]);
 
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
   const navigate = useNavigate();

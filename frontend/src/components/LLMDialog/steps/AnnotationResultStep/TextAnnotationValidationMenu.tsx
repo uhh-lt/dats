@@ -2,6 +2,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import {
   Autocomplete,
+  AutocompleteCloseReason,
   Box,
   createFilterOptions,
   IconButton,
@@ -12,9 +13,8 @@ import {
   PopoverPosition,
   TextField,
   Tooltip,
-  UseAutocompleteProps,
 } from "@mui/material";
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from "react";
+import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useState } from "react";
 import CodeHooks from "../../../../api/CodeHooks.ts";
 import { CodeRead } from "../../../../api/openapi/models/CodeRead.ts";
 import { SpanAnnotationRead } from "../../../../api/openapi/models/SpanAnnotationRead.ts";
@@ -49,35 +49,43 @@ const TextAnnotationValidationMenu = forwardRef<TextAnnotationValidationMenuHand
 
     // computed
     const codeOptions: ICodeFilter[] = useMemo(() => {
-      return codesForSelection.map((c) => {
-        return {
-          ...c,
-          title: c.name,
-        };
-      });
+      return codesForSelection.map((c) => ({
+        ...c,
+        title: c.name,
+      }));
     }, [codesForSelection]);
 
-    // exposed methods (via ref)
-    useImperativeHandle(ref, () => ({
-      open: openCodeSelector,
-    }));
-
     // methods
-    const openCodeSelector = (position: PopoverPosition, annotations: SpanAnnotationRead[] | undefined = undefined) => {
-      setEditingAnnotation(undefined);
-      setAnnotationsToEdit(annotations);
-      setShowCodeSelection(annotations === undefined);
-      setIsPopoverOpen(true);
-      setPosition(position);
-    };
+    const openCodeSelector = useCallback(
+      (position: PopoverPosition, annotations: SpanAnnotationRead[] | undefined = undefined) => {
+        setEditingAnnotation(undefined);
+        setAnnotationsToEdit(annotations);
+        setShowCodeSelection(annotations === undefined);
+        setIsPopoverOpen(true);
+        setPosition(position);
+      },
+      [],
+    );
 
-    const closeCodeSelector = (reason?: "backdropClick" | "escapeKeyDown") => {
-      setShowCodeSelection(false);
-      setIsPopoverOpen(false);
-      setIsAutoCompleteOpen(false);
-      setAutoCompleteValue(null);
-      if (onClose) onClose(reason);
-    };
+    const closeCodeSelector = useCallback(
+      (reason?: "backdropClick" | "escapeKeyDown") => {
+        setShowCodeSelection(false);
+        setIsPopoverOpen(false);
+        setIsAutoCompleteOpen(false);
+        setAutoCompleteValue(null);
+        if (onClose) onClose(reason);
+      },
+      [onClose],
+    );
+
+    // exposed methods (via ref)
+    useImperativeHandle(
+      ref,
+      () => ({
+        open: openCodeSelector,
+      }),
+      [openCodeSelector],
+    );
 
     // effects
     // automatically open the autocomplete soon after the code selection is shown
@@ -90,35 +98,57 @@ const TextAnnotationValidationMenu = forwardRef<TextAnnotationValidationMenuHand
     }, [showCodeSelection]);
 
     // event handlers
-    const handleChange: UseAutocompleteProps<ICodeFilter, false, false, false>["onChange"] = (_event, newValue) => {
-      if (!editingAnnotation) {
-        console.error("editingAnnotation is undefined");
-        return;
-      }
+    const handleChange = useCallback(
+      (_: React.SyntheticEvent, newValue: ICodeFilter | null) => {
+        if (!editingAnnotation) {
+          console.error("editingAnnotation is undefined");
+          return;
+        }
+        if (newValue === null) {
+          return;
+        }
+        onEdit(editingAnnotation, newValue);
+        closeCodeSelector();
+      },
+      [editingAnnotation, onEdit, closeCodeSelector],
+    );
 
-      if (newValue === null) {
-        return;
-      }
-
-      onEdit(editingAnnotation!, newValue);
-      closeCodeSelector();
-    };
-
-    const handleEdit = (annotationToEdit: SpanAnnotationRead, code: CodeRead) => {
+    const handleEditAnnotation = useCallback((annotationToEdit: SpanAnnotationRead, code: CodeRead) => {
       setEditingAnnotation(annotationToEdit);
       setAutoCompleteValue({ ...code, title: code.name });
       setShowCodeSelection(true);
-    };
+    }, []);
 
-    const handleDelete = (annotation: SpanAnnotationRead) => {
-      onDelete(annotation);
-      closeCodeSelector();
-    };
+    const handleDeleteAnnotation = useCallback(
+      (annotation: SpanAnnotationRead) => {
+        onDelete(annotation);
+        closeCodeSelector();
+      },
+      [onDelete, closeCodeSelector],
+    );
+
+    const handlePopoverClose = useCallback(
+      (_event: unknown, reason: "backdropClick" | "escapeKeyDown") => {
+        if (closeCodeSelector) {
+          closeCodeSelector(reason);
+        }
+      },
+      [closeCodeSelector],
+    );
+
+    const handleAutoCompleteClose = useCallback(
+      (_: React.SyntheticEvent, reason: AutocompleteCloseReason) => {
+        if (reason === "escape") {
+          closeCodeSelector("escapeKeyDown");
+        }
+      },
+      [closeCodeSelector],
+    );
 
     return (
       <Popover
         open={isPopoverOpen}
-        onClose={(_event, reason) => closeCodeSelector(reason)}
+        onClose={handlePopoverClose}
         anchorPosition={position}
         anchorReference="anchorPosition"
         anchorOrigin={{
@@ -136,50 +166,44 @@ const TextAnnotationValidationMenu = forwardRef<TextAnnotationValidationMenuHand
               <AnnotationMenuListItem
                 key={annotation.id}
                 annotation={annotation}
-                handleDelete={handleDelete}
-                handleEdit={handleEdit}
+                handleDelete={handleDeleteAnnotation}
+                handleEdit={handleEditAnnotation}
               />
             ))}
           </List>
         ) : (
-          <>
-            <Autocomplete
-              value={autoCompleteValue}
-              onChange={handleChange}
-              filterOptions={(options, params) => {
-                return filter(options, params);
-              }}
-              options={codeOptions}
-              getOptionLabel={(option) => {
-                // Value selected with enter, right from the input
-                if (typeof option === "string") {
-                  return option;
-                }
-                return option.name;
-              }}
-              renderOption={(props, option) => (
-                <li {...props} key={option.id}>
-                  <Box style={{ width: 20, height: 20, backgroundColor: option.color, marginRight: 8 }}></Box>{" "}
-                  {option.title}
-                </li>
-              )}
-              sx={{ width: 300 }}
-              renderInput={(params) => <TextField autoFocus {...params} />}
-              autoHighlight
-              selectOnFocus
-              clearOnBlur
-              handleHomeEndKeys
-              open={isAutoCompleteOpen}
-              onClose={(_event, reason) => reason === "escape" && closeCodeSelector("escapeKeyDown")}
-            />
-          </>
+          <Autocomplete
+            value={autoCompleteValue}
+            onChange={handleChange}
+            filterOptions={(options, params) => filter(options, params)}
+            options={codeOptions}
+            getOptionLabel={(option) => {
+              // Value selected with enter, right from the input
+              if (typeof option === "string") {
+                return option;
+              }
+              return option.name;
+            }}
+            renderOption={(props, option) => (
+              <li {...props} key={option.id}>
+                <Box style={{ width: 20, height: 20, backgroundColor: option.color, marginRight: 8 }}></Box>
+                {option.title}
+              </li>
+            )}
+            sx={{ width: 300 }}
+            renderInput={(params) => <TextField autoFocus {...params} />}
+            autoHighlight
+            selectOnFocus
+            clearOnBlur
+            handleHomeEndKeys
+            open={isAutoCompleteOpen}
+            onClose={handleAutoCompleteClose}
+          />
         )}
       </Popover>
     );
   },
 );
-
-export default TextAnnotationValidationMenu;
 
 interface AnnotationMenuListItemProps {
   annotation: SpanAnnotationRead;
@@ -189,18 +213,29 @@ interface AnnotationMenuListItemProps {
 
 function AnnotationMenuListItem({ annotation, handleEdit, handleDelete }: AnnotationMenuListItemProps) {
   const code = CodeHooks.useGetCode(annotation.code_id);
+
+  const handleEditClick = useCallback(() => {
+    if (code.data) {
+      handleEdit(annotation, code.data);
+    }
+  }, [annotation, code.data, handleEdit]);
+
+  const handleDeleteClick = useCallback(() => {
+    handleDelete(annotation);
+  }, [annotation, handleDelete]);
+
   if (code.isSuccess) {
     return (
       <ListItem>
         <Box style={{ width: 20, height: 20, backgroundColor: code.data.color, marginRight: 8 }} />
         <ListItemText primary={code.data.name} />
         <Tooltip title="Delete">
-          <IconButton onClick={() => handleDelete(annotation)}>
+          <IconButton onClick={handleDeleteClick}>
             <DeleteIcon />
           </IconButton>
         </Tooltip>
         <Tooltip title="Edit">
-          <IconButton edge="end" onClick={() => handleEdit(annotation, code.data)}>
+          <IconButton edge="end" onClick={handleEditClick}>
             <EditIcon />
           </IconButton>
         </Tooltip>
@@ -209,3 +244,5 @@ function AnnotationMenuListItem({ annotation, handleEdit, handleDelete }: Annota
   }
   return null;
 }
+
+export default memo(TextAnnotationValidationMenu);

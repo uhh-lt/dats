@@ -1,4 +1,5 @@
 import { Box, Stack, StackProps } from "@mui/material";
+import { memo } from "react";
 import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 
 function LLMUtterance({
@@ -15,4 +16,4 @@ function LLMUtterance({
   );
 }
 
-export default LLMUtterance;
+export default memo(LLMUtterance);

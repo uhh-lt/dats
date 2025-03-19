@@ -1,4 +1,5 @@
 import { Dialog, DialogTitle, Divider, Step, StepLabel, Stepper } from "@mui/material";
+import { memo, useMemo } from "react";
 import { TaskType } from "../../api/openapi/models/TaskType.ts";
 import { useAppSelector } from "../../plugins/ReduxHooks.ts";
 import AnnotationResultStep from "./steps/AnnotationResultStep/AnnotationResultStep.tsx";
@@ -93,22 +94,26 @@ function LLMDialog() {
   const method = useAppSelector((state) => state.dialog.llmMethod);
   const step = useAppSelector((state) => state.dialog.llmStep);
 
+  const stepLabels = useMemo(
+    () =>
+      steps[method || TaskType.DOCUMENT_TAGGING].map((label) => (
+        <Step key={label}>
+          <StepLabel>{label}</StepLabel>
+        </Step>
+      )),
+    [method],
+  );
+
   return (
     <Dialog open={open} maxWidth="lg" fullWidth>
       <DialogTitle>LLM Assistant {method && <> - {title[method]}</>}</DialogTitle>
-
       <Stepper activeStep={step} sx={{ px: 2, pb: 2 }}>
-        {steps[method || TaskType.DOCUMENT_TAGGING].map((label) => (
-          <Step key={label}>
-            <StepLabel>{label}</StepLabel>
-          </Step>
-        ))}
+        {stepLabels}
       </Stepper>
       <Divider />
-
       {contentDict[step][method || TaskType.DOCUMENT_TAGGING]}
     </Dialog>
   );
 }
 
-export default LLMDialog;
+export default memo(LLMDialog);
