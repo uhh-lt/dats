@@ -4,6 +4,7 @@ import { useState } from "react";
 import { XYPosition } from "reactflow";
 import MetadataHooks from "../../../api/MetadataHooks.ts";
 import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
+import { SpanColumns } from "../../../api/openapi/models/SpanColumns.ts";
 import SpanAnnotationTable from "../../../components/SpanAnnotation/SpanAnnotationTable/SpanAnnotationTable.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
@@ -66,12 +67,17 @@ function AddSpanAnnotationNodeDialogContent({
   const [sortingModel, setSortingModel] = useState<MRT_SortingState>([]);
   const [visibilityModel, setVisibilityModel] = useState<MRT_VisibilityState>(() =>
     // init visibility (disable metadata)
-    metadata.reduce((acc, curr) => {
-      return {
-        ...acc,
-        [curr.id]: false,
-      };
-    }, {}),
+    metadata.reduce(
+      (acc, curr) => {
+        return {
+          ...acc,
+          [curr.id]: false,
+        };
+      },
+      {
+        [SpanColumns.SP_MEMO_CONTENT]: false,
+      },
+    ),
   );
   const selectedAnnotationIds = Object.keys(rowSelectionModel).map((id) => parseInt(id));
 

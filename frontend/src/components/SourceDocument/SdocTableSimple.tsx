@@ -87,7 +87,7 @@ function SdocTableSimple({ sdocIds }: { sdocIds: number[] }) {
     // hide columns per default
     initialState: {
       columnVisibility: {
-        id: false,
+        Memo: false,
       },
     },
     // toolbar

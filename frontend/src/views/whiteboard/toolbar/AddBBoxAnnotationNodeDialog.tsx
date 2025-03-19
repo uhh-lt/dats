@@ -3,6 +3,7 @@ import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "ma
 import { memo, useCallback, useMemo, useState } from "react";
 import { XYPosition } from "reactflow";
 import MetadataHooks from "../../../api/MetadataHooks.ts";
+import { BBoxColumns } from "../../../api/openapi/models/BBoxColumns.ts";
 import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
 import BBoxAnnotationTable from "../../../components/BBoxAnnotation/BBoxAnnotationTable/BBoxAnnotationTable.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
@@ -67,12 +68,17 @@ const AddBBoxAnnotationNodeDialogContent = memo(function AddBBoxAnnotationNodeDi
   const [sortingModel, setSortingModel] = useState<MRT_SortingState>([]);
   const [visibilityModel, setVisibilityModel] = useState<MRT_VisibilityState>(() =>
     // init visibility (disable metadata)
-    metadata.reduce((acc, curr) => {
-      return {
-        ...acc,
-        [curr.id]: false,
-      };
-    }, {}),
+    metadata.reduce(
+      (acc, curr) => {
+        return {
+          ...acc,
+          [curr.id]: false,
+        };
+      },
+      {
+        [BBoxColumns.BB_MEMO_CONTENT]: false,
+      },
+    ),
   );
 
   // memoized selected annotation ids
