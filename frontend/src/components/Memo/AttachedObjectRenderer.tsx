@@ -9,8 +9,8 @@ import { SourceDocumentRead } from "../../api/openapi/models/SourceDocumentRead.
 import { SpanAnnotationRead } from "../../api/openapi/models/SpanAnnotationRead.ts";
 import BBoxAnnotationRenderer from "../BBoxAnnotation/BBoxAnnotationRenderer.tsx";
 import CodeRenderer from "../Code/CodeRenderer.tsx";
+import ProjectRenderer from "../Project/ProjectRenderer.tsx";
 import SentenceAnnotationRenderer from "../SentenceAnnotation/SentenceAnnotationRenderer.tsx";
-import ProjectRenderer from "../SourceDocument/ProjectRenderer.tsx";
 import SdocRenderer from "../SourceDocument/SdocRenderer.tsx";
 import SpanAnnotationRenderer from "../SpanAnnotation/SpanAnnotationRenderer.tsx";
 import TagRenderer from "../Tag/TagRenderer.tsx";
