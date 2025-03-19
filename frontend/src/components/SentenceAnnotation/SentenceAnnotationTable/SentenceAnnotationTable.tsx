@@ -28,7 +28,7 @@ import MemoRenderer2 from "../../Memo/MemoRenderer2.tsx";
 import SdocMetadataRenderer from "../../Metadata/SdocMetadataRenderer.tsx";
 import SdocTagsRenderer from "../../SourceDocument/SdocTagRenderer.tsx";
 import UserRenderer from "../../User/UserRenderer.tsx";
-import SATToolbar, { SEATToolbarProps } from "./SEATToolbar.tsx";
+import SEATToolbar, { SEATToolbarProps } from "./SEATToolbar.tsx";
 import SdocAnnotationLink from "./SdocAnnotationLink.tsx";
 import { useInitSEATFilterSlice } from "./useInitSEATFilterSlice.ts";
 
@@ -68,7 +68,7 @@ function SentenceAnnotationTable({
   onColumnVisibilityChange,
   cardProps,
   positionToolbarAlertBanner = "top",
-  renderToolbarInternalActions = SATToolbar,
+  renderToolbarInternalActions = SEATToolbar,
   renderTopToolbarCustomActions,
   renderBottomToolbarCustomActions,
 }: SentenceAnnotationTableProps) {

@@ -190,17 +190,14 @@ function SearchMemoTable({
   );
 
   // rendering
-  const renderTopToolbarContent = useMemo(
-    () =>
-      renderTopToolbarCustomActions
-        ? (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) =>
-            renderTopToolbarCustomActions({
-              table: props.table,
-              filterName,
-              anchor: tableContainerRef,
-              selectedMemos: flatData.filter((row) => rowSelectionModel[row.document_id]),
-            })
-        : undefined,
+  const renderTopToolbarContent = useCallback(
+    (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) =>
+      renderTopToolbarCustomActions({
+        table: props.table,
+        filterName,
+        anchor: tableContainerRef,
+        selectedMemos: flatData.filter((row) => rowSelectionModel[row.document_id]),
+      }),
     [renderTopToolbarCustomActions, filterName, flatData, rowSelectionModel],
   );
 

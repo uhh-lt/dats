@@ -1,5 +1,5 @@
 import { Stack } from "@mui/material";
-import { memo, useMemo } from "react";
+import { useMemo } from "react";
 import { RootState } from "../../../store/store.ts";
 import ReduxFilterDialog from "../../FilterDialog/ReduxFilterDialog.tsx";
 import MemoDeleteButton from "../MemoDeleteButton.tsx";
@@ -40,4 +40,4 @@ function MemoToolbarLeft({
   );
 }
 
-export default memo(MemoToolbarLeft);
+export default MemoToolbarLeft;
