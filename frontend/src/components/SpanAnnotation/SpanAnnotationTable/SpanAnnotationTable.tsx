@@ -5,12 +5,13 @@ import {
   MRT_RowSelectionState,
   MRT_RowVirtualizer,
   MRT_SortingState,
+  MRT_TableInstance,
   MRT_TableOptions,
   MRT_VisibilityState,
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useEffect, useMemo, useRef } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { SpanAnnotationRow } from "../../../api/openapi/models/SpanAnnotationRow.ts";
@@ -209,6 +210,56 @@ function SpanAnnotationTable({
     }
   }, [projectId, sortingModel]);
 
+  // Table event handlers
+  const handleTableScroll = useCallback(
+    (event: UIEvent<HTMLDivElement>) => fetchMoreOnScroll(event.target as HTMLDivElement),
+    [fetchMoreOnScroll],
+  );
+
+  // rendering
+  const renderTopToolbarContent = useMemo(
+    () =>
+      renderTopToolbarCustomActions
+        ? (props: { table: MRT_TableInstance<SpanAnnotationRow> }) =>
+            renderTopToolbarCustomActions({
+              table: props.table,
+              filterName,
+              anchor: tableContainerRef,
+              selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
+            })
+        : undefined,
+    [renderTopToolbarCustomActions, filterName, flatData, rowSelectionModel],
+  );
+
+  const renderBottomToolbarContent = useCallback(
+    (props: { table: MRT_TableInstance<SpanAnnotationRow> }) => (
+      <Stack direction={"row"} spacing={1} alignItems="center">
+        <Typography>
+          Fetched {totalFetched} of {totalResults} total rows.
+        </Typography>
+        {renderBottomToolbarCustomActions &&
+          renderBottomToolbarCustomActions({
+            table: props.table,
+            filterName,
+            anchor: tableContainerRef,
+            selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
+          })}
+      </Stack>
+    ),
+    [filterName, flatData, renderBottomToolbarCustomActions, rowSelectionModel, totalFetched, totalResults],
+  );
+
+  const renderToolbarActionsContent = useCallback(
+    (props: { table: MRT_TableInstance<SpanAnnotationRow> }) =>
+      renderToolbarInternalActions({
+        table: props.table,
+        filterName,
+        anchor: tableContainerRef,
+        selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
+      }),
+    [renderToolbarInternalActions, filterName, flatData, rowSelectionModel],
+  );
+
   // table
   const table = useMaterialReactTable<SpanAnnotationRow>({
     data: flatData,
@@ -247,7 +298,7 @@ function SpanAnnotationTable({
     },
     muiTableContainerProps: {
       ref: tableContainerRef, //get access to the table container element
-      onScroll: (event) => fetchMoreOnScroll(event.target as HTMLDivElement), //add an event listener to the table container element
+      onScroll: handleTableScroll,
       style: { flexGrow: 1 },
     },
     muiToolbarAlertBannerProps: isError
@@ -258,36 +309,9 @@ function SpanAnnotationTable({
       : undefined,
     // toolbar
     positionToolbarAlertBanner,
-    renderTopToolbarCustomActions: renderTopToolbarCustomActions
-      ? (props) =>
-          renderTopToolbarCustomActions({
-            table: props.table,
-            filterName,
-            anchor: tableContainerRef,
-            selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
-          })
-      : undefined,
-    renderToolbarInternalActions: (props) =>
-      renderToolbarInternalActions({
-        table: props.table,
-        filterName,
-        anchor: tableContainerRef,
-        selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
-      }),
-    renderBottomToolbarCustomActions: (props) => (
-      <Stack direction={"row"} spacing={1} alignItems="center">
-        <Typography>
-          Fetched {totalFetched} of {totalResults} total rows.
-        </Typography>
-        {renderBottomToolbarCustomActions &&
-          renderBottomToolbarCustomActions({
-            table: props.table,
-            filterName,
-            anchor: tableContainerRef,
-            selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
-          })}
-      </Stack>
-    ),
+    renderTopToolbarCustomActions: renderTopToolbarContent,
+    renderToolbarInternalActions: renderToolbarActionsContent,
+    renderBottomToolbarCustomActions: renderBottomToolbarContent,
   });
 
   return (
@@ -300,4 +324,4 @@ function SpanAnnotationTable({
   );
 }
 
-export default SpanAnnotationTable;
+export default memo(SpanAnnotationTable);

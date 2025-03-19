@@ -96,6 +96,41 @@ function TagTable({
     return { projectTagsMap, projectTagRows };
   }, [projectTags.data]);
 
+  // rendering
+  const renderTopToolbarContent = useMemo(
+    () =>
+      renderTopToolbarCustomActions
+        ? (props: { table: MRT_TableInstance<TagTableRow> }) =>
+            renderTopToolbarCustomActions({
+              table: props.table,
+              selectedTags: Object.keys(rowSelectionModel).map((tagId) => projectTagsMap[tagId]),
+            })
+        : undefined,
+    [projectTagsMap, rowSelectionModel, renderTopToolbarCustomActions],
+  );
+  const renderBottomToolbarContent = useMemo(
+    () =>
+      renderBottomToolbarCustomActions
+        ? (props: { table: MRT_TableInstance<TagTableRow> }) =>
+            renderBottomToolbarCustomActions({
+              table: props.table,
+              selectedTags: Object.keys(rowSelectionModel).map((tagId) => projectTagsMap[tagId]),
+            })
+        : undefined,
+    [projectTagsMap, rowSelectionModel, renderBottomToolbarCustomActions],
+  );
+  const renderToolbarActionsContent = useMemo(
+    () =>
+      renderToolbarInternalActions
+        ? (props: { table: MRT_TableInstance<TagTableRow> }) =>
+            renderToolbarInternalActions({
+              table: props.table,
+              selectedTags: Object.keys(rowSelectionModel).map((tagId) => projectTagsMap[tagId]),
+            })
+        : undefined,
+    [projectTagsMap, rowSelectionModel, renderToolbarInternalActions],
+  );
+
   // table
   const table = useMaterialReactTable<TagTableRow>({
     data: projectTagRows,
@@ -132,27 +167,9 @@ function TagTable({
     onRowSelectionChange,
     // toolbar
     enableBottomToolbar: !!renderBottomToolbarCustomActions,
-    renderTopToolbarCustomActions: renderTopToolbarCustomActions
-      ? (props) =>
-          renderTopToolbarCustomActions({
-            table: props.table,
-            selectedTags: Object.keys(rowSelectionModel).map((tagId) => projectTagsMap[tagId]),
-          })
-      : undefined,
-    renderToolbarInternalActions: renderToolbarInternalActions
-      ? (props) =>
-          renderToolbarInternalActions({
-            table: props.table,
-            selectedTags: Object.keys(rowSelectionModel).map((tagId) => projectTagsMap[tagId]),
-          })
-      : undefined,
-    renderBottomToolbarCustomActions: renderBottomToolbarCustomActions
-      ? (props) =>
-          renderBottomToolbarCustomActions({
-            table: props.table,
-            selectedTags: Object.keys(rowSelectionModel).map((tagId) => projectTagsMap[tagId]),
-          })
-      : undefined,
+    renderTopToolbarCustomActions: renderTopToolbarContent,
+    renderToolbarInternalActions: renderToolbarActionsContent,
+    renderBottomToolbarCustomActions: renderBottomToolbarContent,
     // hide columns per default
     initialState: {
       columnVisibility: {

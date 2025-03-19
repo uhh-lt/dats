@@ -221,6 +221,21 @@ function BBoxAnnotationTable({
   );
 
   // rendering
+  const renderTopToolbarContent = useMemo(
+    () =>
+      renderTopToolbarCustomActions
+        ? (props: { table: MRT_TableInstance<BBoxAnnotationRow> }) =>
+            renderTopToolbarCustomActions({
+              table: props.table,
+              filterName,
+              anchor: tableContainerRef,
+              selectedUserId: selectedUserId,
+              selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
+            })
+        : undefined,
+    [renderTopToolbarCustomActions, filterName, selectedUserId, flatData, rowSelectionModel],
+  );
+
   const renderBottomToolbarContent = useCallback(
     (props: { table: MRT_TableInstance<BBoxAnnotationRow> }) => (
       <Stack direction={"row"} spacing={1} alignItems="center">
@@ -248,21 +263,7 @@ function BBoxAnnotationTable({
     ],
   );
 
-  const renderTopToolbarContent = useCallback(
-    (props: { table: MRT_TableInstance<BBoxAnnotationRow> }) =>
-      renderTopToolbarCustomActions
-        ? renderTopToolbarCustomActions({
-            table: props.table,
-            filterName,
-            anchor: tableContainerRef,
-            selectedUserId: selectedUserId,
-            selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
-          })
-        : undefined,
-    [renderTopToolbarCustomActions, filterName, selectedUserId, flatData, rowSelectionModel],
-  );
-
-  const renderToolbarInternalContent = useCallback(
+  const renderToolbarActionsContent = useCallback(
     (props: { table: MRT_TableInstance<BBoxAnnotationRow> }) =>
       renderToolbarInternalActions({
         table: props.table,
@@ -324,7 +325,7 @@ function BBoxAnnotationTable({
     // toolbar
     positionToolbarAlertBanner,
     renderTopToolbarCustomActions: renderTopToolbarContent,
-    renderToolbarInternalActions: renderToolbarInternalContent,
+    renderToolbarInternalActions: renderToolbarActionsContent,
     renderBottomToolbarCustomActions: renderBottomToolbarContent,
   });
 

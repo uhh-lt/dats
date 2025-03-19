@@ -5,12 +5,13 @@ import {
   MRT_RowSelectionState,
   MRT_RowVirtualizer,
   MRT_SortingState,
+  MRT_TableInstance,
   MRT_TableOptions,
   MRT_VisibilityState,
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useEffect, useMemo, useRef } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
 import { QueryKey } from "../../../api/QueryKey.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { SentAnnoColumns } from "../../../api/openapi/models/SentAnnoColumns.ts";
@@ -217,6 +218,54 @@ function SentenceAnnotationTable({
     }
   }, [projectId, sortingModel]);
 
+  // Table event handlers
+  const handleTableScroll = useCallback(
+    (event: UIEvent<HTMLDivElement>) => fetchMoreOnScroll(event.target as HTMLDivElement),
+    [fetchMoreOnScroll],
+  );
+
+  // rendering
+  const renderTopToolbarContent = useMemo(
+    () =>
+      renderTopToolbarCustomActions
+        ? (props: { table: MRT_TableInstance<SentenceAnnotationRow> }) =>
+            renderTopToolbarCustomActions({
+              table: props.table,
+              filterName,
+              anchor: tableContainerRef,
+              selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
+            })
+        : undefined,
+    [renderTopToolbarCustomActions, filterName, flatData, rowSelectionModel],
+  );
+  const renderBottomToolbarContent = useCallback(
+    (props: { table: MRT_TableInstance<SentenceAnnotationRow> }) => (
+      <Stack direction={"row"} spacing={1} alignItems="center" width="100%">
+        <Typography>
+          Fetched {totalFetched} of {totalResults} total rows.
+        </Typography>
+        {renderBottomToolbarCustomActions &&
+          renderBottomToolbarCustomActions({
+            table: props.table,
+            filterName,
+            anchor: tableContainerRef,
+            selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
+          })}
+      </Stack>
+    ),
+    [filterName, flatData, renderBottomToolbarCustomActions, rowSelectionModel, totalFetched, totalResults],
+  );
+  const renderToolbarActionsContent = useCallback(
+    (props: { table: MRT_TableInstance<SentenceAnnotationRow> }) =>
+      renderToolbarInternalActions({
+        table: props.table,
+        filterName,
+        anchor: tableContainerRef,
+        selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
+      }),
+    [renderToolbarInternalActions, filterName, flatData, rowSelectionModel],
+  );
+
   // table
   const table = useMaterialReactTable<SentenceAnnotationRow>({
     data: flatData,
@@ -255,7 +304,7 @@ function SentenceAnnotationTable({
     },
     muiTableContainerProps: {
       ref: tableContainerRef, //get access to the table container element
-      onScroll: (event) => fetchMoreOnScroll(event.target as HTMLDivElement), //add an event listener to the table container element
+      onScroll: handleTableScroll,
       style: { flexGrow: 1 },
     },
     muiToolbarAlertBannerProps: isError
@@ -266,36 +315,9 @@ function SentenceAnnotationTable({
       : undefined,
     // toolbar
     positionToolbarAlertBanner,
-    renderTopToolbarCustomActions: renderTopToolbarCustomActions
-      ? (props) =>
-          renderTopToolbarCustomActions({
-            table: props.table,
-            filterName,
-            anchor: tableContainerRef,
-            selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
-          })
-      : undefined,
-    renderToolbarInternalActions: (props) =>
-      renderToolbarInternalActions({
-        table: props.table,
-        filterName,
-        anchor: tableContainerRef,
-        selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
-      }),
-    renderBottomToolbarCustomActions: (props) => (
-      <Stack direction={"row"} spacing={1} alignItems="center" width="100%">
-        <Typography>
-          Fetched {totalFetched} of {totalResults} total rows.
-        </Typography>
-        {renderBottomToolbarCustomActions &&
-          renderBottomToolbarCustomActions({
-            table: props.table,
-            filterName,
-            anchor: tableContainerRef,
-            selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
-          })}
-      </Stack>
-    ),
+    renderTopToolbarCustomActions: renderTopToolbarContent,
+    renderToolbarInternalActions: renderToolbarActionsContent,
+    renderBottomToolbarCustomActions: renderBottomToolbarContent,
   });
 
   return (
@@ -308,4 +330,4 @@ function SentenceAnnotationTable({
   );
 }
 
-export default SentenceAnnotationTable;
+export default memo(SentenceAnnotationTable);

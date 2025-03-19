@@ -222,23 +222,41 @@ function SdocTableContent({
     }
   }, [projectId, sortingModel]);
 
-  // Memoized callbacks for the table
-  const handleGlobalFilterChange = useCallback((value: string) => {
-    setSearchQuery(value);
-  }, []);
+  const handleTableScroll = useCallback(
+    (event: UIEvent<HTMLDivElement>) => fetchMoreOnScroll(event.target as HTMLDivElement),
+    [fetchMoreOnScroll],
+  );
 
-  const renderTopToolbar = useCallback(
-    (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) => {
-      if (!renderTopToolbarCustomActions) return undefined;
-      return renderTopToolbarCustomActions({
-        table: props.table,
-        selectedDocuments: flatData.filter((row) => rowSelectionModel[row.document_id]),
-      });
-    },
+  // rendering
+  const renderTopToolbarContent = useMemo(
+    () =>
+      renderTopToolbarCustomActions
+        ? (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) =>
+            renderTopToolbarCustomActions({
+              table: props.table,
+              selectedDocuments: flatData.filter((row) => rowSelectionModel[row.document_id]),
+            })
+        : undefined,
     [renderTopToolbarCustomActions, flatData, rowSelectionModel],
   );
 
-  const renderToolbarInternal = useCallback(
+  const renderBottomToolbarContent = useCallback(
+    (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) => (
+      <Stack direction={"row"} spacing={1} alignItems="center">
+        <Typography>
+          Fetched {totalFetched} of {totalResults} total documents.
+        </Typography>
+        {renderBottomToolbarCustomActions &&
+          renderBottomToolbarCustomActions({
+            table: props.table,
+            selectedDocuments: flatData.filter((row) => rowSelectionModel[row.document_id]),
+          })}
+      </Stack>
+    ),
+    [totalFetched, totalResults, renderBottomToolbarCustomActions, flatData, rowSelectionModel],
+  );
+
+  const renderToolbarActionsContent = useCallback(
     (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) => {
       if (renderToolbarInternalActions) {
         return renderToolbarInternalActions({
@@ -257,27 +275,6 @@ function SdocTableContent({
       );
     },
     [renderToolbarInternalActions, flatData, rowSelectionModel, filterName, filterActions, filterStateSelector],
-  );
-
-  const renderBottomToolbar = useCallback(
-    (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) => (
-      <Stack direction={"row"} spacing={1} alignItems="center">
-        <Typography>
-          Fetched {totalFetched} of {totalResults} total documents.
-        </Typography>
-        {renderBottomToolbarCustomActions &&
-          renderBottomToolbarCustomActions({
-            table: props.table,
-            selectedDocuments: flatData.filter((row) => rowSelectionModel[row.document_id]),
-          })}
-      </Stack>
-    ),
-    [totalFetched, totalResults, renderBottomToolbarCustomActions, flatData, rowSelectionModel],
-  );
-
-  const handleScroll = useCallback(
-    (event: UIEvent<HTMLDivElement>) => fetchMoreOnScroll(event.target as HTMLDivElement),
-    [fetchMoreOnScroll],
   );
 
   const renderDetailPanel = useMemo(() => {
@@ -312,7 +309,7 @@ function SdocTableContent({
     },
     // search query
     manualFiltering: true, // turn of client-side filtering
-    onGlobalFilterChange: handleGlobalFilterChange,
+    onGlobalFilterChange: setSearchQuery,
     // selection
     enableRowSelection: true,
     onRowSelectionChange,
@@ -338,7 +335,7 @@ function SdocTableContent({
     },
     muiTableContainerProps: {
       ref: tableContainerRef,
-      onScroll: handleScroll,
+      onScroll: handleTableScroll,
       style: { flexGrow: 1 },
     },
     muiToolbarAlertBannerProps: isError
@@ -349,9 +346,9 @@ function SdocTableContent({
       : undefined,
     // toolbar
     positionToolbarAlertBanner,
-    renderTopToolbarCustomActions: renderTopToolbar,
-    renderToolbarInternalActions: renderToolbarInternal,
-    renderBottomToolbarCustomActions: renderBottomToolbar,
+    renderTopToolbarCustomActions: renderTopToolbarContent,
+    renderToolbarInternalActions: renderToolbarActionsContent,
+    renderBottomToolbarCustomActions: renderBottomToolbarContent,
   });
 
   return <MaterialReactTable table={table} />;

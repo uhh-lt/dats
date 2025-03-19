@@ -37,9 +37,9 @@ const columns: MRT_ColumnDef<CodeTableRow>[] = [
     accessorKey: "color",
     header: "Color",
     enableColumnFilter: false,
-    Cell: memo(({ row }) => {
+    Cell: ({ row }) => {
       return <SquareIcon style={{ color: row.original.color, blockSize: 24 }} />;
-    }),
+    },
   },
   {
     accessorKey: "name",
@@ -98,37 +98,38 @@ function CodeTable({
   }, [projectCodes.data]);
 
   // rendering
-  const renderTopToolbarCustomActionsCallback = useCallback(
-    (props: { table: MRT_TableInstance<CodeTableRow> }) =>
+  const renderTopToolbarContent = useMemo(
+    () =>
       renderTopToolbarCustomActions
-        ? renderTopToolbarCustomActions({
-            table: props.table,
-            selectedCodes: Object.keys(rowSelectionModel).map((codeId) => projectCodesMap[codeId]),
-          })
+        ? (props: { table: MRT_TableInstance<CodeTableRow> }) =>
+            renderTopToolbarCustomActions({
+              table: props.table,
+              selectedCodes: Object.keys(rowSelectionModel).map((codeId) => projectCodesMap[codeId]),
+            })
         : undefined,
     [renderTopToolbarCustomActions, rowSelectionModel, projectCodesMap],
   );
-
-  const renderToolbarInternalActionsCallback = useCallback(
-    (props: { table: MRT_TableInstance<CodeTableRow> }) =>
-      renderToolbarInternalActions
-        ? renderToolbarInternalActions({
-            table: props.table,
-            selectedCodes: Object.values(projectCodesMap).filter((row) => rowSelectionModel[row.id]),
-          })
-        : undefined,
-    [renderToolbarInternalActions, projectCodesMap, rowSelectionModel],
-  );
-
-  const renderBottomToolbarCustomActionsCallback = useCallback(
-    (props: { table: MRT_TableInstance<CodeTableRow> }) =>
+  const renderBottomToolbarContent = useMemo(
+    () =>
       renderBottomToolbarCustomActions
-        ? renderBottomToolbarCustomActions({
-            table: props.table,
-            selectedCodes: Object.values(projectCodesMap).filter((row) => rowSelectionModel[row.id]),
-          })
+        ? (props: { table: MRT_TableInstance<CodeTableRow> }) =>
+            renderBottomToolbarCustomActions({
+              table: props.table,
+              selectedCodes: Object.values(projectCodesMap).filter((row) => rowSelectionModel[row.id]),
+            })
         : undefined,
     [renderBottomToolbarCustomActions, projectCodesMap, rowSelectionModel],
+  );
+  const renderToolbarActionsContent = useMemo(
+    () =>
+      renderToolbarInternalActions
+        ? (props: { table: MRT_TableInstance<CodeTableRow> }) =>
+            renderToolbarInternalActions({
+              table: props.table,
+              selectedCodes: Object.values(projectCodesMap).filter((row) => rowSelectionModel[row.id]),
+            })
+        : undefined,
+    [renderToolbarInternalActions, projectCodesMap, rowSelectionModel],
   );
 
   const getSubRows = useCallback((originalRow: CodeTableRow) => originalRow.subRows, []);
@@ -168,10 +169,10 @@ function CodeTable({
     enableMultiRowSelection,
     onRowSelectionChange,
     // toolbar
-    enableBottomToolbar: !!renderBottomToolbarCustomActions,
-    renderTopToolbarCustomActions: renderTopToolbarCustomActionsCallback,
-    renderToolbarInternalActions: renderToolbarInternalActionsCallback,
-    renderBottomToolbarCustomActions: renderBottomToolbarCustomActionsCallback,
+    enableBottomToolbar: !!renderBottomToolbarContent,
+    renderTopToolbarCustomActions: renderTopToolbarContent,
+    renderToolbarInternalActions: renderToolbarActionsContent,
+    renderBottomToolbarCustomActions: renderBottomToolbarContent,
     // hide columns per default
     initialState: {
       columnVisibility: {

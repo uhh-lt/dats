@@ -6,7 +6,7 @@ import {
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { memo, useCallback, useMemo } from "react";
+import { memo, useMemo } from "react";
 import MetadataHooks from "../../api/MetadataHooks.ts";
 import { ProjectMetadataRead } from "../../api/openapi/models/ProjectMetadataRead.ts";
 
@@ -96,38 +96,37 @@ function ProjectMetadataTableContent({
   }, [projectMetadata]);
 
   // rendering
-  const renderTopToolbarContent = useCallback(
-    (props: { table: MRT_TableInstance<ProjectMetadataRead> }) => {
-      return renderTopToolbarCustomActions
-        ? renderTopToolbarCustomActions({
-            table: props.table,
-            selectedProjectMetadata: Object.keys(rowSelectionModel).map((mId) => projectMetadataMap[mId]),
-          })
-        : undefined;
-    },
+  const renderTopToolbarContent = useMemo(
+    () =>
+      renderTopToolbarCustomActions
+        ? (props: { table: MRT_TableInstance<ProjectMetadataRead> }) =>
+            renderTopToolbarCustomActions({
+              table: props.table,
+              selectedProjectMetadata: Object.keys(rowSelectionModel).map((mId) => projectMetadataMap[mId]),
+            })
+        : undefined,
     [projectMetadataMap, renderTopToolbarCustomActions, rowSelectionModel],
   );
-
-  const renderToolbarInternalContent = useCallback(
-    (props: { table: MRT_TableInstance<ProjectMetadataRead> }) => {
-      return renderToolbarInternalActions
-        ? renderToolbarInternalActions({
-            table: props.table,
-            selectedProjectMetadata: Object.keys(rowSelectionModel).map((mId) => projectMetadataMap[mId]),
-          })
-        : undefined;
-    },
+  const renderToolbarInternalContent = useMemo(
+    () =>
+      renderToolbarInternalActions
+        ? (props: { table: MRT_TableInstance<ProjectMetadataRead> }) =>
+            renderToolbarInternalActions({
+              table: props.table,
+              selectedProjectMetadata: Object.keys(rowSelectionModel).map((mId) => projectMetadataMap[mId]),
+            })
+        : undefined,
     [projectMetadataMap, renderToolbarInternalActions, rowSelectionModel],
   );
-  const renderBottomToolbarContent = useCallback(
-    (props: { table: MRT_TableInstance<ProjectMetadataRead> }) => {
-      return renderBottomToolbarCustomActions
-        ? renderBottomToolbarCustomActions({
-            table: props.table,
-            selectedProjectMetadata: Object.keys(rowSelectionModel).map((mId) => projectMetadataMap[mId]),
-          })
-        : undefined;
-    },
+  const renderBottomToolbarContent = useMemo(
+    () =>
+      renderBottomToolbarCustomActions
+        ? (props: { table: MRT_TableInstance<ProjectMetadataRead> }) =>
+            renderBottomToolbarCustomActions({
+              table: props.table,
+              selectedProjectMetadata: Object.keys(rowSelectionModel).map((mId) => projectMetadataMap[mId]),
+            })
+        : undefined,
     [projectMetadataMap, renderBottomToolbarCustomActions, rowSelectionModel],
   );
 

@@ -185,11 +185,25 @@ function SearchMemoTable({
   }, [projectId, sortingModel, filter]);
 
   const handleTableScroll = useCallback(
-    (container: HTMLDivElement) => fetchMoreOnScroll(container),
+    (event: UIEvent<HTMLDivElement>) => fetchMoreOnScroll(event.target as HTMLDivElement),
     [fetchMoreOnScroll],
   );
 
   // rendering
+  const renderTopToolbarContent = useMemo(
+    () =>
+      renderTopToolbarCustomActions
+        ? (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) =>
+            renderTopToolbarCustomActions({
+              table: props.table,
+              filterName,
+              anchor: tableContainerRef,
+              selectedMemos: flatData.filter((row) => rowSelectionModel[row.document_id]),
+            })
+        : undefined,
+    [renderTopToolbarCustomActions, filterName, flatData, rowSelectionModel],
+  );
+
   const renderBottomToolbarContent = useCallback(
     (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) => (
       <Stack direction={"row"} spacing={1} alignItems="center">
@@ -208,20 +222,7 @@ function SearchMemoTable({
     [totalFetched, totalResults, renderBottomToolbarCustomActions, filterName, flatData, rowSelectionModel],
   );
 
-  const renderTopToolbarContent = useCallback(
-    (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) =>
-      renderTopToolbarCustomActions
-        ? renderTopToolbarCustomActions({
-            table: props.table,
-            filterName,
-            anchor: tableContainerRef,
-            selectedMemos: flatData.filter((row) => rowSelectionModel[row.document_id]),
-          })
-        : undefined,
-    [renderTopToolbarCustomActions, filterName, flatData, rowSelectionModel],
-  );
-
-  const renderToolbarInternalContent = useCallback(
+  const renderToolbarActionsContent = useCallback(
     (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) => (
       <Stack direction="row" spacing={1} alignItems="center">
         <MemoTableOptionsMenu
@@ -285,7 +286,7 @@ function SearchMemoTable({
     },
     muiTableContainerProps: {
       ref: tableContainerRef,
-      onScroll: (event: UIEvent<HTMLDivElement>) => handleTableScroll(event.target as HTMLDivElement),
+      onScroll: handleTableScroll,
       style: { flexGrow: 1 },
     },
     muiToolbarAlertBannerProps: isError
@@ -297,7 +298,7 @@ function SearchMemoTable({
     // toolbar
     positionToolbarAlertBanner: "head-overlay",
     renderTopToolbarCustomActions: renderTopToolbarContent,
-    renderToolbarInternalActions: renderToolbarInternalContent,
+    renderToolbarInternalActions: renderToolbarActionsContent,
     renderBottomToolbarCustomActions: renderBottomToolbarContent,
   });
 
