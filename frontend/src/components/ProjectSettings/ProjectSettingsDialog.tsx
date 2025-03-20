@@ -1,19 +1,7 @@
-import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { LoadingButton, TabContext } from "@mui/lab";
 import TabPanel from "@mui/lab/TabPanel";
-import {
-  AppBar,
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  Divider,
-  Stack,
-  Tabs,
-  Typography,
-} from "@mui/material";
+import { AppBar, Box, Dialog, DialogActions, DialogContent, Divider, Tabs } from "@mui/material";
 import Tab from "@mui/material/Tab";
 import React, { memo, useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -21,6 +9,7 @@ import ProjectHooks from "../../api/ProjectHooks.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI.ts";
 import { CRUDDialogActions } from "../dialogSlice.ts";
+import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
 import ProjectBackgroundTasks from "./backgroundtasks/ProjectBackgroundTasks.tsx";
 import ProjectCodes from "./tabs/ProjectCodes.tsx";
 import ProjectDetails from "./tabs/ProjectDetails.tsx";
@@ -65,6 +54,12 @@ function ProjectSettingsDialog() {
     }
   }, [project.data, deleteProject, navigate]);
 
+  // maximize dialog
+  const [isMaximized, setIsMaximized] = useState(false);
+  const handleToggleMaximize = () => {
+    setIsMaximized((prev) => !prev);
+  };
+
   return (
     <Dialog
       open={isOpen}
@@ -76,14 +71,17 @@ function ProjectSettingsDialog() {
           className: "h100 myFlexFillAllContainer",
         },
       }}
+      fullScreen={isMaximized}
     >
       <TabContext value={tab}>
         <AppBar position="relative" color="primary" className="myFlexFitContentContainer">
-          <Stack direction="row" sx={{ px: 2, pt: 2 }}>
-            <Typography variant="h6" component="div">
-              {project.isSuccess ? project.data.title : "Project name"} - Settings
-            </Typography>
-          </Stack>
+          <DATSDialogHeader
+            title={(project.isSuccess ? project.data.title : "Project name") + " - Settings"}
+            onClose={handleClose}
+            isMaximized={isMaximized}
+            onToggleMaximize={handleToggleMaximize}
+          />
+
           <Tabs value={tab} onChange={handleChangeTab} variant="scrollable" textColor="inherit">
             <Tab label="Details" value="1" />
             <Tab label="User" value="2" />
@@ -128,9 +126,6 @@ function ProjectSettingsDialog() {
             Delete Project
           </LoadingButton>
           <Box sx={{ flexGrow: 1 }} />
-          <Button variant="contained" startIcon={<CloseIcon />} onClick={handleClose}>
-            Close
-          </Button>
         </DialogActions>
       </TabContext>
     </Dialog>

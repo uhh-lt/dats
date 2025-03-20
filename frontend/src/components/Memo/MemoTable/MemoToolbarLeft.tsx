@@ -1,32 +1,28 @@
 import { Stack } from "@mui/material";
 import { useMemo } from "react";
-import { RootState } from "../../../store/store.ts";
+import { ElasticSearchDocumentHit } from "../../../api/openapi/models/ElasticSearchDocumentHit.ts";
 import ReduxFilterDialog from "../../FilterDialog/ReduxFilterDialog.tsx";
+import { FilterTableToolbarProps } from "../../FilterTable/FilterTableToolbarProps.ts";
 import MemoDeleteButton from "../MemoDeleteButton.tsx";
 import MemoStarButton from "../MemoStarButton.tsx";
-import { MemoToolbarProps } from "./MemoToolbarProps.ts";
-import { MemoFilterActions } from "./memoFilterSlice.ts";
-
-const filterStateSelector = (state: RootState) => state.memoFilter;
 
 function MemoToolbarLeft({
   anchor,
+  selectedData,
   filterName,
-  leftChildren,
-  rightChildren,
-  selectedMemos,
-}: MemoToolbarProps & { leftChildren?: React.ReactNode; rightChildren?: React.ReactNode }) {
-  const selectedMemoIds = useMemo(() => selectedMemos.map((memo) => memo.document_id), [selectedMemos]);
+  filterStateSelector,
+  filterActions,
+}: FilterTableToolbarProps<ElasticSearchDocumentHit>) {
+  const selectedMemoIds = useMemo(() => selectedData.map((memo) => memo.id), [selectedData]);
 
   return (
-    <Stack direction="row" spacing={1} alignItems="center">
-      {leftChildren}
+    <Stack direction="row" spacing={1} alignItems="center" sx={{ minHeight: "40px" }}>
       <ReduxFilterDialog
         anchorEl={anchor.current}
         buttonProps={{ size: "small" }}
         filterName={filterName}
         filterStateSelector={filterStateSelector}
-        filterActions={MemoFilterActions}
+        filterActions={filterActions}
       />
       {selectedMemoIds.length > 0 && (
         <>
@@ -35,7 +31,6 @@ function MemoToolbarLeft({
           <MemoStarButton memoIds={selectedMemoIds} isStarred={false} />
         </>
       )}
-      {rightChildren}
     </Stack>
   );
 }

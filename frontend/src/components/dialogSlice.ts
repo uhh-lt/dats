@@ -17,18 +17,17 @@ import { LLMAssistanceEvent } from "./LLMDialog/LLMEvent.ts";
 
 interface DialogState {
   // tags
-  isTagEditDialogOpen: boolean;
   isTagCreateDialogOpen: boolean;
-  tagId?: number;
   tagName?: string;
-  parentTagId?: number;
+  isTagEditDialogOpen: boolean;
+  tag?: DocumentTagRead;
   // codes
   isCodeCreateDialogOpen: boolean;
-  isCodeEditDialogOpen: boolean;
   codeName?: string;
   parentCodeId?: number;
-  codeCreateSuccessHandler: CodeCreateSuccessHandler;
+  isCodeEditDialogOpen: boolean;
   code?: CodeRead;
+  codeCreateSuccessHandler: CodeCreateSuccessHandler;
   // span
   isSpanAnnotationEditDialogOpen: boolean;
   spanAnnotationIds: number[];
@@ -72,9 +71,8 @@ const initialState: DialogState = {
   // tags
   isTagEditDialogOpen: false,
   isTagCreateDialogOpen: false,
-  tagId: undefined,
+  tag: undefined,
   tagName: undefined,
-  parentTagId: undefined,
   // codes
   isCodeCreateDialogOpen: false,
   isCodeEditDialogOpen: false,
@@ -162,13 +160,13 @@ export const dialogSlice = createSlice({
       state.sentenceAnnotationIds = [];
       state.sentenceAnnotationEditDialogOnEdit = undefined;
     },
-    openTagEditDialog: (state, action: PayloadAction<{ tagId: number }>) => {
+    openTagEditDialog: (state, action: PayloadAction<{ tag: DocumentTagRead }>) => {
       state.isTagEditDialogOpen = true;
-      state.tagId = action.payload.tagId;
+      state.tag = action.payload.tag;
     },
     closeTagEditDialog: (state) => {
       state.isTagEditDialogOpen = false;
-      state.tagId = undefined;
+      state.tag = undefined;
     },
     openTagCreateDialog: (state, action: PayloadAction<{ tagName?: string }>) => {
       state.isTagCreateDialogOpen = true;

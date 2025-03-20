@@ -1,9 +1,12 @@
 import { ErrorMessage } from "@hookform/error-message";
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack } from "@mui/material";
+import SaveIcon from "@mui/icons-material/Save";
+import { Button, Dialog, DialogActions, DialogContent, Stack } from "@mui/material";
+import { useEffect, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { TimelineAnalysisConcept } from "../../../api/openapi/models/TimelineAnalysisConcept.ts";
 import FormColorPicker from "../../../components/FormInputs/FormColorPicker.tsx";
 import FormText from "../../../components/FormInputs/FormText.tsx";
+import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import ConceptFilterEditor from "./ConceptFilterEditor.tsx";
 
@@ -22,28 +25,20 @@ function ConceptEditor({ onUpdate, onCancel }: ConceptEditorProps) {
     onCancel(currentConcept);
   };
 
-  return (
-    <Dialog open={conceptEditorOpen} onClose={handleClose} fullWidth maxWidth="md">
-      <ConceptEditorForm concept={currentConcept} onUpdate={onUpdate} onClose={handleClose} />
-    </Dialog>
-  );
-}
-
-interface ConceptEditorFormProps {
-  concept: TimelineAnalysisConcept;
-  onUpdate: (concept: TimelineAnalysisConcept) => void;
-  onClose: () => void;
-}
-
-function ConceptEditorForm({ concept, onUpdate, onClose }: ConceptEditorFormProps) {
   // use react hook form
   const {
     handleSubmit,
     formState: { errors },
     control,
-  } = useForm<TimelineAnalysisConcept>({
-    defaultValues: concept,
-  });
+    reset,
+  } = useForm<TimelineAnalysisConcept>();
+
+  // reset form when dialog opens
+  useEffect(() => {
+    if (conceptEditorOpen) {
+      reset(currentConcept);
+    }
+  }, [conceptEditorOpen, currentConcept, reset]);
 
   // form handling
   const handleUpdate: SubmitHandler<TimelineAnalysisConcept> = (data) => {
@@ -51,9 +46,28 @@ function ConceptEditorForm({ concept, onUpdate, onClose }: ConceptEditorFormProp
   };
   const handleError: SubmitErrorHandler<TimelineAnalysisConcept> = (data) => console.error(data);
 
+  // maximize dialog
+  const [isMaximized, setIsMaximized] = useState(false);
+  const handleToggleMaximize = () => {
+    setIsMaximized((prev) => !prev);
+  };
+
   return (
-    <form onSubmit={handleSubmit(handleUpdate, handleError)}>
-      <DialogTitle>Add / edit concept</DialogTitle>
+    <Dialog
+      open={conceptEditorOpen}
+      onClose={handleClose}
+      fullWidth
+      maxWidth="md"
+      fullScreen={isMaximized}
+      component="form"
+      onSubmit={handleSubmit(handleUpdate, handleError)}
+    >
+      <DATSDialogHeader
+        title="Edit concept"
+        onClose={handleClose}
+        isMaximized={isMaximized}
+        onToggleMaximize={handleToggleMaximize}
+      />
       <DialogContent>
         <Stack spacing={3} sx={{ mt: 1 }}>
           <FormText
@@ -97,12 +111,11 @@ function ConceptEditorForm({ concept, onUpdate, onClose }: ConceptEditorFormProp
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Close</Button>
-        <Button variant="contained" color="success" type="submit">
+        <Button variant="contained" color="success" type="submit" fullWidth startIcon={<SaveIcon />}>
           Save
         </Button>
       </DialogActions>
-    </form>
+    </Dialog>
   );
 }
 

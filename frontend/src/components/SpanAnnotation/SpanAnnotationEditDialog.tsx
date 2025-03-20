@@ -1,7 +1,7 @@
 import { ArrowRight } from "@mui/icons-material";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
-import { Box, Button, ButtonProps, Dialog, DialogActions, DialogTitle, Stack, Typography } from "@mui/material";
+import { ButtonProps, Dialog, DialogActions, Stack, Typography } from "@mui/material";
 import { MRT_RowSelectionState } from "material-react-table";
 import { memo, useCallback, useState } from "react";
 import SpanAnnotationHooks from "../../api/SpanAnnotationHooks.ts";
@@ -9,6 +9,7 @@ import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import CodeRenderer from "../Code/CodeRenderer.tsx";
 import CodeTable from "../Code/CodeTable.tsx";
 import { CRUDDialogActions } from "../dialogSlice.ts";
+import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
 import SpanAnnotationRenderer from "./SpanAnnotationRenderer.tsx";
 
 export interface SpanAnnotationEditDialogProps extends ButtonProps {
@@ -55,11 +56,20 @@ function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) 
     );
   }, [annotationIds, handleClose, onEdit, selectedCodeId, updateAnnotationBulkMutation]);
 
+  // maximize dialog
+  const [isMaximized, setIsMaximized] = useState(false);
+  const handleToggleMaximize = () => {
+    setIsMaximized((prev) => !prev);
+  };
+
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      <DialogTitle>
-        Changing the code of {annotationIds.length} annotation{annotationIds.length > 1 && "s"}
-      </DialogTitle>
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth fullScreen={isMaximized}>
+      <DATSDialogHeader
+        title={`Changing the code of ${annotationIds.length} annotation${annotationIds.length > 1 && "s"}`}
+        onClose={handleClose}
+        isMaximized={isMaximized}
+        onToggleMaximize={handleToggleMaximize}
+      />
       <CodeTable
         projectId={projectId}
         rowSelectionModel={rowSelectionModel}
@@ -86,8 +96,6 @@ function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) 
       )}
 
       <DialogActions>
-        <Button onClick={handleClose}>Close</Button>
-        <Box flexGrow={1} />
         <LoadingButton
           variant="contained"
           color="success"
@@ -96,6 +104,7 @@ function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) 
           disabled={!selectedCodeId}
           loading={isPending}
           loadingPosition="start"
+          fullWidth
         >
           Update Annotation{annotationIds.length > 1 && "s"}
         </LoadingButton>

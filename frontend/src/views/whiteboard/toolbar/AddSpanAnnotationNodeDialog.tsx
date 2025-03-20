@@ -1,10 +1,13 @@
-import { Box, Button, ButtonProps, CircularProgress, Dialog } from "@mui/material";
+import { Button, ButtonProps, CircularProgress, Dialog } from "@mui/material";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { XYPosition } from "reactflow";
 import MetadataHooks from "../../../api/MetadataHooks.ts";
 import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
+import { SpanAnnotationRow } from "../../../api/openapi/models/SpanAnnotationRow.ts";
 import { SpanColumns } from "../../../api/openapi/models/SpanColumns.ts";
+import { FilterTableToolbarProps } from "../../../components/FilterTable/FilterTableToolbarProps.ts";
+import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
 import SpanAnnotationTable from "../../../components/SpanAnnotation/SpanAnnotationTable/SpanAnnotationTable.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
@@ -34,19 +37,33 @@ function AddSpanAnnotationNodeDialog({ projectId, buttonProps, ...props }: AddSp
     setOpen(false);
   };
 
+  // maximize dialog
+  const [isMaximized, setIsMaximized] = useState(false);
+  const handleToggleMaximize = () => {
+    setIsMaximized((prev) => !prev);
+  };
+
   return (
     <>
       <Button onClick={handleOpen} {...buttonProps}>
         Add annotations
       </Button>
-      <Dialog onClose={handleClose} open={open} maxWidth="lg" fullWidth PaperProps={{ style: { height: "100%" } }}>
+      <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         {metadata.isSuccess ? (
-          <AddSpanAnnotationNodeDialogContent
-            onClose={handleClose}
-            projectId={projectId}
-            metadata={metadata.data}
-            {...props}
-          />
+          <>
+            <DATSDialogHeader
+              title="Select span annotations to add to Whiteboard"
+              onClose={handleClose}
+              isMaximized={isMaximized}
+              onToggleMaximize={handleToggleMaximize}
+            />
+            <AddSpanAnnotationNodeDialogContent
+              onClose={handleClose}
+              projectId={projectId}
+              metadata={metadata.data}
+              {...props}
+            />
+          </>
         ) : metadata.isLoading ? (
           <CircularProgress />
         ) : (
@@ -82,22 +99,31 @@ function AddSpanAnnotationNodeDialogContent({
   const selectedAnnotationIds = Object.keys(rowSelectionModel).map((id) => parseInt(id));
 
   // actions
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     onClose();
     setRowSelectionModel({});
-  };
+  }, [onClose]);
 
-  const handleConfirmSelection = () => {
+  const handleConfirmSelection = useCallback(() => {
     const spanAnnotations = selectedAnnotationIds;
     const addNode: PendingAddNodeAction = (position: XYPosition, reactFlowService: ReactFlowService) =>
       reactFlowService.addNodes(createSpanAnnotationNodes({ spanAnnotations, position }));
     onClick(addNode);
     handleClose();
-  };
+  }, [handleClose, onClick, selectedAnnotationIds]);
+
+  // rendering
+  const renderBottomToolbar = useCallback(
+    (props: FilterTableToolbarProps<SpanAnnotationRow>) => (
+      <Button onClick={handleConfirmSelection} disabled={props.selectedData.length === 0}>
+        Add {props.selectedData.length > 0 ? props.selectedData.length : null} Annotations
+      </Button>
+    ),
+    [handleConfirmSelection],
+  );
 
   return (
     <SpanAnnotationTable
-      title="Select span annotations to add to Whiteboard"
       projectId={projectId}
       filterName={filterName}
       rowSelectionModel={rowSelectionModel}
@@ -105,17 +131,8 @@ function AddSpanAnnotationNodeDialogContent({
       sortingModel={sortingModel}
       onSortingChange={setSortingModel}
       columnVisibilityModel={visibilityModel}
-      onColumnVisibilityChange={setVisibilityModel as React.Dispatch<React.SetStateAction<MRT_VisibilityState>>}
-      cardProps={{ elevation: 2, className: "myFlexFillAllContainer myFlexContainer" }}
-      renderBottomToolbarCustomActions={(props) => (
-        <>
-          <Box flexGrow={1} />
-          <Button onClick={handleClose}>Close</Button>
-          <Button onClick={handleConfirmSelection} disabled={props.selectedAnnotations.length === 0}>
-            Add {props.selectedAnnotations.length > 0 ? props.selectedAnnotations.length : null} Annotations
-          </Button>
-        </>
-      )}
+      onColumnVisibilityChange={setVisibilityModel}
+      renderBottomToolbar={renderBottomToolbar}
     />
   );
 }

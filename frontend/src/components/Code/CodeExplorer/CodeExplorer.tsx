@@ -8,7 +8,6 @@ import ExporterButton from "../../Exporter/ExporterButton.tsx";
 import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
 import CodeCreateListItemButton from "../CodeCreateListItemButton.tsx";
-import CodeEditDialog from "../CodeEditDialog.tsx";
 import CodeExplorerActionMenu from "./CodeExplorerActionMenu.tsx";
 import CodeExplorerNodeRenderer from "./CodeExplorerNodeRenderer.tsx";
 import useComputeCodeTree from "./useComputeCodeTree.ts";
@@ -18,7 +17,7 @@ const renderActions = (node: IDataTree) => <CodeExplorerActionMenu node={node} /
 
 function CodeExplorer(props: BoxProps) {
   // custom hooks
-  const { codeTree, allCodes } = useComputeCodeTree();
+  const { codeTree } = useComputeCodeTree();
 
   // global client state (redux)
   const selectedCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
@@ -50,32 +49,29 @@ function CodeExplorer(props: BoxProps) {
 
   return (
     <Box {...props}>
-      {allCodes.isSuccess && codeTree && (
-        <>
-          <TreeExplorer
-            sx={{ pt: 0 }}
-            dataIcon={SquareIcon}
-            // data
-            dataTree={codeTree}
-            // filter
-            showFilter
-            dataFilter={codeFilter}
-            onDataFilterChange={setCodeFilter}
-            // expansion
-            expandedItems={expandedCodeIds}
-            onExpandedItemsChange={handleExpandedCodeIdsChange}
-            // selection
-            selectedItems={selectedCodeId}
-            onSelectedItemsChange={handleSelectedCodeChange}
-            // render node
-            renderNode={renderNode}
-            // actions
-            renderActions={renderActions}
-            // components
-            listActions={<ListActions />}
-          />
-          <CodeEditDialog codes={allCodes.data} />
-        </>
+      {codeTree && (
+        <TreeExplorer
+          sx={{ pt: 0 }}
+          dataIcon={SquareIcon}
+          // data
+          dataTree={codeTree}
+          // filter
+          showFilter
+          dataFilter={codeFilter}
+          onDataFilterChange={setCodeFilter}
+          // expansion
+          expandedItems={expandedCodeIds}
+          onExpandedItemsChange={handleExpandedCodeIdsChange}
+          // selection
+          selectedItems={selectedCodeId}
+          onSelectedItemsChange={handleSelectedCodeChange}
+          // render node
+          renderNode={renderNode}
+          // actions
+          renderActions={renderActions}
+          // components
+          listActions={<ListActions />}
+        />
       )}
     </Box>
   );

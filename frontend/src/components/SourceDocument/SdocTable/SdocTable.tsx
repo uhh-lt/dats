@@ -1,4 +1,4 @@
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import parse from "html-react-parser";
 import {
@@ -6,7 +6,6 @@ import {
   MRT_RowSelectionState,
   MRT_RowVirtualizer,
   MRT_SortingState,
-  MRT_TableInstance,
   MRT_TableOptions,
   MRT_VisibilityState,
   MaterialReactTable,
@@ -22,23 +21,20 @@ import { SearchService } from "../../../api/openapi/services/SearchService.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
 import { useTableInfiniteScroll } from "../../../utils/useTableInfiniteScroll.ts";
-import { FilterActions, FilterState } from "../../FilterDialog/filterSlice.ts";
 import { ColumnInfo, MyFilter, createEmptyFilter } from "../../FilterDialog/filterUtils.ts";
+import FilterTableToolbarLeft from "../../FilterTable/FilterTableToolbarLeft.tsx";
+import { FilterTableToolbarProps } from "../../FilterTable/FilterTableToolbarProps.ts";
+import FilterTableToolbarRight from "../../FilterTable/FilterTableToolbarRight.tsx";
+import { useRenderToolbars } from "../../FilterTable/useRenderToolbars.tsx";
 import SdocMetadataRenderer from "../../Metadata/SdocMetadataRenderer.tsx";
 import SdocAnnotatorsRenderer from "../SdocAnnotatorsRenderer.tsx";
 import SdocRenderer from "../SdocRenderer.tsx";
 import SdocTagsRenderer from "../SdocTagRenderer.tsx";
-import SdocTableToolbar from "./SdocTableToolbar.tsx";
 import { DocumentTableFilterActions } from "./documentTableFilterSlice.ts";
 import { useInitDocumentTableFilterSlice } from "./useInitDocumentTableFilterSlice.ts";
 
 const fetchSize = 20;
 const flatMapData = (page: PaginatedElasticSearchDocumentHits) => page.hits;
-
-export interface DocumentTableActionProps {
-  table: MRT_TableInstance<ElasticSearchDocumentHit>;
-  selectedDocuments: ElasticSearchDocumentHit[];
-}
 
 interface SdocTableProps {
   projectId: number;
@@ -50,16 +46,16 @@ interface SdocTableProps {
   onSortingChange: MRT_TableOptions<ElasticSearchDocumentHit>["onSortingChange"];
   // toolbar
   positionToolbarAlertBanner?: MRT_TableOptions<ElasticSearchDocumentHit>["positionToolbarAlertBanner"];
-  renderToolbarInternalActions?: (props: DocumentTableActionProps) => React.ReactNode;
-  renderTopToolbarCustomActions?: (props: DocumentTableActionProps) => React.ReactNode;
-  renderBottomToolbarCustomActions?: (props: DocumentTableActionProps) => React.ReactNode;
+  renderTopRightToolbar?: (props: FilterTableToolbarProps<ElasticSearchDocumentHit>) => React.ReactNode;
+  renderTopLeftToolbar?: (props: FilterTableToolbarProps<ElasticSearchDocumentHit>) => React.ReactNode;
+  renderBottomToolbar?: (props: FilterTableToolbarProps<ElasticSearchDocumentHit>) => React.ReactNode;
   // filter
-  filterName?: string;
-  filterStateSelector?: (state: RootState) => FilterState;
-  filterActions?: FilterActions;
+  filterName: string;
 }
 
-const defaultFilterStateSelector = (state: RootState) => state.documentTableFilter;
+// this defines which filter slice is used
+const filterStateSelector = (state: RootState) => state.documentTableFilter;
+const filterActions = DocumentTableFilterActions;
 
 function SdocTable(props: SdocTableProps) {
   // global client state (react router)
@@ -77,12 +73,10 @@ function SdocTableContent({
   sortingModel,
   onSortingChange,
   positionToolbarAlertBanner = "top",
-  renderToolbarInternalActions,
-  renderTopToolbarCustomActions,
-  renderBottomToolbarCustomActions,
-  filterName = "root",
-  filterActions = DocumentTableFilterActions,
-  filterStateSelector = defaultFilterStateSelector,
+  renderTopRightToolbar = FilterTableToolbarRight,
+  renderTopLeftToolbar = FilterTableToolbarLeft,
+  renderBottomToolbar,
+  filterName,
   tableInfo,
 }: SdocTableProps & { tableInfo: ColumnInfo[] }) {
   // search query
@@ -108,25 +102,25 @@ function SdocTableContent({
         case SdocColumns.SD_SOURCE_DOCUMENT_TYPE:
           return {
             ...colDef,
-            Cell: ({ row }) => <SdocRenderer sdoc={row.original.document_id} renderDoctypeIcon />,
+            Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderDoctypeIcon />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case SdocColumns.SD_SOURCE_DOCUMENT_FILENAME:
           return {
             ...colDef,
             flex: 2,
-            Cell: ({ row }) => <SdocRenderer sdoc={row.original.document_id} renderFilename />,
+            Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderFilename />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case SdocColumns.SD_DOCUMENT_TAG_ID_LIST:
           return {
             ...colDef,
             flex: 2,
-            Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.document_id} />,
+            Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.id} />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case SdocColumns.SD_USER_ID_LIST:
           return {
             ...colDef,
             flex: 2,
-            Cell: ({ row }) => <SdocAnnotatorsRenderer sdocId={row.original.document_id} />,
+            Cell: ({ row }) => <SdocAnnotatorsRenderer sdocId={row.original.id} />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case SdocColumns.SD_CODE_ID_LIST:
           return null;
@@ -139,7 +133,7 @@ function SdocTableContent({
               ...colDef,
               flex: 2,
               Cell: ({ row }) => (
-                <SdocMetadataRenderer sdocId={row.original.document_id} projectMetadataId={parseInt(column.column)} />
+                <SdocMetadataRenderer sdocId={row.original.id} projectMetadataId={parseInt(column.column)} />
               ),
             } as MRT_ColumnDef<ElasticSearchDocumentHit>;
           } else {
@@ -228,54 +222,20 @@ function SdocTableContent({
   );
 
   // rendering
-  const renderTopToolbarContent = useMemo(
-    () =>
-      renderTopToolbarCustomActions
-        ? (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) =>
-            renderTopToolbarCustomActions({
-              table: props.table,
-              selectedDocuments: flatData.filter((row) => rowSelectionModel[row.document_id]),
-            })
-        : undefined,
-    [renderTopToolbarCustomActions, flatData, rowSelectionModel],
-  );
-
-  const renderBottomToolbarContent = useCallback(
-    (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) => (
-      <Stack direction={"row"} spacing={1} alignItems="center">
-        <Typography>
-          Fetched {totalFetched} of {totalResults} total documents.
-        </Typography>
-        {renderBottomToolbarCustomActions &&
-          renderBottomToolbarCustomActions({
-            table: props.table,
-            selectedDocuments: flatData.filter((row) => rowSelectionModel[row.document_id]),
-          })}
-      </Stack>
-    ),
-    [totalFetched, totalResults, renderBottomToolbarCustomActions, flatData, rowSelectionModel],
-  );
-
-  const renderToolbarActionsContent = useCallback(
-    (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) => {
-      if (renderToolbarInternalActions) {
-        return renderToolbarInternalActions({
-          table: props.table,
-          selectedDocuments: flatData.filter((row) => rowSelectionModel[row.document_id]),
-        });
-      }
-      return (
-        <SdocTableToolbar
-          table={props.table}
-          anchor={tableContainerRef}
-          filterName={filterName}
-          filterActions={filterActions}
-          filterStateSelector={filterStateSelector}
-        />
-      );
-    },
-    [renderToolbarInternalActions, flatData, rowSelectionModel, filterName, filterActions, filterStateSelector],
-  );
+  const { renderTopLeftToolbarContent, renderTopRightToolbarContent, renderBottomToolbarContent } = useRenderToolbars({
+    name: "documents",
+    flatData,
+    totalFetched,
+    totalResults,
+    renderTopRightToolbar,
+    renderTopLeftToolbar,
+    renderBottomToolbar,
+    filterStateSelector,
+    filterActions,
+    filterName,
+    rowSelectionModel,
+    tableContainerRef,
+  });
 
   const renderDetailPanel = useMemo(() => {
     if (!searchQuery || searchQuery.trim().length === 0) return undefined;
@@ -284,7 +244,7 @@ function SdocTableContent({
       row.original.highlights ? (
         <Box className="search-result-highlight">
           {row.original.highlights.map((highlight, index) => (
-            <Typography key={`sdoc-${row.original.document_id}-highlight-${index}`} m={0.5}>
+            <Typography key={`sdoc-${row.original.id}-highlight-${index}`} m={0.5}>
               {parse(highlight)}
             </Typography>
           ))}
@@ -296,7 +256,7 @@ function SdocTableContent({
   const table = useMaterialReactTable<ElasticSearchDocumentHit>({
     data: flatData,
     columns: columns,
-    getRowId: (row) => `${row.document_id}`,
+    getRowId: (row) => `${row.id}`,
     // state
     state: {
       globalFilter: searchQuery,
@@ -346,8 +306,8 @@ function SdocTableContent({
       : undefined,
     // toolbar
     positionToolbarAlertBanner,
-    renderTopToolbarCustomActions: renderTopToolbarContent,
-    renderToolbarInternalActions: renderToolbarActionsContent,
+    renderTopToolbarCustomActions: renderTopLeftToolbarContent,
+    renderToolbarInternalActions: renderTopRightToolbarContent,
     renderBottomToolbarCustomActions: renderBottomToolbarContent,
   });
 

@@ -67,7 +67,7 @@ function ProjectMetadataSelectionStep() {
     dispatch(CRUDDialogActions.previousLLMDialogStep());
   }, [dispatch]);
 
-  const renderBottomToolbarCustomActions = useCallback(
+  const renderBottomToolbarContent = useCallback(
     (props: { selectedProjectMetadata: ProjectMetadataRead[] }) => (
       <DialogActions sx={{ width: "100%", p: 0 }}>
         <Box flexGrow={1} />
@@ -101,7 +101,7 @@ function ProjectMetadataSelectionStep() {
         projectMetadata={filteredProjectMetadata}
         rowSelectionModel={rowSelectionModel}
         onRowSelectionChange={setRowSelectionModel}
-        renderBottomToolbarCustomActions={renderBottomToolbarCustomActions}
+        renderBottomToolbar={renderBottomToolbarContent}
       />
     </>
   );

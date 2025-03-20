@@ -11,9 +11,7 @@ function SentAnnotationAnalysis() {
   return (
     <ContentLayout>
       <Box className="myFlexContainer h100">
-        <SentAnnotationAnalysisTable
-          cardProps={{ elevation: 2, className: "myFlexFillAllContainer myFlexContainer" }}
-        />
+        <SentAnnotationAnalysisTable />
       </Box>
       <SentenceAnnotationEditDialog projectId={projectId} />
     </ContentLayout>

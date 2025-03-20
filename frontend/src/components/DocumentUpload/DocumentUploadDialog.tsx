@@ -2,34 +2,31 @@ import { Dialog, DialogContent, Stack } from "@mui/material";
 import { useCallback, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
-import DialogHeader from "../MUI/DialogHeader.tsx";
+import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 import DocumentUploadJobsView from "./DocumentUploadJobsView.tsx";
 import { FileUploadSection } from "./FileUploadSection.tsx";
 import { UrlCrawlerSection } from "./UrlCrawlerSection.tsx";
 
 export default function DocumentUploadDialog() {
-  const [isMaximized, setIsMaximized] = useState(false);
+  const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
-  // Dialog open state from Redux
-  const open = useAppSelector((state) => state.dialog.isDocumentUploadOpen);
+  // open/close dialog
   const dispatch = useAppDispatch();
-
-  // Get project ID from URL
-  const { projectId } = useParams<{ projectId: string }>();
-  const projId = parseInt(projectId!);
-
+  const open = useAppSelector((state) => state.dialog.isDocumentUploadOpen);
   const handleClose = useCallback(() => {
     dispatch(CRUDDialogActions.closeDocumentUpload());
   }, [dispatch]);
 
-  const toggleMaximize = useCallback(() => {
+  // maximize feature
+  const [isMaximized, setIsMaximized] = useState(false);
+  const toggleMaximize = () => {
     setIsMaximized((prev) => !prev);
-  }, []);
+  };
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
-      <DialogHeader
+      <DATSDialogHeader
         title="Upload Documents"
         onClose={handleClose}
         isMaximized={isMaximized}
@@ -38,10 +35,10 @@ export default function DocumentUploadDialog() {
       <DialogContent>
         <Stack spacing={2}>
           <Stack direction="row" spacing={2} sx={{ minHeight: "300px" }}>
-            <FileUploadSection projectId={projId} />
-            <UrlCrawlerSection projectId={projId} />
+            <FileUploadSection projectId={projectId} />
+            <UrlCrawlerSection projectId={projectId} />
           </Stack>
-          <DocumentUploadJobsView projectId={projId} />
+          <DocumentUploadJobsView projectId={projectId} />
         </Stack>
       </DialogContent>
     </Dialog>

@@ -5,11 +5,9 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle,
   FormControlLabel,
   Radio,
   RadioGroup,
@@ -37,6 +35,7 @@ import { SingleUserLogbookExportJobParams } from "../../api/openapi/models/Singl
 import { useAuth } from "../../auth/useAuth.ts";
 import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { downloadFile } from "../../utils/ExportUtils.ts";
+import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
 import UserName from "../User/UserName.tsx";
 import ExporterItemSelectList from "./ExporterItemSelectList.tsx";
 
@@ -209,6 +208,12 @@ function ExporterDialog() {
     setOpen(false);
   }, []);
 
+  // maximize feature
+  const [isMaximized, setIsMaximized] = useState(false);
+  const handleToggleMaximize = useCallback(() => {
+    setIsMaximized((prev) => !prev);
+  }, []);
+
   const handleTypeChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setExporterData((oldData) => {
       return {
@@ -237,8 +242,13 @@ function ExporterDialog() {
   }, []);
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      <DialogTitle>Export</DialogTitle>
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth fullScreen={isMaximized}>
+      <DATSDialogHeader
+        title="Export"
+        onClose={handleClose}
+        isMaximized={isMaximized}
+        onToggleMaximize={handleToggleMaximize}
+      />
       <DialogContent>
         <Accordion elevation={0} variant="outlined">
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -327,7 +337,6 @@ function ExporterDialog() {
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>Close</Button>
         <LoadingButton
           loading={startExport.isPending || exportJob.data?.status === BackgroundJobStatus.WAITING}
           loadingPosition="start"

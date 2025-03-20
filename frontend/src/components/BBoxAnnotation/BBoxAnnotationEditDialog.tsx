@@ -7,6 +7,7 @@ import BboxAnnotationHooks from "../../api/BboxAnnotationHooks.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import CodeTable from "../Code/CodeTable.tsx";
 import { CRUDDialogActions } from "../dialogSlice.ts";
+import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
 import BBoxAnnotationRenderer from "./BBoxAnnotationRenderer.tsx";
 
 export interface BBoxAnnotationEditDialogProps {
@@ -55,9 +56,20 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
     );
   }, [selectedCodeId, annotation, updateAnnotationMutation, handleClose]);
 
+  // maximize dialog
+  const [isMaximized, setIsMaximized] = useState(false);
+  const handleToggleMaximize = () => {
+    setIsMaximized((prev) => !prev);
+  };
+
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      <DialogTitle>Change the code of the annotation</DialogTitle>
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth fullScreen={isMaximized}>
+      <DATSDialogHeader
+        title="Change the code of the annotation"
+        onClose={handleClose}
+        isMaximized={isMaximized}
+        onToggleMaximize={handleToggleMaximize}
+      />
       <CodeTable
         projectId={projectId}
         rowSelectionModel={rowSelectionModel}

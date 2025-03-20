@@ -66,7 +66,7 @@ function CodeSelectionStep() {
   }, [dispatch]);
 
   // rendering
-  const renderBottomToolbarCustomActions = useCallback(
+  const renderBottomToolbarContent = useCallback(
     (props: { selectedCodes: CodeRead[] }) => (
       <DialogActions sx={{ width: "100%", p: 0 }}>
         <Box flexGrow={1} />
@@ -107,7 +107,7 @@ function CodeSelectionStep() {
         projectId={projectId}
         rowSelectionModel={rowSelectionModel}
         onRowSelectionChange={setRowSelectionModel}
-        renderBottomToolbarCustomActions={renderBottomToolbarCustomActions}
+        renderBottomToolbar={renderBottomToolbarContent}
       />
     </>
   );

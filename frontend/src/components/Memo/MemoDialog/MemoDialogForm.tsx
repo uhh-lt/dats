@@ -1,5 +1,5 @@
 import SaveIcon from "@mui/icons-material/Save";
-import { Box, Divider, IconButton, Stack, Toolbar, Typography } from "@mui/material";
+import { DialogContent, Divider, IconButton, Stack, Toolbar, Typography } from "@mui/material";
 import { memo, useCallback, useMemo, useState } from "react";
 import { SubmitHandler } from "react-hook-form";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
@@ -87,7 +87,7 @@ function MemoDialogForm({
   if (!user) return null;
 
   return (
-    <Box className="h100 myFlexContainer">
+    <DialogContent className="h100 myFlexContainer" sx={{ p: 0 }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" p={1}>
         <Typography>
           <AttachedObjectRenderer attachedObject={attachedObject} attachedObjectType={attachedObjectType} link />
@@ -120,7 +120,7 @@ function MemoDialogForm({
           {"Last modified: " + lastModifiedDate}
         </Typography>
       )}
-    </Box>
+    </DialogContent>
   );
 }
 

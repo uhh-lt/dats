@@ -16,9 +16,9 @@ function TagEditMenuItem({ tag, onClick, ...props }: TagEditMenuItemProps & Menu
     (event: React.MouseEvent<HTMLLIElement>) => {
       event.stopPropagation();
       if (onClick) onClick(event);
-      dispatch(CRUDDialogActions.openTagEditDialog({ tagId: tag.id }));
+      dispatch(CRUDDialogActions.openTagEditDialog({ tag }));
     },
-    [dispatch, onClick, tag.id],
+    [dispatch, onClick, tag],
   );
 
   return (

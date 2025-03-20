@@ -11,9 +11,7 @@ function SpanAnnotationAnalysis() {
   return (
     <ContentLayout>
       <Box className="myFlexContainer h100">
-        <SpanAnnotationAnalysisTable
-          cardProps={{ elevation: 2, className: "myFlexFillAllContainer myFlexContainer" }}
-        />
+        <SpanAnnotationAnalysisTable />
       </Box>
       <SpanAnnotationEditDialog projectId={projectId} />
     </ContentLayout>

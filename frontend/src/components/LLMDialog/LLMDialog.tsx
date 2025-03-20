@@ -1,7 +1,9 @@
-import { Dialog, DialogTitle, Divider, Step, StepLabel, Stepper } from "@mui/material";
-import { memo, useMemo } from "react";
+import { Dialog, Divider, Step, StepLabel, Stepper } from "@mui/material";
+import { memo, useCallback, useMemo, useState } from "react";
 import { TaskType } from "../../api/openapi/models/TaskType.ts";
-import { useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { CRUDDialogActions } from "../dialogSlice.ts";
+import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
 import AnnotationResultStep from "./steps/AnnotationResultStep/AnnotationResultStep.tsx";
 import ApproachSelectionStep from "./steps/ApproachSelectionStep.tsx";
 import CodeSelectionStep from "./steps/CodeSelectionStep.tsx";
@@ -90,10 +92,24 @@ const contentDict: Record<number, Record<TaskType, JSX.Element>> = {
 
 function LLMDialog() {
   // global client state (redux)
-  const open = useAppSelector((state) => state.dialog.isLLMDialogOpen);
   const method = useAppSelector((state) => state.dialog.llmMethod);
   const step = useAppSelector((state) => state.dialog.llmStep);
+  const dispatch = useAppDispatch();
 
+  // open/close dialog
+  const open = useAppSelector((state) => state.dialog.isLLMDialogOpen);
+  const handleClose = useCallback(() => {
+    dispatch(CRUDDialogActions.closeLLMDialog());
+  }, [dispatch]);
+
+  // maximize feature
+  const [isMaximized, setIsMaximized] = useState(false);
+  const handleToggleMaximize = () => {
+    setIsMaximized((prev) => !prev);
+  };
+
+  // rendering
+  const dialogTitle = `LLM Assistant${method ? ` - ${title[method]}` : ""}`;
   const stepLabels = useMemo(
     () =>
       steps[method || TaskType.DOCUMENT_TAGGING].map((label) => (
@@ -105,9 +121,14 @@ function LLMDialog() {
   );
 
   return (
-    <Dialog open={open} maxWidth="lg" fullWidth>
-      <DialogTitle>LLM Assistant {method && <> - {title[method]}</>}</DialogTitle>
-      <Stepper activeStep={step} sx={{ px: 2, pb: 2 }}>
+    <Dialog open={open} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+      <DATSDialogHeader
+        title={dialogTitle}
+        onClose={handleClose}
+        isMaximized={isMaximized}
+        onToggleMaximize={handleToggleMaximize}
+      />
+      <Stepper activeStep={step} sx={{ p: 2 }}>
         {stepLabels}
       </Stepper>
       <Divider />

@@ -171,7 +171,7 @@ function WordFrequencyTable() {
   );
 
   // render
-  const renderTopToolbarContent = useCallback(
+  const renderTopLeftToolbarContent = useCallback(
     () => (
       <Stack direction={"row"} spacing={1} alignItems="center" height={48}>
         <ReduxFilterDialog
@@ -196,7 +196,7 @@ function WordFrequencyTable() {
     ),
     [totalFetched, totalResults, data],
   );
-  const renderToolbarActionsContent = useCallback(
+  const renderTopRightToolbarContent = useCallback(
     ({ table }: { table: MRT_TableInstance<WordFrequencyStat> }) => (
       <Stack direction={"row"} spacing={1} alignItems="center" height={48}>
         <MRT_ShowHideColumnsButton table={table} />
@@ -256,9 +256,9 @@ function WordFrequencyTable() {
       : undefined,
     // toolbar
     positionToolbarAlertBanner: "head-overlay",
+    renderTopToolbarCustomActions: renderTopLeftToolbarContent,
+    renderToolbarInternalActions: renderTopRightToolbarContent,
     renderBottomToolbarCustomActions: renderBottomToolbarContent,
-    renderTopToolbarCustomActions: renderTopToolbarContent,
-    renderToolbarInternalActions: renderToolbarActionsContent,
   });
 
   return <MaterialReactTable table={table} />;

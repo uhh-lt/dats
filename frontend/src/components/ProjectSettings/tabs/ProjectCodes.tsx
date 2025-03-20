@@ -2,10 +2,8 @@ import SquareIcon from "@mui/icons-material/Square";
 import { Box } from "@mui/material";
 import { memo, useCallback, useState } from "react";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import CodeCreateDialog from "../../Code/CodeCreateDialog.tsx";
 import CodeCreateListItemButton from "../../Code/CodeCreateListItemButton.tsx";
 import CodeEditButton from "../../Code/CodeEditButton.tsx";
-import CodeEditDialog from "../../Code/CodeEditDialog.tsx";
 import CodeToggleEnabledButton from "../../Code/CodeToggleEnabledButton.tsx";
 import CodeToggleVisibilityButton from "../../Code/CodeToggleVisibilityButton.tsx";
 import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
@@ -22,7 +20,7 @@ const renderCodeActions = (node: IDataTree) => (
 
 function ProjectCodes() {
   // custom hooks
-  const { codeTree, allCodes } = useComputeProjectCodeTree();
+  const { codeTree } = useComputeProjectCodeTree();
 
   // local state
   const [expandedCodeIds, setExpandedCodeIds] = useState<string[]>([]);
@@ -38,30 +36,26 @@ function ProjectCodes() {
 
   return (
     <Box className="h100">
-      {allCodes.isSuccess && codeTree && (
-        <>
-          <TreeExplorer
-            sx={{ pt: 0 }}
-            dataIcon={SquareIcon}
-            // data
-            dataTree={codeTree}
-            // filter
-            showFilter
-            dataFilter={codeFilter}
-            onDataFilterChange={handleCodeFilterChange}
-            // expansion
-            expandedItems={expandedCodeIds}
-            onExpandedItemsChange={handleExpandedCodeIdsChange}
-            // renderers
-            renderActions={renderCodeActions}
-            // components
-            listActions={<CodeCreateListItemButton parentCodeId={undefined} />}
-            filterActions={<CodeToggleEnabledButton code={codeTree?.model} />}
-          />
-          <CodeEditDialog codes={allCodes.data} />
-        </>
+      {codeTree && (
+        <TreeExplorer
+          sx={{ pt: 0 }}
+          dataIcon={SquareIcon}
+          // data
+          dataTree={codeTree}
+          // filter
+          showFilter
+          dataFilter={codeFilter}
+          onDataFilterChange={handleCodeFilterChange}
+          // expansion
+          expandedItems={expandedCodeIds}
+          onExpandedItemsChange={handleExpandedCodeIdsChange}
+          // renderers
+          renderActions={renderCodeActions}
+          // components
+          listActions={<CodeCreateListItemButton parentCodeId={undefined} />}
+          filterActions={<CodeToggleEnabledButton code={codeTree?.model} />}
+        />
       )}
-      <CodeCreateDialog />
     </Box>
   );
 }

@@ -36,9 +36,6 @@ function Logbook() {
           onSortingChange={setSortingModel}
           columnVisibilityModel={columnVisibilityModel}
           onColumnVisibilityChange={setColumnVisibilityModel}
-          cardProps={{
-            className: "h100",
-          }}
         />
       }
       rightContent={<LogbookEditor projectId={projectId} />}

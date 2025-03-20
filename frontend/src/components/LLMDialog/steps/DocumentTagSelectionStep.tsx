@@ -54,7 +54,7 @@ function DocumentTagSelectionStep() {
   }, [dispatch]);
 
   // rendering
-  const renderBottomToolbarCustomActions = useCallback(
+  const renderBottomToolbarContent = useCallback(
     (props: { selectedTags: DocumentTagRead[] }) => (
       <DialogActions sx={{ width: "100%", p: 0 }}>
         <Box flexGrow={1} />
@@ -88,7 +88,7 @@ function DocumentTagSelectionStep() {
         projectId={projectId}
         rowSelectionModel={rowSelectionModel}
         onRowSelectionChange={setRowSelectionModel}
-        renderBottomToolbarCustomActions={renderBottomToolbarCustomActions}
+        renderBottomToolbar={renderBottomToolbarContent}
       />
     </>
   );

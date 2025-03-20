@@ -1,8 +1,8 @@
 import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, rgbToHex } from "@mui/material";
-import { memo, useCallback, useMemo } from "react";
+import { Dialog, DialogActions, DialogContent, MenuItem, Stack, rgbToHex } from "@mui/material";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import CodeHooks from "../../api/CodeHooks.ts";
@@ -14,6 +14,7 @@ import FormColorPicker from "../FormInputs/FormColorPicker.tsx";
 import FormMenu from "../FormInputs/FormMenu.tsx";
 import FormText from "../FormInputs/FormText.tsx";
 import FormTextMultiline from "../FormInputs/FormTextMultiline.tsx";
+import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 import CodeRenderer from "./CodeRenderer.tsx";
 import { useCodesWithLevel } from "./useCodesWithLevel.ts";
@@ -28,75 +29,51 @@ type CodeCreateValues = {
 };
 
 function CodeCreateDialog() {
-  // global state
+  const dispatch = useAppDispatch();
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
-  // global server state (react query)
+  // codes for selection as parent
   const codes = CodeHooks.useGetEnabledCodes();
-
-  // computed
   const parentCodes = useMemo(() => codes.data?.filter((code) => !code.is_system) || [], [codes.data]);
+  const codeTree = useCodesWithLevel(parentCodes);
 
-  // global client state (redux)
+  // open/close dialog
   const isCodeCreateDialogOpen = useAppSelector((state) => state.dialog.isCodeCreateDialogOpen);
-  const codeName = useAppSelector((state) => state.dialog.codeName);
-  const parentCodeId = useAppSelector((state) => state.dialog.parentCodeId);
-  const dispatch = useAppDispatch();
-
-  // ui event handlers
   const handleCloseCodeCreateDialog = useCallback(() => {
     dispatch(CRUDDialogActions.closeCodeCreateDialog());
   }, [dispatch]);
 
-  // initialize code to create when code changes
-  const codeToCreate = useMemo(() => {
-    const randomHexColor = rgbToHex(contrastiveColors[Math.floor(Math.random() * contrastiveColors.length)]);
-    const isParentCodeIdInParentCodes = parentCodes.find((c) => c.id === parentCodeId);
-    return {
-      name: codeName || "",
-      color: randomHexColor,
-      parentCodeId: isParentCodeIdInParentCodes ? parentCodeId || -1 : -1,
-      description: "",
-    };
-  }, [codeName, parentCodeId, parentCodes]);
+  // maximize feature
+  const [isMaximized, setIsMaximized] = useState(false);
+  const handleToggleMaximize = () => {
+    setIsMaximized((prev) => !prev);
+  };
 
-  return (
-    <Dialog open={isCodeCreateDialogOpen} onClose={handleCloseCodeCreateDialog} maxWidth="md" fullWidth>
-      <CodeCreateForm
-        parentCodes={parentCodes}
-        codeToCreate={codeToCreate}
-        projectId={projectId}
-        onClose={handleCloseCodeCreateDialog}
-      />
-    </Dialog>
-  );
-}
-
-interface CodeCreateFormProps {
-  projectId: number;
-  codeToCreate: CodeCreateValues;
-  parentCodes: CodeRead[];
-  onClose: () => void;
-}
-
-function CodeCreateForm({ projectId, codeToCreate, parentCodes, onClose }: CodeCreateFormProps) {
-  // global client state (redux)
-  const onSuccessHandler = useAppSelector((state) => state.dialog.codeCreateSuccessHandler);
-  const dispatch = useAppDispatch();
-
-  // react form
+  // form
   const {
     handleSubmit,
     formState: { errors },
     control,
-  } = useForm<CodeCreateValues>({
-    defaultValues: codeToCreate,
-  });
+    reset,
+  } = useForm<CodeCreateValues>();
 
-  // mutations
-  const createCodeMutation = CodeHooks.useCreateCode();
+  // reset form when dialog opens
+  const codeName = useAppSelector((state) => state.dialog.codeName);
+  const parentCodeId = useAppSelector((state) => state.dialog.parentCodeId);
+  useEffect(() => {
+    if (isCodeCreateDialogOpen) {
+      reset({
+        parentCodeId: parentCodeId || -1,
+        name: codeName || "",
+        color: rgbToHex(contrastiveColors[Math.floor(Math.random() * contrastiveColors.length)]),
+        description: "",
+      });
+    }
+  }, [isCodeCreateDialogOpen, reset, codeName, parentCodeId]);
 
-  // react form handlers
+  // form actions
+  const { mutate: createCodeMutation, isPending } = CodeHooks.useCreateCode();
+  const onSuccessHandler = useAppSelector((state) => state.dialog.codeCreateSuccessHandler);
   const handleSubmitCodeCreateDialog = useCallback<SubmitHandler<CodeCreateValues>>(
     (data) => {
       let pcid: number | undefined = undefined;
@@ -105,7 +82,7 @@ function CodeCreateForm({ projectId, codeToCreate, parentCodes, onClose }: CodeC
       } else {
         pcid = data.parentCodeId;
       }
-      createCodeMutation.mutate(
+      createCodeMutation(
         {
           requestBody: {
             name: data.name,
@@ -129,26 +106,31 @@ function CodeCreateForm({ projectId, codeToCreate, parentCodes, onClose }: CodeC
             }
             dispatch(AnnoActions.expandCodes(codesToExpand.map((id) => id.toString())));
             if (onSuccessHandler) onSuccessHandler(data, true);
-            onClose();
+            handleCloseCodeCreateDialog();
           },
         },
       );
     },
-    [createCodeMutation, dispatch, onSuccessHandler, parentCodes, projectId, onClose],
+    [createCodeMutation, dispatch, handleCloseCodeCreateDialog, onSuccessHandler, parentCodes, projectId],
   );
+  const handleErrorCodeCreateDialog: SubmitErrorHandler<CodeCreateValues> = (data) => console.error(data);
 
-  const handleErrorCodeCreateDialog = useCallback<SubmitErrorHandler<CodeCreateValues>>(
-    (data) => console.error(data),
-    [],
-  );
-
-  // code tree
-  const codeTree = useCodesWithLevel(parentCodes);
-
-  // rendering
   return (
-    <form onSubmit={handleSubmit(handleSubmitCodeCreateDialog, handleErrorCodeCreateDialog)}>
-      <DialogTitle>Create a new code</DialogTitle>
+    <Dialog
+      open={isCodeCreateDialogOpen}
+      onClose={handleCloseCodeCreateDialog}
+      maxWidth="md"
+      fullWidth
+      fullScreen={isMaximized}
+      component="form"
+      onSubmit={handleSubmit(handleSubmitCodeCreateDialog, handleErrorCodeCreateDialog)}
+    >
+      <DATSDialogHeader
+        title="Create a new code"
+        onClose={handleCloseCodeCreateDialog}
+        isMaximized={isMaximized}
+        onToggleMaximize={handleToggleMaximize}
+      />
       <DialogContent>
         <Stack spacing={3}>
           <FormMenu
@@ -210,25 +192,20 @@ function CodeCreateForm({ projectId, codeToCreate, parentCodes, onClose }: CodeC
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button variant="contained" onClick={onClose}>
-          Cancel
-        </Button>
         <LoadingButton
           variant="contained"
           color="success"
           startIcon={<SaveIcon />}
           fullWidth
           type="submit"
-          loading={createCodeMutation.isPending}
+          loading={isPending}
           loadingPosition="start"
         >
           Create Code
         </LoadingButton>
       </DialogActions>
-    </form>
+    </Dialog>
   );
 }
 
-const MemoizedCodeCreateDialog = memo(CodeCreateDialog);
-
-export default MemoizedCodeCreateDialog;
+export default CodeCreateDialog;

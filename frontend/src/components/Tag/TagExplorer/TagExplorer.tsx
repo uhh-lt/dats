@@ -6,7 +6,6 @@ import { SearchActions } from "../../../views/search/DocumentSearch/searchSlice.
 import ExporterButton from "../../Exporter/ExporterButton.tsx";
 import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
-import TagEditDialog from "../TagEditDialog.tsx";
 import TagMenuCreateButton from "../TagMenu/TagMenuCreateButton.tsx";
 import TagExplorerActionMenu from "./TagExplorerActionMenu.tsx";
 import useComputeTagTree from "./useComputeTagTree.ts";
@@ -19,7 +18,7 @@ interface TagExplorerProps {
 
 function TagExplorer({ onTagClick, ...props }: TagExplorerProps & BoxProps) {
   // custom hooks
-  const { tagTree, allTags } = useComputeTagTree();
+  const { tagTree } = useComputeTagTree();
 
   // tag expansion
   const dispatch = useAppDispatch();
@@ -47,29 +46,26 @@ function TagExplorer({ onTagClick, ...props }: TagExplorerProps & BoxProps) {
 
   return (
     <Box {...props}>
-      {allTags.isSuccess && tagTree && (
-        <>
-          <TreeExplorer
-            sx={{ pt: 0 }}
-            dataIcon={LabelIcon}
-            // data
-            dataTree={tagTree}
-            // filter
-            showFilter
-            dataFilter={tagFilter}
-            onDataFilterChange={handleTagFilterChange}
-            // expansion
-            expandedItems={expandedTagIds}
-            onExpandedItemsChange={handleExpandedTagIdsChange}
-            // actions
-            onItemClick={onTagClick ? handleTagClick : undefined}
-            // renderers
-            renderActions={renderActions}
-            // components
-            listActions={<ListActions />}
-          />
-          <TagEditDialog tags={allTags.data} />
-        </>
+      {tagTree && (
+        <TreeExplorer
+          sx={{ pt: 0 }}
+          dataIcon={LabelIcon}
+          // data
+          dataTree={tagTree}
+          // filter
+          showFilter
+          dataFilter={tagFilter}
+          onDataFilterChange={handleTagFilterChange}
+          // expansion
+          expandedItems={expandedTagIds}
+          onExpandedItemsChange={handleExpandedTagIdsChange}
+          // actions
+          onItemClick={onTagClick ? handleTagClick : undefined}
+          // renderers
+          renderActions={renderActions}
+          // components
+          listActions={<ListActions />}
+        />
       )}
     </Box>
   );

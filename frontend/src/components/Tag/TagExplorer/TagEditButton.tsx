@@ -11,9 +11,9 @@ function TagEditButton({ tag, ...props }: IconButtonProps & { tag: DocumentTagRe
   const handleClickOpen = useCallback(
     (event: React.MouseEvent<HTMLButtonElement>) => {
       event.stopPropagation();
-      dispatch(CRUDDialogActions.openTagEditDialog({ tagId: tag.id }));
+      dispatch(CRUDDialogActions.openTagEditDialog({ tag }));
     },
-    [dispatch, tag.id],
+    [dispatch, tag],
   );
 
   return (

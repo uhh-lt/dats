@@ -38,10 +38,8 @@ import SpanAnnotationHooks from "../../api/SpanAnnotationHooks.ts";
 import TagHooks from "../../api/TagHooks.ts";
 import WhiteboardHooks, { Whiteboard, WhiteboardGraph } from "../../api/WhiteboardHooks.ts";
 import BBoxAnnotationEditDialog from "../../components/BBoxAnnotation/BBoxAnnotationEditDialog.tsx";
-import CodeEditDialog from "../../components/Code/CodeEditDialog.tsx";
 import SentenceAnnotationEditDialog from "../../components/SentenceAnnotation/SentenceAnnotationEditDialog.tsx";
 import SpanAnnotationEditDialog from "../../components/SpanAnnotation/SpanAnnotationEditDialog.tsx";
-import TagEditDialog from "../../components/Tag/TagEditDialog.tsx";
 import { downloadFile } from "../../utils/ExportUtils.ts";
 import StraightConnectionLine from "./connectionlines/StraightConnectionLine.tsx";
 import CustomEdge from "./edges/CustomEdge.tsx";
@@ -166,10 +164,6 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
 
   // global client state (react-router)
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
-
-  // global server state (react query)
-  const projectCodes = CodeHooks.useGetAllCodesList();
-  const projectTags = TagHooks.useGetAllTags();
 
   // mutations
   const bulkLinkDocumentTagsMutation = TagHooks.useBulkLinkDocumentTags();
@@ -524,8 +518,6 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
       <SpanAnnotationEditDialog projectId={projectId} />
       <SentenceAnnotationEditDialog projectId={projectId} />
       <BBoxAnnotationEditDialog projectId={projectId} />
-      {projectTags.isSuccess && <TagEditDialog tags={projectTags.data} />}
-      {projectCodes.isSuccess && <CodeEditDialog codes={projectCodes.data} />}
     </>
   );
 }

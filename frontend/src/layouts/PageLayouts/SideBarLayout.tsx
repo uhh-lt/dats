@@ -3,6 +3,7 @@ import { memo, useCallback, useState } from "react";
 import { Outlet, useParams } from "react-router-dom";
 import { useAuth } from "../../auth/useAuth.ts";
 import CodeCreateDialog from "../../components/Code/CodeCreateDialog.tsx";
+import CodeEditDialog from "../../components/Code/CodeEditDialog.tsx";
 import ConfirmationDialog from "../../components/ConfirmationDialog/ConfirmationDialog.tsx";
 import DocumentUploadDialog from "../../components/DocumentUpload/DocumentUploadDialog.tsx";
 import ExporterDialog from "../../components/Exporter/ExporterDialog.tsx";
@@ -14,6 +15,7 @@ import QuickCommandMenu from "../../components/QuickCommandMenu/QuickCommandMenu
 import { ShortcutManager } from "../../components/ShortcutManager/ShortcutManager.tsx";
 import SnackbarDialog from "../../components/SnackbarDialog/SnackbarDialog.tsx";
 import TagCreateDialog from "../../components/Tag/TagCreateDialog.tsx";
+import TagEditDialog from "../../components/Tag/TagEditDialog.tsx";
 import DialMenu from "../DialMenu/DialMenu.tsx";
 import "../Layout.css";
 import SideBar from "../SideBar/SideBar.tsx";
@@ -71,7 +73,9 @@ function SideBarLayout() {
           <MemoDialog />
           <SnackbarDialog />
           <TagCreateDialog />
+          <TagEditDialog />
           <CodeCreateDialog />
+          <CodeEditDialog />
           <ConfirmationDialog />
           <ExporterDialog />
           <ProjectSettingsDialog />

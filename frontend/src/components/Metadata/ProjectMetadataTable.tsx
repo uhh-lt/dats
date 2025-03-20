@@ -40,9 +40,9 @@ interface SharedProjectMetadataTableProps {
   rowSelectionModel: MRT_RowSelectionState;
   onRowSelectionChange: MRT_TableOptions<ProjectMetadataRead>["onRowSelectionChange"];
   // toolbar
-  renderToolbarInternalActions?: (props: ProjectMetadataTableActionProps) => React.ReactNode;
-  renderTopToolbarCustomActions?: (props: ProjectMetadataTableActionProps) => React.ReactNode;
-  renderBottomToolbarCustomActions?: (props: ProjectMetadataTableActionProps) => React.ReactNode;
+  renderTopRightToolbar?: (props: ProjectMetadataTableActionProps) => React.ReactNode;
+  renderTopLeftToolbar?: (props: ProjectMetadataTableActionProps) => React.ReactNode;
+  renderBottomToolbar?: (props: ProjectMetadataTableActionProps) => React.ReactNode;
 }
 
 interface ProjectMetadataTableProps extends SharedProjectMetadataTableProps {
@@ -78,9 +78,9 @@ function ProjectMetadataTableContent({
   enableMultiRowSelection = true,
   rowSelectionModel,
   onRowSelectionChange,
-  renderToolbarInternalActions,
-  renderTopToolbarCustomActions,
-  renderBottomToolbarCustomActions,
+  renderTopLeftToolbar,
+  renderTopRightToolbar,
+  renderBottomToolbar,
 }: ProjectMetadataTableContentProps) {
   // computed
   const projectMetadataMap = useMemo(() => {
@@ -96,38 +96,38 @@ function ProjectMetadataTableContent({
   }, [projectMetadata]);
 
   // rendering
-  const renderTopToolbarContent = useMemo(
+  const renderTopRightToolbarContent = useMemo(
     () =>
-      renderTopToolbarCustomActions
+      renderTopRightToolbar
         ? (props: { table: MRT_TableInstance<ProjectMetadataRead> }) =>
-            renderTopToolbarCustomActions({
+            renderTopRightToolbar({
               table: props.table,
               selectedProjectMetadata: Object.keys(rowSelectionModel).map((mId) => projectMetadataMap[mId]),
             })
         : undefined,
-    [projectMetadataMap, renderTopToolbarCustomActions, rowSelectionModel],
+    [projectMetadataMap, renderTopRightToolbar, rowSelectionModel],
   );
-  const renderToolbarInternalContent = useMemo(
+  const renderTopLeftToolbarContent = useMemo(
     () =>
-      renderToolbarInternalActions
+      renderTopLeftToolbar
         ? (props: { table: MRT_TableInstance<ProjectMetadataRead> }) =>
-            renderToolbarInternalActions({
+            renderTopLeftToolbar({
               table: props.table,
               selectedProjectMetadata: Object.keys(rowSelectionModel).map((mId) => projectMetadataMap[mId]),
             })
         : undefined,
-    [projectMetadataMap, renderToolbarInternalActions, rowSelectionModel],
+    [projectMetadataMap, renderTopLeftToolbar, rowSelectionModel],
   );
   const renderBottomToolbarContent = useMemo(
     () =>
-      renderBottomToolbarCustomActions
+      renderBottomToolbar
         ? (props: { table: MRT_TableInstance<ProjectMetadataRead> }) =>
-            renderBottomToolbarCustomActions({
+            renderBottomToolbar({
               table: props.table,
               selectedProjectMetadata: Object.keys(rowSelectionModel).map((mId) => projectMetadataMap[mId]),
             })
         : undefined,
-    [projectMetadataMap, renderBottomToolbarCustomActions, rowSelectionModel],
+    [projectMetadataMap, renderBottomToolbar, rowSelectionModel],
   );
 
   // table
@@ -155,9 +155,9 @@ function ProjectMetadataTableContent({
     enableMultiRowSelection,
     onRowSelectionChange,
     // toolbar
-    enableBottomToolbar: !!renderBottomToolbarCustomActions,
-    renderTopToolbarCustomActions: renderTopToolbarContent,
-    renderToolbarInternalActions: renderToolbarInternalContent,
+    enableBottomToolbar: !!renderBottomToolbar,
+    renderTopToolbarCustomActions: renderTopLeftToolbarContent,
+    renderToolbarInternalActions: renderTopRightToolbarContent,
     renderBottomToolbarCustomActions: renderBottomToolbarContent,
     // hide columns per default
     initialState: {
