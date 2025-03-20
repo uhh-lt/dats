@@ -122,8 +122,8 @@ function QuickCommandMenu() {
             }}
           />
         )}
-        renderOption={(props, option) => (
-          <ListItem {...props}>
+        renderOption={({ key, ...props }, option) => (
+          <ListItem key={key} {...props}>
             {option.icon && <ListItemIcon sx={{ minWidth: 40 }}>{option.icon}</ListItemIcon>}
             <ListItemText primary={option.title} secondary={option.description} />
           </ListItem>
