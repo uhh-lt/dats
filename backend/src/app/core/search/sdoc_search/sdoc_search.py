@@ -69,8 +69,7 @@ def search(
             )
         return PaginatedElasticSearchDocumentHits(
             hits=[
-                ElasticSearchDocumentHit(document_id=sdoc_id)
-                for sdoc_id in filtered_sdoc_ids
+                ElasticSearchDocumentHit(id=sdoc_id) for sdoc_id in filtered_sdoc_ids
             ],
             total_results=total_results,
         )
