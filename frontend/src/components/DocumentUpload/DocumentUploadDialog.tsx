@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, Stack } from "@mui/material";
+import { Box, Dialog, Stack } from "@mui/material";
 import { useCallback, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
@@ -32,15 +32,15 @@ export default function DocumentUploadDialog() {
         isMaximized={isMaximized}
         onToggleMaximize={toggleMaximize}
       />
-      <DialogContent>
-        <Stack spacing={2}>
-          <Stack direction="row" spacing={2} sx={{ minHeight: "300px" }}>
-            <FileUploadSection projectId={projectId} />
-            <UrlCrawlerSection projectId={projectId} />
-          </Stack>
-          <DocumentUploadJobsView projectId={projectId} />
+      <Stack spacing={2} p={2} overflow="auto">
+        <Stack direction="row" spacing={2}>
+          <FileUploadSection projectId={projectId} />
+          <UrlCrawlerSection projectId={projectId} />
         </Stack>
-      </DialogContent>
+        <Box className="myFlexContainer myFlexFillAllContainer">
+          <DocumentUploadJobsView projectId={projectId} />
+        </Box>
+      </Stack>
     </Dialog>
   );
 }

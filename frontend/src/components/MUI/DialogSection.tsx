@@ -9,7 +9,7 @@ interface DocumentImportSectionProps {
 
 export function DialogSection({ title, children, action }: DocumentImportSectionProps) {
   return (
-    <Card sx={{ flex: 1 }} variant="outlined">
+    <Card className="h100 myFlexContainer" variant="outlined" sx={{ width: "100%" }}>
       <CardHeader
         title={title}
         slotProps={{
@@ -23,7 +23,7 @@ export function DialogSection({ title, children, action }: DocumentImportSection
         action={action}
       />
       <Divider />
-      <CardContent>{children}</CardContent>
+      <CardContent className="myFlexFillAllContainer">{children}</CardContent>
     </Card>
   );
 }

@@ -28,6 +28,7 @@ import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobSt
 import { MLJobRead } from "../../../api/openapi/models/MLJobRead.ts";
 import { MLJobType } from "../../../api/openapi/models/MLJobType.ts";
 import ContentContainerLayout from "../../../layouts/ContentLayouts/ContentContainerLayout.tsx";
+import MLJobsView from "./MLJobsView.tsx";
 
 function MlAutomation() {
   // global client state (react router)
@@ -69,7 +70,7 @@ function MlAutomation() {
 
   return (
     <ContentContainerLayout>
-      <Card sx={{ minHeight: "225.5px" }} elevation={2} className="myFlexFillAllContainer myFlexContainer">
+      <Card sx={{ minHeight: "225.5px", mb: 2 }} variant="outlined" className="myFlexFillAllContainer myFlexContainer">
         <CardHeader
           title="ML Automations"
           subheader="Start one or more of the following machine learning automations to speed up your work an enable new analysis options"
@@ -154,6 +155,7 @@ function MlAutomation() {
           </Grid2>
         </CardContent>
       </Card>
+      <MLJobsView />
     </ContentContainerLayout>
   );
 }

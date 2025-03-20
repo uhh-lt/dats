@@ -1,28 +1,15 @@
-import {
-  Button,
-  Card,
-  CardActionArea,
-  CardContent,
-  DialogActions,
-  DialogContent,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Box, Card, CardActionArea, CardContent, DialogContent, Stack, Typography } from "@mui/material";
 import { useCallback } from "react";
 import { TaskType } from "../../../api/openapi/models/TaskType.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { CRUDDialogActions } from "../../dialogSlice.ts";
+import LLMJobsView from "../LLMJobsView.tsx";
 import LLMUtterance from "./LLMUtterance.tsx";
 
 function MethodSelectionStep() {
-  const dispatch = useAppDispatch();
-  const handleClose = useCallback(() => {
-    dispatch(CRUDDialogActions.closeLLMDialog());
-  }, [dispatch]);
-
   return (
     <>
-      <DialogContent>
+      <DialogContent sx={{ flexShrink: 0 }}>
         <LLMUtterance>
           <Typography>How can I help you?</Typography>
         </LLMUtterance>
@@ -49,9 +36,9 @@ function MethodSelectionStep() {
           />
         </Stack>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose}>Close</Button>
-      </DialogActions>
+      <Box className="myFlexContainer myFlexFillAllContainer" p={3}>
+        <LLMJobsView />
+      </Box>
     </>
   );
 }

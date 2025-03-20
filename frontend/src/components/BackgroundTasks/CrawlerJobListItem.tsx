@@ -1,9 +1,9 @@
 import WebIcon from "@mui/icons-material/Web";
 import { Link, List, ListItemButton, ListItemIcon, ListItemText, ListSubheader, Typography } from "@mui/material";
 import { memo, useMemo } from "react";
-import CrawlerHooks from "../../../api/CrawlerHooks.ts";
-import { CrawlerJobRead } from "../../../api/openapi/models/CrawlerJobRead.ts";
-import { dateToLocaleString } from "../../../utils/DateUtils.ts";
+import CrawlerHooks from "../../api/CrawlerHooks.ts";
+import { CrawlerJobRead } from "../../api/openapi/models/CrawlerJobRead.ts";
+import { dateToLocaleString } from "../../utils/DateUtils.ts";
 import BackgroundJobListItem from "./BackgroundJobListItem.tsx";
 
 interface CrawlerJobListItemProps {

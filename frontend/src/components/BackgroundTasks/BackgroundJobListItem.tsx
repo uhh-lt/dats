@@ -7,8 +7,8 @@ import MoreHorizOutlinedIcon from "@mui/icons-material/MoreHorizOutlined";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import { CircularProgress, Collapse, IconButton, ListItem, ListItemIcon, ListItemText, Tooltip } from "@mui/material";
 import { memo, useCallback, useState } from "react";
-import PreProHooks from "../../../api/PreProHooks.ts";
-import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobStatus.ts";
+import PreProHooks from "../../api/PreProHooks.ts";
+import { BackgroundJobStatus } from "../../api/openapi/models/BackgroundJobStatus.ts";
 import { statusToTypographyColor } from "./StatusToTypographyColor.ts";
 
 interface BackgroundJobListItemProps {

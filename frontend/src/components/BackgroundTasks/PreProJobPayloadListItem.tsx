@@ -13,9 +13,9 @@ import {
   Typography,
 } from "@mui/material";
 import { memo, useCallback, useState } from "react";
-import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobStatus.ts";
-import { PreprocessingJobPayloadRead } from "../../../api/openapi/models/PreprocessingJobPayloadRead.ts";
-import { docTypeToIcon } from "../../../utils/icons/docTypeToIcon.tsx";
+import { BackgroundJobStatus } from "../../api/openapi/models/BackgroundJobStatus.ts";
+import { PreprocessingJobPayloadRead } from "../../api/openapi/models/PreprocessingJobPayloadRead.ts";
+import { docTypeToIcon } from "../../utils/icons/docTypeToIcon.tsx";
 import { statusToTypographyColor } from "./StatusToTypographyColor.ts";
 
 interface PreProJobPayloadListItemProps {

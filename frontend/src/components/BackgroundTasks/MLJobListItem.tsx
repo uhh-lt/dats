@@ -1,9 +1,9 @@
 import { Typography } from "@mui/material";
 import { memo, useMemo } from "react";
-import MLHooks from "../../../api/MLHooks.ts";
-import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobStatus.ts";
-import { MLJobRead } from "../../../api/openapi/models/MLJobRead.ts";
-import { dateToLocaleString } from "../../../utils/DateUtils.ts";
+import MLHooks from "../../api/MLHooks.ts";
+import { BackgroundJobStatus } from "../../api/openapi/models/BackgroundJobStatus.ts";
+import { MLJobRead } from "../../api/openapi/models/MLJobRead.ts";
+import { dateToLocaleString } from "../../utils/DateUtils.ts";
 import BackgroundJobListItem from "./BackgroundJobListItem.tsx";
 
 interface MLJobListItemProps {
