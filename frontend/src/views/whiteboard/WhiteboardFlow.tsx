@@ -457,6 +457,11 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
                       <AddBorderNodeButton type="Rounded" onClick={handleChangePendingAction} />
                     </Stack>
                   </Paper>
+                  {readonly && (
+                    <Typography mt={3} textAlign="center" variant="h6">
+                      Read-only!
+                    </Typography>
+                  )}
                 </Panel>
                 <Panel position="top-center" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                   {pendingAction && <Paper sx={{ p: 1 }}>Click anywhere to add node(s)!</Paper>}
