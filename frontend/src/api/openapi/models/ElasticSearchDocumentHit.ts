@@ -6,7 +6,7 @@ export type ElasticSearchDocumentHit = {
   /**
    * The ID of the Document
    */
-  document_id: number;
+  id: number;
   /**
    * The score of the Document that was found by a ES Query
    */

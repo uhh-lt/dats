@@ -6739,7 +6739,7 @@
       },
       "ElasticSearchDocumentHit": {
         "properties": {
-          "document_id": { "type": "integer", "title": "Document Id", "description": "The ID of the Document" },
+          "id": { "type": "integer", "title": "Id", "description": "The ID of the Document" },
           "score": {
             "anyOf": [{ "type": "number" }, { "type": "null" }],
             "title": "Score",
@@ -6754,7 +6754,7 @@
           }
         },
         "type": "object",
-        "required": ["document_id"],
+        "required": ["id"],
         "title": "ElasticSearchDocumentHit"
       },
       "ExportFormat": { "type": "string", "enum": ["CSV", "JSON"], "title": "ExportFormat" },
