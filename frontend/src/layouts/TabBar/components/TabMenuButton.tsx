@@ -55,7 +55,7 @@ function TabMenuButton({ projectId, activeTabIndex, totalTabs }: TabMenuButtonPr
           <ListItemText>Close tabs to the right</ListItemText>
         </MenuItem>
         <MenuItem onClick={handleOpenCommandMenu}>
-          <ListItemText>Open command menu</ListItemText>
+          <ListItemText>Open command menu (⌘⇧P)</ListItemText>
         </MenuItem>
       </Menu>
     </>
