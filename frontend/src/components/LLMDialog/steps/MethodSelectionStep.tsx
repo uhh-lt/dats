@@ -9,7 +9,7 @@ import LLMUtterance from "./LLMUtterance.tsx";
 function MethodSelectionStep() {
   return (
     <>
-      <DialogContent sx={{ flexShrink: 0 }}>
+      <DialogContent sx={{ flexShrink: 0, backgroundColor: "grey.100" }}>
         <LLMUtterance>
           <Typography>How can I help you?</Typography>
         </LLMUtterance>
@@ -36,7 +36,7 @@ function MethodSelectionStep() {
           />
         </Stack>
       </DialogContent>
-      <Box className="myFlexContainer myFlexFillAllContainer" p={3}>
+      <Box className="myFlexContainer myFlexFillAllContainer" p={3} bgcolor={"grey.100"}>
         <LLMJobsView />
       </Box>
     </>

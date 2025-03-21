@@ -32,7 +32,7 @@ export default function DocumentUploadDialog() {
         isMaximized={isMaximized}
         onToggleMaximize={toggleMaximize}
       />
-      <Stack spacing={2} p={2} overflow="auto">
+      <Stack spacing={2} p={2} overflow="auto" sx={{ backgroundColor: "grey.100" }}>
         <Stack direction="row" spacing={2}>
           <FileUploadSection projectId={projectId} />
           <UrlCrawlerSection projectId={projectId} />
