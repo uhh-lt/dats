@@ -1,18 +1,16 @@
-import { AppBar, Box, BoxProps, Checkbox, Stack, SvgIconProps, Toolbar } from "@mui/material";
+import { AppBar, Box, BoxProps, Checkbox, Stack, Toolbar } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Node } from "ts-tree-structure";
-import DataTreeView from "./DataTreeView.tsx";
+import DataTreeView, { DataTreeViewProps } from "./DataTreeView.tsx";
 import { IDataTree } from "./IDataTree.ts";
-import { TreeDataFilter } from "./TreeDataFilter.tsx";
+import TreeDataFilter from "./TreeDataFilter.tsx";
 import { filterTree, flatTree } from "./TreeUtils.ts";
 
-interface DataExplorerProps {
-  toolbarTitle?: string;
-  // data
+export interface TreeExplorerProps extends Omit<DataTreeViewProps, "data"> {
   dataTree: Node<IDataTree>;
-  dataIcon: React.ElementType<SvgIconProps>;
+  toolbarTitle?: string;
   // checkboxes
   showCheckboxes?: boolean;
   // expansion
@@ -27,11 +25,9 @@ interface DataExplorerProps {
   onDataFilterChange: (newDataFilter: string) => void;
   // actions
   onItemClick?: (event: React.MouseEvent, itemId: string) => void;
-  // render actions
-  renderNode?: (node: IDataTree) => React.ReactNode;
-  renderActions?: (node: IDataTree) => React.ReactNode;
-  renderListActions?: () => React.ReactNode;
-  renderFilterActions?: () => React.ReactNode;
+  // components
+  listActions?: React.ReactNode;
+  filterActions?: React.ReactNode;
 }
 
 function TreeExplorer({
@@ -48,11 +44,11 @@ function TreeExplorer({
   onSelectedItemsChange,
   renderNode,
   renderActions,
-  renderListActions,
-  renderFilterActions,
+  listActions = undefined,
+  filterActions = undefined,
   dataIcon,
   ...props
-}: DataExplorerProps & BoxProps) {
+}: TreeExplorerProps & BoxProps) {
   // filter feature
   const { dataTree: filteredDataTree, nodesToExpand } = useMemo(
     () =>
@@ -71,16 +67,13 @@ function TreeExplorer({
 
   // checkboxes feature
   const [checkedDataIds, setCheckedDataIds] = useState<number[]>([]);
-
-  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>, node: IDataTree) => {
+  const handleCheckboxChange = useCallback((event: React.ChangeEvent<HTMLInputElement>, node: IDataTree) => {
     event.stopPropagation();
-
     // get ids of the data and all its children
     const dataIds = [node.data.id];
     if (node.children) {
       dataIds.push(...flatTree(node).map((c) => c.id));
     }
-
     // toggle the tag ids
     setCheckedDataIds((prevCheckedDataIds) => {
       if (prevCheckedDataIds.includes(node.data.id)) {
@@ -91,20 +84,42 @@ function TreeExplorer({
         return [...prevCheckedDataIds, ...dataIds.filter((id) => !prevCheckedDataIds.includes(id))];
       }
     });
-  };
+  }, []);
+  const isChecked = useCallback(
+    (node: IDataTree): boolean => {
+      // a node is checked if it's id as well as all of its children are in the checkedTagIds array
+      return checkedDataIds.indexOf(node.data.id) !== -1 && (node.children?.every(isChecked) || true);
+    },
+    [checkedDataIds],
+  );
+  const isIndeterminate = useCallback(
+    (node: IDataTree) => {
+      if (!node.children) {
+        return false;
+      }
+      const numCheckedChildren = node.children.filter(isChecked).length + (isChecked(node) ? 1 : 0);
+      return numCheckedChildren > 0 && numCheckedChildren < node.children.length + 1;
+    },
+    [isChecked],
+  );
 
-  const isChecked = (node: IDataTree): boolean => {
-    // a node is checked if it's id as well as all of its children are in the checkedTagIds array
-    return checkedDataIds.indexOf(node.data.id) !== -1 && (node.children?.every(isChecked) || true);
-  };
-
-  const isIndeterminate = (node: IDataTree) => {
-    if (!node.children) {
-      return false;
-    }
-    const numCheckedChildren = node.children.filter(isChecked).length + (isChecked(node) ? 1 : 0);
-    return numCheckedChildren > 0 && numCheckedChildren < node.children.length + 1;
-  };
+  // rendering
+  const wrapppedRenderActions = useCallback(
+    (node: IDataTree) => (
+      <>
+        {showCheckboxes && (
+          <Checkbox
+            key={node.data.id}
+            checked={isChecked(node)}
+            indeterminate={isIndeterminate(node)}
+            onChange={(event) => handleCheckboxChange(event, node)}
+          />
+        )}
+        {renderActions && renderActions(node)}
+      </>
+    ),
+    [handleCheckboxChange, isChecked, isIndeterminate, renderActions, showCheckboxes],
+  );
 
   return (
     <Box className="h100 myFlexContainer" {...props}>
@@ -117,7 +132,7 @@ function TreeExplorer({
           </Toolbar>
         </AppBar>
       )}
-      {renderListActions && (
+      {listActions !== undefined && (
         <Stack
           direction="row"
           className="myFlexFitContentContainer"
@@ -127,15 +142,13 @@ function TreeExplorer({
             alignItems: "center",
           }}
         >
-          {renderListActions()}
+          {listActions}
         </Stack>
       )}
       {showFilter && (
-        <TreeDataFilter
-          actions={renderFilterActions && renderFilterActions()}
-          dataFilter={dataFilter}
-          onDataFilterChange={onDataFilterChange}
-        />
+        <TreeDataFilter dataFilter={dataFilter} onDataFilterChange={onDataFilterChange}>
+          {filterActions}
+        </TreeDataFilter>
       )}
       <DataTreeView
         dataIcon={dataIcon}
@@ -155,21 +168,9 @@ function TreeExplorer({
         }}
         // actions
         onItemClick={onItemClick}
-        // render actions
+        // renderers
+        renderActions={wrapppedRenderActions}
         renderNode={renderNode}
-        renderActions={(node) => (
-          <>
-            {showCheckboxes && (
-              <Checkbox
-                key={node.data.id}
-                checked={isChecked(node)}
-                indeterminate={isIndeterminate(node)}
-                onChange={(event) => handleCheckboxChange(event, node)}
-              />
-            )}
-            {renderActions && renderActions(node)}
-          </>
-        )}
       />
     </Box>
   );

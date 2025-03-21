@@ -23,7 +23,6 @@ import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobSt
 import { COTARead } from "../../../api/openapi/models/COTARead.ts";
 import { COTATrainingSettings } from "../../../api/openapi/models/COTATrainingSettings.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
-import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import queryClient from "../../../plugins/ReactQueryClient.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import BackgroundJobStatusIndicator from "./BackgroundJobStatusIndicator.tsx";
@@ -56,25 +55,12 @@ function CotaControl({ cota }: CotaControlProps) {
     }
   }, [refinementJob.data]);
 
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
-
   // actions
   const refineCota = CotaHooks.useRefineCota();
   const handleRefineCota = () => {
-    refineCota.mutate(
-      {
-        cotaId: cota.id,
-      },
-      {
-        onSuccess(data) {
-          openSnackbar({
-            text: `Refining CotA '${data.cota.name}', Job ID: '${data.id}'`,
-            severity: "success",
-          });
-        },
-      },
-    );
+    refineCota.mutate({
+      cotaId: cota.id,
+    });
   };
 
   const resetCota = CotaHooks.useResetCota();
@@ -82,19 +68,9 @@ function CotaControl({ cota }: CotaControlProps) {
     ConfirmationAPI.openConfirmationDialog({
       text: `Do you really want to reset the analysis "${cota.name}"? This action cannot be undone! It will reset the search space and delete all sentence annotations.`,
       onAccept: () => {
-        resetCota.mutate(
-          {
-            cotaId: cota.id,
-          },
-          {
-            onSuccess(data) {
-              openSnackbar({
-                text: `Resetted CotA '${data.name}'`,
-                severity: "success",
-              });
-            },
-          },
-        );
+        resetCota.mutate({
+          cotaId: cota.id,
+        });
       },
     });
   };
@@ -118,11 +94,7 @@ function CotaControl({ cota }: CotaControlProps) {
         },
       },
       {
-        onSuccess(data) {
-          openSnackbar({
-            text: `Updated training settings of CotA '${data.name}'`,
-            severity: "success",
-          });
+        onSuccess() {
           dispatch(CotaActions.onCloseTrainingSettings());
         },
       },

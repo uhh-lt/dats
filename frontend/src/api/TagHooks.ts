@@ -3,7 +3,9 @@ import queryClient from "../plugins/ReactQueryClient.ts";
 import { useAppSelector } from "../plugins/ReduxHooks.ts";
 import { RootState } from "../store/store.ts";
 import { QueryKey } from "./QueryKey.ts";
+import { Body_documentTag_update_document_tags_batch } from "./openapi/models/Body_documentTag_update_document_tags_batch.ts";
 import { DocumentTagRead } from "./openapi/models/DocumentTagRead.ts";
+import { SourceDocumentDocumentTagMultiLink } from "./openapi/models/SourceDocumentDocumentTagMultiLink.ts";
 import { DocumentTagService } from "./openapi/services/DocumentTagService.ts";
 import { ProjectService } from "./openapi/services/ProjectService.ts";
 import { SourceDocumentService } from "./openapi/services/SourceDocumentService.ts";
@@ -67,6 +69,9 @@ const useCreateTag = () =>
       );
       queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
     },
+    meta: {
+      successMessage: (tag: DocumentTagRead) => `Created tag ${tag.name}`,
+    },
   });
 
 const useUpdateTag = () =>
@@ -76,6 +81,9 @@ const useUpdateTag = () =>
       queryClient.setQueryData<DocumentTagRead[]>([QueryKey.PROJECT_TAGS, tag.project_id], (oldData) =>
         oldData ? oldData.map((t) => (t.id === tag.id ? tag : t)) : oldData,
       );
+    },
+    meta: {
+      successMessage: (tag: DocumentTagRead) => `Updated tag ${tag.name}`,
     },
   });
 
@@ -96,6 +104,9 @@ const useDeleteTag = () =>
       );
       queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
     },
+    meta: {
+      successMessage: (tag: DocumentTagRead) => `Deleted tag ${tag.name}`,
+    },
   });
 
 const useBulkSetDocumentTags = () =>
@@ -112,6 +123,9 @@ const useBulkSetDocumentTags = () =>
       queryClient.invalidateQueries({ queryKey: [QueryKey.FILTER_TAG_STATISTICS] }); // todo: zu unspezifisch!
       // Invalidate cache of tag statistics query
       queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
+    },
+    meta: {
+      successMessage: (data: number) => `Updated tags for ${data} documents`,
     },
   });
 
@@ -130,6 +144,15 @@ const useBulkLinkDocumentTags = () =>
       // Invalidate cache of tag statistics query
       queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
     },
+    meta: {
+      successMessage: (
+        _data: number,
+        variables: {
+          requestBody: SourceDocumentDocumentTagMultiLink;
+        },
+      ) =>
+        `Linked ${variables.requestBody.document_tag_ids.length} tags to ${variables.requestBody.source_document_ids.length} documents`,
+    },
   });
 
 const useBulkUnlinkDocumentTags = () =>
@@ -145,6 +168,15 @@ const useBulkUnlinkDocumentTags = () =>
       queryClient.invalidateQueries({ queryKey: [QueryKey.FILTER_TAG_STATISTICS] });
       // Invalidate cache of tag statistics query
       queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
+    },
+    meta: {
+      successMessage: (
+        _data: number,
+        variables: {
+          requestBody: SourceDocumentDocumentTagMultiLink;
+        },
+      ) =>
+        `Unlinked ${variables.requestBody.document_tag_ids.length} tags from ${variables.requestBody.source_document_ids.length} documents`,
     },
   });
 
@@ -170,6 +202,18 @@ const useBulkUpdateDocumentTags = () =>
       queryClient.invalidateQueries({ queryKey: [QueryKey.FILTER_TAG_STATISTICS] });
       // Invalidate cache of tag statistics query
       queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
+    },
+    meta: {
+      successMessage: (
+        _data: number,
+        variables: {
+          requestBody: Body_documentTag_update_document_tags_batch;
+        },
+      ) => {
+        const linkCount = variables.requestBody.link_tag_ids?.length || 0;
+        const unlinkCount = variables.requestBody.unlink_tag_ids?.length || 0;
+        return `Updated tags (${linkCount} linked, ${unlinkCount} unlinked) for ${variables.requestBody.sdoc_ids.length} documents`;
+      },
     },
   });
 

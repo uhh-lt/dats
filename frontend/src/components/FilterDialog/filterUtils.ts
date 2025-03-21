@@ -102,33 +102,6 @@ export const filterValueType2defaultValue: Record<FilterValueType, boolean | str
   [FilterValueType.INFER_FROM_OPERATOR]: false,
 };
 
-export const operator2HumanReadable: Record<FilterOperators, string> = {
-  [IDOperator.ID_EQUALS]: "=",
-  [IDOperator.ID_NOT_EQUALS]: "!=",
-  [NumberOperator.NUMBER_EQUALS]: "=",
-  [NumberOperator.NUMBER_NOT_EQUALS]: "!=",
-  [NumberOperator.NUMBER_GT]: ">",
-  [NumberOperator.NUMBER_LT]: "<",
-  [NumberOperator.NUMBER_GTE]: ">=",
-  [NumberOperator.NUMBER_LTE]: "<=",
-  [StringOperator.STRING_CONTAINS]: "contains",
-  [StringOperator.STRING_EQUALS]: "equals",
-  [StringOperator.STRING_NOT_EQUALS]: "not equals",
-  [StringOperator.STRING_STARTS_WITH]: "starts with",
-  [StringOperator.STRING_ENDS_WITH]: "ends with",
-  [IDListOperator.ID_LIST_CONTAINS]: "contains",
-  [IDListOperator.ID_LIST_NOT_CONTAINS]: "contains not",
-  [ListOperator.LIST_CONTAINS]: "contains",
-  [ListOperator.LIST_NOT_CONTAINS]: "contains not",
-  [DateOperator.DATE_EQUALS]: "=",
-  [DateOperator.DATE_GT]: ">",
-  [DateOperator.DATE_LT]: "<",
-  [DateOperator.DATE_GTE]: ">=",
-  [DateOperator.DATE_LTE]: "<+",
-  [BooleanOperator.BOOLEAN_EQUALS]: "is",
-  [BooleanOperator.BOOLEAN_NOT_EQUALS]: "is not",
-};
-
 // METHODS
 export const getDefaultValue = (valueType: FilterValueType, operator: FilterOperator) => {
   if (valueType === FilterValueType.INFER_FROM_OPERATOR) {

@@ -84,6 +84,10 @@ const useDeleteDocuments = () =>
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
     },
+    meta: {
+      successMessage: (_data: SourceDocumentRead[], variables: { sdocIds: number[] }) =>
+        `Successfully deleted ${variables.sdocIds.length} document(s)`,
+    },
   });
 
 const useUpdateName = () =>
@@ -91,6 +95,10 @@ const useUpdateName = () =>
     mutationFn: SourceDocumentService.updateSdoc,
     onSuccess: (data) => {
       queryClient.setQueryData<SourceDocumentRead>([QueryKey.SDOC, data.id], data);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
+    },
+    meta: {
+      successMessage: (sdoc: SourceDocumentRead) => `Updated document "${sdoc.filename}"`,
     },
   });
 

@@ -1,15 +1,15 @@
 import { ArrowRight } from "@mui/icons-material";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
-import { Box, Button, ButtonProps, Dialog, DialogActions, DialogTitle, Stack, Typography } from "@mui/material";
+import { ButtonProps, Dialog, DialogActions, Stack, Typography } from "@mui/material";
 import { MRT_RowSelectionState } from "material-react-table";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import SentenceAnnotationHooks from "../../api/SentenceAnnotationHooks.ts";
-import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import CodeRenderer from "../Code/CodeRenderer.tsx";
 import CodeTable from "../Code/CodeTable.tsx";
 import { CRUDDialogActions } from "../dialogSlice.ts";
+import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
 import SentenceAnnotationRenderer from "./SentenceAnnotationRenderer.tsx";
 
 export interface SentenceAnnotationEditDialogProps extends ButtonProps {
@@ -25,25 +25,22 @@ function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEditDialo
   // global client state (redux)
   const open = useAppSelector((state) => state.dialog.isSentenceAnnotationEditDialogOpen);
   const annotationIds = useAppSelector((state) => state.dialog.sentenceAnnotationIds);
-  const onEdit = useAppSelector((state) => state.dialog.spanAnnotationEditDialogOnEdit);
+  const onEdit = useAppSelector((state) => state.dialog.sentenceAnnotationEditDialogOnEdit);
   const dispatch = useAppDispatch();
 
   // mutations
-  const updateAnnotationBulkMutation = SentenceAnnotationHooks.useUpdateBulkSentenceAnno();
-
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
+  const { mutate: updateAnnotationBulkMutation, isPending } = SentenceAnnotationHooks.useUpdateBulkSentenceAnno();
 
   // actions
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     dispatch(CRUDDialogActions.closeSentenceAnnotationEditDialog());
     setRowSelectionModel({});
-  };
+  }, [dispatch]);
 
-  const handleUpdateAnnotations = () => {
-    if (!selectedCodeId || annotationIds.length === 0) return;
+  const handleUpdateAnnotations = useCallback(() => {
+    if (!selectedCodeId) return;
 
-    updateAnnotationBulkMutation.mutate(
+    updateAnnotationBulkMutation(
       {
         requestBody: annotationIds.map((annotation) => ({
           sent_annotation_id: annotation,
@@ -53,21 +50,26 @@ function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEditDialo
       {
         onSuccess: () => {
           handleClose();
-          if (onEdit) onEdit();
-          openSnackbar({
-            text: `Updated annotation!`,
-            severity: "success",
-          });
+          onEdit?.();
         },
       },
     );
+  }, [selectedCodeId, annotationIds, updateAnnotationBulkMutation, onEdit, handleClose]);
+
+  // maximize dialog
+  const [isMaximized, setIsMaximized] = useState(false);
+  const handleToggleMaximize = () => {
+    setIsMaximized((prev) => !prev);
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      <DialogTitle>
-        Changing the code of {annotationIds.length} annotation{annotationIds.length > 1 && "s"}
-      </DialogTitle>
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth fullScreen={isMaximized}>
+      <DATSDialogHeader
+        title={`Changing the code of ${annotationIds.length} sentence annotation${annotationIds.length > 1 && "s"}`}
+        onClose={handleClose}
+        isMaximized={isMaximized}
+        onToggleMaximize={handleToggleMaximize}
+      />
       <CodeTable
         projectId={projectId}
         rowSelectionModel={rowSelectionModel}
@@ -94,16 +96,15 @@ function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEditDialo
       )}
 
       <DialogActions>
-        <Button onClick={handleClose}>Close</Button>
-        <Box flexGrow={1} />
         <LoadingButton
           variant="contained"
           color="success"
           startIcon={<SaveIcon />}
           onClick={handleUpdateAnnotations}
           disabled={!selectedCodeId}
-          loading={updateAnnotationBulkMutation.isPending}
+          loading={isPending}
           loadingPosition="start"
+          fullWidth
         >
           Update Annotation{annotationIds.length > 1 && "s"}
         </LoadingButton>

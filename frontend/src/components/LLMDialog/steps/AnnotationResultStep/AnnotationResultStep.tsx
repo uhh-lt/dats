@@ -1,7 +1,7 @@
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { LoadingButton, TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Button, CircularProgress, DialogActions, DialogContent, Tab, Typography } from "@mui/material";
-import { useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import LLMHooks from "../../../../api/LLMHooks.ts";
 import { AnnotationLLMJobResult } from "../../../../api/openapi/models/AnnotationLLMJobResult.ts";
 import { SpanAnnotationCreate } from "../../../../api/openapi/models/SpanAnnotationCreate.ts";
@@ -49,9 +49,9 @@ function AnnotationResultStepContent({ jobResult }: { jobResult: AnnotationLLMJo
 
   // local state to manage tabs
   const [tab, setTab] = useState<string>(jobResult.results[0].sdoc_id.toString());
-  const handleChangeTab = (_: React.SyntheticEvent, newValue: string) => {
+  const handleChangeTab = useCallback((_: React.SyntheticEvent, newValue: string) => {
     setTab(newValue);
-  };
+  }, []);
 
   // local state to manage annotations
   const [annotations, setAnnotations] = useState<Record<number, SpanAnnotationRead[]>>(() =>
@@ -60,50 +60,78 @@ function AnnotationResultStepContent({ jobResult }: { jobResult: AnnotationLLMJo
       return acc;
     }, {}),
   );
-  const handleChangeAnnotations = (sdocId: number) => (annotations: SpanAnnotationRead[]) => {
-    setAnnotations((prev) => {
-      return {
+  const handleChangeAnnotations = useCallback(
+    (sdocId: number) => (annotations: SpanAnnotationRead[]) => {
+      setAnnotations((prev) => ({
         ...prev,
         [sdocId]: annotations,
-      };
-    });
-  };
+      }));
+    },
+    [],
+  );
 
   // actions
   const dispatch = useAppDispatch();
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     dispatch(CRUDDialogActions.closeLLMDialog());
-  };
+  }, [dispatch]);
 
-  const createBulkAnnotationsMutation = SpanAnnotationHooks.useCreateBulkAnnotations();
-  const handleApplySuggestedAnnotations = () => {
+  const { mutate: createBulkAnnotationsMutation, isPending } = SpanAnnotationHooks.useCreateBulkAnnotations();
+  const handleApplySuggestedAnnotations = useCallback(() => {
     if (!annotations) return;
 
-    createBulkAnnotationsMutation.mutate(
-      {
-        requestBody: Object.entries(annotations).reduce((acc, [sdocId, sdocAnnos]) => {
-          const sdocIdInt = parseInt(sdocId);
-          for (const annotation of sdocAnnos) {
-            acc.push({
-              sdoc_id: sdocIdInt,
-              code_id: annotation.code_id,
-              begin: annotation.begin,
-              end: annotation.end,
-              begin_token: annotation.begin_token,
-              end_token: annotation.end_token,
-              span_text: annotation.text,
-            });
-          }
-          return acc;
-        }, [] as SpanAnnotationCreate[]),
-      },
+    const bulkAnnotations = Object.entries(annotations).reduce((acc, [sdocId, sdocAnnos]) => {
+      const sdocIdInt = parseInt(sdocId);
+      for (const annotation of sdocAnnos) {
+        acc.push({
+          sdoc_id: sdocIdInt,
+          code_id: annotation.code_id,
+          begin: annotation.begin,
+          end: annotation.end,
+          begin_token: annotation.begin_token,
+          end_token: annotation.end_token,
+          span_text: annotation.text,
+        });
+      }
+      return acc;
+    }, [] as SpanAnnotationCreate[]);
+
+    createBulkAnnotationsMutation(
+      { requestBody: bulkAnnotations },
       {
         onSuccess: () => {
           dispatch(CRUDDialogActions.closeLLMDialog());
         },
       },
     );
-  };
+  }, [annotations, createBulkAnnotationsMutation, dispatch]);
+
+  // rendering
+  const tabPanels = useMemo(
+    () =>
+      Object.entries(annotations).map(([sdocIdStr, annotations]) => {
+        const sdocId = parseInt(sdocIdStr);
+        return (
+          <TabPanel key={sdocId} value={sdocIdStr} sx={{ px: 0, py: 1 }}>
+            <TextAnnotationValidator
+              sdocId={sdocId}
+              codeIdsForSelection={codeIdsForSelection}
+              annotations={annotations}
+              handleChangeAnnotations={handleChangeAnnotations(sdocId)}
+            />
+          </TabPanel>
+        );
+      }),
+    [annotations, codeIdsForSelection, handleChangeAnnotations],
+  );
+
+  const tabs = useMemo(
+    () =>
+      Object.keys(annotations).map((sdocId) => (
+        <Tab key={sdocId} label={<SdocRenderer sdoc={parseInt(sdocId)} renderFilename />} value={sdocId} />
+      )),
+    [annotations],
+  );
 
   return (
     <>
@@ -121,25 +149,9 @@ function AnnotationResultStepContent({ jobResult }: { jobResult: AnnotationLLMJo
         </LLMUtterance>
         <TabContext value={tab}>
           <Box sx={{ mt: 3, borderBottom: 1, borderColor: "divider" }}>
-            <TabList onChange={handleChangeTab}>
-              {Object.keys(annotations).map((sdocId) => (
-                <Tab key={sdocId} label={<SdocRenderer sdoc={parseInt(sdocId)} renderFilename />} value={sdocId} />
-              ))}
-            </TabList>
+            <TabList onChange={handleChangeTab}>{tabs}</TabList>
           </Box>
-          {Object.entries(annotations).map(([sdocIdStr, annotations]) => {
-            const sdocId = parseInt(sdocIdStr);
-            return (
-              <TabPanel key={sdocId} value={sdocIdStr} sx={{ px: 0, py: 1 }}>
-                <TextAnnotationValidator
-                  sdocId={sdocId}
-                  codeIdsForSelection={codeIdsForSelection}
-                  annotations={annotations}
-                  handleChangeAnnotations={handleChangeAnnotations(sdocId)}
-                />
-              </TabPanel>
-            );
-          })}
+          {tabPanels}
         </TabContext>
       </DialogContent>
       <DialogActions>
@@ -147,7 +159,7 @@ function AnnotationResultStepContent({ jobResult }: { jobResult: AnnotationLLMJo
         <LoadingButton
           variant="contained"
           startIcon={<PlayCircleIcon />}
-          loading={createBulkAnnotationsMutation.isPending}
+          loading={isPending}
           loadingPosition="start"
           onClick={handleApplySuggestedAnnotations}
         >
@@ -158,4 +170,4 @@ function AnnotationResultStepContent({ jobResult }: { jobResult: AnnotationLLMJo
   );
 }
 
-export default AnnotationResultStep;
+export default memo(AnnotationResultStep);

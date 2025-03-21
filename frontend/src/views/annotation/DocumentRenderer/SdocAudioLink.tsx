@@ -15,7 +15,7 @@ function SdocAudioLink({ projectId, filename, toPrefix }: SdocAudioLinkProps) {
 
   return (
     <>
-      {sdocId.isSuccess && thumbnailUrl.isSuccess ? (
+      {thumbnailUrl.isSuccess ? (
         <div>
           <Link component={RouterLink} to={`${toPrefix}${sdocId.data}`}>
             <Box sx={{ position: "relative", height: 200, textAlign: "center" }}>
@@ -28,7 +28,7 @@ function SdocAudioLink({ projectId, filename, toPrefix }: SdocAudioLinkProps) {
                   color: "rgba(0, 0, 0, 0.666)",
                 }}
               />
-              <img style={{ marginBottom: 1.5 }} height="200" src={thumbnailUrl.data} alt="Tofu meatballs" />
+              <img style={{ marginBottom: 1.5 }} height="200" src={thumbnailUrl.data} alt="Audio thumbnail" />
             </Box>
           </Link>
         </div>

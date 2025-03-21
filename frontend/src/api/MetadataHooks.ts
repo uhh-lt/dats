@@ -105,6 +105,9 @@ const useDeleteProjectMetadata = () =>
 
       queryClient.invalidateQueries({ queryKey: [QueryKey.TABLE_INFO] }); // tableInfo queries need to be refetched, as metadata was deleted
     },
+    meta: {
+      successMessage: (data: ProjectMetadataRead) => `Deleted metadata "${data.key}"`,
+    },
   });
 
 // SDOC METADATA QUERIES
@@ -167,6 +170,9 @@ const useUpdateSdocMetadata = () =>
         old ? { ...old, [metadata.id]: metadata } : { [metadata.id]: metadata },
       );
     },
+    meta: {
+      successMessage: (data: SourceDocumentMetadataRead) => `Updated metadata value for document "${data.id}"`,
+    },
   });
 
 const useUpdateBulkSdocMetadata = () =>
@@ -178,6 +184,9 @@ const useUpdateBulkSdocMetadata = () =>
           old ? { ...old, [metadata.id]: metadata } : { [metadata.id]: metadata },
         );
       });
+    },
+    meta: {
+      successMessage: (data: SourceDocumentMetadataRead[]) => `Updated ${data.length} document metadata values`,
     },
   });
 

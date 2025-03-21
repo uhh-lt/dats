@@ -50,6 +50,9 @@ const useUpdate = () =>
           );
         });
     },
+    meta: {
+      successMessage: (user: UserRead) => `Updated user ${user.first_name} ${user.last_name}`,
+    },
   });
 
 const useAddUserToProject = () =>
@@ -61,7 +64,7 @@ const useAddUserToProject = () =>
       );
     },
     meta: {
-      successMessage: (user: UserRead) => "Successfully added user " + user.first_name + "!",
+      successMessage: (user: UserRead) => `Added user ${user.first_name} ${user.last_name} to project`,
     },
   });
 
@@ -74,13 +77,16 @@ const useRemoveUserFromProject = () =>
       );
     },
     meta: {
-      successMessage: (data: UserRead) => "Successfully removed user " + data.first_name + "!",
+      successMessage: (user: UserRead) => `Removed user ${user.first_name} ${user.last_name} from project`,
     },
   });
 
 const useRegister = () =>
   useMutation({
     mutationFn: AuthenticationService.register,
+    meta: {
+      successMessage: (user: UserRead) => `Successfully registered user ${user.first_name} ${user.last_name}`,
+    },
   });
 
 const UserHooks = {

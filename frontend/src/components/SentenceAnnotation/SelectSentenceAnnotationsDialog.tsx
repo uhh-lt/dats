@@ -1,9 +1,12 @@
-import { Box, Button, ButtonProps, CircularProgress, Dialog } from "@mui/material";
+import { Button, ButtonProps, CircularProgress, Dialog } from "@mui/material";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
 import MetadataHooks from "../../api/MetadataHooks.ts";
 import { ProjectMetadataRead } from "../../api/openapi/models/ProjectMetadataRead.ts";
 import { SentAnnoColumns } from "../../api/openapi/models/SentAnnoColumns.ts";
+import { SentenceAnnotationRow } from "../../api/openapi/models/SentenceAnnotationRow.ts";
+import { FilterTableToolbarProps } from "../FilterTable/FilterTableToolbarProps.ts";
+import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
 import SentenceAnnotationTable from "./SentenceAnnotationTable/SentenceAnnotationTable.tsx";
 
 const filterName = "selectSentenceAnnotationDialog";
@@ -23,12 +26,18 @@ function SelectSentenceAnnotationsDialog({ projectId, buttonProps, ...props }: S
   const metadata = MetadataHooks.useGetProjectMetadataList();
 
   // actions
-  const handleOpen = () => {
+  const handleOpen = useCallback(() => {
     setOpen(true);
-  };
+  }, []);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setOpen(false);
+  }, []);
+
+  // maximize dialog
+  const [isMaximized, setIsMaximized] = useState(false);
+  const handleToggleMaximize = () => {
+    setIsMaximized((prev) => !prev);
   };
 
   return (
@@ -36,20 +45,22 @@ function SelectSentenceAnnotationsDialog({ projectId, buttonProps, ...props }: S
       <Button onClick={handleOpen} {...buttonProps}>
         Select annotations
       </Button>
-      <Dialog
-        onClose={handleClose}
-        open={open}
-        maxWidth="lg"
-        fullWidth
-        slotProps={{ paper: { style: { height: "100%" } } }}
-      >
+      <Dialog onClose={handleClose} open={open} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         {metadata.isSuccess ? (
-          <SelectSentenceAnnotationsDialogContent
-            onClose={handleClose}
-            projectId={projectId}
-            metadata={metadata.data}
-            {...props}
-          />
+          <>
+            <DATSDialogHeader
+              title="Select sentence annotations to add to Whiteboard"
+              onClose={handleClose}
+              isMaximized={isMaximized}
+              onToggleMaximize={handleToggleMaximize}
+            />
+            <SelectSentenceAnnotationsDialogContent
+              onClose={handleClose}
+              projectId={projectId}
+              metadata={metadata.data}
+              {...props}
+            />
+          </>
         ) : metadata.isLoading ? (
           <CircularProgress />
         ) : (
@@ -66,7 +77,6 @@ interface SelectSentenceAnnotationsDialogContentProps extends SelectSentenceAnno
 }
 
 function SelectSentenceAnnotationsDialogContent({
-  title,
   metadata,
   projectId,
   onConfirmSelection,
@@ -91,20 +101,30 @@ function SelectSentenceAnnotationsDialogContent({
   );
 
   // actions
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     onClose();
     setRowSelectionModel({});
-  };
+  }, [onClose]);
 
-  const handleConfirmSelection = () => {
+  const handleConfirmSelection = useCallback(() => {
     const selectedAnnotationIds = Object.keys(rowSelectionModel).map((id) => parseInt(id));
     onConfirmSelection(selectedAnnotationIds);
     handleClose();
-  };
+  }, [handleClose, onConfirmSelection, rowSelectionModel]);
+
+  // rendering
+  const renderBottomToolbar = useCallback(
+    (props: FilterTableToolbarProps<SentenceAnnotationRow>) => (
+      <Button onClick={handleConfirmSelection} disabled={props.selectedData.length === 0}>
+        Select {props.selectedData.length > 0 ? props.selectedData.length : null} Annotation
+        {props.selectedData.length > 1 ? "s" : ""}
+      </Button>
+    ),
+    [handleConfirmSelection],
+  );
 
   return (
     <SentenceAnnotationTable
-      title={title}
       projectId={projectId}
       filterName={filterName}
       rowSelectionModel={rowSelectionModel}
@@ -112,20 +132,10 @@ function SelectSentenceAnnotationsDialogContent({
       sortingModel={sortingModel}
       onSortingChange={setSortingModel}
       columnVisibilityModel={visibilityModel}
-      onColumnVisibilityChange={setVisibilityModel as React.Dispatch<React.SetStateAction<MRT_VisibilityState>>}
-      cardProps={{ elevation: 2, className: "myFlexFillAllContainer myFlexContainer" }}
-      renderBottomToolbarCustomActions={(props) => (
-        <>
-          <Box flexGrow={1} />
-          <Button onClick={handleClose}>Close</Button>
-          <Button onClick={handleConfirmSelection} disabled={props.selectedAnnotations.length === 0}>
-            Select {props.selectedAnnotations.length > 0 ? props.selectedAnnotations.length : null} Annotation
-            {props.selectedAnnotations.length > 1 ? "s" : ""}
-          </Button>
-        </>
-      )}
+      onColumnVisibilityChange={setVisibilityModel}
+      renderBottomToolbar={renderBottomToolbar}
     />
   );
 }
 
-export default SelectSentenceAnnotationsDialog;
+export default memo(SelectSentenceAnnotationsDialog);

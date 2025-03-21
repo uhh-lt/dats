@@ -1,17 +1,15 @@
 import { TabContext, TabPanel } from "@mui/lab";
-import { Box, Card, CardContent, Container, Portal, Tab, Tabs, Typography } from "@mui/material";
-import React, { useContext, useRef, useState } from "react";
+import { Box, Card, CardContent, Container, Tab, Tabs } from "@mui/material";
+import React, { useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
 import { SourceDocumentDataRead } from "../../api/openapi/models/SourceDocumentDataRead.ts";
 import CodeExplorer from "../../components/Code/CodeExplorer/CodeExplorer.tsx";
 import EditableTypography from "../../components/EditableTypography.tsx";
-import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import DocumentInformation from "../../components/SourceDocument/DocumentInformation/DocumentInformation.tsx";
-import { AppBarContext } from "../../layouts/AppBarContext.ts";
-import OneSidebarLayout from "../../layouts/OneSidebarLayout.tsx";
-import TwoSidebarsLayout from "../../layouts/TwoSidebarsLayout.tsx";
+import SidebarContentLayout from "../../layouts/ContentLayouts/SidebarContentLayout.tsx";
+import SidebarContentSidebarLayout from "../../layouts/ContentLayouts/SidebarContentSidebarLayout.tsx";
 import { useAppSelector } from "../../plugins/ReduxHooks.ts";
 import BBoxAnnotationExplorer from "./AnnotationExploer/BBoxAnnotationExplorer.tsx";
 import SentenceAnnotationExplorer from "./AnnotationExploer/SentenceAnnotationExplorer.tsx";
@@ -160,29 +158,18 @@ function Annotation() {
   const sdocData = SdocHooks.useGetDocumentData(sdocId);
 
   // rename document
-  const openSnackbar = useOpenSnackbar();
   const updateNameMutation = SdocHooks.useUpdateName();
   const handleUpdateName = (newName: string) => {
     if (sdoc.isSuccess) {
       if (newName === sdoc.data.name) {
         return;
       }
-      updateNameMutation.mutate(
-        {
-          sdocId: sdoc.data.id,
-          requestBody: {
-            name: newName,
-          },
+      updateNameMutation.mutate({
+        sdocId: sdoc.data.id,
+        requestBody: {
+          name: newName,
         },
-        {
-          onSuccess: (data) => {
-            openSnackbar({
-              text: `Updated document name to ${data.name}`,
-              severity: "success",
-            });
-          },
-        },
-      );
+      });
     }
   };
 
@@ -257,11 +244,11 @@ function Annotation() {
     </Box>
   );
 
-  // layout: use one sidebar layout in compare mode
-  let layout: JSX.Element = <></>;
+  // rendering
+
   if (isCompareMode) {
-    layout = (
-      <OneSidebarLayout
+    return (
+      <SidebarContentLayout
         leftSidebar={explorer}
         content={
           <>
@@ -272,8 +259,8 @@ function Annotation() {
       />
     );
   } else {
-    layout = (
-      <TwoSidebarsLayout
+    return (
+      <SidebarContentSidebarLayout
         leftSidebar={explorer}
         content={
           <>
@@ -285,19 +272,6 @@ function Annotation() {
       />
     );
   }
-
-  // rendering
-  const appBarContainerRef = useContext(AppBarContext);
-  return (
-    <>
-      <Portal container={appBarContainerRef?.current}>
-        <Typography variant="h6" component="div">
-          {sdoc.isSuccess ? `Annotator: ${sdoc.data.filename}` : "Annotator"}
-        </Typography>
-      </Portal>
-      {layout}
-    </>
-  );
 }
 
 export default Annotation;

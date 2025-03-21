@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+import pandas as pd
 from sqlalchemy import distinct, func
 
 from app.core.analysis.word_frequency_analysis.word_frequency_columns import (
@@ -9,9 +10,9 @@ from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.doc_type import DocType
 from app.core.data.dto.analysis import WordFrequencyResult, WordFrequencyStat
 from app.core.data.dto.project_metadata import ProjectMetadataRead
-from app.core.data.export.export_service import ExportService
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.word_frequency import WordFrequencyORM
+from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
 from app.core.search.column_info import (
     ColumnInfo,
@@ -150,9 +151,26 @@ def word_frequency_export(
     project_id: int,
     filter: Filter[WordFrequencyColumns],
 ) -> str:
-    export_service = ExportService()
+    repo = RepoService()
 
     wf_result = word_frequency(project_id=project_id, filter=filter, sorts=[])
-    return export_service.export_word_frequencies(
-        project_id=project_id, wf_result=wf_result
+
+    data = [
+        {
+            "word": wf.word,
+            "word_percent": wf.word_percent,
+            "count": wf.count,
+            "sdocs": wf.sdocs,
+            "sdocs_percent": wf.sdocs_percent,
+        }
+        for wf in wf_result.word_frequencies
+    ]
+
+    df = pd.DataFrame(data=data)
+
+    # export the data frame
+    export_file = repo.write_df_to_temp_file(
+        df=df,
+        fn=f"project_{project_id}_word_frequency_export",
     )
+    return repo.get_temp_file_url(export_file.name, relative=True)

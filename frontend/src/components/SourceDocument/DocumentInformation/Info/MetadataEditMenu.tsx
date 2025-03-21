@@ -1,5 +1,3 @@
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import DeleteIcon from "@mui/icons-material/Delete";
 import {
   Box,
   Button,
@@ -18,10 +16,10 @@ import React, { useCallback, useState } from "react";
 import MetadataHooks from "../../../../api/MetadataHooks.ts";
 import { MetaType } from "../../../../api/openapi/models/MetaType.ts";
 import { ProjectMetadataRead } from "../../../../api/openapi/models/ProjectMetadataRead.ts";
+import { Icon, getIconComponent } from "../../../../utils/icons/iconUtils.tsx";
+import { metaTypeToIcon } from "../../../../utils/icons/metaTypeToIcon.tsx";
 import ConfirmationAPI from "../../../ConfirmationDialog/ConfirmationAPI.ts";
-import { useOpenSnackbar } from "../../../SnackbarDialog/useOpenSnackbar.ts";
 import MetadataTypeSelectorMenu from "./MetadataTypeSelectorMenu.tsx";
-import { metaTypeToIcon } from "./metaTypeToIcon.tsx";
 
 interface MetadataEditMenuProps {
   projectMetadata: ProjectMetadataRead;
@@ -59,7 +57,6 @@ function MetadataEditMenu({ projectMetadata }: MetadataEditMenuProps) {
 
   // closing / confirming changes
   const updateMutation = MetadataHooks.useUpdateProjectMetadata();
-
   const handleClose = () => {
     setPosition(undefined);
 
@@ -94,29 +91,18 @@ function MetadataEditMenu({ projectMetadata }: MetadataEditMenuProps) {
   };
 
   // deletion
-  const openSnackbar = useOpenSnackbar();
   const deleteMutation = MetadataHooks.useDeleteProjectMetadata();
   const handleDeleteMetadata = useCallback(() => {
     ConfirmationAPI.openConfirmationDialog({
       text: `Do you really want to delete the ProjectMetadata ${projectMetadata.id}? This will remove metadata from all corresponding documents. This action cannot be undone!`,
       onAccept: () => {
         const mutation = deleteMutation.mutate;
-        mutation(
-          {
-            metadataId: projectMetadata.id,
-          },
-          {
-            onSuccess: (data) => {
-              openSnackbar({
-                text: `Deleted Metadata ${data.id} from Project ${data.project_id}`,
-                severity: "success",
-              });
-            },
-          },
-        );
+        mutation({
+          metadataId: projectMetadata.id,
+        });
       },
     });
-  }, [deleteMutation.mutate, projectMetadata.id, openSnackbar]);
+  }, [deleteMutation.mutate, projectMetadata.id]);
 
   return (
     <>
@@ -170,17 +156,13 @@ function MetadataEditMenu({ projectMetadata }: MetadataEditMenuProps) {
         <Divider />
         <ListItem disablePadding>
           <ListItemButton disabled>
-            <ListItemIcon>
-              <ContentCopyIcon />
-            </ListItemIcon>
+            <ListItemIcon>{getIconComponent(Icon.DUPLICATE)}</ListItemIcon>
             <ListItemText>Duplicate metadata</ListItemText>
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
           <ListItemButton onClick={handleDeleteMetadata}>
-            <ListItemIcon>
-              <DeleteIcon />
-            </ListItemIcon>
+            <ListItemIcon>{getIconComponent(Icon.DELETE)}</ListItemIcon>
             <ListItemText>Delete metadata</ListItemText>
           </ListItemButton>
         </ListItem>

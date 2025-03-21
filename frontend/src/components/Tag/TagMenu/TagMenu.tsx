@@ -1,5 +1,3 @@
-import LabelIcon from "@mui/icons-material/Label";
-import SearchIcon from "@mui/icons-material/Search";
 import {
   Box,
   Checkbox,
@@ -16,10 +14,10 @@ import {
   Typography,
 } from "@mui/material";
 import { isEqual } from "lodash";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import TagHooks from "../../../api/TagHooks.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
-import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
+import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 import { CheckboxState } from "./CheckboxState.ts";
 import TagMenuCreationButton from "./TagMenuCreateButton.tsx";
 
@@ -65,16 +63,11 @@ function TagMenuContent({
   tags,
   initialChecked,
 }: { tags: DocumentTagRead[]; initialChecked: Map<number, CheckboxState> } & TagMenuProps) {
-  // mutations
-  const updateTagsMutation = TagHooks.useBulkUpdateDocumentTags();
-  const addTagsMutation = TagHooks.useBulkLinkDocumentTags();
-  const removeTagsMutation = TagHooks.useBulkUnlinkDocumentTags();
-
   // menu state
   const open = Boolean(anchorEl);
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setAnchorEl(null);
-  };
+  }, [setAnchorEl]);
 
   // checkbox state
   const [checked, setChecked] = useState<Map<number, CheckboxState>>(new Map());
@@ -82,21 +75,7 @@ function TagMenuContent({
     setChecked(new Map(initialChecked));
   }, [initialChecked]);
   const hasChanged = useMemo(() => !isEqual(initialChecked, checked), [initialChecked, checked]);
-
-  // filter feature
-  const [search, setSearch] = useState<string>("");
-  const filteredTags: DocumentTagRead[] | undefined = useMemo(() => {
-    return tags.filter((tag) => tag.name.toLowerCase().startsWith(search.toLowerCase()));
-  }, [tags, search]);
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(event.target.value);
-  };
-
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
-
-  // actions
-  const handleCheck = (tagId: number) => {
+  const handleCheck = (tagId: number) => () => {
     setChecked(
       (checked) =>
         new Map(
@@ -108,87 +87,74 @@ function TagMenuContent({
     );
   };
 
-  const handleClickTag = (tagId: number) => {
+  // filter feature
+  const [search, setSearch] = useState<string>("");
+  const filteredTags: DocumentTagRead[] | undefined = useMemo(() => {
+    return tags.filter((tag) => tag.name.toLowerCase().startsWith(search.toLowerCase()));
+  }, [tags, search]);
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(event.target.value);
+  };
+
+  // actions
+  const { mutate: addTagsMutation } = TagHooks.useBulkLinkDocumentTags();
+  const { mutate: removeTagsMutation } = TagHooks.useBulkUnlinkDocumentTags();
+  const handleClickTag = (tagId: number) => () => {
+    console.log("HI!");
     if (initialChecked.get(tagId) === CheckboxState.CHECKED) {
-      removeTagsMutation.mutate(
-        {
-          requestBody: {
-            source_document_ids: sdocIds,
-            document_tag_ids: [tagId],
-          },
+      removeTagsMutation({
+        requestBody: {
+          source_document_ids: sdocIds,
+          document_tag_ids: [tagId],
         },
-        {
-          onSuccess: () => {
-            openSnackbar({
-              text: `Removed tags!`,
-              severity: "success",
-            });
-          },
-        },
-      );
+      });
     } else {
-      addTagsMutation.mutate(
-        {
-          requestBody: {
-            source_document_ids: sdocIds,
-            document_tag_ids: [tagId],
-          },
+      addTagsMutation({
+        requestBody: {
+          source_document_ids: sdocIds,
+          document_tag_ids: [tagId],
         },
-        {
-          onSuccess: () => {
-            openSnackbar({
-              text: `Added tags!`,
-              severity: "success",
-            });
-          },
-        },
-      );
+      });
     }
     handleClose();
   };
-  const handleApplyTags = () => {
-    updateTagsMutation.mutate(
-      {
-        requestBody: {
-          sdoc_ids: sdocIds,
-          link_tag_ids: Array.from(checked)
-            .filter(([, state]) => state === CheckboxState.CHECKED)
-            .map(([tagId]) => tagId),
-          unlink_tag_ids: Array.from(checked)
-            .filter(([, state]) => state === CheckboxState.NOT_CHECKED)
-            .map(([tagId]) => tagId),
-        },
+
+  const { mutate: updateTagsMutation, isPending: isUpdatePending } = TagHooks.useBulkUpdateDocumentTags();
+  const handleApplyTags = useCallback(() => {
+    updateTagsMutation({
+      requestBody: {
+        sdoc_ids: sdocIds,
+        link_tag_ids: Array.from(checked)
+          .filter(([, state]) => state === CheckboxState.CHECKED)
+          .map(([tagId]) => tagId),
+        unlink_tag_ids: Array.from(checked)
+          .filter(([, state]) => state === CheckboxState.NOT_CHECKED)
+          .map(([tagId]) => tagId),
       },
-      {
-        onSuccess: () => {
-          openSnackbar({
-            text: `Updated tags!`,
-            severity: "success",
-          });
-        },
-      },
-    );
+    });
     handleClose();
-  };
+  }, [checked, handleClose, sdocIds, updateTagsMutation]);
 
   // Display buttons depending on state
-  let actionMenu: React.ReactNode = null;
-  if (hasChanged) {
-    actionMenu = (
-      <ListItem disablePadding dense key={"apply"}>
-        <ListItemButton onClick={handleApplyTags} dense disabled={updateTagsMutation.isPending}>
-          <Typography align={"center"} sx={{ width: "100%" }}>
-            Apply
-          </Typography>
-        </ListItemButton>
-      </ListItem>
-    );
-  } else if (
-    search.trim().length === 0 ||
-    (search.trim().length > 0 && filteredTags.map((tag) => tag.name).indexOf(search.trim()) === -1)
-  ) {
-    actionMenu = <TagMenuCreationButton tagName={search} dense key={"create-new"} />;
-  }
+  const actionMenu: React.ReactNode = useMemo(() => {
+    if (hasChanged) {
+      return (
+        <ListItem disablePadding dense key={"apply"}>
+          <ListItemButton onClick={handleApplyTags} dense disabled={isUpdatePending}>
+            <Typography align={"center"} sx={{ width: "100%" }}>
+              Apply
+            </Typography>
+          </ListItemButton>
+        </ListItem>
+      );
+    } else if (
+      search.trim().length === 0 ||
+      (search.trim().length > 0 && filteredTags.map((tag) => tag.name).indexOf(search.trim()) === -1)
+    ) {
+      return <TagMenuCreationButton tagName={search} dense key={"create-new"} />;
+    }
+    return null;
+  }, [filteredTags, handleApplyTags, hasChanged, isUpdatePending, search]);
 
   return (
     <Popover
@@ -214,11 +180,7 @@ function TagMenuContent({
             placeholder="Add tag..."
             slotProps={{
               input: {
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
+                endAdornment: <InputAdornment position="end">{getIconComponent(Icon.SEARCH)}</InputAdornment>,
               },
             }}
           />
@@ -238,19 +200,23 @@ function TagMenuContent({
                 secondaryAction={
                   <Checkbox
                     edge="end"
-                    onChange={() => handleCheck(tag.id)}
+                    onChange={handleCheck(tag.id)}
                     checked={checked.get(tag.id) === CheckboxState.CHECKED}
                     indeterminate={checked.get(tag.id) === CheckboxState.INDETERMINATE}
                     tabIndex={-1}
                     disableRipple
-                    inputProps={{ "aria-labelledby": labelId }}
+                    slotProps={{
+                      input: {
+                        "aria-labelledby": labelId,
+                      },
+                    }}
                     style={{ padding: "0 8px 0 0" }}
                   />
                 }
               >
-                <ListItemButton onClick={() => handleClickTag(tag.id)} dense>
+                <ListItemButton onClick={handleClickTag(tag.id)} dense>
                   <ListItemIcon sx={{ minWidth: "32px" }}>
-                    <LabelIcon style={{ color: tag.color }} />
+                    {getIconComponent(Icon.TAG, { style: { color: tag.color } })}
                   </ListItemIcon>
                   <ListItemText id={labelId} primary={tag.name} />
                 </ListItemButton>

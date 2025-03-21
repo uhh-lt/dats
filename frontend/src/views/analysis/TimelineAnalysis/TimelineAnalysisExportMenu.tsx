@@ -1,11 +1,10 @@
-import ImageIcon from "@mui/icons-material/Image";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
-import TextSnippetIcon from "@mui/icons-material/TextSnippet";
 import { IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Tooltip } from "@mui/material";
 import { useMemo, useState } from "react";
 import CsvDownloader from "react-csv-downloader";
 import { Datas } from "react-csv-downloader/dist/esm/lib/csv";
 import { exportChart } from "../../../utils/ExportUtils.ts";
+import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 import { TimelineAnalysisCount } from "./TimelineAnalysisCount.ts";
 
 interface TimelineAnalysisExportMenuProps {
@@ -48,9 +47,7 @@ function TimelineAnalysisExportMenu({ chartData, chartName }: TimelineAnalysisEx
       </Tooltip>
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
         <MenuItem onClick={handleExportChartPNG}>
-          <ListItemIcon>
-            <ImageIcon fontSize="small" />
-          </ListItemIcon>
+          <ListItemIcon>{getIconComponent(Icon.EXPORT_IMAGE, { fontSize: "small" })}</ListItemIcon>
           <ListItemText>PNG</ListItemText>
         </MenuItem>
         <CsvDownloader
@@ -60,9 +57,7 @@ function TimelineAnalysisExportMenu({ chartData, chartName }: TimelineAnalysisEx
           separator=";"
         >
           <MenuItem onClick={handleClose}>
-            <ListItemIcon>
-              <TextSnippetIcon fontSize="small" />
-            </ListItemIcon>
+            <ListItemIcon>{getIconComponent(Icon.EXPORT_CSV, { fontSize: "small" })}</ListItemIcon>
             <ListItemText>CSV</ListItemText>
           </MenuItem>
         </CsvDownloader>

@@ -17,18 +17,17 @@ import { LLMAssistanceEvent } from "./LLMDialog/LLMEvent.ts";
 
 interface DialogState {
   // tags
-  isTagEditDialogOpen: boolean;
   isTagCreateDialogOpen: boolean;
-  tagId?: number;
   tagName?: string;
-  parentTagId?: number;
+  isTagEditDialogOpen: boolean;
+  tag?: DocumentTagRead;
   // codes
   isCodeCreateDialogOpen: boolean;
-  isCodeEditDialogOpen: boolean;
   codeName?: string;
   parentCodeId?: number;
-  codeCreateSuccessHandler: CodeCreateSuccessHandler;
+  isCodeEditDialogOpen: boolean;
   code?: CodeRead;
+  codeCreateSuccessHandler: CodeCreateSuccessHandler;
   // span
   isSpanAnnotationEditDialogOpen: boolean;
   spanAnnotationIds: number[];
@@ -41,6 +40,8 @@ interface DialogState {
   isBBoxAnnotationEditDialogOpen: boolean;
   isBBoxAnnotationCreateDialogOpen: boolean;
   bboxAnnotation?: BBoxAnnotationRead;
+  // document import
+  isDocumentUploadOpen: boolean;
   // snackbar
   isSnackbarOpen: boolean;
   snackbarData: SnackbarEvent;
@@ -62,15 +63,16 @@ interface DialogState {
   llmParameters: TrainingParameters;
   llmJobId?: string;
   llmJobResult: LLMJobResult | null | undefined;
+  // quick command menu
+  isQuickCommandMenuOpen: boolean;
 }
 
 const initialState: DialogState = {
   // tags
   isTagEditDialogOpen: false,
   isTagCreateDialogOpen: false,
-  tagId: undefined,
+  tag: undefined,
   tagName: undefined,
-  parentTagId: undefined,
   // codes
   isCodeCreateDialogOpen: false,
   isCodeEditDialogOpen: false,
@@ -89,6 +91,8 @@ const initialState: DialogState = {
   isBBoxAnnotationEditDialogOpen: false,
   isBBoxAnnotationCreateDialogOpen: false,
   bboxAnnotation: undefined,
+  // document import
+  isDocumentUploadOpen: false,
   // snackbar
   isSnackbarOpen: false,
   snackbarData: {
@@ -122,6 +126,8 @@ const initialState: DialogState = {
   },
   llmJobId: undefined,
   llmJobResult: undefined,
+  // quick command menu
+  isQuickCommandMenuOpen: false,
 };
 
 export const dialogSlice = createSlice({
@@ -154,13 +160,13 @@ export const dialogSlice = createSlice({
       state.sentenceAnnotationIds = [];
       state.sentenceAnnotationEditDialogOnEdit = undefined;
     },
-    openTagEditDialog: (state, action: PayloadAction<{ tagId: number }>) => {
+    openTagEditDialog: (state, action: PayloadAction<{ tag: DocumentTagRead }>) => {
       state.isTagEditDialogOpen = true;
-      state.tagId = action.payload.tagId;
+      state.tag = action.payload.tag;
     },
     closeTagEditDialog: (state) => {
       state.isTagEditDialogOpen = false;
-      state.tagId = undefined;
+      state.tag = undefined;
     },
     openTagCreateDialog: (state, action: PayloadAction<{ tagName?: string }>) => {
       state.isTagCreateDialogOpen = true;
@@ -210,6 +216,12 @@ export const dialogSlice = createSlice({
     },
     closeBBoxAnnotationCreateDialog: (state) => {
       state.isBBoxAnnotationCreateDialogOpen = false;
+    },
+    openDocumentUpload: (state) => {
+      state.isDocumentUploadOpen = true;
+    },
+    closeDocumentUpload: (state) => {
+      state.isDocumentUploadOpen = false;
     },
     openSnackbar: (
       state,
@@ -361,6 +373,16 @@ export const dialogSlice = createSlice({
         state.llmMetadata = initialState.llmMetadata;
         state.llmCodes = initialState.llmCodes;
       }
+    },
+    // quick command menu
+    openQuickCommandMenu: (state) => {
+      state.isQuickCommandMenuOpen = true;
+    },
+    closeQuickCommandMenu: (state) => {
+      state.isQuickCommandMenuOpen = false;
+    },
+    toggleQuickCommandMenu: (state) => {
+      state.isQuickCommandMenuOpen = !state.isQuickCommandMenuOpen;
     },
   },
 });

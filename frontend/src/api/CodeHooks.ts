@@ -63,6 +63,9 @@ const useCreateCode = () =>
         oldData ? { ...oldData, [data.id]: data } : { [data.id]: data },
       );
     },
+    meta: {
+      successMessage: (data: CodeRead) => `Created code ${data.name}`,
+    },
   });
 
 const useUpdateCode = () =>
@@ -77,6 +80,9 @@ const useUpdateCode = () =>
         queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CODES, data.project_id] });
       }
     },
+    meta: {
+      successMessage: (data: CodeRead) => `Updated code ${data.name}`,
+    },
   });
 
 const useDeleteCode = () =>
@@ -89,6 +95,9 @@ const useDeleteCode = () =>
         delete newData[data.id];
         return newData;
       });
+    },
+    meta: {
+      successMessage: (data: CodeRead) => `Deleted code ${data.name}`,
     },
   });
 

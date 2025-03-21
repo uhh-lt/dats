@@ -1,4 +1,5 @@
 import { Typography } from "@mui/material";
+import { memo } from "react";
 import LLMHooks from "../../../../api/LLMHooks.ts";
 import { MetadataExtractionLLMJobResult } from "../../../../api/openapi/models/MetadataExtractionLLMJobResult.ts";
 import { useAppSelector } from "../../../../plugins/ReduxHooks.ts";
@@ -34,4 +35,4 @@ function MetadataExtractionResultStep() {
   );
 }
 
-export default MetadataExtractionResultStep;
+export default memo(MetadataExtractionResultStep);

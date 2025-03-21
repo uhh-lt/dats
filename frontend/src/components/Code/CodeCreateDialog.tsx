@@ -1,13 +1,12 @@
 import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, rgbToHex } from "@mui/material";
-import { useMemo } from "react";
+import { Dialog, DialogActions, DialogContent, MenuItem, Stack, rgbToHex } from "@mui/material";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import CodeHooks from "../../api/CodeHooks.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
-import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { contrastiveColors } from "../../utils/colors.ts";
 import { AnnoActions } from "../../views/annotation/annoSlice.ts";
@@ -15,6 +14,7 @@ import FormColorPicker from "../FormInputs/FormColorPicker.tsx";
 import FormMenu from "../FormInputs/FormMenu.tsx";
 import FormText from "../FormInputs/FormText.tsx";
 import FormTextMultiline from "../FormInputs/FormTextMultiline.tsx";
+import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 import CodeRenderer from "./CodeRenderer.tsx";
 import { useCodesWithLevel } from "./useCodesWithLevel.ts";
@@ -29,128 +29,108 @@ type CodeCreateValues = {
 };
 
 function CodeCreateDialog() {
-  // global state
+  const dispatch = useAppDispatch();
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
-  // global server state (react query)
+  // codes for selection as parent
   const codes = CodeHooks.useGetEnabledCodes();
-
-  // computed
   const parentCodes = useMemo(() => codes.data?.filter((code) => !code.is_system) || [], [codes.data]);
+  const codeTree = useCodesWithLevel(parentCodes);
 
-  // global client state (redux)
+  // open/close dialog
   const isCodeCreateDialogOpen = useAppSelector((state) => state.dialog.isCodeCreateDialogOpen);
-  const codeName = useAppSelector((state) => state.dialog.codeName);
-  const parentCodeId = useAppSelector((state) => state.dialog.parentCodeId);
-  const dispatch = useAppDispatch();
-
-  // ui event handlers
-  const handleCloseCodeCreateDialog = () => {
+  const handleCloseCodeCreateDialog = useCallback(() => {
     dispatch(CRUDDialogActions.closeCodeCreateDialog());
+  }, [dispatch]);
+
+  // maximize feature
+  const [isMaximized, setIsMaximized] = useState(false);
+  const handleToggleMaximize = () => {
+    setIsMaximized((prev) => !prev);
   };
 
-  // initialize code to create when code changes
-  const codeToCreate = useMemo(() => {
-    const randomHexColor = rgbToHex(contrastiveColors[Math.floor(Math.random() * contrastiveColors.length)]);
-    const isParentCodeIdInParentCodes = parentCodes.find((c) => c.id === parentCodeId);
-    return {
-      name: codeName || "",
-      color: randomHexColor,
-      parentCodeId: isParentCodeIdInParentCodes ? parentCodeId || -1 : -1,
-      description: "",
-    };
-  }, [codeName, parentCodeId, parentCodes]);
-
-  return (
-    <Dialog open={isCodeCreateDialogOpen} onClose={handleCloseCodeCreateDialog} maxWidth="md" fullWidth>
-      <CodeCreateForm
-        parentCodes={parentCodes}
-        codeToCreate={codeToCreate}
-        projectId={projectId}
-        onClose={handleCloseCodeCreateDialog}
-      />
-    </Dialog>
-  );
-}
-
-interface CodeCreateFormProps {
-  projectId: number;
-  codeToCreate: CodeCreateValues;
-  parentCodes: CodeRead[];
-  onClose: () => void;
-}
-
-function CodeCreateForm({ projectId, codeToCreate, parentCodes, onClose }: CodeCreateFormProps) {
-  // global client state (redux)
-  const onSuccessHandler = useAppSelector((state) => state.dialog.codeCreateSuccessHandler);
-  const dispatch = useAppDispatch();
-
-  // react form
+  // form
   const {
     handleSubmit,
     formState: { errors },
     control,
-  } = useForm<CodeCreateValues>({
-    defaultValues: codeToCreate,
-  });
+    reset,
+  } = useForm<CodeCreateValues>();
 
-  // mutations
-  const createCodeMutation = CodeHooks.useCreateCode();
-
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
-
-  // react form handlers
-  const handleSubmitCodeCreateDialog: SubmitHandler<CodeCreateValues> = (data) => {
-    let pcid: number | undefined = undefined;
-    if (typeof data.parentCodeId === "string") {
-      pcid = parseInt(data.parentCodeId);
-    } else {
-      pcid = data.parentCodeId;
+  // reset form when dialog opens
+  const codeName = useAppSelector((state) => state.dialog.codeName);
+  const parentCodeId = useAppSelector((state) => state.dialog.parentCodeId);
+  useEffect(() => {
+    if (isCodeCreateDialogOpen) {
+      reset({
+        parentCodeId: parentCodeId || -1,
+        name: codeName || "",
+        color: rgbToHex(contrastiveColors[Math.floor(Math.random() * contrastiveColors.length)]),
+        description: "",
+      });
     }
-    createCodeMutation.mutate(
-      {
-        requestBody: {
-          name: data.name,
-          description: data.description,
-          color: data.color,
-          project_id: projectId,
-          parent_id: pcid === -1 ? null : pcid,
-          is_system: false,
-        },
-      },
-      {
-        onSuccess: (data) => {
-          openSnackbar({
-            text: `Added new Code ${data.name}!`,
-            severity: "success",
-          });
+  }, [isCodeCreateDialogOpen, reset, codeName, parentCodeId]);
 
-          // if we add a new code successfully, we want to show the code in the code explorer
-          // this means, we have to expand the parent codes, so the new code is visible
-          const codesToExpand = [];
-          let parentCodeId = data.parent_id;
-          while (parentCodeId) {
-            const currentParentCodeId = parentCodeId;
-            codesToExpand.push(parentCodeId);
-            parentCodeId = parentCodes.find((code) => code.id === currentParentCodeId)?.parent_id;
-          }
-          dispatch(AnnoActions.expandCodes(codesToExpand.map((id) => id.toString())));
-          if (onSuccessHandler) onSuccessHandler(data, true);
-          onClose();
+  // form actions
+  const { mutate: createCodeMutation, isPending } = CodeHooks.useCreateCode();
+  const onSuccessHandler = useAppSelector((state) => state.dialog.codeCreateSuccessHandler);
+  const handleSubmitCodeCreateDialog = useCallback<SubmitHandler<CodeCreateValues>>(
+    (data) => {
+      let pcid: number | undefined = undefined;
+      if (typeof data.parentCodeId === "string") {
+        pcid = parseInt(data.parentCodeId);
+      } else {
+        pcid = data.parentCodeId;
+      }
+      createCodeMutation(
+        {
+          requestBody: {
+            name: data.name,
+            description: data.description,
+            color: data.color,
+            project_id: projectId,
+            parent_id: pcid === -1 ? null : pcid,
+            is_system: false,
+          },
         },
-      },
-    );
-  };
-
+        {
+          onSuccess: (data) => {
+            // if we add a new code successfully, we want to show the code in the code explorer
+            // this means, we have to expand the parent codes, so the new code is visible
+            const codesToExpand = [];
+            let parentCodeId = data.parent_id;
+            while (parentCodeId) {
+              const currentParentCodeId = parentCodeId;
+              codesToExpand.push(parentCodeId);
+              parentCodeId = parentCodes.find((code) => code.id === currentParentCodeId)?.parent_id;
+            }
+            dispatch(AnnoActions.expandCodes(codesToExpand.map((id) => id.toString())));
+            if (onSuccessHandler) onSuccessHandler(data, true);
+            handleCloseCodeCreateDialog();
+          },
+        },
+      );
+    },
+    [createCodeMutation, dispatch, handleCloseCodeCreateDialog, onSuccessHandler, parentCodes, projectId],
+  );
   const handleErrorCodeCreateDialog: SubmitErrorHandler<CodeCreateValues> = (data) => console.error(data);
 
-  // code tree
-  const codeTree = useCodesWithLevel(parentCodes);
-  // rendering
   return (
-    <form onSubmit={handleSubmit(handleSubmitCodeCreateDialog, handleErrorCodeCreateDialog)}>
-      <DialogTitle>Create a new code</DialogTitle>
+    <Dialog
+      open={isCodeCreateDialogOpen}
+      onClose={handleCloseCodeCreateDialog}
+      maxWidth="md"
+      fullWidth
+      fullScreen={isMaximized}
+      component="form"
+      onSubmit={handleSubmit(handleSubmitCodeCreateDialog, handleErrorCodeCreateDialog)}
+    >
+      <DATSDialogHeader
+        title="Create a new code"
+        onClose={handleCloseCodeCreateDialog}
+        isMaximized={isMaximized}
+        onToggleMaximize={handleToggleMaximize}
+      />
       <DialogContent>
         <Stack spacing={3}>
           <FormMenu
@@ -212,22 +192,19 @@ function CodeCreateForm({ projectId, codeToCreate, parentCodes, onClose }: CodeC
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button variant="contained" onClick={onClose}>
-          Cancel
-        </Button>
         <LoadingButton
           variant="contained"
           color="success"
           startIcon={<SaveIcon />}
           fullWidth
           type="submit"
-          loading={createCodeMutation.isPending}
+          loading={isPending}
           loadingPosition="start"
         >
           Create Code
         </LoadingButton>
       </DialogActions>
-    </form>
+    </Dialog>
   );
 }
 

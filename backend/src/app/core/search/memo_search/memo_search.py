@@ -67,9 +67,7 @@ def memo_search(
             sorts=sorts,
         )
         return PaginatedElasticSearchDocumentHits(
-            hits=[
-                ElasticSearchDocumentHit(document_id=memo_id) for memo_id in memo_ids
-            ],
+            hits=[ElasticSearchDocumentHit(id=memo_id) for memo_id in memo_ids],
             total_results=total_results,
         )
     else:

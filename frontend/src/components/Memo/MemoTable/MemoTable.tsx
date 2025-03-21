@@ -1,16 +1,17 @@
-import { Card, CardContent, CardHeader, CardProps, Stack, Typography } from "@mui/material";
+import { Box, Stack, Typography } from "@mui/material";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   MRT_ColumnDef,
   MRT_RowSelectionState,
   MRT_RowVirtualizer,
   MRT_SortingState,
+  MRT_TableInstance,
   MRT_TableOptions,
   MRT_VisibilityState,
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useEffect, useMemo, useRef, useState, type UIEvent } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from "react";
 import { ElasticSearchDocumentHit } from "../../../api/openapi/models/ElasticSearchDocumentHit.ts";
 import { MemoColumns } from "../../../api/openapi/models/MemoColumns.ts";
 import { PaginatedElasticSearchDocumentHits } from "../../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
@@ -18,12 +19,14 @@ import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { MemoService } from "../../../api/openapi/services/MemoService.ts";
 import { QueryKey } from "../../../api/QueryKey.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { RootState } from "../../../store/store.ts";
 import { useTableInfiniteScroll } from "../../../utils/useTableInfiniteScroll.ts";
 import { MyFilter, createEmptyFilter } from "../../FilterDialog/filterUtils.ts";
+import { FilterTableToolbarProps } from "../../FilterTable/FilterTableToolbarProps.ts";
 import MemoRenderer from "../MemoRenderer.tsx";
+import { MemoFilterActions } from "./memoFilterSlice.ts";
 import MemoTableOptionsMenu from "./MemoTableOptionsMenu.tsx";
 import MemoToolbarLeft from "./MemoToolbarLeft.tsx";
-import { MemoToolbarProps } from "./MemoToolbarProps.ts";
 import MemoToolbarRight from "./MemoToolbarRight.tsx";
 import { useInitMemoFilterSlice } from "./useInitMemoFilterSlice.ts";
 
@@ -31,7 +34,6 @@ const fetchSize = 20;
 const flatMapData = (page: PaginatedElasticSearchDocumentHits) => page.hits;
 
 export interface MemoTableProps {
-  title?: string;
   projectId: number;
   filterName: string;
   // selection
@@ -44,15 +46,17 @@ export interface MemoTableProps {
   columnVisibilityModel: MRT_VisibilityState;
   onColumnVisibilityChange: MRT_TableOptions<ElasticSearchDocumentHit>["onColumnVisibilityChange"];
   // components
-  cardProps?: CardProps;
   positionToolbarAlertBanner?: MRT_TableOptions<ElasticSearchDocumentHit>["positionToolbarAlertBanner"];
-  renderToolbarInternalActions?: (props: MemoToolbarProps) => React.ReactNode;
-  renderTopToolbarCustomActions?: (props: MemoToolbarProps) => React.ReactNode;
-  renderBottomToolbarCustomActions?: (props: MemoToolbarProps) => React.ReactNode;
+  renderTopRightToolbar?: (props: FilterTableToolbarProps<ElasticSearchDocumentHit>) => React.ReactNode;
+  renderTopLeftToolbar?: (props: FilterTableToolbarProps<ElasticSearchDocumentHit>) => React.ReactNode;
+  renderBottomToolbar?: (props: FilterTableToolbarProps<ElasticSearchDocumentHit>) => React.ReactNode;
 }
 
+// this defines which filter slice is used
+const filterStateSelector = (state: RootState) => state.memoFilter;
+const filterActions = MemoFilterActions;
+
 function SearchMemoTable({
-  title,
   projectId,
   filterName,
   rowSelectionModel,
@@ -61,17 +65,18 @@ function SearchMemoTable({
   onSortingChange,
   columnVisibilityModel,
   onColumnVisibilityChange,
-  cardProps,
-  renderToolbarInternalActions = MemoToolbarRight,
-  renderTopToolbarCustomActions = MemoToolbarLeft,
-  renderBottomToolbarCustomActions,
+  positionToolbarAlertBanner = "head-overlay",
+  renderTopRightToolbar = MemoToolbarRight,
+  renderTopLeftToolbar = MemoToolbarLeft,
+  renderBottomToolbar,
 }: MemoTableProps) {
   // local state
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isSearchContent, setIsSearchContent] = useState<boolean>(false);
 
   // filtering
-  const filter = useAppSelector((state) => state.memoFilter.filter[filterName]) || createEmptyFilter(filterName);
+  const filter =
+    useAppSelector((state) => filterStateSelector(state).filter[filterName]) || createEmptyFilter(filterName);
 
   // virtualization
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
@@ -94,23 +99,23 @@ function SearchMemoTable({
           return {
             ...colDef,
             size: 100,
-            Cell: ({ row }) => <MemoRenderer memo={row.original.document_id} showTitle />,
+            Cell: ({ row }) => <MemoRenderer memo={row.original.id} showTitle />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case MemoColumns.M_CONTENT:
           return {
             ...colDef,
             size: 360,
-            Cell: ({ row }) => <MemoRenderer memo={row.original.document_id} showContent />,
+            Cell: ({ row }) => <MemoRenderer memo={row.original.id} showContent />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case MemoColumns.M_STARRED:
           return {
             ...colDef,
-            Cell: ({ row }) => <MemoRenderer memo={row.original.document_id} showStar />,
+            Cell: ({ row }) => <MemoRenderer memo={row.original.id} showStar />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case MemoColumns.M_USER_ID:
           return {
             ...colDef,
-            Cell: ({ row }) => <MemoRenderer memo={row.original.document_id} showUser />,
+            Cell: ({ row }) => <MemoRenderer memo={row.original.id} showUser />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         default:
           return {
@@ -126,14 +131,13 @@ function SearchMemoTable({
       header: "Attached To",
       enableSorting: false,
       accessorFn: () => null,
-      Cell: ({ row }) => <MemoRenderer memo={row.original.document_id} showAttachedObject attachedObjectLink />,
+      Cell: ({ row }) => <MemoRenderer memo={row.original.id} showAttachedObject attachedObjectLink />,
     } as MRT_ColumnDef<ElasticSearchDocumentHit>;
 
     // unwanted columns are set to null, so we filter those out
     return [...result, attachedToCell];
   }, [tableInfo]);
 
-  // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchDocumentHits>({
     queryKey: [
       QueryKey.MEMO_TABLE,
@@ -159,9 +163,7 @@ function SearchMemoTable({
         pageSize: fetchSize,
       }),
     initialPageParam: 0,
-    getNextPageParam: (_lastGroup, groups) => {
-      return groups.length;
-    },
+    getNextPageParam: (_lastGroup, groups) => groups.length,
     refetchOnWindowFocus: false,
   });
 
@@ -185,11 +187,71 @@ function SearchMemoTable({
     }
   }, [projectId, sortingModel, filter]);
 
+  const handleTableScroll = useCallback(
+    (event: UIEvent<HTMLDivElement>) => fetchMoreOnScroll(event.target as HTMLDivElement),
+    [fetchMoreOnScroll],
+  );
+
+  // rendering
+  const renderTopLeftToolbarContent = useCallback(
+    (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) =>
+      renderTopLeftToolbar({
+        table: props.table,
+        selectedData: flatData.filter((row) => rowSelectionModel[row.id]),
+        anchor: tableContainerRef,
+        filterStateSelector,
+        filterActions,
+        filterName,
+      }),
+    [renderTopLeftToolbar, filterName, flatData, rowSelectionModel],
+  );
+
+  const renderBottomToolbarContent = useCallback(
+    (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) => (
+      <Stack direction={"row"} spacing={1} alignItems="center" width="100%">
+        <Typography>
+          Fetched {totalFetched} of {totalResults} total memos.
+        </Typography>
+        <Box flexGrow={1} />
+        {renderBottomToolbar &&
+          renderBottomToolbar({
+            table: props.table,
+            selectedData: flatData.filter((row) => rowSelectionModel[row.id]),
+            anchor: tableContainerRef,
+            filterStateSelector,
+            filterActions,
+            filterName,
+          })}
+      </Stack>
+    ),
+    [totalFetched, totalResults, renderBottomToolbar, filterName, flatData, rowSelectionModel],
+  );
+
+  const renderTopRightToolbarContent = useCallback(
+    (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) => (
+      <Stack direction="row" spacing={1} alignItems="center">
+        <MemoTableOptionsMenu
+          isSearchContent={isSearchContent}
+          onChangeIsSearchContent={(newValue) => setIsSearchContent(newValue)}
+        />
+        {renderTopRightToolbar({
+          table: props.table,
+          selectedData: flatData.filter((row) => rowSelectionModel[row.id]),
+          anchor: tableContainerRef,
+          filterStateSelector,
+          filterActions,
+          filterName,
+        })}
+      </Stack>
+    ),
+    [filterName, flatData, isSearchContent, renderTopRightToolbar, rowSelectionModel],
+  );
+
   // table
   const table = useMaterialReactTable<ElasticSearchDocumentHit>({
     data: flatData,
     columns: columns,
-    getRowId: (row) => `${row.document_id}`,
+    getRowId: (row) => `${row.id}`,
     // state
     state: {
       globalFilter: searchQuery,
@@ -225,14 +287,13 @@ function SearchMemoTable({
     // column resizing
     enableColumnResizing: true,
     columnResizeMode: "onEnd",
-
     // mui components
     muiTablePaperProps: {
       style: { height: "100%", display: "flex", flexDirection: "column" },
     },
     muiTableContainerProps: {
-      ref: tableContainerRef, //get access to the table container element
-      onScroll: (event: UIEvent<HTMLDivElement>) => fetchMoreOnScroll(event.target as HTMLDivElement), //add an event listener to the table container element
+      ref: tableContainerRef,
+      onScroll: handleTableScroll,
       style: { flexGrow: 1 },
     },
     muiToolbarAlertBannerProps: isError
@@ -242,54 +303,13 @@ function SearchMemoTable({
         }
       : undefined,
     // toolbar
-    positionToolbarAlertBanner: "head-overlay",
-    renderTopToolbarCustomActions: renderTopToolbarCustomActions
-      ? (props) =>
-          renderTopToolbarCustomActions({
-            table: props.table,
-            filterName,
-            anchor: tableContainerRef,
-            selectedMemos: flatData.filter((row) => rowSelectionModel[row.document_id]),
-          })
-      : undefined,
-    renderToolbarInternalActions: (props) => (
-      <Stack direction="row" spacing={1} alignItems="center">
-        <MemoTableOptionsMenu
-          isSearchContent={isSearchContent}
-          onChangeIsSearchContent={(newValue) => setIsSearchContent(newValue)}
-        />
-        {renderToolbarInternalActions({
-          table: props.table,
-          filterName,
-          anchor: tableContainerRef,
-          selectedMemos: flatData.filter((row) => rowSelectionModel[row.document_id]),
-        })}
-      </Stack>
-    ),
-    renderBottomToolbarCustomActions: (props) => (
-      <Stack direction={"row"} spacing={1} alignItems="center">
-        <Typography>
-          Fetched {totalFetched} of {totalResults} total memos.
-        </Typography>
-        {renderBottomToolbarCustomActions &&
-          renderBottomToolbarCustomActions({
-            table: props.table,
-            filterName,
-            anchor: tableContainerRef,
-            selectedMemos: flatData.filter((row) => rowSelectionModel[row.document_id]),
-          })}
-      </Stack>
-    ),
+    positionToolbarAlertBanner,
+    renderTopToolbarCustomActions: renderTopLeftToolbarContent,
+    renderToolbarInternalActions: renderTopRightToolbarContent,
+    renderBottomToolbarCustomActions: renderBottomToolbarContent,
   });
 
-  return (
-    <Card className="myFlexContainer" {...cardProps}>
-      {title ? <CardHeader title={title} /> : null}
-      <CardContent className="myFlexFillAllContainer" style={{ padding: 0 }}>
-        <MaterialReactTable table={table} />
-      </CardContent>
-    </Card>
-  );
+  return <MaterialReactTable table={table} />;
 }
 
-export default SearchMemoTable;
+export default memo(SearchMemoTable);

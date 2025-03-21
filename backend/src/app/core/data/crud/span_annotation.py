@@ -16,6 +16,7 @@ from app.core.data.dto.span_annotation import (
 from app.core.data.dto.span_text import SpanTextCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CodeORM
+from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 
 
@@ -126,6 +127,29 @@ class CRUDSpanAnnotation(
                 for create_dto in create_dtos
             ],
         )
+
+    def read_by_project(
+        self,
+        db: Session,
+        *,
+        project_id: int,
+    ) -> List[SpanAnnotationORM]:
+        query = (
+            db.query(self.model)
+            .join(
+                AnnotationDocumentORM,
+                AnnotationDocumentORM.id == self.model.annotation_document_id,
+            )
+            .join(
+                SourceDocumentORM,
+                SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+            )
+            .where(
+                SourceDocumentORM.project_id == project_id,
+            )
+        )
+
+        return query.all()
 
     def read_by_user_and_sdoc(
         self,

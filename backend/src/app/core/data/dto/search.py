@@ -22,7 +22,7 @@ class ElasticSearchDocumentCreate(BaseModel):
 
 
 class ElasticSearchDocumentHit(BaseModel):
-    document_id: int = Field(description="The ID of the Document")
+    id: int = Field(description="The ID of the Document")
     score: Optional[float] = Field(
         description="The score of the Document that was found by a ES Query",
         default=None,

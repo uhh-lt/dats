@@ -1,13 +1,13 @@
 import { CircularProgress, Dialog } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import eventBus from "../../../EventBus.ts";
-
 import MemoHooks from "../../../api/MemoHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { MemoRead } from "../../../api/openapi/models/MemoRead.ts";
+import DATSDialogHeader from "../../MUI/DATSDialogHeader.tsx";
 import useGetMemosAttachedObject from "../useGetMemosAttachedObject.ts";
 import { MemoEvent } from "./MemoDialogAPI.ts";
-import { MemoDialogContent } from "./MemoDialogContent.tsx";
+import MemoDialogContent from "./MemoDialogContent.tsx";
 
 function MemoDialog() {
   // state
@@ -27,13 +27,25 @@ function MemoDialog() {
     };
   }, [openModal]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setOpen(false);
     setMemoEventData(undefined);
+  }, []);
+
+  // maximize feature
+  const [isMaximized, setIsMaximized] = useState(false);
+  const handleToggleMaximize = () => {
+    setIsMaximized((prev) => !prev);
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth PaperProps={{ style: { height: "66%" } }}>
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth fullScreen={isMaximized}>
+      <DATSDialogHeader
+        title="Memo"
+        onClose={handleClose}
+        isMaximized={isMaximized}
+        onToggleMaximize={handleToggleMaximize}
+      />
       {memoEventData?.memoId ? (
         <MemoDialogByID
           memoId={memoEventData.memoId}

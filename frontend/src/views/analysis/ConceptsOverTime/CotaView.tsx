@@ -1,13 +1,10 @@
-import { CircularProgress, Portal, Typography } from "@mui/material";
-import { useContext } from "react";
+import { CircularProgress } from "@mui/material";
 import { useParams } from "react-router-dom";
 import CotaHooks from "../../../api/CotaHooks.ts";
-import { AppBarContext } from "../../../layouts/AppBarContext.ts";
 import CotaViewContent from "./CotaViewContent.tsx";
 
 function CotaView() {
   // global client state
-  const appBarContainerRef = useContext(AppBarContext);
   const urlParams = useParams() as { projectId: string; cotaId: string };
   const projectId = parseInt(urlParams.projectId);
   const cotaId = parseInt(urlParams.cotaId);
@@ -17,11 +14,6 @@ function CotaView() {
 
   return (
     <>
-      <Portal container={appBarContainerRef?.current}>
-        <Typography variant="h6" component="div">
-          {cota.data?.name || ""}
-        </Typography>
-      </Portal>
       {cota.isSuccess ? (
         <CotaViewContent key={`${projectId}-${cotaId}`} cota={cota.data} />
       ) : cota.isLoading ? (

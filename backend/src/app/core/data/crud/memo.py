@@ -156,6 +156,17 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         )
         return db_obj
 
+    def read_by_project(
+        self,
+        db: Session,
+        *,
+        project_id: int,
+    ) -> List[MemoORM]:
+        query = db.query(self.model).where(
+            self.model.project_id == project_id,
+        )
+        return query.all()
+
     # TODO Flo: Not sure if this actually belongs here...
     @staticmethod
     def get_memo_read_dto_from_orm(db: Session, db_obj: MemoORM) -> MemoRead:

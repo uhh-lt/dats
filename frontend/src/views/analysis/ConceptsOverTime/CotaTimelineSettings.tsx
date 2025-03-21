@@ -13,7 +13,6 @@ import { DateGroupBy } from "../../../api/openapi/models/DateGroupBy.ts";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
 import { MetaType } from "../../../api/openapi/models/MetaType.ts";
 import SdocsWithDateCounter from "../../../components/Metadata/SdocsWithDateCounter/SdocsWithDateCounter.tsx";
-import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 
 interface CotaSettingsProps {
   cota: COTARead;
@@ -28,79 +27,46 @@ function CotaSettings({ cota }: CotaSettingsProps) {
     (metadata) => metadata.doctype === DocType.TEXT && metadata.metatype === MetaType.DATE,
   );
 
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
-
   // actions
   const updateCota = CotaHooks.useUpdateCota();
   const handleChangeMetadataId = (event: React.ChangeEvent<HTMLInputElement>) => {
-    updateCota.mutate(
-      {
-        cotaId: cota.id,
-        requestBody: {
-          ...cota,
-          timeline_settings: {
-            ...cota.timeline_settings,
-            date_metadata_id: parseInt(event.target.value),
-          },
+    updateCota.mutate({
+      cotaId: cota.id,
+      requestBody: {
+        ...cota,
+        timeline_settings: {
+          ...cota.timeline_settings,
+          date_metadata_id: parseInt(event.target.value),
         },
       },
-      {
-        onSuccess(data) {
-          openSnackbar({
-            text: `Updated timeline settings of CotA '${data.name}'`,
-            severity: "success",
-          });
-        },
-      },
-    );
+    });
   };
 
   const handleChangeGroupBy = (event: React.ChangeEvent<HTMLInputElement>) => {
-    updateCota.mutate(
-      {
-        cotaId: cota.id,
-        requestBody: {
-          ...cota,
-          timeline_settings: {
-            ...cota.timeline_settings,
-            group_by: event.target.value as DateGroupBy,
-          },
+    updateCota.mutate({
+      cotaId: cota.id,
+      requestBody: {
+        ...cota,
+        timeline_settings: {
+          ...cota.timeline_settings,
+          group_by: event.target.value as DateGroupBy,
         },
       },
-      {
-        onSuccess(data) {
-          openSnackbar({
-            text: `Updated timeline settings of CotA '${data.name}'`,
-            severity: "success",
-          });
-        },
-      },
-    );
+    });
   };
 
   const handleChangeThreshold = (event: React.FocusEvent<HTMLInputElement>) => {
     if (event.target.value.trim() === "") return;
-    updateCota.mutate(
-      {
-        cotaId: cota.id,
-        requestBody: {
-          ...cota,
-          timeline_settings: {
-            ...cota.timeline_settings,
-            threshold: parseFloat(event.target.value),
-          },
+    updateCota.mutate({
+      cotaId: cota.id,
+      requestBody: {
+        ...cota,
+        timeline_settings: {
+          ...cota.timeline_settings,
+          threshold: parseFloat(event.target.value),
         },
       },
-      {
-        onSuccess(data) {
-          openSnackbar({
-            text: `Updated timeline settings of CotA '${data.name}'`,
-            severity: "success",
-          });
-        },
-      },
-    );
+    });
   };
 
   return (

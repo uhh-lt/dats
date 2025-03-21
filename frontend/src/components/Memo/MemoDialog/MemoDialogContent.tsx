@@ -1,3 +1,4 @@
+import { memo, useCallback } from "react";
 import { SubmitHandler } from "react-hook-form";
 import MemoHooks from "../../../api/MemoHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
@@ -8,9 +9,8 @@ import { MemoRead } from "../../../api/openapi/models/MemoRead.ts";
 import { ProjectRead } from "../../../api/openapi/models/ProjectRead.ts";
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
 import { SpanAnnotationRead } from "../../../api/openapi/models/SpanAnnotationRead.ts";
-import { useOpenSnackbar } from "../../SnackbarDialog/useOpenSnackbar.ts";
 import { MemoCreateSuccessHandler } from "./MemoDialogAPI.ts";
-import { MemoDialogForm, MemoFormValues } from "./MemoDialogForm.tsx";
+import MemoDialogForm, { MemoFormValues } from "./MemoDialogForm.tsx";
 
 interface MemoDialogContentProps {
   attachedObject:
@@ -26,66 +26,56 @@ interface MemoDialogContentProps {
   closeDialog: () => void;
 }
 
-export function MemoDialogContent({
+function MemoDialogContent({
   attachedObject,
   attachedObjectType,
   memo,
   closeDialog,
   onMemoCreateSuccess,
 }: MemoDialogContentProps) {
-  // mutations
-  const createMutation = MemoHooks.useCreateMemo();
-  const updateMutation = MemoHooks.useUpdateMemo();
+  const { mutate: createMemo } = MemoHooks.useCreateMemo();
+  const { mutate: updateMemo } = MemoHooks.useUpdateMemo();
 
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
-
-  // form handling
-  const handleCreateOrUpdateCodeMemo: SubmitHandler<MemoFormValues> = (data) => {
-    if (memo) {
-      updateMutation.mutate(
-        {
-          memoId: memo.id,
-          requestBody: {
-            title: data.title,
-            content: data.content,
-            content_json: data.content_json,
+  const handleCreateOrUpdateCodeMemo = useCallback<SubmitHandler<MemoFormValues>>(
+    (data) => {
+      if (memo) {
+        updateMemo(
+          {
+            memoId: memo.id,
+            requestBody: {
+              title: data.title,
+              content: data.content,
+              content_json: data.content_json,
+            },
           },
-        },
-        {
-          onSuccess: () => {
-            openSnackbar({
-              text: `Updated memo for ${attachedObjectType} ${attachedObject.id}`,
-              severity: "success",
-            });
-            closeDialog();
+          {
+            onSuccess: () => {
+              closeDialog();
+            },
           },
-        },
-      );
-    } else {
-      createMutation.mutate(
-        {
-          attachedObjectId: attachedObject.id,
-          attachedObjectType: attachedObjectType,
-          requestBody: {
-            title: data.title,
-            content: data.content,
-            content_json: data.content_json,
+        );
+      } else {
+        createMemo(
+          {
+            attachedObjectId: attachedObject.id,
+            attachedObjectType: attachedObjectType,
+            requestBody: {
+              title: data.title,
+              content: data.content,
+              content_json: data.content_json,
+            },
           },
-        },
-        {
-          onSuccess: (data) => {
-            openSnackbar({
-              text: `Created memo for ${attachedObjectType} ${attachedObject.id}`,
-              severity: "success",
-            });
-            if (onMemoCreateSuccess) onMemoCreateSuccess(data);
-            closeDialog();
+          {
+            onSuccess: (data) => {
+              if (onMemoCreateSuccess) onMemoCreateSuccess(data);
+              closeDialog();
+            },
           },
-        },
-      );
-    }
-  };
+        );
+      }
+    },
+    [memo, updateMemo, createMemo, attachedObject.id, attachedObjectType, closeDialog, onMemoCreateSuccess],
+  );
 
   return (
     <MemoDialogForm
@@ -98,3 +88,5 @@ export function MemoDialogContent({
     />
   );
 }
+
+export default memo(MemoDialogContent);

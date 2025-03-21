@@ -76,10 +76,9 @@ from app.core.data.crud.source_document import (
 )
 from app.core.data.export.export_service import (
     ExportJobPreparationError,
-    NoDataToExportError,
-    NoSuchExportFormatError,
     NoSuchExportJobError,
 )
+from app.core.data.export.no_data_export_error import NoDataToExportError
 from app.core.data.repo.repo_service import (
     FileAlreadyExistsInRepositoryError,
     FileNotFoundInRepositoryError,
@@ -178,11 +177,6 @@ async def no_data_to_export_handler(_, exc: NoDataToExportError):
 @app.exception_handler(NoSuchExportJobError)
 async def no_such_export_job_handler(_, exc: NoSuchExportJobError):
     return PlainTextResponse(str(exc), status_code=404)
-
-
-@app.exception_handler(NoSuchExportFormatError)
-async def no_such_export_format_handler(_, exc: NoSuchExportFormatError):
-    return PlainTextResponse(str(exc), status_code=400)
 
 
 @app.exception_handler(ExportJobPreparationError)

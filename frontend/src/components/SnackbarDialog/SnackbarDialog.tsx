@@ -1,5 +1,6 @@
 import { AlertTitle, Snackbar } from "@mui/material";
 import MuiAlert from "@mui/material/Alert";
+import { useCallback } from "react";
 import { CRUDDialogActions } from "../../components/dialogSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 
@@ -8,9 +9,9 @@ export default function SnackbarDialog() {
   const event = useAppSelector((state) => state.dialog.snackbarData);
   const dispatch = useAppDispatch();
 
-  const closeSnackbar = () => {
+  const closeSnackbar = useCallback(() => {
     dispatch(CRUDDialogActions.closeSnackbar());
-  };
+  }, [dispatch]);
 
   return (
     <Snackbar

@@ -88,8 +88,8 @@ function TagNode(props: NodeProps<TagNodeData>) {
   }, [props.data.tagId, reactFlowInstance, memo.data]);
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    if (event.detail >= 2) {
-      dispatch(CRUDDialogActions.openTagEditDialog({ tagId: props.data.tagId }));
+    if (event.detail >= 2 && tag.isSuccess) {
+      dispatch(CRUDDialogActions.openTagEditDialog({ tag: tag.data }));
     }
   };
 

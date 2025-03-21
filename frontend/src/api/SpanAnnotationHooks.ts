@@ -48,6 +48,9 @@ const useGetSpanAnnotationsBatch = (sdocId: number | null | undefined, userId: n
 const useCreateBulkAnnotations = () =>
   useMutation({
     mutationFn: SpanAnnotationService.addSpanAnnotationsBulk,
+    meta: {
+      successMessage: (data: SpanAnnotationRead[]) => `Created ${data.length} Span Annotations`,
+    },
   });
 
 const useCreateSpanAnnotation = () => {
@@ -196,6 +199,9 @@ const useUpdateBulkSpan = () =>
           return Array.from(oldMap.values());
         });
       });
+    },
+    meta: {
+      successMessage: (data: SpanAnnotationRead[]) => `Updated ${data.length} Span Annotations`,
     },
   });
 

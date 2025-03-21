@@ -1,7 +1,7 @@
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { IconButton, IconButtonProps, Menu } from "@mui/material";
-import { useState } from "react";
+import { useState, useCallback, memo } from "react";
 import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
+import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
 import MemoDeleteMenuItem from "./MemoDeleteMenuItem.tsx";
 import MemoStarMenuItem from "./MemoStarMenuItem.tsx";
 
@@ -12,39 +12,39 @@ interface MemoActionsMenuProps {
   iconButtonProps?: Omit<IconButtonProps, "onClick" | "disabled">;
 }
 
-export default function MemoActionsMenu({
-  memo,
-  onStarredClick,
-  onDeleteClick,
-  iconButtonProps,
-}: MemoActionsMenuProps) {
+function MemoActionsMenu({ memo, onStarredClick, onDeleteClick, iconButtonProps }: MemoActionsMenuProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
 
-  const handleDeleteClick = () => {
+  const handleClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  }, []);
+
+  const handleDeleteClick = useCallback(() => {
     if (onDeleteClick) {
       onDeleteClick();
     }
     setAnchorEl(null);
-  };
+  }, [onDeleteClick]);
 
-  const handleStarredClick = () => {
+  const handleStarredClick = useCallback(() => {
     if (onStarredClick) {
       onStarredClick();
     }
     setAnchorEl(null);
-  };
+  }, [onStarredClick]);
+
+  const handleClose = useCallback(() => {
+    setAnchorEl(null);
+  }, []);
 
   return (
     <>
       <IconButton onClick={handleClick} disabled={!memo} {...iconButtonProps}>
-        <MoreVertIcon />
+        {getIconComponent(Icon.CONTEXT_MENU)}
       </IconButton>
       {memo && (
-        <Menu anchorEl={anchorEl} open={open} onClose={() => setAnchorEl(null)}>
+        <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
           <MemoStarMenuItem onClick={handleStarredClick} memoId={memo.id} isStarred={memo.starred} />
           <MemoDeleteMenuItem
             memoId={memo.id}
@@ -58,3 +58,5 @@ export default function MemoActionsMenu({
     </>
   );
 }
+
+export default memo(MemoActionsMenu);

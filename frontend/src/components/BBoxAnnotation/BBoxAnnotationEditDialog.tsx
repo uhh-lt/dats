@@ -1,24 +1,28 @@
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
-import { Box, Button, ButtonProps, Dialog, DialogActions, DialogTitle, Divider } from "@mui/material";
+import { Box, Button, Dialog, DialogActions, DialogTitle, Divider } from "@mui/material";
 import { MRT_RowSelectionState } from "material-react-table";
-import { useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import BboxAnnotationHooks from "../../api/BboxAnnotationHooks.ts";
-import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import CodeTable from "../Code/CodeTable.tsx";
 import { CRUDDialogActions } from "../dialogSlice.ts";
+import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
 import BBoxAnnotationRenderer from "./BBoxAnnotationRenderer.tsx";
 
-export interface BBoxAnnotationEditDialogProps extends ButtonProps {
+export interface BBoxAnnotationEditDialogProps {
   projectId: number;
 }
 
 function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) {
   // local state
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
-  const selectedCodeId =
-    Object.keys(rowSelectionModel).length === 1 ? parseInt(Object.keys(rowSelectionModel)[0]) : undefined;
+
+  // memoized computed value
+  const selectedCodeId = useMemo(
+    () => (Object.keys(rowSelectionModel).length === 1 ? parseInt(Object.keys(rowSelectionModel)[0]) : undefined),
+    [rowSelectionModel],
+  );
 
   // global client state (redux)
   const open = useAppSelector((state) => state.dialog.isBBoxAnnotationEditDialogOpen);
@@ -28,16 +32,13 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
   // mutations
   const updateAnnotationMutation = BboxAnnotationHooks.useUpdateBBoxAnnotation();
 
-  // actions
-  const handleClose = () => {
+  // memoized actions
+  const handleClose = useCallback(() => {
     dispatch(CRUDDialogActions.closeBBoxAnnotationEditDialog());
     setRowSelectionModel({});
-  };
+  }, [dispatch]);
 
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
-
-  const handleUpdateAnnotation = () => {
+  const handleUpdateAnnotation = useCallback(() => {
     if (!selectedCodeId || !annotation) return;
 
     updateAnnotationMutation.mutate(
@@ -50,18 +51,25 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
       {
         onSuccess: () => {
           handleClose();
-          openSnackbar({
-            text: `Updated annotation!`,
-            severity: "success",
-          });
         },
       },
     );
+  }, [selectedCodeId, annotation, updateAnnotationMutation, handleClose]);
+
+  // maximize dialog
+  const [isMaximized, setIsMaximized] = useState(false);
+  const handleToggleMaximize = () => {
+    setIsMaximized((prev) => !prev);
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      <DialogTitle>Change the code of the annotation</DialogTitle>
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth fullScreen={isMaximized}>
+      <DATSDialogHeader
+        title="Change the code of the annotation"
+        onClose={handleClose}
+        isMaximized={isMaximized}
+        onToggleMaximize={handleToggleMaximize}
+      />
       <CodeTable
         projectId={projectId}
         rowSelectionModel={rowSelectionModel}
@@ -77,7 +85,7 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
             After:
             {selectedCodeId ? (
               <BBoxAnnotationRenderer
-                bboxAnnotation={selectedCodeId ? { ...annotation, code_id: selectedCodeId } : annotation}
+                bboxAnnotation={{ ...annotation, code_id: selectedCodeId }}
                 showCode
                 showSpanText
               />
@@ -90,7 +98,6 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
           </Box>
         </>
       )}
-
       <DialogActions>
         <Button onClick={handleClose}>Close</Button>
         <LoadingButton
@@ -110,4 +117,4 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
   );
 }
 
-export default BBoxAnnotationEditDialog;
+export default memo(BBoxAnnotationEditDialog);

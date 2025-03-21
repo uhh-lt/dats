@@ -53,6 +53,9 @@ const useCreateCota = () =>
         prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
       );
     },
+    meta: {
+      successMessage: (cota: COTARead) => `Created new Concept Over Time Analysis "${cota.name}"`,
+    },
   });
 
 const useDuplicateCota = () =>
@@ -62,6 +65,9 @@ const useDuplicateCota = () =>
       queryClient.setQueryData<CotaMap>([QueryKey.COTAS_PROJECT_USER, cota.project_id], (prev) =>
         prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
       );
+    },
+    meta: {
+      successMessage: (cota: COTARead) => `Duplicated Concept Over Time Analysis "${cota.name}"`,
     },
   });
 
@@ -74,6 +80,9 @@ const useUpdateCota = () =>
         prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
       );
     },
+    meta: {
+      successMessage: (cota: COTARead) => `Updated Concept Over Time Analysis "${cota.name}"`,
+    },
   });
 
 const useAnnotateCotaSentences = () =>
@@ -83,6 +92,9 @@ const useAnnotateCotaSentences = () =>
       queryClient.setQueryData<CotaMap>([QueryKey.COTAS_PROJECT_USER, cota.project_id], (prev) =>
         prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
       );
+    },
+    meta: {
+      successMessage: (cota: COTARead) => `Updated annotations in Concept Over Time Analysis "${cota.name}"`,
     },
   });
 
@@ -94,6 +106,9 @@ const useRemoveCotaSentences = () =>
         prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
       );
     },
+    meta: {
+      successMessage: (cota: COTARead) => `Removed sentences from Concept Over Time Analysis "${cota.name}"`,
+    },
   });
 
 const useResetCota = () =>
@@ -104,6 +119,9 @@ const useResetCota = () =>
         prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
       );
       queryClient.invalidateQueries({ queryKey: [QueryKey.COTA_MOST_RECENT_REFINEMENT_JOB, cota.id] });
+    },
+    meta: {
+      successMessage: (cota: COTARead) => `Reset Concept Over Time Analysis "${cota.name}"`,
     },
   });
 
@@ -118,6 +136,9 @@ const useDeleteCota = () =>
         delete newData[cota.id];
         return newData;
       });
+    },
+    meta: {
+      successMessage: (cota: COTARead) => `Deleted Concept Over Time Analysis "${cota.name}"`,
     },
   });
 
@@ -155,6 +176,9 @@ const useRefineCota = () =>
       queryClient.invalidateQueries({
         queryKey: [QueryKey.COTA_MOST_RECENT_REFINEMENT_JOB, cotaRefinementJob.cota.id],
       });
+    },
+    meta: {
+      successMessage: (job: COTARefinementJobRead) => `Started refinement job for "${job.cota.name}"`,
     },
   });
 

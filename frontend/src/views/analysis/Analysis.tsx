@@ -1,23 +1,13 @@
-import { Box, Portal, Typography } from "@mui/material";
-import { useContext } from "react";
-import { AppBarContext } from "../../layouts/AppBarContext.ts";
-import NoSidebarLayout from "../../layouts/NoSidebarLayout.tsx";
+import { Box } from "@mui/material";
+import ContentContainerLayout from "../../layouts/ContentLayouts/ContentContainerLayout.tsx";
 import AnalysisCard from "./AnalysisCard.tsx";
 
 function Analysis() {
-  // global client state (context)
-  const appBarContainerRef = useContext(AppBarContext);
-
   return (
-    <NoSidebarLayout>
-      <Portal container={appBarContainerRef?.current}>
-        <Typography variant="h6" color="inherit" component="div">
-          Analysis
-        </Typography>
-      </Portal>
+    <ContentContainerLayout>
       <Box display="flex" gap={2} flexWrap="wrap">
         <AnalysisCard
-          to={"frequency"}
+          to={"code-frequency"}
           title={"Code Frequency Analysis"}
           description={"Analyse the frequencies and occurrences of all codes in this project."}
           color={"#77dd77"}
@@ -54,7 +44,7 @@ function Analysis() {
         <AnalysisCard
           to={"concepts-over-time-analysis"}
           title={"Concepts Over Time Analysis"}
-          description={"Analyse concepts overr time."}
+          description={"Analyse the occurrence of concepts over time."}
           color={"#77dd77"}
         />
 
@@ -65,7 +55,7 @@ function Analysis() {
           color={"#77dd77"}
         />
       </Box>
-    </NoSidebarLayout>
+    </ContentContainerLayout>
   );
 }
 

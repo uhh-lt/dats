@@ -1,17 +1,18 @@
 import {
   Autocomplete,
+  AutocompleteRenderInputParams,
   ListItem,
   ListItemIcon,
   ListItemText,
   Popover,
   PopoverPosition,
   TextField,
-  UseAutocompleteProps,
   createFilterOptions,
 } from "@mui/material";
+import { memo, useCallback } from "react";
 import { MetaType } from "../../../../api/openapi/models/MetaType.ts";
+import { metaTypeToIcon } from "../../../../utils/icons/metaTypeToIcon.tsx";
 import { useDebounce } from "../../../../utils/useDebounce.ts";
-import { metaTypeToIcon } from "./metaTypeToIcon.tsx";
 
 const filter = createFilterOptions<string>();
 
@@ -31,15 +32,44 @@ function MetadataTypeSelectorMenu({
   const debouncedPosition = useDebounce(position, 200);
 
   // filter feature
-  const handleChange: UseAutocompleteProps<string, false, false, true>["onChange"] = (event, newValue) => {
-    event.stopPropagation();
-    if (newValue === null) {
-      return;
-    }
+  const handleChange = useCallback(
+    (event: React.SyntheticEvent, newValue: string | null) => {
+      event.stopPropagation();
+      if (newValue === null) {
+        return;
+      }
+      handleMenuItemClick(newValue);
+      handleClose();
+    },
+    [handleMenuItemClick, handleClose],
+  );
 
-    handleMenuItemClick(newValue);
-    handleClose();
-  };
+  const handleCloseWithEscape = useCallback(
+    (_event: React.SyntheticEvent<Element, Event>, reason: string) => {
+      if (reason === "escape") {
+        handleClose();
+      }
+    },
+    [handleClose],
+  );
+
+  // rendering
+  const renderOption = useCallback(
+    (props: React.HTMLAttributes<HTMLLIElement>, option: string) => (
+      <ListItem {...props} key={option}>
+        <ListItemIcon>{metaTypeToIcon[option as MetaType]}</ListItemIcon>
+        <ListItemText>{option}</ListItemText>
+      </ListItem>
+    ),
+    [],
+  );
+
+  const renderInput = useCallback(
+    (params: AutocompleteRenderInputParams) => (
+      <TextField autoFocus placeholder={placeholder} sx={{ bgcolor: "white" }} {...params} />
+    ),
+    [placeholder],
+  );
 
   return (
     <Popover
@@ -67,31 +97,22 @@ function MetadataTypeSelectorMenu({
           onChange={handleChange}
           filterOptions={filter}
           options={Object.values(MetaType)}
-          getOptionLabel={(option) => {
-            return option;
-          }}
+          getOptionLabel={(option) => option}
           slotProps={{
             paper: {
               sx: { minHeight: "201px", width: "240px" },
             },
           }}
-          renderOption={(props, option) => (
-            <ListItem {...props} key={option}>
-              <ListItemIcon>{metaTypeToIcon[option as MetaType]}</ListItemIcon>
-              <ListItemText>{option}</ListItemText>
-            </ListItem>
-          )}
+          renderOption={renderOption}
           sx={{ width: 240 }}
-          renderInput={(params) => (
-            <TextField autoFocus placeholder={placeholder} sx={{ bgcolor: "white" }} {...params} />
-          )}
+          renderInput={renderInput}
           handleHomeEndKeys
           open={true}
-          onClose={(_event, reason) => reason === "escape" && handleClose()}
+          onClose={handleCloseWithEscape}
         />
       )}
     </Popover>
   );
 }
 
-export default MetadataTypeSelectorMenu;
+export default memo(MetadataTypeSelectorMenu);

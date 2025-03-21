@@ -62,7 +62,7 @@ function SearchStatistics({
   const parentRef = useRef<HTMLDivElement>(null);
 
   return (
-    <Box className="myFlexContainer" {...(props as BoxProps)}>
+    <Box {...(props as BoxProps)} className={`myFlexContainer ${props.className}`}>
       <TabContext value={tab}>
         <Stack
           direction="row"

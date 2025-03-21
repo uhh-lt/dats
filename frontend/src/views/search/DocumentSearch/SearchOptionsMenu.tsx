@@ -1,8 +1,8 @@
 import HelpIcon from "@mui/icons-material/Help";
-import SettingsIcon from "@mui/icons-material/Settings";
 import { Box, Button, FormControlLabel, IconButton, Popover, Switch, Tooltip } from "@mui/material";
 import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 import { SearchActions } from "./searchSlice.ts";
 
 function SearchOptionsMenu() {
@@ -18,7 +18,7 @@ function SearchOptionsMenu() {
     <>
       <Tooltip title="Search options">
         <IconButton onClick={(event) => setAnchorEl(anchorEl ? null : event.currentTarget)}>
-          <SettingsIcon />
+          {getIconComponent(Icon.SETTINGS)}
         </IconButton>
       </Tooltip>
       <Popover

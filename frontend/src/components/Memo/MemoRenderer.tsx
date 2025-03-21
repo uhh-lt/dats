@@ -1,9 +1,10 @@
-import CommentIcon from "@mui/icons-material/Comment";
 import StarIcon from "@mui/icons-material/Star";
 import StarOutlineIcon from "@mui/icons-material/StarOutline";
 import { Stack, StackProps } from "@mui/material";
+import { memo } from "react";
 import MemoHooks from "../../api/MemoHooks.ts";
 import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
+import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
 import UserRenderer from "../User/UserRenderer.tsx";
 import AttachedObjectRenderer from "./AttachedObjectRenderer.tsx";
 
@@ -23,9 +24,9 @@ interface MemoRendererProps {
 
 function MemoRenderer({
   memo,
-  showIcon: icon = false,
-  showTitle: title = false,
-  showContent: content = false,
+  showIcon = false,
+  showTitle = false,
+  showContent = false,
   showUser = false,
   showStar = false,
   showAttachedObject = false,
@@ -36,9 +37,9 @@ function MemoRenderer({
     return (
       <MemoRendererWithoutData
         memoId={memo}
-        showIcon={icon}
-        showTitle={title}
-        showContent={content}
+        showIcon={showIcon}
+        showTitle={showTitle}
+        showContent={showContent}
         showUser={showUser}
         showStar={showStar}
         showAttachedObject={showAttachedObject}
@@ -50,9 +51,9 @@ function MemoRenderer({
     return (
       <MemoRendererWithData
         memo={memo}
-        showIcon={icon}
-        showTitle={title}
-        showContent={content}
+        showIcon={showIcon}
+        showTitle={showTitle}
+        showContent={showContent}
         showUser={showUser}
         showStar={showStar}
         showAttachedObject={showAttachedObject}
@@ -88,7 +89,7 @@ export function MemoRendererWithData({
 }: { memo: MemoRead } & MemoRendererSharedProps & StackProps) {
   return (
     <Stack direction="row" alignItems="center" {...props}>
-      {showIcon && <CommentIcon sx={{ mr: 1 }} />}
+      {showIcon && getIconComponent(Icon.MEMO, { sx: { mr: 1 } })}
       {showTitle && memo.title}
       {showContent && memo.content}
       {showUser && <UserRenderer user={memo.user_id} />}
@@ -104,4 +105,4 @@ export function MemoRendererWithData({
   );
 }
 
-export default MemoRenderer;
+export default memo(MemoRenderer);

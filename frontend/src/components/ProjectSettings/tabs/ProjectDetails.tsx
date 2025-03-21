@@ -2,9 +2,11 @@ import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Box, CardActions, CardContent, Divider, Stack } from "@mui/material";
+import { memo, useCallback } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
 import { ProjectUpdate } from "../../../api/openapi/models/ProjectUpdate.ts";
+import ExportProjectButton from "../../Export/ExportProjectButton.tsx";
 import FormText from "../../FormInputs/FormText.tsx";
 import FormTextMultiline from "../../FormInputs/FormTextMultiline.tsx";
 import { ProjectProps } from "../ProjectProps.ts";
@@ -25,15 +27,19 @@ function ProjectDetails({ project }: ProjectProps) {
   const updateProjectMutation = ProjectHooks.useUpdateProject();
 
   // form handling
-  const handleProjectUpdate: SubmitHandler<ProjectUpdate> = (data) => {
-    updateProjectMutation.mutate({
-      projId: project.id,
-      requestBody: data,
-    });
-  };
-  const handleError: SubmitErrorHandler<ProjectUpdate> = (error) => {
+  const handleProjectUpdate: SubmitHandler<ProjectUpdate> = useCallback(
+    (data) => {
+      updateProjectMutation.mutate({
+        projId: project.id,
+        requestBody: data,
+      });
+    },
+    [updateProjectMutation, project.id],
+  );
+
+  const handleError: SubmitErrorHandler<ProjectUpdate> = useCallback((error) => {
     console.error(error);
-  };
+  }, []);
 
   return (
     <form onSubmit={handleSubmit(handleProjectUpdate, handleError)}>
@@ -71,6 +77,7 @@ function ProjectDetails({ project }: ProjectProps) {
       </CardContent>
       <Divider />
       <CardActions>
+        <ExportProjectButton />
         <Box sx={{ flexGrow: 1 }} />
         <LoadingButton
           variant="contained"
@@ -88,4 +95,4 @@ function ProjectDetails({ project }: ProjectProps) {
   );
 }
 
-export default ProjectDetails;
+export default memo(ProjectDetails);

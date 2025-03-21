@@ -15,6 +15,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import { memo, useCallback } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import UserHooks from "../../../api/UserHooks.ts";
 import { EMAIL_REGEX } from "../../../utils/GlobalConstants.ts";
@@ -42,29 +43,36 @@ function ProjectUsers({ project }: ProjectProps) {
 
   // form handling
   const addUserMutation = UserHooks.useAddUserToProject();
-  const handleAddUser: SubmitHandler<UserAddFormValues> = (data) => {
-    addUserMutation.mutate({
-      projId: project.id,
-      requestBody: {
-        email: data.email,
-      },
-    });
-  };
-  const handleError: SubmitErrorHandler<UserAddFormValues> = (data) => console.error(data);
+  const handleAddUser: SubmitHandler<UserAddFormValues> = useCallback(
+    (data) => {
+      addUserMutation.mutate({
+        projId: project.id,
+        requestBody: {
+          email: data.email,
+        },
+      });
+    },
+    [addUserMutation, project.id],
+  );
+
+  const handleError: SubmitErrorHandler<UserAddFormValues> = useCallback((data) => console.error(data), []);
 
   // remove user
   const removeUserMutation = UserHooks.useRemoveUserFromProject();
-  const handleClickRemoveUser = (userId: number) => {
-    ConfirmationAPI.openConfirmationDialog({
-      text: `Do you really want to remove the User ${userId} from this project? You can add her again.`,
-      onAccept: () => {
-        removeUserMutation.mutate({
-          projId: project.id,
-          userId: userId,
-        });
-      },
-    });
-  };
+  const handleClickRemoveUser = useCallback(
+    (userId: number) => {
+      ConfirmationAPI.openConfirmationDialog({
+        text: `Do you really want to remove the User ${userId} from this project? You can add her again.`,
+        onAccept: () => {
+          removeUserMutation.mutate({
+            projId: project.id,
+            userId: userId,
+          });
+        },
+      });
+    },
+    [project.id, removeUserMutation],
+  );
 
   return (
     <Box display="flex" className="myFlexContainer h100">
@@ -138,4 +146,4 @@ function ProjectUsers({ project }: ProjectProps) {
   );
 }
 
-export default ProjectUsers;
+export default memo(ProjectUsers);

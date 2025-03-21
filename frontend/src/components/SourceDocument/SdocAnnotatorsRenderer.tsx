@@ -38,11 +38,11 @@ function SdocAnnotatorsRendererWithoutData({ sdocId, ...props }: { sdocId: numbe
 
 function SdocAnnotatorsRendererWithData({ annotators }: { annotators: number[] | UserRead[] }) {
   return (
-    <Stack direction="row" alignItems="center">
+    <Stack direction="row" alignItems="center" flexWrap="wrap">
       {annotators.map((annotator, index) => (
         <React.Fragment key={typeof annotator === "number" ? annotator : annotator.id}>
-          {index > 0 && <span style={{ whiteSpace: "pre" }}>, </span>}
           <UserRenderer user={annotator} />
+          {index < annotators.length - 1 && <span style={{ whiteSpace: "pre" }}>, </span>}
         </React.Fragment>
       ))}
     </Stack>

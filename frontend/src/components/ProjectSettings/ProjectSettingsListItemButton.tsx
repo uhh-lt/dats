@@ -1,7 +1,7 @@
-import SettingsIcon from "@mui/icons-material/Settings";
 import { ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 import { useCallback } from "react";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 
 function ProjectSettingsListItemButton() {
@@ -14,9 +14,7 @@ function ProjectSettingsListItemButton() {
     <>
       <ListItem disablePadding>
         <ListItemButton onClick={handleClick}>
-          <ListItemIcon>
-            <SettingsIcon />
-          </ListItemIcon>
+          <ListItemIcon>{getIconComponent(Icon.SETTINGS)}</ListItemIcon>
           <ListItemText primary="Project Settings" />
         </ListItemButton>
       </ListItem>

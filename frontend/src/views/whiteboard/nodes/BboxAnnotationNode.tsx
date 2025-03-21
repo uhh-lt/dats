@@ -1,5 +1,5 @@
 import { Box, CardContent, CardHeader, Divider, MenuItem, Stack, Typography } from "@mui/material";
-import { useEffect, useRef } from "react";
+import { memo, useCallback, useEffect, useRef } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
 import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks.ts";
 import CodeHooks from "../../../api/CodeHooks.ts";
@@ -100,7 +100,7 @@ function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
     if (!memo.data) return;
     const memoId = memo.data.id;
 
-    // checks which edges are already in the graph and removes edges to non-existing memos
+    // check which edges are already in the graph and removes edges to non-existing memos
     const edgesToDelete = reactFlowInstance
       .getEdges()
       .filter(isMemoBBoxAnnotationEdge)
@@ -120,43 +120,46 @@ function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
     }
   }, [props.data.bboxAnnotationId, reactFlowInstance, memo.data]);
 
-  const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    if (!annotation.data) return;
+  // memoized event handlers
+  const handleClick = useCallback(
+    (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      if (!annotation.data) return;
 
-    if (event.detail >= 2) {
-      dispatch(CRUDDialogActions.openBBoxAnnotationEditDialog({ annotation: annotation.data }));
-    }
-  };
+      if (event.detail >= 2) {
+        dispatch(CRUDDialogActions.openBBoxAnnotationEditDialog({ annotation: annotation.data }));
+      }
+    },
+    [annotation.data, dispatch],
+  );
 
-  // context menu actions
-  const handleContextMenuExpandDocument = () => {
+  const handleContextMenuExpandDocument = useCallback(() => {
     if (!annotation.data) return;
 
     reactFlowService.addNodes(
       createSdocNodes({ sdocs: [annotation.data.sdoc_id], position: { x: props.xPos, y: props.yPos - 200 } }),
     );
     contextMenuRef.current?.close();
-  };
+  }, [annotation.data, props.xPos, props.yPos, reactFlowService]);
 
-  const handleContextMenuExpandCode = () => {
+  const handleContextMenuExpandCode = useCallback(() => {
     if (!code.data) return;
 
     reactFlowService.addNodes(
       createCodeNodes({ codes: [code.data], position: { x: props.xPos, y: props.yPos - 200 } }),
     );
     contextMenuRef.current?.close();
-  };
+  }, [code.data, props.xPos, props.yPos, reactFlowService]);
 
-  const handleContextMenuExpandMemo = () => {
+  const handleContextMenuExpandMemo = useCallback(() => {
     if (!memo.data) return;
 
     reactFlowService.addNodes(
       createMemoNodes({ memos: [memo.data], position: { x: props.xPos, y: props.yPos - 200 } }),
     );
     contextMenuRef.current?.close();
-  };
+  }, [memo.data, props.xPos, props.yPos, reactFlowService]);
 
-  const handleContextMenuCreateMemo = () => {
+  const handleContextMenuCreateMemo = useCallback(() => {
     if (memo.data) return;
 
     MemoDialogAPI.openMemo({
@@ -167,7 +170,15 @@ function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
       },
     });
     contextMenuRef.current?.close();
-  };
+  }, [memo.data, props.data.bboxAnnotationId, props.xPos, props.yPos, reactFlowService]);
+
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    contextMenuRef.current?.open({
+      top: e.clientY,
+      left: e.clientX,
+    });
+  }, []);
 
   return (
     <>
@@ -175,17 +186,7 @@ function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
         nodeProps={props}
         allowDrawConnection={false}
         onClick={readonly ? undefined : handleClick}
-        onContextMenu={
-          readonly
-            ? undefined
-            : (e) => {
-                e.preventDefault();
-                contextMenuRef.current?.open({
-                  top: e.clientY,
-                  left: e.clientX,
-                });
-              }
-        }
+        onContextMenu={readonly ? undefined : handleContextMenu}
         backgroundColor={props.data.bgcolor + props.data.bgalpha?.toString(16).padStart(2, "0")}
       >
         {annotation.isSuccess ? (
@@ -240,4 +241,4 @@ function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
   );
 }
 
-export default BboxAnnotationNode;
+export default memo(BboxAnnotationNode);

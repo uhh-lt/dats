@@ -1,8 +1,8 @@
-import DeleteIcon from "@mui/icons-material/Delete";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
-import React from "react";
+import React, { memo, useCallback } from "react";
 import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
+import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 
 interface BBoxAnnotationDeleteMenuItemProps {
   annotationId: number;
@@ -14,29 +14,34 @@ function BBoxAnnotationDeleteMenuItem({
   onClick,
   ...props
 }: BBoxAnnotationDeleteMenuItemProps & MenuItemProps) {
+  // event handlers
   const deleteMutation = BboxAnnotationHooks.useDeleteBBoxAnnotation();
+  const handleClick = useCallback(
+    (event: React.MouseEvent) => {
+      event.stopPropagation();
 
-  const handleClick = (event: React.MouseEvent) => {
-    event.stopPropagation();
+      ConfirmationAPI.openConfirmationDialog({
+        text: `Do you really want to remove the BBoxAnnotation ${annotationId}? You can reassign it later!`,
+        onAccept: () => {
+          deleteMutation.mutate({ bboxToDelete: annotationId });
+        },
+      });
 
-    ConfirmationAPI.openConfirmationDialog({
-      text: `Do you really want to remove the BBoxAnnotation ${annotationId}? You can reassign it later!`,
-      onAccept: () => {
-        deleteMutation.mutate({ bboxToDelete: annotationId });
-      },
-    });
-
-    if (onClick) onClick();
-  };
+      if (onClick) onClick();
+    },
+    [annotationId, deleteMutation, onClick],
+  );
 
   return (
     <MenuItem onClick={handleClick} {...props}>
       <ListItemIcon>
-        <DeleteIcon fontSize="small" />
+        {getIconComponent(Icon.DELETE, {
+          fontSize: "small",
+        })}
       </ListItemIcon>
       <ListItemText>Delete bbox annotation</ListItemText>
     </MenuItem>
   );
 }
 
-export default BBoxAnnotationDeleteMenuItem;
+export default memo(BBoxAnnotationDeleteMenuItem);

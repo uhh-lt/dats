@@ -1,12 +1,13 @@
 import { Stack } from "@mui/material";
 import {
+  MaterialReactTable,
   MRT_ColumnDef,
   MRT_ShowHideColumnsButton,
+  MRT_TableInstance,
   MRT_ToggleDensePaddingButton,
-  MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
 import { useAuth } from "../../auth/useAuth.ts";
 import MemoRenderer2 from "../Memo/MemoRenderer2.tsx";
@@ -20,8 +21,10 @@ function BBoxAnnotationTableSimple({ bboxAnnoIds }: { bboxAnnoIds: number[] }) {
   // global client state (react router)
   const { user } = useAuth();
 
-  // computed
+  // computed data
   const data = useMemo(() => bboxAnnoIds.map((bboxAnnoId) => ({ bboxAnnoId })), [bboxAnnoIds]);
+
+  // memoized columns definition
   const columns: MRT_ColumnDef<BBoxAnnotationTableRow>[] = useMemo(
     () => [
       {
@@ -57,7 +60,7 @@ function BBoxAnnotationTableSimple({ bboxAnnoIds }: { bboxAnnoIds: number[] }) {
         Cell: ({ row }) =>
           user ? (
             <MemoRenderer2
-              attachedObjectType={AttachedObjectType.SPAN_ANNOTATION}
+              attachedObjectType={AttachedObjectType.BBOX_ANNOTATION}
               attachedObjectId={row.original.bboxAnnoId}
               showTitle={false}
               showContent
@@ -67,6 +70,17 @@ function BBoxAnnotationTableSimple({ bboxAnnoIds }: { bboxAnnoIds: number[] }) {
       },
     ],
     [user],
+  );
+
+  // memoized toolbar renderer
+  const renderToolbarActions = useCallback(
+    ({ table }: { table: MRT_TableInstance<BBoxAnnotationTableRow> }) => (
+      <Stack direction="row" spacing={1}>
+        <MRT_ShowHideColumnsButton table={table} />
+        <MRT_ToggleDensePaddingButton table={table} />
+      </Stack>
+    ),
+    [],
   );
 
   // table
@@ -88,20 +102,15 @@ function BBoxAnnotationTableSimple({ bboxAnnoIds }: { bboxAnnoIds: number[] }) {
     // hide columns per default
     initialState: {
       columnVisibility: {
-        id: false,
+        Memo: false,
       },
     },
     // toolbar
     enableBottomToolbar: false,
-    renderToolbarInternalActions: ({ table }) => (
-      <Stack direction="row" spacing={1}>
-        <MRT_ShowHideColumnsButton table={table} />
-        <MRT_ToggleDensePaddingButton table={table} />
-      </Stack>
-    ),
+    renderToolbarInternalActions: renderToolbarActions,
   });
 
   return <MaterialReactTable table={table} />;
 }
 
-export default BBoxAnnotationTableSimple;
+export default memo(BBoxAnnotationTableSimple);

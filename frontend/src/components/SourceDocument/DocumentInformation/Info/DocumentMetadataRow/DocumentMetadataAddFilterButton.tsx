@@ -2,7 +2,7 @@ import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import { IconButtonProps } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import { ProjectMetadataRead } from "../../../../../api/openapi/models/ProjectMetadataRead.ts";
 import { SourceDocumentMetadataRead } from "../../../../../api/openapi/models/SourceDocumentMetadataRead.ts";
 import { useAppDispatch } from "../../../../../plugins/ReduxHooks.ts";
@@ -38,4 +38,4 @@ function DocumentMetadataAddFilterButton({
   );
 }
 
-export default DocumentMetadataAddFilterButton;
+export default memo(DocumentMetadataAddFilterButton);

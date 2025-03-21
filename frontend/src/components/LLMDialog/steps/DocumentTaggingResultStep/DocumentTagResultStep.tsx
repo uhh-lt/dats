@@ -1,7 +1,7 @@
 import LabelIcon from "@mui/icons-material/Label";
 import { LoadingButton } from "@mui/lab";
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
 import LLMHooks from "../../../../api/LLMHooks.ts";
 import { DocumentTaggingLLMJobResult } from "../../../../api/openapi/models/DocumentTaggingLLMJobResult.ts";
 import { DocumentTagRead } from "../../../../api/openapi/models/DocumentTagRead.ts";
@@ -15,7 +15,6 @@ import DocumentTagResultStepTable from "./DocumentTagResultStepTable.tsx";
 function DocumentTagResultStep() {
   // global client state
   const llmJobId = useAppSelector((state) => state.dialog.llmJobId);
-
   // global server state
   const documentTags = TagHooks.useGetAllTags();
   const llmJob = LLMHooks.usePollLLMJob(llmJobId, undefined);
@@ -58,7 +57,6 @@ function DocumentTagResultStepContent({
       },
       {} as Record<number, DocumentTagRead>,
     );
-
     return jobResult.results.map((result) => {
       return {
         sdocId: result.sdoc_id,
@@ -75,13 +73,13 @@ function DocumentTagResultStepContent({
   const dispatch = useAppDispatch();
 
   // actions
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     dispatch(CRUDDialogActions.closeLLMDialog());
-  };
+  }, [dispatch]);
 
-  const applyTagsMutation = TagHooks.useBulkSetDocumentTags();
-  const handleApplyNewTags = () => {
-    applyTagsMutation.mutate(
+  const { mutate: applyTagsMutation, isPending } = TagHooks.useBulkSetDocumentTags();
+  const handleApplyNewTags = useCallback(() => {
+    applyTagsMutation(
       {
         requestBody: rows.map((row) => ({
           source_document_id: row.sdocId,
@@ -94,7 +92,7 @@ function DocumentTagResultStepContent({
         },
       },
     );
-  };
+  }, [rows, applyTagsMutation, dispatch]);
 
   return (
     <>
@@ -116,7 +114,7 @@ function DocumentTagResultStepContent({
           variant="contained"
           startIcon={<LabelIcon />}
           onClick={handleApplyNewTags}
-          loading={applyTagsMutation.isPending}
+          loading={isPending}
           loadingPosition="start"
         >
           Apply new tags
@@ -126,4 +124,4 @@ function DocumentTagResultStepContent({
   );
 }
 
-export default DocumentTagResultStep;
+export default memo(DocumentTagResultStep);

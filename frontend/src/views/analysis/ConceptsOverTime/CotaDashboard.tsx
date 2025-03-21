@@ -3,7 +3,6 @@ import { useMemo } from "react";
 import { useParams } from "react-router";
 import CotaHooks from "../../../api/CotaHooks.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
-import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import AnalysisDashboard from "../AnalysisDashboard/AnalysisDashboard.tsx";
 import {
@@ -45,9 +44,6 @@ function CotaDashboard() {
     variables: duplicatingVariables,
   } = CotaHooks.useDuplicateCota();
 
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
-
   const dispatch = useAppDispatch();
 
   // CRUD actions
@@ -62,11 +58,7 @@ function CotaDashboard() {
           },
         },
         {
-          onSuccess(data) {
-            openSnackbar({
-              text: `Created new timeline analysis '${data.name}'`,
-              severity: "success",
-            });
+          onSuccess() {
             table.setCreatingRow(null); //exit creating mode
           },
         },
@@ -74,38 +66,18 @@ function CotaDashboard() {
     };
 
   const handleDuplicateAnalysis = (row: MRT_Row<AnalysisDashboardRow>) => {
-    duplicateCota(
-      {
-        cotaId: row.original.id,
-      },
-      {
-        onSuccess(data) {
-          openSnackbar({
-            text: `Duplicated analysis '${data.name}'`,
-            severity: "success",
-          });
-        },
-      },
-    );
+    duplicateCota({
+      cotaId: row.original.id,
+    });
   };
 
   const handleDeleteAnalysis = (row: MRT_Row<AnalysisDashboardRow>) => {
     ConfirmationAPI.openConfirmationDialog({
       text: `Do you really want to remove the analysis ${row.original.id}? This action cannot be undone!`,
       onAccept: () => {
-        deleteCota(
-          {
-            cotaId: row.original.id,
-          },
-          {
-            onSuccess(data) {
-              openSnackbar({
-                text: `Deleted analysis '${data.name}'`,
-                severity: "success",
-              });
-            },
-          },
-        );
+        deleteCota({
+          cotaId: row.original.id,
+        });
       },
     });
   };
@@ -119,11 +91,7 @@ function CotaDashboard() {
         },
       },
       {
-        onSuccess(data) {
-          openSnackbar({
-            text: `Updated analysis '${data.name}'`,
-            severity: "success",
-          });
+        onSuccess() {
           table.setEditingRow(null); //exit editing mode
         },
       },

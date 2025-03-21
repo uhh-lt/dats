@@ -1,5 +1,4 @@
 import InfoIcon from "@mui/icons-material/Info";
-import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
@@ -7,6 +6,7 @@ import { useMemo } from "react";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
 import { TimelineAnalysisType } from "../../../api/openapi/models/TimelineAnalysisType.ts";
 import BBoxAnnotationTableSimple from "../../../components/BBoxAnnotation/BBoxAnnotationTableSimple.tsx";
+import CardContainer from "../../../components/MUI/CardContainer.tsx";
 import SentenceAnnotationTableSimple from "../../../components/SentenceAnnotation/SentenceAnnotationTableSimple.tsx";
 import SdocTableSimple from "../../../components/SourceDocument/SdocTableSimple.tsx";
 import SpanAnnotationTableSimple from "../../../components/SpanAnnotation/SpanAnnotationTableSimple.tsx";
@@ -42,7 +42,7 @@ function TimeAnalysisProvenance({ timelineAnalysis }: TimeAnalysisProvenanceProp
   }, [provenanceData, date, concept]);
 
   return (
-    <Card className="myFlexContainer h100">
+    <CardContainer className="myFlexContainer h100">
       <CardHeader
         className="myFlexFitContentContainer"
         action={
@@ -66,7 +66,7 @@ function TimeAnalysisProvenance({ timelineAnalysis }: TimeAnalysisProvenanceProp
           <div>Unknown Analysis Type</div>
         )}
       </CardContent>
-    </Card>
+    </CardContainer>
   );
 }
 

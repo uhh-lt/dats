@@ -19,22 +19,18 @@ import {
   ListItemAvatar,
   ListItemIcon,
   ListItemText,
-  Portal,
   Tooltip,
-  Typography,
 } from "@mui/material";
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import MLHooks from "../../../api/MLHooks.ts";
 import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobStatus.ts";
 import { MLJobRead } from "../../../api/openapi/models/MLJobRead.ts";
 import { MLJobType } from "../../../api/openapi/models/MLJobType.ts";
-import { AppBarContext } from "../../../layouts/AppBarContext.ts";
-import NoSidebarLayout from "../../../layouts/NoSidebarLayout.tsx";
+import ContentContainerLayout from "../../../layouts/ContentLayouts/ContentContainerLayout.tsx";
+import MLJobsView from "./MLJobsView.tsx";
 
 function MlAutomation() {
-  const appBarContainerRef = useContext(AppBarContext);
-
   // global client state (react router)
   const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
 
@@ -73,13 +69,8 @@ function MlAutomation() {
   };
 
   return (
-    <NoSidebarLayout>
-      <Portal container={appBarContainerRef?.current}>
-        <Typography variant="h6" component="div">
-          Tools
-        </Typography>
-      </Portal>
-      <Card sx={{ minHeight: "225.5px" }} elevation={2} className="myFlexFillAllContainer myFlexContainer">
+    <ContentContainerLayout>
+      <Card sx={{ minHeight: "225.5px", mb: 2 }} variant="outlined" className="myFlexFillAllContainer myFlexContainer">
         <CardHeader
           title="ML Automations"
           subheader="Start one or more of the following machine learning automations to speed up your work an enable new analysis options"
@@ -164,7 +155,8 @@ function MlAutomation() {
           </Grid2>
         </CardContent>
       </Card>
-    </NoSidebarLayout>
+      <MLJobsView />
+    </ContentContainerLayout>
   );
 }
 

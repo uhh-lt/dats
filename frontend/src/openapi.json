@@ -6739,7 +6739,7 @@
       },
       "ElasticSearchDocumentHit": {
         "properties": {
-          "document_id": { "type": "integer", "title": "Document Id", "description": "The ID of the Document" },
+          "id": { "type": "integer", "title": "Id", "description": "The ID of the Document" },
           "score": {
             "anyOf": [{ "type": "number" }, { "type": "null" }],
             "title": "Score",
@@ -6754,59 +6754,49 @@
           }
         },
         "type": "object",
-        "required": ["document_id"],
+        "required": ["id"],
         "title": "ElasticSearchDocumentHit"
       },
-      "ExportFormat": { "type": "string", "enum": ["CSV", "JSON"], "title": "ExportFormat" },
       "ExportJobParameters": {
         "properties": {
           "export_job_type": {
             "$ref": "#/components/schemas/ExportJobType",
             "description": "The type of the export job (what to export)"
           },
-          "export_format": {
-            "$ref": "#/components/schemas/ExportFormat",
-            "description": "The format of the exported data.",
-            "default": "CSV"
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "The ID of the Project to export from"
           },
           "specific_export_job_parameters": {
-            "oneOf": [
-              { "$ref": "#/components/schemas/SingleProjectAllDataExportJobParams" },
-              { "$ref": "#/components/schemas/SingleProjectAllUserExportJobParams" },
-              { "$ref": "#/components/schemas/SingleProjectAllTagsExportJobParams" },
-              { "$ref": "#/components/schemas/SingleProjectAllCodesExportJobParams" },
-              { "$ref": "#/components/schemas/SingleProjectSelectedSdocsParams" },
-              { "$ref": "#/components/schemas/SingleProjectSelectedSpanAnnotationsParams" },
-              { "$ref": "#/components/schemas/SingleProjectSelectedSentenceAnnotationsParams" },
-              { "$ref": "#/components/schemas/SingleUserAllDataExportJobParams" },
-              { "$ref": "#/components/schemas/SingleUserAllMemosExportJobParams" },
-              { "$ref": "#/components/schemas/SingleUserLogbookExportJobParams" },
-              { "$ref": "#/components/schemas/SingleDocAllUserAnnotationsExportJobParams" },
-              { "$ref": "#/components/schemas/SingleDocSingleUserAnnotationsExportJobParams" }
+            "anyOf": [
+              {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/ExportSelectedSdocsParams" },
+                  { "$ref": "#/components/schemas/ExportSelectedSpanAnnotationsParams" },
+                  { "$ref": "#/components/schemas/ExportSelectedSentenceAnnotationsParams" },
+                  { "$ref": "#/components/schemas/ExportSelectedBboxAnnotationsParams" },
+                  { "$ref": "#/components/schemas/ExportSelectedMemosParams" }
+                ],
+                "discriminator": {
+                  "propertyName": "export_job_type",
+                  "mapping": {
+                    "SELECTED_BBOX_ANNOTATIONS": "#/components/schemas/ExportSelectedBboxAnnotationsParams",
+                    "SELECTED_MEMOS": "#/components/schemas/ExportSelectedMemosParams",
+                    "SELECTED_SDOCS": "#/components/schemas/ExportSelectedSdocsParams",
+                    "SELECTED_SENTENCE_ANNOTATIONS": "#/components/schemas/ExportSelectedSentenceAnnotationsParams",
+                    "SELECTED_SPAN_ANNOTATIONS": "#/components/schemas/ExportSelectedSpanAnnotationsParams"
+                  }
+                }
+              },
+              { "type": "null" }
             ],
             "title": "Specific Export Job Parameters",
-            "description": "Specific parameters for the export job w.r.t it's type",
-            "discriminator": {
-              "propertyName": "export_job_type",
-              "mapping": {
-                "SINGLE_DOC_ALL_USER_ANNOTATIONS": "#/components/schemas/SingleDocAllUserAnnotationsExportJobParams",
-                "SINGLE_DOC_SINGLE_USER_ANNOTATIONS": "#/components/schemas/SingleDocSingleUserAnnotationsExportJobParams",
-                "SINGLE_PROJECT_ALL_CODES": "#/components/schemas/SingleProjectAllCodesExportJobParams",
-                "SINGLE_PROJECT_ALL_DATA": "#/components/schemas/SingleProjectAllDataExportJobParams",
-                "SINGLE_PROJECT_ALL_TAGS": "#/components/schemas/SingleProjectAllTagsExportJobParams",
-                "SINGLE_PROJECT_ALL_USER": "#/components/schemas/SingleProjectAllUserExportJobParams",
-                "SINGLE_PROJECT_SELECTED_SDOCS": "#/components/schemas/SingleProjectSelectedSdocsParams",
-                "SINGLE_PROJECT_SELECTED_SENTENCE_ANNOTATIONS": "#/components/schemas/SingleProjectSelectedSentenceAnnotationsParams",
-                "SINGLE_PROJECT_SELECTED_SPAN_ANNOTATIONS": "#/components/schemas/SingleProjectSelectedSpanAnnotationsParams",
-                "SINGLE_USER_ALL_DATA": "#/components/schemas/SingleUserAllDataExportJobParams",
-                "SINGLE_USER_ALL_MEMOS": "#/components/schemas/SingleUserAllMemosExportJobParams",
-                "SINGLE_USER_LOGBOOK": "#/components/schemas/SingleUserLogbookExportJobParams"
-              }
-            }
+            "description": "Specific parameters for the export job w.r.t it's type"
           }
         },
         "type": "object",
-        "required": ["export_job_type", "specific_export_job_parameters"],
+        "required": ["export_job_type", "project_id", "specific_export_job_parameters"],
         "title": "ExportJobParameters"
       },
       "ExportJobRead": {
@@ -6840,20 +6830,93 @@
       "ExportJobType": {
         "type": "string",
         "enum": [
-          "SINGLE_PROJECT_ALL_DATA",
-          "SINGLE_PROJECT_ALL_USER",
-          "SINGLE_PROJECT_ALL_TAGS",
-          "SINGLE_PROJECT_ALL_CODES",
-          "SINGLE_PROJECT_SELECTED_SDOCS",
-          "SINGLE_PROJECT_SELECTED_SPAN_ANNOTATIONS",
-          "SINGLE_PROJECT_SELECTED_SENTENCE_ANNOTATIONS",
-          "SINGLE_USER_ALL_DATA",
-          "SINGLE_USER_ALL_MEMOS",
-          "SINGLE_USER_LOGBOOK",
-          "SINGLE_DOC_ALL_USER_ANNOTATIONS",
-          "SINGLE_DOC_SINGLE_USER_ANNOTATIONS"
+          "ALL_DATA",
+          "ALL_USERS",
+          "ALL_SDOCS",
+          "ALL_CODES",
+          "ALL_TAGS",
+          "ALL_SPAN_ANNOTATIONS",
+          "ALL_SENTENCE_ANNOTATIONS",
+          "ALL_BBOX_ANNOTATIONS",
+          "ALL_MEMOS",
+          "ALL_PROJECT_METADATA",
+          "SELECTED_SDOCS",
+          "SELECTED_SPAN_ANNOTATIONS",
+          "SELECTED_SENTENCE_ANNOTATIONS",
+          "SELECTED_BBOX_ANNOTATIONS",
+          "SELECTED_MEMOS"
         ],
         "title": "ExportJobType"
+      },
+      "ExportSelectedBboxAnnotationsParams": {
+        "properties": {
+          "export_job_type": { "type": "string", "const": "SELECTED_BBOX_ANNOTATIONS", "title": "Export Job Type" },
+          "bbox_annotation_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Bbox Annotation Ids",
+            "description": "IDs of the bbox annotations to export"
+          }
+        },
+        "type": "object",
+        "required": ["export_job_type", "bbox_annotation_ids"],
+        "title": "ExportSelectedBboxAnnotationsParams"
+      },
+      "ExportSelectedMemosParams": {
+        "properties": {
+          "export_job_type": { "type": "string", "const": "SELECTED_MEMOS", "title": "Export Job Type" },
+          "memo_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Memo Ids",
+            "description": "IDs of the memos to export"
+          }
+        },
+        "type": "object",
+        "required": ["export_job_type", "memo_ids"],
+        "title": "ExportSelectedMemosParams"
+      },
+      "ExportSelectedSdocsParams": {
+        "properties": {
+          "export_job_type": { "type": "string", "const": "SELECTED_SDOCS", "title": "Export Job Type" },
+          "sdoc_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sdoc Ids",
+            "description": "IDs of the source documents to export"
+          }
+        },
+        "type": "object",
+        "required": ["export_job_type", "sdoc_ids"],
+        "title": "ExportSelectedSdocsParams"
+      },
+      "ExportSelectedSentenceAnnotationsParams": {
+        "properties": {
+          "export_job_type": { "type": "string", "const": "SELECTED_SENTENCE_ANNOTATIONS", "title": "Export Job Type" },
+          "sentence_annotation_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sentence Annotation Ids",
+            "description": "IDs of the sentence annotations to export"
+          }
+        },
+        "type": "object",
+        "required": ["export_job_type", "sentence_annotation_ids"],
+        "title": "ExportSelectedSentenceAnnotationsParams"
+      },
+      "ExportSelectedSpanAnnotationsParams": {
+        "properties": {
+          "export_job_type": { "type": "string", "const": "SELECTED_SPAN_ANNOTATIONS", "title": "Export Job Type" },
+          "span_annotation_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Span Annotation Ids",
+            "description": "IDs of the span annotations to export"
+          }
+        },
+        "type": "object",
+        "required": ["export_job_type", "span_annotation_ids"],
+        "title": "ExportSelectedSpanAnnotationsParams"
       },
       "FewShotParams": {
         "properties": {
@@ -8491,226 +8554,6 @@
         "type": "object",
         "required": ["sdoc_id", "score", "sentence_id"],
         "title": "SimSearchSentenceHit"
-      },
-      "SingleDocAllUserAnnotationsExportJobParams": {
-        "properties": {
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "The ID of the Project to export from"
-          },
-          "export_job_type": {
-            "type": "string",
-            "const": "SINGLE_DOC_ALL_USER_ANNOTATIONS",
-            "title": "Export Job Type"
-          },
-          "sdoc_id": {
-            "type": "integer",
-            "title": "Sdoc Id",
-            "description": "The ID of the SDocument to get the data from."
-          }
-        },
-        "type": "object",
-        "required": ["project_id", "export_job_type", "sdoc_id"],
-        "title": "SingleDocAllUserAnnotationsExportJobParams"
-      },
-      "SingleDocSingleUserAnnotationsExportJobParams": {
-        "properties": {
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "The ID of the Project to export from"
-          },
-          "export_job_type": {
-            "type": "string",
-            "const": "SINGLE_DOC_SINGLE_USER_ANNOTATIONS",
-            "title": "Export Job Type"
-          },
-          "sdoc_id": {
-            "type": "integer",
-            "title": "Sdoc Id",
-            "description": "The ID of the SDocument to get the data from."
-          },
-          "user_id": {
-            "type": "integer",
-            "title": "User Id",
-            "description": "The ID of the User to get the data from."
-          }
-        },
-        "type": "object",
-        "required": ["project_id", "export_job_type", "sdoc_id", "user_id"],
-        "title": "SingleDocSingleUserAnnotationsExportJobParams"
-      },
-      "SingleProjectAllCodesExportJobParams": {
-        "properties": {
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "The ID of the Project to export from"
-          },
-          "export_job_type": { "type": "string", "const": "SINGLE_PROJECT_ALL_CODES", "title": "Export Job Type" }
-        },
-        "type": "object",
-        "required": ["project_id", "export_job_type"],
-        "title": "SingleProjectAllCodesExportJobParams"
-      },
-      "SingleProjectAllDataExportJobParams": {
-        "properties": {
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "The ID of the Project to export from"
-          },
-          "export_job_type": { "type": "string", "const": "SINGLE_PROJECT_ALL_DATA", "title": "Export Job Type" }
-        },
-        "type": "object",
-        "required": ["project_id", "export_job_type"],
-        "title": "SingleProjectAllDataExportJobParams"
-      },
-      "SingleProjectAllTagsExportJobParams": {
-        "properties": {
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "The ID of the Project to export from"
-          },
-          "export_job_type": { "type": "string", "const": "SINGLE_PROJECT_ALL_TAGS", "title": "Export Job Type" }
-        },
-        "type": "object",
-        "required": ["project_id", "export_job_type"],
-        "title": "SingleProjectAllTagsExportJobParams"
-      },
-      "SingleProjectAllUserExportJobParams": {
-        "properties": {
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "The ID of the Project to export from"
-          },
-          "export_job_type": { "type": "string", "const": "SINGLE_PROJECT_ALL_USER", "title": "Export Job Type" }
-        },
-        "type": "object",
-        "required": ["project_id", "export_job_type"],
-        "title": "SingleProjectAllUserExportJobParams"
-      },
-      "SingleProjectSelectedSdocsParams": {
-        "properties": {
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "The ID of the Project to export from"
-          },
-          "export_job_type": { "type": "string", "const": "SINGLE_PROJECT_SELECTED_SDOCS", "title": "Export Job Type" },
-          "sdoc_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Sdoc Ids",
-            "description": "IDs of the source documents to export"
-          }
-        },
-        "type": "object",
-        "required": ["project_id", "export_job_type", "sdoc_ids"],
-        "title": "SingleProjectSelectedSdocsParams"
-      },
-      "SingleProjectSelectedSentenceAnnotationsParams": {
-        "properties": {
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "The ID of the Project to export from"
-          },
-          "export_job_type": {
-            "type": "string",
-            "const": "SINGLE_PROJECT_SELECTED_SENTENCE_ANNOTATIONS",
-            "title": "Export Job Type"
-          },
-          "sentence_annotation_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Sentence Annotation Ids",
-            "description": "IDs of the sentence annotations to export"
-          }
-        },
-        "type": "object",
-        "required": ["project_id", "export_job_type", "sentence_annotation_ids"],
-        "title": "SingleProjectSelectedSentenceAnnotationsParams"
-      },
-      "SingleProjectSelectedSpanAnnotationsParams": {
-        "properties": {
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "The ID of the Project to export from"
-          },
-          "export_job_type": {
-            "type": "string",
-            "const": "SINGLE_PROJECT_SELECTED_SPAN_ANNOTATIONS",
-            "title": "Export Job Type"
-          },
-          "span_annotation_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Span Annotation Ids",
-            "description": "IDs of the span annotations to export"
-          }
-        },
-        "type": "object",
-        "required": ["project_id", "export_job_type", "span_annotation_ids"],
-        "title": "SingleProjectSelectedSpanAnnotationsParams"
-      },
-      "SingleUserAllDataExportJobParams": {
-        "properties": {
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "The ID of the Project to export from"
-          },
-          "export_job_type": { "type": "string", "const": "SINGLE_USER_ALL_DATA", "title": "Export Job Type" },
-          "user_id": {
-            "type": "integer",
-            "title": "User Id",
-            "description": "The ID of the User to get the data from."
-          }
-        },
-        "type": "object",
-        "required": ["project_id", "export_job_type", "user_id"],
-        "title": "SingleUserAllDataExportJobParams"
-      },
-      "SingleUserAllMemosExportJobParams": {
-        "properties": {
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "The ID of the Project to export from"
-          },
-          "export_job_type": { "type": "string", "const": "SINGLE_USER_ALL_MEMOS", "title": "Export Job Type" },
-          "user_id": {
-            "type": "integer",
-            "title": "User Id",
-            "description": "The ID of the User to get the data from."
-          }
-        },
-        "type": "object",
-        "required": ["project_id", "export_job_type", "user_id"],
-        "title": "SingleUserAllMemosExportJobParams"
-      },
-      "SingleUserLogbookExportJobParams": {
-        "properties": {
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "The ID of the Project to export from"
-          },
-          "export_job_type": { "type": "string", "const": "SINGLE_USER_LOGBOOK", "title": "Export Job Type" },
-          "user_id": {
-            "type": "integer",
-            "title": "User Id",
-            "description": "The ID of the User to get the data from."
-          }
-        },
-        "type": "object",
-        "required": ["project_id", "export_job_type", "user_id"],
-        "title": "SingleUserLogbookExportJobParams"
       },
       "SortDirection": { "type": "string", "enum": ["asc", "desc"], "title": "SortDirection" },
       "Sort_BBoxColumns_": {

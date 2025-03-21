@@ -1,8 +1,9 @@
-import { Box, Checkbox, Toolbar, Typography } from "@mui/material";
+import { Box, Checkbox, Typography } from "@mui/material";
 import { useRef } from "react";
+import ExportSdocsButton from "../../../components/Export/ExportSdocsButton.tsx";
 import ReduxFilterDialog from "../../../components/FilterDialog/ReduxFilterDialog.tsx";
+import DATSToolbar from "../../../components/MUI/DATSToolbar.tsx";
 import DeleteSdocsButton from "../../../components/SourceDocument/DeleteSdocsButton.tsx";
-import DownloadSdocsButton from "../../../components/SourceDocument/DownloadSdocsButton.tsx";
 import TagMenuButton from "../../../components/Tag/TagMenu/TagMenuButton.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
@@ -38,19 +39,7 @@ function ImageSimilaritySearchToolbar({ searchResultDocumentIds }: ImageSimilari
   };
 
   return (
-    <Toolbar
-      disableGutters
-      variant="dense"
-      sx={{
-        px: 1,
-        zIndex: (theme) => theme.zIndex.appBar + 1,
-        bgcolor: (theme) => theme.palette.background.paper,
-        borderBottom: "1px solid #e8eaed",
-        boxShadow: 4,
-        gap: 1,
-      }}
-      ref={filterDialogAnchorRef}
-    >
+    <DATSToolbar disableGutters variant="dense" ref={filterDialogAnchorRef}>
       <Checkbox
         color="primary"
         indeterminate={numSelectedDocuments > 0 && numSelectedDocuments < searchResultDocumentIds.length}
@@ -67,7 +56,6 @@ function ImageSimilaritySearchToolbar({ searchResultDocumentIds }: ImageSimilari
             popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
           />
           <DeleteSdocsButton sdocIds={selectedDocumentIds} navigateTo="../search" />
-          <DownloadSdocsButton sdocIds={selectedDocumentIds} />
         </>
       )}
       <Box sx={{ flexGrow: 1 }} />
@@ -80,7 +68,8 @@ function ImageSimilaritySearchToolbar({ searchResultDocumentIds }: ImageSimilari
       />
       <SearchBar placeholder="Search for images" />
       <ImageSimilaritySearchOptionsMenu />
-    </Toolbar>
+      <ExportSdocsButton sdocIds={selectedDocumentIds} />
+    </DATSToolbar>
   );
 }
 

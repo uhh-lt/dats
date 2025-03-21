@@ -10,7 +10,6 @@ import {
   Stack,
   TextField,
 } from "@mui/material";
-import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
@@ -24,6 +23,7 @@ import { MetaType } from "../../../api/openapi/models/MetaType.ts";
 import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
 import { TimelineAnalysisType } from "../../../api/openapi/models/TimelineAnalysisType.ts";
+import CardContainer from "../../../components/MUI/CardContainer.tsx";
 import SdocsWithDateCounter from "../../../components/Metadata/SdocsWithDateCounter/SdocsWithDateCounter.tsx";
 
 interface TimelineAnalysisSettingsProps {
@@ -40,7 +40,7 @@ function TimelineAnalysisSettings({ timelineAnalysis }: TimelineAnalysisSettings
   );
 
   return (
-    <Card className="myFlexContainer h100">
+    <CardContainer className="myFlexContainer h100">
       <CardHeader
         className="myFlexFitContentContainer"
         action={
@@ -64,7 +64,7 @@ function TimelineAnalysisSettings({ timelineAnalysis }: TimelineAnalysisSettings
           <div>Failed to load metadata</div>
         )}
       </CardContent>
-    </Card>
+    </CardContainer>
   );
 }
 

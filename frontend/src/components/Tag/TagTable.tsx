@@ -7,7 +7,7 @@ import {
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
 import TagHooks from "../../api/TagHooks.ts";
 
@@ -50,7 +50,7 @@ const columns: MRT_ColumnDef<TagTableRow>[] = [
   },
 ];
 
-export interface CodeTableActionProps {
+export interface TagTableActionProps {
   table: MRT_TableInstance<TagTableRow>;
   selectedTags: DocumentTagRead[];
 }
@@ -62,18 +62,18 @@ interface TagTableProps {
   rowSelectionModel: MRT_RowSelectionState;
   onRowSelectionChange: MRT_TableOptions<TagTableRow>["onRowSelectionChange"];
   // toolbar
-  renderToolbarInternalActions?: (props: CodeTableActionProps) => React.ReactNode;
-  renderTopToolbarCustomActions?: (props: CodeTableActionProps) => React.ReactNode;
-  renderBottomToolbarCustomActions?: (props: CodeTableActionProps) => React.ReactNode;
+  renderTopRightToolbar?: (props: TagTableActionProps) => React.ReactNode;
+  renderTopLeftToolbar?: (props: TagTableActionProps) => React.ReactNode;
+  renderBottomToolbar?: (props: TagTableActionProps) => React.ReactNode;
 }
 
 function TagTable({
   enableMultiRowSelection = true,
   rowSelectionModel,
   onRowSelectionChange,
-  renderToolbarInternalActions,
-  renderTopToolbarCustomActions,
-  renderBottomToolbarCustomActions,
+  renderTopRightToolbar,
+  renderTopLeftToolbar,
+  renderBottomToolbar,
 }: TagTableProps) {
   // global server state
   const projectTags = TagHooks.useGetAllTags();
@@ -95,6 +95,41 @@ function TagTable({
 
     return { projectTagsMap, projectTagRows };
   }, [projectTags.data]);
+
+  // rendering
+  const renderTopLeftToolbarContent = useMemo(
+    () =>
+      renderTopLeftToolbar
+        ? (props: { table: MRT_TableInstance<TagTableRow> }) =>
+            renderTopLeftToolbar({
+              table: props.table,
+              selectedTags: Object.keys(rowSelectionModel).map((tagId) => projectTagsMap[tagId]),
+            })
+        : undefined,
+    [projectTagsMap, rowSelectionModel, renderTopLeftToolbar],
+  );
+  const renderBottomToolbarContent = useMemo(
+    () =>
+      renderBottomToolbar
+        ? (props: { table: MRT_TableInstance<TagTableRow> }) =>
+            renderBottomToolbar({
+              table: props.table,
+              selectedTags: Object.keys(rowSelectionModel).map((tagId) => projectTagsMap[tagId]),
+            })
+        : undefined,
+    [projectTagsMap, rowSelectionModel, renderBottomToolbar],
+  );
+  const renderTopRightToolbarContent = useMemo(
+    () =>
+      renderTopRightToolbar
+        ? (props: { table: MRT_TableInstance<TagTableRow> }) =>
+            renderTopRightToolbar({
+              table: props.table,
+              selectedTags: Object.keys(rowSelectionModel).map((tagId) => projectTagsMap[tagId]),
+            })
+        : undefined,
+    [projectTagsMap, rowSelectionModel, renderTopRightToolbar],
+  );
 
   // table
   const table = useMaterialReactTable<TagTableRow>({
@@ -131,28 +166,10 @@ function TagTable({
     enableMultiRowSelection,
     onRowSelectionChange,
     // toolbar
-    enableBottomToolbar: !!renderBottomToolbarCustomActions,
-    renderTopToolbarCustomActions: renderTopToolbarCustomActions
-      ? (props) =>
-          renderTopToolbarCustomActions({
-            table: props.table,
-            selectedTags: Object.keys(rowSelectionModel).map((tagId) => projectTagsMap[tagId]),
-          })
-      : undefined,
-    renderToolbarInternalActions: renderToolbarInternalActions
-      ? (props) =>
-          renderToolbarInternalActions({
-            table: props.table,
-            selectedTags: Object.values(projectTagsMap).filter((row) => rowSelectionModel[row.id]),
-          })
-      : undefined,
-    renderBottomToolbarCustomActions: renderBottomToolbarCustomActions
-      ? (props) =>
-          renderBottomToolbarCustomActions({
-            table: props.table,
-            selectedTags: Object.values(projectTagsMap).filter((row) => rowSelectionModel[row.id]),
-          })
-      : undefined,
+    enableBottomToolbar: !!renderBottomToolbar,
+    renderTopToolbarCustomActions: renderTopLeftToolbarContent,
+    renderToolbarInternalActions: renderTopRightToolbarContent,
+    renderBottomToolbarCustomActions: renderBottomToolbarContent,
     // hide columns per default
     initialState: {
       columnVisibility: {
@@ -168,4 +185,4 @@ function TagTable({
 
   return <MaterialReactTable table={table} />;
 }
-export default TagTable;
+export default memo(TagTable);

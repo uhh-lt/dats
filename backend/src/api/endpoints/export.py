@@ -24,9 +24,7 @@ exs: ExportService = ExportService()
 def start_export_job(
     *, export_params: ExportJobParameters, authz_user: AuthzUser = Depends()
 ) -> ExportJobRead:
-    authz_user.assert_in_project(
-        export_params.specific_export_job_parameters.project_id
-    )
+    authz_user.assert_in_project(export_params.project_id)
 
     return prepare_and_start_export_job_async(export_params=export_params)
 
@@ -40,8 +38,6 @@ def get_export_job(
     *, export_job_id: str, authz_user: AuthzUser = Depends()
 ) -> ExportJobRead:
     job = exs.get_export_job(export_job_id=export_job_id)
-    authz_user.assert_in_project(
-        job.parameters.specific_export_job_parameters.project_id
-    )
+    authz_user.assert_in_project(job.parameters.project_id)
 
     return job

@@ -4,11 +4,12 @@ import {
   MRT_ColumnDef,
   MRT_RowVirtualizer,
   MRT_ShowHideColumnsButton,
+  MRT_TableInstance,
   MRT_ToggleDensePaddingButton,
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useEffect, useMemo, useRef, type UIEvent } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
 import { useParams } from "react-router-dom";
 import { QueryKey } from "../../../api/QueryKey.ts";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
@@ -163,6 +164,49 @@ function WordFrequencyTable() {
     }
   }, [projectId, sortingModel]);
 
+  // Table event handlers
+  const handleTableScroll = useCallback(
+    (event: UIEvent<HTMLDivElement>) => fetchMoreOnScroll(event.target as HTMLDivElement),
+    [fetchMoreOnScroll],
+  );
+
+  // render
+  const renderTopLeftToolbarContent = useCallback(
+    () => (
+      <Stack direction={"row"} spacing={1} alignItems="center" height={48}>
+        <ReduxFilterDialog
+          anchorEl={tableContainerRef.current}
+          buttonProps={{ size: "small" }}
+          filterName={filterName}
+          filterStateSelector={filterStateSelector}
+          filterActions={WordFrequencyActions}
+        />
+      </Stack>
+    ),
+    [],
+  );
+  const renderBottomToolbarContent = useCallback(
+    () => (
+      <Stack direction={"row"} spacing={1} alignItems="center">
+        <Typography>
+          Fetched {totalFetched} of {totalResults} unique words (from {data?.pages?.[0]?.sdocs_total ?? 0} documents
+          with {data?.pages?.[0]?.words_total ?? 0} words).
+        </Typography>
+      </Stack>
+    ),
+    [totalFetched, totalResults, data],
+  );
+  const renderTopRightToolbarContent = useCallback(
+    ({ table }: { table: MRT_TableInstance<WordFrequencyStat> }) => (
+      <Stack direction={"row"} spacing={1} alignItems="center" height={48}>
+        <MRT_ShowHideColumnsButton table={table} />
+        <MRT_ToggleDensePaddingButton table={table} />
+        <ExportWordFrequencyButton filter={filter as MyFilter<WordFrequencyColumns>} />
+      </Stack>
+    ),
+    [filter],
+  );
+
   // table
   const table = useMaterialReactTable<WordFrequencyStat>({
     data: flatData,
@@ -201,7 +245,7 @@ function WordFrequencyTable() {
     },
     muiTableContainerProps: {
       ref: tableContainerRef, //get access to the table container element
-      onScroll: (event: UIEvent<HTMLDivElement>) => fetchMoreOnScroll(event.target as HTMLDivElement), //add an event listener to the table container element
+      onScroll: handleTableScroll,
       style: { flexGrow: 1 },
     },
     muiToolbarAlertBannerProps: isError
@@ -212,35 +256,12 @@ function WordFrequencyTable() {
       : undefined,
     // toolbar
     positionToolbarAlertBanner: "head-overlay",
-    renderBottomToolbarCustomActions: () => (
-      <Stack direction={"row"} spacing={1} alignItems="center">
-        <Typography>
-          Fetched {totalFetched} of {totalResults} unique words (from {data?.pages?.[0]?.sdocs_total ?? 0} documents
-          with {data?.pages?.[0]?.words_total ?? 0} words).
-        </Typography>
-      </Stack>
-    ),
-    renderTopToolbarCustomActions: () => (
-      <Stack direction={"row"} spacing={1} alignItems="center" height={48}>
-        <ReduxFilterDialog
-          anchorEl={tableContainerRef.current}
-          buttonProps={{ size: "small" }}
-          filterName={filterName}
-          filterStateSelector={filterStateSelector}
-          filterActions={WordFrequencyActions}
-        />
-      </Stack>
-    ),
-    renderToolbarInternalActions: ({ table }) => (
-      <Stack direction={"row"} spacing={1} alignItems="center" height={48}>
-        <MRT_ShowHideColumnsButton table={table} />
-        <MRT_ToggleDensePaddingButton table={table} />
-        <ExportWordFrequencyButton filter={filter as MyFilter<WordFrequencyColumns>} />
-      </Stack>
-    ),
+    renderTopToolbarCustomActions: renderTopLeftToolbarContent,
+    renderToolbarInternalActions: renderTopRightToolbarContent,
+    renderBottomToolbarCustomActions: renderBottomToolbarContent,
   });
 
   return <MaterialReactTable table={table} />;
 }
 
-export default WordFrequencyTable;
+export default memo(WordFrequencyTable);

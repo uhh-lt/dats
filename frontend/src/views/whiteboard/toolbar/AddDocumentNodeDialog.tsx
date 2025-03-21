@@ -1,7 +1,10 @@
-import { Box, Button, ButtonProps, Dialog, DialogTitle } from "@mui/material";
+import { Button, ButtonProps, Dialog } from "@mui/material";
 import { MRT_RowSelectionState, MRT_SortingState } from "material-react-table";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { XYPosition } from "reactflow";
+import { ElasticSearchDocumentHit } from "../../../api/openapi/models/ElasticSearchDocumentHit.ts";
+import { FilterTableToolbarProps } from "../../../components/FilterTable/FilterTableToolbarProps.ts";
+import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
 import SdocTable from "../../../components/SourceDocument/SdocTable/SdocTable.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
@@ -19,6 +22,7 @@ function AddDocumentNodeDialog({ projectId, buttonProps, onClick }: AddDocumentN
   const [open, setOpen] = useState(false);
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
   const [sortingModel, setSortingModel] = useState<MRT_SortingState>([]);
+
   const selectedSdocIds = Object.keys(rowSelectionModel).map((id) => parseInt(id));
 
   const handleOpenDialogClick = () => {
@@ -30,20 +34,41 @@ function AddDocumentNodeDialog({ projectId, buttonProps, onClick }: AddDocumentN
     setRowSelectionModel({});
   };
 
-  const handleConfirmSelection = () => {
+  // maximize
+  const [isMaximized, setIsMaximized] = useState(false);
+  const handleToggleMaximize = () => {
+    setIsMaximized((prev) => !prev);
+  };
+
+  const handleConfirmSelection = useCallback(() => {
     const addNode = (position: XYPosition, reactFlowService: ReactFlowService) =>
       reactFlowService.addNodes(createSdocNodes({ sdocs: selectedSdocIds, position: position }));
     onClick(addNode);
     handleClose();
-  };
+  }, [onClick, selectedSdocIds]);
+
+  // rendering
+  const renderBottomToolbar = useCallback(
+    (props: FilterTableToolbarProps<ElasticSearchDocumentHit>) => (
+      <Button onClick={handleConfirmSelection} disabled={props.selectedData.length === 0}>
+        Add {props.selectedData.length > 0 ? props.selectedData.length : null} Documents
+      </Button>
+    ),
+    [handleConfirmSelection],
+  );
 
   return (
     <>
       <Button onClick={handleOpenDialogClick} {...buttonProps}>
         Add documents
       </Button>
-      <Dialog onClose={handleClose} open={open} maxWidth="lg" fullWidth>
-        <DialogTitle>Select documents to add to Whiteboard</DialogTitle>
+      <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+        <DATSDialogHeader
+          title="Select documents to add to Whiteboard"
+          onClose={handleClose}
+          isMaximized={isMaximized}
+          onToggleMaximize={handleToggleMaximize}
+        />
         <SdocTable
           projectId={projectId}
           filterName={filterName}
@@ -51,15 +76,7 @@ function AddDocumentNodeDialog({ projectId, buttonProps, onClick }: AddDocumentN
           onRowSelectionChange={setRowSelectionModel}
           sortingModel={sortingModel}
           onSortingChange={setSortingModel}
-          renderBottomToolbarCustomActions={(props) => (
-            <>
-              <Box flexGrow={1} />
-              <Button onClick={handleClose}>Close</Button>
-              <Button onClick={handleConfirmSelection} disabled={props.selectedDocuments.length === 0}>
-                Add {props.selectedDocuments.length > 0 ? props.selectedDocuments.length : null} Documents
-              </Button>
-            </>
-          )}
+          renderBottomToolbar={renderBottomToolbar}
         />
       </Dialog>
     </>

@@ -143,7 +143,11 @@ function SentenceAnnotator({ sdocData, virtualizerScrollElementRef, ...props }: 
     setHoverSentAnnoId(null);
   };
 
-  const handleSentenceMouseDown = (_: React.MouseEvent<HTMLDivElement, MouseEvent>, index: number) => {
+  const handleSentenceMouseDown = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, index: number) => {
+    // only allow left click
+    if (event.button !== 0) {
+      return;
+    }
     setIsDragging(true);
     setSelectedSentences((selectedSentences) => {
       if (selectedSentences.includes(index)) {

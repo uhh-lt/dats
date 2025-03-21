@@ -1,5 +1,6 @@
 import { TabPanel } from "@mui/lab";
 import { Box, CircularProgress, Stack } from "@mui/material";
+import { memo } from "react";
 import MetadataHooks from "../../../../api/MetadataHooks.ts";
 import DocumentMetadataRow from "./DocumentMetadataRow/DocumentMetadataRow.tsx";
 import MetadataCreateButton from "./MetadataCreateButton.tsx";
@@ -20,6 +21,7 @@ function MetadataPanel(props: MetadataPanelProps) {
 
 function MetadataPanelContent({ sdocId, filterName }: MetadataPanelProps) {
   const metadata = MetadataHooks.useGetSdocMetadata(sdocId);
+
   return (
     <TabPanel value="info" sx={{ p: 1 }} className="h100">
       <MetadataCreateButton sdocId={sdocId} />
@@ -39,4 +41,4 @@ function MetadataPanelContent({ sdocId, filterName }: MetadataPanelProps) {
   );
 }
 
-export default MetadataPanel;
+export default memo(MetadataPanel);

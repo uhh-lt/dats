@@ -1,6 +1,6 @@
-import EditIcon from "@mui/icons-material/Edit";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
-import React from "react";
+import { memo, useCallback } from "react";
+import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
 import MemoDialogAPI, { MemoEvent } from "./MemoDialog/MemoDialogAPI.ts";
 
 interface MemoEditMenuItemProps {
@@ -14,20 +14,21 @@ function MemoEditMenuItem({
   onClick,
   ...props
 }: MemoEvent & MemoEditMenuItemProps & MenuItemProps) {
-  const handleClickOpen: React.MouseEventHandler<HTMLLIElement> = (event) => {
-    event.stopPropagation();
-    onClick();
-    MemoDialogAPI.openMemo({ memoId, attachedObjectId, attachedObjectType });
-  };
+  const handleClickOpen = useCallback(
+    (event: React.MouseEvent<HTMLLIElement>) => {
+      event.stopPropagation();
+      onClick();
+      MemoDialogAPI.openMemo({ memoId, attachedObjectId, attachedObjectType });
+    },
+    [memoId, attachedObjectId, attachedObjectType, onClick],
+  );
 
   return (
     <MenuItem onClick={handleClickOpen} disabled={!memoId} {...props}>
-      <ListItemIcon>
-        <EditIcon fontSize="small" />
-      </ListItemIcon>
+      <ListItemIcon>{getIconComponent(Icon.EDIT, { fontSize: "small" })}</ListItemIcon>
       <ListItemText>Edit memo</ListItemText>
     </MenuItem>
   );
 }
 
-export default MemoEditMenuItem;
+export default memo(MemoEditMenuItem);

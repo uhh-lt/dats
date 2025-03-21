@@ -1,18 +1,16 @@
-from typing import Optional
+from pathlib import Path
+from typing import List
 
 import pandas as pd
 from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.memo import crud_memo
-from app.core.data.dto.code import CodeRead
-from app.core.data.dto.document_tag import DocumentTagRead
-from app.core.data.dto.source_document import SourceDocumentRead
+from app.core.data.crud.object_handle import crud_object_handle
 from app.core.data.dto.span_annotation import (
     SpanAnnotationRead,
 )
-from app.core.data.dto.span_group import SpanGroupRead
-from app.core.data.dto.user import UserRead
+from app.core.data.export.no_data_export_error import NoDataToExportError
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
@@ -21,107 +19,111 @@ from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_group import SpanGroupORM
+from app.core.data.repo.repo_service import RepoService
 
 
-def generate_export_df_for_memo(
+def export_selected_memos(
     db: Session,
-    memo_id: Optional[int] = None,
-    memo: Optional[MemoORM] = None,
+    repo: RepoService,
+    project_id: int,
+    memo_ids: List[int],
+) -> Path:
+    memos = crud_memo.read_by_ids(db=db, ids=memo_ids)
+    return __export_memos(
+        db=db,
+        repo=repo,
+        fn=f"project_{project_id}_selected_memos_export",
+        memos=memos,
+    )
+
+
+def export_all_memos(
+    db: Session,
+    repo: RepoService,
+    project_id: int,
+) -> Path:
+    memos = crud_memo.read_by_project(db=db, project_id=project_id)
+    return __export_memos(
+        db=db,
+        repo=repo,
+        fn=f"project_{project_id}_all_memos_export",
+        memos=memos,
+    )
+
+
+def __export_memos(
+    db: Session,
+    repo: RepoService,
+    fn: str,
+    memos: List[MemoORM],
+) -> Path:
+    if len(memos) == 0:
+        raise NoDataToExportError("No memos to export.")
+
+    export_data = __generate_export_df_for_memos(db=db, memos=memos)
+    return repo.write_df_to_temp_file(
+        df=export_data,
+        fn=fn,
+    )
+
+
+def __generate_export_df_for_memos(
+    db: Session,
+    memos: List[MemoORM],
 ) -> pd.DataFrame:
-    if memo is None:
-        if memo_id is None:
-            raise ValueError("Either Memo ID or ORM must be not None")
-        memo = crud_memo.read(db=db, id=memo_id)
+    logger.info(f"Exporting {len(memos)} Memos ...")
 
-    logger.info(f"Exporting Memo {memo_id} ...")
-    memo_dto = crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=memo)
-
-    user_dto = UserRead.model_validate(memo.user)
-
-    # get attached object
-    # avoid circular imports
-    from app.core.data.crud.object_handle import crud_object_handle
-
-    assert memo.attached_to is not None
-    attached_to = crud_object_handle.resolve_handled_object(
-        db=db, handle=memo.attached_to
-    )
-
-    # common data
-    data = {
-        "memo_id": [memo_id],
-        "user_id": [user_dto.id],
-        "user_first_name": [user_dto.first_name],
-        "user_last_name": [user_dto.last_name],
-        "created": [memo_dto.created],
-        "updated": [memo_dto.updated],
-        "starred": [memo_dto.starred],
-        "attached_to": [memo_dto.attached_object_type],
-        "content": [memo_dto.content],
-        "sdoc_name": [None],
-        "tag_name": [None],
-        "span_group_name": [None],
-        "code_name": [None],
-        "span_anno_text": [None],
-    }
-
-    if isinstance(attached_to, CodeORM):
-        dto = CodeRead.model_validate(attached_to)
-        data["code_name"] = [dto.name]
-
-    elif isinstance(attached_to, SpanGroupORM):
-        dto = SpanGroupRead.model_validate(attached_to)
-        data["span_group_name"] = [dto.name]
-
-    elif isinstance(attached_to, SourceDocumentORM):
-        dto = SourceDocumentRead.model_validate(attached_to)
-        data["sdoc_name"] = [dto.filename]
-
-    elif isinstance(attached_to, DocumentTagORM):
-        dto = DocumentTagRead.model_validate(attached_to)
-        data["tag_name"] = [dto.name]
-
-    elif isinstance(attached_to, SpanAnnotationORM):
-        span_read_resolved_dto = SpanAnnotationRead.model_validate(attached_to)
-
-        data["span_anno_text"] = [span_read_resolved_dto.text]
-        data["code_name"] = [attached_to.code.name]
-
-    elif isinstance(attached_to, BBoxAnnotationORM):
-        data["code_name"] = [attached_to.code.name]
-
-    elif isinstance(attached_to, ProjectORM):
-        logger.warning("LogBook Export still todo!")
-        pass
-
-    df = pd.DataFrame(data=data)
-    return df
-
-
-def generate_export_content_for_logbook(
-    db: Session, project_id: int, user_id: int
-) -> str:
-    logger.info(f"Exporting LogBook for User {user_id} of Project {project_id} ...")
-    # FIXME find better way to get the LogBook memo (with SQL but this will be a complicated query with JOINS to resolve the objecthandle)
-    memos = crud_memo.read_by_user_and_project(
-        db=db, user_id=user_id, proj_id=project_id, only_starred=False
-    )
-    logbook_dto = None
-    # avoid circular imports
-    from app.core.data.crud.object_handle import crud_object_handle
-
+    datas = []
     for memo in memos:
-        assert memo.attached_to is not None
+        memo_dto = crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=memo)
+        user = memo.user
+
         # get attached object
+        assert memo.attached_to is not None
         attached_to = crud_object_handle.resolve_handled_object(
             db=db, handle=memo.attached_to
         )
-        if isinstance(attached_to, ProjectORM):
-            logbook_dto = crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=memo)
 
-    if logbook_dto is None:
-        msg = f"User {user_id} has no LogBook for Project {project_id}!"
-        logger.warning(msg)
-        return ""
+        # common data
+        data = {
+            "memo_id": [memo.id],
+            "user_id": [user.id],
+            "user_first_name": [user.first_name],
+            "user_last_name": [user.last_name],
+            "created": [memo_dto.created],
+            "updated": [memo_dto.updated],
+            "starred": [memo_dto.starred],
+            "attached_to": [memo_dto.attached_object_type],
+            "content": [memo_dto.content],
+            "sdoc_name": [None],
+            "tag_name": [None],
+            "span_group_name": [None],
+            "code_name": [None],
+            "span_anno_text": [None],
+        }
 
-    return logbook_dto.content
+        match attached_to:
+            case CodeORM():
+                data["code_name"] = [attached_to.name]
+                break
+            case SpanGroupORM():
+                data["span_group_name"] = [attached_to.name]
+            case SourceDocumentORM():
+                data["sdoc_name"] = [attached_to.filename]
+            case DocumentTagORM():
+                data["tag_name"] = [attached_to.name]
+            case ProjectORM():
+                logger.warning("LogBook Export still todo!")
+                continue
+            case SpanAnnotationORM():
+                span_read_resolved_dto = SpanAnnotationRead.model_validate(attached_to)
+                data["span_anno_text"] = [span_read_resolved_dto.text]
+                data["code_name"] = [attached_to.code.name]
+            case BBoxAnnotationORM():
+                data["code_name"] = [attached_to.code.name]
+            case _:
+                logger.warning(f"Unknown attached object type: {type(attached_to)}")
+
+        datas.append(data)
+
+    return pd.DataFrame(datas)

@@ -47,6 +47,13 @@ function BBoxAnnotationRendererWithoutData({
   }
 }
 
+function LinkWrapper({ children, to, link }: { children: React.ReactNode; to: string; link: boolean }) {
+  if (link) {
+    return <Link to={to}>{children}</Link>;
+  }
+  return children;
+}
+
 function BBoxAnnotationRendererWithData({
   bboxAnnotation,
   showCode,
@@ -57,23 +64,21 @@ function BBoxAnnotationRendererWithData({
   sdocRendererProps,
   link,
 }: { bboxAnnotation: BBoxAnnotationRead } & BBoxAnnotationRendererSharedProps) {
-  const content = (
-    <Stack direction="row" alignItems="center">
-      {showSdoc && <SdocRenderer sdoc={bboxAnnotation.sdoc_id} {...sdocRendererProps} />}
-      {showSdocTags && <SdocTagsRenderer sdocId={bboxAnnotation.sdoc_id} />}
-      {showSdocProjectMetadataId && (
-        <SdocMetadataRenderer sdocId={bboxAnnotation.sdoc_id} projectMetadataId={showSdocProjectMetadataId} />
-      )}
-      {showCode && <CodeRenderer code={bboxAnnotation.code_id} />}
-      {showCode && showSpanText && ": "}
-      {showSpanText &&
-        `${bboxAnnotation.x_min}, ${bboxAnnotation.y_min}, ${bboxAnnotation.x_max}, ${bboxAnnotation.y_max}`}
-    </Stack>
+  return (
+    <LinkWrapper to={`/annotation/${bboxAnnotation.sdoc_id}`} link={!!link}>
+      <Stack direction="row" alignItems="center">
+        {showSdoc && <SdocRenderer sdoc={bboxAnnotation.sdoc_id} {...sdocRendererProps} />}
+        {showSdocTags && <SdocTagsRenderer sdocId={bboxAnnotation.sdoc_id} />}
+        {showSdocProjectMetadataId && (
+          <SdocMetadataRenderer sdocId={bboxAnnotation.sdoc_id} projectMetadataId={showSdocProjectMetadataId} />
+        )}
+        {showCode && <CodeRenderer code={bboxAnnotation.code_id} />}
+        {showCode && showSpanText && ": "}
+        {showSpanText &&
+          `${bboxAnnotation.x_min}, ${bboxAnnotation.y_min}, ${bboxAnnotation.x_max}, ${bboxAnnotation.y_max}`}
+      </Stack>
+    </LinkWrapper>
   );
-  if (link) {
-    return <Link to={`../annotation/${bboxAnnotation.sdoc_id}`}>{content}</Link>;
-  }
-  return content;
 }
 
 export default BBoxAnnotationRenderer;

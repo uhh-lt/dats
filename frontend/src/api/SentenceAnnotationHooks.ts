@@ -152,6 +152,9 @@ const useCreateBulkSentenceAnnotation = () => {
       if (!context) return;
       queryClient.invalidateQueries({ queryKey: context.affectedQueryKey });
     },
+    meta: {
+      successMessage: (data: SentenceAnnotationRead[]) => `Created ${data.length} Sentence Annotations`,
+    },
   });
 };
 
@@ -238,6 +241,9 @@ const useUpdateBulkSentenceAnno = () =>
         });
         queryClient.invalidateQueries({ queryKey: [QueryKey.SENTENCE_ANNOTATION, annotation.id] });
       });
+    },
+    meta: {
+      successMessage: (data: SentenceAnnotationRead[]) => `Updated ${data.length} Sentence Annotations`,
     },
   });
 
@@ -339,6 +345,9 @@ const useDeleteBulkSentenceAnnotationSingleSdoc = () =>
     onSettled: (_data, _error, _variables, context) => {
       if (!context) return;
       queryClient.invalidateQueries({ queryKey: context.affectedQueryKey });
+    },
+    meta: {
+      successMessage: (data: SentenceAnnotationRead[]) => `Bulk deleted ${data.length} Sentence Annotations`,
     },
   });
 

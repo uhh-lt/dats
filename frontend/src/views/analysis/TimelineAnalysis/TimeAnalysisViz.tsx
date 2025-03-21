@@ -1,7 +1,7 @@
 import BarChartIcon from "@mui/icons-material/BarChart";
 import ReplayIcon from "@mui/icons-material/Replay";
 import TimelineIcon from "@mui/icons-material/Timeline";
-import { Box, Card, CardContent, CardHeader, CircularProgress, IconButton, Tooltip, Typography } from "@mui/material";
+import { Box, CardContent, CardHeader, CircularProgress, IconButton, Tooltip, Typography } from "@mui/material";
 import React, { useMemo } from "react";
 import {
   Bar,
@@ -19,6 +19,7 @@ import {
 } from "recharts";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
 import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
+import CardContainer from "../../../components/MUI/CardContainer.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { TimelineAnalysisCount } from "./TimelineAnalysisCount.ts";
 import TimelineAnalysisExportMenu from "./TimelineAnalysisExportMenu.tsx";
@@ -155,7 +156,7 @@ function TimelineAnalysisViz({ timelineAnalysis }: TimelineAnalysisVizProps) {
   }
 
   return (
-    <Card className="myFlexContainer h100">
+    <CardContainer className="myFlexContainer h100">
       <CardHeader
         className="myFlexFitContentContainer"
         action={
@@ -182,7 +183,7 @@ function TimelineAnalysisViz({ timelineAnalysis }: TimelineAnalysisVizProps) {
         subheader={`Click on a ${isBarPlot ? "bar" : "dot"} to see more information.`}
       />
       <CardContent className="myFlexFillAllContainer">{content}</CardContent>
-    </Card>
+    </CardContainer>
   );
 }
 

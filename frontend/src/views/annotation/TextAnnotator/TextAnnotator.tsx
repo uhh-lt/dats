@@ -213,37 +213,17 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
     ConfirmationAPI.openConfirmationDialog({
       text: `Do you really want to remove the SpanAnnotation ${annotation.id}? You can reassign it later!`,
       onAccept: () => {
-        deleteMutation.mutate(
-          { spanAnnotationToDelete: annotation as SpanAnnotationRead },
-          {
-            onSuccess: (spanAnnotation) => {
-              openSnackbar({
-                text: `Deleted Span Annotation ${spanAnnotation.id}`,
-                severity: "success",
-              });
-            },
-          },
-        );
+        deleteMutation.mutate({ spanAnnotationToDelete: annotation as SpanAnnotationRead });
       },
     });
   };
   const handleCodeSelectorEditCode = (annotation: Annotation, code: ICode) => {
-    updateMutation.mutate(
-      {
-        spanAnnotationToUpdate: annotation as SpanAnnotationRead,
-        requestBody: {
-          code_id: code.id,
-        },
+    updateMutation.mutate({
+      spanAnnotationToUpdate: annotation as SpanAnnotationRead,
+      requestBody: {
+        code_id: code.id,
       },
-      {
-        onSuccess: (spanAnnotation) => {
-          openSnackbar({
-            text: `Updated Span Annotation ${spanAnnotation.id}`,
-            severity: "success",
-          });
-        },
-      },
-    );
+    });
   };
   const handleCodeSelectorAddCode = (code: CodeRead, isNewCode: boolean) => {
     if (!fakeAnnotation) return;

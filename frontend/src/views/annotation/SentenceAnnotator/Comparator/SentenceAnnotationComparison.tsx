@@ -6,7 +6,6 @@ import { CodeRead } from "../../../../api/openapi/models/CodeRead.ts";
 import { SentenceAnnotationRead } from "../../../../api/openapi/models/SentenceAnnotationRead.ts";
 import { SourceDocumentDataRead } from "../../../../api/openapi/models/SourceDocumentDataRead.ts";
 import { useAuth } from "../../../../auth/useAuth.ts";
-import { useOpenSnackbar } from "../../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 import { AnnoActions } from "../../annoSlice.ts";
 import { Annotation } from "../../Annotation.ts";
@@ -54,7 +53,6 @@ function SentenceAnnotationComparison({
   // annotation menu
   const annotationMenuRef = useRef<CodeSelectorHandle>(null);
   const dispatch = useAppDispatch();
-  const openSnackbar = useOpenSnackbar();
   const createMutation = SentenceAnnotationHooks.useCreateSentenceAnnotation();
   const createBulkMutation = SentenceAnnotationHooks.useCreateBulkSentenceAnnotation();
   const deleteMutation = SentenceAnnotationHooks.useDeleteSentenceAnnotation();
@@ -150,19 +148,9 @@ function SentenceAnnotationComparison({
       return;
     }
 
-    createBulkMutation.mutate(
-      {
-        requestBody: newAnnotations,
-      },
-      {
-        onSuccess: () => {
-          openSnackbar({
-            text: `Applied All Sentence Annotations`,
-            severity: "success",
-          });
-        },
-      },
-    );
+    createBulkMutation.mutate({
+      requestBody: newAnnotations,
+    });
   };
 
   const handleClickRevertAll = () => {
@@ -199,42 +187,18 @@ function SentenceAnnotationComparison({
       return;
     }
 
-    deleteBulkMutation.mutate(sameAnnotations, {
-      onSuccess: () => {
-        openSnackbar({
-          text: `Reverted All Sentence Annotations`,
-          severity: "success",
-        });
-      },
-    });
+    deleteBulkMutation.mutate(sameAnnotations);
   };
 
   // single processing events
   const handleApplyAnnotation = (annotation: SentenceAnnotationRead) => {
-    createMutation.mutate(
-      {
-        requestBody: annotation,
-      },
-      {
-        onSuccess: (sentenceAnnotation) => {
-          openSnackbar({
-            text: `Applied Sentence Annotation ${sentenceAnnotation.id}`,
-            severity: "success",
-          });
-        },
-      },
-    );
+    createMutation.mutate({
+      requestBody: annotation,
+    });
   };
 
   const handleRevertAnnotation = (annotation: SentenceAnnotationRead) => {
-    deleteMutation.mutate(annotation, {
-      onSuccess: (sentenceAnnotation) => {
-        openSnackbar({
-          text: `Reverted Sentence Annotation ${sentenceAnnotation.id}`,
-          severity: "success",
-        });
-      },
-    });
+    deleteMutation.mutate(annotation);
   };
 
   // event handlers

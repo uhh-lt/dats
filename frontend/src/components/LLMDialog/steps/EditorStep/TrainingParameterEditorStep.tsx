@@ -2,7 +2,7 @@ import { ErrorMessage } from "@hookform/error-message";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { LoadingButton } from "@mui/lab";
 import { Button, DialogActions, DialogContent, Stack, Typography } from "@mui/material";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import LLMHooks from "../../../../api/LLMHooks.ts";
 import { TrainingParameters } from "../../../../api/openapi/models/TrainingParameters.ts";
@@ -27,17 +27,21 @@ function TrainingParameterEditorStep() {
   // local state
   const [trainingParameters, setTrainingParameters] = useState<TrainingParameters>(recommendedParameters);
 
-  // react form handlers
-  const handleChangeTrainingParameters = (formData: TrainingParameters) => {
+  // handlers
+  const handleChangeTrainingParameters = useCallback((formData: TrainingParameters) => {
     setTrainingParameters(formData);
-  };
+  }, []);
+
+  const handleBack = useCallback(() => {
+    dispatch(CRUDDialogActions.previousLLMDialogStep());
+  }, [dispatch]);
 
   // start llm job
-  const startLLMJobMutation = LLMHooks.useStartLLMJob();
-  const handleStartLLMJob = () => {
+  const { mutate: startLLMJobMutation, isPending: isStartPending } = LLMHooks.useStartLLMJob();
+  const handleStartLLMJob = useCallback(() => {
     if (method === undefined) return;
 
-    startLLMJobMutation.mutate(
+    startLLMJobMutation(
       {
         requestBody: {
           project_id: projectId,
@@ -68,7 +72,19 @@ function TrainingParameterEditorStep() {
         },
       },
     );
-  };
+  }, [
+    method,
+    projectId,
+    approach,
+    trainingParameters,
+    sdocIds,
+    tags,
+    metadata,
+    codes,
+    deleteExistingAnnotations,
+    startLLMJobMutation,
+    dispatch,
+  ]);
 
   return (
     <>
@@ -84,11 +100,11 @@ function TrainingParameterEditorStep() {
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => dispatch(CRUDDialogActions.previousLLMDialogStep())}>Back</Button>
+        <Button onClick={handleBack}>Back</Button>
         <LoadingButton
           variant="contained"
           startIcon={<PlayCircleIcon />}
-          loading={startLLMJobMutation.isPending}
+          loading={isStartPending}
           loadingPosition="start"
           onClick={handleStartLLMJob}
         >

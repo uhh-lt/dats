@@ -3,7 +3,6 @@ import { forwardRef, useImperativeHandle, useState } from "react";
 import { Edge, useReactFlow } from "reactflow";
 import CodeHooks from "../../../api/CodeHooks.ts";
 import TagHooks from "../../../api/TagHooks.ts";
-import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { CustomEdgeData } from "../types/CustomEdgeData.ts";
 import { DATSNodeData } from "../types/DATSNodeData.ts";
 import { isCodeNode, isSdocNode, isTagNode } from "../types/typeGuards.ts";
@@ -34,9 +33,6 @@ const DatabaseEdgeEditMenu = forwardRef<DatabaseEdgeEditMenuHandle>((_, ref) => 
     setEdges([]);
   };
 
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
-
   // actions
   const bulkUnlinkDocumentTagsMutation = TagHooks.useBulkUnlinkDocumentTags();
   const handleDeleteTagSdocEdges = () => {
@@ -49,22 +45,12 @@ const DatabaseEdgeEditMenu = forwardRef<DatabaseEdgeEditMenuHandle>((_, ref) => 
       if (!sourceNode || !targetNode) return;
 
       if (isSdocNode(targetNode) && isTagNode(sourceNode)) {
-        bulkUnlinkDocumentTagsMutation.mutate(
-          {
-            requestBody: {
-              document_tag_ids: [sourceNode.data.tagId],
-              source_document_ids: [targetNode.data.sdocId],
-            },
+        bulkUnlinkDocumentTagsMutation.mutate({
+          requestBody: {
+            document_tag_ids: [sourceNode.data.tagId],
+            source_document_ids: [targetNode.data.sdocId],
           },
-          {
-            onSuccess() {
-              openSnackbar({
-                text: "Tag removed from document",
-                severity: "success",
-              });
-            },
-          },
-        );
+        });
       }
     });
 
@@ -82,22 +68,12 @@ const DatabaseEdgeEditMenu = forwardRef<DatabaseEdgeEditMenuHandle>((_, ref) => 
       if (!sourceNode || !targetNode) return;
 
       if (isCodeNode(targetNode) && isCodeNode(sourceNode)) {
-        updateCodeMutation.mutate(
-          {
-            codeId: sourceNode.data.codeId,
-            requestBody: {
-              parent_id: null,
-            },
+        updateCodeMutation.mutate({
+          codeId: sourceNode.data.codeId,
+          requestBody: {
+            parent_id: null,
           },
-          {
-            onSuccess(data) {
-              openSnackbar({
-                text: `Removed parent code from code "${data.name}"`,
-                severity: "success",
-              });
-            },
-          },
-        );
+        });
       }
     });
 

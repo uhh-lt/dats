@@ -49,8 +49,6 @@ interface ICodeFilterWithLevel extends CodeReadWithLevel {
 
 const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
   ({ onClose, onAdd, onEdit, onDelete }, ref) => {
-    // global client state (redux)
-    const codes = useComputeCodesForSelection();
     const dispatch = useAppDispatch();
 
     // local client state
@@ -63,6 +61,7 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
     const [autoCompleteValue, setAutoCompleteValue] = useState<ICodeFilterWithLevel | null>(null);
 
     // computed
+    const codes = useComputeCodesForSelection();
     const codeTree = useCodesWithLevel(codes);
     const codeOptions: ICodeFilterWithLevel[] = useMemo(() => {
       return codeTree.map((c) => ({

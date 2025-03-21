@@ -43,8 +43,7 @@ const useCreateProject = () => {
       );
     },
     meta: {
-      successMessage: (project: ProjectRead) =>
-        "Successfully Created Project " + project.title + " with id " + project.id + "!",
+      successMessage: (project: ProjectRead) => `Successfully Created Project "${project.title}" (ID: ${project.id})`,
     },
   });
 };
@@ -58,7 +57,7 @@ const useUpdateProject = () =>
       );
     },
     meta: {
-      successMessage: (data: ProjectRead) => `Successfully Updated Project with id ${data.id}!`,
+      successMessage: (data: ProjectRead) => `Successfully Updated Project "${data.title}"`,
     },
   });
 
@@ -71,7 +70,7 @@ const useDeleteProject = () =>
       );
     },
     meta: {
-      successMessage: (data: ProjectRead) => "Successfully Deleted Project " + data.title + " with id " + data.id + "!",
+      successMessage: (data: ProjectRead) => `Successfully Deleted Project "${data.title}"`,
     },
   });
 
@@ -79,6 +78,9 @@ const useDeleteProject = () =>
 const useUploadDocument = () =>
   useMutation({
     mutationFn: ProjectService.uploadProjectSdoc,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_PREPROCESSING_JOBS, data.project_id] });
+    },
     meta: {
       successMessage: (data: PreprocessingJobRead) =>
         `Successfully uploaded ${data.payloads.length} documents and started PreprocessingJob ${data.id} in the background!`,
@@ -86,7 +88,13 @@ const useUploadDocument = () =>
   });
 
 // duplicates
-const useFindDuplicateTextDocuments = () => useMutation({ mutationFn: ProjectService.findDuplicateTextSdocs });
+const useFindDuplicateTextDocuments = () =>
+  useMutation({
+    mutationFn: ProjectService.findDuplicateTextSdocs,
+    meta: {
+      successMessage: () => "Document duplicate search completed",
+    },
+  });
 
 const ProjectHooks = {
   // project

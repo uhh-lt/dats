@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import CodeHooks from "../../../api/CodeHooks.ts";
 import { BBoxAnnotationRead } from "../../../api/openapi/models/BBoxAnnotationRead.ts";
 
@@ -37,4 +37,4 @@ function SVGBBoxText({ bbox, xCentering = 0, scaledRatio = 1, ...props }: SVGBBo
   );
 }
 
-export default SVGBBoxText;
+export default memo(SVGBBoxText);

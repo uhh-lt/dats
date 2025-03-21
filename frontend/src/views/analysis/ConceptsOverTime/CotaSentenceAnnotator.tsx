@@ -24,7 +24,6 @@ import { COTAConcept } from "../../../api/openapi/models/COTAConcept.ts";
 import { COTARead } from "../../../api/openapi/models/COTARead.ts";
 import { COTASentenceID } from "../../../api/openapi/models/COTASentenceID.ts";
 import { DateGroupBy } from "../../../api/openapi/models/DateGroupBy.ts";
-import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { dateToLocaleDate } from "../../../utils/DateUtils.ts";
@@ -94,9 +93,6 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
     CotaActions.onRowSelectionChange,
   );
   const selectedDate = useAppSelector((state) => state.cota.selectedDate);
-
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
 
   // virtualization
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
@@ -229,21 +225,11 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
   // actions
   const annotateCotaSentences = CotaHooks.useAnnotateCotaSentences();
   const handleAnnotateSentences = (sentences: COTASentenceID[], conceptId: string | null) => {
-    annotateCotaSentences.mutate(
-      {
-        cotaId: cota.id,
-        conceptId: conceptId,
-        requestBody: sentences,
-      },
-      {
-        onSuccess(data) {
-          openSnackbar({
-            text: `Updated CotA '${data.name}'`,
-            severity: "success",
-          });
-        },
-      },
-    );
+    annotateCotaSentences.mutate({
+      cotaId: cota.id,
+      conceptId: conceptId,
+      requestBody: sentences,
+    });
   };
 
   const removeCotaSentences = CotaHooks.useRemoveCotaSentences();
@@ -254,11 +240,7 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
         requestBody: sentences,
       },
       {
-        onSuccess(data) {
-          openSnackbar({
-            text: `Updated CotA '${data.name}'`,
-            severity: "success",
-          });
+        onSuccess() {
           setRowSelectionModel({});
         },
       },

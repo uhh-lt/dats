@@ -355,7 +355,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
                     document["highlight"]["content"] if "highlight" in document else []
                 )
                 document_hit = ElasticSearchDocumentHit(
-                    document_id=document["_id"],
+                    id=document["_id"],
                     score=document["_score"],
                     highlights=highlights,
                 )
@@ -376,7 +376,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
             for hit in client_response["hits"]["hits"]:
                 highlights = hit["highlight"]["content"] if "highlight" in hit else []
                 document = ElasticSearchDocumentHit(
-                    document_id=hit["_id"], score=hit["_score"], highlights=highlights
+                    id=hit["_id"], score=hit["_score"], highlights=highlights
                 )
                 hits.append(document)
             total_results = client_response["hits"]["total"]["value"]

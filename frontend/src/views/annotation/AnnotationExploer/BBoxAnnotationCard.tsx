@@ -8,6 +8,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { memo } from "react";
 import CodeHooks from "../../../api/CodeHooks.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
@@ -82,4 +83,4 @@ function BBoxAnnotationCard({ isSelected, annotation, onClick, cardProps }: Anno
   );
 }
 
-export default BBoxAnnotationCard;
+export default memo(BBoxAnnotationCard);
