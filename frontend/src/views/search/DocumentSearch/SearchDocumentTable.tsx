@@ -21,6 +21,7 @@ import { SearchService } from "../../../api/openapi/services/SearchService.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import DocumentUploadButton from "../../../components/DocumentUpload/DocumentUploadButton.tsx";
 import NoDocumentsPlaceholder from "../../../components/DocumentUpload/NoDocumentsPlaceholder.tsx";
+import ExportSdocsButton from "../../../components/Export/ExportSdocsButton.tsx";
 import ReduxFilterDialog from "../../../components/FilterDialog/ReduxFilterDialog.tsx";
 import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 import LLMAssistanceButton from "../../../components/LLMDialog/LLMAssistanceButton.tsx";
@@ -28,7 +29,6 @@ import CardContainer from "../../../components/MUI/CardContainer.tsx";
 import DATSToolbar from "../../../components/MUI/DATSToolbar.tsx";
 import SdocMetadataRenderer from "../../../components/Metadata/SdocMetadataRenderer.tsx";
 import DeleteSdocsButton from "../../../components/SourceDocument/DeleteSdocsButton.tsx";
-import ExportSdocsButton from "../../../components/SourceDocument/ExportSdocsButton.tsx";
 import SdocAnnotatorsRenderer from "../../../components/SourceDocument/SdocAnnotatorsRenderer.tsx";
 import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
 import SdocTagsRenderer from "../../../components/SourceDocument/SdocTagRenderer.tsx";
@@ -318,7 +318,6 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
               popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
             />
             <DeleteSdocsButton sdocIds={selectedDocumentIds} navigateTo="../search" />
-            <ExportSdocsButton sdocIds={selectedDocumentIds} />
             <LLMAssistanceButton sdocIds={selectedDocumentIds} projectId={projectId} />
           </>
         )}
@@ -328,6 +327,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
         <DocumentUploadButton />
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleDensePaddingButton table={table} />
+        <ExportSdocsButton sdocIds={selectedDocumentIds} />
       </DATSToolbar>
       <CardContainer sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
         <MRT_TableContainer

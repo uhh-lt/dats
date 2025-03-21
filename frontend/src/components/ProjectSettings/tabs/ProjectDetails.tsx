@@ -6,6 +6,7 @@ import { memo, useCallback } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
 import { ProjectUpdate } from "../../../api/openapi/models/ProjectUpdate.ts";
+import ExportProjectButton from "../../Export/ExportProjectButton.tsx";
 import FormText from "../../FormInputs/FormText.tsx";
 import FormTextMultiline from "../../FormInputs/FormTextMultiline.tsx";
 import { ProjectProps } from "../ProjectProps.ts";
@@ -76,6 +77,7 @@ function ProjectDetails({ project }: ProjectProps) {
       </CardContent>
       <Divider />
       <CardActions>
+        <ExportProjectButton />
         <Box sx={{ flexGrow: 1 }} />
         <LoadingButton
           variant="contained"

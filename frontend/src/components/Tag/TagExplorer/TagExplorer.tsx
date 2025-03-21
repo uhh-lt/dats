@@ -3,7 +3,7 @@ import { Box, BoxProps } from "@mui/material";
 import { memo, useCallback, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { SearchActions } from "../../../views/search/DocumentSearch/searchSlice.ts";
-import ExporterButton from "../../Exporter/ExporterButton.tsx";
+import ExportTagsButton from "../../Export/ExportTagsButton.tsx";
 import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
 import TagMenuCreateButton from "../TagMenu/TagMenuCreateButton.tsx";
@@ -75,11 +75,7 @@ function ListActions() {
   return (
     <>
       <TagMenuCreateButton tagName="" />
-      <ExporterButton
-        tooltip="Export tagset"
-        exporterInfo={{ type: "Tagset", singleUser: false, users: [], sdocId: -1 }}
-        iconButtonProps={{ color: "inherit" }}
-      />
+      <ExportTagsButton />
     </>
   );
 }

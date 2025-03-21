@@ -1,9 +1,9 @@
 import { Box, Checkbox, Typography } from "@mui/material";
 import { useRef } from "react";
+import ExportSdocsButton from "../../../components/Export/ExportSdocsButton.tsx";
 import ReduxFilterDialog from "../../../components/FilterDialog/ReduxFilterDialog.tsx";
 import DATSToolbar from "../../../components/MUI/DATSToolbar.tsx";
 import DeleteSdocsButton from "../../../components/SourceDocument/DeleteSdocsButton.tsx";
-import ExportSdocsButton from "../../../components/SourceDocument/ExportSdocsButton.tsx";
 import TagMenuButton from "../../../components/Tag/TagMenu/TagMenuButton.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
@@ -56,7 +56,6 @@ function ImageSimilaritySearchToolbar({ searchResultDocumentIds }: ImageSimilari
             popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
           />
           <DeleteSdocsButton sdocIds={selectedDocumentIds} navigateTo="../search" />
-          <ExportSdocsButton sdocIds={selectedDocumentIds} />
         </>
       )}
       <Box sx={{ flexGrow: 1 }} />
@@ -69,6 +68,7 @@ function ImageSimilaritySearchToolbar({ searchResultDocumentIds }: ImageSimilari
       />
       <SearchBar placeholder="Search for images" />
       <ImageSimilaritySearchOptionsMenu />
+      <ExportSdocsButton sdocIds={selectedDocumentIds} />
     </DATSToolbar>
   );
 }

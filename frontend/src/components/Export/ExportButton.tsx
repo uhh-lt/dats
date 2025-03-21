@@ -1,20 +1,27 @@
 import { IconButton, Tooltip } from "@mui/material";
 import { memo, useCallback, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import ExporterHooks from "../../api/ExporterHooks.ts";
 import { BackgroundJobStatus } from "../../api/openapi/models/BackgroundJobStatus.ts";
 import { ExportJobParameters } from "../../api/openapi/models/ExportJobParameters.ts";
-import { ExportJobType } from "../../api/openapi/models/ExportJobType.ts";
 import { downloadFile } from "../../utils/ExportUtils.ts";
 import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
 import { useOpenSnackbar } from "../SnackbarDialog/useOpenSnackbar.ts";
 
-type SpecificExportJobParameters = Pick<ExportJobParameters, "specific_export_job_parameters">;
+interface ExportInstantButtonProps extends Omit<ExportJobParameters, "project_id"> {
+  title: string;
+  isDisabled?: boolean;
+}
 
-function ExportInstantButton({
+function ExportButton({
   title,
-  isDisabled,
-  ...params
-}: SpecificExportJobParameters["specific_export_job_parameters"] & { title: string; isDisabled: boolean }) {
+  isDisabled = false,
+  export_job_type,
+  specific_export_job_parameters,
+}: ExportInstantButtonProps) {
+  // global client state (react-router)
+  const projectId = parseInt((useParams() as { projectId: string }).projectId);
+
   // mutations
   const { mutate: startExportMutation, reset: resetExport, data, isPending } = ExporterHooks.useStartExportJob();
   const exportJob = ExporterHooks.usePollExportJob(data?.id);
@@ -25,11 +32,12 @@ function ExportInstantButton({
   const onClick = useCallback(() => {
     startExportMutation({
       requestBody: {
-        export_job_type: params.export_job_type as ExportJobType,
-        specific_export_job_parameters: params,
+        export_job_type: export_job_type,
+        project_id: projectId,
+        specific_export_job_parameters: specific_export_job_parameters,
       },
     });
-  }, [startExportMutation, params]);
+  }, [startExportMutation, export_job_type, projectId, specific_export_job_parameters]);
 
   useEffect(() => {
     if (!exportJob.data) return;
@@ -62,4 +70,4 @@ function ExportInstantButton({
   );
 }
 
-export default memo(ExportInstantButton);
+export default memo(ExportButton);

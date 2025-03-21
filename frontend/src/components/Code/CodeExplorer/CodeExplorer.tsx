@@ -4,7 +4,7 @@ import * as React from "react";
 import { useCallback, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { AnnoActions } from "../../../views/annotation/annoSlice.ts";
-import ExporterButton from "../../Exporter/ExporterButton.tsx";
+import ExportCodesButton from "../../Export/ExportCodesButton.tsx";
 import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
 import CodeCreateListItemButton from "../CodeCreateListItemButton.tsx";
@@ -81,11 +81,7 @@ function ListActions() {
   return (
     <>
       <CodeCreateListItemButton parentCodeId={undefined} />
-      <ExporterButton
-        tooltip="Export codeset"
-        exporterInfo={{ type: "Codeset", singleUser: true, users: [], sdocId: -1 }}
-        iconButtonProps={{ color: "inherit" }}
-      />
+      <ExportCodesButton />
     </>
   );
 }

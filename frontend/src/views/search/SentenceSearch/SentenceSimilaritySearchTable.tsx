@@ -13,12 +13,12 @@ import { useNavigate } from "react-router-dom";
 import { SdocColumns } from "../../../api/openapi/models/SdocColumns.ts";
 import { SimSearchSentenceHit } from "../../../api/openapi/models/SimSearchSentenceHit.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
+import ExportSdocsButton from "../../../components/Export/ExportSdocsButton.tsx";
 import ReduxFilterDialog from "../../../components/FilterDialog/ReduxFilterDialog.tsx";
 import CardContainer from "../../../components/MUI/CardContainer.tsx";
 import DATSToolbar from "../../../components/MUI/DATSToolbar.tsx";
 import SdocMetadataRenderer from "../../../components/Metadata/SdocMetadataRenderer.tsx";
 import DeleteSdocsButton from "../../../components/SourceDocument/DeleteSdocsButton.tsx";
-import ExportSdocsButton from "../../../components/SourceDocument/ExportSdocsButton.tsx";
 import SdocAnnotatorsRenderer from "../../../components/SourceDocument/SdocAnnotatorsRenderer.tsx";
 import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
 import SdocSentenceRenderer from "../../../components/SourceDocument/SdocSentenceRenderer.tsx";
@@ -259,7 +259,6 @@ function SentenceSimilaritySearchTable({
               popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
             />
             <DeleteSdocsButton sdocIds={selectedDocumentIds} navigateTo="../search" />
-            <ExportSdocsButton sdocIds={selectedDocumentIds} />
           </>
         )}
         <Box sx={{ flexGrow: 1 }} />
@@ -267,6 +266,7 @@ function SentenceSimilaritySearchTable({
         <SentenceSimilaritySearchOptionsMenu />
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleDensePaddingButton table={table} />
+        <ExportSdocsButton sdocIds={selectedDocumentIds} />
       </DATSToolbar>
       <CardContainer sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
         <MRT_TableContainer table={table} style={{ flexGrow: 1 }} />

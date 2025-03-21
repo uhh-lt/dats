@@ -6,7 +6,6 @@ import CodeCreateDialog from "../../components/Code/CodeCreateDialog.tsx";
 import CodeEditDialog from "../../components/Code/CodeEditDialog.tsx";
 import ConfirmationDialog from "../../components/ConfirmationDialog/ConfirmationDialog.tsx";
 import DocumentUploadDialog from "../../components/DocumentUpload/DocumentUploadDialog.tsx";
-import ExporterDialog from "../../components/Exporter/ExporterDialog.tsx";
 import LLMDialog from "../../components/LLMDialog/LLMDialog.tsx";
 import MemoDialog from "../../components/Memo/MemoDialog/MemoDialog.tsx";
 import ProjectIdUpdater from "../../components/Project/ProjectIdUpdater.tsx";
@@ -77,7 +76,6 @@ function SideBarLayout() {
           <CodeCreateDialog />
           <CodeEditDialog />
           <ConfirmationDialog />
-          <ExporterDialog />
           <ProjectSettingsDialog />
           <DocumentUploadDialog />
           <LLMDialog />
