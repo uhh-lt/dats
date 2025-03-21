@@ -179,7 +179,6 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   const databaseEdgeEditMenuRef = useRef<DatabaseEdgeEditMenuHandle>(null);
 
   // local state
-  const lastSaveTime = useRef<number>(Date.now());
   const [pendingAction, setPendingAction] = useState<PendingAddNodeAction | undefined>(undefined);
   const [nodes, , onNodesChange] = useNodeStateCustom<DATSNodeData>(whiteboard.content.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgeStateCustom(whiteboard.content.edges);
@@ -338,19 +337,6 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   }, [selectedEdges]);
 
   // SAVE Feature
-  // block navigation if we have changes
-  const [oldData, setOldData] = useState(JSON.stringify(whiteboard.content));
-  useEffect(() => {
-    setOldData(JSON.stringify(whiteboard.content));
-  }, [whiteboard.content]);
-  useBlocker(() => {
-    const newData: WhiteboardGraph = { nodes: nodes, edges: edges };
-    if (oldData !== JSON.stringify(newData)) {
-      return !window.confirm("You have unsaved changes! Are you sure you want to leave?");
-    }
-    return false;
-  });
-
   const updateWhiteboard = WhiteboardHooks.useUpdateWhiteboard();
   const handleSaveWhiteboard = useCallback(() => {
     const newData: WhiteboardGraph = { nodes: nodes, edges: edges };
@@ -365,10 +351,24 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   }, [edges, nodes, updateWhiteboard.mutate, whiteboard.id, whiteboard.title]);
 
   // autosave whiteboard every 3 minutes
+  const lastSaveTime = useRef<number>(Date.now());
   if (Date.now() - lastSaveTime.current > 1000 * 60 * 3) {
     lastSaveTime.current = Date.now();
     handleSaveWhiteboard();
   }
+
+  // autosave whiteboard on page unload
+  const [oldData, setOldData] = useState(JSON.stringify(whiteboard.content));
+  useEffect(() => {
+    setOldData(JSON.stringify(whiteboard.content));
+  }, [whiteboard.content]);
+  useBlocker(() => {
+    const newData: WhiteboardGraph = { nodes: nodes, edges: edges };
+    if (oldData !== JSON.stringify(newData)) {
+      handleSaveWhiteboard();
+    }
+    return false;
+  });
 
   return (
     <>
