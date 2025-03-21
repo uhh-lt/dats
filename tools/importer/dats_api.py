@@ -157,7 +157,7 @@ class DATSAPI:
         )
         r.raise_for_status()
         hits = r.json()["hits"]
-        return [hit["document_id"] for hit in hits]
+        return [hit["id"] for hit in hits]
 
     def read_all_sdoc_ids_by_tags(self, proj_id: int, tags: List[int]):
         # get all sdoc ids
@@ -186,7 +186,7 @@ class DATSAPI:
         )
         r.raise_for_status()
         hits = r.json()["hits"]
-        return [hit["document_id"] for hit in hits]
+        return [hit["id"] for hit in hits]
 
     def upload_files(
         self,
