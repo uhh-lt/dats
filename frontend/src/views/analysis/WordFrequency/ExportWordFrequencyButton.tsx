@@ -1,4 +1,3 @@
-import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import { CircularProgress, IconButton, Tooltip } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
@@ -7,6 +6,7 @@ import { AnalysisService } from "../../../api/openapi/services/AnalysisService.t
 import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { downloadFile } from "../../../utils/ExportUtils.ts";
+import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 
 interface ExportWordFrequencyButtonProps {
   filter: MyFilter<WordFrequencyColumns>;
@@ -52,9 +52,7 @@ export default function ExportWordFrequencyButton({ filter }: ExportWordFrequenc
     return (
       <Tooltip title="Export word frequencies">
         <span>
-          <IconButton onClick={handleClick}>
-            <SaveAltIcon />
-          </IconButton>
+          <IconButton onClick={handleClick}>{getIconComponent(Icon.EXPORT)}</IconButton>
         </span>
       </Tooltip>
     );
