@@ -333,10 +333,11 @@ def sample_sdocs_by_tags(
 )
 def return_topic_distr_data(
     *,
+    project_id: int,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
 ) -> List[dict]:
-    return topic_distr(db=db)
+    return topic_distr(db=db, project_id=project_id)
 
 
 @router.post(
@@ -346,10 +347,11 @@ def return_topic_distr_data(
 )
 def return_top_words_data(
     *,
+    project_id: int,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
 ) -> List[dict]:
-    return top_words(db=db)
+    return top_words(db=db, project_id=project_id)
 
 
 @router.post(
@@ -360,10 +362,11 @@ def return_top_words_data(
 def return_top_words_ollama(
     *,
     topic_id: int,
+    project_id: int,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
 ) -> dict:
-    return top_words_ollama(topic_id, db=db)
+    return top_words_ollama(topic_id, db=db, project_id=project_id)
 
 
 @router.post(

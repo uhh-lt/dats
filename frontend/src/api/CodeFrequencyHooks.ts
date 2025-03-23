@@ -31,25 +31,25 @@ const useCodeOccurrences = (projectId: number, userIds: number[], codeId: number
     enabled: userIds.length > 0 && !!codeId,
   });
 
-const useReturnTopicDistrData = () =>
+const useReturnTopicDistrData = (project_id: number) =>
   useQuery<Array<Record<string, unknown>>, Error>({
-    queryKey: ["Test1"],
-    queryFn: () => AnalysisService.returnTopicDistrData(),
+    queryKey: ["TopicDistrData", project_id],
+    queryFn: () => AnalysisService.returnTopicDistrData({ projectId: project_id }),
     staleTime: Infinity,
   });
 
-const useReturnTopWordsData = () =>
+const useReturnTopWordsData = (project_id: number) =>
   useQuery<Array<Record<string, unknown>>, Error>({
-    queryKey: ["Test2"],
-    queryFn: () => AnalysisService.returnTopWordsData(),
+    queryKey: ["TopWordsData", project_id],
+    queryFn: () => AnalysisService.returnTopWordsData({ projectId: project_id }),
     // only sends once
     staleTime: Infinity,
   });
 
-const useReturnTopWordsOllama = (topic_id: number) => {
+const useReturnTopWordsOllama = (topic_id: number, project_id: number) => {
   return useQuery<Record<string, unknown>, Error>({
-    queryKey: ["UseDTOHook", topic_id],
-    queryFn: () => AnalysisService.returnTopWordsOllama({ topicId: topic_id }),
+    queryKey: ["TopWordsOllama", topic_id, project_id],
+    queryFn: () => AnalysisService.returnTopWordsOllama({ topicId: topic_id, projectId: project_id }),
   });
 };
 

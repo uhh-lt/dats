@@ -8,48 +8,71 @@ const TopWordsBarChart: React.FC<{ topicNum: number; dataHook: UseQueryResult<Re
 }) => {
   dataHook.refetch();
   const data = dataHook.data as Record<string, { word: string; score: number }>[];
+  const [isResponseEmpty, setIsResponseEmpty] = useState(true);
+
+  useEffect(() => {
+    if (Object.keys(data).length === 0) {
+      setIsResponseEmpty(true);
+    } else {
+      setIsResponseEmpty(false);
+    }
+  }, [data]);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [width, setWidth] = useState<number>(window.innerWidth);
 
-  let maxScore = 0;
-  for (const topic of data) {
-    Object.values(topic).forEach((value) => {
-      if (value.score > maxScore) {
-        maxScore = value.score;
-      }
-    });
-  }
-
-  let currentMaxScore = 0;
-  for (const word in data[topicNum]) {
-    if (data[topicNum][word].score > currentMaxScore) {
-      currentMaxScore = data[topicNum][word].score;
-    }
-  }
-
-  const amountTopics = Object.keys(data[0]).length;
   const barHeight = 25;
+
   const marginTop = window.innerHeight * 0.05;
   const marginRight = window.innerWidth * 0.1;
   const marginBottom = window.innerHeight * 0.05;
   const marginLeft = window.innerWidth * 0.1;
-  const height = Math.ceil((amountTopics + 0.1) * barHeight) + marginTop + marginBottom;
 
-  // Create x-scale
+  const formatScore = d3.format(".5f");
+
+  let currentMaxScore = 0;
+
+  let maxScore = 0;
+  let amountTopics = 0;
+
+  let height = window.innerHeight * 0.7;
+
+  let y = d3
+    .scaleBand()
+    .domain([])
+    .rangeRound([marginTop, height - marginBottom])
+    .padding(0.1);
+
+  if (!isResponseEmpty) {
+    for (const topic of data) {
+      Object.values(topic).forEach((value) => {
+        if (value.score > maxScore) {
+          maxScore = value.score;
+        }
+      });
+    }
+
+    for (const word in data[topicNum]) {
+      if (data[topicNum][word].score > currentMaxScore) {
+        currentMaxScore = data[topicNum][word].score;
+      }
+    }
+
+    amountTopics = Object.keys(data[0]).length;
+
+    height = Math.ceil((amountTopics + 0.1) * barHeight) + marginTop + marginBottom;
+
+    y = d3
+      .scaleBand()
+      .domain(d3.sort(Object.values(data[topicNum]), (d) => -d.score).map((d) => d.word))
+      .rangeRound([marginTop, height - marginBottom])
+      .padding(0.1);
+  }
+
   const x = d3
     .scaleLinear()
     .domain([0, currentMaxScore])
     .range([marginLeft, width - marginRight]);
-
-  // Create y-scale
-  const y = d3
-    .scaleBand()
-    .domain(d3.sort(Object.values(data[topicNum]), (d) => -d.score).map((d) => d.word))
-    .rangeRound([marginTop, height - marginBottom])
-    .padding(0.1);
-
-  const formatScore = d3.format(".5f");
 
   // Window resize effect
   useEffect(() => {
@@ -63,7 +86,7 @@ const TopWordsBarChart: React.FC<{ topicNum: number; dataHook: UseQueryResult<Re
     };
   }, []);
 
-  // D3 rendering effect
+  // D3 render
   useEffect(() => {
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
@@ -72,19 +95,53 @@ const TopWordsBarChart: React.FC<{ topicNum: number; dataHook: UseQueryResult<Re
       .attr("width", width)
       .attr("height", height)
       .attr("viewBox", [0, 0, width, height])
-      .attr("style", "max-width: 100%; height: auto; font: 10px sans-serif;");
+      .attr("style", "max-width: 100%; height: auto;");
 
-    // Setup bars
-    svg
-      .append("g")
-      .attr("fill", "steelblue")
-      .selectAll()
-      .data(Object.values(data[topicNum]))
-      .join("rect")
-      .attr("x", x(0))
-      .attr("y", (d) => y(d.word) ?? 0)
-      .attr("width", (d) => x(d.score) * 0.995 - x(0))
-      .attr("height", y.bandwidth());
+    if (!isResponseEmpty) {
+      // Setup bars
+      svg
+        .append("g")
+        .attr("fill", "steelblue")
+        .selectAll()
+        .data(Object.values(data[topicNum]))
+        .join("rect")
+        .attr("x", x(0))
+        .attr("y", (d) => y(d.word) ?? 0)
+        .attr("width", (d) => x(d.score) * 0.995 - x(0))
+        .attr("height", y.bandwidth());
+
+      // Text inside bars
+      svg
+        .append("g")
+        .attr("fill", "white")
+        .attr("text-anchor", "end")
+        .selectAll()
+        .data(Object.values(data[topicNum]))
+        .join("text")
+        .attr("x", (d) => x(d.score) * 0.995)
+        .attr("y", (d) => (y(d.word) ?? 0) + y.bandwidth() / 2)
+        .style("font-size", "16px")
+        .attr("dy", "0.35em")
+        .attr("dx", -4)
+        .text((d) => formatScore(d.score))
+        .call((text) =>
+          text
+            .filter((d) => x(d.score) - x(0) < 20)
+            .attr("dx", +4)
+            .attr("fill", "black")
+            .attr("text-anchor", "start"),
+        );
+    } else {
+      svg
+        .append("text")
+        .attr("x", width / 2)
+        .attr("y", height / 2)
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "middle")
+        .style("font-size", "24px")
+        .style("fill", "gray")
+        .text("No Data Available");
+    }
 
     // Set title
     svg
@@ -105,28 +162,6 @@ const TopWordsBarChart: React.FC<{ topicNum: number; dataHook: UseQueryResult<Re
       .attr("text-anchor", "middle")
       .style("font-size", "18px")
       .text("Score");
-
-    // Text inside bars
-    svg
-      .append("g")
-      .attr("fill", "white")
-      .attr("text-anchor", "end")
-      .selectAll()
-      .data(Object.values(data[topicNum]))
-      .join("text")
-      .attr("x", (d) => x(d.score) * 0.995)
-      .attr("y", (d) => (y(d.word) ?? 0) + y.bandwidth() / 2)
-      .style("font-size", "16px")
-      .attr("dy", "0.35em")
-      .attr("dx", -4)
-      .text((d) => formatScore(d.score))
-      .call((text) =>
-        text
-          .filter((d) => x(d.score) - x(0) < 20)
-          .attr("dx", +4)
-          .attr("fill", "black")
-          .attr("text-anchor", "start"),
-      );
 
     // Setup border
     svg
@@ -153,7 +188,20 @@ const TopWordsBarChart: React.FC<{ topicNum: number; dataHook: UseQueryResult<Re
       .attr("transform", `translate(${marginLeft},0)`)
       .call(d3.axisLeft(y).tickSizeOuter(0))
       .style("font-size", "18px");
-  }, [topicNum, data, formatScore, height, marginBottom, marginLeft, marginRight, marginTop, width, x, y]);
+  }, [
+    topicNum,
+    data,
+    formatScore,
+    height,
+    marginBottom,
+    marginLeft,
+    marginRight,
+    marginTop,
+    width,
+    x,
+    y,
+    isResponseEmpty,
+  ]);
 
   return (
     <div>

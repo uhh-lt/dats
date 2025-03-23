@@ -37,59 +37,58 @@ import MLHooks from "../../../api/MLHooks.ts";
 import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobStatus.ts";
 import { MLJobRead } from "../../../api/openapi/models/MLJobRead.ts";
 import { MLJobType } from "../../../api/openapi/models/MLJobType.ts";
+import { TextInputId } from "./DocCatEnums.tsx";
 import TopDocumentsBarChart from "./TopDocumentsBarChart.tsx";
 import TopWordsBarChart from "./TopWordsBarChart.tsx";
 import TopicDistrChart from "./TopicDistrBarChart.tsx";
 
 function DocumentCategorization() {
+  const [currentTopic, setCurrentTopic] = useState(0);
+  const [currentCarouselField, setCarouselField] = useState(0);
+  const [height, setHeight] = useState<number>(window.innerHeight);
+  const [currentJobId, setCurrentJobId] = useState<string | undefined>(undefined);
+
+  // confirm dialog
+  const [open, setOpen] = useState(false);
+
   const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
 
-  const top_words_data = AnalysisHooks.useReturnTopWordsData();
-  const topic_distr_hook = AnalysisHooks.useReturnTopicDistrData();
+  const top_words_data = AnalysisHooks.useReturnTopWordsData(projectId);
+  const topic_distr_hook = AnalysisHooks.useReturnTopicDistrData(projectId);
 
-  const [currentTopic, setCurrentTopic] = useState(0);
-  //const [selectedTopic, setSelectedTopic] = useState(0);
   const topic_document_data = AnalysisHooks.useReturnTopicDocuments(projectId, currentTopic);
-  const ollamaResponse = AnalysisHooks.useReturnTopWordsOllama(currentTopic);
+  const ollamaResponse = AnalysisHooks.useReturnTopWordsOllama(currentTopic, projectId);
 
-  const [currentCarouselField, setCarouselField] = useState(0);
+  const startMlJob = MLHooks.useStartMLJob();
+  const pollMlJob = MLHooks.usePollMLJob(currentJobId, undefined);
+
+  const diagramList = [
+    <TopWordsBarChart topicNum={currentTopic} dataHook={top_words_data} />,
+    <TopicDistrChart topicNum={currentTopic} dataHook={topic_distr_hook} />,
+    <TopDocumentsBarChart topicNum={currentTopic} dataHook={topic_document_data} />,
+  ];
 
   const [currentNrTopics, setNrTopics] = useState(5);
   const [currentMinTopicSize, setMinTopicSize] = useState(5);
   const [currentTopNWords, setTopNWords] = useState(5);
 
-  enum TextInputId {
-    NrTopics = "nr_topics",
-    MinTopicSize = "min_topic_size",
-    TopNWords = "top_n_words",
-  }
+  const handleChange = (event: SelectChangeEvent<number>) => {
+    setCurrentTopic(event.target.value as number);
+  };
 
-  const [height, setHeight] = useState<number>(window.innerHeight);
-
-  // Window resize effect
-  useEffect(() => {
-    const handleResize = () => {
-      setHeight(window.innerHeight);
-    };
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
-  const [currentJobId, setCurrentJobId] = useState<string | undefined>(undefined);
-
-  // actions
-  const startMlJob = MLHooks.useStartMLJob();
-  const pollMlJob = MLHooks.usePollMLJob(currentJobId, undefined);
+  const changeCarouselCard = (change: number) => {
+    if (currentCarouselField + change < 0) {
+      setCarouselField(diagramList.length - 1);
+    } else {
+      setCarouselField((currentCarouselField + change) % diagramList.length);
+    }
+  };
 
   const handleTopicModelingStarted = (data: MLJobRead) => {
     setCurrentJobId(data.id);
   };
 
   const handleStartTopicModeling = (recompute: boolean = false) => {
-    console.log(`Start of Topic Modeling in DocumentCategorization: ${currentNrTopics}`);
     startMlJob.mutate(
       {
         requestBody: {
@@ -107,9 +106,6 @@ function DocumentCategorization() {
       { onSuccess: handleTopicModelingStarted },
     );
   };
-
-  // confirm dialog
-  const [open, setOpen] = React.useState(false);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -136,23 +132,18 @@ function DocumentCategorization() {
     }
   };
 
-  const diagramList = [
-    <TopWordsBarChart topicNum={currentTopic} dataHook={top_words_data} />,
-    <TopicDistrChart topicNum={currentTopic} dataHook={topic_distr_hook} />,
-    <TopDocumentsBarChart topicNum={currentTopic} dataHook={topic_document_data} />,
-  ];
+  useEffect(() => {
+    const handleResize = () => {
+      setHeight(window.innerHeight);
+    };
+    window.addEventListener("resize", handleResize);
 
-  const handleChange = (event: SelectChangeEvent<number>) => {
-    setCurrentTopic(event.target.value as number);
-  };
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
-  const changeCarouselCard = (change: number) => {
-    if (currentCarouselField + change < 0) {
-      setCarouselField(diagramList.length - 1);
-    } else {
-      setCarouselField((currentCarouselField + change) % diagramList.length);
-    }
-  };
+  const boxHeight = window.innerHeight * 0.6;
 
   return (
     <div>
@@ -261,16 +252,17 @@ function DocumentCategorization() {
           </List>
           <FormControl fullWidth>
             <InputLabel id="dynamic-dropdown-label">Select Key</InputLabel>
-            <Select labelId="dynamic-dropdown-label" value={currentTopic} onChange={handleChange}>
-              {top_words_data.isLoading && <div>Loading...</div>}
-              {top_words_data.isSuccess ? (
+            <Select labelId="dynamic-dropdown-label" value={currentTopic || ""} onChange={handleChange}>
+              {top_words_data.isLoading && <MenuItem disabled>Loading...</MenuItem>}
+
+              {top_words_data.isSuccess && Object.keys(top_words_data.data).length > 0 ? (
                 Object.keys(top_words_data.data).map((key) => (
                   <MenuItem key={key} value={key}>
                     {key}
                   </MenuItem>
                 ))
               ) : (
-                <div></div>
+                <MenuItem disabled>No options available</MenuItem>
               )}
             </Select>
           </FormControl>
@@ -281,6 +273,7 @@ function DocumentCategorization() {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
+              height: boxHeight,
             }}
           >
             <Fab color="primary" size="small" onClick={() => changeCarouselCard(-1)}>
@@ -298,16 +291,25 @@ function DocumentCategorization() {
           </Box>
           <Box
             sx={{
-              width: "80%",
               margin: "auto",
               padding: 2,
             }}
           >
             {ollamaResponse.isLoading && <div style={{ textAlign: "center" }}>Loading...</div>}
             {ollamaResponse.isSuccess ? (
-              <div style={{ whiteSpace: "pre-line", height: height * 0.2 }}>
-                {ollamaResponse.data["reasoning"] as string}
-              </div>
+              <Box
+                sx={{
+                  margin: "auto",
+                  padding: 2,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <div style={{ whiteSpace: "pre-line", height: height * 0.2 }}>
+                  {ollamaResponse.data["reasoning"] as string}
+                </div>
+              </Box>
             ) : (
               <div></div>
             )}

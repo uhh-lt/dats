@@ -12,6 +12,16 @@ const TopicDistrChart: React.FC<{ topicNum: number; dataHook: UseQueryResult<Rec
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [width, setWidth] = useState<number>(window.innerWidth);
 
+  const [isResponseEmpty, setIsResponseEmpty] = useState(true);
+
+  useEffect(() => {
+    if (Object.keys(data).length === 0) {
+      setIsResponseEmpty(true);
+    } else {
+      setIsResponseEmpty(false);
+    }
+  }, [data]);
+
   // Declare the chart dimensions and margins.
   const height = window.innerHeight * 0.7;
   const marginTop = window.innerHeight * 0.05;
@@ -149,7 +159,23 @@ const TopicDistrChart: React.FC<{ topicNum: number; dataHook: UseQueryResult<Rec
       .call(d3.axisLeft(y).tickFormat((y) => y.toString()))
       .call((g) => g.select(".domain").remove())
       .style("font-size", "16px");
-  }, [data, height, marginBottom, marginLeft, marginRight, marginTop, width, x, y]);
+
+    if (isResponseEmpty) {
+      svg
+        .append("text")
+        .attr("x", width / 2)
+        .attr("y", height / 2)
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "middle")
+        .style("font-size", "24px")
+        .style("fill", "gray")
+        .text("No Data Available");
+    }
+
+    return () => {
+      tooltip.remove();
+    };
+  }, [data, height, isResponseEmpty, marginBottom, marginLeft, marginRight, marginTop, width, x, y]);
 
   return (
     <div>

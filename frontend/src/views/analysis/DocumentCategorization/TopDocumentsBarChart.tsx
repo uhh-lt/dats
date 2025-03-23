@@ -9,24 +9,31 @@ const TopDocumentsBarChart: React.FC<{
   console.log(topicNum);
   dataHook.refetch();
   const data = dataHook.data as Record<string, number>[];
+  const amountDocuments = data.length;
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [width, setWidth] = useState<number>(window.innerWidth);
+
+  const [isResponseEmpty, setIsResponseEmpty] = useState(true);
+
+  useEffect(() => {
+    if (Object.keys(data).length === 0) {
+      setIsResponseEmpty(true);
+    } else {
+      setIsResponseEmpty(false);
+    }
+  }, [data]);
 
   // Declare the chart dimensions and margins.
   const height = window.innerHeight * 0.7;
   const marginTop = window.innerHeight * 0.05;
   const marginRight = window.innerWidth * 0.1;
-  const marginBottom = window.innerHeight * 0.05;
+  const marginBottom = window.innerHeight * 0.15;
   const marginLeft = window.innerWidth * 0.1;
 
   // Declare the x (horizontal position) scale.
   const x = d3
     .scaleBand()
-    .domain(
-      data.map((d) => {
-        return d.doc_name.toString();
-      }),
-    ) // descending frequency
+    .domain(data.map((d) => d.doc_name.toString())) // descending frequency
     .range([marginLeft, width - marginRight])
     .padding(0.1);
 
@@ -35,6 +42,12 @@ const TopDocumentsBarChart: React.FC<{
     .scaleLinear()
     .domain([0, d3.max(data, (d) => d.probability) ?? 0])
     .range([height - marginBottom, marginTop]);
+
+  const colorScale = d3
+    .scaleLinear<string>()
+    .domain([0, amountDocuments / 2, amountDocuments - 1]) // Multiple stops
+    .range(["rgb(199, 202, 50)", "rgb(56, 110, 130)", "rgb(69, 21, 91)"]) // Interpolates between these colors
+    .interpolate(d3.interpolateRgb); // Smooth RGB interpolation
 
   // Window resize effect
   useEffect(() => {
@@ -78,10 +91,10 @@ const TopDocumentsBarChart: React.FC<{
     // setup bars
     svg
       .append("g")
-      .attr("fill", "steelblue")
       .selectAll()
       .data(data)
       .join("rect")
+      .attr("fill", (d) => colorScale(d.probability * 10))
       .attr("x", (d) => x(d.doc_name.toString()) ?? 0)
       .attr("y", (d) => y(d.probability))
       .attr("height", (d) => y(0) - y(d.probability))
@@ -104,7 +117,7 @@ const TopDocumentsBarChart: React.FC<{
       .attr("y", marginTop * 0.7)
       .attr("text-anchor", "middle")
       .style("font-size", "18px")
-      .text(`Top X Documents (not yet) Ordered by Probability for Topic ${topicNum}`);
+      .text(`Top ${amountDocuments} Documents Ordered by Probability for Topic ${topicNum}`);
 
     // set x-axis label
     svg
@@ -114,7 +127,7 @@ const TopDocumentsBarChart: React.FC<{
       .attr("y", height - marginBottom * 0.2)
       .attr("text-anchor", "middle")
       .style("font-size", "18px")
-      .text("Document Names (not yet sorted by probability)");
+      .text("Document Names sorted by probability");
 
     // set y-axis label
     svg
@@ -144,7 +157,11 @@ const TopDocumentsBarChart: React.FC<{
       .append("g")
       .attr("transform", `translate(0,${height - marginBottom})`)
       .call(d3.axisBottom(x).tickSizeOuter(0))
-      .style("font-size", "14px");
+      .style("font-size", "14px")
+      .selectAll("text")
+      .style("text-anchor", "end")
+      .attr("dy", ".75em")
+      .attr("transform", "rotate(-15)");
 
     // setup y-axis
     svg
@@ -153,7 +170,37 @@ const TopDocumentsBarChart: React.FC<{
       .call(d3.axisLeft(y).tickFormat((y) => y.toString()))
       .call((g) => g.select(".domain").remove())
       .style("font-size", "16px");
-  }, [data, height, marginBottom, marginLeft, marginRight, marginTop, topicNum, width, x, y]);
+
+    if (isResponseEmpty) {
+      svg
+        .append("text")
+        .attr("x", width / 2)
+        .attr("y", height / 2)
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "middle")
+        .style("font-size", "24px")
+        .style("fill", "gray")
+        .text("No Data Available");
+    }
+
+    return () => {
+      tooltip.remove();
+    };
+  }, [
+    amountDocuments,
+    colorScale,
+    data,
+    height,
+    isResponseEmpty,
+    marginBottom,
+    marginLeft,
+    marginRight,
+    marginTop,
+    topicNum,
+    width,
+    x,
+    y,
+  ]);
 
   return (
     <div>
