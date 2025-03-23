@@ -369,10 +369,20 @@ export class AnalysisService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static returnTopicDistrData(): CancelablePromise<Array<Record<string, any>>> {
+  public static returnTopicDistrData({
+    projectId,
+  }: {
+    projectId: number;
+  }): CancelablePromise<Array<Record<string, any>>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/analysis/topic_distr_data",
+      query: {
+        project_id: projectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
     });
   }
   /**
@@ -380,10 +390,20 @@ export class AnalysisService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static returnTopWordsData(): CancelablePromise<Array<Record<string, any>>> {
+  public static returnTopWordsData({
+    projectId,
+  }: {
+    projectId: number;
+  }): CancelablePromise<Array<Record<string, any>>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/analysis/top_words_data",
+      query: {
+        project_id: projectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
     });
   }
   /**
@@ -391,12 +411,19 @@ export class AnalysisService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static returnTopWordsOllama({ topicId }: { topicId: number }): CancelablePromise<Record<string, any>> {
+  public static returnTopWordsOllama({
+    topicId,
+    projectId,
+  }: {
+    topicId: number;
+    projectId: number;
+  }): CancelablePromise<Record<string, any>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/analysis/top_words_ollama",
       query: {
         topic_id: topicId,
+        project_id: projectId,
       },
       errors: {
         422: `Validation Error`,

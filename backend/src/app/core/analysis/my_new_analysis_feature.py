@@ -16,10 +16,9 @@ class OllamaTopicResponse(BaseModel):
     reasoning: str
 
 
-def top_words(db: Session):
+def top_words(db: Session, project_id: int):
     top_words_data = []
     # TODO NOAH add project_id as a parameter to the hook & reset top_words_data / topic_distr_data
-    project_id = 1
     project = crud_project.read(db=db, id=project_id)
     # umwandeln von orm zu dict/list json object
     topic_infos = [TopicInfoRead.model_validate(x) for x in project.topic_infos]
@@ -31,14 +30,11 @@ def top_words(db: Session):
             topic_x_data[str(index)] = top_word.model_dump()
         top_words_data.append(topic_x_data)
 
-    if not top_words_data:
-        top_words_data.append({"0": {"word": "No Data", "score": 1.0}})
     return top_words_data
 
 
-def topic_distr(db: Session) -> list[dict]:
+def topic_distr(db: Session, project_id: int) -> list[dict]:
     topic_distr_data = []
-    project_id = 1
     project = crud_project.read(db=db, id=project_id)
     topic_infos = [TopicInfoRead.model_validate(x) for x in project.topic_infos]
 
@@ -47,16 +43,21 @@ def topic_distr(db: Session) -> list[dict]:
     return topic_distr_data
 
 
+def sortFunc(e):
+    return e.probability
+
+
 def document_info(project_id: int, db: Session, topic_id: int) -> list[dict]:
     document_info_data = []
     project = crud_project.read(db=db, id=project_id)
     topic_infos = [TopicInfoRead.model_validate(x) for x in project.topic_infos]
 
-    for key, topic_info in enumerate(topic_infos):
-        print(key, ":", topic_info.topic_documents)
+    if topic_infos:
+        topic_info = topic_infos[topic_id].topic_documents
+        topic_info.sort(key=sortFunc, reverse=True)
 
-    for topic_document in topic_infos[topic_id].topic_documents:
-        document_info_data.append(topic_document.model_dump())
+        for topic_document in topic_info:
+            document_info_data.append(topic_document.model_dump())
 
     return document_info_data
 
@@ -88,18 +89,25 @@ def get_prompt(index: int, top_words_data: list):
     return [system_prompt, user_prompt]
 
 
-def top_words_ollama(topic_id: int, db: Session) -> dict:
-    top_words_data = top_words(db)
+def top_words_ollama(topic_id: int, db: Session, project_id: int) -> dict:
+    top_words_data = top_words(db=db, project_id=project_id)
 
     response = ollama_service.chat(
         *get_prompt(topic_id, top_words_data=top_words_data),
         response_model=OllamaTopicResponse,
     )
+
+    print(response)
+
+    # response.reasoning,
+    # response.topic_name,
+    # [top_words_data[topic_id]]
+
     ollama_responses = {
         "prompt": "noah_v1",
-        "reasoning": response.reasoning,
-        "topic_name": response.topic_name,
-        "top_words": [top_words_data[topic_id]],
+        "reasoning": "test",
+        "topic_name": "test",
+        "top_words": ["test"],
     }
 
     file_name = "app/core/analysis/ollama_responses.json"

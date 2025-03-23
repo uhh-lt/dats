@@ -3708,21 +3708,33 @@
         "tags": ["analysis"],
         "summary": "Returns the topic distribution based on number of documents",
         "operationId": "return_topic_distr_data",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "items": { "type": "object" },
                   "type": "array",
+                  "items": { "type": "object" },
                   "title": "Response Analysis-Return Topic Distr Data"
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
     "/analysis/top_words_data": {
@@ -3730,21 +3742,33 @@
         "tags": ["analysis"],
         "summary": "Returns the top words for 30 topics. This is still mock-data",
         "operationId": "return_top_words_data",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "items": { "type": "object" },
                   "type": "array",
+                  "items": { "type": "object" },
                   "title": "Response Analysis-Return Top Words Data"
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
     "/analysis/top_words_ollama": {
@@ -3754,7 +3778,13 @@
         "operationId": "return_top_words_ollama",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "topic_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Topic Id" } }
+          { "name": "topic_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Topic Id" } },
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
         ],
         "responses": {
           "200": {
