@@ -19,7 +19,7 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: [ "0" ]
+              device_ids: [ "${OLLAMA_DEVICE_IDS:-1}" ]
               capabilities: [ gpu ]
     networks:
       - ollama_network

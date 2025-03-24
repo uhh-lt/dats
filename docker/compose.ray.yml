@@ -36,7 +36,7 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: [ "1" ]
+              device_ids: [ "${RAY_DEVICE_IDS:-0}" ]
               capabilities: [ gpu ]
     networks:
       - ray_network
