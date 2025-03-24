@@ -3,6 +3,8 @@ import { Box, IconButton, styled, Tab } from "@mui/material";
 // Styled components for tabs
 export const StyledTab = styled(Tab)(({ theme }) => ({
   minHeight: "42px",
+  minWidth: "100px", // Minimum tab width
+  maxWidth: "240px", // Maximum tab width
   padding: "8px 8px 10px 8px",
   fontSize: theme.typography.body2.fontSize,
   borderRight: `1px solid ${theme.palette.divider}`,
@@ -108,12 +110,16 @@ export const TabContent = styled(Box)({
   width: "100%",
   justifyContent: "space-between",
   pointerEvents: "none",
+  minWidth: 0, // Allow content to shrink
 });
 
 // Container for the tab label and icon
 export const TabLabel = styled(Box)({
   display: "flex",
   alignItems: "center",
+  minWidth: 0, // This allows flex items to shrink below their minimum content size
+  maxWidth: "200px", // Maximum width for the tab label container
+  flex: 1,
 });
 
 // Label text styling
@@ -122,4 +128,6 @@ export const LabelText = styled("span")({
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
   marginLeft: "8px",
+  minWidth: 0, // Allows text to shrink
+  flex: 1,
 });
