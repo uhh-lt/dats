@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 from sqlalchemy import (
     DateTime,
@@ -11,6 +11,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.data.orm.orm_base import ORMBase
+from app.core.data.orm.topic_interpretation import TopicInterpretationORM
 
 if TYPE_CHECKING:
     from app.core.data.orm.project import ProjectORM
@@ -51,4 +52,9 @@ class TopicInfoORM(ORMBase):
     )
     project: Mapped["ProjectORM"] = relationship(
         "ProjectORM", back_populates="topic_infos"
+    )
+
+    # one to many
+    topic_interpretations: Mapped[List["TopicInterpretationORM"]] = relationship(
+        back_populates="topicinfo", passive_deletes=True
     )

@@ -143,7 +143,7 @@ function DocumentCategorization() {
     };
   }, []);
 
-  const boxHeight = window.innerHeight * 0.6;
+  const boxHeight = window.innerHeight * 0.5;
 
   return (
     <NoSidebarLayout>
