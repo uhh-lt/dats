@@ -92,24 +92,27 @@ def get_prompt(index: int, top_words_data: list):
 def top_words_ollama(topic_id: int, db: Session, project_id: int) -> dict:
     top_words_data = top_words(db=db, project_id=project_id)
 
+    if not top_words_data:
+        return {
+            "prompt": "noah_v1",
+            "reasoning": "Topic-Modeling model has not been generated",
+            "topic_name": "No Data",
+            "top_words": [],
+        }
+
     response = ollama_service.chat(
         *get_prompt(topic_id, top_words_data=top_words_data),
         response_model=OllamaTopicResponse,
     )
 
-    print(response)
-
-    # response.reasoning,
-    # response.topic_name,
-    # [top_words_data[topic_id]]
-
     ollama_responses = {
         "prompt": "noah_v1",
-        "reasoning": "test",
-        "topic_name": "test",
-        "top_words": ["test"],
+        "reasoning": response.reasoning,
+        "topic_name": response.topic_name,
+        "top_words": [top_words_data[topic_id]],
     }
 
+    # make persistent in db
     file_name = "app/core/analysis/ollama_responses.json"
     if os.path.exists(file_name):
         print(f"The file '{file_name}' exists. Loading existing data.")
