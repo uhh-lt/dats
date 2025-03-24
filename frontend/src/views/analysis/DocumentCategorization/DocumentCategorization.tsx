@@ -1,7 +1,6 @@
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import FormatQuoteIcon from "@mui/icons-material/FormatQuote";
-import NotStartedIcon from "@mui/icons-material/NotStarted";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import {
   Avatar,
@@ -190,21 +189,8 @@ function DocumentCategorization() {
                 onChange={(event) => handleTextInput(event, "top_n_words")}
               ></TextField>
               <ListItemIcon>
-                <Tooltip title="Performs topic modeling">
-                  <IconButton
-                    onClick={() => handleStartTopicModeling(false)}
-                    loading={
-                      startMlJob.isPending ||
-                      pollMlJob.data?.status == BackgroundJobStatus.RUNNING ||
-                      pollMlJob.data?.status == BackgroundJobStatus.WAITING
-                    }
-                    color="success"
-                  >
-                    <NotStartedIcon />
-                  </IconButton>
-                </Tooltip>
                 <React.Fragment>
-                  <Tooltip title="Re-compute all documents by deleting all previous automatic quote annotations">
+                  <Tooltip title="Deletes all Topics and generates new ones">
                     <IconButton
                       onClick={handleClickOpen}
                       loading={
