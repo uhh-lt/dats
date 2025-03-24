@@ -1,18 +1,18 @@
-import { Box, CircularProgress, Grid2, Portal, Typography } from "@mui/material";
-import { useContext } from "react";
+import { CircularProgress } from "@mui/material";
 import { useParams } from "react-router-dom";
 import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
-import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
+import SidebarContentLayout from "../../../layouts/ContentLayouts/SidebarContentLayout.tsx";
+import PercentageResizablePanel from "../../../layouts/ResizePanel/PercentageResizablePanel.tsx";
+import { useLayoutPercentage } from "../../../layouts/ResizePanel/hooks/useLayoutPercentage.ts";
+import { LayoutPercentageKeys } from "../../../layouts/layoutSlice.ts";
 import ConceptList from "./ConceptList.tsx";
 import TimeAnalysisProvenance from "./TimeAnalysisProvenance.tsx";
 import TimelineAnalysisViz from "./TimeAnalysisViz.tsx";
 import TimelineAnalysisSettings from "./TimelineAnalysisSettings.tsx";
-import { useTimelineAnalysis } from "./useTimelineAnalysis.ts";
 
 function TimelineAnalysis() {
   // global client state
-  const appBarContainerRef = useContext(AppBarContext);
   const urlParams = useParams() as { projectId: string; analysisId: string };
   const projectId = parseInt(urlParams.projectId);
   const analysisId = parseInt(urlParams.analysisId);
@@ -22,11 +22,6 @@ function TimelineAnalysis() {
 
   return (
     <>
-      <Portal container={appBarContainerRef?.current}>
-        <Typography variant="h6" component="div">
-          {timelineAnalysis.data?.name || ""}
-        </Typography>
-      </Portal>
       {timelineAnalysis.isSuccess ? (
         <TimelineAnalysisContent key={`${projectId}-${analysisId}`} timelineAnalysis={timelineAnalysis.data} />
       ) : timelineAnalysis.isLoading ? (
@@ -43,31 +38,32 @@ interface TimelineAnalysisContentProps {
 }
 
 function TimelineAnalysisContent({ timelineAnalysis }: TimelineAnalysisContentProps) {
-  // custom hooks
-  const anaylsisResults = useTimelineAnalysis(timelineAnalysis);
+  const { percentage: leftPercentage, handleResize: handleLeftResize } = useLayoutPercentage(
+    LayoutPercentageKeys.TimelineSidebar,
+  );
+  const { percentage: mainPercentage, handleResize: handleMainResize } = useLayoutPercentage(
+    LayoutPercentageKeys.TimelineContent,
+  );
 
   return (
-    <Grid2 container className="h100" columnSpacing={2} padding={2} bgcolor={"grey.200"}>
-      <Grid2 size={{ md: 3 }} className="myFlexContainer h100">
-        <Box className="myFlexFitContentContainer" sx={{ mb: 2 }}>
-          <TimelineAnalysisSettings timelineAnalysis={timelineAnalysis} />
-        </Box>
-        <Box className="myFlexFillAllContainerNoScroll">
-          <ConceptList timelineAnalysis={timelineAnalysis} />
-        </Box>
-      </Grid2>
-      <Grid2 size={{ md: 9 }} className="h100">
-        <Box style={{ height: "50%" }} sx={{ pb: 1 }}>
-          <TimelineAnalysisViz
-            chartData={anaylsisResults.isSuccess ? anaylsisResults.counts : undefined}
-            timelineAnalysis={timelineAnalysis}
-          />
-        </Box>
-        <Box style={{ height: "50%" }} sx={{ pt: 1 }}>
-          <TimeAnalysisProvenance provenanceData={anaylsisResults.date2concept2ids} />
-        </Box>
-      </Grid2>
-    </Grid2>
+    <SidebarContentLayout
+      leftSidebar={
+        <PercentageResizablePanel
+          firstContent={<TimelineAnalysisSettings timelineAnalysis={timelineAnalysis} />}
+          secondContent={<ConceptList timelineAnalysis={timelineAnalysis} />}
+          onResize={handleLeftResize}
+          contentPercentage={leftPercentage}
+        />
+      }
+      content={
+        <PercentageResizablePanel
+          firstContent={<TimelineAnalysisViz timelineAnalysis={timelineAnalysis} />}
+          secondContent={<TimeAnalysisProvenance timelineAnalysis={timelineAnalysis} />}
+          onResize={handleMainResize}
+          contentPercentage={mainPercentage}
+        />
+      }
+    />
   );
 }
 

@@ -19,7 +19,7 @@ class SeqSentTaggerApi:
 
     @api.post("/train_apply", response_model=SeqSentTaggerJobResponse)
     async def train_apply(self, input: SeqSentTaggerJobInput):
-        return await self.seq_sent_tagger.train_apply.remote(input)
+        return await self.seq_sent_tagger.train_apply.remote(input)  # type: ignore
 
 
 app = SeqSentTaggerApi.bind(

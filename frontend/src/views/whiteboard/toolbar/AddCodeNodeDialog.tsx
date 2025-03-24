@@ -1,9 +1,10 @@
-import { Box, Button, ButtonProps, Dialog, DialogTitle, Stack } from "@mui/material";
+import { Box, Button, ButtonProps, Dialog, Stack } from "@mui/material";
 import { MRT_RowSelectionState } from "material-react-table";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { XYPosition } from "reactflow";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import CodeTable from "../../../components/Code/CodeTable.tsx";
+import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
 import { PendingAddNodeAction } from "../types/PendingAddNodeAction.ts";
@@ -17,6 +18,7 @@ export interface AddCodeNodeDialogProps extends AddNodeDialogProps {
 function AddCodeNodeDialog({ projectId, buttonProps, onClick }: AddCodeNodeDialogProps) {
   // local state
   const [open, setOpen] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
 
   const onOpenDialogClick = () => {
@@ -28,36 +30,50 @@ function AddCodeNodeDialog({ projectId, buttonProps, onClick }: AddCodeNodeDialo
     setRowSelectionModel({});
   };
 
-  const handleConfirmSelection = (codes: CodeRead[]) => {
-    const addNode: PendingAddNodeAction = (position: XYPosition, reactFlowService: ReactFlowService) =>
-      reactFlowService.addNodes(createCodeNodes({ codes, position: position }));
-    onClick(addNode);
-    handleClose();
+  const handleToggleMaximize = () => {
+    setIsMaximized((prev) => !prev);
   };
+
+  const handleConfirmSelection = useCallback(
+    (codes: CodeRead[]) => {
+      const addNode: PendingAddNodeAction = (position: XYPosition, reactFlowService: ReactFlowService) =>
+        reactFlowService.addNodes(createCodeNodes({ codes, position: position }));
+      onClick(addNode);
+      handleClose();
+    },
+    [onClick],
+  );
+
+  // rendering
+  const renderBottomToolbar = useCallback(
+    (props: { selectedCodes: CodeRead[] }) => (
+      <Stack direction={"row"} spacing={1} alignItems="center" p={1}>
+        <Box flexGrow={1} />
+        <Button onClick={() => handleConfirmSelection(props.selectedCodes)} disabled={props.selectedCodes.length === 0}>
+          Add {props.selectedCodes.length > 0 ? props.selectedCodes.length : null} Codes
+        </Button>
+      </Stack>
+    ),
+    [handleConfirmSelection],
+  );
 
   return (
     <>
       <Button onClick={onOpenDialogClick} {...buttonProps}>
         Add codes
       </Button>
-      <Dialog onClose={handleClose} open={open} maxWidth="lg" fullWidth>
-        <DialogTitle>Select codes to add to Whiteboard</DialogTitle>
+      <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+        <DATSDialogHeader
+          title="Select codes to add to Whiteboard"
+          onClose={handleClose}
+          isMaximized={isMaximized}
+          onToggleMaximize={handleToggleMaximize}
+        />
         <CodeTable
           projectId={projectId}
           rowSelectionModel={rowSelectionModel}
           onRowSelectionChange={setRowSelectionModel}
-          renderBottomToolbarCustomActions={(props) => (
-            <Stack direction={"row"} spacing={1} alignItems="center" p={1}>
-              <Box flexGrow={1} />
-              <Button onClick={handleClose}>Close</Button>
-              <Button
-                onClick={() => handleConfirmSelection(props.selectedCodes)}
-                disabled={props.selectedCodes.length === 0}
-              >
-                Add {props.selectedCodes.length > 0 ? props.selectedCodes.length : null} Codes
-              </Button>
-            </Stack>
-          )}
+          renderBottomToolbar={renderBottomToolbar}
         />
       </Dialog>
     </>

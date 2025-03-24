@@ -1,23 +1,17 @@
 import logging
 import os
-from pathlib import Path
 from typing import Any, Dict, List
 
 import numpy as np
 import torch
 from dto.whisper import (
     SegmentTranscription,
-    WhisperFilePathInput,
     WhisperTranscriptionOutput,
     WordTranscription,
 )
-from faster_whisper import WhisperModel as wm
+from faster_whisper import WhisperModel as FasterWhisperModel
 from ray import serve
 from ray_config import build_ray_model_deployment_config, conf
-from scipy.io import wavfile
-from utils import (
-    get_sdoc_path_for_project_and_sdoc_name,
-)
 
 logger = logging.getLogger("ray.serve")
 
@@ -33,37 +27,28 @@ WHISPER_TRANSCRIBE_OPTIONS = cc.options
 class WhisperModel:
     def __init__(self):
         logger.info(f"Loading Whisper model {WHISPER_MODEL} on {DEVICE}")
-        self.model = wm(WHISPER_MODEL, DEVICE, download_root=DOWNLOAD_DIR)
-
-    def _load_uncompressed_audio(self, uncompressed_audio_fp: str | Path) -> np.ndarray:
-        fp = Path(uncompressed_audio_fp)
-        assert fp.exists(), f"File {fp} does not exist."
-        assert fp.suffix == ".wav", f"File {fp} is not a wav file."
-
-        audiodata = wavfile.read(fp)[1]
-        audionp = (
-            np.frombuffer(audiodata, np.int16).flatten().astype(np.float32) / 32768.0
+        self.model = FasterWhisperModel(
+            WHISPER_MODEL, DEVICE, download_root=DOWNLOAD_DIR
         )
-        return audionp
 
-    def transcribe_fpi(self, input: WhisperFilePathInput) -> WhisperTranscriptionOutput:
-        filepath = get_sdoc_path_for_project_and_sdoc_name(
-            proj_id=input.project_id, sdoc_name=input.uncompressed_audio_fp
+    def _get_uncompressed_audio(self, wav_data: np.ndarray) -> np.ndarray:
+        audio_array = (
+            np.frombuffer(wav_data, np.int16).flatten().astype(np.float32) / 32768.0
         )
-        audionp = self._load_uncompressed_audio(filepath)
+        return audio_array
+
+    def transcribe_fpi(self, wav_data: np.ndarray) -> WhisperTranscriptionOutput:
+        audio_array = self._get_uncompressed_audio(wav_data)
 
         logger.debug(
-            (
-                f"Generating automatic transcription of {input.uncompressed_audio_fp}"
-                f" using Whisper '{WHISPER_MODEL}'!"
-            )
+            f"Generating automatic transcription using Whisper '{WHISPER_MODEL}'!"
         )
         transcribe_options: Dict[str, Any] = dict(
             task="transcribe", **WHISPER_TRANSCRIBE_OPTIONS
         )
 
         with torch.no_grad():
-            result = self.model.transcribe(audio=audionp, **transcribe_options)
+            result = self.model.transcribe(audio=audio_array, **transcribe_options)
             transcriptions = list(result[0])
 
         segments: List[SegmentTranscription] = []

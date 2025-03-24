@@ -9,6 +9,7 @@ import * as React from "react";
 import AbcIcon from "@mui/icons-material/Abc";
 import { Typography } from "@mui/material";
 import { SimpleTreeView } from "@mui/x-tree-view/SimpleTreeView";
+import { memo, useCallback } from "react";
 import { IDataTree } from "./IDataTree.ts";
 
 export interface DataTreeViewProps {
@@ -31,34 +32,37 @@ function DataTreeView({
   dataIcon,
   ...props
 }: DataTreeViewProps & TreeViewProps<boolean>) {
-  const renderTree = (nodes: IDataTree[]) => {
-    return nodes.map((node) => {
-      const hasChildren = Array.isArray(node.children) && node.children.length > 0;
-      return (
-        <TreeItem
-          key={node.data.id}
-          itemId={node.data.id.toString()}
-          slots={{
-            expandIcon: ArrowRightIcon,
-            collapseIcon: ArrowDropDownIcon,
-          }}
-          label={
-            <Box sx={{ display: "flex", alignItems: "center", p: 0.5, pr: 0 }}>
-              <Box
-                component={hasChildren ? FolderIcon : dataIcon ? dataIcon : AbcIcon}
-                color={node.data.color}
-                sx={{ mr: 1 }}
-              />
-              {renderNode(node)}
-              {renderActions ? renderActions(node) : undefined}
-            </Box>
-          }
-        >
-          {hasChildren && <React.Fragment> {renderTree(node.children!)}</React.Fragment>}
-        </TreeItem>
-      );
-    });
-  };
+  const renderTree = useCallback(
+    (nodes: IDataTree[]) => {
+      return nodes.map((node) => {
+        const hasChildren = Array.isArray(node.children) && node.children.length > 0;
+        return (
+          <TreeItem
+            key={node.data.id}
+            itemId={node.data.id.toString()}
+            slots={{
+              expandIcon: ArrowRightIcon,
+              collapseIcon: ArrowDropDownIcon,
+            }}
+            label={
+              <Box sx={{ display: "flex", alignItems: "center", p: 0.5, pr: 0 }}>
+                <Box
+                  component={hasChildren ? FolderIcon : dataIcon ? dataIcon : AbcIcon}
+                  color={node.data.color}
+                  sx={{ mr: 1 }}
+                />
+                {renderNode(node)}
+                {renderActions ? renderActions(node) : undefined}
+              </Box>
+            }
+          >
+            {hasChildren && <React.Fragment> {renderTree(node.children!)}</React.Fragment>}
+          </TreeItem>
+        );
+      });
+    },
+    [dataIcon, renderActions, renderNode],
+  );
 
   return (
     <SimpleTreeView
@@ -74,4 +78,4 @@ function DataTreeView({
   );
 }
 
-export default DataTreeView;
+export default memo(DataTreeView);

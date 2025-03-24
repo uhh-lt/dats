@@ -1,45 +1,69 @@
+from pathlib import Path
 from typing import List
 
 import pandas as pd
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.project import crud_project
-from app.core.data.dto.document_tag import DocumentTagRead
+from app.core.data.export.no_data_export_error import NoDataToExportError
+from app.core.data.orm.document_tag import DocumentTagORM
+from app.core.data.repo.repo_service import RepoService
 
 
-def __generate_export_df_for_document_tag(db: Session, tag_id: int) -> pd.DataFrame:
-    logger.info(f"Exporting DocumentTag {tag_id} ...")
-
-    tag = crud_document_tag.read(db=db, id=tag_id)
-    tag_dto = DocumentTagRead.model_validate(tag)
-    applied_to_sdoc_filenames = [sdoc.filename for sdoc in tag.source_documents]
-    data = {
-        "tag_name": [tag_dto.name],
-        "description": [tag_dto.description],
-        "color": [tag_dto.color],
-        "created": [tag_dto.created],
-        "parent_tag_name": [None],
-        "applied_to_sdoc_filenames": [applied_to_sdoc_filenames],
-    }
-    if tag_dto.parent_id:
-        data["parent_tag_name"] = [
-            DocumentTagRead.model_validate(
-                crud_document_tag.read(db=db, id=tag_dto.parent_id)
-            ).name
-        ]
-
-    df = pd.DataFrame(data=data)
-    return df
-
-
-def generate_export_dfs_for_all_document_tags_in_project(
-    db: Session, project_id: int
-) -> List[pd.DataFrame]:
+def export_all_tags(
+    db: Session,
+    repo: RepoService,
+    project_id: int,
+) -> Path:
     tags = crud_project.read(db=db, id=project_id).document_tags
-    exported_tags: List[pd.DataFrame] = []
+    return __export_tags(
+        db=db,
+        repo=repo,
+        fn=f"project_{project_id}_tags",
+        tags=tags,
+    )
+
+
+def __export_tags(
+    db: Session,
+    repo: RepoService,
+    fn: str,
+    tags: List[DocumentTagORM],
+) -> Path:
+    if len(tags) == 0:
+        raise NoDataToExportError("No tags to export.")
+
+    export_data = __generate_export_df_for_tags(tags=tags)
+    return repo.write_df_to_temp_file(
+        df=export_data,
+        fn=fn,
+    )
+
+
+def __generate_export_df_for_tags(tags: List[DocumentTagORM]) -> pd.DataFrame:
+    logger.info(f"Exporting {len(tags)} tags ...")
+
+    # fill the DataFrame
+    data = {
+        "tag_name": [],
+        "description": [],
+        "color": [],
+        "created": [],
+        "parent_tag_name": [],
+        "applied_to_sdoc_filenames": [],
+    }
+
     for tag in tags:
-        export_data = __generate_export_df_for_document_tag(db=db, tag_id=tag.id)
-        exported_tags.append(export_data)
-    return exported_tags
+        parent_tag_name = None
+        if tag.parent_id is not None:
+            parent_tag_name = tag.parent.name
+        applied_to_sdoc_filenames = [sdoc.filename for sdoc in tag.source_documents]
+        data["tag_name"].append(tag.name)
+        data["description"].append(tag.description)
+        data["color"].append(tag.color)
+        data["created"].append(tag.created)
+        data["parent_tag_name"].append(parent_tag_name)
+        data["applied_to_sdoc_filenames"].append(applied_to_sdoc_filenames)
+
+    return pd.DataFrame(data)

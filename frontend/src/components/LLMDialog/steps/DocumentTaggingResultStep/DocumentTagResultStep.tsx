@@ -1,11 +1,10 @@
 import LabelIcon from "@mui/icons-material/Label";
 import { LoadingButton } from "@mui/lab";
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
 import LLMHooks from "../../../../api/LLMHooks.ts";
 import { DocumentTaggingLLMJobResult } from "../../../../api/openapi/models/DocumentTaggingLLMJobResult.ts";
 import { DocumentTagRead } from "../../../../api/openapi/models/DocumentTagRead.ts";
-import ProjectHooks from "../../../../api/ProjectHooks.ts";
 import TagHooks from "../../../../api/TagHooks.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 import { CRUDDialogActions } from "../../../dialogSlice.ts";
@@ -16,10 +15,8 @@ import DocumentTagResultStepTable from "./DocumentTagResultStepTable.tsx";
 function DocumentTagResultStep() {
   // global client state
   const llmJobId = useAppSelector((state) => state.dialog.llmJobId);
-  const projectId = useAppSelector((state) => state.dialog.llmProjectId);
-
   // global server state
-  const documentTags = ProjectHooks.useGetAllTags(projectId);
+  const documentTags = TagHooks.useGetAllTags();
   const llmJob = LLMHooks.usePollLLMJob(llmJobId, undefined);
 
   if (llmJob.isSuccess && llmJob.data.result && documentTags.isSuccess) {
@@ -60,7 +57,6 @@ function DocumentTagResultStepContent({
       },
       {} as Record<number, DocumentTagRead>,
     );
-
     return jobResult.results.map((result) => {
       return {
         sdocId: result.sdoc_id,
@@ -77,13 +73,13 @@ function DocumentTagResultStepContent({
   const dispatch = useAppDispatch();
 
   // actions
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     dispatch(CRUDDialogActions.closeLLMDialog());
-  };
+  }, [dispatch]);
 
-  const applyTagsMutation = TagHooks.useBulkSetDocumentTags();
-  const handleApplyNewTags = () => {
-    applyTagsMutation.mutate(
+  const { mutate: applyTagsMutation, isPending } = TagHooks.useBulkSetDocumentTags();
+  const handleApplyNewTags = useCallback(() => {
+    applyTagsMutation(
       {
         requestBody: rows.map((row) => ({
           source_document_id: row.sdocId,
@@ -96,23 +92,21 @@ function DocumentTagResultStepContent({
         },
       },
     );
-  };
+  }, [rows, applyTagsMutation, dispatch]);
 
   return (
     <>
-      <DialogContent>
-        <LLMUtterance>
-          <Typography>
-            Here are the results! You can find my suggestions in the column <i>Suggested Tags</i>. Now, you decide what
-            to do with them:
-          </Typography>
-          <ul style={{ margin: 0 }}>
-            <li>Use your current tags (discarding my suggestions)</li>
-            <li>Use my suggested tags (discarding the current tags)</li>
-            <li>Merge both your current tags and my suggested tags</li>
-          </ul>
-        </LLMUtterance>
-      </DialogContent>
+      <LLMUtterance p={3}>
+        <Typography>
+          Here are the results! You can find my suggestions in the column <i>Suggested Tags</i>. Now, you decide what to
+          do with them:
+        </Typography>
+        <ul style={{ margin: 0 }}>
+          <li>Use your current tags (discarding my suggestions)</li>
+          <li>Use my suggested tags (discarding the current tags)</li>
+          <li>Merge both your current tags and my suggested tags</li>
+        </ul>
+      </LLMUtterance>
       <DocumentTagResultStepTable rows={rows} onUpdateRows={setRows} />
       <DialogActions>
         <Button onClick={handleClose}>Discard results & close</Button>
@@ -120,7 +114,7 @@ function DocumentTagResultStepContent({
           variant="contained"
           startIcon={<LabelIcon />}
           onClick={handleApplyNewTags}
-          loading={applyTagsMutation.isPending}
+          loading={isPending}
           loadingPosition="start"
         >
           Apply new tags
@@ -130,4 +124,4 @@ function DocumentTagResultStepContent({
   );
 }
 
-export default DocumentTagResultStep;
+export default memo(DocumentTagResultStep);

@@ -1,26 +1,19 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import React, { createContext, useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { ApiError } from "../api/openapi/core/ApiError.ts";
 import { OpenAPI } from "../api/openapi/core/OpenAPI.ts";
 import { UserAuthorizationHeaderData } from "../api/openapi/models/UserAuthorizationHeaderData.ts";
 import { UserRead } from "../api/openapi/models/UserRead.ts";
 import { AuthenticationService } from "../api/openapi/services/AuthenticationService.ts";
 import { UserService } from "../api/openapi/services/UserService.ts";
+import { QueryKey } from "../api/QueryKey.ts";
 import queryClient from "../plugins/ReactQueryClient.ts";
+import { AuthContext } from "./AuthContext.ts";
 import { LoginStatus } from "./LoginStatus.ts";
 
 // init once
 OpenAPI.BASE = import.meta.env.VITE_APP_SERVER || "";
 OpenAPI.TOKEN = localStorage.getItem("dats-access") || undefined;
-
-interface AuthContextType {
-  user: UserRead | undefined;
-  updateAuthData: (authData: UserAuthorizationHeaderData) => void;
-  logout: () => void;
-  loginStatus: LoginStatus;
-}
-
-export const AuthContext = createContext<AuthContextType | null>(null);
 
 interface AuthContextProps {
   children?: React.ReactNode;
@@ -39,7 +32,7 @@ export const AuthProvider = ({ children }: AuthContextProps) => {
 
   // fetch user data
   const internalUser = useQuery<UserRead, Error>({
-    queryKey: ["me", accessToken],
+    queryKey: [QueryKey.ME, accessToken],
     queryFn: UserService.getMe,
     retry: false,
   });

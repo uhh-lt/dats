@@ -26,7 +26,7 @@ export type SpanAnnotationRead = {
   /**
    * The SpanText the SpanAnnotation spans.
    */
-  span_text_id: number;
+  text: string;
   /**
    * Code the SpanAnnotation refers to
    */
@@ -47,4 +47,8 @@ export type SpanAnnotationRead = {
    * Updated timestamp of the SpanAnnotation
    */
   updated: string;
+  /**
+   * The group ids this span annotations belongs to
+   */
+  group_ids: Array<number>;
 };

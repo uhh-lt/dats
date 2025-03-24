@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import urllib.parse as url
@@ -5,10 +6,11 @@ import uuid
 import zipfile
 from http.client import BAD_REQUEST
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 from zipfile import ZipFile
 
 import magic
+import pandas as pd
 from fastapi import HTTPException, UploadFile
 from loguru import logger
 
@@ -327,6 +329,71 @@ class RepoService(metaclass=SingletonMeta):
         logger.info(f"Created Temporary File at {p}")
 
         return p
+
+    def write_files_to_temp_zip_file(
+        self,
+        files: List[Path],
+        fn: Optional[str] = None,
+    ) -> Path:
+        if len(files) == 0:
+            raise ValueError("No files to export!")
+
+        # check that all files exist
+        print(files)
+        for file in files:
+            if not file.exists():
+                raise FileNotFoundInRepositoryError(
+                    proj_id=-1, filename=file.name, dst=file
+                )
+
+        temp_file = self.create_temp_file(fn=fn)
+        temp_file = temp_file.parent / (temp_file.name + ".zip")
+
+        logger.info(f"Writing Files to {temp_file} !")
+        with zipfile.ZipFile(temp_file, mode="w") as zipf:
+            for file in files:
+                zipf.write(file, file.name)
+
+        return temp_file
+
+    def write_df_to_temp_file(
+        self,
+        df: pd.DataFrame,
+        fn: Optional[str] = None,
+    ) -> Path:
+        temp_file = self.create_temp_file(fn=fn)
+        temp_file = temp_file.parent / (temp_file.name + ".csv")
+
+        logger.info(f"Writing DataFrame to {temp_file} !")
+        df.to_csv(temp_file, sep=",", index=False, header=True)
+        return temp_file
+
+    def write_text_to_temp_file(
+        self,
+        text: str,
+        fn: Optional[str] = None,
+    ) -> Path:
+        temp_file = self.create_temp_file(fn=fn)
+        temp_file = temp_file.parent / (temp_file.name + ".txt")
+
+        logger.info(f"Writing text to {temp_file} !")
+        with open(temp_file, "w") as f:
+            f.write(text)
+        return temp_file
+
+    def write_json_to_temp_file(
+        self,
+        json_obj: Union[List[Dict[str, Any]], Dict[str, Any]],
+        fn: Optional[str] = None,
+    ) -> Path:
+        temp_file = self.create_temp_file(fn=fn)
+        temp_file = temp_file.parent / (temp_file.name + ".json")
+
+        logger.info(f"Writing json_obj to {temp_file} !")
+        with open(temp_file, "w") as f:
+            json.dump(json_obj, f, indent=4)
+
+        return temp_file
 
     def create_temp_dir(self, name: Optional[Union[str, Path]] = None) -> Path:
         if name is None:

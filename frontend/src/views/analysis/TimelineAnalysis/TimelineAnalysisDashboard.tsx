@@ -1,17 +1,30 @@
-import { MRT_Row, MRT_TableOptions } from "material-react-table";
+import { MRT_ColumnDef, MRT_Row, MRT_TableOptions } from "material-react-table";
 import { useMemo } from "react";
 import { useParams } from "react-router";
+import { TimelineAnalysisType } from "../../../api/openapi/models/TimelineAnalysisType.ts";
 import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
-import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import AnalysisDashboard from "../AnalysisDashboard/AnalysisDashboard.tsx";
 import {
-  AnaylsisDashboardRow,
+  AnalysisDashboardRow,
   HandleCreateAnalysis,
   useAnalysisDashboardTable,
 } from "../AnalysisDashboard/useAnalysisDashboardTable.tsx";
 import { TimelineAnalysisActions } from "./timelineAnalysisSlice.ts";
+
+interface TimelineAnaylsisDashboardRow extends AnalysisDashboardRow {
+  type: TimelineAnalysisType;
+}
+
+const additionalColumns: MRT_ColumnDef<TimelineAnaylsisDashboardRow>[] = [
+  {
+    id: "type",
+    header: "Type",
+    accessorFn: (params) => params.type,
+    enableEditing: false,
+  },
+];
 
 function TimelineAnalysisDashboard() {
   // global client state
@@ -23,20 +36,18 @@ function TimelineAnalysisDashboard() {
     isLoading: isLoadingAnalysis,
     isFetching: isFetchingAnalysis,
     isError: isLoadingAnalysisError,
-  } = TimelineAnalysisHooks.useGetUserTimelineAnalysiss(projectId);
-  const userAnalysisTableData: AnaylsisDashboardRow[] = useMemo(
+  } = TimelineAnalysisHooks.useGetUserTimelineAnalysisList();
+  const userAnalysisTableData: TimelineAnaylsisDashboardRow[] = useMemo(
     () =>
       userAnalysis?.map((analysis) => ({
         id: analysis.id,
         title: analysis.name,
         updated: analysis.updated,
         user_id: analysis.user_id,
+        type: analysis.timeline_analysis_type,
       })) || [],
     [userAnalysis],
   );
-
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
 
   // mutations
   const { mutate: createTimelineAnalysis, isPending: isCreatingTimelineAnalysis } =
@@ -57,66 +68,47 @@ function TimelineAnalysisDashboard() {
   const dispatch = useAppDispatch();
 
   // CRUD actions
-  const handleCreateAnalysis: HandleCreateAnalysis =
-    () =>
+  const handleCreateAnalysis: HandleCreateAnalysis<TimelineAnaylsisDashboardRow> =
+    (createOption) =>
     ({ values, table }) => {
       createTimelineAnalysis(
         {
           requestBody: {
             project_id: projectId,
             name: values.title,
+            timeline_analysis_type: (createOption?.option as TimelineAnalysisType) || TimelineAnalysisType.DOCUMENT,
           },
         },
         {
-          onSuccess(data) {
-            openSnackbar({
-              text: `Created new timeline analysis '${data.name}'`,
-              severity: "success",
-            });
+          onSuccess() {
             table.setCreatingRow(null); //exit creating mode
           },
         },
       );
     };
 
-  const handleDuplicateAnalysis = (row: MRT_Row<AnaylsisDashboardRow>) => {
-    duplicateTimelineAnalysis(
-      {
-        timelineAnalysisId: row.original.id,
-      },
-      {
-        onSuccess(data) {
-          openSnackbar({
-            text: `Duplicated analysis '${data.name}'`,
-            severity: "success",
-          });
-        },
-      },
-    );
+  const handleDuplicateAnalysis = (row: MRT_Row<TimelineAnaylsisDashboardRow>) => {
+    duplicateTimelineAnalysis({
+      timelineAnalysisId: row.original.id,
+    });
   };
 
-  const handleDeleteAnalysis = (row: MRT_Row<AnaylsisDashboardRow>) => {
+  const handleDeleteAnalysis = (row: MRT_Row<TimelineAnaylsisDashboardRow>) => {
     ConfirmationAPI.openConfirmationDialog({
       text: `Do you really want to remove the analysis ${row.original.id}? This action cannot be undone!`,
       onAccept: () => {
-        deleteTimelineAnalysis(
-          {
-            timelineAnalysisId: row.original.id,
-          },
-          {
-            onSuccess(data) {
-              openSnackbar({
-                text: `Deleted analysis '${data.name}'`,
-                severity: "success",
-              });
-            },
-          },
-        );
+        deleteTimelineAnalysis({
+          timelineAnalysisId: row.original.id,
+        });
       },
     });
   };
 
-  const handleEditAnalysis: MRT_TableOptions<AnaylsisDashboardRow>["onEditingRowSave"] = ({ values, table, row }) => {
+  const handleEditAnalysis: MRT_TableOptions<TimelineAnaylsisDashboardRow>["onEditingRowSave"] = ({
+    values,
+    table,
+    row,
+  }) => {
     updateTimelineAnalysis(
       {
         timelineAnalysisId: row.original.id,
@@ -125,11 +117,7 @@ function TimelineAnalysisDashboard() {
         },
       },
       {
-        onSuccess(data) {
-          openSnackbar({
-            text: `Updated analysis '${data.name}'`,
-            severity: "success",
-          });
+        onSuccess() {
           table.setEditingRow(null); //exit editing mode
         },
       },
@@ -149,11 +137,37 @@ function TimelineAnalysisDashboard() {
     isDeletingAnalysis: isDeletingTimelineAnalysis,
     deletingAnalysisId: deletingVariables?.timelineAnalysisId,
     duplicatingAnalysisId: duplicatingVariables?.timelineAnalysisId,
-    onOpenAnalysis: (analysisId) => dispatch(TimelineAnalysisActions.onOpenTimelineAnalysis({ analysisId, projectId })),
+    onOpenAnalysis: (analysis) =>
+      dispatch(
+        TimelineAnalysisActions.onOpenTimelineAnalysis({
+          analysisId: analysis.id,
+          analysisType: analysis.type,
+          projectId,
+        }),
+      ),
     handleCreateAnalysis,
     handleEditAnalysis,
     handleDeleteAnalysis,
     handleDuplicateAnalysis,
+    analysisCreateOptions: [
+      {
+        option: TimelineAnalysisType.DOCUMENT,
+        label: "Documents",
+      },
+      {
+        option: TimelineAnalysisType.SENTENCE_ANNOTATION,
+        label: "Sentence Annotations",
+      },
+      {
+        option: TimelineAnalysisType.SPAN_ANNOTATION,
+        label: "Span Annotations",
+      },
+      {
+        option: TimelineAnalysisType.BBOX_ANNOTATION,
+        label: "Image Annotations",
+      },
+    ],
+    additionalColumns,
   });
 
   return (

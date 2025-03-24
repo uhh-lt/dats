@@ -11,6 +11,8 @@ from app.core.data.dto.bbox_annotation import (
 )
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
+from app.core.data.orm.code import CodeORM
+from app.core.data.orm.source_document import SourceDocumentORM
 
 
 class CRUDBBoxAnnotation(
@@ -90,12 +92,36 @@ class CRUDBBoxAnnotation(
             ],
         )
 
+    def read_by_project(
+        self,
+        db: Session,
+        *,
+        project_id: int,
+    ) -> List[BBoxAnnotationORM]:
+        query = (
+            db.query(self.model)
+            .join(
+                AnnotationDocumentORM,
+                AnnotationDocumentORM.id == self.model.annotation_document_id,
+            )
+            .join(
+                SourceDocumentORM,
+                SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+            )
+            .where(
+                SourceDocumentORM.project_id == project_id,
+            )
+        )
+
+        return query.all()
+
     def read_by_user_and_sdoc(
         self,
         db: Session,
         *,
         user_id: int,
         sdoc_id: int,
+        exclude_disabled_codes: bool = True,
     ) -> List[BBoxAnnotationORM]:
         query = (
             db.query(self.model)
@@ -105,6 +131,8 @@ class CRUDBBoxAnnotation(
                 AnnotationDocumentORM.source_document_id == sdoc_id,
             )
         )
+        if exclude_disabled_codes:
+            query = query.join(self.model.code).where(CodeORM.enabled == True)  # noqa: E712
 
         return query.all()
 
@@ -114,6 +142,7 @@ class CRUDBBoxAnnotation(
         *,
         user_ids: List[int],
         sdoc_id: int,
+        exclude_disabled_codes: bool = True,
     ) -> List[BBoxAnnotationORM]:
         query = (
             db.query(self.model)
@@ -123,11 +152,18 @@ class CRUDBBoxAnnotation(
                 AnnotationDocumentORM.source_document_id == sdoc_id,
             )
         )
+        if exclude_disabled_codes:
+            query = query.join(self.model.code).where(CodeORM.enabled == True)  # noqa: E712
 
         return query.all()
 
     def read_by_code_and_user(
-        self, db: Session, *, code_id: int, user_id: int
+        self,
+        db: Session,
+        *,
+        code_id: int,
+        user_id: int,
+        exclude_disabled_codes: bool = True,
     ) -> List[BBoxAnnotationORM]:
         query = (
             db.query(self.model)
@@ -136,6 +172,8 @@ class CRUDBBoxAnnotation(
                 self.model.code_id == code_id, AnnotationDocumentORM.user_id == user_id
             )
         )
+        if exclude_disabled_codes:
+            query = query.join(self.model.code).where(CodeORM.enabled == True)  # noqa: E712
 
         return query.all()
 

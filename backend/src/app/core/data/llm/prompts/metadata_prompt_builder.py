@@ -122,7 +122,7 @@ class MetadataPromptBuilder(PromptBuilder):
         )
 
     def _build_user_prompt_template(
-        self, language: str, project_metadata_ids: List[int], **kwargs
+        self, *, language: str, project_metadata_ids: List[int], **kwargs
     ) -> str:
         task_data = "\n".join(
             [

@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardProps, Stack, Typography } from "@mui/material";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   MRT_ColumnDef,
@@ -10,23 +9,29 @@ import {
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useEffect, useMemo, useRef } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { SpanAnnotationRow } from "../../../api/openapi/models/SpanAnnotationRow.ts";
 import { SpanAnnotationSearchResult } from "../../../api/openapi/models/SpanAnnotationSearchResult.ts";
 import { SpanColumns } from "../../../api/openapi/models/SpanColumns.ts";
 import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
+import { QueryKey } from "../../../api/QueryKey.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { RootState } from "../../../store/store.ts";
 import { useTableInfiniteScroll } from "../../../utils/useTableInfiniteScroll.ts";
 import CodeRenderer from "../../Code/CodeRenderer.tsx";
 import { MyFilter, createEmptyFilter } from "../../FilterDialog/filterUtils.ts";
+import FilterTableToolbarLeft from "../../FilterTable/FilterTableToolbarLeft.tsx";
+import { FilterTableToolbarProps } from "../../FilterTable/FilterTableToolbarProps.ts";
+import FilterTableToolbarRight from "../../FilterTable/FilterTableToolbarRight.tsx";
+import { useRenderToolbars } from "../../FilterTable/useRenderToolbars.tsx";
 import MemoRenderer2 from "../../Memo/MemoRenderer2.tsx";
 import SdocMetadataRenderer from "../../Metadata/SdocMetadataRenderer.tsx";
 import SdocTagsRenderer from "../../SourceDocument/SdocTagRenderer.tsx";
 import UserRenderer from "../../User/UserRenderer.tsx";
-import SATToolbar, { SATToolbarProps } from "./SATToolbar.tsx";
+import { SATFilterActions } from "./satFilterSlice.ts";
 import SdocAnnotationLink from "./SdocAnnotationLink.tsx";
 import { useInitSATFilterSlice } from "./useInitSATFilterSlice.ts";
 
@@ -34,7 +39,6 @@ const fetchSize = 20;
 const flatMapData = (page: SpanAnnotationSearchResult) => page.data;
 
 export interface SpanAnnotationTableProps {
-  title?: string;
   projectId: number;
   filterName: string;
   // selection
@@ -47,15 +51,17 @@ export interface SpanAnnotationTableProps {
   columnVisibilityModel: MRT_VisibilityState;
   onColumnVisibilityChange: MRT_TableOptions<SpanAnnotationRow>["onColumnVisibilityChange"];
   // components
-  cardProps?: CardProps;
   positionToolbarAlertBanner?: MRT_TableOptions<SpanAnnotationRow>["positionToolbarAlertBanner"];
-  renderToolbarInternalActions?: (props: SATToolbarProps) => React.ReactNode;
-  renderTopToolbarCustomActions?: (props: SATToolbarProps) => React.ReactNode;
-  renderBottomToolbarCustomActions?: (props: SATToolbarProps) => React.ReactNode;
+  renderTopRightToolbar?: (props: FilterTableToolbarProps<SpanAnnotationRow>) => React.ReactNode;
+  renderTopLeftToolbar?: (props: FilterTableToolbarProps<SpanAnnotationRow>) => React.ReactNode;
+  renderBottomToolbar?: (props: FilterTableToolbarProps<SpanAnnotationRow>) => React.ReactNode;
 }
 
+// this defines which filter slice is used
+const filterStateSelector = (state: RootState) => state.satFilter;
+const filterActions = SATFilterActions;
+
 function SpanAnnotationTable({
-  title = "Span Annotation Table",
   projectId,
   filterName,
   rowSelectionModel,
@@ -64,18 +70,18 @@ function SpanAnnotationTable({
   onSortingChange,
   columnVisibilityModel,
   onColumnVisibilityChange,
-  cardProps,
   positionToolbarAlertBanner = "top",
-  renderToolbarInternalActions = SATToolbar,
-  renderTopToolbarCustomActions,
-  renderBottomToolbarCustomActions,
+  renderTopRightToolbar = FilterTableToolbarRight,
+  renderTopLeftToolbar = FilterTableToolbarLeft,
+  renderBottomToolbar,
 }: SpanAnnotationTableProps) {
   // global client state (react router)
   const { user } = useAuth();
   const userId = user?.id;
 
   // filtering
-  const filter = useAppSelector((state) => state.satFilter.filter[filterName]) || createEmptyFilter(filterName);
+  const filter =
+    useAppSelector((state) => filterStateSelector(state).filter[filterName]) || createEmptyFilter(filterName);
 
   // virtualization
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
@@ -102,8 +108,8 @@ function SpanAnnotationTable({
         case SpanColumns.SP_DOCUMENT_DOCUMENT_TAG_ID_LIST:
           return {
             ...colDef,
-            accessorFn: (row) => row.tags,
-            Cell: ({ row }) => <SdocTagsRenderer tags={row.original.tags} />,
+            accessorFn: (row) => row.tag_ids,
+            Cell: ({ row }) => <SdocTagsRenderer tagIds={row.original.tag_ids} />,
           } as MRT_ColumnDef<SpanAnnotationRow>;
         case SpanColumns.SP_CODE_ID:
           return {
@@ -162,7 +168,7 @@ function SpanAnnotationTable({
   // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<SpanAnnotationSearchResult>({
     queryKey: [
-      "annotation-table-data",
+      QueryKey.SPAN_ANNO_TABLE,
       projectId,
       filter, //refetch when columnFilters changes
       sortingModel, //refetch when sorting changes
@@ -208,6 +214,28 @@ function SpanAnnotationTable({
     }
   }, [projectId, sortingModel]);
 
+  // Table event handlers
+  const handleTableScroll = useCallback(
+    (event: UIEvent<HTMLDivElement>) => fetchMoreOnScroll(event.target as HTMLDivElement),
+    [fetchMoreOnScroll],
+  );
+
+  // rendering
+  const { renderTopLeftToolbarContent, renderTopRightToolbarContent, renderBottomToolbarContent } = useRenderToolbars({
+    name: "span annotations",
+    flatData,
+    totalFetched,
+    totalResults,
+    renderTopRightToolbar,
+    renderTopLeftToolbar,
+    renderBottomToolbar,
+    filterStateSelector,
+    filterActions,
+    filterName,
+    rowSelectionModel,
+    tableContainerRef,
+  });
+
   // table
   const table = useMaterialReactTable<SpanAnnotationRow>({
     data: flatData,
@@ -246,7 +274,7 @@ function SpanAnnotationTable({
     },
     muiTableContainerProps: {
       ref: tableContainerRef, //get access to the table container element
-      onScroll: (event) => fetchMoreOnScroll(event.target as HTMLDivElement), //add an event listener to the table container element
+      onScroll: handleTableScroll,
       style: { flexGrow: 1 },
     },
     muiToolbarAlertBannerProps: isError
@@ -257,46 +285,12 @@ function SpanAnnotationTable({
       : undefined,
     // toolbar
     positionToolbarAlertBanner,
-    renderTopToolbarCustomActions: renderTopToolbarCustomActions
-      ? (props) =>
-          renderTopToolbarCustomActions({
-            table: props.table,
-            filterName,
-            anchor: tableContainerRef,
-            selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
-          })
-      : undefined,
-    renderToolbarInternalActions: (props) =>
-      renderToolbarInternalActions({
-        table: props.table,
-        filterName,
-        anchor: tableContainerRef,
-        selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
-      }),
-    renderBottomToolbarCustomActions: (props) => (
-      <Stack direction={"row"} spacing={1} alignItems="center">
-        <Typography>
-          Fetched {totalFetched} of {totalResults} total rows.
-        </Typography>
-        {renderBottomToolbarCustomActions &&
-          renderBottomToolbarCustomActions({
-            table: props.table,
-            filterName,
-            anchor: tableContainerRef,
-            selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
-          })}
-      </Stack>
-    ),
+    renderTopToolbarCustomActions: renderTopLeftToolbarContent,
+    renderToolbarInternalActions: renderTopRightToolbarContent,
+    renderBottomToolbarCustomActions: renderBottomToolbarContent,
   });
 
-  return (
-    <Card className="myFlexContainer" {...cardProps}>
-      <CardHeader title={title} />
-      <CardContent className="myFlexFillAllContainer" style={{ padding: 0 }}>
-        <MaterialReactTable table={table} />
-      </CardContent>
-    </Card>
-  );
+  return <MaterialReactTable table={table} />;
 }
 
-export default SpanAnnotationTable;
+export default memo(SpanAnnotationTable);

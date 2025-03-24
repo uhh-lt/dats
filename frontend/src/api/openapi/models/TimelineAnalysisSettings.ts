@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { DateGroupBy } from "./DateGroupBy";
-import type { TimelineAnalysisResultType } from "./TimelineAnalysisResultType";
+import type { SentAnnoTimelineAnalysisSettings } from "./SentAnnoTimelineAnalysisSettings";
 export type TimelineAnalysisSettings = {
   /**
    * Group by date
@@ -14,7 +14,7 @@ export type TimelineAnalysisSettings = {
    */
   date_metadata_id?: number | null;
   /**
-   * ResultType of the TimelineAnalysis
+   * Settings specific to the TimelineAnalysis
    */
-  result_type?: TimelineAnalysisResultType;
+  ta_specific_settings?: SentAnnoTimelineAnalysisSettings | null;
 };

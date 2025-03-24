@@ -3,9 +3,13 @@ from typing import Tuple
 
 from app.celery.background_jobs.cota import start_cota_refinement_job_
 from app.celery.background_jobs.crawl import start_crawler_job_
+from app.celery.background_jobs.document_classification import (
+    start_document_classification_job_,
+)
 from app.celery.background_jobs.export import start_export_job_
 from app.celery.background_jobs.import_ import start_import_job_
 from app.celery.background_jobs.llm import start_llm_job_
+from app.celery.background_jobs.ml import start_ml_job_
 from app.celery.background_jobs.preprocess import (
     execute_audio_preprocessing_pipeline_,
     execute_image_preprocessing_pipeline_,
@@ -13,14 +17,13 @@ from app.celery.background_jobs.preprocess import (
     execute_video_preprocessing_pipeline_,
     import_uploaded_archive_,
 )
-from app.celery.background_jobs.trainer import (
-    start_trainer_job_,
-)
+from app.celery.background_jobs.trainer import start_trainer_job_
 from app.celery.celery_worker import celery_worker
 from app.core.data.dto.crawler_job import CrawlerJobRead
 from app.core.data.dto.export_job import ExportJobRead
 from app.core.data.dto.import_job import ImportJobRead
 from app.core.data.dto.llm_job import LLMJobRead
+from app.core.data.dto.ml_job import MLJobRead
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 
 
@@ -61,6 +64,11 @@ def start_crawler_job(crawler_job: CrawlerJobRead) -> Tuple[Path, int]:
 @celery_worker.task(acks_late=True)
 def start_llm_job(llm_job: LLMJobRead) -> None:
     start_llm_job_(llm_job=llm_job)
+
+
+@celery_worker.task(acks_late=True)
+def start_ml_job(ml_job: MLJobRead) -> None:
+    start_ml_job_(ml_job=ml_job)
 
 
 @celery_worker.task(
@@ -118,3 +126,12 @@ def import_uploaded_archive(archive_file_path_and_project_id: Tuple[Path, int]) 
     # we need a tuple to chain the task since chaining only allows for one return object
     archive_file_path, project_id = archive_file_path_and_project_id
     import_uploaded_archive_(archive_file_path=archive_file_path, project_id=project_id)
+
+
+@celery_worker.task(
+    acks_late=True,
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 5, "countdown": 5},
+)
+def start_document_classification_job(task_id: int, project_id: int) -> None:
+    start_document_classification_job_(task_id=task_id, project_id=project_id)

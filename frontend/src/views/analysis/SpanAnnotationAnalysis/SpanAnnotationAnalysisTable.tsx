@@ -1,18 +1,13 @@
 import { useParams } from "react-router-dom";
-import SpanAnnotationTable, {
-  SpanAnnotationTableProps,
-} from "../../../components/SpanAnnotation/SpanAnnotationTable/SpanAnnotationTable.tsx";
+import SpanAnnotationTable from "../../../components/SpanAnnotation/SpanAnnotationTable/SpanAnnotationTable.tsx";
 import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
-import BulkChangeSpanAnnotationCodeButton from "./BulkChangeSpanAnnotationCodeButton.tsx";
 import { SpanAnnotationsActions } from "./spanAnnotationAnalysisSlice.ts";
-import SpanAnnotationAnalysisTableToolbar from "./SpanAnnotationAnalysisTableToolbar.tsx";
+import SpanAnnotationAnalysisTableToolbarLeft from "./Toolbars/SpanAnnotationAnalysisTableToolbarLeft.tsx";
+import SpanAnnotationAnalysisTableToolbarRight from "./Toolbars/SpanAnnotationAnalysisTableToolbarRight.tsx";
 
 const filterName = "spanAnnotationAnalysisTable";
-interface SpanAnnotationAnalysisTableProps {
-  cardProps: SpanAnnotationTableProps["cardProps"];
-}
 
-function SpanAnnotationAnalysisTable({ cardProps }: SpanAnnotationAnalysisTableProps) {
+function SpanAnnotationAnalysisTable() {
   const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
 
   // global client state (redux) connected to table state
@@ -39,11 +34,8 @@ function SpanAnnotationAnalysisTable({ cardProps }: SpanAnnotationAnalysisTableP
       onSortingChange={setSortingModel}
       columnVisibilityModel={columnVisibilityModel}
       onColumnVisibilityChange={setColumnVisibilityModel}
-      renderTopToolbarCustomActions={(props) => (
-        <BulkChangeSpanAnnotationCodeButton {...props} filterName={filterName} />
-      )}
-      renderToolbarInternalActions={SpanAnnotationAnalysisTableToolbar}
-      cardProps={cardProps}
+      renderTopLeftToolbar={SpanAnnotationAnalysisTableToolbarLeft}
+      renderTopRightToolbar={SpanAnnotationAnalysisTableToolbarRight}
       positionToolbarAlertBanner="head-overlay"
     />
   );

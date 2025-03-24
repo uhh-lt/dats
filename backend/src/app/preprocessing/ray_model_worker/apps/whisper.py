@@ -1,10 +1,11 @@
 import logging
 
-from dto.whisper import WhisperFilePathInput, WhisperTranscriptionOutput
-from fastapi import FastAPI
+from dto.whisper import WhisperTranscriptionOutput
+from fastapi import FastAPI, Request
 from models.whisper import WhisperModel
 from ray import serve
 from ray.serve.handle import DeploymentHandle
+from utils import bytes_to_wav_data
 
 api = FastAPI()
 
@@ -21,10 +22,11 @@ class WhisperApi:
         "/transcribe",
         response_model=WhisperTranscriptionOutput,
     )
-    async def transcribe(
-        self, input: WhisperFilePathInput
-    ) -> WhisperTranscriptionOutput:
-        transcript_result = await self.whisper.transcribe_fpi.remote(input)
+    async def transcribe(self, request: Request) -> WhisperTranscriptionOutput:
+        # we are expecting a wav file as binary data (application/octet-stream)
+        raw_wav_bytes = await request.body()
+        wav_data = bytes_to_wav_data(raw_wav_bytes)
+        transcript_result = await self.whisper.transcribe_fpi.remote(wav_data)  # type: ignore
         return transcript_result
 
 

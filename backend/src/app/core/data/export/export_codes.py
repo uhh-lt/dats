@@ -1,39 +1,67 @@
+from pathlib import Path
 from typing import List
 
 import pandas as pd
+from loguru import logger
 from sqlalchemy.orm import Session
 
-from app.core.data.crud.code import crud_code
 from app.core.data.crud.project import crud_project
-from app.core.data.dto.code import CodeRead
+from app.core.data.export.no_data_export_error import NoDataToExportError
+from app.core.data.orm.code import CodeORM
+from app.core.data.repo.repo_service import RepoService
 
 
-def __generate_export_df_for_code(db: Session, code_id: int) -> pd.DataFrame:
-    code = crud_code.read(db=db, id=code_id)
-    code_dto = CodeRead.model_validate(code)
-    parent_code_id = code_dto.parent_id
-    parent_code_name = None
-    if parent_code_id is not None:
-        parent_code_name = CodeRead.model_validate(code.parent).name
+def export_all_codes(
+    db: Session,
+    repo: RepoService,
+    project_id: int,
+) -> Path:
+    codes = crud_project.read(db=db, id=project_id).codes
+    return __export_codes(
+        db=db,
+        repo=repo,
+        fn=f"project_{project_id}_codes",
+        codes=codes,
+    )
 
+
+def __export_codes(
+    db: Session,
+    repo: RepoService,
+    fn: str,
+    codes: List[CodeORM],
+) -> Path:
+    if len(codes) == 0:
+        raise NoDataToExportError("No codes to export.")
+
+    export_data = __generate_export_df_for_codes(codes=codes)
+    return repo.write_df_to_temp_file(
+        df=export_data,
+        fn=fn,
+    )
+
+
+def __generate_export_df_for_codes(codes: List[CodeORM]) -> pd.DataFrame:
+    logger.info(f"Exporting {len(codes)} Codes ...")
+
+    # fill the DataFrame
     data = {
-        "code_name": [code_dto.name],
-        "description": [code_dto.description],
-        "color": [code_dto.color],
-        "created": [code_dto.created],
-        "parent_code_name": [parent_code_name],
+        "code_name": [],
+        "description": [],
+        "color": [],
+        "created": [],
+        "parent_code_name": [],
     }
 
-    df = pd.DataFrame(data=data)
-    return df
-
-
-def generate_export_dfs_for_all_codes_in_project(
-    db: Session, project_id: int
-) -> List[pd.DataFrame]:
-    codes = crud_project.read(db=db, id=project_id).codes
-    exported_codes: List[pd.DataFrame] = []
     for code in codes:
-        export_data = __generate_export_df_for_code(db=db, code_id=code.id)
-        exported_codes.append(export_data)
-    return exported_codes
+        parent_code_name = None
+        if code.parent_id is not None:
+            parent_code_name = code.parent.name
+
+        data["code_name"].append(code.name)
+        data["description"].append(code.description)
+        data["color"].append(code.color)
+        data["created"].append(code.created)
+        data["parent_code_name"].append(parent_code_name)
+
+    return pd.DataFrame(data=data)

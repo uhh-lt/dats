@@ -1,11 +1,14 @@
-import { Divider, Typography } from "@mui/material";
-import { useCallback, useMemo } from "react";
+import { Typography } from "@mui/material";
+import { useCallback, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import ProjectHooks from "../../../api/ProjectHooks.ts";
+import MetadataHooks from "../../../api/MetadataHooks.ts";
 import { SpanEntityStat } from "../../../api/openapi/models/SpanEntityStat.ts";
 import DocumentInformation from "../../../components/SourceDocument/DocumentInformation/DocumentInformation.tsx";
 import TagExplorer from "../../../components/Tag/TagExplorer/TagExplorer.tsx";
-import TwoSidebarsLayout from "../../../layouts/TwoSidebarsLayout.tsx";
+import SidebarContentSidebarLayout from "../../../layouts/ContentLayouts/SidebarContentSidebarLayout.tsx";
+import { LayoutPercentageKeys } from "../../../layouts/layoutSlice.ts";
+import { useLayoutPercentage } from "../../../layouts/ResizePanel/hooks/useLayoutPercentage.ts";
+import PercentageResizablePanel from "../../../layouts/ResizePanel/PercentageResizablePanel.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import SearchStatistics from "../Statistics/SearchStatistics.tsx";
 import SearchDocumentTable from "./SearchDocumentTable.tsx";
@@ -22,7 +25,7 @@ function Search() {
   const dispatch = useAppDispatch();
 
   // filter
-  const projectMetadata = ProjectHooks.useGetMetadata(projectId);
+  const projectMetadata = MetadataHooks.useGetProjectMetadataList();
 
   // computed (local client state)
   const keywordMetadataIds = useMemo(() => {
@@ -50,22 +53,36 @@ function Search() {
     [dispatch],
   );
 
+  // search results
+  const [sdocIds, setSdocIds] = useState<number[]>([]);
+  const handleSearchResultsChange = useCallback((sdocIds: number[]) => {
+    console.log("Search results changed", sdocIds);
+    setSdocIds(sdocIds);
+  }, []);
+
+  // vertical sidebar percentage
+  const { percentage, handleResize } = useLayoutPercentage(LayoutPercentageKeys.SearchVerticalSidebar);
+
   // render
   return (
-    <TwoSidebarsLayout
+    <SidebarContentSidebarLayout
       leftSidebar={
-        <>
-          <TagExplorer sx={{ height: "50%", pt: 0 }} onTagClick={handleAddTagFilter} />
-          <Divider />
-          <SearchStatistics
-            sx={{ height: "50%" }}
-            handleKeywordClick={handleAddKeywordFilter}
-            handleTagClick={handleAddTagFilter}
-            handleCodeClick={handleAddCodeFilter}
-          />
-        </>
+        <PercentageResizablePanel
+          firstContent={<TagExplorer className="h100" onTagClick={handleAddTagFilter} />}
+          secondContent={
+            <SearchStatistics
+              className="h100"
+              sdocIds={sdocIds}
+              handleKeywordClick={handleAddKeywordFilter}
+              handleTagClick={handleAddTagFilter}
+              handleCodeClick={handleAddCodeFilter}
+            />
+          }
+          contentPercentage={percentage}
+          onResize={handleResize}
+        />
       }
-      content={<SearchDocumentTable projectId={projectId} />}
+      content={<SearchDocumentTable projectId={projectId} onSearchResultsChange={handleSearchResultsChange} />}
       rightSidebar={
         <DocumentInformation
           sdocId={selectedDocumentId}

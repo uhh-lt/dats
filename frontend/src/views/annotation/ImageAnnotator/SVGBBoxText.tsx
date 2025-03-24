@@ -1,6 +1,6 @@
-import React from "react";
+import React, { memo } from "react";
 import CodeHooks from "../../../api/CodeHooks.ts";
-import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
+import { BBoxAnnotationRead } from "../../../api/openapi/models/BBoxAnnotationRead.ts";
 
 type CustomTextProps = Omit<
   React.SVGTextElementAttributes<SVGTextElement>,
@@ -8,21 +8,23 @@ type CustomTextProps = Omit<
 >;
 
 interface SVGBBoxTextProps {
-  bbox: BBoxAnnotationReadResolved;
+  bbox: BBoxAnnotationRead;
+  xCentering?: number;
+  scaledRatio?: number;
 }
 
-function SVGBBoxText({ bbox, ...props }: SVGBBoxTextProps & CustomTextProps) {
-  const code = CodeHooks.useGetCode(bbox.code.id);
+function SVGBBoxText({ bbox, xCentering = 0, scaledRatio = 1, ...props }: SVGBBoxTextProps & CustomTextProps) {
+  const code = CodeHooks.useGetCode(bbox.code_id);
 
   return (
     <>
       {code.data && (
         <text
           key={bbox.id}
-          x={bbox.x_min + 3}
-          y={bbox.y_max - 3}
-          width={bbox.x_max - bbox.x_min}
-          height={bbox.y_max - bbox.y_min}
+          x={scaledRatio * (bbox.x_min + 3) + xCentering}
+          y={scaledRatio * (bbox.y_max - 3)}
+          width={scaledRatio * (bbox.x_max - bbox.x_min)}
+          height={scaledRatio * (bbox.y_max - bbox.y_min)}
           fill={"white"}
           stroke={"black"}
           strokeWidth={0.75}
@@ -35,4 +37,4 @@ function SVGBBoxText({ bbox, ...props }: SVGBBoxTextProps & CustomTextProps) {
   );
 }
 
-export default SVGBBoxText;
+export default memo(SVGBBoxText);

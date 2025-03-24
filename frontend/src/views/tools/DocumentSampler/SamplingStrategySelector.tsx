@@ -1,9 +1,10 @@
 import { Button, ButtonGroup, Card, CardContent, CardHeader, CardProps, TextField, Typography } from "@mui/material";
+import { memo, useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { DocumentSamplerActions } from "./documentSamplerSlice.ts";
 
 interface SamplingStrategySelectorProps {
-  cardProps?: Omit<CardProps, "className">;
+  cardProps?: CardProps;
 }
 
 function SamplingStrategySelector({ cardProps }: SamplingStrategySelectorProps) {
@@ -14,22 +15,43 @@ function SamplingStrategySelector({ cardProps }: SamplingStrategySelectorProps) 
   const relativeSamplingValue = useAppSelector((state) => state.documentSampler.relativeSamplingValue);
   const dispatch = useAppDispatch();
 
+  // Memoize callbacks
+  const handleFixedStrategyClick = useCallback(() => {
+    dispatch(DocumentSamplerActions.onSamplingStrategyChange(true));
+  }, [dispatch]);
+
+  const handleRelativeStrategyClick = useCallback(() => {
+    dispatch(DocumentSamplerActions.onSamplingStrategyChange(false));
+  }, [dispatch]);
+
+  const handleFixedValueChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      dispatch(
+        DocumentSamplerActions.onFixedSamplingValueChange(
+          Math.min(maxFixedSamplingValue, parseInt(event.target.value)),
+        ),
+      );
+    },
+    [dispatch, maxFixedSamplingValue],
+  );
+
+  const handleRelativeValueChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      dispatch(DocumentSamplerActions.onRelativeSamplingValueChange(parseFloat(event.target.value)));
+    },
+    [dispatch],
+  );
+
   return (
-    <Card className="myFlexContainer" {...cardProps}>
+    <Card {...cardProps} className={`myFlexContainer ${cardProps?.className}`}>
       <CardHeader
         className="myFlexFitContentContainer"
         action={
           <ButtonGroup>
-            <Button
-              variant={isFixedSamplingStrategy ? "contained" : "outlined"}
-              onClick={() => dispatch(DocumentSamplerActions.onSamplingStrategyChange(true))}
-            >
+            <Button variant={isFixedSamplingStrategy ? "contained" : "outlined"} onClick={handleFixedStrategyClick}>
               Fixed
             </Button>
-            <Button
-              variant={!isFixedSamplingStrategy ? "contained" : "outlined"}
-              onClick={() => dispatch(DocumentSamplerActions.onSamplingStrategyChange(false))}
-            >
+            <Button variant={!isFixedSamplingStrategy ? "contained" : "outlined"} onClick={handleRelativeStrategyClick}>
               Relative
             </Button>
           </ButtonGroup>
@@ -57,13 +79,7 @@ function SamplingStrategySelector({ cardProps }: SamplingStrategySelectorProps) 
             inputProps={{ min: 1, max: maxFixedSamplingValue, step: 1 }}
             sx={{ width: 200, ml: 0.5, mt: 2 }}
             value={fixedSamplingValue}
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-              dispatch(
-                DocumentSamplerActions.onFixedSamplingValueChange(
-                  Math.min(maxFixedSamplingValue, parseInt(event.target.value)),
-                ),
-              );
-            }}
+            onChange={handleFixedValueChange}
           />
         ) : (
           <TextField
@@ -72,9 +88,7 @@ function SamplingStrategySelector({ cardProps }: SamplingStrategySelectorProps) 
             inputProps={{ min: 0, max: 1, step: 0.1 }}
             sx={{ width: 200, ml: 0.5, mt: 2 }}
             value={relativeSamplingValue}
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-              dispatch(DocumentSamplerActions.onRelativeSamplingValueChange(parseFloat(event.target.value)));
-            }}
+            onChange={handleRelativeValueChange}
           />
         )}
       </CardContent>
@@ -82,4 +96,4 @@ function SamplingStrategySelector({ cardProps }: SamplingStrategySelectorProps) 
   );
 }
 
-export default SamplingStrategySelector;
+export default memo(SamplingStrategySelector);

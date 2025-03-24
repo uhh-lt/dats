@@ -1,10 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import RequireAuth from "../auth/RequireAuth.tsx";
-import NoBarLayout from "../layouts/NoBarLayout.tsx";
-import OneBarLayout from "../layouts/OneBarLayout.tsx";
-import TwoBarLayout from "../layouts/TwoBarLayout.tsx";
-import About from "../views/About.tsx";
-import Imprint from "../views/Imprint.tsx";
+import NoBarLayout from "../layouts/PageLayouts/NoBarLayout.tsx";
+import SideBarLayout from "../layouts/PageLayouts/SideBarLayout.tsx";
 import Login from "../views/Login.tsx";
 import NotFound from "../views/NotFound.tsx";
 import Analysis from "../views/analysis/Analysis.tsx";
@@ -14,15 +11,10 @@ import CotaDashboard from "../views/analysis/ConceptsOverTime/CotaDashboard.tsx"
 import CotaView from "../views/analysis/ConceptsOverTime/CotaView.tsx";
 import SentAnnotationAnalysis from "../views/analysis/SentAnnotationAnalysis/SentAnnotationAnalysis.tsx";
 import SpanAnnotationAnalysis from "../views/analysis/SpanAnnotationAnalysis/SpanAnnotationAnalysis.tsx";
-import TableDashboard from "../views/analysis/Table/TableDashboard.tsx";
-import TableView from "../views/analysis/Table/TableView.tsx";
 import TimelineAnalysis from "../views/analysis/TimelineAnalysis/TimelineAnalysis.tsx";
 import TimelineAnalysisDashboard from "../views/analysis/TimelineAnalysis/TimelineAnalysisDashboard.tsx";
 import WordFrequency from "../views/analysis/WordFrequency/WordFrequency.tsx";
 import Annotation from "../views/annotation/Annotation.tsx";
-import Feedback from "../views/feedback/Feedback.tsx";
-import FeedbackAll from "../views/feedback/FeedbackAll.tsx";
-import FeedbackUser from "../views/feedback/FeedbackUser.tsx";
 import Logbook from "../views/logbook/Logbook.tsx";
 import Profile from "../views/profile/Profile.tsx";
 import Projects from "../views/projects/Projects.tsx";
@@ -32,6 +24,7 @@ import ImageSimilaritySearch from "../views/search/ImageSearch/ImageSimilaritySe
 import SentenceSimilaritySearch from "../views/search/SentenceSearch/SentenceSimilaritySearch.tsx";
 import DocumentSampler from "../views/tools/DocumentSampler/DocumentSampler.tsx";
 import DuplicateFinder from "../views/tools/DuplicateFinder/DuplicateFinder.tsx";
+import MlAutomation from "../views/tools/MlAutomation/MlAutomation.tsx";
 import Whiteboard from "../views/whiteboard/Whiteboard.tsx";
 import WhiteboardDashboard from "../views/whiteboard/WhiteboardDashboard.tsx";
 
@@ -56,7 +49,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/",
-    element: <OneBarLayout />,
+    element: <SideBarLayout />,
     children: [
       {
         path: "/projects",
@@ -67,34 +60,12 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/about",
-        element: <About />,
-      },
-      {
-        path: "/imprint",
-        element: <Imprint />,
-      },
-      {
         path: "/me",
         element: (
           <RequireAuth>
             <Profile />
           </RequireAuth>
         ),
-      },
-      {
-        path: "/feedback",
-        element: <Feedback />,
-        children: [
-          {
-            path: "/feedback",
-            element: <FeedbackAll />,
-          },
-          {
-            path: "/feedback/:userId",
-            element: <FeedbackUser />,
-          },
-        ],
       },
       { path: "*", element: <NotFound /> },
     ],
@@ -103,7 +74,7 @@ const router = createBrowserRouter([
     path: "/project/:projectId",
     element: (
       <RequireAuth>
-        <TwoBarLayout />
+        <SideBarLayout />
       </RequireAuth>
     ),
     children: [
@@ -132,7 +103,7 @@ const router = createBrowserRouter([
         element: <Analysis />,
       },
       {
-        path: "/project/:projectId/analysis/frequency",
+        path: "/project/:projectId/analysis/code-frequency",
         element: <CodeFrequencyAnalysis />,
       },
       {
@@ -154,14 +125,6 @@ const router = createBrowserRouter([
       {
         path: "/project/:projectId/analysis/word-frequency",
         element: <WordFrequency />,
-      },
-      {
-        path: "/project/:projectId/analysis/table",
-        element: <TableDashboard />,
-      },
-      {
-        path: "/project/:projectId/analysis/table/:tableId",
-        element: <TableView />,
       },
       {
         path: "/project/:projectId/analysis/concepts-over-time-analysis",
@@ -198,6 +161,10 @@ const router = createBrowserRouter([
       {
         path: "/project/:projectId/tools/document-sampler",
         element: <DocumentSampler />,
+      },
+      {
+        path: "/project/:projectId/tools/ml-automation",
+        element: <MlAutomation />,
       },
     ],
   },

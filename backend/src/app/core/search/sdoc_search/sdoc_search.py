@@ -69,8 +69,7 @@ def search(
             )
         return PaginatedElasticSearchDocumentHits(
             hits=[
-                ElasticSearchDocumentHit(document_id=sdoc_id)
-                for sdoc_id in filtered_sdoc_ids
+                ElasticSearchDocumentHit(id=sdoc_id) for sdoc_id in filtered_sdoc_ids
             ],
             total_results=total_results,
         )
@@ -111,21 +110,19 @@ def filter_sdoc_ids(
 ) -> Tuple[List[int], int]:
     builder = SearchBuilder(db, filter, sorts)
     # build the initial subquery that just queries all sdoc_ids of the project
-    subquery = builder.build_subquery(
-        subquery=(
-            db.query(
-                SourceDocumentORM.id,
-            )
-            .group_by(SourceDocumentORM.id)
-            .filter(SourceDocumentORM.project_id == project_id)
+    subquery = builder.init_subquery(
+        db.query(
+            SourceDocumentORM.id,
         )
-    )
+        .group_by(SourceDocumentORM.id)
+        .filter(SourceDocumentORM.project_id == project_id)
+    ).build_subquery()
     # build the query, specifying the result columns and joining the subquery
-    builder.build_query(
-        query=db.query(
+    builder.init_query(
+        db.query(
             SourceDocumentORM.id,
         ).join(subquery, SourceDocumentORM.id == subquery.c.id)
-    )
+    ).build_query()
     result_rows, total_results = builder.execute_query(
         page_number=page_number,
         page_size=page_size,

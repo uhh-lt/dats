@@ -1,8 +1,10 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import queryClient from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
+import { ApproachType } from "./openapi/models/ApproachType.ts";
 import { BackgroundJobStatus } from "./openapi/models/BackgroundJobStatus.ts";
 import { LLMJobRead } from "./openapi/models/LLMJobRead.ts";
+import { TaskType } from "./openapi/models/TaskType.ts";
 import { LlmService } from "./openapi/services/LlmService.ts";
 
 const useStartLLMJob = () =>
@@ -59,17 +61,52 @@ const useGetAllLLMJobs = (projectId: number) => {
 const useCreatePromptTemplates = () =>
   useMutation({
     mutationFn: LlmService.createPromptTemplates,
+    meta: {
+      successMessage: () => `Created prompt templates`,
+    },
   });
 
 const useCreateTrainingParameters = () =>
   useMutation({
     mutationFn: LlmService.createTrainingParameters,
+    meta: {
+      successMessage: () => `Created training parameters`,
+    },
   });
 
 const useDetermineApproach = () =>
   useMutation({
     mutationFn: LlmService.determineApproach,
+    meta: {
+      successMessage: (data: ApproachType) => `Determined approach type: ${data}`,
+    },
   });
+
+const useCountExistingAssistantAnnotations = ({
+  taskType,
+  approachType,
+  sdocIds,
+  codeIds,
+}: {
+  taskType?: TaskType;
+  approachType: ApproachType;
+  sdocIds: number[];
+  codeIds: number[];
+}) => {
+  return useQuery<Record<string, number>, Error>({
+    queryKey: ["Existing-Annotation-Count", taskType, approachType, sdocIds, codeIds],
+    queryFn: () =>
+      LlmService.countExistingAssistantAnnotations({
+        taskType: taskType!,
+        approachType,
+        requestBody: {
+          sdoc_ids: sdocIds,
+          code_ids: codeIds,
+        },
+      }),
+    enabled: taskType === TaskType.SENTENCE_ANNOTATION,
+  });
+};
 
 const LLMHooks = {
   usePollLLMJob,
@@ -78,6 +115,7 @@ const LLMHooks = {
   useDetermineApproach,
   useCreatePromptTemplates,
   useCreateTrainingParameters,
+  useCountExistingAssistantAnnotations,
 };
 
 export default LLMHooks;

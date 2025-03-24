@@ -1,19 +1,29 @@
 import InfoIcon from "@mui/icons-material/Info";
-import { CircularProgress, MenuItem, Stack, TextField } from "@mui/material";
-import Card from "@mui/material/Card";
+import {
+  Checkbox,
+  CircularProgress,
+  FormControl,
+  FormControlLabel,
+  FormGroup,
+  FormLabel,
+  MenuItem,
+  Stack,
+  TextField,
+} from "@mui/material";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
 import React from "react";
 import { useParams } from "react-router-dom";
-import ProjectHooks from "../../../api/ProjectHooks.ts";
+import MetadataHooks from "../../../api/MetadataHooks.ts";
 import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
 import { DateGroupBy } from "../../../api/openapi/models/DateGroupBy.ts";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
 import { MetaType } from "../../../api/openapi/models/MetaType.ts";
 import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
-import { TimelineAnalysisResultType } from "../../../api/openapi/models/TimelineAnalysisResultType.ts";
+import { TimelineAnalysisType } from "../../../api/openapi/models/TimelineAnalysisType.ts";
+import CardContainer from "../../../components/MUI/CardContainer.tsx";
 import SdocsWithDateCounter from "../../../components/Metadata/SdocsWithDateCounter/SdocsWithDateCounter.tsx";
 
 interface TimelineAnalysisSettingsProps {
@@ -24,13 +34,13 @@ function TimelineAnalysisSettings({ timelineAnalysis }: TimelineAnalysisSettings
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // global server state (react-query)
-  const projectMetadata = ProjectHooks.useGetMetadata(projectId);
+  const projectMetadata = MetadataHooks.useGetProjectMetadataList();
   const filteredProjectMetadata = projectMetadata.data?.filter(
     (metadata) => metadata.doctype === DocType.TEXT && metadata.metatype === MetaType.DATE,
   );
 
   return (
-    <Card className="myFlexContainer h100">
+    <CardContainer className="myFlexContainer h100">
       <CardHeader
         className="myFlexFitContentContainer"
         action={
@@ -54,7 +64,7 @@ function TimelineAnalysisSettings({ timelineAnalysis }: TimelineAnalysisSettings
           <div>Failed to load metadata</div>
         )}
       </CardContent>
-    </Card>
+    </CardContainer>
   );
 }
 
@@ -77,23 +87,27 @@ function TimelineAnalysisSettingsContent({
     });
   };
   const handleChangeMetadataId = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(event.target.value);
     updateTimelineAnalysisMutation.mutate({
       timelineAnalysisId: timelineAnalysis.id,
       requestBody: {
         settings: {
           ...timelineAnalysis.settings,
-          date_metadata_id: parseInt(event.target.value),
+          date_metadata_id: value === -1 ? null : value,
         },
       },
     });
   };
-  const handleChangeResultType = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeCountSentences = (_: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
+    if (timelineAnalysis.timeline_analysis_type !== TimelineAnalysisType.SENTENCE_ANNOTATION) return;
     updateTimelineAnalysisMutation.mutate({
       timelineAnalysisId: timelineAnalysis.id,
       requestBody: {
         settings: {
           ...timelineAnalysis.settings,
-          result_type: event.target.value as TimelineAnalysisResultType,
+          ta_specific_settings: {
+            count_sentences: checked,
+          },
         },
       },
     });
@@ -149,18 +163,22 @@ function TimelineAnalysisSettingsContent({
         ))}
       </TextField>
 
-      <TextField
-        select
-        fullWidth
-        label={"Result type"}
-        variant="outlined"
-        value={timelineAnalysis.settings.result_type}
-        onChange={handleChangeResultType}
-        helperText="Specify the type of the results."
-        disabled
-      >
-        <MenuItem value={"document"}>Document</MenuItem>
-      </TextField>
+      {timelineAnalysis.timeline_analysis_type === TimelineAnalysisType.SENTENCE_ANNOTATION && (
+        <FormControl component="fieldset" variant="standard">
+          <FormLabel component="legend">Sentence Annotation Settings</FormLabel>
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={timelineAnalysis.settings.ta_specific_settings?.count_sentences}
+                  onChange={handleChangeCountSentences}
+                />
+              }
+              label="Count sentences?"
+            />
+          </FormGroup>
+        </FormControl>
+      )}
     </Stack>
   );
 }

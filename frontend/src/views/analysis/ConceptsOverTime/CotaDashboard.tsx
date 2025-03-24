@@ -3,11 +3,10 @@ import { useMemo } from "react";
 import { useParams } from "react-router";
 import CotaHooks from "../../../api/CotaHooks.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
-import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import AnalysisDashboard from "../AnalysisDashboard/AnalysisDashboard.tsx";
 import {
-  AnaylsisDashboardRow,
+  AnalysisDashboardRow,
   HandleCreateAnalysis,
   useAnalysisDashboardTable,
 } from "../AnalysisDashboard/useAnalysisDashboardTable.tsx";
@@ -23,8 +22,8 @@ function CotaDashboard() {
     isLoading: isLoadingAnalysis,
     isFetching: isFetchingAnalysis,
     isError: isLoadingAnalysisError,
-  } = CotaHooks.useGetUserCotas(projectId);
-  const userAnalysisTableData: AnaylsisDashboardRow[] = useMemo(
+  } = CotaHooks.useGetUserCotaList();
+  const userAnalysisTableData: AnalysisDashboardRow[] = useMemo(
     () =>
       userAnalysis?.map((analysis) => ({
         id: analysis.id,
@@ -45,9 +44,6 @@ function CotaDashboard() {
     variables: duplicatingVariables,
   } = CotaHooks.useDuplicateCota();
 
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
-
   const dispatch = useAppDispatch();
 
   // CRUD actions
@@ -62,55 +58,31 @@ function CotaDashboard() {
           },
         },
         {
-          onSuccess(data) {
-            openSnackbar({
-              text: `Created new timeline analysis '${data.name}'`,
-              severity: "success",
-            });
+          onSuccess() {
             table.setCreatingRow(null); //exit creating mode
           },
         },
       );
     };
 
-  const handleDuplicateAnalysis = (row: MRT_Row<AnaylsisDashboardRow>) => {
-    duplicateCota(
-      {
-        cotaId: row.original.id,
-      },
-      {
-        onSuccess(data) {
-          openSnackbar({
-            text: `Duplicated analysis '${data.name}'`,
-            severity: "success",
-          });
-        },
-      },
-    );
+  const handleDuplicateAnalysis = (row: MRT_Row<AnalysisDashboardRow>) => {
+    duplicateCota({
+      cotaId: row.original.id,
+    });
   };
 
-  const handleDeleteAnalysis = (row: MRT_Row<AnaylsisDashboardRow>) => {
+  const handleDeleteAnalysis = (row: MRT_Row<AnalysisDashboardRow>) => {
     ConfirmationAPI.openConfirmationDialog({
       text: `Do you really want to remove the analysis ${row.original.id}? This action cannot be undone!`,
       onAccept: () => {
-        deleteCota(
-          {
-            cotaId: row.original.id,
-          },
-          {
-            onSuccess(data) {
-              openSnackbar({
-                text: `Deleted analysis '${data.name}'`,
-                severity: "success",
-              });
-            },
-          },
-        );
+        deleteCota({
+          cotaId: row.original.id,
+        });
       },
     });
   };
 
-  const handleEditAnalysis: MRT_TableOptions<AnaylsisDashboardRow>["onEditingRowSave"] = ({ values, table, row }) => {
+  const handleEditAnalysis: MRT_TableOptions<AnalysisDashboardRow>["onEditingRowSave"] = ({ values, table, row }) => {
     updateCota(
       {
         cotaId: row.original.id,
@@ -119,11 +91,7 @@ function CotaDashboard() {
         },
       },
       {
-        onSuccess(data) {
-          openSnackbar({
-            text: `Updated analysis '${data.name}'`,
-            severity: "success",
-          });
+        onSuccess() {
           table.setEditingRow(null); //exit editing mode
         },
       },
@@ -143,7 +111,7 @@ function CotaDashboard() {
     isDeletingAnalysis: isDeletingCota,
     deletingAnalysisId: deletingVariables?.cotaId,
     duplicatingAnalysisId: duplicatingVariables?.cotaId,
-    onOpenAnalysis: (analysisId) => dispatch(CotaActions.onOpenCota({ analysisId })),
+    onOpenAnalysis: (analysis) => dispatch(CotaActions.onOpenCota({ analysisId: analysis.id })),
     handleCreateAnalysis,
     handleEditAnalysis,
     handleDeleteAnalysis,
