@@ -1,11 +1,10 @@
-import json
-import os
-
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.project import crud_project
+from app.core.data.crud.topic_interpretation import crud_topic_interpretation
 from app.core.data.dto.topic_info import TopicInfoRead
+from app.core.data.dto.topic_interpretation import TopicInterpretationCreate
 from app.core.data.llm.ollama_service import OllamaService
 
 ollama_service = OllamaService()
@@ -63,7 +62,6 @@ def document_info(project_id: int, db: Session, topic_id: int) -> list[dict]:
 
 
 def get_prompt(index: int, top_words_data: list):
-    print(top_words_data)
     top_words_string = ""
     for point in top_words_data[index]:
         top_words_string += top_words_data[index][point]["word"] + " "
@@ -112,19 +110,18 @@ def top_words_ollama(topic_id: int, db: Session, project_id: int) -> dict:
         "top_words": [top_words_data[topic_id]],
     }
 
-    # make persistent in db
-    file_name = "app/core/analysis/ollama_responses.json"
-    if os.path.exists(file_name):
-        print(f"The file '{file_name}' exists. Loading existing data.")
-        with open(file_name, "r") as file:
-            data = json.load(file)
-    else:
-        print(f"The file '{file_name}' does not exist. Starting with an empty list.")
-        data = []
+    project = crud_project.read(db=db, id=project_id)
+    # umwandeln von orm zu dict/list json object
+    topic_infos = [TopicInfoRead.model_validate(x) for x in project.topic_infos]
 
-    data.append(ollama_responses)
-
-    with open(file_name, "w") as file:
-        json.dump(data, file, indent=4)
+    crud_topic_interpretation.create(
+        db=db,
+        create_dto=TopicInterpretationCreate(
+            topic_info_id=topic_infos[topic_id].id,
+            prompt_name=ollama_responses["prompt"],
+            topic_name=ollama_responses["topic_name"],
+            reasoning=ollama_responses["reasoning"],
+        ),
+    )
 
     return ollama_responses
