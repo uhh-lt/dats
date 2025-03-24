@@ -1,6 +1,6 @@
 import { Box, BoxProps } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useMemo, useRef, useState } from "react";
+import { memo, useMemo, useRef, useState } from "react";
 import CodeHooks from "../../../../api/CodeHooks.ts";
 import { CodeRead } from "../../../../api/openapi/models/CodeRead.ts";
 import { SentenceAnnotationRead } from "../../../../api/openapi/models/SentenceAnnotationRead.ts";
@@ -385,4 +385,4 @@ function SentenceAnnotationComparison({
   );
 }
 
-export default SentenceAnnotationComparison;
+export default memo(SentenceAnnotationComparison);

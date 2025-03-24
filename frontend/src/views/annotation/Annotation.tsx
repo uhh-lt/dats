@@ -1,6 +1,6 @@
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, Card, CardContent, Container, Tab, Tabs } from "@mui/material";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
@@ -8,7 +8,6 @@ import { SourceDocumentDataRead } from "../../api/openapi/models/SourceDocumentD
 import CodeExplorer from "../../components/Code/CodeExplorer/CodeExplorer.tsx";
 import EditableTypography from "../../components/EditableTypography.tsx";
 import DocumentInformation from "../../components/SourceDocument/DocumentInformation/DocumentInformation.tsx";
-import SidebarContentLayout from "../../layouts/ContentLayouts/SidebarContentLayout.tsx";
 import SidebarContentSidebarLayout from "../../layouts/ContentLayouts/SidebarContentSidebarLayout.tsx";
 import { useAppSelector } from "../../plugins/ReduxHooks.ts";
 import BBoxAnnotationExplorer from "./AnnotationExploer/BBoxAnnotationExplorer.tsx";
@@ -202,76 +201,62 @@ function Annotation() {
   );
 
   // for virtualization in annotator components
+  const [isBoxReady, setIsBoxReady] = useState(false);
   const boxRef = useRef<HTMLDivElement | null>(null);
-
-  // annotator: the main content
-  const annotator = (
-    <Box className="myFlexFillAllContainer" ref={boxRef}>
-      <Container sx={{ py: 2 }} maxWidth="xl">
-        <Card raised>
-          <CardContent>
-            {sdocId ? (
-              <>
-                {sdoc.isSuccess && sdocData.isSuccess ? (
-                  <>
-                    <EditableTypography
-                      value={sdoc.data.name || sdoc.data.filename}
-                      onChange={handleUpdateName}
-                      variant="h4"
-                      whiteColor={false}
-                      stackProps={{
-                        width: "100%",
-                        flexGrow: 1,
-                        mb: 2,
-                      }}
-                    />
-                    {isCompareMode
-                      ? comparatorComponent(sdocData.data, boxRef)[sdoc.data.doctype][annotationMode]
-                      : annotatorComponent(sdocData.data, boxRef)[sdoc.data.doctype][annotationMode]}
-                  </>
-                ) : sdoc.isError ? (
-                  <div>Error: {sdoc.error.message}</div>
-                ) : (
-                  <div>Loading...</div>
-                )}
-              </>
-            ) : (
-              <div>Please double-click a document in Search to view it here :)</div>
-            )}
-          </CardContent>
-        </Card>
-      </Container>
-    </Box>
-  );
+  useEffect(() => {
+    if (boxRef.current) {
+      setIsBoxReady(true);
+    }
+  }, [boxRef]);
 
   // rendering
-
-  if (isCompareMode) {
-    return (
-      <SidebarContentLayout
-        leftSidebar={explorer}
-        content={
-          <>
-            <AnnotationToolbar sdoc={sdoc.data} />
-            {annotator}
-          </>
-        }
-      />
-    );
-  } else {
-    return (
-      <SidebarContentSidebarLayout
-        leftSidebar={explorer}
-        content={
-          <>
-            <AnnotationToolbar sdoc={sdoc.data} />
-            {annotator}
-          </>
-        }
-        rightSidebar={<DocumentInformation sdocId={sdocId} />}
-      />
-    );
-  }
+  return (
+    <SidebarContentSidebarLayout
+      leftSidebar={explorer}
+      content={
+        <Box className="h100 myFlexContainer">
+          <AnnotationToolbar sdoc={sdoc.data} />
+          <Box className="myFlexFillAllContainer" ref={boxRef}>
+            <Container sx={{ py: 2 }} maxWidth="xl">
+              <Card raised>
+                <CardContent>
+                  {sdocId ? (
+                    <>
+                      {sdoc.isSuccess && sdocData.isSuccess && isBoxReady ? (
+                        <>
+                          <EditableTypography
+                            value={sdoc.data.name || sdoc.data.filename}
+                            onChange={handleUpdateName}
+                            variant="h4"
+                            whiteColor={false}
+                            stackProps={{
+                              width: "100%",
+                              flexGrow: 1,
+                              mb: 2,
+                            }}
+                          />
+                          {isCompareMode
+                            ? comparatorComponent(sdocData.data, boxRef)[sdoc.data.doctype][annotationMode]
+                            : annotatorComponent(sdocData.data, boxRef)[sdoc.data.doctype][annotationMode]}
+                        </>
+                      ) : sdoc.isError ? (
+                        <div>Error: {sdoc.error.message}</div>
+                      ) : (
+                        <div>Loading...</div>
+                      )}
+                    </>
+                  ) : (
+                    <div>Please double-click a document in Search to view it here :)</div>
+                  )}
+                </CardContent>
+              </Card>
+            </Container>
+          </Box>
+        </Box>
+      }
+      rightSidebar={<DocumentInformation sdocId={sdocId} />}
+    />
+  );
 }
 
 export default Annotation;
