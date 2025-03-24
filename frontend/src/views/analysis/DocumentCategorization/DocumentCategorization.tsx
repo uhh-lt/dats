@@ -37,6 +37,7 @@ import MLHooks from "../../../api/MLHooks.ts";
 import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobStatus.ts";
 import { MLJobRead } from "../../../api/openapi/models/MLJobRead.ts";
 import { MLJobType } from "../../../api/openapi/models/MLJobType.ts";
+import NoSidebarLayout from "../../../layouts/NoSidebarLayout.tsx";
 import { TextInputId } from "./DocCatEnums.tsx";
 import TopDocumentsBarChart from "./TopDocumentsBarChart.tsx";
 import TopWordsBarChart from "./TopWordsBarChart.tsx";
@@ -146,7 +147,7 @@ function DocumentCategorization() {
   const boxHeight = window.innerHeight * 0.6;
 
   return (
-    <div>
+    <NoSidebarLayout>
       <Card>
         <CardContent>
           <Typography gutterBottom sx={{ color: "text.secondary", fontSize: 14 }}>
@@ -155,7 +156,6 @@ function DocumentCategorization() {
         </CardContent>
         <Box
           sx={{
-            width: "80%",
             margin: "auto",
             padding: 2,
           }}
@@ -316,7 +316,7 @@ function DocumentCategorization() {
           </Box>
         </Box>
       </Card>
-    </div>
+    </NoSidebarLayout>
   );
 }
 export default DocumentCategorization;
