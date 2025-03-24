@@ -1,4 +1,5 @@
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
+from loguru import logger
 from pydantic import EmailStr
 
 from app.core.data.dto.user import UserRead
@@ -8,19 +9,19 @@ from config import conf
 
 class MailService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.fast_mail = FastMail(
-            ConnectionConfig(
-                MAIL_FROM=conf.mail.mail,
-                MAIL_USERNAME=conf.mail.user,
-                MAIL_PASSWORD=conf.mail.password,
-                MAIL_SERVER=conf.mail.server,
-                MAIL_PORT=conf.mail.port,
-                MAIL_STARTTLS=conf.mail.starttls == "True",
-                MAIL_SSL_TLS=conf.mail.ssl_tls == "True",
-                USE_CREDENTIALS=conf.mail.use_credentials == "True",
-                VALIDATE_CERTS=conf.mail.validate_certs == "True",
-            )
+        config = ConnectionConfig(
+            MAIL_FROM=conf.mail.mail,
+            MAIL_USERNAME=conf.mail.user,
+            MAIL_PASSWORD=conf.mail.password,
+            MAIL_SERVER=conf.mail.server,
+            MAIL_PORT=conf.mail.port,
+            MAIL_STARTTLS=conf.mail.starttls == "True",
+            MAIL_SSL_TLS=conf.mail.ssl_tls == "True",
+            USE_CREDENTIALS=conf.mail.use_credentials == "True",
+            VALIDATE_CERTS=conf.mail.validate_certs == "True",
         )
+        logger.info(f"MailService config: {config}")
+        cls.fast_mail = FastMail(config)
         return super(MailService, cls).__new__(cls)
 
     async def send_mail(self, email: EmailStr, subject: str, body: str):
@@ -34,6 +35,7 @@ class MailService(metaclass=SingletonMeta):
             await self.fast_mail.send_message(message)
 
     async def send_welcome_mail(self, user: UserRead):
+        logger.info(f"Sending welcome mail to {user.email}")
         subject = "Welcome to Discourse Analysis Tool Suite"
         body = f"""
             <p>Hi {user.first_name} {user.last_name},</p>
