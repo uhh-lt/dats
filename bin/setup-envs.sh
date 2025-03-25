@@ -30,6 +30,7 @@ if [ -z "$PROJECT_NAME" ] || [ -z "$PORT_PREFIX" ]; then
 fi
 
 JWT_SECRET=$(pwgen 32 1)
+SESSION_SECRET=$(pwgen 32 1)
 REPO_ROOT="$(pwd)/docker/backend_repo"
 
 cp docker/.env.example docker/.env
@@ -41,12 +42,14 @@ cp frontend/.env.production.example frontend/.env.production
 sed -i "s/COMPOSE_PROJECT_NAME=demo/COMPOSE_PROJECT_NAME=${PROJECT_NAME}/" docker/.env
 sed -i "s/131/${PORT_PREFIX}/g" docker/.env
 sed -i "s/JWT_SECRET=/JWT_SECRET=${JWT_SECRET}/" docker/.env
+sed -i "s/SESSION_SECRET=/SESSION_SECRET=${SESSION_SECRET}/" docker/.env
 sed -i "s/UID=121/UID=$(id -u)/" docker/.env
 sed -i "s/GID=126/GID=$(id -g)/" docker/.env
 
 # setup backend .env file
 sed -i "s/131/${PORT_PREFIX}/g" backend/.env
 sed -i "s/JWT_SECRET=/JWT_SECRET=${JWT_SECRET}/" backend/.env
+sed -i "s/SESSION_SECRET=/SESSION_SECRET=${SESSION_SECRET}/" backend/.env
 sed -i "s|REPO_ROOT=/insert_path_to_dats_repo/docker/backend_repo|REPO_ROOT=${REPO_ROOT}|" backend/.env
 
 # setup frontend .env file
