@@ -8,7 +8,6 @@ export default defineConfig(({ mode }) => {
   const sharedConfig = {
     plugins: [react()],
     server: {
-      port: parseInt(env.PORT) || 3000,
       strictPort: true,
     },
   };
@@ -19,6 +18,7 @@ export default defineConfig(({ mode }) => {
       plugins: [...sharedConfig.plugins, basicSsl()],
       server: {
         ...sharedConfig.server,
+        port: parseInt(env.PORT) || 3000,
         proxy: {
           "/api": {
             target: env.VITE_APP_SERVER,
@@ -37,6 +37,7 @@ export default defineConfig(({ mode }) => {
   } else {
     return {
       ...sharedConfig,
+      port: 3000,
     };
   }
 });

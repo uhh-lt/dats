@@ -35,8 +35,7 @@ REPO_ROOT="$(pwd)/docker/backend_repo"
 
 cp docker/.env.example docker/.env
 cp backend/.env.example backend/.env
-cp frontend/.env.development.example frontend/.env.development
-cp frontend/.env.production.example frontend/.env.production
+cp frontend/.env.example frontend/.env
 
 # setup docker .env file
 sed -i "s/COMPOSE_PROJECT_NAME=demo/COMPOSE_PROJECT_NAME=${PROJECT_NAME}/" docker/.env
@@ -53,4 +52,4 @@ sed -i "s/SESSION_SECRET=/SESSION_SECRET=${SESSION_SECRET}/" backend/.env
 sed -i "s|REPO_ROOT=/insert_path_to_dats_repo/docker/backend_repo|REPO_ROOT=${REPO_ROOT}|" backend/.env
 
 # setup frontend .env file
-sed -i "s/131/${PORT_PREFIX}/g" frontend/.env.development
+sed -i "s/131/${PORT_PREFIX}/g" frontend/.env
