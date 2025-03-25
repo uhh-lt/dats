@@ -7435,10 +7435,15 @@
       "InstanceInfo": {
         "properties": {
           "is_oidc_enabled": { "type": "boolean", "title": "Is Oidc Enabled", "description": "Is OIDC enabled" },
-          "oidc_provider_name": { "type": "string", "title": "Oidc Provider Name", "description": "OIDC provider name" }
+          "oidc_provider_name": {
+            "type": "string",
+            "title": "Oidc Provider Name",
+            "description": "OIDC provider name"
+          },
+          "is_stable": { "type": "boolean", "title": "Is Stable", "description": "Is stable" }
         },
         "type": "object",
-        "required": ["is_oidc_enabled", "oidc_provider_name"],
+        "required": ["is_oidc_enabled", "oidc_provider_name", "is_stable"],
         "title": "InstanceInfo"
       },
       "KeywordStat": {

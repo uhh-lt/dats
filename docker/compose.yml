@@ -217,6 +217,7 @@ services:
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID}
       OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET}
       OIDC_SERVER_METADATA_URL: ${OIDC_SERVER_METADATA_URL}
+      IS_STABLE: ${IS_STABLE:-false}
     volumes:
       - ./backend_repo:/tmp/dats
     depends_on:
