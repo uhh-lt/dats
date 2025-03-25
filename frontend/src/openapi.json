@@ -3757,8 +3757,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": { "type": "object" },
+                  "type": "object",
+                  "additionalProperties": { "$ref": "#/components/schemas/TopWordsTopic" },
                   "title": "Response Analysis-Return Top Words Data"
                 }
               }
@@ -9944,6 +9944,19 @@
         "type": "object",
         "title": "TimelineAnalysisUpdate"
       },
+      "TopWordsTopic": {
+        "properties": {
+          "topic_words": {
+            "items": { "$ref": "#/components/schemas/TopicWordInfo" },
+            "type": "array",
+            "title": "Topic Words"
+          },
+          "topic_num": { "type": "integer", "title": "Topic Num" }
+        },
+        "type": "object",
+        "required": ["topic_words", "topic_num"],
+        "title": "TopWordsTopic"
+      },
       "TopicModelingParams": {
         "properties": {
           "ml_job_type": { "type": "string", "const": "TOPIC_MODELING", "title": "Ml Job Type" },
@@ -9975,6 +9988,15 @@
         "type": "object",
         "required": ["ml_job_type"],
         "title": "TopicModelingParams"
+      },
+      "TopicWordInfo": {
+        "properties": {
+          "word": { "type": "string", "title": "Word", "description": "Name of the Concept" },
+          "score": { "type": "number", "title": "Score", "description": "Description of the Concept" }
+        },
+        "type": "object",
+        "required": ["word", "score"],
+        "title": "TopicWordInfo"
       },
       "TrainerJobParameters": {
         "properties": {

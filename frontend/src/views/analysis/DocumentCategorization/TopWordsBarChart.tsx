@@ -1,13 +1,15 @@
 import { UseQueryResult } from "@tanstack/react-query";
 import * as d3 from "d3";
 import { useEffect, useRef, useState } from "react";
+import { TopWordsTopic } from "../../../api/openapi/models/TopWordsTopic.ts";
 
-const TopWordsBarChart: React.FC<{ topicNum: number; dataHook: UseQueryResult<Record<string, unknown>[], Error> }> = ({
-  topicNum,
-  dataHook,
-}) => {
-  dataHook.refetch();
-  const data = dataHook.data as Record<string, { word: string; score: number }>[];
+type TopWordsResponseType = Record<string, TopWordsTopic>;
+
+const TopWordsBarChart: React.FC<{
+  topicNum: number;
+  dataHook: UseQueryResult<TopWordsResponseType, Error>;
+}> = ({ topicNum: topicNum, dataHook }) => {
+  const data = dataHook.data as TopWordsResponseType;
   const [isResponseEmpty, setIsResponseEmpty] = useState(true);
 
   useEffect(() => {
@@ -44,27 +46,27 @@ const TopWordsBarChart: React.FC<{ topicNum: number; dataHook: UseQueryResult<Re
     .padding(0.1);
 
   if (!isResponseEmpty) {
-    for (const topic of data) {
-      Object.values(topic).forEach((value) => {
+    for (const entry of Object.values(data)) {
+      entry.topic_words.forEach((value) => {
         if (value.score > maxScore) {
           maxScore = value.score;
         }
       });
     }
 
-    for (const word in data[topicNum]) {
-      if (data[topicNum][word].score > currentMaxScore) {
-        currentMaxScore = data[topicNum][word].score;
+    data[topicNum].topic_words.forEach((word) => {
+      if (word.score > currentMaxScore) {
+        currentMaxScore = word.score;
       }
-    }
+    });
 
-    amountTopics = Object.keys(data[0]).length;
+    amountTopics = Object.keys(data).length;
 
     height = Math.ceil((amountTopics + 0.1) * barHeight) + marginTop + marginBottom;
 
     y = d3
       .scaleBand()
-      .domain(d3.sort(Object.values(data[topicNum]), (d) => -d.score).map((d) => d.word))
+      .domain(d3.sort(Object.values(data[topicNum].topic_words), (d) => -d.score).map((d) => d.word))
       .rangeRound([marginTop, height - marginBottom])
       .padding(0.1);
   }
@@ -103,7 +105,7 @@ const TopWordsBarChart: React.FC<{ topicNum: number; dataHook: UseQueryResult<Re
         .append("g")
         .attr("fill", "steelblue")
         .selectAll()
-        .data(Object.values(data[topicNum]))
+        .data(data[topicNum].topic_words)
         .join("rect")
         .attr("x", x(0))
         .attr("y", (d) => y(d.word) ?? 0)
@@ -116,7 +118,7 @@ const TopWordsBarChart: React.FC<{ topicNum: number; dataHook: UseQueryResult<Re
         .attr("fill", "white")
         .attr("text-anchor", "end")
         .selectAll()
-        .data(Object.values(data[topicNum]))
+        .data(data[topicNum].topic_words)
         .join("text")
         .attr("x", (d) => x(d.score) * 0.995)
         .attr("y", (d) => (y(d.word) ?? 0) + y.bandwidth() / 2)

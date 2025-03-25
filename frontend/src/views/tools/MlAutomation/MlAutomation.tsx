@@ -21,11 +21,18 @@ import { MLJobType } from "../../../api/openapi/models/MLJobType.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import ContentContainerLayout from "../../../layouts/ContentLayouts/ContentContainerLayout.tsx";
 import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
+import { TextInputId } from "../../analysis/DocumentCategorization/DocCatEnums.tsx";
 import MLJobsView from "./MLJobsView.tsx";
 
 function MlAutomation() {
   // global client state (react router)
   const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
+
+  const [currentJobId, setCurrentJobId] = useState<string | undefined>(undefined);
+
+  const [currentNrTopics, setNrTopics] = useState(5);
+  const [currentMinTopicSize, setMinTopicSize] = useState(5);
+  const [currentTopNWords, setTopNWords] = useState(5);
 
   // actions
   const startMlJob = MLHooks.useStartMLJob();
@@ -65,6 +72,86 @@ function MlAutomation() {
         specific_ml_job_parameters: { recompute: false, ml_job_type: MLJobType.DOC_TAG_RECOMMENDATION },
       },
     });
+  };
+
+  const handleTopicModelingStarted = (data: MLJobRead) => {
+    setCurrentJobId(data.id);
+  };
+
+  const handleStartTopicModeling = (recompute: boolean = false) => {
+    startMlJob.mutate(
+      {
+        requestBody: {
+          ml_job_type: MLJobType.TOPIC_MODELING,
+          project_id: projectId,
+          specific_ml_job_parameters: {
+            recompute: recompute,
+            ml_job_type: MLJobType.TOPIC_MODELING,
+            nr_topics: currentNrTopics,
+            min_topic_size: currentMinTopicSize,
+            top_n_words: currentTopNWords,
+          },
+        },
+      },
+      { onSuccess: handleTopicModelingStarted },
+    );
+  };
+
+  const handleTopicModelingStarted = (data: MLJobRead) => {
+    setCurrentJobId(data.id);
+  };
+
+  const handleStartTopicModeling = (recompute: boolean = false) => {
+    startMlJob.mutate(
+      {
+        requestBody: {
+          ml_job_type: MLJobType.TOPIC_MODELING,
+          project_id: projectId,
+          specific_ml_job_parameters: {
+            recompute: recompute,
+            ml_job_type: MLJobType.TOPIC_MODELING,
+            nr_topics: currentNrTopics,
+            min_topic_size: currentMinTopicSize,
+            top_n_words: currentTopNWords,
+          },
+        },
+      },
+      { onSuccess: handleTopicModelingStarted },
+    );
+  };
+
+  const handleTextInput = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, id: string) => {
+    const value = event.target.value;
+
+    if (!isNaN(Number(value)) || value === "") {
+      switch (id) {
+        case TextInputId.NrTopics:
+          return setNrTopics(Number(value));
+        case TextInputId.MinTopicSize:
+          return setMinTopicSize(Number(value));
+        case TextInputId.TopNWords:
+          return setTopNWords(Number(value));
+        default:
+          return console.log("TextFieldId not Found!");
+      }
+    }
+  };
+
+  const handleTextInput = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, id: string) => {
+    const value = event.target.value;
+
+    if (!isNaN(Number(value)) || value === "") {
+      switch (id) {
+        case TextInputId.NrTopics:
+          return setNrTopics(Number(value));
+        case TextInputId.MinTopicSize:
+          return setMinTopicSize(Number(value));
+        case TextInputId.TopNWords:
+          return setTopNWords(Number(value));
+        default:
+          return console.log("TextFieldId not Found!");
+      }
+    }
   };
 
   const handleStartReComputeTagRecommendation = () => {

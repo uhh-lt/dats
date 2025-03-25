@@ -6,8 +6,6 @@ const TopDocumentsBarChart: React.FC<{
   topicNum: number;
   dataHook: UseQueryResult<Record<string, unknown>[], Error>;
 }> = ({ topicNum, dataHook }) => {
-  console.log(topicNum);
-  dataHook.refetch();
   const data = dataHook.data as Record<string, number>[];
   const amountDocuments = data.length;
   const svgRef = useRef<SVGSVGElement | null>(null);

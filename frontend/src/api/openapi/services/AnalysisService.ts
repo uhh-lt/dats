@@ -18,6 +18,7 @@ import type { ColumnInfo_WordFrequencyColumns_ } from "../models/ColumnInfo_Word
 import type { SampledSdocsResults } from "../models/SampledSdocsResults";
 import type { SentenceAnnotationSearchResult } from "../models/SentenceAnnotationSearchResult";
 import type { SpanAnnotationSearchResult } from "../models/SpanAnnotationSearchResult";
+import type { TopWordsTopic } from "../models/TopWordsTopic";
 import type { WordFrequencyResult } from "../models/WordFrequencyResult";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -387,14 +388,14 @@ export class AnalysisService {
   }
   /**
    * Returns the top words for 30 topics. This is still mock-data
-   * @returns any Successful Response
+   * @returns TopWordsTopic Successful Response
    * @throws ApiError
    */
   public static returnTopWordsData({
     projectId,
   }: {
     projectId: number;
-  }): CancelablePromise<Array<Record<string, any>>> {
+  }): CancelablePromise<Record<string, TopWordsTopic>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/analysis/top_words_data",

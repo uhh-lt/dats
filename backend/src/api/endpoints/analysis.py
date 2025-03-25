@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from app.core.analysis.code_frequency_analysis.code_frequency import (
     find_code_frequencies,
@@ -6,6 +6,7 @@ from app.core.analysis.code_frequency_analysis.code_frequency import (
 )
 from app.core.analysis.document_sampler.document_sampler import document_sampler_by_tags
 from app.core.analysis.my_new_analysis_feature import (
+    TopWordsTopic,
     document_info,
     top_words,
     top_words_ollama,
@@ -31,7 +32,6 @@ from app.core.data.dto.analysis import (
     SpanAnnotationSearchResult,
     WordFrequencyResult,
 )
-from app.core.data.dto.topic_info import TopicWordInfo
 from app.core.search.bbox_anno_search.bbox_anno_search import (
     find_bbox_annotations,
     find_bbox_annotations_info,
@@ -343,7 +343,7 @@ def return_topic_distr_data(
 
 @router.post(
     "/top_words_data",
-    response_model=Dict[int, List[TopicWordInfo]],
+    response_model=dict[int, TopWordsTopic],
     summary="Returns the top words for 30 topics. This is still mock-data",
 )
 def return_top_words_data(
@@ -351,7 +351,7 @@ def return_top_words_data(
     project_id: int,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
-) -> Dict[int, List[TopicWordInfo]]:
+) -> dict[int, TopWordsTopic]:
     return top_words(db=db, project_id=project_id)
 
 

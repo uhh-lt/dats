@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import List
 
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -17,28 +17,20 @@ class OllamaTopicResponse(BaseModel):
     reasoning: str
 
 
-def top_words(db: Session, project_id: int) -> Dict[int, List[TopicWordInfo]]:
-    # top_words_data = []
-    ## TODO NOAH add project_id as a parameter to the hook & reset top_words_data / topic_distr_data
-    # project = crud_project.read(db=db, id=project_id)
-    ## umwandeln von orm zu dict/list json object
-    # topic_infos = [TopicInfoRead.model_validate(x) for x in project.topic_infos]
-    #
-    # for topic_info in topic_infos:
-    #    topic_x_data = {}
-    #    # alle wörter durchgehen
-    #    for index, top_word in enumerate(topic_info.topic_words):
-    #        topic_x_data[str(index)] = top_word.model_dump()
-    #    top_words_data.append(topic_x_data)
-    #
-    # return top_words_data
+class TopWordsTopic(BaseModel):
+    topic_words: List[TopicWordInfo]
+    topic_id: int
 
-    # TODO NOAH add project_id as a parameter to the hook & reset top_words_data / topic_distr_data
+
+def top_words(db: Session, project_id: int) -> dict[int, TopWordsTopic]:
     project = crud_project.read(db=db, id=project_id)
     # umwandeln von orm zu dict/list json object
     topic_infos = [TopicInfoRead.model_validate(x) for x in project.topic_infos]
 
-    return {topic_info.id: topic_info.topic_words for topic_info in topic_infos}
+    return {
+        key: TopWordsTopic(topic_words=topic_info.topic_words, topic_id=topic_info.id)
+        for key, topic_info in enumerate(topic_infos)
+    }
 
 
 def topic_distr(db: Session, project_id: int) -> list[dict]:
@@ -70,10 +62,10 @@ def document_info(project_id: int, db: Session, topic_id: int) -> list[dict]:
     return document_info_data
 
 
-def get_prompt(index: int, top_words_data: list):
+def get_prompt(topic_num: int, top_words_data: List[TopicWordInfo]):
     top_words_string = ""
-    for point in top_words_data[index]:
-        top_words_string += top_words_data[index][point]["word"] + " "
+    for point in top_words_data:
+        top_words_string += point.word + " "
 
     user_prompt = (
         "Walter Kempowski (1929-2007) was a contemporary German author, collage artist, and archivist."
@@ -96,7 +88,7 @@ def get_prompt(index: int, top_words_data: list):
     return [system_prompt, user_prompt]
 
 
-def top_words_ollama(topic_id: int, db: Session, project_id: int) -> dict:
+def top_words_ollama(topic_num: int, db: Session, project_id: int) -> dict:
     top_words_data = top_words(db=db, project_id=project_id)
 
     if not top_words_data:
@@ -107,8 +99,8 @@ def top_words_ollama(topic_id: int, db: Session, project_id: int) -> dict:
             "top_words": [],
         }
 
-    response = ollama_service.chat(
-        *get_prompt(topic_id, top_words_data=["test"]),
+    response = ollama_service.llm_chat(
+        *get_prompt(topic_num, top_words_data=top_words_data[topic_num].topic_words),
         response_model=OllamaTopicResponse,
     )
 
@@ -116,17 +108,13 @@ def top_words_ollama(topic_id: int, db: Session, project_id: int) -> dict:
         "prompt": "noah_v1",
         "reasoning": response.reasoning,
         "topic_name": response.topic_name,
-        "top_words": [top_words_data[topic_id]],
+        "top_words": [top_words_data[topic_num].topic_words],
     }
-
-    project = crud_project.read(db=db, id=project_id)
-    # umwandeln von orm zu dict/list json object
-    topic_infos = [TopicInfoRead.model_validate(x) for x in project.topic_infos]
 
     crud_topic_interpretation.create(
         db=db,
         create_dto=TopicInterpretationCreate(
-            topic_info_id=topic_infos[topic_id].id,
+            topic_info_id=top_words_data[topic_num].topic_id,
             prompt_name=ollama_responses["prompt"],
             topic_name=ollama_responses["topic_name"],
             reasoning=ollama_responses["reasoning"],
