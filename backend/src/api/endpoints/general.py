@@ -17,6 +17,7 @@ def info():
     return InstanceInfo(
         is_oidc_enabled=conf.api.auth.oidc.enabled == "True",
         oidc_provider_name=conf.api.auth.oidc.name,
+        is_stable=conf.api.is_stable == "True",
     )
 
 

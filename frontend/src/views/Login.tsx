@@ -178,7 +178,7 @@ function Login() {
           </CardContent>
         </Card>
       )}
-      {import.meta.env.VITE_APP_STABILITY === "UNSTABLE" && (
+      {!instanceInfo.is_stable && (
         <Card sx={{ width: "66%", borderColor: "red", mt: 4 }} variant="outlined">
           <CardContent>
             <Typography component="div" align="justify">

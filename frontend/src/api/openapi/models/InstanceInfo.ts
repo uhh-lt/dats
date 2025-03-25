@@ -11,4 +11,8 @@ export type InstanceInfo = {
    * OIDC provider name
    */
   oidc_provider_name: string;
+  /**
+   * Is stable
+   */
+  is_stable: boolean;
 };
