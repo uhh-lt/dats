@@ -9,6 +9,14 @@ api:
       refresh_ttl: 2592000 # 30 days in seconds
       algo: HS256
       secret: ${oc.env:JWT_SECRET, ""}
+    session:
+      secret: ${oc.env:SESSION_SECRET, ""}
+    oidc:
+      enabled: ${oc.env:OIDC_ENABLED, false}
+      name: ${oc.env:OIDC_PROVIDER_NAME, false}
+      client_id: ${oc.env:OIDC_CLIENT_ID, ""}
+      client_secret: ${oc.env:OIDC_CLIENT_SECRET, ""}
+      server_metadata_url: ${oc.env:OIDC_SERVER_METADATA_URL, "http://authentik-server:9000/.well-known/openid-configuration"}
 
 system_user:
   first_name: SYSTEM

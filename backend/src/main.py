@@ -14,6 +14,7 @@ from fastapi.routing import APIRoute
 from loguru import logger
 from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
+from starlette.middleware.sessions import SessionMiddleware
 from uvicorn.main import run
 
 #####################################################################################################################
@@ -145,6 +146,11 @@ app.add_middleware(
 
 # Middleware to return GZip for results over a certain number of bytes
 app.add_middleware(GZipMiddleware, minimum_size=500)
+
+
+# Middleware required for Oauth2
+# see https://docs.authlib.org/en/latest/client/fastapi.html
+app.add_middleware(SessionMiddleware, secret_key=conf.session.secret)
 
 
 # add custom exception handlers
