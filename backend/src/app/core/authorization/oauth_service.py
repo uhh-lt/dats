@@ -3,15 +3,21 @@ from fastapi import Request
 from loguru import logger
 
 from app.core.data.crud.user import crud_user
-from app.core.data.dto.user import UserCreate
+from app.core.data.dto.user import (
+    UserCreate,
+    UserRead,
+)
 from app.core.data.orm.user import UserORM
 from app.core.db.sql_service import SQLService
+from app.core.mail.mail_service import MailService
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 
 
 class OAuthService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
+        cls.mail_service = MailService()
+
         cls.is_enabled = conf.api.auth.oidc.enabled == "True"
         cls.oauth = OAuth()
 
@@ -70,7 +76,9 @@ class OAuthService(metaclass=SingletonMeta):
                             ),
                         ),
                     )
-
+                    await self.mail_service.send_welcome_mail(
+                        user=UserRead.model_validate(user)
+                    )
                     return user
         except Exception as e:
             logger.error(f"Error processing OIDC authentication: {e}")
