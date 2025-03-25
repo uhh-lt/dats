@@ -10,6 +10,7 @@ from main import app
 def test_authentication_required():
     public_routes: Sequence[Tuple[Set[str], str]] = [
         ({"GET"}, "/"),
+        ({"GET"}, "/info"),
         ({"GET"}, "/heartbeat"),
         ({"POST"}, "/authentication/login"),
         ({"POST"}, "/authentication/logout"),
