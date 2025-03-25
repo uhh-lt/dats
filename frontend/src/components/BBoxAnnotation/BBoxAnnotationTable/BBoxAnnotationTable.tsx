@@ -150,7 +150,7 @@ function BBoxAnnotationTable({
       accessorFn: (row) => row.x,
       Cell: ({ row }) => (
         <ImageCropper
-          imageUrl={encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + row.original.url)}
+          imageUrl={encodeURI("/content/" + row.original.url)}
           x={row.original.x}
           y={row.original.y}
           width={row.original.width}

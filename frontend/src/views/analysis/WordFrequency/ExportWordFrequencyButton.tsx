@@ -40,7 +40,7 @@ export default function ExportWordFrequencyButton({ filter }: ExportWordFrequenc
           });
         },
         onSuccess: (data) => {
-          downloadFile(import.meta.env.VITE_APP_CONTENT + "/" + data);
+          downloadFile("/content/" + data);
         },
       },
     );

@@ -12,7 +12,7 @@ import { AuthContext } from "./AuthContext.ts";
 import { LoginStatus } from "./LoginStatus.ts";
 
 // init once
-OpenAPI.BASE = import.meta.env.VITE_APP_SERVER || "";
+OpenAPI.BASE = "/api";
 OpenAPI.TOKEN = localStorage.getItem("dats-access") || undefined;
 
 interface AuthContextProps {

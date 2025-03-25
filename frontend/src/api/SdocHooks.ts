@@ -60,7 +60,7 @@ const useGetThumbnailURL = (sdocId: number | null | undefined) =>
         thumbnail: true,
       }),
     enabled: !!sdocId,
-    select: (thumbnail_url) => encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + thumbnail_url),
+    select: (thumbnail_url) => encodeURI("/content/" + thumbnail_url),
     staleTime: Infinity,
   });
 

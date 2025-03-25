@@ -17,6 +17,21 @@ export default defineConfig(({ mode }) => {
     return {
       ...sharedConfig,
       plugins: [...sharedConfig.plugins, basicSsl()],
+      server: {
+        ...sharedConfig.server,
+        proxy: {
+          "/api": {
+            target: env.VITE_APP_SERVER,
+            changeOrigin: true, // Required for virtual hosted sites
+            rewrite: (path) => path.replace(/^\/api/, ""), // Optional: remove /api from the path
+          },
+          "/content": {
+            target: env.VITE_APP_CONTENT,
+            changeOrigin: true, // Required for virtual hosted sites
+            rewrite: (path) => path.replace(/^\/content/, ""), // Optional: remove /api from the path
+          },
+        },
+      },
     };
     // mode === "production"
   } else {

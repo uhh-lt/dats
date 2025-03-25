@@ -202,7 +202,7 @@ function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
             <CardContent className="bbox-content" style={{ padding: 2, textAlign: "center" }}>
               {annotation.isSuccess && sdocData.isSuccess && code.data ? (
                 <ImageCropper
-                  imageUrl={encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + sdocData.data?.html)}
+                  imageUrl={encodeURI("/content/" + sdocData.data?.html)}
                   x={annotation.data.x_min}
                   y={annotation.data.y_min}
                   width={annotation.data.x_max - annotation.data.x_min}

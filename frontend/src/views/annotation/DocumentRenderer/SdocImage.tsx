@@ -28,7 +28,7 @@ function SdocImage({ projectId, filename }: SdocImageLinkProps) {
       {sdocData.isSuccess ? (
         <div>
           <img
-            src={encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + sdocData.data.repo_url)}
+            src={encodeURI("/content/" + sdocData.data.repo_url)}
             alt="resolved"
             style={{ maxWidth: "640px", maxHeight: "480px", cursor: "pointer" }}
             onClick={openMenu}

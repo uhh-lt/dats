@@ -92,7 +92,7 @@ function ImageViewerWithData({ sdocData, height, width }: ImageViewerProps & { h
         <g ref={gRef}>
           <image
             ref={imgRef}
-            href={encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + sdocData.repo_url)}
+            href={encodeURI("/content/" + sdocData.repo_url)}
             height={imgContainerHeight}
             x={xCentering}
           />
