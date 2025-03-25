@@ -150,7 +150,7 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 
 # Middleware required for Oauth2
 # see https://docs.authlib.org/en/latest/client/fastapi.html
-app.add_middleware(SessionMiddleware, secret_key=conf.session.secret)
+app.add_middleware(SessionMiddleware, secret_key=conf.api.auth.session.secret)
 
 
 # add custom exception handlers
