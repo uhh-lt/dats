@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -35,6 +35,7 @@ from app.core.data.dto.analysis import (
     SpanAnnotationSearchResult,
     WordFrequencyResult,
 )
+from app.core.data.dto.topic_info import TopicWordInfo
 from app.core.search.bbox_anno_search.bbox_anno_search import (
     find_bbox_annotations,
     find_bbox_annotations_info,
@@ -342,7 +343,7 @@ def return_topic_distr_data(
 
 @router.post(
     "/top_words_data",
-    response_model=List[dict],
+    response_model=Dict[int, List[TopicWordInfo]],
     summary="Returns the top words for 30 topics. This is still mock-data",
 )
 def return_top_words_data(
@@ -350,7 +351,7 @@ def return_top_words_data(
     project_id: int,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
-) -> List[dict]:
+) -> Dict[int, List[TopicWordInfo]]:
     return top_words(db=db, project_id=project_id)
 
 

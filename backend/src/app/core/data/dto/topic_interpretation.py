@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -25,17 +24,8 @@ class TopicInterpretationCreate(TopicInterpretationBase):
     pass
 
 
-class TopicInterpretationCreateIntern(TopicInterpretationCreate):
+class TopicInterpretationUpdate(TopicInterpretationBase, UpdateDTOBase):
     pass
-
-
-class TopicInterpretationUpdateIntern(TopicInterpretationBase, UpdateDTOBase):
-    topic_words: Optional[str] = Field(
-        description=(
-            "JSON Representation of the list of Concepts that are part of the TopicInfo"
-        ),
-        default=None,
-    )
 
 
 class TopicInterpretationRead(TopicInterpretationBase):

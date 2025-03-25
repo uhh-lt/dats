@@ -1,9 +1,11 @@
+from typing import Dict, List
+
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.topic_interpretation import crud_topic_interpretation
-from app.core.data.dto.topic_info import TopicInfoRead
+from app.core.data.dto.topic_info import TopicInfoRead, TopicWordInfo
 from app.core.data.dto.topic_interpretation import TopicInterpretationCreate
 from app.core.data.llm.ollama_service import OllamaService
 
@@ -15,21 +17,28 @@ class OllamaTopicResponse(BaseModel):
     reasoning: str
 
 
-def top_words(db: Session, project_id: int):
-    top_words_data = []
+def top_words(db: Session, project_id: int) -> Dict[int, List[TopicWordInfo]]:
+    # top_words_data = []
+    ## TODO NOAH add project_id as a parameter to the hook & reset top_words_data / topic_distr_data
+    # project = crud_project.read(db=db, id=project_id)
+    ## umwandeln von orm zu dict/list json object
+    # topic_infos = [TopicInfoRead.model_validate(x) for x in project.topic_infos]
+    #
+    # for topic_info in topic_infos:
+    #    topic_x_data = {}
+    #    # alle wörter durchgehen
+    #    for index, top_word in enumerate(topic_info.topic_words):
+    #        topic_x_data[str(index)] = top_word.model_dump()
+    #    top_words_data.append(topic_x_data)
+    #
+    # return top_words_data
+
     # TODO NOAH add project_id as a parameter to the hook & reset top_words_data / topic_distr_data
     project = crud_project.read(db=db, id=project_id)
     # umwandeln von orm zu dict/list json object
     topic_infos = [TopicInfoRead.model_validate(x) for x in project.topic_infos]
 
-    for topic_info in topic_infos:
-        topic_x_data = {}
-        # alle wörter durchgehen
-        for index, top_word in enumerate(topic_info.topic_words):
-            topic_x_data[str(index)] = top_word.model_dump()
-        top_words_data.append(topic_x_data)
-
-    return top_words_data
+    return {topic_info.id: topic_info.topic_words for topic_info in topic_infos}
 
 
 def topic_distr(db: Session, project_id: int) -> list[dict]:
@@ -99,7 +108,7 @@ def top_words_ollama(topic_id: int, db: Session, project_id: int) -> dict:
         }
 
     response = ollama_service.chat(
-        *get_prompt(topic_id, top_words_data=top_words_data),
+        *get_prompt(topic_id, top_words_data=["test"]),
         response_model=OllamaTopicResponse,
     )
 
