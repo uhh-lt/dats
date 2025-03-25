@@ -9,6 +9,8 @@ from config import conf
 
 class MailService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
+        cls.is_enabled = conf.mail.enabled == "True"
+
         config = ConnectionConfig(
             MAIL_FROM=conf.mail.mail,
             MAIL_USERNAME=conf.mail.user,
@@ -25,7 +27,7 @@ class MailService(metaclass=SingletonMeta):
         return super(MailService, cls).__new__(cls)
 
     async def send_mail(self, email: EmailStr, subject: str, body: str):
-        if conf.mail.enabled == "True":
+        if self.is_enabled:
             message = MessageSchema(
                 subject=subject,
                 recipients=[email],
