@@ -200,7 +200,8 @@ services:
       DATS_BACKEND_CONFIG: /dats_code/src/configs/production.yaml
       LOG_LEVEL: ${API_LOG_LEVEL:-info}
       API_WORKERS: ${API_WORKERS:-10}
-      JWT_SECRET: ${JWT_SECRET:-""}
+      JWT_SECRET: ${JWT_SECRET:?jwt secret required}
+      SESSION_SECRET: ${SESSION_SECRET:?session secret required}
       SYSTEM_USER_EMAIL: ${SYSTEM_USER_EMAIL}
       SYSTEM_USER_PASSWORD: ${SYSTEM_USER_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:-dats}
@@ -211,6 +212,10 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-dats123}
       OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-gemma3:27b}
       OLLAMA_VLM_MODEL: ${OLLAMA_VLM_MODEL:-gemma3:27b}
+      OIDC_ENABLED: ${OIDC_ENABLED:-false}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET}
+      OIDC_SERVER_METADATA_URL: ${OIDC_SERVER_METADATA_URL}
     volumes:
       - ./backend_repo:/tmp/dats
     depends_on:
