@@ -7,6 +7,7 @@ import { Box, Button, Card, CardContent, Divider, Typography } from "@mui/materi
 import { useMutation } from "@tanstack/react-query";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { Link, Navigate, useLocation } from "react-router-dom";
+import GeneralHooks from "../api/GeneralHooks.ts";
 import { ApiError } from "../api/openapi/core/ApiError.ts";
 import { AuthenticationService } from "../api/openapi/services/AuthenticationService.ts";
 import { handleOIDCLogin } from "../auth/HandleOIDCLogin.ts";
@@ -34,6 +35,9 @@ function Login() {
   });
   const location = useLocation();
   const { updateAuthData, loginStatus } = useAuth();
+
+  // get info about the instance, is OIDC enabled?
+  const { data: instanceInfo } = GeneralHooks.useGetInstanceInfo();
 
   // login
   const { mutate: loginMutation, isPending: loginIsPending } = useMutation({
@@ -69,6 +73,7 @@ function Login() {
     return <Navigate to={from} replace />;
   }
 
+  if (!instanceInfo) return null;
   return (
     <Box
       sx={{
@@ -140,7 +145,7 @@ function Login() {
               </LoadingButton>
             </Box>
           </form>
-          {import.meta.env.VITE_APP_SSO_PROVIDER !== "null" && (
+          {instanceInfo.is_oidc_enabled && (
             <>
               <Box sx={{ mt: 2 }}>
                 <Divider>
@@ -156,7 +161,7 @@ function Login() {
                 sx={{ mt: 2 }}
                 onClick={() => handleOIDCLogin(updateAuthData)}
               >
-                Sign in with {import.meta.env.VITE_APP_SSO_PROVIDER}
+                Sign in with {instanceInfo.oidc_provider_name}
               </Button>
             </>
           )}

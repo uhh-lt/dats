@@ -3,6 +3,10 @@ export const QueryKey = {
   // the logged-in user (by access token)
   ME: "me",
 
+  // managed by GeneralHooks
+  // the instance info (no parameters)
+  INSTANCE_INFO: "instanceInfo",
+
   // managed by UserHooks
   // all UserRead[] of a Project (by project id)
   PROJECT_USERS: "projectUsers",

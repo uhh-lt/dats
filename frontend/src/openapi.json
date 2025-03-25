@@ -12,6 +12,19 @@
         }
       }
     },
+    "/info": {
+      "get": {
+        "tags": ["general"],
+        "summary": "Info",
+        "operationId": "info",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/InstanceInfo" } } }
+          }
+        }
+      }
+    },
     "/": {
       "get": {
         "tags": ["general"],
@@ -138,6 +151,38 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
+        }
+      }
+    },
+    "/authentication/oidc/login": {
+      "get": {
+        "tags": ["authentication"],
+        "summary": "Oidc Login",
+        "operationId": "oidc_login",
+        "parameters": [
+          {
+            "name": "redirect_uri",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "title": "Redirect Uri" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/authentication/oidc/callback": {
+      "get": {
+        "tags": ["authentication"],
+        "summary": "Oidc Callback",
+        "operationId": "oidc_callback",
+        "responses": {
+          "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } }
         }
       }
     },
@@ -7387,6 +7432,15 @@
         "title": "ImportJobRead"
       },
       "ImportJobType": { "type": "string", "enum": ["PROJECT", "CODES", "TAGS"], "title": "ImportJobType" },
+      "InstanceInfo": {
+        "properties": {
+          "is_oidc_enabled": { "type": "boolean", "title": "Is Oidc Enabled", "description": "Is OIDC enabled" },
+          "oidc_provider_name": { "type": "string", "title": "Oidc Provider Name", "description": "OIDC provider name" }
+        },
+        "type": "object",
+        "required": ["is_oidc_enabled", "oidc_provider_name"],
+        "title": "InstanceInfo"
+      },
       "KeywordStat": {
         "properties": {
           "keyword": { "type": "string", "title": "Keyword", "description": "The counted keyword." },
