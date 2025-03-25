@@ -1,8 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey.ts";
 import { CodeFrequency } from "./openapi/models/CodeFrequency.ts";
 import { CodeOccurrence } from "./openapi/models/CodeOccurrence.ts";
 import { DocType } from "./openapi/models/DocType.ts";
+import { TopWordsTopic } from "./openapi/models/TopWordsTopic.ts";
 import { AnalysisService } from "./openapi/services/AnalysisService.ts";
 
 const useCodeFrequencies = (projectId: number, userIds: number[], codeIds: number[], docTypes: DocType[]) =>
@@ -35,23 +36,19 @@ const useReturnTopicDistrData = (project_id: number) =>
   useQuery<Array<Record<string, unknown>>, Error>({
     queryKey: ["TopicDistrData", project_id],
     queryFn: () => AnalysisService.returnTopicDistrData({ projectId: project_id }),
-    staleTime: Infinity,
   });
 
 const useReturnTopWordsData = (project_id: number) =>
-  useQuery<Array<Record<string, unknown>>, Error>({
+  useQuery<Record<string, TopWordsTopic>, Error>({
     queryKey: ["TopWordsData", project_id],
     queryFn: () => AnalysisService.returnTopWordsData({ projectId: project_id }),
-    // only sends once
-    staleTime: Infinity,
   });
 
-const useReturnTopWordsOllama = (topic_id: number, project_id: number) => {
-  return useQuery<Record<string, unknown>, Error>({
-    queryKey: ["TopWordsOllama", topic_id, project_id],
-    queryFn: () => AnalysisService.returnTopWordsOllama({ topicId: topic_id, projectId: project_id }),
+// change name to action name
+const useReturnTopWordsOllama = (topic_id: number, project_id: number) =>
+  useMutation({
+    mutationFn: () => AnalysisService.returnTopWordsOllama({ topicId: topic_id, projectId: project_id }),
   });
-};
 
 const useReturnTopicDocuments = (project_id: number, topic_id: number) => {
   return useQuery<Array<Record<string, unknown>>, Error>({

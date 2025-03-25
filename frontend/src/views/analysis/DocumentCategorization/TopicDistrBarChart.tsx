@@ -2,12 +2,7 @@ import { UseQueryResult } from "@tanstack/react-query";
 import * as d3 from "d3";
 import { useEffect, useRef, useState } from "react";
 
-const TopicDistrChart: React.FC<{ topicNum: number; dataHook: UseQueryResult<Record<string, unknown>[], Error> }> = ({
-  topicNum,
-  dataHook,
-}) => {
-  console.log(topicNum);
-  dataHook.refetch();
+const TopicDistrChart: React.FC<{ dataHook: UseQueryResult<Record<string, unknown>[], Error> }> = ({ dataHook }) => {
   const data = dataHook.data as Record<string, number>[];
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [width, setWidth] = useState<number>(window.innerWidth);
