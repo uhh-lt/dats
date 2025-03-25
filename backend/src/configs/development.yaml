@@ -12,8 +12,8 @@ api:
     session:
       secret: ${oc.env:SESSION_SECRET, ""}
     oidc:
-      enabled: ${oc.env:OIDC_ENABLED, false}
-      name: ${oc.env:OIDC_PROVIDER_NAME, false}
+      enabled: ${oc.env:OIDC_ENABLED, False}
+      name: ${oc.env:OIDC_PROVIDER_NAME, False}
       client_id: ${oc.env:OIDC_CLIENT_ID, ""}
       client_secret: ${oc.env:OIDC_CLIENT_SECRET, ""}
       server_metadata_url: ${oc.env:OIDC_SERVER_METADATA_URL, "http://authentik-server:9000/.well-known/openid-configuration"}
