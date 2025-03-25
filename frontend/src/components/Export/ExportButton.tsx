@@ -43,7 +43,7 @@ function ExportButton({
     if (!exportJob.data) return;
     if (exportJob.data.status) {
       if (exportJob.data.status === BackgroundJobStatus.FINISHED) {
-        downloadFile(import.meta.env.VITE_APP_CONTENT + "/" + exportJob.data.results_url);
+        downloadFile("/content/" + exportJob.data.results_url);
         // Make sure the download doesn't start again on a re-render
         resetExport();
       } else if (exportJob.data.status === BackgroundJobStatus.ERRORNEOUS) {
