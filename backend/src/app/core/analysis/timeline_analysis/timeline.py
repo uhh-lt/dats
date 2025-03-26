@@ -1,14 +1,15 @@
 from datetime import datetime
-from typing import Any, Dict, List, Tuple
+from typing import Dict, List, Type, TypedDict, Union
 
 import pandas as pd
 import srsly
 from fastapi.encoders import jsonable_encoder
 from loguru import logger
-from sqlalchemy import func
+from sqlalchemy import and_, func
 from sqlalchemy.orm import Session, aliased
 
 from app.core.data.crud.sentence_annotation import crud_sentence_anno
+from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.timeline_analysis import crud_timeline_analysis
 from app.core.data.dto.analysis import DateGroupBy
 from app.core.data.dto.timeline_analysis import (
@@ -16,6 +17,7 @@ from app.core.data.dto.timeline_analysis import (
     SdocTimelineAnalysisFilter,
     SentAnnoTimelineAnalysisFilter,
     SpanAnnoTimelineAnalysisFilter,
+    TAAnnotationAggregationType,
     TimelineAnalysisConcept,
     TimelineAnalysisRead,
     TimelineAnalysisResult,
@@ -32,12 +34,15 @@ from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.timeline_analysis import TimelineAnalysisORM
 from app.core.db.sql_service import SQLService
 from app.core.db.sql_utils import aggregate_ids
-from app.core.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
 from app.core.search.filtering import Filter
 from app.core.search.sdoc_search.sdoc_search_columns import SdocColumns
 from app.core.search.search_builder import SearchBuilder
-from app.core.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
-from app.core.search.span_anno_search.span_anno_search_columns import SpanColumns
+
+
+class TimelineAnalysisRow(TypedDict):
+    data_ids: List[int]
+    date: str
+    count: int
 
 
 def update_timeline_analysis(
@@ -175,7 +180,7 @@ def __compute_timeline_analysis(
                 assert isinstance(
                     concept.ta_specific_filter, SdocTimelineAnalysisFilter
                 ), "Invalid filter type, expected SdocTimelineAnalysisFilter"
-                result_rows, total_results = __sdoc_timeline_analysis(
+                result_rows = __sdoc_timeline_analysis(
                     db=db,
                     project_id=timeline_analysis.project_id,
                     group_by=timeline_analysis.settings.group_by,
@@ -186,46 +191,61 @@ def __compute_timeline_analysis(
                 assert isinstance(
                     concept.ta_specific_filter, SentAnnoTimelineAnalysisFilter
                 ), "Invalid filter type, expected SentAnnoTimelineAnalysisFilter"
-                result_rows, total_results = __sent_anno_timeline_analysis(
+                assert (
+                    timeline_analysis.settings.annotation_aggregation_type is not None
+                ), (
+                    "Annotation aggregation type is required for SentAnnoTimelineAnalysis"
+                    " but not provided in the settings"
+                )
+                result_rows = __sent_anno_timeline_analysis(
                     db=db,
                     project_id=timeline_analysis.project_id,
                     group_by=timeline_analysis.settings.group_by,
                     project_metadata_id=timeline_analysis.settings.date_metadata_id,
                     filter=concept.ta_specific_filter.filter,
+                    annotation_aggregation_type=timeline_analysis.settings.annotation_aggregation_type,
                 )
             case TimelineAnalysisType.SPAN_ANNO:
                 assert isinstance(
                     concept.ta_specific_filter, SpanAnnoTimelineAnalysisFilter
                 ), "Invalid filter type, expected SpanAnnoTimelineAnalysisFilter"
-                result_rows, total_results = __span_anno_timeline_analysis(
+                assert (
+                    timeline_analysis.settings.annotation_aggregation_type is not None
+                ), (
+                    "Annotation aggregation type is required for SpanAnnoTimelineAnalysis"
+                    " but not provided in the settings"
+                )
+                result_rows = __span_anno_timeline_analysis(
                     db=db,
                     project_id=timeline_analysis.project_id,
                     group_by=timeline_analysis.settings.group_by,
                     project_metadata_id=timeline_analysis.settings.date_metadata_id,
                     filter=concept.ta_specific_filter.filter,
+                    annotation_aggregation_type=timeline_analysis.settings.annotation_aggregation_type,
                 )
             case TimelineAnalysisType.BBOX_ANNO:
                 assert isinstance(
                     concept.ta_specific_filter, BBoxAnnoTimelineAnalysisFilter
                 ), "Invalid filter type, expected BBoxAnnoTimelineAnalysisFilter"
-                result_rows, total_results = __bbox_anno_timeline_analysis(
+                assert (
+                    timeline_analysis.settings.annotation_aggregation_type is not None
+                ), (
+                    "Annotation aggregation type is required for BBoxAnnoTimelineAnalysis"
+                    " but not provided in the settings"
+                )
+                result_rows = __bbox_anno_timeline_analysis(
                     db=db,
                     project_id=timeline_analysis.project_id,
                     group_by=timeline_analysis.settings.group_by,
                     project_metadata_id=timeline_analysis.settings.date_metadata_id,
                     filter=concept.ta_specific_filter.filter,
+                    annotation_aggregation_type=timeline_analysis.settings.annotation_aggregation_type,
                 )
             case _:
                 raise ValueError("Invalid timeline analysis type")
 
-        def preprend_zero(x: int):
-            return "0" + str(x) if x < 10 else str(x)
-
-        # map from date (YYYY, YYYY-MM, or YYYY-MM-DD) to list of data_ids
-        result_dict = {
-            "-".join(map(lambda x: preprend_zero(x), row[1:])): row[0]
-            for row in result_rows
-        }
+        # map from date (YYYY, YYYY-MM, or YYYY-MM-DD) to list of rows
+        result_dict = {row["date"]: row for row in result_rows}
 
         # find the date range (earliest and latest date)
         date_results = (
@@ -264,37 +284,18 @@ def __compute_timeline_analysis(
         # create the result, mapping dates to sdoc counts
         result = [
             TimelineAnalysisResult(
-                data_ids=result_dict[date] if date in result_dict else [],
+                data_ids=result_dict[date]["data_ids"] if date in result_dict else [],
                 date=date,
-                count=len(result_dict[date]) if date in result_dict else 0,
+                count=result_dict[date]["count"] if date in result_dict else 0,
             )
             for date in date_list
         ]
 
-        # handle special case for sentence annotations: count sentences vs count annotations
-        if (
-            timeline_analysis.timeline_analysis_type == TimelineAnalysisType.SENT_ANNO
-            and timeline_analysis.settings.ta_specific_settings is not None
-            and timeline_analysis.settings.ta_specific_settings.count_sentences
-        ):
-            # Create a mapping of sent_anno_id to number of sentences
-            sent_anno_ids = [data_id for x in result for data_id in x.data_ids]
-            sent_annos = crud_sentence_anno.read_by_ids(db=db, ids=sent_anno_ids)
-            sent_annos2num_sents = {
-                sent_anno.id: sent_anno.sentence_id_end
-                - sent_anno.sentence_id_start
-                + 1
-                for sent_anno in sent_annos
-            }
-
-            # Update the count of the result
-            for res in result:
-                res.count = sum(
-                    sent_annos2num_sents.get(sent_anno_id, 0)
-                    for sent_anno_id in res.data_ids
-                )
-
         return result
+
+
+def preprend_zero(x: int):
+    return "0" + str(x) if x < 10 else str(x)
 
 
 def __sdoc_timeline_analysis(
@@ -303,7 +304,7 @@ def __sdoc_timeline_analysis(
     group_by: DateGroupBy,
     project_metadata_id: int,
     filter: Filter[SdocColumns],
-) -> Tuple[List[Any], int]:
+) -> List[TimelineAnalysisRow]:
     builder = SearchBuilder(db, filter, sorts=[])
 
     date_metadata = aliased(SourceDocumentMetadataORM)
@@ -337,10 +338,20 @@ def __sdoc_timeline_analysis(
         .group_by(*group_by.apply(column=subquery.c["date"]))  # type: ignore
     ).build_query()
 
-    return builder.execute_query(
+    result_rows, _ = builder.execute_query(
         page_number=None,
         page_size=None,
     )
+
+    # convert the result to a list of TimelineAnalysisRow
+    return [
+        TimelineAnalysisRow(
+            data_ids=row[0],
+            date="-".join(map(lambda x: preprend_zero(x), row[1:])),
+            count=len(row[0]),
+        )
+        for row in result_rows
+    ]
 
 
 def __sent_anno_timeline_analysis(
@@ -348,55 +359,107 @@ def __sent_anno_timeline_analysis(
     project_id: int,
     group_by: DateGroupBy,
     project_metadata_id: int,
-    filter: Filter[SentAnnoColumns],
-) -> Tuple[List[Any], int]:
+    filter: Filter,
+    annotation_aggregation_type: TAAnnotationAggregationType,
+) -> List[TimelineAnalysisRow]:
     # project_metadata_id has to refer to a DATE metadata
+    match annotation_aggregation_type:
+        case TAAnnotationAggregationType.UNIT:
+            # UNIT = Count sentences
 
-    builder = SearchBuilder(db, filter, sorts=[])
-    date_metadata = aliased(SourceDocumentMetadataORM)
-    subquery = (
-        builder.init_subquery(
-            db.query(
-                SentenceAnnotationORM.id,
-                date_metadata.date_value.label("date"),
+            builder = SearchBuilder(db, filter, sorts=[])
+            date_metadata = aliased(SourceDocumentMetadataORM)
+            subquery = (
+                builder.init_subquery(
+                    db.query(
+                        SentenceAnnotationORM.id,
+                        date_metadata.date_value.label("date"),
+                    )
+                    .group_by(SentenceAnnotationORM.id, date_metadata.date_value)
+                    .filter(
+                        SourceDocumentORM.project_id == project_id,
+                    )
+                )
+                ._join_subquery(
+                    AnnotationDocumentORM,
+                    AnnotationDocumentORM.id
+                    == SentenceAnnotationORM.annotation_document_id,
+                )
+                ._join_subquery(
+                    SourceDocumentORM,
+                    SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+                )
+                ._join_subquery(
+                    date_metadata,
+                    (SourceDocumentORM.id == date_metadata.source_document_id)
+                    & (date_metadata.project_metadata_id == project_metadata_id)
+                    & (date_metadata.date_value.isnot(None)),
+                )
+                .build_subquery()
             )
-            .group_by(SentenceAnnotationORM.id, date_metadata.date_value)
-            .filter(
-                SourceDocumentORM.project_id == project_id,
+
+            sent_anno_ids = aggregate_ids(
+                SentenceAnnotationORM.id, label="sent_anno_ids"
             )
-        )
-        ._join_subquery(
-            AnnotationDocumentORM,
-            AnnotationDocumentORM.id == SentenceAnnotationORM.annotation_document_id,
-        )
-        ._join_subquery(
-            SourceDocumentORM,
-            SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
-        )
-        ._join_subquery(
-            date_metadata,
-            (SourceDocumentORM.id == date_metadata.source_document_id)
-            & (date_metadata.project_metadata_id == project_metadata_id)
-            & (date_metadata.date_value.isnot(None)),
-        )
-        .build_subquery()
-    )
+            builder.init_query(
+                db.query(
+                    sent_anno_ids,
+                    *group_by.apply(subquery.c["date"]),  # type: ignore
+                )
+                .join(subquery, SentenceAnnotationORM.id == subquery.c.id)
+                .group_by(*group_by.apply(column=subquery.c["date"]))  # type: ignore
+            ).build_query()
 
-    sent_anno_ids = aggregate_ids(SentenceAnnotationORM.id, label="sent_anno_ids")
-    builder.init_query(
-        db.query(
-            sent_anno_ids,
-            # Todo: Maybe add more here, same stuffa s in sent_anno_search?
-            *group_by.apply(subquery.c["date"]),  # type: ignore
-        )
-        .join(subquery, SentenceAnnotationORM.id == subquery.c.id)
-        .group_by(*group_by.apply(column=subquery.c["date"]))  # type: ignore
-    ).build_query()
+            result_rows, _ = builder.execute_query(
+                page_number=None,
+                page_size=None,
+            )
+            result = [
+                TimelineAnalysisRow(
+                    data_ids=row[0],
+                    date="-".join(map(lambda x: preprend_zero(x), row[1:])),
+                    count=-1,  # we need to update this in the next step
+                )
+                for row in result_rows
+            ]
 
-    return builder.execute_query(
-        page_number=None,
-        page_size=None,
-    )
+            # Create a mapping of sent_anno_id to number of sentences
+            sent_anno_ids = [data_id for row in result for data_id in row["data_ids"]]
+            sent_annos = crud_sentence_anno.read_by_ids(db=db, ids=sent_anno_ids)
+            sent_annos2num_sents = {
+                sent_anno.id: sent_anno.sentence_id_end
+                - sent_anno.sentence_id_start
+                + 1
+                for sent_anno in sent_annos
+            }
+
+            # Update the count of the result
+            for res in result:
+                res["count"] = sum(
+                    sent_annos2num_sents.get(sent_anno_id, 0)
+                    for sent_anno_id in res["data_ids"]
+                )
+            return result
+
+        case TAAnnotationAggregationType.ANNOTATION:
+            return __anno_annotation_timeline_analysis(
+                db=db,
+                project_id=project_id,
+                group_by=group_by,
+                project_metadata_id=project_metadata_id,
+                filter=filter,
+                annotation_orm=SentenceAnnotationORM,
+            )
+
+        case TAAnnotationAggregationType.DOCUMENT:
+            return __anno_document_timeline_analysis(
+                db=db,
+                project_id=project_id,
+                group_by=group_by,
+                project_metadata_id=project_metadata_id,
+                filter=filter,
+                annotation_orm=SentenceAnnotationORM,
+            )
 
 
 def __span_anno_timeline_analysis(
@@ -404,55 +467,103 @@ def __span_anno_timeline_analysis(
     project_id: int,
     group_by: DateGroupBy,
     project_metadata_id: int,
-    filter: Filter[SpanColumns],
-) -> Tuple[List[Any], int]:
+    filter: Filter,
+    annotation_aggregation_type: TAAnnotationAggregationType,
+) -> List[TimelineAnalysisRow]:
     # project_metadata_id has to refer to a DATE metadata
+    match annotation_aggregation_type:
+        case TAAnnotationAggregationType.UNIT:
+            # UNIT = Count sentences
 
-    builder = SearchBuilder(db, filter, sorts=[])
-    date_metadata = aliased(SourceDocumentMetadataORM)
-    subquery = (
-        builder.init_subquery(
-            db.query(
-                SpanAnnotationORM.id,
-                date_metadata.date_value.label("date"),
+            builder = SearchBuilder(db, filter, sorts=[])
+            date_metadata = aliased(SourceDocumentMetadataORM)
+            subquery = (
+                builder.init_subquery(
+                    db.query(
+                        SpanAnnotationORM.id,
+                        date_metadata.date_value.label("date"),
+                    )
+                    .group_by(SpanAnnotationORM.id, date_metadata.date_value)
+                    .filter(
+                        SourceDocumentORM.project_id == project_id,
+                    )
+                )
+                ._join_subquery(
+                    AnnotationDocumentORM,
+                    AnnotationDocumentORM.id
+                    == SpanAnnotationORM.annotation_document_id,
+                )
+                ._join_subquery(
+                    SourceDocumentORM,
+                    SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+                )
+                ._join_subquery(
+                    date_metadata,
+                    (SourceDocumentORM.id == date_metadata.source_document_id)
+                    & (date_metadata.project_metadata_id == project_metadata_id)
+                    & (date_metadata.date_value.isnot(None)),
+                )
+                .build_subquery()
             )
-            .group_by(SpanAnnotationORM.id, date_metadata.date_value)
-            .filter(
-                SourceDocumentORM.project_id == project_id,
+
+            span_anno_ids = aggregate_ids(SpanAnnotationORM.id, label="span_anno_ids")
+            builder.init_query(
+                db.query(
+                    span_anno_ids,
+                    *group_by.apply(subquery.c["date"]),  # type: ignore
+                )
+                .join(subquery, SpanAnnotationORM.id == subquery.c.id)
+                .group_by(*group_by.apply(column=subquery.c["date"]))  # type: ignore
+            ).build_query()
+
+            result_rows, _ = builder.execute_query(
+                page_number=None,
+                page_size=None,
             )
-        )
-        ._join_subquery(
-            AnnotationDocumentORM,
-            AnnotationDocumentORM.id == SpanAnnotationORM.annotation_document_id,
-        )
-        ._join_subquery(
-            SourceDocumentORM,
-            SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
-        )
-        ._join_subquery(
-            date_metadata,
-            (SourceDocumentORM.id == date_metadata.source_document_id)
-            & (date_metadata.project_metadata_id == project_metadata_id)
-            & (date_metadata.date_value.isnot(None)),
-        )
-        .build_subquery()
-    )
+            result = [
+                TimelineAnalysisRow(
+                    data_ids=row[0],
+                    date="-".join(map(lambda x: preprend_zero(x), row[1:])),
+                    count=-1,  # we need to update this in the next step
+                )
+                for row in result_rows
+            ]
 
-    span_anno_ids = aggregate_ids(SpanAnnotationORM.id, label="span_anno_ids")
-    builder.init_query(
-        db.query(
-            span_anno_ids,
-            # Todo: Maybe add more here, same stuffa s in sent_anno_search?
-            *group_by.apply(subquery.c["date"]),  # type: ignore
-        )
-        .join(subquery, SpanAnnotationORM.id == subquery.c.id)
-        .group_by(*group_by.apply(column=subquery.c["date"]))  # type: ignore
-    ).build_query()
+            # Create a mapping of span_anno_id to number of words
+            span_anno_ids = [data_id for row in result for data_id in row["data_ids"]]
+            span_annos = crud_span_anno.read_by_ids(db=db, ids=span_anno_ids)
+            span_annos2num_sents = {
+                span_anno.id: span_anno.end_token - span_anno.begin_token + 1
+                for span_anno in span_annos
+            }
 
-    return builder.execute_query(
-        page_number=None,
-        page_size=None,
-    )
+            # Update the count of the result
+            for res in result:
+                res["count"] = sum(
+                    span_annos2num_sents.get(span_anno_id, 0)
+                    for span_anno_id in res["data_ids"]
+                )
+            return result
+
+        case TAAnnotationAggregationType.ANNOTATION:
+            return __anno_annotation_timeline_analysis(
+                db=db,
+                project_id=project_id,
+                group_by=group_by,
+                project_metadata_id=project_metadata_id,
+                filter=filter,
+                annotation_orm=SpanAnnotationORM,
+            )
+
+        case TAAnnotationAggregationType.DOCUMENT:
+            return __anno_document_timeline_analysis(
+                db=db,
+                project_id=project_id,
+                group_by=group_by,
+                project_metadata_id=project_metadata_id,
+                filter=filter,
+                annotation_orm=SpanAnnotationORM,
+            )
 
 
 def __bbox_anno_timeline_analysis(
@@ -460,26 +571,71 @@ def __bbox_anno_timeline_analysis(
     project_id: int,
     group_by: DateGroupBy,
     project_metadata_id: int,
-    filter: Filter[BBoxColumns],
-) -> Tuple[List[Any], int]:
+    filter: Filter,
+    annotation_aggregation_type: TAAnnotationAggregationType,
+) -> List[TimelineAnalysisRow]:
     # project_metadata_id has to refer to a DATE metadata
+    match annotation_aggregation_type:
+        case TAAnnotationAggregationType.UNIT:
+            # UNIT = ANNO. What is Unit for BBox Annotations?
+            return __anno_annotation_timeline_analysis(
+                db=db,
+                project_id=project_id,
+                group_by=group_by,
+                project_metadata_id=project_metadata_id,
+                filter=filter,
+                annotation_orm=BBoxAnnotationORM,
+            )
+
+        case TAAnnotationAggregationType.ANNOTATION:
+            return __anno_annotation_timeline_analysis(
+                db=db,
+                project_id=project_id,
+                group_by=group_by,
+                project_metadata_id=project_metadata_id,
+                filter=filter,
+                annotation_orm=BBoxAnnotationORM,
+            )
+
+        case TAAnnotationAggregationType.DOCUMENT:
+            return __anno_document_timeline_analysis(
+                db=db,
+                project_id=project_id,
+                group_by=group_by,
+                project_metadata_id=project_metadata_id,
+                filter=filter,
+                annotation_orm=BBoxAnnotationORM,
+            )
+
+
+def __anno_annotation_timeline_analysis(
+    db: Session,
+    project_id: int,
+    group_by: DateGroupBy,
+    project_metadata_id: int,
+    filter: Filter,
+    annotation_orm: Union[
+        Type[SentenceAnnotationORM], Type[SpanAnnotationORM], Type[BBoxAnnotationORM]
+    ],
+) -> List[TimelineAnalysisRow]:
+    # ANNOTATION = Count annotations
 
     builder = SearchBuilder(db, filter, sorts=[])
     date_metadata = aliased(SourceDocumentMetadataORM)
     subquery = (
         builder.init_subquery(
             db.query(
-                BBoxAnnotationORM.id,
+                annotation_orm.id,
                 date_metadata.date_value.label("date"),
             )
-            .group_by(BBoxAnnotationORM.id, date_metadata.date_value)
+            .group_by(annotation_orm.id, date_metadata.date_value)
             .filter(
                 SourceDocumentORM.project_id == project_id,
             )
         )
         ._join_subquery(
             AnnotationDocumentORM,
-            AnnotationDocumentORM.id == BBoxAnnotationORM.annotation_document_id,
+            AnnotationDocumentORM.id == annotation_orm.annotation_document_id,
         )
         ._join_subquery(
             SourceDocumentORM,
@@ -494,18 +650,109 @@ def __bbox_anno_timeline_analysis(
         .build_subquery()
     )
 
-    bbox_anno_ids = aggregate_ids(BBoxAnnotationORM.id, label="bbox_anno_ids")
+    sent_anno_ids = aggregate_ids(annotation_orm.id, label="sent_anno_ids")
     builder.init_query(
         db.query(
-            bbox_anno_ids,
-            # Todo: Maybe add more here, same stuffa s in sent_anno_search?
+            sent_anno_ids,
             *group_by.apply(subquery.c["date"]),  # type: ignore
         )
-        .join(subquery, BBoxAnnotationORM.id == subquery.c.id)
+        .join(subquery, annotation_orm.id == subquery.c.id)
         .group_by(*group_by.apply(column=subquery.c["date"]))  # type: ignore
     ).build_query()
 
-    return builder.execute_query(
+    result_rows, _ = builder.execute_query(
         page_number=None,
         page_size=None,
     )
+
+    return [
+        TimelineAnalysisRow(
+            data_ids=row[0],
+            date="-".join(map(lambda x: preprend_zero(x), row[1:])),
+            count=len(row[0]),
+        )
+        for row in result_rows
+    ]
+
+
+def __anno_document_timeline_analysis(
+    db: Session,
+    project_id: int,
+    group_by: DateGroupBy,
+    project_metadata_id: int,
+    filter: Filter,
+    annotation_orm: Union[
+        Type[SentenceAnnotationORM], Type[SpanAnnotationORM], Type[BBoxAnnotationORM]
+    ],
+) -> List[TimelineAnalysisRow]:
+    # DOCUMENT = Count documents
+
+    builder = SearchBuilder(db, filter, sorts=[])
+    date_metadata = aliased(SourceDocumentMetadataORM)
+    subquery = (
+        builder.init_subquery(
+            db.query(
+                annotation_orm.id.label("anno_id"),
+                SourceDocumentORM.id.label("sdoc_id"),
+                date_metadata.date_value.label("date"),
+            )
+            .group_by(
+                annotation_orm.id,
+                SourceDocumentORM.id,
+                date_metadata.date_value,
+            )
+            .filter(
+                SourceDocumentORM.project_id == project_id,
+            )
+        )
+        ._join_subquery(
+            AnnotationDocumentORM,
+            AnnotationDocumentORM.id == annotation_orm.annotation_document_id,
+        )
+        ._join_subquery(
+            SourceDocumentORM,
+            SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+        )
+        ._join_subquery(
+            date_metadata,
+            (SourceDocumentORM.id == date_metadata.source_document_id)
+            & (date_metadata.project_metadata_id == project_metadata_id)
+            & (date_metadata.date_value.isnot(None)),
+        )
+        .build_subquery()
+    )
+
+    sdoc_ids_agg = aggregate_ids(
+        AnnotationDocumentORM.source_document_id, label="sdoc_ids"
+    )
+    sent_anno_ids = aggregate_ids(annotation_orm.id, label="sent_anno_ids")
+    builder.init_query(
+        db.query(
+            sdoc_ids_agg,
+            sent_anno_ids,
+            *group_by.apply(subquery.c["date"]),  # type: ignore
+        ).group_by(*group_by.apply(column=subquery.c["date"]))  # type: ignore
+    )._join_query(
+        AnnotationDocumentORM,
+        AnnotationDocumentORM.id == annotation_orm.annotation_document_id,
+    )._join_query(
+        subquery,
+        and_(
+            annotation_orm.id == subquery.c.anno_id,
+            AnnotationDocumentORM.source_document_id == subquery.c.sdoc_id,
+        ),
+    ).build_query()
+
+    result_rows, _ = builder.execute_query(
+        page_number=None,
+        page_size=None,
+    )
+
+    return [
+        TimelineAnalysisRow(
+            data_ids=row[1],
+            date="-".join(map(lambda x: preprend_zero(x), row[2:])),
+            count=len(row[0]),
+        )
+        for row in result_rows
+    ]
