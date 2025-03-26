@@ -9,6 +9,7 @@ from app.core.data.dto.background_job_base import BackgroundJobStatus
 
 class MLJobType(StrEnum):
     QUOTATION_ATTRIBUTION = "QUOTATION_ATTRIBUTION"
+    DOC_TAG_RECOMMENDATION = "DOC_TAG_RECOMMENDATION"
 
 
 class QuotationAttributionParams(BaseModel):
@@ -18,10 +19,19 @@ class QuotationAttributionParams(BaseModel):
     )
 
 
+class DocTagRecommendationParams(BaseModel):
+    ml_job_type: Literal[MLJobType.DOC_TAG_RECOMMENDATION]
+    recompute: bool = Field(
+        default=False, description="Whether to recompute already processed documents"
+    )
+
+
 class MLJobParameters(BaseModel):
     ml_job_type: MLJobType = Field(description="The type of the MLJob")
     project_id: int = Field(description="The ID of the Project to analyse")
-    specific_ml_job_parameters: Union[QuotationAttributionParams, None] = Field(
+    specific_ml_job_parameters: Union[
+        QuotationAttributionParams, DocTagRecommendationParams, None
+    ] = Field(
         description="Specific parameters for the MLJob w.r.t it's type",
         discriminator="ml_job_type",
     )

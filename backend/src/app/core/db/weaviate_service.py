@@ -435,7 +435,7 @@ class WeaviateService(VectorIndexService):
         obj_ids = [
             # TODO weaviate does not support batch/bulk queries.
             # need some other solution as this is dead-slow for many objects
-            self._get_object_ids(
+            self._get_object_id(
                 index_type=index_type, proj_id=proj_id, sdoc_id=sdoc, sentence_id=sent
             )
             for sdoc, sent in sdoc_sent_ids
@@ -490,7 +490,7 @@ class WeaviateService(VectorIndexService):
             # to retrieve the Weaviate object ID. To ensure we get the document-level
             # representation, we arbitrarily pass sentence_id = 0, as this applies
             # to the entire document embedding.
-            self._get_object_ids(
+            self._get_object_id(
                 index_type=index_type,
                 proj_id=proj_id,
                 sdoc_id=sdoc_id,
@@ -535,7 +535,7 @@ class WeaviateService(VectorIndexService):
                 )
         return hits
 
-    def _get_object_ids(
+    def _get_object_id(
         self,
         proj_id: int,
         sdoc_id: int,

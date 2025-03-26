@@ -1,114 +1,126 @@
-from typing import List
+from typing import Dict, List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
-from app.celery.background_jobs import (
-    prepare_and_start_document_classification_job_async,
-)
 from app.core.authorization.authz_user import AuthzUser
-from app.core.data.classification.document_classification_service import (
-    DocumentClassificationService,
+from app.core.data.crud.document_tag import (
+    crud_document_tag,
 )
 from app.core.data.crud.document_tag_recommendation import (
-    crud_document_tag_recommendation,
+    crud_document_tag_recommendation_link,
 )
+from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.document_tag_recommendation import (
-    DocumentTagRecommendationJobCreate,
-    DocumentTagRecommendationJobCreateIntern,
-    DocumentTagRecommendationJobRead,
-    DocumentTagRecommendationSummary,
+    DocumentTagRecommendationLinkRead,
+    DocumentTagRecommendationLinkUpdate,
+    DocumentTagRecommendationResult,
 )
+from app.core.data.dto.ml_job import (
+    MLJobRead,
+    MLJobType,
+)
+from app.core.data.orm.document_tag_recommendation import (
+    DocumentTagRecommendationLinkORM,
+)
+from app.core.ml.doc_tag_recommendation.doc_tag_recommendation_service import (
+    DocumentClassificationService,
+)
+from app.core.ml.ml_service import MLService
 
 dcs: DocumentClassificationService = DocumentClassificationService()
+mls: MLService = MLService()
 
 router = APIRouter(
-    prefix="/doctagrecommendationjob",
+    prefix="/doctagrecommendation",
     dependencies=[Depends(get_current_user)],
-    tags=["documentTagRecommendationJob"],
+    tags=["documentTagRecommendation"],
 )
-
-
-@router.put(
-    "",
-    response_model=DocumentTagRecommendationJobRead,
-    summary="Creates a new Document Tag Recommendation Task and returns it.",
-)
-def create_new_doc_tag_rec_task(
-    *,
-    db: Session = Depends(get_db_session),
-    doc_tag_rec: DocumentTagRecommendationJobCreate,
-    authz_user: AuthzUser = Depends(),
-) -> DocumentTagRecommendationJobRead:
-    authz_user.assert_in_project(doc_tag_rec.project_id)
-
-    db_obj = crud_document_tag_recommendation.create(
-        db=db,
-        create_dto=DocumentTagRecommendationJobCreateIntern(
-            project_id=doc_tag_rec.project_id, user_id=authz_user.user.id
-        ),
-    )
-    response = DocumentTagRecommendationJobRead.model_validate(db_obj)
-    prepare_and_start_document_classification_job_async(
-        db_obj.task_id,
-        doc_tag_rec.project_id,
-    )
-
-    return response
 
 
 @router.get(
-    "/{task_id}",
-    response_model=List[DocumentTagRecommendationSummary],
-    summary="Retrieve all document tag recommendations for the given task ID.",
+    "/{project_id}",
+    response_model=List[MLJobRead],
+    summary="Retrieve all finished document tag recommendation MLJobs.",
 )
-def get_recommendations_from_task_endpoint(
-    task_id: int,
-) -> List[DocumentTagRecommendationSummary]:
-    """
-    Retrieves document tag recommendations based on the specified task ID.
+def get_all_doctagrecommendation_jobs(
+    *,
+    db: Session = Depends(get_db_session),
+    project_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> List[MLJobRead]:
+    authz_user.assert_in_project(project_id)
 
-    ### Response Format:
-    The endpoint returns a list of recommendations, where each recommendation
-    is represented as a DocumentTagRecommendationSummary DTO with the following structure:
+    ml_jobs = mls.get_all_ml_jobs(project_id=project_id)
+    ml_jobs = [
+        ml_job
+        for ml_job in ml_jobs
+        if ml_job.status == BackgroundJobStatus.FINISHED
+        and ml_job.parameters.ml_job_type == MLJobType.DOC_TAG_RECOMMENDATION
+    ]
+    ml_jobs.sort(key=lambda x: x.created, reverse=True)
+    return ml_jobs
 
-    ```python
-    {
-        "recommendation_id": int,  # Unique identifier for the recommendation
-        "source_document": str,    # Name of the source document
-        "predicted_tag_id": int,   # ID of the predicted tag
-        "predicted_tag": str,      # Name of the predicted tag
-        "prediction_score": float  # Confidence score of the prediction
-    }
-    ```
 
-    ### Error Handling:
-    - Returns HTTP 404 if no recommendations are found for the given task ID.
-    """
-    recommendations = dcs.get_recommendations_from_task(task_id)
-    if not recommendations:
-        raise HTTPException(status_code=404, detail="No recommendations found.")
-    return recommendations
+@router.get(
+    "/job/{ml_job_id}",
+    response_model=List[DocumentTagRecommendationResult],
+    summary="Retrieve all (non-reviewed) document tag recommendations for the given ml job ID.",
+)
+def get_all_doctagrecommendations_from_job(
+    *,
+    db: Session = Depends(get_db_session),
+    ml_job_id: str,
+    authz_user: AuthzUser = Depends(),
+) -> List[DocumentTagRecommendationResult]:
+    recommendations = crud_document_tag_recommendation_link.read_by_ml_job_id(
+        db=db, ml_job_id=ml_job_id, exclude_reviewed=True
+    )
+
+    sdoc2recommendations: Dict[int, List[DocumentTagRecommendationLinkORM]] = {}
+    for recommendation in recommendations:
+        sdoc2recommendations.setdefault(recommendation.source_document_id, []).append(
+            recommendation
+        )
+
+    affected_sdoc_ids = list(sdoc2recommendations.keys())
+    sdoc2tags = crud_document_tag.get_tags_for_documents(
+        db=db, sdoc_ids=affected_sdoc_ids
+    )
+
+    return [
+        DocumentTagRecommendationResult(
+            sdoc_id=sdoc_id,
+            recommendation_ids=[
+                recommendation.id for recommendation in recommendations
+            ],
+            current_tag_ids=[tag.id for tag in sdoc2tags.get(sdoc_id, [])],
+            suggested_tag_ids=[
+                recommendation.predicted_tag_id for recommendation in recommendations
+            ],
+        )
+        for sdoc_id, recommendations in sdoc2recommendations.items()
+    ]
 
 
 @router.patch(
-    "/update_recommendations",
-    response_model=int,
+    "/review_recommendations",
+    response_model=List[DocumentTagRecommendationLinkRead],
     summary="The endpoint receives IDs of wrongly and correctly tagged document recommendations and sets `is_accepted` to `true` or `false`, while setting the corresponding document tags if `true`.",
 )
 def update_recommendations(
     *,
-    accepted_recommendation_ids: List[int],
-    declined_recommendation_ids: List[int],
-) -> int:
-    modifications = dcs.validate_recommendations(
-        accepted_recommendation_ids=accepted_recommendation_ids,
-        declined_recommendation_ids=declined_recommendation_ids,
+    db: Session = Depends(get_db_session),
+    reviewd_recommendation_ids: List[int],
+    authz_user: AuthzUser = Depends(),
+) -> List[DocumentTagRecommendationLinkRead]:
+    modifications = crud_document_tag_recommendation_link.update_multi(
+        db=db,
+        ids=reviewd_recommendation_ids,
+        update_dtos=[
+            DocumentTagRecommendationLinkUpdate(is_reviewed=True)
+            for _ in reviewd_recommendation_ids
+        ],
     )
-    if modifications == -1:
-        raise HTTPException(
-            status_code=400, detail="An error occurred while updating recommendations."
-        )
-
-    return modifications
+    return [DocumentTagRecommendationLinkRead.model_validate(m) for m in modifications]

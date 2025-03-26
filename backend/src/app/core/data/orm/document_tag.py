@@ -45,12 +45,13 @@ class DocumentTagORM(ORMBase):
     project: Mapped["ProjectORM"] = relationship(
         "ProjectORM", back_populates="document_tags"
     )
+
+    # one to many
     document_tag_recommendation_links: Mapped[
         List["DocumentTagRecommendationLinkORM"]
     ] = relationship(
         "DocumentTagRecommendationLinkORM",
         back_populates="predicted_tag",
-        foreign_keys="[DocumentTagRecommendationLinkORM.predicted_tag_id]",
         passive_deletes=True,
     )
 
