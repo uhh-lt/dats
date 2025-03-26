@@ -1,4 +1,3 @@
-import LabelIcon from "@mui/icons-material/Label";
 import { LoadingButton } from "@mui/lab";
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
 import { memo, useCallback, useState } from "react";
@@ -7,6 +6,7 @@ import { DocumentTaggingLLMJobResult } from "../../../../api/openapi/models/Docu
 import { DocumentTagRead } from "../../../../api/openapi/models/DocumentTagRead.ts";
 import TagHooks from "../../../../api/TagHooks.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
+import { getIconComponent, Icon } from "../../../../utils/icons/iconUtils.tsx";
 import { CRUDDialogActions } from "../../../dialogSlice.ts";
 import LLMUtterance from "../LLMUtterance.tsx";
 import { DocumentTaggingResultRow } from "./DocumentTaggingResultRow.ts";
@@ -112,7 +112,7 @@ function DocumentTagResultStepContent({
         <Button onClick={handleClose}>Discard results & close</Button>
         <LoadingButton
           variant="contained"
-          startIcon={<LabelIcon />}
+          startIcon={getIconComponent(Icon.TAG)}
           onClick={handleApplyNewTags}
           loading={isPending}
           loadingPosition="start"

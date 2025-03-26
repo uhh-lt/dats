@@ -109,6 +109,12 @@ export const QueryKey = {
   // managed by AnnoscalingHooks:
   ANNOSCALING_SUGGEST: "annoscalingSuggest",
 
+  // managed by TagRecommendationHooks:
+  // all MLJobReads[] of type DocumentTagRecommendation of a Project (by project id)
+  PROJECT_TAG_RECOMMENDATION_JOBS: "projectTagRecommendationJobs",
+  // all DocumentTagRecommendationLinkRead[] of a MLJob (by ml job id)
+  TAG_RECOMMENDATIONS: "tagRecommendations",
+
   // tables
   SEARCH_TABLE: "search-document-table-data",
   SDOC_TABLE: "document-table-data",

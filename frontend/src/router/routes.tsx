@@ -11,6 +11,7 @@ import CotaDashboard from "../views/analysis/ConceptsOverTime/CotaDashboard.tsx"
 import CotaView from "../views/analysis/ConceptsOverTime/CotaView.tsx";
 import SentAnnotationAnalysis from "../views/analysis/SentAnnotationAnalysis/SentAnnotationAnalysis.tsx";
 import SpanAnnotationAnalysis from "../views/analysis/SpanAnnotationAnalysis/SpanAnnotationAnalysis.tsx";
+import TagRecommendations from "../views/analysis/TagRecommendations/TagRecommendations.tsx";
 import TimelineAnalysis from "../views/analysis/TimelineAnalysis/TimelineAnalysis.tsx";
 import TimelineAnalysisDashboard from "../views/analysis/TimelineAnalysis/TimelineAnalysisDashboard.tsx";
 import WordFrequency from "../views/analysis/WordFrequency/WordFrequency.tsx";
@@ -137,6 +138,10 @@ const router = createBrowserRouter([
       {
         path: "/project/:projectId/analysis/annotation-scaling",
         element: <AnnotationScaling />,
+      },
+      {
+        path: "/project/:projectId/analysis/tag-recommendations",
+        element: <TagRecommendations />,
       },
       {
         path: "/project/:projectId/whiteboard",

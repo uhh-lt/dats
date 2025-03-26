@@ -1570,41 +1570,19 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/doctagrecommendationjob": {
-      "put": {
-        "tags": ["documentTagRecommendationJob"],
-        "summary": "Creates a new Document Tag Recommendation Task and returns it.",
-        "operationId": "create_new_doc_tag_rec_task",
-        "requestBody": {
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/DocumentTagRecommendationJobCreate" } }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/DocumentTagRecommendationJobRead" } }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/doctagrecommendationjob/{task_id}": {
+    "/doctagrecommendation/{project_id}": {
       "get": {
-        "tags": ["documentTagRecommendationJob"],
-        "summary": "Retrieve all document tag recommendations for the given task ID.",
-        "description": "Retrieves document tag recommendations based on the specified task ID.\n\n### Response Format:\nThe endpoint returns a list of recommendations, where each recommendation\nis represented as a DocumentTagRecommendationSummary DTO with the following structure:\n\n```python\n{\n    \"recommendation_id\": int,  # Unique identifier for the recommendation\n    \"source_document\": str,    # Name of the source document\n    \"predicted_tag_id\": int,   # ID of the predicted tag\n    \"predicted_tag\": str,      # Name of the predicted tag\n    \"prediction_score\": float  # Confidence score of the prediction\n}\n```\n\n### Error Handling:\n- Returns HTTP 404 if no recommendations are found for the given task ID.",
-        "operationId": "get_recommendations_from_task_endpoint",
+        "tags": ["documentTagRecommendation"],
+        "summary": "Retrieve all finished document tag recommendation MLJobs.",
+        "operationId": "get_all_doctagrecommendation_jobs",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "task_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Task Id" } }
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
         ],
         "responses": {
           "200": {
@@ -1613,8 +1591,8 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/DocumentTagRecommendationSummary" },
-                  "title": "Response Documenttagrecommendationjob-Get Recommendations From Task Endpoint"
+                  "items": { "$ref": "#/components/schemas/MLJobRead" },
+                  "title": "Response Documenttagrecommendation-Get All Doctagrecommendation Jobs"
                 }
               }
             }
@@ -1626,15 +1604,44 @@
         }
       }
     },
-    "/doctagrecommendationjob/update_recommendations": {
+    "/doctagrecommendation/job/{ml_job_id}": {
+      "get": {
+        "tags": ["documentTagRecommendation"],
+        "summary": "Retrieve all document tag recommendations for the given ml job ID.",
+        "operationId": "get_all_doctagrecommendations_from_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "ml_job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Ml Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/DocumentTagRecommendationResult" },
+                  "title": "Response Documenttagrecommendation-Get All Doctagrecommendations From Job"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/doctagrecommendation/review_recommendations": {
       "patch": {
-        "tags": ["documentTagRecommendationJob"],
+        "tags": ["documentTagRecommendation"],
         "summary": "The endpoint receives IDs of wrongly and correctly tagged document recommendations and sets `is_accepted` to `true` or `false`, while setting the corresponding document tags if `true`.",
         "operationId": "update_recommendations",
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/Body_documentTagRecommendationJob-update_recommendations" }
+              "schema": { "items": { "type": "integer" }, "type": "array", "title": "Reviewd Recommendation Ids" }
             }
           },
           "required": true
@@ -1644,7 +1651,11 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": { "type": "integer", "title": "Response Documenttagrecommendationjob-Update Recommendations" }
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/DocumentTagRecommendationLinkRead" },
+                  "type": "array",
+                  "title": "Response Documenttagrecommendation-Update Recommendations"
+                }
               }
             }
           },
@@ -5848,23 +5859,6 @@
         "required": ["sdoc_ids", "unlink_tag_ids", "link_tag_ids"],
         "title": "Body_documentTag-update_document_tags_batch"
       },
-      "Body_documentTagRecommendationJob-update_recommendations": {
-        "properties": {
-          "accepted_recommendation_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Accepted Recommendation Ids"
-          },
-          "declined_recommendation_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Declined Recommendation Ids"
-          }
-        },
-        "type": "object",
-        "required": ["accepted_recommendation_ids", "declined_recommendation_ids"],
-        "title": "Body_documentTagRecommendationJob-update_recommendations"
-      },
       "Body_import-start_import_codes_job": {
         "properties": {
           "uploaded_file": {
@@ -6570,6 +6564,20 @@
         "enum": ["umap", "pca", "tsne"],
         "title": "DimensionalityReductionAlgorithm"
       },
+      "DocTagRecommendationParams": {
+        "properties": {
+          "ml_job_type": { "type": "string", "const": "DOC_TAG_RECOMMENDATION", "title": "Ml Job Type" },
+          "recompute": {
+            "type": "boolean",
+            "title": "Recompute",
+            "description": "Whether to recompute already processed documents",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": ["ml_job_type"],
+        "title": "DocTagRecommendationParams"
+      },
       "DocType": { "type": "string", "enum": ["text", "image", "video", "audio"], "title": "DocType" },
       "DocumentTagCreate": {
         "properties": {
@@ -6632,69 +6640,64 @@
         "required": ["name", "color", "id", "project_id", "created", "updated"],
         "title": "DocumentTagRead"
       },
-      "DocumentTagRecommendationJobCreate": {
+      "DocumentTagRecommendationLinkRead": {
         "properties": {
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "ID of the project this recommendation belongs to"
-          }
-        },
-        "type": "object",
-        "required": ["project_id"],
-        "title": "DocumentTagRecommendationJobCreate"
-      },
-      "DocumentTagRecommendationJobRead": {
-        "properties": {
-          "user_id": {
-            "type": "integer",
-            "title": "User Id",
-            "description": "ID of the user who created the recommendation"
-          },
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "ID of the project this recommendation belongs to"
-          },
-          "task_id": { "type": "integer", "title": "Task Id", "description": "ID of the recommendation task" },
-          "created": {
+          "ml_job_id": {
             "type": "string",
-            "format": "date-time",
-            "title": "Created",
-            "description": "Creation timestamp of the recommendation task."
-          }
-        },
-        "type": "object",
-        "required": ["user_id", "project_id", "task_id", "created"],
-        "title": "DocumentTagRecommendationJobRead"
-      },
-      "DocumentTagRecommendationSummary": {
-        "properties": {
-          "recommendation_id": {
-            "type": "integer",
-            "title": "Recommendation Id",
-            "description": "Unique identifier for the recommendation"
+            "title": "Ml Job Id",
+            "description": "Identifier of the corresponding ML Job."
           },
-          "source_document": {
-            "type": "string",
-            "title": "Source Document",
-            "description": "Filename of the source document"
+          "source_document_id": {
+            "type": "integer",
+            "title": "Source Document Id",
+            "description": "ID of the source document"
           },
           "predicted_tag_id": {
             "type": "integer",
             "title": "Predicted Tag Id",
             "description": "ID of the predicted tag"
           },
-          "predicted_tag": { "type": "string", "title": "Predicted Tag", "description": "Name of the predicted tag" },
           "prediction_score": {
             "type": "number",
             "title": "Prediction Score",
-            "description": "Confidence score of the predicition"
+            "description": "Prediction score of the tag"
+          },
+          "is_reviewed": {
+            "type": "boolean",
+            "title": "Is Reviewed",
+            "description": "Reviewed status of the recommendation",
+            "default": false
           }
         },
         "type": "object",
-        "required": ["recommendation_id", "source_document", "predicted_tag_id", "predicted_tag", "prediction_score"],
-        "title": "DocumentTagRecommendationSummary"
+        "required": ["ml_job_id", "source_document_id", "predicted_tag_id", "prediction_score"],
+        "title": "DocumentTagRecommendationLinkRead"
+      },
+      "DocumentTagRecommendationResult": {
+        "properties": {
+          "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
+          "recommendation_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Recommendation Ids",
+            "description": "List of the corresponding DocumentTagRecommendationLinks"
+          },
+          "current_tag_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Current Tag Ids",
+            "description": "List of current tag IDs for the source document"
+          },
+          "suggested_tag_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Suggested Tag Ids",
+            "description": "List of suggested tag IDs for the source document"
+          }
+        },
+        "type": "object",
+        "required": ["sdoc_id", "recommendation_ids", "current_tag_ids", "suggested_tag_ids"],
+        "title": "DocumentTagRecommendationResult"
       },
       "DocumentTagUpdate": {
         "properties": {
@@ -7721,10 +7724,16 @@
           "specific_ml_job_parameters": {
             "anyOf": [
               {
-                "oneOf": [{ "$ref": "#/components/schemas/QuotationAttributionParams" }],
+                "oneOf": [
+                  { "$ref": "#/components/schemas/QuotationAttributionParams" },
+                  { "$ref": "#/components/schemas/DocTagRecommendationParams" }
+                ],
                 "discriminator": {
                   "propertyName": "ml_job_type",
-                  "mapping": { "QUOTATION_ATTRIBUTION": "#/components/schemas/QuotationAttributionParams" }
+                  "mapping": {
+                    "DOC_TAG_RECOMMENDATION": "#/components/schemas/DocTagRecommendationParams",
+                    "QUOTATION_ATTRIBUTION": "#/components/schemas/QuotationAttributionParams"
+                  }
                 }
               },
               { "type": "null" }
@@ -7768,7 +7777,11 @@
         "required": ["id", "created", "updated", "parameters"],
         "title": "MLJobRead"
       },
-      "MLJobType": { "type": "string", "enum": ["QUOTATION_ATTRIBUTION"], "title": "MLJobType" },
+      "MLJobType": {
+        "type": "string",
+        "enum": ["QUOTATION_ATTRIBUTION", "DOC_TAG_RECOMMENDATION"],
+        "title": "MLJobType"
+      },
       "MemoColumns": {
         "type": "string",
         "enum": ["M_TITLE", "M_CONTENT", "M_STARRED", "M_USER_ID"],
@@ -9594,7 +9607,8 @@
           },
           "annotation_aggregation_type": {
             "anyOf": [{ "$ref": "#/components/schemas/TAAnnotationAggregationType" }, { "type": "null" }],
-            "description": "The type of the annotation aggregation (only for TimelineAnalysisType != DOCUMENT)"
+            "description": "The type of the annotation aggregation (only for TimelineAnalysisType != DOCUMENT)",
+            "default": "annotation"
           }
         },
         "type": "object",
