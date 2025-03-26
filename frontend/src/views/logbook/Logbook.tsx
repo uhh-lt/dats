@@ -23,6 +23,10 @@ function Logbook() {
     (state) => state.logbook.columnVisibilityModel,
     LogbookActions.onColumnVisibilityChange,
   );
+  const [fetchSize, setFetchSize] = useReduxConnector(
+    (state) => state.logbook.fetchSize,
+    LogbookActions.onFetchSizeChange,
+  );
 
   return (
     <ContentContentLayout
@@ -36,6 +40,8 @@ function Logbook() {
           onSortingChange={setSortingModel}
           columnVisibilityModel={columnVisibilityModel}
           onColumnVisibilityChange={setColumnVisibilityModel}
+          fetchSize={fetchSize}
+          onFetchSizeChange={setFetchSize}
         />
       }
       rightContent={<LogbookEditor projectId={projectId} />}

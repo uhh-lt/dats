@@ -5,7 +5,7 @@ import {
   MRT_ToggleGlobalFilterButton,
 } from "material-react-table";
 import { FilterTableToolbarProps } from "./FilterTableToolbarProps.ts";
-import { TableRowWithId } from "./TableRowWithId.ts";
+import { TableRowWithId } from "./types/TableRowWithId.ts";
 
 function FilterTableToolbarRight<T extends TableRowWithId>({ table }: FilterTableToolbarProps<T>) {
   return (

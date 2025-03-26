@@ -26,7 +26,8 @@ import { MyFilter, createEmptyFilter } from "../../FilterDialog/filterUtils.ts";
 import FilterTableToolbarLeft from "../../FilterTable/FilterTableToolbarLeft.tsx";
 import { FilterTableToolbarProps } from "../../FilterTable/FilterTableToolbarProps.ts";
 import FilterTableToolbarRight from "../../FilterTable/FilterTableToolbarRight.tsx";
-import { useRenderToolbars } from "../../FilterTable/useRenderToolbars.tsx";
+import { useRenderToolbars } from "../../FilterTable/hooks/useRenderToolbars.tsx";
+import { FilterTableProps } from "../../FilterTable/types/FilterTableProps.ts";
 import MemoRenderer2 from "../../Memo/MemoRenderer2.tsx";
 import SdocMetadataRenderer from "../../Metadata/SdocMetadataRenderer.tsx";
 import SdocTagsRenderer from "../../SourceDocument/SdocTagRenderer.tsx";
@@ -35,7 +36,6 @@ import { SATFilterActions } from "./satFilterSlice.ts";
 import SdocAnnotationLink from "./SdocAnnotationLink.tsx";
 import { useInitSATFilterSlice } from "./useInitSATFilterSlice.ts";
 
-const fetchSize = 20;
 const flatMapData = (page: SpanAnnotationSearchResult) => page.data;
 
 export interface SpanAnnotationTableProps {
@@ -70,11 +70,13 @@ function SpanAnnotationTable({
   onSortingChange,
   columnVisibilityModel,
   onColumnVisibilityChange,
+  fetchSize,
+  onFetchSizeChange,
   positionToolbarAlertBanner = "top",
   renderTopRightToolbar = FilterTableToolbarRight,
   renderTopLeftToolbar = FilterTableToolbarLeft,
   renderBottomToolbar,
-}: SpanAnnotationTableProps) {
+}: FilterTableProps<SpanAnnotationRow>) {
   // global client state (react router)
   const { user } = useAuth();
   const userId = user?.id;
@@ -172,6 +174,7 @@ function SpanAnnotationTable({
       projectId,
       filter, //refetch when columnFilters changes
       sortingModel, //refetch when sorting changes
+      fetchSize,
     ],
     queryFn: ({ pageParam }) =>
       AnalysisService.spanAnnotationSearch({
@@ -220,12 +223,18 @@ function SpanAnnotationTable({
     [fetchMoreOnScroll],
   );
 
+  // fetch all
+  const handleFetchAll = useCallback(() => {
+    onFetchSizeChange(totalResults);
+  }, [onFetchSizeChange, totalResults]);
+
   // rendering
   const { renderTopLeftToolbarContent, renderTopRightToolbarContent, renderBottomToolbarContent } = useRenderToolbars({
     name: "span annotations",
     flatData,
     totalFetched,
     totalResults,
+    handleFetchAll,
     renderTopRightToolbar,
     renderTopLeftToolbar,
     renderBottomToolbar,

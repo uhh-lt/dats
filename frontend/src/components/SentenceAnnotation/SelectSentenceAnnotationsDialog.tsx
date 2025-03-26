@@ -82,6 +82,7 @@ function SelectSentenceAnnotationsDialogContent({
   onConfirmSelection,
   onClose,
 }: SelectSentenceAnnotationsDialogContentProps) {
+  const [fetchSize, setFetchSize] = useState(20);
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
   const [sortingModel, setSortingModel] = useState<MRT_SortingState>([]);
   const [visibilityModel, setVisibilityModel] = useState<MRT_VisibilityState>(() =>
@@ -133,6 +134,8 @@ function SelectSentenceAnnotationsDialogContent({
       onSortingChange={setSortingModel}
       columnVisibilityModel={visibilityModel}
       onColumnVisibilityChange={setVisibilityModel}
+      fetchSize={fetchSize}
+      onFetchSizeChange={setFetchSize}
       renderBottomToolbar={renderBottomToolbar}
     />
   );

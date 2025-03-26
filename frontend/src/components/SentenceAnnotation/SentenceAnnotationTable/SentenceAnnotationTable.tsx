@@ -1,14 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import {
-  MRT_ColumnDef,
-  MRT_RowSelectionState,
-  MRT_RowVirtualizer,
-  MRT_SortingState,
-  MRT_TableOptions,
-  MRT_VisibilityState,
-  MaterialReactTable,
-  useMaterialReactTable,
-} from "material-react-table";
+import { MRT_ColumnDef, MRT_RowVirtualizer, MaterialReactTable, useMaterialReactTable } from "material-react-table";
 import { memo, useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
 import { QueryKey } from "../../../api/QueryKey.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
@@ -24,9 +15,9 @@ import { useTableInfiniteScroll } from "../../../utils/useTableInfiniteScroll.ts
 import CodeRenderer from "../../Code/CodeRenderer.tsx";
 import { MyFilter, createEmptyFilter } from "../../FilterDialog/filterUtils.ts";
 import FilterTableToolbarLeft from "../../FilterTable/FilterTableToolbarLeft.tsx";
-import { FilterTableToolbarProps } from "../../FilterTable/FilterTableToolbarProps.ts";
 import FilterTableToolbarRight from "../../FilterTable/FilterTableToolbarRight.tsx";
-import { useRenderToolbars } from "../../FilterTable/useRenderToolbars.tsx";
+import { useRenderToolbars } from "../../FilterTable/hooks/useRenderToolbars.tsx";
+import { FilterTableProps } from "../../FilterTable/types/FilterTableProps.ts";
 import MemoRenderer2 from "../../Memo/MemoRenderer2.tsx";
 import SdocMetadataRenderer from "../../Metadata/SdocMetadataRenderer.tsx";
 import SdocTagsRenderer from "../../SourceDocument/SdocTagRenderer.tsx";
@@ -35,27 +26,7 @@ import SdocAnnotationLink from "./SdocAnnotationLink.tsx";
 import { SEATFilterActions } from "./seatFilterSlice.ts";
 import { useInitSEATFilterSlice } from "./useInitSEATFilterSlice.ts";
 
-const fetchSize = 20;
 const flatMapData = (page: SentenceAnnotationSearchResult) => page.data;
-
-export interface SentenceAnnotationTableProps {
-  projectId: number;
-  filterName: string;
-  // selection
-  rowSelectionModel: MRT_RowSelectionState;
-  onRowSelectionChange: MRT_TableOptions<SentenceAnnotationRow>["onRowSelectionChange"];
-  // sorting
-  sortingModel: MRT_SortingState;
-  onSortingChange: MRT_TableOptions<SentenceAnnotationRow>["onSortingChange"];
-  // column visibility
-  columnVisibilityModel: MRT_VisibilityState;
-  onColumnVisibilityChange: MRT_TableOptions<SentenceAnnotationRow>["onColumnVisibilityChange"];
-  // components
-  positionToolbarAlertBanner?: MRT_TableOptions<SentenceAnnotationRow>["positionToolbarAlertBanner"];
-  renderTopRightToolbar?: (props: FilterTableToolbarProps<SentenceAnnotationRow>) => React.ReactNode;
-  renderTopLeftToolbar?: (props: FilterTableToolbarProps<SentenceAnnotationRow>) => React.ReactNode;
-  renderBottomToolbar?: (props: FilterTableToolbarProps<SentenceAnnotationRow>) => React.ReactNode;
-}
 
 // this defines which filter slice is used
 const filterStateSelector = (state: RootState) => state.seatFilter;
@@ -70,11 +41,13 @@ function SentenceAnnotationTable({
   onSortingChange,
   columnVisibilityModel,
   onColumnVisibilityChange,
+  fetchSize,
+  onFetchSizeChange,
   positionToolbarAlertBanner = "top",
   renderTopRightToolbar = FilterTableToolbarRight,
   renderTopLeftToolbar = FilterTableToolbarLeft,
   renderBottomToolbar,
-}: SentenceAnnotationTableProps) {
+}: FilterTableProps<SentenceAnnotationRow>) {
   // global client state (react router)
   const { user } = useAuth();
   const userId = user?.id;
@@ -180,6 +153,7 @@ function SentenceAnnotationTable({
       projectId,
       filter, //refetch when columnFilters changes
       sortingModel, //refetch when sorting changes
+      fetchSize,
     ],
     queryFn: ({ pageParam }) =>
       AnalysisService.sentenceAnnotationSearch({
@@ -228,12 +202,18 @@ function SentenceAnnotationTable({
     [fetchMoreOnScroll],
   );
 
+  // fetch all
+  const handleFetchAll = useCallback(() => {
+    onFetchSizeChange(totalResults);
+  }, [onFetchSizeChange, totalResults]);
+
   // rendering
   const { renderTopLeftToolbarContent, renderTopRightToolbarContent, renderBottomToolbarContent } = useRenderToolbars({
     name: "sentence annotations",
     flatData,
     totalFetched,
     totalResults,
+    handleFetchAll,
     renderTopRightToolbar,
     renderTopLeftToolbar,
     renderBottomToolbar,
