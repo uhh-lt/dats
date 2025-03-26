@@ -4,35 +4,11 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.document_tag_recommendation import (
-    DocumentTagRecommendationJobCreateIntern,
-    DocumentTagRecommendationJobUpdate,
     DocumentTagRecommendationLinkCreate,
     DocumentTagRecommendationLinkUpdate,
 )
 from app.core.data.orm.document_tag_recommendation import (
-    DocumentTagRecommendationJobORM,
     DocumentTagRecommendationLinkORM,
-)
-
-
-class CRUDDocumentTagRecommendationJob(
-    CRUDBase[
-        DocumentTagRecommendationJobORM,
-        DocumentTagRecommendationJobCreateIntern,
-        DocumentTagRecommendationJobUpdate,
-    ]
-):
-    # use base class update, read, create functions
-
-    def set_recommendation_job_model(self, db: Session, task_id: int, model_name: str):
-        db.query(self.model).filter(self.model.task_id == task_id).update(
-            {"model_name": model_name}
-        )
-        db.commit()
-
-
-crud_document_tag_recommendation = CRUDDocumentTagRecommendationJob(
-    DocumentTagRecommendationJobORM
 )
 
 
@@ -43,18 +19,17 @@ class CrudDocumentTagRecommendationLink(
         DocumentTagRecommendationLinkUpdate,
     ]
 ):
-    def read_by_task_id(
+    def read_by_ml_job_id(
         self,
         db: Session,
         *,
-        task_id: int,
+        ml_job_id: str,
         exclude_reviewed: bool = False,
     ) -> List[DocumentTagRecommendationLinkORM]:
-        query = db.query(self.model)
-        query = query.filter(self.model.recommendation_task_id == task_id)
+        query = db.query(self.model).filter(self.model.ml_job_id == ml_job_id)
 
         if exclude_reviewed:
-            query = query.filter(self.model.is_accepted == None)  # noqa: E711
+            query = query.filter(self.model.is_reviewed == False)  # noqa: E712
         return query.all()
 
 

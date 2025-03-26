@@ -5,6 +5,7 @@ from sqlalchemy import and_, or_
 
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.ml_job import (
+    DocTagRecommendationParams,
     MLJobCreate,
     MLJobParameters,
     MLJobRead,
@@ -18,6 +19,9 @@ from app.core.data.orm.source_document_job_status import (
     SourceDocumentJobStatusORM,
 )
 from app.core.db.redis_service import RedisService
+from app.core.ml.doc_tag_recommendation.doc_tag_recommendation_service import (
+    DocumentClassificationService,
+)
 from app.core.ml.quote_service import QuoteService
 from app.util.singleton_meta import SingletonMeta
 
@@ -75,35 +79,46 @@ class MLService(metaclass=SingletonMeta):
         try:
             match mlj.parameters.ml_job_type:
                 case MLJobType.QUOTATION_ATTRIBUTION:
-                    if isinstance(
+                    assert isinstance(
                         mlj.parameters.specific_ml_job_parameters,
                         QuotationAttributionParams,
-                    ):
-                        recompute = mlj.parameters.specific_ml_job_parameters.recompute
-                        valid_type = or_(
-                            SourceDocumentJobStatusORM.type
-                            == JobType.QUOTATION_ATTRIBUTION,
-                            SourceDocumentJobStatusORM.type == None,  # noqa: E711
+                    ), "QuotationAttributionParams expected"
+                    recompute = mlj.parameters.specific_ml_job_parameters.recompute
+                    valid_type = or_(
+                        SourceDocumentJobStatusORM.type
+                        == JobType.QUOTATION_ATTRIBUTION,
+                        SourceDocumentJobStatusORM.type == None,  # noqa: E711
+                    )
+                    filter_criterion = (
+                        and_(
+                            valid_type,
+                            inactive_status,
+                            or_(
+                                timestamp_column < start_time,
+                                timestamp_column == None,  # noqa: E711
+                            ),
                         )
-                        filter_criterion = (
-                            and_(
-                                valid_type,
-                                inactive_status,
-                                or_(
-                                    timestamp_column < start_time,
-                                    timestamp_column == None,  # noqa: E711
-                                ),
-                            )
-                            if recompute
-                            else and_(
-                                valid_type,
-                                or_(unfinished_status, timestamp_column == None),  # noqa: E711
-                            )  # noqa: E711
-                        )
+                        if recompute
+                        else and_(
+                            valid_type,
+                            or_(unfinished_status, timestamp_column == None),  # noqa: E711
+                        )  # noqa: E711
+                    )
 
-                        QuoteService().perform_quotation_detection(
-                            mlj.parameters.project_id, filter_criterion, recompute
-                        )
+                    QuoteService().perform_quotation_detection(
+                        mlj.parameters.project_id, filter_criterion, recompute
+                    )
+                case MLJobType.DOC_TAG_RECOMMENDATION:
+                    assert isinstance(
+                        mlj.parameters.specific_ml_job_parameters,
+                        DocTagRecommendationParams,
+                    ), "DocTagRecommendationParams expected"
+                    # DO DOC TAGGING STUFF
+                    DocumentClassificationService().classify_untagged_documents(
+                        ml_job_id=mlj.id,
+                        project_id=mlj.parameters.project_id,
+                    )
+
             mlj = self._update_ml_job(
                 ml_job_id, MLJobUpdate(status=BackgroundJobStatus.FINISHED)
             )
