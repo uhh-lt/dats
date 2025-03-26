@@ -1,6 +1,6 @@
 {
   "openapi": "3.1.0",
-  "info": { "title": "Discourse Analysis Tool Suite API", "version": "1.4.0" },
+  "info": { "title": "Discourse Analysis Tool Suite API", "version": "1.4.1" },
   "paths": {
     "/heartbeat": {
       "get": {
@@ -1607,7 +1607,7 @@
     "/doctagrecommendation/job/{ml_job_id}": {
       "get": {
         "tags": ["documentTagRecommendation"],
-        "summary": "Retrieve all document tag recommendations for the given ml job ID.",
+        "summary": "Retrieve all (non-reviewed) document tag recommendations for the given ml job ID.",
         "operationId": "get_all_doctagrecommendations_from_job",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
