@@ -1,15 +1,16 @@
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, Button, Stack, Typography } from "@mui/material";
 import { MRT_RowSelectionState, MRT_TableInstance } from "material-react-table";
 import { useCallback } from "react";
-import { ReduxFilterDialogProps } from "../FilterDialog/ReduxFilterDialogProps.ts";
-import { FilterTableToolbarProps } from "./FilterTableToolbarProps.ts";
-import { TableRowWithId } from "./TableRowWithId.ts";
+import { ReduxFilterDialogProps } from "../../FilterDialog/ReduxFilterDialogProps.ts";
+import { FilterTableToolbarProps } from "../FilterTableToolbarProps.ts";
+import { TableRowWithId } from "../types/TableRowWithId.ts";
 
 interface UseRenderToolbarsProps<T extends TableRowWithId> extends ReduxFilterDialogProps {
   name: string;
   flatData: T[];
   totalFetched: number;
   totalResults: number;
+  handleFetchAll: () => void;
   renderTopRightToolbar: (props: FilterTableToolbarProps<T>) => React.ReactNode;
   renderTopLeftToolbar: (props: FilterTableToolbarProps<T>) => React.ReactNode;
   renderBottomToolbar?: (props: FilterTableToolbarProps<T>) => React.ReactNode;
@@ -22,6 +23,7 @@ export const useRenderToolbars = <T extends TableRowWithId>({
   flatData,
   totalFetched,
   totalResults,
+  handleFetchAll,
   renderTopRightToolbar,
   renderTopLeftToolbar,
   renderBottomToolbar,
@@ -59,6 +61,9 @@ export const useRenderToolbars = <T extends TableRowWithId>({
         <Typography>
           Fetched {totalFetched} of {totalResults} total {name}.
         </Typography>
+        <Button size="small" onClick={handleFetchAll}>
+          Fetch All
+        </Button>
         <Box sx={{ flexGrow: 1 }} />
         {renderBottomToolbar &&
           renderBottomToolbar({
@@ -75,6 +80,7 @@ export const useRenderToolbars = <T extends TableRowWithId>({
       totalFetched,
       totalResults,
       name,
+      handleFetchAll,
       renderBottomToolbar,
       flatData,
       tableContainerRef,

@@ -24,6 +24,10 @@ function SentAnnotationAnalysisTable() {
     (state) => state.sentAnnotationAnalysis.columnVisibilityModel,
     SentAnnotationsActions.onColumnVisibilityChange,
   );
+  const [fetchSize, setFetchSize] = useReduxConnector(
+    (state) => state.sentAnnotationAnalysis.fetchSize,
+    SentAnnotationsActions.onFetchSizeChange,
+  );
 
   return (
     <SentenceAnnotationTable
@@ -37,6 +41,8 @@ function SentAnnotationAnalysisTable() {
       onColumnVisibilityChange={setColumnVisibilityModel}
       renderTopLeftToolbar={SentAnnotationAnalysisTableToolbarLeft}
       renderTopRightToolbar={SentAnnotationAnalysisTableToolbarRight}
+      fetchSize={fetchSize}
+      onFetchSizeChange={setFetchSize}
       positionToolbarAlertBanner="head-overlay"
     />
   );

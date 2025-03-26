@@ -79,6 +79,7 @@ const AddBBoxAnnotationNodeDialogContent = memo(function AddBBoxAnnotationNodeDi
   onClose,
 }: AddBBoxAnnotationNodeDialogProps & { onClose: () => void; metadata: ProjectMetadataRead[] }) {
   // local state
+  const [fetchSize, setFetchSize] = useState(20);
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
   const [sortingModel, setSortingModel] = useState<MRT_SortingState>([]);
   const [visibilityModel, setVisibilityModel] = useState<MRT_VisibilityState>(() =>
@@ -135,6 +136,8 @@ const AddBBoxAnnotationNodeDialogContent = memo(function AddBBoxAnnotationNodeDi
       onSortingChange={setSortingModel}
       columnVisibilityModel={visibilityModel}
       onColumnVisibilityChange={setVisibilityModel}
+      fetchSize={fetchSize}
+      onFetchSizeChange={setFetchSize}
       renderBottomToolbar={renderBottomToolbarActions}
     />
   );

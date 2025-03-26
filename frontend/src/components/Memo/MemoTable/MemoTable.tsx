@@ -1,13 +1,9 @@
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, Button, Stack, Typography } from "@mui/material";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   MRT_ColumnDef,
-  MRT_RowSelectionState,
   MRT_RowVirtualizer,
-  MRT_SortingState,
   MRT_TableInstance,
-  MRT_TableOptions,
-  MRT_VisibilityState,
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
@@ -22,7 +18,7 @@ import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
 import { useTableInfiniteScroll } from "../../../utils/useTableInfiniteScroll.ts";
 import { MyFilter, createEmptyFilter } from "../../FilterDialog/filterUtils.ts";
-import { FilterTableToolbarProps } from "../../FilterTable/FilterTableToolbarProps.ts";
+import { FilterTableProps } from "../../FilterTable/types/FilterTableProps.ts";
 import MemoRenderer from "../MemoRenderer.tsx";
 import { MemoFilterActions } from "./memoFilterSlice.ts";
 import MemoTableOptionsMenu from "./MemoTableOptionsMenu.tsx";
@@ -30,27 +26,7 @@ import MemoToolbarLeft from "./MemoToolbarLeft.tsx";
 import MemoToolbarRight from "./MemoToolbarRight.tsx";
 import { useInitMemoFilterSlice } from "./useInitMemoFilterSlice.ts";
 
-const fetchSize = 20;
 const flatMapData = (page: PaginatedElasticSearchDocumentHits) => page.hits;
-
-export interface MemoTableProps {
-  projectId: number;
-  filterName: string;
-  // selection
-  rowSelectionModel: MRT_RowSelectionState;
-  onRowSelectionChange: MRT_TableOptions<ElasticSearchDocumentHit>["onRowSelectionChange"];
-  // sorting
-  sortingModel: MRT_SortingState;
-  onSortingChange: MRT_TableOptions<ElasticSearchDocumentHit>["onSortingChange"];
-  // column visibility
-  columnVisibilityModel: MRT_VisibilityState;
-  onColumnVisibilityChange: MRT_TableOptions<ElasticSearchDocumentHit>["onColumnVisibilityChange"];
-  // components
-  positionToolbarAlertBanner?: MRT_TableOptions<ElasticSearchDocumentHit>["positionToolbarAlertBanner"];
-  renderTopRightToolbar?: (props: FilterTableToolbarProps<ElasticSearchDocumentHit>) => React.ReactNode;
-  renderTopLeftToolbar?: (props: FilterTableToolbarProps<ElasticSearchDocumentHit>) => React.ReactNode;
-  renderBottomToolbar?: (props: FilterTableToolbarProps<ElasticSearchDocumentHit>) => React.ReactNode;
-}
 
 // this defines which filter slice is used
 const filterStateSelector = (state: RootState) => state.memoFilter;
@@ -65,11 +41,13 @@ function SearchMemoTable({
   onSortingChange,
   columnVisibilityModel,
   onColumnVisibilityChange,
+  fetchSize,
+  onFetchSizeChange,
   positionToolbarAlertBanner = "head-overlay",
   renderTopRightToolbar = MemoToolbarRight,
   renderTopLeftToolbar = MemoToolbarLeft,
   renderBottomToolbar,
-}: MemoTableProps) {
+}: FilterTableProps<ElasticSearchDocumentHit>) {
   // local state
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isSearchContent, setIsSearchContent] = useState<boolean>(false);
@@ -138,6 +116,7 @@ function SearchMemoTable({
     return [...result, attachedToCell];
   }, [tableInfo]);
 
+  // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchDocumentHits>({
     queryKey: [
       QueryKey.MEMO_TABLE,
@@ -146,6 +125,7 @@ function SearchMemoTable({
       filter, // refetch when columnFilters changes
       sortingModel, // refetch when sorting changes
       isSearchContent,
+      fetchSize,
     ],
     queryFn: ({ pageParam }) =>
       MemoService.searchMemos({
@@ -192,6 +172,11 @@ function SearchMemoTable({
     [fetchMoreOnScroll],
   );
 
+  // fetch all
+  const handleFetchAll = useCallback(() => {
+    onFetchSizeChange(totalResults);
+  }, [onFetchSizeChange, totalResults]);
+
   // rendering
   const renderTopLeftToolbarContent = useCallback(
     (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) =>
@@ -212,6 +197,9 @@ function SearchMemoTable({
         <Typography>
           Fetched {totalFetched} of {totalResults} total memos.
         </Typography>
+        <Button size="small" onClick={handleFetchAll}>
+          Fetch All
+        </Button>
         <Box flexGrow={1} />
         {renderBottomToolbar &&
           renderBottomToolbar({
@@ -224,7 +212,7 @@ function SearchMemoTable({
           })}
       </Stack>
     ),
-    [totalFetched, totalResults, renderBottomToolbar, filterName, flatData, rowSelectionModel],
+    [totalFetched, totalResults, handleFetchAll, renderBottomToolbar, flatData, filterName, rowSelectionModel],
   );
 
   const renderTopRightToolbarContent = useCallback(

@@ -23,6 +23,10 @@ function SpanAnnotationAnalysisTable() {
     (state) => state.spanAnnotationAnalysis.columnVisibilityModel,
     SpanAnnotationsActions.onColumnVisibilityChange,
   );
+  const [fetchSize, setFetchSize] = useReduxConnector(
+    (state) => state.spanAnnotationAnalysis.fetchSize,
+    SpanAnnotationsActions.onFetchSizeChange,
+  );
 
   return (
     <SpanAnnotationTable
@@ -36,6 +40,8 @@ function SpanAnnotationAnalysisTable() {
       onColumnVisibilityChange={setColumnVisibilityModel}
       renderTopLeftToolbar={SpanAnnotationAnalysisTableToolbarLeft}
       renderTopRightToolbar={SpanAnnotationAnalysisTableToolbarRight}
+      fetchSize={fetchSize}
+      onFetchSizeChange={setFetchSize}
       positionToolbarAlertBanner="head-overlay"
     />
   );

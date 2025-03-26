@@ -1,7 +1,7 @@
 import { Stack } from "@mui/material";
 import ReduxFilterDialog from "../FilterDialog/ReduxFilterDialog.tsx";
 import { FilterTableToolbarProps } from "./FilterTableToolbarProps.ts";
-import { TableRowWithId } from "./TableRowWithId.ts";
+import { TableRowWithId } from "./types/TableRowWithId.ts";
 
 function FilterTableToolbarLeft<T extends TableRowWithId>({
   anchor,

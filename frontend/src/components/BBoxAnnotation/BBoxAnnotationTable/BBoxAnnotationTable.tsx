@@ -27,14 +27,14 @@ import { MyFilter, createEmptyFilter } from "../../FilterDialog/filterUtils.ts";
 import FilterTableToolbarLeft from "../../FilterTable/FilterTableToolbarLeft.tsx";
 import { FilterTableToolbarProps } from "../../FilterTable/FilterTableToolbarProps.ts";
 import FilterTableToolbarRight from "../../FilterTable/FilterTableToolbarRight.tsx";
-import { useRenderToolbars } from "../../FilterTable/useRenderToolbars.tsx";
+import { useRenderToolbars } from "../../FilterTable/hooks/useRenderToolbars.tsx";
+import { FilterTableProps } from "../../FilterTable/types/FilterTableProps.ts";
 import MemoRenderer2 from "../../Memo/MemoRenderer2.tsx";
 import SdocMetadataRenderer from "../../Metadata/SdocMetadataRenderer.tsx";
 import SdocTagsRenderer from "../../SourceDocument/SdocTagRenderer.tsx";
 import { BBoxFilterActions } from "./bboxFilterSlice.ts";
 import { useInitBBoxFilterSlice } from "./useInitBBoxFilterSlice.ts";
 
-const fetchSize = 20;
 const flatMapData = (page: BBoxAnnotationSearchResult) => page.data;
 
 export interface BBoxAnnotationTableProps {
@@ -69,11 +69,13 @@ function BBoxAnnotationTable({
   onSortingChange,
   columnVisibilityModel,
   onColumnVisibilityChange,
+  fetchSize,
+  onFetchSizeChange,
   positionToolbarAlertBanner = "top",
   renderTopRightToolbar = FilterTableToolbarRight,
   renderTopLeftToolbar = FilterTableToolbarLeft,
   renderBottomToolbar,
-}: BBoxAnnotationTableProps) {
+}: FilterTableProps<BBoxAnnotationRow>) {
   // global client state (react router)
   const { user } = useAuth();
 
@@ -174,6 +176,7 @@ function BBoxAnnotationTable({
       projectId,
       filter, //refetch when columnFilters changes
       sortingModel, //refetch when sorting changes
+      fetchSize,
     ],
     queryFn: ({ pageParam }) =>
       AnalysisService.bboxAnnotationSearch({
@@ -219,12 +222,18 @@ function BBoxAnnotationTable({
     [fetchMoreOnScroll],
   );
 
+  // fetch all
+  const handleFetchAll = useCallback(() => {
+    onFetchSizeChange(totalResults);
+  }, [onFetchSizeChange, totalResults]);
+
   // rendering
   const { renderTopLeftToolbarContent, renderTopRightToolbarContent, renderBottomToolbarContent } = useRenderToolbars({
     name: "bbox annotations",
     flatData,
     totalFetched,
     totalResults,
+    handleFetchAll,
     renderTopRightToolbar,
     renderTopLeftToolbar,
     renderBottomToolbar,
