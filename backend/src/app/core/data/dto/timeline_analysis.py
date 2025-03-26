@@ -32,6 +32,12 @@ class TimelineAnalysisType(str, Enum):
     BBOX_ANNO = "bbox_annotation"
 
 
+class TAAnnotationAggregationType(str, Enum):
+    UNIT = "unit"
+    ANNOTATION = "annotation"
+    DOCUMENT = "document"
+
+
 class SdocTimelineAnalysisFilter(BaseModel):
     timeline_analysis_type: Literal[TimelineAnalysisType.DOCUMENT]
     filter: Filter[SdocColumns] = Field(description="The filter of the Concept")
@@ -93,22 +99,15 @@ class TimelineAnalysisConceptUpdate(BaseModel):
     )
 
 
-class SentAnnoTimelineAnalysisSettings(BaseModel):
-    count_sentences: bool = Field(
-        description="Counts the number of sentences if True, counts the number of annotations otherwise",
-        default=False,
-    )
-
-
 class TimelineAnalysisSettings(BaseModel):
     group_by: DateGroupBy = Field(description="Group by date", default=DateGroupBy.YEAR)
     date_metadata_id: Optional[int] = Field(
         description="ID of the Project Date Metadata that is used for the TimelineAnalysis",
         default=None,
     )
-    ta_specific_settings: Union[SentAnnoTimelineAnalysisSettings, None] = Field(
-        description="Settings specific to the TimelineAnalysis",
-        default=None,
+    annotation_aggregation_type: Optional[TAAnnotationAggregationType] = Field(
+        description="The type of the annotation aggregation (only for TimelineAnalysisType != DOCUMENT)",
+        default=TAAnnotationAggregationType.ANNOTATION,
     )
 
 
