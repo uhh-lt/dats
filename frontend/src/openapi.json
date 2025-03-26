@@ -8359,18 +8359,6 @@
         "required": ["timeline_analysis_type", "filter"],
         "title": "SentAnnoTimelineAnalysisFilter"
       },
-      "SentAnnoTimelineAnalysisSettings": {
-        "properties": {
-          "count_sentences": {
-            "type": "boolean",
-            "title": "Count Sentences",
-            "description": "Counts the number of sentences if True, counts the number of annotations otherwise",
-            "default": false
-          }
-        },
-        "type": "object",
-        "title": "SentAnnoTimelineAnalysisSettings"
-      },
       "SentenceAnnotationCreate": {
         "properties": {
           "sentence_id_start": {
@@ -9398,6 +9386,11 @@
         "enum": ["STRING_CONTAINS", "STRING_EQUALS", "STRING_NOT_EQUALS", "STRING_STARTS_WITH", "STRING_ENDS_WITH"],
         "title": "StringOperator"
       },
+      "TAAnnotationAggregationType": {
+        "type": "string",
+        "enum": ["unit", "annotation", "document"],
+        "title": "TAAnnotationAggregationType"
+      },
       "TagStat": {
         "properties": {
           "tag": { "$ref": "#/components/schemas/DocumentTagRead", "description": "The counted document tag." },
@@ -9599,9 +9592,9 @@
             "title": "Date Metadata Id",
             "description": "ID of the Project Date Metadata that is used for the TimelineAnalysis"
           },
-          "ta_specific_settings": {
-            "anyOf": [{ "$ref": "#/components/schemas/SentAnnoTimelineAnalysisSettings" }, { "type": "null" }],
-            "description": "Settings specific to the TimelineAnalysis"
+          "annotation_aggregation_type": {
+            "anyOf": [{ "$ref": "#/components/schemas/TAAnnotationAggregationType" }, { "type": "null" }],
+            "description": "The type of the annotation aggregation (only for TimelineAnalysisType != DOCUMENT)"
           }
         },
         "type": "object",

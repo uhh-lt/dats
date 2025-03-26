@@ -1,15 +1,5 @@
 import InfoIcon from "@mui/icons-material/Info";
-import {
-  Checkbox,
-  CircularProgress,
-  FormControl,
-  FormControlLabel,
-  FormGroup,
-  FormLabel,
-  MenuItem,
-  Stack,
-  TextField,
-} from "@mui/material";
+import { CircularProgress, MenuItem, Stack, TextField } from "@mui/material";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
@@ -21,10 +11,34 @@ import { DateGroupBy } from "../../../api/openapi/models/DateGroupBy.ts";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
 import { MetaType } from "../../../api/openapi/models/MetaType.ts";
 import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
+import { TAAnnotationAggregationType } from "../../../api/openapi/models/TAAnnotationAggregationType.ts";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
 import { TimelineAnalysisType } from "../../../api/openapi/models/TimelineAnalysisType.ts";
 import CardContainer from "../../../components/MUI/CardContainer.tsx";
 import SdocsWithDateCounter from "../../../components/Metadata/SdocsWithDateCounter/SdocsWithDateCounter.tsx";
+
+const aggregationType2HumanReadable: Record<TimelineAnalysisType, Record<TAAnnotationAggregationType, string>> = {
+  [TimelineAnalysisType.DOCUMENT]: {
+    [TAAnnotationAggregationType.UNIT]: "NA",
+    [TAAnnotationAggregationType.ANNOTATION]: "NA",
+    [TAAnnotationAggregationType.DOCUMENT]: "NA",
+  },
+  [TimelineAnalysisType.SENTENCE_ANNOTATION]: {
+    [TAAnnotationAggregationType.UNIT]: "Count sentences",
+    [TAAnnotationAggregationType.ANNOTATION]: "Count sentence annotations",
+    [TAAnnotationAggregationType.DOCUMENT]: "Count documents",
+  },
+  [TimelineAnalysisType.SPAN_ANNOTATION]: {
+    [TAAnnotationAggregationType.UNIT]: "Count words",
+    [TAAnnotationAggregationType.ANNOTATION]: "Count span annotations",
+    [TAAnnotationAggregationType.DOCUMENT]: "Count documents",
+  },
+  [TimelineAnalysisType.BBOX_ANNOTATION]: {
+    [TAAnnotationAggregationType.UNIT]: "Count bbpx annotations",
+    [TAAnnotationAggregationType.ANNOTATION]: "Count bbox annotations",
+    [TAAnnotationAggregationType.DOCUMENT]: "Count documents",
+  },
+};
 
 interface TimelineAnalysisSettingsProps {
   timelineAnalysis: TimelineAnalysisRead;
@@ -98,16 +112,14 @@ function TimelineAnalysisSettingsContent({
       },
     });
   };
-  const handleChangeCountSentences = (_: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
-    if (timelineAnalysis.timeline_analysis_type !== TimelineAnalysisType.SENTENCE_ANNOTATION) return;
+  const handleAnnotationAggregationTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (timelineAnalysis.timeline_analysis_type === TimelineAnalysisType.DOCUMENT) return;
     updateTimelineAnalysisMutation.mutate({
       timelineAnalysisId: timelineAnalysis.id,
       requestBody: {
         settings: {
           ...timelineAnalysis.settings,
-          ta_specific_settings: {
-            count_sentences: checked,
-          },
+          annotation_aggregation_type: event.target.value as TAAnnotationAggregationType,
         },
       },
     });
@@ -163,21 +175,22 @@ function TimelineAnalysisSettingsContent({
         ))}
       </TextField>
 
-      {timelineAnalysis.timeline_analysis_type === TimelineAnalysisType.SENTENCE_ANNOTATION && (
-        <FormControl component="fieldset" variant="standard">
-          <FormLabel component="legend">Sentence Annotation Settings</FormLabel>
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={timelineAnalysis.settings.ta_specific_settings?.count_sentences}
-                  onChange={handleChangeCountSentences}
-                />
-              }
-              label="Count sentences?"
-            />
-          </FormGroup>
-        </FormControl>
+      {timelineAnalysis.timeline_analysis_type !== TimelineAnalysisType.DOCUMENT && (
+        <TextField
+          select
+          fullWidth
+          label={"Annotation aggregation"}
+          variant="outlined"
+          value={timelineAnalysis.settings.annotation_aggregation_type}
+          onChange={handleAnnotationAggregationTypeChange}
+          helperText="Specify the aggregation of the annotations."
+        >
+          {Object.values(TAAnnotationAggregationType).map((value) => (
+            <MenuItem key={value} value={value}>
+              {aggregationType2HumanReadable[timelineAnalysis.timeline_analysis_type][value]}
+            </MenuItem>
+          ))}
+        </TextField>
       )}
     </Stack>
   );
