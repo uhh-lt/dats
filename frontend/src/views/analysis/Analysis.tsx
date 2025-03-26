@@ -54,6 +54,13 @@ function Analysis() {
           description={"Semi-automatically scale annotations"}
           color={"#77dd77"}
         />
+
+        <AnalysisCard
+          to={"tag-recommendations"}
+          title={"Tag Recommendations"}
+          description={"Semi-automatically scale tags"}
+          color={"#77dd77"}
+        />
       </Box>
     </ContentContainerLayout>
   );

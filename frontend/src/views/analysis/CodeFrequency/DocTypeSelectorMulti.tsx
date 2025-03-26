@@ -33,9 +33,9 @@ function DocTypeSelectorMulti({
   // render
   return (
     <FormControl {...props}>
-      <InputLabel id="multi-user-select-label">{title}</InputLabel>
+      <InputLabel id="doc-type-select-label">{title}</InputLabel>
       <Select
-        labelId="multi-user-select-label"
+        labelId="doc-type-select-label"
         label={title}
         value={docTypes}
         multiple

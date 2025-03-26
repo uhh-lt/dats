@@ -2,9 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type DocumentTagRecommendationJobCreate = {
+export type DocTagRecommendationParams = {
+  ml_job_type: string;
   /**
-   * ID of the project this recommendation belongs to
+   * Whether to recompute already processed documents
    */
-  project_id: number;
+  recompute?: boolean;
 };
