@@ -6,6 +6,7 @@ import Login from "../views/Login.tsx";
 import NotFound from "../views/NotFound.tsx";
 import Analysis from "../views/analysis/Analysis.tsx";
 import AnnotationScaling from "../views/analysis/AnnotationScaling/AnnotationScaling.tsx";
+import BBoxAnnotationAnalysis from "../views/analysis/BBoxAnnotationAnalysis/BBoxAnnotationAnalysis.tsx";
 import CodeFrequencyAnalysis from "../views/analysis/CodeFrequency/CodeFrequencyAnalysis.tsx";
 import CotaDashboard from "../views/analysis/ConceptsOverTime/CotaDashboard.tsx";
 import CotaView from "../views/analysis/ConceptsOverTime/CotaView.tsx";
@@ -122,6 +123,10 @@ const router = createBrowserRouter([
       {
         path: "/project/:projectId/analysis/sentence-annotations",
         element: <SentAnnotationAnalysis />,
+      },
+      {
+        path: "/project/:projectId/analysis/bbox-annotations",
+        element: <BBoxAnnotationAnalysis />,
       },
       {
         path: "/project/:projectId/analysis/word-frequency",

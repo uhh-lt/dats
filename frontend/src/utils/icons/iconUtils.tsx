@@ -15,6 +15,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import DescriptionIcon from "@mui/icons-material/Description";
 import EditIcon from "@mui/icons-material/Edit";
 import FileCopyIcon from "@mui/icons-material/FileCopy";
+import FilterIcon from "@mui/icons-material/Filter";
 import FolderIcon from "@mui/icons-material/Folder";
 import FormatColorTextIcon from "@mui/icons-material/FormatColorText";
 import FormatListBulletedOutlinedIcon from "@mui/icons-material/FormatListBulletedOutlined";
@@ -92,6 +93,7 @@ export enum Icon {
   CODE_FREQUENCY = "code_frequency",
   SENTENCE_ANNOTATION_TABLE = "sentence_annotation_table",
   SPAN_ANNOTATION_TABLE = "span_annotation_table",
+  BBOX_ANNOTATION_TABLE = "bbox_annotation_table",
 
   // TOOLS
   TOOLS = "tools",
@@ -174,7 +176,7 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.SEARCH]: (iconProps) => <SearchIcon {...iconProps} />,
   [Icon.DOCUMENT_SEARCH]: (iconProps) => <DescriptionIcon {...iconProps} />,
   [Icon.IMAGE_SEARCH]: (iconProps) => <ImageSearchIcon {...iconProps} />,
-  [Icon.SENTENCE_SEARCH]: (iconProps) => <ShortTextIcon {...iconProps} />,
+  [Icon.SENTENCE_SEARCH]: (iconProps) => <FilterIcon {...iconProps} />,
 
   // Annotation
   [Icon.ANNOTATION]: (iconProps) => <FormatColorTextIcon {...iconProps} />,
@@ -191,6 +193,7 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.CODE_FREQUENCY]: (iconProps) => <BarChartIcon {...iconProps} />,
   [Icon.SENTENCE_ANNOTATION_TABLE]: (iconProps) => <SubjectIcon {...iconProps} />,
   [Icon.SPAN_ANNOTATION_TABLE]: (iconProps) => <ShortTextIcon {...iconProps} />,
+  [Icon.BBOX_ANNOTATION_TABLE]: (iconProps) => <FilterIcon {...iconProps} />,
 
   // TOOLS
   [Icon.TOOLS]: (iconProps) => <TuneIcon {...iconProps} />,

@@ -9,6 +9,7 @@ import documentTableFilterReducer from "../components/SourceDocument/SdocTable/d
 import satFilterReducer from "../components/SpanAnnotation/SpanAnnotationTable/satFilterSlice.ts";
 import layoutReducer from "../layouts/layoutSlice.ts";
 import tabReducer from "../layouts/TabBar/tabSlice.ts";
+import bboxAnnotationAnalysisReducer from "../views/analysis/BBoxAnnotationAnalysis/bboxAnnotationAnalysisSlice.ts";
 import cotaReducer from "../views/analysis/ConceptsOverTime/cotaSlice.ts";
 import sentAnnotationAnalysisReducer from "../views/analysis/SentAnnotationAnalysis/sentAnnotationAnalysisSlice.ts";
 import spanAnnotationAnalysisReducer from "../views/analysis/SpanAnnotationAnalysis/spanAnnotationAnalysisSlice.ts";
@@ -35,6 +36,7 @@ export const store = configureStore({
     logbook: logbookReducer,
     spanAnnotationAnalysis: spanAnnotationAnalysisReducer,
     sentAnnotationAnalysis: sentAnnotationAnalysisReducer,
+    bboxAnnotationAnalysis: bboxAnnotationAnalysisReducer,
     timelineAnalysis: timelineAnalysisReducer,
     satFilter: satFilterReducer,
     seatFilter: seatFilterReducer,

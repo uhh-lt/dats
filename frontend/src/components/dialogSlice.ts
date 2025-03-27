@@ -2,7 +2,6 @@ import { AlertProps } from "@mui/material";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
 import { ApproachRecommendation } from "../api/openapi/models/ApproachRecommendation.ts";
 import { ApproachType } from "../api/openapi/models/ApproachType.ts";
-import { BBoxAnnotationRead } from "../api/openapi/models/BBoxAnnotationRead.ts";
 import { CodeRead } from "../api/openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "../api/openapi/models/DocumentTagRead.ts";
 import { LLMJobRead } from "../api/openapi/models/LLMJobRead.ts";
@@ -38,8 +37,8 @@ interface DialogState {
   sentenceAnnotationEditDialogOnEdit?: () => void;
   // bbox
   isBBoxAnnotationEditDialogOpen: boolean;
-  isBBoxAnnotationCreateDialogOpen: boolean;
-  bboxAnnotation?: BBoxAnnotationRead;
+  bboxAnnotationIds: number[];
+  bboxAnnotationEditDialogOnEdit?: () => void;
   // document import
   isDocumentUploadOpen: boolean;
   // snackbar
@@ -87,10 +86,10 @@ const initialState: DialogState = {
   // sentence
   isSentenceAnnotationEditDialogOpen: false,
   sentenceAnnotationIds: [],
+  sentenceAnnotationEditDialogOnEdit: undefined,
   // bbox
   isBBoxAnnotationEditDialogOpen: false,
-  isBBoxAnnotationCreateDialogOpen: false,
-  bboxAnnotation: undefined,
+  bboxAnnotationIds: [],
   // document import
   isDocumentUploadOpen: false,
   // snackbar
@@ -160,6 +159,19 @@ export const dialogSlice = createSlice({
       state.sentenceAnnotationIds = [];
       state.sentenceAnnotationEditDialogOnEdit = undefined;
     },
+    openBBoxAnnotationEditDialog: (
+      state,
+      action: PayloadAction<{ bboxAnnotationIds: number[]; onEdit?: () => void }>,
+    ) => {
+      state.isBBoxAnnotationEditDialogOpen = true;
+      state.bboxAnnotationIds = action.payload.bboxAnnotationIds;
+      state.bboxAnnotationEditDialogOnEdit = action.payload.onEdit;
+    },
+    closeBBoxAnnotationEditDialog: (state) => {
+      state.isBBoxAnnotationEditDialogOpen = false;
+      state.bboxAnnotationIds = [];
+      state.bboxAnnotationEditDialogOnEdit = undefined;
+    },
     openTagEditDialog: (state, action: PayloadAction<{ tag: DocumentTagRead }>) => {
       state.isTagEditDialogOpen = true;
       state.tag = action.payload.tag;
@@ -202,20 +214,6 @@ export const dialogSlice = createSlice({
     closeCodeEditDialog: (state) => {
       state.isCodeEditDialogOpen = false;
       state.code = undefined;
-    },
-    openBBoxAnnotationEditDialog: (state, action: PayloadAction<{ annotation: BBoxAnnotationRead }>) => {
-      state.isBBoxAnnotationEditDialogOpen = true;
-      state.bboxAnnotation = action.payload.annotation;
-    },
-    closeBBoxAnnotationEditDialog: (state) => {
-      state.isBBoxAnnotationEditDialogOpen = false;
-      state.bboxAnnotation = undefined;
-    },
-    openBBoxAnnotationCreateDialog: (state) => {
-      state.isBBoxAnnotationCreateDialogOpen = true;
-    },
-    closeBBoxAnnotationCreateDialog: (state) => {
-      state.isBBoxAnnotationCreateDialogOpen = false;
     },
     openDocumentUpload: (state) => {
       state.isDocumentUploadOpen = true;

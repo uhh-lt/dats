@@ -155,6 +155,15 @@ export const useDefaultCommands = (projectId: string | undefined): CommandItem[]
         route: `/project/${projectId}/analysis/sentence-annotations`,
         keywords: ["go", "to", "navigate", "sentence", "annotation", "table"],
       },
+      {
+        id: "bbox-annotation-table",
+        title: "Image Annotation Table",
+        description: "Go to image annotation table",
+        category: "Analysis",
+        icon: getIconComponent(Icon.BBOX_ANNOTATION_TABLE),
+        route: `/project/${projectId}/analysis/bbox-annotations`,
+        keywords: ["go", "to", "navigate", "image", "bbox", "box", "annotation", "table"],
+      },
       // TOOLS
       {
         id: "ml-automation",

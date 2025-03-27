@@ -35,6 +35,13 @@ function Analysis() {
         />
 
         <AnalysisCard
+          to={"bbox-annotations"}
+          title={"BBox Annotation Table"}
+          description={"View, search, edit bbox annotations in a table."}
+          color={"#77dd77"}
+        />
+
+        <AnalysisCard
           to={"word-frequency"}
           title={"Word Frequency Analysis"}
           description={"Analyse the frequencies and occurrences of all words in this project."}

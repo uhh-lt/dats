@@ -26,12 +26,12 @@ function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEditDialo
   const open = useAppSelector((state) => state.dialog.isSentenceAnnotationEditDialogOpen);
   const annotationIds = useAppSelector((state) => state.dialog.sentenceAnnotationIds);
   const onEdit = useAppSelector((state) => state.dialog.sentenceAnnotationEditDialogOnEdit);
-  const dispatch = useAppDispatch();
 
   // mutations
   const { mutate: updateAnnotationBulkMutation, isPending } = SentenceAnnotationHooks.useUpdateBulkSentenceAnno();
 
   // actions
+  const dispatch = useAppDispatch();
   const handleClose = useCallback(() => {
     dispatch(CRUDDialogActions.closeSentenceAnnotationEditDialog());
     setRowSelectionModel({});
