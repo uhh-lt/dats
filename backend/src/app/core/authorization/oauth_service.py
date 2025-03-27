@@ -1,3 +1,6 @@
+import random
+import string
+
 from authlib.integrations.starlette_client import OAuth, OAuthError
 from fastapi import Request
 from loguru import logger
@@ -68,9 +71,8 @@ class OAuthService(metaclass=SingletonMeta):
                             last_name=userinfo.get("family_name", "Unknown"),
                             # Set a random password since we'll only use OIDC
                             password="".join(
-                                __import__("random").choices(
-                                    __import__("string").ascii_letters
-                                    + __import__("string").digits,
+                                random.choices(
+                                    string.ascii_letters + string.digits,
                                     k=32,
                                 )
                             ),
