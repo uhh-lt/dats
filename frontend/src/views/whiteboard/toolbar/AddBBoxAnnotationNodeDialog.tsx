@@ -1,3 +1,4 @@
+import CropIcon from "@mui/icons-material/Crop";
 import { Button, ButtonProps, CircularProgress, Dialog } from "@mui/material";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { memo, useCallback, useMemo, useState } from "react";
@@ -44,7 +45,7 @@ function AddBBoxAnnotationNodeDialog({ projectId, buttonProps, ...props }: AddBB
   return (
     <>
       <Button onClick={handleOpen} {...buttonProps}>
-        Add annotations
+        <CropIcon />
       </Button>
       <Dialog onClose={handleClose} open={open} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         {metadata.isSuccess ? (

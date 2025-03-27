@@ -439,7 +439,6 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
                 <Panel position="top-left">
                   <Paper elevation={1} sx={{ mb: 3 }}>
                     <Stack>
-                      <Typography p={1}>DATS Objects</Typography>
                       <AddDocumentNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
                       <AddTagNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
                       <AddCodeNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
@@ -451,7 +450,6 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
                   </Paper>
                   <Paper elevation={1}>
                     <Stack>
-                      <Typography p={1}>Text Elements</Typography>
                       <AddNoteNodeButton onClick={handleChangePendingAction} />
                       <AddTextNodeButton onClick={handleChangePendingAction} />
                       <AddBorderNodeButton type="Ellipse" onClick={handleChangePendingAction} />

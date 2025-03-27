@@ -1,3 +1,4 @@
+import CommentIcon from "@mui/icons-material/Comment";
 import { Button, ButtonProps, CircularProgress, Dialog } from "@mui/material";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { useCallback, useState } from "react";
@@ -46,7 +47,7 @@ function AddSpanAnnotationNodeDialog({ projectId, buttonProps, ...props }: AddSp
   return (
     <>
       <Button onClick={handleOpen} {...buttonProps}>
-        Add annotations
+        <CommentIcon />
       </Button>
       <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         {metadata.isSuccess ? (
