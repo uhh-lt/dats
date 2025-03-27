@@ -7,6 +7,7 @@ from api.dependencies import (
     get_current_user,
     get_db_session,
 )
+from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
@@ -14,6 +15,7 @@ from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationCreate,
     BBoxAnnotationRead,
     BBoxAnnotationUpdate,
+    BBoxAnnotationUpdateBulk,
 )
 from app.core.data.dto.code import CodeRead
 
@@ -76,6 +78,34 @@ def update_by_id(
     return BBoxAnnotationRead.model_validate(db_obj)
 
 
+@router.patch(
+    "/bulk/update",
+    response_model=List[BBoxAnnotationRead],
+    summary="Updates BBoxAnnotation in Bulk",
+)
+def update_bbox_anno_annotations_bulk(
+    *,
+    db: Session = Depends(get_db_session),
+    bbox_annos: List[BBoxAnnotationUpdateBulk],
+    authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
+) -> List[BBoxAnnotationRead]:
+    for bbox_anno in bbox_annos:
+        authz_user.assert_in_same_project_as(Crud.CODE, bbox_anno.code_id)
+        authz_user.assert_in_same_project_as(
+            Crud.BBOX_ANNOTATION, bbox_anno.bbox_annotation_id
+        )
+        validate.validate_objects_in_same_project(
+            [
+                (Crud.CODE, bbox_anno.code_id),
+                (Crud.BBOX_ANNOTATION, bbox_anno.bbox_annotation_id),
+            ]
+        )
+
+    db_objs = crud_bbox_anno.update_bulk(db=db, update_dtos=bbox_annos)
+    return [BBoxAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+
+
 @router.delete(
     "/{bbox_id}",
     response_model=BBoxAnnotationRead,
@@ -91,6 +121,23 @@ def delete_by_id(
 
     db_obj = crud_bbox_anno.remove(db=db, id=bbox_id)
     return BBoxAnnotationRead.model_validate(db_obj)
+
+
+@router.delete(
+    "/bulk/delete",
+    response_model=List[BBoxAnnotationRead],
+    summary="Deletes all BBoxAnnotations with the given IDs.",
+)
+def delete_bulk_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    bbox_anno_ids: List[int],
+    authz_user: AuthzUser = Depends(),
+) -> List[BBoxAnnotationRead]:
+    authz_user.assert_in_same_project_as_many(Crud.BBOX_ANNOTATION, bbox_anno_ids)
+
+    db_objs = crud_bbox_anno.remove_bulk(db=db, ids=bbox_anno_ids)
+    return [BBoxAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
 
 
 @router.get(
