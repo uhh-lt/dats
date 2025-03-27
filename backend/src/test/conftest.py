@@ -228,12 +228,11 @@ def api_user(client: TestClient):
             credentials["id"] = response["id"]
 
             # Login
-            grant_type = ""
             scope = ""
             client_id = ""
             client_secret = ""
             login = {
-                "grant_type": grant_type,
+                "grant_type": "password",  # as per the OAuth2.0 spec, this is the only supported grant type
                 "username": credentials["email"],
                 "password": credentials["password"],
                 "scope": scope,
