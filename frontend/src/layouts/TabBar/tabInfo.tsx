@@ -29,6 +29,8 @@ function getIconForBase(base: string): Icon {
       return Icon.SPAN_ANNOTATION_TABLE;
     case "sentence-annotations":
       return Icon.SENTENCE_ANNOTATION_TABLE;
+    case "bbox-annotations":
+      return Icon.BBOX_ANNOTATION_TABLE;
     case "code-frequency":
       return Icon.CODE_FREQUENCY;
     case "duplicate-finder":

@@ -126,7 +126,7 @@ function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
       if (!annotation.data) return;
 
       if (event.detail >= 2) {
-        dispatch(CRUDDialogActions.openBBoxAnnotationEditDialog({ annotation: annotation.data }));
+        dispatch(CRUDDialogActions.openBBoxAnnotationEditDialog({ bboxAnnotationIds: [annotation.data.id] }));
       }
     },
     [annotation.data, dispatch],
