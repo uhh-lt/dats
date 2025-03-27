@@ -186,3 +186,14 @@ quote:
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
+
+glotlid:
+  model: "cis-lmu/glotlid"
+  version: "latest"
+  # the device is always CPU!
+  deployment:
+    ray_actor_options:
+      num_gpus: .0
+    autoscaling_config:
+      min_replicas: 1
+      max_replicas: 1
