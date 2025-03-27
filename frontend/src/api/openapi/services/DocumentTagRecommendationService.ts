@@ -31,7 +31,7 @@ export class DocumentTagRecommendationService {
     });
   }
   /**
-   * Retrieve all document tag recommendations for the given ml job ID.
+   * Retrieve all (non-reviewed) document tag recommendations for the given ml job ID.
    * @returns DocumentTagRecommendationResult Successful Response
    * @throws ApiError
    */
