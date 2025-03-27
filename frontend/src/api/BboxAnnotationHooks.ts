@@ -146,6 +146,23 @@ const useUpdateBBoxAnnotation = () =>
     },
   });
 
+const useUpdateBulkBBoxAnnotation = () =>
+  useMutation({
+    mutationFn: BboxAnnotationService.updateBboxAnnoAnnotationsBulk,
+    onSuccess(data) {
+      queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_TABLE] }); // TODO: This is not optimal, shoudl be projectId, selectedUserId... We do this because of BBoxAnnotationTable
+      data.forEach((annotation) => {
+        queryClient.invalidateQueries({
+          queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS, annotation.sdoc_id, annotation.user_id],
+        });
+        queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_ANNOTATION, annotation.id] });
+      });
+    },
+    meta: {
+      successMessage: (data: BBoxAnnotationRead[]) => `Updated ${data.length} BBox Annotations`,
+    },
+  });
+
 const useDeleteBBoxAnnotation = () =>
   useMutation({
     mutationFn: (variables: { bboxToDelete: BBoxAnnotationRead | number }) =>
@@ -180,13 +197,32 @@ const useDeleteBBoxAnnotation = () =>
     },
   });
 
+const useDeleteBulkBBoxAnnotation = () =>
+  useMutation({
+    mutationFn: BboxAnnotationService.deleteBulkById,
+    onSuccess(data) {
+      queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_TABLE] }); // TODO: This is not optimal, should be projectId, selectedUserId... We do this because of BBoxAnnotationTable
+      data.forEach((annotation) => {
+        queryClient.invalidateQueries({
+          queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS, annotation.sdoc_id, annotation.user_id],
+        });
+        queryClient.removeQueries({ queryKey: [QueryKey.BBOX_ANNOTATION, annotation.id] });
+      });
+    },
+    meta: {
+      successMessage: (data: BBoxAnnotationRead[]) => `Deleted ${data.length} Bounding Box Annotations`,
+    },
+  });
+
 const BboxAnnotationHooks = {
   useGetAnnotation,
   useGetByCodeAndUser,
   useGetBBoxAnnotationsBatch,
   useCreateBBoxAnnotation,
   useUpdateBBoxAnnotation,
+  useUpdateBulkBBoxAnnotation,
   useDeleteBBoxAnnotation,
+  useDeleteBulkBBoxAnnotation,
 };
 
 export default BboxAnnotationHooks;

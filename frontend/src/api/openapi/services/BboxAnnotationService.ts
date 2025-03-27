@@ -5,6 +5,7 @@
 import type { BBoxAnnotationCreate } from "../models/BBoxAnnotationCreate";
 import type { BBoxAnnotationRead } from "../models/BBoxAnnotationRead";
 import type { BBoxAnnotationUpdate } from "../models/BBoxAnnotationUpdate";
+import type { BBoxAnnotationUpdateBulk } from "../models/BBoxAnnotationUpdateBulk";
 import type { CodeRead } from "../models/CodeRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -84,6 +85,46 @@ export class BboxAnnotationService {
       path: {
         bbox_id: bboxId,
       },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Updates BBoxAnnotation in Bulk
+   * @returns BBoxAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static updateBboxAnnoAnnotationsBulk({
+    requestBody,
+  }: {
+    requestBody: Array<BBoxAnnotationUpdateBulk>;
+  }): CancelablePromise<Array<BBoxAnnotationRead>> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/bbox/bulk/update",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Deletes all BBoxAnnotations with the given IDs.
+   * @returns BBoxAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteBulkById({
+    requestBody,
+  }: {
+    requestBody: Array<number>;
+  }): CancelablePromise<Array<BBoxAnnotationRead>> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/bbox/bulk/delete",
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },
