@@ -1,4 +1,4 @@
-import { Button } from "@mui/material";
+import { Button, Tooltip } from "@mui/material";
 import React, { useCallback } from "react";
 import { XYPosition } from "reactflow";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
@@ -40,10 +40,11 @@ function AddBorderNodeButton({ type, onClick }: AddBorderNodeButtonProps) {
   }, [onClick, type]);
 
   return (
-    <Button onClick={handleAddBorderNode}>
-      Add
-      {borderNodeType2Icons[type]} shape
-    </Button>
+    <Tooltip title={`Add ${type.toLowerCase()} shape`} placement="right">
+      <Button onClick={handleAddBorderNode} aria-label={`Add ${type.toLowerCase()} shape`}>
+        {borderNodeType2Icons[type]}
+      </Button>
+    </Tooltip>
   );
 }
 
