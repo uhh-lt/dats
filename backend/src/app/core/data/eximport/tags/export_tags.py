@@ -6,7 +6,11 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.project import crud_project
-from app.core.data.export.no_data_export_error import NoDataToExportError
+from app.core.data.eximport.no_data_export_error import NoDataToExportError
+from app.core.data.eximport.tags.tag_export_schema import (
+    TagExportCollection,
+    TagExportSchema,
+)
 from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.repo.repo_service import RepoService
 
@@ -33,7 +37,6 @@ def __export_tags(
 ) -> Path:
     if len(tags) == 0:
         raise NoDataToExportError("No tags to export.")
-
     export_data = __generate_export_df_for_tags(tags=tags)
     return repo.write_df_to_temp_file(
         df=export_data,
@@ -42,28 +45,19 @@ def __export_tags(
 
 
 def __generate_export_df_for_tags(tags: List[DocumentTagORM]) -> pd.DataFrame:
-    logger.info(f"Exporting {len(tags)} tags ...")
-
-    # fill the DataFrame
-    data = {
-        "tag_name": [],
-        "description": [],
-        "color": [],
-        "created": [],
-        "parent_tag_name": [],
-        "applied_to_sdoc_filenames": [],
-    }
-
+    logger.info(f"Exporting {len(tags)} Tags ...")
+    tag_export_items = []
     for tag in tags:
         parent_tag_name = None
         if tag.parent_id is not None:
             parent_tag_name = tag.parent.name
-        applied_to_sdoc_filenames = [sdoc.filename for sdoc in tag.source_documents]
-        data["tag_name"].append(tag.name)
-        data["description"].append(tag.description)
-        data["color"].append(tag.color)
-        data["created"].append(tag.created)
-        data["parent_tag_name"].append(parent_tag_name)
-        data["applied_to_sdoc_filenames"].append(applied_to_sdoc_filenames)
-
-    return pd.DataFrame(data)
+        tag_export_items.append(
+            TagExportSchema(
+                tag_name=tag.name,
+                color=tag.color,
+                parent_tag_name=parent_tag_name,
+                description=tag.description or "",
+            )
+        )
+    collection = TagExportCollection(tags=tag_export_items)
+    return collection.to_dataframe()

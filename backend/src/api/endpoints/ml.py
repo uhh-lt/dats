@@ -33,7 +33,6 @@ def start_ml_job(
 )
 def get_ml_job(*, ml_job_id: str, authz_user: AuthzUser = Depends()) -> MLJobRead:
     job = mls.get_ml_job(ml_job_id=ml_job_id)
-    mls.get_ml_job
     authz_user.assert_in_project(job.parameters.project_id)
 
     return job

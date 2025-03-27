@@ -48,11 +48,15 @@ class MLJobRead(MLJobBase):
     id: str = Field(description="ID of the MLJob")
     created: datetime = Field(description="Created timestamp of the MLJob")
     updated: datetime = Field(description="Updated timestamp of the MLJob")
-    parameters: MLJobParameters
+    parameters: MLJobParameters = Field(
+        description="The parameters of the MLJob that defines what to do!"
+    )
 
 
 class MLJobCreate(MLJobBase):
-    parameters: MLJobParameters
+    parameters: MLJobParameters = Field(
+        description="The parameters of the MLJob that defines what to do!"
+    )
 
 
 class MLJobUpdate(MLJobBase):

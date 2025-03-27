@@ -12,40 +12,38 @@ from app.core.data.dto.export_job import (
     ExportJobType,
     ExportJobUpdate,
 )
-from app.core.data.export.export_bbox_annotations import (
+from app.core.data.eximport.bbox_annotations.export_bbox_annotations import (
     export_all_bbox_annotations,
     export_selected_bbox_annotations,
 )
-from app.core.data.export.export_codes import (
-    export_all_codes,
-)
-from app.core.data.export.export_memos import (
+from app.core.data.eximport.codes.export_codes import export_all_codes
+from app.core.data.eximport.export_memos import (
     export_all_memos,
     export_selected_memos,
 )
-from app.core.data.export.export_project import (
+from app.core.data.eximport.export_project import (
     export_project,
 )
-from app.core.data.export.export_project_metadata import (
+from app.core.data.eximport.export_project_metadata import (
     export_all_project_metadatas,
 )
-from app.core.data.export.export_sdocs import (
+from app.core.data.eximport.export_sdocs import (
     export_all_sdocs,
     export_selected_sdocs,
 )
-from app.core.data.export.export_sentence_annotations import (
+from app.core.data.eximport.export_sentence_annotations import (
     export_all_sentence_annotations,
     export_selected_sentence_annotations,
 )
-from app.core.data.export.export_span_annotations import (
+from app.core.data.eximport.export_span_annotations import (
     export_all_span_annotations,
     export_selected_span_annotations,
 )
-from app.core.data.export.export_tags import (
-    export_all_tags,
-)
-from app.core.data.export.export_users import (
+from app.core.data.eximport.export_users import (
     export_all_users,
+)
+from app.core.data.eximport.tags.export_tags import (
+    export_all_tags,
 )
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.redis_service import RedisService
@@ -113,7 +111,6 @@ class ExportService(metaclass=SingletonMeta):
             )
 
         exj_create = ExportJobCreate(parameters=export_params)
-        print(exj_create)
         try:
             exj_read = self.redis.store_export_job(export_job=exj_create)
         except Exception as e:

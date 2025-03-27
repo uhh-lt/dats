@@ -5,7 +5,7 @@ import pandas as pd
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.project import crud_project
-from app.core.data.export.no_data_export_error import NoDataToExportError
+from app.core.data.eximport.no_data_export_error import NoDataToExportError
 from app.core.data.orm.project_metadata import ProjectMetadataORM
 from app.core.data.repo.repo_service import RepoService
 
