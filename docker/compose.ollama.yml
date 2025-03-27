@@ -2,13 +2,13 @@
 
 services:
   ollama:
-    image: ollama/ollama:0.6.0
+    image: ollama/ollama:0.6.2
     ports:
       - ${OLLAMA_EXPOSED:-13133}:11434
     environment:
       - OLLAMA_KEEP_ALIVE=-1
       - OLLAMA_FLASH_ATTENTION=1
-      - OLLAMA_MAX_LOADED_MODELS=2
+      - OLLAMA_MAX_LOADED_MODELS=1
       - OLLAMA_KV_CACHE_TYPE=fp16
     tty: true
     restart: unless-stopped
