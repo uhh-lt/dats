@@ -1,3 +1,4 @@
+import StickyNote2Icon from "@mui/icons-material/StickyNote2";
 import { Button, ButtonProps, CircularProgress, Dialog } from "@mui/material";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { useCallback, useState } from "react";
@@ -45,7 +46,7 @@ function AddMemoNodeDialog({ projectId, buttonProps, ...props }: AddMemoNodeDial
   return (
     <>
       <Button onClick={handleOpen} {...buttonProps}>
-        Add memos
+        <StickyNote2Icon />
       </Button>
       <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         {metadata.isSuccess ? (

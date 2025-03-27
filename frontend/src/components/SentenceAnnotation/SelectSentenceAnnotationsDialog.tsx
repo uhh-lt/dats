@@ -1,3 +1,4 @@
+import TextFieldsIcon from "@mui/icons-material/TextFields";
 import { Button, ButtonProps, CircularProgress, Dialog } from "@mui/material";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { memo, useCallback, useState } from "react";
@@ -8,7 +9,6 @@ import { SentenceAnnotationRow } from "../../api/openapi/models/SentenceAnnotati
 import { FilterTableToolbarProps } from "../FilterTable/FilterTableToolbarProps.ts";
 import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
 import SentenceAnnotationTable from "./SentenceAnnotationTable/SentenceAnnotationTable.tsx";
-
 const filterName = "selectSentenceAnnotationDialog";
 
 interface SelectSentenceAnnotationsDialogProps {
@@ -43,7 +43,7 @@ function SelectSentenceAnnotationsDialog({ projectId, buttonProps, ...props }: S
   return (
     <>
       <Button onClick={handleOpen} {...buttonProps}>
-        Select annotations
+        <TextFieldsIcon />
       </Button>
       <Dialog onClose={handleClose} open={open} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         {metadata.isSuccess ? (

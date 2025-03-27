@@ -1,3 +1,4 @@
+import DescriptionIcon from "@mui/icons-material/Description";
 import { Button, ButtonProps, Dialog } from "@mui/material";
 import { MRT_RowSelectionState, MRT_SortingState } from "material-react-table";
 import { useCallback, useState } from "react";
@@ -60,7 +61,7 @@ function AddDocumentNodeDialog({ projectId, buttonProps, onClick }: AddDocumentN
   return (
     <>
       <Button onClick={handleOpenDialogClick} {...buttonProps}>
-        Add documents
+        <DescriptionIcon />
       </Button>
       <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         <DATSDialogHeader
