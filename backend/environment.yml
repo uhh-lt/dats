@@ -20,7 +20,6 @@ dependencies:
   - ftfy=6.1
   - httpx=0.23.0
   - isort=5.12.0
-  - langdetect=1.0
   - loguru=0.6
   - matplotlib=3.7.1
   - multiprocess=0.70.15
