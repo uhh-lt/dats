@@ -14,7 +14,7 @@ dependencies:
   - elasticsearch=7.17
   - email_validator=2.1
   - fastapi-mail=1.4.1
-  - fastapi=0.108.0
+  - fastapi=0.115.12
   - ffmpeg-python=0.2.0
   - frozendict=2.3
   - ftfy=6.1
@@ -36,7 +36,7 @@ dependencies:
   - pytest=7.4.3
   - python-jose=3.3
   - python-magic=0.4
-  - python-multipart=0.0.5
+  - python-multipart=0.0.18
   - python=3.11
   - qdrant-client=1.9.1
   - readability-lxml=0.8.1
