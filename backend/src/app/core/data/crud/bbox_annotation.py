@@ -8,6 +8,7 @@ from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationCreate,
     BBoxAnnotationCreateIntern,
     BBoxAnnotationUpdate,
+    BBoxAnnotationUpdateBulk,
 )
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
@@ -186,12 +187,38 @@ class CRUDBBoxAnnotation(
 
         return bbox_anno
 
+    def update_bulk(
+        self, db: Session, *, update_dtos: List[BBoxAnnotationUpdateBulk]
+    ) -> List[BBoxAnnotationORM]:
+        return [
+            self.update(
+                db,
+                id=update_dto.bbox_annotation_id,
+                update_dto=BBoxAnnotationUpdate(code_id=update_dto.code_id),
+            )
+            for update_dto in update_dtos
+        ]
+
     def remove(self, db: Session, *, id: int) -> Optional[BBoxAnnotationORM]:
         bbox_anno = super().remove(db, id=id)
         # update the annotation document's timestamp
         crud_adoc.update_timestamp(db=db, id=bbox_anno.annotation_document_id)
 
         return bbox_anno
+
+    def remove_bulk(self, db: Session, *, ids: List[int]) -> List[BBoxAnnotationORM]:
+        bbox_annos = []
+        for id in ids:
+            bbox_annos.append(self.remove(db, id=id))
+
+        # find the annotation document ids
+        adoc_ids = {bbox_anno.annotation_document_id for bbox_anno in bbox_annos}
+
+        # update the annotation documents' timestamp
+        for adoc_id in adoc_ids:
+            crud_adoc.update_timestamp(db=db, id=adoc_id)
+
+        return bbox_annos
 
     def remove_by_adoc(self, db: Session, *, adoc_id: int) -> List[int]:
         # find all bbox annotations to be removed

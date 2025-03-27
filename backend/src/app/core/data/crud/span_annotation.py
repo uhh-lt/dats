@@ -248,9 +248,7 @@ class CRUDSpanAnnotation(
             span_annos.append(self.remove(db, id=id))
 
         # find the annotation document ids
-        adoc_ids = {
-            sentence_anno.annotation_document_id for sentence_anno in span_annos
-        }
+        adoc_ids = {span_anno.annotation_document_id for span_anno in span_annos}
 
         # update the annotation documents' timestamp
         for adoc_id in adoc_ids:

@@ -31,6 +31,11 @@ class BBoxAnnotationUpdate(BaseModel, UpdateDTOBase):
     code_id: int = Field(description="Code the BBoxAnnotation refers to")
 
 
+class BBoxAnnotationUpdateBulk(BaseModel, UpdateDTOBase):
+    bbox_annotation_id: int = Field(description="ID of the BBoxAnnotation")
+    code_id: int = Field(description="Code the BBoxAnnotation refers to")
+
+
 # Properties for reading (as in ORM)
 class BBoxAnnotationRead(BBoxAnnotationBaseDTO):
     id: int = Field(description="ID of the BBoxAnnotation")
