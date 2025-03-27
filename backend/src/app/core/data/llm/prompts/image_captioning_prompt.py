@@ -1,2 +1,2 @@
-IMG_CAPTION_USER_PROMPT = "Create a brief one sentence image description. If you recognize any person or other named entities, use their names."
+IMG_CAPTION_USER_PROMPT = "Create a brief one sentence image description. If you recognize any person or other named entities, use their names. Return the description in a single line without any new lines or special characters. Do not include any additional text or explanations. The description should be concise and to the point, focusing on the main subject of the image. Avoid using overly complex language or jargon."
 IMG_DESCRIPTION_USER_PROMPT = "Create a detailed image description covering all prominent objects and actions. If you recognize any person or other named entities, use their names."
