@@ -40,7 +40,7 @@ export default function ExportWordFrequencyButton({ filter }: ExportWordFrequenc
           });
         },
         onSuccess: (data) => {
-          downloadFile("/content/" + data);
+          downloadFile(encodeURI("/content/" + data));
         },
       },
     );
