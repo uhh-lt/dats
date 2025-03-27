@@ -28,7 +28,7 @@ export default defineConfig(({ mode }) => {
           "/content": {
             target: env.VITE_APP_CONTENT,
             changeOrigin: true, // Required for virtual hosted sites
-            rewrite: (path) => path.replace(/^\/content/, ""), // Optional: remove /api from the path
+            rewrite: (path) => path.replace(/^\/content/, ""), // Optional: remove /content from the path
           },
         },
       },
