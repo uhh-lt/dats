@@ -153,7 +153,10 @@ class RedisService(metaclass=SingletonMeta):
         if isinstance(import_job, ImportJobCreate):
             key = self._generate_random_key()
             imj = ImportJobRead(
-                id=key, created=datetime.now(), **import_job.model_dump()
+                id=key,
+                **import_job.model_dump(),
+                created=datetime.now(),
+                updated=datetime.now(),
             )
         elif isinstance(import_job, ImportJobRead):
             key = import_job.id
@@ -167,6 +170,15 @@ class RedisService(metaclass=SingletonMeta):
         logger.debug(f"Successfully stored ImportJob {key}!")
 
         return imj
+
+    def get_all_import_jobs(self, project_id: int) -> List[ImportJobRead]:
+        client = self._get_client("import_")
+        all_import_jobs: List[ImportJobRead] = [
+            self.load_import_job(str(key, "utf-8")) for key in client.keys()
+        ]
+        return [
+            job for job in all_import_jobs if job.parameters.project_id == project_id
+        ]
 
     def load_import_job(self, key: str) -> ImportJobRead:
         client = self._get_client("import_")

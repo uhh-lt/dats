@@ -10,7 +10,7 @@ from app.core.data.crud.object_handle import crud_object_handle
 from app.core.data.dto.span_annotation import (
     SpanAnnotationRead,
 )
-from app.core.data.export.no_data_export_error import NoDataToExportError
+from app.core.data.eximport.no_data_export_error import NoDataToExportError
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM

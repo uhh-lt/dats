@@ -3,13 +3,14 @@ from pathlib import Path
 from typing import (
     Callable,
     Dict,
-    Optional,
+    List,
 )
 
 import pandas as pd
 from loguru import logger
 from sqlalchemy.orm import Session
 
+from app.core.data.crud.project import crud_project
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.import_job import (
     ImportJobCreate,
@@ -18,9 +19,12 @@ from app.core.data.dto.import_job import (
     ImportJobType,
     ImportJobUpdate,
 )
-from app.core.data.import_.import_codes import import_codes_to_proj
+from app.core.data.eximport.bbox_annotations.import_bbox_annotations import (
+    import_bbox_annotations_to_proj,
+)
+from app.core.data.eximport.codes.import_codes import import_codes_to_proj
+from app.core.data.eximport.tags.import_tags import import_tags_to_proj
 from app.core.data.import_.import_project import import_project
-from app.core.data.import_.import_tags import import_tags_to_proj
 from app.core.data.repo.repo_service import (
     RepoService,
 )
@@ -48,8 +52,8 @@ class NoSuchImportJobError(Exception):
 
 
 class UnsupportedImportJobTypeError(Exception):
-    def __init__(self, export_job_type: ImportJobType) -> None:
-        super().__init__(f"ImportJobType {export_job_type} is not supported! ")
+    def __init__(self, import_job_type: ImportJobType) -> None:
+        super().__init__(f"ImportJobType {import_job_type} is not supported! ")
 
 
 class ImportService(metaclass=SingletonMeta):
@@ -58,13 +62,12 @@ class ImportService(metaclass=SingletonMeta):
         cls.redis: RedisService = RedisService()
         cls.sqls: SQLService = SQLService()
         cls.rms: RayModelService = RayModelService()
-
         cls.import_method_for_job_type: Dict[ImportJobType, Callable[..., None]] = {
             ImportJobType.TAGS: cls._import_tags_to_proj,
             ImportJobType.CODES: cls._import_codes_to_proj,
             ImportJobType.PROJECT: cls._import_project,
+            ImportJobType.BBOX_ANNOTATIONS: cls._import_bbox_annotations_to_proj,
         }
-
         return super(ImportService, cls).__new__(cls)
 
     def __unzip(self, path_to_zip_file: Path, unzip_target: Path):
@@ -72,39 +75,62 @@ class ImportService(metaclass=SingletonMeta):
             zip_ref.extractall(unzip_target)
 
     def prepare_import_job(
-        self, import_code_job_params: ImportJobParameters
+        self, import_job_params: ImportJobParameters
     ) -> ImportJobRead:
-        self._assert_all_requested_data_exists(
-            import_code_job_params=import_code_job_params
-        )
+        with self.sqls.db_session() as db:
+            crud_project.exists(
+                db=db,
+                id=import_job_params.project_id,
+                raise_error=True,
+            )
 
-        imp_create = ImportJobCreate(parameters=import_code_job_params)
+        # Check if the file exists
+        if not self.repo._temp_file_exists(filename=import_job_params.file_name):
+            raise ImportJobPreparationError(
+                cause=Exception(
+                    f"The file {import_job_params.file_name} does not exist!"
+                )
+            )
+
+        imp_create = ImportJobCreate(parameters=import_job_params)
         try:
             imj_read = self.redis.store_import_job(import_job=imp_create)
         except Exception as e:
             raise ImportJobPreparationError(cause=e)
-
         return imj_read
 
     def get_import_job(self, import_job_id: str) -> ImportJobRead:
         try:
-            exj = self.redis.load_import_job(key=import_job_id)
+            imj = self.redis.load_import_job(key=import_job_id)
         except Exception as e:
             raise NoSuchImportJobError(import_job_id=import_job_id, cause=e)
+        return imj
 
-        return exj
+    def get_all_import_jobs(self, project_id: int) -> List[ImportJobRead]:
+        return self.redis.get_all_import_jobs(project_id=project_id)
+
+    def _update_import_job(
+        self,
+        import_job_id: str,
+        update: ImportJobUpdate,
+    ) -> ImportJobRead:
+        try:
+            imj = self.redis.update_import_job(key=import_job_id, update=update)
+        except Exception as e:
+            raise NoSuchImportJobError(import_job_id=import_job_id, cause=e)
+        return imj
 
     def start_import_sync(self, import_job_id: str) -> ImportJobRead:
         imj = self.get_import_job(import_job_id=import_job_id)
         if imj.status != BackgroundJobStatus.WAITING:
             raise ImportJobAlreadyStartedOrDoneError(import_job_id=import_job_id)
-
         imj = self._update_import_job(
-            status=BackgroundJobStatus.RUNNING, import_job_id=import_job_id
+            import_job_id=import_job_id,
+            update=ImportJobUpdate(status=BackgroundJobStatus.RUNNING),
         )
         try:
             with self.sqls.db_session() as db:
-                # get the export method based on the jobtype
+                # get the import method based on the jobtype
                 import_method = self.import_method_for_job_type.get(
                     imj.parameters.import_job_type, None
                 )
@@ -117,77 +143,66 @@ class ImportService(metaclass=SingletonMeta):
                     db=db,
                     imj_parameters=imj.parameters,
                 )
-
             imj = self._update_import_job(
-                status=BackgroundJobStatus.FINISHED,
                 import_job_id=import_job_id,
+                update=ImportJobUpdate(status=BackgroundJobStatus.FINISHED),
             )
-
         except Exception as e:
             logger.error(f"Cannot finish import job: {e}")
             imj = self._update_import_job(
-                status=BackgroundJobStatus.ERROR,
                 import_job_id=import_job_id,
+                update=ImportJobUpdate(
+                    status=BackgroundJobStatus.ERROR,
+                    error=f"Cannot finish import job: {e}",
+                ),
             )
-
         return imj
-
-    def _update_import_job(
-        self,
-        import_job_id: str,
-        status: Optional[BackgroundJobStatus] = None,
-    ) -> ImportJobRead:
-        update = ImportJobUpdate(status=status)
-        try:
-            imj = self.redis.update_import_job(key=import_job_id, update=update)
-        except Exception as e:
-            raise NoSuchImportJobError(import_job_id=import_job_id, cause=e)
-        return imj
-
-    def _assert_all_requested_data_exists(
-        self, import_code_job_params: ImportJobParameters
-    ) -> bool:
-        filename = import_code_job_params.filename
-        return self.repo._temp_file_exists(filename=filename)
 
     def _import_codes_to_proj(
         self,
         db: Session,
         imj_parameters: ImportJobParameters,
     ) -> None:
-        project_id = imj_parameters.proj_id
-        filename = imj_parameters.filename
-        path_to_file = self.repo.get_dst_path_for_temp_file(filename)
+        """Import codes to a project"""
+        path_to_file = self.repo.get_dst_path_for_temp_file(imj_parameters.file_name)
         df = pd.read_csv(path_to_file)
-
-        import_codes_to_proj(db=db, df=df, project_id=project_id)
+        import_codes_to_proj(db=db, df=df, project_id=imj_parameters.project_id)
 
     def _import_tags_to_proj(
         self,
         db: Session,
         imj_parameters: ImportJobParameters,
     ) -> None:
-        project_id = imj_parameters.proj_id
-        filename = imj_parameters.filename
-        path_to_file = self.repo.get_dst_path_for_temp_file(filename)
+        """Import tags to a project"""
+        path_to_file = self.repo.get_dst_path_for_temp_file(imj_parameters.file_name)
         df = pd.read_csv(path_to_file)
+        import_tags_to_proj(db=db, df=df, project_id=imj_parameters.project_id)
 
-        import_tags_to_proj(db=db, df=df, proj_id=project_id)
+    def _import_bbox_annotations_to_proj(
+        self,
+        db: Session,
+        imj_parameters: ImportJobParameters,
+    ) -> None:
+        """Import bbox annotations to a project"""
+        path_to_file = self.repo.get_dst_path_for_temp_file(imj_parameters.file_name)
+        df = pd.read_csv(path_to_file)
+        import_bbox_annotations_to_proj(
+            db=db, df=df, project_id=imj_parameters.project_id
+        )
 
     def _import_project(
         self,
         db: Session,
         imj_parameters: ImportJobParameters,
     ) -> None:
-        proj_id = imj_parameters.proj_id
-        user_id = imj_parameters.user_id
-        filename = imj_parameters.filename
-
+        """Import an entire project"""
         # unzip file
         try:
-            path_to_zip_file = self.repo.get_dst_path_for_temp_file(filename)
+            path_to_zip_file = self.repo.get_dst_path_for_temp_file(
+                imj_parameters.file_name
+            )
             path_to_temp_import_dir = self.repo.create_temp_dir(
-                f"import_user_{user_id}_project_{proj_id}"
+                f"import_user_{imj_parameters.user_id}_project_{imj_parameters.project_id}"
             )
             self.__unzip(
                 path_to_zip_file=path_to_zip_file, unzip_target=path_to_temp_import_dir
@@ -200,5 +215,5 @@ class ImportService(metaclass=SingletonMeta):
             db=db,
             repo=self.repo,
             path_to_dir=path_to_temp_import_dir,
-            proj_id=proj_id,
+            proj_id=imj_parameters.project_id,
         )

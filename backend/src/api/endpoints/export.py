@@ -7,7 +7,7 @@ from app.core.data.dto.export_job import (
     ExportJobParameters,
     ExportJobRead,
 )
-from app.core.data.export.export_service import ExportService
+from app.core.data.eximport.export_service import ExportService
 
 router = APIRouter(
     prefix="/export", dependencies=[Depends(get_current_user)], tags=["export"]

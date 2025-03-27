@@ -6,7 +6,7 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.span_annotation import crud_span_anno
-from app.core.data.export.no_data_export_error import NoDataToExportError
+from app.core.data.eximport.no_data_export_error import NoDataToExportError
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.repo.repo_service import RepoService
 

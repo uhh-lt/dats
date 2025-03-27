@@ -34,9 +34,9 @@ from app.core.data.dto.preprocessing_job_payload import (
 from app.core.data.dto.project import ProjectUpdate
 from app.core.data.dto.source_document_data import WordLevelTranscription
 from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
-from app.core.data.import_.import_codes import import_codes_to_proj
+from app.core.data.eximport.codes.import_codes import import_codes_to_proj
+from app.core.data.eximport.tags.import_tags import import_tags_to_proj
 from app.core.data.import_.import_metadata import import_project_metadata
-from app.core.data.import_.import_tags import import_tags_to_proj
 from app.core.data.import_.import_users import import_users_to_proj
 from app.core.data.orm.project import ProjectORM
 from app.core.data.repo.repo_service import (
@@ -210,7 +210,7 @@ def import_project(
         # import tags
         tags_df = pd.read_csv(expected_file_paths["tags"])
         tags_df = tags_df.replace({np.nan: None})
-        tags_id_mapping = import_tags_to_proj(db=db, df=tags_df, proj_id=proj_id)
+        tags_id_mapping = import_tags_to_proj(db=db, df=tags_df, project_id=proj_id)
 
         # read sdoc links
         sdoc_links = pd.read_csv(expected_file_paths["sdoc_links"])

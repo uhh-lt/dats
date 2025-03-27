@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.sentence_annotation import crud_sentence_anno
 from app.core.data.crud.source_document import crud_sdoc
-from app.core.data.export.no_data_export_error import NoDataToExportError
+from app.core.data.eximport.no_data_export_error import NoDataToExportError
 from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
 from app.core.data.repo.repo_service import RepoService
 

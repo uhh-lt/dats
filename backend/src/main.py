@@ -75,11 +75,11 @@ from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.source_document import (
     SourceDocumentPreprocessingUnfinishedError,
 )
-from app.core.data.export.export_service import (
+from app.core.data.eximport.export_service import (
     ExportJobPreparationError,
     NoSuchExportJobError,
 )
-from app.core.data.export.no_data_export_error import NoDataToExportError
+from app.core.data.eximport.no_data_export_error import NoDataToExportError
 from app.core.data.repo.repo_service import (
     FileAlreadyExistsInRepositoryError,
     FileNotFoundInRepositoryError,

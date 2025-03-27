@@ -6,7 +6,11 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.project import crud_project
-from app.core.data.export.no_data_export_error import NoDataToExportError
+from app.core.data.eximport.codes.code_export_schema import (
+    CodeExportCollection,
+    CodeExportSchema,
+)
+from app.core.data.eximport.no_data_export_error import NoDataToExportError
 from app.core.data.orm.code import CodeORM
 from app.core.data.repo.repo_service import RepoService
 
@@ -44,24 +48,21 @@ def __export_codes(
 def __generate_export_df_for_codes(codes: List[CodeORM]) -> pd.DataFrame:
     logger.info(f"Exporting {len(codes)} Codes ...")
 
-    # fill the DataFrame
-    data = {
-        "code_name": [],
-        "description": [],
-        "color": [],
-        "created": [],
-        "parent_code_name": [],
-    }
+    code_export_items = []
 
     for code in codes:
         parent_code_name = None
         if code.parent_id is not None:
             parent_code_name = code.parent.name
 
-        data["code_name"].append(code.name)
-        data["description"].append(code.description)
-        data["color"].append(code.color)
-        data["created"].append(code.created)
-        data["parent_code_name"].append(parent_code_name)
+        code_export_items.append(
+            CodeExportSchema(
+                code_name=code.name,
+                color=code.color,
+                parent_code_name=parent_code_name,
+                description=code.description or "",
+            )
+        )
 
-    return pd.DataFrame(data=data)
+    collection = CodeExportCollection(codes=code_export_items)
+    return collection.to_dataframe()
