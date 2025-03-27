@@ -1,4 +1,5 @@
-import { Button } from "@mui/material";
+import NoteIcon from "@mui/icons-material/Note";
+import { Button, Tooltip } from "@mui/material";
 import { useCallback } from "react";
 import { XYPosition } from "reactflow";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
@@ -12,7 +13,13 @@ function AddNoteNodeButton({ onClick }: AddNodeDialogProps) {
     onClick(addNode);
   }, [onClick]);
 
-  return <Button onClick={handleAddNoteNode}>Add note</Button>;
+  return (
+    <Tooltip title="Add note" placement="right">
+      <Button onClick={handleAddNoteNode} aria-label="Add note">
+        <NoteIcon />
+      </Button>
+    </Tooltip>
+  );
 }
 
 export default AddNoteNodeButton;

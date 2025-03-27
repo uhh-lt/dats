@@ -1,3 +1,4 @@
+import CodeIcon from "@mui/icons-material/Code";
 import { Box, Button, ButtonProps, Dialog, Stack } from "@mui/material";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useCallback, useState } from "react";
@@ -60,7 +61,7 @@ function AddCodeNodeDialog({ projectId, buttonProps, onClick }: AddCodeNodeDialo
   return (
     <>
       <Button onClick={onOpenDialogClick} {...buttonProps}>
-        Add codes
+        <CodeIcon />
       </Button>
       <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         <DATSDialogHeader
