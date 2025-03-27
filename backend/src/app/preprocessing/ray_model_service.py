@@ -17,6 +17,7 @@ from app.preprocessing.ray_model_worker.dto.detr import (
     DETRImageInput,
     DETRObjectDetectionOutput,
 )
+from app.preprocessing.ray_model_worker.dto.glotlid import GlotLIDInput, GlotLIDOutput
 from app.preprocessing.ray_model_worker.dto.quote import QuoteJobInput, QuoteJobOutput
 from app.preprocessing.ray_model_worker.dto.seqsenttagger import (
     SeqSentTaggerJobInput,
@@ -161,3 +162,9 @@ class RayModelService(metaclass=SingletonMeta):
             "/quote/predict", input.model_dump()
         )
         return QuoteJobOutput.model_validate(response.json())
+
+    def language_identification(self, input: GlotLIDInput) -> GlotLIDOutput:
+        response = self._make_post_request_with_json_data(
+            "/glotlid/lid", input.model_dump()
+        )
+        return GlotLIDOutput.model_validate(response.json())
