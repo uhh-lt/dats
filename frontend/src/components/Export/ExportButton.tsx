@@ -43,7 +43,14 @@ function ExportButton({
     if (!exportJob.data) return;
     if (exportJob.data.status) {
       if (exportJob.data.status === BackgroundJobStatus.FINISHED) {
-        downloadFile("/content/" + exportJob.data.results_url);
+        downloadFile(encodeURI("/content/" + exportJob.data.results_url)).catch((error) => {
+          console.error("Download failed:", error);
+          openSnackbar({
+            text: `Failed to download file ${error}.`,
+            severity: "error",
+          });
+        });
+
         // Make sure the download doesn't start again on a re-render
         resetExport();
       } else if (exportJob.data.status === BackgroundJobStatus.ERRORNEOUS) {
