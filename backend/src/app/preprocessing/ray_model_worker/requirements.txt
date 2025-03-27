@@ -4,6 +4,7 @@ ctranslate2==3.19.0
 cupy-cuda11x==12.2.0
 datasets==3.2.0
 faster-whisper==0.8.0
+fasttext==0.9.3
 ffmpeg-python==0.2.0
 huggingface_hub==0.23.5
 lightning==2.3.3
