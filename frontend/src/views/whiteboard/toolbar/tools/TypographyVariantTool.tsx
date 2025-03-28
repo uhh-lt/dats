@@ -1,4 +1,4 @@
-import { MenuItem, Select, SelectChangeEvent, TypographyVariant } from "@mui/material";
+import { MenuItem, Select, SelectChangeEvent, Typography, TypographyVariant } from "@mui/material";
 
 interface TypographyVariantToolProps {
   variant: TypographyVariant | undefined;
@@ -14,13 +14,21 @@ function TypographyVariantTool({ variant, onVariantChange }: TypographyVariantTo
     <Select
       style={{ height: "32px" }}
       size="small"
-      defaultValue={variant}
+      value={variant}
       onChange={handleVariantChange}
-      sx={{ mr: 1 }}
+      renderValue={(value) => <Typography variant="body2">{value}</Typography>}
+      sx={{
+        mr: 1,
+        width: "140px",
+        "& .MuiSelect-select": {
+          display: "flex",
+          alignItems: "center",
+        },
+      }}
     >
       {["h1", "h2", "h3", "h4", "body1", "body2"].map((variant) => (
-        <MenuItem key={variant} value={variant}>
-          {variant.toUpperCase()}
+        <MenuItem key={variant} value={variant} sx={{ width: "140px", px: 2, py: 0 }}>
+          <Typography variant={variant as TypographyVariant}>{variant}</Typography>
         </MenuItem>
       ))}
     </Select>

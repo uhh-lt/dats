@@ -1,5 +1,4 @@
-import CropIcon from "@mui/icons-material/Crop";
-import { Button, ButtonProps, CircularProgress, Dialog } from "@mui/material";
+import { Button, ButtonProps, CircularProgress, Dialog, Tooltip } from "@mui/material";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { memo, useCallback, useMemo, useState } from "react";
 import { XYPosition } from "reactflow";
@@ -8,6 +7,7 @@ import { BBoxColumns } from "../../../api/openapi/models/BBoxColumns.ts";
 import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
 import BBoxAnnotationTable from "../../../components/BBoxAnnotation/BBoxAnnotationTable/BBoxAnnotationTable.tsx";
 import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
+import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
 import { PendingAddNodeAction } from "../types/PendingAddNodeAction.ts";
@@ -44,9 +44,11 @@ function AddBBoxAnnotationNodeDialog({ projectId, buttonProps, ...props }: AddBB
 
   return (
     <>
-      <Button onClick={handleOpen} {...buttonProps}>
-        <CropIcon />
-      </Button>
+      <Tooltip title="Add bbox annotations" placement="right">
+        <Button onClick={handleOpen} {...buttonProps}>
+          {getIconComponent(Icon.BBOX_ANNOTATION)}
+        </Button>
+      </Tooltip>
       <Dialog onClose={handleClose} open={open} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         {metadata.isSuccess ? (
           <>
