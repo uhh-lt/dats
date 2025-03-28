@@ -12,7 +12,10 @@ from app.core.data.dto.import_job import (
     ImportJobType,
 )
 from app.core.data.dto.user import UserRead
-from app.core.data.eximport.import_service import ImportService
+from app.core.data.eximport.import_service import (
+    ImportJobPreparationError,
+    ImportService,
+)
 from app.core.data.repo.repo_service import RepoService
 
 router = APIRouter(
@@ -22,15 +25,21 @@ router = APIRouter(
 ims: ImportService = ImportService()
 repo: RepoService = RepoService()
 
+CSV_FILE_TYPES = [
+    "text/csv",
+    "application/csv",
+    "application/vnd.ms-excel",
+]
+
 expected_file_type: Dict[ImportJobType, List[str]] = {
     ImportJobType.PROJECT: ["application/zip"],
-    ImportJobType.CODES: ["application/csv", "application/vnd.ms-excel"],
-    ImportJobType.TAGS: ["application/csv", "application/vnd.ms-excel"],
-    ImportJobType.BBOX_ANNOTATIONS: ["application/csv", "application/vnd.ms-excel"],
-    ImportJobType.SPAN_ANNOTATIONS: ["application/csv", "application/vnd.ms-excel"],
-    ImportJobType.SENTENCE_ANNOTATIONS: ["application/csv", "application/vnd.ms-excel"],
-    ImportJobType.USERS: ["application/csv", "application/vnd.ms-excel"],
-    ImportJobType.PROJECT_METADATA: ["application/csv", "application/vnd.ms-excel"],
+    ImportJobType.CODES: CSV_FILE_TYPES,
+    ImportJobType.TAGS: CSV_FILE_TYPES,
+    ImportJobType.BBOX_ANNOTATIONS: CSV_FILE_TYPES,
+    ImportJobType.SPAN_ANNOTATIONS: CSV_FILE_TYPES,
+    ImportJobType.SENTENCE_ANNOTATIONS: CSV_FILE_TYPES,
+    ImportJobType.USERS: CSV_FILE_TYPES,
+    ImportJobType.PROJECT_METADATA: CSV_FILE_TYPES,
 }
 
 
@@ -52,12 +61,16 @@ async def start_import_job(
 
     # Based on the import job type, check the file type and contents
     if uploaded_file.content_type not in expected_file_type[import_job_type]:
-        raise ValueError(
-            f"Invalid file type for import job {import_job_type}. Expected one of {expected_file_type[import_job_type]}, but got {uploaded_file.content_type}"
+        raise ImportJobPreparationError(
+            cause=Exception(
+                f"Invalid file type for import job {import_job_type}. Expected one of {expected_file_type[import_job_type]}, but got {uploaded_file.content_type}"
+            )
         )
 
     if uploaded_file.filename is None:
-        raise ValueError("Uploaded file has no filename")
+        raise ImportJobPreparationError(
+            cause=Exception("Uploaded file has no filename")
+        )
 
     # Store the uploaded file
     suffix = uploaded_file.filename.split(".")[-1]

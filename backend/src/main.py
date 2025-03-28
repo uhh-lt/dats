@@ -79,6 +79,7 @@ from app.core.data.eximport.export_service import (
     ExportJobPreparationError,
     NoSuchExportJobError,
 )
+from app.core.data.eximport.import_service import ImportJobPreparationError
 from app.core.data.eximport.no_data_export_error import NoDataToExportError
 from app.core.data.repo.repo_service import (
     FileAlreadyExistsInRepositoryError,
@@ -187,6 +188,11 @@ async def no_such_export_job_handler(_, exc: NoSuchExportJobError):
 
 @app.exception_handler(ExportJobPreparationError)
 async def export_job_preparation_error_handler(_, exc: ExportJobPreparationError):
+    return PlainTextResponse(str(exc), status_code=500)
+
+
+@app.exception_handler(ImportJobPreparationError)
+async def import_job_preparation_error_handler(_, exc: ImportJobPreparationError):
     return PlainTextResponse(str(exc), status_code=500)
 
 
