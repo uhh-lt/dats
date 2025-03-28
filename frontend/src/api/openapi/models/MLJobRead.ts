@@ -25,5 +25,8 @@ export type MLJobRead = {
    * Updated timestamp of the MLJob
    */
   updated: string;
+  /**
+   * The parameters of the MLJob that defines what to do!
+   */
   parameters: MLJobParameters;
 };

@@ -157,7 +157,7 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.DOCUMENT]: (iconProps) => <ArticleIcon {...iconProps} />,
   [Icon.SPAN_ANNOTATION]: (iconProps) => <ShortTextIcon {...iconProps} />,
   [Icon.SENTENCE_ANNOTATION]: (iconProps) => <SubjectIcon {...iconProps} />,
-  [Icon.BBOX_ANNOTATION]: (iconProps) => <ArticleIcon {...iconProps} />,
+  [Icon.BBOX_ANNOTATION]: (iconProps) => <FilterIcon {...iconProps} />,
 
   // Document types
   [Icon.TEXT_DOCUMENT]: (iconProps) => <ArticleIcon {...iconProps} />,
@@ -176,7 +176,7 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.SEARCH]: (iconProps) => <SearchIcon {...iconProps} />,
   [Icon.DOCUMENT_SEARCH]: (iconProps) => <DescriptionIcon {...iconProps} />,
   [Icon.IMAGE_SEARCH]: (iconProps) => <ImageSearchIcon {...iconProps} />,
-  [Icon.SENTENCE_SEARCH]: (iconProps) => <FilterIcon {...iconProps} />,
+  [Icon.SENTENCE_SEARCH]: (iconProps) => <ShortTextIcon {...iconProps} />,
 
   // Annotation
   [Icon.ANNOTATION]: (iconProps) => <FormatColorTextIcon {...iconProps} />,

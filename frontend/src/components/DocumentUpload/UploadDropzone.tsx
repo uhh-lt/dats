@@ -1,3 +1,4 @@
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { Box, Paper, Typography } from "@mui/material";
 import { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
@@ -61,6 +62,7 @@ export function UploadDropzone({ onFilesChanged, files }: UploadDropzoneProps) {
     >
       <input {...getInputProps()} />
       <Box textAlign="center">
+        <CloudUploadIcon sx={{ fontSize: 48, color: "primary.main", mb: 1 }} />
         {isDragActive ? (
           <Typography>Drop the files here...</Typography>
         ) : (

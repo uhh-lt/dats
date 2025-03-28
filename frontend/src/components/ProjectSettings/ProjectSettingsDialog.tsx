@@ -12,6 +12,7 @@ import { CRUDDialogActions } from "../dialogSlice.ts";
 import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
 import ProjectCodes from "./tabs/ProjectCodes.tsx";
 import ProjectDetails from "./tabs/ProjectDetails.tsx";
+import ProjectImport from "./tabs/ProjectImport.tsx";
 import ProjectTags from "./tabs/ProjectTags.tsx";
 import ProjectUsers from "./tabs/ProjectUsers.tsx";
 
@@ -86,6 +87,7 @@ function ProjectSettingsDialog() {
             <Tab label="User" value="2" />
             <Tab label="Codes" value="3" />
             <Tab label="Tags" value="4" />
+            <Tab label="Import" value="5" />
           </Tabs>
         </AppBar>
         {project.isLoading && <DialogContent>Loading project...</DialogContent>}
@@ -103,6 +105,9 @@ function ProjectSettingsDialog() {
             </TabPanel>
             <TabPanel value="4" sx={{ p: 0 }} className="myFlexFillAllContainer">
               <ProjectTags />
+            </TabPanel>
+            <TabPanel value="5" sx={{ p: 0 }} className="myFlexFillAllContainer">
+              <ProjectImport project={project.data} />
             </TabPanel>
           </React.Fragment>
         )}

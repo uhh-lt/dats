@@ -5,19 +5,19 @@
 import type { ImportJobType } from "./ImportJobType";
 export type ImportJobParameters = {
   /**
+   * The type of the import job (what to import)
+   */
+  import_job_type: ImportJobType;
+  /**
    * ID of the Project
    */
-  proj_id: number;
+  project_id: number;
   /**
    * ID of the User, who started the job.
    */
   user_id: number;
   /**
-   * Filename of the csv or zip of csvs.
+   * The name to the file that is used for the import job
    */
-  filename: string;
-  /**
-   * The type of the import job (what to import)
-   */
-  import_job_type: ImportJobType;
+  file_name: string;
 };

@@ -137,6 +137,12 @@ export const QueryKey = {
   // exportjob (by export job id)
   EXPORT_JOB: "exportJob",
 
+  // managed by ImportHooks:
+  // importjob (by import job id)
+  IMPORT_JOB: "importJob",
+  // all import jobs of a Project (by project id)
+  PROJECT_IMPORT_JOBS: "projectImportJobs",
+
   // managed by CrawlerHooks:
   // crawlerjob (by crawler job id)
   CRAWLER_JOB: "crawlerJob",

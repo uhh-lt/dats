@@ -2,31 +2,33 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_import_start_import_codes_job } from "../models/Body_import_start_import_codes_job";
-import type { Body_import_start_import_project_job } from "../models/Body_import_start_import_project_job";
-import type { Body_import_start_import_tags_job } from "../models/Body_import_start_import_tags_job";
+import type { Body_import_start_import_job } from "../models/Body_import_start_import_job";
 import type { ImportJobRead } from "../models/ImportJobRead";
+import type { ImportJobType } from "../models/ImportJobType";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class ImportService {
   /**
-   * Starts the import codes job on given project id.
+   * Starts an import job with the given parameters and file
    * @returns ImportJobRead Successful Response
    * @throws ApiError
    */
-  public static startImportCodesJob({
-    projId,
+  public static startImportJob({
+    projectId,
+    importJobType,
     formData,
   }: {
-    projId: number;
-    formData: Body_import_start_import_codes_job;
+    projectId: number;
+    importJobType: ImportJobType;
+    formData: Body_import_start_import_job;
   }): CancelablePromise<ImportJobRead> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/import/{proj_id}/codes",
+      url: "/import/{project_id}/type/{import_job_type}",
       path: {
-        proj_id: projId,
+        project_id: projectId,
+        import_job_type: importJobType,
       },
       formData: formData,
       mediaType: "multipart/form-data",
@@ -36,45 +38,34 @@ export class ImportService {
     });
   }
   /**
-   * Starts the import tags job on given project.
+   * Returns the ImportJob for the given ID if it exists
    * @returns ImportJobRead Successful Response
    * @throws ApiError
    */
-  public static startImportTagsJob({
-    projId,
-    formData,
-  }: {
-    projId: number;
-    formData: Body_import_start_import_tags_job;
-  }): CancelablePromise<ImportJobRead> {
+  public static getImportJob({ importJobId }: { importJobId: string }): CancelablePromise<ImportJobRead> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/import/{proj_id}/tags",
+      method: "GET",
+      url: "/import/{import_job_id}",
       path: {
-        proj_id: projId,
+        import_job_id: importJobId,
       },
-      formData: formData,
-      mediaType: "multipart/form-data",
       errors: {
         422: `Validation Error`,
       },
     });
   }
   /**
-   * Starts the import project job on given project
+   * Returns all ImportJobs for the given project ID if it exists
    * @returns ImportJobRead Successful Response
    * @throws ApiError
    */
-  public static startImportProjectJob({
-    formData,
-  }: {
-    formData: Body_import_start_import_project_job;
-  }): CancelablePromise<ImportJobRead> {
+  public static getAllImportJobs({ projectId }: { projectId: number }): CancelablePromise<Array<ImportJobRead>> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/import",
-      formData: formData,
-      mediaType: "multipart/form-data",
+      method: "GET",
+      url: "/import/project/{project_id}",
+      path: {
+        project_id: projectId,
+      },
       errors: {
         422: `Validation Error`,
       },
