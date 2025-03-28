@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 
 from fastapi import APIRouter, Depends, UploadFile
 from sqlalchemy.orm import Session
@@ -22,6 +22,17 @@ router = APIRouter(
 ims: ImportService = ImportService()
 repo: RepoService = RepoService()
 
+expected_file_type: Dict[ImportJobType, List[str]] = {
+    ImportJobType.PROJECT: ["application/zip"],
+    ImportJobType.CODES: ["application/csv", "application/vnd.ms-excel"],
+    ImportJobType.TAGS: ["application/csv", "application/vnd.ms-excel"],
+    ImportJobType.BBOX_ANNOTATIONS: ["application/csv", "application/vnd.ms-excel"],
+    ImportJobType.SPAN_ANNOTATIONS: ["application/csv", "application/vnd.ms-excel"],
+    ImportJobType.SENTENCE_ANNOTATIONS: ["application/csv", "application/vnd.ms-excel"],
+    ImportJobType.USERS: ["application/csv", "application/vnd.ms-excel"],
+    ImportJobType.PROJECT_METADATA: ["application/csv", "application/vnd.ms-excel"],
+}
+
 
 @router.post(
     "/{project_id}/type/{import_job_type}",
@@ -40,10 +51,17 @@ async def start_import_job(
     authz_user.assert_in_project(project_id)
 
     # Based on the import job type, check the file type and contents
-    # TODO:
+    if uploaded_file.content_type not in expected_file_type[import_job_type]:
+        raise ValueError(
+            f"Invalid file type for import job {import_job_type}. Expected one of {expected_file_type[import_job_type]}, but got {uploaded_file.content_type}"
+        )
+
+    if uploaded_file.filename is None:
+        raise ValueError("Uploaded file has no filename")
 
     # Store the uploaded file
-    filename = f"import_{import_job_type}_{authz_user.user.id}_{project_id}.csv"
+    suffix = uploaded_file.filename.split(".")[-1]
+    filename = f"import_{import_job_type}_{authz_user.user.id}_{project_id}.{suffix}"
     filepath = repo.get_dst_path_for_temp_file(filename)
     filepath = repo.store_uploaded_file(
         uploaded_file=uploaded_file, filepath=filepath, fn=filename
@@ -85,15 +103,3 @@ def get_all_import_jobs(
     import_jobs = ims.get_all_import_jobs(project_id=project_id)
     import_jobs.sort(key=lambda x: x.created, reverse=True)
     return import_jobs
-
-
-def __is_file_csv(uploaded_file: UploadFile):
-    return uploaded_file.content_type == "text/csv"
-
-
-def __is_file_json(uploaded_file: UploadFile):
-    return uploaded_file.content_type == "application/json"
-
-
-def __is_file_zip(uploaded_file: UploadFile):
-    return uploaded_file.content_type == "application/zip"
