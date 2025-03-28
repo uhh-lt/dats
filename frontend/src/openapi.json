@@ -2249,6 +2249,78 @@
         }
       }
     },
+    "/bbox/bulk/update": {
+      "patch": {
+        "tags": ["bboxAnnotation"],
+        "summary": "Updates BBoxAnnotation in Bulk",
+        "operationId": "update_bbox_anno_annotations_bulk",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": { "$ref": "#/components/schemas/BBoxAnnotationUpdateBulk" },
+                "type": "array",
+                "title": "Bbox Annos"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/BBoxAnnotationRead" },
+                  "type": "array",
+                  "title": "Response Bboxannotation-Update Bbox Anno Annotations Bulk"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/bbox/bulk/delete": {
+      "delete": {
+        "tags": ["bboxAnnotation"],
+        "summary": "Deletes all BBoxAnnotations with the given IDs.",
+        "operationId": "delete_bulk_by_id",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "items": { "type": "integer" }, "type": "array", "title": "Bbox Anno Ids" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/BBoxAnnotationRead" },
+                  "type": "array",
+                  "title": "Response Bboxannotation-Delete Bulk By Id"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/bbox/{bbox_id}/code": {
       "get": {
         "tags": ["bboxAnnotation"],
@@ -5288,19 +5360,30 @@
         }
       }
     },
-    "/import/{proj_id}/codes": {
+    "/import/{project_id}/type/{import_job_type}": {
       "post": {
         "tags": ["import"],
-        "summary": "Starts the import codes job on given project id.",
-        "operationId": "start_import_codes_job",
+        "summary": "Starts an import job with the given parameters and file",
+        "operationId": "start_import_job",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "import_job_type",
+            "in": "path",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/ImportJobType" }
+          }
         ],
         "requestBody": {
           "required": true,
           "content": {
-            "multipart/form-data": { "schema": { "$ref": "#/components/schemas/Body_import-start_import_codes_job" } }
+            "multipart/form-data": { "schema": { "$ref": "#/components/schemas/Body_import-start_import_job" } }
           }
         },
         "responses": {
@@ -5315,21 +5398,20 @@
         }
       }
     },
-    "/import/{proj_id}/tags": {
-      "post": {
+    "/import/{import_job_id}": {
+      "get": {
         "tags": ["import"],
-        "summary": "Starts the import tags job on given project.",
-        "operationId": "start_import_tags_job",
+        "summary": "Returns the ImportJob for the given ID if it exists",
+        "operationId": "get_import_job",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": { "schema": { "$ref": "#/components/schemas/Body_import-start_import_tags_job" } }
+          {
+            "name": "import_job_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "title": "Import Job Id" }
           }
-        },
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -5342,28 +5424,38 @@
         }
       }
     },
-    "/import": {
-      "post": {
+    "/import/project/{project_id}": {
+      "get": {
         "tags": ["import"],
-        "summary": "Starts the import project job on given project",
-        "operationId": "start_import_project_job",
-        "requestBody": {
-          "content": {
-            "multipart/form-data": { "schema": { "$ref": "#/components/schemas/Body_import-start_import_project_job" } }
-          },
-          "required": true
-        },
+        "summary": "Returns all ImportJobs for the given project ID if it exists",
+        "operationId": "get_all_import_jobs",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ImportJobRead" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ImportJobRead" },
+                  "title": "Response Import-Get All Import Jobs"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
     "/ml": {
@@ -5751,6 +5843,19 @@
         "required": ["code_id"],
         "title": "BBoxAnnotationUpdate"
       },
+      "BBoxAnnotationUpdateBulk": {
+        "properties": {
+          "bbox_annotation_id": {
+            "type": "integer",
+            "title": "Bbox Annotation Id",
+            "description": "ID of the BBoxAnnotation"
+          },
+          "code_id": { "type": "integer", "title": "Code Id", "description": "Code the BBoxAnnotation refers to" }
+        },
+        "type": "object",
+        "required": ["bbox_annotation_id", "code_id"],
+        "title": "BBoxAnnotationUpdateBulk"
+      },
       "BBoxColumns": {
         "type": "string",
         "enum": [
@@ -5859,44 +5964,11 @@
         "required": ["sdoc_ids", "unlink_tag_ids", "link_tag_ids"],
         "title": "Body_documentTag-update_document_tags_batch"
       },
-      "Body_import-start_import_codes_job": {
-        "properties": {
-          "uploaded_file": {
-            "type": "string",
-            "format": "binary",
-            "title": "Uploaded File",
-            "description": "CSV file of codes that gets uploaded into project"
-          }
-        },
+      "Body_import-start_import_job": {
+        "properties": { "uploaded_file": { "type": "string", "format": "binary", "title": "Uploaded File" } },
         "type": "object",
         "required": ["uploaded_file"],
-        "title": "Body_import-start_import_codes_job"
-      },
-      "Body_import-start_import_project_job": {
-        "properties": {
-          "uploaded_file": {
-            "type": "string",
-            "format": "binary",
-            "title": "Uploaded File",
-            "description": "Zip file of project metadata that gets uploaded into project"
-          }
-        },
-        "type": "object",
-        "required": ["uploaded_file"],
-        "title": "Body_import-start_import_project_job"
-      },
-      "Body_import-start_import_tags_job": {
-        "properties": {
-          "uploaded_file": {
-            "type": "string",
-            "format": "binary",
-            "title": "Uploaded File",
-            "description": "CSV file of codes that gets uploaded into project"
-          }
-        },
-        "type": "object",
-        "required": ["uploaded_file"],
-        "title": "Body_import-start_import_tags_job"
+        "title": "Body_import-start_import_job"
       },
       "Body_llm-count_existing_assistant_annotations": {
         "properties": {
@@ -7399,16 +7471,20 @@
       "IDOperator": { "type": "string", "enum": ["ID_EQUALS", "ID_NOT_EQUALS"], "title": "IDOperator" },
       "ImportJobParameters": {
         "properties": {
-          "proj_id": { "type": "integer", "title": "Proj Id", "description": "ID of the Project" },
-          "user_id": { "type": "integer", "title": "User Id", "description": "ID of the User, who started the job." },
-          "filename": { "type": "string", "title": "Filename", "description": "Filename of the csv or zip of csvs." },
           "import_job_type": {
             "$ref": "#/components/schemas/ImportJobType",
             "description": "The type of the import job (what to import)"
+          },
+          "project_id": { "type": "integer", "title": "Project Id", "description": "ID of the Project" },
+          "user_id": { "type": "integer", "title": "User Id", "description": "ID of the User, who started the job." },
+          "file_name": {
+            "type": "string",
+            "title": "File Name",
+            "description": "The name to the file that is used for the import job"
           }
         },
         "type": "object",
-        "required": ["proj_id", "user_id", "filename", "import_job_type"],
+        "required": ["import_job_type", "project_id", "user_id", "file_name"],
         "title": "ImportJobParameters"
       },
       "ImportJobRead": {
@@ -7418,23 +7494,47 @@
             "description": "Status of the ImportJob",
             "default": "Waiting"
           },
-          "id": { "type": "string", "title": "Id", "description": "ID of the ImportJob" },
-          "parameters": {
-            "$ref": "#/components/schemas/ImportJobParameters",
-            "description": "The parameters of the import job that defines what to import!"
+          "error": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Error",
+            "description": "Error message (if any)"
           },
+          "id": { "type": "string", "title": "Id", "description": "ID of the ImportJob" },
           "created": {
             "type": "string",
             "format": "date-time",
             "title": "Created",
             "description": "Created timestamp of the ImportJob"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated",
+            "description": "Updated timestamp of the ImportJob"
+          },
+          "parameters": {
+            "$ref": "#/components/schemas/ImportJobParameters",
+            "description": "The parameters of the import job that defines what to import!"
           }
         },
         "type": "object",
-        "required": ["id", "parameters", "created"],
+        "required": ["id", "created", "updated", "parameters"],
         "title": "ImportJobRead"
       },
-      "ImportJobType": { "type": "string", "enum": ["PROJECT", "CODES", "TAGS"], "title": "ImportJobType" },
+      "ImportJobType": {
+        "type": "string",
+        "enum": [
+          "PROJECT",
+          "CODES",
+          "TAGS",
+          "BBOX_ANNOTATIONS",
+          "SPAN_ANNOTATIONS",
+          "SENTENCE_ANNOTATIONS",
+          "USERS",
+          "PROJECT_METADATA"
+        ],
+        "title": "ImportJobType"
+      },
       "InstanceInfo": {
         "properties": {
           "is_oidc_enabled": { "type": "boolean", "title": "Is Oidc Enabled", "description": "Is OIDC enabled" },
@@ -7771,7 +7871,10 @@
             "title": "Updated",
             "description": "Updated timestamp of the MLJob"
           },
-          "parameters": { "$ref": "#/components/schemas/MLJobParameters" }
+          "parameters": {
+            "$ref": "#/components/schemas/MLJobParameters",
+            "description": "The parameters of the MLJob that defines what to do!"
+          }
         },
         "type": "object",
         "required": ["id", "created", "updated", "parameters"],

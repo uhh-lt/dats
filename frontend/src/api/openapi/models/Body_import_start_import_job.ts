@@ -2,9 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type Body_import_start_import_tags_job = {
-  /**
-   * CSV file of codes that gets uploaded into project
-   */
+export type Body_import_start_import_job = {
   uploaded_file: Blob;
 };
