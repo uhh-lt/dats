@@ -31,16 +31,16 @@ from app.core.data.eximport.export_sdocs import (
     export_all_sdocs,
     export_selected_sdocs,
 )
-from app.core.data.eximport.export_sentence_annotations import (
+from app.core.data.eximport.export_users import (
+    export_all_users,
+)
+from app.core.data.eximport.sent_annotations.export_sentence_annotations import (
     export_all_sentence_annotations,
     export_selected_sentence_annotations,
 )
-from app.core.data.eximport.export_span_annotations import (
+from app.core.data.eximport.span_annotations.export_span_annotations import (
     export_all_span_annotations,
     export_selected_span_annotations,
-)
-from app.core.data.eximport.export_users import (
-    export_all_users,
 )
 from app.core.data.eximport.tags.export_tags import (
     export_all_tags,

@@ -4,61 +4,64 @@ import pandas as pd
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.project import crud_project
+from app.core.data.crud.sentence_annotation import crud_sentence_anno
 from app.core.data.crud.source_document import crud_sdoc
-from app.core.data.dto.bbox_annotation import BBoxAnnotationCreate
-from app.core.data.eximport.bbox_annotations.bbox_annotations_export_schema import (
-    BBoxAnnotationExportCollection,
-    BBoxAnnotationExportSchema,
+from app.core.data.dto.sentence_annotation import SentenceAnnotationCreate
+from app.core.data.eximport.sent_annotations.sentence_annotations_export_schema import (
+    SentenceAnnotationExportCollection,
+    SentenceAnnotationExportSchema,
 )
 from app.core.data.orm.source_document import SourceDocumentORM
 
 
-class ImportBBoxAnnotationsError(Exception):
+class ImportSentenceAnnotationsError(Exception):
     def __init__(self, errors: List[str]) -> None:
-        super().__init__(f"Errors occurred while importing bbox annotations: {errors}")
+        super().__init__(
+            f"Errors occurred while importing sentence annotations: {errors}"
+        )
 
 
-def import_bbox_annotations_to_proj(
+def import_sentence_annotations_to_proj(
     db: Session,
     df: pd.DataFrame,
     project_id: int,
 ) -> List[int]:
     """
-    Import bbox annotations from a DataFrame into a project.
+    Import sentence annotations from a DataFrame into a project.
     Validates input data and ensures all required references (document, user, code) exist.
 
     Args:
         db: Database session
-        df: DataFrame with bbox annotation data
+        df: DataFrame with sentence annotation data
         project_id: ID of the project to import annotations into
 
     Returns:
         List of imported annotation IDs
 
     Raises:
-        ImportBBoxAnnotationsError: If validation fails or any required references are missing
+        ImportSentenceAnnotationsError: If validation fails or any required references are missing
     """
     # Validate input data using our schema
     try:
-        annotation_collection = BBoxAnnotationExportCollection.from_dataframe(df)
+        annotation_collection = SentenceAnnotationExportCollection.from_dataframe(df)
     except ValueError as e:
-        logger.error(f"Failed to load bbox annotation import data: {e}")
-        raise ImportBBoxAnnotationsError(
-            errors=["Invalid data format for bbox annotations."]
+        logger.error(f"Failed to load sentence annotation import data: {e}")
+        raise ImportSentenceAnnotationsError(
+            errors=["Invalid data format for sentence annotations."]
         )
 
     logger.info(
-        f"Importing {len(annotation_collection.annotations)} bbox annotations..."
+        f"Importing {len(annotation_collection.annotations)} sentence annotations..."
     )
 
-    # BBoxAnnotations need a User, a SourceDocument and a Code. We need to check if
+    # SentenceAnnotations need a User, a SourceDocument and a Code. We need to check if
     # all of them exist in the database:
     user_emails: Set[str] = set()
     sdoc_names: Set[str] = set()
     code_names: Set[str] = set()
-    user_email2annos: Dict[str, List[BBoxAnnotationExportSchema]] = {}
+    user_email2annos: Dict[str, List[SentenceAnnotationExportSchema]] = {}
+
     for annotation in annotation_collection.annotations:
         user_emails.add(annotation.user_email)
         sdoc_names.add(annotation.sdoc_name)
@@ -99,23 +102,21 @@ def import_bbox_annotations_to_proj(
     # Raise an error if any of the checks failed
     if len(error_messages) > 0:
         logger.error(
-            "The following errors occurred while importing bbox annotations:\n"
+            "The following errors occurred while importing sentence annotations:\n"
             + "\n".join(error_messages)
         )
-        raise ImportBBoxAnnotationsError(errors=error_messages)
+        raise ImportSentenceAnnotationsError(errors=error_messages)
 
     # Everything is fine, we can bulk create the annotations, per user
     imported_anno_ids: List[int] = []
     for user, annotations in user_email2annos.items():
-        created_annos = crud_bbox_anno.create_bulk(
+        created_annos = crud_sentence_anno.create_bulk(
             db=db,
             user_id=project_user_emails[user].id,
             create_dtos=[
-                BBoxAnnotationCreate(
-                    x_min=annotation.bbox_x_min,
-                    y_min=annotation.bbox_y_min,
-                    x_max=annotation.bbox_x_max,
-                    y_max=annotation.bbox_y_max,
+                SentenceAnnotationCreate(
+                    sentence_id_start=annotation.text_begin_sent,
+                    sentence_id_end=annotation.text_end_sent,
                     code_id=project_code_names[annotation.code_name].id,
                     sdoc_id=project_sdoc_names[annotation.sdoc_name].id,
                 )
@@ -125,6 +126,6 @@ def import_bbox_annotations_to_proj(
         imported_anno_ids.extend([anno.id for anno in created_annos])
 
     logger.info(
-        f"Successfully imported {len(imported_anno_ids)} bbox annotations into project {project_id}"
+        f"Successfully imported {len(imported_anno_ids)} sentence annotations into project {project_id}"
     )
     return imported_anno_ids

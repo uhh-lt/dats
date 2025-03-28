@@ -7,6 +7,10 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.eximport.no_data_export_error import NoDataToExportError
+from app.core.data.eximport.span_annotations.span_annotations_export_schema import (
+    SpanAnnotationExportCollection,
+    SpanAnnotationExportSchema,
+)
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.repo.repo_service import RepoService
 
@@ -15,9 +19,9 @@ def export_selected_span_annotations(
     db: Session,
     repo: RepoService,
     project_id: int,
-    sentence_annotation_ids: List[int],
+    span_annotation_ids: List[int],
 ) -> Path:
-    span_annotations = crud_span_anno.read_by_ids(db=db, ids=sentence_annotation_ids)
+    span_annotations = crud_span_anno.read_by_ids(db=db, ids=span_annotation_ids)
     return __export_span_annotations(
         db=db,
         repo=repo,
@@ -63,30 +67,25 @@ def __generate_export_df_for_span_annotations(
 ) -> pd.DataFrame:
     logger.info(f"Exporting {len(span_annotations)} Span Annotations ...")
 
-    # fill the DataFrame
-    data = {
-        "sdoc_name": [],
-        "user_email": [],
-        "user_first_name": [],
-        "user_last_name": [],
-        "code_name": [],
-        "created": [],
-        "text": [],
-        "text_begin_char": [],
-        "text_end_char": [],
-    }
-
+    annotation_export_items = []
     for span in span_annotations:
         sdoc = span.annotation_document.source_document
         user = span.annotation_document.user
-        data["sdoc_name"].append(sdoc.filename)
-        data["user_email"].append(user.email)
-        data["user_first_name"].append(user.first_name)
-        data["user_last_name"].append(user.last_name)
-        data["code_name"].append(span.code.name)
-        data["created"].append(span.created)
-        data["text"].append(span.text)
-        data["text_begin_char"].append(span.begin)
-        data["text_end_char"].append(span.end)
 
-    return pd.DataFrame(data)
+        annotation_export_items.append(
+            SpanAnnotationExportSchema(
+                sdoc_name=sdoc.filename,
+                user_email=user.email,
+                user_first_name=user.first_name,
+                user_last_name=user.last_name,
+                code_name=span.code.name,
+                text=span.text,
+                text_begin_char=span.begin,
+                text_end_char=span.end,
+                text_begin_token=span.begin_token,
+                text_end_token=span.end_token,
+            )
+        )
+
+    collection = SpanAnnotationExportCollection(annotations=annotation_export_items)
+    return collection.to_dataframe()
