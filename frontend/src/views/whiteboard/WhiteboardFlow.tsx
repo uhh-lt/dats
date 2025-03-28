@@ -1,7 +1,8 @@
+import Add from "@mui/icons-material/Add";
 import SaveIcon from "@mui/icons-material/Save";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import { LoadingButton } from "@mui/lab";
-import { Box, Paper, Stack, Typography } from "@mui/material";
+import { Box, Button, Menu, MenuItem, Paper, Stack, Tooltip, Typography } from "@mui/material";
 import { toPng } from "html-to-image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useBlocker, useParams } from "react-router-dom";
@@ -187,6 +188,8 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   const [edges, setEdges, onEdgesChange] = useEdgeStateCustom(whiteboard.content.edges as Edge[]);
   const [selectedEdges, setSelectedEdges] = useState<Edge[]>([]);
   const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
+  const [shapeMenuAnchor, setShapeMenuAnchor] = useState<null | HTMLElement>(null);
+  const shapeMenuOpen = Boolean(shapeMenuAnchor);
 
   const handleChangePendingAction = useCallback(
     (action: PendingAddNodeAction | undefined) => {
@@ -372,6 +375,14 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
     return false;
   });
 
+  const handleShapeMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    setShapeMenuAnchor(event.currentTarget);
+  };
+
+  const handleShapeMenuClose = () => {
+    setShapeMenuAnchor(null);
+  };
+
   return (
     <>
       <Box className="myFlexContainer h100">
@@ -439,22 +450,102 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
                 <Panel position="top-left">
                   <Paper elevation={1} sx={{ mb: 3 }}>
                     <Stack>
-                      <AddDocumentNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
-                      <AddTagNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
-                      <AddCodeNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
-                      <AddSpanAnnotationNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
-                      <AddSentenceAnnotationNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
-                      <AddBBoxAnnotationNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
-                      <AddMemoNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
+                      <AddDocumentNodeDialog
+                        projectId={projectId}
+                        onClick={handleChangePendingAction}
+                        buttonProps={{ sx: { minWidth: 0, p: 1 } }}
+                      />
+                      <AddTagNodeDialog
+                        projectId={projectId}
+                        onClick={handleChangePendingAction}
+                        buttonProps={{ sx: { minWidth: 0, p: 1 } }}
+                      />
+                      <AddCodeNodeDialog
+                        projectId={projectId}
+                        onClick={handleChangePendingAction}
+                        buttonProps={{ sx: { minWidth: 0, p: 1 } }}
+                      />
+                      <AddSpanAnnotationNodeDialog
+                        projectId={projectId}
+                        onClick={handleChangePendingAction}
+                        buttonProps={{ sx: { minWidth: 0, p: 1 } }}
+                      />
+                      <AddSentenceAnnotationNodeDialog
+                        projectId={projectId}
+                        onClick={handleChangePendingAction}
+                        buttonProps={{ sx: { minWidth: 0, p: 1 } }}
+                      />
+                      <AddBBoxAnnotationNodeDialog
+                        projectId={projectId}
+                        onClick={handleChangePendingAction}
+                        buttonProps={{ sx: { minWidth: 0, p: 1 } }}
+                      />
+                      <AddMemoNodeDialog
+                        projectId={projectId}
+                        onClick={handleChangePendingAction}
+                        buttonProps={{ sx: { minWidth: 0, p: 1 } }}
+                      />
                     </Stack>
                   </Paper>
                   <Paper elevation={1}>
                     <Stack>
-                      <AddNoteNodeButton onClick={handleChangePendingAction} />
-                      <AddTextNodeButton onClick={handleChangePendingAction} />
-                      <AddBorderNodeButton type="Ellipse" onClick={handleChangePendingAction} />
-                      <AddBorderNodeButton type="Rectangle" onClick={handleChangePendingAction} />
-                      <AddBorderNodeButton type="Rounded" onClick={handleChangePendingAction} />
+                      <AddNoteNodeButton
+                        onClick={handleChangePendingAction}
+                        buttonProps={{ sx: { minWidth: 0, p: 1 } }}
+                      />
+                      <AddTextNodeButton
+                        onClick={handleChangePendingAction}
+                        buttonProps={{ sx: { minWidth: 0, p: 1 } }}
+                      />
+                      <Tooltip title="Add shape" placement="right">
+                        <Button onClick={handleShapeMenuClick} sx={{ minWidth: 0, p: 1 }}>
+                          <Add />
+                        </Button>
+                      </Tooltip>
+                      <Menu
+                        id="shape-menu"
+                        anchorEl={shapeMenuAnchor}
+                        open={shapeMenuOpen}
+                        onClose={handleShapeMenuClose}
+                        anchorOrigin={{
+                          vertical: "top",
+                          horizontal: "right",
+                        }}
+                        transformOrigin={{
+                          vertical: "top",
+                          horizontal: "left",
+                        }}
+                        slotProps={{
+                          paper: {
+                            sx: {
+                              minWidth: "auto",
+                              width: "fit-content",
+                            },
+                          },
+                        }}
+                      >
+                        <MenuItem onClick={handleShapeMenuClose} sx={{ p: 0, px: 0, py: 0, minHeight: "auto" }}>
+                          <AddBorderNodeButton
+                            type="Rectangle"
+                            onClick={handleChangePendingAction}
+                            buttonProps={{ sx: { minWidth: 0, p: 1 } }}
+                          />
+                        </MenuItem>
+                        <MenuItem onClick={handleShapeMenuClose} sx={{ p: 0, px: 0, py: 0, minHeight: "auto" }}>
+                          <AddBorderNodeButton
+                            type="Ellipse"
+                            onClick={handleChangePendingAction}
+                            buttonProps={{ sx: { minWidth: 0, p: 1 } }}
+                          />
+                        </MenuItem>
+                        <MenuItem onClick={handleShapeMenuClose} sx={{ p: 0, px: 0, py: 0, minHeight: "auto" }}>
+                          <AddBorderNodeButton
+                            type="Rounded"
+                            onClick={handleChangePendingAction}
+                            buttonProps={{ sx: { minWidth: 0, p: 1 } }}
+                          />
+                        </MenuItem>
+                      </Menu>
                     </Stack>
                   </Paper>
                   {readonly && (

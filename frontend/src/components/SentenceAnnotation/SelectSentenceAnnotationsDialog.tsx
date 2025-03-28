@@ -1,5 +1,5 @@
 import TextFieldsIcon from "@mui/icons-material/TextFields";
-import { Button, ButtonProps, CircularProgress, Dialog } from "@mui/material";
+import { Button, ButtonProps, CircularProgress, Dialog, Tooltip } from "@mui/material";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { memo, useCallback, useState } from "react";
 import MetadataHooks from "../../api/MetadataHooks.ts";
@@ -42,9 +42,11 @@ function SelectSentenceAnnotationsDialog({ projectId, buttonProps, ...props }: S
 
   return (
     <>
-      <Button onClick={handleOpen} {...buttonProps}>
-        <TextFieldsIcon />
-      </Button>
+      <Tooltip title="Select sentence annotations" placement="right">
+        <Button onClick={handleOpen} {...buttonProps}>
+          <TextFieldsIcon />
+        </Button>
+      </Tooltip>
       <Dialog onClose={handleClose} open={open} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         {metadata.isSuccess ? (
           <>
