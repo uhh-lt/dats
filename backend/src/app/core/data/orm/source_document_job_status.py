@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
 class JobType(IntEnum):
     QUOTATION_ATTRIBUTION = 100
+    COREFERENCE_RESOLUTION = 101
 
 
 class JobStatus(IntEnum):
