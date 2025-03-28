@@ -77,6 +77,14 @@ class SourceDocumentDataORM(ORMBase):
         return [char2tok[e] for e in self.sentence_ends]
 
     @property
+    def tokenized_sentences(self):
+        tokens = self.tokens
+        return [
+            tokens[s : e + 1]
+            for s, e in zip(self.sentence_token_starts, self.sentence_token_ends)
+        ]
+
+    @property
     def word_level_transcriptions(self) -> Optional[List[WordLevelTranscription]]:
         print(self.token_time_starts)
         print(self.token_time_ends)

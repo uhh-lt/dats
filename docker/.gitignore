@@ -4,6 +4,8 @@
 /models_cache/*
 /numba_cache/*
 /ollama_cache/*
+/triton_cache/*
+/torch_inductor_cache/*
 /pg_data/*
 /rabbitmq_data/*
 /redis_data/*

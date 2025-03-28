@@ -6551,6 +6551,20 @@
         "required": ["label", "column", "sortable", "operator", "value"],
         "title": "ColumnInfo[WordFrequencyColumns]"
       },
+      "CoreferenceResolutionParams": {
+        "properties": {
+          "ml_job_type": { "type": "string", "const": "COREFERENCE_RESOLUTION", "title": "Ml Job Type" },
+          "recompute": {
+            "type": "boolean",
+            "title": "Recompute",
+            "description": "Whether to recompute already processed documents",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": ["ml_job_type"],
+        "title": "CoreferenceResolutionParams"
+      },
       "CrawlerJobParameters": {
         "properties": {
           "project_id": {
@@ -6638,13 +6652,7 @@
       },
       "DocTagRecommendationParams": {
         "properties": {
-          "ml_job_type": { "type": "string", "const": "DOC_TAG_RECOMMENDATION", "title": "Ml Job Type" },
-          "recompute": {
-            "type": "boolean",
-            "title": "Recompute",
-            "description": "Whether to recompute already processed documents",
-            "default": false
-          }
+          "ml_job_type": { "type": "string", "const": "DOC_TAG_RECOMMENDATION", "title": "Ml Job Type" }
         },
         "type": "object",
         "required": ["ml_job_type"],
@@ -7826,11 +7834,13 @@
               {
                 "oneOf": [
                   { "$ref": "#/components/schemas/QuotationAttributionParams" },
-                  { "$ref": "#/components/schemas/DocTagRecommendationParams" }
+                  { "$ref": "#/components/schemas/DocTagRecommendationParams" },
+                  { "$ref": "#/components/schemas/CoreferenceResolutionParams" }
                 ],
                 "discriminator": {
                   "propertyName": "ml_job_type",
                   "mapping": {
+                    "COREFERENCE_RESOLUTION": "#/components/schemas/CoreferenceResolutionParams",
                     "DOC_TAG_RECOMMENDATION": "#/components/schemas/DocTagRecommendationParams",
                     "QUOTATION_ATTRIBUTION": "#/components/schemas/QuotationAttributionParams"
                   }
@@ -7882,7 +7892,7 @@
       },
       "MLJobType": {
         "type": "string",
-        "enum": ["QUOTATION_ATTRIBUTION", "DOC_TAG_RECOMMENDATION"],
+        "enum": ["QUOTATION_ATTRIBUTION", "DOC_TAG_RECOMMENDATION", "COREFERENCE_RESOLUTION"],
         "title": "MLJobType"
       },
       "MemoColumns": {

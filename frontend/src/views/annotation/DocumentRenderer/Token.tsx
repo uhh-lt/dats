@@ -36,6 +36,7 @@ function Token({ token, spanAnnotations }: TokenProps) {
         isEnd={isEnd}
         height={h}
         top={(100 / markCount) * index + "%"}
+        groups={spanAnnotation.group_ids}
       />
     ));
   }, [token, spans]);

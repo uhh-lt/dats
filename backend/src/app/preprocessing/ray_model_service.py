@@ -9,6 +9,7 @@ from app.preprocessing.ray_model_worker.dto.clip import (
     ClipImageEmbeddingInput,
     ClipTextEmbeddingInput,
 )
+from app.preprocessing.ray_model_worker.dto.coref import CorefJobInput, CorefJobOutput
 from app.preprocessing.ray_model_worker.dto.cota import (
     RayCOTAJobInput,
     RayCOTAJobResponse,
@@ -24,9 +25,7 @@ from app.preprocessing.ray_model_worker.dto.seqsenttagger import (
     SeqSentTaggerJobResponse,
 )
 from app.preprocessing.ray_model_worker.dto.spacy import SpacyInput, SpacyPipelineOutput
-from app.preprocessing.ray_model_worker.dto.whisper import (
-    WhisperTranscriptionOutput,
-)
+from app.preprocessing.ray_model_worker.dto.whisper import WhisperTranscriptionOutput
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 
@@ -168,3 +167,9 @@ class RayModelService(metaclass=SingletonMeta):
             "/glotlid/lid", input.model_dump()
         )
         return GlotLIDOutput.model_validate(response.json())
+
+    def coref_prediction(self, input: CorefJobInput) -> CorefJobOutput:
+        response = self._make_post_request_with_json_data(
+            "/coref/predict", input.model_dump()
+        )
+        return CorefJobOutput.model_validate(response.json())

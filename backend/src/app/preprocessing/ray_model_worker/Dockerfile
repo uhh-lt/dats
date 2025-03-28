@@ -20,7 +20,6 @@ COPY requirements.txt /tmp/requirements.txt
 # install and cache dependencies via uv (this drastically (!) reduces build time)
 RUN --mount=type=cache,target=/root/.cache uv pip install -r /tmp/requirements.txt --system
 
-
 # copy source code into the image
 WORKDIR /dats_code_ray
 COPY . .

@@ -2,6 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type DocTagRecommendationParams = {
+export type CoreferenceResolutionParams = {
   ml_job_type: string;
+  /**
+   * Whether to recompute already processed documents
+   */
+  recompute?: boolean;
 };
