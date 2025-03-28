@@ -7,6 +7,10 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.project import crud_project
 from app.core.data.eximport.no_data_export_error import NoDataToExportError
+from app.core.data.eximport.user.user_export_schema import (
+    UserExportCollection,
+    UserExportSchema,
+)
 from app.core.data.orm.user import UserORM
 from app.core.data.repo.repo_service import RepoService
 
@@ -46,14 +50,15 @@ def __generate_export_df_for_users(
 ) -> pd.DataFrame:
     logger.info(f"Exporting {len(users)} users ...")
 
-    data = [
-        {
-            "email": user_data.email,
-            "first_name": user_data.first_name,
-            "last_name": user_data.last_name,
-            "created": user_data.created,
-            "updated": user_data.updated,
-        }
-        for user_data in users
-    ]
-    return pd.DataFrame(data)
+    user_export_items = []
+    for user_data in users:
+        user_export_items.append(
+            UserExportSchema(
+                email=user_data.email,
+                first_name=user_data.first_name,
+                last_name=user_data.last_name,
+            )
+        )
+
+    collection = UserExportCollection(users=user_export_items)
+    return collection.to_dataframe()

@@ -23,11 +23,15 @@ from app.core.data.eximport.bbox_annotations.import_bbox_annotations import (
     import_bbox_annotations_to_proj,
 )
 from app.core.data.eximport.codes.import_codes import import_codes_to_proj
+from app.core.data.eximport.project.import_project import import_project
+from app.core.data.eximport.project_metadata.import_project_metadata import (
+    import_project_metadata_to_proj,
+)
 from app.core.data.eximport.span_annotations.import_span_annotations import (
     import_span_annotations_to_proj,
 )
 from app.core.data.eximport.tags.import_tags import import_tags_to_proj
-from app.core.data.import_.import_project import import_project
+from app.core.data.eximport.user.import_users import import_users_to_proj
 from app.core.data.repo.repo_service import (
     RepoService,
 )
@@ -72,6 +76,8 @@ class ImportService(metaclass=SingletonMeta):
             ImportJobType.BBOX_ANNOTATIONS: cls._import_bbox_annotations_to_proj,
             ImportJobType.SPAN_ANNOTATIONS: cls._import_span_annotations_to_proj,
             ImportJobType.SENTENCE_ANNOTATIONS: cls._import_sent_annotations_to_proj,
+            ImportJobType.PROJECT_METADATA: cls._import_project_metadata_to_proj,
+            ImportJobType.USERS: cls._import_users_to_proj,
         }
         return super(ImportService, cls).__new__(cls)
 
@@ -216,6 +222,28 @@ class ImportService(metaclass=SingletonMeta):
         path_to_file = self.repo.get_dst_path_for_temp_file(imj_parameters.file_name)
         df = pd.read_csv(path_to_file)
         import_span_annotations_to_proj(
+            db=db, df=df, project_id=imj_parameters.project_id
+        )
+
+    def _import_users_to_proj(
+        self,
+        db: Session,
+        imj_parameters: ImportJobParameters,
+    ) -> None:
+        """Import users annotations to a project"""
+        path_to_file = self.repo.get_dst_path_for_temp_file(imj_parameters.file_name)
+        df = pd.read_csv(path_to_file)
+        import_users_to_proj(db=db, df=df, project_id=imj_parameters.project_id)
+
+    def _import_project_metadata_to_proj(
+        self,
+        db: Session,
+        imj_parameters: ImportJobParameters,
+    ) -> None:
+        """Import project metadata to a project"""
+        path_to_file = self.repo.get_dst_path_for_temp_file(imj_parameters.file_name)
+        df = pd.read_csv(path_to_file)
+        import_project_metadata_to_proj(
             db=db, df=df, project_id=imj_parameters.project_id
         )
 
