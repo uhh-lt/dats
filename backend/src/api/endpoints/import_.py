@@ -12,7 +12,7 @@ from app.core.data.dto.import_job import (
     ImportJobType,
 )
 from app.core.data.dto.user import UserRead
-from app.core.data.import_.import_service import ImportService
+from app.core.data.eximport.import_service import ImportService
 from app.core.data.repo.repo_service import RepoService
 
 router = APIRouter(

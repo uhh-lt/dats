@@ -1,7 +1,7 @@
 from loguru import logger
 
 from app.core.data.dto.import_job import ImportJobRead
-from app.core.data.import_.import_service import ImportService
+from app.core.data.eximport.import_service import ImportService
 
 ims: ImportService = ImportService()
 
