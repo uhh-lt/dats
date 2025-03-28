@@ -631,6 +631,8 @@ system_codes:
             desc: Object Category from COCO 2017
           TRUCK:
             desc: Object Category from COCO 2017
+      MENTION:
+        desc: Co-reference mention
       QUOTATIONS:
         desc: Quotation parts
         children:

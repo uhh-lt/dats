@@ -1,6 +1,7 @@
 import FormatQuoteIcon from "@mui/icons-material/FormatQuote";
 import NotStartedIcon from "@mui/icons-material/NotStarted";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import SwitchAccessShortcutAddIcon from "@mui/icons-material/SwitchAccessShortcutAdd";
 import {
   Avatar,
   Card,
@@ -81,9 +82,35 @@ function MlAutomation() {
     });
   };
 
+  // coreference resolution job
+  const handleStartNewCoreferenceResolution = () => {
+    startMlJob.mutate({
+      requestBody: {
+        ml_job_type: MLJobType.COREFERENCE_RESOLUTION,
+        project_id: projectId,
+        specific_ml_job_parameters: { recompute: false, ml_job_type: MLJobType.COREFERENCE_RESOLUTION },
+      },
+    });
+  };
+
+  const handleStartReComputeCoreferenceResolution = () => {
+    ConfirmationAPI.openConfirmationDialog({
+      text: "Remove all automatic coreference annotations including any manually created, linked data such as memos?",
+      onAccept: () => {
+        startMlJob.mutate({
+          requestBody: {
+            ml_job_type: MLJobType.COREFERENCE_RESOLUTION,
+            project_id: projectId,
+            specific_ml_job_parameters: { recompute: false, ml_job_type: MLJobType.COREFERENCE_RESOLUTION },
+          },
+        });
+      },
+    });
+  };
+
   return (
     <ContentContainerLayout>
-      <Card sx={{ minHeight: "300px", mb: 2 }} variant="outlined" className="myFlexFillAllContainer myFlexContainer">
+      <Card sx={{ minHeight: "400px", mb: 2 }} variant="outlined" className="myFlexFillAllContainer myFlexContainer">
         <CardHeader
           title="ML Automations"
           subheader="Start one or more of the following machine learning automations to speed up your work an enable new analysis options"
@@ -107,6 +134,35 @@ function MlAutomation() {
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Re-compute all documents by deleting all previous automatic quote annotations">
+                  <IconButton
+                    onClick={handleStartReComputeQuotationDetection}
+                    loading={startMlJob.isPending}
+                    color="error"
+                  >
+                    <RestartAltIcon />
+                  </IconButton>
+                </Tooltip>
+              </ListItemIcon>
+            </ListItem>
+          </List>
+          <List dense={false}>
+            <ListItem>
+              <ListItemAvatar>
+                <Avatar>
+                  <SwitchAccessShortcutAddIcon />
+                </Avatar>
+              </ListItemAvatar>
+              <ListItemText
+                primary="Quotation detection"
+                secondary={"Detect who says what to whom and create corresponding span annotations"}
+              />
+              <ListItemIcon>
+                <Tooltip title="Perform coreference resolution on all unprocessed documents">
+                  <IconButton onClick={handleStartNewQuotationDetection} loading={startMlJob.isPending} color="success">
+                    <NotStartedIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Re-compute all documents by deleting all previous automatic coreference annotations">
                   <IconButton
                     onClick={handleStartReComputeQuotationDetection}
                     loading={startMlJob.isPending}

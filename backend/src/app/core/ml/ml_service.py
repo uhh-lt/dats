@@ -5,6 +5,7 @@ from sqlalchemy import and_, or_
 
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.ml_job import (
+    CoreferenceResolutionParams,
     DocTagRecommendationParams,
     MLJobCreate,
     MLJobParameters,
@@ -19,6 +20,7 @@ from app.core.data.orm.source_document_job_status import (
     SourceDocumentJobStatusORM,
 )
 from app.core.db.redis_service import RedisService
+from app.core.ml.coref_service import CorefService
 from app.core.ml.doc_tag_recommendation.doc_tag_recommendation_service import (
     DocumentClassificationService,
 )
@@ -118,6 +120,36 @@ class MLService(metaclass=SingletonMeta):
                         ml_job_id=mlj.id,
                         project_id=mlj.parameters.project_id,
                     )
+                case MLJobType.COREFERENCE_RESOLUTION:
+                    if isinstance(
+                        mlj.parameters.specific_ml_job_parameters,
+                        CoreferenceResolutionParams,
+                    ):
+                        recompute = mlj.parameters.specific_ml_job_parameters.recompute
+                        valid_type = or_(
+                            SourceDocumentJobStatusORM.type
+                            == JobType.COREFERENCE_RESOLUTION,
+                            SourceDocumentJobStatusORM.type == None,  # noqa: E711
+                        )
+                        filter_criterion = (
+                            and_(
+                                valid_type,
+                                inactive_status,
+                                or_(
+                                    timestamp_column < start_time,
+                                    timestamp_column == None,  # noqa: E711
+                                ),
+                            )
+                            if recompute
+                            else and_(
+                                valid_type,
+                                or_(unfinished_status, timestamp_column == None),  # noqa: E711
+                            )  # noqa: E711
+                        )
+
+                        CorefService().perform_coreference_resolution(
+                            mlj.parameters.project_id, filter_criterion, recompute
+                        )
 
             mlj = self._update_ml_job(
                 ml_job_id, MLJobUpdate(status=BackgroundJobStatus.FINISHED)
