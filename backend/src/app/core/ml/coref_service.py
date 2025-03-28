@@ -11,9 +11,11 @@ from app.core.data.crud.source_document_job_status import crud_sdoc_job_status
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.span_group import crud_span_group
 from app.core.data.crud.user import SYSTEM_USER_ID
+from app.core.data.doc_type import DocType
 from app.core.data.dto.source_document_job_status import SourceDocumentJobStatusCreate
 from app.core.data.dto.span_annotation import SpanAnnotationCreateIntern
 from app.core.data.dto.span_group import SpanGroupCreateIntern
+from app.core.data.meta_type import MetaType
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.source_document_data import SourceDocumentDataORM
 from app.core.data.orm.source_document_job_status import (
@@ -42,7 +44,11 @@ class CorefService(metaclass=SingletonMeta):
             mention_code = self._get_code_id(db, "MENTION", project_id)
             language_metadata = (
                 crud_project_meta.read_by_project_and_key_and_metatype_and_doctype(
-                    db, project_id, "language", "STRING", "text"
+                    db,
+                    project_id,
+                    "language",
+                    MetaType.STRING.value,
+                    DocType.text.value,
                 )
             )
         if language_metadata is None:
@@ -86,8 +92,7 @@ class CorefService(metaclass=SingletonMeta):
                 .filter(
                     SourceDocumentMetadataORM.project_metadata_id
                     == language_metadata_id,
-                    # workaround for buggy langdetect, set to 'de' once fixed
-                    SourceDocumentMetadataORM.str_value.in_(("en", "de")),
+                    SourceDocumentMetadataORM.str_value == "de",
                 )
                 .limit(100)
             )
