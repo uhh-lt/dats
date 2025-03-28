@@ -153,18 +153,24 @@ function MlAutomation() {
                 </Avatar>
               </ListItemAvatar>
               <ListItemText
-                primary="Quotation detection"
-                secondary={"Detect who says what to whom and create corresponding span annotations"}
+                primary="Coreference resolution"
+                secondary={
+                  "Detect coreference relations between spans and create corresponding span annotations in German documents"
+                }
               />
               <ListItemIcon>
                 <Tooltip title="Perform coreference resolution on all unprocessed documents">
-                  <IconButton onClick={handleStartNewQuotationDetection} loading={startMlJob.isPending} color="success">
+                  <IconButton
+                    onClick={handleStartNewCoreferenceResolution}
+                    loading={startMlJob.isPending}
+                    color="success"
+                  >
                     <NotStartedIcon />
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Re-compute all documents by deleting all previous automatic coreference annotations">
                   <IconButton
-                    onClick={handleStartReComputeQuotationDetection}
+                    onClick={handleStartReComputeCoreferenceResolution}
                     loading={startMlJob.isPending}
                     color="error"
                   >
