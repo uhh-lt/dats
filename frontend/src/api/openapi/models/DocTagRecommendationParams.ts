@@ -4,8 +4,4 @@
 /* eslint-disable */
 export type DocTagRecommendationParams = {
   ml_job_type: string;
-  /**
-   * Whether to recompute already processed documents
-   */
-  recompute?: boolean;
 };
