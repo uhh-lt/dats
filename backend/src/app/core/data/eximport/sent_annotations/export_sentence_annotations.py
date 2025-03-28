@@ -8,6 +8,10 @@ from sqlalchemy.orm import Session
 from app.core.data.crud.sentence_annotation import crud_sentence_anno
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.eximport.no_data_export_error import NoDataToExportError
+from app.core.data.eximport.sent_annotations.sentence_annotations_export_schema import (
+    SentenceAnnotationExportCollection,
+    SentenceAnnotationExportSchema,
+)
 from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
 from app.core.data.repo.repo_service import RepoService
 
@@ -81,37 +85,35 @@ def __generate_export_df_for_sentence_annotations(
         if sdoc_data is not None
     }
 
-    # fill the DataFrame
-    data = {
-        "sdoc_name": [],
-        "user_first_name": [],
-        "user_last_name": [],
-        "code_name": [],
-        "created": [],
-        "text": [],
-        "text_begin_sent": [],
-        "text_end_sent": [],
-    }
-
+    # Create annotations using our schema
+    annotation_export_items = []
     for sent_annotation in sentence_annotations:
         sdoc = sent_annotation.annotation_document.source_document
         user = sent_annotation.annotation_document.user
         sdata = sdoc_data[sdoc.id]
 
-        data["sdoc_name"].append(sdoc.filename)
-        data["user_first_name"].append(user.first_name)
-        data["user_last_name"].append(user.last_name)
-        data["code_name"].append(sent_annotation.code.name)
-        data["created"].append(sent_annotation.created)
-        data["text"].append(
-            " ".join(
+        # Extract text from sentences if possible
+        text = None
+        if sdata and hasattr(sdata, "sentences"):
+            text = " ".join(
                 sdata.sentences[
                     sent_annotation.sentence_id_start : sent_annotation.sentence_id_end
                     + 1
                 ]
             )
-        )
-        data["text_begin_sent"].append(sent_annotation.sentence_id_start)
-        data["text_end_sent"].append(sent_annotation.sentence_id_end)
 
-    return pd.DataFrame(data)
+        annotation_export_items.append(
+            SentenceAnnotationExportSchema(
+                sdoc_name=sdoc.filename,
+                user_email=user.email,
+                user_first_name=user.first_name,
+                user_last_name=user.last_name,
+                code_name=sent_annotation.code.name,
+                text=text,
+                text_begin_sent=sent_annotation.sentence_id_start,
+                text_end_sent=sent_annotation.sentence_id_end,
+            )
+        )
+
+    collection = SentenceAnnotationExportCollection(annotations=annotation_export_items)
+    return collection.to_dataframe()

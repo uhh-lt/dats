@@ -12,6 +12,8 @@ class ImportJobType(str, Enum):
     CODES = "CODES"
     TAGS = "TAGS"
     BBOX_ANNOTATIONS = "BBOX_ANNOTATIONS"
+    SPAN_ANNOTATIONS = "SPAN_ANNOTATIONS"
+    SENTENCE_ANNOTATIONS = "SENTENCE_ANNOTATIONS"
 
 
 class ImportJobParameters(BaseModel):
