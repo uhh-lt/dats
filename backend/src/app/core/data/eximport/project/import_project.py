@@ -35,9 +35,11 @@ from app.core.data.dto.project import ProjectUpdate
 from app.core.data.dto.source_document_data import WordLevelTranscription
 from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
 from app.core.data.eximport.codes.import_codes import import_codes_to_proj
+from app.core.data.eximport.project_metadata.import_project_metadata import (
+    import_project_metadata_to_proj,
+)
 from app.core.data.eximport.tags.import_tags import import_tags_to_proj
-from app.core.data.import_.import_metadata import import_project_metadata
-from app.core.data.import_.import_users import import_users_to_proj
+from app.core.data.eximport.user.import_users import import_users_to_proj
 from app.core.data.orm.project import ProjectORM
 from app.core.data.repo.repo_service import (
     RepoService,
@@ -167,6 +169,7 @@ def __read_import_project_files(temp_proj_path: Path) -> Tuple[Dict, Dict]:
     return expected_files, sdocs
 
 
+# TODO: FIXME this import is not working currently as it does not match the export
 def import_project(
     db: Session,
     repo: RepoService,
@@ -191,16 +194,20 @@ def import_project(
 
         # import project metadata
         metadata_mapping_df = pd.read_csv(expected_file_paths["project_metadatas"])
-        for _, row in metadata_mapping_df.iterrows():
-            import_project_metadata(row, db=db, proj_id=proj_id)
+        import_project_metadata_to_proj(
+            db=db, df=metadata_mapping_df, project_id=proj_id
+        )
 
         # import users (link existing users to the new project)
         user_data_df = pd.read_csv(expected_file_paths["users"])
-        user_email_id_mapping = import_users_to_proj(
+        import_users_to_proj(
             db=db,
             df=user_data_df,
-            proj_id=proj_id,
+            project_id=proj_id,
         )
+        user_email_id_mapping = {
+            user.email: user.id for user in crud_project.read(db=db, id=proj_id).users
+        }
 
         # import codes
         codes_df = pd.read_csv(expected_file_paths["codes"])

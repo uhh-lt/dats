@@ -10,15 +10,19 @@ from app.core.data.crud.object_handle import crud_object_handle
 from app.core.data.dto.span_annotation import (
     SpanAnnotationRead,
 )
+from app.core.data.eximport.memos.memo_export_schema import (
+    MemoExportCollection,
+    MemoExportSchema,
+)
 from app.core.data.eximport.no_data_export_error import NoDataToExportError
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.memo import MemoORM
 from app.core.data.orm.project import ProjectORM
+from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
-from app.core.data.orm.span_group import SpanGroupORM
 from app.core.data.repo.repo_service import RepoService
 
 
@@ -73,57 +77,60 @@ def __generate_export_df_for_memos(
 ) -> pd.DataFrame:
     logger.info(f"Exporting {len(memos)} Memos ...")
 
-    datas = []
+    memo_export_items = []
     for memo in memos:
         memo_dto = crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=memo)
         user = memo.user
 
-        # get attached object
-        assert memo.attached_to is not None
+        # Skip if memo doesn't have attachment
+        if memo.attached_to is None:
+            continue
+
         attached_to = crud_object_handle.resolve_handled_object(
             db=db, handle=memo.attached_to
         )
 
-        # common data
-        data = {
-            "memo_id": [memo.id],
-            "user_id": [user.id],
-            "user_first_name": [user.first_name],
-            "user_last_name": [user.last_name],
-            "created": [memo_dto.created],
-            "updated": [memo_dto.updated],
-            "starred": [memo_dto.starred],
-            "attached_to": [memo_dto.attached_object_type],
-            "content": [memo_dto.content],
-            "sdoc_name": [None],
-            "tag_name": [None],
-            "span_group_name": [None],
-            "code_name": [None],
-            "span_anno_text": [None],
+        # Common data for all memo types
+        memo_data = {
+            "user_first_name": user.first_name,
+            "user_last_name": user.last_name,
+            "starred": memo_dto.starred,
+            "content": memo_dto.content,
+            "attached_type": memo_dto.attached_object_type,
         }
 
+        # Add specific data based on attachment type
         match attached_to:
-            case CodeORM():
-                data["code_name"] = [attached_to.name]
-                break
-            case SpanGroupORM():
-                data["span_group_name"] = [attached_to.name]
-            case SourceDocumentORM():
-                data["sdoc_name"] = [attached_to.filename]
-            case DocumentTagORM():
-                data["tag_name"] = [attached_to.name]
             case ProjectORM():
-                logger.warning("LogBook Export still todo!")
+                # Skip project memos
                 continue
+            case CodeORM():
+                memo_data["code_name"] = attached_to.name
+            case DocumentTagORM():
+                memo_data["tag_name"] = attached_to.name
+            case SourceDocumentORM():
+                memo_data["sdoc_name"] = attached_to.filename
             case SpanAnnotationORM():
                 span_read_resolved_dto = SpanAnnotationRead.model_validate(attached_to)
-                data["span_anno_text"] = [span_read_resolved_dto.text]
-                data["code_name"] = [attached_to.code.name]
+                memo_data["span_anno_text"] = span_read_resolved_dto.text
+                memo_data["code_name"] = attached_to.code.name
+                memo_data["sdoc_name"] = (
+                    attached_to.annotation_document.source_document.filename
+                )
             case BBoxAnnotationORM():
-                data["code_name"] = [attached_to.code.name]
+                memo_data["code_name"] = attached_to.code.name
+                memo_data["sdoc_name"] = (
+                    attached_to.annotation_document.source_document.filename
+                )
+            case SentenceAnnotationORM():
+                memo_data["code_name"] = attached_to.code.name
+                memo_data["sdoc_name"] = (
+                    attached_to.annotation_document.source_document.filename
+                )
             case _:
                 logger.warning(f"Unknown attached object type: {type(attached_to)}")
 
-        datas.append(data)
+        memo_export_items.append(MemoExportSchema(**memo_data))
 
-    return pd.DataFrame(datas)
+    collection = MemoExportCollection(memos=memo_export_items)
+    return collection.to_dataframe()
