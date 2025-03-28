@@ -1,5 +1,4 @@
-import StickyNote2Icon from "@mui/icons-material/StickyNote2";
-import { Button, ButtonProps, CircularProgress, Dialog } from "@mui/material";
+import { Button, ButtonProps, CircularProgress, Dialog, Tooltip } from "@mui/material";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { useCallback, useState } from "react";
 import { XYPosition } from "reactflow";
@@ -9,6 +8,7 @@ import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadata
 import { FilterTableToolbarProps } from "../../../components/FilterTable/FilterTableToolbarProps.ts";
 import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
 import MemoTable from "../../../components/Memo/MemoTable/MemoTable.tsx";
+import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
 import { PendingAddNodeAction } from "../types/PendingAddNodeAction.ts";
@@ -45,9 +45,11 @@ function AddMemoNodeDialog({ projectId, buttonProps, ...props }: AddMemoNodeDial
 
   return (
     <>
-      <Button onClick={handleOpen} {...buttonProps}>
-        <StickyNote2Icon />
-      </Button>
+      <Tooltip title="Add memos" placement="right">
+        <Button onClick={handleOpen} {...buttonProps}>
+          {getIconComponent(Icon.MEMO)}
+        </Button>
+      </Tooltip>
       <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         {metadata.isSuccess ? (
           <>

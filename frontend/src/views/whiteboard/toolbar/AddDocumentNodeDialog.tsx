@@ -1,5 +1,4 @@
-import DescriptionIcon from "@mui/icons-material/Description";
-import { Button, ButtonProps, Dialog } from "@mui/material";
+import { Button, ButtonProps, Dialog, Tooltip } from "@mui/material";
 import { MRT_RowSelectionState, MRT_SortingState } from "material-react-table";
 import { useCallback, useState } from "react";
 import { XYPosition } from "reactflow";
@@ -7,6 +6,7 @@ import { ElasticSearchDocumentHit } from "../../../api/openapi/models/ElasticSea
 import { FilterTableToolbarProps } from "../../../components/FilterTable/FilterTableToolbarProps.ts";
 import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
 import SdocTable from "../../../components/SourceDocument/SdocTable/SdocTable.tsx";
+import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
 import { createSdocNodes } from "../whiteboardUtils.ts";
@@ -60,9 +60,11 @@ function AddDocumentNodeDialog({ projectId, buttonProps, onClick }: AddDocumentN
 
   return (
     <>
-      <Button onClick={handleOpenDialogClick} {...buttonProps}>
-        <DescriptionIcon />
-      </Button>
+      <Tooltip title="Add documents" placement="right">
+        <Button onClick={handleOpenDialogClick} {...buttonProps}>
+          {getIconComponent(Icon.DOCUMENT)}
+        </Button>
+      </Tooltip>
       <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         <DATSDialogHeader
           title="Select documents to add to Whiteboard"
