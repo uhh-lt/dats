@@ -1,11 +1,10 @@
 /authentik/*
-/spacy_models/*
+
 /backend_repo/*
-/models_cache/*
-/numba_cache/*
+/celery_cache/*
 /ollama_cache/*
-/triton_cache/*
-/torch_inductor_cache/*
+/ray_cache/*
+
 /pg_data/*
 /rabbitmq_data/*
 /redis_data/*
@@ -13,4 +12,5 @@
 /qdrant_data/*
 /weaviate_data/*
 /elasticsearch_data/*
+
 .env

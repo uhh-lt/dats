@@ -1,12 +1,10 @@
 #!/bin/sh
 cd "$(dirname "$0}")" || exit
 mkdir -p ../docker/backend_repo
-mkdir -p ../docker/models_cache
-mkdir -p ../docker/spacy_models
-mkdir -p ../docker/numba_cache
+mkdir -p ../docker/celery_cache
 mkdir -p ../docker/ollama_cache
-mkdir -p ../docker/torch_inductor_cache
-mkdir -p ../docker/triton_cache
+mkdir -p ../docker/ray_cache
+chmod -R 777 ../docker/ray_cache
 
 # for production
 mkdir -p ../docker/elasticsearch_data
