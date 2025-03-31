@@ -28,12 +28,12 @@ logger = logging.getLogger("ray.serve")
 class ClipModel:
     def __init__(self):
         logger.debug(f"Loading ClipModel {TEXT_MODEL} for text ...")
-        text_encoder = SentenceTransformer(TEXT_MODEL, device=TEXT_DEVICE)
+        text_encoder = SentenceTransformer(TEXT_MODEL).to(TEXT_DEVICE)
         text_encoder.eval()
         self.text_encoder = text_encoder
 
         logger.debug(f"Loading ClipModel {IMAGE_MODEL} for image ...")
-        image_encoder = SentenceTransformer(IMAGE_MODEL, device=IMAGE_DEVICE)
+        image_encoder = SentenceTransformer(IMAGE_MODEL).to(IMAGE_DEVICE)
         image_encoder.eval()
         self.image_encoder = image_encoder
 
