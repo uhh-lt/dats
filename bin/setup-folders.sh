@@ -4,7 +4,7 @@ mkdir -p ../docker/backend_repo
 mkdir -p ../docker/celery_cache
 mkdir -p ../docker/ollama_cache
 mkdir -p ../docker/ray_cache
-chmod -R 777 ../docker/ray_cache
+chmod 777 ../docker/ray_cache
 
 # for production
 mkdir -p ../docker/elasticsearch_data

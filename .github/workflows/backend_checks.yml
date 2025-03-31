@@ -50,7 +50,7 @@ jobs:
             sed -i 's/ray_network/ray_network_${{ github.run_id }}/g' docker/compose.yml
             echo "RAY_CACHE_DIR=$HOME/ray_cache" >> docker/.env
             mkdir -p $HOME/ray_cache
-            chmod -R 777 $HOME/ray_cache
+            chmod 777 $HOME/ray_cache
           fi
       - name: Build & Start Docker Containers
         working-directory: docker
