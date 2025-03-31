@@ -27,7 +27,9 @@ def rename_app_names(generated_spec_fp: Path, spec_out_fp: Path):
         raise ValueError("Invalid spec format: 'applications' key not found")
 
     for app in spec["applications"]:
-        app["name"] = app["route_prefix"].split("/")[1]
+        name = app["import_path"].split(":")[0].split(".")[-1]
+        app["name"] = name
+        app["route_prefix"] = f"/{name}"
 
     srsly.write_yaml(spec_out_fp, spec)
     print(f"Successfully renamed app names in {spec_out_fp}!")
