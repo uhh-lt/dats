@@ -12,7 +12,7 @@
       "env": {
         "PYTHONPATH": "${workspaceFolder}/backend/src",
         "HUGGINGFACE_HUB_CACHE": "${workspaceFolder}/docker/models_cache",
-        "TRANSFORMERS_CACHE": "${workspaceFolder}/docker/models_cache",
+        "HF_HOME": "${workspaceFolder}/docker/models_cache",
         "TORCH_HOME": "${workspaceFolder}/docker/models_cache"
       },
       "envFile": "${workspaceFolder}/backend/.env"
