@@ -1,5 +1,4 @@
 import logging
-import os
 from typing import Any, Dict, List
 
 import numpy as np
@@ -19,7 +18,6 @@ cc = conf.whisper
 
 WHISPER_MODEL = cc.model
 DEVICE = cc.device
-DOWNLOAD_DIR = os.environ["TRANSFORMERS_CACHE"]
 WHISPER_TRANSCRIBE_OPTIONS = cc.options
 
 
@@ -27,9 +25,7 @@ WHISPER_TRANSCRIBE_OPTIONS = cc.options
 class WhisperModel:
     def __init__(self):
         logger.info(f"Loading Whisper model {WHISPER_MODEL} on {DEVICE}")
-        self.model = FasterWhisperModel(
-            WHISPER_MODEL, DEVICE, download_root=DOWNLOAD_DIR
-        )
+        self.model = FasterWhisperModel(WHISPER_MODEL, DEVICE)
 
     def _get_uncompressed_audio(self, wav_data: np.ndarray) -> np.ndarray:
         audio_array = (
