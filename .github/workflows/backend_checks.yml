@@ -43,14 +43,13 @@ jobs:
           ./bin/setup-folders.sh
           ./bin/setup-envs.sh --project_name action-runner --port_prefix 131
           sed -i 's/\(DATS_BACKEND_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
-          echo "MODELS_CACHE_DIR=$HOME/models_cache" >> docker/.env
-          mkdir -p $HOME/models_cache
           if [ "${{ env.RAY_HAS_CHANGED }}" = "true" ]; then
             sed -i 's/\(DATS_RAY_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
             sed -i 's/ray_network/ray_network_${{ github.run_id }}/g' docker/compose.ray.yml
             sed -i 's/ray_network/ray_network_${{ github.run_id }}/g' docker/compose.yml
-            echo "SPACY_CACHE_DIR=$HOME/spacy_models" >> docker/.env
-            mkdir -p $HOME/spacy_models
+            echo "RAY_CACHE_DIR=$HOME/ray_cache" >> docker/.env
+            mkdir -p $HOME/ray_cache
+            chmod -R 777 $HOME/ray_cache
           fi
       - name: Build & Start Docker Containers
         working-directory: docker
