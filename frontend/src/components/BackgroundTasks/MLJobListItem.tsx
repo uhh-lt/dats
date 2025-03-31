@@ -16,17 +16,21 @@ function MLJobListItem({ initialMLJob }: MLJobListItemProps) {
 
   // compute subtitle
   const subTitle = useMemo(() => {
-    const createdDate = dateToLocaleString(mlJob.data!.created);
-    const updatedDate = dateToLocaleString(mlJob.data!.updated);
-    let title = `${mlJob.data!.parameters.ml_job_type}, started at ${createdDate}`;
-    if (mlJob.data!.status === BackgroundJobStatus.FINISHED) {
-      title += `, finished at ${updatedDate}`;
-    } else if (mlJob.data!.status === BackgroundJobStatus.ABORTED) {
-      title += `, aborted at ${updatedDate}`;
-    } else if (mlJob.data!.status === BackgroundJobStatus.ERRORNEOUS) {
-      title += `, failed at ${updatedDate}`;
+    if (mlJob.data) {
+      const createdDate = dateToLocaleString(mlJob.data.created);
+      const updatedDate = dateToLocaleString(mlJob.data.updated);
+      let title = `${mlJob.data.parameters.ml_job_type}, started at ${createdDate}`;
+      if (mlJob.data!.status === BackgroundJobStatus.FINISHED) {
+        title += `, finished at ${updatedDate}`;
+      } else if (mlJob.data.status === BackgroundJobStatus.ABORTED) {
+        title += `, aborted at ${updatedDate}`;
+      } else if (mlJob.data.status === BackgroundJobStatus.ERRORNEOUS) {
+        title += `, failed at ${updatedDate}`;
+      }
+      return title;
+    } else {
+      return "";
     }
-    return title;
   }, [mlJob.data]);
 
   if (mlJob.isSuccess) {
