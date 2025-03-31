@@ -5,7 +5,7 @@ on:
       - main
   pull_request:
     paths:
-      - ".github/frontend_checks.yml"
+      - ".github/workflows/frontend_checks.yml"
       - "docker/**"
       - "frontend/**"
 

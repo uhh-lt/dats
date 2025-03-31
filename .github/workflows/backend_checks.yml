@@ -6,7 +6,7 @@ on:
   pull_request:
     paths:
       - "backend/**"
-      - ".github/backend_checks.yml"
+      - ".github/workflows/backend_checks.yml"
       - "docker/**"
       - "tools/**"
 

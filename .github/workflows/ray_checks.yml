@@ -6,7 +6,7 @@ on:
   pull_request:
     paths:
       - "backend/src/app/preprocessing/ray_model_worker/**"
-      - ".github/ray_checks.yml"
+      - ".github/workflows/ray_checks.yml"
 
 jobs:
   ray-checks:
