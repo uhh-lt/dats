@@ -20,6 +20,8 @@ jobs:
       RAY_HAS_CHANGED: false
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Checkout PR
         if: github.event_name == 'pull_request'
         env:
@@ -29,7 +31,8 @@ jobs:
         id: check_backend_requirements_pr
         if: github.event_name == 'pull_request'
         run: |
-          base_branch=$(git merge-base origin/${{ github.event.pull_request.base.ref }} HEAD)
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          base_branch="origin/${{ github.event.pull_request.base.ref }}"
           if git diff --name-only $base_branch HEAD | grep -q -e '^backend/requirements.txt' -e '^backend/environment.yml'; then
             echo "BACKEND_HAS_NEW_REQUIREMENTS=true" >> $GITHUB_ENV
           fi
@@ -44,7 +47,8 @@ jobs:
         id: check_ray_model_worker_changes_pr
         if: github.event_name == 'pull_request'
         run: |
-          base_branch=$(git merge-base origin/${{ github.event.pull_request.base.ref }} HEAD)
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          base_branch="origin/${{ github.event.pull_request.base.ref }}"
           if git diff --name-only $base_branch HEAD | grep -q -e '^backend/src/app/preprocessing/ray_model_worker/'; then
             echo "RAY_HAS_CHANGED=true" >> $GITHUB_ENV
           fi
