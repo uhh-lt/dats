@@ -29,7 +29,7 @@ services:
       TRITON_CACHE_DIR: /ray_cache/triton_cache
     volumes:
       # - ../backend/src/app/preprocessing/ray_model_worker:/dats_code_ray # uncomment for dev
-      - ./ray_cache:/ray_cache
+      - "${RAY_CACHE_DIR:-./ray_cache}:/ray_cache"
     shm_size: 12gb
     deploy:
       resources:
