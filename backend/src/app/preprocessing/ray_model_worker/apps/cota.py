@@ -11,7 +11,7 @@ logger = logging.getLogger("ray.serve")
 api = FastAPI()
 
 
-@serve.deployment(num_replicas=1, route_prefix="/cota")
+@serve.deployment(num_replicas=1, name="cota")
 @serve.ingress(api)
 class CotaApi:
     def __init__(self, cota_model_handle: DeploymentHandle) -> None:

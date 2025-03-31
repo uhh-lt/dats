@@ -11,7 +11,7 @@ logger = logging.getLogger("ray.serve")
 api = FastAPI()
 
 
-@serve.deployment(num_replicas=1, route_prefix="/glotlid")
+@serve.deployment(num_replicas=1, name="glotlid")
 @serve.ingress(api)
 class GlotLIDApi:
     def __init__(self, glotlid_model_handle: DeploymentHandle) -> None:

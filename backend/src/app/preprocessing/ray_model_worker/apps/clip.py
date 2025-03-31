@@ -15,7 +15,7 @@ logger = logging.getLogger("ray.serve")
 api = FastAPI()
 
 
-@serve.deployment(num_replicas=1, route_prefix="/clip")
+@serve.deployment(num_replicas=1, name="clip")
 @serve.ingress(api)
 class ClipApi:
     def __init__(self, clip_model_handle: DeploymentHandle) -> None:

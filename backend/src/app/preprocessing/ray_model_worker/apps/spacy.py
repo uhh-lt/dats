@@ -11,7 +11,7 @@ api = FastAPI()
 logger = logging.getLogger("ray.serve")
 
 
-@serve.deployment(num_replicas=1, route_prefix="/spacy")
+@serve.deployment(num_replicas=1, name="spacy")
 @serve.ingress(api)
 class SpacyApi:
     def __init__(self, spacy_model_handle: DeploymentHandle) -> None:

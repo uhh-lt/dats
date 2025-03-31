@@ -1,7 +1,7 @@
 # docker build -t uhhlt/dats_ray:<version> .
 # docker push uhhlt/dats_ray:<version>
 
-FROM rayproject/ray:2.32.0-py311-cu117 AS ray
+FROM rayproject/ray:2.44.1-py311-cu125 AS ray
 
 CMD ["/bin/bash"]
 

@@ -11,7 +11,7 @@ logger = logging.getLogger("ray.serve")
 api = FastAPI()
 
 
-@serve.deployment(num_replicas=1, route_prefix="/detr")
+@serve.deployment(num_replicas=1, name="detr")
 @serve.ingress(api)
 class DETRApi:
     def __init__(self, detr_model_handle: DeploymentHandle) -> None:
