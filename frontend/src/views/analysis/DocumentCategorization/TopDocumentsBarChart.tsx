@@ -6,12 +6,18 @@ const TopDocumentsBarChart: React.FC<{
   topicNum: number;
   dataHook: UseQueryResult<Record<string, unknown>[], Error>;
 }> = ({ topicNum, dataHook }) => {
-  const data = dataHook.data as Record<string, number>[];
-  const amountDocuments = data.length;
+  let data = dataHook.data as Record<string, number>[];
+  let amountDocuments = data.length;
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [width, setWidth] = useState<number>(window.innerWidth);
+  const maxAmountDocs = 20;
 
   const [isResponseEmpty, setIsResponseEmpty] = useState(true);
+
+  if (amountDocuments > maxAmountDocs) {
+    data = data.slice(0, maxAmountDocs);
+    amountDocuments = maxAmountDocs;
+  }
 
   useEffect(() => {
     if (Object.keys(data).length === 0) {
@@ -27,6 +33,8 @@ const TopDocumentsBarChart: React.FC<{
   const marginRight = window.innerWidth * 0.1;
   const marginBottom = window.innerHeight * 0.15;
   const marginLeft = window.innerWidth * 0.1;
+  const fontSize = "1vw";
+  const tickFontSize = "0.9vw";
 
   // Declare the x (horizontal position) scale.
   const x = d3
@@ -114,7 +122,7 @@ const TopDocumentsBarChart: React.FC<{
       .attr("x", width / 2)
       .attr("y", marginTop * 0.7)
       .attr("text-anchor", "middle")
-      .style("font-size", "18px")
+      .style("font-size", fontSize)
       .text(`Top ${amountDocuments} Documents Ordered by Probability for Topic ${topicNum}`);
 
     // set x-axis label
@@ -124,7 +132,7 @@ const TopDocumentsBarChart: React.FC<{
       .attr("x", width / 2)
       .attr("y", height - marginBottom * 0.2)
       .attr("text-anchor", "middle")
-      .style("font-size", "18px")
+      .style("font-size", fontSize)
       .text("Document Names sorted by probability");
 
     // set y-axis label
@@ -135,7 +143,7 @@ const TopDocumentsBarChart: React.FC<{
       .attr("x", -(height / 2))
       .attr("y", marginLeft * 0.7)
       .attr("text-anchor", "middle")
-      .style("font-size", "18px")
+      .style("font-size", fontSize)
       .text("Probability");
 
     // setup border
@@ -155,7 +163,7 @@ const TopDocumentsBarChart: React.FC<{
       .append("g")
       .attr("transform", `translate(0,${height - marginBottom})`)
       .call(d3.axisBottom(x).tickSizeOuter(0))
-      .style("font-size", "14px")
+      .style("font-size", tickFontSize)
       .selectAll("text")
       .style("text-anchor", "end")
       .attr("dy", ".75em")
@@ -167,7 +175,7 @@ const TopDocumentsBarChart: React.FC<{
       .attr("transform", `translate(${marginLeft},0)`)
       .call(d3.axisLeft(y).tickFormat((y) => y.toString()))
       .call((g) => g.select(".domain").remove())
-      .style("font-size", "16px");
+      .style("font-size", fontSize);
 
     if (isResponseEmpty) {
       svg

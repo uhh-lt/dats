@@ -29,6 +29,8 @@ const TopWordsBarChart: React.FC<{
   const marginRight = window.innerWidth * 0.1;
   const marginBottom = window.innerHeight * 0.05;
   const marginLeft = window.innerWidth * 0.1;
+  const fontSize = "1vw";
+  const tickFontSize = "0.9vw";
 
   const formatScore = d3.format(".5f");
 
@@ -122,7 +124,7 @@ const TopWordsBarChart: React.FC<{
         .join("text")
         .attr("x", (d) => x(d.score) * 0.995)
         .attr("y", (d) => (y(d.word) ?? 0) + y.bandwidth() / 2)
-        .style("font-size", "16px")
+        .style("font-size", fontSize)
         .attr("dy", "0.35em")
         .attr("dx", -4)
         .text((d) => formatScore(d.score))
@@ -152,7 +154,7 @@ const TopWordsBarChart: React.FC<{
       .attr("x", width / 2)
       .attr("y", marginTop * 0.7)
       .attr("text-anchor", "middle")
-      .style("font-size", "16px")
+      .style("font-size", fontSize)
       .text("Top Words for the Topic: " + topicNum);
 
     // Set x-axis label
@@ -162,7 +164,7 @@ const TopWordsBarChart: React.FC<{
       .attr("x", width / 2)
       .attr("y", height - marginBottom * 0.2)
       .attr("text-anchor", "middle")
-      .style("font-size", "18px")
+      .style("font-size", fontSize)
       .text("Score");
 
     // Setup border
@@ -183,13 +185,13 @@ const TopWordsBarChart: React.FC<{
       .attr("transform", `translate(0,${height - marginBottom})`)
       .call(d3.axisBottom(x).ticks(width / 200))
       .call((g) => g.select(".domain").remove())
-      .style("font-size", "16px");
+      .style("font-size", tickFontSize);
 
     svg
       .append("g")
       .attr("transform", `translate(${marginLeft},0)`)
       .call(d3.axisLeft(y).tickSizeOuter(0))
-      .style("font-size", "18px");
+      .style("font-size", fontSize);
   }, [
     topicNum,
     data,
