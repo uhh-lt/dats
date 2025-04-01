@@ -12,7 +12,7 @@ from app.core.analysis.search_statistics.search_statistics import (
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.dto.search import (
-    PaginatedElasticSearchDocumentHits,
+    PaginatedSDocHits,
     SimSearchImageHit,
     SimSearchSentenceHit,
 )
@@ -45,7 +45,7 @@ def search_sdocs_info(
 
 @router.post(
     "/sdoc",
-    response_model=PaginatedElasticSearchDocumentHits,
+    response_model=PaginatedSDocHits,
     summary="Returns all SourceDocument Ids and their scores and (optional) hightlights that match the query parameters.",
 )
 def search_sdocs(
@@ -59,7 +59,7 @@ def search_sdocs(
     page_number: Optional[int] = None,
     page_size: Optional[int] = None,
     authz_user: AuthzUser = Depends(),
-) -> PaginatedElasticSearchDocumentHits:
+) -> PaginatedSDocHits:
     authz_user.assert_in_project(project_id)
     return sdoc_search.search(
         search_query=search_query,

@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
@@ -11,12 +11,14 @@ from app.core.data.dto.source_document import (
     SourceDocumentUpdate,
 )
 from app.core.data.dto.source_document_data import SourceDocumentDataRead
+from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.source_document_data import SourceDocumentDataORM
 from app.core.data.orm.source_document_link import SourceDocumentLinkORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.elasticsearch_service import ElasticSearchService
+from app.core.db.sql_utils import aggregate_ids
 
 
 class SourceDocumentPreprocessingUnfinishedError(Exception):
@@ -255,6 +257,36 @@ class CRUDSourceDocument(
             .filter(SourceDocumentORM.document_tags != None)  # noqa: E711
             .all()
         )
+
+    def get_annotators(
+        self, db: Session, *, sdoc_ids: List[int]
+    ) -> Dict[int, List[int]]:
+        user_ids_agg = aggregate_ids(AnnotationDocumentORM.user_id, label="user_ids")
+        rows = (
+            db.query(SourceDocumentORM.id, user_ids_agg)
+            .join(
+                SourceDocumentORM.annotation_documents,
+                isouter=True,
+            )
+            .filter(SourceDocumentORM.id.in_(sdoc_ids))
+            .group_by(SourceDocumentORM.id)
+            .all()
+        )
+        return {row[0]: row[1] for row in rows}
+
+    def get_tags(self, db: Session, *, sdoc_ids: List[int]) -> Dict[int, List[int]]:
+        tag_ids_agg = aggregate_ids(DocumentTagORM.id, label="tag_ids")
+        rows = (
+            db.query(SourceDocumentORM.id, tag_ids_agg)
+            .join(
+                SourceDocumentORM.document_tags,
+                isouter=True,
+            )
+            .filter(SourceDocumentORM.id.in_(sdoc_ids))
+            .group_by(SourceDocumentORM.id)
+            .all()
+        )
+        return {row[0]: row[1] for row in rows}
 
 
 crud_sdoc = CRUDSourceDocument(SourceDocumentORM)
