@@ -218,7 +218,10 @@ class RedisService(metaclass=SingletonMeta):
         if isinstance(crawler_job, CrawlerJobCreate):
             key = self._generate_random_key()
             cj = CrawlerJobRead(
-                id=key, created=datetime.now(), **crawler_job.model_dump()
+                id=key,
+                **crawler_job.model_dump(),
+                created=datetime.now(),
+                updated=datetime.now(),
             )
         elif isinstance(crawler_job, CrawlerJobRead):
             key = crawler_job.id
@@ -246,7 +249,7 @@ class RedisService(metaclass=SingletonMeta):
         cj = self.load_crawler_job(key=key)
         data = cj.model_dump()
         data.update(**update.model_dump())
-        cj = CrawlerJobRead(**data)
+        cj = CrawlerJobRead(**data, updated=datetime.now())
         cj = self.store_crawler_job(crawler_job=cj)
         logger.debug(f"Updated CrawlerJob {key}")
         return cj
