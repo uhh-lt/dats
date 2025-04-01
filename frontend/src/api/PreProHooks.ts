@@ -1,4 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
+import queryClient from "../plugins/ReactQueryClient.ts";
+import { dateToLocaleDate } from "../utils/DateUtils.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { BackgroundJobStatus } from "./openapi/models/BackgroundJobStatus.ts";
 import { PreProProjectStatus } from "./openapi/models/PreProProjectStatus.ts";
@@ -13,21 +15,6 @@ const useGetPreProProjectStatus = (projectId: number) =>
 
 const abortPreProJob = (preProJobId: string) => PreproService.abortPreproJob({ preproJobId: preProJobId });
 
-const usePollPreProProjectStatus = (projectId: number) =>
-  useQuery<PreProProjectStatus, Error>({
-    queryKey: [QueryKey.PREPRO_PROJECT_STATUS, projectId],
-    queryFn: () => PreproService.getProjectPreproStatus({ projId: projectId }),
-    refetchInterval: (query) => {
-      if (!query.state.data) {
-        return 1000;
-      }
-      if (query.state.data.num_sdocs_total > query.state.data.num_sdocs_finished) {
-        return 1000;
-      }
-      return false;
-    },
-  });
-
 const usePollPreProJob = (preProJobId: string | undefined, initialData: PreprocessingJobRead | undefined) => {
   return useQuery<PreprocessingJobRead, Error>({
     queryKey: [QueryKey.PREPRO_JOB, preProJobId],
@@ -40,6 +27,21 @@ const usePollPreProJob = (preProJobId: string | undefined, initialData: Preproce
       if (!query.state.data) {
         return 1000;
       }
+
+      if (query.state.data.status) {
+        // do invalidation if the status is FINISHED (and the job is max 3 minutes old)
+        const localDate = new Date();
+        const localUpdatedDate = dateToLocaleDate(query.state.data.updated);
+        if (
+          query.state.data.status === BackgroundJobStatus.FINISHED &&
+          localDate.getTime() - localUpdatedDate.getTime() < 3 * 60 * 1000
+        ) {
+          const projectId = query.state.data.project_id;
+          console.log("Invalidating documents");
+          queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE, projectId] });
+        }
+      }
+
       if (query.state.data.status) {
         switch (query.state.data.status) {
           case BackgroundJobStatus.ERRORNEOUS:
@@ -69,7 +71,6 @@ const useGetAllPreProJobs = (projectId: number | null | undefined) => {
 
 const PreProHooks = {
   useGetPreProProjectStatus,
-  usePollPreProProjectStatus,
   usePollPreProJob,
   useGetAllPreProJobs,
   abortPreProJob,
