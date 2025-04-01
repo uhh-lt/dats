@@ -36,5 +36,6 @@
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
   "python.testing.cwd": "backend/src",
-  "prettier.prettierPath": "./frontend/node_modules/prettier"
+  "prettier.prettierPath": "./frontend/node_modules/prettier",
+  "python.analysis.extraPaths": ["./backend/src"]
 }
