@@ -44,7 +44,7 @@ function AddBBoxAnnotationNodeDialog({ projectId, buttonProps, ...props }: AddBB
 
   return (
     <>
-      <Tooltip title="Add bbox annotations" placement="right">
+      <Tooltip title="Add bbox annotations" placement="right" arrow>
         <Button onClick={handleOpen} {...buttonProps}>
           {getIconComponent(Icon.BBOX_ANNOTATION)}
         </Button>

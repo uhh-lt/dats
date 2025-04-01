@@ -1,4 +1,4 @@
-import Add from "@mui/icons-material/Add";
+import InterestsIcon from "@mui/icons-material/Interests";
 import SaveIcon from "@mui/icons-material/Save";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import { LoadingButton } from "@mui/lab";
@@ -497,9 +497,9 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
                         onClick={handleChangePendingAction}
                         buttonProps={{ sx: { minWidth: 0, p: 1 } }}
                       />
-                      <Tooltip title="Add shape" placement="right">
+                      <Tooltip title="Add shape" placement="right" arrow>
                         <Button onClick={handleShapeMenuClick} sx={{ minWidth: 0, p: 1 }}>
-                          <Add />
+                          <InterestsIcon />
                         </Button>
                       </Tooltip>
                       <Menu

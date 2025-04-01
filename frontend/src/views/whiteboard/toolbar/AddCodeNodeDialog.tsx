@@ -60,7 +60,7 @@ function AddCodeNodeDialog({ projectId, buttonProps, onClick }: AddCodeNodeDialo
 
   return (
     <>
-      <Tooltip title="Add code" placement="right">
+      <Tooltip title="Add code" placement="right" arrow>
         <Button onClick={onOpenDialogClick} {...buttonProps}>
           {getIconComponent(Icon.CODE)}
         </Button>
