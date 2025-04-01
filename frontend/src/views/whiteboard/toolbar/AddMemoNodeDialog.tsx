@@ -45,7 +45,7 @@ function AddMemoNodeDialog({ projectId, buttonProps, ...props }: AddMemoNodeDial
 
   return (
     <>
-      <Tooltip title="Add memos" placement="right">
+      <Tooltip title="Add memos" placement="right" arrow>
         <Button onClick={handleOpen} {...buttonProps}>
           {getIconComponent(Icon.MEMO)}
         </Button>

@@ -46,7 +46,7 @@ function AddSpanAnnotationNodeDialog({ projectId, buttonProps, ...props }: AddSp
 
   return (
     <>
-      <Tooltip title="Add span annotations" placement="right">
+      <Tooltip title="Add span annotations" placement="right" arrow>
         <Button onClick={handleOpen} {...buttonProps}>
           {getIconComponent(Icon.SPAN_ANNOTATION)}
         </Button>

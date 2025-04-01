@@ -61,7 +61,7 @@ function AddTagNodeDialog({ projectId, buttonProps, onClick }: AddTagNodeDialogP
 
   return (
     <>
-      <Tooltip title="Add tags" placement="right">
+      <Tooltip title="Add tags" placement="right" arrow>
         <Button onClick={handleOpenDialogClick} {...buttonProps}>
           {getIconComponent(Icon.TAG)}
         </Button>
