@@ -6625,6 +6625,12 @@
             "format": "date-time",
             "title": "Created",
             "description": "Created timestamp of the CrawlerJob"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated",
+            "description": "Updated timestamp of the CrawlerJob"
           }
         },
         "type": "object",
@@ -6635,7 +6641,8 @@
           "images_store_path",
           "videos_store_path",
           "audios_store_path",
-          "created"
+          "created",
+          "updated"
         ],
         "title": "CrawlerJobRead"
       },

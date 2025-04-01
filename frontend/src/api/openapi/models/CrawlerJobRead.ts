@@ -41,4 +41,8 @@ export type CrawlerJobRead = {
    * Created timestamp of the CrawlerJob
    */
   created: string;
+  /**
+   * Updated timestamp of the CrawlerJob
+   */
+  updated: string;
 };
