@@ -1,4 +1,4 @@
-import { Button, ButtonProps, CircularProgress, Dialog } from "@mui/material";
+import { Button, ButtonProps, CircularProgress, Dialog, Tooltip } from "@mui/material";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { useCallback, useState } from "react";
 import { XYPosition } from "reactflow";
@@ -8,6 +8,7 @@ import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadata
 import { FilterTableToolbarProps } from "../../../components/FilterTable/FilterTableToolbarProps.ts";
 import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
 import SdocTable from "../../../components/SourceDocument/SdocTable/SdocTable.tsx";
+import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
 import { createSdocNodes } from "../whiteboardUtils.ts";
@@ -42,9 +43,11 @@ function AddDocumentNodeDialog({ projectId, buttonProps, ...props }: AddDocument
 
   return (
     <>
-      <Button onClick={handleOpenDialogClick} {...buttonProps}>
-        Add documents
-      </Button>
+      <Tooltip title="Add document" placement="right" arrow>
+        <Button onClick={handleOpenDialogClick} {...buttonProps}>
+          {getIconComponent(Icon.DOCUMENT)}
+        </Button>
+      </Tooltip>
       <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         {metadata.isSuccess ? (
           <>
