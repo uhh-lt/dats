@@ -23,6 +23,7 @@ import FormEmail from "../../components/FormInputs/FormEmail.tsx";
 import FormPassword from "../../components/FormInputs/FormPassword.tsx";
 import FormText from "../../components/FormInputs/FormText.tsx";
 import { EMAIL_REGEX } from "../../utils/GlobalConstants.ts";
+import DATSLogo from "./DATSLogo.tsx";
 
 interface RegisterFormValues extends UserCreate {
   confirmPassword: string;
@@ -85,18 +86,15 @@ function Register() {
   const handleError: SubmitErrorHandler<UserCreate> = (data) => console.error(data);
 
   return (
-    <Box
+    <Stack
+      gap={4}
       sx={{
-        display: "flex",
         alignItems: "center",
-        flexDirection: "column",
         justifyContent: "center",
         height: "100vh",
       }}
     >
-      <Typography variant="h4" component="div" align="center">
-        Discourse Analysis Tool Suite
-      </Typography>
+      <DATSLogo />
       <Card sx={{ width: 450 }} raised>
         <form onSubmit={handleSubmit(handleRegistration, handleError)}>
           <CardContent>
@@ -245,7 +243,7 @@ function Register() {
           </CardActions>
         </form>
       </Card>
-    </Box>
+    </Stack>
   );
 }
 

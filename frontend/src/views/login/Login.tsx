@@ -3,18 +3,19 @@ import AccountCircle from "@mui/icons-material/AccountCircle";
 import LockIcon from "@mui/icons-material/Lock";
 import LoginIcon from "@mui/icons-material/Login";
 import LoadingButton from "@mui/lab/LoadingButton/LoadingButton";
-import { Box, Button, Card, CardContent, Divider, Typography } from "@mui/material";
+import { Box, Button, Card, CardContent, Divider, Stack, Typography } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { Link, Navigate, useLocation } from "react-router-dom";
-import GeneralHooks from "../api/GeneralHooks.ts";
-import { ApiError } from "../api/openapi/core/ApiError.ts";
-import { AuthenticationService } from "../api/openapi/services/AuthenticationService.ts";
-import { handleOIDCLogin } from "../auth/HandleOIDCLogin.ts";
-import { LoginStatus } from "../auth/LoginStatus.ts";
-import { useAuth } from "../auth/useAuth.ts";
-import FormPassword from "../components/FormInputs/FormPassword.tsx";
-import FormText from "../components/FormInputs/FormText.tsx";
+import GeneralHooks from "../../api/GeneralHooks.ts";
+import { ApiError } from "../../api/openapi/core/ApiError.ts";
+import { AuthenticationService } from "../../api/openapi/services/AuthenticationService.ts";
+import { handleOIDCLogin } from "../../auth/HandleOIDCLogin.ts";
+import { LoginStatus } from "../../auth/LoginStatus.ts";
+import { useAuth } from "../../auth/useAuth.ts";
+import FormPassword from "../../components/FormInputs/FormPassword.tsx";
+import FormText from "../../components/FormInputs/FormText.tsx";
+import DATSLogo from "./DATSLogo.tsx";
 
 interface LoginFormValues {
   user: string;
@@ -75,18 +76,15 @@ function Login() {
 
   if (!instanceInfo) return null;
   return (
-    <Box
+    <Stack
+      gap={4}
       sx={{
-        display: "flex",
         alignItems: "center",
-        flexDirection: "column",
         justifyContent: "center",
         height: "100vh",
       }}
     >
-      <Typography variant="h4" component="div" align="center">
-        Discourse Analysis Tool Suite
-      </Typography>
+      <DATSLogo />
       <Card sx={{ width: 450 }} raised>
         <CardContent>
           <Typography variant="h5" component="div" align="center">
@@ -167,9 +165,8 @@ function Login() {
           )}
         </CardContent>
       </Card>
-
       {!navigator.userAgent.includes("Chrome") && (
-        <Card sx={{ width: "66%", mt: 4 }} variant="outlined">
+        <Card sx={{ width: "66%" }} variant="outlined">
           <CardContent>
             <Typography component="div" align="justify">
               Please use the Chrome browser for the best experience! We cannot guarantee that DATS works properly in
@@ -179,7 +176,7 @@ function Login() {
         </Card>
       )}
       {!instanceInfo.is_stable && (
-        <Card sx={{ width: "66%", borderColor: "red", mt: 4 }} variant="outlined">
+        <Card sx={{ width: "66%", borderColor: "red" }} variant="outlined">
           <CardContent>
             <Typography component="div" align="justify">
               You are about to enter the Discourse Analysis Tool Suite Demo. Several projects are prepared, but you can
@@ -194,7 +191,7 @@ function Login() {
           </CardContent>
         </Card>
       )}
-    </Box>
+    </Stack>
   );
 }
 
