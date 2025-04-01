@@ -247,7 +247,7 @@ class RedisService(metaclass=SingletonMeta):
 
     def update_crawler_job(self, key: str, update: CrawlerJobUpdate) -> CrawlerJobRead:
         cj = self.load_crawler_job(key=key)
-        data = cj.model_dump()
+        data = cj.model_dump(exclude={"updated"})
         data.update(**update.model_dump())
         cj = CrawlerJobRead(**data, updated=datetime.now())
         cj = self.store_crawler_job(crawler_job=cj)
