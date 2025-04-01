@@ -3,14 +3,17 @@ from typing import List, Optional, Tuple, Union
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.project_metadata import crud_project_meta
+from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.doc_type import DocType
 from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.dto.search import (
     ElasticSearchDocumentHit,
     PaginatedElasticSearchDocumentHits,
+    PaginatedSDocHits,
     SimSearchImageHit,
     SimSearchSentenceHit,
 )
+from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.db.elasticsearch_service import ElasticSearchService
 from app.core.db.simsearch_service import SimSearchService
@@ -48,6 +51,52 @@ def search_info(project_id) -> List[ColumnInfo[SdocColumns]]:
 
 
 def search(
+    project_id: int,
+    search_query: str,
+    expert_mode: bool,
+    highlight: bool,
+    filter: Filter[SdocColumns],
+    sorts: List[Sort[SdocColumns]],
+    page_number: Optional[int] = None,
+    page_size: Optional[int] = None,
+) -> PaginatedSDocHits:
+    data = __search(
+        project_id,
+        search_query,
+        expert_mode,
+        highlight,
+        filter,
+        sorts,
+        page_number=page_number,
+        page_size=page_size,
+    )
+
+    # get the additional information about the documents
+    with SQLService().db_session() as db:
+        sdoc_ids = [hit.id for hit in data.hits]
+
+        # 1. the sdoc itself
+        sdoc_db_objs = crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)
+        sdocs = {
+            sdoc.id: SourceDocumentRead.model_validate(sdoc) for sdoc in sdoc_db_objs
+        }
+
+        # 2. the annotators
+        annotators = crud_sdoc.get_annotators(db=db, sdoc_ids=sdoc_ids)  #
+
+        # 3. the tags
+        tags = crud_sdoc.get_tags(db=db, sdoc_ids=sdoc_ids)
+
+    return PaginatedSDocHits(
+        hits=data.hits,
+        sdocs=sdocs,
+        annotators=annotators,
+        tags=tags,
+        total_results=data.total_results,
+    )
+
+
+def __search(
     project_id: int,
     search_query: str,
     expert_mode: bool,

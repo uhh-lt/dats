@@ -1,10 +1,11 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
 from app.core.data.dto.dto_base import UpdateDTOBase
 from app.core.data.dto.memo import AttachedObjectType
+from app.core.data.dto.source_document import SourceDocumentRead
 
 
 class ElasticSearchDocumentCreate(BaseModel):
@@ -94,6 +95,36 @@ class PaginatedElasticSearchDocumentHits(BaseModel):
         description=(
             "The IDs, scores and (optional) highlights of Document search results on "
             "the requested page."
+        )
+    )
+    total_results: int = Field(
+        description="The total number of hits. Used for pagination."
+    )
+
+
+class PaginatedSDocHits(BaseModel):
+    hits: List[ElasticSearchDocumentHit] = Field(
+        description=(
+            "The IDs, scores and (optional) highlights of Document search results on "
+            "the requested page."
+        )
+    )
+    sdocs: Dict[int, SourceDocumentRead] = Field(
+        description=(
+            "A dictionary with the additional information about the documents. The key is the "
+            "document ID and the value is a dictionary with the additional information."
+        )
+    )
+    annotators: Dict[int, List[int]] = Field(
+        description=(
+            "A dictionary with the additional information about the documents. The key is the "
+            "document ID and the value is a dictionary with the additional information."
+        )
+    )
+    tags: Dict[int, List[int]] = Field(
+        description=(
+            "A dictionary with the additional information about the documents. The key is the "
+            "document ID and the value is a dictionary with the additional information."
         )
     )
     total_results: int = Field(
