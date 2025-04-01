@@ -43,6 +43,7 @@ export function AnnotatorSelector({ sdocId }: AnnotatorSelector) {
   }, [dispatch, user, annotatorUserIds.data, isCompareMode]);
 
   // render
+  if (!user?.id || userIds.length === 0 || !visibleUserId) return null;
   return (
     <FormControl size="small">
       <InputLabel id="annotation-user-select-label">Annotations</InputLabel>
