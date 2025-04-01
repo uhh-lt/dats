@@ -110,6 +110,7 @@ const useGetAnnotators = (sdocId: number | null | undefined) =>
       SourceDocumentService.getAnnotators({
         sdocId: sdocId!,
       }),
+    staleTime: 1000 * 60 * 5,
     enabled: !!sdocId,
   });
 

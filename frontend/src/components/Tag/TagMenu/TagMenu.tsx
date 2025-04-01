@@ -100,7 +100,6 @@ function TagMenuContent({
   const { mutate: addTagsMutation } = TagHooks.useBulkLinkDocumentTags();
   const { mutate: removeTagsMutation } = TagHooks.useBulkUnlinkDocumentTags();
   const handleClickTag = (tagId: number) => () => {
-    console.log("HI!");
     if (initialChecked.get(tagId) === CheckboxState.CHECKED) {
       removeTagsMutation({
         requestBody: {
