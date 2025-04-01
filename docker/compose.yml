@@ -255,6 +255,7 @@ services:
       timeout: 10s
       retries: 5
     volumes:
+      - ./logo.png:/usr/share/nginx/html/logo2.png
       - ./nginx.conf:/etc/nginx/nginx.conf
       - ./backend_repo:/usr/share/nginx/content:ro
     depends_on:
