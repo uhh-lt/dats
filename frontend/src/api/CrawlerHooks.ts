@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import queryClient from "../plugins/ReactQueryClient.ts";
+import { dateToLocaleDate } from "../utils/DateUtils.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { BackgroundJobStatus } from "./openapi/models/BackgroundJobStatus.ts";
 import { CrawlerJobRead } from "./openapi/models/CrawlerJobRead.ts";
@@ -29,6 +30,21 @@ const usePollCrawlerJob = (crawlerJobId: string | undefined, initialData: Crawle
       if (!query.state.data) {
         return 1000;
       }
+
+      if (query.state.data.status) {
+        // do invalidation if the status is FINISHED (and the job is max 3 minutes old)
+        const localDate = new Date();
+        const localUpdatedDate = dateToLocaleDate(query.state.data.updated);
+        if (
+          query.state.data.status === BackgroundJobStatus.FINISHED &&
+          localDate.getTime() - localUpdatedDate.getTime() < 3 * 60 * 1000
+        ) {
+          const projectId = query.state.data.parameters.project_id;
+          console.log("Invalidating preprocessing jobs");
+          queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_PREPROCESSING_JOBS, projectId] });
+        }
+      }
+
       if (query.state.data.status) {
         switch (query.state.data.status) {
           case BackgroundJobStatus.ERRORNEOUS:
