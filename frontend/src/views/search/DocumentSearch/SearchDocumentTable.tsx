@@ -17,6 +17,7 @@ import { ElasticSearchDocumentHit } from "../../../api/openapi/models/ElasticSea
 import { PaginatedElasticSearchDocumentHits } from "../../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
 import { SdocColumns } from "../../../api/openapi/models/SdocColumns.ts";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
+import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
 import { SearchService } from "../../../api/openapi/services/SearchService.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import DocumentUploadButton from "../../../components/DocumentUpload/DocumentUploadButton.tsx";
@@ -34,6 +35,7 @@ import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
 import SdocTagsRenderer from "../../../components/SourceDocument/SdocTagRenderer.tsx";
 import TagMenuButton from "../../../components/Tag/TagMenu/TagMenuButton.tsx";
 import { selectSelectedDocumentIds } from "../../../components/tableSlice.ts";
+import queryClient from "../../../plugins/ReactQueryClient.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
 import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
@@ -166,8 +168,8 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
       sortingModel, // refetch when sorting changes
       fetchSize,
     ],
-    queryFn: ({ pageParam }) =>
-      SearchService.searchSdocs({
+    queryFn: async ({ pageParam }) => {
+      const data = await SearchService.searchSdocs({
         searchQuery: searchQuery || "",
         projectId: projectId!,
         highlight: true,
@@ -181,7 +183,26 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
         },
         pageNumber: pageParam as number,
         pageSize: fetchSize,
-      }),
+      });
+
+      // initialize the query cache
+      console.log("Initializing sdoc query cache");
+      Object.entries(data.sdocs).forEach(([sdocId, sdoc]) => {
+        queryClient.setQueryData<SourceDocumentRead>([QueryKey.SDOC, parseInt(sdocId)], sdoc);
+        queryClient.setQueryData<number>([QueryKey.SDOC_ID, projectId, sdoc.filename], sdoc.id);
+      });
+
+      console.log("Initializing annotators query cache");
+      Object.entries(data.annotators).forEach(([sdocId, annotators]) => {
+        queryClient.setQueryData<number[]>([QueryKey.SDOC_ANNOTATORS, parseInt(sdocId)], annotators);
+      });
+
+      console.log("Initializing tags query cache");
+      Object.entries(data.tags).forEach(([sdocId, tags]) => {
+        queryClient.setQueryData<number[]>([QueryKey.SDOC_TAGS, parseInt(sdocId)], tags);
+      });
+      return data;
+    },
     initialPageParam: 0,
     enabled: !!projectId,
     getNextPageParam: (_lastGroup, groups) => {

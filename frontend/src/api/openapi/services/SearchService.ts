@@ -7,7 +7,7 @@ import type { Body_search_find_similar_sentences } from "../models/Body_search_f
 import type { Body_search_search_sdocs } from "../models/Body_search_search_sdocs";
 import type { ColumnInfo_SdocColumns_ } from "../models/ColumnInfo_SdocColumns_";
 import type { KeywordStat } from "../models/KeywordStat";
-import type { PaginatedElasticSearchDocumentHits } from "../models/PaginatedElasticSearchDocumentHits";
+import type { PaginatedSDocHits } from "../models/PaginatedSDocHits";
 import type { SimSearchImageHit } from "../models/SimSearchImageHit";
 import type { SimSearchSentenceHit } from "../models/SimSearchSentenceHit";
 import type { SpanEntityStat } from "../models/SpanEntityStat";
@@ -39,7 +39,7 @@ export class SearchService {
   }
   /**
    * Returns all SourceDocument Ids and their scores and (optional) hightlights that match the query parameters.
-   * @returns PaginatedElasticSearchDocumentHits Successful Response
+   * @returns PaginatedSDocHits Successful Response
    * @throws ApiError
    */
   public static searchSdocs({
@@ -58,7 +58,7 @@ export class SearchService {
     requestBody: Body_search_search_sdocs;
     pageNumber?: number | null;
     pageSize?: number | null;
-  }): CancelablePromise<PaginatedElasticSearchDocumentHits> {
+  }): CancelablePromise<PaginatedSDocHits> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/sdoc",

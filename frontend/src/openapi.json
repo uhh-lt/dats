@@ -2802,9 +2802,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedElasticSearchDocumentHits" } }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedSDocHits" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -8090,6 +8088,42 @@
         "type": "object",
         "required": ["hits", "total_results"],
         "title": "PaginatedElasticSearchDocumentHits"
+      },
+      "PaginatedSDocHits": {
+        "properties": {
+          "hits": {
+            "items": { "$ref": "#/components/schemas/ElasticSearchDocumentHit" },
+            "type": "array",
+            "title": "Hits",
+            "description": "The IDs, scores and (optional) highlights of Document search results on the requested page."
+          },
+          "sdocs": {
+            "additionalProperties": { "$ref": "#/components/schemas/SourceDocumentRead" },
+            "type": "object",
+            "title": "Sdocs",
+            "description": "A dictionary with the additional information about the documents. The key is the document ID and the value is a dictionary with the additional information."
+          },
+          "annotators": {
+            "additionalProperties": { "items": { "type": "integer" }, "type": "array" },
+            "type": "object",
+            "title": "Annotators",
+            "description": "A dictionary with the additional information about the documents. The key is the document ID and the value is a dictionary with the additional information."
+          },
+          "tags": {
+            "additionalProperties": { "items": { "type": "integer" }, "type": "array" },
+            "type": "object",
+            "title": "Tags",
+            "description": "A dictionary with the additional information about the documents. The key is the document ID and the value is a dictionary with the additional information."
+          },
+          "total_results": {
+            "type": "integer",
+            "title": "Total Results",
+            "description": "The total number of hits. Used for pagination."
+          }
+        },
+        "type": "object",
+        "required": ["hits", "sdocs", "annotators", "tags", "total_results"],
+        "title": "PaginatedSDocHits"
       },
       "PreProProjectStatus": {
         "properties": {
