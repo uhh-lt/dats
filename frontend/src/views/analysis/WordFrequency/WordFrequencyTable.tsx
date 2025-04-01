@@ -1,4 +1,5 @@
-import { Stack, Typography } from "@mui/material";
+import { Cloud } from "@mui/icons-material";
+import { Button, Dialog, DialogContent, DialogTitle, Stack, Typography } from "@mui/material";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   MRT_ColumnDef,
@@ -9,7 +10,7 @@ import {
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { memo, useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from "react";
 import { useParams } from "react-router-dom";
 import { QueryKey } from "../../../api/QueryKey.ts";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
@@ -25,6 +26,7 @@ import { RootState } from "../../../store/store.ts";
 import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
 import { useTableInfiniteScroll } from "../../../utils/useTableInfiniteScroll.ts";
 import ExportWordFrequencyButton from "./ExportWordFrequencyButton.tsx";
+import WordCloud from "./WordCloud.tsx";
 import { useInitWordFrequencyFilterSlice } from "./useInitWordFrequencyFilterSlice.ts";
 import { WordFrequencyActions } from "./wordFrequencySlice.ts";
 
@@ -164,6 +166,12 @@ function WordFrequencyTable() {
     }
   }, [projectId, sortingModel]);
 
+  // word cloud
+  const [wordCloudOpen, setWordCloudOpen] = useState<boolean>(false);
+
+  const handleWordCloudOpen = () => setWordCloudOpen(true);
+  const handleWordCloudClose = () => setWordCloudOpen(false);
+
   // Table event handlers
   const handleTableScroll = useCallback(
     (event: UIEvent<HTMLDivElement>) => fetchMoreOnScroll(event.target as HTMLDivElement),
@@ -199,12 +207,20 @@ function WordFrequencyTable() {
   const renderTopRightToolbarContent = useCallback(
     ({ table }: { table: MRT_TableInstance<WordFrequencyStat> }) => (
       <Stack direction={"row"} spacing={1} alignItems="center" height={48}>
+        <Button
+          startIcon={<Cloud />}
+          onClick={handleWordCloudOpen}
+          disabled={Object.keys(rowSelectionModel).length === 0}
+          size="small"
+        >
+          View Word Cloud
+        </Button>
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleDensePaddingButton table={table} />
         <ExportWordFrequencyButton filter={filter as MyFilter<WordFrequencyColumns>} />
       </Stack>
     ),
-    [filter],
+    [filter, rowSelectionModel],
   );
 
   // table
@@ -261,7 +277,17 @@ function WordFrequencyTable() {
     renderBottomToolbarCustomActions: renderBottomToolbarContent,
   });
 
-  return <MaterialReactTable table={table} />;
+  return (
+    <>
+      <MaterialReactTable table={table} />
+      <Dialog open={wordCloudOpen} onClose={handleWordCloudClose} maxWidth="lg" fullWidth>
+        <DialogTitle>Word Cloud Visualization</DialogTitle>
+        <DialogContent>
+          <WordCloud width={800} height={600} words={flatData.filter((word) => rowSelectionModel[word.word])} />
+        </DialogContent>
+      </Dialog>
+    </>
+  );
 }
 
 export default memo(WordFrequencyTable);
