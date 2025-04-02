@@ -22,9 +22,9 @@ class TopWordsTopic(BaseModel):
     topic_id: int
 
 
+# Reads the Topics from the db, generated in Project: {project_id}
 def top_words(db: Session, project_id: int) -> dict[int, TopWordsTopic]:
     project = crud_project.read(db=db, id=project_id)
-    # umwandeln von orm zu dict/list json object
     topic_infos = [TopicInfoRead.model_validate(x) for x in project.topic_infos]
 
     return {
@@ -33,6 +33,7 @@ def top_words(db: Session, project_id: int) -> dict[int, TopWordsTopic]:
     }
 
 
+# TODO: change return type to dict similair to top_words()
 def topic_distr(db: Session, project_id: int) -> list[dict]:
     topic_distr_data = []
     project = crud_project.read(db=db, id=project_id)
@@ -47,6 +48,7 @@ def sortFunc(e):
     return e.probability
 
 
+# TODO: change return type to dict similair to top_words()
 def document_info(project_id: int, db: Session, topic_id: int) -> list[dict]:
     document_info_data = []
     project = crud_project.read(db=db, id=project_id)
@@ -62,10 +64,8 @@ def document_info(project_id: int, db: Session, topic_id: int) -> list[dict]:
     return document_info_data
 
 
-def get_prompt(topic_num: int, top_words_data: List[TopicWordInfo]):
-    top_words_string = ""
-    for point in top_words_data:
-        top_words_string += point.word + " "
+def get_prompt(top_words_data: List[TopicWordInfo]) -> list[str]:
+    top_words_string = " ".join(point.word for point in top_words_data)
 
     user_prompt = (
         "Walter Kempowski (1929-2007) was a contemporary German author, collage artist, and archivist."
@@ -100,7 +100,7 @@ def top_words_ollama(topic_num: int, db: Session, project_id: int) -> dict:
         }
 
     response = ollama_service.llm_chat(
-        *get_prompt(topic_num, top_words_data=top_words_data[topic_num].topic_words),
+        *get_prompt(top_words_data=top_words_data[topic_num].topic_words),
         response_model=OllamaTopicResponse,
     )
 

@@ -2,6 +2,7 @@ import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import {
   Box,
+  Button,
   Card,
   CardContent,
   Fab,
@@ -12,7 +13,7 @@ import {
   SelectChangeEvent,
   Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import AnalysisHooks from "../../../api/CodeFrequencyHooks.ts";
 import ContentContainerLayout from "../../../layouts/ContentLayouts/ContentContainerLayout.tsx";
@@ -25,7 +26,6 @@ function DocumentCategorization() {
   const [currentTopicNum, setCurrentTopicNum] = useState(0);
 
   const [currentCarouselField, setCarouselField] = useState(0);
-  const [height, setHeight] = useState<number>(window.innerHeight);
 
   const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
 
@@ -40,7 +40,7 @@ function DocumentCategorization() {
     isSuccess: ollamaSuccess,
   } = AnalysisHooks.useReturnTopWordsOllama(currentTopicNum, projectId);
 
-  const diagramList = [
+  const carouselDiagramList = [
     <TopWordsBarChart topicNum={currentTopicNum} dataHook={top_words_data} />,
     <TopicDistrChart dataHook={topic_distr_hook} />,
     <TopDocumentsBarChart topicNum={currentTopicNum} dataHook={topic_document_data} />,
@@ -52,73 +52,65 @@ function DocumentCategorization() {
 
   const changeCarouselCard = (change: number) => {
     if (currentCarouselField + change < 0) {
-      setCarouselField(diagramList.length - 1);
+      setCarouselField(carouselDiagramList.length - 1);
     } else {
-      setCarouselField((currentCarouselField + change) % diagramList.length);
+      setCarouselField((currentCarouselField + change) % carouselDiagramList.length);
     }
   };
 
-  useEffect(() => {
-    const handleResize = () => {
-      setHeight(window.innerHeight);
-    };
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
-  const boxHeight = window.innerHeight * 0.5;
-
   return (
     <ContentContainerLayout>
-      <Card>
+      <Card sx={{ flexShrink: 0, height: "fit-content" }}>
         <CardContent>
           <Typography gutterBottom sx={{ color: "text.secondary", fontSize: 14 }}>
             Document Categorization using LLM's and Topic Modeling
           </Typography>
-        </CardContent>
-        <Box
-          sx={{
-            margin: "auto",
-            padding: 2,
-          }}
-        >
-          <FormControl fullWidth>
-            <InputLabel id="dynamic-dropdown-label">Select Key</InputLabel>
-            <Select labelId="dynamic-dropdown-label" value={currentTopicNum || ""} onChange={handleChange}>
-              {top_words_data.isLoading && <MenuItem disabled>Loading...</MenuItem>}
 
-              {top_words_data.isSuccess && Object.keys(top_words_data.data).length > 0 ? (
-                Object.keys(top_words_data.data).map((key) => (
-                  <MenuItem key={key} value={key}>
-                    {key}
+          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "0.5vh" }}>
+            <FormControl>
+              <InputLabel>Select Topic</InputLabel>
+              <Select value={currentTopicNum || ""} onChange={handleChange} sx={{ textAlign: "center", width: "25vw" }}>
+                {top_words_data.isLoading && (
+                  <MenuItem disabled sx={{ display: "flex", justifyContent: "center", textAlign: "center" }}>
+                    Loading...
                   </MenuItem>
-                ))
-              ) : (
-                <MenuItem disabled>No options available</MenuItem>
-              )}
-            </Select>
-          </FormControl>
+                )}
+
+                {top_words_data.isSuccess && Object.keys(top_words_data.data).length > 0 ? (
+                  Object.keys(top_words_data.data).map((key) => (
+                    <MenuItem
+                      key={key}
+                      value={key}
+                      sx={{ display: "flex", justifyContent: "center", textAlign: "center" }}
+                    >
+                      {key}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled sx={{ display: "flex", justifyContent: "center", textAlign: "center" }}>
+                    No options available
+                  </MenuItem>
+                )}
+              </Select>
+            </FormControl>
+          </Box>
           <Box
             sx={{
               margin: "auto",
-              padding: 2,
+              padding: "0.5vh",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              height: boxHeight,
             }}
           >
             <Fab color="primary" size="small" onClick={() => changeCarouselCard(-1)}>
               <ArrowLeftIcon />
             </Fab>
-            {diagramList[currentCarouselField].props.dataHook.isLoading && <div>Loading...</div>}
-            {diagramList[currentCarouselField].props.dataHook.isSuccess ? (
-              diagramList[currentCarouselField]
+            {carouselDiagramList[currentCarouselField].props.dataHook.isLoading && <div>Loading...</div>}
+            {carouselDiagramList[currentCarouselField].props.dataHook.isSuccess ? (
+              carouselDiagramList[currentCarouselField]
             ) : (
-              <div></div>
+              <></>
             )}
             <Fab color="primary" size="small" onClick={() => changeCarouselCard(1)}>
               <ArrowRightIcon />
@@ -130,28 +122,40 @@ function DocumentCategorization() {
               padding: 2,
             }}
           >
-            {isPending && <div>Loading...</div>}
-            <Fab color="primary" size="small" onClick={() => makeLLMInterpretation()}>
-              <ArrowRightIcon />
-            </Fab>
+            <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+              <Button variant="text" onClick={() => makeLLMInterpretation()}>
+                Generate Interpretation for Topic: {currentTopicNum}
+              </Button>
+            </Box>
+            {isPending && <div style={{ textAlign: "center" }}>Loading...</div>}
 
             {ollamaSuccess && ollamaData ? (
               <Box
                 sx={{
                   margin: "auto",
                   padding: 2,
-                  display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
                 }}
               >
-                <div style={{ whiteSpace: "pre-line", height: height * 0.2 }}>{ollamaData["reasoning"]}</div>
+                <h3 style={{ textAlign: "center" }}>{ollamaData["topic_name"]}</h3>
+                <Box
+                  sx={{
+                    maxHeight: "20vh",
+                    overflow: "auto",
+                    padding: 1,
+                    border: "1px solid #ddd",
+                    borderRadius: 2,
+                  }}
+                >
+                  {ollamaData["reasoning"]}
+                </Box>
               </Box>
             ) : (
-              <div></div>
+              <></>
             )}
           </Box>
-        </Box>
+        </CardContent>
       </Card>
     </ContentContainerLayout>
   );

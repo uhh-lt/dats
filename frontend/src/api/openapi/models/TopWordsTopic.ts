@@ -5,5 +5,5 @@
 import type { TopicWordInfo } from "./TopicWordInfo";
 export type TopWordsTopic = {
   topic_words: Array<TopicWordInfo>;
-  topic_num: number;
+  topic_id: number;
 };
