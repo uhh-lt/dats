@@ -23,8 +23,6 @@ const TopWordsBarChart: React.FC<{
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [width, setWidth] = useState<number>(window.innerWidth);
 
-  const barHeight = 25;
-
   const marginTop = window.innerHeight * 0.05;
   const marginRight = window.innerWidth * 0.1;
   const marginBottom = window.innerHeight * 0.05;
@@ -37,9 +35,8 @@ const TopWordsBarChart: React.FC<{
   let currentMaxScore = 0;
 
   let maxScore = 0;
-  let amountTopics = 0;
 
-  let height = window.innerHeight * 0.7;
+  const height = window.innerHeight * 0.7;
 
   let y = d3
     .scaleBand()
@@ -61,10 +58,6 @@ const TopWordsBarChart: React.FC<{
         currentMaxScore = word.score;
       }
     });
-
-    amountTopics = Object.keys(data).length;
-
-    height = Math.ceil((amountTopics + 0.1) * barHeight) + marginTop + marginBottom;
 
     y = d3
       .scaleBand()

@@ -9951,10 +9951,10 @@
             "type": "array",
             "title": "Topic Words"
           },
-          "topic_num": { "type": "integer", "title": "Topic Num" }
+          "topic_id": { "type": "integer", "title": "Topic Id" }
         },
         "type": "object",
-        "required": ["topic_words", "topic_num"],
+        "required": ["topic_words", "topic_id"],
         "title": "TopWordsTopic"
       },
       "TopicModelingParams": {

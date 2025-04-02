@@ -5,15 +5,15 @@ from app.core.analysis.code_frequency_analysis.code_frequency import (
     find_code_occurrences,
 )
 from app.core.analysis.document_sampler.document_sampler import document_sampler_by_tags
-from app.core.analysis.my_new_analysis_feature import (
+from app.core.analysis.statistics.count_metadata import (
+    compute_num_sdocs_with_date_metadata,
+)
+from app.core.analysis.topic_interpretation import (
     TopWordsTopic,
     document_info,
     top_words,
     top_words_ollama,
     topic_distr,
-)
-from app.core.analysis.statistics.count_metadata import (
-    compute_num_sdocs_with_date_metadata,
 )
 from app.core.analysis.word_frequency_analysis.word_frequency import (
     WordFrequencyColumns,
@@ -344,9 +344,9 @@ def return_topic_distr_data(
 @router.post(
     "/top_words_data",
     response_model=dict[int, TopWordsTopic],
-    summary="Returns the top words for 30 topics. This is still mock-data",
+    summary="Returns the top words for all topics generated in the project",
 )
-def return_top_words_data(
+def top_words_data(
     *,
     project_id: int,
     db: Session = Depends(get_db_session),
