@@ -1,5 +1,5 @@
 import { Cloud } from "@mui/icons-material";
-import { Button, Dialog, DialogContent, DialogTitle, Stack, Typography } from "@mui/material";
+import { Button, Stack, Typography } from "@mui/material";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   MRT_ColumnDef,
@@ -21,6 +21,7 @@ import { AnalysisService } from "../../../api/openapi/services/AnalysisService.t
 import { useAuth } from "../../../auth/useAuth.ts";
 import ReduxFilterDialog from "../../../components/FilterDialog/ReduxFilterDialog.tsx";
 import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
+import ContentContentLayout from "../../../layouts/ContentLayouts/ContentContentLayout.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
 import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
@@ -60,6 +61,12 @@ function WordFrequencyTable() {
 
   // virtualization
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
+
+  // word cloud state
+  const [wordCloudOpen, setWordCloudOpen] = useState<boolean>(false);
+
+  const handleWordCloudOpen = () => setWordCloudOpen(true);
+  const handleWordCloudClose = () => setWordCloudOpen(false);
 
   // table columns
   const tableInfo = useInitWordFrequencyFilterSlice({ projectId });
@@ -165,12 +172,6 @@ function WordFrequencyTable() {
       console.error(error);
     }
   }, [projectId, sortingModel]);
-
-  // word cloud
-  const [wordCloudOpen, setWordCloudOpen] = useState<boolean>(false);
-
-  const handleWordCloudOpen = () => setWordCloudOpen(true);
-  const handleWordCloudClose = () => setWordCloudOpen(false);
 
   // Table event handlers
   const handleTableScroll = useCallback(
@@ -279,13 +280,20 @@ function WordFrequencyTable() {
 
   return (
     <>
-      <MaterialReactTable table={table} />
-      <Dialog open={wordCloudOpen} onClose={handleWordCloudClose} maxWidth="lg" fullWidth>
-        <DialogTitle>Word Cloud Visualization</DialogTitle>
-        <DialogContent>
-          <WordCloud width={800} height={600} words={flatData.filter((word) => rowSelectionModel[word.word])} />
-        </DialogContent>
-      </Dialog>
+      {!wordCloudOpen && <MaterialReactTable table={table} />}
+      {wordCloudOpen && (
+        <ContentContentLayout
+          leftContent={<MaterialReactTable table={table} />}
+          rightContent={
+            <WordCloud
+              width={800}
+              height={600}
+              words={flatData.filter((word) => rowSelectionModel[word.word])}
+              onClose={handleWordCloudClose}
+            />
+          }
+        />
+      )}
     </>
   );
 }

@@ -1,3 +1,15 @@
+import { Close } from "@mui/icons-material";
+import {
+  Box,
+  Checkbox,
+  Divider,
+  FormControl,
+  FormControlLabel,
+  IconButton,
+  MenuItem,
+  Select,
+  Typography,
+} from "@mui/material";
 import { scaleLog } from "@visx/scale";
 import { Text } from "@visx/text";
 import { Wordcloud } from "@visx/wordcloud";
@@ -9,6 +21,7 @@ interface WordCloudProps {
   height: number;
   words: WordFrequencyStat[];
   showControls?: boolean;
+  onClose: () => void;
 }
 
 const colors = ["#143059", "#2F6B9A", "#82a6c2"];
@@ -23,7 +36,7 @@ const fixedValueGenerator = () => 0.5;
 
 type SpiralType = "archimedean" | "rectangular";
 
-export default function WordCloud({ width, height, words, showControls = true }: WordCloudProps) {
+export default function WordCloud({ width, height, words, showControls = true, onClose }: WordCloudProps) {
   const [spiralType, setSpiralType] = useState<SpiralType>("archimedean");
   const [withRotation, setWithRotation] = useState<boolean>(false);
 
@@ -37,7 +50,33 @@ export default function WordCloud({ width, height, words, showControls = true }:
   };
 
   return (
-    <div className="wordcloud">
+    <Box
+      component={"div"}
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        userSelect: "none",
+        backgroundColor: "white",
+        height: "100%",
+      }}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          width: "100%",
+          p: 3,
+        }}
+      >
+        <Typography variant="h5">Word Cloud</Typography>
+        <IconButton onClick={onClose} size="small" sx={{ position: "absolute", top: 3, right: 3 }}>
+          <Close />
+        </IconButton>
+      </Box>
+      <Divider />
       <Wordcloud
         words={words.map((w) => ({ text: w.word, value: w.count }))}
         width={width}
@@ -65,43 +104,21 @@ export default function WordCloud({ width, height, words, showControls = true }:
         }
       </Wordcloud>
       {showControls && (
-        <div>
-          <label>
-            Spiral type &nbsp;
-            <select onChange={(e) => setSpiralType(e.target.value as SpiralType)} value={spiralType}>
-              <option key={"archimedean"} value={"archimedean"}>
-                archimedean
-              </option>
-              <option key={"rectangular"} value={"rectangular"}>
-                rectangular
-              </option>
-            </select>
-          </label>
-          <label>
-            With rotation &nbsp;
-            <input type="checkbox" checked={withRotation} onChange={() => setWithRotation(!withRotation)} />
-          </label>
-        </div>
+        <Box sx={{ mt: 2, display: "flex", gap: 3, alignItems: "center" }}>
+          <FormControl size="small" sx={{ minWidth: 200 }}>
+            <Select value={spiralType} onChange={(e) => setSpiralType(e.target.value as SpiralType)} displayEmpty>
+              <MenuItem value="archimedean">Archimedean Spiral</MenuItem>
+              <MenuItem value="rectangular">Rectangular Spiral</MenuItem>
+            </Select>
+          </FormControl>
+          <FormControlLabel
+            control={
+              <Checkbox checked={withRotation} onChange={(e) => setWithRotation(e.target.checked)} size="small" />
+            }
+            label="Enable Rotation"
+          />
+        </Box>
       )}
-      <style>
-        {`
-          .wordcloud {
-            display: flex;
-            flex-direction: column;
-            user-select: none;
-          }
-          .wordcloud svg {
-            margin: 1rem 0;
-            cursor: pointer;
-          }
-          .wordcloud label {
-            display: inline-flex;
-            align-items: center;
-            font-size: 14px;
-            margin-right: 8px;
-          }
-        `}
-      </style>
-    </div>
+    </Box>
   );
 }
