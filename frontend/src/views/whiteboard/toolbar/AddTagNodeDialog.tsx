@@ -1,10 +1,11 @@
-import { Box, Button, ButtonProps, Dialog, Stack } from "@mui/material";
+import { Box, Button, ButtonProps, Dialog, Stack, Tooltip } from "@mui/material";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useCallback, useState } from "react";
 import { XYPosition } from "reactflow";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
 import TagTable from "../../../components/Tag/TagTable.tsx";
+import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
 import { PendingAddNodeAction } from "../types/PendingAddNodeAction.ts";
@@ -60,9 +61,11 @@ function AddTagNodeDialog({ projectId, buttonProps, onClick }: AddTagNodeDialogP
 
   return (
     <>
-      <Button onClick={handleOpenDialogClick} {...buttonProps}>
-        Add tags
-      </Button>
+      <Tooltip title="Add tags" placement="right" arrow>
+        <Button onClick={handleOpenDialogClick} {...buttonProps}>
+          {getIconComponent(Icon.TAG)}
+        </Button>
+      </Tooltip>
       <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         <DATSDialogHeader
           title="Select tags to add to Whiteboard"

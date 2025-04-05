@@ -1,14 +1,14 @@
-import { Button, ButtonProps, CircularProgress, Dialog } from "@mui/material";
+import { Button, ButtonProps, CircularProgress, Dialog, Tooltip } from "@mui/material";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { memo, useCallback, useState } from "react";
 import MetadataHooks from "../../api/MetadataHooks.ts";
 import { ProjectMetadataRead } from "../../api/openapi/models/ProjectMetadataRead.ts";
 import { SentAnnoColumns } from "../../api/openapi/models/SentAnnoColumns.ts";
 import { SentenceAnnotationRow } from "../../api/openapi/models/SentenceAnnotationRow.ts";
+import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
 import { FilterTableToolbarProps } from "../FilterTable/FilterTableToolbarProps.ts";
 import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
 import SentenceAnnotationTable from "./SentenceAnnotationTable/SentenceAnnotationTable.tsx";
-
 const filterName = "selectSentenceAnnotationDialog";
 
 interface SelectSentenceAnnotationsDialogProps {
@@ -42,14 +42,16 @@ function SelectSentenceAnnotationsDialog({ projectId, buttonProps, ...props }: S
 
   return (
     <>
-      <Button onClick={handleOpen} {...buttonProps}>
-        Select annotations
-      </Button>
+      <Tooltip title="Add sentence annotations" placement="right" arrow>
+        <Button onClick={handleOpen} {...buttonProps}>
+          {getIconComponent(Icon.SENTENCE_ANNOTATION)}
+        </Button>
+      </Tooltip>
       <Dialog onClose={handleClose} open={open} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         {metadata.isSuccess ? (
           <>
             <DATSDialogHeader
-              title="Select sentence annotations to add to Whiteboard"
+              title="Select sentence annotations"
               onClose={handleClose}
               isMaximized={isMaximized}
               onToggleMaximize={handleToggleMaximize}

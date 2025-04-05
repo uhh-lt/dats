@@ -1,4 +1,4 @@
-import { Button, ButtonProps, CircularProgress, Dialog } from "@mui/material";
+import { Button, ButtonProps, CircularProgress, Dialog, Tooltip } from "@mui/material";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { useCallback, useState } from "react";
 import { XYPosition } from "reactflow";
@@ -9,6 +9,7 @@ import { SpanColumns } from "../../../api/openapi/models/SpanColumns.ts";
 import { FilterTableToolbarProps } from "../../../components/FilterTable/FilterTableToolbarProps.ts";
 import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
 import SpanAnnotationTable from "../../../components/SpanAnnotation/SpanAnnotationTable/SpanAnnotationTable.tsx";
+import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
 import { PendingAddNodeAction } from "../types/PendingAddNodeAction.ts";
@@ -45,9 +46,11 @@ function AddSpanAnnotationNodeDialog({ projectId, buttonProps, ...props }: AddSp
 
   return (
     <>
-      <Button onClick={handleOpen} {...buttonProps}>
-        Add annotations
-      </Button>
+      <Tooltip title="Add span annotations" placement="right" arrow>
+        <Button onClick={handleOpen} {...buttonProps}>
+          {getIconComponent(Icon.SPAN_ANNOTATION)}
+        </Button>
+      </Tooltip>
       <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         {metadata.isSuccess ? (
           <>

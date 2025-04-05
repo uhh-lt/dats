@@ -1,13 +1,12 @@
-import { Button } from "@mui/material";
-import React, { useCallback } from "react";
-import { XYPosition } from "reactflow";
-import { ReactFlowService } from "../hooks/ReactFlowService.ts";
-import { createBorderNode } from "../whiteboardUtils.ts";
-
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import SquareOutlinedIcon from "@mui/icons-material/SquareOutlined";
+import { Button, Tooltip } from "@mui/material";
+import React, { useCallback } from "react";
+import { XYPosition } from "reactflow";
+import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
+import { createBorderNode } from "../whiteboardUtils.ts";
 
 type BorderNodeType = "Rounded" | "Ellipse" | "Rectangle";
 
@@ -21,7 +20,7 @@ interface AddBorderNodeButtonProps extends AddNodeDialogProps {
   type: BorderNodeType;
 }
 
-function AddBorderNodeButton({ type, onClick }: AddBorderNodeButtonProps) {
+function AddBorderNodeButton({ type, onClick, buttonProps }: AddBorderNodeButtonProps) {
   const handleAddBorderNode = useCallback(() => {
     const addNode = (position: XYPosition, reactFlowService: ReactFlowService) => {
       switch (type) {
@@ -40,10 +39,11 @@ function AddBorderNodeButton({ type, onClick }: AddBorderNodeButtonProps) {
   }, [onClick, type]);
 
   return (
-    <Button onClick={handleAddBorderNode}>
-      Add
-      {borderNodeType2Icons[type]} shape
-    </Button>
+    <Tooltip title={`Add ${type.toLowerCase()} shape`} placement="right" arrow>
+      <Button onClick={handleAddBorderNode} aria-label={`Add ${type.toLowerCase()} shape`} {...buttonProps}>
+        {borderNodeType2Icons[type]}
+      </Button>
+    </Tooltip>
   );
 }
 
