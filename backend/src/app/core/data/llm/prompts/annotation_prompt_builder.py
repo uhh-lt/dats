@@ -121,7 +121,7 @@ class AnnotationPromptBuilder(PromptBuilder):
         return "\n".join(examples)
 
     def _build_user_prompt_template(
-        self, language: str, code_ids: List[int], **kwargs
+        self, *, language: str, code_ids: List[int], **kwargs
     ) -> str:
         task_data = "\n".join(
             [

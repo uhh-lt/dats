@@ -11,12 +11,11 @@ interface SdocAudioLinkProps {
 
 function SdocAudioLink({ projectId, filename, toPrefix }: SdocAudioLinkProps) {
   const sdocId = SdocHooks.useGetDocumentIdByFilename(filename, projectId);
-  const url = SdocHooks.useGetURL(sdocId.data, false);
   const thumbnailUrl = SdocHooks.useGetThumbnailURL(sdocId.data);
 
   return (
     <>
-      {sdocId.isSuccess && url.isSuccess && thumbnailUrl.isSuccess ? (
+      {thumbnailUrl.isSuccess ? (
         <div>
           <Link component={RouterLink} to={`${toPrefix}${sdocId.data}`}>
             <Box sx={{ position: "relative", height: 200, textAlign: "center" }}>
@@ -29,16 +28,12 @@ function SdocAudioLink({ projectId, filename, toPrefix }: SdocAudioLinkProps) {
                   color: "rgba(0, 0, 0, 0.666)",
                 }}
               />
-              <img style={{ marginBottom: 1.5 }} height="200" src={thumbnailUrl.data} alt="Tofu meatballs" />
+              <img style={{ marginBottom: 1.5 }} height="200" src={thumbnailUrl.data} alt="Audio thumbnail" />
             </Box>
           </Link>
         </div>
-      ) : sdocId.isSuccess && !url.isSuccess ? (
-        <img alt={`Could not resolve ${filename} :(`} />
-      ) : sdocId.isError ? (
-        <div>Error: {sdocId.error.message}</div>
-      ) : url.isError ? (
-        <div>Error: {url.error.message}</div>
+      ) : thumbnailUrl.isError ? (
+        <div>Error: {thumbnailUrl.error.message}</div>
       ) : (
         <div>Loading audio...</div>
       )}

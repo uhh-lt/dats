@@ -2,13 +2,15 @@ import { ErrorMessage } from "@hookform/error-message";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { LoadingButton, TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Button, DialogActions, DialogContent, Stack, Tab, Typography } from "@mui/material";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import LLMHooks from "../../../../api/LLMHooks.ts";
+import { ApproachType } from "../../../../api/openapi/models/ApproachType.ts";
 import { LLMPromptTemplates } from "../../../../api/openapi/models/LLMPromptTemplates.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 import { CRUDDialogActions } from "../../../dialogSlice.ts";
 import FormTextMultiline from "../../../FormInputs/FormTextMultiline.tsx";
+import SelectSentenceAnnotationsDialog from "../../../SentenceAnnotation/SelectSentenceAnnotationsDialog.tsx";
 import LLMUtterance from "../LLMUtterance.tsx";
 
 type PromptEditorValues = {
@@ -26,38 +28,77 @@ function PromptEditorStep() {
   const codes = useAppSelector((state) => state.dialog.llmCodes);
   const sdocIds = useAppSelector((state) => state.dialog.llmDocumentIds);
   const recommendedPrompts = useAppSelector((state) => state.dialog.llmPrompts);
+  const deleteExistingAnnotations = useAppSelector((state) => state.dialog.llmDeleteExistingAnnotations);
   const dispatch = useAppDispatch();
 
   // local state (to manage tabs)
   const [tab, setTab] = useState(recommendedPrompts[0].language);
-  const handleChangeTab = (_: React.SyntheticEvent, newValue: string) => {
-    setTab(newValue);
-  };
   const [prompts, setPrompts] = useState<LLMPromptTemplates[]>(recommendedPrompts);
 
+  const handleChangeTab = useCallback((_: React.SyntheticEvent, newValue: string) => {
+    setTab(newValue);
+  }, []);
+
+  // example selection (for few-shot learning)
+  const { mutate: createPromptTemplatesMutation } = LLMHooks.useCreatePromptTemplates();
+  const handleSelectExamples = useCallback(
+    (annotationIds: number[]) => {
+      if (!method) return;
+
+      createPromptTemplatesMutation(
+        {
+          approachType: approach,
+          requestBody: {
+            llm_job_params: {
+              llm_job_type: method,
+              project_id: projectId,
+              specific_task_parameters: {
+                llm_job_type: method,
+                tag_ids: tags.map((tag) => tag.id),
+                project_metadata_ids: metadata.map((m) => m.id),
+                code_ids: codes.map((code) => code.id),
+                sdoc_ids: sdocIds,
+              },
+            },
+            example_ids: annotationIds,
+          },
+        },
+        {
+          onSuccess(data) {
+            dispatch(CRUDDialogActions.llmDialogUpdatePromptEditor({ prompts: data }));
+            setPrompts(data);
+          },
+        },
+      );
+    },
+    [method, projectId, tags, metadata, codes, sdocIds, approach, createPromptTemplatesMutation, dispatch],
+  );
+
   // react form handlers
-  const handleChangePrompt = (language: string) => (formData: PromptEditorValues) => {
-    setPrompts((prevPrompts) => {
-      const updatedPrompts = prevPrompts.map((prompt) => {
-        if (prompt.language === language) {
-          return {
-            ...prompt,
-            system_prompt: formData.systemPrompt,
-            user_prompt: formData.userPrompt,
-          };
-        }
-        return prompt;
+  const handleChangePrompt = useCallback(
+    (language: string) => (formData: PromptEditorValues) => {
+      setPrompts((prevPrompts) => {
+        return prevPrompts.map((prompt) => {
+          if (prompt.language === language) {
+            return {
+              ...prompt,
+              system_prompt: formData.systemPrompt,
+              user_prompt: formData.userPrompt,
+            };
+          }
+          return prompt;
+        });
       });
-      return updatedPrompts;
-    });
-  };
+    },
+    [],
+  );
 
   // start llm job
-  const startLLMJobMutation = LLMHooks.useStartLLMJob();
-  const handleStartLLMJob = () => {
+  const { mutate: startLLMJobMutation, isPending: isStartPending } = LLMHooks.useStartLLMJob();
+  const handleStartLLMJob = useCallback(() => {
     if (method === undefined) return;
 
-    startLLMJobMutation.mutate(
+    startLLMJobMutation(
       {
         requestBody: {
           project_id: projectId,
@@ -73,6 +114,7 @@ function PromptEditorStep() {
             tag_ids: tags.map((tag) => tag.id),
             project_metadata_ids: metadata.map((m) => m.id),
             code_ids: codes.map((code) => code.id),
+            delete_existing_annotations: deleteExistingAnnotations,
           },
         },
       },
@@ -87,7 +129,23 @@ function PromptEditorStep() {
         },
       },
     );
-  };
+  }, [
+    method,
+    projectId,
+    approach,
+    prompts,
+    sdocIds,
+    tags,
+    metadata,
+    codes,
+    deleteExistingAnnotations,
+    startLLMJobMutation,
+    dispatch,
+  ]);
+
+  const handleBack = useCallback(() => {
+    dispatch(CRUDDialogActions.previousLLMDialogStep());
+  }, [dispatch]);
 
   return (
     <>
@@ -106,18 +164,26 @@ function PromptEditorStep() {
             </TabList>
           </Box>
           {prompts.map((prompt) => (
-            <TabPanel key={prompt.language} value={prompt.language} sx={{ px: 0 }}>
+            <TabPanel key={prompt.system_prompt + prompt.user_prompt} value={prompt.language} sx={{ px: 0 }}>
               <PromptEditorStepForm prompt={prompt} handleSavePrompt={handleChangePrompt(prompt.language)} />
             </TabPanel>
           ))}
         </TabContext>
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => dispatch(CRUDDialogActions.previousLLMDialogStep())}>Back</Button>
+        {approach === ApproachType.LLM_FEW_SHOT && (
+          <SelectSentenceAnnotationsDialog
+            title="Select few-shot sentence annotation examples"
+            projectId={projectId}
+            onConfirmSelection={handleSelectExamples}
+          />
+        )}
+        <Box flexGrow={1} />
+        <Button onClick={handleBack}>Back</Button>
         <LoadingButton
           variant="contained"
           startIcon={<PlayCircleIcon />}
-          loading={startLLMJobMutation.isPending}
+          loading={isStartPending}
           loadingPosition="start"
           onClick={handleStartLLMJob}
         >

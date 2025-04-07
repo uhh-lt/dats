@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import React from "react";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
-import { docTypeToIcon } from "../../../utils/docTypeToIcon.tsx";
+import { docTypeToIcon } from "../../../utils/icons/docTypeToIcon.tsx";
 
 interface DocTypeSelectorMultiProps {
   docTypes: DocType[];
@@ -33,9 +33,9 @@ function DocTypeSelectorMulti({
   // render
   return (
     <FormControl {...props}>
-      <InputLabel id="multi-user-select-label">{title}</InputLabel>
+      <InputLabel id="doc-type-select-label">{title}</InputLabel>
       <Select
-        labelId="multi-user-select-label"
+        labelId="doc-type-select-label"
         label={title}
         value={docTypes}
         multiple

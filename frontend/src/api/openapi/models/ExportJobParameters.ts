@@ -2,43 +2,31 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ExportFormat } from "./ExportFormat";
 import type { ExportJobType } from "./ExportJobType";
-import type { SingleDocAllUserAnnotationsExportJobParams } from "./SingleDocAllUserAnnotationsExportJobParams";
-import type { SingleDocSingleUserAnnotationsExportJobParams } from "./SingleDocSingleUserAnnotationsExportJobParams";
-import type { SingleProjectAllCodesExportJobParams } from "./SingleProjectAllCodesExportJobParams";
-import type { SingleProjectAllDataExportJobParams } from "./SingleProjectAllDataExportJobParams";
-import type { SingleProjectAllTagsExportJobParams } from "./SingleProjectAllTagsExportJobParams";
-import type { SingleProjectAllUserExportJobParams } from "./SingleProjectAllUserExportJobParams";
-import type { SingleProjectSelectedSdocsParams } from "./SingleProjectSelectedSdocsParams";
-import type { SingleProjectSelectedSentenceAnnotationsParams } from "./SingleProjectSelectedSentenceAnnotationsParams";
-import type { SingleProjectSelectedSpanAnnotationsParams } from "./SingleProjectSelectedSpanAnnotationsParams";
-import type { SingleUserAllDataExportJobParams } from "./SingleUserAllDataExportJobParams";
-import type { SingleUserAllMemosExportJobParams } from "./SingleUserAllMemosExportJobParams";
-import type { SingleUserLogbookExportJobParams } from "./SingleUserLogbookExportJobParams";
+import type { ExportSelectedBboxAnnotationsParams } from "./ExportSelectedBboxAnnotationsParams";
+import type { ExportSelectedMemosParams } from "./ExportSelectedMemosParams";
+import type { ExportSelectedSdocsParams } from "./ExportSelectedSdocsParams";
+import type { ExportSelectedSentenceAnnotationsParams } from "./ExportSelectedSentenceAnnotationsParams";
+import type { ExportSelectedSpanAnnotationsParams } from "./ExportSelectedSpanAnnotationsParams";
 export type ExportJobParameters = {
   /**
    * The type of the export job (what to export)
    */
   export_job_type: ExportJobType;
   /**
-   * The format of the exported data.
+   * The ID of the Project to export from
    */
-  export_format?: ExportFormat;
+  project_id: number;
   /**
    * Specific parameters for the export job w.r.t it's type
    */
   specific_export_job_parameters:
-    | SingleProjectAllDataExportJobParams
-    | SingleProjectAllUserExportJobParams
-    | SingleProjectAllTagsExportJobParams
-    | SingleProjectAllCodesExportJobParams
-    | SingleProjectSelectedSdocsParams
-    | SingleProjectSelectedSpanAnnotationsParams
-    | SingleProjectSelectedSentenceAnnotationsParams
-    | SingleUserAllDataExportJobParams
-    | SingleUserAllMemosExportJobParams
-    | SingleUserLogbookExportJobParams
-    | SingleDocAllUserAnnotationsExportJobParams
-    | SingleDocSingleUserAnnotationsExportJobParams;
+    | (
+        | ExportSelectedSdocsParams
+        | ExportSelectedSpanAnnotationsParams
+        | ExportSelectedSentenceAnnotationsParams
+        | ExportSelectedBboxAnnotationsParams
+        | ExportSelectedMemosParams
+      )
+    | null;
 };

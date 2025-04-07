@@ -1,7 +1,7 @@
-import LabelIcon from "@mui/icons-material/Label";
 import { Stack, StackProps } from "@mui/material";
 import TagHooks from "../../api/TagHooks.ts";
 import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
+import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
 
 interface TagRendererProps {
   tag: number | DocumentTagRead;
@@ -33,7 +33,7 @@ function TagRendererWithData({
 }: { tag: DocumentTagRead } & Omit<StackProps, "direction" | "alignItems">) {
   return (
     <Stack direction="row" alignItems="center" {...props}>
-      <LabelIcon style={{ color: tag.color }} />
+      {getIconComponent(Icon.TAG, { style: { color: tag.color } })}
       {tag.name}
     </Stack>
   );

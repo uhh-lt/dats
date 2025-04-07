@@ -18,6 +18,9 @@ const useConfirmSuggestions = () =>
   useMutation({
     mutationFn: AnnoscalingService.confirmSuggestions,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: [QueryKey.ANNOSCALING_SUGGEST] }),
+    meta: {
+      successMessage: () => "Successfully confirmed annotation suggestions",
+    },
   });
 
 const AnnoscalingHooks = {

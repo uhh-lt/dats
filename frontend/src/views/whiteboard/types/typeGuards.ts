@@ -1,4 +1,4 @@
-import { Node } from "reactflow";
+import { type Node } from "reactflow";
 import { DATSNodeData } from "./DATSNodeData.ts";
 import { BackgroundColorData } from "./base/BackgroundColorData.ts";
 import { BorderData } from "./base/BorderData.ts";

@@ -156,6 +156,11 @@ def __init_services__(
 
     LLMService()
 
+    # import and init AuthServide
+    from app.core.authorization.oauth_service import OAuthService
+
+    OAuthService()
+
 
 def __create_system_user__() -> None:
     from app.core.data.crud.user import crud_user

@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { DateGroupBy } from "./DateGroupBy";
-import type { TimelineAnalysisResultType } from "./TimelineAnalysisResultType";
+import type { TAAnnotationAggregationType } from "./TAAnnotationAggregationType";
 export type TimelineAnalysisSettings = {
   /**
    * Group by date
@@ -14,7 +14,7 @@ export type TimelineAnalysisSettings = {
    */
   date_metadata_id?: number | null;
   /**
-   * ResultType of the TimelineAnalysis
+   * The type of the annotation aggregation (only for TimelineAnalysisType != DOCUMENT)
    */
-  result_type?: TimelineAnalysisResultType;
+  annotation_aggregation_type?: TAAnnotationAggregationType | null;
 };

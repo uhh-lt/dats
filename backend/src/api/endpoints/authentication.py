@@ -1,12 +1,16 @@
+import json
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
 from api.util import credentials_exception
 from app.core.authorization.authz_user import AuthzUser
+from app.core.authorization.oauth_service import OAuthService
 from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.refresh_token import crud_refresh_token
 from app.core.data.crud.user import crud_user
@@ -22,6 +26,8 @@ from app.core.security import generate_jwt
 
 CONTENT_PREFIX = "/content/projects/"
 AUTHORIZATION = "Authorization"
+
+oauth_service = OAuthService()
 
 router = APIRouter(prefix="/authentication", tags=["authentication"])
 
@@ -149,3 +155,70 @@ async def auth_content(
     index = x_original_uri.find("/", len(CONTENT_PREFIX))
     project = int(x_original_uri[len(CONTENT_PREFIX) : index])
     a.assert_in_project(project)
+
+
+@router.get("/oidc/login")
+async def oidc_login(request: Request, redirect_uri: str) -> Response:
+    if not oauth_service.is_enabled:
+        raise HTTPException(
+            status_code=404, detail="OIDC authentication is not enabled"
+        )
+    return await oauth_service.authentik.authorize_redirect(request, redirect_uri)
+
+
+@router.get("/oidc/callback")
+async def oidc_callback(
+    request: Request, response: Response, db: Session = Depends(get_db_session)
+):
+    if not oauth_service.is_enabled:
+        raise HTTPException(
+            status_code=404, detail="OIDC authentication is not enabled"
+        )
+
+    try:
+        user = await oauth_service.authenticate_oidc(request)
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=str(e))
+
+    (access_token, access_token_expires) = generate_jwt(user)
+    refresh_token = crud_refresh_token.generate(db, user.id)
+
+    response.set_cookie(
+        AUTHORIZATION,
+        access_token,
+        expires=access_token_expires,
+        secure=True,
+        httponly=True,
+        samesite="strict",
+    )
+
+    auth_data = UserAuthorizationHeaderData(
+        access_token=access_token,
+        access_token_expires=access_token_expires,
+        token_type="bearer",
+        refresh_token=refresh_token.token,
+        refresh_token_expires=refresh_token.expires_at,
+    )
+
+    # Properly encode the data as JSON
+    json_str = json.dumps(jsonable_encoder({"token": auth_data.model_dump()}))
+
+    # Return HTML with proper content type that closes the window and sends the token to the parent
+    html_content = f"""
+        <html>
+            <head>
+                <script>
+                    try {{
+                        const data = {json_str};
+                        window.opener.postMessage(data, "*");
+                    }} catch (e) {{
+                        console.error("Failed to process authentication data:", e);
+                    }}
+                </script>
+            </head>
+            <body>
+                <p>Login successful! This window should close automatically...</p>
+            </body>
+        </html>
+    """
+    return HTMLResponse(content=html_content, media_type="text/html")

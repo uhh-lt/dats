@@ -50,7 +50,12 @@ if not STARTUP_DONE:
         logger.error(
             f"Database '{conf.postgres.db}' is not empty. The tests will only run given a database without any tables in it. Drop database? Type 'yes' to clear all data"
         )
-        if sys.stdin.readline().strip() == "yes":
+        if sys.stdin.isatty() and sys.stdin.readline().strip() == "yes":
+            pytest_sessionfinish()
+        elif (
+            not sys.stdin.isatty()
+            and os.environ.get("RESET_DATABASE_FOR_TESTING", "0") == "1"
+        ):
             pytest_sessionfinish()
         else:
             exit(1)
@@ -210,7 +215,7 @@ def api_user(client: TestClient):
 
         def create(self, first_name):
             # Create
-            email = "".join(random.choices(string.ascii_letters, k=10)) + "@aol.com"
+            email = f"{first_name}@dats.com"
             password = "".join(random.choices(string.ascii_letters, k=20))
             last_name = "".join(random.choices(string.ascii_letters, k=10))
             credentials = {
@@ -223,12 +228,11 @@ def api_user(client: TestClient):
             credentials["id"] = response["id"]
 
             # Login
-            grant_type = ""
             scope = ""
             client_id = ""
             client_secret = ""
             login = {
-                "grant_type": grant_type,
+                "grant_type": "password",  # as per the OAuth2.0 spec, this is the only supported grant type
                 "username": credentials["email"],
                 "password": credentials["password"],
                 "scope": scope,
@@ -317,9 +321,9 @@ def api_document(client: TestClient):
             response = client.put(
                 f"/project/{project['id']}/sdoc", headers=user_headers, files=files
             )
-            assert (
-                response.status_code == 200
-            ), f"Failed to upload files. Response: {response}. Files: {files}"
+            assert response.status_code == 200, (
+                f"Failed to upload files. Response: {response}. Files: {files}"
+            )
             response = response.json()
             docs = {}
             for file in response["payloads"]:

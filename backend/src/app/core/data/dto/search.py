@@ -1,10 +1,11 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
 from app.core.data.dto.dto_base import UpdateDTOBase
 from app.core.data.dto.memo import AttachedObjectType
+from app.core.data.dto.source_document import SourceDocumentRead
 
 
 class ElasticSearchDocumentCreate(BaseModel):
@@ -22,7 +23,7 @@ class ElasticSearchDocumentCreate(BaseModel):
 
 
 class ElasticSearchDocumentHit(BaseModel):
-    document_id: int = Field(description="The ID of the Document")
+    id: int = Field(description="The ID of the Document")
     score: Optional[float] = Field(
         description="The score of the Document that was found by a ES Query",
         default=None,
@@ -70,7 +71,7 @@ class ElasticSearchMemoRead(BaseModel):
         description="The ID of the Object the Memo is attached to"
     )
     attached_object_type: Optional[AttachedObjectType] = Field(
-        description=("The type of the Object the Memo is " "attached to")
+        description=("The type of the Object the Memo is attached to")
     )
     updated: Optional[datetime] = Field(
         description="The created date of the Memo", default=datetime.now()
@@ -101,6 +102,36 @@ class PaginatedElasticSearchDocumentHits(BaseModel):
     )
 
 
+class PaginatedSDocHits(BaseModel):
+    hits: List[ElasticSearchDocumentHit] = Field(
+        description=(
+            "The IDs, scores and (optional) highlights of Document search results on "
+            "the requested page."
+        )
+    )
+    sdocs: Dict[int, SourceDocumentRead] = Field(
+        description=(
+            "A dictionary with the additional information about the documents. The key is the "
+            "document ID and the value is a dictionary with the additional information."
+        )
+    )
+    annotators: Dict[int, List[int]] = Field(
+        description=(
+            "A dictionary with the additional information about the documents. The key is the "
+            "document ID and the value is a dictionary with the additional information."
+        )
+    )
+    tags: Dict[int, List[int]] = Field(
+        description=(
+            "A dictionary with the additional information about the documents. The key is the "
+            "document ID and the value is a dictionary with the additional information."
+        )
+    )
+    total_results: int = Field(
+        description="The total number of hits. Used for pagination."
+    )
+
+
 class SimSearchHit(BaseModel):
     sdoc_id: int = Field(
         description="The ID of the SourceDocument similar to the query."
@@ -111,6 +142,12 @@ class SimSearchHit(BaseModel):
 class SimSearchSentenceHit(SimSearchHit):
     sentence_id: int = Field(
         description="The sentence id with respect to the SourceDocument"
+    )
+
+
+class SimSearchDocumentHit(SimSearchHit):
+    compared_sdoc_id: int = Field(
+        description="The ID of the SourceDocument that was compared."
     )
 
 

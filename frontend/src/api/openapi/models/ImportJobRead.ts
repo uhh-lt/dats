@@ -10,15 +10,23 @@ export type ImportJobRead = {
    */
   status?: BackgroundJobStatus;
   /**
+   * Error message (if any)
+   */
+  error?: string | null;
+  /**
    * ID of the ImportJob
    */
   id: string;
   /**
-   * The parameters of the import job that defines what to import!
-   */
-  parameters: ImportJobParameters;
-  /**
    * Created timestamp of the ImportJob
    */
   created: string;
+  /**
+   * Updated timestamp of the ImportJob
+   */
+  updated: string;
+  /**
+   * The parameters of the import job that defines what to import!
+   */
+  parameters: ImportJobParameters;
 };

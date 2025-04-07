@@ -1,15 +1,15 @@
 import SaveIcon from "@mui/icons-material/Save";
-import { Box, Divider, IconButton, Stack, Toolbar, Typography } from "@mui/material";
-import { useCallback, useMemo, useState } from "react";
+import { DialogContent, Divider, IconButton, Stack, Toolbar, Typography } from "@mui/material";
+import { memo, useCallback, useMemo, useState } from "react";
 import { SubmitHandler } from "react-hook-form";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
+import { BBoxAnnotationRead } from "../../../api/openapi/models/BBoxAnnotationRead.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import { MemoRead } from "../../../api/openapi/models/MemoRead.ts";
 import { ProjectRead } from "../../../api/openapi/models/ProjectRead.ts";
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
-import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import { SpanAnnotationRead } from "../../../api/openapi/models/SpanAnnotationRead.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import { dateToLocaleString } from "../../../utils/DateUtils.ts";
 import EditableTypography from "../../EditableTypography.tsx";
@@ -29,8 +29,8 @@ interface MemoDialogFormProps {
     | DocumentTagRead
     | SourceDocumentRead
     | CodeRead
-    | SpanAnnotationReadResolved
-    | BBoxAnnotationReadResolved
+    | SpanAnnotationRead
+    | BBoxAnnotationRead
     | ProjectRead;
   attachedObjectType: AttachedObjectType;
   memo: MemoRead | undefined;
@@ -38,7 +38,7 @@ interface MemoDialogFormProps {
   onDeleteClick: () => void;
 }
 
-export function MemoDialogForm({
+function MemoDialogForm({
   memo,
   attachedObject,
   attachedObjectType,
@@ -54,27 +54,40 @@ export function MemoDialogForm({
     content: memo?.content || "",
     content_json: memo?.content_json || "",
   });
-  const isEditable = !memo || user?.id === memo?.user_id;
+
+  const isEditable = useMemo(() => !memo || user?.id === memo?.user_id, [memo, user?.id]);
+
   const initialContentJson = useMemo(() => memo?.content_json || "", [memo?.content_json]);
 
-  // actions
+  const lastModifiedDate = useMemo(() => {
+    if (!memo?.updated) return "";
+    const fullDate = dateToLocaleString(memo.updated);
+    return fullDate.substring(0, fullDate.indexOf(","));
+  }, [memo?.updated]);
+
   const handleTitleChange = useCallback((title: string) => {
-    setFormData((oldFormData) => {
-      return { ...oldFormData, title };
-    });
+    setFormData((oldFormData) => ({
+      ...oldFormData,
+      title,
+    }));
   }, []);
+
   const handleContentChange = useCallback((content: string, contentJson: string) => {
-    setFormData((oldFormData) => {
-      return { ...oldFormData, content: content, content_json: contentJson };
-    });
+    setFormData((oldFormData) => ({
+      ...oldFormData,
+      content,
+      content_json: contentJson,
+    }));
   }, []);
-  const handleSave = () => {
+
+  const handleSave = useCallback(() => {
     handleCreateOrUpdateMemo(formData);
-  };
+  }, [handleCreateOrUpdateMemo, formData]);
 
   if (!user) return null;
+
   return (
-    <Box className="h100 myFlexContainer">
+    <DialogContent className="h100 myFlexContainer" sx={{ p: 0 }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" p={1}>
         <Typography>
           <AttachedObjectRenderer attachedObject={attachedObject} attachedObjectType={attachedObjectType} link />
@@ -83,7 +96,6 @@ export function MemoDialogForm({
           <UserName userId={memo?.user_id || user.id} />
         </Typography>
       </Stack>
-
       <Divider />
       <Toolbar disableGutters variant="dense" sx={{ justifyContent: "space-between" }}>
         <IconButton onClick={handleSave} color="success">
@@ -105,10 +117,11 @@ export function MemoDialogForm({
       />
       {memo && (
         <Typography variant="subtitle2" color="textSecondary" fontSize={12} p={1}>
-          {"Last modified: " +
-            dateToLocaleString(memo.updated).substring(0, dateToLocaleString(memo.updated).indexOf(","))}
+          {"Last modified: " + lastModifiedDate}
         </Typography>
       )}
-    </Box>
+    </DialogContent>
   );
 }
+
+export default memo(MemoDialogForm);

@@ -1,4 +1,5 @@
 import CodeHooks from "../../../api/CodeHooks.ts";
+import { contrastiveColors } from "../../../utils/colors.ts";
 
 interface MarkProps {
   codeId: number;
@@ -6,16 +7,24 @@ interface MarkProps {
   isEnd: boolean;
   height: string;
   top: string;
+  groups?: number[];
 }
 
-function Mark({ codeId, isStart, isEnd, height, top }: MarkProps) {
+function Mark({ codeId, isStart, isEnd, height, top, groups }: MarkProps) {
   const code = CodeHooks.useGetCode(codeId);
 
   if (code.isSuccess) {
+    let color: string;
+    if (code.data.is_system && code.data.name === "MENTION" && groups && groups.length === 1) {
+      // coreference annotation
+      color = contrastiveColors[groups[0] % contrastiveColors.length];
+    } else {
+      color = code.data.color;
+    }
     return (
       <span
         className={"mark" + (isStart ? " start" : "") + (isEnd ? " end" : "")}
-        style={{ backgroundColor: code.data.color, height: height, top: top }}
+        style={{ backgroundColor: color, height: height, top: top }}
       />
     );
   }

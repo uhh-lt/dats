@@ -2,10 +2,9 @@ import { MRT_Row, MRT_TableOptions } from "material-react-table";
 import { useParams } from "react-router";
 import WhiteboardHooks from "../../api/WhiteboardHooks.ts";
 import ConfirmationAPI from "../../components/ConfirmationDialog/ConfirmationAPI.ts";
-import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import AnalysisDashboard from "../analysis/AnalysisDashboard/AnalysisDashboard.tsx";
 import {
-  AnaylsisDashboardRow,
+  AnalysisDashboardRow,
   HandleCreateAnalysis,
   useAnalysisDashboardTable,
 } from "../analysis/AnalysisDashboard/useAnalysisDashboardTable.tsx";
@@ -20,7 +19,7 @@ function WhiteboardDashboard() {
     isLoading: isLoadingWhiteboards,
     isFetching: isFetchingWhiteboards,
     isError: isLoadingWhiteboardsError,
-  } = WhiteboardHooks.useGetProjectWhiteboards(projectId);
+  } = WhiteboardHooks.useGetProjectWhiteboardsList();
 
   // mutations
   const { mutate: createWhiteboard, isPending: isCreatingWhiteboard } = WhiteboardHooks.useCreateWhiteboard();
@@ -36,43 +35,20 @@ function WhiteboardDashboard() {
     variables: duplicatingVariables,
   } = WhiteboardHooks.useDuplicateWhiteboard();
 
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
-
   // CRUD actions
-  const handleDuplicateClick = (row: MRT_Row<AnaylsisDashboardRow>) => {
-    duplicateWhiteboard(
-      {
-        whiteboardId: row.original.id,
-      },
-      {
-        onSuccess(data) {
-          openSnackbar({
-            text: `Duplicated whiteboard '${data.title}'`,
-            severity: "success",
-          });
-        },
-      },
-    );
+  const handleDuplicateClick = (row: MRT_Row<AnalysisDashboardRow>) => {
+    duplicateWhiteboard({
+      whiteboardId: row.original.id,
+    });
   };
 
-  const handleDeleteClick = (row: MRT_Row<AnaylsisDashboardRow>) => {
+  const handleDeleteClick = (row: MRT_Row<AnalysisDashboardRow>) => {
     ConfirmationAPI.openConfirmationDialog({
       text: `Do you really want to remove the whiteboard ${row.original.id}? This action cannot be undone!`,
       onAccept: () => {
-        deleteWhiteboard(
-          {
-            whiteboardId: row.original.id,
-          },
-          {
-            onSuccess(data) {
-              openSnackbar({
-                text: `Deleted whiteboard '${data.title}'`,
-                severity: "success",
-              });
-            },
-          },
-        );
+        deleteWhiteboard({
+          whiteboardId: row.original.id,
+        });
       },
     });
   };
@@ -88,17 +64,13 @@ function WhiteboardDashboard() {
           },
         },
         {
-          onSuccess(data) {
-            openSnackbar({
-              text: `Created new whiteboard '${data.title}'`,
-              severity: "success",
-            });
+          onSuccess() {
             table.setCreatingRow(null); //exit creating mode
           },
         },
       );
     };
-  const handleUpdateWhiteboard: MRT_TableOptions<AnaylsisDashboardRow>["onEditingRowSave"] = ({
+  const handleUpdateWhiteboard: MRT_TableOptions<AnalysisDashboardRow>["onEditingRowSave"] = ({
     row,
     values,
     table,
@@ -115,11 +87,7 @@ function WhiteboardDashboard() {
         },
       },
       {
-        onSuccess(data) {
-          openSnackbar({
-            text: `Updated whiteboard '${data.title}'`,
-            severity: "success",
-          });
+        onSuccess() {
           table.setEditingRow(null); //exit editing mode
         },
       },

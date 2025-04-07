@@ -76,3 +76,4 @@ class CrawlerJobRead(CrawlerJobBaseDTO):
         description="Path to the ZIP that contains the data of the CrawlerJob",
     )
     created: datetime = Field(description="Created timestamp of the CrawlerJob")
+    updated: datetime = Field(description="Updated timestamp of the CrawlerJob")

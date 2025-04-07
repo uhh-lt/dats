@@ -12,6 +12,7 @@ from app.core.data.dto.sentence_annotation import (
 )
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
+from app.core.data.orm.source_document import SourceDocumentORM
 
 
 class CRUDSentenceAnnotation(
@@ -76,6 +77,29 @@ class CRUDSentenceAnnotation(
                 for create_dto in create_dtos
             ],
         )
+
+    def read_by_project(
+        self,
+        db: Session,
+        *,
+        project_id: int,
+    ) -> List[SentenceAnnotationORM]:
+        query = (
+            db.query(self.model)
+            .join(
+                AnnotationDocumentORM,
+                AnnotationDocumentORM.id == self.model.annotation_document_id,
+            )
+            .join(
+                SourceDocumentORM,
+                SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+            )
+            .where(
+                SourceDocumentORM.project_id == project_id,
+            )
+        )
+
+        return query.all()
 
     def read_by_user_and_sdoc(
         self,

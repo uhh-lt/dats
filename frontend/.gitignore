@@ -1,5 +1,4 @@
-.env.development
-.env.production
+.env
 
 # Logs
 logs
