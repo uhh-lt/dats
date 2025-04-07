@@ -42,8 +42,6 @@ class TopicService(metaclass=SingletonMeta):
         top_n_words: int,
         recompute: bool = False,
     ):
-        # TODO NOAH check auf empty files
-        # Get textdata
         text_data = []
         with self.sqls.db_session() as db:
             project = crud_project.read(db=db, id=project_id)
