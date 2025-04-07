@@ -16,7 +16,6 @@ from app.core.data.dto.ml_job import (
 )
 from app.core.data.orm.source_document_job_status import (
     JobStatus,
-    JobType,
     SourceDocumentJobStatusORM,
 )
 from app.core.db.redis_service import RedisService
@@ -86,14 +85,8 @@ class MLService(metaclass=SingletonMeta):
                         QuotationAttributionParams,
                     ), "QuotationAttributionParams expected"
                     recompute = mlj.parameters.specific_ml_job_parameters.recompute
-                    valid_type = or_(
-                        SourceDocumentJobStatusORM.type
-                        == JobType.QUOTATION_ATTRIBUTION,
-                        SourceDocumentJobStatusORM.type == None,  # noqa: E711
-                    )
                     filter_criterion = (
                         and_(
-                            valid_type,
                             inactive_status,
                             or_(
                                 timestamp_column < start_time,
@@ -101,10 +94,7 @@ class MLService(metaclass=SingletonMeta):
                             ),
                         )
                         if recompute
-                        else and_(
-                            valid_type,
-                            or_(unfinished_status, timestamp_column == None),  # noqa: E711
-                        )  # noqa: E711
+                        else or_(unfinished_status, timestamp_column == None)  # noqa: E711
                     )
 
                     QuoteService().perform_quotation_detection(
@@ -126,14 +116,8 @@ class MLService(metaclass=SingletonMeta):
                         CoreferenceResolutionParams,
                     ):
                         recompute = mlj.parameters.specific_ml_job_parameters.recompute
-                        valid_type = or_(
-                            SourceDocumentJobStatusORM.type
-                            == JobType.COREFERENCE_RESOLUTION,
-                            SourceDocumentJobStatusORM.type == None,  # noqa: E711
-                        )
                         filter_criterion = (
                             and_(
-                                valid_type,
                                 inactive_status,
                                 or_(
                                     timestamp_column < start_time,
@@ -141,10 +125,7 @@ class MLService(metaclass=SingletonMeta):
                                 ),
                             )
                             if recompute
-                            else and_(
-                                valid_type,
-                                or_(unfinished_status, timestamp_column == None),  # noqa: E711
-                            )  # noqa: E711
+                            else or_(unfinished_status, timestamp_column == None)  # noqa: E711
                         )
 
                         CorefService().perform_coreference_resolution(

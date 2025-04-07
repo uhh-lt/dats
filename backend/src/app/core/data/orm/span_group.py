@@ -59,8 +59,12 @@ class SpanGroupORM(ORMBase):
 
 class SpanAnnotationSpanGroupLinkTable(ORMBase):
     span_annotation_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("spanannotation.id", ondelete="CASCADE"), primary_key=True
+        Integer,
+        ForeignKey("spanannotation.id", ondelete="CASCADE"),
+        primary_key=True,
     )
-    span_group_id = mapped_column(
-        Integer, ForeignKey("spangroup.id", ondelete="CASCADE"), primary_key=True
+    span_group_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("spangroup.id", ondelete="CASCADE"),
+        primary_key=True,
     )

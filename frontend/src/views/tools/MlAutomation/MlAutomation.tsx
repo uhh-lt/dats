@@ -49,7 +49,7 @@ function MlAutomation() {
           requestBody: {
             ml_job_type: MLJobType.QUOTATION_ATTRIBUTION,
             project_id: projectId,
-            specific_ml_job_parameters: { recompute: false, ml_job_type: MLJobType.QUOTATION_ATTRIBUTION },
+            specific_ml_job_parameters: { recompute: true, ml_job_type: MLJobType.QUOTATION_ATTRIBUTION },
           },
         });
       },
@@ -101,7 +101,7 @@ function MlAutomation() {
           requestBody: {
             ml_job_type: MLJobType.COREFERENCE_RESOLUTION,
             project_id: projectId,
-            specific_ml_job_parameters: { recompute: false, ml_job_type: MLJobType.COREFERENCE_RESOLUTION },
+            specific_ml_job_parameters: { recompute: true, ml_job_type: MLJobType.COREFERENCE_RESOLUTION },
           },
         });
       },

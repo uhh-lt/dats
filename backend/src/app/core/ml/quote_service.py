@@ -2,18 +2,21 @@ from datetime import datetime
 from typing import Dict, List, NamedTuple, Tuple
 
 from loguru import logger
-from sqlalchemy import ColumnElement
+from sqlalchemy import ColumnElement, and_
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.code import crud_code
+from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.crud.source_document_job_status import crud_sdoc_job_status
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.span_group import crud_span_group
 from app.core.data.crud.user import SYSTEM_USER_ID
+from app.core.data.doc_type import DocType
 from app.core.data.dto.source_document_job_status import SourceDocumentJobStatusCreate
 from app.core.data.dto.span_annotation import SpanAnnotationCreateIntern
 from app.core.data.dto.span_group import SpanGroupCreateIntern
+from app.core.data.meta_type import MetaType
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.source_document_data import SourceDocumentDataORM
 from app.core.data.orm.source_document_job_status import (
@@ -21,6 +24,7 @@ from app.core.data.orm.source_document_job_status import (
     JobType,
     SourceDocumentJobStatusORM,
 )
+from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.db.sql_service import SQLService
 from app.preprocessing.ray_model_service import RayModelService
@@ -68,12 +72,27 @@ class QuoteService(metaclass=SingletonMeta):
                 addr=self._get_code_id(db, "ADDRESSEE", project_id),
                 cue=self._get_code_id(db, "CUE", project_id),
             )
+            language_metadata = (
+                crud_project_meta.read_by_project_and_key_and_metatype_and_doctype(
+                    db,
+                    project_id,
+                    "language",
+                    MetaType.STRING.value,
+                    DocType.text.value,
+                )
+            )
+        if language_metadata is None:
+            raise ValueError("error with project, no language metadata available")
 
         total_processed = 0
         num_processed = -1
         while num_processed != 0:
             num_processed = self._process_batch(
-                filter_criterion, project_id, codes, recompute
+                filter_criterion,
+                project_id,
+                codes,
+                language_metadata.id,
+                recompute,
             )
             total_processed = +num_processed
         return total_processed
@@ -83,20 +102,36 @@ class QuoteService(metaclass=SingletonMeta):
         filter_criterion: ColumnElement,
         project_id: int,
         code: _CodeQuoteId,
+        language_metadata_id: int,
         recompute: bool = False,
     ):
         with self.sqls.db_session() as db:
             query = (
                 db.query(SourceDocumentDataORM)
+                .join(
+                    SourceDocumentMetadataORM,
+                    SourceDocumentMetadataORM.source_document_id
+                    == SourceDocumentDataORM.id,
+                )
                 .outerjoin(
                     SourceDocumentJobStatusORM,
-                    SourceDocumentJobStatusORM.id == SourceDocumentDataORM.id,
+                    and_(
+                        SourceDocumentJobStatusORM.id == SourceDocumentDataORM.id,
+                        SourceDocumentJobStatusORM.type
+                        == JobType.QUOTATION_ATTRIBUTION,
+                    ),
                     full=True,
                 )
                 .filter(filter_criterion)
+                .filter(
+                    SourceDocumentMetadataORM.project_metadata_id
+                    == language_metadata_id,
+                    SourceDocumentMetadataORM.str_value == "de",
+                )
                 .limit(10)
             )
             sdoc_data = query.all()
+        sdoc_data = [doc for doc in sdoc_data if doc is not None]
         num_docs = len(sdoc_data)
 
         if num_docs == 0:

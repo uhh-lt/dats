@@ -18,7 +18,7 @@ RUN --mount=type=cache,target=/root/.cache pip install uv
 COPY requirements.txt /tmp/requirements.txt
 
 # install and cache dependencies via uv (this drastically (!) reduces build time)
-RUN --mount=type=cache,target=/root/.cache uv pip install -r /tmp/requirements.txt --system
+RUN --mount=type=cache,target=/root/.cache uv pip install -r /tmp/requirements.txt --system && uv pip install --system --no-build-isolation flash-attn==2.7.4.post1
 
 # copy source code into the image
 WORKDIR /dats_code_ray
