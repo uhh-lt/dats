@@ -13,6 +13,11 @@ mkdir -p ../docker/rabbitmq_data
 mkdir -p ../docker/redis_data
 mkdir -p ../docker/weaviate_data
 
+# for production monitoring (kuma)
+mkdir -p ../docker/mariadb_data
+mkdir -p ../docker/kuma_data
+chmod 777 ../docker/kuma_data
+
 # for backups
 mkdir -p ../backups/weaviate
 mkdir -p ../backups/elasticsearch
