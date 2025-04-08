@@ -134,6 +134,26 @@ function ConceptList({ timelineAnalysis }: ConceptListProps) {
     }
   };
 
+  const handleDuplicateConcept = (conceptId: string) => {
+    const index = timelineAnalysis.concepts.findIndex((c) => c.id === conceptId);
+    if (index === -1) {
+      console.error(`Concept ${conceptId} not found`);
+    } else {
+      const duplicatedConcept = {
+        ...timelineAnalysis.concepts[index],
+        id: uuidv4(),
+        name: `Duplicated Concept #${timelineAnalysis.concepts.length + 1}`,
+      };
+      timelineAnalysis.concepts.push(duplicatedConcept);
+      updateTimelineAnalysisMutation.mutate({
+        timelineAnalysisId: timelineAnalysis.id,
+        requestBody: {
+          concepts: [...timelineAnalysis.concepts, duplicatedConcept],
+        },
+      });
+    }
+  };
+
   return (
     <>
       <CardContainer className="myFlexContainer h100">
@@ -164,6 +184,7 @@ function ConceptList({ timelineAnalysis }: ConceptListProps) {
                 onEditClick={handleEditConcept}
                 onDeleteClick={handleDeleteConcept}
                 onToggleVisibilityClick={handleToggleVisibilityConcept}
+                onDuplicateClick={handleDuplicateConcept}
               />
             ))}
           </List>
