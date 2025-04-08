@@ -12,5 +12,7 @@
 /qdrant_data/*
 /weaviate_data/*
 /elasticsearch_data/*
+/kuma_data/*
+/mariadb_data/*
 
 .env
