@@ -212,6 +212,9 @@ export const filterReducer = {
   onChangeFilterExpertMode: (state: Draft<FilterState>, action: PayloadAction<{ expertMode: boolean }>) => {
     state.expertMode = action.payload.expertMode;
   },
+  setFilter: (state: Draft<FilterState>, action: PayloadAction<{ filterName: string; filter: MyFilter }>) => {
+    state.filter[action.payload.filterName] = action.payload.filter;
+  },
 };
 
 export type FilterReducer = typeof filterReducer;

@@ -1,7 +1,7 @@
 import { ErrorMessage } from "@hookform/error-message";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { LoadingButton, TabContext, TabList, TabPanel } from "@mui/lab";
-import { Box, Button, DialogActions, DialogContent, Stack, Tab, Typography } from "@mui/material";
+import { Box, Button, CircularProgress, DialogActions, DialogContent, Stack, Tab, Typography } from "@mui/material";
 import { useCallback, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import LLMHooks from "../../../../api/LLMHooks.ts";
@@ -10,8 +10,8 @@ import { LLMPromptTemplates } from "../../../../api/openapi/models/LLMPromptTemp
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 import { CRUDDialogActions } from "../../../dialogSlice.ts";
 import FormTextMultiline from "../../../FormInputs/FormTextMultiline.tsx";
-import SelectSentenceAnnotationsDialog from "../../../SentenceAnnotation/SelectSentenceAnnotationsDialog.tsx";
 import LLMUtterance from "../LLMUtterance.tsx";
+import ExampleSelection from "./ExampleSelection.tsx";
 
 type PromptEditorValues = {
   systemPrompt: string;
@@ -40,10 +40,20 @@ function PromptEditorStep() {
   }, []);
 
   // example selection (for few-shot learning)
-  const { mutate: createPromptTemplatesMutation } = LLMHooks.useCreatePromptTemplates();
+  const [selectedAnnotationIds, setSelectedAnnotationIds] = useState<Record<number, number[]>>({});
+  const { mutate: createPromptTemplatesMutation, isPending } = LLMHooks.useCreatePromptTemplates();
   const handleSelectExamples = useCallback(
-    (annotationIds: number[]) => {
+    (codeId: number, annotationIds: number[]) => {
       if (!method) return;
+      setSelectedAnnotationIds((prev) => {
+        const newSelected = { ...prev };
+        newSelected[codeId] = annotationIds;
+        return newSelected;
+      });
+
+      const newSelected = { ...selectedAnnotationIds };
+      newSelected[codeId] = annotationIds;
+      const selectedFlattened = Object.values(newSelected).flat();
 
       createPromptTemplatesMutation(
         {
@@ -60,7 +70,7 @@ function PromptEditorStep() {
                 sdoc_ids: sdocIds,
               },
             },
-            example_ids: annotationIds,
+            example_ids: selectedFlattened,
           },
         },
         {
@@ -71,7 +81,18 @@ function PromptEditorStep() {
         },
       );
     },
-    [method, projectId, tags, metadata, codes, sdocIds, approach, createPromptTemplatesMutation, dispatch],
+    [
+      method,
+      selectedAnnotationIds,
+      createPromptTemplatesMutation,
+      approach,
+      projectId,
+      tags,
+      metadata,
+      codes,
+      sdocIds,
+      dispatch,
+    ],
   );
 
   // react form handlers
@@ -164,7 +185,27 @@ function PromptEditorStep() {
             </TabList>
           </Box>
           {prompts.map((prompt) => (
-            <TabPanel key={prompt.system_prompt + prompt.user_prompt} value={prompt.language} sx={{ px: 0 }}>
+            <TabPanel
+              key={prompt.system_prompt + prompt.user_prompt}
+              value={prompt.language}
+              sx={{ px: 0, position: "relative" }}
+            >
+              {isPending && (
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <CircularProgress size={64} />
+                </Box>
+              )}
               <PromptEditorStepForm prompt={prompt} handleSavePrompt={handleChangePrompt(prompt.language)} />
             </TabPanel>
           ))}
@@ -172,11 +213,7 @@ function PromptEditorStep() {
       </DialogContent>
       <DialogActions>
         {approach === ApproachType.LLM_FEW_SHOT && (
-          <SelectSentenceAnnotationsDialog
-            title="Select few-shot sentence annotation examples"
-            projectId={projectId}
-            onConfirmSelection={handleSelectExamples}
-          />
+          <ExampleSelection projectId={projectId} codes={codes} onConfirmSelection={handleSelectExamples} />
         )}
         <Box flexGrow={1} />
         <Button onClick={handleBack}>Back</Button>
