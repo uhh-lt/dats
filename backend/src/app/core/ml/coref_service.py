@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Dict, List, Tuple
 
-from sqlalchemy import ColumnElement
+from sqlalchemy import ColumnElement, and_
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.annotation_document import crud_adoc
@@ -85,7 +85,11 @@ class CorefService(metaclass=SingletonMeta):
                 )
                 .outerjoin(
                     SourceDocumentJobStatusORM,
-                    SourceDocumentJobStatusORM.id == SourceDocumentDataORM.id,
+                    and_(
+                        SourceDocumentJobStatusORM.id == SourceDocumentDataORM.id,
+                        SourceDocumentJobStatusORM.type
+                        == JobType.COREFERENCE_RESOLUTION,
+                    ),
                     full=True,
                 )
                 .filter(filter_criterion)
@@ -97,6 +101,7 @@ class CorefService(metaclass=SingletonMeta):
                 .limit(100)
             )
             sdoc_data = query.all()
+        sdoc_data = [doc for doc in sdoc_data if doc is not None]
         num_docs = len(sdoc_data)
 
         if num_docs == 0:
