@@ -1,4 +1,4 @@
-import { Box, TextField, Typography, useTheme } from "@mui/material";
+import { Box, TextField, Typography } from "@mui/material";
 import { useMemo, useState } from "react";
 import {
   BaseEdge,
@@ -33,10 +33,7 @@ const useGetPath = (edge: EdgeProps<CustomEdgeData>): [string, number, number] =
 
 function CustomEdge(props: EdgeProps<CustomEdgeData>) {
   const [edgePath, labelX, labelY] = useGetPath(props);
-
   const reactFlowInstance = useReactFlow();
-  const theme = useTheme();
-
   const [isEditing, setIsEditing] = useState(false);
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -71,6 +68,11 @@ function CustomEdge(props: EdgeProps<CustomEdgeData>) {
     setIsEditing(false);
   };
 
+  // Get font size from fontSize property
+  const getFontSize = (data: CustomEdgeData) => {
+    return data.label.fontSize ? `${data.label.fontSize}px` : "16px";
+  };
+
   return (
     <>
       <BaseEdge path={edgePath} {...props} />
@@ -103,7 +105,7 @@ function CustomEdge(props: EdgeProps<CustomEdgeData>) {
                   onKeyDown={(event) => event.key === "Escape" && handleChangeText(event)}
                   inputProps={{
                     style: {
-                      ...theme.typography[props.data.label.variant],
+                      fontSize: getFontSize(props.data),
                     },
                   }}
                   multiline
@@ -112,7 +114,7 @@ function CustomEdge(props: EdgeProps<CustomEdgeData>) {
               </Box>
             ) : (
               <Typography
-                variant={props.data.label.variant}
+                variant="body1"
                 color={props.data.label.color}
                 style={{
                   ...(props.data.label.italic && { fontStyle: "italic" }),
@@ -120,6 +122,7 @@ function CustomEdge(props: EdgeProps<CustomEdgeData>) {
                   ...(props.data.label.underline && { textDecoration: "underline" }),
                   textAlign: props.data.label.horizontalAlign,
                   width: "100%",
+                  fontSize: getFontSize(props.data),
                 }}
                 whiteSpace="pre-wrap"
               >

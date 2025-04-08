@@ -1,4 +1,4 @@
-import { Box, TextField, Typography, useTheme } from "@mui/material";
+import { Box, TextField, Typography } from "@mui/material";
 import { useState } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
 import { TextData } from "../types/base/TextData.ts";
@@ -6,7 +6,6 @@ import BaseNode from "./BaseNode.tsx";
 
 function TextNode(props: NodeProps<TextData>) {
   const reactFlowInstance = useReactFlow();
-  const theme = useTheme();
 
   const [isEditing, setIsEditing] = useState(false);
 
@@ -39,6 +38,14 @@ function TextNode(props: NodeProps<TextData>) {
     setIsEditing(false);
   };
 
+  // Get font size from fontSize property
+  const getFontSize = () => {
+    if (props.data.fontSize) {
+      return props.data.fontSize;
+    }
+    return "16px"; // Default size
+  };
+
   return (
     <BaseNode allowDrawConnection={false} nodeProps={props} onClick={handleClick} alignment={props.data.verticalAlign}>
       {isEditing ? (
@@ -50,7 +57,7 @@ function TextNode(props: NodeProps<TextData>) {
             onKeyDown={(event) => event.key === "Escape" && handleChangeText(event)}
             inputProps={{
               style: {
-                ...theme.typography[props.data.variant],
+                fontSize: getFontSize(),
               },
             }}
             multiline
@@ -59,7 +66,7 @@ function TextNode(props: NodeProps<TextData>) {
         </Box>
       ) : (
         <Typography
-          variant={props.data.variant}
+          variant="body1"
           color={props.data.color}
           style={{
             ...(props.data.italic && { fontStyle: "italic" }),
@@ -67,6 +74,7 @@ function TextNode(props: NodeProps<TextData>) {
             ...(props.data.underline && { textDecoration: "underline" }),
             textAlign: props.data.horizontalAlign,
             width: "100%",
+            fontSize: getFontSize(),
           }}
           whiteSpace="pre-wrap"
         >
