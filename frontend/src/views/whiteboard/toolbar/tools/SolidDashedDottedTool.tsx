@@ -1,6 +1,4 @@
-import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
-import RemoveIcon from "@mui/icons-material/Remove";
-import { Box, Button, ButtonGroup, Menu, MenuItem, Stack } from "@mui/material";
+import { Box, Button, ButtonGroup, Menu, MenuItem, Stack, Tooltip } from "@mui/material";
 import { useState } from "react";
 
 interface SolidDashedDottedToolProps {
@@ -27,33 +25,47 @@ function SolidDashedDottedTool({ value, onValueChange }: SolidDashedDottedToolPr
   return (
     <>
       <ButtonGroup size="small" className="nodrag" sx={{ mr: 1, bgcolor: "background.paper" }}>
-        <Button variant="contained" onClick={handleClick} sx={{ minWidth: 0, py: 1 }}>
-          <Box
-            sx={{
-              width: 20,
-              height: 2,
-              backgroundColor: "currentColor",
-              borderRadius: 1,
-              ...(value === "dashed" && {
-                backgroundImage: "linear-gradient(to right, currentColor 50%, transparent 50%)",
-                backgroundSize: "4px 100%",
-              }),
-              ...(value === "dotted" && {
-                backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)",
-                backgroundSize: "4px 100%",
-              }),
-            }}
-          />
-        </Button>
+        <Tooltip title="Border style" arrow>
+          <Button variant="text" onClick={handleClick} sx={{ minWidth: 0, py: 1, color: "black" }}>
+            <Box
+              sx={{
+                width: 20,
+                height: 2,
+                backgroundColor: "currentColor",
+                borderRadius: 1,
+                ...(value === "dashed" && {
+                  backgroundImage: "linear-gradient(to right, currentColor 50%, transparent 50%)",
+                  backgroundSize: "4px 100%",
+                }),
+                ...(value === "dotted" && {
+                  backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)",
+                  backgroundSize: "4px 100%",
+                }),
+              }}
+            />
+          </Button>
+        </Tooltip>
       </ButtonGroup>
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={handleClose}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "center",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "center",
+        }}
         sx={{
           "& .MuiPaper-root": {
             padding: 0,
+            paddingY: 0.8,
             margin: 0,
+            marginTop: 2.5,
+            elevation: 1,
+            boxShadow: 1,
           },
           "& .MuiList-root": {
             padding: 0,
@@ -66,21 +78,46 @@ function SolidDashedDottedTool({ value, onValueChange }: SolidDashedDottedToolPr
             selected={value === "solid"}
             sx={{ minWidth: "auto", m: 0, p: 1 }}
           >
-            <RemoveIcon />
+            <Box
+              sx={{
+                width: 20,
+                height: 2,
+                backgroundColor: "currentColor",
+                borderRadius: 1,
+              }}
+            />
           </MenuItem>
           <MenuItem
             onClick={handleStyleClick("dashed")}
             selected={value === "dashed"}
             sx={{ minWidth: "auto", m: 0, p: 1 }}
           >
-            <b>---</b>
+            <Box
+              sx={{
+                width: 20,
+                height: 2,
+                backgroundColor: "currentColor",
+                borderRadius: 1,
+                backgroundImage: "linear-gradient(to right, currentColor 50%, transparent 50%)",
+                backgroundSize: "4px 100%",
+              }}
+            />
           </MenuItem>
           <MenuItem
             onClick={handleStyleClick("dotted")}
             selected={value === "dotted"}
             sx={{ minWidth: "auto", m: 0, p: 1 }}
           >
-            <MoreHorizIcon />
+            <Box
+              sx={{
+                width: 20,
+                height: 2,
+                backgroundColor: "currentColor",
+                borderRadius: 1,
+                backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)",
+                backgroundSize: "4px 100%",
+              }}
+            />
           </MenuItem>
         </Stack>
       </Menu>
