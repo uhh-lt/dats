@@ -114,6 +114,15 @@ class OllamaService(metaclass=SingletonMeta):
             options=gen_kwargs,
             format=response_model.model_json_schema(),
         )
+        max_context_size = int(gen_kwargs.get("num_ctx", "-1"))
+        if (
+            max_context_size != -1
+            and response.prompt_eval_count is not None
+            and response.prompt_eval_count > max_context_size
+        ):
+            raise Exception(
+                f"Your input is too long! Max context size of {max_context_size} exceeded. Cannot process your request."
+            )
         if response.message.content is None:
             raise Exception(f"Ollama response is None: {response}")
 
