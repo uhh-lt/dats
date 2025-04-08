@@ -75,25 +75,19 @@ function PromptEditorStep() {
         },
         {
           onSuccess(data) {
-            dispatch(CRUDDialogActions.llmDialogUpdatePromptEditor({ prompts: data }));
+            // dispatch(CRUDDialogActions.llmDialogUpdatePromptEditor({ prompts: data }));
             setPrompts(data);
           },
         },
       );
     },
-    [
-      method,
-      selectedAnnotationIds,
-      createPromptTemplatesMutation,
-      approach,
-      projectId,
-      tags,
-      metadata,
-      codes,
-      sdocIds,
-      dispatch,
-    ],
+    [method, selectedAnnotationIds, createPromptTemplatesMutation, approach, projectId, tags, metadata, codes, sdocIds],
   );
+  const handleResetExamples = useCallback(() => {
+    setSelectedAnnotationIds({});
+    setPrompts(recommendedPrompts);
+    // dispatch(CRUDDialogActions.llmDialogUpdatePromptEditor({ prompts: recommendedPrompts }));
+  }, [recommendedPrompts]);
 
   // react form handlers
   const handleChangePrompt = useCallback(
@@ -213,7 +207,10 @@ function PromptEditorStep() {
       </DialogContent>
       <DialogActions>
         {approach === ApproachType.LLM_FEW_SHOT && (
-          <ExampleSelection projectId={projectId} codes={codes} onConfirmSelection={handleSelectExamples} />
+          <>
+            <ExampleSelection projectId={projectId} codes={codes} onConfirmSelection={handleSelectExamples} />
+            <Button onClick={handleResetExamples}>Reset examples</Button>
+          </>
         )}
         <Box flexGrow={1} />
         <Button onClick={handleBack}>Back</Button>
