@@ -4,6 +4,7 @@ import parse from "html-react-parser";
 import {
   MRT_ColumnDef,
   MRT_GlobalFilterTextField,
+  MRT_LinearProgressBar,
   MRT_RowVirtualizer,
   MRT_ShowHideColumnsButton,
   MRT_TableContainer,
@@ -349,6 +350,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleDensePaddingButton table={table} />
         <ExportSdocsButton sdocIds={selectedDocumentIds} />
+        <MRT_LinearProgressBar isTopToolbar={true} table={table} />
       </DATSToolbar>
       <CardContainer sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
         <MRT_TableContainer
