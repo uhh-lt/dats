@@ -4,23 +4,11 @@ import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
 import FormatBoldIcon from "@mui/icons-material/FormatBold";
 import FormatItalicIcon from "@mui/icons-material/FormatItalic";
 import FormatUnderlinedIcon from "@mui/icons-material/FormatUnderlined";
-import TextFormatIcon from "@mui/icons-material/TextFormat";
 import VerticalAlignBottomIcon from "@mui/icons-material/VerticalAlignBottom";
 import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
 import VerticalAlignTopIcon from "@mui/icons-material/VerticalAlignTop";
 
-import {
-  Button,
-  ButtonGroup,
-  Divider,
-  Menu,
-  MenuItem,
-  Paper,
-  Stack,
-  Typography,
-  TypographyVariant,
-} from "@mui/material";
-import { Variant } from "@mui/material/styles/createTypography";
+import { Box, Button, ButtonGroup, Divider, Menu, MenuItem, Paper, Stack, Tooltip, Typography } from "@mui/material";
 import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 import { Node, useReactFlow } from "reactflow";
 import { BackgroundColorData } from "../types/base/BackgroundColorData.ts";
@@ -85,13 +73,13 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
     [nodes, reactFlowInstance],
   );
 
-  const handleFontSizeChange = (variant: TypographyVariant) => {
+  const handleFontSizeChange = (fontSize: number) => {
     updateNodes((oldNode) => {
       return {
         ...oldNode,
         data: {
           ...oldNode.data,
-          variant: variant,
+          fontSize: fontSize,
         },
       };
     });
@@ -280,7 +268,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
               <>
                 <TypographyVariantTool
                   key={`variant-${nodes[0].id}`}
-                  variant={nodes[0].data.variant as Variant}
+                  variant={nodes[0].data.fontSize}
                   onVariantChange={handleFontSizeChange}
                 />
                 <ColorTool
@@ -289,9 +277,18 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
                   color={nodes[0].data.color}
                   onColorChange={handleColorChange}
                 />
-                <Button variant="contained" size="small" onClick={handleTextStyleClick} sx={{ minWidth: 0, mr: 1 }}>
-                  <TextFormatIcon />
-                </Button>
+                <Tooltip title="Text style" arrow>
+                  <Box>
+                    <Button
+                      variant="text"
+                      size="small"
+                      onClick={handleTextStyleClick}
+                      sx={{ minWidth: 0, mr: 1, color: "black" }}
+                    >
+                      <FormatBoldIcon />
+                    </Button>
+                  </Box>
+                </Tooltip>
                 <Menu
                   anchorEl={textStyleAnchor}
                   open={Boolean(textStyleAnchor)}
@@ -308,6 +305,9 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
                     "& .MuiPaper-root": {
                       padding: 0,
                       margin: 0,
+                      marginTop: 1.5,
+                      elevation: 1,
+                      boxShadow: 1,
                     },
                     "& .MuiList-root": {
                       padding: 0,
@@ -349,9 +349,13 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
                 </Menu>
                 <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
                 <ButtonGroup size="small" className="nodrag" sx={{ mr: 1, bgcolor: "background.paper" }}>
-                  <Button variant="contained" onClick={handleAlignClick} sx={{ minWidth: 0 }}>
-                    {getAlignIcon()}
-                  </Button>
+                  <Tooltip title="Text alignment" arrow>
+                    <Box>
+                      <Button variant="text" onClick={handleAlignClick} sx={{ minWidth: 0, color: "black" }}>
+                        {getAlignIcon()}
+                      </Button>
+                    </Box>
+                  </Tooltip>
                 </ButtonGroup>
                 <Menu
                   anchorEl={alignAnchor}
@@ -369,6 +373,9 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
                     "& .MuiPaper-root": {
                       padding: 0,
                       margin: 0,
+                      marginTop: 1.5,
+                      elevation: 1,
+                      boxShadow: 1,
                     },
                     "& .MuiList-root": {
                       padding: 0,
@@ -409,9 +416,17 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
                   </Stack>
                 </Menu>
                 <ButtonGroup size="small" className="nodrag" sx={{ mr: 1, bgcolor: "background.paper" }}>
-                  <Button variant="contained" onClick={handleVerticalAlignMenuClick} sx={{ minWidth: 0 }}>
-                    {getVerticalAlignIcon()}
-                  </Button>
+                  <Tooltip title="Vertical alignment" arrow>
+                    <Box>
+                      <Button
+                        variant="text"
+                        onClick={handleVerticalAlignMenuClick}
+                        sx={{ minWidth: 0, color: "black" }}
+                      >
+                        {getVerticalAlignIcon()}
+                      </Button>
+                    </Box>
+                  </Tooltip>
                 </ButtonGroup>
                 <Menu
                   anchorEl={verticalAlignAnchor}
@@ -429,6 +444,9 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
                     "& .MuiPaper-root": {
                       padding: 0,
                       margin: 0,
+                      marginTop: 1.5,
+                      elevation: 1,
+                      boxShadow: 1,
                     },
                     "& .MuiList-root": {
                       padding: 0,

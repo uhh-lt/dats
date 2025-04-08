@@ -1,4 +1,4 @@
-import { OutlinedInput } from "@mui/material";
+import { OutlinedInput, Tooltip } from "@mui/material";
 
 interface ColorToolProps {
   caption: string | undefined;
@@ -21,19 +21,21 @@ function ColorTool({ caption, color, onColorChange }: ColorToolProps) {
   return (
     <>
       {caption}
-      <OutlinedInput
-        sx={{ bgcolor: "background.paper", p: 0, ml: caption ? 0.5 : undefined, mr: 1 }}
-        type="color"
-        onChange={handleColorChange}
-        defaultValue={color}
-        inputProps={{
-          style: {
-            padding: "1.5px 3px",
-            height: "28px",
-            width: "28px",
-          },
-        }}
-      />
+      <Tooltip title="Color picker" arrow>
+        <OutlinedInput
+          sx={{ bgcolor: "background.paper", p: 0, ml: caption ? 0.5 : undefined, mr: 1 }}
+          type="color"
+          onChange={handleColorChange}
+          defaultValue={color}
+          inputProps={{
+            style: {
+              padding: "1.5px 3px",
+              height: "28px",
+              width: "28px",
+            },
+          }}
+        />
+      </Tooltip>
     </>
   );
 }

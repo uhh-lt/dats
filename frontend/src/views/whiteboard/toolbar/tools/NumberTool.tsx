@@ -1,4 +1,4 @@
-import { OutlinedInput } from "@mui/material";
+import { OutlinedInput, Tooltip } from "@mui/material";
 
 interface NumberToolProps {
   value: number | undefined;
@@ -19,21 +19,23 @@ function NumberTool({ value, onValueChange, min, max }: NumberToolProps) {
   };
 
   return (
-    <OutlinedInput
-      sx={{ bgcolor: "background.paper", p: 0, mr: 1 }}
-      type="number"
-      onChange={handleStrokeWidthChange}
-      defaultValue={value}
-      inputProps={{
-        style: {
-          padding: "1.5px 3px",
-          height: "28px",
-          width: "34px",
-        },
-        min: min,
-        max: max,
-      }}
-    />
+    <Tooltip title="Width" arrow>
+      <OutlinedInput
+        sx={{ bgcolor: "background.paper", p: 0, mr: 1 }}
+        type="number"
+        onChange={handleStrokeWidthChange}
+        defaultValue={value}
+        inputProps={{
+          style: {
+            padding: "1.5px 3px",
+            height: "28px",
+            width: "34px",
+          },
+          min: min,
+          max: max,
+        }}
+      />
+    </Tooltip>
   );
 }
 

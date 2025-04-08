@@ -7,18 +7,7 @@ import StraightIcon from "@mui/icons-material/Straight";
 import TurnRightIcon from "@mui/icons-material/TurnRight";
 import UTurnRightIcon from "@mui/icons-material/UTurnRight";
 
-import {
-  Button,
-  ButtonGroup,
-  Divider,
-  MenuItem,
-  Paper,
-  Select,
-  SelectChangeEvent,
-  Stack,
-  TypographyVariant,
-} from "@mui/material";
-import { Variant } from "@mui/material/styles/createTypography";
+import { Button, ButtonGroup, Divider, MenuItem, Paper, Select, SelectChangeEvent, Stack } from "@mui/material";
 import React, { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 import { Edge, EdgeMarker, MarkerType, useReactFlow } from "reactflow";
 import { WhiteboardEdgeData_Input } from "../../../api/openapi/models/WhiteboardEdgeData_Input.ts";
@@ -256,20 +245,22 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
     });
   };
 
-  const handleFontSizeChange = (variant: TypographyVariant) => {
+  const handleFontSizeChange = (fontSize: number) => {
     updateEdges((oldEdge) => {
-      return {
-        ...oldEdge,
-        ...(oldEdge.data && {
+      if (edges.some((edge) => edge.id === oldEdge.id) && oldEdge.data) {
+        return {
+          ...oldEdge,
           data: {
             ...oldEdge.data,
+            type: oldEdge.data.type || "bezier",
             label: {
               ...oldEdge.data.label,
-              variant: variant,
+              fontSize,
             },
           },
-        }),
-      };
+        };
+      }
+      return oldEdge;
     });
   };
 
@@ -399,7 +390,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
                 <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
                 <TypographyVariantTool
                   key={`variant-${edges[0].id}`}
-                  variant={edges[0].data!.label.variant as Variant}
+                  variant={edges[0].data!.label.fontSize}
                   onVariantChange={handleFontSizeChange}
                 />
                 <ColorTool
