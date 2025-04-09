@@ -256,6 +256,13 @@ function WordFrequencyTable() {
           children: "Error loading data",
         }
       : undefined,
+    muiTopToolbarProps: {
+      sx: {
+        px: 2,
+        py: 0,
+        minHeight: 48,
+      },
+    },
     // toolbar
     positionToolbarAlertBanner: "head-overlay",
     renderTopToolbarCustomActions: renderTopLeftToolbarContent,
