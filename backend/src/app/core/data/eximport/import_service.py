@@ -29,6 +29,9 @@ from app.core.data.eximport.span_annotations.import_span_annotations import (
 )
 from app.core.data.eximport.tags.import_tags import import_tags_to_proj
 from app.core.data.eximport.user.import_users import import_users_to_proj
+from app.core.data.eximport.whiteboards.import_whiteboards import (
+    import_whiteboards_to_proj,
+)
 from app.core.data.repo.repo_service import (
     RepoService,
 )
@@ -77,6 +80,7 @@ class ImportService(metaclass=SingletonMeta):
             ImportJobType.SENTENCE_ANNOTATIONS: cls._import_sent_annotations_to_proj,
             ImportJobType.PROJECT_METADATA: cls._import_project_metadata_to_proj,
             ImportJobType.USERS: cls._import_users_to_proj,
+            ImportJobType.WHITEBOARDS: cls._import_whiteboards_to_proj,
         }
         return super(ImportService, cls).__new__(cls)
 
@@ -223,6 +227,16 @@ class ImportService(metaclass=SingletonMeta):
         import_span_annotations_to_proj(
             db=db, df=df, project_id=imj_parameters.project_id
         )
+
+    def _import_whiteboards_to_proj(
+        self,
+        db: Session,
+        imj_parameters: ImportJobParameters,
+    ) -> None:
+        """Import whiteboards to a project"""
+        path_to_file = self.repo.get_dst_path_for_temp_file(imj_parameters.file_name)
+        df = pd.read_csv(path_to_file)
+        import_whiteboards_to_proj(db=db, df=df, project_id=imj_parameters.project_id)
 
     def _import_users_to_proj(
         self,
