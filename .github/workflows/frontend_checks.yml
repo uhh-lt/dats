@@ -75,10 +75,10 @@ jobs:
             mkdir -p $HOME/ray_cache
             chmod 777 $HOME/ray_cache
           fi
-          source docker/.env
       - name: Build & Start Docker Containers
         working-directory: docker
         run: |
+          source .env
           if [ "${{ env.RAY_HAS_CHANGED }}" = "true" ]; then
             docker compose -f compose.ray.yml build
             docker compose -f compose.ray.yml up --wait
