@@ -16,6 +16,7 @@ class ImportJobType(str, Enum):
     SENTENCE_ANNOTATIONS = "SENTENCE_ANNOTATIONS"
     USERS = "USERS"
     PROJECT_METADATA = "PROJECT_METADATA"
+    WHITEBOARDS = "WHITEBOARDS"
 
 
 class ImportJobParameters(BaseModel):
