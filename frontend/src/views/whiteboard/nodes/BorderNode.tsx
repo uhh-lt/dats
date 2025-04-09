@@ -1,4 +1,4 @@
-import { Box, TextField, Typography, useTheme } from "@mui/material";
+import { Box, TextField, Typography } from "@mui/material";
 import { useState } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
 import { BorderNodeData } from "../types/customnodes/BorderNodeData.ts";
@@ -6,7 +6,6 @@ import BaseNode from "./BaseNode.tsx";
 
 function BorderNode(props: NodeProps<BorderNodeData>) {
   const reactFlowInstance = useReactFlow();
-  const theme = useTheme();
 
   const [isEditing, setIsEditing] = useState(false);
 
@@ -40,6 +39,14 @@ function BorderNode(props: NodeProps<BorderNodeData>) {
     setIsEditing(false);
   };
 
+  // Get font size from fontSize property
+  const getFontSize = () => {
+    if (props.data.fontSize) {
+      return props.data.fontSize;
+    }
+    return "16px"; // Default size
+  };
+
   return (
     <BaseNode
       allowDrawConnection={false}
@@ -63,7 +70,9 @@ function BorderNode(props: NodeProps<BorderNodeData>) {
             onKeyDown={(event) => event.key === "Escape" && handleChangeText(event)}
             inputProps={{
               style: {
-                ...theme.typography[props.data.variant],
+                fontSize: getFontSize(),
+                fontFamily: props.data.fontFamily ?? "Arial",
+                textDecoration: props.data.strikethrough ? "line-through" : "none",
               },
             }}
             multiline
@@ -72,14 +81,19 @@ function BorderNode(props: NodeProps<BorderNodeData>) {
         </Box>
       ) : (
         <Typography
-          variant={props.data.variant}
+          variant="body1"
           color={props.data.color}
           style={{
+            textDecoration:
+              [props.data.underline ? "underline" : "", props.data.strikethrough ? "line-through" : ""]
+                .filter(Boolean)
+                .join(" ") || "none",
             ...(props.data.italic && { fontStyle: "italic" }),
             ...(props.data.bold && { fontWeight: "bold" }),
-            ...(props.data.underline && { textDecoration: "underline" }),
             textAlign: props.data.horizontalAlign,
             width: "100%",
+            fontSize: getFontSize(),
+            fontFamily: props.data.fontFamily ?? "Arial",
           }}
           whiteSpace="pre-wrap"
         >

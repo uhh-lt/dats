@@ -1,10 +1,11 @@
-import { Box, Button, ButtonProps, Dialog, Stack } from "@mui/material";
+import { Box, Button, ButtonProps, Dialog, Stack, Tooltip } from "@mui/material";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useCallback, useState } from "react";
 import { XYPosition } from "reactflow";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import CodeTable from "../../../components/Code/CodeTable.tsx";
 import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
+import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
 import { PendingAddNodeAction } from "../types/PendingAddNodeAction.ts";
@@ -59,9 +60,11 @@ function AddCodeNodeDialog({ projectId, buttonProps, onClick }: AddCodeNodeDialo
 
   return (
     <>
-      <Button onClick={onOpenDialogClick} {...buttonProps}>
-        Add codes
-      </Button>
+      <Tooltip title="Add code" placement="right" arrow>
+        <Button onClick={onOpenDialogClick} {...buttonProps}>
+          {getIconComponent(Icon.CODE)}
+        </Button>
+      </Tooltip>
       <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         <DATSDialogHeader
           title="Select codes to add to Whiteboard"

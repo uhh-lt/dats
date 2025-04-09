@@ -4,11 +4,26 @@ import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
 import FormatBoldIcon from "@mui/icons-material/FormatBold";
 import FormatItalicIcon from "@mui/icons-material/FormatItalic";
 import FormatUnderlinedIcon from "@mui/icons-material/FormatUnderlined";
+import StrikethroughSIcon from "@mui/icons-material/StrikethroughS";
 import VerticalAlignBottomIcon from "@mui/icons-material/VerticalAlignBottom";
 import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
 import VerticalAlignTopIcon from "@mui/icons-material/VerticalAlignTop";
 
-import { Button, ButtonGroup, Divider, Paper, Stack, Typography, TypographyVariant } from "@mui/material";
+import {
+  Box,
+  Button,
+  ButtonGroup,
+  Divider,
+  FormControl,
+  Menu,
+  MenuItem,
+  Paper,
+  Select,
+  SelectChangeEvent,
+  Stack,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 import { Node, useReactFlow } from "reactflow";
 import { BackgroundColorData } from "../types/base/BackgroundColorData.ts";
@@ -26,9 +41,15 @@ export interface NodeEditMenuHandle {
   close: () => void;
 }
 
+// Define predefined font families
+const FONT_FAMILIES = ["Arial", "Times New Roman", "Courier New", "Verdana", "Georgia"];
+
 const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
   const reactFlowInstance = useReactFlow<BackgroundColorData | TextData | BorderData>();
   const [nodes, setNodes] = useState<Node<BackgroundColorData | TextData | BorderData>[]>([]);
+  const [textStyleAnchor, setTextStyleAnchor] = useState<null | HTMLElement>(null);
+  const [alignAnchor, setAlignAnchor] = useState<null | HTMLElement>(null);
+  const [isFontFamilyMenuOpen, setIsFontFamilyMenuOpen] = useState(false);
 
   // exposed methods (via ref)
   useImperativeHandle(ref, () => ({
@@ -70,13 +91,13 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
     [nodes, reactFlowInstance],
   );
 
-  const handleFontSizeChange = (variant: TypographyVariant) => {
+  const handleFontSizeChange = (fontSize: number) => {
     updateNodes((oldNode) => {
       return {
         ...oldNode,
         data: {
           ...oldNode.data,
-          variant: variant,
+          fontSize: fontSize,
         },
       };
     });
@@ -118,7 +139,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
     });
   };
 
-  const handleStyleClick = (style: "bold" | "italic" | "underline") => () => {
+  const handleStyleClick = (style: "bold" | "italic" | "underline" | "strikethrough") => () => {
     updateNodes((oldNode) => {
       if (hasTextData(oldNode)) {
         return {
@@ -128,6 +149,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
             ...(style === "bold" && { bold: !oldNode.data.bold }),
             ...(style === "italic" && { italic: !oldNode.data.italic }),
             ...(style === "underline" && { underline: !oldNode.data.underline }),
+            ...(style === "strikethrough" && { strikethrough: !oldNode.data.strikethrough }),
           },
         };
       } else {
@@ -196,20 +218,115 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
     });
   };
 
+  const handleTextStyleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setTextStyleAnchor(event.currentTarget);
+  };
+
+  const handleTextStyleClose = () => {
+    setTextStyleAnchor(null);
+  };
+
+  const handleAlignClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAlignAnchor(event.currentTarget);
+  };
+
+  const handleAlignClose = () => {
+    setAlignAnchor(null);
+  };
+
+  const getAlignIcon = () => {
+    if (!hasTextData(nodes[0])) return <FormatAlignLeftIcon />;
+
+    const textData = nodes[0].data as TextData;
+    switch (textData.horizontalAlign) {
+      case "left":
+        return <FormatAlignLeftIcon />;
+      case "center":
+        return <FormatAlignCenterIcon />;
+      case "right":
+        return <FormatAlignRightIcon />;
+      default:
+        return <FormatAlignLeftIcon />;
+    }
+  };
+
   const showTextTools = isTextDataArray(nodes);
   const showBackgroundColorTools = isBackgroundColorDataArray(nodes);
   const showBorderTools = isBorderDataArray(nodes);
 
+  // Get current font family, default to Arial if not set or inconsistent
+  const getCurrentFontFamily = () => {
+    if (!showTextTools || !nodes[0]?.data?.fontFamily) return "Arial"; // Check for fontFamily existence
+    const firstFontFamily = nodes[0].data.fontFamily;
+    // Check if all selected nodes have the same font family
+    const allSame = nodes.every((node) => node.data.fontFamily === firstFontFamily);
+    return allSame ? firstFontFamily : ""; // Return empty string if inconsistent
+  };
+
+  const currentFontFamily = getCurrentFontFamily();
+
+  // New handler for font family change
+  const handleFontFamilyChange = (event: SelectChangeEvent) => {
+    const fontFamily = event.target.value as string;
+    updateNodes((oldNode) => {
+      return {
+        ...oldNode,
+        data: {
+          ...oldNode.data,
+          fontFamily: fontFamily, // Assumes TextData has fontFamily
+        },
+      };
+    });
+  };
+
   return (
     <>
       {nodes.length > 0 && (
-        <Paper sx={{ p: 1, mb: 1, width: "fit-content" }}>
+        <Paper sx={{ py: 0.8, px: 0.5, mb: 1, width: "fit-content" }}>
           <Stack direction="row" alignItems="center">
             {showTextTools && (
               <>
+                {/* Font Family Selector */}
+                <Tooltip title="Font Family" arrow disableHoverListener={isFontFamilyMenuOpen}>
+                  <FormControl size="small" sx={{ mr: 1, minWidth: 120 }}>
+                    <Select
+                      value={currentFontFamily}
+                      onChange={handleFontFamilyChange}
+                      displayEmpty
+                      inputProps={{ "aria-label": "Font Family" }}
+                      sx={{
+                        fontSize: "0.8rem",
+                        "& .MuiOutlinedInput-notchedOutline": { border: "none" },
+                      }}
+                      MenuProps={{
+                        sx: {
+                          "& .MuiPaper-root": {
+                            boxShadow: 1,
+                            marginTop: "8px",
+                          },
+                        },
+                      }}
+                      onOpen={() => setIsFontFamilyMenuOpen(true)}
+                      onClose={() => setIsFontFamilyMenuOpen(false)}
+                    >
+                      {currentFontFamily === "" && (
+                        <MenuItem value="" disabled>
+                          <em>Multiple Fonts</em>
+                        </MenuItem>
+                      )}
+                      {FONT_FAMILIES.map((font) => (
+                        <MenuItem key={font} value={font} sx={{ fontFamily: font, fontSize: "0.9rem" }}>
+                          {font}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Tooltip>
+                <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
+
                 <TypographyVariantTool
                   key={`variant-${nodes[0].id}`}
-                  variant={nodes[0].data.variant}
+                  variant={nodes[0].data.fontSize}
                   onVariantChange={handleFontSizeChange}
                 />
                 <ColorTool
@@ -218,64 +335,174 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
                   color={nodes[0].data.color}
                   onColorChange={handleColorChange}
                 />
-                <ButtonGroup size="small" className="nodrag" sx={{ mr: 1, bgcolor: "background.paper" }}>
-                  <Button variant={nodes[0].data.bold ? "contained" : "outlined"} onClick={handleStyleClick("bold")}>
-                    <FormatBoldIcon />
-                  </Button>
-                  <Button
-                    variant={nodes[0].data.italic ? "contained" : "outlined"}
-                    onClick={handleStyleClick("italic")}
-                  >
-                    <FormatItalicIcon />
-                  </Button>
-                  <Button
-                    variant={nodes[0].data.underline ? "contained" : "outlined"}
-                    onClick={handleStyleClick("underline")}
-                  >
-                    <FormatUnderlinedIcon />
-                  </Button>
-                </ButtonGroup>
                 <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
-                <ButtonGroup size="small" className="nodrag" sx={{ mr: 1, bgcolor: "background.paper" }}>
-                  <Button
-                    variant={nodes[0].data.horizontalAlign === "left" ? "contained" : "outlined"}
-                    onClick={handleHorizontalAlignClick("left")}
-                  >
-                    <FormatAlignLeftIcon />
-                  </Button>
-                  <Button
-                    variant={nodes[0].data.horizontalAlign === "center" ? "contained" : "outlined"}
-                    onClick={handleHorizontalAlignClick("center")}
-                  >
-                    <FormatAlignCenterIcon />
-                  </Button>
-                  <Button
-                    variant={nodes[0].data.horizontalAlign === "right" ? "contained" : "outlined"}
-                    onClick={handleHorizontalAlignClick("right")}
-                  >
-                    <FormatAlignRightIcon />
-                  </Button>
+                <Tooltip title="Text style" arrow disableHoverListener={Boolean(textStyleAnchor)}>
+                  <Box>
+                    <Button
+                      variant="text"
+                      size="small"
+                      onClick={handleTextStyleClick}
+                      sx={{ minWidth: 0, color: "black" }}
+                    >
+                      <FormatBoldIcon />
+                    </Button>
+                  </Box>
+                </Tooltip>
+                <Menu
+                  anchorEl={textStyleAnchor}
+                  open={Boolean(textStyleAnchor)}
+                  onClose={handleTextStyleClose}
+                  anchorOrigin={{
+                    vertical: "bottom",
+                    horizontal: "center",
+                  }}
+                  transformOrigin={{
+                    vertical: "top",
+                    horizontal: "center",
+                  }}
+                  sx={{
+                    "& .MuiPaper-root": { boxShadow: 1, mt: 1.8 },
+                    "& .MuiList-root": { p: 0 },
+                  }}
+                >
+                  <Stack direction="row">
+                    <MenuItem
+                      onClick={() => {
+                        handleStyleClick("bold")();
+                        handleTextStyleClose();
+                      }}
+                      selected={showTextTools && (nodes[0]?.data as TextData)?.bold}
+                      sx={{ minWidth: "auto", m: 0, p: 1 }}
+                    >
+                      <FormatBoldIcon />
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        handleStyleClick("italic")();
+                        handleTextStyleClose();
+                      }}
+                      selected={showTextTools && (nodes[0]?.data as TextData)?.italic}
+                      sx={{ minWidth: "auto", m: 0, p: 1 }}
+                    >
+                      <FormatItalicIcon />
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        handleStyleClick("underline")();
+                        handleTextStyleClose();
+                      }}
+                      selected={showTextTools && (nodes[0]?.data as TextData)?.underline}
+                      sx={{ minWidth: "auto", m: 0, p: 1 }}
+                    >
+                      <FormatUnderlinedIcon />
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        handleStyleClick("strikethrough")();
+                        handleTextStyleClose();
+                      }}
+                      selected={showTextTools && (nodes[0]?.data as TextData)?.strikethrough}
+                      sx={{ minWidth: "auto", m: 0, p: 1 }}
+                    >
+                      <StrikethroughSIcon />
+                    </MenuItem>
+                  </Stack>
+                </Menu>
+                <ButtonGroup size="small" className="nodrag" sx={{ bgcolor: "background.paper" }}>
+                  <Tooltip title="Text alignment" arrow disableHoverListener={Boolean(alignAnchor)}>
+                    <Box>
+                      <Button variant="text" onClick={handleAlignClick} sx={{ minWidth: 0, color: "black" }}>
+                        {showTextTools ? getAlignIcon() : <FormatAlignLeftIcon />}
+                      </Button>
+                    </Box>
+                  </Tooltip>
                 </ButtonGroup>
-                <ButtonGroup size="small" className="nodrag" sx={{ mr: 1, bgcolor: "background.paper" }}>
-                  <Button
-                    variant={nodes[0].data.verticalAlign === "top" ? "contained" : "outlined"}
-                    onClick={handleVerticalAlignClick("top")}
-                  >
-                    <VerticalAlignTopIcon />
-                  </Button>
-                  <Button
-                    variant={nodes[0].data.verticalAlign === "center" ? "contained" : "outlined"}
-                    onClick={handleVerticalAlignClick("center")}
-                  >
-                    <VerticalAlignCenterIcon />
-                  </Button>
-                  <Button
-                    variant={nodes[0].data.verticalAlign === "bottom" ? "contained" : "outlined"}
-                    onClick={handleVerticalAlignClick("bottom")}
-                  >
-                    <VerticalAlignBottomIcon />
-                  </Button>
-                </ButtonGroup>
+                <Menu
+                  anchorEl={alignAnchor}
+                  open={Boolean(alignAnchor)}
+                  onClose={handleAlignClose}
+                  anchorOrigin={{
+                    vertical: "bottom",
+                    horizontal: "center",
+                  }}
+                  transformOrigin={{
+                    vertical: "top",
+                    horizontal: "center",
+                  }}
+                  sx={{
+                    "& .MuiPaper-root": {
+                      padding: 0,
+                      margin: 0,
+                      marginTop: 1.5,
+                      elevation: 1,
+                      boxShadow: 1,
+                    },
+                    "& .MuiList-root": {
+                      padding: 0,
+                    },
+                  }}
+                >
+                  <Stack direction="column" spacing={1} sx={{ p: 0.5 }}>
+                    <Stack direction="row" spacing={1}>
+                      <MenuItem
+                        onClick={() => {
+                          handleHorizontalAlignClick("left")();
+                          handleAlignClose();
+                        }}
+                        sx={{ minWidth: "auto", m: 0, p: 1 }}
+                      >
+                        <FormatAlignLeftIcon />
+                      </MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          handleHorizontalAlignClick("center")();
+                          handleAlignClose();
+                        }}
+                        sx={{ minWidth: "auto", m: 0, p: 1 }}
+                      >
+                        <FormatAlignCenterIcon />
+                      </MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          handleHorizontalAlignClick("right")();
+                          handleAlignClose();
+                        }}
+                        sx={{ minWidth: "auto", m: 0, p: 1 }}
+                      >
+                        <FormatAlignRightIcon />
+                      </MenuItem>
+                    </Stack>
+                    <Stack direction="row" spacing={1}>
+                      <MenuItem
+                        onClick={() => {
+                          handleVerticalAlignClick("top")();
+                          handleAlignClose();
+                        }}
+                        sx={{ minWidth: "auto", m: 0, p: 1 }}
+                      >
+                        <VerticalAlignTopIcon />
+                      </MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          handleVerticalAlignClick("center")();
+                          handleAlignClose();
+                        }}
+                        sx={{ minWidth: "auto", m: 0, p: 1 }}
+                      >
+                        <VerticalAlignCenterIcon />
+                      </MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          handleVerticalAlignClick("bottom")();
+                          handleAlignClose();
+                        }}
+                        sx={{ minWidth: "auto", m: 0, p: 1 }}
+                      >
+                        <VerticalAlignBottomIcon />
+                      </MenuItem>
+                    </Stack>
+                  </Stack>
+                </Menu>
               </>
             )}
             {showBackgroundColorTools && (
