@@ -1,14 +1,13 @@
+import CloudIcon from "@mui/icons-material/Cloud";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import {
   Box,
   Checkbox,
-  Divider,
   FormControl,
   FormControlLabel,
   IconButton,
   MenuItem,
   Select,
-  Toolbar,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -16,14 +15,14 @@ import { scaleLog } from "@visx/scale";
 import { Text } from "@visx/text";
 import { Wordcloud } from "@visx/wordcloud";
 import { toPng } from "html-to-image";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { WordFrequencyStat } from "../../../api/openapi/models/WordFrequencyStat.ts";
+import DATSToolbar from "../../../components/MUI/DATSToolbar.tsx";
 
 interface WordCloudProps {
   width: number;
   height: number;
   words: WordFrequencyStat[];
-  showControls?: boolean;
 }
 
 const colors = ["#143059", "#2F6B9A", "#82a6c2"];
@@ -38,19 +37,22 @@ const fixedValueGenerator = () => 0.5;
 
 type SpiralType = "archimedean" | "rectangular";
 
-export default function WordCloud({ width, height, words, showControls = true }: WordCloudProps) {
+export default function WordCloud({ width, height, words }: WordCloudProps) {
   const [spiralType, setSpiralType] = useState<SpiralType>("archimedean");
   const [withRotation, setWithRotation] = useState<boolean>(false);
   const wordCloudRef = useRef<HTMLDivElement>(null);
 
-  const fontScale = scaleLog({
-    domain: [Math.min(...words.map((w) => w.count)), Math.max(...words.map((w) => w.count))],
-    range: [10, 100],
-  });
+  const fontSizeSetter = useCallback(
+    (datum: { text: string; value: number }) => {
+      const fontScale = scaleLog({
+        domain: [Math.min(...words.map((w) => w.count)), Math.max(...words.map((w) => w.count))],
+        range: [10, 100],
+      });
 
-  const fontSizeSetter = (datum: { text: string; value: number }) => {
-    return fontScale(datum.value);
-  };
+      return fontScale(datum.value);
+    },
+    [words],
+  );
 
   const hasWords = words.length > 0;
 
@@ -58,7 +60,6 @@ export default function WordCloud({ width, height, words, showControls = true }:
     if (wordCloudRef.current === null) return;
 
     toPng(wordCloudRef.current, {
-      filter: (node) => !node?.classList?.contains("word-cloud-controls"),
       backgroundColor: "white",
     }).then((dataUrl) => {
       const link = document.createElement("a");
@@ -69,43 +70,25 @@ export default function WordCloud({ width, height, words, showControls = true }:
   };
 
   return (
-    <Box
-      component={"div"}
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        userSelect: "none",
-        backgroundColor: "white",
-        height: "100%",
-      }}
-    >
-      {showControls && (
-        <Toolbar
-          variant="dense"
-          sx={{ width: "100%", justifyContent: "flex-end", gap: 2, mt: 1 }}
-          className="word-cloud-controls"
-        >
-          <FormControl size="small" sx={{ minWidth: 200 }}>
-            <Select value={spiralType} onChange={(e) => setSpiralType(e.target.value as SpiralType)} displayEmpty>
-              <MenuItem value="archimedean">Archimedean Spiral</MenuItem>
-              <MenuItem value="rectangular">Rectangular Spiral</MenuItem>
-            </Select>
-          </FormControl>
-          <FormControlLabel
-            control={
-              <Checkbox checked={withRotation} onChange={(e) => setWithRotation(e.target.checked)} size="small" />
-            }
-            label="Enable Rotation"
-          />
-          <Tooltip title="Export Word Cloud">
-            <IconButton onClick={handleExport} size="small">
-              <SaveAltIcon />
-            </IconButton>
-          </Tooltip>
-        </Toolbar>
-      )}
-      <Divider sx={{ width: "100%", mt: 1, mb: 1, boxShadow: 1 }} />
+    <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <DATSToolbar variant="dense">
+        <FormControl size="small" sx={{ minWidth: 200 }}>
+          <Select value={spiralType} onChange={(e) => setSpiralType(e.target.value as SpiralType)} displayEmpty>
+            <MenuItem value="archimedean">Archimedean Spiral</MenuItem>
+            <MenuItem value="rectangular">Rectangular Spiral</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControlLabel
+          control={<Checkbox checked={withRotation} onChange={(e) => setWithRotation(e.target.checked)} size="small" />}
+          label="Enable Rotation"
+        />
+        <Box sx={{ flexGrow: 1 }} />
+        <Tooltip title="Export Word Cloud">
+          <IconButton onClick={handleExport} size="small">
+            <SaveAltIcon />
+          </IconButton>
+        </Tooltip>
+      </DATSToolbar>
       <Box
         ref={wordCloudRef}
         sx={{
@@ -156,11 +139,17 @@ export default function WordCloud({ width, height, words, showControls = true }:
               textAlign: "center",
             }}
           >
+            <CloudIcon
+              sx={{
+                fontSize: "64px",
+                color: "text.secondary",
+              }}
+            />
             <Typography variant="h6" color="text.secondary" gutterBottom>
               No words selected
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Select words from the table to visualize them in the word cloud
+              Select words from the table to visualize them as a word cloud
             </Typography>
           </Box>
         )}
