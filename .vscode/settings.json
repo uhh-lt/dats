@@ -1,6 +1,7 @@
 {
   "python.envFile": "${workspaceFolder}/backend/.env",
   "python.autoComplete.extraPaths": ["./backend/src"],
+  "ruff.configuration": "backend/pyproject.toml",
   "editor.formatOnSave": true,
   "prettier.configPath": "./frontend/package.json",
   "javascript.preferences.importModuleSpecifierEnding": "js",
