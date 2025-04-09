@@ -58,6 +58,8 @@ function TextNode(props: NodeProps<TextData>) {
             inputProps={{
               style: {
                 fontSize: getFontSize(),
+                fontFamily: props.data.fontFamily ?? "Arial",
+                textDecoration: props.data.strikethrough ? "line-through" : "none",
               },
             }}
             multiline
@@ -69,12 +71,16 @@ function TextNode(props: NodeProps<TextData>) {
           variant="body1"
           color={props.data.color}
           style={{
+            textDecoration:
+              [props.data.underline ? "underline" : "", props.data.strikethrough ? "line-through" : ""]
+                .filter(Boolean)
+                .join(" ") || "none",
             ...(props.data.italic && { fontStyle: "italic" }),
             ...(props.data.bold && { fontWeight: "bold" }),
-            ...(props.data.underline && { textDecoration: "underline" }),
             textAlign: props.data.horizontalAlign,
             width: "100%",
             fontSize: getFontSize(),
+            fontFamily: props.data.fontFamily ?? "Arial",
           }}
           whiteSpace="pre-wrap"
         >

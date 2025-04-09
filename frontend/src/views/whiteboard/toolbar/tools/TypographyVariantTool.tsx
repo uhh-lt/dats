@@ -71,19 +71,9 @@ function TypographyVariantTool({ variant, onVariantChange }: TypographyVariantTo
             alignItems: "center",
             position: "relative",
             height: "32px",
-            width: "80px",
-            border: "1px solid rgba(0, 0, 0, 0.23)",
-            borderRadius: 1,
+            width: "40px",
             px: 1,
             cursor: "pointer",
-            "&:hover": {
-              borderColor: "rgba(0, 0, 0, 0.87)",
-            },
-            "&:focus": {
-              outline: "none",
-              borderColor: "primary.main",
-              borderWidth: 2,
-            },
           }}
         >
           <Typography variant="body2" sx={{ flex: 1 }}>
@@ -104,16 +94,16 @@ function TypographyVariantTool({ variant, onVariantChange }: TypographyVariantTo
         onClose={handleClose}
         anchorOrigin={{
           vertical: "bottom",
-          horizontal: "left",
+          horizontal: "center",
         }}
         transformOrigin={{
           vertical: "top",
-          horizontal: "left",
+          horizontal: "center",
         }}
         slotProps={{
           paper: {
             sx: {
-              width: "80px",
+              width: "60px",
               maxHeight: "300px",
               marginTop: 1.8,
               boxShadow: 3,
