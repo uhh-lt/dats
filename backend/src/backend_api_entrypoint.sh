@@ -1,6 +1,9 @@
 #!/bin/bash
 
 set -e
+
+source ../.venv/bin/activate
+
 LOG_LEVEL=${LOG_LEVEL:-debug}
 API_PORT=${API_PORT:-5500}
 API_PRODUCTION_MODE=${API_PRODUCTION_MODE:--1}

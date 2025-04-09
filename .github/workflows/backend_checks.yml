@@ -64,35 +64,37 @@ jobs:
       - name: Check 1 - pytest runs without errors
         working-directory: docker
         run: |
-          docker compose run dats-backend-api /opt/envs/dats/bin/python -m pytest
+          docker compose run dats-backend-api /dats_code/.venv/bin/python -m pytest
       - name: Check 2 - Database migrates without errors database
         working-directory: docker
         run: |
-          docker compose run -e PYTHONPATH='/dats_code/src' dats-backend-api /opt/envs/dats/bin/python migration/run_migrations.py
+          docker compose run -e PYTHONPATH='/dats_code/src' dats-backend-api /dats_code/.venv/bin/python migration/run_migrations.py
       - name: Check 3 - Database schema is up-to-date after migration
         working-directory: docker
         run: |
-          docker compose run dats-backend-api /opt/envs/dats/bin/alembic check
+          docker compose run dats-backend-api /dats_code/.venv/bin/alembic check
       - name: Start Remaining Docker Containers
         working-directory: docker
         run: |
           COMPOSE_PROFILES="weaviate,background,backend" docker compose up --wait --quiet-pull
-      - name: Check 4 - Test End-2-End importer script
-        working-directory: tools/importer
+      - name: Check 4 - pyright runs without errors
+        working-directory: backend
+        run: |
+          uv sync --directory . --no-editable --no-install-project --no-install-workspace
+          source .venv/bin/activate
+          pyright
+      - name: Check 5 - Test End-2-End importer script
+        working-directory: backend
         env:
           TESTDATA_PASSWORD: ${{ secrets.TESTDATA_PASSWORD }}
         run: |
-          pip install -r requirements.txt
+          source .venv/bin/activate
+          cd ../tools/importer
+          uv pip install -r requirements.txt
           wget -q http://ltdata1.informatik.uni-hamburg.de/dwts/totalitarismo.zip
           unzip -q -P "$TESTDATA_PASSWORD" totalitarismo.zip
           python dats_importer.py --input_dir json --backend_url http://localhost:13120/ --is_json --doctype text
           python dats_importer.py --input_dir images --backend_url http://localhost:13120/ --doctype image
-      - name: Check 5 - pyright runs without errors
-        run: |
-          micromamba env create -f backend/environment.yml --yes
-          micromamba run -n dats pip install -r backend/src/app/preprocessing/ray_model_worker/requirements.txt
-          micromamba run -n dats pip install ray==2.32.0
-          micromamba run -n dats pyright
       - name: Cleanup
         working-directory: docker
         if: always()
@@ -103,6 +105,5 @@ jobs:
             docker rmi $RAY_IMAGE
           fi
           docker compose down -v --remove-orphans
-          micromamba env remove -n dats --yes
           BACKEND_IMAGE=uhhlt/dats_backend:$(grep -oP 'DATS_BACKEND_DOCKER_VERSION=\K.*' .env)
           docker rmi $BACKEND_IMAGE
