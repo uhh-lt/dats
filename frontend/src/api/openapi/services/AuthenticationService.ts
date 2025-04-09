@@ -129,4 +129,15 @@ export class AuthenticationService {
       url: "/authentication/oidc/callback",
     });
   }
+  /**
+   * Sync Session
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static syncSession(): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/authentication/sync-session",
+    });
+  }
 }
