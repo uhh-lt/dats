@@ -20,12 +20,14 @@ class ExportJobType(str, Enum):
     ALL_BBOX_ANNOTATIONS = "ALL_BBOX_ANNOTATIONS"
     ALL_MEMOS = "ALL_MEMOS"
     ALL_PROJECT_METADATA = "ALL_PROJECT_METADATA"
+    ALL_WHITEBOARDS = "ALL_WHITEBOARDS"
     # selected
     SELECTED_SDOCS = "SELECTED_SDOCS"
     SELECTED_SPAN_ANNOTATIONS = "SELECTED_SPAN_ANNOTATIONS"
     SELECTED_SENTENCE_ANNOTATIONS = "SELECTED_SENTENCE_ANNOTATIONS"
     SELECTED_BBOX_ANNOTATIONS = "SELECTED_BBOX_ANNOTATIONS"
     SELECTED_MEMOS = "SELECTED_MEMOS"
+    SELECTED_WHITEBOARDS = "SELECTED_WHITEBOARDS"
 
 
 class SpecificExportJobParameters(BaseModel):
@@ -65,6 +67,11 @@ class ExportSelectedMemosParams(SpecificExportJobParameters):
     memo_ids: List[int] = Field(description="IDs of the memos to export")
 
 
+class ExportSelectedWhiteboardsParams(SpecificExportJobParameters):
+    export_job_type: Literal[ExportJobType.SELECTED_WHITEBOARDS]
+    whiteboard_ids: List[int] = Field(description="IDs of the whiteboards to export")
+
+
 class ExportJobParameters(BaseModel):
     export_job_type: ExportJobType = Field(
         description="The type of the export job (what to export)"
@@ -79,6 +86,7 @@ class ExportJobParameters(BaseModel):
         ExportSelectedSentenceAnnotationsParams,
         ExportSelectedBboxAnnotationsParams,
         ExportSelectedMemosParams,
+        ExportSelectedWhiteboardsParams,
     ] = Field(
         description="Specific parameters for the export job w.r.t it's type",
         discriminator="export_job_type",

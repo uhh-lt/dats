@@ -43,6 +43,10 @@ from app.core.data.eximport.tags.export_tags import (
 from app.core.data.eximport.user.export_users import (
     export_all_users,
 )
+from app.core.data.eximport.whiteboards.export_whiteboards import (
+    export_all_whiteboards,
+    export_selected_whiteboards,
+)
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
@@ -91,12 +95,14 @@ class ExportService(metaclass=SingletonMeta):
             ExportJobType.ALL_BBOX_ANNOTATIONS: export_all_bbox_annotations,
             ExportJobType.ALL_MEMOS: export_all_memos,
             ExportJobType.ALL_PROJECT_METADATA: export_all_project_metadatas,
+            ExportJobType.ALL_WHITEBOARDS: export_all_whiteboards,
             # selected
             ExportJobType.SELECTED_SDOCS: export_selected_sdocs,
             ExportJobType.SELECTED_SPAN_ANNOTATIONS: export_selected_span_annotations,
             ExportJobType.SELECTED_SENTENCE_ANNOTATIONS: export_selected_sentence_annotations,
             ExportJobType.SELECTED_BBOX_ANNOTATIONS: export_selected_bbox_annotations,
             ExportJobType.SELECTED_MEMOS: export_selected_memos,
+            ExportJobType.SELECTED_WHITEBOARDS: export_selected_whiteboards,
         }
 
         return super(ExportService, cls).__new__(cls)
