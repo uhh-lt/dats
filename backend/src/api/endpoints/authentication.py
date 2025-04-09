@@ -1,5 +1,5 @@
 import json
-from typing import Annotated
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
 from fastapi.encoders import jsonable_encoder
@@ -7,7 +7,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from api.dependencies import get_current_user, get_db_session
+from api.dependencies import get_current_user, get_db_session, reusable_oauth2_scheme
 from api.util import credentials_exception
 from app.core.authorization.authz_user import AuthzUser
 from app.core.authorization.oauth_service import OAuthService
@@ -21,8 +21,9 @@ from app.core.data.dto.user import (
     UserLogin,
     UserRead,
 )
+from app.core.data.orm.user import UserORM
 from app.core.mail.mail_service import MailService
-from app.core.security import generate_jwt
+from app.core.security import decode_jwt, generate_jwt
 
 CONTENT_PREFIX = "/content/projects/"
 AUTHORIZATION = "Authorization"
@@ -119,7 +120,10 @@ def logout(
     summary="Uses the given refresh token to obtain a new access token.",
 )
 def refresh_access_token(
-    *, db: Session = Depends(get_db_session), dto: RefreshAccessTokenData = Depends()
+    *,
+    db: Session = Depends(get_db_session),
+    dto: RefreshAccessTokenData = Depends(),
+    response: Response,
 ) -> UserAuthorizationHeaderData:
     token = crud_refresh_token.read_and_verify(db, dto.refresh_token)
     crud_refresh_token.revoke(db, token)
@@ -128,6 +132,16 @@ def refresh_access_token(
 
     (access_token, access_token_expires) = generate_jwt(token.user)
     new_token = crud_refresh_token.generate(db, token.user.id)
+
+    response.set_cookie(
+        AUTHORIZATION,
+        access_token,
+        expires=access_token_expires,
+        secure=True,
+        httponly=True,
+        samesite="strict",
+    )
+
     return UserAuthorizationHeaderData(
         access_token=access_token,
         access_token_expires=access_token_expires,
@@ -183,15 +197,6 @@ async def oidc_callback(
     (access_token, access_token_expires) = generate_jwt(user)
     refresh_token = crud_refresh_token.generate(db, user.id)
 
-    response.set_cookie(
-        AUTHORIZATION,
-        access_token,
-        expires=access_token_expires,
-        secure=True,
-        httponly=True,
-        samesite="strict",
-    )
-
     auth_data = UserAuthorizationHeaderData(
         access_token=access_token,
         access_token_expires=access_token_expires,
@@ -222,3 +227,24 @@ async def oidc_callback(
         </html>
     """
     return HTMLResponse(content=html_content, media_type="text/html")
+
+
+@router.post("/sync-session")
+async def sync_session(
+    response: Response,
+    current_user: UserORM = Depends(get_current_user),
+    token: str = Depends(reusable_oauth2_scheme),
+) -> None:
+    payload = decode_jwt(token=token)
+    expire: Optional[str] = payload.get("exp")
+    if expire is None:
+        raise ValueError("Expiration time not found in token payload")
+
+    response.set_cookie(
+        AUTHORIZATION,
+        token,
+        expires=expire,
+        secure=True,
+        httponly=True,
+        samesite="strict",
+    )

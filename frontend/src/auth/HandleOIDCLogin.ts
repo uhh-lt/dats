@@ -19,7 +19,18 @@ export function handleOIDCLogin(updateAuthData: (authData: UserAuthorizationHead
   const messageHandler = (event: MessageEvent) => {
     if (event.data.token) {
       const authData = event.data.token as UserAuthorizationHeaderData;
+      // Update auth data in parent window
       updateAuthData(authData);
+
+      // Manually make a call to refresh cookies in the parent context
+      fetch("/api/authentication/sync-session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authData.access_token}`,
+        },
+      });
+
       window.removeEventListener("message", messageHandler);
       if (loginWindow) {
         loginWindow.close();
