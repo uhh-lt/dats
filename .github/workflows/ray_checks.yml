@@ -19,6 +19,7 @@ jobs:
           ./bin/setup-folders.sh
           ./bin/setup-envs.sh --project_name action-runner --port_prefix 131
           sed -i 's/\(DATS_RAY_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
+          sed -i 's/^UID=.*//' docker/.env
           echo "RAY_CACHE_DIR=$HOME/ray_cache" >> docker/.env
           mkdir -p $HOME/ray_cache
           chmod 777 $HOME/ray_cache
