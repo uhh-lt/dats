@@ -22,3 +22,6 @@ notebooks
 Dockerfile
 Makefile
 README.md
+
+# igore venv
+.venv

@@ -134,7 +134,7 @@ services:
       context: ../backend
       dockerfile: Dockerfile
     healthcheck:
-      test: "/opt/envs/dats/bin/python -m celery -A app.celery.celery_worker inspect ping | grep -q pong || exit 1"
+      test: "/dats_code/.venv/bin/python -m celery -A app.celery.celery_worker inspect ping | grep -q pong || exit 1"
       interval: 30s
       timeout: 10s
       retries: 5
