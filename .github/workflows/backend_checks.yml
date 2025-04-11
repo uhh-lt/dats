@@ -14,7 +14,6 @@ jobs:
   backend-checks:
     runs-on: self-hosted
     env:
-      API_WORKERS: 1
       RAY_HAS_CHANGED: false
     steps:
       - uses: actions/checkout@v3
@@ -67,18 +66,22 @@ jobs:
       - name: Check 1 - pytest runs without errors
         working-directory: docker
         run: |
+          source .env
           docker compose run dats-backend-api /dats_code/.venv/bin/python -m pytest
       - name: Check 2 - Database migrates without errors database
         working-directory: docker
         run: |
+          source .env
           docker compose run -e PYTHONPATH='/dats_code/src' dats-backend-api /dats_code/.venv/bin/python migration/run_migrations.py
       - name: Check 3 - Database schema is up-to-date after migration
         working-directory: docker
         run: |
+          source .env
           docker compose run dats-backend-api /dats_code/.venv/bin/alembic check
       - name: Start Remaining Docker Containers
         working-directory: docker
         run: |
+          source .env
           COMPOSE_PROFILES="weaviate,background,backend" docker compose up --wait --quiet-pull
       - name: Check 4 - pyright runs without errors
         working-directory: backend
@@ -102,6 +105,7 @@ jobs:
         working-directory: docker
         if: always()
         run: |
+          source .env
           if [ "${{ env.RAY_HAS_CHANGED }}" = "true" ]; then
             docker compose -f compose.ray.yml down -v
             RAY_IMAGE=uhhlt/dats_ray:$(grep -oP 'DATS_RAY_DOCKER_VERSION=\K.*' .env)
