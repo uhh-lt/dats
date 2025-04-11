@@ -30,12 +30,8 @@ class DATSAPI:
             "Content-Type": "application/x-www-form-urlencoded",
         }
         data = {
-            "grant_type": "",
             "username": self.username,
             "password": self.password,
-            "scope": "",
-            "client_id": "",
-            "client_secret": "",
         }
         r = requests.post(
             f"{self.BASE_PATH}authentication/login", headers=headers, data=data
