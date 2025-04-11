@@ -83,13 +83,15 @@ jobs:
         run: |
           source .env
           COMPOSE_PROFILES="weaviate,background,backend" docker compose up --wait --quiet-pull
-      - name: Check 4 - pyright runs without errors
+      - name: Check 4 - install uv environment
         working-directory: backend
         run: |
-          uv sync --directory . --no-editable --no-install-project --no-install-workspace
-          source .venv/bin/activate
-          pyright
-      - name: Check 5 - Test End-2-End importer script
+          uv sync
+      - name: Check 5 - pyright runs without errors
+        working-directory: backend
+        run: |
+          uv run pyright
+      - name: Check 6 - Test End-2-End importer script
         working-directory: backend
         env:
           TESTDATA_PASSWORD: ${{ secrets.TESTDATA_PASSWORD }}
