@@ -9,7 +9,6 @@ import {
   Typography,
 } from "@mui/material";
 import { memo } from "react";
-import CodeHooks from "../../../api/CodeHooks.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { BBoxAnnotationRead } from "../../../api/openapi/models/BBoxAnnotationRead.ts";
@@ -20,9 +19,14 @@ import AnnotationCardActionsMenu from "./AnnotationCardActionMenu.tsx";
 import AnnotationCardMemo from "./AnnotationCardMemo.tsx";
 import { AnnotationCardProps } from "./types/AnnotationCardProps.ts";
 
-function BBoxAnnotationCard({ isSelected, annotation, onClick, cardProps }: AnnotationCardProps<BBoxAnnotationRead>) {
+function BBoxAnnotationCard({
+  isSelected,
+  annotation,
+  code,
+  onClick,
+  cardProps,
+}: AnnotationCardProps<BBoxAnnotationRead>) {
   const sdocData = SdocHooks.useGetDocumentData(annotation.sdoc_id);
-  const code = CodeHooks.useGetCode(annotation.code_id);
 
   return (
     <Card {...cardProps}>
@@ -45,7 +49,7 @@ function BBoxAnnotationCard({ isSelected, annotation, onClick, cardProps }: Anno
       <Divider />
       <CardActionArea onClick={onClick}>
         <CardContent sx={{ p: 1, pb: "0px !important", textAlign: "center" }}>
-          {sdocData.isSuccess && code.isSuccess ? (
+          {sdocData.isSuccess ? (
             <ImageCropper
               imageUrl={encodeURI("/content/" + sdocData.data.repo_url)}
               x={annotation.x_min}
@@ -55,7 +59,7 @@ function BBoxAnnotationCard({ isSelected, annotation, onClick, cardProps }: Anno
               height={annotation.y_max - annotation.y_min}
               targetHeight={100}
               style={{
-                border: "4px solid " + code.data.color,
+                border: "4px solid " + code.color,
               }}
             />
           ) : (
@@ -68,14 +72,14 @@ function BBoxAnnotationCard({ isSelected, annotation, onClick, cardProps }: Anno
           </Stack>
         </CardContent>
       </CardActionArea>
-      {isSelected && code.isSuccess && (
+      {isSelected && (
         <>
           <Divider />
           <AnnotationCardMemo
             annotationId={annotation.id}
             annotationType={AttachedObjectType.BBOX_ANNOTATION}
             annotationText="Image"
-            codeName={code.data.name}
+            codeName={code.name}
           />
         </>
       )}

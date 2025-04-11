@@ -1,14 +1,4 @@
-import {
-  Card,
-  CardActionArea,
-  CardContent,
-  CardHeader,
-  CircularProgress,
-  Divider,
-  Stack,
-  Typography,
-} from "@mui/material";
-import CodeHooks from "../../../api/CodeHooks.ts";
+import { Card, CardActionArea, CardContent, CardHeader, Divider, Stack, Typography } from "@mui/material";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { SpanAnnotationRead } from "../../../api/openapi/models/SpanAnnotationRead.ts";
 import CodeRenderer from "../../../components/Code/CodeRenderer.tsx";
@@ -17,9 +7,13 @@ import AnnotationCardActionsMenu from "./AnnotationCardActionMenu.tsx";
 import AnnotationCardMemo from "./AnnotationCardMemo.tsx";
 import { AnnotationCardProps } from "./types/AnnotationCardProps.ts";
 
-function SpanAnnotationCard({ isSelected, annotation, onClick, cardProps }: AnnotationCardProps<SpanAnnotationRead>) {
-  const code = CodeHooks.useGetCode(annotation.code_id);
-
+function SpanAnnotationCard({
+  isSelected,
+  annotation,
+  code,
+  onClick,
+  cardProps,
+}: AnnotationCardProps<SpanAnnotationRead>) {
   return (
     <Card {...cardProps}>
       <CardHeader
@@ -41,21 +35,17 @@ function SpanAnnotationCard({ isSelected, annotation, onClick, cardProps }: Anno
       <Divider />
       <CardActionArea onClick={onClick}>
         <CardContent sx={{ pr: 1, pl: 1.5, pt: 1, pb: "0px !important" }}>
-          {code.isSuccess ? (
-            <Typography
-              variant="body1"
-              sx={{
-                wordBreak: "break-word",
-                borderLeft: "3px solid",
-                borderColor: code.data.color,
-                pl: 1,
-              }}
-            >
-              {annotation.text}
-            </Typography>
-          ) : (
-            <CircularProgress />
-          )}
+          <Typography
+            variant="body1"
+            sx={{
+              wordBreak: "break-word",
+              borderLeft: "3px solid",
+              borderColor: code.color,
+              pl: 1,
+            }}
+          >
+            {annotation.text}
+          </Typography>
           <Stack direction="row" justifyContent="end" width="100%">
             <Typography variant="subtitle2" color="textDisabled" fontSize={12}>
               <UserName userId={annotation.user_id} />
@@ -63,13 +53,13 @@ function SpanAnnotationCard({ isSelected, annotation, onClick, cardProps }: Anno
           </Stack>
         </CardContent>
       </CardActionArea>
-      {isSelected && code.isSuccess && (
+      {isSelected && (
         <>
           <Divider />
           <AnnotationCardMemo
             annotationId={annotation.id}
             annotationType={AttachedObjectType.SPAN_ANNOTATION}
-            codeName={code.data.name}
+            codeName={code.name}
             annotationText={annotation.text}
           />
         </>
