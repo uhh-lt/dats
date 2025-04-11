@@ -67,17 +67,17 @@ jobs:
         working-directory: docker
         run: |
           source .env
-          docker compose run dats-backend-api /dats_code/.venv/bin/python -m pytest
+          docker compose run --user $(id -u):$(id -g) dats-backend-api /dats_code/.venv/bin/python -m pytest
       - name: Check 2 - Database migrates without errors database
         working-directory: docker
         run: |
           source .env
-          docker compose run -e PYTHONPATH='/dats_code/src' dats-backend-api /dats_code/.venv/bin/python migration/run_migrations.py
+          docker compose run --user $(id -u):$(id -g) -e PYTHONPATH='/dats_code/src' dats-backend-api /dats_code/.venv/bin/python migration/run_migrations.py
       - name: Check 3 - Database schema is up-to-date after migration
         working-directory: docker
         run: |
           source .env
-          docker compose run dats-backend-api /dats_code/.venv/bin/alembic check
+          docker compose run --user $(id -u):$(id -g) dats-backend-api /dats_code/.venv/bin/alembic check
       - name: Start Remaining Docker Containers
         working-directory: docker
         run: |
