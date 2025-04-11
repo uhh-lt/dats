@@ -43,7 +43,7 @@
       "name": "celery",
       "type": "node-terminal",
       "request": "launch",
-      "command": "micromamba activate dats && celery -A app.celery.background_jobs.tasks worker -Q bgJobsQ,celery -P threads -l info -c 1 --without-gossip --without-mingle --without-heartbeat",
+      "command": "uv run celery -A app.celery.background_jobs.tasks worker -Q bgJobsQ,celery -P threads -l info -c 1 --without-gossip --without-mingle --without-heartbeat",
       "cwd": "${workspaceFolder}/backend/src",
       "envFile": "${workspaceFolder}/backend/.env"
     },
@@ -51,8 +51,8 @@
       "name": "Pyright",
       "type": "node-terminal",
       "request": "launch",
-      "command": "micromamba activate dats && pyright",
-      "cwd": "${workspaceFolder}"
+      "command": "uv run pyright",
+      "cwd": "${workspaceFolder}/backend"
     },
     {
       "name": "Python: run_migrations.py",
@@ -70,7 +70,7 @@
       "name": "Alembic: check",
       "type": "node-terminal",
       "request": "launch",
-      "command": "micromamba activate dats && alembic check",
+      "command": "uv run alembic check",
       "cwd": "${workspaceFolder}/backend/src",
       "envFile": "${workspaceFolder}/backend/.env"
     },
@@ -78,7 +78,7 @@
       "name": "Alembic: revision",
       "type": "node-terminal",
       "request": "launch",
-      "command": "micromamba activate dats && alembic revision --autogenerate -m \"vscode launcher\"",
+      "command": "uv run alembic revision --autogenerate -m \"vscode launcher\"",
       "cwd": "${workspaceFolder}/backend/src",
       "envFile": "${workspaceFolder}/backend/.env"
     }
