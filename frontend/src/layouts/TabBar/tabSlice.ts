@@ -50,6 +50,15 @@ export const tabSlice = createSlice({
         projectState.activeTabIndex = existingTabIndex;
       }
     },
+    addMultipleTabs: (state, action: PayloadAction<{ tabDatas: TabData[]; projectId: number }>) => {
+      const projectState = getOrCreateTabState(state, action.payload.projectId);
+      action.payload.tabDatas.forEach((tabData) => {
+        const existingTabIndex = projectState.tabs.findIndex((tab) => tab.path === tabData.path);
+        if (existingTabIndex === -1) {
+          projectState.tabs.push(tabData);
+        }
+      });
+    },
     removeTab: (state, action: PayloadAction<{ tabId: number; projectId: number }>) => {
       const projectState = getOrCreateTabState(state, action.payload.projectId);
       if (projectState.tabs.length <= 1) return;
