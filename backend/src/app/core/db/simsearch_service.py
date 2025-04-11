@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
+from config import conf
 from loguru import logger
 
 from app.core.data.crud.source_document import crud_sdoc
@@ -22,7 +23,6 @@ from app.preprocessing.ray_model_worker.dto.clip import (
     ClipTextEmbeddingInput,
 )
 from app.util.singleton_meta import SingletonMeta
-from config import conf
 
 
 class SimSearchService(metaclass=SingletonMeta):

@@ -1,5 +1,3 @@
-from loguru import logger
-
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.repo.utils import (
     image_to_base64,
@@ -10,6 +8,7 @@ from app.preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.ray_model_service import RayModelService
 from app.preprocessing.ray_model_worker.dto.detr import DETRImageInput
+from loguru import logger
 
 rms = RayModelService()
 

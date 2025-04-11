@@ -1,10 +1,6 @@
 from datetime import datetime
 from typing import Dict, List, NamedTuple, Tuple
 
-from loguru import logger
-from sqlalchemy import ColumnElement, and_
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.project_metadata import crud_project_meta
@@ -35,6 +31,9 @@ from app.preprocessing.ray_model_worker.dto.quote import (
     Token,
 )
 from app.util.singleton_meta import SingletonMeta
+from loguru import logger
+from sqlalchemy import ColumnElement, and_
+from sqlalchemy.orm import Session
 
 
 class _CodeQuoteId(NamedTuple):

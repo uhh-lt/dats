@@ -1,9 +1,5 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
-from api.dependencies import get_current_user, get_db_session
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.span_group import crud_span_group
@@ -15,6 +11,10 @@ from app.core.data.dto.span_group import (
     SpanGroupRead,
     SpanGroupUpdate,
 )
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from api.dependencies import get_current_user, get_db_session
 
 router = APIRouter(
     prefix="/spangroup", dependencies=[Depends(get_current_user)], tags=["spanGroup"]

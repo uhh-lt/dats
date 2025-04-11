@@ -1,10 +1,10 @@
+from config import conf
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
 from loguru import logger
 from pydantic import EmailStr
 
 from app.core.data.dto.user import UserRead
 from app.util.singleton_meta import SingletonMeta
-from config import conf
 
 
 class MailService(metaclass=SingletonMeta):

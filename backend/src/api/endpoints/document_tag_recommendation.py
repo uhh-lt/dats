@@ -1,9 +1,5 @@
 from typing import Dict, List
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
-from api.dependencies import get_current_user, get_db_session
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud.document_tag import (
     crud_document_tag,
@@ -28,6 +24,10 @@ from app.core.ml.doc_tag_recommendation.doc_tag_recommendation_service import (
     DocumentClassificationService,
 )
 from app.core.ml.ml_service import MLService
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from api.dependencies import get_current_user, get_db_session
 
 dcs: DocumentClassificationService = DocumentClassificationService()
 mls: MLService = MLService()

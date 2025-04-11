@@ -2,10 +2,6 @@ import shutil
 from typing import Dict, List, Optional
 
 import srsly
-from fastapi.encoders import jsonable_encoder
-from loguru import logger
-from sqlalchemy.orm import Session
-
 from app.celery.background_jobs import start_cota_refinement_job_async
 from app.core.analysis.cota.pipeline import build_cota_refinement_pipeline
 from app.core.data.crud.concept_over_time_analysis import crud_cota
@@ -33,6 +29,9 @@ from app.core.db.simsearch_service import SimSearchService
 from app.core.db.sql_service import SQLService
 from app.trainer.trainer_service import TrainerService
 from app.util.singleton_meta import SingletonMeta
+from fastapi.encoders import jsonable_encoder
+from loguru import logger
+from sqlalchemy.orm import Session
 
 
 class COTAService(metaclass=SingletonMeta):

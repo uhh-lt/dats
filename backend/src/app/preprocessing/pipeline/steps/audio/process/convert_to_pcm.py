@@ -1,8 +1,7 @@
 import ffmpeg
-from loguru import logger
-
 from app.preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
+from loguru import logger
 
 
 def convert_to_pcm(cargo: PipelineCargo) -> PipelineCargo:

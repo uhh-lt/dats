@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import List, Optional, Union
 
 import redis
+from config import conf
 from loguru import logger
 
 from app.core.data.dto.concept_over_time_analysis import (
@@ -28,7 +29,6 @@ from app.core.data.dto.trainer_job import (
     TrainerJobUpdate,
 )
 from app.util.singleton_meta import SingletonMeta
-from config import conf
 
 
 class RedisService(metaclass=SingletonMeta):

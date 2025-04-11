@@ -1,10 +1,5 @@
 from typing import List
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
-from api.dependencies import get_current_user, get_db_session
-from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.span_annotation import crud_span_anno
@@ -17,6 +12,11 @@ from app.core.data.dto.span_annotation import (
     SpanAnnotationUpdateBulk,
 )
 from app.core.data.dto.span_group import SpanGroupRead
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from api.dependencies import get_current_user, get_db_session
+from api.validation import Validate
 
 router = APIRouter(
     prefix="/span", dependencies=[Depends(get_current_user)], tags=["spanAnnotation"]

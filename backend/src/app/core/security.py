@@ -2,12 +2,12 @@ import secrets
 from datetime import UTC, datetime, timedelta
 from typing import Dict, Tuple
 
+from config import conf
 from jose import jwt
 from loguru import logger
 from passlib.context import CryptContext
 
 from app.core.data.orm.user import UserORM
-from config import conf
 
 __password_ctx = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 

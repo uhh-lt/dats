@@ -2,7 +2,6 @@ import wave
 
 import matplotlib.pyplot as plt
 import numpy as np
-
 from app.core.data.repo.repo_service import RepoService
 from app.preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo

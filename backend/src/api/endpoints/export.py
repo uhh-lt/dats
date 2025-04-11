@@ -1,6 +1,3 @@
-from fastapi import APIRouter, Depends
-
-from api.dependencies import get_current_user
 from app.celery.background_jobs import prepare_and_start_export_job_async
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.dto.export_job import (
@@ -8,6 +5,9 @@ from app.core.data.dto.export_job import (
     ExportJobRead,
 )
 from app.core.data.eximport.export_service import ExportService
+from fastapi import APIRouter, Depends
+
+from api.dependencies import get_current_user
 
 router = APIRouter(
     prefix="/export", dependencies=[Depends(get_current_user)], tags=["export"]

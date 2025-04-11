@@ -1,9 +1,8 @@
 import yake
-from loguru import logger
-
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from config import conf
+from loguru import logger
 
 
 def generate_keywords(cargo: PipelineCargo) -> PipelineCargo:

@@ -1,7 +1,5 @@
 from typing import List, Optional, Tuple, Union
 
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.doc_type import DocType
@@ -25,6 +23,7 @@ from app.core.search.filtering import (
 from app.core.search.sdoc_search.sdoc_search_columns import SdocColumns
 from app.core.search.search_builder import SearchBuilder
 from app.core.search.sorting import Sort
+from sqlalchemy.orm import Session
 
 
 def search_info(project_id) -> List[ColumnInfo[SdocColumns]]:

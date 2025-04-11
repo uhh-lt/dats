@@ -1,13 +1,13 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
-from api.dependencies import get_current_user, get_db_session
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.dto.trainer_job import TrainerJobParameters, TrainerJobRead
 from app.core.db.redis_service import RedisService
 from app.trainer.trainer_service import TrainerService
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from api.dependencies import get_current_user, get_db_session
 
 router = APIRouter(
     prefix="/trainer", dependencies=[Depends(get_current_user)], tags=["trainer"]

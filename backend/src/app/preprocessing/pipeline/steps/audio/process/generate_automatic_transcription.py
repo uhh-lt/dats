@@ -1,7 +1,5 @@
 from pathlib import Path
 
-from loguru import logger
-
 from app.core.data.dto.source_document_data import WordLevelTranscription
 from app.preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
@@ -9,6 +7,7 @@ from app.preprocessing.ray_model_service import RayModelService
 from app.preprocessing.ray_model_worker.dto.whisper import (
     WhisperTranscriptionOutput,
 )
+from loguru import logger
 
 rms = RayModelService()
 

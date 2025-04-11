@@ -1,9 +1,6 @@
 from pathlib import Path
 from typing import List
 
-from loguru import logger
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.source_document_metadata import (
@@ -12,6 +9,8 @@ from app.core.data.dto.source_document_metadata import (
 from app.core.data.eximport.no_data_export_error import NoDataToExportError
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
+from loguru import logger
+from sqlalchemy.orm import Session
 
 
 def export_selected_sdocs(

@@ -2,9 +2,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Union
 
-from loguru import logger
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.project import crud_project
 from app.core.data.eximport.bbox_annotations.export_bbox_annotations import (
     export_all_bbox_annotations,
@@ -22,6 +19,8 @@ from app.core.data.eximport.tags.export_tags import export_all_tags
 from app.core.data.eximport.user.export_users import export_all_users
 from app.core.data.orm.project import ProjectORM
 from app.core.data.repo.repo_service import RepoService
+from loguru import logger
+from sqlalchemy.orm import Session
 
 
 def export_project(

@@ -1,8 +1,6 @@
 from collections import Counter
 from typing import Dict, List, Optional, Set
 
-from sqlalchemy import func
-
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.dto.search_stats import KeywordStat, SpanEntityStat, TagStat
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
@@ -14,6 +12,7 @@ from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.db.sql_service import SQLService
+from sqlalchemy import func
 
 
 def compute_tag_statistics(

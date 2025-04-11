@@ -1,8 +1,6 @@
 from typing import List, Optional
 
 import pandas as pd
-from sqlalchemy import distinct, func
-
 from app.core.analysis.word_frequency_analysis.word_frequency_columns import (
     WordFrequencyColumns,
 )
@@ -20,6 +18,7 @@ from app.core.search.column_info import (
 from app.core.search.filtering import Filter
 from app.core.search.search_builder import SearchBuilder
 from app.core.search.sorting import Sort
+from sqlalchemy import distinct, func
 
 
 def word_frequency_info(

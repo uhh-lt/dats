@@ -3,11 +3,6 @@ from typing import Dict, List, Type, TypedDict, Union
 
 import pandas as pd
 import srsly
-from fastapi.encoders import jsonable_encoder
-from loguru import logger
-from sqlalchemy import and_, func
-from sqlalchemy.orm import Session, aliased
-
 from app.core.data.crud.sentence_annotation import crud_sentence_anno
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.timeline_analysis import crud_timeline_analysis
@@ -37,6 +32,10 @@ from app.core.db.sql_utils import aggregate_ids
 from app.core.search.filtering import Filter
 from app.core.search.sdoc_search.sdoc_search_columns import SdocColumns
 from app.core.search.search_builder import SearchBuilder
+from fastapi.encoders import jsonable_encoder
+from loguru import logger
+from sqlalchemy import and_, func
+from sqlalchemy.orm import Session, aliased
 
 
 class TimelineAnalysisRow(TypedDict):

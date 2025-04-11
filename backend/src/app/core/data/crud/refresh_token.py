@@ -1,15 +1,15 @@
 from datetime import UTC, datetime, timedelta
 from typing import Never
 
+from api.util import credentials_exception
+from config import conf
 from sqlalchemy import and_, delete, or_, update
 from sqlalchemy.orm import Session, joinedload
 
-from api.util import credentials_exception
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.refresh_token import RefreshTokenCreate
 from app.core.data.orm.refresh_token import RefreshTokenORM
 from app.core.security import genereate_refresh_token
-from config import conf
 
 
 class CRUDRefreshToken(CRUDBase[RefreshTokenORM, RefreshTokenCreate, Never]):

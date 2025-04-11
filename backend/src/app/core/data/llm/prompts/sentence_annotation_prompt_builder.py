@@ -1,14 +1,13 @@
 import random
 from typing import Dict, List, Optional
 
-from pydantic import BaseModel
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.user import SYSTEM_USER_IDS
 from app.core.data.llm.prompts.prompt_builder import PromptBuilder
 from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
 from config import conf
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 sent_anno_conf = conf.llm_assistant.sentence_annotation
 

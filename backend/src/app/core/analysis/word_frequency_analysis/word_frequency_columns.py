@@ -1,6 +1,3 @@
-from sqlalchemy import String, cast, func
-from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg
-
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
@@ -12,6 +9,8 @@ from app.core.db.sql_utils import aggregate_ids, aggregate_two_ids
 from app.core.search.column_info import AbstractColumns
 from app.core.search.filtering_operators import FilterOperator, FilterValueType
 from app.core.search.search_builder import SearchBuilder
+from sqlalchemy import String, cast, func
+from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg
 
 
 class WordFrequencyColumns(str, AbstractColumns):
