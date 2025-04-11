@@ -42,6 +42,7 @@ import { RootState } from "../../../store/store.ts";
 import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
 import { useTableFetchMoreOnScroll, useTransformInfiniteData } from "../../../utils/useTableInfiniteScroll.ts";
 import { useInitSearchFilterSlice } from "../useInitSearchFilterSlice.ts";
+import OpenInTabsButton from "./OpenInTabsButton.tsx";
 import SearchOptionsMenu from "./SearchOptionsMenu.tsx";
 import { SearchActions } from "./searchSlice.ts";
 
@@ -356,6 +357,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
             />
             <DeleteSdocsButton sdocIds={selectedDocumentIds} navigateTo="../search" />
             <LLMAssistanceButton sdocIds={selectedDocumentIds} projectId={projectId} />
+            <OpenInTabsButton sdocIds={selectedDocumentIds} projectId={projectId} />
           </>
         )}
         <Box sx={{ flexGrow: 1 }} />
