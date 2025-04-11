@@ -79,6 +79,22 @@ class OllamaService(metaclass=SingletonMeta):
             cls.__max_vlm_chat_sessions = 50
             cls.__max_vlm_chat_session_age = 7 * 24 * 60 * 60  # 7 days
 
+            # load the model with a dummy request to ensure that it is loaded and ready to use
+            ollamac.chat(
+                model=cls.__model["llm"],
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are kind and helpful.",
+                    },
+                    {
+                        "role": "user",
+                        "content": "Hi!",
+                    },
+                ],
+                options=cls.__default_kwargs["llm"],
+            )
+
         except Exception as e:
             msg = f"Cannot instantiate OllamaService - Error '{e}'"
             logger.error(msg)
