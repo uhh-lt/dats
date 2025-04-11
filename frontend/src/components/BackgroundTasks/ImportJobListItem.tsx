@@ -19,7 +19,6 @@ function ImportJobListItem({ initialImportJob }: ImportJobListItemProps) {
     if (!importJob.data) {
       return "";
     }
-
     const createdDate = dateToLocaleString(importJob.data.created);
     const updatedDate = dateToLocaleString(importJob.data.updated);
     let title = `${importJob.data!.parameters.import_job_type}, started at ${createdDate}`;

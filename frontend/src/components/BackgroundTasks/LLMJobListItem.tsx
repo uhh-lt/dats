@@ -30,16 +30,17 @@ function LLMJobListItem({ initialLLMJob }: LLMJobListItemProps) {
 
   // compute date string
   const subTitle = useMemo(() => {
-    const createdDate = dateToLocaleString(llmJob.data!.created);
-    const updatedDate = dateToLocaleString(llmJob.data!.updated);
-    let title = `${
-      llmJob.data!.parameters.specific_task_parameters.sdoc_ids.length
-    } documents, started at ${createdDate}`;
-    if (llmJob.data!.status === BackgroundJobStatus.FINISHED) {
+    if (!llmJob.data) {
+      return "";
+    }
+    const createdDate = dateToLocaleString(llmJob.data.created);
+    const updatedDate = dateToLocaleString(llmJob.data.updated);
+    let title = `${llmJob.data.parameters.specific_task_parameters.sdoc_ids.length} documents, started at ${createdDate}`;
+    if (llmJob.data.status === BackgroundJobStatus.FINISHED) {
       title += `, finished at ${updatedDate}`;
-    } else if (llmJob.data!.status === BackgroundJobStatus.ABORTED) {
+    } else if (llmJob.data.status === BackgroundJobStatus.ABORTED) {
       title += `, aborted at ${updatedDate}`;
-    } else if (llmJob.data!.status === BackgroundJobStatus.ERRORNEOUS) {
+    } else if (llmJob.data.status === BackgroundJobStatus.ERRORNEOUS) {
       title += `, failed at ${updatedDate}`;
     }
     return title;
