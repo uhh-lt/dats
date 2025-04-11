@@ -2,9 +2,6 @@ from pathlib import Path
 from typing import List
 
 import pandas as pd
-from loguru import logger
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.eximport.bbox_annotations.bbox_annotations_export_schema import (
     BBoxAnnotationExportCollection,
@@ -13,6 +10,8 @@ from app.core.data.eximport.bbox_annotations.bbox_annotations_export_schema impo
 from app.core.data.eximport.no_data_export_error import NoDataToExportError
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.repo.repo_service import RepoService
+from loguru import logger
+from sqlalchemy.orm import Session
 
 
 def export_selected_bbox_annotations(

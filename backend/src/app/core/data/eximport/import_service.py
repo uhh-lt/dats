@@ -7,9 +7,6 @@ from typing import (
 )
 
 import pandas as pd
-from loguru import logger
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.project import crud_project
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.import_job import (
@@ -39,6 +36,8 @@ from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
 from app.preprocessing.ray_model_service import RayModelService
 from app.util.singleton_meta import SingletonMeta
+from loguru import logger
+from sqlalchemy.orm import Session
 
 
 class ImportJobPreparationError(Exception):

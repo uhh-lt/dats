@@ -1,12 +1,12 @@
 from typing import List
 
-from fastapi import APIRouter, Depends
-
-from api.dependencies import get_current_user
 from app.celery.background_jobs import prepare_and_start_ml_job_async
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.dto.ml_job import MLJobParameters, MLJobRead
 from app.core.ml.ml_service import MLService
+from fastapi import APIRouter, Depends
+
+from api.dependencies import get_current_user
 
 router = APIRouter(prefix="/ml", dependencies=[Depends(get_current_user)], tags=["ml"])
 

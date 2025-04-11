@@ -1,10 +1,5 @@
 from typing import Dict, List
 
-from fastapi import APIRouter, Depends
-from loguru import logger
-from sqlalchemy.orm import Session
-
-from api.dependencies import get_current_user, get_db_session, skip_limit_params
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
@@ -25,6 +20,11 @@ from app.core.data.dto.span_annotation import SpanAnnotationRead
 from app.core.data.dto.span_group import SpanGroupRead, SpanGroupWithAnnotationsRead
 from app.core.data.dto.word_frequency import WordFrequencyRead
 from app.core.data.repo.repo_service import RepoService
+from fastapi import APIRouter, Depends
+from loguru import logger
+from sqlalchemy.orm import Session
+
+from api.dependencies import get_current_user, get_db_session, skip_limit_params
 
 router = APIRouter(
     prefix="/sdoc", dependencies=[Depends(get_current_user)], tags=["sourceDocument"]

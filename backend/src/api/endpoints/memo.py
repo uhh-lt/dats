@@ -1,11 +1,5 @@
 from typing import Dict, List
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
-from api.dependencies import get_current_user, get_db_session
-from api.util import get_object_memo_for_user, get_object_memos
-from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud, MemoCrud
 from app.core.data.crud.memo import crud_memo
@@ -24,6 +18,12 @@ from app.core.search.filtering import Filter
 from app.core.search.memo_search.memo_search import memo_info, memo_search
 from app.core.search.memo_search.memo_search_columns import MemoColumns
 from app.core.search.sorting import Sort
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from api.dependencies import get_current_user, get_db_session
+from api.util import get_object_memo_for_user, get_object_memos
+from api.validation import Validate
 
 router = APIRouter(
     prefix="/memo", dependencies=[Depends(get_current_user)], tags=["memo"]

@@ -2,9 +2,6 @@ from pathlib import Path
 from typing import List
 
 import pandas as pd
-from loguru import logger
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.object_handle import crud_object_handle
 from app.core.data.dto.span_annotation import (
@@ -24,6 +21,8 @@ from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.repo.repo_service import RepoService
+from loguru import logger
+from sqlalchemy.orm import Session
 
 
 def export_selected_memos(

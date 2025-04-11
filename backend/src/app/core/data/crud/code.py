@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Optional
 
+from config import conf
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
@@ -7,7 +8,6 @@ from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.code import CodeCreate, CodeUpdate
 from app.core.data.orm.code import CodeORM
 from app.util.color import get_next_color
-from config import conf
 
 
 class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):

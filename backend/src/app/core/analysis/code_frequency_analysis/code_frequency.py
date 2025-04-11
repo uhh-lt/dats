@@ -1,7 +1,5 @@
 from typing import List
 
-from sqlalchemy import and_, func
-
 from app.core.data.crud.project import crud_project
 from app.core.data.doc_type import DocType
 from app.core.data.dto.analysis import CodeFrequency, CodeOccurrence
@@ -17,6 +15,7 @@ from app.core.data.orm.source_document_data import SourceDocumentDataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.db.sql_service import SQLService
+from sqlalchemy import and_, func
 
 
 def find_code_frequencies(

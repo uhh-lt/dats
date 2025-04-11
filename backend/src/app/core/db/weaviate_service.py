@@ -2,6 +2,7 @@ from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import weaviate
+from config import conf
 from loguru import logger
 
 from app.core.data.dto.search import (
@@ -11,7 +12,6 @@ from app.core.data.dto.search import (
 )
 from app.core.db.index_type import IndexType
 from app.core.db.vector_index_service import VectorIndexService
-from config import conf
 
 
 class WeaviateService(VectorIndexService):

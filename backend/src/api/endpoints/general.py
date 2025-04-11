@@ -1,8 +1,7 @@
-from fastapi import APIRouter
-from fastapi.responses import RedirectResponse
-
 from app.core.data.dto.instance_info import InstanceInfo
 from config import conf
+from fastapi import APIRouter
+from fastapi.responses import RedirectResponse
 
 router = APIRouter(tags=["general"])
 

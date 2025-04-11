@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Union
 
 import srsly
+from config import conf
 from elasticsearch import Elasticsearch, helpers
 from loguru import logger
 
@@ -14,7 +15,6 @@ from app.core.data.dto.search import (
     PaginatedElasticSearchDocumentHits,
 )
 from app.util.singleton_meta import SingletonMeta
-from config import conf
 
 
 class NoSuchMemoInElasticSearchError(Exception):

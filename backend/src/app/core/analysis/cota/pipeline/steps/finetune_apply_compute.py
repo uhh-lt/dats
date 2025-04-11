@@ -1,9 +1,6 @@
 from typing import Dict, List, Tuple
 
 import numpy as np
-from loguru import logger
-from umap.umap_ import UMAP
-
 from app.core.analysis.cota.pipeline.cargo import Cargo
 from app.core.data.dto.concept_over_time_analysis import (
     COTAConcept,
@@ -17,6 +14,8 @@ from app.preprocessing.ray_model_worker.dto.cota import (
     RayCOTAJobResponse,
     RayCOTASentenceBase,
 )
+from loguru import logger
+from umap.umap_ import UMAP
 
 rms: RayModelService = RayModelService()
 repo: RepoService = RepoService()

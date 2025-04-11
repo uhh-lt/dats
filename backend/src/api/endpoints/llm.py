@@ -1,8 +1,5 @@
 from typing import Dict, List, Optional
 
-from fastapi import APIRouter, Depends
-
-from api.dependencies import get_current_user
 from app.celery.background_jobs import prepare_and_start_llm_job_async
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.dto.llm_job import (
@@ -16,6 +13,9 @@ from app.core.data.dto.llm_job import (
     TrainingParameters,
 )
 from app.core.data.llm.llm_service import LLMService
+from fastapi import APIRouter, Depends
+
+from api.dependencies import get_current_user
 
 router = APIRouter(
     prefix="/llm", dependencies=[Depends(get_current_user)], tags=["llm"]

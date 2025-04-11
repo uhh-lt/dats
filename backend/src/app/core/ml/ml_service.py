@@ -1,8 +1,6 @@
 from datetime import datetime
 from typing import List, Union
 
-from sqlalchemy import and_, or_
-
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.ml_job import (
     CoreferenceResolutionParams,
@@ -25,6 +23,7 @@ from app.core.ml.doc_tag_recommendation.doc_tag_recommendation_service import (
 )
 from app.core.ml.quote_service import QuoteService
 from app.util.singleton_meta import SingletonMeta
+from sqlalchemy import and_, or_
 
 
 class MLJobPreparationError(Exception):

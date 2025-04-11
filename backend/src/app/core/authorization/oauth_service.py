@@ -2,6 +2,7 @@ import random
 import string
 
 from authlib.integrations.starlette_client import OAuth, OAuthError
+from config import conf
 from fastapi import Request
 from loguru import logger
 
@@ -14,7 +15,6 @@ from app.core.data.orm.user import UserORM
 from app.core.db.sql_service import SQLService
 from app.core.mail.mail_service import MailService
 from app.util.singleton_meta import SingletonMeta
-from config import conf
 
 
 class OAuthService(metaclass=SingletonMeta):

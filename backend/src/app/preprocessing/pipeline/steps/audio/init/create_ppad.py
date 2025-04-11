@@ -1,8 +1,7 @@
-from loguru import logger
-
 from app.core.data.repo.repo_service import RepoService
 from app.preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
+from loguru import logger
 
 repo = RepoService()
 

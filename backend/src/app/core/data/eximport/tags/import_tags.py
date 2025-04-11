@@ -1,15 +1,14 @@
 from typing import Dict, List, Optional
 
 import pandas as pd
-from loguru import logger
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.dto.document_tag import DocumentTagCreate
 from app.core.data.eximport.tags.tag_export_schema import (
     TagExportCollection,
     TagExportSchema,
 )
+from loguru import logger
+from sqlalchemy.orm import Session
 
 
 class TagImporter:

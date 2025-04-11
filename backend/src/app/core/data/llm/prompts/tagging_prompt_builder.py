@@ -1,10 +1,9 @@
 from typing import List
 
-from pydantic import BaseModel
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.project import crud_project
 from app.core.data.llm.prompts.prompt_builder import PromptBuilder
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 
 class OllamaParsedDocumentTaggingResult(BaseModel):

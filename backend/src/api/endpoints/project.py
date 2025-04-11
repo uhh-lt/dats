@@ -1,13 +1,5 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
-from sqlalchemy.orm import Session
-
-from api.dependencies import (
-    get_current_user,
-    get_db_session,
-)
-from api.util import get_object_memo_for_user
 from app.core.analysis.duplicate_finder.duplicate_finder import find_duplicates
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud.code import crud_code
@@ -38,6 +30,14 @@ from app.core.data.dto.user import UserRead
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.db.elasticsearch_service import ElasticSearchService
 from app.preprocessing.preprocessing_service import PreprocessingService
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from sqlalchemy.orm import Session
+
+from api.dependencies import (
+    get_current_user,
+    get_db_session,
+)
+from api.util import get_object_memo_for_user
 
 router = APIRouter(
     prefix="/project",

@@ -1,9 +1,6 @@
 from typing import List, Optional, Union
 
-from fastapi import APIRouter, Depends
-
 import app.core.search.sdoc_search.sdoc_search as sdoc_search
-from api.dependencies import get_current_user
 from app.core.analysis.search_statistics.search_statistics import (
     compute_code_statistics,
     compute_keyword_statistics,
@@ -22,6 +19,9 @@ from app.core.search.column_info import ColumnInfo
 from app.core.search.filtering import Filter
 from app.core.search.sdoc_search.sdoc_search_columns import SdocColumns
 from app.core.search.sorting import Sort
+from fastapi import APIRouter, Depends
+
+from api.dependencies import get_current_user
 
 router = APIRouter(
     prefix="/search", dependencies=[Depends(get_current_user)], tags=["search"]

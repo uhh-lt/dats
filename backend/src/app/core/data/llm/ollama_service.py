@@ -2,12 +2,11 @@ import time
 from typing import Dict, List, Optional, Tuple, Type, TypedDict, TypeVar
 from uuid import uuid4
 
+from app.util.singleton_meta import SingletonMeta
+from config import conf
 from loguru import logger
 from ollama import Client
 from pydantic import BaseModel
-
-from app.util.singleton_meta import SingletonMeta
-from config import conf
 
 T = TypeVar("T", bound=BaseModel)
 

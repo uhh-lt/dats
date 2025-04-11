@@ -1,8 +1,7 @@
 from typing import Callable, List
 
-from pydantic import BaseModel, Field
-
 from app.core.analysis.cota.pipeline.cargo import Cargo
+from pydantic import BaseModel, Field
 
 
 class PipelineStep(BaseModel):

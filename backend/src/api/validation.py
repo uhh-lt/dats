@@ -1,13 +1,13 @@
 from typing import Optional, Sequence, Tuple
 
-from fastapi import Depends
-from sqlalchemy.orm import Session
-
-from api.dependencies import get_db_session
 from app.core.data.crud import Crud
 from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.orm.orm_base import ORMBase
 from app.core.data.orm.util import get_parent_project_id
+from fastapi import Depends
+from sqlalchemy.orm import Session
+
+from api.dependencies import get_db_session
 
 
 class InvalidError(Exception):

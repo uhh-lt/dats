@@ -1,9 +1,5 @@
 from typing import List, Union
 
-from fastapi import HTTPException
-from loguru import logger
-from starlette import status
-
 from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.dto.memo import AttachedObjectType, MemoInDB, MemoRead
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
@@ -15,6 +11,9 @@ from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_group import SpanGroupORM
+from fastapi import HTTPException
+from loguru import logger
+from starlette import status
 
 credentials_exception = HTTPException(
     status_code=status.HTTP_403_FORBIDDEN,

@@ -1,8 +1,7 @@
-from loguru import logger
-
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from app.util.string_builder import StringBuilder
+from loguru import logger
 
 
 def apply_html_source_mapping_with_custom_html_tags(

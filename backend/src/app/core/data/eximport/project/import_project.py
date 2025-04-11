@@ -14,10 +14,6 @@ from typing import (
 
 import numpy as np
 import pandas as pd
-from celery import Task, group
-from loguru import logger
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.preprocessing_job import crud_prepro_job
 from app.core.data.crud.project import crud_project
 from app.core.data.doc_type import (
@@ -47,6 +43,9 @@ from app.core.data.repo.repo_service import (
 from app.preprocessing.pipeline.model.image.autobbox import AutoBBox
 from app.preprocessing.pipeline.model.text.autosentanno import AutoSentAnno
 from app.preprocessing.pipeline.model.text.autospan import AutoSpan
+from celery import Task, group
+from loguru import logger
+from sqlalchemy.orm import Session
 
 
 class ImportSDocFileMissingException(Exception):

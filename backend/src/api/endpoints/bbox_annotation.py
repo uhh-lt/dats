@@ -1,13 +1,5 @@
 from typing import List
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
-from api.dependencies import (
-    get_current_user,
-    get_db_session,
-)
-from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
@@ -18,6 +10,14 @@ from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationUpdateBulk,
 )
 from app.core.data.dto.code import CodeRead
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from api.dependencies import (
+    get_current_user,
+    get_db_session,
+)
+from api.validation import Validate
 
 router = APIRouter(
     prefix="/bbox", dependencies=[Depends(get_current_user)], tags=["bboxAnnotation"]

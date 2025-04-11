@@ -1,10 +1,9 @@
 from pathlib import Path
 
-from loguru import logger
-
 from app.preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
+from loguru import logger
 
 
 def create_pptd_from_transcription(cargo: PipelineCargo) -> PipelineCargo:

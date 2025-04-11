@@ -1,11 +1,10 @@
 from typing import List
 
-from bs4 import BeautifulSoup
-
 from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
 from app.core.data.repo.repo_service import RepoService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
+from bs4 import BeautifulSoup
 from config import conf
 
 cc = conf.celery

@@ -1,9 +1,5 @@
 from typing import List, Optional, Tuple
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
-from api.dependencies import get_current_user, get_db_session
 from app.core.analysis.code_frequency_analysis.code_frequency import (
     find_code_frequencies,
     find_code_occurrences,
@@ -51,6 +47,10 @@ from app.core.search.span_anno_search.span_anno_search import (
 from app.core.search.span_anno_search.span_anno_search_columns import (
     SpanColumns,
 )
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from api.dependencies import get_current_user, get_db_session
 
 router = APIRouter(
     prefix="/analysis", dependencies=[Depends(get_current_user)], tags=["analysis"]

@@ -1,9 +1,6 @@
 from typing import Dict, List, Set
 
 import pandas as pd
-from loguru import logger
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
@@ -13,6 +10,8 @@ from app.core.data.eximport.bbox_annotations.bbox_annotations_export_schema impo
     BBoxAnnotationExportSchema,
 )
 from app.core.data.orm.source_document import SourceDocumentORM
+from loguru import logger
+from sqlalchemy.orm import Session
 
 
 class ImportBBoxAnnotationsError(Exception):

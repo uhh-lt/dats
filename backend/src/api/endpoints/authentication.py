@@ -1,14 +1,6 @@
 import json
 from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
-from fastapi.encoders import jsonable_encoder
-from fastapi.responses import HTMLResponse
-from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
-
-from api.dependencies import get_current_user, get_db_session, reusable_oauth2_scheme
-from api.util import credentials_exception
 from app.core.authorization.authz_user import AuthzUser
 from app.core.authorization.oauth_service import OAuthService
 from app.core.data.crud.crud_base import NoSuchElementError
@@ -24,6 +16,14 @@ from app.core.data.dto.user import (
 from app.core.data.orm.user import UserORM
 from app.core.mail.mail_service import MailService
 from app.core.security import decode_jwt, generate_jwt
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import HTMLResponse
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
+
+from api.dependencies import get_current_user, get_db_session, reusable_oauth2_scheme
+from api.util import credentials_exception
 
 CONTENT_PREFIX = "/content/projects/"
 AUTHORIZATION = "Authorization"

@@ -1,11 +1,10 @@
 from collections import Counter
 from typing import Optional
 
-from loguru import logger
-
 from app.preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
+from loguru import logger
 
 
 def generate_word_frequncies(cargo: PipelineCargo) -> PipelineCargo:

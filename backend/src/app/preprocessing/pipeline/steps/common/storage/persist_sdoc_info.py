@@ -1,9 +1,6 @@
 import traceback
 from typing import Optional
 
-from loguru import logger
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.project import crud_project
@@ -24,6 +21,8 @@ from app.preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.preprodoc_base import PreProDocBase
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
+from loguru import logger
+from sqlalchemy.orm import Session
 
 repo: RepoService = RepoService()
 sql: SQLService = SQLService()

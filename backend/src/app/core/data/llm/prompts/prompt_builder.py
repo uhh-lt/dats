@@ -1,9 +1,8 @@
 from typing import List, Optional
 
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.project import crud_project
 from app.core.data.dto.llm_job import LLMPromptTemplates
+from sqlalchemy.orm import Session
 
 # ENGLISH
 

@@ -9,14 +9,13 @@ Create Date: 2025-01-13 10:21:43.457535
 from typing import Sequence, Union
 
 import sqlalchemy as sa
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.sql import text
-
 from alembic import op
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.doc_type import DocType
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.repo.repo_service import RepoService
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.sql import text
 
 # revision identifiers, used by Alembic.
 revision: str = "970c55224a39"

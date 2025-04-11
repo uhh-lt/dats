@@ -1,8 +1,7 @@
 from typing import Any, Dict, List
 
-from pydantic import BaseModel, ConfigDict, Field, SkipValidation
-
 from app.core.data.dto.concept_over_time_analysis import COTARefinementJobRead
+from pydantic import BaseModel, ConfigDict, Field, SkipValidation
 
 # if TYPE_CHECKING:
 #     from app.core.analysis.cota.pipeline.step import PipelineStep

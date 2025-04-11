@@ -1,7 +1,6 @@
-from PIL import Image
-
 from app.preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
+from PIL import Image
 
 
 def create_image_metadata(cargo: PipelineCargo) -> PipelineCargo:

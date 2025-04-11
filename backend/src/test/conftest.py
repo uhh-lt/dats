@@ -10,13 +10,6 @@ from typing import Callable, Generator
 import magic
 import pytest
 import requests
-from fastapi import Request
-from fastapi.datastructures import Headers
-from fastapi.testclient import TestClient
-from loguru import logger
-from pytest import FixtureRequest
-from sqlalchemy.orm import Session
-
 from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.orm.code import CodeORM
@@ -28,6 +21,12 @@ from app.core.db.redis_service import RedisService
 from app.core.db.simsearch_service import SimSearchService
 from app.core.db.sql_service import SQLService
 from config import conf
+from fastapi import Request
+from fastapi.datastructures import Headers
+from fastapi.testclient import TestClient
+from loguru import logger
+from pytest import FixtureRequest
+from sqlalchemy.orm import Session
 
 os.environ["RESET_DATA"] = "1"
 

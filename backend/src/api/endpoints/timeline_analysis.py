@@ -1,9 +1,5 @@
 from typing import List
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
-from api.dependencies import get_current_user, get_db_session
 from app.core.analysis.timeline_analysis.timeline import (
     recompute_timeline_analysis,
     update_timeline_analysis,
@@ -17,6 +13,10 @@ from app.core.data.dto.timeline_analysis import (
     TimelineAnalysisRead,
     TimelineAnalysisUpdate,
 )
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from api.dependencies import get_current_user, get_db_session
 
 router = APIRouter(
     prefix="/timelineAnalysis",

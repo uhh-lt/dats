@@ -1,9 +1,6 @@
 from datetime import datetime
 from typing import Callable, Dict, List, Optional, Type, Union
 
-from loguru import logger
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.sentence_annotation import crud_sentence_anno
 from app.core.data.crud.source_document import crud_sdoc
@@ -81,6 +78,8 @@ from app.preprocessing.ray_model_worker.dto.seqsenttagger import (
 )
 from app.util.singleton_meta import SingletonMeta
 from config import conf
+from loguru import logger
+from sqlalchemy.orm import Session
 
 lac = conf.llm_assistant
 

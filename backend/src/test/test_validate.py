@@ -1,5 +1,4 @@
 import pytest
-
 from api.validation import InvalidError, Validate
 
 

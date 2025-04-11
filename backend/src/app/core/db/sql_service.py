@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 from typing import Generator
 
+from config import conf
 from loguru import logger
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.engine import Engine
@@ -9,7 +10,6 @@ from sqlalchemy_utils import create_database, database_exists, drop_database
 
 from app.core.db.import_all_orms import *  # noqa: F401, F403
 from app.util.singleton_meta import SingletonMeta
-from config import conf
 
 
 class SQLService(metaclass=SingletonMeta):

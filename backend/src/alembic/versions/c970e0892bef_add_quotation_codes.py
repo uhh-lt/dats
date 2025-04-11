@@ -9,11 +9,10 @@ Create Date: 2025-02-26 15:28:35.202746
 from typing import Any, Dict, Optional, Sequence, Union
 
 import sqlalchemy as sa
-from pydantic import BaseModel, Field
-from sqlalchemy.orm import Session, sessionmaker
-
 from alembic import op
 from app.util.color import get_next_color
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session, sessionmaker
 
 # revision identifiers, used by Alembic.
 revision: str = "c970e0892bef"

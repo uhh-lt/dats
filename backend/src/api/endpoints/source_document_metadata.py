@@ -1,10 +1,5 @@
 from typing import List
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
-from api.dependencies import get_current_user, get_db_session
-from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
@@ -14,6 +9,11 @@ from app.core.data.dto.source_document_metadata import (
     SourceDocumentMetadataRead,
     SourceDocumentMetadataUpdate,
 )
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from api.dependencies import get_current_user, get_db_session
+from api.validation import Validate
 
 router = APIRouter(
     prefix="/sdocmeta", dependencies=[Depends(get_current_user)], tags=["sdocMetadata"]
