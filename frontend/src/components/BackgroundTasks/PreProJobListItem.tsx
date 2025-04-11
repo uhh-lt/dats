@@ -17,15 +17,17 @@ function PreProJobListItem({ initialPreProJob }: PreprocessingJobListItemProps) 
 
   // compute subtitle
   const subTitle = useMemo(() => {
+    if (!preProJob.data) {
+      return "";
+    }
     const createdDate = dateToLocaleString(initialPreProJob.created);
     const updatedDate = dateToLocaleString(initialPreProJob.updated);
-
-    let title = `${preProJob.data!.payloads.length} documents, started at ${createdDate}`;
-    if (preProJob.data!.status === BackgroundJobStatus.FINISHED) {
+    let title = `${preProJob.data.payloads.length} documents, started at ${createdDate}`;
+    if (preProJob.data.status === BackgroundJobStatus.FINISHED) {
       title += `, finished at ${updatedDate}`;
-    } else if (preProJob.data!.status === BackgroundJobStatus.ABORTED) {
+    } else if (preProJob.data.status === BackgroundJobStatus.ABORTED) {
       title += `, aborted at ${updatedDate}`;
-    } else if (preProJob.data!.status === BackgroundJobStatus.ERRORNEOUS) {
+    } else if (preProJob.data.status === BackgroundJobStatus.ERRORNEOUS) {
       title += `, failed at ${updatedDate}`;
     }
     return title;
