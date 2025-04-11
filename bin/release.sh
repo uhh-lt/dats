@@ -20,8 +20,7 @@ sed -i "s/DATS_FRONTEND_DOCKER_VERSION=.*/DATS_FRONTEND_DOCKER_VERSION=$1/" .env
 
 # update backend version
 cd ../backend
-ENV_NAME=dats source _activate_current_env.sh
-python update_version.py --version $1
+uv run update_version.py --version $1
 read -p "Please restart the backend to make sure its OpenAPI spec is up to date. Afterwards, press any key to continue. " -n 1 -r
 
 # update frontend version
