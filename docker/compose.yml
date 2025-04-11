@@ -99,7 +99,7 @@ services:
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
-    user: ${UID:-1000}:${GID:-1000}
+    user: ${DOCKER_UID:-1000}:${DOCKER_GID:-1000}
     group_add:
       - "0"
     healthcheck:
@@ -108,7 +108,7 @@ services:
       timeout: 10s
       retries: 5
     environment:
-      # see https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-network.html
+      # see https://www.elastic.co/gDOCKER_uide/en/elasticsearch/reference/current/modules-network.html
       # use 127.0.0.1 to access the ES node from OUTSIDE of the docker network (e.g. when ssh tunneling to ltdocker)
       # network.publish_host=127.0.0.1
       # http.publish_port=${ELASTICSEARCH_EXPOSED_PORT:-9200}
@@ -139,7 +139,7 @@ services:
       timeout: 10s
       retries: 5
     command: /dats_code/src/celery_background_jobs_worker_entrypoint.sh
-    user: ${UID:-1000}:${GID:-1000}
+    user: ${DOCKER_UID:-1000}:${DOCKER_GID:-1000}
     environment:
       DATS_BACKEND_CONFIG: /dats_code/src/configs/production.yaml
       LOG_LEVEL: ${CELERY_LOG_LEVEL:-info}
@@ -191,7 +191,7 @@ services:
       timeout: 10s
       retries: 5
     command: /dats_code/src/backend_api_entrypoint.sh
-    user: ${UID:-1000}:${GID:-1000}
+    user: ${DOCKER_UID:-1000}:${DOCKER_GID:-1000}
     environment:
       DATS_BACKEND_CONFIG: /dats_code/src/configs/production.yaml
       LOG_LEVEL: ${API_LOG_LEVEL:-info}
