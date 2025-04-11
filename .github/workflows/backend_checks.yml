@@ -77,11 +77,6 @@ jobs:
         run: |
           source .env
           docker compose run --user $(id -u):$(id -g) dats-backend-api /dats_code/.venv/bin/alembic check
-      - name: Start Remaining Docker Containers
-        working-directory: docker
-        run: |
-          source .env
-          COMPOSE_PROFILES="weaviate,background,backend" docker compose up --wait --quiet-pull
       - name: Check 4 - install uv environment
         working-directory: backend
         run: |
@@ -90,6 +85,11 @@ jobs:
         working-directory: backend
         run: |
           uv run pyright
+      - name: Start Remaining Docker Containers
+        working-directory: docker
+        run: |
+          source .env
+          COMPOSE_PROFILES="weaviate,background,backend" docker compose up --wait --quiet-pull
       - name: Check 6 - Test End-2-End importer script
         working-directory: backend
         env:
