@@ -321,6 +321,21 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
     }
   }, [projectId, searchQuery, filter, sortingModel]);
 
+  // Track & restore scroll position
+  const savedScrollPosition = useAppSelector((state) => state.search.scrollPosition);
+  useEffect(() => {
+    if (
+      table.refs.tableContainerRef.current &&
+      table.refs.tableContainerRef.current?.scrollTop !== savedScrollPosition
+    ) {
+      console.log("Restoring scroll position: ", savedScrollPosition);
+      setTimeout(() => {
+        table.refs.tableContainerRef.current!.scrollTop = savedScrollPosition;
+      }, 100);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <DATSToolbar variant="dense" ref={toolbarRef}>
@@ -356,7 +371,13 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
         <MRT_TableContainer
           table={table}
           style={{ flexGrow: 1 }}
-          onScroll={(event) => fetchMoreOnScroll(event.target as HTMLDivElement)}
+          onScroll={(event) => {
+            // Save the scroll position when the user scrolls
+            const target = event.target as HTMLDivElement;
+            dispatch(SearchActions.onSaveScrollPosition(target.scrollTop));
+            // Continue with the default fetch more behavior
+            fetchMoreOnScroll(target);
+          }}
         />
         <Box sx={{ p: 1 }}>
           <Divider />
