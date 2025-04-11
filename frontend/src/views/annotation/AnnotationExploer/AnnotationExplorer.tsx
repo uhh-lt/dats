@@ -105,7 +105,7 @@ function AnnotationExplorer<T extends AnnotationRead>({
             position: "relative",
           }}
         >
-          {annotations ? (
+          {annotations && codes ? (
             <>
               {annotations.length > 0
                 ? filteredAnnotations.length > 0
@@ -127,6 +127,7 @@ function AnnotationExplorer<T extends AnnotationRead>({
                         >
                           {renderAnnotationCard({
                             annotation,
+                            code: codes[annotation.code_id],
                             isSelected,
                             cardProps: {
                               variant: "outlined",

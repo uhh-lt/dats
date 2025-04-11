@@ -13,11 +13,7 @@ function SpanAnnotationExplorer({ sdocId }: { sdocId: number }) {
 
   return (
     <AnnotationExplorer
-      annotations={annotations.data?.map((annotation) => ({
-        ...annotation,
-        code_id: annotation.code_id,
-        span_text_id: 1,
-      }))}
+      annotations={annotations.data}
       filterByText={filterByText}
       renderAnnotationCard={SpanAnnotationCard}
     />
