@@ -2,7 +2,7 @@ import logging
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Set, TypedDict
+from typing import Dict, List, Set, Tuple, TypedDict
 from uuid import uuid4
 
 import torch
@@ -152,16 +152,16 @@ class SentenceTaggingDataset(Dataset):
         # create the labels field that uses the ids, not the strings
         self.labels = [[self.tag2id[tag] for tag in ls] for ls in labels]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.labels)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, List[int]]:
         labels = self.labels[idx]
         embeddings = torch.tensor(self.embeddings[idx])
         return embeddings, labels
 
 
-def collate_fn(batch):
+def collate_fn(batch: List[Tuple[torch.Tensor, List[int]]]):
     embeddings, labels = zip(*batch)
 
     # Pad labels
@@ -174,7 +174,7 @@ def collate_fn(batch):
         mask[i, : len(label)] = 1
 
     # Pad embeddings
-    padded_embeddings = pad_sequence(embeddings, batch_first=True, padding_value=0)
+    padded_embeddings = pad_sequence(embeddings, batch_first=True, padding_value=0)  # type: ignore
 
     # switch first sentence (0) with longest sentence (longest_idx)
     longest_idx = max(range(len(labels)), key=lambda k: len(labels[k]))

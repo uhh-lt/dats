@@ -99,6 +99,7 @@ def prepare_and_start_crawling_job_async(
     assert job2 is not None, "Job 2 is None"
 
     start_export_job_chain = job1 | job2
+    assert start_export_job_chain is not None, "Job chain is None"
     start_export_job_chain.apply_async()
 
     return cj
