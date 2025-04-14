@@ -17,6 +17,7 @@ class ImportJobType(str, Enum):
     USERS = "USERS"
     PROJECT_METADATA = "PROJECT_METADATA"
     WHITEBOARDS = "WHITEBOARDS"
+    TIMELINE_ANALYSES = "TIMELINE_ANALYSES"
 
 
 class ImportJobParameters(BaseModel):

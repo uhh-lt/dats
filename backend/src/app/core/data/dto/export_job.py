@@ -21,6 +21,7 @@ class ExportJobType(str, Enum):
     ALL_MEMOS = "ALL_MEMOS"
     ALL_PROJECT_METADATA = "ALL_PROJECT_METADATA"
     ALL_WHITEBOARDS = "ALL_WHITEBOARDS"
+    ALL_TIMELINE_ANALYSES = "ALL_TIMELINE_ANALYSES"
     # selected
     SELECTED_SDOCS = "SELECTED_SDOCS"
     SELECTED_SPAN_ANNOTATIONS = "SELECTED_SPAN_ANNOTATIONS"
@@ -28,48 +29,50 @@ class ExportJobType(str, Enum):
     SELECTED_BBOX_ANNOTATIONS = "SELECTED_BBOX_ANNOTATIONS"
     SELECTED_MEMOS = "SELECTED_MEMOS"
     SELECTED_WHITEBOARDS = "SELECTED_WHITEBOARDS"
+    SELECTED_TIMELINE_ANALYSES = "SELECTED_TIMELINE_ANALYSES"
 
 
-class SpecificExportJobParameters(BaseModel):
-    export_job_type: ExportJobType = Field(
-        description="The type of the export job (what to export)"
-    )
-
-
-class ExportSelectedSdocsParams(SpecificExportJobParameters):
+class ExportSelectedSdocsParams(BaseModel):
     export_job_type: Literal[ExportJobType.SELECTED_SDOCS]
     sdoc_ids: List[int] = Field(description="IDs of the source documents to export")
 
 
-class ExportSelectedSpanAnnotationsParams(SpecificExportJobParameters):
+class ExportSelectedSpanAnnotationsParams(BaseModel):
     export_job_type: Literal[ExportJobType.SELECTED_SPAN_ANNOTATIONS]
     span_annotation_ids: List[int] = Field(
         description="IDs of the span annotations to export"
     )
 
 
-class ExportSelectedSentenceAnnotationsParams(SpecificExportJobParameters):
+class ExportSelectedSentenceAnnotationsParams(BaseModel):
     export_job_type: Literal[ExportJobType.SELECTED_SENTENCE_ANNOTATIONS]
     sentence_annotation_ids: List[int] = Field(
         description="IDs of the sentence annotations to export"
     )
 
 
-class ExportSelectedBboxAnnotationsParams(SpecificExportJobParameters):
+class ExportSelectedBboxAnnotationsParams(BaseModel):
     export_job_type: Literal[ExportJobType.SELECTED_BBOX_ANNOTATIONS]
     bbox_annotation_ids: List[int] = Field(
         description="IDs of the bbox annotations to export"
     )
 
 
-class ExportSelectedMemosParams(SpecificExportJobParameters):
+class ExportSelectedMemosParams(BaseModel):
     export_job_type: Literal[ExportJobType.SELECTED_MEMOS]
     memo_ids: List[int] = Field(description="IDs of the memos to export")
 
 
-class ExportSelectedWhiteboardsParams(SpecificExportJobParameters):
+class ExportSelectedWhiteboardsParams(BaseModel):
     export_job_type: Literal[ExportJobType.SELECTED_WHITEBOARDS]
     whiteboard_ids: List[int] = Field(description="IDs of the whiteboards to export")
+
+
+class ExportSelectedTimelineAnalysesParams(BaseModel):
+    export_job_type: Literal[ExportJobType.SELECTED_TIMELINE_ANALYSES]
+    timeline_analysis_ids: List[int] = Field(
+        description="IDs of the timeline analyses to export"
+    )
 
 
 class ExportJobParameters(BaseModel):
@@ -87,6 +90,7 @@ class ExportJobParameters(BaseModel):
         ExportSelectedBboxAnnotationsParams,
         ExportSelectedMemosParams,
         ExportSelectedWhiteboardsParams,
+        ExportSelectedTimelineAnalysesParams,
     ] = Field(
         description="Specific parameters for the export job w.r.t it's type",
         discriminator="export_job_type",
