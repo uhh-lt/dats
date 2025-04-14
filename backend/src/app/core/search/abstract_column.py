@@ -35,5 +35,7 @@ class AbstractColumns(Enum, metaclass=EnumMeta):
     def resolve_ids(self, db: Session, ids: List[int]) -> List[str]:
         raise NotImplementedError
 
-    def resolve_names(self, db: Session, names: List[str]) -> List[int]:
+    def resolve_names(
+        self, db: Session, project_id: int, names: List[str]
+    ) -> List[int]:
         raise NotImplementedError

@@ -65,7 +65,7 @@ class FilterExpression(BaseModel, Generic[T]):
             return self
 
         # Resolve IDs for IDOperator
-        if self.operator == IDOperator:
+        if self.operator == IDOperator.EQUALS or self.operator == IDOperator.NOT_EQUALS:
             assert isinstance(self.value, int), f"Expected int, got {type(self.value)}"
             resolved_ids = self.column.resolve_ids(db=db, ids=[int(self.value)])
             if len(resolved_ids) == 0:
@@ -76,49 +76,68 @@ class FilterExpression(BaseModel, Generic[T]):
             return self
 
         # Resolve IDs for IDListOperator
-        if self.operator == IDListOperator:
-            assert isinstance(
-                self.value, list
-            ), f"Expected list, got {type(self.value)}"
-            ids = []
-            for id in self.value:
-                assert isinstance(id, int), f"Expected int, got {type(id)}"
-                ids.append(int(id))
+        if (
+            self.operator == IDListOperator.CONTAINS
+            or self.operator == IDListOperator.NOT_CONTAINS
+        ):
+            if isinstance(self.value, str):
+                ids = [int(self.value)]
+            elif isinstance(self.value, int):
+                ids = [int(self.value)]
+            elif isinstance(self.value, list):
+                ids = []
+                for id in self.value:
+                    assert isinstance(id, int), f"Expected int, got {type(id)}"
+                    ids.append(int(id))
+            else:
+                ids = []
+
             resolved_ids = self.column.resolve_ids(db=db, ids=ids)
-            if len(resolved_ids) == 0:
+            if len(ids) > 1 and len(resolved_ids) == 0:
                 raise ValueError(f"IDs '{ids}' not found for column {self.column}")
             self.value = resolved_ids
             return self
 
         return self
 
-    def resolve_names(self, db: Session) -> "FilterExpression[T]":
+    def resolve_names(self, db: Session, project_id: int) -> "FilterExpression[T]":
         # We don't need to resolve names for metadata columns
         if isinstance(self.column, int):
             return self
 
         # Resolve names for IDOperator
-        if self.operator == IDOperator:
+        if self.operator == IDOperator.EQUALS or self.operator == IDOperator.NOT_EQUALS:
             assert isinstance(self.value, str), f"Expected str, got {type(self.value)}"
-            resolved_names = self.column.resolve_names(db=db, names=[self.value])
+            resolved_names = self.column.resolve_names(
+                db=db, project_id=project_id, names=[self.value]
+            )
             if len(resolved_names) == 0:
                 raise ValueError(f"'{self.value}' not found for column {self.column}")
             self.value = resolved_names[0]
             return self
 
         # Resolve names for IDListOperator
-        if self.operator == IDListOperator:
-            assert isinstance(
-                self.value, list
-            ), f"Expected list, got {type(self.value)}"
-            names = []
-            for name in self.value:
-                assert isinstance(name, str), f"Expected str, got {type(name)}"
-                names.append(name)
+        if (
+            self.operator == IDListOperator.CONTAINS
+            or self.operator == IDListOperator.NOT_CONTAINS
+        ):
+            if isinstance(self.value, str):
+                names = [self.value]
+            elif isinstance(self.value, list):
+                names = []
+                for name in self.value:
+                    assert isinstance(name, str), f"Expected str, got {type(name)}"
+                    names.append(name)
+            else:
+                names = []
+
             resolved_names = [
-                str(id) for id in self.column.resolve_names(db=db, names=names)
+                str(id)
+                for id in self.column.resolve_names(
+                    db=db, project_id=project_id, names=names
+                )
             ]
-            if len(resolved_names) == 0:
+            if len(names) > 0 and len(resolved_names) == 0:
                 raise ValueError(
                     f"Names '{self.value}' not found for column {self.column}"
                 )
@@ -156,15 +175,18 @@ class Filter(BaseModel, Generic[T]):
         # Resolve IDs for each FilterExpression in the filter
         for item in filter.items:
             if isinstance(item, FilterExpression):
+                print("THIS IS AN EXPRESSION!")
                 resolved_items.append(item.resolve_ids(db=db))
             else:
-                resolved_items.append(item)
+                resolved_items.append(Filter.resolve_ids(item, db=db))
         resolved.items = resolved_items
 
         return resolved
 
     @classmethod
-    def resolve_names(cls, filter: "Filter[T]", db: Session) -> "Filter[T]":
+    def resolve_names(
+        cls, filter: "Filter[T]", db: Session, project_id: int
+    ) -> "Filter[T]":
         """
         Resolve names for all FilterExpressions in the filter tree.
         (This is the opposite of resolve_ids)
@@ -180,9 +202,11 @@ class Filter(BaseModel, Generic[T]):
         # Resolve names for each FilterExpression in the filter
         for item in filter.items:
             if isinstance(item, FilterExpression):
-                resolved_items.append(item.resolve_names(db=db))
+                resolved_items.append(item.resolve_names(db=db, project_id=project_id))
             else:
-                resolved_items.append(item)
+                resolved_items.append(
+                    Filter.resolve_names(item, db=db, project_id=project_id)
+                )
         resolved.items = resolved_items
 
         return resolved
