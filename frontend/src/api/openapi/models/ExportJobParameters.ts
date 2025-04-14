@@ -4,6 +4,7 @@
 /* eslint-disable */
 import type { ExportJobType } from "./ExportJobType";
 import type { ExportSelectedBboxAnnotationsParams } from "./ExportSelectedBboxAnnotationsParams";
+import type { ExportSelectedCotaParams } from "./ExportSelectedCotaParams";
 import type { ExportSelectedMemosParams } from "./ExportSelectedMemosParams";
 import type { ExportSelectedSdocsParams } from "./ExportSelectedSdocsParams";
 import type { ExportSelectedSentenceAnnotationsParams } from "./ExportSelectedSentenceAnnotationsParams";
@@ -31,6 +32,7 @@ export type ExportJobParameters = {
         | ExportSelectedMemosParams
         | ExportSelectedWhiteboardsParams
         | ExportSelectedTimelineAnalysesParams
+        | ExportSelectedCotaParams
       )
     | null;
 };

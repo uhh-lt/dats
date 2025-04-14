@@ -6922,12 +6922,14 @@
                   { "$ref": "#/components/schemas/ExportSelectedBboxAnnotationsParams" },
                   { "$ref": "#/components/schemas/ExportSelectedMemosParams" },
                   { "$ref": "#/components/schemas/ExportSelectedWhiteboardsParams" },
-                  { "$ref": "#/components/schemas/ExportSelectedTimelineAnalysesParams" }
+                  { "$ref": "#/components/schemas/ExportSelectedTimelineAnalysesParams" },
+                  { "$ref": "#/components/schemas/ExportSelectedCotaParams" }
                 ],
                 "discriminator": {
                   "propertyName": "export_job_type",
                   "mapping": {
                     "SELECTED_BBOX_ANNOTATIONS": "#/components/schemas/ExportSelectedBboxAnnotationsParams",
+                    "SELECTED_COTA": "#/components/schemas/ExportSelectedCotaParams",
                     "SELECTED_MEMOS": "#/components/schemas/ExportSelectedMemosParams",
                     "SELECTED_SDOCS": "#/components/schemas/ExportSelectedSdocsParams",
                     "SELECTED_SENTENCE_ANNOTATIONS": "#/components/schemas/ExportSelectedSentenceAnnotationsParams",
@@ -6990,13 +6992,15 @@
           "ALL_PROJECT_METADATA",
           "ALL_WHITEBOARDS",
           "ALL_TIMELINE_ANALYSES",
+          "ALL_COTA",
           "SELECTED_SDOCS",
           "SELECTED_SPAN_ANNOTATIONS",
           "SELECTED_SENTENCE_ANNOTATIONS",
           "SELECTED_BBOX_ANNOTATIONS",
           "SELECTED_MEMOS",
           "SELECTED_WHITEBOARDS",
-          "SELECTED_TIMELINE_ANALYSES"
+          "SELECTED_TIMELINE_ANALYSES",
+          "SELECTED_COTA"
         ],
         "title": "ExportJobType"
       },
@@ -7013,6 +7017,20 @@
         "type": "object",
         "required": ["export_job_type", "bbox_annotation_ids"],
         "title": "ExportSelectedBboxAnnotationsParams"
+      },
+      "ExportSelectedCotaParams": {
+        "properties": {
+          "export_job_type": { "type": "string", "const": "SELECTED_COTA", "title": "Export Job Type" },
+          "cota_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Cota Ids",
+            "description": "IDs of the cota to export"
+          }
+        },
+        "type": "object",
+        "required": ["export_job_type", "cota_ids"],
+        "title": "ExportSelectedCotaParams"
       },
       "ExportSelectedMemosParams": {
         "properties": {
@@ -7593,7 +7611,8 @@
           "USERS",
           "PROJECT_METADATA",
           "WHITEBOARDS",
-          "TIMELINE_ANALYSES"
+          "TIMELINE_ANALYSES",
+          "COTA"
         ],
         "title": "ImportJobType"
       },
