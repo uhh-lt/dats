@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { useParams } from "react-router";
 import CotaHooks from "../../../api/CotaHooks.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
+import ExportCotaButton from "../../../components/Export/ExportCotaButton.tsx";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import AnalysisDashboard from "../AnalysisDashboard/AnalysisDashboard.tsx";
 import {
@@ -87,7 +88,7 @@ function CotaDashboard() {
       {
         cotaId: row.original.id,
         requestBody: {
-          name: values.name,
+          name: values.title,
         },
       },
       {
@@ -116,6 +117,7 @@ function CotaDashboard() {
     handleEditAnalysis,
     handleDeleteAnalysis,
     handleDuplicateAnalysis,
+    renderExportButton: (props) => <ExportCotaButton {...props} />,
   });
 
   return (
