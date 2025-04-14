@@ -1,3 +1,5 @@
+from typing import List
+
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
@@ -10,6 +12,7 @@ from app.core.db.sql_utils import aggregate_ids
 from app.core.search.column_info import AbstractColumns
 from app.core.search.filtering_operators import FilterOperator, FilterValueType
 from app.core.search.search_builder import SearchBuilder
+from sqlalchemy.orm import Session
 
 # TODO: How to do text search?
 
@@ -145,3 +148,79 @@ class SentAnnoColumns(str, AbstractColumns):
                     AnnotationDocumentORM.id
                     == SentenceAnnotationORM.annotation_document_id,
                 )
+
+    def resolve_ids(self, db: Session, ids: List[int]) -> List[str]:
+        match self:
+            case SentAnnoColumns.SOURCE_DOCUMENT_FILENAME:
+                raise NotImplementedError(
+                    "Cannot resolve ID for SourceDocument filename!"
+                )
+            case SentAnnoColumns.DOCUMENT_TAG_ID_LIST:
+                result = (
+                    db.query(DocumentTagORM)
+                    .filter(
+                        DocumentTagORM.id.in_(ids),
+                    )
+                    .all()
+                )
+                return [tag.name for tag in result]
+            case SentAnnoColumns.CODE_ID:
+                result = (
+                    db.query(CodeORM)
+                    .filter(
+                        CodeORM.id.in_(ids),
+                    )
+                    .all()
+                )
+                return [code.name for code in result]
+            # case SentAnnoColumns.TEXT:
+            #     return SpanTextORM
+            case SentAnnoColumns.MEMO_CONTENT:
+                raise NotImplementedError("Cannot resolve ID for Memo content!")
+            case SentAnnoColumns.USER_ID:
+                result = (
+                    db.query(UserORM)
+                    .filter(
+                        UserORM.id.in_(ids),
+                    )
+                    .all()
+                )
+                return [user.email for user in result]
+
+    def resolve_names(self, db: Session, names: List[str]) -> List[int]:
+        match self:
+            case SentAnnoColumns.SOURCE_DOCUMENT_FILENAME:
+                raise NotImplementedError(
+                    "Cannot resolve name for SourceDocument filename!"
+                )
+            case SentAnnoColumns.DOCUMENT_TAG_ID_LIST:
+                result = (
+                    db.query(DocumentTagORM)
+                    .filter(
+                        DocumentTagORM.name.in_(names),
+                    )
+                    .all()
+                )
+                return [tag.id for tag in result]
+            case SentAnnoColumns.CODE_ID:
+                result = (
+                    db.query(CodeORM)
+                    .filter(
+                        CodeORM.name.in_(names),
+                    )
+                    .all()
+                )
+                return [code.id for code in result]
+            # case SentAnnoColumns.TEXT:
+            #     return SpanTextORM
+            case SentAnnoColumns.MEMO_CONTENT:
+                raise NotImplementedError("Cannot resolve name for Memo content!")
+            case SentAnnoColumns.USER_ID:
+                result = (
+                    db.query(UserORM)
+                    .filter(
+                        UserORM.email.in_(names),
+                    )
+                    .all()
+                )
+                return [user.id for user in result]

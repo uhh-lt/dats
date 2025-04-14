@@ -58,7 +58,7 @@ class BBoxAnnoTimelineAnalysisFilter(BaseModel):
     filter: Filter[BBoxColumns] = Field(description="The filter of the Concept")
 
 
-class TimelineAnalysisConcept(BaseModel):
+class TimelineAnalysisConceptForExport(BaseModel):
     timeline_analysis_type: TimelineAnalysisType = Field(
         description="Type of the Timeline Analysis"
     )
@@ -76,6 +76,9 @@ class TimelineAnalysisConcept(BaseModel):
         description="List of Concepts that are part of the TimelineAnalysis",
         discriminator="timeline_analysis_type",
     )
+
+
+class TimelineAnalysisConcept(TimelineAnalysisConceptForExport):
     filter_hash: int = Field(description="Hash of the filter to identify changes")
     results: List[TimelineAnalysisResult] = Field(
         description="List of Results of the TimelineAnalysis"
@@ -99,15 +102,18 @@ class TimelineAnalysisConceptUpdate(BaseModel):
     )
 
 
-class TimelineAnalysisSettings(BaseModel):
+class TimelineAnalysisSettingsForExport(BaseModel):
     group_by: DateGroupBy = Field(description="Group by date", default=DateGroupBy.YEAR)
-    date_metadata_id: Optional[int] = Field(
-        description="ID of the Project Date Metadata that is used for the TimelineAnalysis",
-        default=None,
-    )
     annotation_aggregation_type: Optional[TAAnnotationAggregationType] = Field(
         description="The type of the annotation aggregation (only for TimelineAnalysisType != DOCUMENT)",
         default=TAAnnotationAggregationType.ANNOTATION,
+    )
+
+
+class TimelineAnalysisSettings(TimelineAnalysisSettingsForExport):
+    date_metadata_id: Optional[int] = Field(
+        description="ID of the Project Date Metadata that is used for the TimelineAnalysis",
+        default=None,
     )
 
 
