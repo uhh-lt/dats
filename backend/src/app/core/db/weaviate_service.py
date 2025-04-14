@@ -712,7 +712,11 @@ class WeaviateService(VectorIndexService):
             result_dict = {r["sdoc_id"]: r["_additional"]["vector"] for r in result}
             sorted_res = []
             for sdoc_id in batch:
-                sorted_res.append(result_dict[sdoc_id])
+                if sdoc_id in result_dict:
+                    sorted_res.append(result_dict[sdoc_id])
+                else:
+                    print(f"Could not find embeddings for sdoc_id: {sdoc_id}")
+                    sorted_res.append([0.0] * 512)
             return sorted_res
 
         embeddings = []
