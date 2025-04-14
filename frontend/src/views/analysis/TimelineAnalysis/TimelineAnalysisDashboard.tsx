@@ -4,6 +4,7 @@ import { useParams } from "react-router";
 import { TimelineAnalysisType } from "../../../api/openapi/models/TimelineAnalysisType.ts";
 import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
+import ExportTimelineAnalysisButton from "../../../components/Export/ExportTimelineAnalysisButton.tsx";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import AnalysisDashboard from "../AnalysisDashboard/AnalysisDashboard.tsx";
 import {
@@ -113,7 +114,7 @@ function TimelineAnalysisDashboard() {
       {
         timelineAnalysisId: row.original.id,
         requestBody: {
-          name: values.name,
+          name: values.title,
         },
       },
       {
@@ -168,6 +169,7 @@ function TimelineAnalysisDashboard() {
       },
     ],
     additionalColumns,
+    renderExportButton: (props) => <ExportTimelineAnalysisButton {...props} />,
   });
 
   return (
