@@ -1,9 +1,6 @@
 from typing import Dict, List, Set
 
 import pandas as pd
-from loguru import logger
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.whiteboard import crud_whiteboard
 from app.core.data.dto.whiteboard import WhiteboardCreateIntern
@@ -11,6 +8,8 @@ from app.core.data.eximport.whiteboards.whiteboard_export_schema import (
     WhiteboardExportCollection,
     WhiteboardExportSchema,
 )
+from loguru import logger
+from sqlalchemy.orm import Session
 
 
 class ImportWhiteboardsError(Exception):
