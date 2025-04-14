@@ -15,6 +15,10 @@ from app.core.data.eximport.bbox_annotations.export_bbox_annotations import (
     export_selected_bbox_annotations,
 )
 from app.core.data.eximport.codes.export_codes import export_all_codes
+from app.core.data.eximport.cota.export_cota import (
+    export_all_cota,
+    export_selected_cota,
+)
 from app.core.data.eximport.memos.export_memos import (
     export_all_memos,
     export_selected_memos,
@@ -101,6 +105,7 @@ class ExportService(metaclass=SingletonMeta):
             ExportJobType.ALL_PROJECT_METADATA: export_all_project_metadatas,
             ExportJobType.ALL_WHITEBOARDS: export_all_whiteboards,
             ExportJobType.ALL_TIMELINE_ANALYSES: export_all_timeline_analyses,
+            ExportJobType.ALL_COTA: export_all_cota,
             # selected
             ExportJobType.SELECTED_SDOCS: export_selected_sdocs,
             ExportJobType.SELECTED_SPAN_ANNOTATIONS: export_selected_span_annotations,
@@ -109,6 +114,7 @@ class ExportService(metaclass=SingletonMeta):
             ExportJobType.SELECTED_MEMOS: export_selected_memos,
             ExportJobType.SELECTED_WHITEBOARDS: export_selected_whiteboards,
             ExportJobType.SELECTED_TIMELINE_ANALYSES: export_selected_timeline_analyses,
+            ExportJobType.SELECTED_COTA: export_selected_cota,
         }
 
         return super(ExportService, cls).__new__(cls)

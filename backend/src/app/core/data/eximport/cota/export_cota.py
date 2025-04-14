@@ -1,0 +1,166 @@
+from pathlib import Path
+from typing import List
+
+import pandas as pd
+import srsly
+from app.core.data.crud.concept_over_time_analysis import crud_cota
+from app.core.data.dto.concept_over_time_analysis import COTARead
+from app.core.data.eximport.cota.cota_export_schema import (
+    COTAExportCollection,
+    COTAExportSchema,
+)
+from app.core.data.eximport.cota.cota_transformations import (
+    transform_concept_for_export,
+    transform_timeline_settings_for_export,
+    transform_training_settings_for_export,
+)
+from app.core.data.eximport.no_data_export_error import NoDataToExportError
+from app.core.data.orm.concept_over_time_analysis import ConceptOverTimeAnalysisORM
+from app.core.data.repo.repo_service import RepoService
+from fastapi.encoders import jsonable_encoder
+from loguru import logger
+from sqlalchemy.orm import Session
+
+
+def export_selected_cota(
+    db: Session,
+    repo: RepoService,
+    project_id: int,
+    cota_ids: List[int],
+) -> Path:
+    """
+    Export selected concept over time analyses to a CSV file.
+
+    Args:
+        db: Database session
+        repo: Repository service for file operations
+        project_id: ID of the project
+        cota_ids: List of concept over time analysis IDs to export
+
+    Returns:
+        Path to the exported file
+
+    Raises:
+        NoDataToExportError: If no COTA analyses are found
+    """
+    cota_analyses = crud_cota.read_by_ids(db=db, ids=cota_ids)
+    return __export_cota(
+        db=db,
+        repo=repo,
+        fn=f"project_{project_id}_selected_cota_export",
+        cota_analyses=cota_analyses,
+    )
+
+
+def export_all_cota(
+    db: Session,
+    repo: RepoService,
+    project_id: int,
+) -> Path:
+    """
+    Export all concept over time analyses from a project to a CSV file.
+
+    Args:
+        db: Database session
+        repo: Repository service for file operations
+        project_id: ID of the project
+
+    Returns:
+        Path to the exported file
+
+    Raises:
+        NoDataToExportError: If no COTA analyses are found
+    """
+    cota_analyses = [
+        cota
+        for cota in db.query(ConceptOverTimeAnalysisORM)
+        .filter(ConceptOverTimeAnalysisORM.project_id == project_id)
+        .all()
+    ]
+    return __export_cota(
+        db=db,
+        repo=repo,
+        fn=f"project_{project_id}_all_cota_export",
+        cota_analyses=cota_analyses,
+    )
+
+
+def __export_cota(
+    db: Session,
+    repo: RepoService,
+    fn: str,
+    cota_analyses: List[ConceptOverTimeAnalysisORM],
+) -> Path:
+    """
+    Export concept over time analyses to a CSV file.
+
+    Args:
+        db: Database session
+        repo: Repository service for file operations
+        fn: Filename for the export
+        cota_analyses: List of COTA ORMs to export
+
+    Returns:
+        Path to the exported file
+
+    Raises:
+        NoDataToExportError: If no COTA analyses are found
+    """
+    if len(cota_analyses) == 0:
+        raise NoDataToExportError("No concept over time analyses to export.")
+
+    export_data = __generate_export_df_for_cota(db=db, cota_analyses=cota_analyses)
+    return repo.write_df_to_temp_file(
+        df=export_data,
+        fn=fn,
+    )
+
+
+def __generate_export_df_for_cota(
+    db: Session,
+    cota_analyses: List[ConceptOverTimeAnalysisORM],
+) -> pd.DataFrame:
+    """
+    Generate a DataFrame for exporting concept over time analyses.
+
+    Args:
+        db: Database session
+        cota_analyses: List of COTA ORMs to export
+
+    Returns:
+        DataFrame containing the COTA data
+    """
+    logger.info(f"Exporting {len(cota_analyses)} Concept Over Time Analyses ...")
+
+    cota_export_items = []
+    for cota in cota_analyses:
+        cota_dto = COTARead.model_validate(cota)
+
+        # Transform concepts for export
+        transformed_concepts = [
+            transform_concept_for_export(db=db, concept=concept)
+            for concept in cota_dto.concepts
+        ]
+
+        # Transform timeline settings for export
+        transformed_timeline_settings = transform_timeline_settings_for_export(
+            db=db, settings=cota_dto.timeline_settings
+        )
+
+        # Transform training settings for export
+        transformed_training_settings = transform_training_settings_for_export(
+            db=db, settings=cota_dto.training_settings
+        )
+
+        cota_export_items.append(
+            COTAExportSchema(
+                name=cota.name,
+                user_email=cota.user.email,
+                timeline_settings=transformed_timeline_settings.model_dump_json(),
+                training_settings=transformed_training_settings.model_dump_json(),
+                concepts=srsly.json_dumps(jsonable_encoder(transformed_concepts)),
+            )
+        )
+
+    collection = COTAExportCollection(cota_analyses=cota_export_items)
+    return collection.to_dataframe()
