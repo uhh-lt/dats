@@ -22,6 +22,7 @@ class ExportJobType(str, Enum):
     ALL_PROJECT_METADATA = "ALL_PROJECT_METADATA"
     ALL_WHITEBOARDS = "ALL_WHITEBOARDS"
     ALL_TIMELINE_ANALYSES = "ALL_TIMELINE_ANALYSES"
+    ALL_COTA = "ALL_COTA"
     # selected
     SELECTED_SDOCS = "SELECTED_SDOCS"
     SELECTED_SPAN_ANNOTATIONS = "SELECTED_SPAN_ANNOTATIONS"
@@ -30,6 +31,7 @@ class ExportJobType(str, Enum):
     SELECTED_MEMOS = "SELECTED_MEMOS"
     SELECTED_WHITEBOARDS = "SELECTED_WHITEBOARDS"
     SELECTED_TIMELINE_ANALYSES = "SELECTED_TIMELINE_ANALYSES"
+    SELECTED_COTA = "SELECTED_COTA"
 
 
 class ExportSelectedSdocsParams(BaseModel):
@@ -75,6 +77,11 @@ class ExportSelectedTimelineAnalysesParams(BaseModel):
     )
 
 
+class ExportSelectedCotaParams(BaseModel):
+    export_job_type: Literal[ExportJobType.SELECTED_COTA]
+    cota_ids: List[int] = Field(description="IDs of the cota to export")
+
+
 class ExportJobParameters(BaseModel):
     export_job_type: ExportJobType = Field(
         description="The type of the export job (what to export)"
@@ -91,6 +98,7 @@ class ExportJobParameters(BaseModel):
         ExportSelectedMemosParams,
         ExportSelectedWhiteboardsParams,
         ExportSelectedTimelineAnalysesParams,
+        ExportSelectedCotaParams,
     ] = Field(
         description="Specific parameters for the export job w.r.t it's type",
         discriminator="export_job_type",
