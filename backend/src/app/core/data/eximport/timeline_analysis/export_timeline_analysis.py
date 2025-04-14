@@ -16,6 +16,7 @@ from app.core.data.eximport.timeline_analysis.timeline_analysis_transformations 
 )
 from app.core.data.orm.timeline_analysis import TimelineAnalysisORM
 from app.core.data.repo.repo_service import RepoService
+from fastapi.encoders import jsonable_encoder
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -155,7 +156,7 @@ def __generate_export_df_for_timeline_analyses(
                 type=ta.timeline_analysis_type,
                 user_email=ta.user.email,
                 settings=transformed_settings.model_dump_json(),
-                concepts=srsly.json_dumps(transformed_concepts),
+                concepts=srsly.json_dumps(jsonable_encoder(transformed_concepts)),
             )
         )
 

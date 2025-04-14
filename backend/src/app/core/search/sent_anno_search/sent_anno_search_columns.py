@@ -187,7 +187,9 @@ class SentAnnoColumns(str, AbstractColumns):
                 )
                 return [user.email for user in result]
 
-    def resolve_names(self, db: Session, names: List[str]) -> List[int]:
+    def resolve_names(
+        self, db: Session, project_id: int, names: List[str]
+    ) -> List[int]:
         match self:
             case SentAnnoColumns.SOURCE_DOCUMENT_FILENAME:
                 raise NotImplementedError(
@@ -197,6 +199,7 @@ class SentAnnoColumns(str, AbstractColumns):
                 result = (
                     db.query(DocumentTagORM)
                     .filter(
+                        DocumentTagORM.project_id == project_id,
                         DocumentTagORM.name.in_(names),
                     )
                     .all()
@@ -206,6 +209,7 @@ class SentAnnoColumns(str, AbstractColumns):
                 result = (
                     db.query(CodeORM)
                     .filter(
+                        CodeORM.project_id == project_id,
                         CodeORM.name.in_(names),
                     )
                     .all()

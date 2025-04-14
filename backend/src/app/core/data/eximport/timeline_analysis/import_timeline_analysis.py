@@ -17,6 +17,7 @@ from app.core.data.eximport.timeline_analysis.timeline_analysis_transformations 
     transform_concept_for_import,
     transform_settings_for_import,
 )
+from fastapi.encoders import jsonable_encoder
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -55,7 +56,7 @@ def import_timeline_analysis_to_proj(
     except ValueError as e:
         logger.error(f"Failed to load timeline analysis import data: {e}")
         raise ImportTimelineAnalysisError(
-            errors=["Invalid data format for timeline analyses."]
+            errors=[f"Invalid data format for timeline analyses: {e}"]
         )
 
     logger.info(
@@ -89,7 +90,9 @@ def import_timeline_analysis_to_proj(
                 for concept in concepts
             ]
             transformed_concepts = [
-                transform_concept_for_import(db=db, concept=concept)
+                transform_concept_for_import(
+                    db=db, project_id=project_id, concept=concept
+                )
                 for concept in concepts
             ]
 
@@ -118,7 +121,7 @@ def import_timeline_analysis_to_proj(
                 project_id=project_id,
                 user_id=project_user_emails[ta.user_email].id,
                 timeline_analysis_type=TimelineAnalysisType(ta.type),
-                concepts=srsly.json_dumps(transformed_concepts),
+                concepts=srsly.json_dumps(jsonable_encoder(transformed_concepts)),
                 settings=transformed_settings.model_dump_json(),
             )
         )

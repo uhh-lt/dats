@@ -40,6 +40,8 @@ expected_file_type: Dict[ImportJobType, List[str]] = {
     ImportJobType.SENTENCE_ANNOTATIONS: CSV_FILE_TYPES,
     ImportJobType.USERS: CSV_FILE_TYPES,
     ImportJobType.PROJECT_METADATA: CSV_FILE_TYPES,
+    ImportJobType.WHITEBOARDS: CSV_FILE_TYPES,
+    ImportJobType.TIMELINE_ANALYSES: CSV_FILE_TYPES,
 }
 
 

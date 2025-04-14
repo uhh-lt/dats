@@ -21,7 +21,10 @@ def transform_settings_for_export(
     Returns:
         Transformed settings
     """
-    return TimelineAnalysisSettingsForExport.model_validate(settings)
+    return TimelineAnalysisSettingsForExport(
+        group_by=settings.group_by,
+        annotation_aggregation_type=settings.annotation_aggregation_type,
+    )
 
 
 def transform_settings_for_import(
@@ -65,11 +68,21 @@ def transform_concept_for_export(
         transformed.ta_specific_filter.filter, db=db
     )
 
-    return TimelineAnalysisConceptForExport.model_validate(transformed)
+    return TimelineAnalysisConceptForExport(
+        timeline_analysis_type=transformed.timeline_analysis_type,
+        id=transformed.id,
+        name=transformed.name,
+        description=transformed.description,
+        color=transformed.color,
+        visible=transformed.visible,
+        ta_specific_filter=transformed.ta_specific_filter,
+    )
 
 
 def transform_concept_for_import(
-    db: Session, concept: TimelineAnalysisConceptForExport
+    db: Session,
+    project_id: int,
+    concept: TimelineAnalysisConceptForExport,
 ) -> TimelineAnalysisConcept:
     """
     Transform a single timeline analysis concept for import.
@@ -86,7 +99,7 @@ def transform_concept_for_import(
 
     # Transform the ta_specific_filter: Resolve IDs to names
     transformed.ta_specific_filter.filter = Filter.resolve_names(
-        transformed.ta_specific_filter.filter, db=db
+        transformed.ta_specific_filter.filter, db=db, project_id=project_id
     )
 
     return TimelineAnalysisConcept(
