@@ -8,6 +8,8 @@ import type { ExportSelectedMemosParams } from "./ExportSelectedMemosParams";
 import type { ExportSelectedSdocsParams } from "./ExportSelectedSdocsParams";
 import type { ExportSelectedSentenceAnnotationsParams } from "./ExportSelectedSentenceAnnotationsParams";
 import type { ExportSelectedSpanAnnotationsParams } from "./ExportSelectedSpanAnnotationsParams";
+import type { ExportSelectedTimelineAnalysesParams } from "./ExportSelectedTimelineAnalysesParams";
+import type { ExportSelectedWhiteboardsParams } from "./ExportSelectedWhiteboardsParams";
 export type ExportJobParameters = {
   /**
    * The type of the export job (what to export)
@@ -27,6 +29,8 @@ export type ExportJobParameters = {
         | ExportSelectedSentenceAnnotationsParams
         | ExportSelectedBboxAnnotationsParams
         | ExportSelectedMemosParams
+        | ExportSelectedWhiteboardsParams
+        | ExportSelectedTimelineAnalysesParams
       )
     | null;
 };
