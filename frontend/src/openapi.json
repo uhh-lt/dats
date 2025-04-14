@@ -5950,7 +5950,7 @@
       "Body_authentication-login": {
         "properties": {
           "grant_type": {
-            "anyOf": [{ "type": "string", "pattern": "^password$" }, { "type": "null" }],
+            "anyOf": [{ "type": "string", "pattern": "password" }, { "type": "null" }],
             "title": "Grant Type"
           },
           "username": { "type": "string", "title": "Username" },
@@ -6920,7 +6920,9 @@
                   { "$ref": "#/components/schemas/ExportSelectedSpanAnnotationsParams" },
                   { "$ref": "#/components/schemas/ExportSelectedSentenceAnnotationsParams" },
                   { "$ref": "#/components/schemas/ExportSelectedBboxAnnotationsParams" },
-                  { "$ref": "#/components/schemas/ExportSelectedMemosParams" }
+                  { "$ref": "#/components/schemas/ExportSelectedMemosParams" },
+                  { "$ref": "#/components/schemas/ExportSelectedWhiteboardsParams" },
+                  { "$ref": "#/components/schemas/ExportSelectedTimelineAnalysesParams" }
                 ],
                 "discriminator": {
                   "propertyName": "export_job_type",
@@ -6929,7 +6931,9 @@
                     "SELECTED_MEMOS": "#/components/schemas/ExportSelectedMemosParams",
                     "SELECTED_SDOCS": "#/components/schemas/ExportSelectedSdocsParams",
                     "SELECTED_SENTENCE_ANNOTATIONS": "#/components/schemas/ExportSelectedSentenceAnnotationsParams",
-                    "SELECTED_SPAN_ANNOTATIONS": "#/components/schemas/ExportSelectedSpanAnnotationsParams"
+                    "SELECTED_SPAN_ANNOTATIONS": "#/components/schemas/ExportSelectedSpanAnnotationsParams",
+                    "SELECTED_TIMELINE_ANALYSES": "#/components/schemas/ExportSelectedTimelineAnalysesParams",
+                    "SELECTED_WHITEBOARDS": "#/components/schemas/ExportSelectedWhiteboardsParams"
                   }
                 }
               },
@@ -6984,11 +6988,15 @@
           "ALL_BBOX_ANNOTATIONS",
           "ALL_MEMOS",
           "ALL_PROJECT_METADATA",
+          "ALL_WHITEBOARDS",
+          "ALL_TIMELINE_ANALYSES",
           "SELECTED_SDOCS",
           "SELECTED_SPAN_ANNOTATIONS",
           "SELECTED_SENTENCE_ANNOTATIONS",
           "SELECTED_BBOX_ANNOTATIONS",
-          "SELECTED_MEMOS"
+          "SELECTED_MEMOS",
+          "SELECTED_WHITEBOARDS",
+          "SELECTED_TIMELINE_ANALYSES"
         ],
         "title": "ExportJobType"
       },
@@ -7061,6 +7069,34 @@
         "type": "object",
         "required": ["export_job_type", "span_annotation_ids"],
         "title": "ExportSelectedSpanAnnotationsParams"
+      },
+      "ExportSelectedTimelineAnalysesParams": {
+        "properties": {
+          "export_job_type": { "type": "string", "const": "SELECTED_TIMELINE_ANALYSES", "title": "Export Job Type" },
+          "timeline_analysis_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Timeline Analysis Ids",
+            "description": "IDs of the timeline analyses to export"
+          }
+        },
+        "type": "object",
+        "required": ["export_job_type", "timeline_analysis_ids"],
+        "title": "ExportSelectedTimelineAnalysesParams"
+      },
+      "ExportSelectedWhiteboardsParams": {
+        "properties": {
+          "export_job_type": { "type": "string", "const": "SELECTED_WHITEBOARDS", "title": "Export Job Type" },
+          "whiteboard_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Whiteboard Ids",
+            "description": "IDs of the whiteboards to export"
+          }
+        },
+        "type": "object",
+        "required": ["export_job_type", "whiteboard_ids"],
+        "title": "ExportSelectedWhiteboardsParams"
       },
       "FewShotParams": {
         "properties": {
@@ -7555,7 +7591,9 @@
           "SPAN_ANNOTATIONS",
           "SENTENCE_ANNOTATIONS",
           "USERS",
-          "PROJECT_METADATA"
+          "PROJECT_METADATA",
+          "WHITEBOARDS",
+          "TIMELINE_ANALYSES"
         ],
         "title": "ImportJobType"
       },
@@ -9765,15 +9803,15 @@
       "TimelineAnalysisSettings": {
         "properties": {
           "group_by": { "$ref": "#/components/schemas/DateGroupBy", "description": "Group by date", "default": "YEAR" },
-          "date_metadata_id": {
-            "anyOf": [{ "type": "integer" }, { "type": "null" }],
-            "title": "Date Metadata Id",
-            "description": "ID of the Project Date Metadata that is used for the TimelineAnalysis"
-          },
           "annotation_aggregation_type": {
             "anyOf": [{ "$ref": "#/components/schemas/TAAnnotationAggregationType" }, { "type": "null" }],
             "description": "The type of the annotation aggregation (only for TimelineAnalysisType != DOCUMENT)",
             "default": "annotation"
+          },
+          "date_metadata_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Date Metadata Id",
+            "description": "ID of the Project Date Metadata that is used for the TimelineAnalysis"
           }
         },
         "type": "object",

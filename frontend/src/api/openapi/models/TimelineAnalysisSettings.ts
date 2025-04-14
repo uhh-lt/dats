@@ -10,11 +10,11 @@ export type TimelineAnalysisSettings = {
    */
   group_by?: DateGroupBy;
   /**
-   * ID of the Project Date Metadata that is used for the TimelineAnalysis
-   */
-  date_metadata_id?: number | null;
-  /**
    * The type of the annotation aggregation (only for TimelineAnalysisType != DOCUMENT)
    */
   annotation_aggregation_type?: TAAnnotationAggregationType | null;
+  /**
+   * ID of the Project Date Metadata that is used for the TimelineAnalysis
+   */
+  date_metadata_id?: number | null;
 };

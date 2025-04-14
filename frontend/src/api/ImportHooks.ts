@@ -58,6 +58,10 @@ const usePollImportJob = (importJobId: string | undefined, initialData: ImportJo
               console.log("Invalidating users");
               queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_USERS, projectId] });
               break;
+            case ImportJobType.TIMELINE_ANALYSES:
+              console.log("Invalidating timeline analyses");
+              queryClient.invalidateQueries({ queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, projectId] });
+              break;
             case ImportJobType.BBOX_ANNOTATIONS:
             case ImportJobType.SPAN_ANNOTATIONS:
             case ImportJobType.SENTENCE_ANNOTATIONS:
