@@ -5,12 +5,14 @@ from sqlalchemy.orm import Session
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.whiteboard import (
     WhiteboardCreateIntern,
-    WhiteboardUpdate,
+    WhiteboardUpdateIntern,
 )
 from app.core.data.orm.whiteboard import WhiteboardORM
 
 
-class CRUDWhiteboard(CRUDBase[WhiteboardORM, WhiteboardCreateIntern, WhiteboardUpdate]):
+class CRUDWhiteboard(
+    CRUDBase[WhiteboardORM, WhiteboardCreateIntern, WhiteboardUpdateIntern]
+):
     def read_by_project_and_user(
         self, db: Session, *, project_id: int, user_id: int
     ) -> List[WhiteboardORM]:
