@@ -8,21 +8,23 @@ import useGetMemosAttachedObject from "../../../components/Memo/useGetMemosAttac
 import { useReactFlowService } from "../hooks/ReactFlowService.ts";
 
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import { BBoxAnnotationNodeData } from "../../../api/openapi/models/BBoxAnnotationNodeData.ts";
 import { BBoxAnnotationRead } from "../../../api/openapi/models/BBoxAnnotationRead.ts";
+import { CodeNodeData } from "../../../api/openapi/models/CodeNodeData.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
+import { MemoNodeData } from "../../../api/openapi/models/MemoNodeData.ts";
+import { SdocNodeData } from "../../../api/openapi/models/SdocNodeData.ts";
+import { SentenceAnnotationNodeData } from "../../../api/openapi/models/SentenceAnnotationNodeData.ts";
+import { SentenceAnnotationRead } from "../../../api/openapi/models/SentenceAnnotationRead.ts";
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
+import { SpanAnnotationNodeData } from "../../../api/openapi/models/SpanAnnotationNodeData.ts";
 import { SpanAnnotationRead } from "../../../api/openapi/models/SpanAnnotationRead.ts";
+import { TagNodeData } from "../../../api/openapi/models/TagNodeData.ts";
 import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../components/GenericPositionMenu.tsx";
 import { attachedObjectTypeToText } from "../../../components/Memo/attachedObjectTypeToText.ts";
 import MemoRenderer from "../../../components/Memo/MemoRenderer.tsx";
 import { DATSNodeData } from "../types/DATSNodeData.ts";
-import { BBoxAnnotationNodeData } from "../types/dbnodes/BBoxAnnotationNodeData.ts";
-import { CodeNodeData } from "../types/dbnodes/CodeNodeData.ts";
-import { MemoNodeData } from "../types/dbnodes/MemoNodeData.ts";
-import { SdocNodeData } from "../types/dbnodes/SdocNodeData.ts";
-import { SpanAnnotationNodeData } from "../types/dbnodes/SpanAnnotationNodeData.ts";
-import { TagNodeData } from "../types/dbnodes/TagNodeData.ts";
 import { isBBoxAnnotationNode, isCodeNode, isSdocNode, isSpanAnnotationNode, isTagNode } from "../types/typeGuards.ts";
 import {
   createBBoxAnnotationNodes,
@@ -30,9 +32,11 @@ import {
   createMemoBBoxAnnotationEdge,
   createMemoCodeEdge,
   createMemoSdocEdge,
+  createMemoSentenceAnnotationEdge,
   createMemoSpanAnnotationEdge,
   createMemoTagEdge,
   createSdocNodes,
+  createSentenceAnnotationNodes,
   createSpanAnnotationNodes,
   createTagNodes,
   isMemoBBoxAnnotationEdge,
@@ -89,6 +93,8 @@ const getAttachedObjectNodeId = (attachedObjectType: AttachedObjectType) => (nod
       return (node as Node<SpanAnnotationNodeData>).data.spanAnnotationId;
     case AttachedObjectType.BBOX_ANNOTATION:
       return (node as Node<BBoxAnnotationNodeData>).data.bboxAnnotationId;
+    case AttachedObjectType.SENTENCE_ANNOTATION:
+      return (node as Node<SentenceAnnotationNodeData>).data.sentenceAnnotationId;
     default:
       return -1;
   }
@@ -125,6 +131,11 @@ const createMemoAttachedObjectEdge = (
         memoId,
         bboxAnnotationId: attachedObjectId,
       });
+    case AttachedObjectType.SENTENCE_ANNOTATION:
+      return createMemoSentenceAnnotationEdge({
+        memoId,
+        sentenceAnnotationId: attachedObjectId,
+      });
     default:
       return undefined;
   }
@@ -132,7 +143,13 @@ const createMemoAttachedObjectEdge = (
 
 const createAttachedObjectNodes = (
   attachedObjectType: AttachedObjectType,
-  attachedObject: DocumentTagRead | CodeRead | SpanAnnotationRead | BBoxAnnotationRead | SourceDocumentRead,
+  attachedObject:
+    | DocumentTagRead
+    | CodeRead
+    | SpanAnnotationRead
+    | BBoxAnnotationRead
+    | SentenceAnnotationRead
+    | SourceDocumentRead,
   position: XYPosition,
 ): Node<DATSNodeData>[] => {
   switch (attachedObjectType) {
@@ -158,6 +175,11 @@ const createAttachedObjectNodes = (
     case AttachedObjectType.BBOX_ANNOTATION:
       return createBBoxAnnotationNodes({
         bboxAnnotations: [attachedObject as BBoxAnnotationRead],
+        position,
+      });
+    case AttachedObjectType.SENTENCE_ANNOTATION:
+      return createSentenceAnnotationNodes({
+        sentenceAnnotations: [attachedObject as SentenceAnnotationRead],
         position,
       });
     default:

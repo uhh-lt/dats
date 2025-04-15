@@ -6,6 +6,7 @@ import CodeHooks from "../../../api/CodeHooks.ts";
 import MemoHooks from "../../../api/MemoHooks.ts";
 import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import { SpanAnnotationNodeData } from "../../../api/openapi/models/SpanAnnotationNodeData.ts";
 import CodeRenderer from "../../../components/Code/CodeRenderer.tsx";
 import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../components/GenericPositionMenu.tsx";
 import MemoDialogAPI from "../../../components/Memo/MemoDialog/MemoDialogAPI.ts";
@@ -14,7 +15,6 @@ import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { AnnoActions } from "../../annotation/annoSlice.ts";
 import { useReactFlowService } from "../hooks/ReactFlowService.ts";
 import { DATSNodeData } from "../types/DATSNodeData.ts";
-import { SpanAnnotationNodeData } from "../types/dbnodes/SpanAnnotationNodeData.ts";
 import { isCodeNode, isMemoNode, isSdocNode } from "../types/typeGuards.ts";
 import {
   createCodeNodes,

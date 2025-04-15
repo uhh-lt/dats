@@ -9,6 +9,7 @@ import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
 import VerticalAlignTopIcon from "@mui/icons-material/VerticalAlignTop";
 
 import { Button, ButtonGroup, Divider, Paper, Stack, Typography, TypographyVariant } from "@mui/material";
+import { Variant } from "@mui/material/styles/createTypography";
 import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 import { Node, useReactFlow } from "reactflow";
 import { BackgroundColorData } from "../types/base/BackgroundColorData.ts";
@@ -209,7 +210,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
               <>
                 <TypographyVariantTool
                   key={`variant-${nodes[0].id}`}
-                  variant={nodes[0].data.variant}
+                  variant={nodes[0].data.variant as Variant}
                   onVariantChange={handleFontSizeChange}
                 />
                 <ColorTool

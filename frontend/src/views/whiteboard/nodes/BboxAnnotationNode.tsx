@@ -6,6 +6,7 @@ import CodeHooks from "../../../api/CodeHooks.ts";
 import MemoHooks from "../../../api/MemoHooks.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import { BBoxAnnotationNodeData } from "../../../api/openapi/models/BBoxAnnotationNodeData.ts";
 import CodeRenderer from "../../../components/Code/CodeRenderer.tsx";
 import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../components/GenericPositionMenu.tsx";
 import MemoDialogAPI from "../../../components/Memo/MemoDialog/MemoDialogAPI.ts";
@@ -13,7 +14,6 @@ import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { useReactFlowService } from "../hooks/ReactFlowService.ts";
 import { DATSNodeData } from "../types/DATSNodeData.ts";
-import { BBoxAnnotationNodeData } from "../types/dbnodes/BBoxAnnotationNodeData.ts";
 import { isCodeNode, isMemoNode, isSdocNode } from "../types/typeGuards.ts";
 import {
   createCodeBBoxAnnotationEdge,

@@ -7,13 +7,13 @@ import SdocHooks from "../../../api/SdocHooks.ts";
 import TagHooks from "../../../api/TagHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
+import { SdocNodeData } from "../../../api/openapi/models/SdocNodeData.ts";
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
 import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../components/GenericPositionMenu.tsx";
 import MemoDialogAPI from "../../../components/Memo/MemoDialog/MemoDialogAPI.ts";
 import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
 import { useReactFlowService } from "../hooks/ReactFlowService.ts";
 import { DATSNodeData } from "../types/DATSNodeData.ts";
-import { SdocNodeData } from "../types/dbnodes/SdocNodeData.ts";
 import { isMemoNode, isTagNode } from "../types/typeGuards.ts";
 import {
   createMemoNodes,

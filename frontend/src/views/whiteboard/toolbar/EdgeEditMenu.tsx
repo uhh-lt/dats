@@ -18,10 +18,12 @@ import {
   Stack,
   TypographyVariant,
 } from "@mui/material";
+import { Variant } from "@mui/material/styles/createTypography";
 import React, { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 import { Edge, EdgeMarker, MarkerType, useReactFlow } from "reactflow";
+import { WhiteboardEdgeData_Input } from "../../../api/openapi/models/WhiteboardEdgeData_Input.ts";
+import { WhiteboardEdgeType } from "../../../api/openapi/models/WhiteboardEdgeType.ts";
 import { isDashed, isDotted } from "../edges/edgeUtils.ts";
-import { CustomEdgeData } from "../types/CustomEdgeData.ts";
 import { DATSNodeData } from "../types/DATSNodeData.ts";
 import ColorTool from "./tools/ColorTool.tsx";
 import NumberTool from "./tools/NumberTool.tsx";
@@ -49,13 +51,13 @@ const type2icon: Record<string, React.ReactElement> = {
 };
 
 export interface EdgeEditMenuHandle {
-  open: (edges: Edge<CustomEdgeData>[]) => void;
+  open: (edges: Edge<WhiteboardEdgeData_Input>[]) => void;
   close: () => void;
 }
 
 const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
-  const reactFlowInstance = useReactFlow<DATSNodeData, CustomEdgeData>();
-  const [edges, setEdges] = useState<Edge<CustomEdgeData>[]>([]);
+  const reactFlowInstance = useReactFlow<DATSNodeData, WhiteboardEdgeData_Input>();
+  const [edges, setEdges] = useState<Edge<WhiteboardEdgeData_Input>[]>([]);
 
   // exposed methods (via ref)
   useImperativeHandle(ref, () => ({
@@ -64,7 +66,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
   }));
 
   // methods
-  const openMenu = (edges: Edge<CustomEdgeData>[]) => {
+  const openMenu = (edges: Edge<WhiteboardEdgeData_Input>[]) => {
     // TODO: This is a workaround. It seems there is a bug in react-flow
     setEdges(edges.map((edge) => reactFlowInstance.getEdge(edge.id)!));
   };
@@ -74,9 +76,9 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
   };
 
   const updateEdges = useCallback(
-    (updateFnc: (oldEdge: Edge<CustomEdgeData>) => Edge<CustomEdgeData>) => {
+    (updateFnc: (oldEdge: Edge<WhiteboardEdgeData_Input>) => Edge<WhiteboardEdgeData_Input>) => {
       const idsToCheck = new Set(edges.map((edge) => edge.id));
-      const updatedEdges: Edge<CustomEdgeData>[] = [];
+      const updatedEdges: Edge<WhiteboardEdgeData_Input>[] = [];
       reactFlowInstance.setEdges((edges) => {
         const newEdges = edges.map((edge) => {
           if (idsToCheck.has(edge.id)) {
@@ -94,14 +96,14 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
     [edges, reactFlowInstance],
   );
 
-  const handleTypeChange = (event: SelectChangeEvent<"smoothstep" | "bezier" | "simplebezier" | "straight">) => {
+  const handleTypeChange = (event: SelectChangeEvent<WhiteboardEdgeType>) => {
     updateEdges((oldEdge) => {
       return {
         ...oldEdge,
         ...(oldEdge.data && {
           data: {
             ...oldEdge.data,
-            type: event.target.value as "smoothstep" | "bezier" | "simplebezier" | "straight",
+            type: event.target.value as WhiteboardEdgeType,
           },
         }),
       };
@@ -371,7 +373,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
               defaultValue={edges[0].data?.type}
               onChange={handleTypeChange}
             >
-              {["bezier", "simplebezier", "straight", "smoothstep"].map((type) => (
+              {Object.values(WhiteboardEdgeType).map((type) => (
                 <MenuItem key={type} value={type}>
                   {type2icon[type]}
                 </MenuItem>
@@ -397,7 +399,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
                 <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
                 <TypographyVariantTool
                   key={`variant-${edges[0].id}`}
-                  variant={edges[0].data!.label.variant}
+                  variant={edges[0].data!.label.variant as Variant}
                   onVariantChange={handleFontSizeChange}
                 />
                 <ColorTool
@@ -414,7 +416,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
                 />
                 <SliderTool
                   key={`bg-alpha-${edges[0].id}`}
-                  value={edges[0].data!.label.bgalpha}
+                  value={edges[0].data!.label.bgalpha || 0}
                   onValueChange={handleBGAlphaChange}
                 />
               </>

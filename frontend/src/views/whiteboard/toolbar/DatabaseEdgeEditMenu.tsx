@@ -2,8 +2,8 @@ import { Button, ButtonGroup, Paper, Stack } from "@mui/material";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { Edge, useReactFlow } from "reactflow";
 import CodeHooks from "../../../api/CodeHooks.ts";
+import { WhiteboardEdgeData_Input } from "../../../api/openapi/models/WhiteboardEdgeData_Input.ts";
 import TagHooks from "../../../api/TagHooks.ts";
-import { CustomEdgeData } from "../types/CustomEdgeData.ts";
 import { DATSNodeData } from "../types/DATSNodeData.ts";
 import { isCodeNode, isSdocNode, isTagNode } from "../types/typeGuards.ts";
 import { isCodeParentCodeEdgeArray, isTagSdocEdgeArray } from "../whiteboardUtils.ts";
@@ -14,7 +14,7 @@ export interface DatabaseEdgeEditMenuHandle {
 }
 
 const DatabaseEdgeEditMenu = forwardRef<DatabaseEdgeEditMenuHandle>((_, ref) => {
-  const reactFlowInstance = useReactFlow<DATSNodeData, CustomEdgeData>();
+  const reactFlowInstance = useReactFlow<DATSNodeData, WhiteboardEdgeData_Input>();
 
   const [edges, setEdges] = useState<Edge[]>([]);
 
