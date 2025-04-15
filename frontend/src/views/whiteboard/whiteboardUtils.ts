@@ -106,7 +106,7 @@ export const createTextNode = ({ position }: { position?: XYPosition }): Node<Te
       horizontalAlign: HorizontalAlign.LEFT,
       verticalAlign: VerticalAlign.TOP,
     },
-    type: "text",
+    type: WhiteboardNodeType.TEXT,
     position: { x: position?.x || 0, y: position?.y || 0 },
   };
 };
@@ -127,7 +127,7 @@ export const createNoteNode = ({ position }: { position?: XYPosition }): Node<No
       horizontalAlign: HorizontalAlign.LEFT,
       verticalAlign: VerticalAlign.TOP,
     },
-    type: "note",
+    type: WhiteboardNodeType.NOTE,
     position: { x: position?.x || 0, y: position?.y || 0 },
   };
 };
@@ -158,7 +158,7 @@ export const createBorderNode = ({
       borderStyle: BorderStyle.SOLID,
       borderWidth: 1,
     },
-    type: "border",
+    type: WhiteboardNodeType.BORDER,
     position: { x: position?.x || 0, y: position?.y || 0 },
   };
 };
@@ -173,7 +173,7 @@ export const createTagNodes = ({
   const tagIds = tags.map((tag) => (typeof tag === "number" ? tag : tag.id));
   return tagIds.map((tagId, index) => ({
     id: `tag-${tagId}`,
-    type: "tag",
+    type: WhiteboardNodeType.TAG,
     data: { ...defaultDatabaseNodeData, tagId, type: WhiteboardNodeType.TAG },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
@@ -189,7 +189,7 @@ export const createMemoNodes = ({
   const memoIds = memos.map((memo) => (typeof memo === "number" ? memo : memo.id));
   return memoIds.map((memoId, index) => ({
     id: `memo-${memoId}`,
-    type: "memo",
+    type: WhiteboardNodeType.MEMO,
     data: { ...defaultDatabaseNodeData, memoId, type: WhiteboardNodeType.MEMO },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
@@ -205,7 +205,7 @@ export const createSdocNodes = ({
   const sdocIds = sdocs.map((sdoc) => (typeof sdoc === "number" ? sdoc : sdoc.id));
   return sdocIds.map((sdocId, index) => ({
     id: `sdoc-${sdocId}`,
-    type: "sdoc",
+    type: WhiteboardNodeType.SDOC,
     data: { ...defaultDatabaseNodeData, sdocId, type: WhiteboardNodeType.SDOC },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
@@ -220,7 +220,7 @@ export const createCodeNodes = ({
 }): Node<CodeNodeData>[] => {
   return codes.map((code, index) => ({
     id: `code-${code.id}`,
-    type: "code",
+    type: WhiteboardNodeType.CODE,
     data: { ...defaultDatabaseNodeData, codeId: code.id, parentCodeId: code.parent_id, type: WhiteboardNodeType.CODE },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
@@ -236,7 +236,7 @@ export const createSpanAnnotationNodes = ({
   const spanAnnotationIds = spanAnnotations.map((span) => (typeof span === "number" ? span : span.id));
   return spanAnnotationIds.map((spanAnnotationId, index) => ({
     id: `spanAnnotation-${spanAnnotationId}`,
-    type: "spanAnnotation",
+    type: WhiteboardNodeType.SPAN_ANNOTATION,
     data: { ...defaultDatabaseNodeData, spanAnnotationId, type: WhiteboardNodeType.SPAN_ANNOTATION },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
@@ -252,7 +252,7 @@ export const createSentenceAnnotationNodes = ({
   const sentenceAnnotationIds = sentenceAnnotations.map((span) => (typeof span === "number" ? span : span.id));
   return sentenceAnnotationIds.map((sentenceAnnotationId, index) => ({
     id: `sentenceAnnotation-${sentenceAnnotationId}`,
-    type: "sentenceAnnotation",
+    type: WhiteboardNodeType.SENTENCE_ANNOTATION,
     data: { ...defaultDatabaseNodeData, sentenceAnnotationId, type: WhiteboardNodeType.SENTENCE_ANNOTATION },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
@@ -268,7 +268,7 @@ export const createBBoxAnnotationNodes = ({
   const bboxAnnotationIds = bboxAnnotations.map((bbox) => (typeof bbox === "number" ? bbox : bbox.id));
   return bboxAnnotationIds.map((bboxAnnotationId, index) => ({
     id: `bboxAnnotation-${bboxAnnotationId}`,
-    type: "bboxAnnotation",
+    type: WhiteboardNodeType.BBOX_ANNOTATION,
     data: { ...defaultDatabaseNodeData, bboxAnnotationId, type: WhiteboardNodeType.BBOX_ANNOTATION },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
