@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 from uuid import uuid4
 
 from sqlalchemy.orm import Session
@@ -128,6 +128,19 @@ class CRUDBBoxAnnotation(
         )
 
         return query.all()
+
+    def read_by_project_and_uuid(
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        uuid: str,
+    ) -> Optional[BBoxAnnotationORM]:
+        query = db.query(self.model).where(
+            self.model.project_id == project_id,
+            self.model.uuid == uuid,
+        )
+        return query.first()
 
     def read_by_user_and_sdoc(
         self,

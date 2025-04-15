@@ -1,36 +1,115 @@
-from typing import List
+from typing import List, Literal, Optional, Union
 
 import pandas as pd
+from app.core.data.dto.whiteboard import (
+    BorderNodeData,
+    NoteNodeData,
+    TextNodeData,
+    WhiteboardBackgroundColorData,
+    WhiteboardContent,
+    WhiteboardNode,
+    WhiteboardNodeType,
+)
 from pydantic import BaseModel, Field, field_validator
+
+
+class SdocNodeDataForExport(WhiteboardBackgroundColorData):
+    type: Literal[WhiteboardNodeType.SDOC]
+    sdoc_filename: str = Field(description="Filename of the source document")
+
+
+class MemoNodeDataForExport(WhiteboardBackgroundColorData):
+    type: Literal[WhiteboardNodeType.MEMO]
+    memoId: int = Field(description="ID of the memo")
+
+
+class CodeNodeDataForExport(WhiteboardBackgroundColorData):
+    type: Literal[WhiteboardNodeType.CODE]
+    code_name: str = Field(description="Name of the code")
+    parent_code_name: Optional[str] = Field(
+        description="Name of the parent code",
+        default=None,
+    )
+
+
+class TagNodeDataForExport(WhiteboardBackgroundColorData):
+    type: Literal[WhiteboardNodeType.TAG]
+    tag_name: str = Field(description="Name of the tag")
+
+
+class SpanAnnotationNodeDataForExport(WhiteboardBackgroundColorData):
+    type: Literal[WhiteboardNodeType.SPAN_ANNOTATION]
+    span_annotation_uuid: str = Field(
+        description="UUID of the span annotation",
+    )
+
+
+class SentenceAnnotationNodeDataForExport(WhiteboardBackgroundColorData):
+    type: Literal[WhiteboardNodeType.SENTENCE_ANNOTATION]
+    sentence_annotation_uuid: str = Field(
+        description="UUID of the sentence annotation",
+    )
+
+
+class BBoxAnnotationNodeDataForExport(WhiteboardBackgroundColorData):
+    type: Literal[WhiteboardNodeType.BBOX_ANNOTATION]
+    bbox_annotation_uuid: str = Field(
+        description="UUID of the bbox annotation",
+    )
+
+
+class WhiteboardNodeForExport(WhiteboardNode):
+    data: Union[
+        TextNodeData,
+        NoteNodeData,
+        BorderNodeData,
+        SdocNodeDataForExport,
+        MemoNodeDataForExport,
+        CodeNodeDataForExport,
+        TagNodeDataForExport,
+        SpanAnnotationNodeDataForExport,
+        SentenceAnnotationNodeDataForExport,
+        BBoxAnnotationNodeDataForExport,
+    ] = Field(
+        description="Data of the node",
+        discriminator="type",
+    )
+
+
+class WhiteboardContentForExport(WhiteboardContent):
+    nodes: List[WhiteboardNodeForExport] = Field(
+        description="List of nodes in the whiteboard content",
+    )
 
 
 class WhiteboardExportSchema(BaseModel):
     """Schema definition for whiteboard export/import operations."""
 
-    whiteboard_title: str = Field(description="Title of the whiteboard")
+    title: str = Field(description="Title of the whiteboard")
     user_email: str = Field(description="Email of the whiteboard owner")
     content: str = Field(description="JSON content of the whiteboard")
 
-    @field_validator("whiteboard_title")
+    @field_validator("title", "user_email", "content")
     @classmethod
-    def validate_whiteboard_title(cls, v):
+    def validate_required_fields(cls, v, info):
         if not v or v.strip() == "":
-            raise ValueError("whiteboard_title cannot be empty")
-        return v
-
-    @field_validator("user_email")
-    @classmethod
-    def validate_user_email(cls, v):
-        if not v or v.strip() == "":
-            raise ValueError("user_email cannot be empty")
+            raise ValueError(f"{info.field_name} cannot be empty")
         return v
 
     @field_validator("content")
     @classmethod
-    def validate_content(cls, v):
+    def validate_content_json(cls, v):
+        """Validate that the content field is a valid JSON string that can be parsed
+        as WhiteboardContentForExport."""
         if not v or v.strip() == "":
-            # Content should be at least an empty JSON object/array
-            return '{"nodes":[],"edges":[]}'
+            return v
+
+        try:
+            # Validate using the WhiteboardContentForExport schema
+            WhiteboardContentForExport.model_validate_json(v)
+        except Exception as e:
+            raise ValueError(f"Invalid content JSON format: {str(e)}")
+
         return v
 
 
