@@ -6,6 +6,7 @@ import MemoHooks from "../../../api/MemoHooks.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import TagHooks from "../../../api/TagHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import { TagNodeData } from "../../../api/openapi/models/TagNodeData.ts";
 import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../components/GenericPositionMenu.tsx";
 import MemoDialogAPI from "../../../components/Memo/MemoDialog/MemoDialogAPI.ts";
 import TagRenderer from "../../../components/Tag/TagRenderer.tsx";
@@ -13,7 +14,6 @@ import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { useReactFlowService } from "../hooks/ReactFlowService.ts";
 import { DATSNodeData } from "../types/DATSNodeData.ts";
-import { TagNodeData } from "../types/dbnodes/TagNodeData.ts";
 import { isMemoNode, isSdocNode } from "../types/typeGuards.ts";
 import {
   createMemoNodes,

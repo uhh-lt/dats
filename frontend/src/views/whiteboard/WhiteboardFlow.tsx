@@ -33,10 +33,14 @@ import {
 import "reactflow/dist/style.css";
 import BboxAnnotationHooks from "../../api/BboxAnnotationHooks.ts";
 import CodeHooks from "../../api/CodeHooks.ts";
+import { WhiteboardContent_Output } from "../../api/openapi/models/WhiteboardContent_Output.ts";
+import { WhiteboardEdgeData_Output } from "../../api/openapi/models/WhiteboardEdgeData_Output.ts";
+import { WhiteboardNodeType } from "../../api/openapi/models/WhiteboardNodeType.ts";
+import { WhiteboardRead } from "../../api/openapi/models/WhiteboardRead.ts";
 import SentenceAnnotationHooks from "../../api/SentenceAnnotationHooks.ts";
 import SpanAnnotationHooks from "../../api/SpanAnnotationHooks.ts";
 import TagHooks from "../../api/TagHooks.ts";
-import WhiteboardHooks, { Whiteboard, WhiteboardGraph } from "../../api/WhiteboardHooks.ts";
+import WhiteboardHooks from "../../api/WhiteboardHooks.ts";
 import BBoxAnnotationEditDialog from "../../components/BBoxAnnotation/BBoxAnnotationEditDialog.tsx";
 import SentenceAnnotationEditDialog from "../../components/SentenceAnnotation/SentenceAnnotationEditDialog.tsx";
 import SpanAnnotationEditDialog from "../../components/SpanAnnotation/SpanAnnotationEditDialog.tsx";
@@ -69,7 +73,6 @@ import AddTextNodeButton from "./toolbar/AddTextNodeButton.tsx";
 import DatabaseEdgeEditMenu, { DatabaseEdgeEditMenuHandle } from "./toolbar/DatabaseEdgeEditMenu.tsx";
 import EdgeEditMenu, { EdgeEditMenuHandle } from "./toolbar/EdgeEditMenu.tsx";
 import NodeEditMenu, { NodeEditMenuHandle } from "./toolbar/NodeEditMenu.tsx";
-import { CustomEdgeData } from "./types/CustomEdgeData.ts";
 import { DATSNodeData } from "./types/DATSNodeData.ts";
 import { PendingAddNodeAction } from "./types/PendingAddNodeAction.ts";
 import {
@@ -91,16 +94,16 @@ import {
 } from "./whiteboardUtils.ts";
 
 const nodeTypes: NodeTypes = {
-  border: BorderNode,
-  note: NoteNode,
-  text: TextNode,
-  memo: MemoNode,
-  sdoc: SdocNode,
-  tag: TagNode,
-  code: CodeNode,
-  spanAnnotation: SpanAnnotationNode,
-  sentenceAnnotation: SentenceAnnotationNode,
-  bboxAnnotation: BboxAnnotationNode,
+  [WhiteboardNodeType.BORDER]: BorderNode,
+  [WhiteboardNodeType.NOTE]: NoteNode,
+  [WhiteboardNodeType.TEXT]: TextNode,
+  [WhiteboardNodeType.MEMO]: MemoNode,
+  [WhiteboardNodeType.SDOC]: SdocNode,
+  [WhiteboardNodeType.TAG]: TagNode,
+  [WhiteboardNodeType.CODE]: CodeNode,
+  [WhiteboardNodeType.SPAN_ANNOTATION]: SpanAnnotationNode,
+  [WhiteboardNodeType.SENTENCE_ANNOTATION]: SentenceAnnotationNode,
+  [WhiteboardNodeType.BBOX_ANNOTATION]: BboxAnnotationNode,
 };
 
 const edgeTypes = {
@@ -124,7 +127,7 @@ const defaultEdgeOptions: DefaultEdgeOptions = {
       verticalAlign: "center",
     },
     type: "simplebezier",
-  } as CustomEdgeData,
+  } as WhiteboardEdgeData_Output,
   style: {
     stroke: "#000000",
     strokeWidth: 3,
@@ -133,7 +136,7 @@ const defaultEdgeOptions: DefaultEdgeOptions = {
     color: "#000000",
     type: MarkerType.ArrowClosed,
   },
-  markerStart: undefined,
+  markerStart: "",
 };
 
 const isValidConnection: IsValidConnection = (connection) => {
@@ -151,7 +154,7 @@ const resetSelectedElementsSelector = (state: ReactFlowState) => state.resetSele
 const connectionHandleIdSelector = (state: ReactFlowState) => state.connectionHandleId;
 
 interface WhiteboardFlowProps {
-  whiteboard: Whiteboard;
+  whiteboard: WhiteboardRead;
   readonly: boolean;
 }
 
@@ -181,7 +184,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   // local state
   const [pendingAction, setPendingAction] = useState<PendingAddNodeAction | undefined>(undefined);
   const [nodes, , onNodesChange] = useNodeStateCustom<DATSNodeData>(whiteboard.content.nodes);
-  const [edges, setEdges, onEdgesChange] = useEdgeStateCustom(whiteboard.content.edges);
+  const [edges, setEdges, onEdgesChange] = useEdgeStateCustom(whiteboard.content.edges as Edge[]);
   const [selectedEdges, setSelectedEdges] = useState<Edge[]>([]);
   const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
 
@@ -339,13 +342,12 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   // SAVE Feature
   const updateWhiteboard = WhiteboardHooks.useUpdateWhiteboard();
   const handleSaveWhiteboard = useCallback(() => {
-    const newData: WhiteboardGraph = { nodes: nodes, edges: edges };
     const mutation = updateWhiteboard.mutate;
     mutation({
       whiteboardId: whiteboard.id,
       requestBody: {
         title: whiteboard.title,
-        content: JSON.stringify(newData),
+        content: { nodes: nodes, edges: edges },
       },
     });
   }, [edges, nodes, updateWhiteboard.mutate, whiteboard.id, whiteboard.title]);
@@ -363,7 +365,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
     setOldData(JSON.stringify(whiteboard.content));
   }, [whiteboard.content]);
   useBlocker(() => {
-    const newData: WhiteboardGraph = { nodes: nodes, edges: edges };
+    const newData: WhiteboardContent_Output = { nodes: nodes, edges: edges };
     if (oldData !== JSON.stringify(newData)) {
       handleSaveWhiteboard();
     }
