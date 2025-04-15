@@ -16,6 +16,8 @@ class SpanAnnotationBaseDTO(BaseModel):
 
 # Properties for creation
 class SpanAnnotationCreateIntern(SpanAnnotationBaseDTO):
+    project_id: int = Field(description="Project the SpanAnnotation belongs to")
+    uuid: str = Field(description="UUID of the SpanAnnotation")
     span_text: str = Field(description="The SpanText the SpanAnnotation spans.")
     code_id: int = Field(description="Code the SpanAnnotation refers to")
     annotation_document_id: int = Field(

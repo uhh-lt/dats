@@ -1,9 +1,11 @@
-from typing import List, Optional
+from typing import Dict, List
+from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.crud_base import CRUDBase
+from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.sentence_annotation import (
     SentenceAnnotationCreate,
     SentenceAnnotationCreateIntern,
@@ -32,6 +34,8 @@ class CRUDSentenceAnnotation(
         db_obj = super().create(
             db=db,
             create_dto=SentenceAnnotationCreateIntern(
+                project_id=adoc.source_document.project_id,
+                uuid=str(uuid4()),
                 sentence_id_start=create_dto.sentence_id_start,
                 sentence_id_end=create_dto.sentence_id_end,
                 code_id=create_dto.code_id,
@@ -55,6 +59,13 @@ class CRUDSentenceAnnotation(
         for create_dto in create_dtos:
             annotations_by_user_sdoc[(user_id, create_dto.sdoc_id)].append(create_dto)
 
+        # find project id for each sdoc_id
+        sdoc_ids = {create_dto.sdoc_id for create_dto in create_dtos}
+        sdocs = crud_sdoc.read_by_ids(db=db, ids=list(sdoc_ids))
+        project_id_by_sdoc_id: Dict[int, int] = {}
+        for sdoc in sdocs:
+            project_id_by_sdoc_id[sdoc.id] = sdoc.project_id
+
         # find or create annotation documents for each user and sdoc_id
         adoc_id_by_user_sdoc = {}
         for user_id, sdoc_id in annotations_by_user_sdoc.keys():
@@ -67,6 +78,8 @@ class CRUDSentenceAnnotation(
             db=db,
             create_dtos=[
                 SentenceAnnotationCreateIntern(
+                    project_id=project_id_by_sdoc_id[create_dto.sdoc_id],
+                    uuid=str(uuid4()),
                     sentence_id_end=create_dto.sentence_id_end,
                     sentence_id_start=create_dto.sentence_id_start,
                     code_id=create_dto.code_id,
@@ -195,7 +208,7 @@ class CRUDSentenceAnnotation(
             for update_dto in update_dtos
         ]
 
-    def remove(self, db: Session, *, id: int) -> Optional[SentenceAnnotationORM]:
+    def remove(self, db: Session, *, id: int) -> SentenceAnnotationORM:
         sentence_anno = super().remove(db, id=id)
         # update the annotation document's timestamp
         crud_adoc.update_timestamp(db=db, id=sentence_anno.annotation_document_id)

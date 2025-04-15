@@ -1,9 +1,11 @@
-from typing import List, Optional
+from typing import Dict, List, Tuple
+from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.crud_base import CRUDBase
+from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationCreate,
     BBoxAnnotationCreateIntern,
@@ -31,6 +33,8 @@ class CRUDBBoxAnnotation(
         db_obj = super().create(
             db=db,
             create_dto=BBoxAnnotationCreateIntern(
+                project_id=adoc.source_document.project_id,
+                uuid=str(uuid4()),
                 x_min=create_dto.x_min,
                 x_max=create_dto.x_max,
                 y_min=create_dto.y_min,
@@ -68,8 +72,15 @@ class CRUDBBoxAnnotation(
         for create_dto in create_dtos:
             annotations_by_user_sdoc[(user_id, create_dto.sdoc_id)].append(create_dto)
 
+        # find project id for each sdoc_id
+        sdoc_ids = {create_dto.sdoc_id for create_dto in create_dtos}
+        sdocs = crud_sdoc.read_by_ids(db=db, ids=list(sdoc_ids))
+        project_id_by_sdoc_id: Dict[int, int] = {}
+        for sdoc in sdocs:
+            project_id_by_sdoc_id[sdoc.id] = sdoc.project_id
+
         # find or create annotation documents for each user and sdoc_id
-        adoc_id_by_user_sdoc = {}
+        adoc_id_by_user_sdoc: Dict[Tuple[int, int], int] = {}
         for user_id, sdoc_id in annotations_by_user_sdoc.keys():
             adoc_id_by_user_sdoc[(user_id, sdoc_id)] = crud_adoc.exists_or_create(
                 db=db, user_id=user_id, sdoc_id=sdoc_id
@@ -80,6 +91,8 @@ class CRUDBBoxAnnotation(
             db=db,
             create_dtos=[
                 BBoxAnnotationCreateIntern(
+                    project_id=project_id_by_sdoc_id[create_dto.sdoc_id],
+                    uuid=str(uuid4()),
                     x_max=create_dto.x_max,
                     y_max=create_dto.y_max,
                     x_min=create_dto.x_min,
@@ -199,7 +212,7 @@ class CRUDBBoxAnnotation(
             for update_dto in update_dtos
         ]
 
-    def remove(self, db: Session, *, id: int) -> Optional[BBoxAnnotationORM]:
+    def remove(self, db: Session, *, id: int) -> BBoxAnnotationORM:
         bbox_anno = super().remove(db, id=id)
         # update the annotation document's timestamp
         crud_adoc.update_timestamp(db=db, id=bbox_anno.annotation_document_id)
