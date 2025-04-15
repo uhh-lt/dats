@@ -72,12 +72,9 @@ def export_all_timeline_analyses(
     Raises:
         NoDataToExportError: If no timeline analyses are found
     """
-    timeline_analyses = [
-        ta
-        for ta in db.query(TimelineAnalysisORM)
-        .filter(TimelineAnalysisORM.project_id == project_id)
-        .all()
-    ]
+    timeline_analyses = crud_timeline_analysis.read_by_project(
+        db=db, project_id=project_id
+    )
     return __export_timeline_analyses(
         db=db,
         repo=repo,

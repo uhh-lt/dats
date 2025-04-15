@@ -38,10 +38,8 @@ class TimelineAnalysisExportSchema(BaseModel):
             return v
 
         try:
-            # Parse JSON string to dict
-            settings_dict = srsly.json_loads(v)
             # Validate using the TimelineAnalysisSettingsForExport schema
-            TimelineAnalysisSettingsForExport.model_validate(settings_dict)
+            TimelineAnalysisSettingsForExport.model_validate_json(v)
         except Exception as e:
             raise ValueError(f"Invalid settings JSON format: {str(e)}")
 
