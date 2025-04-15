@@ -3,9 +3,9 @@ from typing import TYPE_CHECKING, Any, List, Optional, Tuple, TypeVar, Union
 from sqlalchemy import desc
 from sqlalchemy.orm import Query, Session, aliased
 from sqlalchemy.sql._typing import (
-    _ColumnExpressionArgument,
-    _JoinTargetArgument,
-    _OnClauseArgument,
+    _ColumnExpressionArgument,  # type: ignore
+    _JoinTargetArgument,  # type: ignore
+    _OnClauseArgument,  # type: ignore
 )
 from sqlalchemy.sql.selectable import Subquery
 
