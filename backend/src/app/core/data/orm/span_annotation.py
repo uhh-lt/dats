@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, List
 
-from sqlalchemy import DateTime, ForeignKey, Integer, func
+from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.data.orm.orm_base import ORMBase
@@ -10,12 +10,14 @@ if TYPE_CHECKING:
     from app.core.data.orm.annotation_document import AnnotationDocumentORM
     from app.core.data.orm.code import CodeORM
     from app.core.data.orm.object_handle import ObjectHandleORM
+    from app.core.data.orm.project import ProjectORM
     from app.core.data.orm.span_group import SpanGroupORM
     from app.core.data.orm.span_text import SpanTextORM
 
 
 class SpanAnnotationORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    uuid: Mapped[str] = mapped_column(String, nullable=False, index=True)
     begin: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     end: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     begin_token: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
@@ -36,6 +38,18 @@ class SpanAnnotationORM(ORMBase):
     )
 
     # many to one
+    project_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey(
+            "project.id", ondelete="CASCADE", name="FK_span_annotation_project_id"
+        ),
+        nullable=False,
+        index=True,
+    )
+    project: Mapped["ProjectORM"] = relationship(
+        "ProjectORM", back_populates="span_annotations"
+    )
+
     code_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("code.id", ondelete="CASCADE"),
@@ -69,6 +83,14 @@ class SpanAnnotationORM(ORMBase):
         "SpanGroupORM",
         secondary="SpanAnnotationSpanGroupLinkTable".lower(),
         back_populates="span_annotations",
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "project_id",
+            "uuid",
+            name="UC_span_annotation_uuid_unique_per_project",
+        ),
     )
 
     @property

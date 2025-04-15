@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Dict, List, Tuple
+from uuid import uuid4
 
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.code import crud_code
@@ -155,6 +156,8 @@ class CorefService(metaclass=SingletonMeta):
                         begin_char = sdoc.token_character_offsets[start][0]
                         end_char = sdoc.token_character_offsets[end][1]
                         dto = SpanAnnotationCreateIntern(
+                            project_id=project_id,
+                            uuid=str(uuid4()),
                             begin_token=start,
                             end_token=end + 1,
                             begin=begin_char,

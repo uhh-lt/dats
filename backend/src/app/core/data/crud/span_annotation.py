@@ -1,10 +1,12 @@
-from typing import List
+from typing import Dict, List, Tuple
+from uuid import uuid4
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.crud_base import CRUDBase
+from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.span_group import crud_span_group
 from app.core.data.crud.span_text import crud_span_text
 from app.core.data.dto.span_annotation import (
@@ -39,6 +41,8 @@ class CRUDSpanAnnotation(
         # create the SpanAnnotation (and link the SpanText via FK)
         dto_obj_data = jsonable_encoder(
             SpanAnnotationCreateIntern(
+                project_id=adoc.source_document.project_id,
+                uuid=str(uuid4()),
                 annotation_document_id=adoc.id,
                 begin=create_dto.begin,
                 end=create_dto.end,
@@ -102,8 +106,15 @@ class CRUDSpanAnnotation(
         for create_dto in create_dtos:
             annotations_by_user_sdoc[(user_id, create_dto.sdoc_id)].append(create_dto)
 
+        # find project id for each sdoc_id
+        sdoc_ids = {create_dto.sdoc_id for create_dto in create_dtos}
+        sdocs = crud_sdoc.read_by_ids(db=db, ids=list(sdoc_ids))
+        project_id_by_sdoc_id: Dict[int, int] = {}
+        for sdoc in sdocs:
+            project_id_by_sdoc_id[sdoc.id] = sdoc.project_id
+
         # find or create annotation documents for each user and sdoc_id
-        adoc_id_by_user_sdoc = {}
+        adoc_id_by_user_sdoc: Dict[Tuple[int, int], int] = {}
         for user_id, sdoc_id in annotations_by_user_sdoc.keys():
             adoc_id_by_user_sdoc[(user_id, sdoc_id)] = crud_adoc.exists_or_create(
                 db=db, user_id=user_id, sdoc_id=sdoc_id
@@ -114,6 +125,8 @@ class CRUDSpanAnnotation(
             db=db,
             create_dtos=[
                 SpanAnnotationCreateIntern(
+                    project_id=project_id_by_sdoc_id[create_dto.sdoc_id],
+                    uuid=str(uuid4()),
                     begin=create_dto.begin,
                     end=create_dto.end,
                     span_text=create_dto.span_text,

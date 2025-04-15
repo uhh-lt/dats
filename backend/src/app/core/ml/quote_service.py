@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Dict, List, NamedTuple, Tuple
+from uuid import uuid4
 
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.code import crud_code
@@ -248,6 +249,8 @@ class QuoteService(metaclass=SingletonMeta):
             char_begin = sdoc.token_starts[start]
             char_end = sdoc.token_ends[end - 1]
             dto = SpanAnnotationCreateIntern(
+                project_id=sdoc.project_id,
+                uuid=str(uuid4()),
                 begin_token=start,
                 end_token=end,
                 begin=char_begin,

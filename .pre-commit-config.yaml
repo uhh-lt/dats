@@ -21,7 +21,7 @@ repos:
     hooks:
       - id: pyright
         name: "Pyright"
-        entry: bash -c 'source backend/.venv/bin/activate && pyright "$@"' --
+        entry: bash -c 'source backend/.venv/bin/activate && pyright --project backend "$@"' --
         language: system
         files: \.py$
   - repo: https://github.com/pre-commit/mirrors-eslint
