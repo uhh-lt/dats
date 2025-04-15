@@ -5750,6 +5750,25 @@
         "required": ["x_min", "x_max", "y_min", "y_max", "code_id", "sdoc_id"],
         "title": "BBoxAnnotationCreate"
       },
+      "BBoxAnnotationNodeData": {
+        "properties": {
+          "bgcolor": { "type": "string", "title": "Bgcolor", "description": "Background color of the text" },
+          "bgalpha": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Bgalpha",
+            "description": "Background color alpha of the text"
+          },
+          "type": { "type": "string", "const": "bboxAnnotation", "title": "Type" },
+          "bboxAnnotationId": {
+            "type": "integer",
+            "title": "Bboxannotationid",
+            "description": "ID of the bbox annotation"
+          }
+        },
+        "type": "object",
+        "required": ["bgcolor", "bgalpha", "type", "bboxAnnotationId"],
+        "title": "BBoxAnnotationNodeData"
+      },
       "BBoxAnnotationRead": {
         "properties": {
           "x_min": {
@@ -6060,6 +6079,59 @@
         "enum": ["BOOLEAN_EQUALS", "BOOLEAN_NOT_EQUALS"],
         "title": "BooleanOperator"
       },
+      "BorderNodeData": {
+        "properties": {
+          "borderColor": { "type": "string", "title": "Bordercolor", "description": "Color of the border" },
+          "borderRadius": { "type": "string", "title": "Borderradius", "description": "Radius of the border" },
+          "borderWidth": { "type": "integer", "title": "Borderwidth", "description": "Width of the border" },
+          "borderStyle": { "$ref": "#/components/schemas/BorderStyle", "description": "Style of the border" },
+          "text": { "type": "string", "title": "Text", "description": "Text of the text" },
+          "variant": {
+            "type": "string",
+            "title": "Variant",
+            "description": "Variant of the text (e.g., 'h1', 'h2', 'subtitle', ...)"
+          },
+          "color": { "type": "string", "title": "Color", "description": "Text color of the text" },
+          "horizontalAlign": {
+            "$ref": "#/components/schemas/HorizontalAlign",
+            "description": "Horizontal alignment of the text"
+          },
+          "verticalAlign": {
+            "$ref": "#/components/schemas/VerticalAlign",
+            "description": "Vertical alignment of the text"
+          },
+          "bold": { "type": "boolean", "title": "Bold", "description": "Boldness of the text" },
+          "italic": { "type": "boolean", "title": "Italic", "description": "Italicness of the text" },
+          "underline": { "type": "boolean", "title": "Underline", "description": "Underlinedness of the text" },
+          "bgcolor": { "type": "string", "title": "Bgcolor", "description": "Background color of the text" },
+          "bgalpha": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Bgalpha",
+            "description": "Background color alpha of the text"
+          },
+          "type": { "type": "string", "const": "border", "title": "Type" }
+        },
+        "type": "object",
+        "required": [
+          "borderColor",
+          "borderRadius",
+          "borderWidth",
+          "borderStyle",
+          "text",
+          "variant",
+          "color",
+          "horizontalAlign",
+          "verticalAlign",
+          "bold",
+          "italic",
+          "underline",
+          "bgcolor",
+          "bgalpha",
+          "type"
+        ],
+        "title": "BorderNodeData"
+      },
+      "BorderStyle": { "type": "string", "enum": ["solid", "dashed", "dotted"], "title": "BorderStyle" },
       "COTAConcept": {
         "properties": {
           "id": { "type": "string", "title": "Id", "description": "ID of the Concept" },
@@ -6380,6 +6452,26 @@
         "type": "object",
         "required": ["code_id", "count"],
         "title": "CodeFrequency"
+      },
+      "CodeNodeData": {
+        "properties": {
+          "bgcolor": { "type": "string", "title": "Bgcolor", "description": "Background color of the text" },
+          "bgalpha": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Bgalpha",
+            "description": "Background color alpha of the text"
+          },
+          "type": { "type": "string", "const": "code", "title": "Type" },
+          "codeId": { "type": "integer", "title": "Codeid", "description": "ID of the code" },
+          "parentCodeId": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Parentcodeid",
+            "description": "ID of the parent code"
+          }
+        },
+        "type": "object",
+        "required": ["bgcolor", "bgalpha", "type", "codeId"],
+        "title": "CodeNodeData"
       },
       "CodeOccurrence": {
         "properties": {
@@ -7541,6 +7633,7 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "HorizontalAlign": { "type": "string", "enum": ["left", "center", "right"], "title": "HorizontalAlign" },
       "IDListOperator": {
         "type": "string",
         "enum": ["ID_LIST_CONTAINS", "ID_LIST_NOT_CONTAINS"],
@@ -7989,6 +8082,21 @@
         "required": ["title", "content", "content_json"],
         "title": "MemoCreate"
       },
+      "MemoNodeData": {
+        "properties": {
+          "bgcolor": { "type": "string", "title": "Bgcolor", "description": "Background color of the text" },
+          "bgalpha": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Bgalpha",
+            "description": "Background color alpha of the text"
+          },
+          "type": { "type": "string", "const": "memo", "title": "Type" },
+          "memoId": { "type": "integer", "title": "Memoid", "description": "ID of the memo" }
+        },
+        "type": "object",
+        "required": ["bgcolor", "bgalpha", "type", "memoId"],
+        "title": "MemoNodeData"
+      },
       "MemoRead": {
         "properties": {
           "title": { "type": "string", "title": "Title", "description": "Title of the Memo" },
@@ -8133,6 +8241,50 @@
         "type": "object",
         "required": ["llm_approach_type", "training_parameters"],
         "title": "ModelTrainingParams"
+      },
+      "NoteNodeData": {
+        "properties": {
+          "text": { "type": "string", "title": "Text", "description": "Text of the text" },
+          "variant": {
+            "type": "string",
+            "title": "Variant",
+            "description": "Variant of the text (e.g., 'h1', 'h2', 'subtitle', ...)"
+          },
+          "color": { "type": "string", "title": "Color", "description": "Text color of the text" },
+          "horizontalAlign": {
+            "$ref": "#/components/schemas/HorizontalAlign",
+            "description": "Horizontal alignment of the text"
+          },
+          "verticalAlign": {
+            "$ref": "#/components/schemas/VerticalAlign",
+            "description": "Vertical alignment of the text"
+          },
+          "bold": { "type": "boolean", "title": "Bold", "description": "Boldness of the text" },
+          "italic": { "type": "boolean", "title": "Italic", "description": "Italicness of the text" },
+          "underline": { "type": "boolean", "title": "Underline", "description": "Underlinedness of the text" },
+          "bgcolor": { "type": "string", "title": "Bgcolor", "description": "Background color of the text" },
+          "bgalpha": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Bgalpha",
+            "description": "Background color alpha of the text"
+          },
+          "type": { "type": "string", "const": "note", "title": "Type" }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "variant",
+          "color",
+          "horizontalAlign",
+          "verticalAlign",
+          "bold",
+          "italic",
+          "underline",
+          "bgcolor",
+          "bgalpha",
+          "type"
+        ],
+        "title": "NoteNodeData"
       },
       "NumberOperator": {
         "type": "string",
@@ -8518,6 +8670,21 @@
         ],
         "title": "SdocColumns"
       },
+      "SdocNodeData": {
+        "properties": {
+          "bgcolor": { "type": "string", "title": "Bgcolor", "description": "Background color of the text" },
+          "bgalpha": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Bgalpha",
+            "description": "Background color alpha of the text"
+          },
+          "type": { "type": "string", "const": "sdoc", "title": "Type" },
+          "sdocId": { "type": "integer", "title": "Sdocid", "description": "ID of the source document" }
+        },
+        "type": "object",
+        "required": ["bgcolor", "bgalpha", "type", "sdocId"],
+        "title": "SdocNodeData"
+      },
       "SdocSentencePair": {
         "properties": {
           "sdoc_id": { "type": "integer", "title": "Sdoc Id" },
@@ -8629,6 +8796,25 @@
         "type": "object",
         "required": ["llm_job_type", "results"],
         "title": "SentenceAnnotationLLMJobResult"
+      },
+      "SentenceAnnotationNodeData": {
+        "properties": {
+          "bgcolor": { "type": "string", "title": "Bgcolor", "description": "Background color of the text" },
+          "bgalpha": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Bgalpha",
+            "description": "Background color alpha of the text"
+          },
+          "type": { "type": "string", "const": "sentenceAnnotation", "title": "Type" },
+          "sentenceAnnotationId": {
+            "type": "integer",
+            "title": "Sentenceannotationid",
+            "description": "ID of the sentence annotation"
+          }
+        },
+        "type": "object",
+        "required": ["bgcolor", "bgalpha", "type", "sentenceAnnotationId"],
+        "title": "SentenceAnnotationNodeData"
       },
       "SentenceAnnotationParams": {
         "properties": {
@@ -9378,6 +9564,25 @@
         ],
         "title": "SpanAnnotationDeleted"
       },
+      "SpanAnnotationNodeData": {
+        "properties": {
+          "bgcolor": { "type": "string", "title": "Bgcolor", "description": "Background color of the text" },
+          "bgalpha": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Bgalpha",
+            "description": "Background color alpha of the text"
+          },
+          "type": { "type": "string", "const": "spanAnnotation", "title": "Type" },
+          "spanAnnotationId": {
+            "type": "integer",
+            "title": "Spanannotationid",
+            "description": "ID of the span annotation"
+          }
+        },
+        "type": "object",
+        "required": ["bgcolor", "bgalpha", "type", "spanAnnotationId"],
+        "title": "SpanAnnotationNodeData"
+      },
       "SpanAnnotationRead": {
         "properties": {
           "begin": { "type": "integer", "title": "Begin", "description": "Begin of the SpanAnnotation in characters" },
@@ -9626,6 +9831,21 @@
         "enum": ["unit", "annotation", "document"],
         "title": "TAAnnotationAggregationType"
       },
+      "TagNodeData": {
+        "properties": {
+          "bgcolor": { "type": "string", "title": "Bgcolor", "description": "Background color of the text" },
+          "bgalpha": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Bgalpha",
+            "description": "Background color alpha of the text"
+          },
+          "type": { "type": "string", "const": "tag", "title": "Type" },
+          "tagId": { "type": "integer", "title": "Tagid", "description": "ID of the tag" }
+        },
+        "type": "object",
+        "required": ["bgcolor", "bgalpha", "type", "tagId"],
+        "title": "TagNodeData"
+      },
       "TagStat": {
         "properties": {
           "tag": { "$ref": "#/components/schemas/DocumentTagRead", "description": "The counted document tag." },
@@ -9648,6 +9868,42 @@
         "type": "string",
         "enum": ["DOCUMENT_TAGGING", "METADATA_EXTRACTION", "ANNOTATION", "SENTENCE_ANNOTATION"],
         "title": "TaskType"
+      },
+      "TextNodeData": {
+        "properties": {
+          "text": { "type": "string", "title": "Text", "description": "Text of the text" },
+          "variant": {
+            "type": "string",
+            "title": "Variant",
+            "description": "Variant of the text (e.g., 'h1', 'h2', 'subtitle', ...)"
+          },
+          "color": { "type": "string", "title": "Color", "description": "Text color of the text" },
+          "horizontalAlign": {
+            "$ref": "#/components/schemas/HorizontalAlign",
+            "description": "Horizontal alignment of the text"
+          },
+          "verticalAlign": {
+            "$ref": "#/components/schemas/VerticalAlign",
+            "description": "Vertical alignment of the text"
+          },
+          "bold": { "type": "boolean", "title": "Bold", "description": "Boldness of the text" },
+          "italic": { "type": "boolean", "title": "Italic", "description": "Italicness of the text" },
+          "underline": { "type": "boolean", "title": "Underline", "description": "Underlinedness of the text" },
+          "type": { "type": "string", "const": "text", "title": "Type" }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "variant",
+          "color",
+          "horizontalAlign",
+          "verticalAlign",
+          "bold",
+          "italic",
+          "underline",
+          "type"
+        ],
+        "title": "TextNodeData"
       },
       "TimelineAnalysisConcept": {
         "properties": {
@@ -10029,6 +10285,45 @@
         "required": ["loc", "msg", "type"],
         "title": "ValidationError"
       },
+      "VerticalAlign": { "type": "string", "enum": ["top", "center", "bottom"], "title": "VerticalAlign" },
+      "WhiteboardContent-Input": {
+        "properties": {
+          "nodes": {
+            "items": { "$ref": "#/components/schemas/WhiteboardNode-Input" },
+            "type": "array",
+            "title": "Nodes",
+            "description": "Nodes of the Whiteboard"
+          },
+          "edges": {
+            "items": { "$ref": "#/components/schemas/WhiteboardEdge-Input" },
+            "type": "array",
+            "title": "Edges",
+            "description": "Edges of the Whiteboard"
+          }
+        },
+        "type": "object",
+        "required": ["nodes", "edges"],
+        "title": "WhiteboardContent"
+      },
+      "WhiteboardContent-Output": {
+        "properties": {
+          "nodes": {
+            "items": { "$ref": "#/components/schemas/WhiteboardNode-Output" },
+            "type": "array",
+            "title": "Nodes",
+            "description": "Nodes of the Whiteboard"
+          },
+          "edges": {
+            "items": { "$ref": "#/components/schemas/WhiteboardEdge-Output" },
+            "type": "array",
+            "title": "Edges",
+            "description": "Edges of the Whiteboard"
+          }
+        },
+        "type": "object",
+        "required": ["nodes", "edges"],
+        "title": "WhiteboardContent"
+      },
       "WhiteboardCreate": {
         "properties": {
           "title": { "type": "string", "title": "Title", "description": "Title of the Whiteboard" },
@@ -10037,6 +10332,291 @@
         "type": "object",
         "required": ["title", "project_id"],
         "title": "WhiteboardCreate"
+      },
+      "WhiteboardEdge-Input": {
+        "properties": {
+          "id": { "type": "string", "title": "Id", "description": "ID of the edge" },
+          "type": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Type",
+            "description": "Type of the edge"
+          },
+          "source": { "type": "string", "title": "Source", "description": "Source node ID" },
+          "sourceHandle": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Sourcehandle",
+            "description": "Source handle position"
+          },
+          "target": { "type": "string", "title": "Target", "description": "Target node ID" },
+          "targetHandle": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Targethandle",
+            "description": "Target handle position"
+          },
+          "data": {
+            "anyOf": [{ "$ref": "#/components/schemas/WhiteboardEdgeData-Input" }, { "type": "null" }],
+            "description": "Data of the edge"
+          },
+          "style": {
+            "anyOf": [{ "type": "object" }, { "type": "null" }],
+            "title": "Style",
+            "description": "Style of the edge"
+          },
+          "markerEnd": {
+            "anyOf": [{ "type": "object" }, { "type": "string" }],
+            "title": "Markerend",
+            "description": "Marker end of the edge",
+            "default": ""
+          },
+          "markerStart": {
+            "anyOf": [{ "type": "object" }, { "type": "string" }],
+            "title": "Markerstart",
+            "description": "Marker start of the edge",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": ["id", "source", "target"],
+        "title": "WhiteboardEdge"
+      },
+      "WhiteboardEdge-Output": {
+        "properties": {
+          "id": { "type": "string", "title": "Id", "description": "ID of the edge" },
+          "type": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Type",
+            "description": "Type of the edge"
+          },
+          "source": { "type": "string", "title": "Source", "description": "Source node ID" },
+          "sourceHandle": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Sourcehandle",
+            "description": "Source handle position"
+          },
+          "target": { "type": "string", "title": "Target", "description": "Target node ID" },
+          "targetHandle": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Targethandle",
+            "description": "Target handle position"
+          },
+          "data": {
+            "anyOf": [{ "$ref": "#/components/schemas/WhiteboardEdgeData-Output" }, { "type": "null" }],
+            "description": "Data of the edge"
+          },
+          "style": {
+            "anyOf": [{ "type": "object" }, { "type": "null" }],
+            "title": "Style",
+            "description": "Style of the edge"
+          },
+          "markerEnd": {
+            "anyOf": [{ "type": "object" }, { "type": "string" }],
+            "title": "Markerend",
+            "description": "Marker end of the edge",
+            "default": ""
+          },
+          "markerStart": {
+            "anyOf": [{ "type": "object" }, { "type": "string" }],
+            "title": "Markerstart",
+            "description": "Marker start of the edge",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": ["id", "source", "target"],
+        "title": "WhiteboardEdge"
+      },
+      "WhiteboardEdgeData-Input": {
+        "properties": {
+          "type": { "$ref": "#/components/schemas/WhiteboardEdgeType", "description": "Type of the edge" },
+          "label": { "$ref": "#/components/schemas/WhiteboardEdgeLabelData" }
+        },
+        "type": "object",
+        "required": ["type", "label"],
+        "title": "WhiteboardEdgeData"
+      },
+      "WhiteboardEdgeData-Output": {
+        "properties": {
+          "type": { "$ref": "#/components/schemas/WhiteboardEdgeType", "description": "Type of the edge" },
+          "label": { "$ref": "#/components/schemas/WhiteboardEdgeLabelData" }
+        },
+        "type": "object",
+        "required": ["type", "label"],
+        "title": "WhiteboardEdgeData"
+      },
+      "WhiteboardEdgeLabelData": {
+        "properties": {
+          "text": { "type": "string", "title": "Text", "description": "Text of the text" },
+          "variant": {
+            "type": "string",
+            "title": "Variant",
+            "description": "Variant of the text (e.g., 'h1', 'h2', 'subtitle', ...)"
+          },
+          "color": { "type": "string", "title": "Color", "description": "Text color of the text" },
+          "horizontalAlign": {
+            "$ref": "#/components/schemas/HorizontalAlign",
+            "description": "Horizontal alignment of the text"
+          },
+          "verticalAlign": {
+            "$ref": "#/components/schemas/VerticalAlign",
+            "description": "Vertical alignment of the text"
+          },
+          "bold": { "type": "boolean", "title": "Bold", "description": "Boldness of the text" },
+          "italic": { "type": "boolean", "title": "Italic", "description": "Italicness of the text" },
+          "underline": { "type": "boolean", "title": "Underline", "description": "Underlinedness of the text" },
+          "bgcolor": { "type": "string", "title": "Bgcolor", "description": "Background color of the text" },
+          "bgalpha": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Bgalpha",
+            "description": "Background color alpha of the text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "variant",
+          "color",
+          "horizontalAlign",
+          "verticalAlign",
+          "bold",
+          "italic",
+          "underline",
+          "bgcolor",
+          "bgalpha"
+        ],
+        "title": "WhiteboardEdgeLabelData"
+      },
+      "WhiteboardEdgeType": {
+        "type": "string",
+        "enum": ["bezier", "straight", "simplebezier", "smoothstep"],
+        "title": "WhiteboardEdgeType"
+      },
+      "WhiteboardNode-Input": {
+        "properties": {
+          "id": { "type": "string", "title": "Id", "description": "ID of the node" },
+          "type": {
+            "anyOf": [{ "$ref": "#/components/schemas/WhiteboardNodeType" }, { "type": "string" }],
+            "title": "Type",
+            "description": "Type of the node",
+            "default": "text"
+          },
+          "data": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/TextNodeData" },
+              { "$ref": "#/components/schemas/NoteNodeData" },
+              { "$ref": "#/components/schemas/BorderNodeData" },
+              { "$ref": "#/components/schemas/SdocNodeData" },
+              { "$ref": "#/components/schemas/MemoNodeData" },
+              { "$ref": "#/components/schemas/CodeNodeData" },
+              { "$ref": "#/components/schemas/TagNodeData" },
+              { "$ref": "#/components/schemas/SpanAnnotationNodeData" },
+              { "$ref": "#/components/schemas/SentenceAnnotationNodeData" },
+              { "$ref": "#/components/schemas/BBoxAnnotationNodeData" }
+            ],
+            "title": "Data",
+            "description": "Data of the node",
+            "discriminator": {
+              "propertyName": "type",
+              "mapping": {
+                "bboxAnnotation": "#/components/schemas/BBoxAnnotationNodeData",
+                "border": "#/components/schemas/BorderNodeData",
+                "code": "#/components/schemas/CodeNodeData",
+                "memo": "#/components/schemas/MemoNodeData",
+                "note": "#/components/schemas/NoteNodeData",
+                "sdoc": "#/components/schemas/SdocNodeData",
+                "sentenceAnnotation": "#/components/schemas/SentenceAnnotationNodeData",
+                "spanAnnotation": "#/components/schemas/SpanAnnotationNodeData",
+                "tag": "#/components/schemas/TagNodeData",
+                "text": "#/components/schemas/TextNodeData"
+              }
+            }
+          },
+          "position": { "$ref": "#/components/schemas/XYPosition", "description": "Position of the node" },
+          "width": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Width",
+            "description": "Width of the node"
+          },
+          "height": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Height",
+            "description": "Height of the node"
+          }
+        },
+        "type": "object",
+        "required": ["id", "data", "position"],
+        "title": "WhiteboardNode"
+      },
+      "WhiteboardNode-Output": {
+        "properties": {
+          "id": { "type": "string", "title": "Id", "description": "ID of the node" },
+          "type": {
+            "anyOf": [{ "$ref": "#/components/schemas/WhiteboardNodeType" }, { "type": "string" }],
+            "title": "Type",
+            "description": "Type of the node",
+            "default": "text"
+          },
+          "data": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/TextNodeData" },
+              { "$ref": "#/components/schemas/NoteNodeData" },
+              { "$ref": "#/components/schemas/BorderNodeData" },
+              { "$ref": "#/components/schemas/SdocNodeData" },
+              { "$ref": "#/components/schemas/MemoNodeData" },
+              { "$ref": "#/components/schemas/CodeNodeData" },
+              { "$ref": "#/components/schemas/TagNodeData" },
+              { "$ref": "#/components/schemas/SpanAnnotationNodeData" },
+              { "$ref": "#/components/schemas/SentenceAnnotationNodeData" },
+              { "$ref": "#/components/schemas/BBoxAnnotationNodeData" }
+            ],
+            "title": "Data",
+            "description": "Data of the node",
+            "discriminator": {
+              "propertyName": "type",
+              "mapping": {
+                "bboxAnnotation": "#/components/schemas/BBoxAnnotationNodeData",
+                "border": "#/components/schemas/BorderNodeData",
+                "code": "#/components/schemas/CodeNodeData",
+                "memo": "#/components/schemas/MemoNodeData",
+                "note": "#/components/schemas/NoteNodeData",
+                "sdoc": "#/components/schemas/SdocNodeData",
+                "sentenceAnnotation": "#/components/schemas/SentenceAnnotationNodeData",
+                "spanAnnotation": "#/components/schemas/SpanAnnotationNodeData",
+                "tag": "#/components/schemas/TagNodeData",
+                "text": "#/components/schemas/TextNodeData"
+              }
+            }
+          },
+          "position": { "$ref": "#/components/schemas/XYPosition", "description": "Position of the node" },
+          "width": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Width",
+            "description": "Width of the node"
+          },
+          "height": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Height",
+            "description": "Height of the node"
+          }
+        },
+        "type": "object",
+        "required": ["id", "data", "position"],
+        "title": "WhiteboardNode"
+      },
+      "WhiteboardNodeType": {
+        "type": "string",
+        "enum": [
+          "text",
+          "note",
+          "border",
+          "sdoc",
+          "memo",
+          "code",
+          "tag",
+          "spanAnnotation",
+          "sentenceAnnotation",
+          "bboxAnnotation"
+        ],
+        "title": "WhiteboardNodeType"
       },
       "WhiteboardRead": {
         "properties": {
@@ -10060,7 +10640,10 @@
             "title": "Updated",
             "description": "Updated timestamp of the Whiteboard"
           },
-          "content": { "type": "string", "title": "Content", "description": "Content of the Whiteboard" }
+          "content": {
+            "$ref": "#/components/schemas/WhiteboardContent-Output",
+            "description": "Content of the Whiteboard"
+          }
         },
         "type": "object",
         "required": ["title", "id", "project_id", "user_id", "created", "updated", "content"],
@@ -10074,9 +10657,8 @@
             "description": "Title of the Whiteboard"
           },
           "content": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Content",
-            "description": "Content of the Whiteboard"
+            "anyOf": [{ "$ref": "#/components/schemas/WhiteboardContent-Input" }, { "type": "null" }],
+            "description": "Conten of the Whiteboard"
           }
         },
         "type": "object",
@@ -10157,6 +10739,15 @@
         "type": "object",
         "required": ["text", "start_ms", "end_ms"],
         "title": "WordLevelTranscription"
+      },
+      "XYPosition": {
+        "properties": {
+          "x": { "type": "number", "title": "X", "description": "X coordinate of the position" },
+          "y": { "type": "number", "title": "Y", "description": "Y coordinate of the position" }
+        },
+        "type": "object",
+        "required": ["x", "y"],
+        "title": "XYPosition"
       },
       "ZeroShotParams": {
         "properties": {

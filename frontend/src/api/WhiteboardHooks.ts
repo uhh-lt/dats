@@ -1,6 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
-import { Edge, Node } from "reactflow";
 import queryClient from "../plugins/ReactQueryClient.ts";
 import { useAppSelector } from "../plugins/ReduxHooks.ts";
 import { RootState } from "../store/store.ts";
@@ -10,13 +9,7 @@ import { WhiteboardService } from "./openapi/services/WhiteboardService.ts";
 
 // WHITEBOARD QUERIES
 
-export type WhiteboardGraph = {
-  nodes: Node[];
-  edges: Edge[];
-};
-
-export type WhiteboardMap = Record<number, Whiteboard>;
-export type Whiteboard = Omit<WhiteboardRead, "content"> & { content: WhiteboardGraph };
+export type WhiteboardMap = Record<number, WhiteboardRead>;
 
 interface UseProjectWhiteboardsQueryParams<T> {
   select?: (data: WhiteboardMap) => T;
@@ -30,7 +23,7 @@ const useProjectWhiteboardsQuery = <T = WhiteboardMap>({ select, enabled }: UseP
     queryFn: async () => {
       const data = await WhiteboardService.getByProject({ projectId: projectId! });
       return data.reduce((acc, whiteboard) => {
-        const content = JSON.parse(whiteboard.content) as WhiteboardGraph;
+        const content = whiteboard.content;
         acc[whiteboard.id] = { ...whiteboard, content };
         return acc;
       }, {} as WhiteboardMap);
@@ -68,7 +61,7 @@ const useUpdateWhiteboard = () =>
   useMutation({
     mutationFn: WhiteboardService.updateById,
     onSuccess(data) {
-      const updatedWhiteboard = { ...data, content: JSON.parse(data.content) as WhiteboardGraph };
+      const updatedWhiteboard = { ...data };
       queryClient.setQueryData<WhiteboardMap>([QueryKey.WHITEBOARDS_PROJECT, data.project_id], (prevWhiteboards) => {
         return prevWhiteboards
           ? { ...prevWhiteboards, [data.id]: updatedWhiteboard }
@@ -85,7 +78,7 @@ const useDuplicateWhiteboard = () => {
   return useMutation({
     mutationFn: WhiteboardService.duplicateById,
     onSuccess(data) {
-      const duplicatedWhiteboard = { ...data, content: JSON.parse(data.content) as WhiteboardGraph };
+      const duplicatedWhiteboard = { ...data };
       queryClient.setQueryData<WhiteboardMap>([QueryKey.WHITEBOARDS_PROJECT, projectId], (prevWhiteboards) =>
         prevWhiteboards ? { ...prevWhiteboards, [data.id]: duplicatedWhiteboard } : { [data.id]: duplicatedWhiteboard },
       );
