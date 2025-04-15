@@ -24,7 +24,7 @@ def transform_timeline_settings_for_export(
     return COTATimelineSettings(
         group_by=settings.group_by,
         threshold=settings.threshold,
-        # Note: date_metadata_id is excluded as it's project-specific and resolved after import
+        # Note: date_metadata_id is excluded as it's project-specific
     )
 
 

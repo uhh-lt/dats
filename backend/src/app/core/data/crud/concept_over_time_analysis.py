@@ -13,6 +13,18 @@ from app.core.data.orm.concept_over_time_analysis import ConceptOverTimeAnalysis
 class CRUDConceptOverTimeAnalysis(
     CRUDBase[ConceptOverTimeAnalysisORM, COTACreateIntern, COTAUpdateIntern]
 ):
+    def read_by_project(
+        self, db: Session, *, project_id: int
+    ) -> List[ConceptOverTimeAnalysisORM]:
+        db_objs = (
+            db.query(self.model)
+            .filter(
+                self.model.project_id == project_id,
+            )
+            .all()
+        )
+        return db_objs
+
     def read_by_project_and_user(
         self, db: Session, *, project_id: int, user_id: int, raise_error: bool = True
     ) -> List[ConceptOverTimeAnalysisORM]:

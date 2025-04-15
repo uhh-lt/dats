@@ -39,10 +39,8 @@ class COTAExportSchema(BaseModel):
             return v
 
         try:
-            # Parse JSON string to dict
-            settings_dict = srsly.json_loads(v)
             # Validate using the COTATimelineSettings schema
-            COTATimelineSettings.model_validate(settings_dict)
+            COTATimelineSettings.model_validate_json(v)
         except Exception as e:
             raise ValueError(f"Invalid timeline_settings JSON format: {str(e)}")
 
@@ -57,10 +55,8 @@ class COTAExportSchema(BaseModel):
             return v
 
         try:
-            # Parse JSON string to dict
-            settings_dict = srsly.json_loads(v)
             # Validate using the COTATrainingSettings schema
-            COTATrainingSettings.model_validate(settings_dict)
+            COTATrainingSettings.model_validate_json(v)
         except Exception as e:
             raise ValueError(f"Invalid training_settings JSON format: {str(e)}")
 
