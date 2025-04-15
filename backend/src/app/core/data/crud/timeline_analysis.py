@@ -16,6 +16,18 @@ class CRUDTimelineAnalysis(
         TimelineAnalysisORM, TimelineAnalysisCreateIntern, TimelineAnalysisUpdateIntern
     ]
 ):
+    def read_by_project(
+        self, db: Session, *, project_id: int
+    ) -> List[TimelineAnalysisORM]:
+        db_obj = (
+            db.query(self.model)
+            .filter(
+                self.model.project_id == project_id,
+            )
+            .all()
+        )
+        return db_obj
+
     def read_by_project_and_user(
         self, db: Session, *, project_id: int, user_id: int
     ) -> List[TimelineAnalysisORM]:
