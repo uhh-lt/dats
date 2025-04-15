@@ -71,12 +71,7 @@ def export_all_cota(
     Raises:
         NoDataToExportError: If no COTA analyses are found
     """
-    cota_analyses = [
-        cota
-        for cota in db.query(ConceptOverTimeAnalysisORM)
-        .filter(ConceptOverTimeAnalysisORM.project_id == project_id)
-        .all()
-    ]
+    cota_analyses = crud_cota.read_by_project(db=db, project_id=project_id)
     return __export_cota(
         db=db,
         repo=repo,
