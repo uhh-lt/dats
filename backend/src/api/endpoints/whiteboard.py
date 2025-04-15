@@ -8,6 +8,7 @@ from app.core.data.dto.whiteboard import (
     WhiteboardCreateIntern,
     WhiteboardRead,
     WhiteboardUpdate,
+    WhiteboardUpdateIntern,
 )
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -109,7 +110,17 @@ def update_by_id(
 ) -> WhiteboardRead:
     authz_user.assert_in_same_project_as(Crud.WHITEBOARD, whiteboard_id)
 
-    db_obj = crud_whiteboard.update(db=db, id=whiteboard_id, update_dto=whiteboard)
+    update_dto = WhiteboardUpdateIntern(
+        **whiteboard.model_dump(exclude_unset=True, exclude={"content"}),
+    )
+    if whiteboard.content is not None:
+        update_dto.content = whiteboard.content.model_dump_json(exclude_unset=True)
+
+    db_obj = crud_whiteboard.update(
+        db=db,
+        id=whiteboard_id,
+        update_dto=update_dto,
+    )
     return WhiteboardRead.model_validate(db_obj)
 
 
