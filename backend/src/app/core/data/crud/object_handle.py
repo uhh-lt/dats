@@ -10,6 +10,7 @@ from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError, UpdateNot
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
+from app.core.data.crud.sentence_annotation import crud_sentence_anno
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.span_group import crud_span_group
@@ -21,6 +22,7 @@ from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.memo import MemoORM
 from app.core.data.orm.object_handle import ObjectHandleORM
 from app.core.data.orm.project import ProjectORM
+from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_group import SpanGroupORM
@@ -36,6 +38,7 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, UpdateNotAl
         "source_document_id": crud_sdoc,
         "span_annotation_id": crud_span_anno,
         "bbox_annotation_id": crud_bbox_anno,
+        "sentence_annotation_id": crud_sentence_anno,
         "span_group_id": crud_span_group,
         "user_id": crud_user,
         "memo_id": crud_memo,
@@ -48,6 +51,7 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, UpdateNotAl
         "source_document_id": SourceDocumentORM,
         "span_annotation_id": SpanAnnotationORM,
         "bbox_annotation_id": BBoxAnnotationORM,
+        "sentence_annotation_id": SentenceAnnotationORM,
         "span_group_id": SpanGroupORM,
         "user_id": UserORM,
         "memo_id": MemoORM,
@@ -102,6 +106,7 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, UpdateNotAl
         ProjectORM,
         SourceDocumentORM,
         SpanAnnotationORM,
+        SentenceAnnotationORM,
         BBoxAnnotationORM,
         SpanGroupORM,
         UserORM,

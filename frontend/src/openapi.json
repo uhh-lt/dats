@@ -7705,7 +7705,8 @@
           "PROJECT_METADATA",
           "WHITEBOARDS",
           "TIMELINE_ANALYSES",
-          "COTA"
+          "COTA",
+          "MEMOS"
         ],
         "title": "ImportJobType"
       },

@@ -34,6 +34,19 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         self.__update_memo_in_elasticsearch(updated_memo)
         return updated_memo
 
+    def read_by_project_and_uuid(
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        uuid: str,
+    ) -> Optional[MemoORM]:
+        query = db.query(self.model).where(
+            self.model.project_id == project_id,
+            self.model.uuid == uuid,
+        )
+        return query.first()
+
     def read_by_user_and_project(
         self,
         db: Session,

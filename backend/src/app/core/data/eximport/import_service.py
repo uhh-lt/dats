@@ -21,6 +21,7 @@ from app.core.data.eximport.bbox_annotations.import_bbox_annotations import (
 )
 from app.core.data.eximport.codes.import_codes import import_codes_to_proj
 from app.core.data.eximport.cota.import_cota import import_cota_to_proj
+from app.core.data.eximport.memos.import_memos import import_memos_to_proj
 from app.core.data.eximport.project.import_project import import_project
 from app.core.data.eximport.project_metadata.import_project_metadata import (
     import_project_metadata_to_proj,
@@ -87,6 +88,7 @@ class ImportService(metaclass=SingletonMeta):
             ImportJobType.WHITEBOARDS: cls._import_whiteboards_to_proj,
             ImportJobType.TIMELINE_ANALYSES: cls._import_timeline_analyses_to_proj,
             ImportJobType.COTA: cls._import_cota_to_proj,
+            ImportJobType.MEMOS: cls._import_memos_to_proj,
         }
         return super(ImportService, cls).__new__(cls)
 
@@ -265,6 +267,16 @@ class ImportService(metaclass=SingletonMeta):
         path_to_file = self.repo.get_dst_path_for_temp_file(imj_parameters.file_name)
         df = pd.read_csv(path_to_file)
         import_cota_to_proj(db=db, df=df, project_id=imj_parameters.project_id)
+
+    def _import_memos_to_proj(
+        self,
+        db: Session,
+        imj_parameters: ImportJobParameters,
+    ) -> None:
+        """Import memos to a project"""
+        path_to_file = self.repo.get_dst_path_for_temp_file(imj_parameters.file_name)
+        df = pd.read_csv(path_to_file)
+        import_memos_to_proj(db=db, df=df, project_id=imj_parameters.project_id)
 
     def _import_users_to_proj(
         self,
