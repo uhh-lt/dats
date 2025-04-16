@@ -1,10 +1,13 @@
 from typing import Dict, List, Set
 
 import pandas as pd
+from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.sentence_annotation import crud_sentence_anno
 from app.core.data.crud.source_document import crud_sdoc
-from app.core.data.dto.sentence_annotation import SentenceAnnotationCreate
+from app.core.data.dto.sentence_annotation import (
+    SentenceAnnotationCreateIntern,
+)
 from app.core.data.eximport.sent_annotations.sentence_annotations_export_schema import (
     SentenceAnnotationExportCollection,
     SentenceAnnotationExportSchema,
@@ -60,7 +63,6 @@ def import_sentence_annotations_to_proj(
     sdoc_names: Set[str] = set()
     code_names: Set[str] = set()
     user_email2annos: Dict[str, List[SentenceAnnotationExportSchema]] = {}
-
     for annotation in annotation_collection.annotations:
         user_emails.add(annotation.user_email)
         sdoc_names.add(annotation.sdoc_name)
@@ -98,6 +100,16 @@ def import_sentence_annotations_to_proj(
                 f"Code '{code_name}' is not part of the project {project_id}"
             )
 
+    # 4. Check if the sentence annnotation already exists
+    for annotation in annotation_collection.annotations:
+        existing_annotation = crud_sentence_anno.read_by_project_and_uuid(
+            db=db, project_id=project_id, uuid=annotation.uuid
+        )
+        if existing_annotation is not None:
+            error_messages.append(
+                f"Sentence annotation with UUID '{annotation.uuid}' already exists in project {project_id}"
+            )
+
     # Raise an error if any of the checks failed
     if len(error_messages) > 0:
         logger.error(
@@ -106,23 +118,45 @@ def import_sentence_annotations_to_proj(
         )
         raise ImportSentenceAnnotationsError(errors=error_messages)
 
-    # Everything is fine, we can bulk create the annotations, per user
-    imported_anno_ids: List[int] = []
-    for user, annotations in user_email2annos.items():
-        created_annos = crud_sentence_anno.create_bulk(
-            db=db,
-            user_id=project_user_emails[user].id,
-            create_dtos=[
-                SentenceAnnotationCreate(
+    # Everything is fine, prepare the creation (finding / creating annotation documents)
+    create_dtos: List[SentenceAnnotationCreateIntern] = []
+    for user_email, annotations in user_email2annos.items():
+        user = project_user_emails[user_email]
+
+        # find affected sdocs
+        sdoc_ids = {
+            project_sdoc_names[annotation.sdoc_name].id for annotation in annotations
+        }
+
+        # find or create annotation documents
+        adoc_id_by_sdoc_id: Dict[int, int] = {}
+        for sdoc_id in sdoc_ids:
+            adoc_id_by_sdoc_id[sdoc_id] = crud_adoc.exists_or_create(
+                db=db, user_id=user.id, sdoc_id=sdoc_id
+            ).id
+
+        create_dtos.extend(
+            [
+                SentenceAnnotationCreateIntern(
+                    uuid=annotation.uuid,
+                    project_id=project_id,
+                    annotation_document_id=adoc_id_by_sdoc_id[
+                        project_sdoc_names[annotation.sdoc_name].id
+                    ],
+                    code_id=project_code_names[annotation.code_name].id,
                     sentence_id_start=annotation.text_begin_sent,
                     sentence_id_end=annotation.text_end_sent,
-                    code_id=project_code_names[annotation.code_name].id,
-                    sdoc_id=project_sdoc_names[annotation.sdoc_name].id,
                 )
                 for annotation in annotations
-            ],
+            ]
         )
-        imported_anno_ids.extend([anno.id for anno in created_annos])
+
+    # we can bulk create the annotations
+    created_annos = crud_sentence_anno.create_multi(
+        db=db,
+        create_dtos=create_dtos,
+    )
+    imported_anno_ids = [anno.id for anno in created_annos]
 
     logger.info(
         f"Successfully imported {len(imported_anno_ids)} sentence annotations into project {project_id}"

@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field, field_validator
 class SpanAnnotationExportSchema(BaseModel):
     """Schema definition for span annotation export/import operations."""
 
+    uuid: str = Field(description="UUID of the span annotation")
     sdoc_name: str = Field(description="Name of the source document")
     user_email: str = Field(description="Email of the user who created the annotation")
     code_name: str = Field(description="Name of the code assigned to the annotation")
@@ -30,7 +31,7 @@ class SpanAnnotationExportSchema(BaseModel):
         description="Last name of the user", default=None
     )
 
-    @field_validator("sdoc_name", "user_email", "code_name", "text")
+    @field_validator("uuid", "sdoc_name", "user_email", "code_name", "text")
     @classmethod
     def validate_required_fields(cls, v, info):
         if not v or v.strip() == "":

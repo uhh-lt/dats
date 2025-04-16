@@ -1,10 +1,13 @@
 from typing import Dict, List, Set
 
 import pandas as pd
+from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.span_annotation import crud_span_anno
-from app.core.data.dto.span_annotation import SpanAnnotationCreate
+from app.core.data.dto.span_annotation import (
+    SpanAnnotationCreateIntern,
+)
 from app.core.data.eximport.span_annotations.span_annotations_export_schema import (
     SpanAnnotationExportCollection,
     SpanAnnotationExportSchema,
@@ -95,6 +98,16 @@ def import_span_annotations_to_proj(
                 f"Code '{code_name}' is not part of the project {project_id}"
             )
 
+    # 4. Check if the span annnotation already exists
+    for annotation in annotation_collection.annotations:
+        existing_annotation = crud_span_anno.read_by_project_and_uuid(
+            db=db, project_id=project_id, uuid=annotation.uuid
+        )
+        if existing_annotation is not None:
+            error_messages.append(
+                f"Span annotation with UUID '{annotation.uuid}' already exists in project {project_id}"
+            )
+
     # Raise an error if any of the checks failed
     if len(error_messages) > 0:
         logger.error(
@@ -103,26 +116,46 @@ def import_span_annotations_to_proj(
         )
         raise ImportSpanAnnotationsError(errors=error_messages)
 
-    # Everything is fine, we can bulk create the annotations, per user
-    imported_anno_ids: List[int] = []
-    for user, annotations in user_email2annos.items():
-        created_annos = crud_span_anno.create_bulk(
-            db=db,
-            user_id=project_user_emails[user].id,
-            create_dtos=[
-                SpanAnnotationCreate(
-                    begin=annotation.text_begin_char,
-                    end=annotation.text_end_char,
-                    span_text=annotation.text,
-                    begin_token=annotation.text_begin_token,
-                    end_token=annotation.text_end_token,
-                    code_id=project_code_names[annotation.code_name].id,
-                    sdoc_id=project_sdoc_names[annotation.sdoc_name].id,
-                )
-                for annotation in annotations
-            ],
+    # Everything is fine, prepare the creation (finding / creating annotation documents)
+    create_dtos: List[SpanAnnotationCreateIntern] = []
+    for user_email, annotations in user_email2annos.items():
+        user = project_user_emails[user_email]
+
+        # find affected sdocs
+        sdoc_ids = {
+            project_sdoc_names[annotation.sdoc_name].id for annotation in annotations
+        }
+
+        # find or create annotation documents
+        adoc_id_by_sdoc_id: Dict[int, int] = {}
+        for sdoc_id in sdoc_ids:
+            adoc_id_by_sdoc_id[sdoc_id] = crud_adoc.exists_or_create(
+                db=db, user_id=user.id, sdoc_id=sdoc_id
+            ).id
+
+        create_dtos.extend(
+            SpanAnnotationCreateIntern(
+                uuid=annotation.uuid,
+                project_id=project_id,
+                annotation_document_id=adoc_id_by_sdoc_id[
+                    project_sdoc_names[annotation.sdoc_name].id
+                ],
+                code_id=project_code_names[annotation.code_name].id,
+                begin=annotation.text_begin_char,
+                end=annotation.text_end_char,
+                begin_token=annotation.text_begin_token,
+                end_token=annotation.text_end_token,
+                span_text=annotation.text,
+            )
+            for annotation in annotations
         )
-        imported_anno_ids.extend([anno.id for anno in created_annos])
+
+    # we can bulk create the annotations
+    created_annos = crud_span_anno.create_multi(
+        db=db,
+        create_dtos=create_dtos,
+    )
+    imported_anno_ids = [anno.id for anno in created_annos]
 
     logger.info(
         f"Successfully imported {len(imported_anno_ids)} span annotations into project {project_id}"
