@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field, field_validator
 class SentenceAnnotationExportSchema(BaseModel):
     """Schema definition for sentence annotation export/import operations."""
 
+    uuid: str = Field(description="UUID of the sentence annotation")
     sdoc_name: str = Field(description="Name of the source document")
     user_email: str = Field(description="Email of the user who created the annotation")
     code_name: str = Field(description="Name of the code assigned to the annotation")
@@ -22,7 +23,7 @@ class SentenceAnnotationExportSchema(BaseModel):
         description="Last name of the user", default=None
     )
 
-    @field_validator("sdoc_name", "user_email", "code_name")
+    @field_validator("uuid", "sdoc_name", "user_email", "code_name")
     @classmethod
     def validate_required_fields(cls, v, info):
         if not v or v.strip() == "":

@@ -51,25 +51,19 @@ class CRUDSentenceAnnotation(
     def create_bulk(
         self, db: Session, *, user_id: int, create_dtos: List[SentenceAnnotationCreate]
     ) -> List[SentenceAnnotationORM]:
-        # group by user and sdoc_id
-        # identify codes
-        annotations_by_user_sdoc = {
-            (user_id, create_dto.sdoc_id): [] for create_dto in create_dtos
-        }
-        for create_dto in create_dtos:
-            annotations_by_user_sdoc[(user_id, create_dto.sdoc_id)].append(create_dto)
+        # find affected sdocs
+        sdoc_ids = {create_dto.sdoc_id for create_dto in create_dtos}
 
         # find project id for each sdoc_id
-        sdoc_ids = {create_dto.sdoc_id for create_dto in create_dtos}
         sdocs = crud_sdoc.read_by_ids(db=db, ids=list(sdoc_ids))
         project_id_by_sdoc_id: Dict[int, int] = {}
         for sdoc in sdocs:
             project_id_by_sdoc_id[sdoc.id] = sdoc.project_id
 
-        # find or create annotation documents for each user and sdoc_id
-        adoc_id_by_user_sdoc = {}
-        for user_id, sdoc_id in annotations_by_user_sdoc.keys():
-            adoc_id_by_user_sdoc[(user_id, sdoc_id)] = crud_adoc.exists_or_create(
+        # find or create annotation documents for each sdoc_id
+        adoc_id_by_sdoc_id: Dict[int, int] = {}
+        for sdoc_id in sdoc_ids:
+            adoc_id_by_sdoc_id[sdoc_id] = crud_adoc.exists_or_create(
                 db=db, user_id=user_id, sdoc_id=sdoc_id
             ).id
 
@@ -83,9 +77,7 @@ class CRUDSentenceAnnotation(
                     sentence_id_end=create_dto.sentence_id_end,
                     sentence_id_start=create_dto.sentence_id_start,
                     code_id=create_dto.code_id,
-                    annotation_document_id=adoc_id_by_user_sdoc[
-                        (user_id, create_dto.sdoc_id)
-                    ],
+                    annotation_document_id=adoc_id_by_sdoc_id[create_dto.sdoc_id],
                 )
                 for create_dto in create_dtos
             ],

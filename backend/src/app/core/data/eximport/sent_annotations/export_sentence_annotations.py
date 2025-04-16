@@ -103,6 +103,7 @@ def __generate_export_df_for_sentence_annotations(
 
         annotation_export_items.append(
             SentenceAnnotationExportSchema(
+                uuid=sent_annotation.uuid,
                 sdoc_name=sdoc.filename,
                 user_email=user.email,
                 user_first_name=user.first_name,
