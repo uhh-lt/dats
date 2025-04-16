@@ -1,9 +1,13 @@
+from typing import List
+
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
+from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
+from app.core.data.orm.user import UserORM
 from app.core.db.sql_utils import (
     aggregate_ids,
     aggregate_two_ids,
@@ -13,6 +17,7 @@ from app.core.search.filtering_operators import FilterOperator, FilterValueType
 from app.core.search.search_builder import SearchBuilder
 from sqlalchemy import String, cast, func
 from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg
+from sqlalchemy.orm import Session
 
 
 class SdocColumns(str, AbstractColumns):
@@ -182,3 +187,71 @@ class SdocColumns(str, AbstractColumns):
 
     def add_query_filter_statements(self, query_builder: SearchBuilder):
         pass
+
+    def resolve_ids(self, db: Session, ids: List[int]) -> List[str]:
+        match self:
+            case SdocColumns.DOCUMENT_TAG_ID_LIST:
+                result = (
+                    db.query(DocumentTagORM)
+                    .filter(
+                        DocumentTagORM.id.in_(ids),
+                    )
+                    .all()
+                )
+                return [tag.name for tag in result]
+            case SdocColumns.CODE_ID_LIST:
+                result = (
+                    db.query(CodeORM)
+                    .filter(
+                        CodeORM.id.in_(ids),
+                    )
+                    .all()
+                )
+                return [code.name for code in result]
+            case SdocColumns.USER_ID_LIST:
+                result = (
+                    db.query(UserORM)
+                    .filter(
+                        UserORM.id.in_(ids),
+                    )
+                    .all()
+                )
+                return [user.email for user in result]
+            case _:
+                raise NotImplementedError(f"Cannot resolve ID for {self}!")
+
+    def resolve_names(
+        self, db: Session, project_id: int, names: List[str]
+    ) -> List[int]:
+        match self:
+            case SdocColumns.DOCUMENT_TAG_ID_LIST:
+                result = (
+                    db.query(DocumentTagORM)
+                    .filter(
+                        DocumentTagORM.project_id == project_id,
+                        DocumentTagORM.name.in_(names),
+                    )
+                    .all()
+                )
+                return [tag.id for tag in result]
+            case SdocColumns.CODE_ID_LIST:
+                result = (
+                    db.query(CodeORM)
+                    .filter(
+                        CodeORM.project_id == project_id,
+                        CodeORM.name.in_(names),
+                    )
+                    .all()
+                )
+                return [code.id for code in result]
+            case SdocColumns.USER_ID_LIST:
+                result = (
+                    db.query(UserORM)
+                    .filter(
+                        UserORM.email.in_(names),
+                    )
+                    .all()
+                )
+                return [user.id for user in result]
+            case _:
+                raise NotImplementedError(f"Cannot resolve name for {self}!")

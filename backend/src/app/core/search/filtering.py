@@ -175,7 +175,6 @@ class Filter(BaseModel, Generic[T]):
         # Resolve IDs for each FilterExpression in the filter
         for item in filter.items:
             if isinstance(item, FilterExpression):
-                print("THIS IS AN EXPRESSION!")
                 resolved_items.append(item.resolve_ids(db=db))
             else:
                 resolved_items.append(Filter.resolve_ids(item, db=db))
@@ -196,7 +195,7 @@ class Filter(BaseModel, Generic[T]):
             Filter: A new Filter instance with resolved names.
         """
 
-        resolved = filter.copy(deep=True)
+        resolved = filter.model_copy(deep=True)
         resolved_items: List[Union[FilterExpression[T], "Filter[T]"]] = []
 
         # Resolve names for each FilterExpression in the filter
