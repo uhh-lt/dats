@@ -685,6 +685,26 @@ class WeaviateService(VectorIndexService):
 
         return np.array(embeddings)
 
+    def get_document_embedding_by_sdoc_id(self, sdoc_id: int) -> np.ndarray:
+        query = (
+            self._client.query.get(
+                self._document_class_name,
+                self._document_props,
+            )
+            .with_additional(["vector"])
+            .with_where(
+                {
+                    "path": ["sdoc_id"],
+                    "operator": "Equal",
+                    "valueInt": sdoc_id,
+                },
+            )
+        )
+        result = query.do()
+        result = result["data"]["Get"][self._document_class_name]
+        result_dict = {r["sdoc_id"]: r["_additional"]["vector"] for r in result}
+        return np.array(result_dict[sdoc_id])
+
     def get_document_embeddings(self, search_ids: List[int]) -> np.ndarray:
         # First prepare the query to run through data
         def run_batch(batch):
@@ -733,6 +753,26 @@ class WeaviateService(VectorIndexService):
                 break
 
         return np.array(embeddings)
+
+    def get_image_embedding_by_sdoc_id(self, sdoc_id: int) -> np.ndarray:
+        query = (
+            self._client.query.get(
+                self._image_class_name,
+                self._document_props,
+            )
+            .with_additional(["vector"])
+            .with_where(
+                {
+                    "path": ["sdoc_id"],
+                    "operator": "Equal",
+                    "valueInt": sdoc_id,
+                },
+            )
+        )
+        result = query.do()
+        result = result["data"]["Get"][self._image_class_name]
+        result_dict = {r["sdoc_id"]: r["_additional"]["vector"] for r in result}
+        return np.array(result_dict[sdoc_id])
 
     def drop_indices(self) -> None:
         logger.warning("Dropping all Weaviate indices!")

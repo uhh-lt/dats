@@ -37,7 +37,7 @@ function ImportJobListItem({ initialImportJob }: ImportJobListItemProps) {
       <BackgroundJobListItem
         jobStatus={importJob.data.status}
         jobId={importJob.data.id}
-        title={`Import Job - ${importJob.data.parameters.import_job_type}}`}
+        title={`Import Job - ${importJob.data.parameters.import_job_type}`}
         subTitle={subTitle}
       >
         <Typography>{importJob.data.error}</Typography>

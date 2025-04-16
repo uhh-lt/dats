@@ -33,6 +33,7 @@ CSV_FILE_TYPES = [
 
 expected_file_type: Dict[ImportJobType, List[str]] = {
     ImportJobType.PROJECT: ["application/zip"],
+    ImportJobType.DOCUMENTS: ["application/zip"],
     ImportJobType.CODES: CSV_FILE_TYPES,
     ImportJobType.TAGS: CSV_FILE_TYPES,
     ImportJobType.BBOX_ANNOTATIONS: CSV_FILE_TYPES,

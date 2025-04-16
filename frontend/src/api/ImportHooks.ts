@@ -66,6 +66,10 @@ const usePollImportJob = (importJobId: string | undefined, initialData: ImportJo
               console.log("Invalidating whiteboads");
               queryClient.invalidateQueries({ queryKey: [QueryKey.WHITEBOARDS_PROJECT, projectId] });
               break;
+            case ImportJobType.DOCUMENTS:
+              console.log("Invalidating search documents");
+              queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE, projectId] });
+              break;
             case ImportJobType.BBOX_ANNOTATIONS:
             case ImportJobType.SPAN_ANNOTATIONS:
             case ImportJobType.SENTENCE_ANNOTATIONS:

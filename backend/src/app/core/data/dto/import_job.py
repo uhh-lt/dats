@@ -20,6 +20,7 @@ class ImportJobType(str, Enum):
     TIMELINE_ANALYSES = "TIMELINE_ANALYSES"
     COTA = "COTA"
     MEMOS = "MEMOS"
+    DOCUMENTS = "DOCUMENTS"
 
 
 class ImportJobParameters(BaseModel):

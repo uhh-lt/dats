@@ -7706,7 +7706,8 @@
           "WHITEBOARDS",
           "TIMELINE_ANALYSES",
           "COTA",
-          "MEMOS"
+          "MEMOS",
+          "DOCUMENTS"
         ],
         "title": "ImportJobType"
       },
