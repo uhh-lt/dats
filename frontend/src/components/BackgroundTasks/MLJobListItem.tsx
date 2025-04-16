@@ -37,7 +37,7 @@ function MLJobListItem({ initialMLJob }: MLJobListItemProps) {
       <BackgroundJobListItem
         jobStatus={mlJob.data.status}
         jobId={mlJob.data.id}
-        title={`ML Job - ${mlJob.data.parameters.ml_job_type}}`}
+        title={`ML Job - ${mlJob.data.parameters.ml_job_type}`}
         subTitle={subTitle}
       >
         <Typography>{mlJob.data.error}</Typography>

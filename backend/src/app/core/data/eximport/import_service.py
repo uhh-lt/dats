@@ -26,6 +26,7 @@ from app.core.data.eximport.project.import_project import import_project
 from app.core.data.eximport.project_metadata.import_project_metadata import (
     import_project_metadata_to_proj,
 )
+from app.core.data.eximport.sdocs.import_sdocs import import_sdocs_to_proj
 from app.core.data.eximport.span_annotations.import_span_annotations import (
     import_span_annotations_to_proj,
 )
@@ -89,6 +90,7 @@ class ImportService(metaclass=SingletonMeta):
             ImportJobType.TIMELINE_ANALYSES: cls._import_timeline_analyses_to_proj,
             ImportJobType.COTA: cls._import_cota_to_proj,
             ImportJobType.MEMOS: cls._import_memos_to_proj,
+            ImportJobType.DOCUMENTS: cls._import_source_documents_to_proj,
         }
         return super(ImportService, cls).__new__(cls)
 
@@ -298,6 +300,48 @@ class ImportService(metaclass=SingletonMeta):
         df = pd.read_csv(path_to_file)
         import_project_metadata_to_proj(
             db=db, df=df, project_id=imj_parameters.project_id
+        )
+
+    def _import_source_documents_to_proj(
+        self,
+        db: Session,
+        imj_parameters: ImportJobParameters,
+    ) -> None:
+        """Import source documents to a project"""
+        # unzip file
+        try:
+            path_to_zip_file = self.repo.get_dst_path_for_temp_file(
+                imj_parameters.file_name
+            )
+            path_to_temp_import_dir = self.repo.create_temp_dir(
+                f"import_user_{imj_parameters.user_id}_sdocs_{imj_parameters.project_id}"
+            )
+            self.__unzip(
+                path_to_zip_file=path_to_zip_file, unzip_target=path_to_temp_import_dir
+            )
+            logger.info("unzipped imported sdocds")
+        except Exception as e:
+            raise e
+
+        # Find the data file (CSV) and the source files
+        data_file = None
+        source_files = []
+        for file_path in path_to_temp_import_dir.glob("**/*"):
+            if file_path.is_file():
+                if file_path.name.endswith(".csv"):
+                    data_file = file_path
+                else:
+                    source_files.append(file_path)
+
+        if not data_file:
+            raise Exception("No data file (.csv) found in the zip archive")
+
+        df = pd.read_csv(data_file)
+        import_sdocs_to_proj(
+            db=db,
+            source_files=source_files,
+            df=df,
+            project_id=imj_parameters.project_id,
         )
 
     def _import_project(

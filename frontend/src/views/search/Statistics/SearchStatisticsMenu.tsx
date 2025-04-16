@@ -52,7 +52,6 @@ function SearchStatisticsMenu({
 
   // filter feature
   const options: StatisticsFilter[] = useMemo(() => {
-    console.log("Creating options");
     return [
       { id: -1, title: "Keywords", navigateTo: "keywords", level: 0 },
       { id: -2, title: "Tags", navigateTo: "tags", level: 0 },
@@ -65,7 +64,6 @@ function SearchStatisticsMenu({
       })),
     ];
   }, [codesWithLevel]);
-  console.log(options);
   const handleChange: UseAutocompleteProps<StatisticsFilter, false, false, true>["onChange"] = (event, newValue) => {
     event.stopPropagation();
     if (typeof newValue === "string") {
