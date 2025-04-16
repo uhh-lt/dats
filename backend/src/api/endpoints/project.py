@@ -1,4 +1,5 @@
 from typing import List, Optional
+from uuid import uuid4
 
 from app.core.analysis.duplicate_finder.duplicate_finder import find_duplicates
 from app.core.authorization.authz_user import AuthzUser
@@ -348,6 +349,7 @@ def get_or_create_user_memo(
             attached_object_id=proj_id,
             attached_object_type=AttachedObjectType.project,
             create_dto=MemoCreateIntern(
+                uuid=str(uuid4()),
                 title="Project Memo",
                 content="",
                 content_json="",

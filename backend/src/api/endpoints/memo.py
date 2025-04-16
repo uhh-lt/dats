@@ -1,4 +1,5 @@
 from typing import Dict, List
+from uuid import uuid4
 
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud, MemoCrud
@@ -74,7 +75,10 @@ def add_memo(
         attached_object_id=attached_object_id,
         attached_object_type=attached_object_type,
         create_dto=MemoCreateIntern(
-            **memo.model_dump(), user_id=authz_user.user.id, project_id=proj_id
+            **memo.model_dump(),
+            user_id=authz_user.user.id,
+            project_id=proj_id,
+            uuid=str(uuid4()),
         ),
     )
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)

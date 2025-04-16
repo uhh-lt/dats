@@ -57,6 +57,7 @@ class MemoCreate(MemoBaseDTO):
 
 class MemoCreateIntern(MemoCreate):
     project_id: int = Field(description="Project the Memo belongs to")
+    uuid: str = Field(description="UUID of the Memo")
     user_id: int = Field(description="User the Memo belongs to")
 
 

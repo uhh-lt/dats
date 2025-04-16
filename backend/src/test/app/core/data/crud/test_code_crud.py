@@ -1,5 +1,6 @@
 import random
 import string
+from uuid import uuid4
 
 import pytest
 from api.util import get_object_memo_for_user, get_object_memos
@@ -90,6 +91,7 @@ def test_add_get_memo(
     starred = False
 
     memo = MemoCreateIntern(
+        uuid=str(uuid4()),
         title=title,
         content=content,
         content_json=content_json,
