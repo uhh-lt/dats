@@ -1,7 +1,15 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, func
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
@@ -14,6 +22,7 @@ from app.core.data.orm.orm_base import ORMBase
 
 class MemoORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    uuid: Mapped[str] = mapped_column(String, nullable=False, index=True)
     title: Mapped[str] = mapped_column(String, nullable=False, index=True)
     content: Mapped[str] = mapped_column(String, nullable=False, index=False)
     content_json: Mapped[str] = mapped_column(String, nullable=False, index=False)
@@ -60,3 +69,11 @@ class MemoORM(ORMBase):
         Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True
     )
     user: Mapped["UserORM"] = relationship("UserORM", back_populates="memos")
+
+    __table_args__ = (
+        UniqueConstraint(
+            "project_id",
+            "uuid",
+            name="UC_memo_uuid_unique_per_project",
+        ),
+    )
