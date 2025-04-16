@@ -346,6 +346,10 @@ def transform_nodes_for_export(
                     )
                 )
 
+        case _:
+            # Handle unknown node types
+            raise ValueError(f"Unknown node type: {node_type}")
+
     return transformed_nodes
 
 
@@ -625,5 +629,9 @@ def transform_nodes_for_import(
             # As per the requirements, we'll skip real transformation for memos
             for node in nodes:
                 transformed_nodes.append(WhiteboardNode(**node.model_dump()))
+
+        case _:
+            # Handle unknown node types
+            errors.append(f"Unknown node type: {node_type}")
 
     return transformed_nodes, errors
