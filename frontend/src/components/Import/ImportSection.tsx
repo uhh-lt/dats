@@ -29,6 +29,7 @@ const importTypeHelperText: Record<ImportJobType, string> = {
   [ImportJobType.WHITEBOARDS]: "Import whiteboards from a whiteboard export file",
   [ImportJobType.TIMELINE_ANALYSES]: "Import timeline analyses from a timeline analyses export file",
   [ImportJobType.COTA]: "Import Concept Over Time Analyses from a COTA export file",
+  [ImportJobType.MEMOS]: "Import memos from a memos export file",
 };
 
 function ImportSection({ projectId }: { projectId: number }) {

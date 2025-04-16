@@ -14,4 +14,5 @@ export enum ImportJobType {
   WHITEBOARDS = "WHITEBOARDS",
   TIMELINE_ANALYSES = "TIMELINE_ANALYSES",
   COTA = "COTA",
+  MEMOS = "MEMOS",
 }
