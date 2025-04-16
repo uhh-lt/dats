@@ -151,10 +151,6 @@ class SentAnnoColumns(str, AbstractColumns):
 
     def resolve_ids(self, db: Session, ids: List[int]) -> List[str]:
         match self:
-            case SentAnnoColumns.SOURCE_DOCUMENT_FILENAME:
-                raise NotImplementedError(
-                    "Cannot resolve ID for SourceDocument filename!"
-                )
             case SentAnnoColumns.DOCUMENT_TAG_ID_LIST:
                 result = (
                     db.query(DocumentTagORM)
@@ -173,10 +169,6 @@ class SentAnnoColumns(str, AbstractColumns):
                     .all()
                 )
                 return [code.name for code in result]
-            # case SentAnnoColumns.TEXT:
-            #     return SpanTextORM
-            case SentAnnoColumns.MEMO_CONTENT:
-                raise NotImplementedError("Cannot resolve ID for Memo content!")
             case SentAnnoColumns.USER_ID:
                 result = (
                     db.query(UserORM)
@@ -186,15 +178,13 @@ class SentAnnoColumns(str, AbstractColumns):
                     .all()
                 )
                 return [user.email for user in result]
+            case _:
+                raise NotImplementedError(f"Cannot resolve ID for {self}!")
 
     def resolve_names(
         self, db: Session, project_id: int, names: List[str]
     ) -> List[int]:
         match self:
-            case SentAnnoColumns.SOURCE_DOCUMENT_FILENAME:
-                raise NotImplementedError(
-                    "Cannot resolve name for SourceDocument filename!"
-                )
             case SentAnnoColumns.DOCUMENT_TAG_ID_LIST:
                 result = (
                     db.query(DocumentTagORM)
@@ -215,10 +205,6 @@ class SentAnnoColumns(str, AbstractColumns):
                     .all()
                 )
                 return [code.id for code in result]
-            # case SentAnnoColumns.TEXT:
-            #     return SpanTextORM
-            case SentAnnoColumns.MEMO_CONTENT:
-                raise NotImplementedError("Cannot resolve name for Memo content!")
             case SentAnnoColumns.USER_ID:
                 result = (
                     db.query(UserORM)
@@ -228,3 +214,5 @@ class SentAnnoColumns(str, AbstractColumns):
                     .all()
                 )
                 return [user.id for user in result]
+            case _:
+                raise NotImplementedError(f"Cannot resolve name for {self}!")
