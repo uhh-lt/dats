@@ -18,7 +18,7 @@ function TagRenderer({ tag, ...props }: TagRendererProps & Omit<StackProps, "dir
 function TagRendererWithoutData({ tagId, ...props }: { tagId: number } & Omit<StackProps, "direction" | "alignItems">) {
   const tag = TagHooks.useGetTag(tagId);
 
-  if (tag.isSuccess) {
+  if (tag.data) {
     return <TagRendererWithData tag={tag.data} {...props} />;
   } else if (tag.isError) {
     return <div>{tag.error.message}</div>;
