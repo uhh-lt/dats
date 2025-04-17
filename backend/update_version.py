@@ -35,7 +35,7 @@ for i, line in enumerate(uv_lock):
     if previous_line.startswith('name = "dats-backend"') and line.startswith(
         "version = "
     ):
-        uv_lock[i] = f"version = {args.version}\n"
+        uv_lock[i] = f'version = "{args.version}"\n'
         break
     previous_line = line
 with open("./uv.lock", "w") as f:
