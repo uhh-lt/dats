@@ -7,6 +7,7 @@ from app.core.data.eximport.tags.tag_export_schema import (
     TagExportCollection,
     TagExportSchema,
 )
+from app.util.color import get_next_color
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -146,7 +147,7 @@ class TagImporter:
                     description=tag.description,
                     parent_id=parent_id,
                     project_id=self.project_id,
-                    **({"color": tag.color} if tag.color is not None else {}),
+                    color=tag.color if tag.color else get_next_color(),
                 ),
             )
             self.tag_id_mapping[tag.tag_name] = created_tag.id
