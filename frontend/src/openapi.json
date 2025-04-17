@@ -10542,7 +10542,8 @@
             "anyOf": [{ "type": "number" }, { "type": "null" }],
             "title": "Height",
             "description": "Height of the node"
-          }
+          },
+          "style": { "type": "object", "title": "Style", "description": "Style of the node", "default": {} }
         },
         "type": "object",
         "required": ["id", "data", "position"],
@@ -10598,7 +10599,8 @@
             "anyOf": [{ "type": "number" }, { "type": "null" }],
             "title": "Height",
             "description": "Height of the node"
-          }
+          },
+          "style": { "type": "object", "title": "Style", "description": "Style of the node", "default": {} }
         },
         "type": "object",
         "required": ["id", "data", "position"],

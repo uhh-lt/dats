@@ -49,4 +49,8 @@ export type WhiteboardNode_Output = {
    * Height of the node
    */
   height?: number | null;
+  /**
+   * Style of the node
+   */
+  style?: Record<string, any>;
 };
