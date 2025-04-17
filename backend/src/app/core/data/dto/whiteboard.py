@@ -168,6 +168,10 @@ class WhiteboardNode(BaseModel):
         description="Height of the node",
         default=None,
     )
+    style: Dict[str, Any] = Field(
+        description="Style of the node",
+        default={},
+    )
 
     model_config = ConfigDict(
         # This tells Pydantic to ignore extra fields
