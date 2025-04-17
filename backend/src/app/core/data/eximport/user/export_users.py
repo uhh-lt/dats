@@ -23,7 +23,7 @@ def export_all_users(
     return __export_users(
         db=db,
         repo=repo,
-        fn=f"project_{project_id}_users",
+        fn=f"project_{project_id}_all_users",
         users=users,
     )
 

@@ -48,7 +48,7 @@ def import_span_annotations_to_proj(
     except ValueError as e:
         logger.error(f"Failed to load span annotation import data: {e}")
         raise ImportSpanAnnotationsError(
-            errors=["Invalid data format for span annotations."]
+            errors=["Invalid data format for span annotations: {e}"]
         )
 
     logger.info(

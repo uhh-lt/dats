@@ -11,6 +11,14 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 
+class ImportCodesError(Exception):
+    """Exception raised when code import fails."""
+
+    def __init__(self, errors: List[str]) -> None:
+        super().__init__(f"Errors occurred while importing codes: {errors}")
+        self.errors = errors
+
+
 class CodeImporter:
     """
     Handles import of code hierarchies from pandas DataFrame into the database.
@@ -37,19 +45,24 @@ class CodeImporter:
             code_collection = CodeExportCollection.from_dataframe(df)
         except ValueError as e:
             logger.error(f"Failed to load code import data: {e}")
-            raise e
+            raise ImportCodesError(errors=[f"Invalid data format for codes: {e}"])
 
-        # Process codes in hierarchical order (breadth-first)
-        sorted_layers = self._sort_codes_by_hierarchy(code_collection.codes)
+        try:
+            # Process codes in hierarchical order (breadth-first)
+            sorted_layers = self._sort_codes_by_hierarchy(code_collection.codes)
 
-        logger.info(
-            f"Importing {len(code_collection.codes)} codes in {len(sorted_layers)} hierarchical layers..."
-        )
+            logger.info(
+                f"Importing {len(code_collection.codes)} codes in {len(sorted_layers)} hierarchical layers..."
+            )
 
-        # Process each layer in order
-        for layer in sorted_layers:
-            for code in layer:
-                self._create_if_not_exists(code)
+            # Process each layer in order
+            for layer in sorted_layers:
+                for code in layer:
+                    self._create_if_not_exists(code)
+
+        except ValueError as e:
+            logger.error(f"Failed to import codes: {e}")
+            raise ImportCodesError(errors=[str(e)])
 
         logger.info(f"Successfully imported {len(self.code_id_mapping)} codes")
         return self.code_id_mapping

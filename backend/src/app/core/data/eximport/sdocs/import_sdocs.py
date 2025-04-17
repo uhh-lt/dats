@@ -46,8 +46,7 @@ class ImportSourceDocumentsError(Exception):
 
 def import_sdocs_to_proj(
     db: Session,
-    df: pd.DataFrame,
-    source_files: List[Path],
+    path_to_dir: Path,
     project_id: int,
 ) -> List[int]:
     """
@@ -56,8 +55,6 @@ def import_sdocs_to_proj(
 
     Args:
         db: Database session
-        df: DataFrame with source document data
-        source_files: List of source files to be imported
         project_id: ID of the project to import documents into
 
     Returns:
@@ -66,14 +63,32 @@ def import_sdocs_to_proj(
     Raises:
         ImportSourceDocumentsError: If validation fails or any required references are missing
     """
-    error_messages = []
+
+    # Find the data file (CSV) and the source files in the import directory
+    data_file = None
+    source_files = []
+    for file_path in path_to_dir.glob("**/*"):
+        if file_path.is_file():
+            if file_path.name.endswith(".csv"):
+                data_file = file_path
+            else:
+                source_files.append(file_path)
+
+    if not data_file:
+        raise ImportSourceDocumentsError(
+            errors=["No data file (.csv) found in the zip archive"]
+        )
+
+    df = pd.read_csv(data_file)
 
     # Validate input data with our schema
     try:
         sdoc_collection = SourceDocumentExportCollection.from_dataframe(df)
     except Exception as e:
-        error_messages.append(f"Failed to parse document export data: {str(e)}")
-        raise ImportSourceDocumentsError(errors=error_messages)
+        logger.error(f"Failed to load document export data: {e}")
+        raise ImportSourceDocumentsError(
+            errors=[f"Invalid data format for source documents: {e}"]
+        )
 
     logger.info(
         f"Importing {len(sdoc_collection.source_documents)} source documents..."

@@ -43,7 +43,7 @@ def export_selected_whiteboards(
     return __export_whiteboards(
         db=db,
         repo=repo,
-        fn=f"project_{project_id}_selected_whiteboards_export",
+        fn=f"project_{project_id}_selected_whiteboards",
         whiteboards=whiteboards,
     )
 
@@ -71,7 +71,7 @@ def export_all_whiteboards(
     return __export_whiteboards(
         db=db,
         repo=repo,
-        fn=f"project_{project_id}_all_whiteboards_export",
+        fn=f"project_{project_id}_all_whiteboards",
         whiteboards=whiteboards,
     )
 

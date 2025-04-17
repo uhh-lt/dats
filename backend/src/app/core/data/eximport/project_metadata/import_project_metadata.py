@@ -43,7 +43,7 @@ def import_project_metadata_to_proj(
     except ValueError as e:
         logger.error(f"Failed to load project metadata import data: {e}")
         raise ImportProjectMetadataError(
-            errors=["Invalid data format for project metadata."]
+            errors=[f"Invalid data format for project metadata: {e}"]
         )
 
     logger.info(

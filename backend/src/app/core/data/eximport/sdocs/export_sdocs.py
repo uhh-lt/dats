@@ -14,7 +14,6 @@ from app.core.data.eximport.sdocs.sdoc_export_schema import (
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.weaviate_service import WeaviateService
-from loguru import logger
 from sqlalchemy.orm import Session
 
 vector_index = WeaviateService()
@@ -30,7 +29,7 @@ def export_selected_sdocs(
     return __export_sdocs(
         db=db,
         repo=repo,
-        fn=f"project_{project_id}_selected_sdocs_export",
+        fn=f"project_{project_id}_selected_docs",
         sdocs=sdocs,
     )
 
@@ -40,11 +39,11 @@ def export_all_sdocs(
     repo: RepoService,
     project_id: int,
 ) -> Path:
-    sdocs = crud_sdoc.read_by_project(db=db, proj_id=project_id)
+    sdocs = crud_sdoc.read_by_project(db=db, proj_id=project_id, only_finished=False)
     return __export_sdocs(
         db=db,
         repo=repo,
-        fn=f"project_{project_id}_all_sdocs_export",
+        fn=f"project_{project_id}_all_docs",
         sdocs=sdocs,
     )
 
@@ -116,25 +115,16 @@ def __export_sdocs(
 
         # Get document embeddings
         doc_embedding = vector_index.get_document_embedding_by_sdoc_id(sdoc.id)
-        logger.info(
-            f"Document embedding shape for sdoc {sdoc.id}: {doc_embedding.shape}"
-        )
         doc_embedding = doc_embedding.tolist()
 
         # Get sentence embeddings
         sentence_embeddings = vector_index.get_sentence_embeddings_by_sdoc_id(sdoc.id)
-        logger.info(
-            f"Sentence embedding shape for sdoc {sdoc.id}: {sentence_embeddings.shape}"
-        )
         sentence_embeddings = sentence_embeddings.tolist()
 
         # Get image embeddings
         image_embeddings = None
         if sdoc.doctype == "image":
             image_embeddings = vector_index.get_image_embedding_by_sdoc_id(sdoc.id)
-            logger.info(
-                f"Image embedding shape for sdoc {sdoc.id}: {image_embeddings.shape}"
-            )
             image_embeddings = image_embeddings.tolist()
 
         # Create export schema for the document

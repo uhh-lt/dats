@@ -24,7 +24,7 @@ def export_selected_bbox_annotations(
     return __export_bbox_annotations(
         db=db,
         repo=repo,
-        fn=f"project_{project_id}_selected_bbox_annotations_export",
+        fn=f"project_{project_id}_selected_bbox_annotations",
         bbox_annotations=bbox_annotations,
     )
 
@@ -38,7 +38,7 @@ def export_all_bbox_annotations(
     return __export_bbox_annotations(
         db=db,
         repo=repo,
-        fn=f"project_{project_id}_all_bbox_annotations_export",
+        fn=f"project_{project_id}_all_bbox_annotations",
         bbox_annotations=bbox_annotations,
     )
 

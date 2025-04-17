@@ -23,7 +23,7 @@ def export_all_project_metadatas(
     return __export_project_metadatas(
         db=db,
         repo=repo,
-        fn=f"project_{project_id}_project_metadatas",
+        fn=f"project_{project_id}_all_project_metadatas",
         project_metadatas=project_metadatas,
     )
 
