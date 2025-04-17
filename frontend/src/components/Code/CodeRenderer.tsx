@@ -20,7 +20,8 @@ const CodeRendererWithData = memo(({ code }: { code: CodeRead }) => {
 const CodeRendererWithoutData = memo(({ codeId }: { codeId: number }) => {
   const code = CodeHooks.useGetCode(codeId);
 
-  if (code.isSuccess) {
+  if (code.data) {
+    console.log(code.data);
     return <CodeRendererWithData code={code.data} />;
   } else if (code.isError) {
     return <div>{code.error.message}</div>;
@@ -30,6 +31,7 @@ const CodeRendererWithoutData = memo(({ codeId }: { codeId: number }) => {
 });
 
 function CodeRenderer({ code }: CodeRendererProps) {
+  console.log(code);
   if (typeof code === "number") {
     return <CodeRendererWithoutData codeId={code} />;
   } else {

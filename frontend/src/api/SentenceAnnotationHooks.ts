@@ -249,10 +249,13 @@ const useUpdateBulkSentenceAnno = () =>
 
 const useDeleteSentenceAnnotation = () =>
   useMutation({
-    mutationFn: (sentAnnoToDelete: SentenceAnnotationRead) =>
-      SentenceAnnotationService.deleteById({ sentenceAnnoId: sentAnnoToDelete.id }),
+    mutationFn: (sentAnnoToDelete: SentenceAnnotationRead | number) =>
+      SentenceAnnotationService.deleteById({
+        sentenceAnnoId: typeof sentAnnoToDelete === "number" ? sentAnnoToDelete : sentAnnoToDelete.id,
+      }),
     // optimistic updates
     onMutate: async (sentAnnoToDelete) => {
+      if (typeof sentAnnoToDelete === "number") return;
       const affectedQueryKey = [QueryKey.SDOC_SENTENCE_ANNOTATOR, sentAnnoToDelete.sdoc_id, sentAnnoToDelete.user_id];
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
       const previousSentenceAnnotator = queryClient.getQueryData<SentenceAnnotatorResult>(affectedQueryKey);

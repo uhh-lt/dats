@@ -21,6 +21,7 @@ interface AttachedObjectRendererProps {
     | SourceDocumentRead
     | CodeRead
     | SpanAnnotationRead
+    | SentenceAnnotationRead
     | BBoxAnnotationRead
     | ProjectRead
     | number;

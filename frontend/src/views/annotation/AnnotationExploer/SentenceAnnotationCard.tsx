@@ -21,7 +21,7 @@ function SentenceAnnotationCard({
         action={
           <AnnotationCardActionsMenu
             annotationId={annotation.id}
-            annotationType={AttachedObjectType.SPAN_ANNOTATION}
+            annotationType={AttachedObjectType.SENTENCE_ANNOTATION}
             iconButtonProps={{ size: "small" }}
           />
         }
@@ -58,7 +58,7 @@ function SentenceAnnotationCard({
           <Divider />
           <AnnotationCardMemo
             annotationId={annotation.id}
-            annotationType={AttachedObjectType.SPAN_ANNOTATION}
+            annotationType={AttachedObjectType.SENTENCE_ANNOTATION}
             codeName={code.name}
             annotationText={"Sentence"}
           />

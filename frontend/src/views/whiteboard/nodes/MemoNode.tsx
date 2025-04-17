@@ -25,7 +25,14 @@ import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../compone
 import { attachedObjectTypeToText } from "../../../components/Memo/attachedObjectTypeToText.ts";
 import MemoRenderer from "../../../components/Memo/MemoRenderer.tsx";
 import { DATSNodeData } from "../types/DATSNodeData.ts";
-import { isBBoxAnnotationNode, isCodeNode, isSdocNode, isSpanAnnotationNode, isTagNode } from "../types/typeGuards.ts";
+import {
+  isBBoxAnnotationNode,
+  isCodeNode,
+  isSdocNode,
+  isSentenceAnnotationNode,
+  isSpanAnnotationNode,
+  isTagNode,
+} from "../types/typeGuards.ts";
 import {
   createBBoxAnnotationNodes,
   createCodeNodes,
@@ -42,6 +49,7 @@ import {
   isMemoBBoxAnnotationEdge,
   isMemoCodeEdge,
   isMemoSdocEdge,
+  isMemoSentenceAnnotationEdge,
   isMemoSpanAnnotationEdge,
   isMemoTagEdge,
 } from "../whiteboardUtils.ts";
@@ -59,6 +67,8 @@ const isMemoAttachedObjectEdge = (attachedObjectType: AttachedObjectType) => {
       return isMemoSpanAnnotationEdge;
     case AttachedObjectType.BBOX_ANNOTATION:
       return isMemoBBoxAnnotationEdge;
+    case AttachedObjectType.SENTENCE_ANNOTATION:
+      return isMemoSentenceAnnotationEdge;
     default:
       return () => false;
   }
@@ -76,6 +86,8 @@ const isAttachedObjectNode = (attachedObjectType: AttachedObjectType) => {
       return isSpanAnnotationNode;
     case AttachedObjectType.BBOX_ANNOTATION:
       return isBBoxAnnotationNode;
+    case AttachedObjectType.SENTENCE_ANNOTATION:
+      return isSentenceAnnotationNode;
     default:
       return () => false;
   }

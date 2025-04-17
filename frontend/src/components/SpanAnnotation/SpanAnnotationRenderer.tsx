@@ -67,7 +67,7 @@ function SpanAnnotationRendererWithData({
   }, [dispatch, spanAnnotation.id, spanAnnotation.user_id]);
 
   return (
-    <LinkWrapper to={`/annotation/${spanAnnotation.sdoc_id}`} onClick={handleClick} link={!!link}>
+    <LinkWrapper to={`../annotation/${spanAnnotation.sdoc_id}`} onClick={handleClick} link={!!link}>
       <Stack direction="row" alignItems="center">
         {showSdoc && <SdocRenderer sdoc={spanAnnotation.sdoc_id} {...sdocRendererProps} />}
         {showSdocTags && <SdocTagsRenderer sdocId={spanAnnotation.sdoc_id} />}
