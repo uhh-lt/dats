@@ -1,6 +1,6 @@
 {
   "openapi": "3.1.0",
-  "info": { "title": "Discourse Analysis Tool Suite API", "version": "1.5.1" },
+  "info": { "title": "Discourse Analysis Tool Suite API", "version": "1.6.0" },
   "paths": {
     "/heartbeat": {
       "get": {
@@ -5969,7 +5969,7 @@
       "Body_authentication-login": {
         "properties": {
           "grant_type": {
-            "anyOf": [{ "type": "string", "pattern": "password" }, { "type": "null" }],
+            "anyOf": [{ "type": "string", "pattern": "^password$" }, { "type": "null" }],
             "title": "Grant Type"
           },
           "username": { "type": "string", "title": "Username" },
