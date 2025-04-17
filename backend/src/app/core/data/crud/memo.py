@@ -19,6 +19,7 @@ from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.memo import MemoORM
 from app.core.data.orm.object_handle import ObjectHandleORM
 from app.core.data.orm.project import ProjectORM
+from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_group import SpanGroupORM
@@ -213,6 +214,12 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
                 **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
                 attached_object_id=attached_to.id,
                 attached_object_type=AttachedObjectType.bbox_annotation,
+            )
+        elif isinstance(attached_to, SentenceAnnotationORM):
+            return MemoRead(
+                **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
+                attached_object_id=attached_to.id,
+                attached_object_type=AttachedObjectType.sentence_annotation,
             )
         elif isinstance(attached_to, SourceDocumentORM):
             return MemoRead(
