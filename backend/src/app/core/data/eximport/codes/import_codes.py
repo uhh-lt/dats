@@ -7,6 +7,7 @@ from app.core.data.eximport.codes.code_export_schema import (
     CodeExportCollection,
     CodeExportSchema,
 )
+from app.util.color import get_next_color
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -154,7 +155,7 @@ class CodeImporter:
                     project_id=self.project_id,
                     is_system=False,
                     enabled=True,
-                    **({"color": code.color} if code.color is not None else {}),
+                    color=code.color if code.color else get_next_color(),
                 ),
             )
             self.code_id_mapping[code.code_name] = created_code.id
