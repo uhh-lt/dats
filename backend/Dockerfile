@@ -1,7 +1,7 @@
 # docker build -f Dockerfile -t uhhlt/dats_backend:<version> .
 # docker push uhhlt/dats_backend:<version>
 
-FROM ubuntu:jammy-20221020 AS ubuntu
+FROM ubuntu:jammy-20250404 AS ubuntu
 # install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 CMD ["/bin/bash"]
@@ -16,7 +16,7 @@ ENV TZ=Europe/Berlin
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN apt-get update && apt-get install -y software-properties-common && add-apt-repository ppa:deadsnakes/ppa
 RUN apt-get update -q && \
-    apt-get install -q -y --no-install-recommends bzip2 curl wget ca-certificates libmagic1 libpq-dev build-essential python3.11 python3-pip python3-dev ffmpeg && \
+    apt-get install -q -y --no-install-recommends bzip2 curl wget ca-certificates libmagic1 libpq-dev build-essential python3.11 python3.11-dev python3-pip python3-dev ffmpeg && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     rm -r /var/cache
