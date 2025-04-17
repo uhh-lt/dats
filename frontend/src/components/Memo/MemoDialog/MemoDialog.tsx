@@ -124,7 +124,7 @@ function MemoDialog2({
 
   return (
     <>
-      {attachedObject.isSuccess ? (
+      {attachedObject.data ? (
         <MemoDialogContent
           memo={memo}
           attachedObject={attachedObject.data}

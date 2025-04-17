@@ -178,7 +178,7 @@ function SdocNodeImageContent({ sdoc }: { sdoc: SourceDocumentRead }) {
     return <CircularProgress />;
   }
 
-  return <CardMedia component="img" image={encodeURI("/content/" + sdocData.data?.html)} alt="Thumbnail" />;
+  return <CardMedia component="img" image={encodeURI("/content/" + sdocData.data?.repo_url)} alt="Thumbnail" />;
 }
 
 export default SdocNode;

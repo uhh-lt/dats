@@ -7,6 +7,7 @@ import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import { MemoRead } from "../../../api/openapi/models/MemoRead.ts";
 import { ProjectRead } from "../../../api/openapi/models/ProjectRead.ts";
+import { SentenceAnnotationRead } from "../../../api/openapi/models/SentenceAnnotationRead.ts";
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
 import { SpanAnnotationRead } from "../../../api/openapi/models/SpanAnnotationRead.ts";
 import { MemoCreateSuccessHandler } from "./MemoDialogAPI.ts";
@@ -18,6 +19,7 @@ interface MemoDialogContentProps {
     | SourceDocumentRead
     | CodeRead
     | SpanAnnotationRead
+    | SentenceAnnotationRead
     | BBoxAnnotationRead
     | ProjectRead;
   attachedObjectType: AttachedObjectType;

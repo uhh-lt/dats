@@ -5,11 +5,15 @@ import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectTy
 import MemoDeleteMenuItem from "../../../components/Memo/MemoDeleteMenuItem.tsx";
 import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 import BBoxAnnotationDeleteMenuItem from "./BBoxAnnotationDeleteMenuItem.tsx";
+import SentenceAnnotationDeleteMenuItem from "./SentenceAnnotationDeleteMenuItem.tsx";
 import SpanAnnotationDeleteMenuItem from "./SpanAnnotationDeleteMenuItem.tsx";
 
 interface MemoMenuItemsProps {
   annotationId: number;
-  annotationType: AttachedObjectType.SPAN_ANNOTATION | AttachedObjectType.BBOX_ANNOTATION;
+  annotationType:
+    | AttachedObjectType.SPAN_ANNOTATION
+    | AttachedObjectType.BBOX_ANNOTATION
+    | AttachedObjectType.SENTENCE_ANNOTATION;
   handleClose: () => void;
 }
 
@@ -32,7 +36,10 @@ function MemoMenuItems({ annotationId, annotationType, handleClose }: MemoMenuIt
 
 interface AnnotationCardActionsMenuProps {
   annotationId: number;
-  annotationType: AttachedObjectType.SPAN_ANNOTATION | AttachedObjectType.BBOX_ANNOTATION;
+  annotationType:
+    | AttachedObjectType.SPAN_ANNOTATION
+    | AttachedObjectType.BBOX_ANNOTATION
+    | AttachedObjectType.SENTENCE_ANNOTATION;
   iconButtonProps?: Omit<IconButtonProps, "onClick">;
 }
 
@@ -59,6 +66,8 @@ export default function AnnotationCardActionsMenu({
         <MemoMenuItems annotationId={annotationId} annotationType={annotationType} handleClose={handleClose} />
         {annotationType === AttachedObjectType.SPAN_ANNOTATION ? (
           <SpanAnnotationDeleteMenuItem annotationId={annotationId} onClick={handleClose} />
+        ) : annotationType === AttachedObjectType.SENTENCE_ANNOTATION ? (
+          <SentenceAnnotationDeleteMenuItem annotationId={annotationId} onClick={handleClose} />
         ) : (
           <BBoxAnnotationDeleteMenuItem annotationId={annotationId} onClick={handleClose} />
         )}

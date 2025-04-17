@@ -1,5 +1,5 @@
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
-import React, { memo, useCallback } from "react";
+import React, { useCallback } from "react";
 import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
@@ -44,4 +44,4 @@ function BBoxAnnotationDeleteMenuItem({
   );
 }
 
-export default memo(BBoxAnnotationDeleteMenuItem);
+export default BBoxAnnotationDeleteMenuItem;
