@@ -23,7 +23,7 @@ def export_all_codes(
     return __export_codes(
         db=db,
         repo=repo,
-        fn=f"project_{project_id}_codes",
+        fn=f"project_{project_id}_all_codes",
         codes=codes,
     )
 

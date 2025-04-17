@@ -24,7 +24,7 @@ def export_selected_span_annotations(
     return __export_span_annotations(
         db=db,
         repo=repo,
-        fn=f"project_{project_id}_selected_span_annotations_export",
+        fn=f"project_{project_id}_selected_span_annotations",
         span_annotations=span_annotations,
     )
 
@@ -38,7 +38,7 @@ def export_all_span_annotations(
     return __export_span_annotations(
         db=db,
         repo=repo,
-        fn=f"project_{project_id}_all_span_annotations_export",
+        fn=f"project_{project_id}_all_span_annotations",
         span_annotations=span_annotations,
     )
 

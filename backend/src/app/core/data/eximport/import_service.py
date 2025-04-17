@@ -323,24 +323,9 @@ class ImportService(metaclass=SingletonMeta):
         except Exception as e:
             raise e
 
-        # Find the data file (CSV) and the source files
-        data_file = None
-        source_files = []
-        for file_path in path_to_temp_import_dir.glob("**/*"):
-            if file_path.is_file():
-                if file_path.name.endswith(".csv"):
-                    data_file = file_path
-                else:
-                    source_files.append(file_path)
-
-        if not data_file:
-            raise Exception("No data file (.csv) found in the zip archive")
-
-        df = pd.read_csv(data_file)
         import_sdocs_to_proj(
             db=db,
-            source_files=source_files,
-            df=df,
+            path_to_dir=path_to_temp_import_dir,
             project_id=imj_parameters.project_id,
         )
 

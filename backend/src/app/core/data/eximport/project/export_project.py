@@ -7,7 +7,12 @@ from app.core.data.eximport.bbox_annotations.export_bbox_annotations import (
     export_all_bbox_annotations,
 )
 from app.core.data.eximport.codes.export_codes import export_all_codes
+from app.core.data.eximport.cota.export_cota import export_all_cota
 from app.core.data.eximport.memos.export_memos import export_all_memos
+from app.core.data.eximport.no_data_export_error import NoDataToExportError
+from app.core.data.eximport.project_metadata.export_project_metadata import (
+    export_all_project_metadatas,
+)
 from app.core.data.eximport.sdocs.export_sdocs import export_all_sdocs
 from app.core.data.eximport.sent_annotations.export_sentence_annotations import (
     export_all_sentence_annotations,
@@ -16,7 +21,11 @@ from app.core.data.eximport.span_annotations.export_span_annotations import (
     export_all_span_annotations,
 )
 from app.core.data.eximport.tags.export_tags import export_all_tags
+from app.core.data.eximport.timeline_analysis.export_timeline_analysis import (
+    export_all_timeline_analyses,
+)
 from app.core.data.eximport.user.export_users import export_all_users
+from app.core.data.eximport.whiteboards.export_whiteboards import export_all_whiteboards
 from app.core.data.orm.project import ProjectORM
 from app.core.data.repo.repo_service import RepoService
 from loguru import logger
@@ -43,72 +52,34 @@ def __export_project(
     fn: str,
     project: ProjectORM,
 ) -> Path:
-    # We export this for a project:
-    # 1. Project details (json file)
-    # 2. Source documents and their related data (zip file)
-    # 3. Users (csv file)
-    # 4. Codes (csv file)
-    # 5. Tags (csv file)
-    # 6. BBox annotations (csv file)
-    # 7. Sentence annotations (csv file)
-    # 8. Span annotations (csv file)
-    # 9. Memos (csv file)
+    export_files = []
+    for export_fn in [
+        export_all_bbox_annotations,
+        export_all_codes,
+        export_all_cota,
+        export_all_memos,
+        export_all_project_metadatas,
+        export_all_sdocs,
+        export_all_sentence_annotations,
+        export_all_span_annotations,
+        export_all_tags,
+        export_all_timeline_analyses,
+        export_all_users,
+        export_all_whiteboards,
+    ]:
+        try:
+            export_files.append(
+                export_fn(
+                    db=db,
+                    repo=repo,
+                    project_id=project.id,
+                )
+            )
+        except NoDataToExportError as e:
+            logger.warning(e)
 
-    project_details_file = __export_project_details(repo=repo, project=project)
-    sdoc_files = export_all_sdocs(
-        db=db,
-        repo=repo,
-        project_id=project.id,
-    )
-    user_file = export_all_users(
-        db=db,
-        repo=repo,
-        project_id=project.id,
-    )
-    codes_file = export_all_codes(
-        db=db,
-        repo=repo,
-        project_id=project.id,
-    )
-    tags_file = export_all_tags(
-        db=db,
-        repo=repo,
-        project_id=project.id,
-    )
-    bbox_annotations_file = export_all_bbox_annotations(
-        db=db,
-        repo=repo,
-        project_id=project.id,
-    )
-    sentence_annotations_file = export_all_sentence_annotations(
-        db=db,
-        repo=repo,
-        project_id=project.id,
-    )
-    span_annotations_file = export_all_span_annotations(
-        db=db,
-        repo=repo,
-        project_id=project.id,
-    )
-    memos_file = export_all_memos(
-        db=db,
-        repo=repo,
-        project_id=project.id,
-    )
-
-    files = [
-        project_details_file,
-        sdoc_files,
-        user_file,
-        codes_file,
-        tags_file,
-        bbox_annotations_file,
-        sentence_annotations_file,
-        span_annotations_file,
-        memos_file,
-    ]
     return repo.write_files_to_temp_zip_file(
-        files=files,
+        files=export_files,
         fn=fn,
     )
 

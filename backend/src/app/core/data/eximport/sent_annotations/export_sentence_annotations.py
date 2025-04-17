@@ -27,7 +27,7 @@ def export_selected_sentence_annotations(
     return __export_sentence_annotations(
         db=db,
         repo=repo,
-        fn=f"project_{project_id}_selected_sentence_annotations_export",
+        fn=f"project_{project_id}_selected_sentence_annotations",
         sentence_annotations=sentence_annotations,
     )
 
@@ -43,7 +43,7 @@ def export_all_sentence_annotations(
     return __export_sentence_annotations(
         db=db,
         repo=repo,
-        fn=f"project_{project_id}_all_sentence_annotations_export",
+        fn=f"project_{project_id}_all_sentence_annotations",
         sentence_annotations=sentence_annotations,
     )
 

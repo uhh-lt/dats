@@ -41,7 +41,7 @@ def import_users_to_proj(
         user_collection = UserExportCollection.from_dataframe(df)
     except ValueError as e:
         logger.error(f"Failed to load user import data: {e}")
-        raise ImportUsersError(errors=["Invalid data format for users."])
+        raise ImportUsersError(errors=[f"Invalid data format for users: {e}"])
 
     logger.info(f"Importing {len(user_collection.users)} users...")
 

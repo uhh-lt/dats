@@ -66,14 +66,38 @@ const usePollImportJob = (importJobId: string | undefined, initialData: ImportJo
               console.log("Invalidating whiteboads");
               queryClient.invalidateQueries({ queryKey: [QueryKey.WHITEBOARDS_PROJECT, projectId] });
               break;
+            case ImportJobType.COTA:
+              console.log("Invalidating cota");
+              queryClient.invalidateQueries({ queryKey: [QueryKey.COTAS_PROJECT_USER, projectId] });
+              break;
             case ImportJobType.DOCUMENTS:
               console.log("Invalidating search documents");
               queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE, projectId] });
               break;
+            case ImportJobType.MEMOS:
+              queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMO] });
+              queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO] });
+              queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_TABLE] });
+              queryClient.invalidateQueries({ queryKey: [QueryKey.OBJECT_MEMOS] });
+              break;
+            case ImportJobType.PROJECT:
+              console.log("Invalidating project");
+              queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_TAGS, projectId] });
+              queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CODES, projectId] });
+              queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_METADATAS, projectId] });
+              queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_USERS, projectId] });
+              queryClient.invalidateQueries({ queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, projectId] });
+              queryClient.invalidateQueries({ queryKey: [QueryKey.WHITEBOARDS_PROJECT, projectId] });
+              queryClient.invalidateQueries({ queryKey: [QueryKey.COTAS_PROJECT_USER, projectId] });
+              queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE, projectId] });
+              queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMO] });
+              queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO] });
+              queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_TABLE] });
+              queryClient.invalidateQueries({ queryKey: [QueryKey.OBJECT_MEMOS] });
+              break;
             case ImportJobType.BBOX_ANNOTATIONS:
             case ImportJobType.SPAN_ANNOTATIONS:
             case ImportJobType.SENTENCE_ANNOTATIONS:
-            case ImportJobType.PROJECT:
               break;
             default:
               console.error("Unknown import job type");

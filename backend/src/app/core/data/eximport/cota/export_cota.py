@@ -47,7 +47,7 @@ def export_selected_cota(
     return __export_cota(
         db=db,
         repo=repo,
-        fn=f"project_{project_id}_selected_cota_export",
+        fn=f"project_{project_id}_selected_cota",
         cota_analyses=cota_analyses,
     )
 
@@ -75,7 +75,7 @@ def export_all_cota(
     return __export_cota(
         db=db,
         repo=repo,
-        fn=f"project_{project_id}_all_cota_export",
+        fn=f"project_{project_id}_all_cota",
         cota_analyses=cota_analyses,
     )
 

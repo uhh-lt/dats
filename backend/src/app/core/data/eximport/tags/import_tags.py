@@ -11,6 +11,14 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 
+class ImportTagsError(Exception):
+    """Exception raised when tag import fails."""
+
+    def __init__(self, errors: List[str]) -> None:
+        super().__init__(f"Errors occurred while importing tags: {errors}")
+        self.errors = errors
+
+
 class TagImporter:
     """
     Handles import of tag hierarchies from pandas DataFrame into the database.
@@ -35,18 +43,22 @@ class TagImporter:
             tag_collection = TagExportCollection.from_dataframe(df)
         except ValueError as e:
             logger.error(f"Failed to load tag import data: {e}")
-            raise e
+            raise ImportTagsError(errors=[f"Invalid data format for tags: {e}"])
 
-        # Process tags in hierarchical order (breadth-first)
-        sorted_layers = self._sort_tags_by_hierarchy(tag_collection.tags)
-        logger.info(
-            f"Importing {len(tag_collection.tags)} tags in {len(sorted_layers)} hierarchical layers..."
-        )
+        try:
+            # Process tags in hierarchical order (breadth-first)
+            sorted_layers = self._sort_tags_by_hierarchy(tag_collection.tags)
+            logger.info(
+                f"Importing {len(tag_collection.tags)} tags in {len(sorted_layers)} hierarchical layers..."
+            )
 
-        # Process each layer in order
-        for layer in sorted_layers:
-            for tag in layer:
-                self._create_if_not_exists(tag)
+            # Process each layer in order
+            for layer in sorted_layers:
+                for tag in layer:
+                    self._create_if_not_exists(tag)
+        except ValueError as e:
+            logger.error(f"Failed to import tags: {e}")
+            raise ImportTagsError(errors=[str(e)])
 
         logger.info(f"Successfully imported {len(self.tag_id_mapping)} tags")
         return self.tag_id_mapping

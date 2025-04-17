@@ -18,7 +18,7 @@ import ImportHooks from "../../api/ImportHooks.ts";
 import ImportDropzone from "./ImportDropzone.tsx";
 
 const importTypeHelperText: Record<ImportJobType, string> = {
-  [ImportJobType.PROJECT]: "Import a complete project export including documents, annotations, tags, and codes",
+  [ImportJobType.PROJECT]: "Import a complete project from a project export file",
   [ImportJobType.TAGS]: "Import document tags from a tags export file",
   [ImportJobType.CODES]: "Import annotation codes from a codes export file",
   [ImportJobType.BBOX_ANNOTATIONS]: "Import bounding box annotations from a bbox export file",
@@ -85,14 +85,11 @@ function ImportSection({ projectId }: { projectId: number }) {
             onChange={handleImportTypeChange}
             disabled={isPending}
           >
-            {Object.values(ImportJobType).map((type) =>
-              // Exclude PROJECT type from the select options as it is not working
-              type !== ImportJobType.PROJECT ? (
-                <MenuItem key={type} value={type}>
-                  {type}
-                </MenuItem>
-              ) : null,
-            )}
+            {Object.values(ImportJobType).map((type) => (
+              <MenuItem key={type} value={type}>
+                {type}
+              </MenuItem>
+            ))}
           </Select>
           <FormHelperText>{importTypeHelperText[importType]}</FormHelperText>
         </FormControl>

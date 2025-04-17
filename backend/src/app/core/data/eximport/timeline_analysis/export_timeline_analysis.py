@@ -48,7 +48,7 @@ def export_selected_timeline_analyses(
     return __export_timeline_analyses(
         db=db,
         repo=repo,
-        fn=f"project_{project_id}_selected_timeline_analyses_export",
+        fn=f"project_{project_id}_selected_timeline_analyses",
         timeline_analyses=timeline_analyses,
     )
 
@@ -78,7 +78,7 @@ def export_all_timeline_analyses(
     return __export_timeline_analyses(
         db=db,
         repo=repo,
-        fn=f"project_{project_id}_all_timeline_analyses_export",
+        fn=f"project_{project_id}_all_timeline_analyses",
         timeline_analyses=timeline_analyses,
     )
 

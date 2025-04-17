@@ -32,7 +32,7 @@ def export_selected_memos(
     return __export_memos(
         db=db,
         repo=repo,
-        fn=f"project_{project_id}_selected_memos_export",
+        fn=f"project_{project_id}_selected_memos",
         memos=memos,
     )
 
@@ -46,7 +46,7 @@ def export_all_memos(
     return __export_memos(
         db=db,
         repo=repo,
-        fn=f"project_{project_id}_all_memos_export",
+        fn=f"project_{project_id}_all_memos",
         memos=memos,
     )
 

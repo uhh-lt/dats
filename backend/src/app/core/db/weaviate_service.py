@@ -243,7 +243,7 @@ class WeaviateService(VectorIndexService):
             .do()
         )
         if len(response["data"]["Get"][self.class_names[IndexType.IMAGE]]) == 0:
-            msg = f"No Sentence with sentence_id {sdoc_id} found!"
+            msg = f"No Image embedding for sdoc id '{sdoc_id}' found!"
             logger.error(msg)
             raise KeyError(msg)
 

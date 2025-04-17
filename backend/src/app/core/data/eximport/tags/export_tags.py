@@ -23,7 +23,7 @@ def export_all_tags(
     return __export_tags(
         db=db,
         repo=repo,
-        fn=f"project_{project_id}_tags",
+        fn=f"project_{project_id}_all_tags",
         tags=tags,
     )
 
