@@ -31,9 +31,9 @@ import { BorderData } from "../types/base/BorderData.ts";
 import { TextData } from "../types/base/TextData.ts";
 import { hasTextData, isBackgroundColorDataArray, isBorderDataArray, isTextDataArray } from "../types/typeGuards.ts";
 import BgColorTool from "./tools/BgColorTool.tsx";
+import BorderColorTool from "./tools/BorderColorTool.tsx";
 import ColorTool from "./tools/ColorTool.tsx";
 import NumberTool from "./tools/NumberTool.tsx";
-
 import SolidDashedDottedTool from "./tools/SolidDashedDottedTool.tsx";
 import TypographyVariantTool from "./tools/TypographyVariantTool.tsx";
 
@@ -521,8 +521,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
             {showBorderTools && (
               <>
                 <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
-                <ColorTool
-                  caption="Border:"
+                <BorderColorTool
                   key={`bordercolor-${nodes[0].id}`}
                   color={nodes[0].data.borderColor}
                   onColorChange={handleBorderColorChange}
