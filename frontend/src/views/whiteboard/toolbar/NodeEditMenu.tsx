@@ -30,9 +30,10 @@ import { BackgroundColorData } from "../types/base/BackgroundColorData.ts";
 import { BorderData } from "../types/base/BorderData.ts";
 import { TextData } from "../types/base/TextData.ts";
 import { hasTextData, isBackgroundColorDataArray, isBorderDataArray, isTextDataArray } from "../types/typeGuards.ts";
+import BgColorTool from "./tools/BgColorTool.tsx";
 import ColorTool from "./tools/ColorTool.tsx";
 import NumberTool from "./tools/NumberTool.tsx";
-import SliderTool from "./tools/SliderTool.tsx";
+
 import SolidDashedDottedTool from "./tools/SolidDashedDottedTool.tsx";
 import TypographyVariantTool from "./tools/TypographyVariantTool.tsx";
 
@@ -508,15 +509,11 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
             {showBackgroundColorTools && (
               <>
                 <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
-                <ColorTool
+                <BgColorTool
                   key={`bg-color-${nodes[0].id}`}
-                  caption="BG:"
                   color={nodes[0].data.bgcolor}
-                  onColorChange={handleBGColorChange}
-                />
-                <SliderTool
-                  key={`bg-alpha-${nodes[0].id}`}
                   value={nodes[0].data.bgalpha}
+                  onColorChange={handleBGColorChange}
                   onValueChange={handleBGAlphaChange}
                 />
               </>
