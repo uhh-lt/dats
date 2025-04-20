@@ -1,10 +1,12 @@
 import { Add as AddIcon } from "@mui/icons-material";
-import { Box, Button, Grid2 as Grid, Menu, Stack, Tooltip } from "@mui/material";
+import { Box, Button, Grid2 as Grid, Menu, Stack, Tooltip, Typography } from "@mui/material";
 import { useRef, useState } from "react";
 
 interface BorderColorToolProps {
   color: string;
   onColorChange: (color: string) => void;
+  borderStyle: "solid" | "dashed" | "dotted";
+  onBorderStyleChange: (style: "solid" | "dashed" | "dotted") => void;
 }
 
 // Predefined colors
@@ -26,7 +28,12 @@ const PREDEFINED_COLORS = [
   "#000080", // Navy
 ];
 
-const BorderColorTool: React.FC<BorderColorToolProps> = ({ color, onColorChange }) => {
+const BorderColorTool: React.FC<BorderColorToolProps> = ({
+  color,
+  onColorChange,
+  borderStyle,
+  onBorderStyleChange,
+}) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const colorInputRef = useRef<HTMLInputElement>(null);
@@ -53,7 +60,7 @@ const BorderColorTool: React.FC<BorderColorToolProps> = ({ color, onColorChange 
 
   return (
     <Box sx={{ display: "flex", alignItems: "center" }}>
-      <Tooltip title="Border color" arrow>
+      <Tooltip title="Border color and style" arrow>
         <Button
           size="small"
           onClick={handleClick}
@@ -101,6 +108,59 @@ const BorderColorTool: React.FC<BorderColorToolProps> = ({ color, onColorChange 
         }}
       >
         <Stack direction="column" spacing={1} sx={{ p: 1, minWidth: 160 }}>
+          <Typography variant="caption" sx={{ color: "text.secondary", p: 1, pb: 0 }}>
+            Border style
+          </Typography>
+          <Stack direction="row" spacing={1} sx={{ p: 1, pt: 0, pb: 2, justifyContent: "center" }}>
+            <Button
+              onClick={() => onBorderStyleChange("solid")}
+              sx={{
+                minWidth: "auto",
+                p: 1,
+                "&:hover": { bgcolor: "transparent" },
+              }}
+            >
+              <p
+                style={{
+                  width: "20px",
+                  margin: 0,
+                  borderTop: `2px ${borderStyle === "solid" ? "black" : "#666"} solid`,
+                }}
+              />
+            </Button>
+            <Button
+              onClick={() => onBorderStyleChange("dashed")}
+              sx={{
+                minWidth: "auto",
+                p: 1,
+                "&:hover": { bgcolor: "transparent" },
+              }}
+            >
+              <p
+                style={{
+                  width: "20px",
+                  margin: 0,
+                  borderTop: `2px ${borderStyle === "dashed" ? "black" : "#666"} dashed`,
+                }}
+              />
+            </Button>
+            <Button
+              onClick={() => onBorderStyleChange("dotted")}
+              sx={{
+                minWidth: "auto",
+                p: 1,
+                "&:hover": { bgcolor: "transparent" },
+              }}
+            >
+              <p
+                style={{
+                  width: "20px",
+                  margin: 0,
+                  borderTop: `2px ${borderStyle === "dotted" ? "black" : "#666"} dotted`,
+                }}
+              />
+            </Button>
+          </Stack>
           <Grid container spacing={1} columns={4} sx={{ justifyContent: "start" }}>
             {PREDEFINED_COLORS.map((predefinedColor) => (
               <Grid key={predefinedColor} size={{ xs: 1 }} sx={{ display: "flex", justifyContent: "center" }}>

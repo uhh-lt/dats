@@ -22,6 +22,17 @@ function SolidDashedDottedTool({ value, onValueChange }: SolidDashedDottedToolPr
     handleClose();
   };
 
+  const getBorderStyle = (style: "solid" | "dashed" | "dotted") => {
+    switch (style) {
+      case "solid":
+        return "1px solid currentColor";
+      case "dashed":
+        return "1px dashed currentColor";
+      case "dotted":
+        return "1px dotted currentColor";
+    }
+  };
+
   return (
     <>
       <ButtonGroup size="small" className="nodrag" sx={{ mr: 1, bgcolor: "background.paper" }}>
@@ -30,17 +41,8 @@ function SolidDashedDottedTool({ value, onValueChange }: SolidDashedDottedToolPr
             <Box
               sx={{
                 width: 20,
-                height: 2,
-                backgroundColor: "currentColor",
-                borderRadius: 1,
-                ...(value === "dashed" && {
-                  backgroundImage: "linear-gradient(to right, currentColor 50%, transparent 50%)",
-                  backgroundSize: "4px 100%",
-                }),
-                ...(value === "dotted" && {
-                  backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)",
-                  backgroundSize: "4px 100%",
-                }),
+                height: 0,
+                border: getBorderStyle(value),
               }}
             />
           </Button>
@@ -81,9 +83,8 @@ function SolidDashedDottedTool({ value, onValueChange }: SolidDashedDottedToolPr
             <Box
               sx={{
                 width: 20,
-                height: 2,
-                backgroundColor: "currentColor",
-                borderRadius: 1,
+                height: 0,
+                border: "1px solid currentColor",
               }}
             />
           </MenuItem>
@@ -95,11 +96,8 @@ function SolidDashedDottedTool({ value, onValueChange }: SolidDashedDottedToolPr
             <Box
               sx={{
                 width: 20,
-                height: 2,
-                backgroundColor: "currentColor",
-                borderRadius: 1,
-                backgroundImage: "linear-gradient(to right, currentColor 50%, transparent 50%)",
-                backgroundSize: "4px 100%",
+                height: 0,
+                border: "1px dashed currentColor",
               }}
             />
           </MenuItem>
@@ -111,11 +109,8 @@ function SolidDashedDottedTool({ value, onValueChange }: SolidDashedDottedToolPr
             <Box
               sx={{
                 width: 20,
-                height: 2,
-                backgroundColor: "currentColor",
-                borderRadius: 1,
-                backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)",
-                backgroundSize: "4px 100%",
+                height: 0,
+                border: "1px dotted currentColor",
               }}
             />
           </MenuItem>

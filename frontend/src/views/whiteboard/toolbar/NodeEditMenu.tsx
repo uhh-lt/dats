@@ -34,7 +34,6 @@ import BgColorTool from "./tools/BgColorTool.tsx";
 import BorderColorTool from "./tools/BorderColorTool.tsx";
 import ColorTool from "./tools/ColorTool.tsx";
 import NumberTool from "./tools/NumberTool.tsx";
-import SolidDashedDottedTool from "./tools/SolidDashedDottedTool.tsx";
 import TypographyVariantTool from "./tools/TypographyVariantTool.tsx";
 
 export interface NodeEditMenuHandle {
@@ -525,6 +524,8 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
                   key={`bordercolor-${nodes[0].id}`}
                   color={nodes[0].data.borderColor}
                   onColorChange={handleBorderColorChange}
+                  borderStyle={nodes[0].data.borderStyle}
+                  onBorderStyleChange={handleBorderStyleChange}
                 />
                 <NumberTool
                   key={`borderwidth-${nodes[0].id}`}
@@ -532,11 +533,6 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
                   onValueChange={handleBorderWidthChange}
                   min={1}
                   max={20}
-                />
-                <SolidDashedDottedTool
-                  key={`borderstyle-${nodes[0].id}`}
-                  value={nodes[0].data.borderStyle}
-                  onValueChange={handleBorderStyleChange}
                 />
               </>
             )}
