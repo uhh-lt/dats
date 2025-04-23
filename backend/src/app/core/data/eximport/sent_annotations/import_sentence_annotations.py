@@ -84,7 +84,9 @@ def import_sentence_annotations_to_proj(
     # 2. Check if the SourceDocuments exists
     project_sdoc_names: Dict[str, SourceDocumentORM] = {}
     for sdoc_name in sdoc_names:
-        sdoc = crud_sdoc.read_by_filename(db=db, proj_id=project_id, filename=sdoc_name)
+        sdoc = crud_sdoc.read_by_filename(
+            db=db, proj_id=project_id, filename=sdoc_name, only_finished=False
+        )
         if sdoc is None:
             error_messages.append(
                 f"Source document '{sdoc_name}' not found in project {project_id}"
