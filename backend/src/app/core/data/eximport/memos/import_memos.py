@@ -109,7 +109,10 @@ def import_memos_to_proj(
 
             case AttachedObjectType.source_document:
                 sdoc = crud_sdoc.read_by_filename(
-                    db=db, proj_id=project_id, filename=memo.attached_to
+                    db=db,
+                    proj_id=project_id,
+                    filename=memo.attached_to,
+                    only_finished=False,
                 )
                 if sdoc is None:
                     error_messages.append(
