@@ -63,7 +63,7 @@ def import_project_metadata_to_proj(
         )
         if existing_pm:
             logger.warning(
-                f"Metadata with key '{metadata.key}' and type '{metadata.metatype}' already exists in project {project_id}. Skipping..."
+                f"Metadata with key '{metadata.key}' and type '{metadata.metatype}' for doctype '{metadata.doctype}' already exists in project {project_id}. Skipping..."
             )
             continue
 
