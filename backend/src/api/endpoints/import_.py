@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, TypedDict
 
 from app.celery.background_jobs import prepare_and_start_import_job_async
 from app.core.authorization.authz_user import AuthzUser
@@ -25,26 +25,51 @@ router = APIRouter(
 ims: ImportService = ImportService()
 repo: RepoService = RepoService()
 
-CSV_FILE_TYPES = [
-    "text/csv",
-    "application/csv",
-    "application/vnd.ms-excel",
-]
 
-expected_file_type: Dict[ImportJobType, List[str]] = {
-    ImportJobType.PROJECT: ["application/zip"],
-    ImportJobType.DOCUMENTS: ["application/zip"],
-    ImportJobType.CODES: CSV_FILE_TYPES,
-    ImportJobType.TAGS: CSV_FILE_TYPES,
-    ImportJobType.BBOX_ANNOTATIONS: CSV_FILE_TYPES,
-    ImportJobType.SPAN_ANNOTATIONS: CSV_FILE_TYPES,
-    ImportJobType.SENTENCE_ANNOTATIONS: CSV_FILE_TYPES,
-    ImportJobType.USERS: CSV_FILE_TYPES,
-    ImportJobType.PROJECT_METADATA: CSV_FILE_TYPES,
-    ImportJobType.WHITEBOARDS: CSV_FILE_TYPES,
-    ImportJobType.TIMELINE_ANALYSES: CSV_FILE_TYPES,
-    ImportJobType.COTA: CSV_FILE_TYPES,
-    ImportJobType.MEMOS: CSV_FILE_TYPES,
+class FileFormat(TypedDict):
+    """File format definition for import jobs."""
+
+    mime_types: List[str]
+    suffix: str
+
+
+ZIP_FILE_FORMAT: FileFormat = {
+    "mime_types": [
+        "application/zip",
+        "application/x-zip",
+        "application/x-zip-compressed",
+        "application/x-compress",
+        "application/x-compressed",
+        "application/octet-stream",
+        "multipart/x-zip",
+    ],
+    "suffix": ".zip",
+}
+
+CSV_FILE_FORMAT: FileFormat = {
+    "mime_types": [
+        "text/csv",
+        "application/csv",
+        "application/vnd.ms-excel",
+    ],
+    "suffix": ".csv",
+}
+
+# Single mapping for file format information by import job type
+import_job_file_formats: Dict[ImportJobType, FileFormat] = {
+    ImportJobType.PROJECT: ZIP_FILE_FORMAT,
+    ImportJobType.DOCUMENTS: ZIP_FILE_FORMAT,
+    ImportJobType.CODES: CSV_FILE_FORMAT,
+    ImportJobType.TAGS: CSV_FILE_FORMAT,
+    ImportJobType.BBOX_ANNOTATIONS: CSV_FILE_FORMAT,
+    ImportJobType.SPAN_ANNOTATIONS: CSV_FILE_FORMAT,
+    ImportJobType.SENTENCE_ANNOTATIONS: CSV_FILE_FORMAT,
+    ImportJobType.USERS: CSV_FILE_FORMAT,
+    ImportJobType.PROJECT_METADATA: CSV_FILE_FORMAT,
+    ImportJobType.WHITEBOARDS: CSV_FILE_FORMAT,
+    ImportJobType.TIMELINE_ANALYSES: CSV_FILE_FORMAT,
+    ImportJobType.COTA: CSV_FILE_FORMAT,
+    ImportJobType.MEMOS: CSV_FILE_FORMAT,
 }
 
 
@@ -64,11 +89,23 @@ async def start_import_job(
 ) -> ImportJobRead:
     authz_user.assert_in_project(project_id)
 
+    file_format = import_job_file_formats[import_job_type]
+
     # Based on the import job type, check the file type and contents
-    if uploaded_file.content_type not in expected_file_type[import_job_type]:
+    if uploaded_file.content_type not in file_format["mime_types"]:
         raise ImportJobPreparationError(
             cause=Exception(
-                f"Invalid file type for import job {import_job_type}. Expected one of {expected_file_type[import_job_type]}, but got {uploaded_file.content_type}"
+                f"Invalid file type for import job {import_job_type}. Expected one of {file_format['mime_types']}, but got {uploaded_file.content_type}"
+            )
+        )
+
+    # Check the file suffix
+    if uploaded_file.filename and not uploaded_file.filename.endswith(
+        file_format["suffix"]
+    ):
+        raise ImportJobPreparationError(
+            cause=Exception(
+                f"Invalid file suffix for import job {import_job_type}. Expected {file_format['suffix']}, but got {uploaded_file.filename}"
             )
         )
 
