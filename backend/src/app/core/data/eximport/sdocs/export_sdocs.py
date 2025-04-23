@@ -93,10 +93,13 @@ def __export_sdocs(
         tags = [tag.name for tag in sdoc.document_tags]
 
         # Document links
+        # We only want the resolved links, i.e., the ones that have a linked_source_document_id
         links = [
             link.linked_source_document_filename
             for link in sdoc.source_document_links
             if link.linked_source_document_filename is not None
+            and link.linked_source_document_id is not None
+            and link.parent_source_document_id is not None
         ]
 
         # Document metadata
