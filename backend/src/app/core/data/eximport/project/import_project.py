@@ -83,6 +83,53 @@ class ExportEntity(Enum):
             case _:
                 raise ValueError("Unknown entity")
 
+    def import_entity(self, db: Session, data, project_id: int) -> None:
+        match self:
+            case ExportEntity.BBOX_ANNOTATION:
+                import_bbox_annotations_to_proj(db=db, df=data, project_id=project_id)
+            case ExportEntity.CODE:
+                import_codes_to_proj(db=db, df=data, project_id=project_id)
+            case ExportEntity.COTA:
+                import_cota_to_proj(db=db, df=data, project_id=project_id)
+            case ExportEntity.MEMO:
+                import_memos_to_proj(db=db, df=data, project_id=project_id)
+            case ExportEntity.PROJECT_METADATA:
+                import_project_metadata_to_proj(db=db, df=data, project_id=project_id)
+            case ExportEntity.SDOC:
+                import_sdocs_to_proj(db=db, path_to_dir=data, project_id=project_id)
+            case ExportEntity.SENT_ANNOTATION:
+                import_sentence_annotations_to_proj(
+                    db=db, df=data, project_id=project_id
+                )
+            case ExportEntity.SPAN_ANNOTATION:
+                import_span_annotations_to_proj(db=db, df=data, project_id=project_id)
+            case ExportEntity.TAG:
+                import_tags_to_proj(db=db, df=data, project_id=project_id)
+            case ExportEntity.TIMELINE_ANALYSIS:
+                import_timeline_analysis_to_proj(db=db, df=data, project_id=project_id)
+            case ExportEntity.USER:
+                import_users_to_proj(db=db, df=data, project_id=project_id)
+            case ExportEntity.WHITEBOARD:
+                import_whiteboards_to_proj(db=db, df=data, project_id=project_id)
+            case _:
+                raise ValueError("Unknown entity for import")
+
+
+IMPORT_ORDER = [
+    ExportEntity.PROJECT_METADATA,
+    ExportEntity.USER,
+    ExportEntity.CODE,
+    ExportEntity.TAG,
+    ExportEntity.SDOC,
+    ExportEntity.BBOX_ANNOTATION,
+    ExportEntity.SPAN_ANNOTATION,
+    ExportEntity.SENT_ANNOTATION,
+    ExportEntity.MEMO,
+    ExportEntity.COTA,
+    ExportEntity.TIMELINE_ANALYSIS,
+    ExportEntity.WHITEBOARD,
+]
+
 
 def __organize_import_files(import_dir: Path) -> Dict[ExportEntity, Path]:
     """
@@ -117,112 +164,32 @@ def import_project(
 ) -> None:
     organized_files = __organize_import_files(import_dir=path_to_dir)
 
-    # import project metadata
-    if ExportEntity.PROJECT_METADATA in organized_files:
-        pm_df = pd.read_csv(organized_files[ExportEntity.PROJECT_METADATA])
-        import_project_metadata_to_proj(db=db, df=pm_df, project_id=proj_id)
+    # read data
+    organized_data = {}
+    for entity, file_path in organized_files.items():
+        if entity == ExportEntity.SDOC:
+            # read zip (unzip file)
+            try:
+                path_to_zip_file = repo.get_dst_path_for_temp_file(
+                    organized_files[ExportEntity.SDOC]
+                )
+                path_to_temp_import_dir = repo.create_temp_dir(
+                    f"import_project_{proj_id}_sdocs"
+                )
+                with zipfile.ZipFile(path_to_zip_file, "r") as zip_ref:
+                    zip_ref.extractall(path_to_temp_import_dir)
+                logger.info("unzipped imported project")
+                organized_data[entity] = path_to_temp_import_dir
+            except Exception as e:
+                raise e
+        else:
+            # read csv
+            organized_data[entity] = pd.read_csv(file_path)
 
-    # import users
-    if ExportEntity.USER in organized_files:
-        user_data_df = pd.read_csv(organized_files[ExportEntity.USER])
-        import_users_to_proj(
-            db=db,
-            df=user_data_df,
-            project_id=proj_id,
-        )
+    # import data
+    for entity in IMPORT_ORDER:
+        if entity not in organized_files:
+            continue
 
-    # import codes
-    if ExportEntity.CODE in organized_files:
-        codes_df = pd.read_csv(organized_files[ExportEntity.CODE])
-        import_codes_to_proj(db=db, df=codes_df, project_id=proj_id)
-
-    # import tags
-    if ExportEntity.TAG in organized_files:
-        tags_df = pd.read_csv(organized_files[ExportEntity.TAG])
-        import_tags_to_proj(db=db, df=tags_df, project_id=proj_id)
-
-    # import sdocs
-    if ExportEntity.SDOC in organized_files:
-        # unzip file
-        try:
-            path_to_zip_file = repo.get_dst_path_for_temp_file(
-                organized_files[ExportEntity.SDOC]
-            )
-            path_to_temp_import_dir = repo.create_temp_dir(
-                f"import_project_{proj_id}_sdocs"
-            )
-            with zipfile.ZipFile(path_to_zip_file, "r") as zip_ref:
-                zip_ref.extractall(path_to_temp_import_dir)
-            logger.info("unzipped imported project")
-        except Exception as e:
-            raise e
-        import_sdocs_to_proj(
-            db=db,
-            path_to_dir=path_to_temp_import_dir,
-            project_id=proj_id,
-        )
-
-    # import bbox annotations
-    if ExportEntity.BBOX_ANNOTATION in organized_files:
-        bbox_df = pd.read_csv(organized_files[ExportEntity.BBOX_ANNOTATION])
-        import_bbox_annotations_to_proj(
-            db=db,
-            df=bbox_df,
-            project_id=proj_id,
-        )
-
-    # import span annotations
-    if ExportEntity.SPAN_ANNOTATION in organized_files:
-        span_df = pd.read_csv(organized_files[ExportEntity.SPAN_ANNOTATION])
-        import_span_annotations_to_proj(
-            db=db,
-            df=span_df,
-            project_id=proj_id,
-        )
-
-    # import sentence annotations
-    if ExportEntity.SENT_ANNOTATION in organized_files:
-        sent_df = pd.read_csv(organized_files[ExportEntity.SENT_ANNOTATION])
-        import_sentence_annotations_to_proj(
-            db=db,
-            df=sent_df,
-            project_id=proj_id,
-        )
-
-    # import Memos
-    if ExportEntity.MEMO in organized_files:
-        memo_df = pd.read_csv(organized_files[ExportEntity.MEMO])
-        import_memos_to_proj(
-            db=db,
-            df=memo_df,
-            project_id=proj_id,
-        )
-
-    # import COTA
-    if ExportEntity.COTA in organized_files:
-        cota_df = pd.read_csv(organized_files[ExportEntity.COTA])
-        import_cota_to_proj(
-            db=db,
-            df=cota_df,
-            project_id=proj_id,
-        )
-
-    # import Timeline Analysis
-    if ExportEntity.TIMELINE_ANALYSIS in organized_files:
-        timeline_analysis_df = pd.read_csv(
-            organized_files[ExportEntity.TIMELINE_ANALYSIS]
-        )
-        import_timeline_analysis_to_proj(
-            db=db,
-            df=timeline_analysis_df,
-            project_id=proj_id,
-        )
-
-    # import Whiteboard
-    if ExportEntity.WHITEBOARD in organized_files:
-        whiteboard_df = pd.read_csv(organized_files[ExportEntity.WHITEBOARD])
-        import_whiteboards_to_proj(
-            db=db,
-            df=whiteboard_df,
-            project_id=proj_id,
-        )
+        data = organized_data[entity]
+        entity.import_entity(db=db, data=data, project_id=proj_id)
