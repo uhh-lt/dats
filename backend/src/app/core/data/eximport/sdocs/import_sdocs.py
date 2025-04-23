@@ -198,7 +198,7 @@ def import_sdocs_to_proj(
         sdoc_data_create = SourceDocumentDataCreate(
             id=created_sdoc.id,
             repo_url=relative_url,
-            content=sdoc_export.content,
+            content=sdoc_export.content if sdoc_export.content else "",
             html=sdoc_export.html,
             token_starts=sdoc_export.token_starts,
             token_ends=sdoc_export.token_ends,
@@ -284,7 +284,7 @@ def import_sdocs_to_proj(
                 project_id=project_id,
                 sdoc_id=created_sdoc.id,
                 filename=created_sdoc.filename,
-                content=sdoc_export.content,
+                content=sdoc_export.content if sdoc_export.content else "",
             ),
         )
 

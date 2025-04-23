@@ -96,8 +96,8 @@ def import_memos_to_proj(
             project_id=project_id,
             user_id=user.id,
             title=memo.title,
-            content=memo.content,
-            content_json=memo.content_json,
+            content=memo.content if memo.content else "",
+            content_json=memo.content_json if memo.content_json else "",
             starred=memo.starred,
         )
         attached_type = AttachedObjectType(memo.attached_type)

@@ -1,5 +1,5 @@
 import json
-from typing import List
+from typing import List, Optional
 
 import pandas as pd
 from app.core.data.dto.memo import AttachedObjectType
@@ -13,8 +13,8 @@ class MemoExportSchema(BaseModel):
     user_email: str = Field(description="Email of the user who created the memo")
     starred: bool = Field(description="Whether the memo is starred")
     title: str = Field(description="Title of the memo")
-    content: str = Field(description="Content of the memo")
-    content_json: str = Field(description="JSON Content of the memo")
+    content: Optional[str] = Field(description="Content of the memo")
+    content_json: Optional[str] = Field(description="JSON Content of the memo")
     attached_type: str = Field(description="Type of object the memo is attached to")
     attached_to: str = Field(
         description="Unique identifier of the object the memo is attached to"
