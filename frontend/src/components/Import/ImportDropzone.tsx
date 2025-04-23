@@ -3,15 +3,15 @@ import { Box, Paper, Typography } from "@mui/material";
 import { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 
-// Only allow ZIP and CSV files for imports
-const allowedMimeTypes: Array<string> = [
-  "application/zip",
-  "text/csv",
-  "application/vnd.ms-excel", // Some systems use this MIME type for CSV
-];
+// Define both MIME types and file extensions
+const allowedFileTypes = {
+  "application/zip": [".zip"],
+  "text/csv": [".csv"],
+  "application/vnd.ms-excel": [".csv"], // Some systems use this MIME type for CSV
+};
 
 // File extensions for display purposes
-const allowedFileExtensions = ".zip, .csv";
+const allowedFileExtensions = Array.from(new Set(Object.values(allowedFileTypes).flat()));
 
 interface ImportDropzoneProps {
   onFileChanged: (file: File) => void;
@@ -31,7 +31,7 @@ function ImportDropzone({ onFileChanged, file }: ImportDropzoneProps) {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: allowedMimeTypes.reduce((acc, type) => ({ ...acc, [type]: [] }), {}),
+    accept: allowedFileTypes,
     maxSize: 100 * 1024 * 1024, // 100MB max file size
     multiple: false, // Only allow single file selection
   });
@@ -64,7 +64,7 @@ function ImportDropzone({ onFileChanged, file }: ImportDropzoneProps) {
           <>
             <Typography>Drag & drop a file here, or click to select</Typography>
             <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: "block" }}>
-              Accepted formats: {allowedFileExtensions}
+              Accepted formats: {allowedFileExtensions.join(", ")}
             </Typography>
             <Typography variant="caption" color="textSecondary" sx={{ display: "block" }}>
               Maximum file size: 100MB
