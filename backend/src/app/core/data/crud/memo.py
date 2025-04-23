@@ -32,7 +32,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
 
     def update(self, db: Session, *, id: int, update_dto: MemoUpdate) -> MemoORM:
         updated_memo = super().update(db, id=id, update_dto=update_dto)
-        self.__update_memo_in_elasticsearch(updated_memo)
+        self.update_memo_in_elasticsearch(updated_memo)
         return updated_memo
 
     def read_by_project_and_uuid(
@@ -163,7 +163,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         # create an ObjectHandle for the attached object
         oh_db_obj = crud_object_handle.create(db=db, create_dto=oh_create_dto)
         db_obj = self.__create_memo(create_dto, db, oh_db_obj)
-        self.__add_memo_to_elasticsearch(
+        self.add_memo_to_elasticsearch(
             memo_orm=db_obj,
             attached_object_id=attached_object_id,
             attached_object_type=attached_object_type,
@@ -245,7 +245,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             )
 
     @staticmethod
-    def __add_memo_to_elasticsearch(
+    def add_memo_to_elasticsearch(
         memo_orm: MemoORM,
         attached_object_id: int,
         attached_object_type: AttachedObjectType,
@@ -264,7 +264,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         )
 
     @staticmethod
-    def __update_memo_in_elasticsearch(
+    def update_memo_in_elasticsearch(
         memo_orm: MemoORM,
     ):
         update_es_dto = ElasticSearchMemoUpdate(
