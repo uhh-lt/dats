@@ -49,7 +49,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
   const [nodes, setNodes] = useState<Node<BackgroundColorData | TextData | BorderData>[]>([]);
   const [textStyleAnchor, setTextStyleAnchor] = useState<null | HTMLElement>(null);
   const [alignAnchor, setAlignAnchor] = useState<null | HTMLElement>(null);
-  const [isFontFamilyMenuOpen, setIsFontFamilyMenuOpen] = useState(false);
+  const [isFontFamilyMenuOpen, setIsFontFamilyMenuOpen] = useState<boolean>(false);
 
   // exposed methods (via ref)
   useImperativeHandle(ref, () => ({
