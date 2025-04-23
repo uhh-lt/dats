@@ -1,4 +1,4 @@
-import { Add as AddIcon } from "@mui/icons-material";
+import { Add as AddIcon, FormatColorText as FormatColorTextIcon } from "@mui/icons-material";
 import { Box, Button, Grid2 as Grid, Menu, Stack, Tooltip } from "@mui/material";
 import { useRef, useState } from "react";
 
@@ -64,14 +64,15 @@ const FontColorTool: React.FC<FontColorToolProps> = ({ color, onColorChange }) =
             height: 28,
             p: 0,
             borderRadius: "50%",
-            bgcolor: color,
-            border: "1px solid rgba(0, 0, 0, 0.12)",
+            color: color,
+            border: "none",
             "&:hover": {
-              bgcolor: color,
               opacity: 0.8,
             },
           }}
-        />
+        >
+          <FormatColorTextIcon fontSize="large" />
+        </Button>
       </Tooltip>
       <Menu
         anchorEl={anchorEl}
