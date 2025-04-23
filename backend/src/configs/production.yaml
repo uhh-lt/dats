@@ -661,4 +661,4 @@ system_codes:
 keyword_extraction:
   max_ngram_size: 2
   deduplication_threshold: 0.5
-  keyword_proposals: 20
+  keyword_proposals: 5
