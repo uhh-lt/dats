@@ -7,16 +7,27 @@ import StraightIcon from "@mui/icons-material/Straight";
 import TurnRightIcon from "@mui/icons-material/TurnRight";
 import UTurnRightIcon from "@mui/icons-material/UTurnRight";
 
-import { Button, ButtonGroup, Divider, MenuItem, Paper, Select, SelectChangeEvent, Stack } from "@mui/material";
+import {
+  Button,
+  ButtonGroup,
+  Divider,
+  MenuItem,
+  Paper,
+  Select,
+  SelectChangeEvent,
+  Stack,
+  Tooltip,
+} from "@mui/material";
 import React, { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 import { Edge, EdgeMarker, MarkerType, useReactFlow } from "reactflow";
 import { WhiteboardEdgeData_Input } from "../../../api/openapi/models/WhiteboardEdgeData_Input.ts";
 import { WhiteboardEdgeType } from "../../../api/openapi/models/WhiteboardEdgeType.ts";
 import { isDashed, isDotted } from "../edges/edgeUtils.ts";
 import { DATSNodeData } from "../types/DATSNodeData.ts";
-import ColorTool from "./tools/ColorTool.tsx";
+import BgColorTool from "./tools/BgColorTool.tsx";
+import EdgeColorTool from "./tools/EdgeColorTool.tsx";
+import FontColorTool from "./tools/FontColorTool.tsx";
 import NumberTool from "./tools/NumberTool.tsx";
-import SliderTool from "./tools/SliderTool.tsx";
 import SolidDashedDottedTool from "./tools/SolidDashedDottedTool.tsx";
 import TypographyVariantTool from "./tools/TypographyVariantTool.tsx";
 
@@ -304,45 +315,118 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
     closeMenu();
   };
 
+  const handleStartSelectOpen = () => {
+    setIsStartSelectOpen(true);
+  };
+
+  const handleStartSelectClose = () => {
+    setIsStartSelectOpen(false);
+  };
+
+  const handleEndSelectOpen = () => {
+    setIsEndSelectOpen(true);
+  };
+
+  const handleEndSelectClose = () => {
+    setIsEndSelectOpen(false);
+  };
+
+  const getBorderStyle = (edge: Edge) => {
+    if (!edge.style?.strokeDasharray) return "solid";
+    const dashArray = edge.style.strokeDasharray.toString();
+    return dashArray.split(",")[0] === dashArray.split(",")[1] ? "dotted" : "dashed";
+  };
+
   return (
     <>
       {edges.length > 0 && (
         <Paper sx={{ p: 1, mb: 1, width: "fit-content" }}>
           <Stack direction="row" alignItems="center">
-            <Select
-              key={`markerStart-${edges[0].id}`}
-              style={{ height: "32px" }}
-              sx={{ mr: 0.5 }}
-              size="small"
-              defaultValue={edges[0].markerStart ? (edges[0].markerStart as EdgeMarker).type : "noarrow"}
-              onChange={handleMarkerStartChange}
-            >
-              {["noarrow", "arrow", "arrowclosed"].map((type) => (
-                <MenuItem key={type} value={type}>
-                  {arrow2rotatedicon[type]}
-                </MenuItem>
-              ))}
-            </Select>
-            <Select
-              key={`markerEnd-${edges[0].id}`}
-              style={{ height: "32px" }}
-              sx={{ mr: 1 }}
-              size="small"
-              defaultValue={edges[0].markerEnd ? (edges[0].markerEnd as EdgeMarker).type : "noarrow"}
-              onChange={handleMarkerEndChange}
-            >
-              {["noarrow", "arrow", "arrowclosed"].map((type) => (
-                <MenuItem key={type} value={type}>
-                  {arrow2icon[type]}
-                </MenuItem>
-              ))}
-            </Select>
+            <Tooltip title="Line start" arrow disableHoverListener={isStartSelectOpen}>
+              <Select
+                key={`markerStart-${edges[0].id}`}
+                size="small"
+                sx={{
+                  mr: 0.5,
+                  height: "32px",
+                  "& .MuiOutlinedInput-notchedOutline": { border: "none" },
+                  "& .MuiSelect-select": {
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    p: 0.5,
+                  },
+                }}
+                MenuProps={{
+                  sx: {
+                    "& .MuiPaper-root": {
+                      boxShadow: 1,
+                      marginTop: "8px",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    },
+                  },
+                }}
+                onOpen={handleStartSelectOpen}
+                onClose={handleStartSelectClose}
+                defaultValue={edges[0].markerStart ? (edges[0].markerStart as EdgeMarker).type : "noarrow"}
+                onChange={handleMarkerStartChange}
+              >
+                {["noarrow", "arrow", "arrowclosed"].map((type) => (
+                  <MenuItem key={type} value={type} sx={{ minWidth: "auto", m: 0, p: 1 }}>
+                    {arrow2rotatedicon[type]}
+                  </MenuItem>
+                ))}
+              </Select>
+            </Tooltip>
+            <Tooltip title="Line end" arrow disableHoverListener={isEndSelectOpen}>
+              <Select
+                key={`markerEnd-${edges[0].id}`}
+                size="small"
+                sx={{
+                  mr: 1,
+                  height: "32px",
+                  "& .MuiOutlinedInput-notchedOutline": { border: "none" },
+                  "& .MuiSelect-select": {
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    p: 0.5,
+                  },
+                }}
+                MenuProps={{
+                  sx: {
+                    "& .MuiPaper-root": {
+                      boxShadow: 1,
+                      marginTop: "8px",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    },
+                  },
+                }}
+                onOpen={handleEndSelectOpen}
+                onClose={handleEndSelectClose}
+                defaultValue={edges[0].markerEnd ? (edges[0].markerEnd as EdgeMarker).type : "noarrow"}
+                onChange={handleMarkerEndChange}
+              >
+                {["noarrow", "arrow", "arrowclosed"].map((type) => (
+                  <MenuItem key={type} value={type} sx={{ minWidth: "auto", m: 0, p: 1 }}>
+                    {arrow2icon[type]}
+                  </MenuItem>
+                ))}
+              </Select>
+            </Tooltip>
             <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
-            <ColorTool
+            <EdgeColorTool
               key={`stroke-color-${edges[0].id}`}
-              caption="Edge:"
-              color={edges[0].style?.stroke}
+              color={edges[0].style?.stroke || "#000000"}
               onColorChange={handleColorChange}
+              borderStyle={getBorderStyle(edges[0])}
+              onBorderStyleChange={handleStrokeStyleChange}
             />
             <NumberTool
               key={`stroke-width-${edges[0].id}`}
@@ -358,9 +442,26 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
             />
             <Select
               key={`type-${edges[0].id}`}
-              style={{ height: "32px" }}
-              sx={{ mr: 1 }}
               size="small"
+              sx={{
+                mr: 1,
+                height: "32px",
+                "& .MuiOutlinedInput-notchedOutline": { border: "none" },
+                "& .MuiSelect-select": {
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  p: 0.5,
+                },
+              }}
+              MenuProps={{
+                sx: {
+                  "& .MuiPaper-root": {
+                    boxShadow: 1,
+                    marginTop: "8px",
+                  },
+                },
+              }}
               defaultValue={edges[0].data?.type}
               onChange={handleTypeChange}
             >
@@ -393,28 +494,23 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
                   variant={edges[0].data!.label.fontSize}
                   onVariantChange={handleFontSizeChange}
                 />
-                <ColorTool
+                <FontColorTool
                   key={`font-color-${edges[0].id}`}
-                  caption={undefined}
                   color={edges[0].data!.label.color}
                   onColorChange={handleFontColorChange}
                 />
-                <ColorTool
+                <BgColorTool
                   key={`bg-color-${edges[0].id}`}
-                  caption="BG:"
                   color={edges[0].data!.label.bgcolor}
+                  value={edges[0].data!.label.bgalpha}
                   onColorChange={handleBGColorChange}
-                />
-                <SliderTool
-                  key={`bg-alpha-${edges[0].id}`}
-                  value={edges[0].data!.label.bgalpha || 0}
                   onValueChange={handleBGAlphaChange}
                 />
               </>
             )}
             <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
             <ButtonGroup size="small" className="nodrag" sx={{ bgcolor: "background.paper" }}>
-              <Button onClick={handleDeleteClick}>
+              <Button variant="text" onClick={handleDeleteClick} sx={{ color: "text.secondary" }}>
                 <DeleteIcon />
               </Button>
             </ButtonGroup>

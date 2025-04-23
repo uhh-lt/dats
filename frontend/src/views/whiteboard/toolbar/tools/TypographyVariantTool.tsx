@@ -106,7 +106,8 @@ function TypographyVariantTool({ variant, onVariantChange }: TypographyVariantTo
               width: "60px",
               maxHeight: "300px",
               marginTop: 1.8,
-              boxShadow: 3,
+              boxShadow: 1,
+              elevation: 1,
             },
           },
         }}
