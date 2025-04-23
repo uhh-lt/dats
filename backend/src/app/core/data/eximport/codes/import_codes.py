@@ -31,12 +31,13 @@ class CodeImporter:
         self.project_id = project_id
         self.code_id_mapping: Dict[str, int] = {}
 
-    def import_codes(self, df: pd.DataFrame) -> Dict[str, int]:
+    def import_codes(self, df: pd.DataFrame, validate_only: bool) -> Dict[str, int]:
         """
         Import codes from DataFrame into the project.
 
         Args:
             df: DataFrame with code data matching the CodeExportSchema
+            validate_only: If True, only validate the data without importing
 
         Returns:
             Dict mapping code_names to their IDs in the database
@@ -57,9 +58,26 @@ class CodeImporter:
             )
 
             # Process each layer in order
+            create_dtos: List[CodeCreate] = []
             for layer in sorted_layers:
                 for code in layer:
-                    self._create_if_not_exists(code)
+                    create_dto = self._prepare_create_if_not_exists(code)
+                    if create_dto:
+                        create_dtos.append(create_dto)
+
+            # If validate_only is True, we can stop here
+            if validate_only:
+                logger.info("Validation successful. No codes were imported.")
+                return {}
+
+            # Everything is valid, now we can create the codes
+            created_codes = crud_code.create_multi(
+                db=self.db,
+                create_dtos=create_dtos,
+            )
+            for code in created_codes:
+                logger.info(f"Created code {code.name} with ID {code.id}")
+                self.code_id_mapping[code.name] = code.id
 
         except ValueError as e:
             logger.error(f"Failed to import codes: {e}")
@@ -122,9 +140,11 @@ class CodeImporter:
 
         return layers
 
-    def _create_if_not_exists(self, code: CodeExportSchema) -> None:
+    def _prepare_create_if_not_exists(
+        self, code: CodeExportSchema
+    ) -> Optional[CodeCreate]:
         """
-        Create a code if it doesn't exist.
+        Prepare the creation of a code if it doesn't exist.
 
         Args:
             code: Code schema to create or validate
@@ -144,22 +164,17 @@ class CodeImporter:
             # Validate that existing code matches imported code
             self._validate_existing_code(existing_code, code, parent_id)
             self.code_id_mapping[code.code_name] = existing_code.id
+            return None
         else:
-            # Create new code
-            created_code = crud_code.create(
-                db=self.db,
-                create_dto=CodeCreate(
-                    name=code.code_name,
-                    description=code.description,
-                    parent_id=parent_id,
-                    project_id=self.project_id,
-                    is_system=False,
-                    enabled=True,
-                    color=code.color if code.color else get_next_color(),
-                ),
+            return CodeCreate(
+                name=code.code_name,
+                description=code.description,
+                parent_id=parent_id,
+                project_id=self.project_id,
+                is_system=False,
+                enabled=True,
+                color=code.color if code.color else get_next_color(),
             )
-            self.code_id_mapping[code.code_name] = created_code.id
-            logger.info(f"Created code {code.code_name} with ID {created_code.id}")
 
     def _validate_existing_code(
         self,
@@ -190,6 +205,7 @@ def import_codes_to_proj(
     db: Session,
     df: pd.DataFrame,
     project_id: int,
+    validate_only: bool = False,
 ) -> Dict[str, int]:
     """
     Import codes from a DataFrame into a project.
@@ -198,9 +214,10 @@ def import_codes_to_proj(
         db: Database session
         df: DataFrame with code data
         project_id: ID of the project to import codes into
+        validate_only: If True, only validate the data without importing
 
     Returns:
         Dictionary mapping code names to their IDs in the database
     """
     importer = CodeImporter(db, project_id)
-    return importer.import_codes(df)
+    return importer.import_codes(df, validate_only=validate_only)
