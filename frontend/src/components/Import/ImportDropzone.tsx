@@ -6,8 +6,14 @@ import { useDropzone } from "react-dropzone";
 // Define both MIME types and file extensions
 const allowedFileTypes = {
   "application/zip": [".zip"],
+  "application/x-zip": [".zip"],
+  "application/x-zip-compressed": [".zip"],
+  "application/x-compress": [".zip"],
+  "application/x-compressed": [".zip"],
+  "application/octet-stream": [".zip"],
+  "multipart/x-zip": [".zip"],
   "text/csv": [".csv"],
-  "application/vnd.ms-excel": [".csv"], // Some systems use this MIME type for CSV
+  "application/vnd.ms-excel": [".csv"],
 };
 
 // File extensions for display purposes
