@@ -30,7 +30,7 @@ class SourceDocumentExportSchema(BaseModel):
     )
 
     # Processed data of the source document
-    content: str = Field(description="Content of the source document")
+    content: Optional[str] = Field(description="Content of the source document")
     html: str = Field(description="HTML representation of the source document")
     token_starts: List[int] = Field(
         description="List of start positions of tokens in the source document"
