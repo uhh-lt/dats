@@ -22,6 +22,20 @@ class ElasticSearchDocumentCreate(BaseModel):
     )
 
 
+class ElasticSearchDocumentRead(BaseModel):
+    filename: Optional[str] = Field(description="The filename of the SourceDocument")
+    content: Optional[str] = Field(description="The raw text of the SourceDocument")
+    sdoc_id: Optional[int] = Field(
+        description="The ID of the SourceDocument as it is in the SQL DB"
+    )
+    project_id: Optional[int] = Field(
+        description="The ID of the Project the SourceDocument belongs to"
+    )
+    created: Optional[datetime] = Field(
+        description="The created date of the SourceDocument",
+    )
+
+
 class ElasticSearchDocumentHit(BaseModel):
     id: int = Field(description="The ID of the Document")
     score: Optional[float] = Field(
