@@ -31,11 +31,14 @@ class TagImporter:
         self.project_id = project_id
         self.tag_id_mapping: Dict[str, int] = {}
 
-    def import_tags(self, df: pd.DataFrame) -> Dict[str, int]:
+    def import_tags(self, df: pd.DataFrame, validate_only: bool) -> Dict[str, int]:
         """
         Import tags from DataFrame into the project.
+
         Args:
             df: DataFrame with tag data matching the TagExportSchema
+            validate_only: If True, only validate the data without importing
+
         Returns:
             Dict mapping tag_names to their IDs in the database
         """
@@ -54,9 +57,27 @@ class TagImporter:
             )
 
             # Process each layer in order
+            create_dtos: List[DocumentTagCreate] = []
             for layer in sorted_layers:
                 for tag in layer:
-                    self._create_if_not_exists(tag)
+                    create_dto = self._prepare_create_if_not_exists(tag)
+                    if create_dto:
+                        create_dtos.append(create_dto)
+
+            # If validate_only is True, we can stop here
+            if validate_only:
+                logger.info("Validation completed successfully. No tags were imported.")
+                return {}
+
+            # Everything is valid, we can create the tags
+            created_tags = crud_document_tag.create_multi(
+                db=self.db,
+                create_dtos=create_dtos,
+            )
+            for tag in created_tags:
+                logger.info(f"Created tag {tag.name} with ID {tag.id}")
+                self.tag_id_mapping[tag.name] = tag.id
+
         except ValueError as e:
             logger.error(f"Failed to import tags: {e}")
             raise ImportTagsError(errors=[str(e)])
@@ -117,9 +138,11 @@ class TagImporter:
 
         return layers
 
-    def _create_if_not_exists(self, tag: TagExportSchema) -> None:
+    def _prepare_create_if_not_exists(
+        self, tag: TagExportSchema
+    ) -> Optional[DocumentTagCreate]:
         """
-        Create a tag if it doesn't exist.
+        Prepare the creation of a tag if it doesn't exist.
         Args:
             tag: Tag schema to create or validate
         """
@@ -138,20 +161,15 @@ class TagImporter:
             # Validate that existing tag matches imported tag
             self._validate_existing_tag(existing_tag, tag, parent_id)
             self.tag_id_mapping[tag.tag_name] = existing_tag.id
+            return None
         else:
-            # Create new tag
-            created_tag = crud_document_tag.create(
-                db=self.db,
-                create_dto=DocumentTagCreate(
-                    name=tag.tag_name,
-                    description=tag.description,
-                    parent_id=parent_id,
-                    project_id=self.project_id,
-                    color=tag.color if tag.color else get_next_color(),
-                ),
+            return DocumentTagCreate(
+                name=tag.tag_name,
+                description=tag.description,
+                parent_id=parent_id,
+                project_id=self.project_id,
+                color=tag.color if tag.color else get_next_color(),
             )
-            self.tag_id_mapping[tag.tag_name] = created_tag.id
-            logger.info(f"Created tag {tag.tag_name} with ID {created_tag.id}")
 
     def _validate_existing_tag(
         self,
@@ -176,6 +194,7 @@ def import_tags_to_proj(
     db: Session,
     df: pd.DataFrame,
     project_id: int,
+    validate_only: bool = False,
 ) -> Dict[str, int]:
     """
     Import tags from a DataFrame into a project.
@@ -183,8 +202,10 @@ def import_tags_to_proj(
         db: Database session
         df: DataFrame with tag data
         project_id: ID of the project to import tags into
+        validate_only: If True, only validate the data without importing
+
     Returns:
         Dictionary mapping tag names to their IDs in the database
     """
     importer = TagImporter(db, project_id)
-    return importer.import_tags(df)
+    return importer.import_tags(df, validate_only=validate_only)

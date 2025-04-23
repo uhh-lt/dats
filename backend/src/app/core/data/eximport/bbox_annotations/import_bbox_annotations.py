@@ -26,6 +26,7 @@ def import_bbox_annotations_to_proj(
     db: Session,
     df: pd.DataFrame,
     project_id: int,
+    validate_only: bool = False,
 ) -> List[int]:
     """
     Import bbox annotations from a DataFrame into a project.
@@ -35,6 +36,7 @@ def import_bbox_annotations_to_proj(
         db: Database session
         df: DataFrame with bbox annotation data
         project_id: ID of the project to import annotations into
+        validate_only: If True, only validate the data without importing
 
     Returns:
         List of imported annotation IDs
@@ -115,6 +117,11 @@ def import_bbox_annotations_to_proj(
             + "\n".join(error_messages)
         )
         raise ImportBBoxAnnotationsError(errors=error_messages)
+
+    # If validate_only is True, we stop here
+    if validate_only:
+        logger.info("Validation successful. No bbox annotations were imported.")
+        return []
 
     # Everything is fine, prepare the creation (finding / creating annotation documents)
     create_dtos: List[BBoxAnnotationCreateIntern] = []
