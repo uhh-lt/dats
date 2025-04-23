@@ -110,8 +110,11 @@ class SimSearchService(metaclass=SingletonMeta):
         sentence_embs = sentence_embs.numpy()
 
         # create cheap&easy (but suboptimal) document embeddings for now
-        doc_emb = sentence_embs.sum(axis=0)
-        doc_emb /= np.linalg.norm(doc_emb)
+        if len(sentence_embs) > 0:
+            doc_emb = sentence_embs.sum(axis=0)
+            doc_emb /= np.linalg.norm(doc_emb)
+        else:
+            doc_emb = np.array([])
 
         logger.debug(
             f"Adding {len(sentence_embs)} sentences "
