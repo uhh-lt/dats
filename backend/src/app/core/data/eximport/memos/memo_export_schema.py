@@ -24,8 +24,6 @@ class MemoExportSchema(BaseModel):
         "uuid",
         "user_email",
         "title",
-        "content",
-        "content_json",
         "attached_type",
         "attached_to",
     )
