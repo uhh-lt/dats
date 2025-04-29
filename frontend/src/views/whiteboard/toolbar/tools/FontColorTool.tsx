@@ -71,7 +71,7 @@ const FontColorTool: React.FC<FontColorToolProps> = ({ color, onColorChange }) =
             },
           }}
         >
-          <FormatColorTextIcon fontSize="large" />
+          <FormatColorTextIcon fontSize="medium" />
         </Button>
       </Tooltip>
       <Menu

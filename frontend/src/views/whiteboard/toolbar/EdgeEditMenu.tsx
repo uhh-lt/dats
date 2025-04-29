@@ -475,10 +475,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
               <>
                 <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
                 <ButtonGroup size="small" className="nodrag" sx={{ mr: 1, bgcolor: "background.paper" }}>
-                  <Button
-                    variant={!edges[0].style?.strokeDasharray ? "contained" : "outlined"}
-                    onClick={handleAddTextClick}
-                  >
+                  <Button variant={"contained"} onClick={handleAddTextClick}>
                     Add Text
                   </Button>
                 </ButtonGroup>
