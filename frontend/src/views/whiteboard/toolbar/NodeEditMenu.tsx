@@ -314,6 +314,8 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
         strikethrough: getOrDefault(oldData, "strikethrough", false),
       };
 
+      // console.log("commonProps", commonProps); // Debugging log for commonProps
+
       // Create new data based on node type
       let newData;
       switch (nodeType) {
@@ -381,7 +383,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
 
       return {
         ...oldNode,
-        type: nodeType,
+        type: nodeType === "ellipse" || nodeType === "rectangle" || nodeType === "rounded" ? "border" : nodeType,
         data: newData,
         ...(nodeType === "ellipse" || nodeType === "rectangle" || nodeType === "rounded"
           ? { width: 200, height: 200 }
