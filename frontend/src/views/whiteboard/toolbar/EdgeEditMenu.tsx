@@ -475,7 +475,17 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
               <>
                 <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
                 <ButtonGroup size="small" className="nodrag" sx={{ mr: 1, bgcolor: "background.paper" }}>
-                  <Button variant={"contained"} onClick={handleAddTextClick}>
+                  <Button
+                    variant="text"
+                    sx={{
+                      color: "black",
+                      "&:hover": {
+                        backgroundColor: "transparent",
+                        color: "black",
+                      },
+                    }}
+                    onClick={handleAddTextClick}
+                  >
                     Add Text
                   </Button>
                 </ButtonGroup>
