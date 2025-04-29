@@ -29,13 +29,15 @@ export const hasTextData = (node: Node): node is Node<TextData> => {
   const data = node.data as TextData;
   return (
     data.text !== undefined &&
-    data.variant !== undefined &&
     data.color !== undefined &&
     data.horizontalAlign !== undefined &&
     data.verticalAlign !== undefined &&
     data.bold !== undefined &&
     data.italic !== undefined &&
-    data.underline !== undefined
+    data.underline !== undefined &&
+    data.strikethrough !== undefined &&
+    data.fontFamily !== undefined &&
+    data.fontSize !== undefined
   );
 };
 
