@@ -1,11 +1,7 @@
 import DeleteIcon from "@mui/icons-material/Delete";
 import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
-import MovingIcon from "@mui/icons-material/Moving";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import StraightIcon from "@mui/icons-material/Straight";
-import TurnRightIcon from "@mui/icons-material/TurnRight";
-import UTurnRightIcon from "@mui/icons-material/UTurnRight";
 
 import {
   Button,
@@ -28,7 +24,6 @@ import BgColorTool from "./tools/BgColorTool.tsx";
 import EdgeColorTool from "./tools/EdgeColorTool.tsx";
 import FontColorTool from "./tools/FontColorTool.tsx";
 import NumberTool from "./tools/NumberTool.tsx";
-import SolidDashedDottedTool from "./tools/SolidDashedDottedTool.tsx";
 import TypographyVariantTool from "./tools/TypographyVariantTool.tsx";
 
 const arrow2icon: Record<string, React.ReactElement> = {
@@ -41,13 +36,6 @@ const arrow2rotatedicon: Record<string, React.ReactElement> = {
   noarrow: <HorizontalRuleIcon style={{ transform: "rotate(180deg)" }} />,
   arrow: <KeyboardArrowRightIcon style={{ transform: "rotate(180deg)" }} />,
   arrowclosed: <PlayArrowIcon style={{ transform: "rotate(180deg)" }} />,
-};
-
-const type2icon: Record<string, React.ReactElement> = {
-  bezier: <MovingIcon />,
-  simplebezier: <UTurnRightIcon style={{ transform: "rotate(270deg)" }} />,
-  straight: <StraightIcon style={{ transform: "rotate(90deg)" }} />,
-  smoothstep: <TurnRightIcon />,
 };
 
 export interface EdgeEditMenuHandle {
@@ -427,6 +415,8 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
               onColorChange={handleColorChange}
               borderStyle={getBorderStyle(edges[0])}
               onBorderStyleChange={handleStrokeStyleChange}
+              edgeType={edges[0].data?.type || "bezier"}
+              onEdgeTypeChange={handleTypeChange}
             />
             <NumberTool
               key={`stroke-width-${edges[0].id}`}
@@ -435,42 +425,6 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
               min={1}
               max={20}
             />
-            <SolidDashedDottedTool
-              key={`stroke-style-${edges[0].id}`}
-              value={isDashed(edges[0]) ? "dashed" : isDotted(edges[0]) ? "dotted" : "solid"}
-              onValueChange={handleStrokeStyleChange}
-            />
-            <Select
-              key={`type-${edges[0].id}`}
-              size="small"
-              sx={{
-                mr: 1,
-                height: "32px",
-                "& .MuiOutlinedInput-notchedOutline": { border: "none" },
-                "& .MuiSelect-select": {
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  p: 0.5,
-                },
-              }}
-              MenuProps={{
-                sx: {
-                  "& .MuiPaper-root": {
-                    boxShadow: 1,
-                    marginTop: "8px",
-                  },
-                },
-              }}
-              defaultValue={edges[0].data?.type}
-              onChange={handleTypeChange}
-            >
-              {Object.values(WhiteboardEdgeType).map((type) => (
-                <MenuItem key={type} value={type}>
-                  {type2icon[type]}
-                </MenuItem>
-              ))}
-            </Select>
             {edges.every((edge) => edge.data?.label === undefined || edge.data?.label.text.trim() === "") && (
               <>
                 <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
