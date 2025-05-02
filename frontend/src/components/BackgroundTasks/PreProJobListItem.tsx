@@ -1,5 +1,6 @@
 import { List, ListSubheader } from "@mui/material";
-import { memo, useMemo } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { memo, useMemo, useRef } from "react";
 import PreProHooks from "../../api/PreProHooks.ts";
 import { BackgroundJobStatus } from "../../api/openapi/models/BackgroundJobStatus.ts";
 import { PreprocessingJobRead } from "../../api/openapi/models/PreprocessingJobRead.ts";
@@ -14,6 +15,14 @@ interface PreprocessingJobListItemProps {
 function PreProJobListItem({ initialPreProJob }: PreprocessingJobListItemProps) {
   // global server state (react-query)
   const preProJob = PreProHooks.usePollPreProJob(initialPreProJob.id, initialPreProJob);
+
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const rowVirtualizer = useVirtualizer({
+    count: preProJob.data?.payloads.length || 0,
+    getScrollElement: () => listRef.current,
+    estimateSize: () => 56, // estimated height of each item
+  });
 
   // compute subtitle
   const subTitle = useMemo(() => {
@@ -42,7 +51,7 @@ function PreProJobListItem({ initialPreProJob }: PreprocessingJobListItemProps) 
         title={`Preprocessing Job: ${preProJob.data.id}`}
         subTitle={subTitle}
       >
-        <List
+        {/* <List
           component="div"
           subheader={<ListSubheader sx={{ pl: 8 }}>Processed Documents</ListSubheader>}
           disablePadding
@@ -51,6 +60,25 @@ function PreProJobListItem({ initialPreProJob }: PreprocessingJobListItemProps) 
           {preProJob.data.payloads.map((ppj, index) => (
             <PreProJobPayloadListItem key={index} ppj={ppj} />
           ))}
+        </List> */}
+        <List
+          ref={listRef}
+          component="div"
+          subheader={<ListSubheader sx={{ pl: 8 }}>Processed Documents</ListSubheader>}
+          disablePadding
+          dense
+          style={{
+            height: 400,
+            overflow: "auto",
+            position: "relative",
+          }}
+        >
+          <div style={{ position: "relative", width: "100%", height: "100%" }}>
+            {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+              const ppj = preProJob.data?.payloads[virtualItem.index];
+              return <PreProJobPayloadListItem key={virtualItem.key} ppj={ppj} />;
+            })}
+          </div>
         </List>
       </BackgroundJobListItem>
     );
