@@ -1,12 +1,5 @@
 src/app/preprocessing/ray_model_worker/spec.yaml
 src/dev_notebooks
-src/data
-src/experiments
-backend_repo
-sample_data
-spacy_models
-image_models
-models_cache
 
 # backend logs
 backend/src/logs

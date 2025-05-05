@@ -1,12 +1,9 @@
 from collections import Counter
 from typing import Dict, List, Optional, Set
 
-from sqlalchemy import func
-
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.dto.search_stats import KeywordStat, SpanEntityStat, TagStat
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
-from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import (
     DocumentTagORM,
     SourceDocumentDocumentTagLinkTable,
@@ -15,6 +12,7 @@ from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.db.sql_service import SQLService
+from sqlalchemy import func
 
 
 def compute_tag_statistics(
@@ -141,10 +139,9 @@ def compute_code_statistics(
             )
             .join(SpanTextORM.span_annotations)
             .join(SpanAnnotationORM.annotation_document)
-            .join(SpanAnnotationORM.code)
             .group_by(SpanTextORM.id)
             .filter(
-                CodeORM.id == code_id,
+                SpanAnnotationORM.code_id == code_id,
                 AnnotationDocumentORM.source_document_id.in_(list(sdoc_ids)),
             )
             .order_by(count.desc())
@@ -169,7 +166,7 @@ def compute_code_statistics(
             .join(SpanAnnotationORM.code)
             .group_by(SpanTextORM.id)
             .filter(
-                CodeORM.id == code_id,
+                SpanAnnotationORM.code_id == code_id,
                 SpanTextORM.id.in_(span_text_ids),
             )
             .order_by(func.array_position(span_text_ids, SpanTextORM.id))

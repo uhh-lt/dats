@@ -19,6 +19,7 @@ from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.memo import MemoORM
 from app.core.data.orm.object_handle import ObjectHandleORM
 from app.core.data.orm.project import ProjectORM
+from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_group import SpanGroupORM
@@ -31,8 +32,21 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
 
     def update(self, db: Session, *, id: int, update_dto: MemoUpdate) -> MemoORM:
         updated_memo = super().update(db, id=id, update_dto=update_dto)
-        self.__update_memo_in_elasticsearch(updated_memo)
+        self.update_memo_in_elasticsearch(updated_memo)
         return updated_memo
+
+    def read_by_project_and_uuid(
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        uuid: str,
+    ) -> Optional[MemoORM]:
+        query = db.query(self.model).where(
+            self.model.project_id == project_id,
+            self.model.uuid == uuid,
+        )
+        return query.first()
 
     def read_by_user_and_project(
         self,
@@ -120,6 +134,10 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
                 oh_create_dto = ObjectHandleCreate(
                     span_annotation_id=attached_object_id
                 )
+            case AttachedObjectType.sentence_annotation:
+                oh_create_dto = ObjectHandleCreate(
+                    sentence_annotation_id=attached_object_id
+                )
             case AttachedObjectType.span_group:
                 oh_create_dto = ObjectHandleCreate(span_group_id=attached_object_id)
             case AttachedObjectType.bbox_annotation:
@@ -138,19 +156,30 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
                 raise NotImplementedError(
                     f"Unknown AttachedObjectType: {attached_object_type}"
                 )
-        assert (
-            oh_create_dto is not None
-        ), f"Unknown AttachedObjectType: {attached_object_type}"
+        assert oh_create_dto is not None, (
+            f"Unknown AttachedObjectType: {attached_object_type}"
+        )
 
         # create an ObjectHandle for the attached object
         oh_db_obj = crud_object_handle.create(db=db, create_dto=oh_create_dto)
         db_obj = self.__create_memo(create_dto, db, oh_db_obj)
-        self.__add_memo_to_elasticsearch(
+        self.add_memo_to_elasticsearch(
             memo_orm=db_obj,
             attached_object_id=attached_object_id,
             attached_object_type=attached_object_type,
         )
         return db_obj
+
+    def read_by_project(
+        self,
+        db: Session,
+        *,
+        project_id: int,
+    ) -> List[MemoORM]:
+        query = db.query(self.model).where(
+            self.model.project_id == project_id,
+        )
+        return query.all()
 
     # TODO Flo: Not sure if this actually belongs here...
     @staticmethod
@@ -186,6 +215,12 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
                 attached_object_id=attached_to.id,
                 attached_object_type=AttachedObjectType.bbox_annotation,
             )
+        elif isinstance(attached_to, SentenceAnnotationORM):
+            return MemoRead(
+                **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
+                attached_object_id=attached_to.id,
+                attached_object_type=AttachedObjectType.sentence_annotation,
+            )
         elif isinstance(attached_to, SourceDocumentORM):
             return MemoRead(
                 **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
@@ -210,7 +245,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             )
 
     @staticmethod
-    def __add_memo_to_elasticsearch(
+    def add_memo_to_elasticsearch(
         memo_orm: MemoORM,
         attached_object_id: int,
         attached_object_type: AttachedObjectType,
@@ -229,7 +264,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         )
 
     @staticmethod
-    def __update_memo_in_elasticsearch(
+    def update_memo_in_elasticsearch(
         memo_orm: MemoORM,
     ):
         update_es_dto = ElasticSearchMemoUpdate(

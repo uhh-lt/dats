@@ -1,8 +1,7 @@
-from loguru import logger
-
 from app.preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.video.preprovideodoc import PreProVideoDoc
+from loguru import logger
 
 POSSIBLE_METADATA = [
     "language",

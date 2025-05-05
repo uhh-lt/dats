@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { InstanceInfo } from "../models/InstanceInfo";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -15,6 +16,17 @@ export class GeneralService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/heartbeat",
+    });
+  }
+  /**
+   * Info
+   * @returns InstanceInfo Successful Response
+   * @throws ApiError
+   */
+  public static info(): CancelablePromise<InstanceInfo> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/info",
     });
   }
   /**

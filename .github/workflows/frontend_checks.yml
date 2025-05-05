@@ -3,10 +3,9 @@ on:
   push:
     branches:
       - main
-      - mwp_v1
   pull_request:
     paths:
-      - ".github/**"
+      - ".github/workflows/frontend_checks.yml"
       - "docker/**"
       - "frontend/**"
 
@@ -16,68 +15,74 @@ jobs:
     env:
       API_WORKERS: 1
       VITE_APP_SERVER: http://localhost:13120
-      COMPOSE_PROFILES: "weaviate,ray,background,backend,frontend"
-      RAY_CONFIG: "config_gpu.yaml"
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      COMPOSE_PROFILES: "weaviate,background,backend,frontend"
       BACKEND_HAS_NEW_REQUIREMENTS: false
-      RAY_HAS_NEW_REQUIREMENTS: false
+      RAY_HAS_CHANGED: false
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Checkout PR
         if: github.event_name == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr checkout ${{ github.event.pull_request.number }}
-      - name: Check for new backend requirements
-        id: check_backend_requirements
+      - name: Check for new backend requirements (pull request)
+        id: check_backend_requirements_pr
         if: github.event_name == 'pull_request'
         run: |
-          base_branch=$(git merge-base origin/${{ github.event.pull_request.base.ref }} HEAD)
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          base_branch="origin/${{ github.event.pull_request.base.ref }}"
           if git diff --name-only $base_branch HEAD | grep -q -e '^backend/requirements.txt' -e '^backend/environment.yml'; then
             echo "BACKEND_HAS_NEW_REQUIREMENTS=true" >> $GITHUB_ENV
           fi
-      - name: Check for new backend requirements on push
-        id: check_backend_requirements2
+      - name: Check for new backend requirements (push)
+        id: check_backend_requirements_push
         if: github.event_name == 'push'
         run: |
           if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q -e '^backend/requirements.txt' -e '^backend/environment.yml'; then
             echo "BACKEND_HAS_NEW_REQUIREMENTS=true" >> $GITHUB_ENV
           fi
-      - name: Check for new ray requirements
-        id: check_ray_requirements
+      - name: Check for changes in ray_model_worker (pull request)
+        id: check_ray_model_worker_changes_pr
         if: github.event_name == 'pull_request'
         run: |
-          base_branch=$(git merge-base origin/${{ github.event.pull_request.base.ref }} HEAD)
-          if git diff --name-only $base_branch HEAD | grep -q -e '^backend/src/app/preprocessing/ray_model_worker/requirements.txt'; then
-            echo "RAY_HAS_NEW_REQUIREMENTS=true" >> $GITHUB_ENV
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          base_branch="origin/${{ github.event.pull_request.base.ref }}"
+          if git diff --name-only $base_branch HEAD | grep -q -e '^backend/src/app/preprocessing/ray_model_worker/'; then
+            echo "RAY_HAS_CHANGED=true" >> $GITHUB_ENV
           fi
-      - name: Check for new ray requirements on push
-        id: check_ray_requirements2
+      - name: Check for changes in ray_model_worker (push)
+        id: check_ray_model_worker_changes_push
         if: github.event_name == 'push'
         run: |
-          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q -e '^backend/src/app/preprocessing/ray_model_worker/requirements.txt'; then
-            echo "RAY_HAS_NEW_REQUIREMENTS=true" >> $GITHUB_ENV
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q -e '^backend/src/app/preprocessing/ray_model_worker/'; then
+            echo "RAY_HAS_CHANGED=true" >> $GITHUB_ENV
           fi
       - name: Prepare environment
         run: |
           ./bin/setup-folders.sh
           ./bin/setup-envs.sh --project_name action-runner --port_prefix 131
           sed -i 's/\(DATS_FRONTEND_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
-          if [ "${{ env.RAY_HAS_NEW_REQUIREMENTS }}" = "true" ]; then
-            sed -i 's/\(DATS_RAY_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
-          fi
+          sed -i 's/^RAY_DEVICE_IDS=.*/RAY_DEVICE_IDS=1/' docker/.env
           if [ "${{ env.BACKEND_HAS_NEW_REQUIREMENTS }}" = "true" ]; then
             sed -i 's/\(DATS_BACKEND_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
           fi
-          echo "SPACY_CACHE_DIR=$HOME/spacy_models" >> docker/.env
-          echo "MODELS_CACHE_DIR=$HOME/models_cache" >> docker/.env
-          mkdir -p $HOME/spacy_models
-          mkdir -p $HOME/models_cache
+          if [ "${{ env.RAY_HAS_CHANGED }}" = "true" ]; then
+            sed -i 's/\(DATS_RAY_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
+            sed -i 's/ray_network/ray_network_${{ github.run_id }}/g' docker/compose.ray.yml
+            sed -i 's/ray_network/ray_network_${{ github.run_id }}/g' docker/compose.yml
+            echo "RAY_CACHE_DIR=$HOME/ray_cache" >> docker/.env
+            mkdir -p $HOME/ray_cache
+            chmod 777 $HOME/ray_cache
+          fi
       - name: Build & Start Docker Containers
         working-directory: docker
         run: |
-          if [ "${{ env.RAY_HAS_NEW_REQUIREMENTS }}" = "true" ]; then
-            docker compose build ray
+          source .env
+          if [ "${{ env.RAY_HAS_CHANGED }}" = "true" ]; then
+            docker compose -f compose.ray.yml build
+            docker compose -f compose.ray.yml up --wait
           fi
           if [ "${{ env.BACKEND_HAS_NEW_REQUIREMENTS }}" = "true" ]; then
             docker compose build dats-backend-api
@@ -110,6 +115,15 @@ jobs:
         working-directory: docker
         if: always()
         run: |
+          if [ "${{ env.RAY_HAS_CHANGED }}" = "true" ]; then
+            docker compose -f compose.ray.yml down -v
+            RAY_IMAGE=uhhlt/dats_ray:$(grep -oP 'DATS_RAY_DOCKER_VERSION=\K.*' .env)
+            docker rmi $RAY_IMAGE
+          fi
           docker compose down -v
+          if [ "${{ env.BACKEND_HAS_NEW_REQUIREMENTS }}" = "true" ]; then
+            BACKEND_IMAGE=uhhlt/dats_backend:$(grep -oP 'DATS_BACKEND_DOCKER_VERSION=\K.*' .env)
+            docker rmi $BACKEND_IMAGE
+          fi
           FRONTEND_IMAGE=uhhlt/dats_frontend:$(grep -oP 'DATS_FRONTEND_DOCKER_VERSION=\K.*' .env)
           docker rmi $FRONTEND_IMAGE

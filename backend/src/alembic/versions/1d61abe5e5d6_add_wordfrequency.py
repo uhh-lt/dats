@@ -12,6 +12,7 @@ Create Date: 2023-11-27 09:26:21.487888
 import json
 from typing import List, Sequence, Union
 
+from alembic import op
 from sqlalchemy import (
     Boolean,
     ForeignKey,
@@ -25,8 +26,6 @@ from sqlalchemy.orm import (
     mapped_column,
     relationship,
 )
-
-from alembic import op
 
 Base = declarative_base()
 

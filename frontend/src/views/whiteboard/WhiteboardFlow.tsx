@@ -5,7 +5,7 @@ import { Box, Paper, Stack, Typography } from "@mui/material";
 import { toPng } from "html-to-image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useBlocker, useParams } from "react-router-dom";
-import ReactFlow, {
+import {
   Background,
   Connection,
   ConnectionMode,
@@ -22,6 +22,7 @@ import ReactFlow, {
   OnConnect,
   OnSelectionChangeFunc,
   Panel,
+  ReactFlow,
   ReactFlowState,
   XYPosition,
   addEdge,
@@ -32,17 +33,17 @@ import ReactFlow, {
 import "reactflow/dist/style.css";
 import BboxAnnotationHooks from "../../api/BboxAnnotationHooks.ts";
 import CodeHooks from "../../api/CodeHooks.ts";
-import ProjectHooks from "../../api/ProjectHooks.ts";
+import { WhiteboardContent_Output } from "../../api/openapi/models/WhiteboardContent_Output.ts";
+import { WhiteboardEdgeData_Output } from "../../api/openapi/models/WhiteboardEdgeData_Output.ts";
+import { WhiteboardNodeType } from "../../api/openapi/models/WhiteboardNodeType.ts";
+import { WhiteboardRead } from "../../api/openapi/models/WhiteboardRead.ts";
 import SentenceAnnotationHooks from "../../api/SentenceAnnotationHooks.ts";
 import SpanAnnotationHooks from "../../api/SpanAnnotationHooks.ts";
 import TagHooks from "../../api/TagHooks.ts";
-import WhiteboardHooks, { Whiteboard, WhiteboardGraph } from "../../api/WhiteboardHooks.ts";
+import WhiteboardHooks from "../../api/WhiteboardHooks.ts";
 import BBoxAnnotationEditDialog from "../../components/BBoxAnnotation/BBoxAnnotationEditDialog.tsx";
-import CodeEditDialog from "../../components/Code/CodeEditDialog.tsx";
 import SentenceAnnotationEditDialog from "../../components/SentenceAnnotation/SentenceAnnotationEditDialog.tsx";
-import { useOpenSnackbar } from "../../components/SnackbarDialog/useOpenSnackbar.ts";
 import SpanAnnotationEditDialog from "../../components/SpanAnnotation/SpanAnnotationEditDialog.tsx";
-import TagEditDialog from "../../components/Tag/TagEditDialog.tsx";
 import { downloadFile } from "../../utils/ExportUtils.ts";
 import StraightConnectionLine from "./connectionlines/StraightConnectionLine.tsx";
 import CustomEdge from "./edges/CustomEdge.tsx";
@@ -72,7 +73,6 @@ import AddTextNodeButton from "./toolbar/AddTextNodeButton.tsx";
 import DatabaseEdgeEditMenu, { DatabaseEdgeEditMenuHandle } from "./toolbar/DatabaseEdgeEditMenu.tsx";
 import EdgeEditMenu, { EdgeEditMenuHandle } from "./toolbar/EdgeEditMenu.tsx";
 import NodeEditMenu, { NodeEditMenuHandle } from "./toolbar/NodeEditMenu.tsx";
-import { CustomEdgeData } from "./types/CustomEdgeData.ts";
 import { DATSNodeData } from "./types/DATSNodeData.ts";
 import { PendingAddNodeAction } from "./types/PendingAddNodeAction.ts";
 import {
@@ -94,16 +94,16 @@ import {
 } from "./whiteboardUtils.ts";
 
 const nodeTypes: NodeTypes = {
-  border: BorderNode,
-  note: NoteNode,
-  text: TextNode,
-  memo: MemoNode,
-  sdoc: SdocNode,
-  tag: TagNode,
-  code: CodeNode,
-  spanAnnotation: SpanAnnotationNode,
-  sentenceAnnotation: SentenceAnnotationNode,
-  bboxAnnotation: BboxAnnotationNode,
+  [WhiteboardNodeType.BORDER]: BorderNode,
+  [WhiteboardNodeType.NOTE]: NoteNode,
+  [WhiteboardNodeType.TEXT]: TextNode,
+  [WhiteboardNodeType.MEMO]: MemoNode,
+  [WhiteboardNodeType.SDOC]: SdocNode,
+  [WhiteboardNodeType.TAG]: TagNode,
+  [WhiteboardNodeType.CODE]: CodeNode,
+  [WhiteboardNodeType.SPAN_ANNOTATION]: SpanAnnotationNode,
+  [WhiteboardNodeType.SENTENCE_ANNOTATION]: SentenceAnnotationNode,
+  [WhiteboardNodeType.BBOX_ANNOTATION]: BboxAnnotationNode,
 };
 
 const edgeTypes = {
@@ -127,7 +127,7 @@ const defaultEdgeOptions: DefaultEdgeOptions = {
       verticalAlign: "center",
     },
     type: "simplebezier",
-  } as CustomEdgeData,
+  } as WhiteboardEdgeData_Output,
   style: {
     stroke: "#000000",
     strokeWidth: 3,
@@ -136,7 +136,7 @@ const defaultEdgeOptions: DefaultEdgeOptions = {
     color: "#000000",
     type: MarkerType.ArrowClosed,
   },
-  markerStart: undefined,
+  markerStart: "",
 };
 
 const isValidConnection: IsValidConnection = (connection) => {
@@ -154,7 +154,7 @@ const resetSelectedElementsSelector = (state: ReactFlowState) => state.resetSele
 const connectionHandleIdSelector = (state: ReactFlowState) => state.connectionHandleId;
 
 interface WhiteboardFlowProps {
-  whiteboard: Whiteboard;
+  whiteboard: WhiteboardRead;
   readonly: boolean;
 }
 
@@ -168,16 +168,12 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   // global client state (react-router)
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
-  // global server state (react query)
-  const projectCodes = ProjectHooks.useGetAllCodes(projectId, true);
-  const projectTags = ProjectHooks.useGetAllTags(projectId);
-
   // mutations
   const bulkLinkDocumentTagsMutation = TagHooks.useBulkLinkDocumentTags();
   const updateCodeMutation = CodeHooks.useUpdateCode();
-  const updateSpanAnnotationMutation = SpanAnnotationHooks.useUpdateSpan();
-  const updateSentenceAnnotationMutation = SentenceAnnotationHooks.useUpdateSentenceAnno();
-  const updateBBoxAnnotationMutation = BboxAnnotationHooks.useUpdateBBox();
+  const updateSpanAnnotationMutation = SpanAnnotationHooks.useUpdateSpanAnnotation();
+  const updateSentenceAnnotationMutation = SentenceAnnotationHooks.useUpdateSentenceAnnotation();
+  const updateBBoxAnnotationMutation = BboxAnnotationHooks.useUpdateBBoxAnnotation();
 
   // refs
   const flowRef = useRef<HTMLDivElement>(null);
@@ -186,15 +182,11 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   const databaseEdgeEditMenuRef = useRef<DatabaseEdgeEditMenuHandle>(null);
 
   // local state
-  const lastSaveTime = useRef<number>(Date.now());
   const [pendingAction, setPendingAction] = useState<PendingAddNodeAction | undefined>(undefined);
   const [nodes, , onNodesChange] = useNodeStateCustom<DATSNodeData>(whiteboard.content.nodes);
-  const [edges, setEdges, onEdgesChange] = useEdgeStateCustom(whiteboard.content.edges);
+  const [edges, setEdges, onEdgesChange] = useEdgeStateCustom(whiteboard.content.edges as Edge[]);
   const [selectedEdges, setSelectedEdges] = useState<Edge[]>([]);
   const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
-
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
 
   const handleChangePendingAction = useCallback(
     (action: PendingAddNodeAction | undefined) => {
@@ -227,106 +219,56 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
         // tag can be manually connected to document
         if (isSdocNode(targetNode) && isTagNode(sourceNode)) {
           const mutation = bulkLinkDocumentTagsMutation.mutate;
-          mutation(
-            {
-              requestBody: {
-                document_tag_ids: [sourceNode.data.tagId],
-                source_document_ids: [targetNode.data.sdocId],
-              },
+          mutation({
+            requestBody: {
+              document_tag_ids: [sourceNode.data.tagId],
+              source_document_ids: [targetNode.data.sdocId],
             },
-            {
-              onSuccess() {
-                openSnackbar({
-                  text: "Tag added to document",
-                  severity: "success",
-                });
-              },
-            },
-          );
+          });
         }
 
         // code can be manually connected to other code
         if (isCodeNode(sourceNode) && isCodeNode(targetNode)) {
           const mutation = updateCodeMutation.mutate;
-          mutation(
-            {
-              codeId: sourceNode.data.codeId,
-              requestBody: {
-                parent_id: targetNode.data.codeId,
-              },
+          mutation({
+            codeId: sourceNode.data.codeId,
+            requestBody: {
+              parent_id: targetNode.data.codeId,
             },
-            {
-              onSuccess() {
-                openSnackbar({
-                  text: "Updated parent code",
-                  severity: "success",
-                });
-              },
-            },
-          );
+          });
         }
 
         // codes can be manually connected to annotations
         if (isCodeNode(sourceNode) && isSpanAnnotationNode(targetNode)) {
           const mutation = updateSpanAnnotationMutation.mutate;
-          mutation(
-            {
-              spanAnnotationId: targetNode.data.spanAnnotationId,
-              requestBody: {
-                code_id: sourceNode.data.codeId,
-              },
+          mutation({
+            spanAnnotationToUpdate: targetNode.data.spanAnnotationId,
+            requestBody: {
+              code_id: sourceNode.data.codeId,
             },
-            {
-              onSuccess() {
-                openSnackbar({
-                  text: "Updated span annotation",
-                  severity: "success",
-                });
-              },
-            },
-          );
+          });
         }
 
         // codes can be manually connected to annotations
         if (isCodeNode(sourceNode) && isSentenceAnnotationNode(targetNode)) {
           const mutation = updateSentenceAnnotationMutation.mutate;
-          mutation(
-            {
-              sentenceAnnoId: targetNode.data.sentenceAnnotationId,
-              requestBody: {
-                code_id: sourceNode.data.codeId,
-              },
+          mutation({
+            sentenceAnnoToUpdate: targetNode.data.sentenceAnnotationId,
+            update: {
+              code_id: sourceNode.data.codeId,
             },
-            {
-              onSuccess() {
-                openSnackbar({
-                  text: "Updated sentence annotation",
-                  severity: "success",
-                });
-              },
-            },
-          );
+          });
         }
 
         // codes can be manually connected to annotations
         if (isCodeNode(sourceNode) && isBBoxAnnotationNode(targetNode)) {
           const mutation = updateBBoxAnnotationMutation.mutate;
-          mutation(
-            {
-              bboxId: targetNode.data.bboxAnnotationId,
-              requestBody: {
-                code_id: sourceNode.data.codeId,
-              },
+          mutation({
+            bboxToUpdate: targetNode.data.bboxAnnotationId,
+            requestBody: {
+              code_id: sourceNode.data.codeId,
             },
-            {
-              onSuccess() {
-                openSnackbar({
-                  text: "Updated bbox annotation",
-                  severity: "success",
-                });
-              },
-            },
-          );
+          });
         }
       } else {
         setEdges((e) => addEdge(connection, e));
@@ -335,7 +277,6 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
     [
       reactFlowInstance,
       bulkLinkDocumentTagsMutation.mutate,
-      openSnackbar,
       updateCodeMutation.mutate,
       updateSpanAnnotationMutation.mutate,
       updateBBoxAnnotationMutation.mutate,
@@ -399,47 +340,37 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   }, [selectedEdges]);
 
   // SAVE Feature
-  // block navigation if we have changes
+  const updateWhiteboard = WhiteboardHooks.useUpdateWhiteboard();
+  const handleSaveWhiteboard = useCallback(() => {
+    const mutation = updateWhiteboard.mutate;
+    mutation({
+      whiteboardId: whiteboard.id,
+      requestBody: {
+        title: whiteboard.title,
+        content: { nodes: nodes, edges: edges },
+      },
+    });
+  }, [edges, nodes, updateWhiteboard.mutate, whiteboard.id, whiteboard.title]);
+
+  // autosave whiteboard every 3 minutes
+  const lastSaveTime = useRef<number>(Date.now());
+  if (Date.now() - lastSaveTime.current > 1000 * 60 * 3) {
+    lastSaveTime.current = Date.now();
+    handleSaveWhiteboard();
+  }
+
+  // autosave whiteboard on page unload
   const [oldData, setOldData] = useState(JSON.stringify(whiteboard.content));
   useEffect(() => {
     setOldData(JSON.stringify(whiteboard.content));
   }, [whiteboard.content]);
   useBlocker(() => {
-    const newData: WhiteboardGraph = { nodes: nodes, edges: edges };
+    const newData: WhiteboardContent_Output = { nodes: nodes, edges: edges };
     if (oldData !== JSON.stringify(newData)) {
-      return !window.confirm("You have unsaved changes! Are you sure you want to leave?");
+      handleSaveWhiteboard();
     }
     return false;
   });
-
-  const updateWhiteboard = WhiteboardHooks.useUpdateWhiteboard();
-  const handleSaveWhiteboard = useCallback(() => {
-    const newData: WhiteboardGraph = { nodes: nodes, edges: edges };
-    const mutation = updateWhiteboard.mutate;
-    mutation(
-      {
-        whiteboardId: whiteboard.id,
-        requestBody: {
-          title: whiteboard.title,
-          content: JSON.stringify(newData),
-        },
-      },
-      {
-        onSuccess(data) {
-          openSnackbar({
-            text: `Saved whiteboard '${data.title}'`,
-            severity: "success",
-          });
-        },
-      },
-    );
-  }, [edges, nodes, openSnackbar, updateWhiteboard.mutate, whiteboard.id, whiteboard.title]);
-
-  // autosave whiteboard every 3 minutes
-  if (Date.now() - lastSaveTime.current > 1000 * 60 * 3) {
-    lastSaveTime.current = Date.now();
-    handleSaveWhiteboard();
-  }
 
   return (
     <>
@@ -528,6 +459,11 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
                       <AddBorderNodeButton type="Rounded" onClick={handleChangePendingAction} />
                     </Stack>
                   </Paper>
+                  {readonly && (
+                    <Typography mt={3} textAlign="center" variant="h6">
+                      Read-only!
+                    </Typography>
+                  )}
                 </Panel>
                 <Panel position="top-center" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                   {pendingAction && <Paper sx={{ p: 1 }}>Click anywhere to add node(s)!</Paper>}
@@ -589,8 +525,6 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
       <SpanAnnotationEditDialog projectId={projectId} />
       <SentenceAnnotationEditDialog projectId={projectId} />
       <BBoxAnnotationEditDialog projectId={projectId} />
-      {projectTags.isSuccess && <TagEditDialog tags={projectTags.data} />}
-      {projectCodes.isSuccess && <CodeEditDialog codes={projectCodes.data} />}
     </>
   );
 }

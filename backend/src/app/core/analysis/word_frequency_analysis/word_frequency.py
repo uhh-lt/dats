@@ -1,7 +1,6 @@
 from typing import List, Optional
 
-from sqlalchemy import distinct, func
-
+import pandas as pd
 from app.core.analysis.word_frequency_analysis.word_frequency_columns import (
     WordFrequencyColumns,
 )
@@ -9,9 +8,9 @@ from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.doc_type import DocType
 from app.core.data.dto.analysis import WordFrequencyResult, WordFrequencyStat
 from app.core.data.dto.project_metadata import ProjectMetadataRead
-from app.core.data.export.export_service import ExportService
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.word_frequency import WordFrequencyORM
+from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
 from app.core.search.column_info import (
     ColumnInfo,
@@ -19,6 +18,7 @@ from app.core.search.column_info import (
 from app.core.search.filtering import Filter
 from app.core.search.search_builder import SearchBuilder
 from app.core.search.sorting import Sort
+from sqlalchemy import distinct, func
 
 
 def word_frequency_info(
@@ -51,17 +51,15 @@ def word_frequency(
     with SQLService().db_session() as db:
         # count all words, all sdocs query (uses filtering)
         builder = SearchBuilder(db=db, filter=filter, sorts=[])
-        subquery = builder.build_subquery(
-            subquery=(
-                db.query(
-                    SourceDocumentORM.id.label("id"),
-                )
-                .filter(
-                    SourceDocumentORM.project_id == project_id,
-                )
-                .group_by(SourceDocumentORM.id)
+        subquery = builder.init_subquery(
+            db.query(
+                SourceDocumentORM.id.label("id"),
             )
-        )
+            .filter(
+                SourceDocumentORM.project_id == project_id,
+            )
+            .group_by(SourceDocumentORM.id)
+        ).build_subquery()
 
         global_word_count_agg = func.sum(WordFrequencyORM.count).label(
             "global_word_count"
@@ -69,13 +67,11 @@ def word_frequency(
         global_sdoc_count_agg = func.count(distinct(WordFrequencyORM.sdoc_id)).label(
             "global_sdoc_count"
         )
-        builder.build_query(
-            query=(
-                db.query(global_word_count_agg, global_sdoc_count_agg).join(
-                    subquery, WordFrequencyORM.sdoc_id == subquery.c.id
-                )
+        builder.init_query(
+            db.query(global_word_count_agg, global_sdoc_count_agg).join(
+                subquery, WordFrequencyORM.sdoc_id == subquery.c.id
             )
-        )
+        ).build_query()
         result_rows, total_results = builder.execute_query(
             page_number=None, page_size=None
         )
@@ -97,40 +93,36 @@ def word_frequency(
 
         # main query (uses filtering, sorting and pagination)
         builder = SearchBuilder(db=db, filter=filter, sorts=sorts)
-        subquery = builder.build_subquery(
-            subquery=(
-                db.query(
-                    SourceDocumentORM.id.label("id"),
-                )
-                .filter(
-                    SourceDocumentORM.project_id == project_id,
-                )
-                .group_by(SourceDocumentORM.id)
+        subquery = builder.init_subquery(
+            db.query(
+                SourceDocumentORM.id.label("id"),
             )
-        )
+            .filter(
+                SourceDocumentORM.project_id == project_id,
+            )
+            .group_by(SourceDocumentORM.id)
+        ).build_subquery()
         word_count_acc = func.sum(WordFrequencyORM.count).label(
             WordFrequencyColumns.WORD_FREQUENCY
         )
         sdocs_count_agg = func.count(distinct(WordFrequencyORM.sdoc_id)).label(
             WordFrequencyColumns.SOURCE_DOCUMENT_FREQUENCY
         )
-        builder.build_query(
-            query=(
-                db.query(
-                    word_count_acc,
-                    WordFrequencyORM.word,
-                    (word_count_acc / global_word_count).label(
-                        WordFrequencyColumns.WORD_PERCENT
-                    ),
-                    sdocs_count_agg,
-                    (sdocs_count_agg / global_sdoc_count).label(
-                        WordFrequencyColumns.SOURCE_DOCUMENT_PERCENT
-                    ),
-                )
-                .join(subquery, WordFrequencyORM.sdoc_id == subquery.c.id)
-                .group_by(WordFrequencyORM.word)
+        builder.init_query(
+            db.query(
+                word_count_acc,
+                WordFrequencyORM.word,
+                (word_count_acc / global_word_count).label(
+                    WordFrequencyColumns.WORD_PERCENT
+                ),
+                sdocs_count_agg,
+                (sdocs_count_agg / global_sdoc_count).label(
+                    WordFrequencyColumns.SOURCE_DOCUMENT_PERCENT
+                ),
             )
-        )
+            .join(subquery, WordFrequencyORM.sdoc_id == subquery.c.id)
+            .group_by(WordFrequencyORM.word)
+        ).build_query()
         result_rows, total_results = builder.execute_query(
             page_number=page, page_size=page_size
         )
@@ -158,9 +150,26 @@ def word_frequency_export(
     project_id: int,
     filter: Filter[WordFrequencyColumns],
 ) -> str:
-    export_service = ExportService()
+    repo = RepoService()
 
     wf_result = word_frequency(project_id=project_id, filter=filter, sorts=[])
-    return export_service.export_word_frequencies(
-        project_id=project_id, wf_result=wf_result
+
+    data = [
+        {
+            "word": wf.word,
+            "word_percent": wf.word_percent,
+            "count": wf.count,
+            "sdocs": wf.sdocs,
+            "sdocs_percent": wf.sdocs_percent,
+        }
+        for wf in wf_result.word_frequencies
+    ]
+
+    df = pd.DataFrame(data=data)
+
+    # export the data frame
+    export_file = repo.write_df_to_temp_file(
+        df=df,
+        fn=f"project_{project_id}_word_frequency_export",
     )
+    return repo.get_temp_file_url(export_file.name, relative=True)

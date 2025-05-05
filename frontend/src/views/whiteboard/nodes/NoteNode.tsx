@@ -1,7 +1,8 @@
 import { Box, TextField, Typography, useTheme } from "@mui/material";
+import { Variant } from "@mui/material/styles/createTypography";
 import { useState } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
-import { NoteNodeData } from "../types/customnodes/NoteNodeData.ts";
+import { NoteNodeData } from "../../../api/openapi/models/NoteNodeData.ts";
 import BaseCardNode from "./BaseCardNode.tsx";
 
 function NoteNode(props: NodeProps<NoteNodeData>) {
@@ -57,7 +58,7 @@ function NoteNode(props: NodeProps<NoteNodeData>) {
             onKeyDown={(event) => event.key === "Escape" && handleChangeText(event)}
             inputProps={{
               style: {
-                ...theme.typography[props.data.variant],
+                ...theme.typography[props.data.variant as Variant],
               },
             }}
             multiline
@@ -66,7 +67,7 @@ function NoteNode(props: NodeProps<NoteNodeData>) {
         </Box>
       ) : (
         <Typography
-          variant={props.data.variant}
+          variant={props.data.variant as Variant}
           color={props.data.color}
           style={{
             ...(props.data.italic && { fontStyle: "italic" }),

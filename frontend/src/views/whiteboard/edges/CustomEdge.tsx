@@ -1,4 +1,5 @@
 import { Box, TextField, Typography, useTheme } from "@mui/material";
+import { Variant } from "@mui/material/styles/createTypography";
 import { useMemo, useState } from "react";
 import {
   BaseEdge,
@@ -10,9 +11,9 @@ import {
   getStraightPath,
   useReactFlow,
 } from "reactflow";
-import { CustomEdgeData } from "../types/CustomEdgeData.ts";
+import { WhiteboardEdgeData_Input } from "../../../api/openapi/models/WhiteboardEdgeData_Input.ts";
 
-const useGetPath = (edge: EdgeProps<CustomEdgeData>): [string, number, number] => {
+const useGetPath = (edge: EdgeProps<WhiteboardEdgeData_Input>): [string, number, number] => {
   const [edgePath, labelX, labelY] = useMemo(() => {
     switch (edge.data?.type) {
       case "bezier":
@@ -31,7 +32,7 @@ const useGetPath = (edge: EdgeProps<CustomEdgeData>): [string, number, number] =
   return [edgePath, labelX, labelY];
 };
 
-function CustomEdge(props: EdgeProps<CustomEdgeData>) {
+function CustomEdge(props: EdgeProps<WhiteboardEdgeData_Input>) {
   const [edgePath, labelX, labelY] = useGetPath(props);
 
   const reactFlowInstance = useReactFlow();
@@ -103,7 +104,7 @@ function CustomEdge(props: EdgeProps<CustomEdgeData>) {
                   onKeyDown={(event) => event.key === "Escape" && handleChangeText(event)}
                   inputProps={{
                     style: {
-                      ...theme.typography[props.data.label.variant],
+                      ...theme.typography[props.data.label.variant as Variant],
                     },
                   }}
                   multiline
@@ -112,7 +113,7 @@ function CustomEdge(props: EdgeProps<CustomEdgeData>) {
               </Box>
             ) : (
               <Typography
-                variant={props.data.label.variant}
+                variant={props.data.label.variant as Variant}
                 color={props.data.label.color}
                 style={{
                   ...(props.data.label.italic && { fontStyle: "italic" }),

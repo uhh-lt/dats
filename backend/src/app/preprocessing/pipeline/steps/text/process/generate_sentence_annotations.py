@@ -1,8 +1,7 @@
-from loguru import logger
-
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from app.preprocessing.pipeline.model.text.sentence import Sentence
+from loguru import logger
 
 
 def generate_sentence_annotations(cargo: PipelineCargo) -> PipelineCargo:

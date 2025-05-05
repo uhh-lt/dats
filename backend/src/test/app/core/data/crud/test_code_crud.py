@@ -1,9 +1,8 @@
 import random
 import string
+from uuid import uuid4
 
 import pytest
-from sqlalchemy.orm import Session
-
 from api.util import get_object_memo_for_user, get_object_memos
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import NoSuchElementError
@@ -18,6 +17,7 @@ from app.core.data.dto.memo import (
 from app.core.data.orm.code import CodeORM
 from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.user import UserORM
+from sqlalchemy.orm import Session
 
 
 def test_create_get_delete_code(
@@ -91,6 +91,7 @@ def test_add_get_memo(
     starred = False
 
     memo = MemoCreateIntern(
+        uuid=str(uuid4()),
         title=title,
         content=content,
         content_json=content_json,

@@ -1,5 +1,5 @@
 import { Box, CircularProgress, Divider, Stack, Toolbar, Typography } from "@mui/material";
-import { useCallback } from "react";
+import { memo, useCallback, useMemo } from "react";
 import MemoHooks from "../../api/MemoHooks.ts";
 import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
 import { useAuth } from "../../auth/useAuth.ts";
@@ -24,9 +24,10 @@ function MemoBlockEditor({ memoId, renderToolbar, onDelete, onStarred }: MemoBlo
   const memo = MemoHooks.useGetMemo(memoId);
   const attachedObject = useGetMemosAttachedObject(memo.data?.attached_object_type)(memo.data?.attached_object_id);
 
-  const isEditable = user?.id === memo.data?.user_id;
+  const isEditable = useMemo(() => user?.id === memo.data?.user_id, [user?.id, memo.data?.user_id]);
 
   const { mutate: updateMemo } = MemoHooks.useUpdateMemo();
+
   const handleTitleChange = useCallback(
     (title: string) => {
       updateMemo({
@@ -52,6 +53,12 @@ function MemoBlockEditor({ memoId, renderToolbar, onDelete, onStarred }: MemoBlo
     [memoId, updateMemo],
   );
 
+  const lastModifiedDate = useMemo(() => {
+    if (!memo.data?.updated) return "";
+    const fullDate = dateToLocaleString(memo.data.updated);
+    return fullDate.substring(0, fullDate.indexOf(","));
+  }, [memo.data?.updated]);
+
   return (
     <Box className="h100 myFlexContainer">
       {memo.isLoading || attachedObject.isLoading ? (
@@ -74,7 +81,6 @@ function MemoBlockEditor({ memoId, renderToolbar, onDelete, onStarred }: MemoBlo
               <UserName userId={memo.data.user_id} />
             </Typography>
           </Stack>
-
           <Divider />
           <Toolbar disableGutters variant="dense" sx={{ justifyContent: "space-between" }}>
             {renderToolbar ? renderToolbar(memo.data) : null}
@@ -97,8 +103,7 @@ function MemoBlockEditor({ memoId, renderToolbar, onDelete, onStarred }: MemoBlo
             editable={isEditable}
           />
           <Typography variant="subtitle2" color="textSecondary" fontSize={12} px={1}>
-            {"Last modified: " +
-              dateToLocaleString(memo.data.updated).substring(0, dateToLocaleString(memo.data.updated).indexOf(","))}
+            {"Last modified: " + lastModifiedDate}
           </Typography>
         </>
       ) : null}
@@ -106,4 +111,4 @@ function MemoBlockEditor({ memoId, renderToolbar, onDelete, onStarred }: MemoBlo
   );
 }
 
-export default MemoBlockEditor;
+export default memo(MemoBlockEditor);

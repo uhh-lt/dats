@@ -3,18 +3,21 @@ from typing import Sequence, Set, Tuple
 
 import starlette.routing
 from fastapi.routing import APIRoute
-
 from main import app
 
 
 def test_authentication_required():
     public_routes: Sequence[Tuple[Set[str], str]] = [
         ({"GET"}, "/"),
+        ({"GET"}, "/info"),
         ({"GET"}, "/heartbeat"),
         ({"POST"}, "/authentication/login"),
         ({"POST"}, "/authentication/logout"),
         ({"POST"}, "/authentication/refresh_access"),
         ({"POST"}, "/authentication/register"),
+        ({"GET"}, "/authentication/oidc/login"),
+        ({"GET"}, "/authentication/oidc/callback"),
+        ({"POST"}, "/authentication/sync-session"),
         # This route requires authentication, but does so
         # in a manner we couldn't easily verify in the test.
         ({"GET"}, "/user/me"),
@@ -41,9 +44,9 @@ def test_authentication_required():
                 and dep.dependency.__qualname__ == "get_current_user"
             ]
 
-            assert (
-                len(auth_dep) == 1
-            ), f"route {route.methods} {route.path} is not protected by authentication"
+            assert len(auth_dep) == 1, (
+                f"route {route.methods} {route.path} is not protected by authentication"
+            )
         elif isinstance(route, starlette.routing.Route):
             # These routes are usually built into FastAPI, and
             # we expect them to not require authentication.

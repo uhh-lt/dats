@@ -1,7 +1,6 @@
 import { Card, CardActionArea, CardContent, CardHeader, Divider, Stack, Typography } from "@mui/material";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { SentenceAnnotationReadResolved } from "../../../api/openapi/models/SentenceAnnotationReadResolved.ts";
-import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
+import { SentenceAnnotationRead } from "../../../api/openapi/models/SentenceAnnotationRead.ts";
 import CodeRenderer from "../../../components/Code/CodeRenderer.tsx";
 import UserName from "../../../components/User/UserName.tsx";
 import AnnotationCardActionsMenu from "./AnnotationCardActionMenu.tsx";
@@ -11,17 +10,18 @@ import { AnnotationCardProps } from "./types/AnnotationCardProps.ts";
 function SentenceAnnotationCard({
   isSelected,
   annotation,
+  code,
   onClick,
   cardProps,
-}: AnnotationCardProps<SentenceAnnotationReadResolved>) {
+}: AnnotationCardProps<SentenceAnnotationRead>) {
   return (
     <Card {...cardProps}>
       <CardHeader
-        title={<CodeRenderer key={annotation.code.id} code={annotation.code} />}
+        title={<CodeRenderer key={annotation.code_id} code={annotation.code_id} />}
         action={
           <AnnotationCardActionsMenu
             annotationId={annotation.id}
-            annotationType={AttachedObjectType.SPAN_ANNOTATION}
+            annotationType={AttachedObjectType.SENTENCE_ANNOTATION}
             iconButtonProps={{ size: "small" }}
           />
         }
@@ -40,7 +40,7 @@ function SentenceAnnotationCard({
             sx={{
               wordBreak: "break-word",
               borderLeft: "3px solid",
-              borderColor: annotation.code.color,
+              borderColor: code.color,
               pl: 1,
             }}
           >
@@ -58,10 +58,9 @@ function SentenceAnnotationCard({
           <Divider />
           <AnnotationCardMemo
             annotationId={annotation.id}
-            annotationType={AttachedObjectType.SPAN_ANNOTATION}
-            codeName={annotation.code.name}
+            annotationType={AttachedObjectType.SENTENCE_ANNOTATION}
+            codeName={code.name}
             annotationText={"Sentence"}
-            useGetAnnotationMemo={SpanAnnotationHooks.useGetUserMemo}
           />
         </>
       )}

@@ -1,11 +1,9 @@
 import random
 import string
 from typing import Any, Dict
+from uuid import uuid4
 
 import pytest
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.memo import crud_memo
@@ -25,6 +23,8 @@ from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.user import UserORM
 from app.core.db.sql_service import SQLService
 from config import conf
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
 
 def get_number_of_system_codes() -> int:
@@ -230,6 +230,7 @@ def test_get_add_remove_memos_project(
     json1 = "{}"
     starred1 = False
     memo1 = MemoCreateIntern(
+        uuid=str(uuid4()),
         title=title1,
         content=content1,
         content_json=json1,
@@ -261,6 +262,7 @@ def test_get_add_remove_memos_project(
     json2 = "{}"
     starred2 = True
     memo2 = MemoCreateIntern(
+        uuid=str(uuid4()),
         title=title2,
         content=content2,
         content_json=json2,
