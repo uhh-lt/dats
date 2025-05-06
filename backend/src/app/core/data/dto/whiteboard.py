@@ -41,9 +41,6 @@ class VerticalAlign(str, Enum):
 
 class WhiteboardTextData(BaseModel):
     text: str = Field(description="Text of the text")
-    variant: str = Field(
-        description="Variant of the text (e.g., 'h1', 'h2', 'subtitle', ...)"
-    )
     color: str = Field(description="Text color of the text")
     horizontalAlign: HorizontalAlign = Field(
         description="Horizontal alignment of the text"
@@ -52,6 +49,9 @@ class WhiteboardTextData(BaseModel):
     bold: bool = Field(description="Boldness of the text")
     italic: bool = Field(description="Italicness of the text")
     underline: bool = Field(description="Underlinedness of the text")
+    strikethrough: bool = Field(description="Strikethroughness of the text")
+    fontSize: int = Field(description="Font size of the text")
+    fontFamily: str = Field(description="Font family of the text")
 
 
 # --- DATA END ---

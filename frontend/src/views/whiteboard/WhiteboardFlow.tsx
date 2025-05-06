@@ -194,7 +194,6 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
   const [shapeMenuAnchor, setShapeMenuAnchor] = useState<null | HTMLElement>(null);
   const shapeMenuOpen = Boolean(shapeMenuAnchor);
-  const [whiteboardTitle, setWhiteboardTitle] = useState(whiteboard.title);
 
   const handleChangePendingAction = useCallback(
     (action: PendingAddNodeAction | undefined) => {
@@ -358,7 +357,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
         content: { nodes: nodes, edges: edges },
       },
     });
-  }, [edges, nodes, updateWhiteboard.mutate, whiteboard.id, whiteboardTitle]);
+  }, [edges, nodes, updateWhiteboard.mutate, whiteboard.id, whiteboard.title]);
 
   // autosave whiteboard every 3 minutes
   const lastSaveTime = useRef<number>(Date.now());
@@ -379,6 +378,20 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
     }
     return false;
   });
+
+  // CHANGE TITLE Feature
+  const handleTitleChange = useCallback(
+    (newTitle: string) => {
+      const mutation = updateWhiteboard.mutate;
+      mutation({
+        whiteboardId: whiteboard.id,
+        requestBody: {
+          title: newTitle,
+        },
+      });
+    },
+    [updateWhiteboard.mutate, whiteboard.id],
+  );
 
   const handleShapeMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     setShapeMenuAnchor(event.currentTarget);
@@ -402,9 +415,9 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
           node?.classList?.contains("react-flow__panel")
         ),
     }).then((dataUrl) => {
-      downloadFile(dataUrl, `whiteboard-${whiteboardTitle}.png`);
+      downloadFile(dataUrl, `whiteboard-${whiteboard.title}.png`);
     });
-  }, [reactFlowInstance, whiteboardTitle]);
+  }, [reactFlowInstance, whiteboard.title]);
 
   return (
     <>
@@ -483,18 +496,8 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
                           Whiteboard
                         </Typography>
                         <EditableTypography
-                          value={whiteboardTitle}
-                          onChange={(newTitle) => {
-                            setWhiteboardTitle(newTitle);
-                            const newData: WhiteboardGraph = { nodes: nodes, edges: edges };
-                            updateWhiteboard.mutate({
-                              whiteboardId: whiteboard.id,
-                              requestBody: {
-                                title: newTitle,
-                                content: JSON.stringify(newData),
-                              },
-                            });
-                          }}
+                          value={whiteboard.title}
+                          onChange={handleTitleChange}
                           whiteColor={false}
                           variant="subtitle1"
                         />

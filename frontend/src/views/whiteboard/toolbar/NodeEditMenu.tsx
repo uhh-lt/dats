@@ -29,8 +29,6 @@ import { Node, useReactFlow } from "reactflow";
 import { BackgroundColorData } from "../types/base/BackgroundColorData.ts";
 import { BorderData } from "../types/base/BorderData.ts";
 import { TextData } from "../types/base/TextData.ts";
-import { BorderNodeData } from "../types/customnodes/BorderNodeData.ts";
-import { NoteNodeData } from "../types/customnodes/NoteNodeData.ts";
 import { hasTextData, isBackgroundColorDataArray, isBorderDataArray, isTextDataArray } from "../types/typeGuards.ts";
 import { createNodeDataByType } from "../utils/nodeTypeUtils.ts";
 import BgColorTool from "./tools/BgColorTool.tsx";
@@ -73,11 +71,11 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
   const updateNodes = useCallback(
     (
       updateFnc: (
-        oldNode: Node<BackgroundColorData | TextData | BorderData | BorderNodeData | NoteNodeData>,
-      ) => Node<BackgroundColorData | TextData | BorderData | BorderNodeData | NoteNodeData>,
+        oldNode: Node<BackgroundColorData | TextData | BorderData>,
+      ) => Node<BackgroundColorData | TextData | BorderData>,
     ) => {
       const idsToCheck = new Set(nodes.map((node) => node.id));
-      const updatedNodes: Node<BackgroundColorData | TextData | BorderData | BorderNodeData | NoteNodeData>[] = [];
+      const updatedNodes: Node<BackgroundColorData | TextData | BorderData>[] = [];
       reactFlowInstance.setNodes((nodes) =>
         nodes.map((node) => {
           if (idsToCheck.has(node.id)) {
@@ -284,7 +282,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
 
   const handleChangeNodeType = (nodeType: string) => {
     updateNodes((oldNode) => {
-      const oldData = oldNode.data as Partial<TextData & NoteNodeData & BorderNodeData>;
+      const oldData = oldNode.data as Partial<TextData & BackgroundColorData & BorderData>;
       const { newData, nodeType: type, dimensions } = createNodeDataByType(oldData, nodeType);
 
       return {

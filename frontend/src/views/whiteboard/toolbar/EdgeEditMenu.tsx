@@ -46,6 +46,8 @@ export interface EdgeEditMenuHandle {
 const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
   const reactFlowInstance = useReactFlow<DATSNodeData, WhiteboardEdgeData_Input>();
   const [edges, setEdges] = useState<Edge<WhiteboardEdgeData_Input>[]>([]);
+  const [isStartSelectOpen, setIsStartSelectOpen] = useState(false);
+  const [isEndSelectOpen, setIsEndSelectOpen] = useState(false);
 
   // exposed methods (via ref)
   useImperativeHandle(ref, () => ({
@@ -84,14 +86,14 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
     [edges, reactFlowInstance],
   );
 
-  const handleTypeChange = (event: SelectChangeEvent<WhiteboardEdgeType>) => {
+  const handleTypeChange = (type: WhiteboardEdgeType) => {
     updateEdges((oldEdge) => {
       return {
         ...oldEdge,
         ...(oldEdge.data && {
           data: {
             ...oldEdge.data,
-            type: event.target.value as WhiteboardEdgeType,
+            type: type,
           },
         }),
       };
@@ -415,7 +417,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
               onColorChange={handleColorChange}
               borderStyle={getBorderStyle(edges[0])}
               onBorderStyleChange={handleStrokeStyleChange}
-              edgeType={edges[0].data?.type || "bezier"}
+              edgeType={edges[0].data?.type || WhiteboardEdgeType.BEZIER}
               onEdgeTypeChange={handleTypeChange}
             />
             <NumberTool

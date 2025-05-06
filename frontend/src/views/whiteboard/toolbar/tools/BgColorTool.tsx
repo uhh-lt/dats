@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 
 interface BgColorToolProps {
   color: string;
-  value: number | undefined;
+  value: number | null;
   onColorChange: (color: string) => void;
   onValueChange: (value: number) => void;
 }
@@ -28,7 +28,7 @@ const PREDEFINED_COLORS = [
   "#000080", // Navy
 ];
 
-const BgColorTool: React.FC<BgColorToolProps> = ({ color, value = 1, onColorChange, onValueChange }) => {
+const BgColorTool: React.FC<BgColorToolProps> = ({ color, value, onColorChange, onValueChange }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const colorInputRef = useRef<HTMLInputElement>(null);
@@ -129,7 +129,7 @@ const BgColorTool: React.FC<BgColorToolProps> = ({ color, value = 1, onColorChan
             <Box sx={{ px: 1 }}>
               <Slider
                 size="small"
-                defaultValue={value}
+                defaultValue={value || 1}
                 step={1}
                 min={0}
                 max={255}
