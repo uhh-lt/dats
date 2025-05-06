@@ -1,6 +1,6 @@
+import { BackgroundColorData } from "../types/base/BackgroundColorData.ts";
+import { BorderData } from "../types/base/BorderData.ts";
 import { TextData } from "../types/base/TextData";
-import { BorderNodeData } from "../types/customnodes/BorderNodeData";
-import { NoteNodeData } from "../types/customnodes/NoteNodeData";
 
 // Helper to extract a property from an object, or return a default value if the property is undefined
 export function getOrDefault<T, K extends keyof T>(obj: Partial<T>, key: K, defaultValue: T[K]): T[K] {
@@ -8,9 +8,10 @@ export function getOrDefault<T, K extends keyof T>(obj: Partial<T>, key: K, defa
 }
 
 // Function to create new node data based on node type and existing data
-export function createNodeDataByType(oldData: Partial<TextData & NoteNodeData & BorderNodeData>, nodeType: string) {
+export function createNodeDataByType(oldData: Partial<TextData & BorderData & BackgroundColorData>, nodeType: string) {
   // Get common properties that might exist in the current node
   const commonProps = {
+    type: nodeType === "ellipse" || nodeType === "rectangle" || nodeType === "rounded" ? "border" : nodeType,
     text: getOrDefault(oldData, "text", "New Text"),
     color: getOrDefault(oldData, "color", "#000000"),
     fontSize: getOrDefault(oldData, "fontSize", 12),

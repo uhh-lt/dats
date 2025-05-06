@@ -5,14 +5,15 @@ import TurnRightIcon from "@mui/icons-material/TurnRight";
 import UTurnRightIcon from "@mui/icons-material/UTurnRight";
 import { Box, Button, Grid2 as Grid, Menu, Stack, Tooltip, Typography } from "@mui/material";
 import { useRef, useState } from "react";
+import { WhiteboardEdgeType } from "../../../../api/openapi/models/WhiteboardEdgeType.ts";
 
 interface EdgeColorToolProps {
   color: string;
   onColorChange: (color: string) => void;
   borderStyle: "solid" | "dashed" | "dotted";
   onBorderStyleChange: (style: "solid" | "dashed" | "dotted") => void;
-  edgeType: "bezier" | "simplebezier" | "straight" | "smoothstep";
-  onEdgeTypeChange: (type: "bezier" | "simplebezier" | "straight" | "smoothstep") => void;
+  edgeType: WhiteboardEdgeType;
+  onEdgeTypeChange: (type: WhiteboardEdgeType) => void;
 }
 
 // Predefined colors
@@ -126,12 +127,12 @@ const EdgeColorTool: React.FC<EdgeColorToolProps> = ({
             Edge type
           </Typography>
           <Grid container spacing={1} columns={4} sx={{ justifyContent: "start", px: 1, pb: 1 }}>
-            {["bezier", "simplebezier", "straight", "smoothstep"].map((type) => (
+            {Object.values(WhiteboardEdgeType).map((type) => (
               <Grid key={type} size={{ xs: 1 }} sx={{ display: "flex", justifyContent: "center" }}>
                 <Tooltip title={type} arrow>
                   <Button
                     size="small"
-                    onClick={() => onEdgeTypeChange(type as "bezier" | "simplebezier" | "straight" | "smoothstep")}
+                    onClick={() => onEdgeTypeChange(type)}
                     sx={{
                       minWidth: 0,
                       width: 24,

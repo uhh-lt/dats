@@ -68,11 +68,6 @@ function CustomEdge(props: EdgeProps<WhiteboardEdgeData_Input>) {
     setIsEditing(false);
   };
 
-  // Get font size from fontSize property
-  const getFontSize = (data: CustomEdgeData) => {
-    return data.label.fontSize ? `${data.label.fontSize}px` : "16px";
-  };
-
   return (
     <>
       <BaseEdge path={edgePath} {...props} />
@@ -103,11 +98,7 @@ function CustomEdge(props: EdgeProps<WhiteboardEdgeData_Input>) {
                   defaultValue={props.data.label.text}
                   onBlur={handleChangeText}
                   onKeyDown={(event) => event.key === "Escape" && handleChangeText(event)}
-                  inputProps={{
-                    style: {
-                      fontSize: getFontSize(props.data),
-                    },
-                  }}
+                  slotProps={{ htmlInput: { style: { fontSize: `${props.data.label.fontSize}px` } } }}
                   multiline
                   autoFocus
                 />
@@ -122,7 +113,7 @@ function CustomEdge(props: EdgeProps<WhiteboardEdgeData_Input>) {
                   ...(props.data.label.underline && { textDecoration: "underline" }),
                   textAlign: props.data.label.horizontalAlign,
                   width: "100%",
-                  fontSize: getFontSize(props.data),
+                  fontSize: `${props.data.label.fontSize}px`,
                 }}
                 whiteSpace="pre-wrap"
               >
