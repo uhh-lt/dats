@@ -5,12 +5,15 @@ import StickyNote2Icon from "@mui/icons-material/StickyNote2";
 import TitleIcon from "@mui/icons-material/Title";
 import { Grid2 as Grid, IconButton, Menu, Tooltip, Typography } from "@mui/material";
 import { useState } from "react";
+import { Node } from "reactflow";
+import { BorderData } from "../../types/base/BorderData";
 
 interface NodeChangeToolProps {
   onNodeTypeChange: (nodeType: string) => void;
+  node?: Node;
 }
 
-const NodeChangeTool: React.FC<NodeChangeToolProps> = ({ onNodeTypeChange }) => {
+const NodeChangeTool: React.FC<NodeChangeToolProps> = ({ onNodeTypeChange, node }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -36,6 +39,32 @@ const NodeChangeTool: React.FC<NodeChangeToolProps> = ({ onNodeTypeChange }) => 
     },
   };
 
+  // Get the appropriate icon based on node type and shape
+  const getNodeTypeIcon = () => {
+    if (!node) return <CheckBoxOutlineBlankIcon />;
+
+    const borderData = node.type === "border" ? (node.data as BorderData) : null;
+
+    switch (node.type) {
+      case "text":
+        return <TitleIcon />;
+      case "note":
+        return <StickyNote2Icon />;
+      case "border":
+        if (!borderData) return <CheckBoxOutlineBlankIcon />;
+        if (borderData.borderRadius === "100%") {
+          return <RadioButtonUncheckedIcon />;
+        } else if (borderData.borderRadius === "0px") {
+          return <SquareOutlinedIcon />;
+        } else if (borderData.borderRadius === "25px") {
+          return <CheckBoxOutlineBlankIcon />;
+        }
+        return <CheckBoxOutlineBlankIcon />;
+      default:
+        return <CheckBoxOutlineBlankIcon />;
+    }
+  };
+
   return (
     <>
       <Tooltip title="Change Node Type" arrow disableHoverListener={open}>
@@ -44,7 +73,7 @@ const NodeChangeTool: React.FC<NodeChangeToolProps> = ({ onNodeTypeChange }) => 
           sx={{ color: "black", mr: 1, "&:hover": { color: "black", backgroundColor: "transparent" } }}
           onClick={handleMenuOpen}
         >
-          <CheckBoxOutlineBlankIcon />
+          {getNodeTypeIcon()}
         </IconButton>
       </Tooltip>
       <Menu

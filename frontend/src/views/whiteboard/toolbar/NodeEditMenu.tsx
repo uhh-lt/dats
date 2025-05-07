@@ -303,7 +303,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
       {nodes.length > 0 && (
         <Paper sx={{ py: 0.8, px: 0.5, mb: 1, width: "fit-content" }}>
           <Stack direction="row" alignItems="center">
-            <NodeChangeTool onNodeTypeChange={handleChangeNodeType} />
+            <NodeChangeTool onNodeTypeChange={handleChangeNodeType} node={nodes[0]} />
             {showTextTools && (
               <>
                 {/* Font Family Selector */}
