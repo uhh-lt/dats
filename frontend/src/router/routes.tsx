@@ -1,7 +1,17 @@
 import { createBrowserRouter } from "react-router-dom";
+import { CodeMap } from "../api/CodeHooks.ts";
+import { BBoxAnnotationRead } from "../api/openapi/models/BBoxAnnotationRead.ts";
+import { DocumentTagRead } from "../api/openapi/models/DocumentTagRead.ts";
+import { MemoRead } from "../api/openapi/models/MemoRead.ts";
+import { SentenceAnnotationRead } from "../api/openapi/models/SentenceAnnotationRead.ts";
+import { SourceDocumentRead } from "../api/openapi/models/SourceDocumentRead.ts";
+import { SpanAnnotationRead } from "../api/openapi/models/SpanAnnotationRead.ts";
+import { WhiteboardService } from "../api/openapi/services/WhiteboardService.ts";
+import { QueryKey } from "../api/QueryKey.ts";
 import RequireAuth from "../auth/RequireAuth.tsx";
 import NoBarLayout from "../layouts/PageLayouts/NoBarLayout.tsx";
 import SideBarLayout from "../layouts/PageLayouts/SideBarLayout.tsx";
+import queryClient from "../plugins/ReactQueryClient.ts";
 import Analysis from "../views/analysis/Analysis.tsx";
 import AnnotationScaling from "../views/analysis/AnnotationScaling/AnnotationScaling.tsx";
 import BBoxAnnotationAnalysis from "../views/analysis/BBoxAnnotationAnalysis/BBoxAnnotationAnalysis.tsx";
@@ -158,6 +168,55 @@ const router = createBrowserRouter([
       {
         path: "/project/:projectId/whiteboard/:whiteboardId",
         element: <Whiteboard />,
+        loader: async ({ params }) => {
+          const projectId = params.projectId as string;
+          if (!projectId) {
+            throw new Response("Not Found", { status: 404, statusText: "Project ID is missing" });
+          }
+
+          const whiteboardId = params.whiteboardId as string;
+          if (!whiteboardId) {
+            throw new Response("Not Found", { status: 404, statusText: "Whiteboard ID is missing" });
+          }
+
+          console.log(`Loader for /whiteboard/${whiteboardId} initiated.`);
+          try {
+            const whiteboardData = await WhiteboardService.getDataById({ whiteboardId: parseInt(whiteboardId) });
+            whiteboardData.span_annotations.forEach((sa) => {
+              queryClient.setQueryData<SpanAnnotationRead>([QueryKey.SPAN_ANNOTATION, sa.id], sa);
+            });
+            whiteboardData.sent_annotations.forEach((sa) => {
+              queryClient.setQueryData<SentenceAnnotationRead>([QueryKey.SENTENCE_ANNOTATION, sa.id], sa);
+            });
+            whiteboardData.bbox_annotations.forEach((ba) => {
+              queryClient.setQueryData<BBoxAnnotationRead>([QueryKey.BBOX_ANNOTATION, ba.id], ba);
+            });
+            whiteboardData.memos.forEach((memo) => {
+              queryClient.setQueryData<MemoRead>([QueryKey.MEMO, memo.id], memo);
+            });
+            whiteboardData.sdocs.forEach((sdoc) => {
+              queryClient.setQueryData<SourceDocumentRead>([QueryKey.SDOC, sdoc.id], sdoc);
+            });
+            if (whiteboardData.codes.length > 0) {
+              const codeMap = whiteboardData.codes.reduce((acc, code) => {
+                acc[code.id] = code;
+                return acc;
+              }, {} as CodeMap);
+              queryClient.setQueryData<CodeMap>([QueryKey.PROJECT_CODES, parseInt(projectId)], codeMap);
+            }
+            if (whiteboardData.tags.length > 0) {
+              queryClient.setQueryData<DocumentTagRead[]>(
+                [QueryKey.PROJECT_TAGS, parseInt(projectId)],
+                whiteboardData.tags,
+              );
+            }
+
+            return null;
+          } catch (error) {
+            console.error(`Error fetching whiteboard data: ${error}`);
+            throw new Response("Failed to load whiteboard", { status: 500 });
+          }
+        },
       },
       {
         path: "/project/:projectId/logbook",

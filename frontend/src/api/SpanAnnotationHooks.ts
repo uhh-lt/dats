@@ -20,6 +20,7 @@ const useGetAnnotation = (spanId: number | null | undefined) =>
         spanId: spanId!,
       }) as Promise<SpanAnnotationRead>,
     enabled: !!spanId,
+    staleTime: 1000 * 60 * 5,
   });
 
 const useGetByCodeAndUser = (codeId: number | null | undefined) =>

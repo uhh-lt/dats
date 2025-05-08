@@ -6,6 +6,7 @@ from app.core.data.crud.whiteboard import crud_whiteboard
 from app.core.data.dto.whiteboard import (
     WhiteboardCreate,
     WhiteboardCreateIntern,
+    WhiteboardData,
     WhiteboardRead,
     WhiteboardUpdate,
     WhiteboardUpdateIntern,
@@ -58,6 +59,22 @@ def get_by_id(
 
     db_obj = crud_whiteboard.read(db=db, id=whiteboard_id)
     return WhiteboardRead.model_validate(db_obj)
+
+
+@router.get(
+    "/data/{whiteboard_id}",
+    response_model=WhiteboardData,
+    summary="Returns the Whiteboard with the given ID if it exists",
+)
+def get_data_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    whiteboard_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> WhiteboardData:
+    authz_user.assert_in_same_project_as(Crud.WHITEBOARD, whiteboard_id)
+
+    return crud_whiteboard.read_data(db=db, id=whiteboard_id)
 
 
 @router.get(

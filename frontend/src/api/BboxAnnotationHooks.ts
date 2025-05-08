@@ -20,6 +20,7 @@ const useGetAnnotation = (bboxId: number | undefined) =>
         bboxId: bboxId!,
       }) as CancelablePromise<BBoxAnnotationRead>,
     enabled: !!bboxId,
+    staleTime: 1000 * 60 * 5,
   });
 
 const useGetByCodeAndUser = (codeId: number | undefined) =>

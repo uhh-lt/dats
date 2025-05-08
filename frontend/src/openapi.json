@@ -4119,6 +4119,32 @@
         }
       }
     },
+    "/whiteboard/data/{whiteboard_id}": {
+      "get": {
+        "tags": ["whiteboard"],
+        "summary": "Returns the Whiteboard with the given ID if it exists",
+        "operationId": "get_data_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "whiteboard_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Whiteboard Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WhiteboardData" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/whiteboard/project/{project_id}": {
       "get": {
         "tags": ["whiteboard"],
@@ -7329,10 +7355,16 @@
             "title": "Updated",
             "description": "Updated timestamp of the Code"
           },
-          "is_system": { "type": "boolean", "title": "Is System", "description": "Is the Code a system code" }
+          "is_system": { "type": "boolean", "title": "Is System", "description": "Is the Code a system code" },
+          "memo_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Memo Ids",
+            "description": "Memo IDs attached to the Code"
+          }
         },
         "type": "object",
-        "required": ["name", "color", "description", "id", "project_id", "created", "updated", "is_system"],
+        "required": ["name", "color", "description", "id", "project_id", "created", "updated", "is_system", "memo_ids"],
         "title": "CodeRead"
       },
       "CodeUpdate": {
@@ -11708,6 +11740,55 @@
         "type": "object",
         "required": ["title", "project_id"],
         "title": "WhiteboardCreate"
+      },
+      "WhiteboardData": {
+        "properties": {
+          "sdocs": {
+            "items": { "$ref": "#/components/schemas/SourceDocumentRead" },
+            "type": "array",
+            "title": "Sdocs",
+            "description": "List of source documents"
+          },
+          "codes": {
+            "items": { "$ref": "#/components/schemas/CodeRead" },
+            "type": "array",
+            "title": "Codes",
+            "description": "List of codes"
+          },
+          "tags": {
+            "items": { "$ref": "#/components/schemas/DocumentTagRead" },
+            "type": "array",
+            "title": "Tags",
+            "description": "List of tags"
+          },
+          "span_annotations": {
+            "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
+            "type": "array",
+            "title": "Span Annotations",
+            "description": "List of span annotations"
+          },
+          "sent_annotations": {
+            "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" },
+            "type": "array",
+            "title": "Sent Annotations",
+            "description": "List of sentence annotations"
+          },
+          "bbox_annotations": {
+            "items": { "$ref": "#/components/schemas/BBoxAnnotationRead" },
+            "type": "array",
+            "title": "Bbox Annotations",
+            "description": "List of bbox annotations"
+          },
+          "memos": {
+            "items": { "$ref": "#/components/schemas/MemoRead" },
+            "type": "array",
+            "title": "Memos",
+            "description": "List of memos"
+          }
+        },
+        "type": "object",
+        "required": ["sdocs", "codes", "tags", "span_annotations", "sent_annotations", "bbox_annotations", "memos"],
+        "title": "WhiteboardData"
       },
       "WhiteboardEdge-Input": {
         "properties": {
