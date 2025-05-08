@@ -3,7 +3,7 @@ import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import SquareOutlinedIcon from "@mui/icons-material/SquareOutlined";
 import StickyNote2Icon from "@mui/icons-material/StickyNote2";
 import TitleIcon from "@mui/icons-material/Title";
-import { Grid2 as Grid, IconButton, Menu, Tooltip, Typography } from "@mui/material";
+import { Grid2 as Grid, IconButton, Menu, Tooltip } from "@mui/material";
 import { useState } from "react";
 import { Node } from "reactflow";
 import { BorderData } from "../../types/base/BorderData";
@@ -30,14 +30,36 @@ const NodeChangeTool: React.FC<NodeChangeToolProps> = ({ onNodeTypeChange, node 
     handleMenuClose();
   };
 
+  // Check if a node type is currently active
+  const isNodeTypeActive = (nodeType: string) => {
+    if (!node) return false;
+
+    if (nodeType === "text" || nodeType === "note") {
+      return node.type === nodeType;
+    }
+
+    if (node.type === "border") {
+      const borderData = node.data as BorderData;
+      if (nodeType === "ellipse") return borderData.borderRadius === "100%";
+      if (nodeType === "rectangle") return borderData.borderRadius === "0px";
+      if (nodeType === "rounded") return borderData.borderRadius === "25px";
+    }
+
+    return false;
+  };
+
   // Common style for icon buttons
-  const iconStyle = {
+  const getIconStyle = (nodeType: string) => ({
     cursor: "pointer",
-    transition: "transform 0.2s ease",
+    transition: "all 0.2s ease",
+    color: isNodeTypeActive(nodeType) ? "primary.main" : "inherit",
+    backgroundColor: isNodeTypeActive(nodeType) ? "action.selected" : "transparent",
+    borderRadius: "4px",
     "&:hover": {
       transform: "scale(1.2)",
+      backgroundColor: "action.hover",
     },
-  };
+  });
 
   // Get the appropriate icon based on node type and shape
   const getNodeTypeIcon = () => {
@@ -92,15 +114,19 @@ const NodeChangeTool: React.FC<NodeChangeToolProps> = ({ onNodeTypeChange, node 
           "& .MuiPaper-root": { boxShadow: 1, mt: 1.8 },
         }}
       >
-        <Grid container columns={3} sx={{ justifyContent: "start", px: 1.2 }}>
+        <Grid container columns={3} sx={{ justifyContent: "start", px: 1.2, gap: 0 }}>
           <Grid size={{ xs: 1 }} sx={{ display: "flex", justifyContent: "center", pt: 0.5 }}>
             <Tooltip title="Text" arrow>
-              <TitleIcon fontSize="medium" onClick={() => handleNodeTypeChange("text")} sx={iconStyle} />
+              <TitleIcon fontSize="medium" onClick={() => handleNodeTypeChange("text")} sx={getIconStyle("text")} />
             </Tooltip>
           </Grid>
           <Grid size={{ xs: 1 }} sx={{ display: "flex", justifyContent: "center", pt: 0.5 }}>
             <Tooltip title="Note" arrow>
-              <StickyNote2Icon fontSize="medium" onClick={() => handleNodeTypeChange("note")} sx={iconStyle} />
+              <StickyNote2Icon
+                fontSize="medium"
+                onClick={() => handleNodeTypeChange("note")}
+                sx={getIconStyle("note")}
+              />
             </Tooltip>
           </Grid>
           <Grid size={{ xs: 1 }} sx={{ display: "flex", justifyContent: "center", pt: 0.5 }}>
@@ -108,13 +134,17 @@ const NodeChangeTool: React.FC<NodeChangeToolProps> = ({ onNodeTypeChange, node 
               <RadioButtonUncheckedIcon
                 fontSize="medium"
                 onClick={() => handleNodeTypeChange("ellipse")}
-                sx={iconStyle}
+                sx={getIconStyle("ellipse")}
               />
             </Tooltip>
           </Grid>
           <Grid size={{ xs: 1 }} sx={{ display: "flex", justifyContent: "center", pt: 0.5 }}>
             <Tooltip title="Rectangle" arrow>
-              <SquareOutlinedIcon fontSize="medium" onClick={() => handleNodeTypeChange("rectangle")} sx={iconStyle} />
+              <SquareOutlinedIcon
+                fontSize="medium"
+                onClick={() => handleNodeTypeChange("rectangle")}
+                sx={getIconStyle("rectangle")}
+              />
             </Tooltip>
           </Grid>
           <Grid size={{ xs: 1 }} sx={{ display: "flex", justifyContent: "center", pt: 0.5 }}>
@@ -122,17 +152,11 @@ const NodeChangeTool: React.FC<NodeChangeToolProps> = ({ onNodeTypeChange, node 
               <CheckBoxOutlineBlankIcon
                 fontSize="medium"
                 onClick={() => handleNodeTypeChange("rounded")}
-                sx={iconStyle}
+                sx={getIconStyle("rounded")}
               />
             </Tooltip>
           </Grid>
         </Grid>
-        <Typography
-          variant="caption"
-          sx={{ px: 2, py: 1, color: "text.secondary", justifyContent: "center", display: "flex" }}
-        >
-          All Node Types
-        </Typography>
       </Menu>
     </>
   );

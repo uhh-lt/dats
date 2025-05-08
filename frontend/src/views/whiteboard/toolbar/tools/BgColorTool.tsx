@@ -137,30 +137,31 @@ const BgColorTool: React.FC<BgColorToolProps> = ({ color, value, onColorChange, 
               />
             </Box>
           </Box>
+          <Typography variant="caption" sx={{ mb: 1, pl: 1 }}>
+            Colors
+          </Typography>
           <Grid container spacing={1} columns={4} sx={{ justifyContent: "start" }}>
             {PREDEFINED_COLORS.map((predefinedColor) => (
               <Grid key={predefinedColor} size={{ xs: 1 }} sx={{ display: "flex", justifyContent: "center" }}>
-                <Tooltip title={predefinedColor} arrow>
-                  <Button
-                    size="small"
-                    onClick={() => handlePredefinedColorClick(predefinedColor)}
-                    sx={{
-                      minWidth: 0,
-                      width: 24,
-                      height: 24,
-                      p: 0,
-                      borderRadius: "50%",
+                <Button
+                  size="small"
+                  onClick={() => handlePredefinedColorClick(predefinedColor)}
+                  sx={{
+                    minWidth: 0,
+                    width: 24,
+                    height: 24,
+                    p: 0,
+                    borderRadius: "50%",
+                    bgcolor: predefinedColor,
+                    border: "1px solid rgba(0, 0, 0, 0.12)",
+                    "&:hover": {
                       bgcolor: predefinedColor,
-                      border: "1px solid rgba(0, 0, 0, 0.12)",
-                      "&:hover": {
-                        bgcolor: predefinedColor,
-                        opacity: 0.7,
-                        transform: "scale(1.1)",
-                      },
-                      transition: (theme) => theme.transitions.create(["opacity", "transform", "background-color"]),
-                    }}
-                  />
-                </Tooltip>
+                      opacity: 0.7,
+                      transform: "scale(1.1)",
+                    },
+                    transition: (theme) => theme.transitions.create(["opacity", "transform", "background-color"]),
+                  }}
+                />
               </Grid>
             ))}
             <Grid size={{ xs: 1 }} sx={{ display: "flex", justifyContent: "center" }}>

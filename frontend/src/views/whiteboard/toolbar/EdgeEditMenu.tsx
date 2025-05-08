@@ -48,6 +48,8 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
   const [edges, setEdges] = useState<Edge<WhiteboardEdgeData_Input>[]>([]);
   const [isStartSelectOpen, setIsStartSelectOpen] = useState(false);
   const [isEndSelectOpen, setIsEndSelectOpen] = useState(false);
+  const [isStartTooltipOpen, setIsStartTooltipOpen] = useState(false);
+  const [isEndTooltipOpen, setIsEndTooltipOpen] = useState(false);
 
   // exposed methods (via ref)
   useImperativeHandle(ref, () => ({
@@ -307,6 +309,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
 
   const handleStartSelectOpen = () => {
     setIsStartSelectOpen(true);
+    setIsStartTooltipOpen(false);
   };
 
   const handleStartSelectClose = () => {
@@ -315,10 +318,31 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
 
   const handleEndSelectOpen = () => {
     setIsEndSelectOpen(true);
+    setIsEndTooltipOpen(false);
   };
 
   const handleEndSelectClose = () => {
     setIsEndSelectOpen(false);
+  };
+
+  const handleStartTooltipOpen = () => {
+    if (!isStartSelectOpen) {
+      setIsStartTooltipOpen(true);
+    }
+  };
+
+  const handleStartTooltipClose = () => {
+    setIsStartTooltipOpen(false);
+  };
+
+  const handleEndTooltipOpen = () => {
+    if (!isEndSelectOpen) {
+      setIsEndTooltipOpen(true);
+    }
+  };
+
+  const handleEndTooltipClose = () => {
+    setIsEndTooltipOpen(false);
   };
 
   const getBorderStyle = (edge: Edge) => {
@@ -332,7 +356,13 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
       {edges.length > 0 && (
         <Paper sx={{ p: 1, mb: 1, width: "fit-content" }}>
           <Stack direction="row" alignItems="center">
-            <Tooltip title="Line start" arrow disableHoverListener={isStartSelectOpen}>
+            <Tooltip
+              title="Line start"
+              arrow
+              open={isStartTooltipOpen}
+              onOpen={handleStartTooltipOpen}
+              onClose={handleStartTooltipClose}
+            >
               <Select
                 key={`markerStart-${edges[0].id}`}
                 size="small"
@@ -371,7 +401,13 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
                 ))}
               </Select>
             </Tooltip>
-            <Tooltip title="Line end" arrow disableHoverListener={isEndSelectOpen}>
+            <Tooltip
+              title="Line end"
+              arrow
+              open={isEndTooltipOpen}
+              onOpen={handleEndTooltipOpen}
+              onClose={handleEndTooltipClose}
+            >
               <Select
                 key={`markerEnd-${edges[0].id}`}
                 size="small"
