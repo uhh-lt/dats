@@ -322,7 +322,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
                         sx: {
                           "& .MuiPaper-root": {
                             boxShadow: 1,
-                            marginTop: "8px",
+                            marginTop: "19px",
                           },
                         },
                       }}
@@ -380,7 +380,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
                     horizontal: "center",
                   }}
                   sx={{
-                    "& .MuiPaper-root": { boxShadow: 1, mt: 1.8 },
+                    "& .MuiPaper-root": { boxShadow: 1, mt: "19px" },
                     "& .MuiList-root": { p: 0 },
                   }}
                 >
@@ -452,7 +452,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
                     "& .MuiPaper-root": {
                       padding: 0,
                       margin: 0,
-                      marginTop: 1.5,
+                      marginTop: "19px",
                       elevation: 1,
                       boxShadow: 1,
                     },
