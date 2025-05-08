@@ -33,6 +33,7 @@ const useGetAnnotation = (sentenceAnnoId: number | undefined) =>
         sentenceAnnoId: sentenceAnnoId!,
       }) as CancelablePromise<SentenceAnnotationRead>,
     enabled: !!sentenceAnnoId,
+    staleTime: 1000 * 60 * 5,
   });
 
 // SENTENCE MUTATIONS
