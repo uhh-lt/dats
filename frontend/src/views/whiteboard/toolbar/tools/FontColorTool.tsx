@@ -90,7 +90,7 @@ const FontColorTool: React.FC<FontColorToolProps> = ({ color, onColorChange }) =
           "& .MuiPaper-root": {
             padding: 0,
             margin: 0,
-            marginTop: 1.5,
+            marginTop: "19px",
             elevation: 1,
             boxShadow: 1,
             width: 160,

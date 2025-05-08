@@ -131,7 +131,7 @@ function NumberTool({ value, onValueChange, min, max }: NumberToolProps) {
             sx: {
               width: "60px",
               maxHeight: "300px",
-              marginTop: 1.8,
+              marginTop: "19px",
               boxShadow: 3,
             },
           },

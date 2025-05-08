@@ -381,7 +381,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
                   sx: {
                     "& .MuiPaper-root": {
                       boxShadow: 1,
-                      marginTop: "8px",
+                      marginTop: "17px",
                       display: "flex",
                       flexDirection: "column",
                       alignItems: "center",
@@ -426,7 +426,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
                   sx: {
                     "& .MuiPaper-root": {
                       boxShadow: 1,
-                      marginTop: "8px",
+                      marginTop: "17px",
                       display: "flex",
                       flexDirection: "column",
                       alignItems: "center",
