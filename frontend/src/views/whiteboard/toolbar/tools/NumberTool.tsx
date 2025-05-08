@@ -86,7 +86,7 @@ function NumberTool({ value, onValueChange, min, max }: NumberToolProps) {
 
   return (
     <>
-      <Tooltip title="Width" arrow>
+      <Tooltip title="Size" arrow>
         <Box
           ref={inputRef}
           onClick={handleClick}

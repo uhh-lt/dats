@@ -468,6 +468,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
                           handleHorizontalAlignClick("left")();
                           handleAlignClose();
                         }}
+                        selected={showTextTools && (nodes[0]?.data as TextData)?.horizontalAlign === "left"}
                         sx={{ minWidth: "auto", m: 0, p: 1 }}
                       >
                         <FormatAlignLeftIcon />
@@ -477,6 +478,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
                           handleHorizontalAlignClick("center")();
                           handleAlignClose();
                         }}
+                        selected={showTextTools && (nodes[0]?.data as TextData)?.horizontalAlign === "center"}
                         sx={{ minWidth: "auto", m: 0, p: 1 }}
                       >
                         <FormatAlignCenterIcon />
@@ -486,6 +488,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
                           handleHorizontalAlignClick("right")();
                           handleAlignClose();
                         }}
+                        selected={showTextTools && (nodes[0]?.data as TextData)?.horizontalAlign === "right"}
                         sx={{ minWidth: "auto", m: 0, p: 1 }}
                       >
                         <FormatAlignRightIcon />
@@ -497,6 +500,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
                           handleVerticalAlignClick("top")();
                           handleAlignClose();
                         }}
+                        selected={showTextTools && (nodes[0]?.data as TextData)?.verticalAlign === "top"}
                         sx={{ minWidth: "auto", m: 0, p: 1 }}
                       >
                         <VerticalAlignTopIcon />
@@ -506,6 +510,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
                           handleVerticalAlignClick("center")();
                           handleAlignClose();
                         }}
+                        selected={showTextTools && (nodes[0]?.data as TextData)?.verticalAlign === "center"}
                         sx={{ minWidth: "auto", m: 0, p: 1 }}
                       >
                         <VerticalAlignCenterIcon />
@@ -515,6 +520,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
                           handleVerticalAlignClick("bottom")();
                           handleAlignClose();
                         }}
+                        selected={showTextTools && (nodes[0]?.data as TextData)?.verticalAlign === "bottom"}
                         sx={{ minWidth: "auto", m: 0, p: 1 }}
                       >
                         <VerticalAlignBottomIcon />
