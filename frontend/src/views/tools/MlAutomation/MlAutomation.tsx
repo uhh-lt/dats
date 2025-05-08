@@ -178,7 +178,7 @@ function MlAutomation() {
 
   return (
     <ContentContainerLayout>
-      <Card sx={{ minHeight: "400px", mb: 2 }} variant="outlined" className="myFlexFillAllContainer myFlexContainer">
+      <Card sx={{ minHeight: "450px", mb: 2 }} variant="outlined" className="myFlexFillAllContainer myFlexContainer">
         <CardHeader
           title="ML Automations"
           subheader="Start one or more of the following machine learning automations to speed up your work an enable new analysis options"
@@ -276,6 +276,8 @@ function MlAutomation() {
                 </Tooltip>
               </ListItemIcon>
             </ListItem>
+          </List>
+          <List dense={false}>
             <ListItem>
               <ListItemAvatar>
                 <Avatar>
@@ -314,9 +316,9 @@ function MlAutomation() {
                         pollMlJob.data?.status == BackgroundJobStatus.RUNNING ||
                         pollMlJob.data?.status == BackgroundJobStatus.WAITING
                       }
-                      color="error"
+                      color="success"
                     >
-                      <RestartAltIcon />
+                      <NotStartedIcon />
                     </IconButton>
                   </Tooltip>
                   <Dialog
@@ -328,8 +330,7 @@ function MlAutomation() {
                     <DialogTitle id="alert-dialog-title">{"Potential dataloss ahead! Are you sure?"}</DialogTitle>
                     <DialogContent>
                       <DialogContentText id="alert-dialog-description">
-                        Remove all automatic quotation annotations including any manually created, linked data such as
-                        memos?
+                        Removes all generated topics and generates a new topic model
                       </DialogContentText>
                     </DialogContent>
                     <DialogActions>

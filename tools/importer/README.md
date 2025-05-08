@@ -19,7 +19,8 @@ pip install python-magic
 
 ```
 # import Ortslinien
-python importer/dats_importer.py --input_dir /home/9scheld/dats/tools/importer/test_data --backend_url http://localhost:45620/ --project_id 6 --tag_name ortslinien --tag_description ortslinien --doctype text --mime_type text/plain --username SYSTEM@dats.org
+python importer/dats_importer.py --input_dir /home/9scheld/dats/tools/importer/endordner --backend_url http://localhost:45620/ --project_id 7 --tag_name ortslinien --tag_description ortslinien --doctype text --mime_type text/plain --username SYSTEM@dats.org --password 12SYSTEM34
+
 # import klimawirtschaft
 python importer/dats_importer.py --input_dir /ltstorage/shares/projects/dwts/backend/src/dev_notebooks/data/KlimaWirtschaft/json --backend_url http://localhost:19002/ --project_id 86 --tag_name wirtschaft --tag_description wirtschaft --is_json --metadata_keys Newspaper Date Length Section Author Headline --metadata_types STRING DATE NUMBER STRING STRING STRING --doctype text --content_key Article --mime_type text/html --username SYSTEM@dwts.org
 

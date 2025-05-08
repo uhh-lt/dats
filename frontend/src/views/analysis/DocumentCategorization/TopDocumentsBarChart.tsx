@@ -3,6 +3,7 @@ import * as d3 from "d3";
 import { useEffect, useRef, useState } from "react";
 
 const TopDocumentsBarChart: React.FC<{
+  chartName: string;
   topicNum: number;
   dataHook: UseQueryResult<Record<string, unknown>[], Error>;
 }> = ({ topicNum, dataHook }) => {

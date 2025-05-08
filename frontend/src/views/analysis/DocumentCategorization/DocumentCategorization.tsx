@@ -13,7 +13,7 @@ import {
   SelectChangeEvent,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import AnalysisHooks from "../../../api/CodeFrequencyHooks.ts";
 import ContentContainerLayout from "../../../layouts/ContentLayouts/ContentContainerLayout.tsx";
@@ -27,6 +27,8 @@ function DocumentCategorization() {
 
   const [currentCarouselField, setCarouselField] = useState(0);
 
+  const [currentInterpretation, setInterpretation] = useState<Record<string, string> | null>(null);
+
   const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
 
   const top_words_data = AnalysisHooks.useReturnTopWordsData(projectId);
@@ -37,26 +39,38 @@ function DocumentCategorization() {
     mutate: makeLLMInterpretation,
     isPending,
     data: ollamaData,
-    isSuccess: ollamaSuccess,
   } = AnalysisHooks.useReturnTopWordsOllama(currentTopicNum, projectId);
 
   const carouselDiagramList = [
-    <TopWordsBarChart topicNum={currentTopicNum} dataHook={top_words_data} />,
-    <TopicDistrChart dataHook={topic_distr_hook} />,
-    <TopDocumentsBarChart topicNum={currentTopicNum} dataHook={topic_document_data} />,
+    <TopWordsBarChart chartName={"Top Words"} topicNum={currentTopicNum} dataHook={top_words_data} />,
+    <TopicDistrChart chartName={"Topic Distribution"} dataHook={topic_distr_hook} />,
+    <TopDocumentsBarChart chartName={"Top Documents"} topicNum={currentTopicNum} dataHook={topic_document_data} />,
   ];
 
   const handleChange = (event: SelectChangeEvent<number>) => {
     setCurrentTopicNum(event.target.value as number);
+    setInterpretation(null);
+  };
+
+  const calcCarouselCardNum = (change: number) => {
+    let newCardNum = 0;
+    if (currentCarouselField + change < 0) {
+      newCardNum = carouselDiagramList.length - 1;
+    } else {
+      newCardNum = (currentCarouselField + change) % carouselDiagramList.length;
+    }
+    return newCardNum;
   };
 
   const changeCarouselCard = (change: number) => {
-    if (currentCarouselField + change < 0) {
-      setCarouselField(carouselDiagramList.length - 1);
-    } else {
-      setCarouselField((currentCarouselField + change) % carouselDiagramList.length);
-    }
+    setCarouselField(calcCarouselCardNum(change));
   };
+
+  useEffect(() => {
+    if (ollamaData) {
+      setInterpretation(ollamaData);
+    }
+  }, [ollamaData]);
 
   return (
     <ContentContainerLayout>
@@ -103,18 +117,36 @@ function DocumentCategorization() {
               alignItems: "center",
             }}
           >
-            <Fab color="primary" size="small" onClick={() => changeCarouselCard(-1)}>
-              <ArrowLeftIcon />
-            </Fab>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              <div>{carouselDiagramList[calcCarouselCardNum(-1)].props.chartName}</div>
+              <Fab color="primary" size="small" onClick={() => changeCarouselCard(-1)}>
+                <ArrowLeftIcon />
+              </Fab>
+            </Box>
             {carouselDiagramList[currentCarouselField].props.dataHook.isLoading && <div>Loading...</div>}
             {carouselDiagramList[currentCarouselField].props.dataHook.isSuccess ? (
               carouselDiagramList[currentCarouselField]
             ) : (
               <></>
             )}
-            <Fab color="primary" size="small" onClick={() => changeCarouselCard(1)}>
-              <ArrowRightIcon />
-            </Fab>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              <div>{carouselDiagramList[calcCarouselCardNum(1)].props.chartName}</div>
+              <Fab color="primary" size="small" onClick={() => changeCarouselCard(1)}>
+                <ArrowRightIcon />
+              </Fab>
+            </Box>
           </Box>
           <Box
             sx={{
@@ -123,13 +155,13 @@ function DocumentCategorization() {
             }}
           >
             <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-              <Button variant="text" onClick={() => makeLLMInterpretation()}>
+              <Button variant="outlined" onClick={() => makeLLMInterpretation()}>
                 Generate Interpretation for Topic: {currentTopicNum}
               </Button>
             </Box>
             {isPending && <div style={{ textAlign: "center" }}>Loading...</div>}
 
-            {ollamaSuccess && ollamaData ? (
+            {currentInterpretation ? (
               <Box
                 sx={{
                   margin: "auto",
@@ -138,7 +170,7 @@ function DocumentCategorization() {
                   alignItems: "center",
                 }}
               >
-                <h3 style={{ textAlign: "center" }}>{ollamaData["topic_name"]}</h3>
+                <h3 style={{ textAlign: "center" }}>{currentInterpretation["topic_name"]}</h3>
                 <Box
                   sx={{
                     maxHeight: "20vh",
@@ -148,7 +180,7 @@ function DocumentCategorization() {
                     borderRadius: 2,
                   }}
                 >
-                  {ollamaData["reasoning"]}
+                  {currentInterpretation["reasoning"]}
                 </Box>
               </Box>
             ) : (

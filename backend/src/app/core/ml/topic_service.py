@@ -1,9 +1,7 @@
-from string import punctuation
+from html import unescape
 from typing import List, Tuple
 
-from bertopic import BERTopic
-from umap import UMAP
-
+import spacy
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.topic_info import crud_topic_info
@@ -19,10 +17,18 @@ from app.core.db.sql_service import SQLService
 from app.core.db.weaviate_service import WeaviateService
 from app.core.ml.multi_languages import custom_stopwords
 from app.util.singleton_meta import SingletonMeta
+from bertopic import BERTopic
+from sklearn.feature_extraction.text import CountVectorizer
+from spacy.language import Language
+from spacy_langdetect import LanguageDetector
+from umap import UMAP
 
-# @Language.factory("language_detector")
-# def get_lang_detector(nlp, name):
-#    return LanguageDetector()
+# from string import punctuation
+
+
+@Language.factory("language_detector")
+def get_lang_detector(nlp, name):
+    return LanguageDetector()
 
 
 class TopicService(metaclass=SingletonMeta):
@@ -61,25 +67,18 @@ class TopicService(metaclass=SingletonMeta):
                     if doc_data.content.strip():
                         text_data.append(doc_data.content)
 
-        # nlp = spacy.load("de_core_news_lg")
-        # print("nlp loaded...")
-        #
-        # nlp.add_pipe("language_detector", last=True)
+        nlp = spacy.load("de_core_news_lg")
+        print("nlp loaded...")
+
+        nlp.add_pipe("language_detector", last=True)
 
         # TODO: make as python file
         # import stopwords from stopwords_file.py
 
-        preprocessed_text_data = [
-            self.preprocess_text(td, custom_stopwords) for td in token_data
-        ]
+        preprocessed_text_data = [self.preprocess_text(doc, nlp) for doc in text_data]
 
         # get text embeddings
-        print("Before getting embeds")
         text_embeddings = self.ws.get_document_embeddings(search_ids=sdoc_ids)
-        assert len(text_embeddings) == len(
-            sdoc_ids
-        ), "Received Embeddings do not match the amount of Files"
-        print("received embeddings")
 
         # TODO 2: Topic modeliung ausführen
         # Initialize UMAP for dimensionality reduction
@@ -102,9 +101,16 @@ class TopicService(metaclass=SingletonMeta):
         )
 
         print("BERTopic model fitting completed.")
-        # TODO 3: Ergebnisse abspeichern -> Datenbank
-        # loop durch alle topics und create jeweils
-        # TODO: change to extract all info through get_topic_info?
+
+        print("Updating topic representation with Vectorizer")
+        vectorizer_model = CountVectorizer(stop_words=custom_stopwords)
+        topic_model.update_topics(
+            preprocessed_text_data,
+            vectorizer_model=vectorizer_model,
+            top_n_words=top_n_words,
+        )
+        print("Finished updating topics")
+
         if recompute:
             # delete data in db from this project
             subquery = (
@@ -154,43 +160,44 @@ class TopicService(metaclass=SingletonMeta):
                     ),
                 )
 
-    # def preprocess_text(self, text: str, nlp: Language, custom_stopwords: List[str]):
-    #    text = unescape(text)
-    #
-    #    doc = nlp(text.lower())
-    #
-    #    # Check if language detection exists before accessing
-    #    if not doc._.has("language") or doc._.language is None:
-    #        return ""
-    #
-    #    # Only process if detected language is German or English
-    #    if doc._.language["language"] in ["de", "en"]:
-    #        tokens = [
-    #            token.lemma_
-    #            for token in doc
-    #            if not token.is_stop  # Remove spaCy's stopwords
-    #            and not token.is_punct  # Remove punctuation
-    #            and not any(
-    #                char.isdigit() for char in token.text
-    #            )  # Remove tokens with numbers
-    #            and token.lemma_ not in custom_stopwords  # Remove custom stopwords
-    #            and len(token) > 2  # Filter out very short tokens
-    #        ]
-    #        return " ".join(tokens)
-    #
-    #    return ""  # Ensure function always returns a string
+    def preprocess_text(self, text: str, nlp: Language):
+        print("Start preprocessing text of length:", len(text))
+        text = unescape(text)
 
-    def preprocess_text(self, tokens: List[str], custom_stopwords: List[str]):
+        doc = nlp(text.lower())
+
+        # Check if language detection exists before accessing
+        if not doc._.has("language") or doc._.language is None:
+            return ""
+
         # Only process if detected language is German or English
-        tokens = [
-            token
-            for token in tokens
-            if token not in punctuation  # Remove punctuation
-            and not any(char.isdigit() for char in token)  # Remove tokens with numbers
-            and token not in custom_stopwords  # Remove custom stopwords
-            and len(token) > 2  # Filter out very short tokens
-        ]
-        return " ".join(tokens)
+        if doc._.language["language"] in ["de", "en"]:
+            tokens = [
+                token.lemma_
+                for token in doc
+                if not token.is_stop  # Remove spaCy's stopwords
+                and not token.is_punct  # Remove punctuation
+                and not any(
+                    char.isdigit() for char in token.text
+                )  # Remove tokens with numbers
+                and token.lemma_ not in custom_stopwords  # Remove custom stopwords
+                and len(token) > 2  # Filter out very short tokens
+            ]
+            return " ".join(tokens)
+
+        return ""  # Ensure function always returns a string
+
+    # def preprocess_text(self, tokens: List[str], custom_stopwords: List[str]):
+    #    # Only process if detected language is German or English
+    #    tokens = [
+    #        token
+    #        for token in tokens
+    #        if token not in punctuation  # Remove punctuation
+    #        and not any(char.isdigit() for char in token)  # Remove tokens with numbers
+    #        and token not in custom_stopwords  # Remove custom stopwords
+    #        and len(token) > 2  # Filter out very short tokens
+    #    ]
+    #    return " ".join(tokens)
 
     def _make_topic_info(
         self,

@@ -1,5 +1,5 @@
 import time
-from typing import Dict, List, Optional, Tuple, Type, TypedDict, TypeVar
+from typing import Dict, List, Optional, Tuple, Type, TypedDict, TypeVar, Union
 from uuid import uuid4
 
 from app.util.singleton_meta import SingletonMeta
@@ -80,7 +80,7 @@ class OllamaService(metaclass=SingletonMeta):
             cls.__max_vlm_chat_session_age = 7 * 24 * 60 * 60  # 7 days
 
             # load the model with a dummy request to ensure that it is loaded and ready to use
-            ollamac.chat(
+            response = ollamac.chat(
                 model=cls.__model["llm"],
                 messages=[
                     {
@@ -94,7 +94,7 @@ class OllamaService(metaclass=SingletonMeta):
                 ],
                 options=cls.__default_kwargs["llm"],
             )
-
+            logger.info(response.message.content)
         except Exception as e:
             msg = f"Cannot instantiate OllamaService - Error '{e}'"
             logger.error(msg)
@@ -108,9 +108,9 @@ class OllamaService(metaclass=SingletonMeta):
         self,
         system_prompt: str,
         user_prompt: str,
-        response_model: Type[T],
+        response_model: Optional[Type[T]] = None,
         gen_kwargs: Optional[Dict[str, str]] = None,
-    ) -> T:
+    ) -> Union[T, str]:
         if gen_kwargs is None:
             gen_kwargs = self.__default_kwargs["llm"]
 
@@ -127,7 +127,9 @@ class OllamaService(metaclass=SingletonMeta):
                 },
             ],
             options=gen_kwargs,
-            format=response_model.model_json_schema(),
+            format=response_model.model_json_schema()
+            if response_model is not None
+            else None,
         )
         max_context_size = int(gen_kwargs.get("num_ctx", "-1"))
         if (
@@ -141,7 +143,10 @@ class OllamaService(metaclass=SingletonMeta):
         if response.message.content is None:
             raise Exception(f"Ollama response is None: {response}")
 
-        return response_model.model_validate_json(response.message.content)
+        if response_model is not None:
+            return response_model.model_validate_json(response.message.content)
+        else:
+            return response.message.content
 
     def _start_vlm_chat_session(self) -> str:
         session_id = str(uuid4())

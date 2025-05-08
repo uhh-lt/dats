@@ -81,9 +81,9 @@ def get_prompt(top_words_data: List[TopicWordInfo]) -> list[str]:
     system_prompt = (
         "You are an expert in digital humanities with extensive experience in topic modeling, particularly using BERTopic."
         "Your current analysis focuses on Walter Kempowski's Ortslinien project—a complex work that intertwines various media "
-        "to create a spatial narrative of time. When responding, please adhere to the following format: "
-        "{ 'topic_name': '<Your chosen umbrella term for the topic>', 'reasoning': '<A detailed explanation of your interpretation and the connection to the provided top words>' }"
+        "to create a spatial narrative of time"
     )
+    #    "{ 'topic_name': '<Your chosen umbrella term for the topic>', 'reasoning': '<A detailed explanation of your interpretation and the connection to the provided top words>' }"
 
     return [system_prompt, user_prompt]
 
@@ -99,15 +99,22 @@ def top_words_ollama(topic_num: int, db: Session, project_id: int) -> dict:
             "top_words": [],
         }
 
+    prompts = get_prompt(top_words_data=top_words_data[topic_num].topic_words)
+
     response = ollama_service.llm_chat(
-        *get_prompt(top_words_data=top_words_data[topic_num].topic_words),
+        system_prompt=prompts[0],
+        user_prompt=prompts[1],
         response_model=OllamaTopicResponse,
     )
 
     ollama_responses = {
         "prompt": "noah_v1",
-        "reasoning": response.reasoning,
-        "topic_name": response.topic_name,
+        "reasoning": response.reasoning
+        if type(response) is OllamaTopicResponse
+        else "",
+        "topic_name": response.topic_name
+        if type(response) is OllamaTopicResponse
+        else "",
         "top_words": [top_words_data[topic_num].topic_words],
     }
 

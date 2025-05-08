@@ -1,7 +1,7 @@
 """add topic info interpretation
 
 Revision ID: 3c5ca479f52d
-Revises: 313ed5adfe76
+Revises: 6e007e34f05f
 Create Date: 2025-03-25 13:33:30.040577
 
 """
@@ -9,12 +9,11 @@ Create Date: 2025-03-25 13:33:30.040577
 from typing import Sequence, Union
 
 import sqlalchemy as sa
-
 from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "3c5ca479f52d"
-down_revision: Union[str, None] = "313ed5adfe76"
+down_revision: Union[str, None] = "6e007e34f05f"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

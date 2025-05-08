@@ -6,6 +6,7 @@ import { TopWordsTopic } from "../../../api/openapi/models/TopWordsTopic.ts";
 type TopWordsResponseType = Record<string, TopWordsTopic>;
 
 const TopWordsBarChart: React.FC<{
+  chartName: string;
   topicNum: number;
   dataHook: UseQueryResult<TopWordsResponseType, Error>;
 }> = ({ topicNum: topicNum, dataHook }) => {
