@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Iterable, List, Tuple, Union, overload
 
 import numpy as np
+
 from app.core.data.dto.search import SimSearchDocumentHit, SimSearchSentenceHit
 from app.core.db.index_type import IndexType
 from app.util.singleton_meta import SingletonMeta

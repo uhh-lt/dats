@@ -82,9 +82,9 @@ class SimSearchService(metaclass=SingletonMeta):
     def _get_image_name_from_sdoc_id(self, sdoc_id: int) -> SourceDocumentRead:
         with self.sqls.db_session() as db:
             sdoc = SourceDocumentRead.model_validate(crud_sdoc.read(db=db, id=sdoc_id))
-            assert sdoc.doctype == DocType.image, (
-                f"SourceDocument with {sdoc_id=} is not an image!"
-            )
+            assert (
+                sdoc.doctype == DocType.image
+            ), f"SourceDocument with {sdoc_id=} is not an image!"
         return sdoc
 
     def _encode_image(self, image_sdoc_id: int) -> np.ndarray:
@@ -120,10 +120,19 @@ class SimSearchService(metaclass=SingletonMeta):
             f"from SDoc {sdoc_id} in Project {proj_id} to Weaviate ..."
         )
         self._index.add_embeddings_to_index(
-            IndexType.SENTENCE, proj_id, repeat(sdoc_id, len(sentence_embs)), sentence_embs
+            IndexType.SENTENCE,
+            proj_id,
+            repeat(sdoc_id, len(sentence_embs)),
+            sentence_embs,
         )
-    
-    def add_document_embeddings(self, proj_id: int, sdoc_ids: Iterable[int], embeddings: np.ndarray, force: bool = False):
+
+    def add_document_embeddings(
+        self,
+        proj_id: int,
+        sdoc_ids: Iterable[int],
+        embeddings: np.ndarray,
+        force: bool = False,
+    ):
         try:
             self._index.add_embeddings_to_index(
                 IndexType.DOCUMENT, proj_id, sdoc_ids, embeddings
@@ -136,7 +145,7 @@ class SimSearchService(metaclass=SingletonMeta):
                 )
             else:
                 raise e
-    
+
     def remove_all_document_embeddings(self, proj_id):
         self._index.remove_project_index(proj_id, IndexType.DOCUMENT)
 

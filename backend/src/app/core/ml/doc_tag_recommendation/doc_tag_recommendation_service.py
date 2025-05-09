@@ -1,15 +1,16 @@
 import statistics
 from collections import defaultdict
-from typing import DefaultDict, List
+from typing import List
 
 from app.core.data.crud.document_tag import crud_document_tag
-from app.core.data.crud.document_tag_recommendation import \
-    crud_document_tag_recommendation_link
+from app.core.data.crud.document_tag_recommendation import (
+    crud_document_tag_recommendation_link,
+)
 from app.core.data.crud.source_document import crud_sdoc
-from app.core.data.dto.document_tag_recommendation import \
-    DocumentTagRecommendationLinkCreate
+from app.core.data.dto.document_tag_recommendation import (
+    DocumentTagRecommendationLinkCreate,
+)
 from app.core.data.dto.search import SimSearchDocumentHit
-from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.db.simsearch_service import SimSearchService
 from app.core.db.sql_service import SQLService
 from app.util.singleton_meta import SingletonMeta

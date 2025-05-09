@@ -1,7 +1,8 @@
 from typing import List
 
-from app.core.data.dto.dto_base import UpdateDTOBase
 from pydantic import BaseModel, ConfigDict, Field
+
+from app.core.data.dto.dto_base import UpdateDTOBase
 
 
 class DocumentTagRecommendationLinkBaseDTO(BaseModel):

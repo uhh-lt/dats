@@ -2,6 +2,7 @@ from time import perf_counter_ns
 from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
+
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.dto.span_annotation import SpanAnnotationCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
