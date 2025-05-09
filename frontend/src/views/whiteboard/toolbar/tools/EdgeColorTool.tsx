@@ -1,11 +1,11 @@
-import { Add as AddIcon } from "@mui/icons-material";
 import MovingIcon from "@mui/icons-material/Moving";
 import StraightIcon from "@mui/icons-material/Straight";
 import TurnRightIcon from "@mui/icons-material/TurnRight";
 import UTurnRightIcon from "@mui/icons-material/UTurnRight";
 import { Box, Button, Grid2 as Grid, Menu, Stack, Tooltip, Typography } from "@mui/material";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { WhiteboardEdgeType } from "../../../../api/openapi/models/WhiteboardEdgeType.ts";
+import ColorGrid from "./ColorGrid.tsx";
 
 interface EdgeColorToolProps {
   color: string;
@@ -15,25 +15,6 @@ interface EdgeColorToolProps {
   edgeType: WhiteboardEdgeType;
   onEdgeTypeChange: (type: WhiteboardEdgeType) => void;
 }
-
-// Predefined colors
-const PREDEFINED_COLORS = [
-  "#ffffff", // White
-  "#000000", // Black
-  "#ff0000", // Red
-  "#00ff00", // Green
-  "#0000ff", // Blue
-  "#ffff00", // Yellow
-  "#ff00ff", // Magenta
-  "#00ffff", // Cyan
-  "#808080", // Gray
-  "#800000", // Maroon
-  "#808000", // Olive
-  "#008000", // Dark Green
-  "#800080", // Purple
-  "#008080", // Teal
-  "#000080", // Navy
-];
 
 const type2icon: Record<string, React.ReactElement> = {
   bezier: <MovingIcon />,
@@ -52,7 +33,6 @@ const EdgeColorTool: React.FC<EdgeColorToolProps> = ({
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-  const colorInputRef = useRef<HTMLInputElement>(null);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -60,18 +40,6 @@ const EdgeColorTool: React.FC<EdgeColorToolProps> = ({
 
   const handleClose = () => {
     setAnchorEl(null);
-  };
-
-  const handleColorChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    onColorChange(event.target.value);
-  };
-
-  const handlePredefinedColorClick = (predefinedColor: string) => {
-    onColorChange(predefinedColor);
-  };
-
-  const handleAddColorClick = () => {
-    colorInputRef.current?.click();
   };
 
   return (
@@ -212,75 +180,7 @@ const EdgeColorTool: React.FC<EdgeColorToolProps> = ({
           <Typography variant="caption" sx={{ color: "text.secondary", pl: 1, pb: 0 }}>
             Edge Colors
           </Typography>
-          <Grid container spacing={1} columns={4} sx={{ justifyContent: "start" }}>
-            {PREDEFINED_COLORS.map((predefinedColor) => (
-              <Grid key={predefinedColor} size={{ xs: 1 }} sx={{ display: "flex", justifyContent: "center" }}>
-                <Button
-                  size="small"
-                  onClick={() => handlePredefinedColorClick(predefinedColor)}
-                  sx={{
-                    minWidth: 0,
-                    width: 24,
-                    height: 24,
-                    p: 0,
-                    borderRadius: "50%",
-                    bgcolor: predefinedColor,
-                    border: "1px solid rgba(0, 0, 0, 0.12)",
-                    "&:hover": {
-                      bgcolor: predefinedColor,
-                      opacity: 0.7,
-                      transform: "scale(1.1)",
-                    },
-                    transition: (theme) => theme.transitions.create(["opacity", "transform", "background-color"]),
-                  }}
-                />
-              </Grid>
-            ))}
-            <Grid size={{ xs: 1 }} sx={{ display: "flex", justifyContent: "center" }}>
-              <Tooltip title="Add new color" arrow>
-                <Box sx={{ position: "relative" }}>
-                  <input
-                    ref={colorInputRef}
-                    type="color"
-                    value={color}
-                    onChange={handleColorChange}
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: "24px",
-                      height: "24px",
-                      padding: 0,
-                      border: "none",
-                      opacity: 0,
-                      cursor: "pointer",
-                    }}
-                  />
-                  <Button
-                    size="small"
-                    onClick={handleAddColorClick}
-                    sx={{
-                      minWidth: 0,
-                      width: 24,
-                      height: 24,
-                      p: 0,
-                      borderRadius: "50%",
-                      bgcolor: "background.paper",
-                      border: "1px solid rgba(0, 0, 0, 0.12)",
-                      "&:hover": {
-                        bgcolor: "background.paper",
-                        opacity: 0.7,
-                        transform: "scale(1.1)",
-                      },
-                      transition: (theme) => theme.transitions.create(["opacity", "transform", "background-color"]),
-                    }}
-                  >
-                    <AddIcon sx={{ fontSize: 16, color: "text.secondary" }} />
-                  </Button>
-                </Box>
-              </Tooltip>
-            </Grid>
-          </Grid>
+          <ColorGrid selectedColor={color} onColorChange={onColorChange} />
         </Stack>
       </Menu>
     </Box>

@@ -1,20 +1,6 @@
 import DeleteIcon from "@mui/icons-material/Delete";
-import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
-import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-
-import {
-  Button,
-  ButtonGroup,
-  Divider,
-  MenuItem,
-  Paper,
-  Select,
-  SelectChangeEvent,
-  Stack,
-  Tooltip,
-} from "@mui/material";
-import React, { forwardRef, useCallback, useImperativeHandle, useState } from "react";
+import { Button, ButtonGroup, Divider, Paper, SelectChangeEvent, Stack } from "@mui/material";
+import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 import { Edge, EdgeMarker, MarkerType, useReactFlow } from "reactflow";
 import { WhiteboardEdgeData_Input } from "../../../api/openapi/models/WhiteboardEdgeData_Input.ts";
 import { WhiteboardEdgeType } from "../../../api/openapi/models/WhiteboardEdgeType.ts";
@@ -22,21 +8,10 @@ import { isDashed, isDotted } from "../edges/edgeUtils.ts";
 import { DATSNodeData } from "../types/DATSNodeData.ts";
 import BgColorTool from "./tools/BgColorTool.tsx";
 import EdgeColorTool from "./tools/EdgeColorTool.tsx";
+import EdgeMarkerTool from "./tools/EdgeMarkerTool.tsx";
 import FontColorTool from "./tools/FontColorTool.tsx";
+import FontSizeTool from "./tools/FontSizeTool.tsx";
 import NumberTool from "./tools/NumberTool.tsx";
-import TypographyVariantTool from "./tools/TypographyVariantTool.tsx";
-
-const arrow2icon: Record<string, React.ReactElement> = {
-  noarrow: <HorizontalRuleIcon />,
-  arrow: <KeyboardArrowRightIcon />,
-  arrowclosed: <PlayArrowIcon />,
-};
-
-const arrow2rotatedicon: Record<string, React.ReactElement> = {
-  noarrow: <HorizontalRuleIcon style={{ transform: "rotate(180deg)" }} />,
-  arrow: <KeyboardArrowRightIcon style={{ transform: "rotate(180deg)" }} />,
-  arrowclosed: <PlayArrowIcon style={{ transform: "rotate(180deg)" }} />,
-};
 
 export interface EdgeEditMenuHandle {
   open: (edges: Edge<WhiteboardEdgeData_Input>[]) => void;
@@ -356,96 +331,22 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
       {edges.length > 0 && (
         <Paper sx={{ p: 1, mb: 1, width: "fit-content" }}>
           <Stack direction="row" alignItems="center">
-            <Tooltip
-              title="Line start"
-              arrow
-              open={isStartTooltipOpen}
-              onOpen={handleStartTooltipOpen}
-              onClose={handleStartTooltipClose}
-            >
-              <Select
-                key={`markerStart-${edges[0].id}`}
-                size="small"
-                sx={{
-                  mr: 0.5,
-                  height: "32px",
-                  "& .MuiOutlinedInput-notchedOutline": { border: "none" },
-                  "& .MuiSelect-select": {
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    p: 0.5,
-                  },
-                }}
-                MenuProps={{
-                  sx: {
-                    "& .MuiPaper-root": {
-                      boxShadow: 1,
-                      marginTop: "17px",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    },
-                  },
-                }}
-                onOpen={handleStartSelectOpen}
-                onClose={handleStartSelectClose}
-                defaultValue={edges[0].markerStart ? (edges[0].markerStart as EdgeMarker).type : "noarrow"}
-                onChange={handleMarkerStartChange}
-              >
-                {["noarrow", "arrow", "arrowclosed"].map((type) => (
-                  <MenuItem key={type} value={type} sx={{ minWidth: "auto", m: 0, p: 1 }}>
-                    {arrow2rotatedicon[type]}
-                  </MenuItem>
-                ))}
-              </Select>
-            </Tooltip>
-            <Tooltip
-              title="Line end"
-              arrow
-              open={isEndTooltipOpen}
-              onOpen={handleEndTooltipOpen}
-              onClose={handleEndTooltipClose}
-            >
-              <Select
-                key={`markerEnd-${edges[0].id}`}
-                size="small"
-                sx={{
-                  mr: 1,
-                  height: "32px",
-                  "& .MuiOutlinedInput-notchedOutline": { border: "none" },
-                  "& .MuiSelect-select": {
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    p: 0.5,
-                  },
-                }}
-                MenuProps={{
-                  sx: {
-                    "& .MuiPaper-root": {
-                      boxShadow: 1,
-                      marginTop: "17px",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    },
-                  },
-                }}
-                onOpen={handleEndSelectOpen}
-                onClose={handleEndSelectClose}
-                defaultValue={edges[0].markerEnd ? (edges[0].markerEnd as EdgeMarker).type : "noarrow"}
-                onChange={handleMarkerEndChange}
-              >
-                {["noarrow", "arrow", "arrowclosed"].map((type) => (
-                  <MenuItem key={type} value={type} sx={{ minWidth: "auto", m: 0, p: 1 }}>
-                    {arrow2icon[type]}
-                  </MenuItem>
-                ))}
-              </Select>
-            </Tooltip>
+            <EdgeMarkerTool
+              markerStart={edges[0].markerStart as EdgeMarker}
+              markerEnd={edges[0].markerEnd as EdgeMarker}
+              onMarkerStartChange={handleMarkerStartChange}
+              onMarkerEndChange={handleMarkerEndChange}
+              onStartSelectOpen={handleStartSelectOpen}
+              onStartSelectClose={handleStartSelectClose}
+              onEndSelectOpen={handleEndSelectOpen}
+              onEndSelectClose={handleEndSelectClose}
+              isStartTooltipOpen={isStartTooltipOpen}
+              isEndTooltipOpen={isEndTooltipOpen}
+              onStartTooltipOpen={handleStartTooltipOpen}
+              onStartTooltipClose={handleStartTooltipClose}
+              onEndTooltipOpen={handleEndTooltipOpen}
+              onEndTooltipClose={handleEndTooltipClose}
+            />
             <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
             <EdgeColorTool
               key={`stroke-color-${edges[0].id}`}
@@ -488,10 +389,10 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
             ) && (
               <>
                 <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
-                <TypographyVariantTool
-                  key={`variant-${edges[0].id}`}
-                  variant={edges[0].data!.label.fontSize}
-                  onVariantChange={handleFontSizeChange}
+                <FontSizeTool
+                  key={`size-${edges[0].id}`}
+                  size={edges[0].data!.label.fontSize}
+                  onSizeChange={handleFontSizeChange}
                 />
                 <FontColorTool
                   key={`font-color-${edges[0].id}`}
