@@ -2,7 +2,6 @@ from time import perf_counter_ns
 from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
-
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.dto.span_annotation import SpanAnnotationCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
@@ -185,11 +184,4 @@ class AnnoScalingService(metaclass=SingletonMeta):
         return np.asarray(overlap).argmax().item()
 
     def __overlap(self, s1: int, e1: int, s2: int, e2: int):
-        return max(min(e1, e2) - max(s1, s2), 0)
-        return max(min(e1, e2) - max(s1, s2), 0)
-        return max(min(e1, e2) - max(s1, s2), 0)
-        return max(min(e1, e2) - max(s1, s2), 0)
-        return max(min(e1, e2) - max(s1, s2), 0)
-        return max(min(e1, e2) - max(s1, s2), 0)
-        return max(min(e1, e2) - max(s1, s2), 0)
         return max(min(e1, e2) - max(s1, s2), 0)

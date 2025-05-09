@@ -5,12 +5,14 @@ from typing import Literal, Optional, Union
 from pydantic import BaseModel, Field
 
 from app.core.data.dto.background_job_base import BackgroundJobStatus
+from config import conf
 
 
 class MLJobType(StrEnum):
     QUOTATION_ATTRIBUTION = "QUOTATION_ATTRIBUTION"
     DOC_TAG_RECOMMENDATION = "DOC_TAG_RECOMMENDATION"
     COREFERENCE_RESOLUTION = "COREFERENCE_RESOLUTION"
+    DOCUMENT_EMBEDDING = "DOCUMENT_EMBEDDING"
 
 
 class QuotationAttributionParams(BaseModel):
@@ -22,6 +24,13 @@ class QuotationAttributionParams(BaseModel):
 
 class DocTagRecommendationParams(BaseModel):
     ml_job_type: Literal[MLJobType.DOC_TAG_RECOMMENDATION]
+    exclusive: bool = Field(
+        default=False, description="Whether tags are mutually exclusive"
+    )
+    tag_ids: list[int] = Field(
+        default=[],
+        description="Tags to consider. If empty, all tags applied to any document are considered.",
+    )
 
 
 class CoreferenceResolutionParams(BaseModel):
@@ -31,6 +40,14 @@ class CoreferenceResolutionParams(BaseModel):
     )
 
 
+class DocumentEmbeddingParams(BaseModel):
+    ml_job_type: Literal[MLJobType.DOCUMENT_EMBEDDING]
+    recompute: bool = Field(
+        default=False, description="Whether to recompute already processed documents"
+    )
+    model: str = Field(default=conf.ollama.emb.model)
+
+
 class MLJobParameters(BaseModel):
     ml_job_type: MLJobType = Field(description="The type of the MLJob")
     project_id: int = Field(description="The ID of the Project to analyse")
@@ -38,6 +55,7 @@ class MLJobParameters(BaseModel):
         QuotationAttributionParams,
         DocTagRecommendationParams,
         CoreferenceResolutionParams,
+        DocumentEmbeddingParams,
         None,
     ] = Field(
         description="Specific parameters for the MLJob w.r.t it's type",

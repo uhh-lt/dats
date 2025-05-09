@@ -1,8 +1,7 @@
 from typing import List
 
-from pydantic import BaseModel, ConfigDict, Field
-
 from app.core.data.dto.dto_base import UpdateDTOBase
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class DocumentTagRecommendationLinkBaseDTO(BaseModel):
@@ -39,3 +38,4 @@ class DocumentTagRecommendationResult(BaseModel):
     suggested_tag_ids: List[int] = Field(
         description="List of suggested tag IDs for the source document"
     )
+    scores: List[float] = Field(description="")

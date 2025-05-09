@@ -1,5 +1,5 @@
 import uuid
-from typing import List, Tuple
+from typing import Iterable, List, Tuple
 
 import numpy as np
 from config import conf
@@ -53,9 +53,15 @@ class QdrantService(VectorIndexService):
         return super(QdrantService, cls).__new__(cls)
 
     def add_embeddings_to_index(
-        self, type: IndexType, proj_id: int, sdoc_id: int, embeddings: List[np.ndarray]
+        self,
+        type: IndexType,
+        proj_id: int,
+        sdoc_ids: Iterable[int],
+        embeddings: List[np.ndarray],
     ):
-        logger.debug(f"Adding {type} SDoc {sdoc_id} in Project {proj_id} to Qdrant ...")
+        logger.debug(
+            f"Adding {type} SDoc {sdoc_ids} in Project {proj_id} to Qdrant ..."
+        )
 
         points = [
             PointStruct(
@@ -71,7 +77,7 @@ class QdrantService(VectorIndexService):
                     "sentence_id": id,
                 },
             )
-            for id, emb in enumerate(embeddings)
+            for id, (sdoc_id, emb) in enumerate(zip(sdoc_ids, embeddings))
         ]
         self._client.upsert(type, points)  # type: ignore
 
@@ -147,7 +153,7 @@ class QdrantService(VectorIndexService):
 
     def suggest(
         self,
-        sdoc_sent_ids: List[Tuple[int, int]],
+        sdoc_sent_ids: Iterable[Tuple[int, int]],
         proj_id: int,
         index_type: IndexType,
     ) -> List[SimSearchSentenceHit]:
@@ -185,3 +191,9 @@ class QdrantService(VectorIndexService):
 
     def _sentence_uuid(self, sdoc_id: int, id: int):
         return str(uuid.UUID(int=(sdoc_id << 64) + id))
+
+    def knn(self, proj_id, index_type, sdoc_ids_to_search, sdoc_ids_known, k=3):
+        raise NotImplementedError
+
+    def remove_project_index(self, proj_id, type):
+        raise NotImplementedError

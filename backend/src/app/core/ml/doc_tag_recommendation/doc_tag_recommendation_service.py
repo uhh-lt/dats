@@ -1,13 +1,15 @@
-from typing import List
+import statistics
+from collections import defaultdict
+from typing import DefaultDict, List
 
 from app.core.data.crud.document_tag import crud_document_tag
-from app.core.data.crud.document_tag_recommendation import (
-    crud_document_tag_recommendation_link,
-)
+from app.core.data.crud.document_tag_recommendation import \
+    crud_document_tag_recommendation_link
 from app.core.data.crud.source_document import crud_sdoc
-from app.core.data.dto.document_tag_recommendation import (
-    DocumentTagRecommendationLinkCreate,
-)
+from app.core.data.dto.document_tag_recommendation import \
+    DocumentTagRecommendationLinkCreate
+from app.core.data.dto.search import SimSearchDocumentHit
+from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.db.simsearch_service import SimSearchService
 from app.core.db.sql_service import SQLService
 from app.util.singleton_meta import SingletonMeta
@@ -34,7 +36,14 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         cls.used_model = "Similiarity Search"
         return super(DocumentClassificationService, cls).__new__(cls)
 
-    def classify_untagged_documents(self, ml_job_id: str, project_id: int):
+    def classify_untagged_documents(
+        self,
+        ml_job_id: str,
+        project_id: int,
+        tag_ids: List[int] = [],
+        exclusive: bool = False,
+        knn: bool = False,
+    ):
         """
         Classifies untagged documents by suggesting tags based on similar tagged documents.
 
@@ -45,57 +54,130 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         Args:
             task_id (int): The ID of the classification task.
             project_id (int): The project ID to limit the documents and tags.
+            tag_ids (List[int]): The IDs of the tags to consider
+            exclusive (bool): Whether tags are mutually exclusive, either A or B
         """
         dtos = []  # List to hold DTOs to be inserted into the database
         with self.sqls.db_session() as db:
             # Fetch all documents that already have tags for the given project
-            sdocs_with_tags = [
-                sdoc
-                for sdoc in crud_sdoc.read_all_with_tags(db=db, project_id=project_id)
-            ]
+            sdocs_with_tags = crud_sdoc.read_all_with_tags(
+                db=db, project_id=project_id, tag_ids=tag_ids
+            )
+
         # Extract IDs from the tagged documents
-        sdoc_ids = [sdoc.id for sdoc in sdocs_with_tags]
+        sdoc_ids = {sdoc.id for sdoc in sdocs_with_tags}
 
         # Retrieve a mapping: document_id -> list of associated DocumentTagORM objects
         sdocs_and_tags = crud_document_tag.get_tags_for_documents(db, sdoc_ids=sdoc_ids)
 
         # Suggest similar documents based on the already tagged documents
-        similar_docs = self.sim.suggest_similar_documents(
-            proj_id=project_id, sdoc_ids=sdoc_ids, top_k=10
-        )
+        if exclusive:
+            # get suggestions for each tag using documents with that tag as positive examples
+            # and all documents with another tag as negative examples
+            tag_to_docs = defaultdict[int, list[int]](list[int])
+            for sid, tags in sdocs_and_tags.items():
+                for t in tags:
+                    tag_to_docs[t.id].append(sid)
+            tag_to_similar = {
+                t: list[SimSearchDocumentHit]() for t in tag_to_docs.keys()
+            }
+            for tag, similar_docs_per_tag in tag_to_similar.items():
+                pos_sdocs_ids = set(tag_to_docs[tag])
+                neg_sodc_ids_lists = [ids for t, ids in tag_to_docs.items() if t != tag]
+                neg_sodc_ids = {item for items in neg_sodc_ids_lists for item in items}
+                similar_docs = self.sim.suggest_similar_documents(
+                    proj_id=project_id,
+                    pos_sdoc_ids=pos_sdocs_ids,
+                    neg_sdoc_ids=neg_sodc_ids,
+                    top_k=10,
+                    unique=False,
+                )
+                # Filter out documents that already have tags (i.e. exclude those in sdoc_ids)
+                similar_docs_per_tag.extend(
+                    (doc for doc in similar_docs if doc.sdoc_id not in sdoc_ids)
+                )
+            # all_suggested_sdoc_ids = [doc.sdoc_id for docs in tag_to_similar.values() for doc in docs]
+            # sdocs_and_tags = crud_sdoc.get_tags(db, sdoc_ids=all_suggested_sdoc_ids)
+            for tag, similar_docs_per_tag in tag_to_similar.items():
+                for hit in similar_docs_per_tag:
+                    dtos.append(
+                        DocumentTagRecommendationLinkCreate(
+                            ml_job_id=ml_job_id,
+                            source_document_id=hit.sdoc_id,
+                            predicted_tag_id=tag,
+                            is_reviewed=False,
+                            prediction_score=hit.score,
+                        )
+                    )
+        elif knn is True:
+            sdocs_without_tags = crud_sdoc.read_all_without_tags(
+                db=db, project_id=project_id, tag_ids=tag_ids
+            )
+            sdoc_ids_to_classify = [sdoc.id for sdoc in sdocs_without_tags]
 
-        # Filter out documents that already have tags (i.e. exclude those in sdoc_ids)
-        filtered_similar_docs = [
-            doc for doc in similar_docs if doc.sdoc_id not in sdoc_ids
-        ]
-        # Process each similar (untagged) document
-        for similar_doc in (
-            filtered_similar_docs
-        ):  # Retrieve the tags from the compared (tagged) document using its ID as key.
-            # If no tags are found, skip this similar_doc.
-            tags = sdocs_and_tags.get(similar_doc.compared_sdoc_id, None)
-            if not tags:
-                continue
+            nns = self.sim.knn_documents(
+                project_id, sdoc_ids_to_classify, sdoc_ids, k=5
+            )
 
-            # For each tag associated with the compared (tagged) document, create a prediction.
-            for tag in tags:
+            for nn, sdoc in zip(nns, sdoc_ids_to_classify):
+                pairs = [
+                    _IdScorePair(item.id, items.score)
+                    for items in nn
+                    for item in sdocs_and_tags[items.sdoc_id]
+                ]
+                scores = defaultdict[int, list[float]](list)
+                for pair in pairs:
+                    scores[pair.id].append(pair.score)
+                best = max(scores.items(), key=lambda x: sum(x[1]))
                 dtos.append(
                     DocumentTagRecommendationLinkCreate(
                         ml_job_id=ml_job_id,
-                        source_document_id=similar_doc.sdoc_id,
-                        predicted_tag_id=tag.id,
+                        source_document_id=sdoc,
+                        predicted_tag_id=best[0],
                         is_reviewed=False,
-                        prediction_score=similar_doc.score,
+                        prediction_score=statistics.fmean(best[1]),
                     )
                 )
+        else:
+            # simply get suggestions only using positive examples
+            similar_docs = self.sim.suggest_similar_documents(
+                proj_id=project_id,
+                pos_sdoc_ids=sdoc_ids,
+                neg_sdoc_ids=set(),
+                top_k=10,
+                unique=False,
+            )
+            # Filter out documents that already have tags (i.e. exclude those in sdoc_ids)
+            similar_docs = [doc for doc in similar_docs if doc.sdoc_id not in sdoc_ids]
 
-        dtos = self._deduplicate_document_classifications(dtos)
+            # Process each similar (untagged) document
+            for similar_doc in similar_docs:  # Retrieve the tags from the compared (tagged) document using its ID as key.
+                # If no tags are found, skip this similar_doc.
+                tags = sdocs_and_tags.get(similar_doc.compared_sdoc_id, None)
+                if not tags:
+                    continue
+
+                # For each tag associated with the compared (tagged) document, create a prediction.
+                for tag in tags:
+                    dtos.append(
+                        DocumentTagRecommendationLinkCreate(
+                            ml_job_id=ml_job_id,
+                            source_document_id=similar_doc.sdoc_id,
+                            predicted_tag_id=tag.id,
+                            is_reviewed=False,
+                            prediction_score=similar_doc.score,
+                        )
+                    )
+
+        dtos = self._deduplicate_document_classifications(dtos, True)
 
         # Insert all generated tag recommendation DTOs into the database at once.
         crud_document_tag_recommendation_link.create_multi(db=db, create_dtos=dtos)
 
     def _deduplicate_document_classifications(
-        self, dtos: List[DocumentTagRecommendationLinkCreate]
+        self,
+        dtos: List[DocumentTagRecommendationLinkCreate],
+        exclusive: bool,
     ) -> List[DocumentTagRecommendationLinkCreate]:
         """
         Deduplicates document tag classification recommendations.
@@ -121,7 +203,11 @@ class DocumentClassificationService(metaclass=SingletonMeta):
 
         # Iterate over the dtos and only keep the entry with the highest prediction_score
         for dto in dtos:
-            key = (dto.source_document_id, dto.predicted_tag_id)
+            key = (
+                dto.source_document_id
+                if exclusive
+                else (dto.source_document_id, dto.predicted_tag_id)
+            )
 
             # If the key does not exist yet or the current score is higher, store the entry
             if (
@@ -132,3 +218,15 @@ class DocumentClassificationService(metaclass=SingletonMeta):
 
         # The deduplicated entries are now the values of the dictionary
         return list(deduplicated_entries.values())
+
+
+class _IdScorePair:
+    def __init__(self, id, score):
+        self.id = id
+        self.score = score
+
+    def __hash__(self):
+        return hash(self.id)
+
+    def __eq__(self, value):
+        return self.id == value.id

@@ -1,11 +1,10 @@
 from datetime import datetime
 from typing import Dict, List, Optional
 
-from pydantic import BaseModel, Field
-
 from app.core.data.dto.dto_base import UpdateDTOBase
 from app.core.data.dto.memo import AttachedObjectType
 from app.core.data.dto.source_document import SourceDocumentRead
+from pydantic import BaseModel, Field
 
 
 class ElasticSearchDocumentCreate(BaseModel):
@@ -152,11 +151,19 @@ class SimSearchHit(BaseModel):
     )
     score: float = Field(description="The similarity score.")
 
+    def __eq__(self, other):
+        if not isinstance(other, SimSearchHit):
+            return False
+        return self.sdoc_id == other.sdoc_id
+
 
 class SimSearchSentenceHit(SimSearchHit):
     sentence_id: int = Field(
         description="The sentence id with respect to the SourceDocument"
     )
+
+    def __eq__(self, other):
+        return super().__eq__(other) and self.sentence_id == other.sentence_id
 
 
 class SimSearchDocumentHit(SimSearchHit):
