@@ -12,7 +12,8 @@ function useComputeTokenData({
   userId: number | null | undefined;
 }) {
   // global server state (react query)
-  const annotations = SpanAnnotationHooks.useGetSpanAnnotationsBatch(sdocData.id, userId);
+  const annotationIds = SpanAnnotationHooks.useGetSpanAnnotationsBatch(sdocData.id, userId);
+  const annotations = SpanAnnotationHooks.useGetAnnotations(annotationIds.data);
 
   // computed
   // todo: maybe implement with selector?
@@ -36,6 +37,8 @@ function useComputeTokenData({
   // annotationMap stores annotationId -> SpanAnnotationRead
   // annotationsPerToken map stores tokenId -> spanAnnotationId[]
   const { annotationMap, annotationsPerToken } = useMemo(() => {
+    console.log("annotationData has changed!");
+
     if (!annotations.data) return { annotationMap: undefined, annotationsPerToken: undefined };
     const spanGroupIdMapping = new Map<number, number>();
     const annotationMap = new Map<number, SpanAnnotationRead>();

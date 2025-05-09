@@ -162,13 +162,19 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
     // when we create a new span annotation, we add a new annotation to a certain document
     // thus, we only affect the annotation document that we are adding to
     const affectedQueryKey = [QueryKey.SDOC_SPAN_ANNOTATIONS, requestBody.sdoc_id, visibleUserId];
-
-    // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
     await queryClient.cancelQueries({ queryKey: affectedQueryKey });
+    queryClient.setQueryData<number[]>(affectedQueryKey, (old) => {
+      // check if there is already a fake annotation, do nothing. If there is no fake annotation, add the new one
+      const fakeAnnotationIndex = old?.findIndex((id) => id === FAKE_ANNOTATION_ID);
+      if (fakeAnnotationIndex !== undefined && fakeAnnotationIndex !== -1) {
+        return old;
+      }
+      return old ? [...old, FAKE_ANNOTATION_ID] : [FAKE_ANNOTATION_ID];
+    });
 
     // Add a fake annotation
-    queryClient.setQueryData<SpanAnnotationRead[]>(affectedQueryKey, (old) => {
-      const spanAnnotation = {
+    queryClient.setQueryData<SpanAnnotationRead>([QueryKey.SPAN_ANNOTATION, FAKE_ANNOTATION_ID], () => {
+      return {
         ...requestBody,
         id: FAKE_ANNOTATION_ID,
         text: requestBody.span_text,
@@ -186,8 +192,8 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
         updated: "",
         user_id: 0,
         group_ids: [],
+        memo_ids: [],
       };
-      return old === undefined ? [spanAnnotation] : [...old, spanAnnotation];
     });
 
     // open code selector
@@ -219,7 +225,7 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
   };
   const handleCodeSelectorEditCode = (annotation: Annotation, code: ICode) => {
     updateMutation.mutate({
-      spanAnnotationToUpdate: annotation as SpanAnnotationRead,
+      spanId: annotation.id,
       requestBody: {
         code_id: code.id,
       },
