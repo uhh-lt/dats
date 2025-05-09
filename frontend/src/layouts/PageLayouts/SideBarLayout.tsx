@@ -8,6 +8,7 @@ import ConfirmationDialog from "../../components/ConfirmationDialog/Confirmation
 import DocumentUploadDialog from "../../components/DocumentUpload/DocumentUploadDialog.tsx";
 import LLMDialog from "../../components/LLMDialog/LLMDialog.tsx";
 import MemoDialog from "../../components/Memo/MemoDialog/MemoDialog.tsx";
+import MemoDialogNew from "../../components/Memo/MemoDialogNew/MemoDialogNew.tsx";
 import ProjectIdUpdater from "../../components/Project/ProjectIdUpdater.tsx";
 import ProjectSettingsDialog from "../../components/ProjectSettings/ProjectSettingsDialog.tsx";
 import QuickCommandMenu from "../../components/QuickCommandMenu/QuickCommandMenu.tsx";
@@ -80,6 +81,7 @@ function SideBarLayout() {
           <DocumentUploadDialog />
           <LLMDialog />
           <QuickCommandMenu />
+          <MemoDialogNew />
           <ShortcutManager />
         </>
       )}

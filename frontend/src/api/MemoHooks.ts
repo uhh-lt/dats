@@ -1,8 +1,11 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import queryClient from "../plugins/ReactQueryClient.ts";
+import { CodeMap } from "./CodeHooks.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { AttachedObjectType } from "./openapi/models/AttachedObjectType.ts";
+import { DocumentTagRead } from "./openapi/models/DocumentTagRead.ts";
 import { MemoRead } from "./openapi/models/MemoRead.ts";
+import { SpanAnnotationRead } from "./openapi/models/SpanAnnotationRead.ts";
 import { MemoService } from "./openapi/services/MemoService.ts";
 import { ProjectService } from "./openapi/services/ProjectService.ts";
 
@@ -58,6 +61,50 @@ const useCreateMemo = () =>
         [QueryKey.OBJECT_MEMOS, data.attached_object_type, data.attached_object_id],
         (oldData) => (oldData ? [...oldData, data] : [data]),
       );
+      switch (data.attached_object_type) {
+        case AttachedObjectType.CODE:
+          // add new memo id to the code's memo_ids
+          queryClient.setQueryData<CodeMap>([QueryKey.PROJECT_CODES, data.project_id], (oldData) => {
+            if (oldData) {
+              const code = oldData[data.attached_object_id];
+              if (code) {
+                const memoIds = code.memo_ids ? [...code.memo_ids, data.id] : [data.id];
+                const newCode = { ...code, memo_ids: memoIds };
+                return { ...oldData, [data.attached_object_id]: newCode };
+              }
+              return oldData;
+            }
+          });
+          break;
+        case AttachedObjectType.DOCUMENT_TAG:
+          // add new memo id to the tags's memo_ids
+          queryClient.setQueryData<DocumentTagRead[]>([QueryKey.PROJECT_TAGS, data.project_id], (oldData) => {
+            if (oldData) {
+              const tag = oldData.find((tag) => tag.id === data.attached_object_id);
+              if (tag) {
+                const memoIds = tag.memo_ids ? [...tag.memo_ids, data.id] : [data.id];
+                const newTag = { ...tag, memo_ids: memoIds };
+                return oldData.map((t) => (t.id === tag.id ? newTag : t));
+              }
+              return oldData;
+            }
+          });
+          break;
+        case AttachedObjectType.SPAN_ANNOTATION:
+          // add new memo id to the span's memo_ids
+          queryClient.setQueryData<SpanAnnotationRead>(
+            [QueryKey.SPAN_ANNOTATION, data.attached_object_id],
+            (oldData) => {
+              if (oldData) {
+                const memoIds = oldData.memo_ids ? [...oldData.memo_ids, data.id] : [data.id];
+                const newSpan = { ...oldData, memo_ids: memoIds };
+                return newSpan;
+              }
+              return oldData;
+            },
+          );
+          break;
+      }
     },
     meta: {
       successMessage: (memo: MemoRead) => `Created memo "${memo.title}"`,

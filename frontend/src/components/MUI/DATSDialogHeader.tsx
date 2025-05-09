@@ -1,9 +1,9 @@
 import { Close, Fullscreen, FullscreenExit } from "@mui/icons-material";
-import { IconButton, Stack, Toolbar, Typography } from "@mui/material";
-import { memo } from "react";
+import { Box, IconButton, Stack, Toolbar, Typography } from "@mui/material";
+import React, { memo } from "react";
 
 interface DialogHeaderProps {
-  title: string;
+  title: string | React.ReactNode;
   onClose: () => void;
   isMaximized: boolean;
   onToggleMaximize: () => void;
@@ -18,8 +18,10 @@ function DATSDialogHeader({ title, onClose, isMaximized, onToggleMaximize }: Dia
       })}
     >
       <Stack direction="row" alignItems="center" spacing={1} width="100%">
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          {title}
+        <Typography variant="h6" component="div" sx={{ flexGrow: 1, overflow: "hidden" }}>
+          <Box whiteSpace="nowrap" display="flex" alignItems="center">
+            {title}
+          </Box>
         </Typography>
         <IconButton edge="end" color="inherit" onClick={onToggleMaximize}>
           {isMaximized ? <FullscreenExit /> : <Fullscreen />}

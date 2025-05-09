@@ -22,7 +22,7 @@ import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { SentenceAnnotationRead } from "../../../api/openapi/models/SentenceAnnotationRead.ts";
 import { useCodesWithLevel } from "../../../components/Code/useCodesWithLevel.ts";
 import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
-import MemoButton from "../../../components/Memo/MemoButton.tsx";
+import MemoButtonNew from "../../../components/Memo/MemoButtonNew.tsx";
 import { CodeReadWithLevel } from "../../../components/TreeExplorer/CodeReadWithLevel.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { Annotation, Annotations } from "../Annotation.ts";
@@ -201,6 +201,7 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
                       description: "",
                       project_id: -1,
                       is_system: false,
+                      memo_ids: [],
                     },
                     title: `Add "${inputValue.trim()}"`,
                     level: 0,
@@ -278,21 +279,24 @@ function CodeSelectorListItem({
           <Box style={{ width: 20, height: 20, backgroundColor: code.data.color, marginRight: 8 }} />
           <ListItemText primary={code.data.name} />
           {isBboxAnnotation(annotation) ? (
-            <MemoButton
+            <MemoButtonNew
+              memoIds={annotation.memo_ids}
               attachedObjectId={annotation.id}
               attachedObjectType={AttachedObjectType.BBOX_ANNOTATION}
               sx={{ ml: 1 }}
               onClick={() => handleOpenMemo()}
             />
           ) : isSentenceAnnotation(annotation) ? (
-            <MemoButton
+            <MemoButtonNew
+              memoIds={annotation.memo_ids}
               attachedObjectId={annotation.id}
               attachedObjectType={AttachedObjectType.SENTENCE_ANNOTATION}
               sx={{ ml: 1 }}
               onClick={() => handleOpenMemo()}
             />
           ) : (
-            <MemoButton
+            <MemoButtonNew
+              memoIds={annotation.memo_ids}
               attachedObjectId={annotation.id}
               attachedObjectType={AttachedObjectType.SPAN_ANNOTATION}
               sx={{ ml: 1 }}
