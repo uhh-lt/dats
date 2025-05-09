@@ -40,11 +40,7 @@ class OllamaService(metaclass=SingletonMeta):
                 "vlm": "",
                 "emb": "",
             }
-            cls.__default_kwargs: ModelParams = {
-                "llm": {},
-                "vlm": {},
-                "emb": {}
-            }
+            cls.__default_kwargs: ModelParams = {"llm": {}, "vlm": {}, "emb": {}}
             cls.__client = ollamac
 
             # check if the configured models are available
@@ -246,11 +242,12 @@ class OllamaService(metaclass=SingletonMeta):
         inputs: list[str],
         options: Optional[Dict[str, str]] = None,
     ) -> np.ndarray:
-        
         if options is None:
             options = self.__default_kwargs["emb"]
 
-        response = self.__client.embed(model=self.__model["emb"], input=inputs, options=options)
+        response = self.__client.embed(
+            model=self.__model["emb"], input=inputs, options=options
+        )
         arr = np.array(response.embeddings)
 
         return arr

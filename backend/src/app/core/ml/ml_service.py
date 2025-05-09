@@ -141,17 +141,19 @@ class MLService(metaclass=SingletonMeta):
                     ), "DocumentEmbeddingParams expected"
                     recompute = mlj.parameters.specific_ml_job_parameters.recompute
                     filter_criterion = (
-                            and_(
-                                inactive_status,
-                                or_(
-                                    timestamp_column < start_time,
-                                    timestamp_column == None,  # noqa: E711
-                                ),
-                            )
-                            if recompute
-                            else or_(unfinished_status, timestamp_column == None)  # noqa: E711
+                        and_(
+                            inactive_status,
+                            or_(
+                                timestamp_column < start_time,
+                                timestamp_column == None,  # noqa: E711
+                            ),
                         )
-                    EmbeddingService().embed_documents(mlj.parameters.project_id, filter_criterion, recompute)
+                        if recompute
+                        else or_(unfinished_status, timestamp_column == None)  # noqa: E711
+                    )
+                    EmbeddingService().embed_documents(
+                        mlj.parameters.project_id, filter_criterion, recompute
+                    )
             mlj = self._update_ml_job(
                 ml_job_id, MLJobUpdate(status=BackgroundJobStatus.FINISHED)
             )

@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from app.core.data.crud.code import crud_code
 from app.core.data.crud.source_document_job_status import crud_sdoc_job_status
 from app.core.data.dto.source_document_job_status import SourceDocumentJobStatusCreate
 from app.core.data.llm.ollama_service import OllamaService
