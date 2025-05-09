@@ -3,7 +3,7 @@ import { useCallback, useState } from "react";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
-import MemoMenuItem from "../../Memo/MemoMenuItem.tsx";
+import MemoMenuItemNew from "../../Memo/MemoMenuItemNew.tsx";
 import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
 import CodeEditMenuItem from "./CodeEditMenuItem.tsx";
 import CodeToggleVisibilityMenuItem from "./CodeToggleVisibilityMenuItem.tsx";
@@ -31,7 +31,8 @@ function CodeExplorerActionMenu({ node }: CodeExplorerActionMenuProps) {
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
         <CodeToggleVisibilityMenuItem code={node} onClick={handleClose} />
         <CodeEditMenuItem code={node.data as CodeRead} onClick={handleClose} />
-        <MemoMenuItem
+        <MemoMenuItemNew
+          memoIds={node.data.memo_ids}
           attachedObjectId={node.data.id}
           attachedObjectType={AttachedObjectType.CODE}
           onClick={handleClose}

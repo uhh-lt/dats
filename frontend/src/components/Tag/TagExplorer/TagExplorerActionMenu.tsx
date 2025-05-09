@@ -2,7 +2,7 @@ import { IconButton, Menu } from "@mui/material";
 import { useCallback, useState } from "react";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
-import MemoMenuItem from "../../Memo/MemoMenuItem.tsx";
+import MemoMenuItemNew from "../../Memo/MemoMenuItemNew.tsx";
 import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
 import TagEditMenuItem from "./TagEditMenuItem.tsx";
 
@@ -29,7 +29,8 @@ function TagExplorerActionMenu({ node }: TagExplorerActionMenuProps) {
       <IconButton onClick={handleClick}>{getIconComponent(Icon.CONTEXT_MENU)}</IconButton>
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
         <TagEditMenuItem tag={node.data} onClick={handleClose} />
-        <MemoMenuItem
+        <MemoMenuItemNew
+          memoIds={node.data.memo_ids}
           attachedObjectId={node.data.id}
           attachedObjectType={AttachedObjectType.DOCUMENT_TAG}
           onClick={handleClose}

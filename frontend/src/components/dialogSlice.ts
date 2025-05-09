@@ -2,6 +2,7 @@ import { AlertProps } from "@mui/material";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
 import { ApproachRecommendation } from "../api/openapi/models/ApproachRecommendation.ts";
 import { ApproachType } from "../api/openapi/models/ApproachType.ts";
+import { AttachedObjectType } from "../api/openapi/models/AttachedObjectType.ts";
 import { CodeRead } from "../api/openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "../api/openapi/models/DocumentTagRead.ts";
 import { LLMJobRead } from "../api/openapi/models/LLMJobRead.ts";
@@ -13,8 +14,15 @@ import { TrainingParameters } from "../api/openapi/models/TrainingParameters.ts"
 import { SnackbarEvent } from "../components/SnackbarDialog/SnackbarEvent.ts";
 import { CodeCreateSuccessHandler } from "./Code/CodeCreateDialog.tsx";
 import { LLMAssistanceEvent } from "./LLMDialog/LLMEvent.ts";
+import { MemoCreateSuccessHandler } from "./Memo/MemoDialog/MemoDialogAPI.ts";
 
 interface DialogState {
+  // memos
+  isMemoDialogOpen: boolean;
+  memoIds: number[];
+  attachedObjectId?: number;
+  attachedObjectType: AttachedObjectType;
+  onMemoCreateSuccess?: MemoCreateSuccessHandler;
   // tags
   isTagCreateDialogOpen: boolean;
   tagName?: string;
@@ -67,6 +75,12 @@ interface DialogState {
 }
 
 const initialState: DialogState = {
+  // memos
+  isMemoDialogOpen: false,
+  memoIds: [],
+  attachedObjectId: undefined,
+  attachedObjectType: AttachedObjectType.CODE,
+  onMemoCreateSuccess: undefined,
   // tags
   isTagEditDialogOpen: false,
   isTagCreateDialogOpen: false,
@@ -133,6 +147,28 @@ export const dialogSlice = createSlice({
   name: "dialog",
   initialState,
   reducers: {
+    openMemoDialog: (
+      state,
+      action: PayloadAction<{
+        memoIds: number[];
+        attachedObjectType: AttachedObjectType;
+        attachedObjectId: number;
+        onMemoCreateSuccess?: MemoCreateSuccessHandler;
+      }>,
+    ) => {
+      state.isMemoDialogOpen = true;
+      state.memoIds = action.payload.memoIds;
+      state.attachedObjectType = action.payload.attachedObjectType;
+      state.attachedObjectId = action.payload.attachedObjectId;
+      state.onMemoCreateSuccess = action.payload.onMemoCreateSuccess;
+    },
+    closeMemoDialog: (state) => {
+      state.isMemoDialogOpen = false;
+      state.memoIds = [];
+      state.attachedObjectId = undefined;
+      state.attachedObjectType = AttachedObjectType.CODE;
+      state.onMemoCreateSuccess = undefined;
+    },
     openSpanAnnotationEditDialog: (
       state,
       action: PayloadAction<{ spanAnnotationIds: number[]; onEdit?: () => void }>,
