@@ -53,6 +53,7 @@ class SpanAnnotationRead(SpanAnnotationBaseDTO):
     group_ids: List[int] = Field(
         description="The group ids this span annotations belongs to"
     )
+    memo_ids: List[int] = Field(description="Memo IDs attached to the SpanAnnotation")
     model_config = ConfigDict(from_attributes=True)
 
 

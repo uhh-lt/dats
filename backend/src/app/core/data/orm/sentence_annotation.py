@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -81,3 +81,9 @@ class SentenceAnnotationORM(ORMBase):
     @property
     def sdoc_id(self):
         return self.annotation_document.source_document_id
+
+    @property
+    def memo_ids(self) -> List[int]:
+        if self.object_handle is None:
+            return []
+        return [memo.id for memo in self.object_handle.attached_memos]

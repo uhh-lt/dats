@@ -108,3 +108,9 @@ class SpanAnnotationORM(ORMBase):
     @property
     def group_ids(self):
         return [group.id for group in self.span_groups]
+
+    @property
+    def memo_ids(self) -> List[int]:
+        if self.object_handle is None:
+            return []
+        return [memo.id for memo in self.object_handle.attached_memos]

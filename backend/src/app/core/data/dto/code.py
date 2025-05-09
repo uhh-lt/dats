@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -48,4 +48,5 @@ class CodeRead(CodeBaseDTO):
     created: datetime = Field(description="Created timestamp of the Code")
     updated: datetime = Field(description="Updated timestamp of the Code")
     is_system: bool = Field(description="Is the Code a system code")
+    memo_ids: List[int] = Field(description="Memo IDs attached to the Code")
     model_config = ConfigDict(from_attributes=True)
