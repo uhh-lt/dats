@@ -35,4 +35,8 @@ export type SentenceAnnotationRead = {
    * Updated timestamp of the SentenceAnnotation
    */
   updated: string;
+  /**
+   * Memo IDs attached to the SentenceAnnotation
+   */
+  memo_ids: Array<number>;
 };

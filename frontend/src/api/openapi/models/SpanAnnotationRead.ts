@@ -51,4 +51,8 @@ export type SpanAnnotationRead = {
    * The group ids this span annotations belongs to
    */
   group_ids: Array<number>;
+  /**
+   * Memo IDs attached to the SpanAnnotation
+   */
+  memo_ids: Array<number>;
 };

@@ -5836,10 +5836,28 @@
             "format": "date-time",
             "title": "Updated",
             "description": "Updated timestamp of the BBoxAnnotation"
+          },
+          "memo_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Memo Ids",
+            "description": "Memo IDs attached to the BBoxAnnotation"
           }
         },
         "type": "object",
-        "required": ["x_min", "x_max", "y_min", "y_max", "id", "code_id", "user_id", "sdoc_id", "created", "updated"],
+        "required": [
+          "x_min",
+          "x_max",
+          "y_min",
+          "y_max",
+          "id",
+          "code_id",
+          "user_id",
+          "sdoc_id",
+          "created",
+          "updated",
+          "memo_ids"
+        ],
         "title": "BBoxAnnotationRead"
       },
       "BBoxAnnotationRow": {
@@ -6854,10 +6872,16 @@
             "format": "date-time",
             "title": "Updated",
             "description": "Updated timestamp of the DocumentTag"
+          },
+          "memo_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Memo Ids",
+            "description": "Memo IDs attached to the DocumentTag"
           }
         },
         "type": "object",
-        "required": ["name", "color", "id", "project_id", "created", "updated"],
+        "required": ["name", "color", "id", "project_id", "created", "updated", "memo_ids"],
         "title": "DocumentTagRead"
       },
       "DocumentTagRecommendationLinkRead": {
@@ -8911,6 +8935,12 @@
             "format": "date-time",
             "title": "Updated",
             "description": "Updated timestamp of the SentenceAnnotation"
+          },
+          "memo_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Memo Ids",
+            "description": "Memo IDs attached to the SentenceAnnotation"
           }
         },
         "type": "object",
@@ -8922,7 +8952,8 @@
           "user_id",
           "sdoc_id",
           "created",
-          "updated"
+          "updated",
+          "memo_ids"
         ],
         "title": "SentenceAnnotationRead"
       },
@@ -9657,6 +9688,12 @@
             "type": "array",
             "title": "Group Ids",
             "description": "The group ids this span annotations belongs to"
+          },
+          "memo_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Memo Ids",
+            "description": "Memo IDs attached to the SpanAnnotation"
           }
         },
         "type": "object",
@@ -9672,7 +9709,8 @@
           "sdoc_id",
           "created",
           "updated",
-          "group_ids"
+          "group_ids",
+          "memo_ids"
         ],
         "title": "SpanAnnotationRead"
       },

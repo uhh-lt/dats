@@ -43,4 +43,8 @@ export type CodeRead = {
    * Is the Code a system code
    */
   is_system: boolean;
+  /**
+   * Memo IDs attached to the Code
+   */
+  memo_ids: Array<number>;
 };

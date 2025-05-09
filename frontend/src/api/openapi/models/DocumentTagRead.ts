@@ -35,4 +35,8 @@ export type DocumentTagRead = {
    * Updated timestamp of the DocumentTag
    */
   updated: string;
+  /**
+   * Memo IDs attached to the DocumentTag
+   */
+  memo_ids: Array<number>;
 };
