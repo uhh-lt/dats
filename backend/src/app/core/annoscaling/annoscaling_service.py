@@ -186,10 +186,3 @@ class AnnoScalingService(metaclass=SingletonMeta):
 
     def __overlap(self, s1: int, e1: int, s2: int, e2: int):
         return max(min(e1, e2) - max(s1, s2), 0)
-        return max(min(e1, e2) - max(s1, s2), 0)
-        return max(min(e1, e2) - max(s1, s2), 0)
-        return max(min(e1, e2) - max(s1, s2), 0)
-        return max(min(e1, e2) - max(s1, s2), 0)
-        return max(min(e1, e2) - max(s1, s2), 0)
-        return max(min(e1, e2) - max(s1, s2), 0)
-        return max(min(e1, e2) - max(s1, s2), 0)

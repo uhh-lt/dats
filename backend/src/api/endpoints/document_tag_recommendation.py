@@ -1,9 +1,7 @@
 from typing import Dict, List
 
 from app.core.authorization.authz_user import AuthzUser
-from app.core.data.crud.document_tag import (
-    crud_document_tag,
-)
+from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.document_tag_recommendation import (
     crud_document_tag_recommendation_link,
 )
@@ -13,10 +11,7 @@ from app.core.data.dto.document_tag_recommendation import (
     DocumentTagRecommendationLinkUpdate,
     DocumentTagRecommendationResult,
 )
-from app.core.data.dto.ml_job import (
-    MLJobRead,
-    MLJobType,
-)
+from app.core.data.dto.ml_job import MLJobRead, MLJobType
 from app.core.data.orm.document_tag_recommendation import (
     DocumentTagRecommendationLinkORM,
 )
@@ -77,6 +72,10 @@ def get_all_doctagrecommendations_from_job(
     recommendations = crud_document_tag_recommendation_link.read_by_ml_job_id(
         db=db, ml_job_id=ml_job_id, exclude_reviewed=True
     )
+    if len(recommendations) > 0:
+        authz_user.assert_in_project(recommendations[0].source_document.project_id)
+    else:
+        return []
 
     sdoc2recommendations: Dict[int, List[DocumentTagRecommendationLinkORM]] = {}
     for recommendation in recommendations:
@@ -89,7 +88,7 @@ def get_all_doctagrecommendations_from_job(
         db=db, sdoc_ids=affected_sdoc_ids
     )
 
-    return [
+    results = [
         DocumentTagRecommendationResult(
             sdoc_id=sdoc_id,
             recommendation_ids=[
@@ -99,9 +98,13 @@ def get_all_doctagrecommendations_from_job(
             suggested_tag_ids=[
                 recommendation.predicted_tag_id for recommendation in recommendations
             ],
+            scores=[
+                recommendation.prediction_score for recommendation in recommendations
+            ],
         )
         for sdoc_id, recommendations in sdoc2recommendations.items()
     ]
+    return results
 
 
 @router.patch(
@@ -123,4 +126,5 @@ def update_recommendations(
             for _ in reviewd_recommendation_ids
         ],
     )
+    return [DocumentTagRecommendationLinkRead.model_validate(m) for m in modifications]
     return [DocumentTagRecommendationLinkRead.model_validate(m) for m in modifications]

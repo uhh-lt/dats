@@ -237,24 +237,32 @@ class CRUDSourceDocument(
         ]
 
     def read_all_without_tags(
-        self, db: Session, *, project_id: int
+        self, db: Session, *, project_id: int, tag_ids: List[int] = []
     ) -> List[SourceDocumentORM]:
         return (
             db.query(SourceDocumentORM)
             .filter(SourceDocumentORM.project_id == project_id)
             .outerjoin(SourceDocumentORM.document_tags)
-            .filter(SourceDocumentORM.document_tags == None)  # noqa: E711
+            .filter(
+                SourceDocumentORM.document_tags == None  # noqa: E711
+                if len(tag_ids) == 0
+                else DocumentTagORM.id.notin_(tag_ids)
+            )
             .all()
         )
 
     def read_all_with_tags(
-        self, db: Session, *, project_id: int
+        self, db: Session, *, project_id: int, tag_ids: List[int] = []
     ) -> List[SourceDocumentORM]:
         return (
             db.query(SourceDocumentORM)
             .filter(SourceDocumentORM.project_id == project_id)
             .join(SourceDocumentORM.document_tags)
-            .filter(SourceDocumentORM.document_tags != None)  # noqa: E711
+            .filter(
+                SourceDocumentORM.document_tags != None  # noqa: E711
+                if len(tag_ids) == 0
+                else DocumentTagORM.id.in_(tag_ids)
+            )
             .all()
         )
 

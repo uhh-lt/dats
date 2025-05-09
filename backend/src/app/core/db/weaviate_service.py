@@ -1,7 +1,8 @@
-from typing import List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import weaviate
+import weaviate.gql
 from config import conf
 from loguru import logger
 
@@ -12,6 +13,17 @@ from app.core.data.dto.search import (
 )
 from app.core.db.index_type import IndexType
 from app.core.db.vector_index_service import VectorIndexService
+
+
+class WeaviateError(RuntimeError):
+    pass
+
+
+class WeaviateVectorLengthError(WeaviateError):
+    def __init__(self):
+        super().__init__(
+            "New embedding vector lengths are different from already indexed vectors!"
+        )
 
 
 class WeaviateService(VectorIndexService):
@@ -69,7 +81,7 @@ class WeaviateService(VectorIndexService):
             "name": cls._document_class_name,
             "fields": [
                 {"name": "text", "type": "string"},
-                {"name": "vec", "type": "float[]", "num_dim": 512},
+                {"name": "vec", "type": "float[]", "num_dim": 1024},
                 {"name": "project_id", "type": "int32"},
                 {"name": "sdoc_id", "type": "int32"},
             ],
@@ -165,13 +177,34 @@ class WeaviateService(VectorIndexService):
         return super(WeaviateService, cls).__new__(cls)
 
     def add_embeddings_to_index(
-        self, type: IndexType, proj_id: int, sdoc_id: int, embeddings: List[np.ndarray]
+        self,
+        type: IndexType,
+        proj_id: int,
+        sdoc_ids: Iterable[int],
+        embeddings: List[np.ndarray],
     ):
         logger.debug(
-            f"Adding {type} SDoc {sdoc_id} in Project {proj_id} to Weaviate ..."
+            f"Adding {type} SDocs {sdoc_ids} in Project {proj_id} to Weaviate ..."
         )
-        with self._client.batch as batch:
-            for sent_id, sent_emb in enumerate(embeddings):
+
+        def check_batch_result(
+            results: Optional[List[Dict[str, Any]]],
+        ) -> None:
+            if results is None:
+                return
+            for result in results:
+                if "result" in result and "errors" in result["result"]:
+                    if "error" in result["result"]["errors"]:
+                        error = result["result"]["errors"]["error"]
+                        if len(error) > 0 and "vector lengths don't match" in error[
+                            0
+                        ].get("message", ""):
+                            raise WeaviateVectorLengthError()
+                        else:
+                            raise WeaviateError(result["result"]["errors"])
+
+        with self._client.batch(callback=check_batch_result) as batch:
+            for sent_id, (sdoc_id, emb) in enumerate(zip(sdoc_ids, embeddings)):
                 if type == IndexType.SENTENCE:
                     data_object = {
                         "project_id": proj_id,
@@ -187,7 +220,7 @@ class WeaviateService(VectorIndexService):
                 batch.add_data_object(
                     data_object,
                     class_name=self.class_names[type],
-                    vector=sent_emb,  # type: ignore
+                    vector=emb,  # type: ignore
                 )
 
     def remove_embeddings_from_index(self, type: IndexType, sdoc_id: int):
@@ -394,15 +427,15 @@ class WeaviateService(VectorIndexService):
 
     def suggest(
         self,
-        data_ids: Union[List[int], List[Tuple[int, int]]],
+        data_ids: Union[Iterable[int], Iterable[Tuple[int, int]]],
         proj_id: int,
         top_k: int,
         index_type: IndexType = IndexType.DOCUMENT,
     ) -> Union[List[SimSearchDocumentHit], List[SimSearchSentenceHit]]:
         match index_type:
             case IndexType.DOCUMENT:
-                assert isinstance(data_ids, List)
-                assert isinstance(data_ids[0], int)
+                assert isinstance(data_ids, Iterable)
+                assert isinstance(next(iter(data_ids)), int)
                 if not all(isinstance(i, int) for i in data_ids):
                     raise ValueError(
                         "Expected a list of integers for DOCUMENT index type"
@@ -428,18 +461,12 @@ class WeaviateService(VectorIndexService):
     def _suggest_similar_sentences(
         self,
         proj_id: int,
-        sdoc_sent_ids: List[Tuple[int, int]],
+        sdoc_sent_ids: Iterable[Tuple[int, int]],
         top_k: int,
         index_type: IndexType,
     ) -> List[SimSearchSentenceHit]:
-        obj_ids = [
-            # TODO weaviate does not support batch/bulk queries.
-            # need some other solution as this is dead-slow for many objects
-            self._get_object_id(
-                index_type=index_type, proj_id=proj_id, sdoc_id=sdoc, sentence_id=sent
-            )
-            for sdoc, sent in sdoc_sent_ids
-        ]
+        sdoc_ids, sent_ids = zip(*sdoc_sent_ids)
+        obj_ids = self._get_object_ids(proj_id, sdoc_ids, index_type, sent_ids)
 
         project_filter = {
             "path": ["project_id"],
@@ -479,29 +506,29 @@ class WeaviateService(VectorIndexService):
     def _suggest_similar_documents(
         self,
         proj_id: int,
-        sdoc_ids: List[int],
+        sdoc_ids: Sequence[int],
         top_k: int,
         index_type: IndexType,
     ) -> List[SimSearchDocumentHit]:
-        #
-        obj_ids = [
-            # Since document-level embeddings are stored using the same method
-            # as sentence embeddings, we use _get_sentence_object_ids_by_sdoc_id_sentence_id
-            # to retrieve the Weaviate object ID. To ensure we get the document-level
-            # representation, we arbitrarily pass sentence_id = 0, as this applies
-            # to the entire document embedding.
-            self._get_object_id(
-                index_type=index_type,
-                proj_id=proj_id,
-                sdoc_id=sdoc_id,
-                sentence_id=None,
-            )
-            for sdoc_id in sdoc_ids
-        ]
+        obj_ids = self._get_object_ids(proj_id, sdoc_ids, index_type)
         project_filter = {
-            "path": ["project_id"],
+            "path": "project_id",
             "operator": "Equal",
             "valueInt": proj_id,
+        }
+
+        exclude_self_filter = {
+            "path": "id",
+            "operator": "NotEqual",
+            "valueText": None,
+        }
+
+        combined_filter = {
+            "operator": "And",
+            "operands": [
+                project_filter,
+                exclude_self_filter,
+            ],
         }
 
         hits: List[SimSearchDocumentHit] = []
@@ -514,17 +541,16 @@ class WeaviateService(VectorIndexService):
                 self._document_props,
             )
 
+            exclude_self_filter["valueText"] = obj
+
             query = (
                 query.with_near_object({"id": obj})
                 .with_additional(["certainty"])
-                .with_where(project_filter)
+                .with_where(combined_filter)
                 .with_limit(top_k)
             )
 
             res = query.do()["data"]["Get"][self._document_class_name]
-            if res is None:
-                print("IsNone")
-                continue
             for r in res:
                 hits.append(
                     SimSearchDocumentHit(
@@ -535,13 +561,14 @@ class WeaviateService(VectorIndexService):
                 )
         return hits
 
-    def _get_object_id(
+    def _build_object_id_request(
         self,
         proj_id: int,
         sdoc_id: int,
-        sentence_id: Optional[int],
+        alias: str,
         index_type: IndexType,
-    ) -> str:
+        sentence_id: Optional[int] = None,
+    ) -> weaviate.gql.query.GetBuilder:
         object_class_name = ""
         id = ""
         id_filter = {
@@ -578,18 +605,45 @@ class WeaviateService(VectorIndexService):
             case IndexType.NAMED_ENTITY:
                 raise ValueError("Named Entities are not supported.")
 
-        response = (
+        req = (
             self._client.query.get(object_class_name, [id])
             .with_where(id_filter)
             .with_additional("id")
-            .do()
+            .with_alias(alias)
         )
-        if len(response["data"]["Get"][object_class_name]) == 0:
-            msg = f"No {object_class_name} embedding for SDoc {sdoc_id} found!"
-            logger.error(msg)
-            raise KeyError(msg)
+        return req
 
-        return response["data"]["Get"][object_class_name][0]["_additional"]["id"]
+    def _get_object_ids(
+        self,
+        proj_id: int,
+        sdoc_ids: Sequence[int],
+        index_type: IndexType,
+        sentence_ids: Optional[Iterable[int]] = None,
+    ) -> List[str]:
+        aliases = [f"doc_{id}" for id in range(len(sdoc_ids))]
+
+        requests = (
+            [
+                self._build_object_id_request(proj_id, sdoc_id, alias, index_type)
+                for sdoc_id, alias in zip(sdoc_ids, aliases)
+            ]
+            if sentence_ids is None
+            else [
+                self._build_object_id_request(
+                    proj_id, sdoc_id, alias, index_type, sent_id
+                )
+                for sdoc_id, sent_id, alias in zip(sdoc_ids, sentence_ids, aliases)
+            ]
+        )
+
+        try:
+            response = self._client.query.multi_get(requests).do()
+        except Exception as e:
+            raise e
+
+        results = response["data"]["Get"]
+
+        return [results[alias][0]["_additional"]["id"] for alias in aliases]
 
     def get_sentence_embeddings_by_sdoc_id(self, sdoc_id: int) -> np.ndarray:
         query = (
@@ -779,3 +833,74 @@ class WeaviateService(VectorIndexService):
         for name in self.class_names.values():
             if self._client.schema.exists(name):
                 self._client.schema.delete_class(name)
+
+    def knn(self, proj_id, index_type, sdoc_ids_to_search, sdoc_ids_known, k=5):
+        obj_ids = self._get_object_ids(proj_id, sdoc_ids_to_search, index_type)
+
+        project_filter = {
+            "path": "project_id",
+            "operator": "Equal",
+            "valueInt": proj_id,
+        }
+
+        allowed_documents_filter = {
+            "path": "sdoc_id",
+            "operator": "ContainsAny",
+            "valueInt": list(sdoc_ids_known),
+        }
+
+        combined_filter = {
+            "operator": "And",
+            "operands": [
+                project_filter,
+                allowed_documents_filter,
+            ],
+        }
+
+        aliases = [f"doc_{id}" for id in sdoc_ids_to_search]
+        queries: list[weaviate.gql.query.GetBuilder] = []
+
+        for a, obj, sdoc_id in zip(aliases, obj_ids, sdoc_ids_to_search):
+            query = self._client.query.get(
+                self._document_class_name,
+                self._document_props,
+            )
+
+            query = (
+                query.with_near_object({"id": obj})
+                .with_additional(["certainty"])
+                .with_where(combined_filter)
+                .with_limit(k)
+                .with_alias(a)
+            )
+
+            queries.append(query)
+
+        response = self._client.query.multi_get(queries).do()
+
+        res = response["data"]["Get"]
+        hits: List[List[SimSearchDocumentHit]] = []
+        for a, sdoc_id in zip(aliases, sdoc_ids_to_search):
+            l = []
+            for r in res[a]:
+                l.append(
+                    SimSearchDocumentHit(
+                        sdoc_id=r["sdoc_id"],
+                        score=r["_additional"]["certainty"],
+                        compared_sdoc_id=sdoc_id,
+                    )
+                )
+            hits.append(l)
+        return hits
+
+    def remove_project_index(self, proj_id, type):
+        name = self.class_names[type]
+        if self._client.schema.exists(name):
+            self._client.batch.delete_objects(
+                class_name=name,
+                where={
+                    "path": ["project_id"],
+                    "operator": "Equal",
+                    "valueInt": proj_id,
+                },
+            )
