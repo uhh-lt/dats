@@ -3,10 +3,26 @@ import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import SquareOutlinedIcon from "@mui/icons-material/SquareOutlined";
 import StickyNote2Icon from "@mui/icons-material/StickyNote2";
 import TitleIcon from "@mui/icons-material/Title";
-import { Grid2 as Grid, IconButton, Menu, Tooltip } from "@mui/material";
+import { Box, IconButton, Menu, MenuItem, Tooltip } from "@mui/material";
 import { useState } from "react";
 import { Node } from "reactflow";
 import { BorderData } from "../../types/base/BorderData";
+
+enum NodeType {
+  TEXT = "text",
+  NOTE = "note",
+  ELLIPSE = "ellipse",
+  RECTANGLE = "rectangle",
+  ROUNDED = "rounded",
+}
+
+const NodeTypeIconMap = {
+  [NodeType.TEXT]: <TitleIcon />,
+  [NodeType.NOTE]: <StickyNote2Icon />,
+  [NodeType.ELLIPSE]: <RadioButtonUncheckedIcon />,
+  [NodeType.RECTANGLE]: <SquareOutlinedIcon />,
+  [NodeType.ROUNDED]: <CheckBoxOutlineBlankIcon />,
+};
 
 interface NodeChangeToolProps {
   onNodeTypeChange: (nodeType: string) => void;
@@ -48,19 +64,6 @@ const NodeChangeTool: React.FC<NodeChangeToolProps> = ({ onNodeTypeChange, node 
     return false;
   };
 
-  // Common style for icon buttons
-  const getIconStyle = (nodeType: string) => ({
-    cursor: "pointer",
-    transition: "all 0.2s ease",
-    color: isNodeTypeActive(nodeType) ? "primary.main" : "inherit",
-    backgroundColor: isNodeTypeActive(nodeType) ? "action.selected" : "transparent",
-    borderRadius: "4px",
-    "&:hover": {
-      transform: "scale(1.2)",
-      backgroundColor: "action.hover",
-    },
-  });
-
   // Get the appropriate icon based on node type and shape
   const getNodeTypeIcon = () => {
     if (!node) return <CheckBoxOutlineBlankIcon />;
@@ -92,7 +95,12 @@ const NodeChangeTool: React.FC<NodeChangeToolProps> = ({ onNodeTypeChange, node 
       <Tooltip title="Change Node Type" arrow disableHoverListener={open}>
         <IconButton
           size="large"
-          sx={{ color: "black", mr: 1, "&:hover": { color: "black", backgroundColor: "transparent" } }}
+          sx={{
+            color: "black",
+            mr: 1,
+            borderRadius: "0px",
+            "&:hover": { color: "black", backgroundColor: "transparent" },
+          }}
           onClick={handleMenuOpen}
         >
           {getNodeTypeIcon()}
@@ -111,52 +119,48 @@ const NodeChangeTool: React.FC<NodeChangeToolProps> = ({ onNodeTypeChange, node 
           horizontal: "center",
         }}
         sx={{
-          "& .MuiPaper-root": { boxShadow: 1, mt: 1.8 },
+          "& .MuiPaper-root": {
+            boxShadow: 1,
+            mt: 1.8,
+            p: 0,
+            width: "140px",
+          },
+          "& .MuiList-root": { p: 0 },
         }}
       >
-        <Grid container columns={3} sx={{ justifyContent: "start", px: 1.2, gap: 0 }}>
-          <Grid size={{ xs: 1 }} sx={{ display: "flex", justifyContent: "center", pt: 0.5 }}>
-            <Tooltip title="Text" arrow>
-              <TitleIcon fontSize="medium" onClick={() => handleNodeTypeChange("text")} sx={getIconStyle("text")} />
-            </Tooltip>
-          </Grid>
-          <Grid size={{ xs: 1 }} sx={{ display: "flex", justifyContent: "center", pt: 0.5 }}>
-            <Tooltip title="Note" arrow>
-              <StickyNote2Icon
-                fontSize="medium"
-                onClick={() => handleNodeTypeChange("note")}
-                sx={getIconStyle("note")}
-              />
-            </Tooltip>
-          </Grid>
-          <Grid size={{ xs: 1 }} sx={{ display: "flex", justifyContent: "center", pt: 0.5 }}>
-            <Tooltip title="Ellipse" arrow>
-              <RadioButtonUncheckedIcon
-                fontSize="medium"
-                onClick={() => handleNodeTypeChange("ellipse")}
-                sx={getIconStyle("ellipse")}
-              />
-            </Tooltip>
-          </Grid>
-          <Grid size={{ xs: 1 }} sx={{ display: "flex", justifyContent: "center", pt: 0.5 }}>
-            <Tooltip title="Rectangle" arrow>
-              <SquareOutlinedIcon
-                fontSize="medium"
-                onClick={() => handleNodeTypeChange("rectangle")}
-                sx={getIconStyle("rectangle")}
-              />
-            </Tooltip>
-          </Grid>
-          <Grid size={{ xs: 1 }} sx={{ display: "flex", justifyContent: "center", pt: 0.5 }}>
-            <Tooltip title="Rounded" arrow>
-              <CheckBoxOutlineBlankIcon
-                fontSize="medium"
-                onClick={() => handleNodeTypeChange("rounded")}
-                sx={getIconStyle("rounded")}
-              />
-            </Tooltip>
-          </Grid>
-        </Grid>
+        <Box sx={{ display: "flex", flexWrap: "wrap", width: "100%", p: 0, m: 0 }}>
+          {Object.values(NodeType).map((type) => {
+            const icon = NodeTypeIconMap[type];
+            return (
+              <Box
+                key={type}
+                sx={{
+                  width: "33.33%",
+                  display: "flex",
+                  justifyContent: "center",
+                  p: 0,
+                  m: 0,
+                }}
+              >
+                <Tooltip title={type} arrow>
+                  <MenuItem
+                    selected={isNodeTypeActive(type)}
+                    onClick={() => handleNodeTypeChange(type)}
+                    sx={{
+                      p: 1,
+                      m: 0,
+                      minWidth: "auto",
+                      width: "100%",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {icon}
+                  </MenuItem>
+                </Tooltip>
+              </Box>
+            );
+          })}
+        </Box>
       </Menu>
     </>
   );
