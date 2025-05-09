@@ -43,6 +43,7 @@ class DocumentTagRead(DocumentTagBaseDTO):
     project_id: int = Field(description="Project the DocumentTag belongs to")
     created: datetime = Field(description="Created timestamp of the DocumentTag")
     updated: datetime = Field(description="Updated timestamp of the DocumentTag")
+    memo_ids: List[int] = Field(description="Memo IDs attached to the DocumentTag")
     model_config = ConfigDict(from_attributes=True)
 
 

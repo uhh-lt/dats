@@ -83,3 +83,9 @@ class CodeORM(ORMBase):
             name="UC_code_name_unique_per_project",
         ),
     )
+
+    @property
+    def memo_ids(self) -> List[int]:
+        if self.object_handle is None:
+            return []
+        return [memo.id for memo in self.object_handle.attached_memos]

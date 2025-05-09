@@ -49,6 +49,9 @@ class SentenceAnnotationRead(SentenceAnnotationBaseDTO):
     sdoc_id: int = Field(description="SourceDocument the SentenceAnnotation refers to")
     created: datetime = Field(description="Created timestamp of the SentenceAnnotation")
     updated: datetime = Field(description="Updated timestamp of the SentenceAnnotation")
+    memo_ids: List[int] = Field(
+        description="Memo IDs attached to the SentenceAnnotation"
+    )
     model_config = ConfigDict(from_attributes=True)
 
 
