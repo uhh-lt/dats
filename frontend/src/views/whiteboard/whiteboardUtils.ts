@@ -25,6 +25,26 @@ import { theme } from "../../plugins/ReactMUI.ts";
 
 const positionOffset = 50;
 
+export const FONT_FAMILIES = ["Arial", "Times New Roman", "Courier New", "Verdana", "Georgia"];
+
+export const PREDEFINED_COLORS = [
+  "#ffffff", // White
+  "#000000", // Black
+  "#ff0000", // Red
+  "#00ff00", // Green
+  "#0000ff", // Blue
+  "#ffff00", // Yellow
+  "#ff00ff", // Magenta
+  "#00ffff", // Cyan
+  "#808080", // Gray
+  "#800000", // Maroon
+  "#808000", // Olive
+  "#008000", // Dark Green
+  "#800080", // Purple
+  "#008080", // Teal
+  "#000080", // Navy
+];
+
 export const defaultDatabaseEdgeOptions: DefaultEdgeOptions = {
   style: { strokeWidth: 3, stroke: theme.palette.grey[400] },
   type: "floating",

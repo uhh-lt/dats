@@ -3,12 +3,12 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { Box, Menu, MenuItem, Tooltip, Typography } from "@mui/material";
 import { useRef, useState } from "react";
 
-interface TypographyVariantToolProps {
-  variant: number | undefined;
-  onVariantChange: (variant: number) => void;
+interface FontSizeToolProps {
+  size: number | undefined;
+  onSizeChange: (size: number) => void;
 }
 
-function TypographyVariantTool({ variant, onVariantChange }: TypographyVariantToolProps) {
+const FontSizeTool: React.FC<FontSizeToolProps> = ({ size, onSizeChange }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const inputRef = useRef<HTMLDivElement>(null);
   const defaultSize = 16;
@@ -24,37 +24,37 @@ function TypographyVariantTool({ variant, onVariantChange }: TypographyVariantTo
   };
 
   const handleMenuItemClick = (size: number) => {
-    onVariantChange(size);
+    onSizeChange(size);
     handleClose();
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    const currentSize = variant || defaultSize;
+    const currentSize = size || defaultSize;
 
     if (event.key === "ArrowUp") {
       event.preventDefault();
       if (currentSize < maxSize) {
-        onVariantChange(currentSize + 1);
+        onSizeChange(currentSize + 1);
       }
     } else if (event.key === "ArrowDown") {
       event.preventDefault();
       if (currentSize > minSize) {
-        onVariantChange(currentSize - 1);
+        onSizeChange(currentSize - 1);
       }
     }
   };
 
   const handleIncreaseFontSize = () => {
-    const currentSize = variant || defaultSize;
+    const currentSize = size || defaultSize;
     if (currentSize < maxSize) {
-      onVariantChange(currentSize + 1);
+      onSizeChange(currentSize + 1);
     }
   };
 
   const handleDecreaseFontSize = () => {
-    const currentSize = variant || defaultSize;
+    const currentSize = size || defaultSize;
     if (currentSize > minSize) {
-      onVariantChange(currentSize - 1);
+      onSizeChange(currentSize - 1);
     }
   };
 
@@ -77,7 +77,7 @@ function TypographyVariantTool({ variant, onVariantChange }: TypographyVariantTo
           }}
         >
           <Typography variant="body2" sx={{ flex: 1 }}>
-            {variant || defaultSize}
+            {size || defaultSize}
           </Typography>
           <Box
             sx={{
@@ -112,14 +112,14 @@ function TypographyVariantTool({ variant, onVariantChange }: TypographyVariantTo
           },
         }}
       >
-        {Array.from({ length: maxSize - minSize + 1 }, (_, i) => minSize + i).map((size) => (
+        {Array.from({ length: maxSize - minSize + 1 }, (_, i) => minSize + i).map((fontSize) => (
           <MenuItem
-            key={size}
-            onClick={() => handleMenuItemClick(size)}
-            selected={size === variant}
+            key={fontSize}
+            onClick={() => handleMenuItemClick(fontSize)}
+            selected={size === fontSize}
             sx={{ px: 2, py: 0.5 }}
           >
-            <Typography>{size}</Typography>
+            <Typography>{fontSize}</Typography>
           </MenuItem>
         ))}
       </Menu>
@@ -163,6 +163,6 @@ function TypographyVariantTool({ variant, onVariantChange }: TypographyVariantTo
       </Box>
     </>
   );
-}
+};
 
-export default TypographyVariantTool;
+export default FontSizeTool;

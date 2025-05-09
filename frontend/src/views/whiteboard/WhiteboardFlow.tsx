@@ -10,8 +10,6 @@ import {
   Background,
   Connection,
   ConnectionMode,
-  ControlButton,
-  Controls,
   DefaultEdgeOptions,
   Edge,
   IsValidConnection,
@@ -649,16 +647,6 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
               </>
             )}
             <Background />
-            <Controls>
-              <ControlButton onClick={handleExportWhiteboard}>
-                <SaveAltIcon
-                  style={{
-                    maxWidth: "16px",
-                    maxHeight: "24px",
-                  }}
-                />
-              </ControlButton>
-            </Controls>
             <MiniMap />
           </ReactFlow>
         </Box>
