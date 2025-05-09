@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from typing import Iterable, List, Tuple, Union, overload
 
 import numpy as np
-
 from app.core.data.dto.search import SimSearchDocumentHit, SimSearchSentenceHit
 from app.core.db.index_type import IndexType
 from app.util.singleton_meta import SingletonMeta
@@ -14,7 +13,7 @@ class VectorIndexService(ABC, metaclass=SingletonMeta):
         self,
         type: IndexType,
         proj_id: int,
-        sdoc_id: int,
+        sdoc_id: Iterable[int],
         embeddings: Iterable[np.ndarray],
     ):
         pass
@@ -25,6 +24,10 @@ class VectorIndexService(ABC, metaclass=SingletonMeta):
 
     @abstractmethod
     def remove_project_from_index(self, proj_id: int):
+        pass
+
+    @abstractmethod
+    def remove_project_index(self, proj_id: int, type: IndexType):
         pass
 
     @abstractmethod
@@ -39,10 +42,20 @@ class VectorIndexService(ABC, metaclass=SingletonMeta):
     ) -> List[SimSearchSentenceHit]:
         pass
 
+    @abstractmethod
+    def knn(
+        self,
+        proj_id: int,
+        index_type: IndexType,
+        sdoc_ids_to_search: Iterable[int],
+        sdoc_ids_known: Iterable[int],
+        k: int = 3,
+    ) -> List[List[SimSearchDocumentHit]]: ...
+
     @overload
     def suggest(
         self,
-        data_ids: List[Tuple[int, int]],
+        data_ids: Iterable[Tuple[int, int]],
         proj_id: int,
         top_k: int,
         index_type: IndexType = IndexType.SENTENCE,
@@ -50,7 +63,7 @@ class VectorIndexService(ABC, metaclass=SingletonMeta):
     @overload
     def suggest(
         self,
-        data_ids: List[int],
+        data_ids: Iterable[int],
         proj_id: int,
         top_k: int,
         index_type: IndexType = IndexType.DOCUMENT,
@@ -58,7 +71,7 @@ class VectorIndexService(ABC, metaclass=SingletonMeta):
     @abstractmethod
     def suggest(
         self,
-        data_ids: Union[List[int], List[Tuple[int, int]]],
+        data_ids: Union[Iterable[int], Iterable[Tuple[int, int]]],
         proj_id: int,
         top_k: int,
         index_type: IndexType = IndexType.DOCUMENT,

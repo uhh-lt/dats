@@ -1,8 +1,5 @@
 from typing import Dict, List, Optional
 
-from sqlalchemy import and_, desc, func, or_
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
 from app.core.data.dto.source_document import (
     SDocStatus,
@@ -19,6 +16,8 @@ from app.core.data.orm.source_document_link import SourceDocumentLinkORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.elasticsearch_service import ElasticSearchService
 from app.core.db.sql_utils import aggregate_ids
+from sqlalchemy import and_, desc, func, or_
+from sqlalchemy.orm import Session
 
 
 class SourceDocumentPreprocessingUnfinishedError(Exception):
@@ -237,24 +236,32 @@ class CRUDSourceDocument(
         ]
 
     def read_all_without_tags(
-        self, db: Session, *, project_id: int
+        self, db: Session, *, project_id: int, tag_ids: List[int] = []
     ) -> List[SourceDocumentORM]:
         return (
             db.query(SourceDocumentORM)
             .filter(SourceDocumentORM.project_id == project_id)
             .outerjoin(SourceDocumentORM.document_tags)
-            .filter(SourceDocumentORM.document_tags == None)  # noqa: E711
+            .filter(
+                SourceDocumentORM.document_tags == None  # noqa: E711
+                if len(tag_ids) == 0
+                else DocumentTagORM.id.notin_(tag_ids)
+            )
             .all()
         )
 
     def read_all_with_tags(
-        self, db: Session, *, project_id: int
+        self, db: Session, *, project_id: int, tag_ids: List[int] = []
     ) -> List[SourceDocumentORM]:
         return (
             db.query(SourceDocumentORM)
             .filter(SourceDocumentORM.project_id == project_id)
             .join(SourceDocumentORM.document_tags)
-            .filter(SourceDocumentORM.document_tags != None)  # noqa: E711
+            .filter(
+                SourceDocumentORM.document_tags != None  # noqa: E711
+                if len(tag_ids) == 0
+                else DocumentTagORM.id.in_(tag_ids)
+            )
             .all()
         )
 

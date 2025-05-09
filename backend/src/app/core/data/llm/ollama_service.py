@@ -2,6 +2,7 @@ import time
 from typing import Dict, List, Optional, Tuple, Type, TypedDict, TypeVar
 from uuid import uuid4
 
+import numpy as np
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 from loguru import logger
@@ -14,11 +15,13 @@ T = TypeVar("T", bound=BaseModel)
 class ModelDict(TypedDict):
     llm: str
     vlm: str
+    emb: str
 
 
 class ModelParams(TypedDict):
     llm: Dict
     vlm: Dict
+    emb: Dict
 
 
 class OllamaService(metaclass=SingletonMeta):
@@ -35,17 +38,19 @@ class OllamaService(metaclass=SingletonMeta):
             cls.__model: ModelDict = {
                 "llm": "",
                 "vlm": "",
+                "emb": "",
             }
             cls.__default_kwargs: ModelParams = {
                 "llm": {},
                 "vlm": {},
+                "emb": {}
             }
             cls.__client = ollamac
 
             # check if the configured models are available
             available_models = [x.model for x in ollamac.list()["models"]]
             logger.info(f"Available models: {available_models}")
-            for model_type in ["llm", "vlm"]:
+            for model_type in ["llm", "vlm", "emb"]:
                 model_name = conf.ollama[model_type].model
                 if model_name not in available_models:
                     logger.info(
@@ -59,7 +64,7 @@ class OllamaService(metaclass=SingletonMeta):
             # ensure that the models are available
             available_models = [x.model for x in ollamac.list()["models"]]
             logger.info(f"Available models: {available_models}")
-            for model_type in ["llm", "vlm"]:
+            for model_type in ["llm", "vlm", "emb"]:
                 model_name = conf.ollama[model_type].model
                 if model_name not in available_models:
                     raise RuntimeError(
@@ -235,3 +240,17 @@ class OllamaService(metaclass=SingletonMeta):
         except Exception as e:
             logger.error(f"Error while validating Ollama response: {e}")
             return response.message.content, session_id
+
+    def llm_embed(
+        self,
+        inputs: list[str],
+        options: Optional[Dict[str, str]] = None,
+    ) -> np.ndarray:
+        
+        if options is None:
+            options = self.__default_kwargs["emb"]
+
+        response = self.__client.embed(model=self.__model["emb"], input=inputs, options=options)
+        arr = np.array(response.embeddings)
+
+        return arr

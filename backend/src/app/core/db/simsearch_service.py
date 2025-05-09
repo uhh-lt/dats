@@ -1,4 +1,5 @@
-from typing import Any, Dict, List, Optional, Tuple, Union
+from itertools import repeat
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, TypeVar, Union
 
 import numpy as np
 from config import conf
@@ -12,17 +13,21 @@ from app.core.data.dto.search import (
     SimSearchSentenceHit,
 )
 from app.core.data.dto.source_document import SourceDocumentRead
+from app.core.data.llm.ollama_service import OllamaService
 from app.core.data.repo.repo_service import RepoService
 from app.core.data.repo.utils import image_to_base64, load_image
 from app.core.db.index_type import IndexType
 from app.core.db.sql_service import SQLService
 from app.core.db.vector_index_service import VectorIndexService
+from app.core.db.weaviate_service import WeaviateVectorLengthError
 from app.preprocessing.ray_model_service import RayModelService
 from app.preprocessing.ray_model_worker.dto.clip import (
     ClipImageEmbeddingInput,
     ClipTextEmbeddingInput,
 )
 from app.util.singleton_meta import SingletonMeta
+
+SimSearchHit = TypeVar("SimSearchHit")
 
 
 class SimSearchService(metaclass=SingletonMeta):
@@ -58,27 +63,28 @@ class SimSearchService(metaclass=SingletonMeta):
         cls.rms = RayModelService()
         cls.repo = RepoService()
         cls.sqls = SQLService()
+        cls.llm = OllamaService()
         return super(SimSearchService, cls).__new__(cls)
 
-    def _encode_text(self, text: List[str], return_avg_emb: bool = False) -> np.ndarray:
+    def _encode_text(
+        self, text: List[str], document_embedding: bool = False
+    ) -> np.ndarray:
+        if document_embedding:
+            doc_text = " ".join(text)
+            doc_emb = self.llm.llm_embed([doc_text])
+            return doc_emb
         encoded_query = self.rms.clip_text_embedding(ClipTextEmbeddingInput(text=text))
         if len(encoded_query.embeddings) == 1:
             return encoded_query.numpy().squeeze()
-        elif len(encoded_query.embeddings) > 1 and return_avg_emb:
-            # average embeddings
-            query_emb: np.ndarray = encoded_query.numpy().mean(axis=0)
-            # normalize averaged embedding
-            query_emb: np.ndarray = query_emb / np.linalg.norm(query_emb)
-            return query_emb
         else:
             return encoded_query.numpy()
 
     def _get_image_name_from_sdoc_id(self, sdoc_id: int) -> SourceDocumentRead:
         with self.sqls.db_session() as db:
             sdoc = SourceDocumentRead.model_validate(crud_sdoc.read(db=db, id=sdoc_id))
-            assert (
-                sdoc.doctype == DocType.image
-            ), f"SourceDocument with {sdoc_id=} is not an image!"
+            assert sdoc.doctype == DocType.image, (
+                f"SourceDocument with {sdoc_id=} is not an image!"
+            )
         return sdoc
 
     def _encode_image(self, image_sdoc_id: int) -> np.ndarray:
@@ -109,23 +115,30 @@ class SimSearchService(metaclass=SingletonMeta):
             )
         sentence_embs = sentence_embs.numpy()
 
-        # create cheap&easy (but suboptimal) document embeddings for now
-        if len(sentence_embs) > 0:
-            doc_emb = sentence_embs.sum(axis=0)
-            doc_emb /= np.linalg.norm(doc_emb)
-        else:
-            doc_emb = np.array([])
-
         logger.debug(
             f"Adding {len(sentence_embs)} sentences "
             f"from SDoc {sdoc_id} in Project {proj_id} to Weaviate ..."
         )
         self._index.add_embeddings_to_index(
-            IndexType.DOCUMENT, proj_id, sdoc_id, [doc_emb]
+            IndexType.SENTENCE, proj_id, repeat(sdoc_id, len(sentence_embs)), sentence_embs
         )
-        self._index.add_embeddings_to_index(
-            IndexType.SENTENCE, proj_id, sdoc_id, sentence_embs
-        )
+    
+    def add_document_embeddings(self, proj_id: int, sdoc_ids: Iterable[int], embeddings: np.ndarray, force: bool = False):
+        try:
+            self._index.add_embeddings_to_index(
+                IndexType.DOCUMENT, proj_id, sdoc_ids, embeddings
+            )
+        except WeaviateVectorLengthError as e:
+            if force:
+                self.remove_all_document_embeddings(proj_id)
+                self._index.add_embeddings_to_index(
+                    IndexType.DOCUMENT, proj_id, sdoc_ids, embeddings
+                )
+            else:
+                raise e
+    
+    def remove_all_document_embeddings(self, proj_id):
+        self._index.remove_project_index(proj_id, IndexType.DOCUMENT)
 
     def add_image_sdoc_to_index(self, proj_id: int, sdoc_id: int) -> None:
         image_emb = self._encode_image(image_sdoc_id=sdoc_id)
@@ -133,7 +146,7 @@ class SimSearchService(metaclass=SingletonMeta):
             f"Adding image SDoc {sdoc_id} in Project {proj_id} to Weaviate ..."
         )
         self._index.add_embeddings_to_index(
-            IndexType.IMAGE, proj_id, sdoc_id, [image_emb]
+            IndexType.IMAGE, proj_id, [sdoc_id], [image_emb]
         )
 
     def remove_sdoc_from_index(self, doctype: str, sdoc_id: int):
@@ -177,7 +190,7 @@ class SimSearchService(metaclass=SingletonMeta):
             raise ValueError(msg)
         elif text_query is not None:
             query_emb = self._encode_text(
-                text=text_query, return_avg_emb=average_text_query
+                text=text_query, document_embedding=average_text_query
             )
         elif image_query_id is not None:
             query_emb = self._encode_image(image_sdoc_id=image_query_id)
@@ -249,6 +262,15 @@ class SimSearchService(metaclass=SingletonMeta):
             sdoc_ids_to_search=sdoc_ids_to_search,
         )
 
+    def knn_documents(
+        self,
+        proj_id: int,
+        classify: Iterable[int],
+        gold: Iterable[int],
+        k: int = 3,
+    ) -> List[List[SimSearchDocumentHit]]:
+        return self._index.knn(proj_id, IndexType.DOCUMENT, classify, gold, k)
+
     def suggest_similar_sentences(
         self,
         proj_id: int,
@@ -282,25 +304,43 @@ class SimSearchService(metaclass=SingletonMeta):
         return results[0 : min(len(results), top_k)]
 
     def suggest_similar_documents(
-        # TODO: Extend function with negative examples
         self,
         proj_id: int,
-        sdoc_ids: List[int],
+        pos_sdoc_ids: Set[int],
+        neg_sdoc_ids: Set[int],
         top_k: int,
+        unique: bool,
     ) -> List[SimSearchDocumentHit]:
-        hits = self._index.suggest(sdoc_ids, proj_id, top_k, IndexType.DOCUMENT)
-        marked_sdoc_ids = {entry for entry in sdoc_ids}
+        marked_sdoc_ids = pos_sdoc_ids.union(neg_sdoc_ids)
+        hits = self._index.suggest(pos_sdoc_ids, proj_id, top_k, IndexType.DOCUMENT)
         hits = [h for h in hits if h.sdoc_id not in marked_sdoc_ids]
         hits.sort(key=lambda x: (x.sdoc_id, -x.score))
+        if unique:
+            hits = self.__unique_consecutive(hits)
+        if len(neg_sdoc_ids) > 0:
+            candidates = {h.sdoc_id for h in hits}
+            nearest = self._index.suggest(
+                candidates,
+                proj_id,
+                1,
+                IndexType.DOCUMENT,
+            )
+            results = []
+            for hit, near in zip(hits, nearest):
+                if near.sdoc_id not in neg_sdoc_ids:
+                    results.append(hit)
+        else:
+            results = hits
+        results.sort(key=lambda x: x.score, reverse=True)
         return hits
 
-    def __unique_consecutive(
-        self, hits: List[SimSearchSentenceHit]
-    ) -> List[SimSearchSentenceHit]:
-        result = []
-        current = SimSearchSentenceHit(sdoc_id=-1, sentence_id=-1, score=0.0)
+    def __unique_consecutive(self, hits: List[SimSearchHit]) -> List[SimSearchHit]:
+        if len(hits) == 0:
+            return []
+        current = hits[0]
+        result = [current]
         for hit in hits:
-            if hit.sdoc_id != current.sdoc_id or hit.sentence_id != current.sentence_id:
+            if hit != current:
                 current = hit
                 result.append(hit)
         return result

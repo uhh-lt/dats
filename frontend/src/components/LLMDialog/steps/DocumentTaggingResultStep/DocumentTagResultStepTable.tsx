@@ -1,5 +1,6 @@
 import { Box, Button, Stack, Typography } from "@mui/material";
 import {
+  getMRT_RowSelectionHandler,
   MaterialReactTable,
   MRT_ColumnDef,
   MRT_RowModel,
@@ -118,6 +119,11 @@ function DocumentTagResultStepTable<T extends DocumentTaggingResultRow>({
     },
     // selection
     enableRowSelection: true,
+    //clicking anywhere on the row will select it
+    muiTableBodyRowProps: ({ row, staticRowIndex, table }) => ({
+      onClick: (event) => getMRT_RowSelectionHandler({ row, staticRowIndex, table })(event),
+      sx: { cursor: "pointer" },
+    }),
     positionToolbarAlertBanner: "bottom",
     onRowSelectionChange: setRowSelectionModel,
     // expansion

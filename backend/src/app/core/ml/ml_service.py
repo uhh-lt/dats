@@ -5,6 +5,7 @@ from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.ml_job import (
     CoreferenceResolutionParams,
     DocTagRecommendationParams,
+    DocumentEmbeddingParams,
     MLJobCreate,
     MLJobParameters,
     MLJobRead,
@@ -21,6 +22,7 @@ from app.core.ml.coref_service import CorefService
 from app.core.ml.doc_tag_recommendation.doc_tag_recommendation_service import (
     DocumentClassificationService,
 )
+from app.core.ml.embedding_service import EmbeddingService
 from app.core.ml.quote_service import QuoteService
 from app.util.singleton_meta import SingletonMeta
 from sqlalchemy import and_, or_
@@ -108,6 +110,8 @@ class MLService(metaclass=SingletonMeta):
                     DocumentClassificationService().classify_untagged_documents(
                         ml_job_id=mlj.id,
                         project_id=mlj.parameters.project_id,
+                        tag_ids=mlj.parameters.specific_ml_job_parameters.tag_ids,
+                        exclusive=mlj.parameters.specific_ml_job_parameters.exclusive,
                     )
                 case MLJobType.COREFERENCE_RESOLUTION:
                     if isinstance(
@@ -130,7 +134,24 @@ class MLService(metaclass=SingletonMeta):
                         CorefService().perform_coreference_resolution(
                             mlj.parameters.project_id, filter_criterion, recompute
                         )
-
+                case MLJobType.DOCUMENT_EMBEDDING:
+                    assert isinstance(
+                        mlj.parameters.specific_ml_job_parameters,
+                        DocumentEmbeddingParams,
+                    ), "DocumentEmbeddingParams expected"
+                    recompute = mlj.parameters.specific_ml_job_parameters.recompute
+                    filter_criterion = (
+                            and_(
+                                inactive_status,
+                                or_(
+                                    timestamp_column < start_time,
+                                    timestamp_column == None,  # noqa: E711
+                                ),
+                            )
+                            if recompute
+                            else or_(unfinished_status, timestamp_column == None)  # noqa: E711
+                        )
+                    EmbeddingService().embed_documents(mlj.parameters.project_id, filter_criterion, recompute)
             mlj = self._update_ml_job(
                 ml_job_id, MLJobUpdate(status=BackgroundJobStatus.FINISHED)
             )
@@ -153,4 +174,5 @@ class MLService(metaclass=SingletonMeta):
             mlj = self.redis.update_ml_job(key=ml_job_id, update=update)
         except Exception as e:
             raise NoSuchMLJobError(ml_job_id, cause=e)
+        return mlj
         return mlj
