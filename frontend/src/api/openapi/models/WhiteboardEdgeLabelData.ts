@@ -48,9 +48,9 @@ export type WhiteboardEdgeLabelData = {
   /**
    * Background color of the text
    */
-  bgcolor: string;
+  color: string;
   /**
    * Background color alpha of the text
    */
-  bgalpha: number | null;
+  alpha: number | null;
 };

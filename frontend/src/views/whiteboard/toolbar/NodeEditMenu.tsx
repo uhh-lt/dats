@@ -2,10 +2,14 @@ import { Divider, Paper, SelectChangeEvent, Stack, Typography } from "@mui/mater
 import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 import { Node, useReactFlow } from "reactflow";
 import { BorderStyle } from "../../../api/openapi/models/BorderStyle.ts";
+import { HorizontalAlign } from "../../../api/openapi/models/HorizontalAlign.ts";
+import { VerticalAlign } from "../../../api/openapi/models/VerticalAlign.ts";
 import FontSizeTool from "../toolbar/tools/FontSizeTool.tsx";
+import TextStyleTool from "../toolbar/tools/TextStyleTool.tsx";
 import { BackgroundColorData } from "../types/base/BackgroundColorData.ts";
 import { BorderData } from "../types/base/BorderData.ts";
 import { TextData } from "../types/base/TextData.ts";
+import { TextStyle } from "../types/base/TextStyle.ts";
 import { hasTextData, isBackgroundColorDataArray, isBorderDataArray, isTextDataArray } from "../types/typeGuards.ts";
 import { createNodeDataByType } from "./nodeTypeUtils.ts";
 import BgColorTool from "./tools/BgColorTool.tsx";
@@ -15,7 +19,7 @@ import FontSelectionTool from "./tools/FontSelectionTool.tsx";
 import NodeChangeTool from "./tools/NodeChangeTool.tsx";
 import NumberTool from "./tools/NumberTool.tsx";
 import TextAlignmentTool from "./tools/TextAlignmentTool.tsx";
-import TextStyleTool from "./tools/TextStyleTool.tsx";
+
 export interface NodeEditMenuHandle {
   open: (nodes: Node[]) => void;
   close: () => void;
@@ -77,7 +81,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
     });
   };
 
-  const handleHorizontalAlignClick = (horizontal: "left" | "center" | "right") => () => {
+  const handleHorizontalAlignClick = (horizontal: HorizontalAlign) => () => {
     updateNodes((oldNode) => {
       return {
         ...oldNode,
@@ -89,7 +93,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
     });
   };
 
-  const handleVerticalAlignClick = (verticalAlign: "top" | "center" | "bottom") => () => {
+  const handleVerticalAlignClick = (verticalAlign: VerticalAlign) => () => {
     updateNodes((oldNode) => {
       return {
         ...oldNode,
@@ -220,6 +224,24 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
     });
   };
 
+  const handleStyleChange = (style: TextStyle) => {
+    updateNodes((oldNode) => {
+      if (hasTextData(oldNode)) {
+        return {
+          ...oldNode,
+          data: {
+            ...oldNode.data,
+            ...(style === TextStyle.BOLD && { bold: !oldNode.data.bold }),
+            ...(style === TextStyle.ITALIC && { italic: !oldNode.data.italic }),
+            ...(style === TextStyle.UNDERLINE && { underline: !oldNode.data.underline }),
+            ...(style === TextStyle.STRIKETHROUGH && { strikethrough: !oldNode.data.strikethrough }),
+          },
+        };
+      }
+      return oldNode;
+    });
+  };
+
   return (
     <>
       {nodes.length > 0 && (
@@ -248,26 +270,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
                   onColorChange={handleColorChange}
                 />
                 <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
-                <TextStyleTool
-                  textData={nodes[0].data as TextData}
-                  onStyleChange={(style) => {
-                    updateNodes((oldNode) => {
-                      if (hasTextData(oldNode)) {
-                        return {
-                          ...oldNode,
-                          data: {
-                            ...oldNode.data,
-                            ...(style === "bold" && { bold: !oldNode.data.bold }),
-                            ...(style === "italic" && { italic: !oldNode.data.italic }),
-                            ...(style === "underline" && { underline: !oldNode.data.underline }),
-                            ...(style === "strikethrough" && { strikethrough: !oldNode.data.strikethrough }),
-                          },
-                        };
-                      }
-                      return oldNode;
-                    });
-                  }}
-                />
+                <TextStyleTool textData={nodes[0].data as TextData} onStyleChange={handleStyleChange} />
                 <TextAlignmentTool
                   nodes={nodes}
                   showTextTools={showTextTools}
@@ -284,7 +287,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
                   color={nodes[0].data.bgcolor}
                   value={nodes[0].data.bgalpha}
                   onColorChange={handleBGColorChange}
-                  onValueChange={handleBGAlphaChange}
+                  onAlphaChange={handleBGAlphaChange}
                 />
               </>
             )}

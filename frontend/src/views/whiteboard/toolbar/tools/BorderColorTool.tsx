@@ -10,12 +10,12 @@ interface BorderColorToolProps {
   onBorderStyleChange: (style: BorderStyle) => void;
 }
 
-const BorderColorTool: React.FC<BorderColorToolProps> = ({
+export default function BorderColorTool({
   color,
   onColorChange,
   borderStyle,
   onBorderStyleChange,
-}) => {
+}: BorderColorToolProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -107,6 +107,4 @@ const BorderColorTool: React.FC<BorderColorToolProps> = ({
       </Menu>
     </Box>
   );
-};
-
-export default BorderColorTool;
+}

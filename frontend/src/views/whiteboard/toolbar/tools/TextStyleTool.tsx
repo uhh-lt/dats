@@ -4,8 +4,8 @@ import FormatUnderlinedIcon from "@mui/icons-material/FormatUnderlined";
 import StrikethroughSIcon from "@mui/icons-material/StrikethroughS";
 import { Box, Button, Menu, MenuItem, Stack, Tooltip } from "@mui/material";
 import { useState } from "react";
-import { TextStyle } from "../../../../api/openapi/models/TextStyle.ts";
 import { TextData } from "../../types/base/TextData.ts";
+import { TextStyle } from "../../types/base/TextStyle.ts";
 
 const textStyleIcons = {
   [TextStyle.BOLD]: <FormatBoldIcon />,

@@ -1,5 +1,4 @@
-import { FormatColorText as FormatColorTextIcon } from "@mui/icons-material";
-import { Box, Button, Menu, Stack, Tooltip } from "@mui/material";
+import { Box, Button, Menu, Tooltip } from "@mui/material";
 import { useState } from "react";
 import ColorGrid from "./ColorGrid.tsx";
 
@@ -8,7 +7,7 @@ interface FontColorToolProps {
   onColorChange: (color: string) => void;
 }
 
-const FontColorTool: React.FC<FontColorToolProps> = ({ color, onColorChange }) => {
+export default function FontColorTool({ color, onColorChange }: FontColorToolProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -22,7 +21,7 @@ const FontColorTool: React.FC<FontColorToolProps> = ({ color, onColorChange }) =
 
   return (
     <Box sx={{ display: "flex", alignItems: "center" }}>
-      <Tooltip title="Font color" arrow>
+      <Tooltip title="Font color" arrow disableHoverListener={Boolean(anchorEl)}>
         <Button
           size="small"
           onClick={handleClick}
@@ -33,15 +32,14 @@ const FontColorTool: React.FC<FontColorToolProps> = ({ color, onColorChange }) =
             height: 28,
             p: 0,
             borderRadius: "50%",
-            color: color,
-            border: "none",
+            bgcolor: color,
+            border: "1px solid rgba(0, 0, 0, 0.12)",
             "&:hover": {
+              bgcolor: color,
               opacity: 0.8,
             },
           }}
-        >
-          <FormatColorTextIcon fontSize="medium" />
-        </Button>
+        />
       </Tooltip>
       <Menu
         anchorEl={anchorEl}
@@ -69,12 +67,8 @@ const FontColorTool: React.FC<FontColorToolProps> = ({ color, onColorChange }) =
           },
         }}
       >
-        <Stack direction="column" spacing={1} sx={{ p: 1, minWidth: 160 }}>
-          <ColorGrid selectedColor={color} onColorChange={onColorChange} />
-        </Stack>
+        <ColorGrid selectedColor={color} onColorChange={onColorChange} />
       </Menu>
     </Box>
   );
-};
-
-export default FontColorTool;
+}

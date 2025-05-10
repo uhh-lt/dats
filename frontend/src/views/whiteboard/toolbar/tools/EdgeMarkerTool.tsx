@@ -2,6 +2,7 @@ import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import { MenuItem, Select, SelectChangeEvent, Tooltip } from "@mui/material";
+import { useState } from "react";
 import { EdgeMarker } from "reactflow";
 
 const arrow2icon: Record<string, React.ReactElement> = {
@@ -21,16 +22,6 @@ interface EdgeMarkerToolProps {
   markerEnd?: EdgeMarker;
   onMarkerStartChange: (event: SelectChangeEvent) => void;
   onMarkerEndChange: (event: SelectChangeEvent) => void;
-  onStartSelectOpen: () => void;
-  onStartSelectClose: () => void;
-  onEndSelectOpen: () => void;
-  onEndSelectClose: () => void;
-  isStartTooltipOpen: boolean;
-  isEndTooltipOpen: boolean;
-  onStartTooltipOpen: () => void;
-  onStartTooltipClose: () => void;
-  onEndTooltipOpen: () => void;
-  onEndTooltipClose: () => void;
 }
 
 export default function EdgeMarkerTool({
@@ -38,25 +29,58 @@ export default function EdgeMarkerTool({
   markerEnd,
   onMarkerStartChange,
   onMarkerEndChange,
-  onStartSelectOpen,
-  onStartSelectClose,
-  onEndSelectOpen,
-  onEndSelectClose,
-  isStartTooltipOpen,
-  isEndTooltipOpen,
-  onStartTooltipOpen,
-  onStartTooltipClose,
-  onEndTooltipOpen,
-  onEndTooltipClose,
 }: EdgeMarkerToolProps) {
+  const [isStartSelectOpen, setIsStartSelectOpen] = useState(false);
+  const [isEndSelectOpen, setIsEndSelectOpen] = useState(false);
+  const [isStartTooltipOpen, setIsStartTooltipOpen] = useState(false);
+  const [isEndTooltipOpen, setIsEndTooltipOpen] = useState(false);
+
+  const handleStartSelectOpen = () => {
+    setIsStartSelectOpen(true);
+    setIsStartTooltipOpen(false);
+  };
+
+  const handleStartSelectClose = () => {
+    setIsStartSelectOpen(false);
+  };
+
+  const handleEndSelectOpen = () => {
+    setIsEndSelectOpen(true);
+    setIsEndTooltipOpen(false);
+  };
+
+  const handleEndSelectClose = () => {
+    setIsEndSelectOpen(false);
+  };
+
+  const handleStartTooltipOpen = () => {
+    if (!isStartSelectOpen) {
+      setIsStartTooltipOpen(true);
+    }
+  };
+
+  const handleStartTooltipClose = () => {
+    setIsStartTooltipOpen(false);
+  };
+
+  const handleEndTooltipOpen = () => {
+    if (!isEndSelectOpen) {
+      setIsEndTooltipOpen(true);
+    }
+  };
+
+  const handleEndTooltipClose = () => {
+    setIsEndTooltipOpen(false);
+  };
+
   return (
     <>
       <Tooltip
         title="Line start"
         arrow
         open={isStartTooltipOpen}
-        onOpen={onStartTooltipOpen}
-        onClose={onStartTooltipClose}
+        onOpen={handleStartTooltipOpen}
+        onClose={handleStartTooltipClose}
       >
         <Select
           size="small"
@@ -83,8 +107,8 @@ export default function EdgeMarkerTool({
               },
             },
           }}
-          onOpen={onStartSelectOpen}
-          onClose={onStartSelectClose}
+          onOpen={handleStartSelectOpen}
+          onClose={handleStartSelectClose}
           value={markerStart ? markerStart.type : "noarrow"}
           onChange={onMarkerStartChange}
         >
@@ -95,7 +119,13 @@ export default function EdgeMarkerTool({
           ))}
         </Select>
       </Tooltip>
-      <Tooltip title="Line end" arrow open={isEndTooltipOpen} onOpen={onEndTooltipOpen} onClose={onEndTooltipClose}>
+      <Tooltip
+        title="Line end"
+        arrow
+        open={isEndTooltipOpen}
+        onOpen={handleEndTooltipOpen}
+        onClose={handleEndTooltipClose}
+      >
         <Select
           size="small"
           sx={{
@@ -121,8 +151,8 @@ export default function EdgeMarkerTool({
               },
             },
           }}
-          onOpen={onEndSelectOpen}
-          onClose={onEndSelectClose}
+          onOpen={handleEndSelectOpen}
+          onClose={handleEndSelectClose}
           value={markerEnd ? markerEnd.type : "noarrow"}
           onChange={onMarkerEndChange}
         >
