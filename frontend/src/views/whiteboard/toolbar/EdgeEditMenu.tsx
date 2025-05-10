@@ -224,7 +224,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
     });
   };
 
-  const handleEdgeColorChange = (color: string) => {
+  const handleBGColorChange = (color: string) => {
     updateEdges((oldEdge) => {
       return {
         ...oldEdge,
@@ -233,7 +233,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
             ...oldEdge.data,
             label: {
               ...oldEdge.data.label,
-              color: color,
+              bgcolor: color,
             },
           },
         }),
@@ -241,7 +241,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
     });
   };
 
-  const handleAlphaChange = (alpha: number) => {
+  const handleBGAlphaChange = (alpha: number) => {
     updateEdges((oldEdge) => {
       return {
         ...oldEdge,
@@ -250,7 +250,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
             ...oldEdge.data,
             label: {
               ...oldEdge.data.label,
-              alpha: alpha,
+              bgalpha: alpha,
             },
           },
         }),
@@ -335,10 +335,10 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
                 />
                 <BgColorTool
                   key={`edge-color-${edges[0].id}`}
-                  color={edges[0].data!.label.color}
-                  value={edges[0].data!.label.alpha}
-                  onColorChange={handleEdgeColorChange}
-                  onAlphaChange={handleAlphaChange}
+                  color={edges[0].data!.label.bgcolor}
+                  alpha={edges[0].data!.label.bgalpha}
+                  onColorChange={handleBGColorChange}
+                  onAlphaChange={handleBGAlphaChange}
                 />
               </>
             )}

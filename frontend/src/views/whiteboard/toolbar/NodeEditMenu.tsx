@@ -285,7 +285,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
                 <BgColorTool
                   key={`bg-color-${nodes[0].id}`}
                   color={nodes[0].data.bgcolor}
-                  value={nodes[0].data.bgalpha}
+                  alpha={nodes[0].data.bgalpha}
                   onColorChange={handleBGColorChange}
                   onAlphaChange={handleBGAlphaChange}
                 />

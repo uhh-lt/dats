@@ -24,26 +24,20 @@ function BorderNode(props: NodeProps<BorderNodeData>) {
   };
 
   return (
-    <TextNodeComponent
+    <BaseNode
+      allowDrawConnection={false}
       nodeProps={props}
-      onTextChange={handleTextChange}
-      renderContainer={(children) => (
-        <BaseNode
-          allowDrawConnection={false}
-          nodeProps={props}
-          alignment={props.data.verticalAlign}
-          style={{
-            borderRadius: props.data.borderRadius,
-            borderColor: props.data.borderColor,
-            borderWidth: props.data.borderWidth,
-            borderStyle: props.data.borderStyle,
-            backgroundColor: props.data.bgcolor + props.data.bgalpha?.toString(16).padStart(2, "0"),
-          }}
-        >
-          {children}
-        </BaseNode>
-      )}
-    />
+      alignment={props.data.verticalAlign}
+      style={{
+        borderRadius: props.data.borderRadius,
+        borderColor: props.data.borderColor,
+        borderWidth: props.data.borderWidth,
+        borderStyle: props.data.borderStyle,
+        backgroundColor: props.data.bgcolor + props.data.bgalpha?.toString(16).padStart(2, "0"),
+      }}
+    >
+      <TextNodeComponent nodeProps={props} onTextChange={handleTextChange} />
+    </BaseNode>
   );
 }
 
