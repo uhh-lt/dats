@@ -23,14 +23,14 @@ const type2icon: Record<string, React.ReactElement> = {
   smoothstep: <TurnRightIcon />,
 };
 
-const EdgeColorTool: React.FC<EdgeColorToolProps> = ({
+export default function EdgeColorTool({
   color,
   onColorChange,
   borderStyle,
   onBorderStyleChange,
   edgeType,
   onEdgeTypeChange,
-}) => {
+}: EdgeColorToolProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -185,6 +185,4 @@ const EdgeColorTool: React.FC<EdgeColorToolProps> = ({
       </Menu>
     </Box>
   );
-};
-
-export default EdgeColorTool;
+}

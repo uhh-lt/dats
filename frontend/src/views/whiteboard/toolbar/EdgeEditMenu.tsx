@@ -21,10 +21,6 @@ export interface EdgeEditMenuHandle {
 const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
   const reactFlowInstance = useReactFlow<DATSNodeData, WhiteboardEdgeData_Input>();
   const [edges, setEdges] = useState<Edge<WhiteboardEdgeData_Input>[]>([]);
-  const [isStartSelectOpen, setIsStartSelectOpen] = useState(false);
-  const [isEndSelectOpen, setIsEndSelectOpen] = useState(false);
-  const [isStartTooltipOpen, setIsStartTooltipOpen] = useState(false);
-  const [isEndTooltipOpen, setIsEndTooltipOpen] = useState(false);
 
   // exposed methods (via ref)
   useImperativeHandle(ref, () => ({
@@ -136,39 +132,25 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
 
   const handleMarkerStartChange = (event: SelectChangeEvent) => {
     updateEdges((oldEdge) => {
-      if (event.target.value === "noarrow") {
-        return {
-          ...oldEdge,
-          markerStart: undefined,
-        };
-      } else {
-        return {
-          ...oldEdge,
-          markerStart: {
-            color: oldEdge.style?.stroke,
-            type: event.target.value as MarkerType,
-          },
-        };
-      }
+      return {
+        ...oldEdge,
+        markerStart: {
+          type: event.target.value as MarkerType,
+          color: oldEdge.style?.stroke || "#000000",
+        },
+      };
     });
   };
 
   const handleMarkerEndChange = (event: SelectChangeEvent) => {
     updateEdges((oldEdge) => {
-      if (event.target.value === "noarrow") {
-        return {
-          ...oldEdge,
-          markerEnd: undefined,
-        };
-      } else {
-        return {
-          ...oldEdge,
-          markerEnd: {
-            color: oldEdge.style?.stroke,
-            type: event.target.value as MarkerType,
-          },
-        };
-      }
+      return {
+        ...oldEdge,
+        markerEnd: {
+          type: event.target.value as MarkerType,
+          color: oldEdge.style?.stroke || "#000000",
+        },
+      };
     });
   };
 
@@ -242,7 +224,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
     });
   };
 
-  const handleBGColorChange = (color: string) => {
+  const handleEdgeColorChange = (color: string) => {
     updateEdges((oldEdge) => {
       return {
         ...oldEdge,
@@ -251,7 +233,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
             ...oldEdge.data,
             label: {
               ...oldEdge.data.label,
-              bgcolor: color,
+              color: color,
             },
           },
         }),
@@ -259,7 +241,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
     });
   };
 
-  const handleBGAlphaChange = (alpha: number) => {
+  const handleAlphaChange = (alpha: number) => {
     updateEdges((oldEdge) => {
       return {
         ...oldEdge,
@@ -268,7 +250,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
             ...oldEdge.data,
             label: {
               ...oldEdge.data.label,
-              bgalpha: alpha,
+              alpha: alpha,
             },
           },
         }),
@@ -280,44 +262,6 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
     const edgeIds = edges.map((edge) => edge.id);
     reactFlowInstance.setEdges((edges) => edges.filter((edge) => edgeIds.indexOf(edge.id) === -1));
     closeMenu();
-  };
-
-  const handleStartSelectOpen = () => {
-    setIsStartSelectOpen(true);
-    setIsStartTooltipOpen(false);
-  };
-
-  const handleStartSelectClose = () => {
-    setIsStartSelectOpen(false);
-  };
-
-  const handleEndSelectOpen = () => {
-    setIsEndSelectOpen(true);
-    setIsEndTooltipOpen(false);
-  };
-
-  const handleEndSelectClose = () => {
-    setIsEndSelectOpen(false);
-  };
-
-  const handleStartTooltipOpen = () => {
-    if (!isStartSelectOpen) {
-      setIsStartTooltipOpen(true);
-    }
-  };
-
-  const handleStartTooltipClose = () => {
-    setIsStartTooltipOpen(false);
-  };
-
-  const handleEndTooltipOpen = () => {
-    if (!isEndSelectOpen) {
-      setIsEndTooltipOpen(true);
-    }
-  };
-
-  const handleEndTooltipClose = () => {
-    setIsEndTooltipOpen(false);
   };
 
   const getBorderStyle = (edge: Edge) => {
@@ -336,16 +280,6 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
               markerEnd={edges[0].markerEnd as EdgeMarker}
               onMarkerStartChange={handleMarkerStartChange}
               onMarkerEndChange={handleMarkerEndChange}
-              onStartSelectOpen={handleStartSelectOpen}
-              onStartSelectClose={handleStartSelectClose}
-              onEndSelectOpen={handleEndSelectOpen}
-              onEndSelectClose={handleEndSelectClose}
-              isStartTooltipOpen={isStartTooltipOpen}
-              isEndTooltipOpen={isEndTooltipOpen}
-              onStartTooltipOpen={handleStartTooltipOpen}
-              onStartTooltipClose={handleStartTooltipClose}
-              onEndTooltipOpen={handleEndTooltipOpen}
-              onEndTooltipClose={handleEndTooltipClose}
             />
             <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
             <EdgeColorTool
@@ -400,11 +334,11 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
                   onColorChange={handleFontColorChange}
                 />
                 <BgColorTool
-                  key={`bg-color-${edges[0].id}`}
-                  color={edges[0].data!.label.bgcolor}
-                  value={edges[0].data!.label.bgalpha}
-                  onColorChange={handleBGColorChange}
-                  onValueChange={handleBGAlphaChange}
+                  key={`edge-color-${edges[0].id}`}
+                  color={edges[0].data!.label.color}
+                  value={edges[0].data!.label.alpha}
+                  onColorChange={handleEdgeColorChange}
+                  onAlphaChange={handleAlphaChange}
                 />
               </>
             )}

@@ -10,11 +10,10 @@ interface NumberToolProps {
   max: number;
 }
 
-function NumberTool({ value, onValueChange, min, max }: NumberToolProps) {
+export default function NumberTool({ value, onValueChange, min, max }: NumberToolProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const inputRef = useRef<HTMLDivElement>(null);
   const defaultSize = 1;
-  let timeout: NodeJS.Timeout | undefined;
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
     setAnchorEl(event.currentTarget);
@@ -25,12 +24,7 @@ function NumberTool({ value, onValueChange, min, max }: NumberToolProps) {
   };
 
   const handleMenuItemClick = (size: number) => {
-    if (timeout) {
-      clearTimeout(timeout);
-    }
-    timeout = setTimeout(() => {
-      onValueChange(size);
-    }, 333);
+    onValueChange(size);
     handleClose();
   };
 
@@ -40,22 +34,12 @@ function NumberTool({ value, onValueChange, min, max }: NumberToolProps) {
     if (event.key === "ArrowUp") {
       event.preventDefault();
       if (currentSize < max) {
-        if (timeout) {
-          clearTimeout(timeout);
-        }
-        timeout = setTimeout(() => {
-          onValueChange(currentSize + 1);
-        }, 333);
+        onValueChange(currentSize + 1);
       }
     } else if (event.key === "ArrowDown") {
       event.preventDefault();
       if (currentSize > min) {
-        if (timeout) {
-          clearTimeout(timeout);
-        }
-        timeout = setTimeout(() => {
-          onValueChange(currentSize - 1);
-        }, 333);
+        onValueChange(currentSize - 1);
       }
     }
   };
@@ -63,24 +47,14 @@ function NumberTool({ value, onValueChange, min, max }: NumberToolProps) {
   const handleIncreaseSize = () => {
     const currentSize = value || defaultSize;
     if (currentSize < max) {
-      if (timeout) {
-        clearTimeout(timeout);
-      }
-      timeout = setTimeout(() => {
-        onValueChange(currentSize + 1);
-      }, 333);
+      onValueChange(currentSize + 1);
     }
   };
 
   const handleDecreaseSize = () => {
     const currentSize = value || defaultSize;
     if (currentSize > min) {
-      if (timeout) {
-        clearTimeout(timeout);
-      }
-      timeout = setTimeout(() => {
-        onValueChange(currentSize - 1);
-      }, 333);
+      onValueChange(currentSize - 1);
     }
   };
 
@@ -189,5 +163,3 @@ function NumberTool({ value, onValueChange, min, max }: NumberToolProps) {
     </>
   );
 }
-
-export default NumberTool;

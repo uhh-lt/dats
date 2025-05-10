@@ -1,5 +1,5 @@
 import { NodeProps, useReactFlow } from "reactflow";
-import { useTextNode } from "../toolbar/textNodeUtils.tsx";
+import { TextNodeComponent } from "../toolbar/textNodeUtils.tsx";
 import { TextData } from "../types/base/TextData.ts";
 import BaseNode from "./BaseNode.tsx";
 
@@ -23,22 +23,17 @@ function TextNode(props: NodeProps<TextData>) {
     );
   };
 
-  const { handleClick, renderContent } = useTextNode({
-    nodeProps: props,
-    onTextChange: handleTextChange,
-    renderContainer: (children) => (
-      <BaseNode
-        allowDrawConnection={false}
-        nodeProps={props}
-        onClick={handleClick}
-        alignment={props.data.verticalAlign}
-      >
-        {children}
-      </BaseNode>
-    ),
-  });
-
-  return renderContent();
+  return (
+    <TextNodeComponent
+      nodeProps={props}
+      onTextChange={handleTextChange}
+      renderContainer={(children) => (
+        <BaseNode allowDrawConnection={false} nodeProps={props} alignment={props.data.verticalAlign}>
+          {children}
+        </BaseNode>
+      )}
+    />
+  );
 }
 
 export default TextNode;

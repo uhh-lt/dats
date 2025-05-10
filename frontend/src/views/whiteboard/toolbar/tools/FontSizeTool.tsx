@@ -3,17 +3,18 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { Box, Menu, MenuItem, Tooltip, Typography } from "@mui/material";
 import { useRef, useState } from "react";
 
+const DEFAULT_SIZE = 16;
+const MIN_SIZE = 8;
+const MAX_SIZE = 72;
+
 interface FontSizeToolProps {
   size: number | undefined;
   onSizeChange: (size: number) => void;
 }
 
-const FontSizeTool: React.FC<FontSizeToolProps> = ({ size, onSizeChange }) => {
+export default function FontSizeTool({ size, onSizeChange }: FontSizeToolProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const inputRef = useRef<HTMLDivElement>(null);
-  const defaultSize = 16;
-  const minSize = 8;
-  const maxSize = 72;
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
     setAnchorEl(event.currentTarget);
@@ -29,31 +30,31 @@ const FontSizeTool: React.FC<FontSizeToolProps> = ({ size, onSizeChange }) => {
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    const currentSize = size || defaultSize;
+    const currentSize = size || DEFAULT_SIZE;
 
     if (event.key === "ArrowUp") {
       event.preventDefault();
-      if (currentSize < maxSize) {
+      if (currentSize < MAX_SIZE) {
         onSizeChange(currentSize + 1);
       }
     } else if (event.key === "ArrowDown") {
       event.preventDefault();
-      if (currentSize > minSize) {
+      if (currentSize > MIN_SIZE) {
         onSizeChange(currentSize - 1);
       }
     }
   };
 
   const handleIncreaseFontSize = () => {
-    const currentSize = size || defaultSize;
-    if (currentSize < maxSize) {
+    const currentSize = size || DEFAULT_SIZE;
+    if (currentSize < MAX_SIZE) {
       onSizeChange(currentSize + 1);
     }
   };
 
   const handleDecreaseFontSize = () => {
-    const currentSize = size || defaultSize;
-    if (currentSize > minSize) {
+    const currentSize = size || DEFAULT_SIZE;
+    if (currentSize > MIN_SIZE) {
       onSizeChange(currentSize - 1);
     }
   };
@@ -77,7 +78,7 @@ const FontSizeTool: React.FC<FontSizeToolProps> = ({ size, onSizeChange }) => {
           }}
         >
           <Typography variant="body2" sx={{ flex: 1 }}>
-            {size || defaultSize}
+            {size || DEFAULT_SIZE}
           </Typography>
           <Box
             sx={{
@@ -112,7 +113,7 @@ const FontSizeTool: React.FC<FontSizeToolProps> = ({ size, onSizeChange }) => {
           },
         }}
       >
-        {Array.from({ length: maxSize - minSize + 1 }, (_, i) => minSize + i).map((fontSize) => (
+        {Array.from({ length: MAX_SIZE - MIN_SIZE + 1 }, (_, i) => MIN_SIZE + i).map((fontSize) => (
           <MenuItem
             key={fontSize}
             onClick={() => handleMenuItemClick(fontSize)}
@@ -163,6 +164,4 @@ const FontSizeTool: React.FC<FontSizeToolProps> = ({ size, onSizeChange }) => {
       </Box>
     </>
   );
-};
-
-export default FontSizeTool;
+}

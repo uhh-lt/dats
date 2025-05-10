@@ -1,6 +1,6 @@
 import { NodeProps, useReactFlow } from "reactflow";
 import { NoteNodeData } from "../../../api/openapi/models/NoteNodeData.ts";
-import { useTextNode } from "../toolbar/textNodeUtils.tsx";
+import { TextNodeComponent } from "../toolbar/textNodeUtils.tsx";
 import BaseCardNode from "./BaseCardNode.tsx";
 
 function NoteNode(props: NodeProps<NoteNodeData>) {
@@ -23,23 +23,22 @@ function NoteNode(props: NodeProps<NoteNodeData>) {
     );
   };
 
-  const { handleClick, renderContent } = useTextNode({
-    nodeProps: props,
-    onTextChange: handleTextChange,
-    renderContainer: (children) => (
-      <BaseCardNode
-        allowDrawConnection={false}
-        nodeProps={props}
-        onClick={handleClick}
-        backgroundColor={props.data.bgcolor + props.data.bgalpha?.toString(16).padStart(2, "0")}
-        alignment={props.data.verticalAlign}
-      >
-        {children}
-      </BaseCardNode>
-    ),
-  });
-
-  return renderContent();
+  return (
+    <TextNodeComponent
+      nodeProps={props}
+      onTextChange={handleTextChange}
+      renderContainer={(children) => (
+        <BaseCardNode
+          allowDrawConnection={false}
+          nodeProps={props}
+          backgroundColor={props.data.bgcolor + props.data.bgalpha?.toString(16).padStart(2, "0")}
+          alignment={props.data.verticalAlign}
+        >
+          {children}
+        </BaseCardNode>
+      )}
+    />
+  );
 }
 
 export default NoteNode;

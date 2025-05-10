@@ -1,10 +1,13 @@
+import { HorizontalAlign } from "../../../../api/openapi/models/HorizontalAlign.ts";
+import { VerticalAlign } from "../../../../api/openapi/models/VerticalAlign.ts";
+
 export interface TextData {
   text: string;
   fontSize: number;
   fontFamily: string;
   color: string;
-  horizontalAlign: "left" | "center" | "right";
-  verticalAlign: "top" | "center" | "bottom";
+  horizontalAlign: HorizontalAlign;
+  verticalAlign: VerticalAlign;
   bold: boolean;
   italic: boolean;
   underline: boolean;

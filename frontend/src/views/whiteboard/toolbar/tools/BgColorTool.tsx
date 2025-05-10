@@ -6,10 +6,10 @@ interface BgColorToolProps {
   color: string;
   value: number | null;
   onColorChange: (color: string) => void;
-  onValueChange: (value: number) => void;
+  onAlphaChange: (value: number) => void;
 }
 
-const BgColorTool: React.FC<BgColorToolProps> = ({ color, value, onColorChange, onValueChange }) => {
+export default function BgColorTool({ color, value, onColorChange, onAlphaChange }: BgColorToolProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -33,8 +33,9 @@ const BgColorTool: React.FC<BgColorToolProps> = ({ color, value, onColorChange, 
       const r = parseInt(color.slice(1, 3), 16);
       const g = parseInt(color.slice(3, 5), 16);
       const b = parseInt(color.slice(5, 7), 16);
+      const alpha = value ? value / 255 : 1; // Convert alpha from 0-255 to 0-1 range
 
-      return `rgba(${r}, ${g}, ${b}, ${value})`;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     } catch (error) {
       console.error("Error converting color:", error);
       return "transparent";
@@ -101,7 +102,7 @@ const BgColorTool: React.FC<BgColorToolProps> = ({ color, value, onColorChange, 
                 step={1}
                 min={0}
                 max={255}
-                onChangeCommitted={(_event, newValue) => onValueChange(newValue as number)}
+                onChangeCommitted={(_event, newValue) => onAlphaChange(newValue as number)}
               />
             </Box>
           </Box>
@@ -113,6 +114,4 @@ const BgColorTool: React.FC<BgColorToolProps> = ({ color, value, onColorChange, 
       </Menu>
     </Box>
   );
-};
-
-export default BgColorTool;
+}
