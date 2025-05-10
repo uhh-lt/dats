@@ -24,15 +24,9 @@ function TextNode(props: NodeProps<TextData>) {
   };
 
   return (
-    <TextNodeComponent
-      nodeProps={props}
-      onTextChange={handleTextChange}
-      renderContainer={(children) => (
-        <BaseNode allowDrawConnection={false} nodeProps={props} alignment={props.data.verticalAlign}>
-          {children}
-        </BaseNode>
-      )}
-    />
+    <BaseNode allowDrawConnection={false} nodeProps={props} alignment={props.data.verticalAlign}>
+      <TextNodeComponent nodeProps={props} onTextChange={handleTextChange} />
+    </BaseNode>
   );
 }
 

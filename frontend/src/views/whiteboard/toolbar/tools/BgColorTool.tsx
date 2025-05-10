@@ -4,12 +4,12 @@ import ColorGrid from "./ColorGrid.tsx";
 
 interface BgColorToolProps {
   color: string;
-  value: number | null;
+  alpha: number | null;
   onColorChange: (color: string) => void;
   onAlphaChange: (value: number) => void;
 }
 
-export default function BgColorTool({ color, value, onColorChange, onAlphaChange }: BgColorToolProps) {
+export default function BgColorTool({ color, alpha, onColorChange, onAlphaChange }: BgColorToolProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -33,9 +33,9 @@ export default function BgColorTool({ color, value, onColorChange, onAlphaChange
       const r = parseInt(color.slice(1, 3), 16);
       const g = parseInt(color.slice(3, 5), 16);
       const b = parseInt(color.slice(5, 7), 16);
-      const alpha = value ? value / 255 : 1; // Convert alpha from 0-255 to 0-1 range
+      const alphaValue = alpha ? alpha / 255 : 1; // Convert alpha from 0-255 to 0-1 range
 
-      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      return `rgba(${r}, ${g}, ${b}, ${alphaValue})`;
     } catch (error) {
       console.error("Error converting color:", error);
       return "transparent";
@@ -98,7 +98,7 @@ export default function BgColorTool({ color, value, onColorChange, onAlphaChange
             <Box sx={{ px: 1 }}>
               <Slider
                 size="small"
-                defaultValue={value || 1}
+                defaultValue={alpha || 1}
                 step={1}
                 min={0}
                 max={255}

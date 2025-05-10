@@ -3,16 +3,14 @@ import { useState } from "react";
 import { NodeProps } from "reactflow";
 import { TextNodeData } from "../../../api/openapi/models/TextNodeData.ts";
 
-interface TextNodeComponentProps<T extends Partial<TextNodeData>> {
+export interface TextNodeComponentProps<T extends Partial<TextNodeData>> {
   nodeProps: NodeProps<T>;
   onTextChange: (value: string) => void;
-  renderContainer: (children: React.ReactNode) => React.ReactNode;
 }
 
 export function TextNodeComponent<T extends Partial<TextNodeData>>({
   nodeProps,
   onTextChange,
-  renderContainer,
 }: TextNodeComponentProps<T>) {
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
@@ -44,9 +42,9 @@ export function TextNodeComponent<T extends Partial<TextNodeData>>({
     fontFamily: nodeProps.data.fontFamily ?? "Arial",
   };
 
-  const renderContent = () => {
-    if (isEditing) {
-      return (
+  return (
+    <div onClick={handleClick}>
+      {isEditing ? (
         <Box className="nodrag">
           <TextField
             variant="outlined"
@@ -60,15 +58,11 @@ export function TextNodeComponent<T extends Partial<TextNodeData>>({
             autoFocus
           />
         </Box>
-      );
-    }
-
-    return (
-      <Typography variant="body1" color={nodeProps.data.color} style={textStyle} whiteSpace="pre-wrap">
-        {nodeProps.data.text}
-      </Typography>
-    );
-  };
-
-  return renderContainer(<div onClick={handleClick}>{renderContent()}</div>);
+      ) : (
+        <Typography variant="body1" color={nodeProps.data.color} style={textStyle} whiteSpace="pre-wrap">
+          {nodeProps.data.text}
+        </Typography>
+      )}
+    </div>
+  );
 }
