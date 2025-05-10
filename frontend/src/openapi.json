@@ -6086,11 +6086,6 @@
           "borderWidth": { "type": "integer", "title": "Borderwidth", "description": "Width of the border" },
           "borderStyle": { "$ref": "#/components/schemas/BorderStyle", "description": "Style of the border" },
           "text": { "type": "string", "title": "Text", "description": "Text of the text" },
-          "variant": {
-            "type": "string",
-            "title": "Variant",
-            "description": "Variant of the text (e.g., 'h1', 'h2', 'subtitle', ...)"
-          },
           "color": { "type": "string", "title": "Color", "description": "Text color of the text" },
           "horizontalAlign": {
             "$ref": "#/components/schemas/HorizontalAlign",
@@ -6103,6 +6098,13 @@
           "bold": { "type": "boolean", "title": "Bold", "description": "Boldness of the text" },
           "italic": { "type": "boolean", "title": "Italic", "description": "Italicness of the text" },
           "underline": { "type": "boolean", "title": "Underline", "description": "Underlinedness of the text" },
+          "strikethrough": {
+            "type": "boolean",
+            "title": "Strikethrough",
+            "description": "Strikethroughness of the text"
+          },
+          "fontSize": { "type": "integer", "title": "Fontsize", "description": "Font size of the text" },
+          "fontFamily": { "type": "string", "title": "Fontfamily", "description": "Font family of the text" },
           "bgcolor": { "type": "string", "title": "Bgcolor", "description": "Background color of the text" },
           "bgalpha": {
             "anyOf": [{ "type": "number" }, { "type": "null" }],
@@ -6118,13 +6120,15 @@
           "borderWidth",
           "borderStyle",
           "text",
-          "variant",
           "color",
           "horizontalAlign",
           "verticalAlign",
           "bold",
           "italic",
           "underline",
+          "strikethrough",
+          "fontSize",
+          "fontFamily",
           "bgcolor",
           "bgalpha",
           "type"
@@ -8247,11 +8251,6 @@
       "NoteNodeData": {
         "properties": {
           "text": { "type": "string", "title": "Text", "description": "Text of the text" },
-          "variant": {
-            "type": "string",
-            "title": "Variant",
-            "description": "Variant of the text (e.g., 'h1', 'h2', 'subtitle', ...)"
-          },
           "color": { "type": "string", "title": "Color", "description": "Text color of the text" },
           "horizontalAlign": {
             "$ref": "#/components/schemas/HorizontalAlign",
@@ -8264,6 +8263,13 @@
           "bold": { "type": "boolean", "title": "Bold", "description": "Boldness of the text" },
           "italic": { "type": "boolean", "title": "Italic", "description": "Italicness of the text" },
           "underline": { "type": "boolean", "title": "Underline", "description": "Underlinedness of the text" },
+          "strikethrough": {
+            "type": "boolean",
+            "title": "Strikethrough",
+            "description": "Strikethroughness of the text"
+          },
+          "fontSize": { "type": "integer", "title": "Fontsize", "description": "Font size of the text" },
+          "fontFamily": { "type": "string", "title": "Fontfamily", "description": "Font family of the text" },
           "bgcolor": { "type": "string", "title": "Bgcolor", "description": "Background color of the text" },
           "bgalpha": {
             "anyOf": [{ "type": "number" }, { "type": "null" }],
@@ -8275,13 +8281,15 @@
         "type": "object",
         "required": [
           "text",
-          "variant",
           "color",
           "horizontalAlign",
           "verticalAlign",
           "bold",
           "italic",
           "underline",
+          "strikethrough",
+          "fontSize",
+          "fontFamily",
           "bgcolor",
           "bgalpha",
           "type"
@@ -9874,11 +9882,6 @@
       "TextNodeData": {
         "properties": {
           "text": { "type": "string", "title": "Text", "description": "Text of the text" },
-          "variant": {
-            "type": "string",
-            "title": "Variant",
-            "description": "Variant of the text (e.g., 'h1', 'h2', 'subtitle', ...)"
-          },
           "color": { "type": "string", "title": "Color", "description": "Text color of the text" },
           "horizontalAlign": {
             "$ref": "#/components/schemas/HorizontalAlign",
@@ -9891,18 +9894,27 @@
           "bold": { "type": "boolean", "title": "Bold", "description": "Boldness of the text" },
           "italic": { "type": "boolean", "title": "Italic", "description": "Italicness of the text" },
           "underline": { "type": "boolean", "title": "Underline", "description": "Underlinedness of the text" },
+          "strikethrough": {
+            "type": "boolean",
+            "title": "Strikethrough",
+            "description": "Strikethroughness of the text"
+          },
+          "fontSize": { "type": "integer", "title": "Fontsize", "description": "Font size of the text" },
+          "fontFamily": { "type": "string", "title": "Fontfamily", "description": "Font family of the text" },
           "type": { "type": "string", "const": "text", "title": "Type" }
         },
         "type": "object",
         "required": [
           "text",
-          "variant",
           "color",
           "horizontalAlign",
           "verticalAlign",
           "bold",
           "italic",
           "underline",
+          "strikethrough",
+          "fontSize",
+          "fontFamily",
           "type"
         ],
         "title": "TextNodeData"
@@ -10448,11 +10460,6 @@
       "WhiteboardEdgeLabelData": {
         "properties": {
           "text": { "type": "string", "title": "Text", "description": "Text of the text" },
-          "variant": {
-            "type": "string",
-            "title": "Variant",
-            "description": "Variant of the text (e.g., 'h1', 'h2', 'subtitle', ...)"
-          },
           "color": { "type": "string", "title": "Color", "description": "Text color of the text" },
           "horizontalAlign": {
             "$ref": "#/components/schemas/HorizontalAlign",
@@ -10465,6 +10472,13 @@
           "bold": { "type": "boolean", "title": "Bold", "description": "Boldness of the text" },
           "italic": { "type": "boolean", "title": "Italic", "description": "Italicness of the text" },
           "underline": { "type": "boolean", "title": "Underline", "description": "Underlinedness of the text" },
+          "strikethrough": {
+            "type": "boolean",
+            "title": "Strikethrough",
+            "description": "Strikethroughness of the text"
+          },
+          "fontSize": { "type": "integer", "title": "Fontsize", "description": "Font size of the text" },
+          "fontFamily": { "type": "string", "title": "Fontfamily", "description": "Font family of the text" },
           "bgcolor": { "type": "string", "title": "Bgcolor", "description": "Background color of the text" },
           "bgalpha": {
             "anyOf": [{ "type": "number" }, { "type": "null" }],
@@ -10475,13 +10489,15 @@
         "type": "object",
         "required": [
           "text",
-          "variant",
           "color",
           "horizontalAlign",
           "verticalAlign",
           "bold",
           "italic",
           "underline",
+          "strikethrough",
+          "fontSize",
+          "fontFamily",
           "bgcolor",
           "bgalpha"
         ],

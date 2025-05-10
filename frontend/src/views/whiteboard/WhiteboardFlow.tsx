@@ -1,16 +1,15 @@
+import InterestsIcon from "@mui/icons-material/Interests";
 import SaveIcon from "@mui/icons-material/Save";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import { LoadingButton } from "@mui/lab";
-import { Box, Paper, Stack, Typography } from "@mui/material";
+import { Box, Button, IconButton, Menu, MenuItem, Paper, Stack, Tooltip, Typography } from "@mui/material";
 import { toPng } from "html-to-image";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useBlocker, useParams } from "react-router-dom";
+import { Link, useBlocker, useParams } from "react-router-dom";
 import {
   Background,
   Connection,
   ConnectionMode,
-  ControlButton,
-  Controls,
   DefaultEdgeOptions,
   Edge,
   IsValidConnection,
@@ -42,6 +41,7 @@ import SpanAnnotationHooks from "../../api/SpanAnnotationHooks.ts";
 import TagHooks from "../../api/TagHooks.ts";
 import WhiteboardHooks from "../../api/WhiteboardHooks.ts";
 import BBoxAnnotationEditDialog from "../../components/BBoxAnnotation/BBoxAnnotationEditDialog.tsx";
+import EditableTypography from "../../components/EditableTypography";
 import SentenceAnnotationEditDialog from "../../components/SentenceAnnotation/SentenceAnnotationEditDialog.tsx";
 import SpanAnnotationEditDialog from "../../components/SpanAnnotation/SpanAnnotationEditDialog.tsx";
 import { downloadFile } from "../../utils/ExportUtils.ts";
@@ -123,6 +123,9 @@ const defaultEdgeOptions: DefaultEdgeOptions = {
       bold: false,
       italic: false,
       underline: false,
+      strikethrough: false,
+      fontFamily: "Arial",
+      fontSize: 12,
       horizontalAlign: "center",
       verticalAlign: "center",
     },
@@ -187,6 +190,8 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   const [edges, setEdges, onEdgesChange] = useEdgeStateCustom(whiteboard.content.edges as Edge[]);
   const [selectedEdges, setSelectedEdges] = useState<Edge[]>([]);
   const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
+  const [shapeMenuAnchor, setShapeMenuAnchor] = useState<null | HTMLElement>(null);
+  const shapeMenuOpen = Boolean(shapeMenuAnchor);
 
   const handleChangePendingAction = useCallback(
     (action: PendingAddNodeAction | undefined) => {
@@ -372,6 +377,46 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
     return false;
   });
 
+  // CHANGE TITLE Feature
+  const handleTitleChange = useCallback(
+    (newTitle: string) => {
+      const mutation = updateWhiteboard.mutate;
+      mutation({
+        whiteboardId: whiteboard.id,
+        requestBody: {
+          title: newTitle,
+        },
+      });
+    },
+    [updateWhiteboard.mutate, whiteboard.id],
+  );
+
+  const handleShapeMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    setShapeMenuAnchor(event.currentTarget);
+  };
+
+  const handleShapeMenuClose = () => {
+    setShapeMenuAnchor(null);
+  };
+
+  const handleExportWhiteboard = useCallback(() => {
+    if (flowRef.current === null) return;
+    reactFlowInstance.fitView({
+      duration: 0,
+      padding: 0.01,
+    });
+    toPng(flowRef.current, {
+      filter: (node) =>
+        !(
+          node?.classList?.contains("react-flow__minimap") ||
+          node?.classList?.contains("react-flow__controls") ||
+          node?.classList?.contains("react-flow__panel")
+        ),
+    }).then((dataUrl) => {
+      downloadFile(dataUrl, `whiteboard-${whiteboard.title}.png`);
+    });
+  }, [reactFlowInstance, whiteboard.title]);
+
   return (
     <>
       <Box className="myFlexContainer h100">
@@ -437,26 +482,138 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
             {!readonly && (
               <>
                 <Panel position="top-left">
-                  <Paper elevation={1} sx={{ mb: 3 }}>
-                    <Stack>
-                      <Typography p={1}>DATS Objects</Typography>
-                      <AddDocumentNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
-                      <AddTagNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
-                      <AddCodeNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
-                      <AddSpanAnnotationNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
-                      <AddSentenceAnnotationNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
-                      <AddBBoxAnnotationNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
-                      <AddMemoNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
+                  <Paper elevation={1} sx={{ mb: 3, width: "fit-content", borderRadius: 2 }}>
+                    <Stack spacing={1} sx={{ p: 1 }}>
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        <Typography
+                          variant="h5"
+                          component={Link}
+                          to={`/project/${projectId}/whiteboard`}
+                          sx={{ textDecoration: "none", color: "black" }}
+                        >
+                          Whiteboard
+                        </Typography>
+                        <EditableTypography
+                          value={whiteboard.title}
+                          onChange={handleTitleChange}
+                          whiteColor={false}
+                          variant="subtitle1"
+                        />
+                        <Tooltip title="Export whiteboard" placement="right" arrow>
+                          <IconButton onClick={handleExportWhiteboard} size="small" sx={{ ml: 1, color: "black" }}>
+                            <SaveAltIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
                     </Stack>
                   </Paper>
-                  <Paper elevation={1}>
+                </Panel>
+                <Panel position="top-left" style={{ marginTop: 100 }}>
+                  <Paper elevation={1} sx={{ mb: 3, width: "fit-content" }}>
                     <Stack>
-                      <Typography p={1}>Text Elements</Typography>
-                      <AddNoteNodeButton onClick={handleChangePendingAction} />
-                      <AddTextNodeButton onClick={handleChangePendingAction} />
-                      <AddBorderNodeButton type="Ellipse" onClick={handleChangePendingAction} />
-                      <AddBorderNodeButton type="Rectangle" onClick={handleChangePendingAction} />
-                      <AddBorderNodeButton type="Rounded" onClick={handleChangePendingAction} />
+                      <AddDocumentNodeDialog
+                        projectId={projectId}
+                        onClick={handleChangePendingAction}
+                        buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
+                      />
+                      <AddTagNodeDialog
+                        projectId={projectId}
+                        onClick={handleChangePendingAction}
+                        buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
+                      />
+                      <AddCodeNodeDialog
+                        projectId={projectId}
+                        onClick={handleChangePendingAction}
+                        buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
+                      />
+                      <AddSpanAnnotationNodeDialog
+                        projectId={projectId}
+                        onClick={handleChangePendingAction}
+                        buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
+                      />
+                      <AddSentenceAnnotationNodeDialog
+                        projectId={projectId}
+                        onClick={handleChangePendingAction}
+                        buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
+                      />
+                      <AddBBoxAnnotationNodeDialog
+                        projectId={projectId}
+                        onClick={handleChangePendingAction}
+                        buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
+                      />
+                      <AddMemoNodeDialog
+                        projectId={projectId}
+                        onClick={handleChangePendingAction}
+                        buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
+                      />
+                    </Stack>
+                  </Paper>
+                  <Paper elevation={1} sx={{ width: "fit-content" }}>
+                    <Stack>
+                      <AddNoteNodeButton
+                        onClick={handleChangePendingAction}
+                        buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
+                      />
+                      <AddTextNodeButton
+                        onClick={handleChangePendingAction}
+                        buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
+                      />
+                      <Tooltip title="Add shape" placement="right" arrow>
+                        <Button
+                          onClick={handleShapeMenuClick}
+                          sx={{ minWidth: 0, p: 1, color: "black" }}
+                          variant="text"
+                        >
+                          <InterestsIcon />
+                        </Button>
+                      </Tooltip>
+                      <Menu
+                        id="shape-menu"
+                        anchorEl={shapeMenuAnchor}
+                        open={shapeMenuOpen}
+                        onClose={handleShapeMenuClose}
+                        anchorOrigin={{
+                          vertical: "top",
+                          horizontal: "right",
+                        }}
+                        transformOrigin={{
+                          vertical: "top",
+                          horizontal: "left",
+                        }}
+                        slotProps={{
+                          paper: {
+                            sx: {
+                              minWidth: "auto",
+                              width: "fit-content",
+                              marginLeft: 0.8,
+                              elevation: 1,
+                              boxShadow: 1,
+                            },
+                          },
+                        }}
+                      >
+                        <MenuItem onClick={handleShapeMenuClose} sx={{ p: 0, px: 0, py: 0, minHeight: "auto" }}>
+                          <AddBorderNodeButton
+                            type="Rectangle"
+                            onClick={handleChangePendingAction}
+                            buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
+                          />
+                        </MenuItem>
+                        <MenuItem onClick={handleShapeMenuClose} sx={{ p: 0, px: 0, py: 0, minHeight: "auto" }}>
+                          <AddBorderNodeButton
+                            type="Ellipse"
+                            onClick={handleChangePendingAction}
+                            buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
+                          />
+                        </MenuItem>
+                        <MenuItem onClick={handleShapeMenuClose} sx={{ p: 0, px: 0, py: 0, minHeight: "auto" }}>
+                          <AddBorderNodeButton
+                            type="Rounded"
+                            onClick={handleChangePendingAction}
+                            buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
+                          />
+                        </MenuItem>
+                      </Menu>
                     </Stack>
                   </Paper>
                   {readonly && (
@@ -490,34 +647,6 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
               </>
             )}
             <Background />
-            <Controls>
-              <ControlButton
-                onClick={() => {
-                  if (flowRef.current === null) return;
-                  reactFlowInstance.fitView({
-                    duration: 0,
-                    padding: 0.01,
-                  });
-                  toPng(flowRef.current, {
-                    filter: (node) =>
-                      !(
-                        node?.classList?.contains("react-flow__minimap") ||
-                        node?.classList?.contains("react-flow__controls") ||
-                        node?.classList?.contains("react-flow__panel")
-                      ),
-                  }).then((dataUrl) => {
-                    downloadFile(dataUrl, `whiteboard-${whiteboard.title}.png`);
-                  });
-                }}
-              >
-                <SaveAltIcon
-                  style={{
-                    maxWidth: "16px",
-                    maxHeight: "24px",
-                  }}
-                />
-              </ControlButton>
-            </Controls>
             <MiniMap />
           </ReactFlow>
         </Box>

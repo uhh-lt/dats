@@ -3,17 +3,18 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { Box, Menu, MenuItem, Tooltip, Typography } from "@mui/material";
 import { useRef, useState } from "react";
 
-interface NumberToolProps {
-  value: number | undefined;
-  onValueChange: (value: number) => void;
-  min: number;
-  max: number;
+const DEFAULT_SIZE = 16;
+const MIN_SIZE = 8;
+const MAX_SIZE = 72;
+
+interface FontSizeToolProps {
+  size: number | undefined;
+  onSizeChange: (size: number) => void;
 }
 
-export default function NumberTool({ value, onValueChange, min, max }: NumberToolProps) {
+export default function FontSizeTool({ size, onSizeChange }: FontSizeToolProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const inputRef = useRef<HTMLDivElement>(null);
-  const defaultSize = 1;
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
     setAnchorEl(event.currentTarget);
@@ -24,43 +25,43 @@ export default function NumberTool({ value, onValueChange, min, max }: NumberToo
   };
 
   const handleMenuItemClick = (size: number) => {
-    onValueChange(size);
+    onSizeChange(size);
     handleClose();
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    const currentSize = value || defaultSize;
+    const currentSize = size || DEFAULT_SIZE;
 
     if (event.key === "ArrowUp") {
       event.preventDefault();
-      if (currentSize < max) {
-        onValueChange(currentSize + 1);
+      if (currentSize < MAX_SIZE) {
+        onSizeChange(currentSize + 1);
       }
     } else if (event.key === "ArrowDown") {
       event.preventDefault();
-      if (currentSize > min) {
-        onValueChange(currentSize - 1);
+      if (currentSize > MIN_SIZE) {
+        onSizeChange(currentSize - 1);
       }
     }
   };
 
-  const handleIncreaseSize = () => {
-    const currentSize = value || defaultSize;
-    if (currentSize < max) {
-      onValueChange(currentSize + 1);
+  const handleIncreaseFontSize = () => {
+    const currentSize = size || DEFAULT_SIZE;
+    if (currentSize < MAX_SIZE) {
+      onSizeChange(currentSize + 1);
     }
   };
 
-  const handleDecreaseSize = () => {
-    const currentSize = value || defaultSize;
-    if (currentSize > min) {
-      onValueChange(currentSize - 1);
+  const handleDecreaseFontSize = () => {
+    const currentSize = size || DEFAULT_SIZE;
+    if (currentSize > MIN_SIZE) {
+      onSizeChange(currentSize - 1);
     }
   };
 
   return (
     <>
-      <Tooltip title="Size" arrow>
+      <Tooltip title="Text size" arrow>
         <Box
           ref={inputRef}
           onClick={handleClick}
@@ -72,18 +73,18 @@ export default function NumberTool({ value, onValueChange, min, max }: NumberToo
             position: "relative",
             height: "32px",
             width: "40px",
+            px: 1,
             cursor: "pointer",
           }}
         >
-          <Typography variant="body2" sx={{ flex: 1, textAlign: "center" }}>
-            {value || defaultSize}
+          <Typography variant="body2" sx={{ flex: 1 }}>
+            {size || DEFAULT_SIZE}
           </Typography>
           <Box
             sx={{
               display: "flex",
               flexDirection: "column",
               height: "100%",
-              ml: 1.8,
             }}
           ></Box>
         </Box>
@@ -106,23 +107,24 @@ export default function NumberTool({ value, onValueChange, min, max }: NumberToo
               width: "60px",
               maxHeight: "300px",
               marginTop: "19px",
-              boxShadow: 3,
+              boxShadow: 1,
+              elevation: 1,
             },
           },
         }}
       >
-        {Array.from({ length: max - min + 1 }, (_, i) => min + i).map((size) => (
+        {Array.from({ length: MAX_SIZE - MIN_SIZE + 1 }, (_, i) => MIN_SIZE + i).map((fontSize) => (
           <MenuItem
-            key={size}
-            onClick={() => handleMenuItemClick(size)}
-            selected={size === value}
+            key={fontSize}
+            onClick={() => handleMenuItemClick(fontSize)}
+            selected={size === fontSize}
             sx={{ px: 2, py: 0.5 }}
           >
-            <Typography>{size}</Typography>
+            <Typography>{fontSize}</Typography>
           </MenuItem>
         ))}
       </Menu>
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column" }}>
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", px: 1 }}>
         <Box
           sx={{
             flex: 1,
@@ -136,7 +138,7 @@ export default function NumberTool({ value, onValueChange, min, max }: NumberToo
           }}
           onClick={(e) => {
             e.stopPropagation();
-            handleIncreaseSize();
+            handleIncreaseFontSize();
           }}
         >
           <KeyboardArrowUpIcon fontSize="small" />
@@ -154,7 +156,7 @@ export default function NumberTool({ value, onValueChange, min, max }: NumberToo
           }}
           onClick={(e) => {
             e.stopPropagation();
-            handleDecreaseSize();
+            handleDecreaseFontSize();
           }}
         >
           <KeyboardArrowDownIcon fontSize="small" />

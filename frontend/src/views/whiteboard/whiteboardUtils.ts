@@ -25,6 +25,26 @@ import { theme } from "../../plugins/ReactMUI.ts";
 
 const positionOffset = 50;
 
+export const FONT_FAMILIES = ["Arial", "Times New Roman", "Courier New", "Verdana", "Georgia"];
+
+export const PREDEFINED_COLORS = [
+  "#ffffff", // White
+  "#000000", // Black
+  "#ff0000", // Red
+  "#00ff00", // Green
+  "#0000ff", // Blue
+  "#ffff00", // Yellow
+  "#ff00ff", // Magenta
+  "#00ffff", // Cyan
+  "#808080", // Gray
+  "#800000", // Maroon
+  "#808000", // Olive
+  "#008000", // Dark Green
+  "#800080", // Purple
+  "#008080", // Teal
+  "#000080", // Navy
+];
+
 export const defaultDatabaseEdgeOptions: DefaultEdgeOptions = {
   style: { strokeWidth: 3, stroke: theme.palette.grey[400] },
   type: "floating",
@@ -98,13 +118,15 @@ export const createTextNode = ({ position }: { position?: XYPosition }): Node<Te
     data: {
       type: WhiteboardNodeType.TEXT,
       text: "test",
-      variant: "h3",
       color: "#000000",
+      horizontalAlign: HorizontalAlign.LEFT,
+      verticalAlign: VerticalAlign.TOP,
       bold: false,
       italic: false,
       underline: false,
-      horizontalAlign: HorizontalAlign.LEFT,
-      verticalAlign: VerticalAlign.TOP,
+      strikethrough: false,
+      fontFamily: "Arial",
+      fontSize: 12,
     },
     type: WhiteboardNodeType.TEXT,
     position: { x: position?.x || 0, y: position?.y || 0 },
@@ -117,13 +139,15 @@ export const createNoteNode = ({ position }: { position?: XYPosition }): Node<No
     data: {
       type: WhiteboardNodeType.NOTE,
       text: "test",
-      variant: "h3",
       color: "#000000",
       bgcolor: "#ffffff",
       bgalpha: 255,
       bold: false,
       italic: false,
       underline: false,
+      strikethrough: false,
+      fontFamily: "Arial",
+      fontSize: 12,
       horizontalAlign: HorizontalAlign.LEFT,
       verticalAlign: VerticalAlign.TOP,
     },
@@ -144,13 +168,15 @@ export const createBorderNode = ({
     data: {
       type: WhiteboardNodeType.BORDER,
       text: "test",
-      variant: "h3",
       color: "#000000",
       bgcolor: "#ffffff",
       bgalpha: 127,
       bold: false,
       italic: false,
       underline: false,
+      strikethrough: false,
+      fontFamily: "Arial",
+      fontSize: 12,
       horizontalAlign: HorizontalAlign.CENTER,
       verticalAlign: VerticalAlign.CENTER,
       borderColor: "#000000",

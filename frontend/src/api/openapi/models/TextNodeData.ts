@@ -10,10 +10,6 @@ export type TextNodeData = {
    */
   text: string;
   /**
-   * Variant of the text (e.g., 'h1', 'h2', 'subtitle', ...)
-   */
-  variant: string;
-  /**
    * Text color of the text
    */
   color: string;
@@ -37,5 +33,17 @@ export type TextNodeData = {
    * Underlinedness of the text
    */
   underline: boolean;
+  /**
+   * Strikethroughness of the text
+   */
+  strikethrough: boolean;
+  /**
+   * Font size of the text
+   */
+  fontSize: number;
+  /**
+   * Font family of the text
+   */
+  fontFamily: string;
   type: string;
 };

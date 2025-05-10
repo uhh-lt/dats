@@ -1,28 +1,12 @@
-import { Box, TextField, Typography, useTheme } from "@mui/material";
-import { Variant } from "@mui/material/styles/createTypography";
-import { useState } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
 import { NoteNodeData } from "../../../api/openapi/models/NoteNodeData.ts";
-import BaseCardNode from "./BaseCardNode.tsx";
+import { TextNodeComponent } from "../toolbar/textNodeUtils.tsx";
+import BaseNode from "./BaseNode.tsx";
 
 function NoteNode(props: NodeProps<NoteNodeData>) {
   const reactFlowInstance = useReactFlow();
-  const theme = useTheme();
 
-  const [isEditing, setIsEditing] = useState(false);
-
-  const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    if (event.detail >= 2) {
-      setIsEditing(true);
-    }
-  };
-
-  const handleChangeText = (
-    event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element> | React.KeyboardEvent<HTMLDivElement>,
-  ) => {
-    // @ts-expect-error event target value is always a string
-    const value: string = event.target.value;
-    console.log(value);
+  const handleTextChange = (value: string) => {
     reactFlowInstance.setNodes((nodes) =>
       nodes.map((node) => {
         if (node.id === props.id) {
@@ -34,54 +18,22 @@ function NoteNode(props: NodeProps<NoteNodeData>) {
             },
           };
         }
-
         return node;
       }),
     );
-    setIsEditing(false);
   };
 
   return (
-    <BaseCardNode
+    <BaseNode
       allowDrawConnection={false}
       nodeProps={props}
-      onClick={handleClick}
-      backgroundColor={props.data.bgcolor + props.data.bgalpha?.toString(16).padStart(2, "0")}
       alignment={props.data.verticalAlign}
+      style={{
+        backgroundColor: props.data.bgcolor + props.data.bgalpha?.toString(16).padStart(2, "0"),
+      }}
     >
-      {isEditing ? (
-        <Box className="nodrag">
-          <TextField
-            variant="outlined"
-            defaultValue={props.data.text}
-            onBlur={handleChangeText}
-            onKeyDown={(event) => event.key === "Escape" && handleChangeText(event)}
-            inputProps={{
-              style: {
-                ...theme.typography[props.data.variant as Variant],
-              },
-            }}
-            multiline
-            autoFocus
-          />
-        </Box>
-      ) : (
-        <Typography
-          variant={props.data.variant as Variant}
-          color={props.data.color}
-          style={{
-            ...(props.data.italic && { fontStyle: "italic" }),
-            ...(props.data.bold && { fontWeight: "bold" }),
-            ...(props.data.underline && { textDecoration: "underline" }),
-            textAlign: props.data.horizontalAlign,
-            width: "100%",
-          }}
-          whiteSpace="pre-wrap"
-        >
-          {props.data.text}
-        </Typography>
-      )}
-    </BaseCardNode>
+      <TextNodeComponent nodeProps={props} onTextChange={handleTextChange} />
+    </BaseNode>
   );
 }
 

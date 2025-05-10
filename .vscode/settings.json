@@ -47,5 +47,11 @@
   },
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "python.testing.pytestArgs": ["test"],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "python.testing.cwd": "backend/src",
+  "prettier.prettierPath": "./frontend/node_modules/prettier",
+  "python.analysis.extraPaths": ["./backend/src"]
 }
