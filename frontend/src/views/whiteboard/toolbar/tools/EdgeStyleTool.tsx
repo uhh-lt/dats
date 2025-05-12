@@ -127,7 +127,7 @@ export default function EdgeStyleTool({
           </Typography>
           <Stack direction="row" spacing={1} sx={{ justifyContent: "center" }}>
             {Object.values(StrokeStyle).map((type) => (
-              <Tooltip title={type} arrow>
+              <Tooltip title={type} arrow key={type}>
                 <Button
                   size="small"
                   onClick={() => onStrokeStyleChange(type)}
