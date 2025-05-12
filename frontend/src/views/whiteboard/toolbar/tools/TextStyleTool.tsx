@@ -2,7 +2,7 @@ import FormatBoldIcon from "@mui/icons-material/FormatBold";
 import FormatItalicIcon from "@mui/icons-material/FormatItalic";
 import FormatUnderlinedIcon from "@mui/icons-material/FormatUnderlined";
 import StrikethroughSIcon from "@mui/icons-material/StrikethroughS";
-import { Box, Button, Menu, MenuItem, Stack, Tooltip } from "@mui/material";
+import { Button, Menu, MenuItem, Stack, Tooltip } from "@mui/material";
 import { useState } from "react";
 import { TextData } from "../../types/base/TextData.ts";
 import { TextStyle } from "../../types/base/TextStyle.ts";
@@ -38,11 +38,9 @@ const TextStyleTool: React.FC<TextStyleToolProps> = ({ textData, onStyleChange }
   return (
     <>
       <Tooltip title="Text style" arrow disableHoverListener={Boolean(textStyleAnchor)}>
-        <Box>
-          <Button variant="text" size="small" onClick={handleTextStyleClick} sx={{ minWidth: 0, color: "black" }}>
-            <FormatBoldIcon />
-          </Button>
-        </Box>
+        <Button variant="text" size="small" onClick={handleTextStyleClick} sx={{ minWidth: 0, color: "black" }}>
+          <FormatBoldIcon />
+        </Button>
       </Tooltip>
       <Menu
         anchorEl={textStyleAnchor}

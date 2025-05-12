@@ -1,19 +1,18 @@
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import { Box, Menu, MenuItem, Tooltip, Typography } from "@mui/material";
-import { useRef, useState } from "react";
+import { Box, Menu, MenuItem, Stack, Tooltip, Typography } from "@mui/material";
+import { useState } from "react";
 
 interface NumberToolProps {
-  value: number | undefined;
+  tooltip: string;
+  value: number;
   onValueChange: (value: number) => void;
   min: number;
   max: number;
 }
 
-export default function NumberTool({ value, onValueChange, min, max }: NumberToolProps) {
+export default function NumberTool({ tooltip, value, onValueChange, min, max }: NumberToolProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const inputRef = useRef<HTMLDivElement>(null);
-  const defaultSize = 1;
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
     setAnchorEl(event.currentTarget);
@@ -29,64 +28,50 @@ export default function NumberTool({ value, onValueChange, min, max }: NumberToo
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    const currentSize = value || defaultSize;
-
     if (event.key === "ArrowUp") {
       event.preventDefault();
-      if (currentSize < max) {
-        onValueChange(currentSize + 1);
+      if (value < max) {
+        onValueChange(value + 1);
       }
     } else if (event.key === "ArrowDown") {
       event.preventDefault();
-      if (currentSize > min) {
-        onValueChange(currentSize - 1);
+      if (value > min) {
+        onValueChange(value - 1);
       }
     }
   };
 
   const handleIncreaseSize = () => {
-    const currentSize = value || defaultSize;
-    if (currentSize < max) {
-      onValueChange(currentSize + 1);
+    if (value < max) {
+      onValueChange(value + 1);
     }
   };
 
   const handleDecreaseSize = () => {
-    const currentSize = value || defaultSize;
-    if (currentSize > min) {
-      onValueChange(currentSize - 1);
+    if (value > min) {
+      onValueChange(value - 1);
     }
   };
 
   return (
-    <>
-      <Tooltip title="Size" arrow>
-        <Box
-          ref={inputRef}
+    <Stack direction="row" alignItems="center">
+      <Tooltip title={tooltip} arrow>
+        <Typography
+          variant="body2"
           onClick={handleClick}
           onKeyDown={handleKeyDown}
           tabIndex={0}
           sx={{
             display: "inline-flex",
             alignItems: "center",
-            position: "relative",
+            justifyContent: "center",
             height: "32px",
-            width: "40px",
+            width: "32px",
             cursor: "pointer",
           }}
         >
-          <Typography variant="body2" sx={{ flex: 1, textAlign: "center" }}>
-            {value || defaultSize}
-          </Typography>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              height: "100%",
-              ml: 1.8,
-            }}
-          ></Box>
-        </Box>
+          {value}
+        </Typography>
       </Tooltip>
       <Menu
         anchorEl={anchorEl}
@@ -103,21 +88,18 @@ export default function NumberTool({ value, onValueChange, min, max }: NumberToo
         slotProps={{
           paper: {
             sx: {
-              width: "60px",
               maxHeight: "300px",
               marginTop: "19px",
               boxShadow: 3,
             },
           },
+          list: {
+            sx: { p: 0 },
+          },
         }}
       >
         {Array.from({ length: max - min + 1 }, (_, i) => min + i).map((size) => (
-          <MenuItem
-            key={size}
-            onClick={() => handleMenuItemClick(size)}
-            selected={size === value}
-            sx={{ px: 2, py: 0.5 }}
-          >
+          <MenuItem key={size} onClick={() => handleMenuItemClick(size)} selected={size === value}>
             <Typography>{size}</Typography>
           </MenuItem>
         ))}
@@ -125,7 +107,6 @@ export default function NumberTool({ value, onValueChange, min, max }: NumberToo
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column" }}>
         <Box
           sx={{
-            flex: 1,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -139,11 +120,10 @@ export default function NumberTool({ value, onValueChange, min, max }: NumberToo
             handleIncreaseSize();
           }}
         >
-          <KeyboardArrowUpIcon fontSize="small" />
+          <KeyboardArrowUpIcon fontSize="inherit" />
         </Box>
         <Box
           sx={{
-            flex: 1,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -157,9 +137,9 @@ export default function NumberTool({ value, onValueChange, min, max }: NumberToo
             handleDecreaseSize();
           }}
         >
-          <KeyboardArrowDownIcon fontSize="small" />
+          <KeyboardArrowDownIcon fontSize="inherit" />
         </Box>
       </Box>
-    </>
+    </Stack>
   );
 }

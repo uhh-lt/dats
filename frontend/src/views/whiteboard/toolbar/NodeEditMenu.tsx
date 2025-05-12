@@ -4,7 +4,6 @@ import { Node, useReactFlow } from "reactflow";
 import { BorderStyle } from "../../../api/openapi/models/BorderStyle.ts";
 import { HorizontalAlign } from "../../../api/openapi/models/HorizontalAlign.ts";
 import { VerticalAlign } from "../../../api/openapi/models/VerticalAlign.ts";
-import FontSizeTool from "../toolbar/tools/FontSizeTool.tsx";
 import TextStyleTool from "../toolbar/tools/TextStyleTool.tsx";
 import { BackgroundColorData } from "../types/base/BackgroundColorData.ts";
 import { BorderData } from "../types/base/BorderData.ts";
@@ -105,7 +104,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
     });
   };
 
-  const handleBorderStyleChange = (borderStyle: "dashed" | "solid" | "dotted") => {
+  const handleBorderStyleChange = (borderStyle: BorderStyle) => {
     updateNodes((oldNode) => {
       return {
         ...oldNode,
@@ -245,11 +244,11 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
   return (
     <>
       {nodes.length > 0 && (
-        <Paper sx={{ py: 0.8, px: 0.5, mb: 1, width: "fit-content" }}>
-          <Stack direction="row" alignItems="center">
-            <NodeChangeTool onNodeTypeChange={handleChangeNodeType} node={nodes[0]} />
+        <Paper sx={{ p: 1, width: "fit-content" }}>
+          <Stack direction="row" alignItems="center" spacing={1}>
             {showTextTools && (
               <>
+                <NodeChangeTool onNodeTypeChange={handleChangeNodeType} node={nodes[0]} />
                 <FontSelectionTool
                   currentFontFamily={currentFontFamily}
                   onFontFamilyChange={handleFontFamilyChange}
@@ -257,23 +256,23 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
                   onMenuOpen={() => setIsFontFamilyMenuOpen(true)}
                   onMenuClose={() => setIsFontFamilyMenuOpen(false)}
                 />
-                <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
-
-                <FontSizeTool
-                  key={`size-${nodes[0].id}`}
-                  size={nodes[0].data.fontSize}
-                  onSizeChange={handleFontSizeChange}
+                <NumberTool
+                  tooltip="Font size"
+                  key={`font-size-${nodes[0].id}`}
+                  value={nodes[0].data.fontSize}
+                  onValueChange={handleFontSizeChange}
+                  min={8}
+                  max={72}
                 />
                 <FontColorTool
                   key={`font-color-${nodes[0].id}`}
                   color={nodes[0].data.color}
                   onColorChange={handleColorChange}
                 />
-                <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
+                <Divider orientation="vertical" flexItem />
                 <TextStyleTool textData={nodes[0].data as TextData} onStyleChange={handleStyleChange} />
                 <TextAlignmentTool
                   nodes={nodes}
-                  showTextTools={showTextTools}
                   handleHorizontalAlignClick={handleHorizontalAlignClick}
                   handleVerticalAlignClick={handleVerticalAlignClick}
                 />
@@ -281,7 +280,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
             )}
             {showBackgroundColorTools && (
               <>
-                <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
+                <Divider orientation="vertical" flexItem />
                 <BgColorTool
                   key={`bg-color-${nodes[0].id}`}
                   color={nodes[0].data.bgcolor}
@@ -293,7 +292,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
             )}
             {showBorderTools && (
               <>
-                <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
+                <Divider orientation="vertical" flexItem />
                 <BorderColorTool
                   key={`bordercolor-${nodes[0].id}`}
                   color={nodes[0].data.borderColor}
@@ -302,6 +301,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
                   onBorderStyleChange={handleBorderStyleChange}
                 />
                 <NumberTool
+                  tooltip="Border width"
                   key={`borderwidth-${nodes[0].id}`}
                   value={nodes[0].data.borderWidth}
                   onValueChange={handleBorderWidthChange}

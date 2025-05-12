@@ -1,3 +1,6 @@
+import { BorderStyle } from "../../../api/openapi/models/BorderStyle.ts";
+import { HorizontalAlign } from "../../../api/openapi/models/HorizontalAlign.ts";
+import { VerticalAlign } from "../../../api/openapi/models/VerticalAlign.ts";
 import { BackgroundColorData } from "../types/base/BackgroundColorData.ts";
 import { BorderData } from "../types/base/BorderData.ts";
 import { TextData } from "../types/base/TextData";
@@ -16,8 +19,8 @@ export function createNodeDataByType(oldData: Partial<TextData & BorderData & Ba
     color: getOrDefault(oldData, "color", "#000000"),
     fontSize: getOrDefault(oldData, "fontSize", 12),
     fontFamily: getOrDefault(oldData, "fontFamily", "Arial"),
-    horizontalAlign: getOrDefault(oldData, "horizontalAlign", "left"),
-    verticalAlign: getOrDefault(oldData, "verticalAlign", "top"),
+    horizontalAlign: getOrDefault(oldData, "horizontalAlign", HorizontalAlign.LEFT),
+    verticalAlign: getOrDefault(oldData, "verticalAlign", VerticalAlign.TOP),
     bold: getOrDefault(oldData, "bold", false),
     italic: getOrDefault(oldData, "italic", false),
     underline: getOrDefault(oldData, "underline", false),
@@ -49,7 +52,7 @@ export function createNodeDataByType(oldData: Partial<TextData & BorderData & Ba
         borderRadius: "100%",
         borderColor: getOrDefault(oldData, "borderColor", "#000000"),
         borderWidth: getOrDefault(oldData, "borderWidth", 1),
-        borderStyle: getOrDefault(oldData, "borderStyle", "solid"),
+        borderStyle: getOrDefault(oldData, "borderStyle", BorderStyle.SOLID),
         width: 200,
         height: 200,
       };
@@ -62,7 +65,7 @@ export function createNodeDataByType(oldData: Partial<TextData & BorderData & Ba
         bgalpha: getOrDefault(oldData, "bgalpha", 255),
         borderColor: getOrDefault(oldData, "borderColor", "#000000"),
         borderWidth: getOrDefault(oldData, "borderWidth", 1),
-        borderStyle: getOrDefault(oldData, "borderStyle", "solid"),
+        borderStyle: getOrDefault(oldData, "borderStyle", BorderStyle.SOLID),
         borderRadius: "0px",
         width: 200,
         height: 200,
@@ -76,7 +79,7 @@ export function createNodeDataByType(oldData: Partial<TextData & BorderData & Ba
         bgalpha: getOrDefault(oldData, "bgalpha", 255),
         borderColor: getOrDefault(oldData, "borderColor", "#000000"),
         borderWidth: getOrDefault(oldData, "borderWidth", 1),
-        borderStyle: getOrDefault(oldData, "borderStyle", "solid"),
+        borderStyle: getOrDefault(oldData, "borderStyle", BorderStyle.SOLID),
         borderRadius: "25px",
         width: 200,
         height: 200,

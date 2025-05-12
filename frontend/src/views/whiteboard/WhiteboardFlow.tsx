@@ -1,15 +1,15 @@
 import InterestsIcon from "@mui/icons-material/Interests";
 import SaveIcon from "@mui/icons-material/Save";
-import SaveAltIcon from "@mui/icons-material/SaveAlt";
-import { LoadingButton } from "@mui/lab";
 import { Box, Button, IconButton, Menu, MenuItem, Paper, Stack, Tooltip, Typography } from "@mui/material";
 import { toPng } from "html-to-image";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useBlocker, useParams } from "react-router-dom";
+import { useBlocker, useParams } from "react-router-dom";
 import {
+  addEdge,
   Background,
   Connection,
   ConnectionMode,
+  Controls,
   DefaultEdgeOptions,
   Edge,
   IsValidConnection,
@@ -23,11 +23,10 @@ import {
   Panel,
   ReactFlow,
   ReactFlowState,
-  XYPosition,
-  addEdge,
   updateEdge,
   useReactFlow,
   useStore,
+  XYPosition,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import BboxAnnotationHooks from "../../api/BboxAnnotationHooks.ts";
@@ -45,6 +44,7 @@ import EditableTypography from "../../components/EditableTypography";
 import SentenceAnnotationEditDialog from "../../components/SentenceAnnotation/SentenceAnnotationEditDialog.tsx";
 import SpanAnnotationEditDialog from "../../components/SpanAnnotation/SpanAnnotationEditDialog.tsx";
 import { downloadFile } from "../../utils/ExportUtils.ts";
+import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
 import StraightConnectionLine from "./connectionlines/StraightConnectionLine.tsx";
 import CustomEdge from "./edges/CustomEdge.tsx";
 import FloatingEdge from "./edges/FloatingEdge.tsx";
@@ -482,33 +482,28 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
             {!readonly && (
               <>
                 <Panel position="top-left">
-                  <Paper elevation={1} sx={{ mb: 3, width: "fit-content", borderRadius: 2 }}>
+                  <Paper elevation={1} sx={{ mb: 3, width: "fit-content" }}>
                     <Stack spacing={1} sx={{ p: 1 }}>
                       <Stack direction="row" alignItems="center" spacing={1}>
-                        <Typography
-                          variant="h5"
-                          component={Link}
-                          to={`/project/${projectId}/whiteboard`}
-                          sx={{ textDecoration: "none", color: "black" }}
-                        >
-                          Whiteboard
-                        </Typography>
                         <EditableTypography
                           value={whiteboard.title}
                           onChange={handleTitleChange}
                           whiteColor={false}
-                          variant="subtitle1"
+                          variant="h5"
                         />
-                        <Tooltip title="Export whiteboard" placement="right" arrow>
-                          <IconButton onClick={handleExportWhiteboard} size="small" sx={{ ml: 1, color: "black" }}>
-                            <SaveAltIcon />
+                        <Tooltip title="Save whiteboard" placement="bottom" arrow>
+                          <IconButton size="small" loading={updateWhiteboard.isPending} onClick={handleSaveWhiteboard}>
+                            <SaveIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Export whiteboard" placement="bottom" arrow>
+                          <IconButton onClick={handleExportWhiteboard} size="small" sx={{ ml: 1 }}>
+                            {getIconComponent(Icon.EXPORT)}
                           </IconButton>
                         </Tooltip>
                       </Stack>
                     </Stack>
                   </Paper>
-                </Panel>
-                <Panel position="top-left" style={{ marginTop: 100 }}>
                   <Paper elevation={1} sx={{ mb: 3, width: "fit-content" }}>
                     <Stack>
                       <AddDocumentNodeDialog
@@ -590,6 +585,9 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
                               boxShadow: 1,
                             },
                           },
+                          list: {
+                            sx: { p: 0 },
+                          },
                         }}
                       >
                         <MenuItem onClick={handleShapeMenuClose} sx={{ p: 0, px: 0, py: 0, minHeight: "auto" }}>
@@ -628,25 +626,10 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
                   <EdgeEditMenu ref={edgeEditMenuRef} />
                   <DatabaseEdgeEditMenu ref={databaseEdgeEditMenuRef} />
                 </Panel>
-                <Panel position="top-right">
-                  <Paper elevation={1}>
-                    <LoadingButton
-                      variant="contained"
-                      color="success"
-                      startIcon={<SaveIcon />}
-                      fullWidth
-                      type="submit"
-                      loading={updateWhiteboard.isPending}
-                      loadingPosition="start"
-                      onClick={handleSaveWhiteboard}
-                    >
-                      Save whiteboard
-                    </LoadingButton>
-                  </Paper>
-                </Panel>
               </>
             )}
             <Background />
+            <Controls />
             <MiniMap />
           </ReactFlow>
         </Box>

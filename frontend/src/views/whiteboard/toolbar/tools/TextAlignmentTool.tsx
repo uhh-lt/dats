@@ -4,7 +4,7 @@ import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
 import VerticalAlignBottomIcon from "@mui/icons-material/VerticalAlignBottom";
 import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
 import VerticalAlignTopIcon from "@mui/icons-material/VerticalAlignTop";
-import { Box, Button, Menu, MenuItem, Stack, Tooltip } from "@mui/material";
+import { Button, Menu, MenuItem, Stack, Tooltip } from "@mui/material";
 import { useState } from "react";
 import { Node } from "reactflow";
 import { HorizontalAlign } from "../../../../api/openapi/models/HorizontalAlign.ts";
@@ -27,23 +27,16 @@ const verticalAlignIcons = {
 
 interface TextAlignmentToolProps {
   nodes: Node<BackgroundColorData | TextData | BorderData>[];
-  showTextTools: boolean;
   handleHorizontalAlignClick: (align: HorizontalAlign) => () => void;
   handleVerticalAlignClick: (align: VerticalAlign) => () => void;
 }
 
 const TextAlignmentTool: React.FC<TextAlignmentToolProps> = ({
   nodes,
-  showTextTools,
   handleHorizontalAlignClick,
   handleVerticalAlignClick,
 }: TextAlignmentToolProps) => {
   const [alignAnchor, setAlignAnchor] = useState<null | HTMLElement>(null);
-
-  const getAlignIcon = () => {
-    const textData = nodes[0]?.data as TextData;
-    return horizontalAlignIcons[textData.horizontalAlign as HorizontalAlign] || FormatAlignLeftIcon;
-  };
 
   const handleAlignClick = (event: React.MouseEvent<HTMLElement>) => {
     setAlignAnchor(event.currentTarget);
@@ -56,11 +49,9 @@ const TextAlignmentTool: React.FC<TextAlignmentToolProps> = ({
   return (
     <>
       <Tooltip title="Text alignment" arrow disableHoverListener={Boolean(alignAnchor)}>
-        <Box>
-          <Button variant="text" onClick={handleAlignClick} sx={{ minWidth: 0, color: "black" }}>
-            {showTextTools ? getAlignIcon() : <FormatAlignLeftIcon />}
-          </Button>
-        </Box>
+        <Button variant="text" size="small" onClick={handleAlignClick} sx={{ minWidth: 0, color: "black" }}>
+          {horizontalAlignIcons[(nodes[0]?.data as TextData).horizontalAlign] || <FormatAlignLeftIcon />}
+        </Button>
       </Tooltip>
       <Menu
         anchorEl={alignAnchor}
@@ -81,7 +72,6 @@ const TextAlignmentTool: React.FC<TextAlignmentToolProps> = ({
             marginTop: "19px",
             elevation: 1,
             boxShadow: 1,
-            width: "140px",
           },
           "& .MuiList-root": {
             padding: 0,
@@ -93,19 +83,17 @@ const TextAlignmentTool: React.FC<TextAlignmentToolProps> = ({
             {Object.values(HorizontalAlign).map((align) => {
               const icon = horizontalAlignIcons[align];
               return (
-                <Box key={align} sx={{ width: "33.33%", display: "flex", justifyContent: "center", p: 0, m: 0 }}>
-                  <MenuItem
-                    key={align}
-                    onClick={() => {
-                      handleHorizontalAlignClick(align)();
-                      handleAlignClose();
-                    }}
-                    selected={showTextTools && (nodes[0]?.data as TextData)?.horizontalAlign === align}
-                    sx={{ minWidth: "auto", m: 0, p: 1 }}
-                  >
-                    {icon}
-                  </MenuItem>
-                </Box>
+                <MenuItem
+                  key={align}
+                  onClick={() => {
+                    handleHorizontalAlignClick(align)();
+                    handleAlignClose();
+                  }}
+                  selected={(nodes[0]?.data as TextData)?.horizontalAlign === align}
+                  sx={{ p: 1 }}
+                >
+                  {icon}
+                </MenuItem>
               );
             })}
           </Stack>
@@ -113,19 +101,17 @@ const TextAlignmentTool: React.FC<TextAlignmentToolProps> = ({
             {Object.values(VerticalAlign).map((align) => {
               const icon = verticalAlignIcons[align];
               return (
-                <Box key={align} sx={{ width: "33.33%", display: "flex", justifyContent: "center", p: 0, m: 0 }}>
-                  <MenuItem
-                    key={align}
-                    onClick={() => {
-                      handleVerticalAlignClick(align)();
-                      handleAlignClose();
-                    }}
-                    selected={showTextTools && (nodes[0]?.data as TextData)?.verticalAlign === align}
-                    sx={{ minWidth: "auto", m: 0, p: 1 }}
-                  >
-                    {icon}
-                  </MenuItem>
-                </Box>
+                <MenuItem
+                  key={align}
+                  onClick={() => {
+                    handleVerticalAlignClick(align)();
+                    handleAlignClose();
+                  }}
+                  selected={(nodes[0]?.data as TextData)?.verticalAlign === align}
+                  sx={{ p: 1 }}
+                >
+                  {icon}
+                </MenuItem>
               );
             })}
           </Stack>

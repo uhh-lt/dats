@@ -5,12 +5,12 @@ import { Edge, EdgeMarker, MarkerType, useReactFlow } from "reactflow";
 import { WhiteboardEdgeData_Input } from "../../../api/openapi/models/WhiteboardEdgeData_Input.ts";
 import { WhiteboardEdgeType } from "../../../api/openapi/models/WhiteboardEdgeType.ts";
 import { isDashed, isDotted } from "../edges/edgeUtils.ts";
+import { StrokeStyle } from "../types/base/StrokeStyle.ts";
 import { DATSNodeData } from "../types/DATSNodeData.ts";
 import BgColorTool from "./tools/BgColorTool.tsx";
-import EdgeColorTool from "./tools/EdgeColorTool.tsx";
 import EdgeMarkerTool from "./tools/EdgeMarkerTool.tsx";
+import EdgeStyleTool from "./tools/EdgeStyleTool.tsx";
 import FontColorTool from "./tools/FontColorTool.tsx";
-import FontSizeTool from "./tools/FontSizeTool.tsx";
 import NumberTool from "./tools/NumberTool.tsx";
 
 export interface EdgeEditMenuHandle {
@@ -154,17 +154,17 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
     });
   };
 
-  const handleStrokeStyleChange = (borderStyle: "dashed" | "solid" | "dotted" | undefined) => {
+  const handleStrokeStyleChange = (strokeStyle: "dashed" | "solid" | "dotted" | undefined) => {
     updateEdges((oldEdge) => {
       return {
         ...oldEdge,
         style: {
           ...oldEdge.style,
           strokeDasharray:
-            borderStyle === "solid"
+            strokeStyle === "solid"
               ? undefined
-              : borderStyle === "dashed"
-                ? `${2 * (oldEdge.style!.strokeWidth! as number)} ${2 * (oldEdge.style!.strokeWidth! as number)}`
+              : strokeStyle === "dashed"
+                ? `${2 * (oldEdge.style!.strokeWidth! as number)} ${oldEdge.style!.strokeWidth! as number}`
                 : `${oldEdge.style!.strokeWidth! as number} ${oldEdge.style!.strokeWidth! as number}`,
         },
       };
@@ -264,43 +264,44 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
     closeMenu();
   };
 
-  const getBorderStyle = (edge: Edge) => {
-    if (!edge.style?.strokeDasharray) return "solid";
+  const getStrokeStyle = (edge: Edge) => {
+    if (!edge.style?.strokeDasharray) return StrokeStyle.SOLID;
     const dashArray = edge.style.strokeDasharray.toString();
-    return dashArray.split(",")[0] === dashArray.split(",")[1] ? "dotted" : "dashed";
+    return dashArray.split(" ")[0] === dashArray.split(" ")[1] ? StrokeStyle.DOTTED : StrokeStyle.DASHED;
   };
 
   return (
     <>
       {edges.length > 0 && (
-        <Paper sx={{ p: 1, mb: 1, width: "fit-content" }}>
-          <Stack direction="row" alignItems="center">
+        <Paper sx={{ p: 1, width: "fit-content" }}>
+          <Stack direction="row" alignItems="center" spacing={1}>
             <EdgeMarkerTool
               markerStart={edges[0].markerStart as EdgeMarker}
               markerEnd={edges[0].markerEnd as EdgeMarker}
               onMarkerStartChange={handleMarkerStartChange}
               onMarkerEndChange={handleMarkerEndChange}
             />
-            <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
-            <EdgeColorTool
+            <Divider orientation="vertical" flexItem />
+            <EdgeStyleTool
               key={`stroke-color-${edges[0].id}`}
               color={edges[0].style?.stroke || "#000000"}
               onColorChange={handleColorChange}
-              borderStyle={getBorderStyle(edges[0])}
-              onBorderStyleChange={handleStrokeStyleChange}
+              strokeStyle={getStrokeStyle(edges[0])}
+              onStrokeStyleChange={handleStrokeStyleChange}
               edgeType={edges[0].data?.type || WhiteboardEdgeType.BEZIER}
               onEdgeTypeChange={handleTypeChange}
             />
             <NumberTool
+              tooltip="Edge size"
               key={`stroke-width-${edges[0].id}`}
-              value={edges[0].style?.strokeWidth as number | undefined}
+              value={(edges[0].style?.strokeWidth as number | undefined) || 1}
               onValueChange={handleStrokeWidthChange}
               min={1}
               max={20}
             />
             {edges.every((edge) => edge.data?.label === undefined || edge.data?.label.text.trim() === "") && (
               <>
-                <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
+                <Divider orientation="vertical" flexItem />
                 <ButtonGroup size="small" className="nodrag" sx={{ mr: 1, bgcolor: "background.paper" }}>
                   <Button
                     variant="text"
@@ -322,11 +323,14 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
               (edge) => edge.data && edge.data.label !== undefined && edge.data.label.text.trim().length > 0,
             ) && (
               <>
-                <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
-                <FontSizeTool
-                  key={`size-${edges[0].id}`}
-                  size={edges[0].data!.label.fontSize}
-                  onSizeChange={handleFontSizeChange}
+                <Divider orientation="vertical" flexItem />
+                <NumberTool
+                  tooltip="Font size"
+                  key={`font-size-${edges[0].id}`}
+                  value={edges[0].data!.label.fontSize || 1}
+                  onValueChange={handleFontSizeChange}
+                  min={8}
+                  max={72}
                 />
                 <FontColorTool
                   key={`font-color-${edges[0].id}`}
@@ -342,12 +346,15 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
                 />
               </>
             )}
-            <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
-            <ButtonGroup size="small" className="nodrag" sx={{ bgcolor: "background.paper" }}>
-              <Button variant="text" onClick={handleDeleteClick} sx={{ color: "text.secondary" }}>
-                <DeleteIcon />
-              </Button>
-            </ButtonGroup>
+            <Divider orientation="vertical" flexItem />
+            <Button
+              size="small"
+              variant="text"
+              onClick={handleDeleteClick}
+              sx={{ color: "text.secondary", minWidth: 0 }}
+            >
+              <DeleteIcon />
+            </Button>
           </Stack>
         </Paper>
       )}

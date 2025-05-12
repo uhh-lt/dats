@@ -1,28 +1,9 @@
-import { NodeProps, useReactFlow } from "reactflow";
+import { NodeProps } from "reactflow";
 import { BorderNodeData } from "../../../api/openapi/models/BorderNodeData.ts";
-import { TextNodeComponent } from "../toolbar/textNodeUtils.tsx";
 import BaseNode from "./BaseNode.tsx";
+import { TextNodeComponent } from "./TextNodeComponent.tsx";
 
 function BorderNode(props: NodeProps<BorderNodeData>) {
-  const reactFlowInstance = useReactFlow();
-
-  const handleTextChange = (value: string) => {
-    reactFlowInstance.setNodes((nodes) =>
-      nodes.map((node) => {
-        if (node.id === props.id) {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              text: value,
-            },
-          };
-        }
-        return node;
-      }),
-    );
-  };
-
   return (
     <BaseNode
       allowDrawConnection={false}
@@ -36,7 +17,7 @@ function BorderNode(props: NodeProps<BorderNodeData>) {
         backgroundColor: props.data.bgcolor + props.data.bgalpha?.toString(16).padStart(2, "0"),
       }}
     >
-      <TextNodeComponent nodeProps={props} onTextChange={handleTextChange} />
+      <TextNodeComponent nodeProps={props} />
     </BaseNode>
   );
 }
