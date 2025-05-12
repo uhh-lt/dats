@@ -1,16 +1,20 @@
-import { Divider, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import ProjectHooks from "../../../api/ProjectHooks.ts";
+import MetadataHooks from "../../../api/MetadataHooks.ts";
 import { SdocColumns } from "../../../api/openapi/models/SdocColumns.ts";
 import { SimSearchImageHit } from "../../../api/openapi/models/SimSearchImageHit.ts";
 import { SpanEntityStat } from "../../../api/openapi/models/SpanEntityStat.ts";
 import { SearchService } from "../../../api/openapi/services/SearchService.ts";
+import { QueryKey } from "../../../api/QueryKey.ts";
 import { MyFilter, createEmptyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 import DocumentInformation from "../../../components/SourceDocument/DocumentInformation/DocumentInformation.tsx";
 import TagExplorer from "../../../components/Tag/TagExplorer/TagExplorer.tsx";
-import TwoSidebarsLayout from "../../../layouts/TwoSidebarsLayout.tsx";
+import SidebarContentSidebarLayout from "../../../layouts/ContentLayouts/SidebarContentSidebarLayout.tsx";
+import { LayoutPercentageKeys } from "../../../layouts/layoutSlice.ts";
+import { useLayoutPercentage } from "../../../layouts/ResizePanel/hooks/useLayoutPercentage.ts";
+import PercentageResizablePanel from "../../../layouts/ResizePanel/PercentageResizablePanel.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { SearchActions } from "../DocumentSearch/searchSlice.ts";
 import SearchStatistics from "../Statistics/SearchStatistics.tsx";
@@ -29,7 +33,7 @@ function ImageSimilaritySearch() {
   const dispatch = useAppDispatch();
 
   // filter
-  const projectMetadata = ProjectHooks.useGetMetadata(projectId);
+  const projectMetadata = MetadataHooks.useGetProjectMetadataList();
 
   // computed (local client state)
   const keywordMetadataIds = useMemo(() => {
@@ -65,7 +69,7 @@ function ImageSimilaritySearch() {
   const searchQuery = useAppSelector((state) => state.imageSearch.searchQuery);
   const { data, isError, isFetching, isLoading } = useQuery<SimSearchImageHit[]>({
     queryKey: [
-      "image-similarity-search",
+      QueryKey.IMG_SIMSEARCH,
       projectId,
       searchQuery, // refetch when searchQuery changes
       filter, // refetch when columnFilters changes
@@ -86,24 +90,30 @@ function ImageSimilaritySearch() {
   // extract sdoc ids from results, but they have to be unique
   const sdocIds = useMemo(() => data?.map((hit) => hit.sdoc_id) || [], [data]);
 
+  // vertical sidebar percentage
+  const { percentage, handleResize } = useLayoutPercentage(LayoutPercentageKeys.SearchVerticalSidebar);
+
   // render
   return (
-    <TwoSidebarsLayout
+    <SidebarContentSidebarLayout
       leftSidebar={
-        <>
-          <TagExplorer sx={{ height: "50%", pt: 0 }} onTagClick={handleAddTagFilter} />
-          <Divider />
-          <SearchStatistics
-            sx={{ height: "50%" }}
-            sdocIds={sdocIds}
-            handleKeywordClick={handleAddKeywordFilter}
-            handleTagClick={handleAddTagFilter}
-            handleCodeClick={handleAddCodeFilter}
-          />
-        </>
+        <PercentageResizablePanel
+          firstContent={<TagExplorer onTagClick={handleAddTagFilter} />}
+          secondContent={
+            <SearchStatistics
+              sx={{ height: "100%" }}
+              sdocIds={sdocIds}
+              handleKeywordClick={handleAddKeywordFilter}
+              handleTagClick={handleAddTagFilter}
+              handleCodeClick={handleAddCodeFilter}
+            />
+          }
+          contentPercentage={percentage}
+          onResize={handleResize}
+        />
       }
       content={
-        <>
+        <Box className="myFlexContainer h100">
           <ImageSimilaritySearchToolbar searchResultDocumentIds={sdocIds} />
           <ImageSimilarityView
             projectId={projectId}
@@ -116,7 +126,7 @@ function ImageSimilaritySearch() {
               sx: { p: 1 },
             }}
           />
-        </>
+        </Box>
       }
       rightSidebar={
         <DocumentInformation

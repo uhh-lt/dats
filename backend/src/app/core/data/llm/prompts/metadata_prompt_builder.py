@@ -1,12 +1,11 @@
 from typing import Dict, List
 
-from pydantic import BaseModel
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.project import crud_project
 from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.llm.prompts.prompt_builder import PromptBuilder
 from app.core.data.meta_type import MetaType
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 
 class OllamaMetadataExtractionResult(BaseModel):
@@ -122,7 +121,7 @@ class MetadataPromptBuilder(PromptBuilder):
         )
 
     def _build_user_prompt_template(
-        self, language: str, project_metadata_ids: List[int], **kwargs
+        self, *, language: str, project_metadata_ids: List[int], **kwargs
     ) -> str:
         task_data = "\n".join(
             [

@@ -1,8 +1,5 @@
-from typing import List
+from typing import Dict, List, Optional
 
-from fastapi import APIRouter, Depends
-
-from api.dependencies import get_current_user
 from app.celery.background_jobs import prepare_and_start_llm_job_async
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.dto.llm_job import (
@@ -12,9 +9,13 @@ from app.core.data.dto.llm_job import (
     LLMJobParameters2,
     LLMJobRead,
     LLMPromptTemplates,
+    TaskType,
     TrainingParameters,
 )
 from app.core.data.llm.llm_service import LLMService
+from fastapi import APIRouter, Depends
+
+from api.dependencies import get_current_user
 
 router = APIRouter(
     prefix="/llm", dependencies=[Depends(get_current_user)], tags=["llm"]
@@ -72,12 +73,15 @@ def create_prompt_templates(
     *,
     llm_job_params: LLMJobParameters,
     approach_type: ApproachType,
+    example_ids: Optional[List[int]] = None,
     authz_user: AuthzUser = Depends(),
 ) -> List[LLMPromptTemplates]:
     authz_user.assert_in_project(llm_job_params.project_id)
 
     return llms.create_prompt_templates(
-        llm_job_params=llm_job_params, approach_type=approach_type
+        llm_job_params=llm_job_params,
+        approach_type=approach_type,
+        example_ids=example_ids,
     )
 
 
@@ -105,3 +109,24 @@ def determine_approach(
     authz_user.assert_in_project(llm_job_params.project_id)
 
     return llms.determine_approach(llm_job_params=llm_job_params)
+
+
+@router.post(
+    "/count_existing_assistant_annotations",
+    response_model=Dict[int, int],
+    summary="Based on the approach, count the number of existing assistant annotations",
+)
+def count_existing_assistant_annotations(
+    *,
+    sdoc_ids: List[int],
+    code_ids: List[int],
+    task_type: TaskType,
+    approach_type: ApproachType,
+    authz_user: AuthzUser = Depends(),
+) -> Dict[int, int]:
+    return llms.count_existing_assistant_annotations(
+        approach_type=approach_type,
+        task_type=task_type,
+        sdoc_ids=sdoc_ids,
+        code_ids=code_ids,
+    )

@@ -1,15 +1,15 @@
-import { Node } from "reactflow";
+import { type Node } from "reactflow";
+import { BBoxAnnotationNodeData } from "../../../api/openapi/models/BBoxAnnotationNodeData.ts";
+import { CodeNodeData } from "../../../api/openapi/models/CodeNodeData.ts";
+import { MemoNodeData } from "../../../api/openapi/models/MemoNodeData.ts";
+import { SdocNodeData } from "../../../api/openapi/models/SdocNodeData.ts";
+import { SentenceAnnotationNodeData } from "../../../api/openapi/models/SentenceAnnotationNodeData.ts";
+import { SpanAnnotationNodeData } from "../../../api/openapi/models/SpanAnnotationNodeData.ts";
+import { TagNodeData } from "../../../api/openapi/models/TagNodeData.ts";
 import { DATSNodeData } from "./DATSNodeData.ts";
 import { BackgroundColorData } from "./base/BackgroundColorData.ts";
 import { BorderData } from "./base/BorderData.ts";
 import { TextData } from "./base/TextData.ts";
-import { BBoxAnnotationNodeData } from "./dbnodes/BBoxAnnotationNodeData.ts";
-import { CodeNodeData } from "./dbnodes/CodeNodeData.ts";
-import { MemoNodeData } from "./dbnodes/MemoNodeData.ts";
-import { SdocNodeData } from "./dbnodes/SdocNodeData.ts";
-import { SentenceAnnotationNodeData } from "./dbnodes/SentenceAnnotationNodeData.ts";
-import { SpanAnnotationNodeData } from "./dbnodes/SpanAnnotationNodeData.ts";
-import { TagNodeData } from "./dbnodes/TagNodeData.ts";
 
 export const hasBorderData = (node: Node): node is Node<BorderData> => {
   const data = node.data as BorderData;
@@ -29,13 +29,15 @@ export const hasTextData = (node: Node): node is Node<TextData> => {
   const data = node.data as TextData;
   return (
     data.text !== undefined &&
-    data.variant !== undefined &&
     data.color !== undefined &&
     data.horizontalAlign !== undefined &&
     data.verticalAlign !== undefined &&
     data.bold !== undefined &&
     data.italic !== undefined &&
-    data.underline !== undefined
+    data.underline !== undefined &&
+    data.strikethrough !== undefined &&
+    data.fontFamily !== undefined &&
+    data.fontSize !== undefined
   );
 };
 

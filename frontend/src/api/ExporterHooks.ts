@@ -8,6 +8,7 @@ const useStartExportJob = () =>
   useMutation({
     mutationFn: ExportService.startExportJob,
     meta: {
+      successMessage: "Export job started! Please wait...",
       errorMessage: "Failed to gather documents for export",
     },
   });

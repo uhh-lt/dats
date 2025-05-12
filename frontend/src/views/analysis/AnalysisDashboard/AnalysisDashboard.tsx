@@ -1,27 +1,18 @@
-import { Card, CardContent, CardHeader, Portal, Typography } from "@mui/material";
+import { Card, CardContent, CardHeader } from "@mui/material";
 import { MRT_TableInstance, MaterialReactTable } from "material-react-table";
-import { useContext } from "react";
-import NoSidebarLayout from "../../../layouts/NoSidebarLayout.tsx";
-import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
-import { AnaylsisDashboardRow } from "./useAnalysisDashboardTable.tsx";
+import ContentContainerLayout from "../../../layouts/ContentLayouts/ContentContainerLayout.tsx";
+import { AnalysisDashboardRow } from "./useAnalysisDashboardTable.tsx";
 
-interface AnalysisDashboardProps {
+interface AnalysisDashboardProps<T extends AnalysisDashboardRow> {
   pageTitle: string;
   headerTitle: string;
   subheaderTitle?: string;
-  table: MRT_TableInstance<AnaylsisDashboardRow>;
+  table: MRT_TableInstance<T>;
 }
 
-export default function AnalysisDashboard(props: AnalysisDashboardProps) {
-  const appBarContainerRef = useContext(AppBarContext);
-
+export default function AnalysisDashboard<T extends AnalysisDashboardRow>(props: AnalysisDashboardProps<T>) {
   return (
-    <NoSidebarLayout>
-      <Portal container={appBarContainerRef?.current}>
-        <Typography variant="h6" component="div">
-          {props.pageTitle}
-        </Typography>
-      </Portal>
+    <ContentContainerLayout>
       <Card
         sx={{ width: "100%", minHeight: "225.5px" }}
         elevation={2}
@@ -34,6 +25,6 @@ export default function AnalysisDashboard(props: AnalysisDashboardProps) {
           </div>
         </CardContent>
       </Card>
-    </NoSidebarLayout>
+    </ContentContainerLayout>
   );
 }

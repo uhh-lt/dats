@@ -2,6 +2,7 @@ import uuid
 from typing import List, Tuple
 
 import numpy as np
+from config import conf
 from loguru import logger
 from qdrant_client import QdrantClient
 from qdrant_client.conversions.common_types import PointStruct, VectorParams
@@ -19,7 +20,6 @@ from qdrant_client.models import (
 from app.core.data.dto.search import SimSearchImageHit, SimSearchSentenceHit
 from app.core.db.index_type import IndexType
 from app.core.db.vector_index_service import VectorIndexService
-from config import conf
 
 
 class QdrantService(VectorIndexService):
@@ -147,9 +147,9 @@ class QdrantService(VectorIndexService):
 
     def suggest(
         self,
-        index_type: IndexType,
-        proj_id: int,
         sdoc_sent_ids: List[Tuple[int, int]],
+        proj_id: int,
+        index_type: IndexType,
     ) -> List[SimSearchSentenceHit]:
         filter = Filter(
             must=[FieldCondition(key="proj_id", match=MatchValue(value=proj_id))]

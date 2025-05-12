@@ -1,4 +1,4 @@
-import { Box, TextField, Typography, useTheme } from "@mui/material";
+import { Box, TextField, Typography } from "@mui/material";
 import { useMemo, useState } from "react";
 import {
   BaseEdge,
@@ -10,9 +10,9 @@ import {
   getStraightPath,
   useReactFlow,
 } from "reactflow";
-import { CustomEdgeData } from "../types/CustomEdgeData.ts";
+import { WhiteboardEdgeData_Input } from "../../../api/openapi/models/WhiteboardEdgeData_Input.ts";
 
-const useGetPath = (edge: EdgeProps<CustomEdgeData>): [string, number, number] => {
+const useGetPath = (edge: EdgeProps<WhiteboardEdgeData_Input>): [string, number, number] => {
   const [edgePath, labelX, labelY] = useMemo(() => {
     switch (edge.data?.type) {
       case "bezier":
@@ -31,12 +31,9 @@ const useGetPath = (edge: EdgeProps<CustomEdgeData>): [string, number, number] =
   return [edgePath, labelX, labelY];
 };
 
-function CustomEdge(props: EdgeProps<CustomEdgeData>) {
+function CustomEdge(props: EdgeProps<WhiteboardEdgeData_Input>) {
   const [edgePath, labelX, labelY] = useGetPath(props);
-
   const reactFlowInstance = useReactFlow();
-  const theme = useTheme();
-
   const [isEditing, setIsEditing] = useState(false);
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -101,18 +98,14 @@ function CustomEdge(props: EdgeProps<CustomEdgeData>) {
                   defaultValue={props.data.label.text}
                   onBlur={handleChangeText}
                   onKeyDown={(event) => event.key === "Escape" && handleChangeText(event)}
-                  inputProps={{
-                    style: {
-                      ...theme.typography[props.data.label.variant],
-                    },
-                  }}
+                  slotProps={{ htmlInput: { style: { fontSize: `${props.data.label.fontSize}px` } } }}
                   multiline
                   autoFocus
                 />
               </Box>
             ) : (
               <Typography
-                variant={props.data.label.variant}
+                variant="body1"
                 color={props.data.label.color}
                 style={{
                   ...(props.data.label.italic && { fontStyle: "italic" }),
@@ -120,6 +113,7 @@ function CustomEdge(props: EdgeProps<CustomEdgeData>) {
                   ...(props.data.label.underline && { textDecoration: "underline" }),
                   textAlign: props.data.label.horizontalAlign,
                   width: "100%",
+                  fontSize: `${props.data.label.fontSize}px`,
                 }}
                 whiteSpace="pre-wrap"
               >

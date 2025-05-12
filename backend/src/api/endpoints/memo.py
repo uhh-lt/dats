@@ -1,12 +1,8 @@
 from typing import Dict, List
+from uuid import uuid4
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
-from api.dependencies import get_current_user, get_db_session
-from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
-from app.core.data.crud import Crud
+from app.core.data.crud import Crud, MemoCrud
 from app.core.data.crud.memo import crud_memo
 from app.core.data.dto.memo import (
     AttachedObjectType,
@@ -23,20 +19,27 @@ from app.core.search.filtering import Filter
 from app.core.search.memo_search.memo_search import memo_info, memo_search
 from app.core.search.memo_search.memo_search_columns import MemoColumns
 from app.core.search.sorting import Sort
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from api.dependencies import get_current_user, get_db_session
+from api.util import get_object_memo_for_user, get_object_memos
+from api.validation import Validate
 
 router = APIRouter(
     prefix="/memo", dependencies=[Depends(get_current_user)], tags=["memo"]
 )
 
 
-attachedObject2Crud: Dict[AttachedObjectType, Crud] = {
-    AttachedObjectType.document_tag: Crud.DOCUMENT_TAG,
-    AttachedObjectType.source_document: Crud.SOURCE_DOCUMENT,
-    AttachedObjectType.code: Crud.CODE,
-    AttachedObjectType.bbox_annotation: Crud.BBOX_ANNOTATION,
-    AttachedObjectType.span_annotation: Crud.SPAN_ANNOTATION,
-    AttachedObjectType.span_group: Crud.SPAN_GROUP,
-    AttachedObjectType.project: Crud.PROJECT,
+attachedObject2Crud: Dict[AttachedObjectType, MemoCrud] = {
+    AttachedObjectType.document_tag: MemoCrud.DOCUMENT_TAG,
+    AttachedObjectType.source_document: MemoCrud.SOURCE_DOCUMENT,
+    AttachedObjectType.code: MemoCrud.CODE,
+    AttachedObjectType.bbox_annotation: MemoCrud.BBOX_ANNOTATION,
+    AttachedObjectType.span_annotation: MemoCrud.SPAN_ANNOTATION,
+    AttachedObjectType.sentence_annotation: MemoCrud.SENTENCE_ANNOTATION,
+    AttachedObjectType.span_group: MemoCrud.SPAN_GROUP,
+    AttachedObjectType.project: MemoCrud.PROJECT,
 }
 
 
@@ -59,7 +62,7 @@ def add_memo(
         raise ValueError("Invalid attached_object_type")
 
     # get project id of the attached object
-    attached_object = crud.value.read(db=db, id=attached_object_id)  # type: ignore
+    attached_object = crud.value.read(db=db, id=attached_object_id)
     proj_id = get_parent_project_id(attached_object)
     if proj_id is None:
         raise ValueError("Attached object has no project")
@@ -72,7 +75,10 @@ def add_memo(
         attached_object_id=attached_object_id,
         attached_object_type=attached_object_type,
         create_dto=MemoCreateIntern(
-            **memo.model_dump(), user_id=authz_user.user.id, project_id=proj_id
+            **memo.model_dump(),
+            user_id=authz_user.user.id,
+            project_id=proj_id,
+            uuid=str(uuid4()),
         ),
     )
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
@@ -98,6 +104,62 @@ def get_by_id(
 
     db_obj = crud_memo.read(db=db, id=memo_id)
     return crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj)
+
+
+@router.get(
+    "/attached_obj/{attached_obj_type}/to/{attached_obj_id}",
+    response_model=List[MemoRead],
+    summary="Returns all Memos attached to the object if it exists",
+)
+def get_memos_by_attached_object_id(
+    *,
+    db: Session = Depends(get_db_session),
+    attached_obj_id: int,
+    attached_obj_type: AttachedObjectType,
+    authz_user: AuthzUser = Depends(),
+) -> List[MemoRead]:
+    crud = attachedObject2Crud.get(attached_obj_type)
+    if crud is None:
+        raise ValueError("Invalid attached_object_type")
+
+    # get project id of the attached object
+    attached_object = crud.value.read(db=db, id=attached_obj_id)
+    proj_id = get_parent_project_id(attached_object)
+    if proj_id is None:
+        raise ValueError("Attached object has no project")
+
+    # check if user is authorized to get memo from the attached object
+    authz_user.assert_in_project(project_id=proj_id)
+
+    return get_object_memos(db_obj=attached_object)
+
+
+@router.get(
+    "/attached_obj/{attached_obj_type}/to/{attached_obj_id}/user",
+    response_model=MemoRead,
+    summary="Returns the logged-in User's Memo attached to the object if it exists",
+)
+def get_user_memo_by_attached_object_id(
+    *,
+    db: Session = Depends(get_db_session),
+    attached_obj_id: int,
+    attached_obj_type: AttachedObjectType,
+    authz_user: AuthzUser = Depends(),
+) -> MemoRead:
+    crud = attachedObject2Crud.get(attached_obj_type)
+    if crud is None:
+        raise ValueError("Invalid attached_object_type")
+
+    # get project id of the attached object
+    attached_object = crud.value.read(db=db, id=attached_obj_id)
+    proj_id = get_parent_project_id(attached_object)
+    if proj_id is None:
+        raise ValueError("Attached object has no project")
+
+    # check if user is authorized to get memo from the attached object
+    authz_user.assert_in_project(project_id=proj_id)
+
+    return get_object_memo_for_user(db_obj=attached_object, user_id=authz_user.user.id)
 
 
 @router.patch(

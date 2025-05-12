@@ -8,33 +8,40 @@ import {
   Select,
   SelectChangeEvent,
 } from "@mui/material";
-import React from "react";
-import ProjectHooks from "../../api/ProjectHooks.ts";
+import React, { memo, useCallback } from "react";
+import UserHooks from "../../api/UserHooks.ts";
 import UserName from "./UserName.tsx";
 
 interface UserSelectorProps {
-  projectId: number | undefined;
   userIds: number[];
   onUserIdChange: (userIds: number[]) => void;
   title: string;
 }
 
-function UserSelectorMulti({
-  projectId,
-  userIds,
-  onUserIdChange,
-  title,
-  ...props
-}: UserSelectorProps & FormControlProps) {
+function UserSelectorMulti({ userIds, onUserIdChange, title, ...props }: UserSelectorProps & FormControlProps) {
   // global server state (react query)
-  const projectUsers = ProjectHooks.useGetAllUsers(projectId);
+  const projectUsers = UserHooks.useGetAllUsers();
 
   // handlers (for ui)
-  const handleChange = (event: SelectChangeEvent<number[]>) => {
-    onUserIdChange(event.target.value as number[]);
-  };
+  const handleChange = useCallback(
+    (event: SelectChangeEvent<number[]>) => {
+      onUserIdChange(event.target.value as number[]);
+    },
+    [onUserIdChange],
+  );
 
   // render
+  const renderValue = useCallback(
+    (userIds: number[]) =>
+      userIds.map((userId, index) => (
+        <React.Fragment key={userId}>
+          <UserName userId={userId} />
+          {index < userIds.length - 1 && ", "}
+        </React.Fragment>
+      )),
+    [],
+  );
+
   return (
     <FormControl {...props}>
       <InputLabel id="multi-user-select-label">{title}</InputLabel>
@@ -46,14 +53,7 @@ function UserSelectorMulti({
         onChange={handleChange}
         disabled={!projectUsers.isSuccess}
         fullWidth
-        renderValue={(userIds) =>
-          userIds.map((userId, index) => (
-            <React.Fragment key={userId}>
-              <UserName userId={userId} />
-              {index < userIds.length - 1 && ", "}
-            </React.Fragment>
-          ))
-        }
+        renderValue={renderValue}
       >
         {projectUsers.isSuccess &&
           projectUsers.data.map((user) => (
@@ -69,4 +69,4 @@ function UserSelectorMulti({
   );
 }
 
-export default UserSelectorMulti;
+export default memo(UserSelectorMulti);

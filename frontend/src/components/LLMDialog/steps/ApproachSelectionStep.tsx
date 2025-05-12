@@ -5,19 +5,28 @@ import {
   Button,
   DialogActions,
   DialogContent,
+  Divider,
   FormControl,
   InputLabel,
   MenuItem,
   Select,
   SelectChangeEvent,
+  Stack,
   Typography,
 } from "@mui/material";
-import React, { useState } from "react";
+import React, { memo, useCallback, useMemo, useState } from "react";
 import LLMHooks from "../../../api/LLMHooks.ts";
 import { ApproachType } from "../../../api/openapi/models/ApproachType.ts";
+import { TaskType } from "../../../api/openapi/models/TaskType.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import CodeRenderer from "../../Code/CodeRenderer.tsx";
 import { CRUDDialogActions } from "../../dialogSlice.ts";
 import LLMUtterance from "./LLMUtterance.tsx";
+
+enum DeletionStrategy {
+  DELETE_EXISTING = "DELETE_EXISTING",
+  KEEP_EXISTING = "KEEP_EXISTING",
+}
 
 const explanations: Record<ApproachType, string> = {
   [ApproachType.LLM_ZERO_SHOT]:
@@ -41,57 +50,85 @@ function ApproachSelectionStep() {
 
   // local state
   const [approachType, setApproachType] = useState(approachRecommendation.recommended_approach);
-  const handleChange = (event: SelectChangeEvent) => {
+  const [deleteExistingAnnotations, setDeleteExistingAnnotations] = useState(DeletionStrategy.DELETE_EXISTING);
+
+  // memoized handlers
+  const handleChange = useCallback((event: SelectChangeEvent) => {
     setApproachType(event.target.value as ApproachType);
-  };
+  }, []);
 
-  // initiate next step (get the generated prompts)
-  const createPromptTemplatesMutation = LLMHooks.useCreatePromptTemplates();
-  const createTrainingParametersMutation = LLMHooks.useCreateTrainingParameters();
+  const handleChangeDeletionStrategy = useCallback((event: SelectChangeEvent) => {
+    setDeleteExistingAnnotations(event.target.value as DeletionStrategy);
+  }, []);
 
-  const handleNext = () => {
+  const handleBack = useCallback(() => {
+    dispatch(CRUDDialogActions.previousLLMDialogStep());
+  }, [dispatch]);
+
+  // memoized values
+  const codeIds = useMemo(() => codes.map((code) => code.id), [codes]);
+
+  // deletion strategy
+  const existingAssistantAnnotations = LLMHooks.useCountExistingAssistantAnnotations({
+    taskType: llmMethod,
+    approachType,
+    sdocIds,
+    codeIds,
+  });
+
+  const hasExistingAnnotations = useMemo(
+    () =>
+      existingAssistantAnnotations.isSuccess &&
+      Object.values(existingAssistantAnnotations.data).some((count) => count > 0),
+    [existingAssistantAnnotations.data, existingAssistantAnnotations.isSuccess],
+  );
+
+  // mutations
+  const { mutate: createPromptTemplatesMutation, isPending: isPTPending } = LLMHooks.useCreatePromptTemplates();
+  const { mutate: createTrainingParametersMutation, isPending: isTPPending } = LLMHooks.useCreateTrainingParameters();
+
+  const handleNext = useCallback(() => {
     if (!llmMethod) return;
 
-    // the next action depends on the selected approach
+    const commonParams = {
+      llm_job_type: llmMethod,
+      project_id: projectId,
+      specific_task_parameters: {
+        llm_job_type: llmMethod,
+        tag_ids: tags.map((tag) => tag.id),
+        project_metadata_ids: metadata.map((m) => m.id),
+        code_ids: codeIds,
+        sdoc_ids: sdocIds,
+      },
+    };
+
     switch (approachType) {
       case ApproachType.LLM_ZERO_SHOT:
       case ApproachType.LLM_FEW_SHOT:
-        createPromptTemplatesMutation.mutate(
+        createPromptTemplatesMutation(
           {
             approachType: approachType,
             requestBody: {
-              llm_job_type: llmMethod,
-              project_id: projectId,
-              specific_task_parameters: {
-                llm_job_type: llmMethod,
-                tag_ids: tags.map((tag) => tag.id),
-                project_metadata_ids: metadata.map((m) => m.id),
-                code_ids: codes.map((code) => code.id),
-                sdoc_ids: sdocIds,
-              },
+              llm_job_params: commonParams,
             },
           },
           {
             onSuccess(data) {
-              dispatch(CRUDDialogActions.llmDialogGoToPromptEditor({ prompts: data, approach: approachType }));
+              dispatch(
+                CRUDDialogActions.llmDialogGoToPromptEditor({
+                  prompts: data,
+                  approach: approachType,
+                  deleteExistingAnnotations: deleteExistingAnnotations === DeletionStrategy.DELETE_EXISTING,
+                }),
+              );
             },
           },
         );
         break;
       case ApproachType.MODEL_TRAINING:
-        createTrainingParametersMutation.mutate(
+        createTrainingParametersMutation(
           {
-            requestBody: {
-              llm_job_type: llmMethod,
-              project_id: projectId,
-              specific_task_parameters: {
-                llm_job_type: llmMethod,
-                tag_ids: tags.map((tag) => tag.id),
-                project_metadata_ids: metadata.map((m) => m.id),
-                code_ids: codes.map((code) => code.id),
-                sdoc_ids: sdocIds,
-              },
-            },
+            requestBody: commonParams,
           },
           {
             onSuccess(data) {
@@ -106,13 +143,24 @@ function ApproachSelectionStep() {
         );
         break;
     }
-  };
+  }, [
+    llmMethod,
+    projectId,
+    tags,
+    metadata,
+    codeIds,
+    sdocIds,
+    approachType,
+    createPromptTemplatesMutation,
+    createTrainingParametersMutation,
+    dispatch,
+    deleteExistingAnnotations,
+  ]);
 
-  const num_available_appproaches = Object.values(approachRecommendation.available_approaches).filter(
-    (available) => available,
-  ).length;
-
-  console.log(approachRecommendation.reasoning);
+  const numAvailableApproaches = useMemo(
+    () => Object.values(approachRecommendation.available_approaches).filter((available) => available).length,
+    [approachRecommendation.available_approaches],
+  );
 
   return (
     <>
@@ -125,7 +173,7 @@ function ApproachSelectionStep() {
                 <br />
               </React.Fragment>
             ))}
-            {num_available_appproaches > 1 ? " You can change the approach if you want." : ""}
+            {numAvailableApproaches > 1 ? " You can change the approach if you want." : ""}
           </Typography>
         </LLMUtterance>
         <FormControl sx={{ ml: 12.5, my: 2 }}>
@@ -138,7 +186,11 @@ function ApproachSelectionStep() {
             onChange={handleChange}
           >
             {Object.values(ApproachType).map((approach) => (
-              <MenuItem value={approach} disabled={!approachRecommendation.available_approaches[approach.valueOf()]}>
+              <MenuItem
+                key={approach}
+                value={approach}
+                disabled={!approachRecommendation.available_approaches[approach.valueOf()]}
+              >
                 {approach}
               </MenuItem>
             ))}
@@ -147,19 +199,46 @@ function ApproachSelectionStep() {
         <LLMUtterance>
           <Typography>{explanations[approachType as ApproachType]}</Typography>
         </LLMUtterance>
+        {llmMethod === TaskType.SENTENCE_ANNOTATION && existingAssistantAnnotations.data && hasExistingAnnotations && (
+          <>
+            <Divider sx={{ my: 2 }} />
+            <LLMUtterance>
+              <Typography>
+                <b>Warning!</b> I noticed that I already annotated the documents you selected. I checked the number of
+                my annotations for each code and found:
+              </Typography>
+              {Object.entries(existingAssistantAnnotations.data).map(([code, count]) => (
+                <Stack direction="row" key={code}>
+                  <CodeRenderer code={parseInt(code)} />: {count}
+                </Stack>
+              ))}
+              <Typography>How should we deal with my existing annotations?</Typography>
+            </LLMUtterance>
+            <FormControl sx={{ ml: 12.5, my: 2 }}>
+              <InputLabel id="deletion-strategy">Deletion</InputLabel>
+              <Select
+                labelId="deletion-strategy"
+                id="deletion-strategy"
+                value={deleteExistingAnnotations}
+                label="Delete"
+                onChange={handleChangeDeletionStrategy}
+              >
+                <MenuItem value={DeletionStrategy.DELETE_EXISTING}>Delete existing annotations</MenuItem>
+                <MenuItem value={DeletionStrategy.KEEP_EXISTING}>Keep existing annotations</MenuItem>
+              </Select>
+            </FormControl>
+          </>
+        )}
       </DialogContent>
       <DialogActions>
         <Box flexGrow={1} />
-        <Button
-          disabled={createPromptTemplatesMutation.isPending}
-          onClick={() => dispatch(CRUDDialogActions.previousLLMDialogStep())}
-        >
+        <Button disabled={isPTPending || isTPPending} onClick={handleBack}>
           Back
         </Button>
         <LoadingButton
           variant="contained"
           startIcon={<PlayCircleIcon />}
-          loading={createPromptTemplatesMutation.isPending}
+          loading={isPTPending || isTPPending}
           loadingPosition="start"
           onClick={handleNext}
         >
@@ -170,4 +249,4 @@ function ApproachSelectionStep() {
   );
 }
 
-export default ApproachSelectionStep;
+export default memo(ApproachSelectionStep);
