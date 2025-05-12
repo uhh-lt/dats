@@ -3,9 +3,10 @@ import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import SquareOutlinedIcon from "@mui/icons-material/SquareOutlined";
 import StickyNote2Icon from "@mui/icons-material/StickyNote2";
 import TitleIcon from "@mui/icons-material/Title";
-import { Box, IconButton, Menu, MenuItem, Tooltip } from "@mui/material";
-import { useState } from "react";
+import { IconButton, Menu, MenuItem, Tooltip } from "@mui/material";
+import { useMemo, useState } from "react";
 import { Node } from "reactflow";
+import { WhiteboardNodeType } from "../../../../api/openapi/models/WhiteboardNodeType.ts";
 import { BorderData } from "../../types/base/BorderData";
 
 enum NodeType {
@@ -15,6 +16,25 @@ enum NodeType {
   RECTANGLE = "rectangle",
   ROUNDED = "rounded",
 }
+
+// Check if a node type is currently active
+const getNodeType = (node: Node | undefined): NodeType => {
+  if (!node) return NodeType.TEXT;
+
+  if (node.type === WhiteboardNodeType.TEXT) {
+    return NodeType.TEXT;
+  }
+  if (node.type === WhiteboardNodeType.NOTE) {
+    return NodeType.NOTE;
+  }
+  if (node.type === WhiteboardNodeType.BORDER) {
+    const borderData = node.data as BorderData;
+    if (borderData.borderRadius === "100%") return NodeType.ELLIPSE;
+    if (borderData.borderRadius === "0px") return NodeType.RECTANGLE;
+    if (borderData.borderRadius === "25px") return NodeType.ROUNDED;
+  }
+  return NodeType.TEXT;
+};
 
 const NodeTypeIconMap = {
   [NodeType.TEXT]: <TitleIcon />,
@@ -46,49 +66,7 @@ const NodeChangeTool: React.FC<NodeChangeToolProps> = ({ onNodeTypeChange, node 
     handleMenuClose();
   };
 
-  // Check if a node type is currently active
-  const isNodeTypeActive = (nodeType: string) => {
-    if (!node) return false;
-
-    if (nodeType === "text" || nodeType === "note") {
-      return node.type === nodeType;
-    }
-
-    if (node.type === "border") {
-      const borderData = node.data as BorderData;
-      if (nodeType === "ellipse") return borderData.borderRadius === "100%";
-      if (nodeType === "rectangle") return borderData.borderRadius === "0px";
-      if (nodeType === "rounded") return borderData.borderRadius === "25px";
-    }
-
-    return false;
-  };
-
-  // Get the appropriate icon based on node type and shape
-  const getNodeTypeIcon = () => {
-    if (!node) return <CheckBoxOutlineBlankIcon />;
-
-    const borderData = node.type === "border" ? (node.data as BorderData) : null;
-
-    switch (node.type) {
-      case "text":
-        return <TitleIcon />;
-      case "note":
-        return <StickyNote2Icon />;
-      case "border":
-        if (!borderData) return <CheckBoxOutlineBlankIcon />;
-        if (borderData.borderRadius === "100%") {
-          return <RadioButtonUncheckedIcon />;
-        } else if (borderData.borderRadius === "0px") {
-          return <SquareOutlinedIcon />;
-        } else if (borderData.borderRadius === "25px") {
-          return <CheckBoxOutlineBlankIcon />;
-        }
-        return <CheckBoxOutlineBlankIcon />;
-      default:
-        return <CheckBoxOutlineBlankIcon />;
-    }
-  };
+  const nodeType = useMemo(() => getNodeType(node), [node]);
 
   return (
     <>
@@ -96,14 +74,13 @@ const NodeChangeTool: React.FC<NodeChangeToolProps> = ({ onNodeTypeChange, node 
         <IconButton
           size="large"
           sx={{
+            p: 0.5,
             color: "black",
-            mr: 1,
-            borderRadius: "0px",
             "&:hover": { color: "black", backgroundColor: "transparent" },
           }}
           onClick={handleMenuOpen}
         >
-          {getNodeTypeIcon()}
+          {NodeTypeIconMap[nodeType]}
         </IconButton>
       </Tooltip>
       <Menu
@@ -121,46 +98,27 @@ const NodeChangeTool: React.FC<NodeChangeToolProps> = ({ onNodeTypeChange, node 
         sx={{
           "& .MuiPaper-root": {
             boxShadow: 1,
-            mt: 1.8,
-            p: 0,
-            width: "140px",
+            mt: "19px",
           },
           "& .MuiList-root": { p: 0 },
         }}
       >
-        <Box sx={{ display: "flex", flexWrap: "wrap", width: "100%", p: 0, m: 0 }}>
-          {Object.values(NodeType).map((type) => {
-            const icon = NodeTypeIconMap[type];
-            return (
-              <Box
-                key={type}
+        {Object.values(NodeType).map((type) => {
+          const icon = NodeTypeIconMap[type];
+          return (
+            <Tooltip title={type} arrow placement="left">
+              <MenuItem
+                selected={nodeType === type}
+                onClick={() => handleNodeTypeChange(type)}
                 sx={{
-                  width: "33.33%",
-                  display: "flex",
-                  justifyContent: "center",
-                  p: 0,
-                  m: 0,
+                  p: 1,
                 }}
               >
-                <Tooltip title={type} arrow>
-                  <MenuItem
-                    selected={isNodeTypeActive(type)}
-                    onClick={() => handleNodeTypeChange(type)}
-                    sx={{
-                      p: 1,
-                      m: 0,
-                      minWidth: "auto",
-                      width: "100%",
-                      justifyContent: "center",
-                    }}
-                  >
-                    {icon}
-                  </MenuItem>
-                </Tooltip>
-              </Box>
-            );
-          })}
-        </Box>
+                {icon}
+              </MenuItem>
+            </Tooltip>
+          );
+        })}
       </Menu>
     </>
   );

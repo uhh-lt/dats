@@ -2,6 +2,25 @@ import { Box, Button, Menu, Slider, Stack, Tooltip, Typography } from "@mui/mate
 import { useState } from "react";
 import ColorGrid from "./ColorGrid.tsx";
 
+// Convert hex color to rgba for the icon background
+const computeBackgroundColor = (color: string, alpha: number | null) => {
+  // If it's already an rgba color, return it
+  if (color.startsWith("rgba")) return color;
+
+  // Convert hex to rgba
+  try {
+    const r = parseInt(color.slice(1, 3), 16);
+    const g = parseInt(color.slice(3, 5), 16);
+    const b = parseInt(color.slice(5, 7), 16);
+    const alphaValue = alpha ? alpha / 255 : 1; // Convert alpha from 0-255 to 0-1 range
+
+    return `rgba(${r}, ${g}, ${b}, ${alphaValue})`;
+  } catch (error) {
+    console.error("Error converting color:", error);
+    return "transparent";
+  }
+};
+
 interface BgColorToolProps {
   color: string;
   alpha: number | null;
@@ -21,27 +40,6 @@ export default function BgColorTool({ color, alpha, onColorChange, onAlphaChange
     setAnchorEl(null);
   };
 
-  // Convert hex color to rgba for the icon background
-  const getBackgroundColor = () => {
-    if (!color) return "transparent";
-
-    // If it's already an rgba color, return it
-    if (color.startsWith("rgba")) return color;
-
-    // Convert hex to rgba
-    try {
-      const r = parseInt(color.slice(1, 3), 16);
-      const g = parseInt(color.slice(3, 5), 16);
-      const b = parseInt(color.slice(5, 7), 16);
-      const alphaValue = alpha ? alpha / 255 : 1; // Convert alpha from 0-255 to 0-1 range
-
-      return `rgba(${r}, ${g}, ${b}, ${alphaValue})`;
-    } catch (error) {
-      console.error("Error converting color:", error);
-      return "transparent";
-    }
-  };
-
   return (
     <Box sx={{ display: "flex", alignItems: "center" }}>
       <Tooltip title="Background color" arrow>
@@ -49,16 +47,15 @@ export default function BgColorTool({ color, alpha, onColorChange, onAlphaChange
           size="small"
           onClick={handleClick}
           sx={{
-            mr: 1,
             minWidth: 0,
             width: 28,
             height: 28,
             p: 0,
             borderRadius: "50%",
-            bgcolor: getBackgroundColor(),
+            bgcolor: computeBackgroundColor(color, alpha),
             border: "1px solid rgba(0, 0, 0, 0.12)",
             "&:hover": {
-              bgcolor: getBackgroundColor(),
+              bgcolor: computeBackgroundColor(color, alpha),
               opacity: 0.8,
             },
           }}
@@ -91,23 +88,21 @@ export default function BgColorTool({ color, alpha, onColorChange, onAlphaChange
         }}
       >
         <Stack direction="column" spacing={1} sx={{ p: 1, minWidth: 160 }}>
-          <Box sx={{ width: "100%" }}>
-            <Typography variant="caption" sx={{ mb: 1, pl: 1 }}>
-              Opacity
-            </Typography>
-            <Box sx={{ px: 1 }}>
-              <Slider
-                size="small"
-                defaultValue={alpha || 1}
-                step={1}
-                min={0}
-                max={255}
-                onChangeCommitted={(_event, newValue) => onAlphaChange(newValue as number)}
-              />
-            </Box>
+          <Typography variant="caption" sx={{ color: "text.secondary" }}>
+            Opacity
+          </Typography>
+          <Box sx={{ px: 1 }}>
+            <Slider
+              size="small"
+              defaultValue={alpha || 1}
+              step={1}
+              min={0}
+              max={255}
+              onChangeCommitted={(_event, newValue) => onAlphaChange(newValue as number)}
+            />
           </Box>
-          <Typography variant="caption" sx={{ mb: 1, pl: 1 }}>
-            Colors
+          <Typography variant="caption" sx={{ color: "text.secondary" }}>
+            Color
           </Typography>
           <ColorGrid selectedColor={color} onColorChange={onColorChange} />
         </Stack>

@@ -26,7 +26,6 @@ export default function FontColorTool({ color, onColorChange }: FontColorToolPro
           size="small"
           onClick={handleClick}
           sx={{
-            mr: 1,
             minWidth: 0,
             width: 28,
             height: 28,
@@ -55,7 +54,7 @@ export default function FontColorTool({ color, onColorChange }: FontColorToolPro
         }}
         sx={{
           "& .MuiPaper-root": {
-            padding: 0,
+            padding: 1,
             margin: 0,
             marginTop: "19px",
             elevation: 1,

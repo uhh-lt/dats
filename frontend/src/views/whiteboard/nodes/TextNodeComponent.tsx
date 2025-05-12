@@ -1,31 +1,44 @@
 import { Box, TextField, Typography } from "@mui/material";
 import { useState } from "react";
-import { NodeProps } from "reactflow";
+import { NodeProps, useReactFlow } from "reactflow";
 import { TextNodeData } from "../../../api/openapi/models/TextNodeData.ts";
 
 export interface TextNodeComponentProps<T extends Partial<TextNodeData>> {
   nodeProps: NodeProps<T>;
-  onTextChange: (value: string) => void;
 }
 
-export function TextNodeComponent<T extends Partial<TextNodeData>>({
-  nodeProps,
-  onTextChange,
-}: TextNodeComponentProps<T>) {
+export function TextNodeComponent<T extends Partial<TextNodeData>>({ nodeProps }: TextNodeComponentProps<T>) {
+  // Edit Mode
   const [isEditing, setIsEditing] = useState<boolean>(false);
-
   const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     if (event.detail >= 2) {
       setIsEditing(true);
     }
   };
 
+  // Handle Text Change
+  const reactFlowInstance = useReactFlow();
   const handleChangeText = (
     event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element> | React.KeyboardEvent<HTMLDivElement>,
   ) => {
     // @ts-expect-error - value is always a string
     const value: string = event.target.value;
-    onTextChange(value);
+
+    reactFlowInstance.setNodes((nodes) =>
+      nodes.map((node) => {
+        if (node.id === nodeProps.id) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              text: value,
+            },
+          };
+        }
+        return node;
+      }),
+    );
+
     setIsEditing(false);
   };
 
@@ -51,8 +64,10 @@ export function TextNodeComponent<T extends Partial<TextNodeData>>({
             defaultValue={nodeProps.data.text}
             onBlur={handleChangeText}
             onKeyDown={(event) => event.key === "Escape" && handleChangeText(event)}
-            inputProps={{
-              style: textStyle,
+            slotProps={{
+              htmlInput: {
+                style: textStyle,
+              },
             }}
             multiline
             autoFocus

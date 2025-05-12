@@ -1,7 +1,7 @@
 import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import { MenuItem, Select, SelectChangeEvent, Tooltip } from "@mui/material";
+import { MenuItem, Select, SelectChangeEvent, Stack, Tooltip } from "@mui/material";
 import { useState } from "react";
 import { EdgeMarker } from "reactflow";
 
@@ -74,9 +74,9 @@ export default function EdgeMarkerTool({
   };
 
   return (
-    <>
+    <Stack direction="row" alignItems="center">
       <Tooltip
-        title="Line start"
+        title="Edge start"
         arrow
         open={isStartTooltipOpen}
         onOpen={handleStartTooltipOpen}
@@ -85,26 +85,27 @@ export default function EdgeMarkerTool({
         <Select
           size="small"
           sx={{
-            mr: 0.5,
             height: "32px",
             "& .MuiOutlinedInput-notchedOutline": { border: "none" },
             "& .MuiSelect-select": {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              p: 0.5,
+              p: 0,
             },
           }}
           MenuProps={{
             sx: {
               "& .MuiPaper-root": {
                 boxShadow: 1,
-                marginTop: "17px",
+                minWidth: "0 !important",
+                marginTop: "19px",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
               },
+              "& .MuiList-root": { p: 0 },
             },
           }}
           onOpen={handleStartSelectOpen}
@@ -113,14 +114,14 @@ export default function EdgeMarkerTool({
           onChange={onMarkerStartChange}
         >
           {["noarrow", "arrow", "arrowclosed"].map((type) => (
-            <MenuItem key={type} value={type} sx={{ minWidth: "auto", m: 0, p: 1 }}>
+            <MenuItem key={type} value={type} sx={{ p: 1 }}>
               {arrow2rotatedicon[type]}
             </MenuItem>
           ))}
         </Select>
       </Tooltip>
       <Tooltip
-        title="Line end"
+        title="Edge end"
         arrow
         open={isEndTooltipOpen}
         onOpen={handleEndTooltipOpen}
@@ -129,26 +130,23 @@ export default function EdgeMarkerTool({
         <Select
           size="small"
           sx={{
-            mr: 1,
             height: "32px",
             "& .MuiOutlinedInput-notchedOutline": { border: "none" },
             "& .MuiSelect-select": {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              p: 0.5,
+              p: 0,
             },
           }}
           MenuProps={{
             sx: {
               "& .MuiPaper-root": {
                 boxShadow: 1,
-                marginTop: "17px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
+                minWidth: "0 !important",
+                marginTop: "19px",
               },
+              "& .MuiList-root": { p: 0 },
             },
           }}
           onOpen={handleEndSelectOpen}
@@ -163,6 +161,6 @@ export default function EdgeMarkerTool({
           ))}
         </Select>
       </Tooltip>
-    </>
+    </Stack>
   );
 }

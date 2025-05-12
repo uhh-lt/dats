@@ -43,9 +43,7 @@ const ColorGrid: React.FC<ColorGridProps> = ({ selectedColor, onColorChange, inc
                 "&:hover": {
                   bgcolor: predefinedColor,
                   opacity: 0.7,
-                  transform: "scale(1.1)",
                 },
-                transition: (theme) => theme.transitions.create(["opacity", "transform", "background-color"]),
               }}
             />
           </Grid>
@@ -85,9 +83,7 @@ const ColorGrid: React.FC<ColorGridProps> = ({ selectedColor, onColorChange, inc
                     "&:hover": {
                       bgcolor: "background.paper",
                       opacity: 0.7,
-                      transform: "scale(1.1)",
                     },
-                    transition: (theme) => theme.transitions.create(["opacity", "transform", "background-color"]),
                   }}
                 >
                   <AddIcon sx={{ fontSize: 16, color: "text.secondary" }} />

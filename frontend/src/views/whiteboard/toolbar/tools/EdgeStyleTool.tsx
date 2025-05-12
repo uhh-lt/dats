@@ -5,13 +5,14 @@ import UTurnRightIcon from "@mui/icons-material/UTurnRight";
 import { Box, Button, Grid2 as Grid, Menu, Stack, Tooltip, Typography } from "@mui/material";
 import { useState } from "react";
 import { WhiteboardEdgeType } from "../../../../api/openapi/models/WhiteboardEdgeType.ts";
+import { StrokeStyle } from "../../types/base/StrokeStyle.ts";
 import ColorGrid from "./ColorGrid.tsx";
 
 interface EdgeColorToolProps {
   color: string;
   onColorChange: (color: string) => void;
-  borderStyle: "solid" | "dashed" | "dotted";
-  onBorderStyleChange: (style: "solid" | "dashed" | "dotted") => void;
+  strokeStyle: StrokeStyle;
+  onStrokeStyleChange: (style: StrokeStyle) => void;
   edgeType: WhiteboardEdgeType;
   onEdgeTypeChange: (type: WhiteboardEdgeType) => void;
 }
@@ -23,11 +24,11 @@ const type2icon: Record<string, React.ReactElement> = {
   smoothstep: <TurnRightIcon />,
 };
 
-export default function EdgeColorTool({
+export default function EdgeStyleTool({
   color,
   onColorChange,
-  borderStyle,
-  onBorderStyleChange,
+  strokeStyle,
+  onStrokeStyleChange,
   edgeType,
   onEdgeTypeChange,
 }: EdgeColorToolProps) {
@@ -44,12 +45,11 @@ export default function EdgeColorTool({
 
   return (
     <Box sx={{ display: "flex", alignItems: "center" }}>
-      <Tooltip title="Edge color and style" arrow>
+      <Tooltip title="Edge style" arrow>
         <Button
           size="small"
           onClick={handleClick}
           sx={{
-            mr: 1,
             minWidth: 0,
             width: 28,
             height: 28,
@@ -91,8 +91,8 @@ export default function EdgeColorTool({
         }}
       >
         <Stack direction="column" spacing={1} sx={{ p: 1, minWidth: 160 }}>
-          <Typography variant="caption" sx={{ color: "text.secondary", p: 1, pb: 0 }}>
-            Edge type
+          <Typography variant="caption" sx={{ color: "text.secondary" }}>
+            Edge Type
           </Typography>
           <Grid container spacing={1} columns={4} sx={{ justifyContent: "start", px: 1, pb: 1 }}>
             {Object.values(WhiteboardEdgeType).map((type) => (
@@ -105,7 +105,7 @@ export default function EdgeColorTool({
                       minWidth: 0,
                       width: 24,
                       height: 24,
-                      p: 1.8,
+                      p: 2,
                       color: "black",
                       borderRadius: "50%",
                       bgcolor: edgeType === type ? "action.selected" : "transparent",
@@ -113,9 +113,7 @@ export default function EdgeColorTool({
                       "&:hover": {
                         bgcolor: "action.hover",
                         opacity: 0.7,
-                        transform: "scale(1.1)",
                       },
-                      transition: (theme) => theme.transitions.create(["opacity", "transform", "background-color"]),
                     }}
                   >
                     {type2icon[type]}
@@ -124,61 +122,42 @@ export default function EdgeColorTool({
               </Grid>
             ))}
           </Grid>
-          <Typography variant="caption" sx={{ color: "text.secondary", pl: 1, pb: 0 }}>
-            Edge style
+          <Typography variant="caption" sx={{ color: "text.secondary" }}>
+            Stroke Style
           </Typography>
-          <Stack direction="row" spacing={1} sx={{ p: 1, pt: 0, pb: 2, justifyContent: "center" }}>
-            <Button
-              onClick={() => onBorderStyleChange("solid")}
-              sx={{
-                minWidth: "auto",
-                p: 1,
-                "&:hover": { bgcolor: "transparent" },
-              }}
-            >
-              <p
-                style={{
-                  width: "20px",
-                  margin: 0,
-                  borderTop: `2px ${borderStyle === "solid" ? "black" : "#666"} solid`,
-                }}
-              />
-            </Button>
-            <Button
-              onClick={() => onBorderStyleChange("dashed")}
-              sx={{
-                minWidth: "auto",
-                p: 1,
-                "&:hover": { bgcolor: "transparent" },
-              }}
-            >
-              <p
-                style={{
-                  width: "20px",
-                  margin: 0,
-                  borderTop: `2px ${borderStyle === "dashed" ? "black" : "#666"} dashed`,
-                }}
-              />
-            </Button>
-            <Button
-              onClick={() => onBorderStyleChange("dotted")}
-              sx={{
-                minWidth: "auto",
-                p: 1,
-                "&:hover": { bgcolor: "transparent" },
-              }}
-            >
-              <p
-                style={{
-                  width: "20px",
-                  margin: 0,
-                  borderTop: `2px ${borderStyle === "dotted" ? "black" : "#666"} dotted`,
-                }}
-              />
-            </Button>
+          <Stack direction="row" spacing={1} sx={{ justifyContent: "center" }}>
+            {Object.values(StrokeStyle).map((type) => (
+              <Tooltip title={type} arrow>
+                <Button
+                  size="small"
+                  onClick={() => onStrokeStyleChange(type)}
+                  sx={{
+                    minWidth: "auto",
+                    width: 32,
+                    height: 32,
+                    color: "black",
+                    borderRadius: "50%",
+                    bgcolor: strokeStyle === type ? "action.selected" : "transparent",
+                    border: "none",
+                    "&:hover": {
+                      bgcolor: "action.hover",
+                      opacity: 0.7,
+                    },
+                  }}
+                >
+                  <p
+                    style={{
+                      width: "20px",
+                      margin: 0,
+                      borderTop: `2px black ${type}`,
+                    }}
+                  />
+                </Button>
+              </Tooltip>
+            ))}
           </Stack>
-          <Typography variant="caption" sx={{ color: "text.secondary", pl: 1, pb: 0 }}>
-            Edge Colors
+          <Typography variant="caption" sx={{ color: "text.secondary" }}>
+            Color
           </Typography>
           <ColorGrid selectedColor={color} onColorChange={onColorChange} />
         </Stack>

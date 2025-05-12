@@ -29,12 +29,11 @@ export default function BorderColorTool({
 
   return (
     <Box sx={{ display: "flex", alignItems: "center" }}>
-      <Tooltip title="Border color and style" arrow>
+      <Tooltip title="Border style" arrow>
         <Button
           size="small"
           onClick={handleClick}
           sx={{
-            mr: 1,
             minWidth: 0,
             width: 28,
             height: 28,
@@ -77,29 +76,41 @@ export default function BorderColorTool({
         }}
       >
         <Stack direction="column" spacing={1} sx={{ p: 1, minWidth: 160 }}>
-          <Typography variant="caption" sx={{ color: "text.secondary", p: 1, pb: 0 }}>
+          <Typography variant="caption" sx={{ color: "text.secondary" }}>
             Border style
           </Typography>
-          <Stack direction="row" spacing={1} sx={{ p: 1, pt: 0, pb: 2, justifyContent: "center" }}>
-            {Object.values(BorderStyle).map((style) => {
-              return (
+          <Stack direction="row" spacing={1} sx={{ justifyContent: "center" }}>
+            {Object.values(BorderStyle).map((type) => (
+              <Tooltip title={type} arrow>
                 <Button
-                  key={style}
-                  onClick={() => onBorderStyleChange(style)}
-                  sx={{ minWidth: "auto", p: 1, "&:hover": { bgcolor: "transparent" } }}
+                  size="small"
+                  onClick={() => onBorderStyleChange(type)}
+                  sx={{
+                    minWidth: "auto",
+                    width: 32,
+                    height: 32,
+                    color: "black",
+                    borderRadius: "50%",
+                    bgcolor: borderStyle === type ? "action.selected" : "transparent",
+                    border: "none",
+                    "&:hover": {
+                      bgcolor: "action.hover",
+                      opacity: 0.7,
+                    },
+                  }}
                 >
                   <p
                     style={{
                       width: "20px",
                       margin: 0,
-                      borderTop: `2px ${style === borderStyle ? "black" : "#666"} solid`,
+                      borderTop: `2px black ${type}`,
                     }}
                   />
                 </Button>
-              );
-            })}
+              </Tooltip>
+            ))}
           </Stack>
-          <Typography variant="caption" sx={{ color: "text.secondary", pl: 1, pb: 0 }}>
+          <Typography variant="caption" sx={{ color: "text.secondary" }}>
             Border Colors
           </Typography>
           <ColorGrid selectedColor={color} onColorChange={onColorChange} />
