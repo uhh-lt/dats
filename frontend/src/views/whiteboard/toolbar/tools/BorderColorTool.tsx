@@ -81,7 +81,7 @@ export default function BorderColorTool({
           </Typography>
           <Stack direction="row" spacing={1} sx={{ justifyContent: "center" }}>
             {Object.values(BorderStyle).map((type) => (
-              <Tooltip title={type} arrow>
+              <Tooltip title={type} arrow key={type}>
                 <Button
                   size="small"
                   onClick={() => onBorderStyleChange(type)}

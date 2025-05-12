@@ -106,7 +106,7 @@ const NodeChangeTool: React.FC<NodeChangeToolProps> = ({ onNodeTypeChange, node 
         {Object.values(NodeType).map((type) => {
           const icon = NodeTypeIconMap[type];
           return (
-            <Tooltip title={type} arrow placement="left">
+            <Tooltip title={type} arrow placement="left" key={type}>
               <MenuItem
                 selected={nodeType === type}
                 onClick={() => handleNodeTypeChange(type)}
