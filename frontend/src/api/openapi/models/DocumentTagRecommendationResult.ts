@@ -19,4 +19,8 @@ export type DocumentTagRecommendationResult = {
    * List of suggested tag IDs for the source document
    */
   suggested_tag_ids: Array<number>;
+  /**
+   * List of the scores of the suggested tags
+   */
+  scores: Array<number>;
 };
