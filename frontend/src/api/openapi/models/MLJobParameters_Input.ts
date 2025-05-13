@@ -7,7 +7,7 @@ import type { DocTagRecommendationParams } from "./DocTagRecommendationParams";
 import type { DocumentEmbeddingParams } from "./DocumentEmbeddingParams";
 import type { MLJobType } from "./MLJobType";
 import type { QuotationAttributionParams } from "./QuotationAttributionParams";
-export type MLJobParameters = {
+export type MLJobParameters_Input = {
   /**
    * The type of the MLJob
    */

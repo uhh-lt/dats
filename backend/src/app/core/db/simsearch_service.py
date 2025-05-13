@@ -1,4 +1,3 @@
-from itertools import repeat
 from typing import (
     Any,
     Callable,
@@ -133,14 +132,14 @@ class SimSearchService(metaclass=SingletonMeta):
         self._index.add_embeddings_to_index(
             IndexType.SENTENCE,
             proj_id,
-            repeat(sdoc_id, len(sentence_embs)),
+            [sdoc_id] * len(sentence_embs),
             sentence_embs,
         )
 
     def add_document_embeddings(
         self,
         proj_id: int,
-        sdoc_ids: Iterable[int],
+        sdoc_ids: List[int],
         embeddings: np.ndarray,
         force: bool = False,
     ):
@@ -198,7 +197,7 @@ class SimSearchService(metaclass=SingletonMeta):
         self,
         text_query: Optional[List[str]] = None,
         image_query_id: Optional[int] = None,
-        average_text_query: bool = False,
+        document_query: bool = False,
     ) -> np.ndarray:
         if text_query is None and image_query_id is None:
             msg = "Either text_query or image_query must be set!"
@@ -211,8 +210,8 @@ class SimSearchService(metaclass=SingletonMeta):
         elif text_query is not None:
             query_emb = (
                 self._encode_document(" ".join(text_query))
-                if average_text_query
-                else self._encode_sentences(sentencesext=text_query)
+                if document_query
+                else self._encode_sentences(sentences=text_query)
             )
         elif image_query_id is not None:
             query_emb = self._encode_image(image_sdoc_id=image_query_id)
@@ -226,7 +225,7 @@ class SimSearchService(metaclass=SingletonMeta):
         query_params = {
             "text_query": None,
             "image_query_id": None,
-            "average_text_query": False,
+            "document_query": False,
         }
 
         if isinstance(query, int) or (isinstance(query, str) and query.isdigit()):
@@ -235,7 +234,7 @@ class SimSearchService(metaclass=SingletonMeta):
             query_params["text_query"] = [query]
         elif isinstance(query, list):
             query_params["text_query"] = query
-            query_params["average_text_query"] = True
+            query_params["document_query"] = True
 
         return query_params
 

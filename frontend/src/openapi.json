@@ -5473,7 +5473,7 @@
         "summary": "Returns the MLJob for the given Parameters",
         "operationId": "start_ml_job",
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MLJobParameters" } } },
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MLJobParameters-Input" } } },
           "required": true
         },
         "responses": {
@@ -6764,13 +6764,46 @@
       },
       "DocTagRecommendationParams": {
         "properties": {
-          "ml_job_type": { "type": "string", "const": "DOC_TAG_RECOMMENDATION", "title": "Ml Job Type" }
+          "ml_job_type": { "type": "string", "const": "DOC_TAG_RECOMMENDATION", "title": "Ml Job Type" },
+          "multi_class": {
+            "type": "boolean",
+            "title": "Multi Class",
+            "description": "Tags are mutually exclusive if `False`",
+            "default": false
+          },
+          "tag_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Tag Ids",
+            "description": "Tags to consider. If empty, all tags applied to any document are considered.",
+            "default": []
+          },
+          "method": {
+            "$ref": "#/components/schemas/DocumentTagRecommendationMethod",
+            "description": "Method to use for suggestions",
+            "default": "KNN"
+          }
         },
         "type": "object",
         "required": ["ml_job_type"],
         "title": "DocTagRecommendationParams"
       },
       "DocType": { "type": "string", "enum": ["text", "image", "video", "audio"], "title": "DocType" },
+      "DocumentEmbeddingParams": {
+        "properties": {
+          "ml_job_type": { "type": "string", "const": "DOCUMENT_EMBEDDING", "title": "Ml Job Type" },
+          "recompute": {
+            "type": "boolean",
+            "title": "Recompute",
+            "description": "Whether to recompute already processed documents",
+            "default": false
+          },
+          "model": { "type": "string", "title": "Model", "default": "snowflake-arctic-embed2:568m" }
+        },
+        "type": "object",
+        "required": ["ml_job_type"],
+        "title": "DocumentEmbeddingParams"
+      },
       "DocumentTagCreate": {
         "properties": {
           "name": { "type": "string", "title": "Name", "description": "Title of the DocumentTag" },
@@ -6865,6 +6898,11 @@
         "required": ["ml_job_id", "source_document_id", "predicted_tag_id", "prediction_score"],
         "title": "DocumentTagRecommendationLinkRead"
       },
+      "DocumentTagRecommendationMethod": {
+        "type": "string",
+        "enum": ["SIMPLE", "KNN", "EXCLUSIVE"],
+        "title": "DocumentTagRecommendationMethod"
+      },
       "DocumentTagRecommendationResult": {
         "properties": {
           "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
@@ -6885,10 +6923,16 @@
             "type": "array",
             "title": "Suggested Tag Ids",
             "description": "List of suggested tag IDs for the source document"
+          },
+          "scores": {
+            "items": { "type": "number" },
+            "type": "array",
+            "title": "Scores",
+            "description": "List of the scores of the suggested tags"
           }
         },
         "type": "object",
-        "required": ["sdoc_id", "recommendation_ids", "current_tag_ids", "suggested_tag_ids"],
+        "required": ["sdoc_id", "recommendation_ids", "current_tag_ids", "suggested_tag_ids", "scores"],
         "title": "DocumentTagRecommendationResult"
       },
       "DocumentTagUpdate": {
@@ -7997,7 +8041,7 @@
         "title": "LogicalOperator",
         "description": "This tells our filter how to combine multiple column expressions."
       },
-      "MLJobParameters": {
+      "MLJobParameters-Input": {
         "properties": {
           "ml_job_type": { "$ref": "#/components/schemas/MLJobType", "description": "The type of the MLJob" },
           "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project to analyse" },
@@ -8007,12 +8051,47 @@
                 "oneOf": [
                   { "$ref": "#/components/schemas/QuotationAttributionParams" },
                   { "$ref": "#/components/schemas/DocTagRecommendationParams" },
-                  { "$ref": "#/components/schemas/CoreferenceResolutionParams" }
+                  { "$ref": "#/components/schemas/CoreferenceResolutionParams" },
+                  { "$ref": "#/components/schemas/DocumentEmbeddingParams" }
                 ],
                 "discriminator": {
                   "propertyName": "ml_job_type",
                   "mapping": {
                     "COREFERENCE_RESOLUTION": "#/components/schemas/CoreferenceResolutionParams",
+                    "DOCUMENT_EMBEDDING": "#/components/schemas/DocumentEmbeddingParams",
+                    "DOC_TAG_RECOMMENDATION": "#/components/schemas/DocTagRecommendationParams",
+                    "QUOTATION_ATTRIBUTION": "#/components/schemas/QuotationAttributionParams"
+                  }
+                }
+              },
+              { "type": "null" }
+            ],
+            "title": "Specific Ml Job Parameters",
+            "description": "Specific parameters for the MLJob w.r.t it's type"
+          }
+        },
+        "type": "object",
+        "required": ["ml_job_type", "project_id", "specific_ml_job_parameters"],
+        "title": "MLJobParameters"
+      },
+      "MLJobParameters-Output": {
+        "properties": {
+          "ml_job_type": { "$ref": "#/components/schemas/MLJobType", "description": "The type of the MLJob" },
+          "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project to analyse" },
+          "specific_ml_job_parameters": {
+            "anyOf": [
+              {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/QuotationAttributionParams" },
+                  { "$ref": "#/components/schemas/DocTagRecommendationParams" },
+                  { "$ref": "#/components/schemas/CoreferenceResolutionParams" },
+                  { "$ref": "#/components/schemas/DocumentEmbeddingParams" }
+                ],
+                "discriminator": {
+                  "propertyName": "ml_job_type",
+                  "mapping": {
+                    "COREFERENCE_RESOLUTION": "#/components/schemas/CoreferenceResolutionParams",
+                    "DOCUMENT_EMBEDDING": "#/components/schemas/DocumentEmbeddingParams",
                     "DOC_TAG_RECOMMENDATION": "#/components/schemas/DocTagRecommendationParams",
                     "QUOTATION_ATTRIBUTION": "#/components/schemas/QuotationAttributionParams"
                   }
@@ -8054,7 +8133,7 @@
             "description": "Updated timestamp of the MLJob"
           },
           "parameters": {
-            "$ref": "#/components/schemas/MLJobParameters",
+            "$ref": "#/components/schemas/MLJobParameters-Output",
             "description": "The parameters of the MLJob that defines what to do!"
           }
         },
@@ -8064,7 +8143,7 @@
       },
       "MLJobType": {
         "type": "string",
-        "enum": ["QUOTATION_ATTRIBUTION", "DOC_TAG_RECOMMENDATION", "COREFERENCE_RESOLUTION"],
+        "enum": ["QUOTATION_ATTRIBUTION", "DOC_TAG_RECOMMENDATION", "COREFERENCE_RESOLUTION", "DOCUMENT_EMBEDDING"],
         "title": "MLJobType"
       },
       "MemoColumns": {

@@ -6,6 +6,9 @@ from config import conf
 from pydantic import BaseModel, Field
 
 from app.core.data.dto.background_job_base import BackgroundJobStatus
+from app.core.data.dto.document_tag_recommendation import (
+    DocumentTagRecommendationMethod,
+)
 
 
 class MLJobType(StrEnum):
@@ -24,12 +27,16 @@ class QuotationAttributionParams(BaseModel):
 
 class DocTagRecommendationParams(BaseModel):
     ml_job_type: Literal[MLJobType.DOC_TAG_RECOMMENDATION]
-    exclusive: bool = Field(
-        default=False, description="Whether tags are mutually exclusive"
+    multi_class: bool = Field(
+        default=False, description="Tags are mutually exclusive if `False`"
     )
     tag_ids: list[int] = Field(
         default=[],
         description="Tags to consider. If empty, all tags applied to any document are considered.",
+    )
+    method: DocumentTagRecommendationMethod = Field(
+        default=DocumentTagRecommendationMethod.KNN,
+        description="Method to use for suggestions",
     )
 
 

@@ -2,14 +2,19 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { DocumentTagRecommendationMethod } from "./DocumentTagRecommendationMethod";
 export type DocTagRecommendationParams = {
   ml_job_type: string;
   /**
-   * Whether tags are mutually exclusive
+   * Tags are mutually exclusive if `False`
    */
-  exclusive?: boolean;
+  multi_class?: boolean;
   /**
    * Tags to consider. If empty, all tags applied to any document are considered.
    */
   tag_ids?: Array<number>;
+  /**
+   * Method to use for suggestions
+   */
+  method?: DocumentTagRecommendationMethod;
 };

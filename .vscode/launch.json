@@ -48,6 +48,23 @@
       "envFile": "${workspaceFolder}/backend/.env"
     },
     {
+      "name": "debug-celery",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/.venv/bin/celery",
+      "args": ["-A", "app.celery.background_jobs.tasks", "worker", "-Q", "bgJobsQ,celery", "-P", "threads", "-l", "info", "-c", "1", "--without-gossip", "--without-mingle", "--without-heartbeat"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/backend/src",
+      "justMyCode": true,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/backend/src",
+        "HUGGINGFACE_HUB_CACHE": "${workspaceFolder}/docker/models_cache",
+        "HF_HOME": "${workspaceFolder}/docker/models_cache",
+        "TORCH_HOME": "${workspaceFolder}/docker/models_cache"
+      },
+      "envFile": "${workspaceFolder}/backend/.env"
+    },
+    {
       "name": "Pyright",
       "type": "node-terminal",
       "request": "launch",
@@ -81,6 +98,17 @@
       "command": "uv run alembic revision --autogenerate -m \"vscode launcher\"",
       "cwd": "${workspaceFolder}/backend/src",
       "envFile": "${workspaceFolder}/backend/.env"
-    }
+    },
+    {
+      "name": "pytest",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "mamba activate dats && pytest",
+      "cwd": "${workspaceFolder}/backend/src",
+      "envFile": "${workspaceFolder}/backend/.env",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/backend/src"
+      }
+    },
   ]
 }
