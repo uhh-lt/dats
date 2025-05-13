@@ -152,6 +152,7 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-dats123}
       OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-gemma3:27b}
       OLLAMA_VLM_MODEL: ${OLLAMA_VLM_MODEL:-gemma3:27b}
+      OLLAMA_EMB_MODEL: ${OLLAMA_EMB_MODEL:-snowflake-arctic-embed2:568m}
       NUMBA_CACHE_DIR: /celery_cache/numba_cache
     volumes:
       - ./backend_repo:/tmp/dats

@@ -66,27 +66,6 @@ class WeaviateService(VectorIndexService):
             ],
         }
 
-        cls._sentence_schema = {
-            "name": cls._sentence_class_name,
-            "fields": [
-                {"name": "text", "type": "string"},
-                {"name": "vec", "type": "float[]", "num_dim": 512},
-                {"name": "project_id", "type": "int32"},
-                {"name": "sdoc_id", "type": "int32"},
-                {"name": "sentence_id", "type": "int32"},
-            ],
-        }
-
-        cls._document_schema = {
-            "name": cls._document_class_name,
-            "fields": [
-                {"name": "text", "type": "string"},
-                {"name": "vec", "type": "float[]", "num_dim": 1024},
-                {"name": "project_id", "type": "int32"},
-                {"name": "sdoc_id", "type": "int32"},
-            ],
-        }
-
         cls._named_entity_class_obj = {
             "class": cls._named_entity_class_name,
             "vectorizer": "none",
@@ -620,6 +599,7 @@ class WeaviateService(VectorIndexService):
         index_type: IndexType,
         sentence_ids: Optional[Iterable[int]] = None,
     ) -> List[str]:
+        """ Returns the weaviviate-internal IDs required for the `near_object` query """
         aliases = [f"doc_{id}" for id in range(len(sdoc_ids))]
 
         requests = (
@@ -893,7 +873,7 @@ class WeaviateService(VectorIndexService):
             hits.append(l)
         return hits
 
-    def remove_project_index(self, proj_id, type):
+    def remove_project_index(self, proj_id: int, type: IndexType):
         name = self.class_names[type]
         if self._client.schema.exists(name):
             self._client.batch.delete_objects(

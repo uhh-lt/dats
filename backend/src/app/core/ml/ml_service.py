@@ -71,13 +71,6 @@ class MLService(metaclass=SingletonMeta):
             ml_job_id, MLJobUpdate(status=BackgroundJobStatus.RUNNING)
         )
 
-        timestamp_column = SourceDocumentJobStatusORM.timestamp
-        unfinished_status = SourceDocumentJobStatusORM.status.in_(
-            (JobStatus.ERROR, JobStatus.ABORTED, JobStatus.UNQUEUED, None)
-        )
-        inactive_status = SourceDocumentJobStatusORM.status.notin_(
-            (JobStatus.WAITING, JobStatus.RUNNING)
-        )
         try:
             match mlj.parameters.ml_job_type:
                 case MLJobType.QUOTATION_ATTRIBUTION:
@@ -86,18 +79,9 @@ class MLService(metaclass=SingletonMeta):
                         QuotationAttributionParams,
                     ), "QuotationAttributionParams expected"
                     recompute = mlj.parameters.specific_ml_job_parameters.recompute
-                    filter_criterion = (
-                        and_(
-                            inactive_status,
-                            or_(
-                                timestamp_column < start_time,
-                                timestamp_column == None,  # noqa: E711
-                            ),
-                        )
-                        if recompute
-                        else or_(unfinished_status, timestamp_column == None)  # noqa: E711
+                    filter_criterion = self._build_filter_criterion(
+                        start_time, recompute
                     )
-
                     QuoteService().perform_quotation_detection(
                         mlj.parameters.project_id, filter_criterion, recompute
                     )
@@ -119,16 +103,8 @@ class MLService(metaclass=SingletonMeta):
                         CoreferenceResolutionParams,
                     ):
                         recompute = mlj.parameters.specific_ml_job_parameters.recompute
-                        filter_criterion = (
-                            and_(
-                                inactive_status,
-                                or_(
-                                    timestamp_column < start_time,
-                                    timestamp_column == None,  # noqa: E711
-                                ),
-                            )
-                            if recompute
-                            else or_(unfinished_status, timestamp_column == None)  # noqa: E711
+                        filter_criterion = self._build_filter_criterion(
+                            start_time, recompute
                         )
 
                         CorefService().perform_coreference_resolution(
@@ -140,16 +116,8 @@ class MLService(metaclass=SingletonMeta):
                         DocumentEmbeddingParams,
                     ), "DocumentEmbeddingParams expected"
                     recompute = mlj.parameters.specific_ml_job_parameters.recompute
-                    filter_criterion = (
-                        and_(
-                            inactive_status,
-                            or_(
-                                timestamp_column < start_time,
-                                timestamp_column == None,  # noqa: E711
-                            ),
-                        )
-                        if recompute
-                        else or_(unfinished_status, timestamp_column == None)  # noqa: E711
+                    filter_criterion = self._build_filter_criterion(
+                        start_time, recompute
                     )
                     EmbeddingService().embed_documents(
                         mlj.parameters.project_id, filter_criterion, recompute
@@ -177,4 +145,24 @@ class MLService(metaclass=SingletonMeta):
         except Exception as e:
             raise NoSuchMLJobError(ml_job_id, cause=e)
         return mlj
-        return mlj
+
+    def _build_filter_criterion(self, start_time, recompute: bool):
+        inactive_status = SourceDocumentJobStatusORM.status.notin_(
+            (JobStatus.WAITING, JobStatus.RUNNING)
+        )
+        timestamp_column = SourceDocumentJobStatusORM.timestamp
+        unfinished_status = SourceDocumentJobStatusORM.status.in_(
+            (JobStatus.ERROR, JobStatus.ABORTED, JobStatus.UNQUEUED, None)
+        )
+        filter_criterion = (
+            and_(
+                inactive_status,
+                or_(
+                    timestamp_column < start_time,
+                    timestamp_column == None,  # noqa: E711
+                ),
+            )
+            if recompute
+            else or_(unfinished_status, timestamp_column == None)  # noqa: E711
+        )
+        return filter_criterion
