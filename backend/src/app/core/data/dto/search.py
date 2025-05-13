@@ -152,19 +152,11 @@ class SimSearchHit(BaseModel):
     )
     score: float = Field(description="The similarity score.")
 
-    def __eq__(self, other):
-        if not isinstance(other, SimSearchHit):
-            return False
-        return self.sdoc_id == other.sdoc_id
-
 
 class SimSearchSentenceHit(SimSearchHit):
     sentence_id: int = Field(
         description="The sentence id with respect to the SourceDocument"
     )
-
-    def __eq__(self, other):
-        return super().__eq__(other) and self.sentence_id == other.sentence_id
 
 
 class SimSearchDocumentHit(SimSearchHit):

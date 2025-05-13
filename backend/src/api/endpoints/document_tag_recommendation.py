@@ -72,10 +72,10 @@ def get_all_doctagrecommendations_from_job(
     recommendations = crud_document_tag_recommendation_link.read_by_ml_job_id(
         db=db, ml_job_id=ml_job_id, exclude_reviewed=True
     )
-    if len(recommendations) > 0:
-        authz_user.assert_in_project(recommendations[0].source_document.project_id)
-    else:
+    if len(recommendations) == 0:
         return []
+    authz_user.assert_in_project(recommendations[0].source_document.project_id)
+
 
     sdoc2recommendations: Dict[int, List[DocumentTagRecommendationLinkORM]] = {}
     for recommendation in recommendations:
@@ -126,5 +126,4 @@ def update_recommendations(
             for _ in reviewd_recommendation_ids
         ],
     )
-    return [DocumentTagRecommendationLinkRead.model_validate(m) for m in modifications]
     return [DocumentTagRecommendationLinkRead.model_validate(m) for m in modifications]

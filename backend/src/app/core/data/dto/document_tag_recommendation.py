@@ -39,4 +39,4 @@ class DocumentTagRecommendationResult(BaseModel):
     suggested_tag_ids: List[int] = Field(
         description="List of suggested tag IDs for the source document"
     )
-    scores: List[float] = Field(description="")
+    scores: List[float] = Field(description="List of the scores of the suggested tags")

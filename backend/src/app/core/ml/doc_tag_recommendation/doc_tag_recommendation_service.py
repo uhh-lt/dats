@@ -122,13 +122,13 @@ class DocumentClassificationService(metaclass=SingletonMeta):
 
             for nn, sdoc in zip(nns, sdoc_ids_to_classify):
                 pairs = [
-                    _IdScorePair(item.id, items.score)
+                    (item.id, items.score)
                     for items in nn
                     for item in sdocs_and_tags[items.sdoc_id]
                 ]
                 scores = defaultdict[int, list[float]](list)
-                for pair in pairs:
-                    scores[pair.id].append(pair.score)
+                for id, score in pairs:
+                    scores[id].append(score)
                 best = max(scores.items(), key=lambda x: sum(x[1]))
                 dtos.append(
                     DocumentTagRecommendationLinkCreate(
@@ -219,15 +219,3 @@ class DocumentClassificationService(metaclass=SingletonMeta):
 
         # The deduplicated entries are now the values of the dictionary
         return list(deduplicated_entries.values())
-
-
-class _IdScorePair:
-    def __init__(self, id, score):
-        self.id = id
-        self.score = score
-
-    def __hash__(self):
-        return hash(self.id)
-
-    def __eq__(self, value):
-        return self.id == value.id

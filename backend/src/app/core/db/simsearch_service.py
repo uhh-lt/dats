@@ -1,5 +1,16 @@
 from itertools import repeat
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, TypeVar, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import numpy as np
 from config import conf
@@ -66,14 +77,14 @@ class SimSearchService(metaclass=SingletonMeta):
         cls.llm = OllamaService()
         return super(SimSearchService, cls).__new__(cls)
 
-    def _encode_text(
-        self, text: List[str], document_embedding: bool = False
-    ) -> np.ndarray:
-        if document_embedding:
-            doc_text = " ".join(text)
-            doc_emb = self.llm.llm_embed([doc_text])
-            return doc_emb
-        encoded_query = self.rms.clip_text_embedding(ClipTextEmbeddingInput(text=text))
+    def _encode_document(self, text: str) -> np.ndarray:
+        doc_emb = self.llm.llm_embed([text])
+        return doc_emb
+
+    def _encode_sentences(self, sentences: List[str]) -> np.ndarray:
+        encoded_query = self.rms.clip_text_embedding(
+            ClipTextEmbeddingInput(text=sentences)
+        )
         if len(encoded_query.embeddings) == 1:
             return encoded_query.numpy().squeeze()
         else:
@@ -82,9 +93,9 @@ class SimSearchService(metaclass=SingletonMeta):
     def _get_image_name_from_sdoc_id(self, sdoc_id: int) -> SourceDocumentRead:
         with self.sqls.db_session() as db:
             sdoc = SourceDocumentRead.model_validate(crud_sdoc.read(db=db, id=sdoc_id))
-            assert (
-                sdoc.doctype == DocType.image
-            ), f"SourceDocument with {sdoc_id=} is not an image!"
+            assert sdoc.doctype == DocType.image, (
+                f"SourceDocument with {sdoc_id=} is not an image!"
+            )
         return sdoc
 
     def _encode_image(self, image_sdoc_id: int) -> np.ndarray:
@@ -198,8 +209,10 @@ class SimSearchService(metaclass=SingletonMeta):
             logger.error(msg)
             raise ValueError(msg)
         elif text_query is not None:
-            query_emb = self._encode_text(
-                text=text_query, document_embedding=average_text_query
+            query_emb = (
+                self._encode_document(" ".join(text_query))
+                if average_text_query
+                else self._encode_sentences(sentencesext=text_query)
             )
         elif image_query_id is not None:
             query_emb = self._encode_image(image_sdoc_id=image_query_id)
@@ -297,7 +310,7 @@ class SimSearchService(metaclass=SingletonMeta):
             h for h in hits if (h.sdoc_id, h.sentence_id) not in marked_sdoc_sent_ids
         ]
         hits.sort(key=lambda x: (x.sdoc_id, x.sentence_id))
-        hits = self.__unique_consecutive(hits)
+        hits = self.__unique_consecutive(hits, key=lambda x: (x.sdoc_id, x.sentence_id))
         candidates = [(h.sdoc_id, h.sentence_id) for h in hits]
         nearest = self._index.suggest(
             candidates,
@@ -325,7 +338,9 @@ class SimSearchService(metaclass=SingletonMeta):
         hits = [h for h in hits if h.sdoc_id not in marked_sdoc_ids]
         hits.sort(key=lambda x: (x.sdoc_id, -x.score))
         if unique:
-            hits = self.__unique_consecutive(hits)
+            hits = self.__unique_consecutive(
+                hits, key=lambda x: (x.sdoc_id, x.compared_sdoc_id)
+            )
         if len(neg_sdoc_ids) > 0:
             candidates = {h.sdoc_id for h in hits}
             nearest = self._index.suggest(
@@ -343,13 +358,15 @@ class SimSearchService(metaclass=SingletonMeta):
         results.sort(key=lambda x: x.score, reverse=True)
         return hits
 
-    def __unique_consecutive(self, hits: List[SimSearchHit]) -> List[SimSearchHit]:
+    def __unique_consecutive(
+        self, hits: List[SimSearchHit], key: Callable[[SimSearchHit], any]
+    ) -> List[SimSearchHit]:
         if len(hits) == 0:
             return []
         current = hits[0]
         result = [current]
         for hit in hits:
-            if hit != current:
+            if key(hit) != key(current):
                 current = hit
                 result.append(hit)
         return result
