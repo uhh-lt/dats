@@ -29,7 +29,7 @@ class VectorIndexService(ABC, metaclass=SingletonMeta):
 
     @abstractmethod
     def remove_project_index(self, proj_id: int, type: IndexType):
-        """ Deletes all data of type `type` in project with id `project_id` """
+        """Deletes all data of type `type` in project with id `project_id`"""
         pass
 
     @abstractmethod
@@ -53,8 +53,8 @@ class VectorIndexService(ABC, metaclass=SingletonMeta):
         sdoc_ids_known: Iterable[int],
         k: int = 3,
     ) -> List[List[SimSearchDocumentHit]]:
-        """ Returns the k-nearest neighbors within the (unlabeled) `sdoc_ids_to_search` documents
-        given `sdoc_ids_known` documents as labeled training data """
+        """Returns the k-nearest neighbors within the (unlabeled) `sdoc_ids_to_search` documents
+        given `sdoc_ids_known` documents as labeled training data"""
         pass
 
     @overload

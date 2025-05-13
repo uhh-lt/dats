@@ -599,7 +599,7 @@ class WeaviateService(VectorIndexService):
         index_type: IndexType,
         sentence_ids: Optional[Iterable[int]] = None,
     ) -> List[str]:
-        """ Returns the weaviviate-internal IDs required for the `near_object` query """
+        """Returns the weaviviate-internal IDs required for the `near_object` query"""
         aliases = [f"doc_{id}" for id in range(len(sdoc_ids))]
 
         requests = (

@@ -76,7 +76,6 @@ def get_all_doctagrecommendations_from_job(
         return []
     authz_user.assert_in_project(recommendations[0].source_document.project_id)
 
-
     sdoc2recommendations: Dict[int, List[DocumentTagRecommendationLinkORM]] = {}
     for recommendation in recommendations:
         sdoc2recommendations.setdefault(recommendation.source_document_id, []).append(
