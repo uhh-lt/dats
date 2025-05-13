@@ -9,7 +9,6 @@ from app.core.data.orm.source_document_job_status import (
     JobType,
     SourceDocumentJobStatusORM,
 )
-from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.db.simsearch_service import SimSearchService
 from app.core.db.sql_service import SQLService
 from app.preprocessing.ray_model_service import RayModelService

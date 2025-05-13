@@ -52,7 +52,22 @@
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/backend/.venv/bin/celery",
-      "args": ["-A", "app.celery.background_jobs.tasks", "worker", "-Q", "bgJobsQ,celery", "-P", "threads", "-l", "info", "-c", "1", "--without-gossip", "--without-mingle", "--without-heartbeat"],
+      "args": [
+        "-A",
+        "app.celery.background_jobs.tasks",
+        "worker",
+        "-Q",
+        "bgJobsQ,celery",
+        "-P",
+        "threads",
+        "-l",
+        "info",
+        "-c",
+        "1",
+        "--without-gossip",
+        "--without-mingle",
+        "--without-heartbeat"
+      ],
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}/backend/src",
       "justMyCode": true,
@@ -109,6 +124,6 @@
       "env": {
         "PYTHONPATH": "${workspaceFolder}/backend/src"
       }
-    },
+    }
   ]
 }
