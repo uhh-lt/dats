@@ -159,9 +159,12 @@ class WeaviateService(VectorIndexService):
         self,
         type: IndexType,
         proj_id: int,
-        sdoc_ids: Iterable[int],
+        sdoc_ids: List[int],
         embeddings: List[np.ndarray],
     ):
+        assert len(sdoc_ids) == len(embeddings), (
+            "`sdoc_ids` and `embeddings` must have the same length"
+        )
         logger.debug(
             f"Adding {type} SDocs {sdoc_ids} in Project {proj_id} to Weaviate ..."
         )
@@ -576,7 +579,7 @@ class WeaviateService(VectorIndexService):
                     {
                         "path": ["sentence_id"],
                         "operator": "Equal",
-                        "valueNumber": sentence_id,
+                        "valueInt": sentence_id,
                     },
                 )
             case IndexType.IMAGE:

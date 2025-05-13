@@ -95,7 +95,8 @@ class MLService(metaclass=SingletonMeta):
                         ml_job_id=mlj.id,
                         project_id=mlj.parameters.project_id,
                         tag_ids=mlj.parameters.specific_ml_job_parameters.tag_ids,
-                        exclusive=mlj.parameters.specific_ml_job_parameters.exclusive,
+                        multi_class=mlj.parameters.specific_ml_job_parameters.multi_class,
+                        method=mlj.parameters.specific_ml_job_parameters.method,
                     )
                 case MLJobType.COREFERENCE_RESOLUTION:
                     if isinstance(

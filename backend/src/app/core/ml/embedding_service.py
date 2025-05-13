@@ -51,11 +51,6 @@ class EmbeddingService(metaclass=SingletonMeta):
         with self.sqls.db_session() as db:
             query = (
                 db.query(SourceDocumentDataORM)
-                .join(
-                    SourceDocumentMetadataORM,
-                    SourceDocumentMetadataORM.source_document_id
-                    == SourceDocumentDataORM.id,
-                )
                 .outerjoin(
                     SourceDocumentJobStatusORM,
                     and_(
