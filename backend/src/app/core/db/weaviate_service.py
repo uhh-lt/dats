@@ -817,7 +817,14 @@ class WeaviateService(VectorIndexService):
             if self._client.schema.exists(name):
                 self._client.schema.delete_class(name)
 
-    def knn(self, proj_id, index_type, sdoc_ids_to_search, sdoc_ids_known, k=5):
+    def knn(
+        self,
+        proj_id: int,
+        index_type: IndexType,
+        sdoc_ids_to_search: Sequence[int],
+        sdoc_ids_known: Sequence[int],
+        k: int = 3,
+    ) -> List[List[SimSearchDocumentHit]]:
         obj_ids = self._get_object_ids(proj_id, sdoc_ids_to_search, index_type)
 
         project_filter = {

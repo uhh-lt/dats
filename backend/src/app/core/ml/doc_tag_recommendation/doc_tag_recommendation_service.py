@@ -1,6 +1,6 @@
 import statistics
 from collections import defaultdict
-from typing import Dict, Iterable, Iterator, List
+from typing import Dict, Iterable, Iterator, List, Sequence, Set
 
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.document_tag_recommendation import (
@@ -80,7 +80,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
                 )
             case DocumentTagRecommendationMethod.KNN:
                 dto_iter = self._knn_suggestions(
-                    ml_job_id, project_id, sdoc_ids, sdocs_and_tags, tag_ids
+                    ml_job_id, project_id, list(sdoc_ids), sdocs_and_tags, tag_ids
                 )
             case DocumentTagRecommendationMethod.SIMPLE:
                 dto_iter = self._simple_suggestions(
@@ -94,9 +94,9 @@ class DocumentClassificationService(metaclass=SingletonMeta):
 
     def _exclusive_suggestions(
         self,
-        ml_job_id: int,
+        ml_job_id: str,
         project_id: int,
-        sdoc_ids: List[int],
+        sdoc_ids: Iterable[int],
         sdocs_and_tags: Dict[int, List[DocumentTagORM]],
     ) -> Iterator[DocumentTagRecommendationLinkCreate]:
         """get suggestions for each tag using documents with that tag as positive examples
@@ -135,9 +135,9 @@ class DocumentClassificationService(metaclass=SingletonMeta):
 
     def _knn_suggestions(
         self,
-        ml_job_id: int,
+        ml_job_id: str,
         project_id: int,
-        sdoc_ids: List[int],
+        sdoc_ids: Sequence[int],
         sdocs_and_tags: Dict[int, List[DocumentTagORM]],
         tag_ids: List[int],
     ) -> Iterator[DocumentTagRecommendationLinkCreate]:
@@ -170,9 +170,9 @@ class DocumentClassificationService(metaclass=SingletonMeta):
 
     def _simple_suggestions(
         self,
-        ml_job_id: int,
+        ml_job_id: str,
         project_id: int,
-        sdoc_ids: List[int],
+        sdoc_ids: Set[int],
         sdocs_and_tags: Dict[int, List[DocumentTagORM]],
     ) -> Iterator[DocumentTagRecommendationLinkCreate]:
         """simply get suggestions only using positive examples"""

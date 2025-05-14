@@ -258,7 +258,7 @@ def import_sdocs_to_proj(
         vector_index.add_embeddings_to_index(
             type=IndexType.SENTENCE,
             proj_id=project_id,
-            sdoc_id=[created_sdoc.id] * len(sdoc_export.sentence_embeddings),
+            sdoc_ids=[created_sdoc.id] * len(sdoc_export.sentence_embeddings),
             embeddings=[np.array(se) for se in sdoc_export.sentence_embeddings],
         )
 
@@ -270,7 +270,7 @@ def import_sdocs_to_proj(
             vector_index.add_embeddings_to_index(
                 type=IndexType.IMAGE,
                 proj_id=project_id,
-                sdoc_id=[created_sdoc.id],
+                sdoc_ids=[created_sdoc.id],
                 embeddings=[np.array(sdoc_export.image_embedding)],
             )
 

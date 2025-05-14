@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Iterable, List, Tuple, Union, overload
+from typing import Iterable, List, Sequence, Tuple, Union, overload
 
 import numpy as np
 
@@ -49,8 +49,8 @@ class VectorIndexService(ABC, metaclass=SingletonMeta):
         self,
         proj_id: int,
         index_type: IndexType,
-        sdoc_ids_to_search: Iterable[int],
-        sdoc_ids_known: Iterable[int],
+        sdoc_ids_to_search: Sequence[int],
+        sdoc_ids_known: Sequence[int],
         k: int = 3,
     ) -> List[List[SimSearchDocumentHit]]:
         """Returns the k-nearest neighbors within the (unlabeled) `sdoc_ids_to_search` documents

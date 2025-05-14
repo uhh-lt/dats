@@ -2,9 +2,9 @@ from typing import (
     Any,
     Callable,
     Dict,
-    Iterable,
     List,
     Optional,
+    Sequence,
     Set,
     Tuple,
     TypeVar,
@@ -92,9 +92,9 @@ class SimSearchService(metaclass=SingletonMeta):
     def _get_image_name_from_sdoc_id(self, sdoc_id: int) -> SourceDocumentRead:
         with self.sqls.db_session() as db:
             sdoc = SourceDocumentRead.model_validate(crud_sdoc.read(db=db, id=sdoc_id))
-            assert (
-                sdoc.doctype == DocType.image
-            ), f"SourceDocument with {sdoc_id=} is not an image!"
+            assert sdoc.doctype == DocType.image, (
+                f"SourceDocument with {sdoc_id=} is not an image!"
+            )
         return sdoc
 
     def _encode_image(self, image_sdoc_id: int) -> np.ndarray:
@@ -286,8 +286,8 @@ class SimSearchService(metaclass=SingletonMeta):
     def knn_documents(
         self,
         proj_id: int,
-        classify: Iterable[int],
-        gold: Iterable[int],
+        classify: Sequence[int],
+        gold: Sequence[int],
         k: int = 3,
     ) -> List[List[SimSearchDocumentHit]]:
         return self._index.knn(proj_id, IndexType.DOCUMENT, classify, gold, k)
@@ -358,7 +358,7 @@ class SimSearchService(metaclass=SingletonMeta):
         return hits
 
     def __unique_consecutive(
-        self, hits: List[SimSearchHit], key: Callable[[SimSearchHit], any]
+        self, hits: List[SimSearchHit], key: Callable[[SimSearchHit], Any]
     ) -> List[SimSearchHit]:
         if len(hits) == 0:
             return []
