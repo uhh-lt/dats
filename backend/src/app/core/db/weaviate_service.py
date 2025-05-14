@@ -162,9 +162,9 @@ class WeaviateService(VectorIndexService):
         sdoc_ids: List[int],
         embeddings: List[np.ndarray],
     ):
-        assert len(sdoc_ids) == len(
-            embeddings
-        ), "`sdoc_ids` and `embeddings` must have the same length"
+        assert len(sdoc_ids) == len(embeddings), (
+            "`sdoc_ids` and `embeddings` must have the same length"
+        )
         logger.debug(
             f"Adding {type} SDocs {sdoc_ids} in Project {proj_id} to Weaviate ..."
         )
@@ -871,16 +871,16 @@ class WeaviateService(VectorIndexService):
         res = response["data"]["Get"]
         hits: List[List[SimSearchDocumentHit]] = []
         for a, sdoc_id in zip(aliases, sdoc_ids_to_search):
-            l = []
+            hits_per_source = []
             for r in res[a]:
-                l.append(
+                hits_per_source.append(
                     SimSearchDocumentHit(
                         sdoc_id=r["sdoc_id"],
                         score=r["_additional"]["certainty"],
                         compared_sdoc_id=sdoc_id,
                     )
                 )
-            hits.append(l)
+            hits.append(hits_per_source)
         return hits
 
     def remove_project_index(self, proj_id: int, type: IndexType):
