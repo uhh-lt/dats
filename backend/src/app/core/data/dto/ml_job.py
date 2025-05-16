@@ -2,7 +2,6 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Literal, Optional, Union
 
-from config import conf
 from pydantic import BaseModel, Field
 
 from app.core.data.dto.background_job_base import BackgroundJobStatus
