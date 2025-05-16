@@ -117,7 +117,7 @@ class VectorIndexService(ABC, metaclass=SingletonMeta):
     def get_embeddings(
         self,
         search_tuples: List[Tuple[int, int]],
-        index_type: IndexType = IndexType.SENTENCE,
+        index_type: IndexType,
     ) -> np.ndarray:
         pass
 
