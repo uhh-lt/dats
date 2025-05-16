@@ -162,9 +162,9 @@ class WeaviateService(VectorIndexService):
         sdoc_ids: List[int],
         embeddings: List[np.ndarray],
     ):
-        assert len(sdoc_ids) == len(
-            embeddings
-        ), "`sdoc_ids` and `embeddings` must have the same length"
+        assert len(sdoc_ids) == len(embeddings), (
+            "`sdoc_ids` and `embeddings` must have the same length"
+        )
         logger.debug(
             f"Adding {type} SDocs {sdoc_ids} in Project {proj_id} to Weaviate ..."
         )
@@ -659,7 +659,7 @@ class WeaviateService(VectorIndexService):
     def get_embeddings(
         self,
         search_tuples: List[Tuple[int, int]],
-        index_type: IndexType = IndexType.SENTENCE,
+        index_type: IndexType,
     ) -> np.ndarray:
         if index_type != IndexType.SENTENCE:
             raise NotImplementedError("get_embeddings only implemented for sentences")

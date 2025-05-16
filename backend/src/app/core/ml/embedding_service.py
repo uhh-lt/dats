@@ -34,7 +34,7 @@ class EmbeddingService(metaclass=SingletonMeta):
         cls.sqls: SQLService = SQLService()
         cls.rms: RayModelService = RayModelService()
         cls.llm: OllamaService = OllamaService()
-        cls._index: VectorIndexService = VectorIndexService()
+        cls.vis: VectorIndexService = VectorIndexService()
         return super(EmbeddingService, cls).__new__(cls)
 
     def add_text_sdoc_to_index(
@@ -57,7 +57,7 @@ class EmbeddingService(metaclass=SingletonMeta):
             f"Adding {len(sentence_embs)} sentences "
             f"from SDoc {sdoc_id} in project {proj_id} to index ..."
         )
-        self._index.add_embeddings_to_index(
+        self.vis.add_embeddings_to_index(
             IndexType.SENTENCE,
             proj_id,
             [sdoc_id] * len(sentence_embs),
@@ -72,13 +72,13 @@ class EmbeddingService(metaclass=SingletonMeta):
         force: bool = False,
     ):
         try:
-            self._index.add_embeddings_to_index(
+            self.vis.add_embeddings_to_index(
                 IndexType.DOCUMENT, proj_id, sdoc_ids, embeddings
             )
         except WeaviateVectorLengthError as e:
             if force:
-                self._index.remove_project_index(proj_id, IndexType.DOCUMENT)
-                self._index.add_embeddings_to_index(
+                self.vis.remove_project_index(proj_id, IndexType.DOCUMENT)
+                self.vis.add_embeddings_to_index(
                     IndexType.DOCUMENT, proj_id, sdoc_ids, embeddings
                 )
             else:
@@ -89,7 +89,7 @@ class EmbeddingService(metaclass=SingletonMeta):
         logger.debug(
             f"Adding image SDoc {sdoc_id} in Project {proj_id} to Weaviate ..."
         )
-        self._index.add_embeddings_to_index(
+        self.vis.add_embeddings_to_index(
             IndexType.IMAGE, proj_id, [sdoc_id], [image_emb]
         )
 
@@ -97,11 +97,11 @@ class EmbeddingService(metaclass=SingletonMeta):
         match doctype:
             case DocType.text:
                 logger.debug(f"Removing text SDoc {sdoc_id} from Index!")
-                self._index.remove_embeddings_from_index(IndexType.SENTENCE, sdoc_id)
-                self._index.remove_embeddings_from_index(IndexType.DOCUMENT, sdoc_id)
+                self.vis.remove_embeddings_from_index(IndexType.SENTENCE, sdoc_id)
+                self.vis.remove_embeddings_from_index(IndexType.DOCUMENT, sdoc_id)
             case DocType.image:
                 logger.debug(f"Removing image SDoc {sdoc_id} from Index!")
-                self._index.remove_embeddings_from_index(IndexType.IMAGE, sdoc_id)
+                self.vis.remove_embeddings_from_index(IndexType.IMAGE, sdoc_id)
             case _:
                 # Other doctypes are not used for simsearch
                 pass
@@ -135,9 +135,9 @@ class EmbeddingService(metaclass=SingletonMeta):
     def _get_image_name_from_sdoc_id(self, sdoc_id: int) -> SourceDocumentRead:
         with self.sqls.db_session() as db:
             sdoc = SourceDocumentRead.model_validate(crud_sdoc.read(db=db, id=sdoc_id))
-            assert (
-                sdoc.doctype == DocType.image
-            ), f"SourceDocument with {sdoc_id=} is not an image!"
+            assert sdoc.doctype == DocType.image, (
+                f"SourceDocument with {sdoc_id=} is not an image!"
+            )
         return sdoc
 
     def embed_documents(

@@ -204,6 +204,7 @@ class TypesenseService(VectorIndexService):
     def get_embeddings(
         self,
         search_tuples: List[Tuple[int, int]],
+        index_type: IndexType,
     ) -> np.ndarray:
         # TODO implement
         raise NotImplementedError(

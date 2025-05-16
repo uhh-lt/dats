@@ -68,9 +68,10 @@ from app.core.data.llm.prompts.tagging_prompt_builder import (
 )
 from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
 from app.core.data.repo.repo_service import RepoService
+from app.core.db.index_type import IndexType
 from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
-from app.core.db.weaviate_service import WeaviateService
+from app.core.db.vector_index_service import VectorIndexService
 from app.preprocessing.ray_model_service import RayModelService
 from app.preprocessing.ray_model_worker.dto.seqsenttagger import (
     SeqSentTaggerDoc,
@@ -111,7 +112,7 @@ class LLMService(metaclass=SingletonMeta):
         cls.sqls: SQLService = SQLService()
         cls.ollamas: OllamaService = OllamaService()
         cls.rms: RayModelService = RayModelService()
-        cls.sss: WeaviateService = WeaviateService()
+        cls.vis: VectorIndexService = VectorIndexService()
 
         # map from job_type to function
         cls.llm_method_for_job_approach_type: Dict[
@@ -475,12 +476,12 @@ class LLMService(metaclass=SingletonMeta):
         approach_parameters: ZeroShotParams,
         task_parameters: DocumentTaggingParams,
     ) -> LLMJobResult:
-        assert isinstance(
-            task_parameters, DocumentTaggingParams
-        ), "Wrong task parameters!"
-        assert isinstance(
-            approach_parameters, ZeroShotParams
-        ), "Wrong approach parameters!"
+        assert isinstance(task_parameters, DocumentTaggingParams), (
+            "Wrong task parameters!"
+        )
+        assert isinstance(approach_parameters, ZeroShotParams), (
+            "Wrong approach parameters!"
+        )
 
         msg = f"Started LLMJob - Document Tagging, num docs: {len(task_parameters.sdoc_ids)}"
         self._update_llm_job_description(
@@ -600,12 +601,12 @@ class LLMService(metaclass=SingletonMeta):
         approach_parameters: ZeroShotParams,
         task_parameters: MetadataExtractionParams,
     ) -> LLMJobResult:
-        assert isinstance(
-            task_parameters, MetadataExtractionParams
-        ), "Wrong task parameters!"
-        assert isinstance(
-            approach_parameters, ZeroShotParams
-        ), "Wrong approach parameters!"
+        assert isinstance(task_parameters, MetadataExtractionParams), (
+            "Wrong task parameters!"
+        )
+        assert isinstance(approach_parameters, ZeroShotParams), (
+            "Wrong approach parameters!"
+        )
 
         msg = f"Started LLMJob - Metadata Extraction, num docs: {len(task_parameters.sdoc_ids)}"
         self._update_llm_job_description(
@@ -748,9 +749,9 @@ class LLMService(metaclass=SingletonMeta):
         task_parameters: AnnotationParams,
     ) -> LLMJobResult:
         assert isinstance(task_parameters, AnnotationParams), "Wrong task parameters!"
-        assert isinstance(
-            approach_parameters, ZeroShotParams
-        ), "Wrong approach parameters!"
+        assert isinstance(approach_parameters, ZeroShotParams), (
+            "Wrong approach parameters!"
+        )
 
         msg = f"Started LLMJob - Annotation, num docs: {len(task_parameters.sdoc_ids)}"
         self._update_llm_job_description(
@@ -915,9 +916,9 @@ class LLMService(metaclass=SingletonMeta):
         approach_parameters: Union[ZeroShotParams, FewShotParams],
         task_parameters: SentenceAnnotationParams,
     ) -> LLMJobResult:
-        assert isinstance(
-            task_parameters, SentenceAnnotationParams
-        ), "Wrong task parameters!"
+        assert isinstance(task_parameters, SentenceAnnotationParams), (
+            "Wrong task parameters!"
+        )
         assert isinstance(approach_parameters, ZeroShotParams) or isinstance(
             approach_parameters, FewShotParams
         ), "Wrong approach parameters!"
@@ -1130,12 +1131,12 @@ class LLMService(metaclass=SingletonMeta):
         approach_parameters: ModelTrainingParams,
         task_parameters: SentenceAnnotationParams,
     ) -> LLMJobResult:
-        assert isinstance(
-            task_parameters, SentenceAnnotationParams
-        ), "Wrong task parameters!"
-        assert isinstance(
-            approach_parameters, ModelTrainingParams
-        ), "Wrong approach parameters!"
+        assert isinstance(task_parameters, SentenceAnnotationParams), (
+            "Wrong task parameters!"
+        )
+        assert isinstance(approach_parameters, ModelTrainingParams), (
+            "Wrong approach parameters!"
+        )
 
         msg = f"Started LLMJob - Sentence Annotation (RAY), num docs: {len(task_parameters.sdoc_ids)}"
         self._update_llm_job(
@@ -1195,7 +1196,7 @@ class LLMService(metaclass=SingletonMeta):
                     continue
 
                 # get embeddings
-                sentence_embeddings = self.sss.get_sentence_embeddings_by_sdoc_id(
+                sentence_embeddings = self.vis.get_sentence_embeddings_by_sdoc_id(
                     sdoc_id=training_sdoc.id
                 ).tolist()
 
@@ -1211,8 +1212,8 @@ class LLMService(metaclass=SingletonMeta):
                 if sdoc_data is not None
                 for sent_id in range(len(sdoc_data.sentences))
             ]
-            sentence_embeddings = self.sss.get_embeddings(
-                search_tuples=search_tuples
+            sentence_embeddings = self.vis.get_embeddings(
+                search_tuples=search_tuples, index_type=IndexType.SENTENCE
             ).tolist()
             logger.debug(
                 f"Found {len(sentence_embeddings)} corresponding sentence embeddings."
@@ -1288,8 +1289,8 @@ class LLMService(metaclass=SingletonMeta):
                 if sdoc_data is not None
                 for sent_id in range(len(sdoc_data.sentences))
             ]
-            test_sentence_embeddings = self.sss.get_embeddings(
-                search_tuples=search_tuples
+            test_sentence_embeddings = self.vis.get_embeddings(
+                search_tuples=search_tuples, index_type=IndexType.SENTENCE
             ).tolist()
             test_sdoc_id2sent_embs: Dict[int, List[List[float]]] = {}
             for sent_emb, (sent_id, sdoc_id) in zip(
