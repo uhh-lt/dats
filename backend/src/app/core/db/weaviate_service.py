@@ -27,7 +27,7 @@ class WeaviateVectorLengthError(WeaviateError):
 
 
 class WeaviateService(VectorIndexService):
-    def __new__(cls, *args, **kwargs):
+    def __init__(cls, *args, **kwargs):
         cls._sentence_class_name = "Sentence"
         cls._image_class_name = "Image"
         cls._named_entity_class_name = "NamedEntity"
@@ -656,9 +656,14 @@ class WeaviateService(VectorIndexService):
 
         return np.array(sorted_res)
 
-    def get_sentence_embeddings(
-        self, search_tuples: List[Tuple[int, int]]
+    def get_embeddings(
+        self,
+        search_tuples: List[Tuple[int, int]],
+        index_type: IndexType = IndexType.SENTENCE,
     ) -> np.ndarray:
+        if index_type != IndexType.SENTENCE:
+            raise NotImplementedError("get_embeddings only implemented for sentences")
+
         # First prepare the query to run through data
         def run_batch(batch):
             query = (

@@ -74,8 +74,8 @@ class CRUDSourceDocument(
         return [id2data.get(id) for id in ids]
 
     def remove(self, db: Session, *, id: int) -> SourceDocumentORM:
-        # Import SimSearchService here to prevent a cyclic dependency
-        from app.core.db.simsearch_service import SimSearchService
+        # Import EmbeddingService here to prevent a cyclic dependency
+        from app.core.ml.embedding_service import EmbeddingService
 
         sdoc_db_obj = super().remove(db=db, id=id)
 
@@ -89,8 +89,8 @@ class CRUDSourceDocument(
             sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
         )
 
-        # remove from simsearch
-        SimSearchService().remove_sdoc_from_index(sdoc_db_obj.doctype, sdoc_db_obj.id)
+        # remove from index
+        EmbeddingService().remove_sdoc_embeddings(sdoc_db_obj.doctype, sdoc_db_obj.id)
 
         return sdoc_db_obj
 

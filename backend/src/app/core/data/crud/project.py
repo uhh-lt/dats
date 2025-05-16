@@ -11,15 +11,12 @@ from app.core.data.crud.user import (
     SYSTEM_USER_ID,
     crud_user,
 )
-from app.core.data.dto.project import (
-    ProjectCreate,
-    ProjectUpdate,
-)
+from app.core.data.dto.project import ProjectCreate, ProjectUpdate
 from app.core.data.dto.user import UserRead
 from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.user import UserORM
 from app.core.data.repo.repo_service import RepoService
-from app.core.db.simsearch_service import SimSearchService
+from app.core.db.vector_index_service import VectorIndexService
 
 
 class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
@@ -62,7 +59,7 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         # 2) delete the files from repo
         RepoService().purge_project_data(proj_id=id)
         # 3) Remove embeddings
-        SimSearchService().remove_all_project_embeddings(id)
+        VectorIndexService().remove_project_from_index(id)
 
         return proj_db_obj
 

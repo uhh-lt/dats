@@ -181,7 +181,7 @@ class QdrantService(VectorIndexService):
             for r in res
         ]
 
-    def get_sentence_embeddings(self, search_tuples: List[Tuple[int]]) -> np.ndarray:
+    def get_embeddings(self, search_tuples: List[Tuple[int]]) -> np.ndarray:
         # TODO implement
         raise NotImplementedError("get_sentence_embeddings not implemented for qdrant")
 
