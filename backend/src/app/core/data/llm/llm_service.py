@@ -475,12 +475,12 @@ class LLMService(metaclass=SingletonMeta):
         approach_parameters: ZeroShotParams,
         task_parameters: DocumentTaggingParams,
     ) -> LLMJobResult:
-        assert isinstance(
-            task_parameters, DocumentTaggingParams
-        ), "Wrong task parameters!"
-        assert isinstance(
-            approach_parameters, ZeroShotParams
-        ), "Wrong approach parameters!"
+        assert isinstance(task_parameters, DocumentTaggingParams), (
+            "Wrong task parameters!"
+        )
+        assert isinstance(approach_parameters, ZeroShotParams), (
+            "Wrong approach parameters!"
+        )
 
         msg = f"Started LLMJob - Document Tagging, num docs: {len(task_parameters.sdoc_ids)}"
         self._update_llm_job_description(
@@ -600,12 +600,12 @@ class LLMService(metaclass=SingletonMeta):
         approach_parameters: ZeroShotParams,
         task_parameters: MetadataExtractionParams,
     ) -> LLMJobResult:
-        assert isinstance(
-            task_parameters, MetadataExtractionParams
-        ), "Wrong task parameters!"
-        assert isinstance(
-            approach_parameters, ZeroShotParams
-        ), "Wrong approach parameters!"
+        assert isinstance(task_parameters, MetadataExtractionParams), (
+            "Wrong task parameters!"
+        )
+        assert isinstance(approach_parameters, ZeroShotParams), (
+            "Wrong approach parameters!"
+        )
 
         msg = f"Started LLMJob - Metadata Extraction, num docs: {len(task_parameters.sdoc_ids)}"
         self._update_llm_job_description(
@@ -748,9 +748,9 @@ class LLMService(metaclass=SingletonMeta):
         task_parameters: AnnotationParams,
     ) -> LLMJobResult:
         assert isinstance(task_parameters, AnnotationParams), "Wrong task parameters!"
-        assert isinstance(
-            approach_parameters, ZeroShotParams
-        ), "Wrong approach parameters!"
+        assert isinstance(approach_parameters, ZeroShotParams), (
+            "Wrong approach parameters!"
+        )
 
         msg = f"Started LLMJob - Annotation, num docs: {len(task_parameters.sdoc_ids)}"
         self._update_llm_job_description(
@@ -915,9 +915,9 @@ class LLMService(metaclass=SingletonMeta):
         approach_parameters: Union[ZeroShotParams, FewShotParams],
         task_parameters: SentenceAnnotationParams,
     ) -> LLMJobResult:
-        assert isinstance(
-            task_parameters, SentenceAnnotationParams
-        ), "Wrong task parameters!"
+        assert isinstance(task_parameters, SentenceAnnotationParams), (
+            "Wrong task parameters!"
+        )
         assert isinstance(approach_parameters, ZeroShotParams) or isinstance(
             approach_parameters, FewShotParams
         ), "Wrong approach parameters!"
@@ -1130,12 +1130,12 @@ class LLMService(metaclass=SingletonMeta):
         approach_parameters: ModelTrainingParams,
         task_parameters: SentenceAnnotationParams,
     ) -> LLMJobResult:
-        assert isinstance(
-            task_parameters, SentenceAnnotationParams
-        ), "Wrong task parameters!"
-        assert isinstance(
-            approach_parameters, ModelTrainingParams
-        ), "Wrong approach parameters!"
+        assert isinstance(task_parameters, SentenceAnnotationParams), (
+            "Wrong task parameters!"
+        )
+        assert isinstance(approach_parameters, ModelTrainingParams), (
+            "Wrong approach parameters!"
+        )
 
         msg = f"Started LLMJob - Sentence Annotation (RAY), num docs: {len(task_parameters.sdoc_ids)}"
         self._update_llm_job(
@@ -1211,7 +1211,7 @@ class LLMService(metaclass=SingletonMeta):
                 if sdoc_data is not None
                 for sent_id in range(len(sdoc_data.sentences))
             ]
-            sentence_embeddings = self.sss.get_sentence_embeddings(
+            sentence_embeddings = self.sss.get_embeddings(
                 search_tuples=search_tuples
             ).tolist()
             logger.debug(
@@ -1288,7 +1288,7 @@ class LLMService(metaclass=SingletonMeta):
                 if sdoc_data is not None
                 for sent_id in range(len(sdoc_data.sentences))
             ]
-            test_sentence_embeddings = self.sss.get_sentence_embeddings(
+            test_sentence_embeddings = self.sss.get_embeddings(
                 search_tuples=search_tuples
             ).tolist()
             test_sdoc_id2sent_embs: Dict[int, List[List[float]]] = {}

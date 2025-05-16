@@ -201,7 +201,7 @@ class TypesenseService(VectorIndexService):
 
         return candidates
 
-    def get_sentence_embeddings(
+    def get_embeddings(
         self,
         search_tuples: List[Tuple[int, int]],
     ) -> np.ndarray:

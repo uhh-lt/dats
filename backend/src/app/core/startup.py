@@ -141,10 +141,15 @@ def __init_services__(
 
     RayModelService()
 
+    # import and init VectorIndexService
+    from app.core.db.vector_index_service import VectorIndexService
+
+    VectorIndexService(reset_vector_index=reset_vector_index)
+
     # import and init SimSearchService
     from app.core.db.simsearch_service import SimSearchService
 
-    SimSearchService(reset_vector_index=reset_vector_index)
+    SimSearchService()
 
     # import and init OllamaService
     from app.core.data.llm.ollama_service import OllamaService

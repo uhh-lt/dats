@@ -18,8 +18,8 @@ from app.core.data.orm.user import UserORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.elasticsearch_service import ElasticSearchService
 from app.core.db.redis_service import RedisService
-from app.core.db.simsearch_service import SimSearchService
 from app.core.db.sql_service import SQLService
+from app.core.db.vector_index_service import VectorIndexService
 from config import conf
 from fastapi import Request
 from fastapi.datastructures import Headers
@@ -35,7 +35,7 @@ def pytest_sessionfinish():
     # Make sure the next test session starts with clean databases
     SQLService().drop_database()
     ElasticSearchService().drop_indices()
-    SimSearchService().drop_indices()
+    VectorIndexService().drop_indices()
     RedisService().flush_all_clients()
     RepoService().purge_repo()
 
@@ -320,9 +320,9 @@ def api_document(client: TestClient):
             response = client.put(
                 f"/project/{project['id']}/sdoc", headers=user_headers, files=files
             )
-            assert (
-                response.status_code == 200
-            ), f"Failed to upload files. Response: {response}. Files: {files}"
+            assert response.status_code == 200, (
+                f"Failed to upload files. Response: {response}. Files: {files}"
+            )
             response = response.json()
             docs = {}
             for file in response["payloads"]:

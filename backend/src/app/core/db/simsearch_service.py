@@ -12,186 +12,28 @@ from typing import (
 )
 
 import numpy as np
-from config import conf
 from loguru import logger
 
-from app.core.data.crud.source_document import crud_sdoc
-from app.core.data.doc_type import DocType
 from app.core.data.dto.search import (
     SimSearchDocumentHit,
     SimSearchImageHit,
     SimSearchSentenceHit,
 )
-from app.core.data.dto.source_document import SourceDocumentRead
-from app.core.data.llm.ollama_service import OllamaService
-from app.core.data.repo.repo_service import RepoService
-from app.core.data.repo.utils import image_to_base64, load_image
 from app.core.db.index_type import IndexType
 from app.core.db.sql_service import SQLService
 from app.core.db.vector_index_service import VectorIndexService
-from app.core.db.weaviate_service import WeaviateVectorLengthError
-from app.preprocessing.ray_model_service import RayModelService
-from app.preprocessing.ray_model_worker.dto.clip import (
-    ClipImageEmbeddingInput,
-    ClipTextEmbeddingInput,
-)
+from app.core.ml.embedding_service import EmbeddingService
 from app.util.singleton_meta import SingletonMeta
 
 SimSearchHit = TypeVar("SimSearchHit")
 
 
 class SimSearchService(metaclass=SingletonMeta):
-    def __new__(cls, reset_vector_index=False):
-        index_name: str = conf.vector_index.service
-        match index_name:
-            case "qdrant":
-                # import and init QdrantService
-                from app.core.db.qdrant_service import QdrantService
-
-                cls._index: VectorIndexService = QdrantService(flush=reset_vector_index)
-            case "typesense":
-                # import and init TypesenseService
-                from app.core.db.typesense_service import TypesenseService
-
-                cls._index: VectorIndexService = TypesenseService(
-                    flush=reset_vector_index
-                )
-            case "weaviate":
-                # import and init WeaviateService
-                from app.core.db.weaviate_service import WeaviateService
-
-                cls._index: VectorIndexService = WeaviateService(
-                    flush=reset_vector_index
-                )
-            case _:
-                msg = (
-                    f"VECTOR_INDEX environment variable not correctly set: {index_name}"
-                )
-                logger.error(msg)
-                raise SystemExit(msg)
-
-        cls.rms = RayModelService()
-        cls.repo = RepoService()
+    def __new__(cls):
+        cls._index = VectorIndexService()
         cls.sqls = SQLService()
-        cls.llm = OllamaService()
+        cls.emb = EmbeddingService()
         return super(SimSearchService, cls).__new__(cls)
-
-    def _encode_document(self, text: str) -> np.ndarray:
-        doc_emb = self.llm.llm_embed([text])
-        return doc_emb
-
-    def _encode_sentences(self, sentences: List[str]) -> np.ndarray:
-        encoded_query = self.rms.clip_text_embedding(
-            ClipTextEmbeddingInput(text=sentences)
-        )
-        if len(encoded_query.embeddings) == 1:
-            return encoded_query.numpy().squeeze()
-        else:
-            return encoded_query.numpy()
-
-    def _get_image_name_from_sdoc_id(self, sdoc_id: int) -> SourceDocumentRead:
-        with self.sqls.db_session() as db:
-            sdoc = SourceDocumentRead.model_validate(crud_sdoc.read(db=db, id=sdoc_id))
-            assert (
-                sdoc.doctype == DocType.image
-            ), f"SourceDocument with {sdoc_id=} is not an image!"
-        return sdoc
-
-    def _encode_image(self, image_sdoc_id: int) -> np.ndarray:
-        image_sdoc = self._get_image_name_from_sdoc_id(sdoc_id=image_sdoc_id)
-        image_fp = self.repo.get_path_to_sdoc_file(image_sdoc, raise_if_not_exists=True)
-        image = load_image(image_fp)
-        base64_image = image_to_base64(image)
-
-        encoded_query = self.rms.clip_image_embedding(
-            ClipImageEmbeddingInput(
-                base64_images=[base64_image],
-            )
-        )
-        return encoded_query.numpy().squeeze()
-
-    def add_text_sdoc_to_index(
-        self,
-        proj_id: int,
-        sdoc_id: int,
-        sentences: List[str],
-    ) -> None:
-        sentence_embs = self.rms.clip_text_embedding(
-            ClipTextEmbeddingInput(text=sentences)
-        )
-        if len(sentence_embs.embeddings) != len(sentences):
-            raise ValueError(
-                f"Embedding/Sentence mismatch for sdoc {sdoc_id}! Input: {len(sentences)} sentences, Output: {len(sentence_embs.embeddings)} embeddings"
-            )
-        sentence_embs = sentence_embs.numpy()
-
-        logger.debug(
-            f"Adding {len(sentence_embs)} sentences "
-            f"from SDoc {sdoc_id} in Project {proj_id} to Weaviate ..."
-        )
-        self._index.add_embeddings_to_index(
-            IndexType.SENTENCE,
-            proj_id,
-            [sdoc_id] * len(sentence_embs),
-            sentence_embs,
-        )
-
-    def add_document_embeddings(
-        self,
-        proj_id: int,
-        sdoc_ids: List[int],
-        embeddings: np.ndarray,
-        force: bool = False,
-    ):
-        try:
-            self._index.add_embeddings_to_index(
-                IndexType.DOCUMENT, proj_id, sdoc_ids, embeddings
-            )
-        except WeaviateVectorLengthError as e:
-            if force:
-                self.remove_all_document_embeddings(proj_id)
-                self._index.add_embeddings_to_index(
-                    IndexType.DOCUMENT, proj_id, sdoc_ids, embeddings
-                )
-            else:
-                raise e
-
-    def remove_all_document_embeddings(self, proj_id):
-        self._index.remove_project_index(proj_id, IndexType.DOCUMENT)
-
-    def add_image_sdoc_to_index(self, proj_id: int, sdoc_id: int) -> None:
-        image_emb = self._encode_image(image_sdoc_id=sdoc_id)
-        logger.debug(
-            f"Adding image SDoc {sdoc_id} in Project {proj_id} to Weaviate ..."
-        )
-        self._index.add_embeddings_to_index(
-            IndexType.IMAGE, proj_id, [sdoc_id], [image_emb]
-        )
-
-    def remove_sdoc_from_index(self, doctype: str, sdoc_id: int):
-        match doctype:
-            case DocType.text:
-                self.remove_text_sdoc_from_index(sdoc_id)
-            case DocType.image:
-                self.remove_image_sdoc_from_index(sdoc_id)
-            case _:
-                # Other doctypes are not used for simsearch
-                pass
-
-    def remove_image_sdoc_from_index(self, sdoc_id: int) -> None:
-        logger.debug(f"Removing image SDoc {sdoc_id} from Index!")
-        self._index.remove_embeddings_from_index(IndexType.IMAGE, sdoc_id)
-
-    def remove_text_sdoc_from_index(self, sdoc_id: int) -> None:
-        logger.debug(f"Removing text SDoc {sdoc_id} from Index!")
-        self._index.remove_embeddings_from_index(IndexType.SENTENCE, sdoc_id)
-        self._index.remove_embeddings_from_index(IndexType.DOCUMENT, sdoc_id)
-
-    def remove_all_project_embeddings(
-        self,
-        proj_id: int,
-    ) -> None:
-        self._index.remove_project_from_index(proj_id)
 
     def _encode_query(
         self,
@@ -209,12 +51,12 @@ class SimSearchService(metaclass=SingletonMeta):
             raise ValueError(msg)
         elif text_query is not None:
             query_emb = (
-                self._encode_document(" ".join(text_query))
+                self.emb.encode_document(" ".join(text_query))
                 if document_query
-                else self._encode_sentences(sentences=text_query)
+                else self.emb.encode_sentences(sentences=text_query)
             )
         elif image_query_id is not None:
-            query_emb = self._encode_image(image_sdoc_id=image_query_id)
+            query_emb = self.emb.encode_image(image_sdoc_id=image_query_id)
         else:
             msg = "This should never happend! Unknown Error!"
             logger.error(msg)
@@ -369,12 +211,3 @@ class SimSearchService(metaclass=SingletonMeta):
                 current = hit
                 result.append(hit)
         return result
-
-    def get_sentence_embeddings(
-        self, search_tuples: List[Tuple[int, int]]
-    ) -> np.ndarray:
-        return self._index.get_sentence_embeddings(search_tuples)
-
-    def drop_indices(self) -> None:
-        logger.warning("Dropping all sim search indices!")
-        self._index.drop_indices()

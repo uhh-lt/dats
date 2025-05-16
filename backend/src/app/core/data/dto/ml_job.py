@@ -52,7 +52,6 @@ class DocumentEmbeddingParams(BaseModel):
     recompute: bool = Field(
         default=False, description="Whether to recompute already processed documents"
     )
-    model: str = Field(default=conf.ollama.emb.model)
 
 
 class MLJobParameters(BaseModel):
