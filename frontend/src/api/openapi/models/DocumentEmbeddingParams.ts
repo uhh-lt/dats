@@ -8,5 +8,4 @@ export type DocumentEmbeddingParams = {
    * Whether to recompute already processed documents
    */
   recompute?: boolean;
-  model?: string;
 };
