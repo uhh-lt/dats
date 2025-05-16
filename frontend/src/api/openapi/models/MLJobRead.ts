@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { BackgroundJobStatus } from "./BackgroundJobStatus";
-import type { MLJobParameters } from "./MLJobParameters";
+import type { MLJobParameters_Output } from "./MLJobParameters_Output";
 export type MLJobRead = {
   /**
    * Status of the MLJob
@@ -28,5 +28,5 @@ export type MLJobRead = {
   /**
    * The parameters of the MLJob that defines what to do!
    */
-  parameters: MLJobParameters;
+  parameters: MLJobParameters_Output;
 };

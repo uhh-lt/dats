@@ -1,3 +1,4 @@
+from enum import StrEnum
 from typing import List
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -39,3 +40,10 @@ class DocumentTagRecommendationResult(BaseModel):
     suggested_tag_ids: List[int] = Field(
         description="List of suggested tag IDs for the source document"
     )
+    scores: List[float] = Field(description="List of the scores of the suggested tags")
+
+
+class DocumentTagRecommendationMethod(StrEnum):
+    SIMPLE = "SIMPLE"
+    KNN = "KNN"
+    EXCLUSIVE = "EXCLUSIVE"

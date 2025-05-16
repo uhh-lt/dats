@@ -30,6 +30,7 @@ class CrudDocumentTagRecommendationLink(
 
         if exclude_reviewed:
             query = query.filter(self.model.is_reviewed == False)  # noqa: E712
+        query = query.order_by(self.model.prediction_score.desc())
         return query.all()
 
 

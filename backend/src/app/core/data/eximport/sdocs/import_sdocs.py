@@ -12,10 +12,7 @@ from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.word_frequency import crud_word_frequency
 from app.core.data.doc_type import DocType
 from app.core.data.dto.search import ElasticSearchDocumentCreate
-from app.core.data.dto.source_document import (
-    SDocStatus,
-    SourceDocumentCreate,
-)
+from app.core.data.dto.source_document import SDocStatus, SourceDocumentCreate
 from app.core.data.dto.source_document_data import SourceDocumentDataCreate
 from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
@@ -253,7 +250,7 @@ def import_sdocs_to_proj(
         vector_index.add_embeddings_to_index(
             type=IndexType.DOCUMENT,
             proj_id=project_id,
-            sdoc_id=created_sdoc.id,
+            sdoc_ids=[created_sdoc.id],
             embeddings=[np.array(sdoc_export.document_embedding)],
         )
 
@@ -261,7 +258,7 @@ def import_sdocs_to_proj(
         vector_index.add_embeddings_to_index(
             type=IndexType.SENTENCE,
             proj_id=project_id,
-            sdoc_id=created_sdoc.id,
+            sdoc_ids=[created_sdoc.id] * len(sdoc_export.sentence_embeddings),
             embeddings=[np.array(se) for se in sdoc_export.sentence_embeddings],
         )
 
@@ -273,7 +270,7 @@ def import_sdocs_to_proj(
             vector_index.add_embeddings_to_index(
                 type=IndexType.IMAGE,
                 proj_id=project_id,
-                sdoc_id=created_sdoc.id,
+                sdoc_ids=[created_sdoc.id],
                 embeddings=[np.array(sdoc_export.image_embedding)],
             )
 

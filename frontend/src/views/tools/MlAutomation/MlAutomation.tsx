@@ -67,21 +67,6 @@ function MlAutomation() {
     });
   };
 
-  const handleStartReComputeTagRecommendation = () => {
-    ConfirmationAPI.openConfirmationDialog({
-      text: "Remove all ...",
-      onAccept: () => {
-        startMlJob.mutate({
-          requestBody: {
-            ml_job_type: MLJobType.DOC_TAG_RECOMMENDATION,
-            project_id: projectId,
-            specific_ml_job_parameters: { recompute: true, ml_job_type: MLJobType.DOC_TAG_RECOMMENDATION },
-          },
-        });
-      },
-    });
-  };
-
   // coreference resolution job
   const handleStartNewCoreferenceResolution = () => {
     startMlJob.mutate({
@@ -108,9 +93,35 @@ function MlAutomation() {
     });
   };
 
+  // document embedding job
+  const handleStartNewDocumentEmbeddings = () => {
+    startMlJob.mutate({
+      requestBody: {
+        ml_job_type: MLJobType.DOCUMENT_EMBEDDING,
+        project_id: projectId,
+        specific_ml_job_parameters: { recompute: false, ml_job_type: MLJobType.DOCUMENT_EMBEDDING },
+      },
+    });
+  };
+
+  const handleStartReComputeDocumentEmbeddings = () => {
+    ConfirmationAPI.openConfirmationDialog({
+      text: "Remove all document embeddings from the index and compute new embeddings?",
+      onAccept: () => {
+        startMlJob.mutate({
+          requestBody: {
+            ml_job_type: MLJobType.DOCUMENT_EMBEDDING,
+            project_id: projectId,
+            specific_ml_job_parameters: { recompute: true, ml_job_type: MLJobType.DOCUMENT_EMBEDDING },
+          },
+        });
+      },
+    });
+  };
+
   return (
     <ContentContainerLayout>
-      <Card sx={{ minHeight: "400px", mb: 2 }} variant="outlined" className="myFlexFillAllContainer myFlexContainer">
+      <Card sx={{ minHeight: "440px", mb: 2 }} variant="outlined" className="myFlexFillAllContainer myFlexContainer">
         <CardHeader
           title="ML Automations"
           subheader="Start one or more of the following machine learning automations to speed up your work an enable new analysis options"
@@ -192,14 +203,29 @@ function MlAutomation() {
                 }
               />
               <ListItemIcon>
-                <Tooltip title="Perform tag recommendation on all documents">
+                <Tooltip title="Perform tag recommendation on untagged documents">
                   <IconButton onClick={handleStartNewTagRecommendation} loading={startMlJob.isPending} color="success">
                     <NotStartedIcon />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title="Perform tag recommendation on all documents">
+              </ListItemIcon>
+            </ListItem>
+          </List>
+          <List dense={false}>
+            <ListItem>
+              <ListItemAvatar>
+                <Avatar>{getIconComponent(Icon.DOCUMENT)}</Avatar>
+              </ListItemAvatar>
+              <ListItemText primary="Document Embeddings" secondary="Compute document embeddings" />
+              <ListItemIcon>
+                <Tooltip title="Compute embeddings for all unprocessed documents">
+                  <IconButton onClick={handleStartNewDocumentEmbeddings} loading={startMlJob.isPending} color="success">
+                    <NotStartedIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Re-compute embeddings for all documents">
                   <IconButton
-                    onClick={handleStartReComputeTagRecommendation}
+                    onClick={handleStartReComputeDocumentEmbeddings}
                     loading={startMlJob.isPending}
                     color="error"
                   >

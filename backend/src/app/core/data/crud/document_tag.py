@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, Iterable, List, Optional
 
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
@@ -186,14 +186,14 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
         return dict((tag_id, count) for tag_id, count in rows)
 
     def get_tags_for_documents(
-        self, db: Session, *, sdoc_ids: List[int]
+        self, db: Session, *, sdoc_ids: Iterable[int]
     ) -> Dict[int, List[DocumentTagORM]]:
         """
         Retrieves all tags associated with the given list of document IDs.
 
         Args:
             db (Session): The current database session used for querying.
-            sdoc_ids (List[int]): A list of document IDs for which to retrieve tags.
+            sdoc_ids (Iterable[int]): A list of document IDs for which to retrieve tags.
 
         Returns:
             Dict[int, List[DocumentTagORM]]: A dictionary mapping each document ID to a list of associated tags.

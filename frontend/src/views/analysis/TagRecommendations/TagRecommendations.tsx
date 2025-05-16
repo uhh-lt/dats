@@ -101,9 +101,7 @@ function TagRecommendationsContent({
         sdocId: result.sdoc_id,
         current_tags: result.current_tag_ids.map((tagId) => tagId2Tag[tagId]),
         suggested_tags: result.suggested_tag_ids.map((tagId) => tagId2Tag[tagId]),
-        merged_tags: [...new Set([...result.current_tag_ids, ...result.suggested_tag_ids])].map(
-          (tagId) => tagId2Tag[tagId],
-        ),
+        merged_tags: result.current_tag_ids.map((tagId) => tagId2Tag[tagId]),
         reasoning: "Test",
         recommendation_ids: result.recommendation_ids,
       };

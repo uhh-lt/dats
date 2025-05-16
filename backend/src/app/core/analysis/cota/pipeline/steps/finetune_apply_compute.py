@@ -2,12 +2,10 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 from app.core.analysis.cota.pipeline.cargo import Cargo
-from app.core.data.dto.concept_over_time_analysis import (
-    COTAConcept,
-    COTASentence,
-)
+from app.core.data.dto.concept_over_time_analysis import COTAConcept, COTASentence
 from app.core.data.repo.repo_service import RepoService
-from app.core.db.simsearch_service import SimSearchService
+from app.core.db.index_type import IndexType
+from app.core.db.vector_index_service import VectorIndexService
 from app.preprocessing.ray_model_service import RayModelService
 from app.preprocessing.ray_model_worker.dto.cota import (
     RayCOTAJobInput,
@@ -19,7 +17,7 @@ from umap.umap_ import UMAP
 
 rms: RayModelService = RayModelService()
 repo: RepoService = RepoService()
-sims: SimSearchService = SimSearchService()
+vis: VectorIndexService = VectorIndexService()
 
 
 def finetune_apply_compute(cargo: Cargo) -> Cargo:
@@ -45,10 +43,11 @@ def finetune_apply_compute(cargo: Cargo) -> Cargo:
                 sentence.concept_similarities[concept_id] = similarity
 
     else:
-        embeddings_tensor = sims.get_sentence_embeddings(
+        embeddings_tensor = vis.get_embeddings(
             search_tuples=[
                 (cota_sent.sentence_id, cota_sent.sdoc_id) for cota_sent in search_space
-            ]
+            ],
+            index_type=IndexType.SENTENCE,
         )
         probabilities = [[0.5, 0.5] for _ in search_space]
         logger.debug("No model exists. We use weaviate embeddings.")

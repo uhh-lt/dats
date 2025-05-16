@@ -5,12 +5,16 @@ from typing import Literal, Optional, Union
 from pydantic import BaseModel, Field
 
 from app.core.data.dto.background_job_base import BackgroundJobStatus
+from app.core.data.dto.document_tag_recommendation import (
+    DocumentTagRecommendationMethod,
+)
 
 
 class MLJobType(StrEnum):
     QUOTATION_ATTRIBUTION = "QUOTATION_ATTRIBUTION"
     DOC_TAG_RECOMMENDATION = "DOC_TAG_RECOMMENDATION"
     COREFERENCE_RESOLUTION = "COREFERENCE_RESOLUTION"
+    DOCUMENT_EMBEDDING = "DOCUMENT_EMBEDDING"
 
 
 class QuotationAttributionParams(BaseModel):
@@ -22,10 +26,28 @@ class QuotationAttributionParams(BaseModel):
 
 class DocTagRecommendationParams(BaseModel):
     ml_job_type: Literal[MLJobType.DOC_TAG_RECOMMENDATION]
+    multi_class: bool = Field(
+        default=False, description="Tags are mutually exclusive if `False`"
+    )
+    tag_ids: list[int] = Field(
+        default=[],
+        description="Tags to consider. If empty, all tags applied to any document are considered.",
+    )
+    method: DocumentTagRecommendationMethod = Field(
+        default=DocumentTagRecommendationMethod.KNN,
+        description="Method to use for suggestions",
+    )
 
 
 class CoreferenceResolutionParams(BaseModel):
     ml_job_type: Literal[MLJobType.COREFERENCE_RESOLUTION]
+    recompute: bool = Field(
+        default=False, description="Whether to recompute already processed documents"
+    )
+
+
+class DocumentEmbeddingParams(BaseModel):
+    ml_job_type: Literal[MLJobType.DOCUMENT_EMBEDDING]
     recompute: bool = Field(
         default=False, description="Whether to recompute already processed documents"
     )
@@ -38,6 +60,7 @@ class MLJobParameters(BaseModel):
         QuotationAttributionParams,
         DocTagRecommendationParams,
         CoreferenceResolutionParams,
+        DocumentEmbeddingParams,
         None,
     ] = Field(
         description="Specific parameters for the MLJob w.r.t it's type",

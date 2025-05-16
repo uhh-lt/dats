@@ -74,8 +74,8 @@ class CRUDSourceDocument(
         return [id2data.get(id) for id in ids]
 
     def remove(self, db: Session, *, id: int) -> SourceDocumentORM:
-        # Import SimSearchService here to prevent a cyclic dependency
-        from app.core.db.simsearch_service import SimSearchService
+        # Import EmbeddingService here to prevent a cyclic dependency
+        from app.core.ml.embedding_service import EmbeddingService
 
         sdoc_db_obj = super().remove(db=db, id=id)
 
@@ -89,8 +89,8 @@ class CRUDSourceDocument(
             sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
         )
 
-        # remove from simsearch
-        SimSearchService().remove_sdoc_from_index(sdoc_db_obj.doctype, sdoc_db_obj.id)
+        # remove from index
+        EmbeddingService().remove_sdoc_embeddings(sdoc_db_obj.doctype, sdoc_db_obj.id)
 
         return sdoc_db_obj
 
@@ -237,24 +237,32 @@ class CRUDSourceDocument(
         ]
 
     def read_all_without_tags(
-        self, db: Session, *, project_id: int
+        self, db: Session, *, project_id: int, tag_ids: List[int] = []
     ) -> List[SourceDocumentORM]:
         return (
             db.query(SourceDocumentORM)
             .filter(SourceDocumentORM.project_id == project_id)
             .outerjoin(SourceDocumentORM.document_tags)
-            .filter(SourceDocumentORM.document_tags == None)  # noqa: E711
+            .filter(
+                SourceDocumentORM.document_tags == None  # noqa: E711
+                if len(tag_ids) == 0
+                else DocumentTagORM.id.notin_(tag_ids)
+            )
             .all()
         )
 
     def read_all_with_tags(
-        self, db: Session, *, project_id: int
+        self, db: Session, *, project_id: int, tag_ids: List[int] = []
     ) -> List[SourceDocumentORM]:
         return (
             db.query(SourceDocumentORM)
             .filter(SourceDocumentORM.project_id == project_id)
             .join(SourceDocumentORM.document_tags)
-            .filter(SourceDocumentORM.document_tags != None)  # noqa: E711
+            .filter(
+                SourceDocumentORM.document_tags != None  # noqa: E711
+                if len(tag_ids) == 0
+                else DocumentTagORM.id.in_(tag_ids)
+            )
             .all()
         )
 

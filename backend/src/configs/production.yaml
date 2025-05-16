@@ -153,6 +153,9 @@ ollama:
       top_p: 0.9
       top_k: 40
       repetition_penalty: 1.1
+  emb:
+    model: ${oc.env:OLLAMA_EMB_MODEL, snowflake-arctic-embed2:568m}
+    default_params:
 
 llm_assistant:
   sentence_annotation:
