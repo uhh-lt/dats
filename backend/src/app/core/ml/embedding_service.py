@@ -14,6 +14,7 @@ from app.core.data.orm.source_document_job_status import (
     JobType,
     SourceDocumentJobStatusORM,
 )
+from app.core.data.repo.repo_service import RepoService
 from app.core.data.repo.utils import image_to_base64, load_image
 from app.core.db.index_type import IndexType
 from app.core.db.sql_service import SQLService
@@ -32,6 +33,7 @@ from sqlalchemy import ColumnElement, and_
 class EmbeddingService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.sqls: SQLService = SQLService()
+        cls.repo = RepoService()
         cls.rms: RayModelService = RayModelService()
         cls.llm: OllamaService = OllamaService()
         cls.vis: VectorIndexService = VectorIndexService()
