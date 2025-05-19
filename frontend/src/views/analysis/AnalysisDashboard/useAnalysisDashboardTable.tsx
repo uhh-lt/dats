@@ -1,8 +1,6 @@
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import DeleteIcon from "@mui/icons-material/DeleteOutlined";
-import EditIcon from "@mui/icons-material/Edit";
 import { Box, Button, CircularProgress, IconButton, Menu, MenuItem, Tooltip } from "@mui/material";
 import {
+  createRow,
   MRT_ColumnDef,
   MRT_Row,
   MRT_ShowHideColumnsButton,
@@ -11,15 +9,16 @@ import {
   MRT_ToggleDensePaddingButton,
   MRT_ToggleFiltersButton,
   MRT_ToggleGlobalFilterButton,
-  createRow,
   useMaterialReactTable,
 } from "material-react-table";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ExportAnalysisButtonProps } from "../../../components/Export/ExportTimelineAnalysisButton.tsx";
 import UserName from "../../../components/User/UserName.tsx";
 import { dateToLocaleString } from "../../../utils/DateUtils.ts";
+import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 
-export type AnaylsisDashboardRow = {
+export type AnalysisDashboardRow = {
   id: number;
   title: string;
   updated: string;
@@ -31,13 +30,13 @@ export type AnalysisCreateOption = {
   label: string;
 };
 
-export type HandleCreateAnalysis = (
+export type HandleCreateAnalysis<T extends AnalysisDashboardRow = AnalysisDashboardRow> = (
   createOption?: AnalysisCreateOption,
-) => MRT_TableOptions<AnaylsisDashboardRow>["onCreatingRowSave"];
+) => MRT_TableOptions<T>["onCreatingRowSave"];
 
-export interface UseAnaylsisDashboardTableProps {
+export interface UseAnaylsisDashboardTableProps<T extends AnalysisDashboardRow> {
   analysisName: string;
-  data: AnaylsisDashboardRow[];
+  data: T[];
   isLoadingData: boolean;
   isFetchingData: boolean;
   isLoadingDataError: boolean;
@@ -47,37 +46,43 @@ export interface UseAnaylsisDashboardTableProps {
   isDuplicatingAnalysis: boolean;
   deletingAnalysisId?: number;
   duplicatingAnalysisId?: number;
-  onOpenAnalysis: (analysisId: number) => void;
-  handleDuplicateAnalysis: (row: MRT_Row<AnaylsisDashboardRow>) => void;
-  handleDeleteAnalysis: (row: MRT_Row<AnaylsisDashboardRow>) => void;
-  handleCreateAnalysis: HandleCreateAnalysis;
-  handleEditAnalysis: MRT_TableOptions<AnaylsisDashboardRow>["onEditingRowSave"];
+  onOpenAnalysis: (analysisRow: T) => void;
+  handleDuplicateAnalysis: (row: MRT_Row<T>) => void;
+  handleDeleteAnalysis: (row: MRT_Row<T>) => void;
+  handleCreateAnalysis: HandleCreateAnalysis<T>;
+  handleEditAnalysis: MRT_TableOptions<T>["onEditingRowSave"];
   analysisCreateOptions?: AnalysisCreateOption[];
+  additionalColumns?: MRT_ColumnDef<T>[];
+  renderExportButton: (props: ExportAnalysisButtonProps) => JSX.Element;
 }
 
-const columns: MRT_ColumnDef<AnaylsisDashboardRow>[] = [
-  { accessorKey: "id", header: "ID", enableEditing: false },
-  {
-    accessorKey: "title",
-    header: "Name",
-    enableEditing: true,
-  },
-  {
-    id: "updated",
-    header: "Last modified",
-    accessorFn: (params) => dateToLocaleString(params.updated as string),
-    enableEditing: false,
-  },
-  {
-    accessorKey: "user_id",
-    header: "Owner",
-    enableEditing: false,
-    Cell: ({ row }) => (row.original.user_id === -1 ? "..." : <UserName userId={row.original.user_id} />),
-  },
-];
-
-export const useAnalysisDashboardTable = (props: UseAnaylsisDashboardTableProps) => {
+export const useAnalysisDashboardTable = <T extends AnalysisDashboardRow>(props: UseAnaylsisDashboardTableProps<T>) => {
   const navigate = useNavigate();
+
+  const columns = useMemo(() => {
+    const columns: MRT_ColumnDef<T>[] = [
+      { accessorKey: "id", header: "ID", enableEditing: false },
+      {
+        accessorKey: "title",
+        header: "Name",
+        enableEditing: true,
+      },
+      {
+        id: "updated",
+        header: "Last modified",
+        accessorFn: (params) => dateToLocaleString(params.updated as string),
+        enableEditing: false,
+      },
+      {
+        accessorKey: "user_id",
+        header: "Owner",
+        enableEditing: false,
+        Cell: ({ row }) => (row.original.user_id === -1 ? "..." : <UserName userId={row.original.user_id} />),
+      },
+      ...(props.additionalColumns ?? []),
+    ];
+    return columns;
+  }, [props.additionalColumns]);
 
   // create option menu
   const [analysisCreateOption, setAnalysisCreateOption] = useState<AnalysisCreateOption | undefined>(undefined);
@@ -89,19 +94,19 @@ export const useAnalysisDashboardTable = (props: UseAnaylsisDashboardTableProps)
   const handleCloseMenu = () => {
     setAnchorEl(null);
   };
-  const showCreateAnalysisRow = (table: MRT_TableInstance<AnaylsisDashboardRow>) => {
+  const showCreateAnalysisRow = (table: MRT_TableInstance<T>) => {
     table.setCreatingRow(
       createRow(table, {
         id: -1,
         title: "",
         updated: new Date().toISOString(),
         user_id: -1,
-      }),
+      } as T),
     );
     table.setEditingRow(null); //exit editing mode
   };
 
-  return useMaterialReactTable<AnaylsisDashboardRow>({
+  return useMaterialReactTable<T>({
     data: props.data,
     columns: columns,
     getRowId: (row) => `${row.id}`,
@@ -125,7 +130,10 @@ export const useAnalysisDashboardTable = (props: UseAnaylsisDashboardTableProps)
     muiTableContainerProps: {
       style: { flexGrow: 1 },
     },
+    // selection
+    enableRowSelection: true,
     // row actions
+    positionActionsColumn: "last",
     muiTableBodyRowProps: ({ row, table }) => {
       const tableState = table.getState();
       return {
@@ -133,7 +141,7 @@ export const useAnalysisDashboardTable = (props: UseAnaylsisDashboardTableProps)
           tableState.editingRow || tableState.creatingRow || props.deletingAnalysisId === row.original.id
             ? undefined
             : () => {
-                props.onOpenAnalysis(row.original.id);
+                props.onOpenAnalysis(row.original);
                 navigate(`./${row.original.id}`);
               },
       };
@@ -189,6 +197,7 @@ export const useAnalysisDashboardTable = (props: UseAnaylsisDashboardTableProps)
     enableRowVirtualization: true,
     enableBottomToolbar: false,
     // actions
+    displayColumnDefOptions: { "mrt-row-actions": { size: 150 } },
     renderRowActions: ({ row, table }) => (
       <Box sx={{ display: "flex", gap: "0.5rem" }}>
         <Tooltip title="Edit">
@@ -199,7 +208,7 @@ export const useAnalysisDashboardTable = (props: UseAnaylsisDashboardTableProps)
               table.setCreatingRow(null); //exit creating mode
             }}
           >
-            <EditIcon />
+            <>{getIconComponent(Icon.EDIT)}</>
           </IconButton>
         </Tooltip>
         <Tooltip title="Duplicate">
@@ -214,7 +223,7 @@ export const useAnalysisDashboardTable = (props: UseAnaylsisDashboardTableProps)
               {props.isDuplicatingAnalysis && props.duplicatingAnalysisId === row.original.id ? (
                 <CircularProgress size={24} />
               ) : (
-                <ContentCopyIcon />
+                <>{getIconComponent(Icon.DUPLICATE)}</>
               )}
             </IconButton>
           </span>
@@ -232,7 +241,7 @@ export const useAnalysisDashboardTable = (props: UseAnaylsisDashboardTableProps)
               {props.isDeletingAnalysis && props.deletingAnalysisId === row.original.id ? (
                 <CircularProgress size={24} />
               ) : (
-                <DeleteIcon />
+                <>{getIconComponent(Icon.DELETE)}</>
               )}
             </IconButton>
           </span>
@@ -258,6 +267,7 @@ export const useAnalysisDashboardTable = (props: UseAnaylsisDashboardTableProps)
         <MRT_ToggleFiltersButton table={table} />
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleDensePaddingButton table={table} />
+        {props.renderExportButton({ analysisIds: table.getSelectedRowModel().flatRows.map((row) => parseInt(row.id)) })}
       </Box>
     ),
   });

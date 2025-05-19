@@ -1,12 +1,11 @@
 from io import BytesIO
 
 import ffmpeg
-from loguru import logger
-from PIL import Image
-
 from app.core.data.repo.repo_service import RepoService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.video.preprovideodoc import PreProVideoDoc
+from loguru import logger
+from PIL import Image
 
 repo = RepoService()
 

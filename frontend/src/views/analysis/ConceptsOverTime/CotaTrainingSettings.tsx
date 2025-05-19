@@ -1,10 +1,13 @@
 import { ErrorMessage } from "@hookform/error-message";
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, MenuItem, Stack } from "@mui/material";
+import SaveIcon from "@mui/icons-material/Save";
+import { Button, Dialog, DialogActions, DialogContent, Divider, MenuItem, Stack } from "@mui/material";
+import { useEffect, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { COTATrainingSettings } from "../../../api/openapi/models/COTATrainingSettings.ts";
 import { DimensionalityReductionAlgorithm } from "../../../api/openapi/models/DimensionalityReductionAlgorithm.ts";
 import FormMenu from "../../../components/FormInputs/FormMenu.tsx";
 import FormNumber from "../../../components/FormInputs/FormNumber.tsx";
+import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 
 interface CotaTrainingSettingsProps {
@@ -12,31 +15,25 @@ interface CotaTrainingSettingsProps {
   onCancel: () => void;
 }
 
-function CotaTrainingSettings(props: CotaTrainingSettingsProps) {
+function CotaTrainingSettings({ onUpdate, onCancel }: CotaTrainingSettingsProps) {
   // global client state
   const trainingSettings = useAppSelector((state) => state.cota.trainingSettings);
   const trainingSettingsOpen = useAppSelector((state) => state.cota.trainingSettingsOpen);
 
-  return (
-    <Dialog open={trainingSettingsOpen} onClose={props.onCancel} fullWidth maxWidth="md">
-      <CotaTrainingSettingsForm settings={trainingSettings} {...props} />
-    </Dialog>
-  );
-}
-
-function CotaTrainingSettingsForm({
-  onUpdate,
-  onCancel,
-  settings,
-}: CotaTrainingSettingsProps & { settings: COTATrainingSettings }) {
   // use react hook form
   const {
     handleSubmit,
     formState: { errors },
     control,
-  } = useForm<COTATrainingSettings>({
-    defaultValues: settings,
-  });
+    reset,
+  } = useForm<COTATrainingSettings>();
+
+  // reset form when dialog opens
+  useEffect(() => {
+    if (trainingSettingsOpen) {
+      reset(trainingSettings);
+    }
+  }, [trainingSettings, reset, trainingSettingsOpen]);
 
   // form handling
   const handleUpdate: SubmitHandler<COTATrainingSettings> = (data) => {
@@ -44,9 +41,28 @@ function CotaTrainingSettingsForm({
   };
   const handleError: SubmitErrorHandler<COTATrainingSettings> = (data) => console.error(data);
 
+  // maximize feature
+  const [isMaximized, setIsMaximized] = useState(false);
+  const handleToggleMaximize = () => {
+    setIsMaximized((prev) => !prev);
+  };
+
   return (
-    <form onSubmit={handleSubmit(handleUpdate, handleError)}>
-      <DialogTitle>Advanced Training Settings</DialogTitle>
+    <Dialog
+      open={trainingSettingsOpen}
+      onClose={onCancel}
+      fullWidth
+      maxWidth="md"
+      fullScreen={isMaximized}
+      component="form"
+      onSubmit={handleSubmit(handleUpdate, handleError)}
+    >
+      <DATSDialogHeader
+        title="Advanced Training Settings"
+        onClose={onCancel}
+        isMaximized={isMaximized}
+        onToggleMaximize={handleToggleMaximize}
+      />
       <DialogContent>
         <Stack spacing={3} sx={{ mt: 1 }}>
           <Divider>Search Space</Divider>
@@ -216,12 +232,11 @@ function CotaTrainingSettingsForm({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onCancel}>Close</Button>
-        <Button variant="contained" color="success" type="submit">
+        <Button variant="contained" color="success" type="submit" fullWidth startIcon={<SaveIcon />}>
           Save
         </Button>
       </DialogActions>
-    </form>
+    </Dialog>
   );
 }
 

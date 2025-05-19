@@ -8,6 +8,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { memo, useCallback, useMemo } from "react";
 import MemoHooks from "../../api/MemoHooks.ts";
 import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
 import { dateToLocaleString } from "../../utils/DateUtils.ts";
@@ -22,51 +23,25 @@ interface MemoCardSharedProps {
   onStarredClick?: () => void;
 }
 
-function MemoCard({ memo, ...props }: MemoCardSharedProps & { memo: number | MemoRead | undefined }) {
-  if (memo === undefined || typeof memo === "number") {
-    return <MemoCardWithoutContent memoId={memo} {...props} />;
-  } else {
-    return <MemoCardWithContent memo={memo} {...props} />;
-  }
-}
-
-function MemoCardWithoutContent({ memoId, ...props }: MemoCardSharedProps & { memoId: number | undefined }) {
-  // query
-  const memo = MemoHooks.useGetMemo(memoId);
-
-  if (memo.isSuccess) {
-    return <MemoCardWithContent memo={memo.data} {...props} />;
-  } else if (memo.isLoading) {
-    return <CircularProgress />;
-  } else if (memo.isError) {
-    return (
-      <CardHeader
-        title={`Error: ${memo.error.message}`}
-        sx={{ pb: 1, pt: 1 }}
-        titleTypographyProps={{ variant: "h5" }}
-      />
-    );
-  } else {
-    return null;
-  }
-}
-
 function MemoCardWithContent({
   memo,
   onClick,
   onDeleteClick,
   onStarredClick,
 }: MemoCardSharedProps & { memo: MemoRead }) {
-  // query
   const attachedObject = useGetMemosAttachedObject(memo.attached_object_type)(memo.attached_object_id);
 
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     if (onClick) {
       onClick(memo);
     }
-  };
+  }, [onClick, memo]);
 
-  // rendering
+  const lastModifiedDate = useMemo(() => {
+    const fullDate = dateToLocaleString(memo.updated);
+    return fullDate.substring(0, fullDate.indexOf(","));
+  }, [memo.updated]);
+
   return (
     <Card variant="outlined">
       <CardHeader
@@ -91,10 +66,12 @@ function MemoCardWithContent({
             iconButtonProps={{ size: "small" }}
           />
         }
-        titleTypographyProps={{
-          variant: "body1",
-          display: "flex",
-          alignItems: "center",
+        slotProps={{
+          title: {
+            variant: "body1",
+            display: "flex",
+            alignItems: "center",
+          },
         }}
         sx={{ px: 1, py: 0.5 }}
       />
@@ -112,8 +89,7 @@ function MemoCardWithContent({
           </Typography>
           <Stack direction="row" alignItems="center" mt={1} justifyContent="space-between">
             <Typography variant="subtitle2" color="textSecondary" fontSize={12}>
-              {"Last modified: " +
-                dateToLocaleString(memo.updated).substring(0, dateToLocaleString(memo.updated).indexOf(","))}
+              {"Last modified: " + lastModifiedDate}
             </Typography>
             <Typography variant="subtitle2" color="textDisabled" fontSize={12}>
               <UserName userId={memo.user_id} />
@@ -125,4 +101,36 @@ function MemoCardWithContent({
   );
 }
 
-export default MemoCard;
+function MemoCardWithoutContent({ memoId, ...props }: MemoCardSharedProps & { memoId: number | undefined }) {
+  const memo = MemoHooks.useGetMemo(memoId);
+
+  if (memo.isSuccess) {
+    return <MemoCardWithContent memo={memo.data} {...props} />;
+  } else if (memo.isLoading) {
+    return <CircularProgress />;
+  } else if (memo.isError) {
+    return (
+      <CardHeader
+        title={`Error: ${memo.error.message}`}
+        sx={{ pb: 1, pt: 1 }}
+        slotProps={{
+          title: {
+            variant: "h5",
+          },
+        }}
+      />
+    );
+  } else {
+    return null;
+  }
+}
+
+function MemoCard({ memo, ...props }: MemoCardSharedProps & { memo: number | MemoRead | undefined }) {
+  if (memo === undefined || typeof memo === "number") {
+    return <MemoCardWithoutContent memoId={memo} {...props} />;
+  } else {
+    return <MemoCardWithContent memo={memo} {...props} />;
+  }
+}
+
+export default memo(MemoCard);

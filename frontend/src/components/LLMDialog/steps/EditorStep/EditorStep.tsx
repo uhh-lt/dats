@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { ApproachType } from "../../../../api/openapi/models/ApproachType.ts";
 import { useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 import PromptEditorStep from "./PromptEditorStep.tsx";
@@ -19,4 +20,4 @@ function EditorStep() {
   }
 }
 
-export default EditorStep;
+export default memo(EditorStep);

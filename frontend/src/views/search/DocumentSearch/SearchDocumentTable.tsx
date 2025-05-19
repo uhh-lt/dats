@@ -1,9 +1,10 @@
-import { Box, Button, Card, Divider, Stack, Toolbar, Typography } from "@mui/material";
+import { Box, Button, Divider, Stack, Typography } from "@mui/material";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import parse from "html-react-parser";
 import {
   MRT_ColumnDef,
   MRT_GlobalFilterTextField,
+  MRT_LinearProgressBar,
   MRT_RowVirtualizer,
   MRT_ShowHideColumnsButton,
   MRT_TableContainer,
@@ -17,24 +18,31 @@ import { ElasticSearchDocumentHit } from "../../../api/openapi/models/ElasticSea
 import { PaginatedElasticSearchDocumentHits } from "../../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
 import { SdocColumns } from "../../../api/openapi/models/SdocColumns.ts";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
+import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
 import { SearchService } from "../../../api/openapi/services/SearchService.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
+import DocumentUploadButton from "../../../components/DocumentUpload/DocumentUploadButton.tsx";
+import NoDocumentsPlaceholder from "../../../components/DocumentUpload/NoDocumentsPlaceholder.tsx";
+import ExportSdocsButton from "../../../components/Export/ExportSdocsButton.tsx";
 import ReduxFilterDialog from "../../../components/FilterDialog/ReduxFilterDialog.tsx";
 import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 import LLMAssistanceButton from "../../../components/LLMDialog/LLMAssistanceButton.tsx";
+import CardContainer from "../../../components/MUI/CardContainer.tsx";
+import DATSToolbar from "../../../components/MUI/DATSToolbar.tsx";
 import SdocMetadataRenderer from "../../../components/Metadata/SdocMetadataRenderer.tsx";
 import DeleteSdocsButton from "../../../components/SourceDocument/DeleteSdocsButton.tsx";
-import DownloadSdocsButton from "../../../components/SourceDocument/DownloadSdocsButton.tsx";
 import SdocAnnotatorsRenderer from "../../../components/SourceDocument/SdocAnnotatorsRenderer.tsx";
 import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
 import SdocTagsRenderer from "../../../components/SourceDocument/SdocTagRenderer.tsx";
 import TagMenuButton from "../../../components/Tag/TagMenu/TagMenuButton.tsx";
 import { selectSelectedDocumentIds } from "../../../components/tableSlice.ts";
+import queryClient from "../../../plugins/ReactQueryClient.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
 import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
 import { useTableFetchMoreOnScroll, useTransformInfiniteData } from "../../../utils/useTableInfiniteScroll.ts";
 import { useInitSearchFilterSlice } from "../useInitSearchFilterSlice.ts";
+import OpenInTabsButton from "./OpenInTabsButton.tsx";
 import SearchOptionsMenu from "./SearchOptionsMenu.tsx";
 import { SearchActions } from "./searchSlice.ts";
 
@@ -46,9 +54,10 @@ const flatMapData = (page: PaginatedElasticSearchDocumentHits) => page.hits;
 
 interface DocumentTableProps {
   projectId: number;
+  onSearchResultsChange?: (sdocIds: number[]) => void;
 }
 
-function SearchDocumentTable({ projectId }: DocumentTableProps) {
+function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTableProps) {
   const navigate = useNavigate();
 
   // global client state (react router)
@@ -105,23 +114,23 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
           return {
             ...colDef,
             size: 100,
-            Cell: ({ row }) => <SdocRenderer sdoc={row.original.document_id} renderDoctypeIcon />,
+            Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderDoctypeIcon />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case SdocColumns.SD_SOURCE_DOCUMENT_FILENAME:
           return {
             ...colDef,
             size: 360,
-            Cell: ({ row }) => <SdocRenderer sdoc={row.original.document_id} renderFilename />,
+            Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderFilename />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case SdocColumns.SD_DOCUMENT_TAG_ID_LIST:
           return {
             ...colDef,
-            Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.document_id} />,
+            Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.id} />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case SdocColumns.SD_USER_ID_LIST:
           return {
             ...colDef,
-            Cell: ({ row }) => <SdocAnnotatorsRenderer sdocId={row.original.document_id} />,
+            Cell: ({ row }) => <SdocAnnotatorsRenderer sdocId={row.original.id} />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case SdocColumns.SD_CODE_ID_LIST:
           return null;
@@ -133,7 +142,7 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
             return {
               ...colDef,
               Cell: ({ row }) => (
-                <SdocMetadataRenderer sdocId={row.original.document_id} projectMetadataId={parseInt(column.column)} />
+                <SdocMetadataRenderer sdocId={row.original.id} projectMetadataId={parseInt(column.column)} />
               ),
             } as MRT_ColumnDef<ElasticSearchDocumentHit>;
           } else {
@@ -161,8 +170,8 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
       sortingModel, // refetch when sorting changes
       fetchSize,
     ],
-    queryFn: ({ pageParam }) =>
-      SearchService.searchSdocs({
+    queryFn: async ({ pageParam }) => {
+      const data = await SearchService.searchSdocs({
         searchQuery: searchQuery || "",
         projectId: projectId!,
         highlight: true,
@@ -176,7 +185,26 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
         },
         pageNumber: pageParam as number,
         pageSize: fetchSize,
-      }),
+      });
+
+      // initialize the query cache
+      console.log("Initializing sdoc query cache");
+      Object.entries(data.sdocs).forEach(([sdocId, sdoc]) => {
+        queryClient.setQueryData<SourceDocumentRead>([QueryKey.SDOC, parseInt(sdocId)], sdoc);
+        queryClient.setQueryData<number>([QueryKey.SDOC_ID, projectId, sdoc.filename], sdoc.id);
+      });
+
+      console.log("Initializing annotators query cache");
+      Object.entries(data.annotators).forEach(([sdocId, annotators]) => {
+        queryClient.setQueryData<number[]>([QueryKey.SDOC_ANNOTATORS, parseInt(sdocId)], annotators);
+      });
+
+      console.log("Initializing tags query cache");
+      Object.entries(data.tags).forEach(([sdocId, tags]) => {
+        queryClient.setQueryData<number[]>([QueryKey.SDOC_TAGS, parseInt(sdocId)], tags);
+      });
+      return data;
+    },
     initialPageParam: 0,
     enabled: !!projectId,
     getNextPageParam: (_lastGroup, groups) => {
@@ -189,11 +217,15 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
     flatMapData,
   });
 
+  useEffect(() => {
+    onSearchResultsChange?.(flatData.map((sdoc) => sdoc.id));
+  }, [onSearchResultsChange, flatData]);
+
   // table
   const table = useMaterialReactTable<ElasticSearchDocumentHit>({
     data: flatData,
     columns: columns,
-    getRowId: (row) => `${row.document_id}`,
+    getRowId: (row) => `${row.id}`,
     // state
     state: {
       globalFilter: searchQuery,
@@ -241,7 +273,7 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
             row.original.highlights ? (
               <Box className="search-result-highlight">
                 {row.original.highlights.map((highlight, index) => (
-                  <Typography key={`sdoc-${row.original.document_id}-highlight-${index}`} m={0.5}>
+                  <Typography key={`sdoc-${row.original.id}-highlight-${index}`} m={0.5}>
                     {parse(highlight)}
                   </Typography>
                 ))}
@@ -252,15 +284,16 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
     muiTableBodyRowProps: ({ row }) => ({
       onClick: (event) => {
         if (event.detail >= 2) {
-          navigate(`/project/${projectId}/annotation/${row.original.document_id}`);
+          navigate(`/project/${projectId}/annotation/${row.original.id}`);
         } else {
-          dispatch(SearchActions.onToggleSelectedDocumentIdChange(row.original.document_id));
+          dispatch(SearchActions.onToggleSelectedDocumentIdChange(row.original.id));
         }
       },
       sx: {
-        backgroundColor: selectedDocumentId === row.original.document_id ? "lightgrey !important" : undefined,
+        backgroundColor: selectedDocumentId === row.original.id ? "lightgrey !important" : undefined,
       },
     }),
+    renderEmptyRowsFallback: filter.items.length === 0 ? () => <NoDocumentsPlaceholder /> : undefined,
     muiToolbarAlertBannerProps: isError
       ? {
           color: "error",
@@ -289,20 +322,24 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
     }
   }, [projectId, searchQuery, filter, sortingModel]);
 
+  // Track & restore scroll position
+  const savedScrollPosition = useAppSelector((state) => state.search.scrollPosition);
+  useEffect(() => {
+    if (
+      table.refs.tableContainerRef.current &&
+      table.refs.tableContainerRef.current?.scrollTop !== savedScrollPosition
+    ) {
+      console.log("Restoring scroll position: ", savedScrollPosition);
+      setTimeout(() => {
+        table.refs.tableContainerRef.current!.scrollTop = savedScrollPosition;
+      }, 100);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
-    <>
-      <Toolbar
-        variant="dense"
-        sx={{
-          zIndex: (theme) => theme.zIndex.appBar + 1,
-          bgcolor: (theme) => theme.palette.background.paper,
-          borderBottom: "1px solid #e8eaed",
-          boxShadow: 4,
-          justifyContent: "center",
-          gap: 1,
-        }}
-        ref={toolbarRef}
-      >
+    <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <DATSToolbar variant="dense" ref={toolbarRef}>
         <ReduxFilterDialog
           anchorEl={toolbarRef.current}
           buttonProps={{ size: "small" }}
@@ -319,21 +356,30 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
               popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
             />
             <DeleteSdocsButton sdocIds={selectedDocumentIds} navigateTo="../search" />
-            <DownloadSdocsButton sdocIds={selectedDocumentIds} />
             <LLMAssistanceButton sdocIds={selectedDocumentIds} projectId={projectId} />
+            <OpenInTabsButton sdocIds={selectedDocumentIds} projectId={projectId} />
           </>
         )}
         <Box sx={{ flexGrow: 1 }} />
         <MRT_GlobalFilterTextField table={table} />
         <SearchOptionsMenu />
+        <DocumentUploadButton />
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleDensePaddingButton table={table} />
-      </Toolbar>
-      <Card elevation={8} sx={{ height: "100%", display: "flex", flexDirection: "column", m: 2 }}>
+        <ExportSdocsButton sdocIds={selectedDocumentIds} />
+        <MRT_LinearProgressBar isTopToolbar={true} table={table} />
+      </DATSToolbar>
+      <CardContainer sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
         <MRT_TableContainer
           table={table}
           style={{ flexGrow: 1 }}
-          onScroll={(event) => fetchMoreOnScroll(event.target as HTMLDivElement)}
+          onScroll={(event) => {
+            // Save the scroll position when the user scrolls
+            const target = event.target as HTMLDivElement;
+            dispatch(SearchActions.onSaveScrollPosition(target.scrollTop));
+            // Continue with the default fetch more behavior
+            fetchMoreOnScroll(target);
+          }}
         />
         <Box sx={{ p: 1 }}>
           <Divider />
@@ -346,8 +392,8 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
             </Button>
           </Stack>
         </Box>
-      </Card>
-    </>
+      </CardContainer>
+    </Box>
   );
 }
 

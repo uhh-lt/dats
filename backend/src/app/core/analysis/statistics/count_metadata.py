@@ -1,10 +1,9 @@
 from typing import Tuple
 
-from sqlalchemy import func
-
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.db.sql_service import SQLService
+from sqlalchemy import func
 
 
 def compute_num_sdocs_with_date_metadata(

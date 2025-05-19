@@ -1,10 +1,10 @@
 from typing import List, NoReturn
 
+from api.dependencies import get_current_user, get_db_session
 from fastapi import Depends, Request
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from api.dependencies import get_current_user, get_db_session
 from app.core.data.crud import Crud
 from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.orm.orm_base import ORMBase

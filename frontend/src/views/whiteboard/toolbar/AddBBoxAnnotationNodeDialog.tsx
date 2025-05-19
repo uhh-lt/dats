@@ -1,10 +1,13 @@
-import { Box, Button, ButtonProps, CircularProgress, Dialog } from "@mui/material";
+import { Button, ButtonProps, CircularProgress, Dialog, Tooltip } from "@mui/material";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
-import { useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { XYPosition } from "reactflow";
+import MetadataHooks from "../../../api/MetadataHooks.ts";
+import { BBoxColumns } from "../../../api/openapi/models/BBoxColumns.ts";
 import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
-import ProjectHooks from "../../../api/ProjectHooks.ts";
 import BBoxAnnotationTable from "../../../components/BBoxAnnotation/BBoxAnnotationTable/BBoxAnnotationTable.tsx";
+import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
+import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
 import { PendingAddNodeAction } from "../types/PendingAddNodeAction.ts";
@@ -22,30 +25,46 @@ function AddBBoxAnnotationNodeDialog({ projectId, buttonProps, ...props }: AddBB
   const [open, setOpen] = useState(false);
 
   // global server state
-  const metadata = ProjectHooks.useGetMetadata(projectId);
+  const metadata = MetadataHooks.useGetProjectMetadataList();
 
-  // actions
-  const handleOpen = () => {
+  // memoized handlers
+  const handleOpen = useCallback(() => {
     setOpen(true);
-  };
+  }, []);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setOpen(false);
+  }, []);
+
+  // maximize dialog
+  const [isMaximized, setIsMaximized] = useState(false);
+  const handleToggleMaximize = () => {
+    setIsMaximized((prev) => !prev);
   };
 
   return (
     <>
-      <Button onClick={handleOpen} {...buttonProps}>
-        Add annotations
-      </Button>
-      <Dialog onClose={handleClose} open={open} maxWidth="lg" fullWidth PaperProps={{ style: { height: "100%" } }}>
+      <Tooltip title="Add bbox annotations" placement="right" arrow>
+        <Button onClick={handleOpen} {...buttonProps}>
+          {getIconComponent(Icon.BBOX_ANNOTATION)}
+        </Button>
+      </Tooltip>
+      <Dialog onClose={handleClose} open={open} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         {metadata.isSuccess ? (
-          <AddBBoxAnnotationNodeDialogContent
-            onClose={handleClose}
-            projectId={projectId}
-            metadata={metadata.data}
-            {...props}
-          />
+          <>
+            <DATSDialogHeader
+              title="Select bbox annotations to add to Whiteboard"
+              onClose={handleClose}
+              isMaximized={isMaximized}
+              onToggleMaximize={handleToggleMaximize}
+            />
+            <AddBBoxAnnotationNodeDialogContent
+              onClose={handleClose}
+              projectId={projectId}
+              metadata={metadata.data}
+              {...props}
+            />
+          </>
         ) : metadata.isLoading ? (
           <CircularProgress />
         ) : (
@@ -56,43 +75,62 @@ function AddBBoxAnnotationNodeDialog({ projectId, buttonProps, ...props }: AddBB
   );
 }
 
-function AddBBoxAnnotationNodeDialogContent({
+const AddBBoxAnnotationNodeDialogContent = memo(function AddBBoxAnnotationNodeDialogContent({
   metadata,
   projectId,
   onClick,
   onClose,
 }: AddBBoxAnnotationNodeDialogProps & { onClose: () => void; metadata: ProjectMetadataRead[] }) {
   // local state
+  const [fetchSize, setFetchSize] = useState(20);
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
   const [sortingModel, setSortingModel] = useState<MRT_SortingState>([]);
   const [visibilityModel, setVisibilityModel] = useState<MRT_VisibilityState>(() =>
     // init visibility (disable metadata)
-    metadata.reduce((acc, curr) => {
-      return {
-        ...acc,
-        [curr.id]: false,
-      };
-    }, {}),
+    metadata.reduce(
+      (acc, curr) => {
+        return {
+          ...acc,
+          [curr.id]: false,
+        };
+      },
+      {
+        [BBoxColumns.BB_MEMO_CONTENT]: false,
+      },
+    ),
   );
-  const selectedAnnotationIds = Object.keys(rowSelectionModel).map((id) => parseInt(id));
 
-  // actions
-  const handleClose = () => {
+  // memoized selected annotation ids
+  const selectedAnnotationIds = useMemo(
+    () => Object.keys(rowSelectionModel).map((id) => parseInt(id)),
+    [rowSelectionModel],
+  );
+
+  // memoized handlers
+  const handleClose = useCallback(() => {
     onClose();
     setRowSelectionModel({});
-  };
+  }, [onClose]);
 
-  const handleConfirmSelection = () => {
+  const handleConfirmSelection = useCallback(() => {
     const bboxAnnotations = selectedAnnotationIds;
     const addNode: PendingAddNodeAction = (position: XYPosition, reactFlowService: ReactFlowService) =>
       reactFlowService.addNodes(createBBoxAnnotationNodes({ bboxAnnotations, position }));
     onClick(addNode);
     handleClose();
-  };
+  }, [selectedAnnotationIds, onClick, handleClose]);
+
+  const renderBottomToolbarActions = useCallback(
+    () => (
+      <Button onClick={handleConfirmSelection} disabled={selectedAnnotationIds.length === 0}>
+        Add {selectedAnnotationIds.length > 0 ? selectedAnnotationIds.length : null} Annotations
+      </Button>
+    ),
+    [handleConfirmSelection, selectedAnnotationIds.length],
+  );
 
   return (
     <BBoxAnnotationTable
-      title="Select bbox annotations to add to Whiteboard"
       projectId={projectId}
       filterName={filterName}
       rowSelectionModel={rowSelectionModel}
@@ -101,18 +139,11 @@ function AddBBoxAnnotationNodeDialogContent({
       onSortingChange={setSortingModel}
       columnVisibilityModel={visibilityModel}
       onColumnVisibilityChange={setVisibilityModel}
-      cardProps={{ elevation: 2, className: "myFlexFillAllContainer myFlexContainer" }}
-      renderBottomToolbarCustomActions={(props) => (
-        <>
-          <Box flexGrow={1} />
-          <Button onClick={handleClose}>Close</Button>
-          <Button onClick={handleConfirmSelection} disabled={props.selectedAnnotations.length === 0}>
-            Add {props.selectedAnnotations.length > 0 ? props.selectedAnnotations.length : null} Annotations
-          </Button>
-        </>
-      )}
+      fetchSize={fetchSize}
+      onFetchSizeChange={setFetchSize}
+      renderBottomToolbar={renderBottomToolbarActions}
     />
   );
-}
+});
 
-export default AddBBoxAnnotationNodeDialog;
+export default memo(AddBBoxAnnotationNodeDialog);

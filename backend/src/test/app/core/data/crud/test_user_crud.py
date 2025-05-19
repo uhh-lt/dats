@@ -2,18 +2,17 @@ import random
 import string
 
 import pytest
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.user import crud_user
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.user import UserCreate, UserRead, UserUpdate
 from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.user import UserORM
+from sqlalchemy.orm import Session
 
 
 def test_create_delete_user(db: Session) -> None:
-    email = f'{"".join(random.choices(string.ascii_letters, k=15))}@gmail.com'
+    email = f"{''.join(random.choices(string.ascii_letters, k=15))}@gmail.com"
     first_name = "".join(random.choices(string.ascii_letters, k=15))
     last_name = "".join(random.choices(string.ascii_letters, k=15))
     password = "".join(random.choices(string.ascii_letters, k=15))
@@ -44,7 +43,7 @@ def test_create_delete_user(db: Session) -> None:
 
 
 def test_update_user(db: Session, user: UserORM) -> None:
-    email = f'{"".join(random.choices(string.ascii_letters, k=15))}@gmail.com'
+    email = f"{''.join(random.choices(string.ascii_letters, k=15))}@gmail.com"
     first_name = "".join(random.choices(string.ascii_letters, k=15))
     last_name = "".join(random.choices(string.ascii_letters, k=15))
     password = "".join(random.choices(string.ascii_letters, k=15))

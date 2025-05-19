@@ -3,13 +3,12 @@ from typing import List
 
 import networkx as nx
 import numpy as np
-from loguru import logger
-from scipy import sparse
-from sklearn.metrics.pairwise import manhattan_distances
-
 from app.core.data.crud.word_frequency import crud_word_frequency
 from app.core.data.doc_type import DocType
 from app.core.db.sql_service import SQLService
+from loguru import logger
+from scipy import sparse
+from sklearn.metrics.pairwise import manhattan_distances
 
 
 def find_duplicates(project_id: int, max_different_words: int) -> List[List[int]]:

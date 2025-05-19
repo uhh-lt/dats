@@ -1,7 +1,8 @@
 /node_modules
 .idea
 *.md
-Dockerfile.dev
 Dockerfile
 .dockerignore
 .gitignore
+.env.example
+.env

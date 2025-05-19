@@ -1,7 +1,9 @@
 import logging
+import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Set, TypedDict
+from typing import Dict, List, Set, Tuple, TypedDict
+from uuid import uuid4
 
 import torch
 from dto.seqsenttagger import (
@@ -150,16 +152,16 @@ class SentenceTaggingDataset(Dataset):
         # create the labels field that uses the ids, not the strings
         self.labels = [[self.tag2id[tag] for tag in ls] for ls in labels]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.labels)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, List[int]]:
         labels = self.labels[idx]
         embeddings = torch.tensor(self.embeddings[idx])
         return embeddings, labels
 
 
-def collate_fn(batch):
+def collate_fn(batch: List[Tuple[torch.Tensor, List[int]]]):
     embeddings, labels = zip(*batch)
 
     # Pad labels
@@ -172,7 +174,7 @@ def collate_fn(batch):
         mask[i, : len(label)] = 1
 
     # Pad embeddings
-    padded_embeddings = pad_sequence(embeddings, batch_first=True, padding_value=0)
+    padded_embeddings = pad_sequence(embeddings, batch_first=True, padding_value=0)  # type: ignore
 
     # switch first sentence (0) with longest sentence (longest_idx)
     longest_idx = max(range(len(labels)), key=lambda k: len(labels[k]))
@@ -200,7 +202,9 @@ def collate_fn(batch):
         == len(new_padded_embeddings)
         == len(new_padded_labels)
         == len(new_mask)
-    ), f"Lengths must match: {len(padded_embeddings)}, {len(padded_labels)}, {len(mask)}, {len(new_padded_embeddings)}, {len(new_padded_labels)}, {len(new_mask)}"
+    ), (
+        f"Lengths must match: {len(padded_embeddings)}, {len(padded_labels)}, {len(mask)}, {len(new_padded_embeddings)}, {len(new_padded_labels)}, {len(new_mask)}"
+    )
 
     return (
         torch.tensor(new_padded_embeddings),
@@ -213,8 +217,7 @@ cc = conf.seqsenttagger
 
 DEVICE = cc.device
 BATCH_SIZE = cc.batch_size
-
-SHARED_REPO_ROOT: Path = Path(conf.repo_root)
+ROOT_DIR: Path = Path(cc.root_dir)
 
 logger = logging.getLogger("ray.serve")
 
@@ -222,12 +225,17 @@ logger = logging.getLogger("ray.serve")
 @serve.deployment(**build_ray_model_deployment_config("seqsenttagger"))
 class SeqSentTaggerModel:
     def train_apply(self, input: SeqSentTaggerJobInput) -> SeqSentTaggerJobResponse:
+        # 0 create tmp id
+        tmp_id = str(uuid4())
+
         # 1 finetune
-        trained_model_ckpt_path = self.__train_model(input)
+        trained_model_ckpt_path = self.__train_model(input, tmp_id)
 
         # 2 apply model
         preds = self.__test_model(
-            test_data=input.test_data, model_path=trained_model_ckpt_path
+            test_data=input.test_data,
+            model_path=trained_model_ckpt_path,
+            tmp_id=tmp_id,
         )
 
         return SeqSentTaggerJobResponse(
@@ -236,7 +244,7 @@ class SeqSentTaggerModel:
             ]
         )
 
-    def __train_model(self, input: SeqSentTaggerJobInput) -> Path:
+    def __train_model(self, input: SeqSentTaggerJobInput, tmp_id: str) -> Path:
         # Split the training data into train and validation
         train_size = int(0.8 * len(input.training_data))
         train_data = input.training_data[:train_size]
@@ -280,9 +288,7 @@ class SeqSentTaggerModel:
         )  # Stop if val_loss doesn't improve for 3 epochs
 
         model_name = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        model_path = self.__get_model_dir(
-            proj_id=input.project_id, model_name=model_name
-        )
+        model_path = self.__get_model_dir(model_name=model_name, tmp_id=tmp_id)
         checkpoint = ModelCheckpoint(
             dirpath=model_path,
             filename="best-model",
@@ -293,7 +299,7 @@ class SeqSentTaggerModel:
 
         # Logger
         tb_logger = loggers.TensorBoardLogger(
-            save_dir=self.__get_temp_files_root_path()
+            save_dir=self.__get_logger_dir(tmp_id=tmp_id)
         )
 
         # Trainer
@@ -315,7 +321,7 @@ class SeqSentTaggerModel:
         return model_path / "best-model.ckpt"
 
     def __test_model(
-        self, test_data: List[SeqSentTaggerDoc], model_path: Path
+        self, test_data: List[SeqSentTaggerDoc], model_path: Path, tmp_id: str
     ) -> List[List[str]]:
         # 1. Create the test data
         test_dataset = SentenceTaggingDataset(test_data)
@@ -332,7 +338,7 @@ class SeqSentTaggerModel:
 
         # 3. Evaluate the model
         tb_logger = loggers.TensorBoardLogger(
-            save_dir=self.__get_temp_files_root_path() / "lightning_logs"
+            save_dir=self.__get_logger_dir(tmp_id=tmp_id)
         )
         trainer = Trainer(
             logger=tb_logger,
@@ -353,24 +359,20 @@ class SeqSentTaggerModel:
             pred_tags.append([model.id2tag[i] for i in pred])
         logger.info(f"Showing the first prediction as strings: {pred_tags[0]}")
 
+        # 5. Remove the temporary files
+        shutil.rmtree(ROOT_DIR / tmp_id)
+        logger.info(f"Removed temporary files at {ROOT_DIR / tmp_id}")
+
         return pred_tags
 
-    def __get_temp_files_root_path(self) -> Path:
-        return SHARED_REPO_ROOT.joinpath("temporary_files")
-
-    def __get_project_repo_root_path(self, proj_id: int) -> Path:
-        return SHARED_REPO_ROOT.joinpath(f"projects/{proj_id}/")
-
-    def __get_models_root_path(self, proj_id: int) -> Path:
-        return self.__get_project_repo_root_path(proj_id=proj_id).joinpath("models")
+    def __get_logger_dir(self, tmp_id: str) -> Path:
+        return ROOT_DIR / tmp_id / "lightning_logs"
 
     def __get_model_dir(
         self,
-        proj_id: int,
+        tmp_id: str,
         model_name: str,
         model_prefix: str = "SeqSentTagger_",
     ) -> Path:
-        name = (
-            self.__get_models_root_path(proj_id=proj_id) / f"{model_prefix}{model_name}"
-        )
+        name = ROOT_DIR / tmp_id / "models" / f"{model_prefix}{model_name}"
         return name

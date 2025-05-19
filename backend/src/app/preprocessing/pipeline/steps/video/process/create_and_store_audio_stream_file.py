@@ -1,8 +1,7 @@
 import ffmpeg
-from loguru import logger
-
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.video.preprovideodoc import PreProVideoDoc
+from loguru import logger
 
 
 def create_and_store_audio_stream_file(cargo: PipelineCargo) -> PipelineCargo:

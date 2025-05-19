@@ -1,25 +1,23 @@
-import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter";
-import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft";
-import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
-import FormatBoldIcon from "@mui/icons-material/FormatBold";
-import FormatItalicIcon from "@mui/icons-material/FormatItalic";
-import FormatUnderlinedIcon from "@mui/icons-material/FormatUnderlined";
-import VerticalAlignBottomIcon from "@mui/icons-material/VerticalAlignBottom";
-import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
-import VerticalAlignTopIcon from "@mui/icons-material/VerticalAlignTop";
-
-import { Button, ButtonGroup, Divider, Paper, Stack, Typography, TypographyVariant } from "@mui/material";
+import { Divider, Paper, SelectChangeEvent, Stack, Typography } from "@mui/material";
 import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 import { Node, useReactFlow } from "reactflow";
+import { BorderStyle } from "../../../api/openapi/models/BorderStyle.ts";
+import { HorizontalAlign } from "../../../api/openapi/models/HorizontalAlign.ts";
+import { VerticalAlign } from "../../../api/openapi/models/VerticalAlign.ts";
+import TextStyleTool from "../toolbar/tools/TextStyleTool.tsx";
 import { BackgroundColorData } from "../types/base/BackgroundColorData.ts";
 import { BorderData } from "../types/base/BorderData.ts";
 import { TextData } from "../types/base/TextData.ts";
+import { TextStyle } from "../types/base/TextStyle.ts";
 import { hasTextData, isBackgroundColorDataArray, isBorderDataArray, isTextDataArray } from "../types/typeGuards.ts";
-import ColorTool from "./tools/ColorTool.tsx";
+import { createNodeDataByType } from "./nodeTypeUtils.ts";
+import BgColorTool from "./tools/BgColorTool.tsx";
+import BorderColorTool from "./tools/BorderColorTool.tsx";
+import FontColorTool from "./tools/FontColorTool.tsx";
+import FontSelectionTool from "./tools/FontSelectionTool.tsx";
+import NodeChangeTool from "./tools/NodeChangeTool.tsx";
 import NumberTool from "./tools/NumberTool.tsx";
-import SliderTool from "./tools/SliderTool.tsx";
-import SolidDashedDottedTool from "./tools/SolidDashedDottedTool.tsx";
-import TypographyVariantTool from "./tools/TypographyVariantTool.tsx";
+import TextAlignmentTool from "./tools/TextAlignmentTool.tsx";
 
 export interface NodeEditMenuHandle {
   open: (nodes: Node[]) => void;
@@ -29,7 +27,7 @@ export interface NodeEditMenuHandle {
 const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
   const reactFlowInstance = useReactFlow<BackgroundColorData | TextData | BorderData>();
   const [nodes, setNodes] = useState<Node<BackgroundColorData | TextData | BorderData>[]>([]);
-
+  const [isFontFamilyMenuOpen, setIsFontFamilyMenuOpen] = useState<boolean>(false);
   // exposed methods (via ref)
   useImperativeHandle(ref, () => ({
     open: openMenu,
@@ -70,19 +68,19 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
     [nodes, reactFlowInstance],
   );
 
-  const handleFontSizeChange = (variant: TypographyVariant) => {
+  const handleFontSizeChange = (fontSize: number) => {
     updateNodes((oldNode) => {
       return {
         ...oldNode,
         data: {
           ...oldNode.data,
-          variant: variant,
+          fontSize: fontSize,
         },
       };
     });
   };
 
-  const handleHorizontalAlignClick = (horizontal: "left" | "center" | "right") => () => {
+  const handleHorizontalAlignClick = (horizontal: HorizontalAlign) => () => {
     updateNodes((oldNode) => {
       return {
         ...oldNode,
@@ -94,7 +92,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
     });
   };
 
-  const handleVerticalAlignClick = (verticalAlign: "top" | "center" | "bottom") => () => {
+  const handleVerticalAlignClick = (verticalAlign: VerticalAlign) => () => {
     updateNodes((oldNode) => {
       return {
         ...oldNode,
@@ -106,7 +104,7 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
     });
   };
 
-  const handleBorderStyleChange = (borderStyle: "dashed" | "solid" | "dotted") => {
+  const handleBorderStyleChange = (borderStyle: BorderStyle) => {
     updateNodes((oldNode) => {
       return {
         ...oldNode,
@@ -115,24 +113,6 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
           borderStyle: borderStyle,
         },
       };
-    });
-  };
-
-  const handleStyleClick = (style: "bold" | "italic" | "underline") => () => {
-    updateNodes((oldNode) => {
-      if (hasTextData(oldNode)) {
-        return {
-          ...oldNode,
-          data: {
-            ...oldNode.data,
-            ...(style === "bold" && { bold: !oldNode.data.bold }),
-            ...(style === "italic" && { italic: !oldNode.data.italic }),
-            ...(style === "underline" && { underline: !oldNode.data.underline }),
-          },
-        };
-      } else {
-        return oldNode;
-      }
     });
   };
 
@@ -200,120 +180,133 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
   const showBackgroundColorTools = isBackgroundColorDataArray(nodes);
   const showBorderTools = isBorderDataArray(nodes);
 
+  // Get current font family, default to Arial if not set or inconsistent
+  const getCurrentFontFamily = () => {
+    if (!showTextTools || !nodes[0]?.data?.fontFamily) return "Arial"; // Check for fontFamily existence
+    const firstFontFamily = nodes[0].data.fontFamily;
+    // Check if all selected nodes have the same font family
+    const allSame = nodes.every((node) => node.data.fontFamily === firstFontFamily);
+    return allSame ? firstFontFamily : ""; // Return empty string if inconsistent
+  };
+
+  const currentFontFamily = getCurrentFontFamily();
+
+  // New handler for font family change
+  const handleFontFamilyChange = (event: SelectChangeEvent) => {
+    const fontFamily = event.target.value as string;
+    updateNodes((oldNode) => {
+      return {
+        ...oldNode,
+        data: {
+          ...oldNode.data,
+          fontFamily: fontFamily,
+        },
+      };
+    });
+  };
+
+  const handleChangeNodeType = (nodeType: string) => {
+    updateNodes((oldNode) => {
+      const oldData = oldNode.data as Partial<TextData & BackgroundColorData & BorderData>;
+      const { newData, nodeType: type, dimensions } = createNodeDataByType(oldData, nodeType);
+
+      return {
+        ...oldNode,
+        type,
+        data: newData,
+        ...(dimensions || {}),
+        position: {
+          x: oldNode.position.x,
+          y: oldNode.position.y,
+        },
+      };
+    });
+  };
+
+  const handleStyleChange = (style: TextStyle) => {
+    updateNodes((oldNode) => {
+      if (hasTextData(oldNode)) {
+        return {
+          ...oldNode,
+          data: {
+            ...oldNode.data,
+            ...(style === TextStyle.BOLD && { bold: !oldNode.data.bold }),
+            ...(style === TextStyle.ITALIC && { italic: !oldNode.data.italic }),
+            ...(style === TextStyle.UNDERLINE && { underline: !oldNode.data.underline }),
+            ...(style === TextStyle.STRIKETHROUGH && { strikethrough: !oldNode.data.strikethrough }),
+          },
+        };
+      }
+      return oldNode;
+    });
+  };
+
   return (
     <>
       {nodes.length > 0 && (
-        <Paper sx={{ p: 1, mb: 1, width: "fit-content" }}>
-          <Stack direction="row" alignItems="center">
+        <Paper sx={{ p: 1, width: "fit-content" }}>
+          <Stack direction="row" alignItems="center" spacing={1}>
             {showTextTools && (
               <>
-                <TypographyVariantTool
-                  key={`variant-${nodes[0].id}`}
-                  variant={nodes[0].data.variant}
-                  onVariantChange={handleFontSizeChange}
+                <NodeChangeTool onNodeTypeChange={handleChangeNodeType} node={nodes[0]} />
+                <FontSelectionTool
+                  currentFontFamily={currentFontFamily}
+                  onFontFamilyChange={handleFontFamilyChange}
+                  isMenuOpen={isFontFamilyMenuOpen}
+                  onMenuOpen={() => setIsFontFamilyMenuOpen(true)}
+                  onMenuClose={() => setIsFontFamilyMenuOpen(false)}
                 />
-                <ColorTool
-                  caption={undefined}
+                <NumberTool
+                  tooltip="Font size"
+                  key={`font-size-${nodes[0].id}`}
+                  value={nodes[0].data.fontSize}
+                  onValueChange={handleFontSizeChange}
+                  min={8}
+                  max={72}
+                />
+                <FontColorTool
                   key={`font-color-${nodes[0].id}`}
                   color={nodes[0].data.color}
                   onColorChange={handleColorChange}
                 />
-                <ButtonGroup size="small" className="nodrag" sx={{ mr: 1, bgcolor: "background.paper" }}>
-                  <Button variant={nodes[0].data.bold ? "contained" : "outlined"} onClick={handleStyleClick("bold")}>
-                    <FormatBoldIcon />
-                  </Button>
-                  <Button
-                    variant={nodes[0].data.italic ? "contained" : "outlined"}
-                    onClick={handleStyleClick("italic")}
-                  >
-                    <FormatItalicIcon />
-                  </Button>
-                  <Button
-                    variant={nodes[0].data.underline ? "contained" : "outlined"}
-                    onClick={handleStyleClick("underline")}
-                  >
-                    <FormatUnderlinedIcon />
-                  </Button>
-                </ButtonGroup>
-                <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
-                <ButtonGroup size="small" className="nodrag" sx={{ mr: 1, bgcolor: "background.paper" }}>
-                  <Button
-                    variant={nodes[0].data.horizontalAlign === "left" ? "contained" : "outlined"}
-                    onClick={handleHorizontalAlignClick("left")}
-                  >
-                    <FormatAlignLeftIcon />
-                  </Button>
-                  <Button
-                    variant={nodes[0].data.horizontalAlign === "center" ? "contained" : "outlined"}
-                    onClick={handleHorizontalAlignClick("center")}
-                  >
-                    <FormatAlignCenterIcon />
-                  </Button>
-                  <Button
-                    variant={nodes[0].data.horizontalAlign === "right" ? "contained" : "outlined"}
-                    onClick={handleHorizontalAlignClick("right")}
-                  >
-                    <FormatAlignRightIcon />
-                  </Button>
-                </ButtonGroup>
-                <ButtonGroup size="small" className="nodrag" sx={{ mr: 1, bgcolor: "background.paper" }}>
-                  <Button
-                    variant={nodes[0].data.verticalAlign === "top" ? "contained" : "outlined"}
-                    onClick={handleVerticalAlignClick("top")}
-                  >
-                    <VerticalAlignTopIcon />
-                  </Button>
-                  <Button
-                    variant={nodes[0].data.verticalAlign === "center" ? "contained" : "outlined"}
-                    onClick={handleVerticalAlignClick("center")}
-                  >
-                    <VerticalAlignCenterIcon />
-                  </Button>
-                  <Button
-                    variant={nodes[0].data.verticalAlign === "bottom" ? "contained" : "outlined"}
-                    onClick={handleVerticalAlignClick("bottom")}
-                  >
-                    <VerticalAlignBottomIcon />
-                  </Button>
-                </ButtonGroup>
+                <Divider orientation="vertical" flexItem />
+                <TextStyleTool textData={nodes[0].data as TextData} onStyleChange={handleStyleChange} />
+                <TextAlignmentTool
+                  nodes={nodes}
+                  handleHorizontalAlignClick={handleHorizontalAlignClick}
+                  handleVerticalAlignClick={handleVerticalAlignClick}
+                />
               </>
             )}
             {showBackgroundColorTools && (
               <>
-                <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
-                <ColorTool
+                <Divider orientation="vertical" flexItem />
+                <BgColorTool
                   key={`bg-color-${nodes[0].id}`}
-                  caption="BG:"
                   color={nodes[0].data.bgcolor}
+                  alpha={nodes[0].data.bgalpha}
                   onColorChange={handleBGColorChange}
-                />
-                <SliderTool
-                  key={`bg-alpha-${nodes[0].id}`}
-                  value={nodes[0].data.bgalpha}
-                  onValueChange={handleBGAlphaChange}
+                  onAlphaChange={handleBGAlphaChange}
                 />
               </>
             )}
             {showBorderTools && (
               <>
-                <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
-                <ColorTool
-                  caption="Border:"
+                <Divider orientation="vertical" flexItem />
+                <BorderColorTool
                   key={`bordercolor-${nodes[0].id}`}
                   color={nodes[0].data.borderColor}
                   onColorChange={handleBorderColorChange}
+                  borderStyle={nodes[0].data.borderStyle as BorderStyle}
+                  onBorderStyleChange={handleBorderStyleChange}
                 />
                 <NumberTool
+                  tooltip="Border width"
                   key={`borderwidth-${nodes[0].id}`}
                   value={nodes[0].data.borderWidth}
                   onValueChange={handleBorderWidthChange}
                   min={1}
                   max={20}
-                />
-                <SolidDashedDottedTool
-                  key={`borderstyle-${nodes[0].id}`}
-                  value={nodes[0].data.borderStyle}
-                  onValueChange={handleBorderStyleChange}
                 />
               </>
             )}

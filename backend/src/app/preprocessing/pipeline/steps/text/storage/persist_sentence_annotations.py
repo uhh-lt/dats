@@ -1,9 +1,6 @@
 import traceback
 from typing import Dict, Set
 
-from loguru import logger
-from psycopg2 import OperationalError
-
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.sentence_annotation import crud_sentence_anno
 from app.core.data.dto.code import CodeCreate
@@ -13,6 +10,8 @@ from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.autosentanno import AutoSentAnno
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from app.util.color import get_next_color
+from loguru import logger
+from psycopg2 import OperationalError
 
 sql: SQLService = SQLService()
 
