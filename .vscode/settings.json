@@ -15,6 +15,8 @@
   "python.testing.cwd": "backend/src",
   "python.analysis.diagnosticMode": "workspace",
   "python.analysis.extraPaths": ["./backend/src"],
+  "python.analysis.autoFormatStrings": true,
+  "python.analysis.typeCheckingMode": "basic",
 
   // ruff (python linter)
   "ruff.configuration": "backend/pyproject.toml",
@@ -47,11 +49,5 @@
   },
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "python.testing.pytestArgs": ["test"],
-  "python.testing.unittestEnabled": false,
-  "python.testing.pytestEnabled": true,
-  "python.testing.cwd": "backend/src",
-  "prettier.prettierPath": "./frontend/node_modules/prettier",
-  "python.analysis.extraPaths": ["./backend/src"]
+  }
 }
