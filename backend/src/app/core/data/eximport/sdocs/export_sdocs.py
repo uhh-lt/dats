@@ -13,10 +13,10 @@ from app.core.data.eximport.sdocs.sdoc_export_schema import (
 )
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
-from app.core.db.weaviate_service import WeaviateService
+from app.core.db.vector_index_service import VectorIndexService
 from sqlalchemy.orm import Session
 
-vector_index = WeaviateService()
+vector_index = VectorIndexService()
 
 
 def export_selected_sdocs(

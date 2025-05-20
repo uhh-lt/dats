@@ -137,9 +137,9 @@ class EmbeddingService(metaclass=SingletonMeta):
     def _get_image_name_from_sdoc_id(self, sdoc_id: int) -> SourceDocumentRead:
         with self.sqls.db_session() as db:
             sdoc = SourceDocumentRead.model_validate(crud_sdoc.read(db=db, id=sdoc_id))
-            assert (
-                sdoc.doctype == DocType.image
-            ), f"SourceDocument with {sdoc_id=} is not an image!"
+            assert sdoc.doctype == DocType.image, (
+                f"SourceDocument with {sdoc_id=} is not an image!"
+            )
         return sdoc
 
     def embed_documents(
@@ -148,7 +148,7 @@ class EmbeddingService(metaclass=SingletonMeta):
         total_processed = 0
         num_processed = -1
         if recompute:
-            self.sim.remove_all_document_embeddings(project_id)
+            self.vis.remove_project_index(project_id, IndexType.DOCUMENT)
         while num_processed != 0:
             num_processed = self._process_document_batch(
                 filter_criterion,

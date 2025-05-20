@@ -27,20 +27,20 @@ class WeaviateVectorLengthError(WeaviateError):
 
 
 class WeaviateService(VectorIndexService):
-    def __init__(cls, *args, **kwargs):
-        cls._sentence_class_name = "Sentence"
-        cls._image_class_name = "Image"
-        cls._named_entity_class_name = "NamedEntity"
-        cls._document_class_name = "Document"
+    def __init__(self, *args, **kwargs):
+        self._sentence_class_name = "Sentence"
+        self._image_class_name = "Image"
+        self._named_entity_class_name = "NamedEntity"
+        self._document_class_name = "Document"
 
-        cls.class_names = {
-            IndexType.SENTENCE: cls._sentence_class_name,
-            IndexType.IMAGE: cls._image_class_name,
-            IndexType.NAMED_ENTITY: cls._named_entity_class_name,
-            IndexType.DOCUMENT: cls._document_class_name,
+        self.class_names = {
+            IndexType.SENTENCE: self._sentence_class_name,
+            IndexType.IMAGE: self._image_class_name,
+            IndexType.NAMED_ENTITY: self._named_entity_class_name,
+            IndexType.DOCUMENT: self._document_class_name,
         }
 
-        cls._common_properties = [
+        self._common_properties = [
             {
                 "name": "project_id",
                 "description": "The id of the project this sentence belongs to",
@@ -53,11 +53,11 @@ class WeaviateService(VectorIndexService):
             },
         ]
 
-        cls._sentence_class_obj = {
-            "class": cls._sentence_class_name,
+        self._sentence_class_obj = {
+            "class": self._sentence_class_name,
             "vectorizer": "none",
             "properties": [
-                *cls._common_properties,
+                *self._common_properties,
                 {
                     "name": "sentence_id",
                     "description": "The id of this sentence",
@@ -66,11 +66,11 @@ class WeaviateService(VectorIndexService):
             ],
         }
 
-        cls._named_entity_class_obj = {
-            "class": cls._named_entity_class_name,
+        self._named_entity_class_obj = {
+            "class": self._named_entity_class_name,
             "vectorizer": "none",
             "properties": [
-                *cls._common_properties,
+                *self._common_properties,
                 {
                     "name": "span_id",
                     "description": "The id of this span annotation",
@@ -79,19 +79,19 @@ class WeaviateService(VectorIndexService):
             ],
         }
 
-        cls._document_class_obj = {
-            "class": cls._document_class_name,
+        self._document_class_obj = {
+            "class": self._document_class_name,
             "vectorizer": "none",
             "properties": [
-                *cls._common_properties,
+                *self._common_properties,
             ],
         }
 
-        cls._image_class_obj = {
-            "class": cls._image_class_name,
+        self._image_class_obj = {
+            "class": self._image_class_name,
             "vectorizer": "none",
             "properties": [
-                *cls._common_properties,
+                *self._common_properties,
             ],
         }
 
@@ -100,60 +100,60 @@ class WeaviateService(VectorIndexService):
             w_host = conf.weaviate.host
             w_port = conf.weaviate.port
             url = f"http://{w_host}:{w_port}"
-            cls._client = weaviate.Client(url)
+            self._client = weaviate.Client(url)
 
-            if not cls._client.is_ready():
+            if not self._client.is_ready():
                 msg = f"Weaviate client at {url} not ready!"
                 logger.error(msg)
                 raise RuntimeError(msg)
 
-            cls._client.batch.configure(
+            self._client.batch.configure(
                 batch_size=100,
                 num_workers=2,
             )
 
             if kwargs["flush"] if "flush" in kwargs else False:
                 logger.warning("Flushing DATS Weaviate Data!")
-                if cls._client.schema.exists(cls._sentence_class_name):
-                    cls._client.schema.delete_class(cls._sentence_class_name)
-                if cls._client.schema.exists(cls._image_class_name):
-                    cls._client.schema.delete_class(cls._image_class_name)
-                if cls._client.schema.exists(cls._named_entity_class_name):
-                    cls._client.schema.delete_class(cls._named_entity_class_name)
-                if cls._client.schema.exists(cls._document_class_name):
-                    cls._client.schema.delete_class(cls._document_class_name)
+                if self._client.schema.exists(self._sentence_class_name):
+                    self._client.schema.delete_class(self._sentence_class_name)
+                if self._client.schema.exists(self._image_class_name):
+                    self._client.schema.delete_class(self._image_class_name)
+                if self._client.schema.exists(self._named_entity_class_name):
+                    self._client.schema.delete_class(self._named_entity_class_name)
+                if self._client.schema.exists(self._document_class_name):
+                    self._client.schema.delete_class(self._document_class_name)
 
             # create classes
-            if not cls._client.schema.exists(cls._sentence_class_name):
-                logger.debug(f"Creating class {cls._sentence_class_obj}!")
-                cls._client.schema.create_class(cls._sentence_class_obj)
-            if not cls._client.schema.exists(cls._image_class_name):
-                logger.debug(f"Creating class {cls._image_class_obj}!")
-                cls._client.schema.create_class(cls._image_class_obj)
-            if not cls._client.schema.exists(cls._named_entity_class_name):
-                logger.debug(f"Creating class {cls._named_entity_class_obj}!")
-                cls._client.schema.create_class(cls._named_entity_class_obj)
-            if not cls._client.schema.exists(cls._document_class_name):
-                logger.debug(f"Creating class {cls._document_class_obj}!")
-                cls._client.schema.create_class(cls._document_class_obj)
+            if not self._client.schema.exists(self._sentence_class_name):
+                logger.debug(f"Creating class {self._sentence_class_obj}!")
+                self._client.schema.create_class(self._sentence_class_obj)
+            if not self._client.schema.exists(self._image_class_name):
+                logger.debug(f"Creating class {self._image_class_obj}!")
+                self._client.schema.create_class(self._image_class_obj)
+            if not self._client.schema.exists(self._named_entity_class_name):
+                logger.debug(f"Creating class {self._named_entity_class_obj}!")
+                self._client.schema.create_class(self._named_entity_class_obj)
+            if not self._client.schema.exists(self._document_class_name):
+                logger.debug(f"Creating class {self._document_class_obj}!")
+                self._client.schema.create_class(self._document_class_obj)
 
-            cls._sentence_props = list(
-                map(lambda p: p["name"], cls._sentence_class_obj["properties"])
+            self._sentence_props = list(
+                map(lambda p: p["name"], self._sentence_class_obj["properties"])
             )
-            cls._image_props = list(
-                map(lambda p: p["name"], cls._image_class_obj["properties"])
+            self._image_props = list(
+                map(lambda p: p["name"], self._image_class_obj["properties"])
             )
-            cls._named_entity_props = list(
-                map(lambda p: p["name"], cls._named_entity_class_obj["properties"])
+            self._named_entity_props = list(
+                map(lambda p: p["name"], self._named_entity_class_obj["properties"])
             )
-            cls._document_props = list(
-                map(lambda p: p["name"], cls._document_class_obj["properties"])
+            self._document_props = list(
+                map(lambda p: p["name"], self._document_class_obj["properties"])
             )
         except Exception as e:
             msg = f"Cannot connect or initialize to Weaviate DB - Error '{e}'"
             logger.error(msg)
             raise SystemExit(msg)
-        return super(WeaviateService, cls).__new__(cls)
+        return super(WeaviateService, self)
 
     def add_embeddings_to_index(
         self,
@@ -162,9 +162,9 @@ class WeaviateService(VectorIndexService):
         sdoc_ids: List[int],
         embeddings: List[np.ndarray],
     ):
-        assert len(sdoc_ids) == len(
-            embeddings
-        ), "`sdoc_ids` and `embeddings` must have the same length"
+        assert len(sdoc_ids) == len(embeddings), (
+            "`sdoc_ids` and `embeddings` must have the same length"
+        )
         logger.debug(
             f"Adding {type} SDocs {sdoc_ids} in Project {proj_id} to Weaviate ..."
         )

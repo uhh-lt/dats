@@ -1,5 +1,5 @@
-from abc import ABC, abstractmethod
-from typing import Iterable, List, Sequence, Tuple, Union, overload
+from abc import ABC
+from typing import Iterable, List, Sequence, Tuple
 
 import numpy as np
 from config import conf
@@ -31,15 +31,14 @@ class VectorIndexService(ABC, metaclass=SingletonMeta):
                 instance = super(VectorIndexService, WeaviateService).__new__(
                     WeaviateService
                 )
-                return instance
             case _:
                 msg = (
                     f"VECTOR_INDEX environment variable not correctly set: {index_name}"
                 )
                 logger.error(msg)
                 raise SystemExit(msg)
+        return instance
 
-    @abstractmethod
     def add_embeddings_to_index(
         self,
         type: IndexType,
@@ -47,22 +46,18 @@ class VectorIndexService(ABC, metaclass=SingletonMeta):
         sdoc_id: Iterable[int],
         embeddings: Iterable[np.ndarray],
     ):
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def remove_embeddings_from_index(self, type: IndexType, sdoc_id: int):
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def remove_project_from_index(self, proj_id: int):
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def remove_project_index(self, proj_id: int, type: IndexType):
         """Deletes all data of type `type` in project with id `project_id`"""
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def search_index(
         self,
         proj_id: int,
@@ -72,9 +67,8 @@ class VectorIndexService(ABC, metaclass=SingletonMeta):
         top_k: int = 10,
         threshold: float = 0.0,
     ) -> List[SimSearchSentenceHit]:
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def knn(
         self,
         proj_id: int,
@@ -85,42 +79,32 @@ class VectorIndexService(ABC, metaclass=SingletonMeta):
     ) -> List[List[SimSearchDocumentHit]]:
         """Returns the k-nearest neighbors within the (unlabeled) `sdoc_ids_to_search` documents
         given `sdoc_ids_known` documents as labeled training data"""
-        pass
+        raise NotImplementedError
 
-    @overload
     def suggest(
         self,
-        data_ids: Iterable[Tuple[int, int]],
+        data_ids: Iterable[int] | Iterable[Tuple[int, int]],
         proj_id: int,
         top_k: int,
-        index_type: IndexType = IndexType.SENTENCE,
-    ) -> List[SimSearchSentenceHit]: ...
-    @overload
-    def suggest(
-        self,
-        data_ids: Iterable[int],
-        proj_id: int,
-        top_k: int,
-        index_type: IndexType = IndexType.DOCUMENT,
-    ) -> List[SimSearchDocumentHit]: ...
-    @abstractmethod
-    def suggest(
-        self,
-        data_ids: Union[Iterable[int], Iterable[Tuple[int, int]]],
-        proj_id: int,
-        top_k: int,
-        index_type: IndexType = IndexType.DOCUMENT,
-    ) -> Union[List[SimSearchDocumentHit], List[SimSearchSentenceHit]]:
-        pass
+        index_type: IndexType,
+    ) -> List[SimSearchSentenceHit]:
+        raise NotImplementedError
 
-    @abstractmethod
     def get_embeddings(
         self,
         search_tuples: List[Tuple[int, int]],
         index_type: IndexType,
     ) -> np.ndarray:
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
+    def get_document_embedding_by_sdoc_id(self, sdoc_id: int) -> np.ndarray:
+        raise NotImplementedError
+
+    def get_sentence_embeddings_by_sdoc_id(self, sdoc_id: int) -> np.ndarray:
+        raise NotImplementedError
+
+    def get_image_embedding_by_sdoc_id(self, sdoc_id: int) -> np.ndarray:
+        raise NotImplementedError
+
     def drop_indices(self) -> None:
-        pass
+        raise NotImplementedError
