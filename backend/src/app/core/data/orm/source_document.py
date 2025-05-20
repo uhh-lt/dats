@@ -8,15 +8,19 @@ from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from app.core.data.orm.annotation_document import AnnotationDocumentORM
+    from app.core.data.orm.aspect import AspectORM
+    from app.core.data.orm.document_aspect import DocumentAspectORM
     from app.core.data.orm.document_tag import DocumentTagORM
     from app.core.data.orm.document_tag_recommendation import (
         DocumentTagRecommendationLinkORM,
     )
+    from app.core.data.orm.document_topic import DocumentTopicORM
     from app.core.data.orm.object_handle import ObjectHandleORM
     from app.core.data.orm.project import ProjectORM
     from app.core.data.orm.source_document_data import SourceDocumentDataORM
     from app.core.data.orm.source_document_link import SourceDocumentLinkORM
     from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
+    from app.core.data.orm.topic import TopicORM
     from app.core.data.orm.word_frequency import WordFrequencyORM
 
 
@@ -81,6 +85,28 @@ class SourceDocumentORM(ORMBase):
         passive_deletes=True,
     )
 
+    document_aspects: Mapped[List["DocumentAspectORM"]] = relationship(
+        "DocumentAspectORM",
+        back_populates="source_document",
+        cascade="all, delete-orphan",
+    )
+    aspects: Mapped[List["AspectORM"]] = relationship(
+        "AspectORM",
+        secondary="documentaspect",
+        back_populates="source_documents",
+    )
+
+    document_topics: Mapped[List["DocumentTopicORM"]] = relationship(
+        "DocumentTopicORM",
+        back_populates="source_document",
+        cascade="all, delete-orphan",
+    )
+    topics: Mapped[List["TopicORM"]] = relationship(
+        "TopicORM",
+        secondary="documenttopic",
+        back_populates="source_documents",
+    )
+
     # many to many
     document_tags: Mapped[List["DocumentTagORM"]] = relationship(
         "DocumentTagORM",
@@ -95,6 +121,7 @@ class SourceDocumentORM(ORMBase):
         back_populates="source_document",
         passive_deletes=True,
     )
+
     __table_args__ = (
         UniqueConstraint(
             "project_id", "filename", name="UC_unique_filename_in_project"
