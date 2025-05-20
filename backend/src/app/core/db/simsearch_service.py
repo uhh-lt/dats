@@ -141,7 +141,9 @@ class SimSearchService(metaclass=SingletonMeta):
         neg_sdoc_sent_ids: List[Tuple[int, int]],
         top_k: int,
     ) -> List[SimSearchSentenceHit]:
-        hits = self.vis.suggest(pos_sdoc_sent_ids, proj_id, top_k, IndexType.SENTENCE)
+        hits: List[SimSearchSentenceHit] = self.vis.suggest(  # type: ignore
+            pos_sdoc_sent_ids, proj_id, top_k, IndexType.SENTENCE
+        )
         marked_sdoc_sent_ids = {
             entry for entry in pos_sdoc_sent_ids + neg_sdoc_sent_ids
         }
@@ -151,7 +153,7 @@ class SimSearchService(metaclass=SingletonMeta):
         hits.sort(key=lambda x: (x.sdoc_id, x.sentence_id))
         hits = self.__unique_consecutive(hits, key=lambda x: (x.sdoc_id, x.sentence_id))
         candidates = [(h.sdoc_id, h.sentence_id) for h in hits]
-        nearest = self.vis.suggest(
+        nearest: List[SimSearchSentenceHit] = self.vis.suggest(  # type: ignore
             candidates,
             proj_id,
             1,
@@ -159,6 +161,7 @@ class SimSearchService(metaclass=SingletonMeta):
         )
         results = []
         for hit, near in zip(hits, nearest):
+            assert type(near) is SimSearchSentenceHit
             if (near.sdoc_id, near.sentence_id) not in neg_sdoc_sent_ids:
                 results.append(hit)
         results.sort(key=lambda x: x.score, reverse=True)
@@ -173,7 +176,9 @@ class SimSearchService(metaclass=SingletonMeta):
         unique: bool,
     ) -> List[SimSearchDocumentHit]:
         marked_sdoc_ids = pos_sdoc_ids.union(neg_sdoc_ids)
-        hits = self.vis.suggest(pos_sdoc_ids, proj_id, top_k, IndexType.DOCUMENT)
+        hits: List[SimSearchDocumentHit] = self.vis.suggest(  # type: ignore
+            pos_sdoc_ids, proj_id, top_k, IndexType.DOCUMENT
+        )
         hits = [h for h in hits if h.sdoc_id not in marked_sdoc_ids]
         hits.sort(key=lambda x: (x.sdoc_id, -x.score))
         if unique:

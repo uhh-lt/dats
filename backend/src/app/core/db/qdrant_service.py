@@ -1,5 +1,5 @@
 import uuid
-from typing import Iterable, List, Tuple
+from typing import Iterable, List, Tuple, Union
 
 import numpy as np
 from config import conf
@@ -115,14 +115,14 @@ class QdrantService(VectorIndexService):
         proj_id: int,
         index_type: IndexType,
         query_emb: np.ndarray,
-        sdoc_ids_to_search: List[int],
+        sdoc_ids_to_search: List[int] | None,
         top_k: int = 10,
         threshold: float = 0.0,
     ) -> List[SimSearchSentenceHit] | List[SimSearchImageHit]:
         filter = Filter(
             must=[
-                FieldCondition(key="proj_id", match=MatchValue(value=proj_id)),
-                FieldCondition(key="sdoc_id", match=MatchAny(any=sdoc_ids_to_search)),
+                FieldCondition(key="proj_id", match=MatchValue(value=proj_id)),  # type: ignore
+                FieldCondition(key="sdoc_id", match=MatchAny(any=sdoc_ids_to_search)),  # type: ignore
             ]
         )
         res = self._client.search(
@@ -153,9 +153,10 @@ class QdrantService(VectorIndexService):
 
     def suggest(
         self,
-        sdoc_sent_ids: Iterable[Tuple[int, int]],
+        data_ids: Union[Iterable[int], Iterable[Tuple[int, int]]],
         proj_id: int,
-        index_type: IndexType,
+        top_k: int,
+        index_type: IndexType = IndexType.DOCUMENT,
     ) -> List[SimSearchSentenceHit]:
         filter = Filter(
             must=[FieldCondition(key="proj_id", match=MatchValue(value=proj_id))]
@@ -168,7 +169,7 @@ class QdrantService(VectorIndexService):
                 with_payload=True,
                 positive=[self._sentence_uuid(sdoc_id, sent_id)],
             )
-            for sdoc_id, sent_id in sdoc_sent_ids
+            for sdoc_id, sent_id in data_ids  # type: ignore
         ]
         res = self._client.recommend_batch(index_type, req)
 

@@ -1,4 +1,4 @@
-from typing import Iterable, List, Tuple
+from typing import Iterable, List, Tuple, Union
 
 import numpy as np
 import typesense
@@ -134,7 +134,7 @@ class TypesenseService(VectorIndexService):
         proj_id: int,
         index_type: IndexType,
         query_emb: np.ndarray,
-        sdoc_ids_to_search: List[int],
+        sdoc_ids_to_search: List[int] | None,
         top_k: int = 10,
         threshold: float = 0.0,
     ) -> List[SimSearchSentenceHit] | List[SimSearchImageHit]:
@@ -168,15 +168,16 @@ class TypesenseService(VectorIndexService):
 
     def suggest(
         self,
-        index_type: IndexType,
+        data_ids: Union[Iterable[int], Iterable[Tuple[int, int]]],
         proj_id: int,
-        sdoc_sent_ids: Iterable[Tuple[int, int]],
+        top_k: int,
+        index_type: IndexType = IndexType.DOCUMENT,
     ) -> List[SimSearchSentenceHit]:
         candidates: List[SimSearchSentenceHit] = []
         vc = "vector_query"
         queries = [
             {vc: f"vec:([], id: {sdoc_id}-{sent_id}, k:1)"}
-            for sdoc_id, sent_id in sdoc_sent_ids
+            for sdoc_id, sent_id in data_ids  # type: ignore
         ]
 
         res = self._client.multi_search.perform(

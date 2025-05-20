@@ -96,7 +96,8 @@ class CRUDSourceDocument(
 
     def remove_by_project(self, db: Session, *, proj_id: int) -> List[int]:
         # Import SimSearchService here to prevent a cyclic dependency
-        from app.core.db.simsearch_service import SimSearchService
+        from app.core.ml.embedding_service import EmbeddingService
+
 
         # find all sdocs to be removed
         query = db.query(self.model).filter(self.model.project_id == proj_id)
@@ -111,7 +112,7 @@ class CRUDSourceDocument(
                 proj_id=proj_id, sdoc_id=sdoc.id
             )
 
-            SimSearchService().remove_sdoc_from_index(sdoc.doctype, sdoc.id)
+            EmbeddingService().remove_sdoc_embeddings(sdoc.doctype, sdoc.id)
 
         ids = [removed_orm.id for removed_orm in removed_orms]
 
