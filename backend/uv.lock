@@ -709,6 +709,7 @@ dependencies = [
     { name = "omegaconf" },
     { name = "pandas" },
     { name = "passlib" },
+    { name = "pgvector" },
     { name = "pillow" },
     { name = "pip" },
     { name = "pre-commit" },
@@ -809,6 +810,7 @@ requires-dist = [
     { name = "omegaconf", specifier = "==2.3.0" },
     { name = "pandas", specifier = "==2.1.4" },
     { name = "passlib", specifier = "==1.7" },
+    { name = "pgvector", specifier = "==0.4.1" },
     { name = "pillow", specifier = "==10.0.0" },
     { name = "pip", specifier = "==23.3.2" },
     { name = "pre-commit", specifier = "==3.3.3" },
@@ -2537,6 +2539,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ac/ef/c5c9f8dd6b8ceb080112f41037e9f0ce442cfd8937739cf3e5d8645de3d5/peft-0.15.1.tar.gz", hash = "sha256:e4c65af70683a9ef3baf1ab450710f1eb7181f369ef6172ca8bf15bf4ae6ff71", size = 471440 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d5/47/f2938c20b1c6d7b738ca2a129cf73cd1453cea76d5c9a2f2bbf6199bf037/peft-0.15.1-py3-none-any.whl", hash = "sha256:5fb3960beb518f00668f2cdc53424a5cc495c78281697821ce24609c90ca0a10", size = 411012 },
+]
+
+[[package]]
+name = "pgvector"
+version = "0.4.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/44/43/9a0fb552ab4fd980680c2037962e331820f67585df740bedc4a2b50faf20/pgvector-0.4.1.tar.gz", hash = "sha256:83d3a1c044ff0c2f1e95d13dfb625beb0b65506cfec0941bfe81fd0ad44f4003", size = 30646 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bf/21/b5735d5982892c878ff3d01bb06e018c43fc204428361ee9fc25a1b2125c/pgvector-0.4.1-py3-none-any.whl", hash = "sha256:34bb4e99e1b13d08a2fe82dda9f860f15ddcd0166fbb25bffe15821cbfeb7362", size = 27086 },
 ]
 
 [[package]]

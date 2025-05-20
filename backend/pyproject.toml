@@ -43,6 +43,7 @@ dependencies = [
     "omegaconf==2.3.0",
     "pandas==2.1.4",
     "passlib==1.7",
+    "pgvector==0.4.1",
     "pillow==10.0.0",
     "pip==23.3.2",
     "pre-commit==3.3.3",
