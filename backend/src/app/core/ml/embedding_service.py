@@ -137,9 +137,9 @@ class EmbeddingService(metaclass=SingletonMeta):
     def _get_image_name_from_sdoc_id(self, sdoc_id: int) -> SourceDocumentRead:
         with self.sqls.db_session() as db:
             sdoc = SourceDocumentRead.model_validate(crud_sdoc.read(db=db, id=sdoc_id))
-            assert sdoc.doctype == DocType.image, (
-                f"SourceDocument with {sdoc_id=} is not an image!"
-            )
+            assert (
+                sdoc.doctype == DocType.image
+            ), f"SourceDocument with {sdoc_id=} is not an image!"
         return sdoc
 
     def embed_documents(
