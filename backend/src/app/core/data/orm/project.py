@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
+    from app.core.data.orm.aspect import AspectORM
     from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
     from app.core.data.orm.code import CodeORM
     from app.core.data.orm.document_tag import DocumentTagORM
@@ -82,6 +83,10 @@ class ProjectORM(ORMBase):
         "ProjectMetadataORM",
         back_populates="project",
         passive_deletes=True,
+    )
+
+    aspects: Mapped[List["AspectORM"]] = relationship(
+        "AspectORM", back_populates="project", passive_deletes=True
     )
 
     # many to many
