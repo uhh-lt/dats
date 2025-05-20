@@ -98,7 +98,6 @@ class CRUDSourceDocument(
         # Import SimSearchService here to prevent a cyclic dependency
         from app.core.ml.embedding_service import EmbeddingService
 
-
         # find all sdocs to be removed
         query = db.query(self.model).filter(self.model.project_id == proj_id)
         removed_orms = query.all()
