@@ -126,6 +126,8 @@ for idx, file in enumerate(
     filename = file.name.replace(".json", ".html")
     try:
         data = json.loads(file.read_bytes())
+        if data.get('filename'):
+            filename = data['filename']
         sdoc_id = api.resolve_sdoc_id_from_proj_and_filename(
             proj_id=project["id"], filename=filename
         )
