@@ -67,6 +67,9 @@ python dats_importer.py --input_dir /path/to/images --backend_url http://localho
 
 # import json files
 python dats_importer.py --input_dir /path/to/json --backend_url http://localhost:5500/ --project_name my_project --tag_name tag1 --is_json
+
+# convert zotero to json files
+python zotero_converter.py Corpus/Corpus.bib
 ```
 
 ## CLI Parameters
