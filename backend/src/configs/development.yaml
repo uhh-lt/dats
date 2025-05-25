@@ -65,22 +65,10 @@ celery:
     extract_images_from_pdf: True
     extract_images_from_docx: True
 
-vector_index:
-  service: ${oc.env:VECTOR_INDEX, weaviate}
-
 weaviate:
   host: localhost
   port: ${oc.env:WEAVIATE_PORT, 13132}
-
-typesense:
-  host: localhost
-  port: ${oc.env:TYPESENSE_PORT, 8108}
-  api_key: ${oc.env:TYPESENSE_API_KEY, dats123}
-
-qdrant:
-  host: localhost
-  port: ${oc.env:QDRANT_PORT, 6333}
-  grpc_port: ${oc.env:QDRANT_GRPC_PORT, 6334}
+  grpc_port: ${oc.env:WEAVIATE_GRPC_PORT, 13134}
 
 postgres:
   host: localhost
@@ -116,6 +104,7 @@ redis:
     llm: 6
     import_: 7
     ml: 8
+    tm: 9
 
 logging:
   max_file_size: 500 # MB
@@ -142,17 +131,11 @@ ollama:
   llm:
     model: ${oc.env:OLLAMA_LLM_MODEL, gemma3:27b}
     default_params:
-      num_ctx: 8192
+      num_ctx: 16384
   vlm:
     model: ${oc.env:OLLAMA_VLM_MODEL, gemma3:27b}
     default_params:
-      temperature: 0.0
-      seed: 1337
-      num_predict: 8192
       num_ctx: 16384
-      top_p: 0.9
-      top_k: 40
-      repetition_penalty: 1.1
   emb:
     model: ${oc.env:OLLAMA_EMB_MODEL, snowflake-arctic-embed2:568m}
     default_params:

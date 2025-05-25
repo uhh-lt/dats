@@ -99,18 +99,17 @@ class MLService(metaclass=SingletonMeta):
                         method=mlj.parameters.specific_ml_job_parameters.method,
                     )
                 case MLJobType.COREFERENCE_RESOLUTION:
-                    if isinstance(
+                    assert isinstance(
                         mlj.parameters.specific_ml_job_parameters,
                         CoreferenceResolutionParams,
-                    ):
-                        recompute = mlj.parameters.specific_ml_job_parameters.recompute
-                        filter_criterion = self._build_filter_criterion(
-                            start_time, recompute
-                        )
-
-                        CorefService().perform_coreference_resolution(
-                            mlj.parameters.project_id, filter_criterion, recompute
-                        )
+                    ), "CoreferenceResolutionParams expected"
+                    recompute = mlj.parameters.specific_ml_job_parameters.recompute
+                    filter_criterion = self._build_filter_criterion(
+                        start_time, recompute
+                    )
+                    CorefService().perform_coreference_resolution(
+                        mlj.parameters.project_id, filter_criterion, recompute
+                    )
                 case MLJobType.DOCUMENT_EMBEDDING:
                     assert isinstance(
                         mlj.parameters.specific_ml_job_parameters,

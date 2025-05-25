@@ -38,34 +38,6 @@ services:
     networks:
       - dats_network
 
-  typesense:
-    image: typesense/typesense:27.1
-    restart: on-failure
-    environment:
-      - TYPESENSE_API_KEY=${TYPESENSE_API_KEY:-dats123}
-      - TYPESENSE_DATA_DIR=/data
-    networks:
-      - dats_network
-    healthcheck:
-      test: [ "CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/8108' || exit 1" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-    profiles:
-      - typesense
-
-  qdrant:
-    image: qdrant/qdrant:v1.9.2
-    networks:
-      - dats_network
-    healthcheck:
-      test: [ "CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/6333' || exit 1" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-    profiles:
-      - qdrant
-
   weaviate:
     command:
       - --host
@@ -74,7 +46,7 @@ services:
       - "8080"
       - --scheme
       - http
-    image: semitechnologies/weaviate:1.21.3
+    image: semitechnologies/weaviate:1.30.4
     healthcheck:
       test: [ "CMD-SHELL", "wget -q --spider http://localhost:8080/v1/.well-known/ready || exit 1" ]
       interval: 30s

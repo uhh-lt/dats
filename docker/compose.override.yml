@@ -17,24 +17,20 @@ services:
     ports:
       - "${REDIS_EXPOSED:-13124}:6379"
 
-  typesense:
-    volumes:
-      - typesense_data:/data
-    ports:
-      - "${TYPESENSE_EXPOSED:-8108}:8108"
-
-  qdrant:
-    volumes:
-      - qdrant_data:/qdrant/storage
-    ports:
-      - "${QDRANT_EXPOSED:-6333}:6333"
-      - "${QDRANT_GRPC_EXPOSED:-6334}:6334"
-
   weaviate:
     volumes:
       - "weaviate_data:/var/lib/weaviate"
     ports:
       - "${WEAVIATE_EXPOSED:-13132}:8080"
+      - "${WEAVIATE_GRPC_EXPOSED:-13134}:50051"
+
+  weaviateapp:
+    # https://github.com/Shah91n/WeaviateCluster
+    image: weaviateclusterapp:latest
+    ports:
+      - "${WEAVIATEAPP_EXPOSED:-13135}:8501"
+    extra_hosts:
+      - "localhost:host-gateway"
 
   elasticsearch:
     volumes:
@@ -90,8 +86,4 @@ volumes:
   elasticsearch_data:
     driver: local
   weaviate_data:
-    driver: local
-  typesense_data:
-    driver: local
-  qdrant_data:
     driver: local

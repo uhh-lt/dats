@@ -141,10 +141,10 @@ def __init_services__(
 
     RayModelService()
 
-    # import and init VectorIndexService
-    from app.core.db.vector_index_service import VectorIndexService
+    # import and init WeaviateService
+    from app.core.vector.weaviate_service import WeaviateService
 
-    VectorIndexService(reset_vector_index=reset_vector_index)
+    WeaviateService(flush=reset_vector_index)
 
     # import and init SimSearchService
     from app.core.db.simsearch_service import SimSearchService

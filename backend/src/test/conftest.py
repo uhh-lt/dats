@@ -19,7 +19,7 @@ from app.core.data.repo.repo_service import RepoService
 from app.core.db.elasticsearch_service import ElasticSearchService
 from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
-from app.core.db.vector_index_service import VectorIndexService
+from app.core.vector.weaviate_service import WeaviateService
 from config import conf
 from fastapi import Request
 from fastapi.datastructures import Headers
@@ -35,7 +35,7 @@ def pytest_sessionfinish():
     # Make sure the next test session starts with clean databases
     SQLService().drop_database()
     ElasticSearchService().drop_indices()
-    VectorIndexService().drop_indices()
+    WeaviateService().drop_indices()
     RedisService().flush_all_clients()
     RepoService().purge_repo()
 
