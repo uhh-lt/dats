@@ -2,6 +2,7 @@ from app.celery.background_jobs import prepare_and_start_tm_job_async
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.aspect import crud_aspect
+from app.core.data.crud.document_topic import crud_document_topic
 from app.core.data.dto.aspect import (
     AspectCreate,
     AspectRead,
@@ -177,7 +178,7 @@ def remove_aspect_by_id(
     return AspectRead.model_validate(db_obj)
 
 
-# --- START LABELILNG --- #
+# --- START LABELING --- #
 
 
 @router.post(
@@ -189,12 +190,16 @@ def accept_label(
     *,
     db: Session = Depends(get_db_session),
     aspect_id: int,
+    sdoc_ids: list[int],
     authz_user: AuthzUser = Depends(),
-) -> AspectRead:
+) -> int:
     authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
-
-    # TODO: implement
-    raise NotImplementedError("accept_label not implemented yet")
+    return crud_document_topic.set_labels(
+        db=db,
+        aspect_id=aspect_id,
+        sdoc_ids=sdoc_ids,
+        is_accepted=True,
+    )
 
 
 @router.post(
@@ -206,12 +211,16 @@ def revert_label(
     *,
     db: Session = Depends(get_db_session),
     aspect_id: int,
+    sdoc_ids: list[int],
     authz_user: AuthzUser = Depends(),
-) -> AspectRead:
+) -> int:
     authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
-
-    # TODO: implement
-    raise NotImplementedError("revert_label not implemented yet")
+    return crud_document_topic.set_labels(
+        db=db,
+        aspect_id=aspect_id,
+        sdoc_ids=sdoc_ids,
+        is_accepted=False,
+    )
 
 
 # --- START VISUALIZATIONS --- #
