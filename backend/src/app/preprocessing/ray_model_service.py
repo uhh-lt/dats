@@ -20,6 +20,10 @@ from app.preprocessing.ray_model_worker.dto.detr import (
     DETRObjectDetectionOutput,
 )
 from app.preprocessing.ray_model_worker.dto.glotlid import GlotLIDInput, GlotLIDOutput
+from app.preprocessing.ray_model_worker.dto.promptembedder import (
+    PromptEmbedderInput,
+    PromptEmbedderOutput,
+)
 from app.preprocessing.ray_model_worker.dto.quote import QuoteJobInput, QuoteJobOutput
 from app.preprocessing.ray_model_worker.dto.seqsenttagger import (
     SeqSentTaggerJobInput,
@@ -141,6 +145,14 @@ class RayModelService(metaclass=SingletonMeta):
             "/clip/embedding/image", input.model_dump()
         )
         return ClipEmbeddingOutput.model_validate(response.json())
+
+    def promptembedder_embedding(
+        self, input: PromptEmbedderInput
+    ) -> PromptEmbedderOutput:
+        response = self._make_post_request_with_json_data(
+            "/promptembedder/embed", input.model_dump()
+        )
+        return PromptEmbedderOutput.model_validate(response.json())
 
     def cota_finetune_apply_compute(self, input: RayCOTAJobInput) -> RayCOTAJobResponse:
         response = self._make_post_request_with_json_data(
