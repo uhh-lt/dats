@@ -1,5 +1,5 @@
 import re
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 import joblib
 import numpy as np
@@ -10,13 +10,14 @@ from app.core.data.crud.document_topic import crud_document_topic
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.topic import crud_topic
 from app.core.data.dto.document_aspect import DocumentAspectCreate, DocumentAspectUpdate
-from app.core.data.dto.document_topic import DocumentTopicCreate
+from app.core.data.dto.document_topic import DocumentTopicCreate, DocumentTopicUpdate
 from app.core.data.dto.topic import (
     TopicCreateIntern,
     TopicUpdateIntern,
 )
 from app.core.data.llm.ollama_service import OllamaService
 from app.core.data.orm.document_aspect import DocumentAspectORM
+from app.core.data.orm.document_topic import DocumentTopicORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
 from app.core.topicmodel.ctfidf import ClassTfidfTransformer
@@ -370,6 +371,19 @@ class TMService:
     def _extract_topics(
         self, db: Session, aspect_id: int, topic_ids: Optional[List[int]]
     ):
+        """
+        Extracts all topis of the given Aspect by:
+        1. Finding the most important words for each topic ( group documents by topic, create one "big" document per topic, compute c-TF-IDF, identify top words )
+        2. Generating topic name and description with LLM
+        3. Computing the topic embeddings (cluster centroids)
+        4. Identifying the top similar documents
+        5. Storing the topics in the database and vector DB
+        :param db: The database session
+        :param aspect_id: The ID of the Aspect
+        :param topic_ids: Optional list of topic IDs to consider. If None, all topics for the aspect will be considered.
+        :return: None
+        """
+
         aspect = crud_aspect.read(db=db, id=aspect_id)
         level = 0  # TODO: we only consider 1 level for now (level 0)
 
@@ -379,6 +393,8 @@ class TMService:
                 db=db, aspect_id=aspect_id, level=level
             )
         else:
+            # TODO: Ich glaube das ist falsch! Für C-TF-IDF müssen immer alle topics berücksichtigt werden!
+            # TODO: aber es sollten wahrscheinlich trotzdem nur die topics geupdated werden, die in topic_ids sind!
             topics = crud_topic.read_by_ids(db=db, ids=topic_ids)
         topic_ids = [topic.id for topic in topics]
         logger.info(f"Extracting data for {len(topic_ids)} topics.")
@@ -453,6 +469,7 @@ class TMService:
             da.embedding_uuid is not None for da in doc_aspects
         ), "Not all document aspects have embeddings."
         embedding_uuids = [da.embedding_uuid for da in doc_aspects]
+        embedding_sdoc_ids = np.array([da.sdoc_id for da in doc_aspects])
         embeddings = np.array(
             crud_aspect_embedding.get_embeddings_by_uuids(
                 project_id=aspect.project_id, uuids=embedding_uuids
@@ -462,8 +479,13 @@ class TMService:
         topic_centroids: Dict[int, np.ndarray] = {}
         top_docs: List[List[int]] = []
         assigned_topics_arr = np.array(assigned_topics)
+        distance_update_ids: List[
+            Tuple[int, int]
+        ] = []  # List of (sdoc_id, topic_id) tuples
+        distance_update_dtos: List[DocumentTopicUpdate] = []
         for topic_id in np.unique(assigned_topics_arr):
             doc_embeddings = embeddings[assigned_topics_arr == topic_id]
+            sdoc_ids = embedding_sdoc_ids[assigned_topics_arr == topic_id]
 
             # ... compute the topic embeddings (cluster centroids)
             topic_centroids[topic_id] = np.mean(doc_embeddings, axis=0)
@@ -471,11 +493,18 @@ class TMService:
             # .. compute the top 3 documents
             similarities = doc_embeddings @ topic_centroids[topic_id]
             num_top_docs_to_retrieve = min(3, len(doc_embeddings))
+            # TODO: Is this correct? How do I want to sort? i think it is ascending now! vllt einfach torchtopk nutzen?
             top_doc_indices = np.argsort(similarities)[:num_top_docs_to_retrieve]
             top_doc_ids = [
                 topic_to_doc_aspects[topic_id][i].sdoc_id for i in top_doc_indices
             ]
             top_docs.append(top_doc_ids)
+
+            # ... update the distances of the document topics
+            for sdoc_id, similarity in zip(sdoc_ids, similarities):
+                distance_update_dtos.append(
+                    DocumentTopicUpdate(distance=1.0 - similarity)
+                )
 
         logger.info(
             f"Computed topic embeddings & top documents for {len(topic_centroids)} topics."
@@ -514,6 +543,16 @@ class TMService:
                 )
             )
         crud_topic.update_multi(db=db, ids=tids, update_dtos=update_dtos)
+
+        # ... update the document topics with the new distances
+        if len(distance_update_dtos) > 0:
+            # Update the distances of the document topics
+            crud_document_topic.update_multi_by_sdoc_topic_ids(
+                db=db,
+                sdoc_topic_ids=distance_update_ids,
+                update_dtos=distance_update_dtos,
+            )
+
         logger.info(
             f"Updated {len(update_dtos)} topics in the database with names, descriptions, top words, top word scores, and top documents."
         )
@@ -550,6 +589,98 @@ class TMService:
         pass
 
     def add_topic(self, tm_job_id: str, params: AddTopicParams):
+        with self.sqls.db_session() as db:
+            # Read the aspect
+            aspect = crud_aspect.read(db=db, id=params.create_dto.aspect_id)
+
+            # Read the current document <-> topic assignments
+            document_topics = crud_document_topic.read_by_aspect(
+                db=db, aspect_id=aspect.id
+            )
+            doc2topic: Dict[int, DocumentTopicORM] = {
+                dt.sdoc_id: dt for dt in document_topics
+            }
+            assert (
+                len(document_topics) == len(doc2topic)
+            ), f"There are duplicate document-topic assignments in the database for aspect {aspect.id}!"
+
+        # 2. Embedd the new topic
+        logger.info(
+            f"Computing embeddings for the new topic with model {aspect.embedding_model}..."
+        )
+        embedding_output = self.rms.promptembedder_embedding(
+            input=PromptEmbedderInput(
+                model_name=aspect.embedding_model,
+                prompt=aspect.doc_embedding_prompt,
+                data=[f"{params.create_dto.name}\n{params.create_dto.description}"],
+            ),
+        )
+        assert (
+            len(embedding_output.embeddings) == 1
+        ), "Expected exactly one embedding output for the new topic."
+
+        # 3. Create the new topic in the database
+        new_topic = crud_topic.create(
+            db=db,
+            create_dto=TopicCreateIntern(
+                parent_topic_id=params.create_dto.parent_topic_id,
+                aspect_id=params.create_dto.aspect_id,
+                level=params.create_dto.level,
+                name=params.create_dto.name,
+                description=params.create_dto.description,
+                color=params.create_dto.color,
+            ),
+        )
+
+        # 4. For all source documents in the aspect, decide whether to assign the new topic or not. Track the changes/affected topics!
+        update_dtos: List[DocumentTopicUpdate] = []
+        update_ids: List[int] = []
+        modified_topics: Set[int] = set()
+        results = crud_aspect_embedding.search_near_vector_in_aspect(
+            project_id=aspect.project_id,
+            aspect_id=aspect.id,
+            vector=embedding_output.embeddings[0],
+            k=len(document_topics),
+        )
+        for result in results:
+            doc_topic = doc2topic.get(result.id.sdoc_id, None)
+            assert (
+                doc_topic is not None
+            ), f"Document {result.id.sdoc_id} does not have a topic assignment in aspect {aspect.id}."
+
+            # assign the new topic if the distance is smaller than the current topic's distance
+            if result.score < doc_topic.distance:
+                update_ids.append(doc_topic.id)
+                update_dtos.append(
+                    DocumentTopicUpdate(
+                        topic_id=new_topic.id,
+                        distance=result.score,
+                    )
+                )
+                # track changes
+                modified_topics.add(doc_topic.topic_id)
+                modified_topics.add(new_topic.id)
+
+        # 5. Store the new topic assignments in the database
+        if len(update_dtos) > 0:
+            crud_document_topic.update_multi(
+                db=db, ids=update_ids, update_dtos=update_dtos
+            )
+            logger.info(
+                f"Updated {len(update_dtos)} document-topic assignments with the new topic {new_topic.id}."
+            )
+
+        # 6. Extract the topics for all affected ones (computing top words, top docs, embedding, etc)
+        if len(modified_topics) > 0:
+            logger.info(
+                f"Extracting topics for {len(modified_topics)} modified topics: {modified_topics}."
+            )
+            self._extract_topics(
+                db=db,
+                aspect_id=aspect.id,
+                topic_ids=list(modified_topics),
+            )
+
         pass
 
     def remove_topic(self, tm_job_id: str, params: RemoveTopicParams):
