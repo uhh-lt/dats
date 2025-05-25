@@ -223,3 +223,16 @@ docling:
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
+
+promptembedder:
+  model: "nvidia/NV-Embed-v2"
+  max_seq_length: 16384
+  batch_size: 1
+  device: cpu
+  deployment:
+    ray_actor_options:
+      num_gpus: .0
+    autoscaling_config:
+      min_replicas: 1
+      max_replicas: 1
+  root_dir: /tmp/dats/ray/promptembedder
