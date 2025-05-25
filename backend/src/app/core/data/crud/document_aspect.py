@@ -23,6 +23,19 @@ class CRUDDocumentAspect(
             .all()
         )
 
+    def read_by_aspect_and_topic_id(
+        self, db, *, aspect_id: int, topic_id: int
+    ) -> list[DocumentAspectORM]:
+        return (
+            db.query(self.model)
+            .join(DocumentTopicORM, DocumentTopicORM.sdoc_id == self.model.sdoc_id)
+            .filter(
+                self.model.aspect_id == aspect_id,
+                DocumentTopicORM.topic_id == topic_id,
+            )
+            .all()
+        )
+
     def read_by_aspect_and_topic_ids(
         self, db, *, aspect_id: int, topic_ids: list[int]
     ) -> tuple[list[DocumentAspectORM], list[int]]:

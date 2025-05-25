@@ -7,7 +7,6 @@ from app.core.data.dto.document_topic import (
     DocumentTopicCreate,
     DocumentTopicUpdate,
 )
-from app.core.data.orm.aspect import AspectORM
 from app.core.data.orm.document_topic import DocumentTopicORM
 from app.core.data.orm.topic import TopicORM
 
@@ -19,8 +18,17 @@ class CRUDDocumentTopic(
         return (
             db.query(self.model)
             .join(TopicORM, TopicORM.id == self.model.topic_id)
-            .join(AspectORM, AspectORM.id == TopicORM.aspect_id)
-            .filter(AspectORM.id == aspect_id)
+            .filter(TopicORM.aspect_id == aspect_id)
+            .all()
+        )
+
+    def read_by_aspect_and_topic_id(
+        self, db: Session, *, aspect_id: int, topic_id: int
+    ) -> list[DocumentTopicORM]:
+        return (
+            db.query(self.model)
+            .join(TopicORM, TopicORM.id == self.model.topic_id)
+            .filter(TopicORM.aspect_id == aspect_id, self.model.topic_id == topic_id)
             .all()
         )
 
