@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 class DocumentTopicORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    distance: Mapped[float] = mapped_column(Integer, nullable=True)
     is_accepted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # many to one

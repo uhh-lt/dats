@@ -13,6 +13,10 @@ class DocumentTopicCreate(BaseModel):
 
 # Properties for updating
 class DocumentTopicUpdate(BaseModel, UpdateDTOBase):
+    topic_id: Optional[int] = Field(default=None, description="Update the topic ID")
     is_accepted: Optional[bool] = Field(
-        None, description="Update the acceptance status"
+        default=None, description="Update the acceptance status"
+    )
+    distance: Optional[float] = Field(
+        default=None, description="Update distance to the assigned topic"
     )

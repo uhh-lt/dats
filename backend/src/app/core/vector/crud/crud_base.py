@@ -548,7 +548,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
         project_id: int,
         vector: List[float],
         k: int,
-        threshold: float,
+        threshold: Optional[float] = None,
         filters: Optional[_Filters] = None,
     ) -> List[SimSearchResult[ID]]:
         """
