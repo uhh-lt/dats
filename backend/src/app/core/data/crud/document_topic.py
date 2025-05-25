@@ -1,5 +1,5 @@
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy import tuple_
+from sqlalchemy import tuple_, update
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
@@ -95,6 +95,49 @@ class CRUDDocumentTopic(
         db.add_all(db_objs)
         db.commit()
         return db_objs
+
+    def merge_topics(
+        self,
+        db: Session,
+        *,
+        topic_to_keep: int,
+        topic_to_merge: int,
+    ) -> None:
+        """
+        Merge two topics by updating the topic_id of all DocumentTopicORM entries
+        that belong to the topic being merged into the topic that is kept.
+        Args:
+            db: The database session
+            topic_to_keep: The ID of the topic that will be kept
+            topic_to_merge: The ID of the topic that will be merged into the kept topic
+        Raises:
+            NoSuchElementError: If the topic to merge does not exist
+            IntegrityError: If the merge operation violates database constraints
+        """
+        # No actual merge operation needed.
+        if topic_to_keep == topic_to_merge:
+            return
+
+        # Check if the topic to merge exists
+        self.read(db=db, id=topic_to_merge)
+        self.read(db=db, id=topic_to_keep)
+
+        # Update all DocumentTopicORM entries that reference the topic to merge
+        stmt = (
+            update(self.model)
+            .where(self.model.topic_id == topic_to_merge)
+            .values(topic_id=topic_to_keep)
+            .execution_options(
+                synchronize_session=False
+            )  # Recommended for bulk updates
+        )
+
+        try:
+            db.execute(stmt)
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise  # Re-raise the database exception (e.g., IntegrityError)
 
 
 crud_document_topic = CRUDDocumentTopic(DocumentTopicORM)
