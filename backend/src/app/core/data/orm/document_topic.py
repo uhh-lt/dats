@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, ForeignKey, Integer
+from sqlalchemy import Boolean, ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.data.orm.orm_base import ORMBase
@@ -11,25 +11,32 @@ if TYPE_CHECKING:
 
 
 class DocumentTopicORM(ORMBase):
-    # Composite primary key
-    sdoc_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("source_document.id", ondelete="CASCADE"), primary_key=True
-    )
-    topic_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("topic.id", ondelete="CASCADE"), primary_key=True
-    )
-
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     is_accepted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # many to one
+    sdoc_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("sourcedocument.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     source_document: Mapped["SourceDocumentORM"] = relationship(
         "SourceDocumentORM",
         back_populates="document_topics",
+    )
+    topic_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("topic.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     topic: Mapped["TopicORM"] = relationship(
         "TopicORM",
         back_populates="document_topics",
     )
+
+    __table_args__ = (UniqueConstraint("sdoc_id", "topic_id", name="uq_sdoc_topic"),)
 
     def __repr__(self) -> str:
         return f"<DocumentTopicORM(sdoc_id={self.sdoc_id}, topic_id={self.topic_id}, is_accepted={self.is_accepted})>"

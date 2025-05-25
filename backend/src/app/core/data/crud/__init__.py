@@ -1,6 +1,7 @@
 from enum import Enum
 
 from app.core.data.crud.annotation_document import crud_adoc
+from app.core.data.crud.aspect import crud_aspect
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.concept_over_time_analysis import crud_cota
@@ -25,6 +26,7 @@ from app.core.data.crud.whiteboard import crud_whiteboard
 
 
 class Crud(Enum):
+    ASPECT = crud_aspect
     ANNOTATION_DOCUMENT = crud_adoc
     BBOX_ANNOTATION = crud_bbox_anno
     CODE = crud_code

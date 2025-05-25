@@ -28,6 +28,11 @@ from app.core.data.dto.trainer_job import (
     TrainerJobRead,
     TrainerJobUpdate,
 )
+from app.core.topicmodel.tm_job import (
+    TMJobCreate,
+    TMJobRead,
+    TMJobUpdate,
+)
 from app.util.singleton_meta import SingletonMeta
 
 
@@ -573,3 +578,67 @@ class RedisService(metaclass=SingletonMeta):
             raise RuntimeError(msg)
         logger.debug(f"Deleted MLJob {key}")
         return mlj
+
+    def store_tm_job(self, tm_job: Union[TMJobCreate, TMJobRead]) -> TMJobRead:
+        client = self._get_client("tm")
+
+        if isinstance(tm_job, TMJobCreate):
+            key = self._generate_random_key()
+            tmj = TMJobRead(
+                id=key,
+                **tm_job.model_dump(),
+                created=datetime.now(),
+                updated=datetime.now(),
+            )
+        elif isinstance(tm_job, TMJobRead):
+            key = tm_job.id
+            tmj = tm_job
+        else:
+            msg = "Invalid type for tm_job parameter."
+            logger.error(msg)
+            raise TypeError(msg)
+
+        if client.set(key.encode("utf-8"), tmj.model_dump_json()) != 1:
+            msg = "Cannot store TMJob!"
+            logger.error(msg)
+            raise RuntimeError(msg)
+
+        logger.debug(f"Successfully stored TMJob {key}!")
+        return tmj
+
+    def get_all_tm_jobs(self, project_id: int) -> List[TMJobRead]:
+        client = self._get_client("tm")
+        all_tm_jobs: List[TMJobRead] = [
+            self.load_tm_job(str(key, "utf-8")) for key in client.keys()
+        ]
+        return [job for job in all_tm_jobs if job.project_id == project_id]
+
+    def load_tm_job(self, key: str) -> TMJobRead:
+        client = self._get_client("tm")
+        tmj = client.get(key.encode("utf-8"))
+        if tmj is None:
+            msg = f"TMJob with ID {key} does not exist!"
+            logger.error(msg)
+            raise KeyError(msg)
+
+        logger.debug(f"Successfully loaded TMJob {key}")
+        return TMJobRead.model_validate_json(tmj)
+
+    def update_tm_job(self, key: str, update: TMJobUpdate) -> TMJobRead:
+        tmj = self.load_tm_job(key=key)
+        data = tmj.model_dump(exclude={"updated"})
+        data.update(**update.model_dump(exclude_unset=True))
+        tmj = TMJobRead(**data, updated=datetime.now())
+        tmj = self.store_tm_job(tm_job=tmj)
+        logger.debug(f"Updated TMJob {key}")
+        return tmj
+
+    def delete_tm_job(self, key: str) -> TMJobRead:
+        tmj = self.load_tm_job(key=key)
+        client = self._get_client("tm")
+        if client.delete(key.encode("utf-8")) != 1:
+            msg = f"Cannot delete TMJob {key}"
+            logger.error(msg)
+            raise RuntimeError(msg)
+        logger.debug(f"Deleted TMJob {key}")
+        return tmj

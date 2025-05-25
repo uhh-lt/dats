@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING, List, Optional
 
-from pgvector.sqlalchemy import Vector
 from sqlalchemy import ARRAY, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -10,9 +9,6 @@ if TYPE_CHECKING:
     from app.core.data.orm.aspect import AspectORM
     from app.core.data.orm.document_topic import DocumentTopicORM
     from app.core.data.orm.source_document import SourceDocumentORM
-
-
-EMBEDDING_SIZE = 1024  # Define the embedding size for the topic embedding
 
 
 class TopicORM(ORMBase):
@@ -27,7 +23,6 @@ class TopicORM(ORMBase):
     level: Mapped[int] = mapped_column(Integer)
     color: Mapped[str] = mapped_column(String, nullable=False)
     top_docs: Mapped[Optional[List[int]]] = mapped_column(ARRAY(Integer), nullable=True)
-    topic_embedding = mapped_column(Vector(EMBEDDING_SIZE), nullable=True)
 
     # many to one
     parent_topic_id: Mapped[Optional[int]] = mapped_column(
@@ -45,15 +40,15 @@ class TopicORM(ORMBase):
     )
     aspect: Mapped["AspectORM"] = relationship("AspectORM", back_populates="topics")
 
-    # many to many with SourceDocument through DocumentTopicORM
+    # many to many
     document_topics: Mapped[List["DocumentTopicORM"]] = relationship(
         "DocumentTopicORM", back_populates="topic", cascade="all, delete-orphan"
     )
-
     source_documents: Mapped[List["SourceDocumentORM"]] = relationship(
         "SourceDocumentORM",
         secondary="documenttopic",
         back_populates="topics",
+        overlaps="document_topics,source_document,topic",
     )
 
     def __repr__(self) -> str:
