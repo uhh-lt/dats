@@ -681,10 +681,90 @@ class TMService:
                 topic_ids=list(modified_topics),
             )
 
-        pass
-
     def remove_topic(self, tm_job_id: str, params: RemoveTopicParams):
-        pass
+        with self.sqls.db_session() as db:
+            # 1. Read all relevant data
+            # - Read the topic to remove
+            topic = crud_topic.read(db=db, id=params.topic_id)
+
+            # - Read the aspect
+            aspect = topic.aspect
+
+            # - Read the document aspect embeddings of all affected documents
+            document_aspects = crud_document_aspect.read_by_aspect_and_topic_id(
+                db=db, aspect_id=topic.aspect_id, topic_id=topic.id
+            )
+            aspect_embedding_uuids = [da.embedding_uuid for da in document_aspects]
+            document_embeddings = np.array(
+                crud_aspect_embedding.get_embeddings_by_uuids(
+                    project_id=aspect.project_id,
+                    uuids=aspect_embedding_uuids,
+                )
+            )
+
+            # - Read all topic embeddings, but exclude the topic to remove
+            te_search_result = crud_topic_embedding.find_embeddings_by_aspect_id(
+                project_id=aspect.project_id,
+                aspect_id=topic.aspect_id,
+            )
+            topic_embeddings = np.array(
+                [te.embedding for te in te_search_result if te.id.topic_id != topic.id]
+            )
+            topic_ids = [
+                te.id.topic_id for te in te_search_result if te.id.topic_id != topic.id
+            ]
+
+            # - Read the current document-topic assignments (which will be updated)
+            document_topics = crud_document_topic.read_by_aspect_and_topic_id(
+                db=db, aspect_id=topic.aspect_id, topic_id=topic.id
+            )
+
+            assert (
+                len(aspect_embedding_uuids) == len(document_topics)
+            ), "The number of document aspect embeddings does not match the number of document topics."
+
+        # 2. Compute the similarities of the document embeddings to the remaining topic embeddings
+        similarities = document_embeddings @ topic_embeddings.T
+
+        # 3. For each document aspect, find the most similar topic embedding and update the document topic assignment
+        update_dtos: List[DocumentTopicUpdate] = []
+        update_ids: List[int] = []
+        modified_topics: Set[int] = set()
+        for da, similarity in zip(document_aspects, similarities):
+            most_similar_topic_index = np.argmax(similarity)
+            most_similar_topic_id = topic_ids[most_similar_topic_index]
+
+            update_ids.append(da.id)
+            update_dtos.append(
+                DocumentTopicUpdate(
+                    topic_id=most_similar_topic_id,
+                    distance=1.0 - similarity[most_similar_topic_index],
+                )
+            )
+            modified_topics.add(most_similar_topic_id)
+
+        # 4. Update the document-topic assignments in the database
+        if len(update_dtos) > 0:
+            crud_document_topic.update_multi(
+                db=db, ids=update_ids, update_dtos=update_dtos
+            )
+            logger.info(
+                f"Updated {len(update_dtos)} document-topic assignments to the most similar topics."
+            )
+
+        # 5. Remove the topic from the database
+        crud_topic.remove(db=db, id=params.topic_id)
+
+        # 6. Extract the topics for all affected ones (computing top words, top docs, embedding, etc)
+        if len(modified_topics) > 0:
+            logger.info(
+                f"Extracting topics for {len(modified_topics)} modified topics: {modified_topics}."
+            )
+            self._extract_topics(
+                db=db,
+                aspect_id=aspect.id,
+                topic_ids=list(modified_topics),
+            )
 
     def merge_topics(self, tm_job_id: str, params: MergeTopicsParams):
         pass
