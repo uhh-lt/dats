@@ -85,6 +85,22 @@ class SourceDocumentORM(ORMBase):
         passive_deletes=True,
     )
 
+    # many to many
+    document_tags: Mapped[List["DocumentTagORM"]] = relationship(
+        "DocumentTagORM",
+        secondary="SourceDocumentDocumentTagLinkTable".lower(),
+        back_populates="source_documents",
+        passive_deletes=True,
+    )
+
+    document_tag_recommendation_link: Mapped[
+        List["DocumentTagRecommendationLinkORM"]
+    ] = relationship(
+        "DocumentTagRecommendationLinkORM",
+        back_populates="source_document",
+        passive_deletes=True,
+    )
+
     document_aspects: Mapped[List["DocumentAspectORM"]] = relationship(
         "DocumentAspectORM",
         back_populates="source_document",
@@ -94,6 +110,7 @@ class SourceDocumentORM(ORMBase):
         "AspectORM",
         secondary="documentaspect",
         back_populates="source_documents",
+        overlaps="document_aspects,aspect,source_document",
     )
 
     document_topics: Mapped[List["DocumentTopicORM"]] = relationship(
@@ -105,21 +122,7 @@ class SourceDocumentORM(ORMBase):
         "TopicORM",
         secondary="documenttopic",
         back_populates="source_documents",
-    )
-
-    # many to many
-    document_tags: Mapped[List["DocumentTagORM"]] = relationship(
-        "DocumentTagORM",
-        secondary="SourceDocumentDocumentTagLinkTable".lower(),
-        back_populates="source_documents",
-        passive_deletes=True,
-    )
-    document_tag_recommendation_link: Mapped[
-        List["DocumentTagRecommendationLinkORM"]
-    ] = relationship(
-        "DocumentTagRecommendationLinkORM",
-        back_populates="source_document",
-        passive_deletes=True,
+        overlaps="document_topics,topic,source_document",
     )
 
     __table_args__ = (

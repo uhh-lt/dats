@@ -61,6 +61,7 @@ from api.endpoints import (
     span_annotation,
     span_group,
     timeline_analysis,
+    topic_modelling,
     trainer,
     user,
     whiteboard,
@@ -279,6 +280,7 @@ app.include_router(sentence_annotation.router)
 app.include_router(import_.router)
 app.include_router(ml.router)
 app.include_router(chat.router)
+app.include_router(topic_modelling.router)
 
 
 def main() -> None:

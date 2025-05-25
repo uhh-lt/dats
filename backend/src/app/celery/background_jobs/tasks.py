@@ -14,6 +14,7 @@ from app.celery.background_jobs.preprocess import (
     execute_video_preprocessing_pipeline_,
     import_uploaded_archive_,
 )
+from app.celery.background_jobs.tm import start_tm_job_
 from app.celery.background_jobs.trainer import start_trainer_job_
 from app.celery.celery_worker import celery_worker
 from app.core.data.dto.crawler_job import CrawlerJobRead
@@ -21,6 +22,7 @@ from app.core.data.dto.export_job import ExportJobRead
 from app.core.data.dto.import_job import ImportJobRead
 from app.core.data.dto.llm_job import LLMJobRead
 from app.core.data.dto.ml_job import MLJobRead
+from app.core.topicmodel.tm_job import TMJobRead
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 
 
@@ -66,6 +68,11 @@ def start_llm_job(llm_job: LLMJobRead) -> None:
 @celery_worker.task(acks_late=True)
 def start_ml_job(ml_job: MLJobRead) -> None:
     start_ml_job_(ml_job=ml_job)
+
+
+@celery_worker.task(acks_late=True)
+def start_tm_job(tm_job: TMJobRead) -> None:
+    start_tm_job_(tm_job=tm_job)
 
 
 @celery_worker.task(

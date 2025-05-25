@@ -46,6 +46,7 @@ class AspectORM(ORMBase):
         "SourceDocumentORM",
         secondary="documentaspect",
         back_populates="aspects",
+        overlaps="document_aspects,source_document,aspect",
     )
 
     def __repr__(self) -> str:
