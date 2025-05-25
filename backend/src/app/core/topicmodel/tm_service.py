@@ -240,7 +240,15 @@ class TMService:
         aspect_id: int,
         sdoc_ids: Optional[List[int]],
         num_clusters: Optional[int],
-    ):
+    ) -> List[int]:
+        """
+        Clusters the document aspects of the given Aspect using HDBSCAN.
+        If sdoc_ids are provided, only those source documents will be clustered.
+        :param db: The database session
+        :param aspect_id: The ID of the Aspect
+        :return: List of topic IDs that were assigned to the documents.
+        """
+
         aspect = crud_aspect.read(db=db, id=aspect_id)
 
         # 1. Read the document aspects
@@ -285,7 +293,7 @@ class TMService:
         cluster_ids = np.unique(clusters).tolist()
         logger.info(f"Found {len(cluster_ids)} clusters with HDBSCAN")
 
-        # 5. Store the topics (clusters) in the DB
+        # 4. Store the topics (clusters) in the DB
         topics = crud_topic.create_multi(
             db=db,
             create_dtos=[
@@ -301,7 +309,7 @@ class TMService:
             f"Stored {len(cluster_id2topic_id)} topics in the database corresponding to {len(cluster_ids)} clusters."
         )
 
-        # 6. Store the cluster assignments in the database
+        # 5. Store the cluster assignments in the database
         crud_document_topic.create_multi(
             db=db,
             create_dtos=[
@@ -316,6 +324,8 @@ class TMService:
         logger.info(
             f"Assigned {len(doc_aspects)} document aspects to {len(cluster_id2topic_id)} topics."
         )
+
+        return list(cluster_id2topic_id.values())
 
     def __preprocess_text(self, documents: List[str]) -> List[str]:
         r"""Basic preprocessing of text.
@@ -797,7 +807,41 @@ class TMService:
         )
 
     def split_topic(self, tm_job_id: str, params: SplitTopicParams):
-        pass
+        with self.sqls.db_session() as db:
+            # 1. Read the topic to split
+            topic = crud_topic.read(db=db, id=params.topic_id)
+            aspect = topic.aspect
+
+            # 2. Find all sdoc_ids associated with the topic
+            sdoc_ids = [
+                da.sdoc_id
+                for da in crud_document_aspect.read_by_aspect_and_topic_id(
+                    db=db, aspect_id=topic.aspect_id, topic_id=topic.id
+                )
+            ]
+            assert len(sdoc_ids) > 0, "Cannot split a topic without document aspects."
+            logger.info(
+                f"Found {len(sdoc_ids)} source documents associated with topic {params.topic_id}."
+            )
+
+            # 3. Remove the topic from the database
+            crud_topic.remove(db=db, id=params.topic_id)
+            logger.info(f"Removed topic {params.topic_id} from the database.")
+
+            # 4. Cluster the documents, creating new topics and assigning them to the documents
+            created_topic_ids = self._cluster_documents(
+                db=db,
+                aspect_id=aspect.id,
+                sdoc_ids=sdoc_ids,  # TODO: could be optimized by providing the document aspects directly
+                num_clusters=None,
+            )
+
+            # 5. Extract the topics
+            self._extract_topics(
+                db=db,
+                aspect_id=aspect.id,
+                topic_ids=created_topic_ids,
+            )
 
     def refine_topic_model(self, tm_job_id: str, params: RefineTopicModelParams):
         pass
