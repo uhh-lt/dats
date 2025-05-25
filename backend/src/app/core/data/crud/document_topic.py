@@ -139,5 +139,41 @@ class CRUDDocumentTopic(
             db.rollback()
             raise  # Re-raise the database exception (e.g., IntegrityError)
 
+    def set_labels(
+        self,
+        db: Session,
+        *,
+        aspect_id: int,
+        sdoc_ids: list[int],
+        is_accepted: bool,
+    ) -> int:
+        """
+        Accepts the labels for the provided SourceDocuments (by ID) of the aspect.
+        Args:
+            db: The database session
+            aspect_id: The ID of the aspect to which the topic belongs
+            sdoc_ids: List of SourceDocument IDs to accept labels for
+            is_accepted: Whether to set the labels as accepted
+        Returns:
+            The number of DocumentTopicORM objects that were updated
+        """
+        if not sdoc_ids:
+            return 0
+
+        stmt = (
+            update(self.model)
+            .where(
+                self.model.sdoc_id.in_(sdoc_ids),
+                self.model.topic_id == TopicORM.id,
+                TopicORM.aspect_id == aspect_id,
+            )
+            .values(is_accepted=is_accepted)
+            .execution_options(synchronize_session=False)
+        )
+        results = db.execute(stmt)
+        db.commit()
+
+        return results.rowcount if results.rowcount is not None else 0
+
 
 crud_document_topic = CRUDDocumentTopic(DocumentTopicORM)
