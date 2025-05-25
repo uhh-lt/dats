@@ -89,18 +89,6 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         )
         return code_id[0] if code_id else None
 
-    def remove_by_project(self, db: Session, *, proj_id: int) -> List[int]:
-        # find all codes to be removed
-        query = db.query(self.model).filter(self.model.project_id == proj_id)
-        removed_orms = query.all()
-        ids = [removed_orm.id for removed_orm in removed_orms]
-
-        # delete the codes
-        query.delete()
-        db.commit()
-
-        return ids
-
     def get_with_children(self, db: Session, *, code_id) -> List[CodeORM]:
         topq = (
             db.query(self.model.id)
