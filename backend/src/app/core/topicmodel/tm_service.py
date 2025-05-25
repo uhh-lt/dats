@@ -723,37 +723,37 @@ class TMService:
                 len(aspect_embedding_uuids) == len(document_topics)
             ), "The number of document aspect embeddings does not match the number of document topics."
 
-        # 2. Compute the similarities of the document embeddings to the remaining topic embeddings
-        similarities = document_embeddings @ topic_embeddings.T
+            # 2. Compute the similarities of the document embeddings to the remaining topic embeddings
+            similarities = document_embeddings @ topic_embeddings.T
 
-        # 3. For each document aspect, find the most similar topic embedding and update the document topic assignment
-        update_dtos: List[DocumentTopicUpdate] = []
-        update_ids: List[int] = []
-        modified_topics: Set[int] = set()
-        for da, similarity in zip(document_aspects, similarities):
-            most_similar_topic_index = np.argmax(similarity)
-            most_similar_topic_id = topic_ids[most_similar_topic_index]
+            # 3. For each document aspect, find the most similar topic embedding and update the document topic assignment
+            update_dtos: List[DocumentTopicUpdate] = []
+            update_ids: List[int] = []
+            modified_topics: Set[int] = set()
+            for da, similarity in zip(document_aspects, similarities):
+                most_similar_topic_index = np.argmax(similarity)
+                most_similar_topic_id = topic_ids[most_similar_topic_index]
 
-            update_ids.append(da.id)
-            update_dtos.append(
-                DocumentTopicUpdate(
-                    topic_id=most_similar_topic_id,
-                    distance=1.0 - similarity[most_similar_topic_index],
+                update_ids.append(da.id)
+                update_dtos.append(
+                    DocumentTopicUpdate(
+                        topic_id=most_similar_topic_id,
+                        distance=1.0 - similarity[most_similar_topic_index],
+                    )
                 )
-            )
-            modified_topics.add(most_similar_topic_id)
+                modified_topics.add(most_similar_topic_id)
 
-        # 4. Update the document-topic assignments in the database
-        if len(update_dtos) > 0:
-            crud_document_topic.update_multi(
-                db=db, ids=update_ids, update_dtos=update_dtos
-            )
-            logger.info(
-                f"Updated {len(update_dtos)} document-topic assignments to the most similar topics."
-            )
+            # 4. Update the document-topic assignments in the database
+            if len(update_dtos) > 0:
+                crud_document_topic.update_multi(
+                    db=db, ids=update_ids, update_dtos=update_dtos
+                )
+                logger.info(
+                    f"Updated {len(update_dtos)} document-topic assignments to the most similar topics."
+                )
 
-        # 5. Remove the topic from the database
-        crud_topic.remove(db=db, id=params.topic_id)
+            # 5. Remove the topic from the database
+            crud_topic.remove(db=db, id=params.topic_id)
 
         # 6. Extract the topics for all affected ones (computing top words, top docs, embedding, etc)
         if len(modified_topics) > 0:
@@ -767,7 +767,34 @@ class TMService:
             )
 
     def merge_topics(self, tm_job_id: str, params: MergeTopicsParams):
-        pass
+        with self.sqls.db_session() as db:
+            # 1. Read the topics to merge
+            topic1 = crud_topic.read(db=db, id=params.topic_to_keep)
+            topic2 = crud_topic.read(db=db, id=params.topic_to_merge)
+            aspect = topic1.aspect
+            assert (
+                topic1.aspect_id == topic2.aspect_id
+            ), "Cannot merge topics from different aspects."
+
+            # 2. Merge the topics (updating the topic id)
+            crud_document_topic.merge_topics(
+                db=db,
+                topic_to_keep=params.topic_to_keep,
+                topic_to_merge=params.topic_to_merge,
+            )
+
+            # 3. Delete the merged topic from the database
+            crud_topic.remove(db=db, id=params.topic_to_merge)
+            logger.info(
+                f"Merged topics {params.topic_to_keep} and {params.topic_to_merge}."
+            )
+
+        # 4. Extract the topics for the remaining topic (computing top words, top docs, embedding, etc)
+        self._extract_topics(
+            db=db,
+            aspect_id=aspect.id,
+            topic_ids=[params.topic_to_keep],
+        )
 
     def split_topic(self, tm_job_id: str, params: SplitTopicParams):
         pass

@@ -55,8 +55,8 @@ class MergeTopicsParams(BaseModel):
     tm_job_type: Literal[TMJobType.MERGE_TOPICS] = Field(
         default=TMJobType.MERGE_TOPICS, description="Type of the TMJob"
     )
-    topic_id_1: int = Field(description="ID of the first topic to merge.")
-    topic_id_2: int = Field(description="ID of the second topic to merge.")
+    topic_to_keep: int = Field(description="ID of the topic to keep after merging.")
+    topic_to_merge: int = Field(description="ID of the topic to delete after merging.")
 
 
 class SplitTopicParams(BaseModel):
