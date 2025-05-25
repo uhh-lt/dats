@@ -248,6 +248,4 @@ class OllamaService(metaclass=SingletonMeta):
         response = self.__client.embed(
             model=self.__model["emb"], input=inputs, options=options
         )
-        arr = np.array(response.embeddings)
-
-        return arr
+        return np.array(response.embeddings)
