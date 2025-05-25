@@ -13,14 +13,6 @@ services:
     volumes:
       - "./redis_data:/var/lib/redis/data"
 
-  typesense:
-    volumes:
-      - "./typesense_data:/data"
-
-  qdrant:
-    volumes:
-      - "./qdrant_data:/qdrant/storage"
-
   weaviate:
     volumes:
       - "./weaviate_data:/var/lib/weaviate"

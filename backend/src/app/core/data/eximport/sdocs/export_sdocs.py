@@ -13,10 +13,12 @@ from app.core.data.eximport.sdocs.sdoc_export_schema import (
 )
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
-from app.core.db.vector_index_service import VectorIndexService
+from app.core.vector.crud.document_embedding import crud_document_embedding
+from app.core.vector.crud.image_embedding import crud_image_embedding
+from app.core.vector.crud.sentence_embedding import crud_sentence_embedding
+from app.core.vector.dto.document_embedding import DocumentObjectIdentifier
+from app.core.vector.dto.image_embedding import ImageObjectIdentifier
 from sqlalchemy.orm import Session
-
-vector_index = VectorIndexService()
 
 
 def export_selected_sdocs(
@@ -117,18 +119,22 @@ def __export_sdocs(
         word_frequencies = [(wf.word, wf.count) for wf in sdoc.word_frequencies]
 
         # Get document embeddings
-        doc_embedding = vector_index.get_document_embedding_by_sdoc_id(sdoc.id)
-        doc_embedding = doc_embedding.tolist()
+        doc_embedding = crud_document_embedding.get_embedding(
+            project_id=sdoc.project_id, id=DocumentObjectIdentifier(sdoc_id=sdoc.id)
+        )
 
         # Get sentence embeddings
-        sentence_embeddings = vector_index.get_sentence_embeddings_by_sdoc_id(sdoc.id)
-        sentence_embeddings = sentence_embeddings.tolist()
+        sentence_embeddings = crud_sentence_embedding.get_embeddings_by_sdoc_id(
+            project_id=sdoc.project_id, sdoc_id=sdoc.id
+        )
+        sentence_embeddings = [se.embedding for se in sentence_embeddings]
 
         # Get image embeddings
-        image_embeddings = None
+        image_embedding = None
         if sdoc.doctype == "image":
-            image_embeddings = vector_index.get_image_embedding_by_sdoc_id(sdoc.id)
-            image_embeddings = image_embeddings.tolist()
+            image_embedding = crud_image_embedding.get_embedding(
+                project_id=sdoc.project_id, id=ImageObjectIdentifier(sdoc_id=sdoc.id)
+            )
 
         # Create export schema for the document
         export_schema = SourceDocumentExportSchema(
@@ -150,7 +156,7 @@ def __export_sdocs(
             token_time_ends=sdoc_data.token_time_ends,
             document_embedding=doc_embedding,
             sentence_embeddings=sentence_embeddings,
-            image_embedding=image_embeddings,
+            image_embedding=image_embedding,
         )
 
         export_collection.append(export_schema)

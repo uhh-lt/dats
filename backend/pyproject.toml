@@ -76,7 +76,7 @@ dependencies = [
     "ujson>=5.10.0",
     "umap-learn==0.5.5",
     "uvicorn==0.23.2",
-    "weaviate-client==3.24.1",
+    "weaviate-client==4.14.4",
     "webdriver-manager==4.0.1",
     "yake==0.4.8",
 ]

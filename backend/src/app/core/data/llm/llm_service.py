@@ -68,10 +68,10 @@ from app.core.data.llm.prompts.tagging_prompt_builder import (
 )
 from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
 from app.core.data.repo.repo_service import RepoService
-from app.core.db.index_type import IndexType
 from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
-from app.core.db.vector_index_service import VectorIndexService
+from app.core.vector.crud.sentence_embedding import crud_sentence_embedding
+from app.core.vector.dto.sentence_embedding import SentenceObjectIdentifier
 from app.preprocessing.ray_model_service import RayModelService
 from app.preprocessing.ray_model_worker.dto.seqsenttagger import (
     SeqSentTaggerDoc,
@@ -112,7 +112,6 @@ class LLMService(metaclass=SingletonMeta):
         cls.sqls: SQLService = SQLService()
         cls.ollamas: OllamaService = OllamaService()
         cls.rms: RayModelService = RayModelService()
-        cls.vis: VectorIndexService = VectorIndexService()
 
         # map from job_type to function
         cls.llm_method_for_job_approach_type: Dict[
@@ -1190,31 +1189,20 @@ class LLMService(metaclass=SingletonMeta):
                     f"Got data of {len(training_sdocs)} from {len(sdoc_id2sentence_annotations)} sdocs."
                 )
 
-            # 1.3 - Sanity check, number of embeddings should match the number of sentences
-            for training_sdoc in training_sdocs:
-                if training_sdoc is None:
-                    continue
-
-                # get embeddings
-                sentence_embeddings = self.vis.get_sentence_embeddings_by_sdoc_id(
-                    sdoc_id=training_sdoc.id
-                ).tolist()
-
-                if len(sentence_embeddings) != len(training_sdoc.sentences):
-                    logger.error(
-                        f"Number of embeddings ({len(sentence_embeddings)}) and sentences ({len(training_sdoc.sentences)}) do not match for sdoc {training_sdoc.id}."
-                    )
-
-            # 1.4 - Find the corresponding sentence embeddings
+            # 1.3 - Find the corresponding sentence embeddings
             search_tuples = [
                 (sent_id, sdoc_data.id)
                 for sdoc_data in training_sdocs
                 if sdoc_data is not None
                 for sent_id in range(len(sdoc_data.sentences))
             ]
-            sentence_embeddings = self.vis.get_embeddings(
-                search_tuples=search_tuples, index_type=IndexType.SENTENCE
-            ).tolist()
+            sentence_embeddings = crud_sentence_embedding.get_embeddings(
+                project_id=project_id,
+                ids=[
+                    SentenceObjectIdentifier(sdoc_id=sdoc_id, sentence_id=sent_id)
+                    for sent_id, sdoc_id in search_tuples
+                ],
+            )
             logger.debug(
                 f"Found {len(sentence_embeddings)} corresponding sentence embeddings."
             )
@@ -1228,13 +1216,13 @@ class LLMService(metaclass=SingletonMeta):
                 f"Mapped the embeddings to the documents. {[f'{sdoc_id}:{len(embeddings)}' for sdoc_id, embeddings in sdoc_id2sent_embs.items()]}"
             )
 
-            # 1.5 - Find the code names
+            # 1.4 - Find the code names
             codes = crud_code.read_by_ids(db=db, ids=task_parameters.code_ids)
             code_id2name = {code.id: code.name for code in codes}
             code_name2id = {code.name: code.id for code in codes}
             logger.debug(f"Found the {len(codes)} codes.")
 
-        # 1.6 - Build the training data
+        # 1.5 - Build the training data
         training_dataset: List[SeqSentTaggerDoc] = []
         for sdoc_id, annotations in sdoc_id2sentence_annotations.items():
             sentence_embeddings = sdoc_id2sent_embs.get(sdoc_id, [])
@@ -1289,9 +1277,13 @@ class LLMService(metaclass=SingletonMeta):
                 if sdoc_data is not None
                 for sent_id in range(len(sdoc_data.sentences))
             ]
-            test_sentence_embeddings = self.vis.get_embeddings(
-                search_tuples=search_tuples, index_type=IndexType.SENTENCE
-            ).tolist()
+            test_sentence_embeddings = crud_sentence_embedding.get_embeddings(
+                project_id=project_id,
+                ids=[
+                    SentenceObjectIdentifier(sdoc_id=sdoc_id, sentence_id=sent_id)
+                    for sent_id, sdoc_id in search_tuples
+                ],
+            )
             test_sdoc_id2sent_embs: Dict[int, List[List[float]]] = {}
             for sent_emb, (sent_id, sdoc_id) in zip(
                 test_sentence_embeddings, search_tuples
