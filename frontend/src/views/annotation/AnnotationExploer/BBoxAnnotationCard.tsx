@@ -8,10 +8,10 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks.ts";
+import { memo } from "react";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { BBoxAnnotationReadResolved } from "../../../api/openapi/models/BBoxAnnotationReadResolved.ts";
+import { BBoxAnnotationRead } from "../../../api/openapi/models/BBoxAnnotationRead.ts";
 import CodeRenderer from "../../../components/Code/CodeRenderer.tsx";
 import UserName from "../../../components/User/UserName.tsx";
 import ImageCropper from "../../whiteboard/nodes/ImageCropper.tsx";
@@ -22,15 +22,16 @@ import { AnnotationCardProps } from "./types/AnnotationCardProps.ts";
 function BBoxAnnotationCard({
   isSelected,
   annotation,
+  code,
   onClick,
   cardProps,
-}: AnnotationCardProps<BBoxAnnotationReadResolved>) {
+}: AnnotationCardProps<BBoxAnnotationRead>) {
   const sdocData = SdocHooks.useGetDocumentData(annotation.sdoc_id);
 
   return (
     <Card {...cardProps}>
       <CardHeader
-        title={<CodeRenderer key={annotation.code.id} code={annotation.code} />}
+        title={<CodeRenderer key={annotation.code_id} code={annotation.code_id} />}
         action={
           <AnnotationCardActionsMenu
             annotationId={annotation.id}
@@ -50,7 +51,7 @@ function BBoxAnnotationCard({
         <CardContent sx={{ p: 1, pb: "0px !important", textAlign: "center" }}>
           {sdocData.isSuccess ? (
             <ImageCropper
-              imageUrl={encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + sdocData.data.html)}
+              imageUrl={encodeURI("/content/" + sdocData.data.repo_url)}
               x={annotation.x_min}
               y={annotation.y_min}
               width={annotation.x_max - annotation.x_min}
@@ -58,7 +59,7 @@ function BBoxAnnotationCard({
               height={annotation.y_max - annotation.y_min}
               targetHeight={100}
               style={{
-                border: "4px solid " + annotation.code.color,
+                border: "4px solid " + code.color,
               }}
             />
           ) : (
@@ -77,9 +78,8 @@ function BBoxAnnotationCard({
           <AnnotationCardMemo
             annotationId={annotation.id}
             annotationType={AttachedObjectType.BBOX_ANNOTATION}
-            useGetAnnotationMemo={BboxAnnotationHooks.useGetUserMemo}
             annotationText="Image"
-            codeName={annotation.code.name}
+            codeName={code.name}
           />
         </>
       )}
@@ -87,4 +87,4 @@ function BBoxAnnotationCard({
   );
 }
 
-export default BBoxAnnotationCard;
+export default memo(BBoxAnnotationCard);

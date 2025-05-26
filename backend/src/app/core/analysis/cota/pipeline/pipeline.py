@@ -1,8 +1,6 @@
 import time
 from typing import Callable, Dict, List, Optional
 
-from loguru import logger
-
 from app.core.analysis.cota.pipeline.cargo import Cargo
 from app.core.analysis.cota.pipeline.step import PipelineStep
 from app.core.data.dto.background_job_base import BackgroundJobStatus
@@ -11,6 +9,7 @@ from app.core.data.dto.concept_over_time_analysis import (
     COTARefinementJobUpdate,
 )
 from app.core.db.redis_service import RedisService
+from loguru import logger
 
 
 class COTARefinementPipeline:
@@ -82,8 +81,7 @@ class COTARefinementPipeline:
         stop_t = time.perf_counter()
 
         logger.info(
-            f"Executing the COTARefinementPipeline took"
-            f" {stop_t - start_t:0.4f} seconds"
+            f"Executing the COTARefinementPipeline took {stop_t - start_t:0.4f} seconds"
         )
 
         return job
@@ -163,7 +161,7 @@ class COTARefinementPipeline:
                     logger.error(msg)
                     raise ValueError(msg)
 
-            logger.info((f"Running: {step} for " f"COTARefinementJob {cargo.job.id} "))
+            logger.info((f"Running: {step} for COTARefinementJob {cargo.job.id} "))
             cargo = self._update_cota_job(
                 cargo=cargo,
                 current_step_name=step.name,
@@ -182,7 +180,7 @@ class COTARefinementPipeline:
             msg = (
                 f"An error occurred while executing the COTARefinementPipelineStep {step}"
                 f"for COTARefinementJob {cargo.job.id} "
-                f"Error: {e}"
+                f"Error: {type(e)} {e}"
             )
             logger.error(msg)
             cargo = self._update_cota_job(

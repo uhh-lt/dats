@@ -1,8 +1,8 @@
-from app.core.db.simsearch_service import SimSearchService
+from app.core.ml.embedding_service import EmbeddingService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 
-sss = SimSearchService()
+emb = EmbeddingService()
 
 
 def index_text_document_for_simsearch(cargo: PipelineCargo) -> PipelineCargo:
@@ -13,10 +13,11 @@ def index_text_document_for_simsearch(cargo: PipelineCargo) -> PipelineCargo:
 
     sentences = [sent.text for sent in pptd.sentences]
     if len(sentences) > 0:
-        sss.add_text_sdoc_to_index(
+        emb.add_text_sdoc_to_index(
             proj_id=proj_id,
             sdoc_id=sdoc_id,
             sentences=sentences,
+            text=pptd.text,
         )
 
     return cargo

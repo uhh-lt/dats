@@ -1,3 +1,4 @@
+import { memo } from "react";
 import UserHooks from "../../api/UserHooks.ts";
 
 interface UserNameProps {
@@ -22,4 +23,4 @@ function UserName({ userId }: UserNameProps) {
   return <>Loading...</>;
 }
 
-export default UserName;
+export default memo(UserName);

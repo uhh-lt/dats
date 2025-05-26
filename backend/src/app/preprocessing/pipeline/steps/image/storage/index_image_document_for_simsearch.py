@@ -1,8 +1,8 @@
-from app.core.db.simsearch_service import SimSearchService
+from app.core.ml.embedding_service import EmbeddingService
 from app.preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 
-sss = SimSearchService()
+emb = EmbeddingService()
 
 
 def index_image_document_for_simsearch(cargo: PipelineCargo) -> PipelineCargo:
@@ -10,7 +10,7 @@ def index_image_document_for_simsearch(cargo: PipelineCargo) -> PipelineCargo:
     sdoc_id = cargo.data["sdoc_id"]
     proj_id = ppid.project_id
 
-    sss.add_image_sdoc_to_index(
+    emb.add_image_sdoc_to_index(
         sdoc_id=sdoc_id,
         proj_id=proj_id,
     )

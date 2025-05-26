@@ -1,24 +1,29 @@
 import { FormControl, InputLabel, ListItemText, MenuItem, Select, SelectChangeEvent } from "@mui/material";
-import ProjectHooks from "../../api/ProjectHooks.ts";
+import { memo, useCallback } from "react";
+import UserHooks from "../../api/UserHooks.ts";
 import UserName from "./UserName.tsx";
 
 interface UserSelectorProps {
-  projectId: number | undefined;
   userId: number;
   onUserIdChange: (userIds: number) => void;
   title: string;
 }
 
-function UserSelectorSingle({ projectId, userId, onUserIdChange, title }: UserSelectorProps) {
+function UserSelectorSingle({ userId, onUserIdChange, title }: UserSelectorProps) {
   // global server state (react query)
-  const projectUsers = ProjectHooks.useGetAllUsers(projectId);
+  const projectUsers = UserHooks.useGetAllUsers();
 
   // handlers (for ui)
-  const handleChange = (event: SelectChangeEvent<number>) => {
-    onUserIdChange(parseInt(event.target.value as string));
-  };
+  const handleChange = useCallback(
+    (event: SelectChangeEvent<number>) => {
+      onUserIdChange(parseInt(event.target.value as string));
+    },
+    [onUserIdChange],
+  );
 
   // render
+  const renderValue = useCallback((userId: number) => <UserName userId={userId} />, []);
+
   return (
     <FormControl sx={{ mx: 1 }}>
       <InputLabel id="user-select-label">{title}</InputLabel>
@@ -29,7 +34,7 @@ function UserSelectorSingle({ projectId, userId, onUserIdChange, title }: UserSe
         value={userId}
         onChange={handleChange}
         disabled={!projectUsers.isSuccess}
-        renderValue={(userId) => <UserName userId={userId} />}
+        renderValue={renderValue}
       >
         {projectUsers.isSuccess &&
           projectUsers.data.map((user) => (
@@ -44,4 +49,4 @@ function UserSelectorSingle({ projectId, userId, onUserIdChange, title }: UserSe
   );
 }
 
-export default UserSelectorSingle;
+export default memo(UserSelectorSingle);

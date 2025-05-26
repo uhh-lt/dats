@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
@@ -11,12 +11,14 @@ from app.core.data.dto.source_document import (
     SourceDocumentUpdate,
 )
 from app.core.data.dto.source_document_data import SourceDocumentDataRead
+from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.source_document_data import SourceDocumentDataORM
 from app.core.data.orm.source_document_link import SourceDocumentLinkORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.elasticsearch_service import ElasticSearchService
+from app.core.db.sql_utils import aggregate_ids
 
 
 class SourceDocumentPreprocessingUnfinishedError(Exception):
@@ -72,8 +74,8 @@ class CRUDSourceDocument(
         return [id2data.get(id) for id in ids]
 
     def remove(self, db: Session, *, id: int) -> SourceDocumentORM:
-        # Import SimSearchService here to prevent a cyclic dependency
-        from app.core.db.simsearch_service import SimSearchService
+        # Import EmbeddingService here to prevent a cyclic dependency
+        from app.core.ml.embedding_service import EmbeddingService
 
         sdoc_db_obj = super().remove(db=db, id=id)
 
@@ -87,14 +89,14 @@ class CRUDSourceDocument(
             sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
         )
 
-        # remove from simsearch
-        SimSearchService().remove_sdoc_from_index(sdoc_db_obj.doctype, sdoc_db_obj.id)
+        # remove from index
+        EmbeddingService().remove_sdoc_embeddings(sdoc_db_obj.doctype, sdoc_db_obj.id)
 
         return sdoc_db_obj
 
     def remove_by_project(self, db: Session, *, proj_id: int) -> List[int]:
         # Import SimSearchService here to prevent a cyclic dependency
-        from app.core.db.simsearch_service import SimSearchService
+        from app.core.ml.embedding_service import EmbeddingService
 
         # find all sdocs to be removed
         query = db.query(self.model).filter(self.model.project_id == proj_id)
@@ -109,7 +111,7 @@ class CRUDSourceDocument(
                 proj_id=proj_id, sdoc_id=sdoc.id
             )
 
-            SimSearchService().remove_sdoc_from_index(sdoc.doctype, sdoc.id)
+            EmbeddingService().remove_sdoc_embeddings(sdoc.doctype, sdoc.id)
 
         ids = [removed_orm.id for removed_orm in removed_orms]
 
@@ -233,6 +235,66 @@ class CRUDSourceDocument(
             for (parent_sdoc_id, linked_sdoc_id) in res
             if linked_sdoc_id is not None
         ]
+
+    def read_all_without_tags(
+        self, db: Session, *, project_id: int, tag_ids: List[int] = []
+    ) -> List[SourceDocumentORM]:
+        return (
+            db.query(SourceDocumentORM)
+            .filter(SourceDocumentORM.project_id == project_id)
+            .outerjoin(SourceDocumentORM.document_tags)
+            .filter(
+                SourceDocumentORM.document_tags == None  # noqa: E711
+                if len(tag_ids) == 0
+                else DocumentTagORM.id.notin_(tag_ids)
+            )
+            .all()
+        )
+
+    def read_all_with_tags(
+        self, db: Session, *, project_id: int, tag_ids: List[int] = []
+    ) -> List[SourceDocumentORM]:
+        return (
+            db.query(SourceDocumentORM)
+            .filter(SourceDocumentORM.project_id == project_id)
+            .join(SourceDocumentORM.document_tags)
+            .filter(
+                SourceDocumentORM.document_tags != None  # noqa: E711
+                if len(tag_ids) == 0
+                else DocumentTagORM.id.in_(tag_ids)
+            )
+            .all()
+        )
+
+    def get_annotators(
+        self, db: Session, *, sdoc_ids: List[int]
+    ) -> Dict[int, List[int]]:
+        user_ids_agg = aggregate_ids(AnnotationDocumentORM.user_id, label="user_ids")
+        rows = (
+            db.query(SourceDocumentORM.id, user_ids_agg)
+            .join(
+                SourceDocumentORM.annotation_documents,
+                isouter=True,
+            )
+            .filter(SourceDocumentORM.id.in_(sdoc_ids))
+            .group_by(SourceDocumentORM.id)
+            .all()
+        )
+        return {row[0]: row[1] for row in rows}
+
+    def get_tags(self, db: Session, *, sdoc_ids: List[int]) -> Dict[int, List[int]]:
+        tag_ids_agg = aggregate_ids(DocumentTagORM.id, label="tag_ids")
+        rows = (
+            db.query(SourceDocumentORM.id, tag_ids_agg)
+            .join(
+                SourceDocumentORM.document_tags,
+                isouter=True,
+            )
+            .filter(SourceDocumentORM.id.in_(sdoc_ids))
+            .group_by(SourceDocumentORM.id)
+            .all()
+        )
+        return {row[0]: row[1] for row in rows}
 
 
 crud_sdoc = CRUDSourceDocument(SourceDocumentORM)

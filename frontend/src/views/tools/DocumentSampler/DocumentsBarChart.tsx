@@ -1,5 +1,5 @@
 import { CardProps } from "@mui/material";
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { ChartDataPoint } from "./ChartDataPoint.ts";
@@ -13,6 +13,7 @@ interface DocumentsBarChartProps {
 function DocumentsBarChart({ cardProps, onChartRefresh }: DocumentsBarChartProps) {
   const isFixedSamplingStrategy = useAppSelector((state) => state.documentSampler.isFixedSamplingStrategy);
 
+  // Memoize chart rendering function
   const renderChart = useCallback(
     (chartData: ChartDataPoint[]) => (
       <ResponsiveContainer>
@@ -22,7 +23,7 @@ function DocumentsBarChart({ cardProps, onChartRefresh }: DocumentsBarChartProps
           <CartesianGrid stroke="#eee" />
           <Tooltip />
           <Legend />
-          <Bar dataKey={(chartDatum: ChartDataPoint) => chartDatum.count} fill="#8884d8" name={"Documents"} />
+          <Bar dataKey={(chartDatum: ChartDataPoint) => chartDatum.count} fill="#8884d8" name="Documents" />
           <Bar
             dataKey={(chartDatum: ChartDataPoint) =>
               isFixedSamplingStrategy ? chartDatum.fixedSampleCount : chartDatum.relativeSampleCount
@@ -47,4 +48,4 @@ function DocumentsBarChart({ cardProps, onChartRefresh }: DocumentsBarChartProps
   );
 }
 
-export default DocumentsBarChart;
+export default memo(DocumentsBarChart);

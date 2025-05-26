@@ -2,16 +2,18 @@ import { CardContent, CardHeader, CardMedia, CircularProgress, Divider, MenuItem
 import { intersection } from "lodash";
 import { useEffect, useRef } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
+import MemoHooks from "../../../api/MemoHooks.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
+import TagHooks from "../../../api/TagHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
+import { SdocNodeData } from "../../../api/openapi/models/SdocNodeData.ts";
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
 import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../components/GenericPositionMenu.tsx";
 import MemoDialogAPI from "../../../components/Memo/MemoDialog/MemoDialogAPI.ts";
 import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
 import { useReactFlowService } from "../hooks/ReactFlowService.ts";
 import { DATSNodeData } from "../types/DATSNodeData.ts";
-import { SdocNodeData } from "../types/dbnodes/SdocNodeData.ts";
 import { isMemoNode, isTagNode } from "../types/typeGuards.ts";
 import {
   createMemoNodes,
@@ -34,22 +36,21 @@ function SdocNode(props: NodeProps<SdocNodeData>) {
 
   // global server state (react-query)
   const sdoc = SdocHooks.useGetDocument(props.data.sdocId);
-  const tags = SdocHooks.useGetAllDocumentTags(props.data.sdocId);
-  const memo = SdocHooks.useGetMemo(props.data.sdocId);
+  const tagIds = TagHooks.useGetAllTagIdsBySdocId(props.data.sdocId);
+  const memo = MemoHooks.useGetUserMemo(AttachedObjectType.SOURCE_DOCUMENT, props.data.sdocId);
 
   const docType = sdoc.data?.doctype;
 
   // effects
   useEffect(() => {
-    if (!tags.data) return;
-    const tagIds = tags.data.map((tag) => tag.id);
+    if (!tagIds.data) return;
 
     // checks which edges are already in the graph and removes edges to non-existing tags
     const edgesToDelete = reactFlowInstance
       .getEdges()
       .filter(isTagSdocEdge) // isTagEdge
       .filter((edge) => edge.target === `sdoc-${props.data.sdocId}`) // isEdgeForThisSdoc
-      .filter((edge) => !tagIds.includes(parseInt(edge.source.split("-")[1]))); // isEdgeForNonExistingTag
+      .filter((edge) => !tagIds.data.includes(parseInt(edge.source.split("-")[1]))); // isEdgeForNonExistingTag
     reactFlowInstance.deleteElements({ edges: edgesToDelete });
 
     // checks which tag nodes are already in the graph and adds edges to them
@@ -57,11 +58,11 @@ function SdocNode(props: NodeProps<SdocNodeData>) {
       .getNodes()
       .filter(isTagNode)
       .map((tag) => tag.data.tagId);
-    const edgesToAdd = intersection(existingTagNodeIds, tagIds).map((tagId) =>
+    const edgesToAdd = intersection(existingTagNodeIds, tagIds.data).map((tagId) =>
       createTagSdocEdge({ tagId, sdocId: props.data.sdocId }),
     );
     reactFlowInstance.addEdges(edgesToAdd);
-  }, [props.data.sdocId, reactFlowInstance, tags.data]);
+  }, [props.data.sdocId, reactFlowInstance, tagIds.data]);
 
   useEffect(() => {
     if (!memo.data) return;
@@ -86,9 +87,9 @@ function SdocNode(props: NodeProps<SdocNodeData>) {
   }, [props.data.sdocId, reactFlowInstance, memo.data]);
 
   const handleContextMenuExpandTags = () => {
-    if (!tags.data) return;
+    if (!tagIds.data) return;
 
-    reactFlowService.addNodes(createTagNodes({ tags: tags.data, position: { x: props.xPos, y: props.yPos - 200 } }));
+    reactFlowService.addNodes(createTagNodes({ tags: tagIds.data, position: { x: props.xPos, y: props.yPos - 200 } }));
     contextMenuRef.current?.close();
   };
 
@@ -156,7 +157,7 @@ function SdocNode(props: NodeProps<SdocNodeData>) {
         </CardContent>
       </BaseCardNode>
       <GenericPositionMenu ref={contextMenuRef}>
-        <MenuItem onClick={handleContextMenuExpandTags}>Expand document tags ({tags.data?.length || 0})</MenuItem>
+        <MenuItem onClick={handleContextMenuExpandTags}>Expand document tags ({tagIds.data?.length || 0})</MenuItem>
         <Divider />
         <MenuItem onClick={handleContextMenuExpandAnnotations}>Expand annotations</MenuItem>
         <Divider />
@@ -177,13 +178,7 @@ function SdocNodeImageContent({ sdoc }: { sdoc: SourceDocumentRead }) {
     return <CircularProgress />;
   }
 
-  return (
-    <CardMedia
-      component="img"
-      image={encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + sdocData.data?.html)}
-      alt="Thumbnail"
-    />
-  );
+  return <CardMedia component="img" image={encodeURI("/content/" + sdocData.data?.repo_url)} alt="Thumbnail" />;
 }
 
 export default SdocNode;

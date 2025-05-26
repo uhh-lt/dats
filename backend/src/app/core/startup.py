@@ -141,10 +141,15 @@ def __init_services__(
 
     RayModelService()
 
+    # import and init VectorIndexService
+    from app.core.db.vector_index_service import VectorIndexService
+
+    VectorIndexService(reset_vector_index=reset_vector_index)
+
     # import and init SimSearchService
     from app.core.db.simsearch_service import SimSearchService
 
-    SimSearchService(reset_vector_index=reset_vector_index)
+    SimSearchService()
 
     # import and init OllamaService
     from app.core.data.llm.ollama_service import OllamaService
@@ -156,12 +161,18 @@ def __init_services__(
 
     LLMService()
 
+    # import and init AuthServide
+    from app.core.authorization.oauth_service import OAuthService
+
+    OAuthService()
+
 
 def __create_system_user__() -> None:
+    from config import conf
+
     from app.core.data.crud.user import crud_user
     from app.core.data.dto.user import UserCreate
     from app.core.db.sql_service import SQLService
-    from config import conf
 
     with SQLService().db_session() as db_session:
         if not crud_user.exists(db=db_session, id=1):
@@ -176,10 +187,11 @@ def __create_system_user__() -> None:
 
 
 def __create_demo_user__() -> None:
+    from config import conf
+
     from app.core.data.crud.user import crud_user
     from app.core.data.dto.user import UserCreate
     from app.core.db.sql_service import SQLService
-    from config import conf
 
     with SQLService().db_session() as db_session:
         if not crud_user.exists(db=db_session, id=2):
@@ -193,10 +205,11 @@ def __create_demo_user__() -> None:
 
 
 def __create_assistant_users__() -> None:
+    from config import conf
+
     from app.core.data.crud.user import crud_user
     from app.core.data.dto.user import UserCreate
     from app.core.db.sql_service import SQLService
-    from config import conf
 
     with SQLService().db_session() as db_session:
         for user_id, last_name in [

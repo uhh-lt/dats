@@ -2,45 +2,70 @@ import { createSlice } from "@reduxjs/toolkit";
 import { persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 
-const MIN_CONTENT_SIZE = 3;
+export enum LayoutPercentageKeys {
+  // percentages
+  ContentContentLayout = "content-content-layout",
+  SearchVerticalSidebar = "search-vertical-sidebar",
+  TimelineSidebar = "timeline-sidebar",
+  TimelineContent = "timeline-main-content",
+  CotaSidebar = "cota-sidebar",
+  CotaContent = "cota-main-content",
+  DocumentSamplerSidebar = "document-sampler-sidebar",
+  DocumentSamplerContent = "document-sampler-content",
+}
+
+export enum LayoutSizeKeys {
+  SidebarContentLayoutLeft = "sidebar-content-layout-left",
+  SidebarContentSidebarLayoutLeft = "sidebar-content-sidebar-layout-left",
+  SidebarContentSidebarLayoutRight = "sidebar-content-sidebar-layout-right",
+}
 
 export interface LayoutState {
-  // app state:
-  leftSidebarSize: number;
-  rightSidebarSize: number;
-  contentSize: number;
+  // Stores percentage values (0-100) for resizable components
+  verticalPercentages: Record<LayoutPercentageKeys, number>;
+  // Stores pixel values for resizable components
+  sizes: Record<LayoutSizeKeys, number>;
 }
 
 const initialState: LayoutState = {
-  // app state:
-  leftSidebarSize: 3,
-  rightSidebarSize: 3,
-  contentSize: 6,
+  verticalPercentages: {
+    [LayoutPercentageKeys.SearchVerticalSidebar]: 30,
+    [LayoutPercentageKeys.TimelineSidebar]: 30,
+    [LayoutPercentageKeys.TimelineContent]: 30,
+    [LayoutPercentageKeys.ContentContentLayout]: 30,
+    [LayoutPercentageKeys.CotaSidebar]: 30,
+    [LayoutPercentageKeys.CotaContent]: 30,
+    [LayoutPercentageKeys.DocumentSamplerSidebar]: 30,
+    [LayoutPercentageKeys.DocumentSamplerContent]: 30,
+  },
+  sizes: {
+    [LayoutSizeKeys.SidebarContentLayoutLeft]: 300,
+    [LayoutSizeKeys.SidebarContentSidebarLayoutLeft]: 300,
+    [LayoutSizeKeys.SidebarContentSidebarLayoutRight]: 300,
+  },
 };
 
 export const layoutSlice = createSlice({
   name: "layout",
   initialState,
   reducers: {
-    onIncreaseLeft: (state) => {
-      if (state.contentSize === MIN_CONTENT_SIZE) return;
-      state.leftSidebarSize += 1;
-      state.contentSize -= 1;
+    setPercentage: (state, action: { payload: { componentName: LayoutPercentageKeys; percentage: number } }) => {
+      // round the percentage to prevent floating point errors
+      const roundedPercentage = Math.round(action.payload.percentage);
+
+      // only update the state if the percentage has changed
+      if (roundedPercentage !== state.verticalPercentages[action.payload.componentName]) {
+        state.verticalPercentages[action.payload.componentName] = roundedPercentage;
+      }
     },
-    onDecreaseLeft: (state) => {
-      if (state.leftSidebarSize === 0) return;
-      state.leftSidebarSize -= 1;
-      state.contentSize += 1;
-    },
-    onIncreaseRight: (state) => {
-      if (state.contentSize === MIN_CONTENT_SIZE) return;
-      state.rightSidebarSize += 1;
-      state.contentSize -= 1;
-    },
-    onDecreaseRight: (state) => {
-      if (state.rightSidebarSize === 0) return;
-      state.rightSidebarSize -= 1;
-      state.contentSize += 1;
+    setSize: (state, action: { payload: { componentName: LayoutSizeKeys; size: number } }) => {
+      // round the size to prevent floating point errors
+      const roundedSize = Math.round(action.payload.size);
+
+      // only update the state if the size has changed
+      if (roundedSize !== state.sizes[action.payload.componentName]) {
+        state.sizes[action.payload.componentName] = roundedSize;
+      }
     },
   },
 });

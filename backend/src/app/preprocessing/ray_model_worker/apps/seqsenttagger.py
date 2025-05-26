@@ -11,7 +11,7 @@ logger = logging.getLogger("ray.serve")
 api = FastAPI()
 
 
-@serve.deployment(num_replicas=1, route_prefix="/seqsenttagger")
+@serve.deployment(num_replicas=1, name="seqsenttagger")
 @serve.ingress(api)
 class SeqSentTaggerApi:
     def __init__(self, seqsenttagger_model_handle: DeploymentHandle) -> None:
@@ -19,7 +19,7 @@ class SeqSentTaggerApi:
 
     @api.post("/train_apply", response_model=SeqSentTaggerJobResponse)
     async def train_apply(self, input: SeqSentTaggerJobInput):
-        return await self.seq_sent_tagger.train_apply.remote(input)
+        return await self.seq_sent_tagger.train_apply.remote(input)  # type: ignore
 
 
 app = SeqSentTaggerApi.bind(

@@ -1,8 +1,5 @@
 from typing import List
 
-from fastapi import APIRouter, Depends
-
-from api.dependencies import get_current_user
 from app.core.annoscaling.annoscaling_service import AnnoScalingService
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.dto.annoscaling import (
@@ -10,6 +7,9 @@ from app.core.data.dto.annoscaling import (
     AnnoscalingResult,
     AnnoscalingSuggest,
 )
+from fastapi import APIRouter, Depends
+
+from api.dependencies import get_current_user
 
 router = APIRouter(
     prefix="/annoscaling",

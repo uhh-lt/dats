@@ -5,7 +5,6 @@ import {
   CircularProgress,
   Dialog,
   DialogContent,
-  DialogTitle,
   IconButton,
   InputBase,
   Paper,
@@ -13,9 +12,10 @@ import {
   Tooltip,
 } from "@mui/material";
 import { TransitionProps } from "@mui/material/transitions";
-import React from "react";
+import React, { useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import SdocHooks from "../../../api/SdocHooks.ts";
+import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { ImageSearchActions } from "./imageSearchSlice.ts";
 
@@ -129,6 +129,12 @@ function SdocImageRenderer({ sdocId }: { sdocId: number }) {
     setOpen(false);
   };
 
+  // maximize dialog
+  const [isMaximized, setIsMaximized] = useState(false);
+  const handleToggleMaximize = () => {
+    setIsMaximized((prev) => !prev);
+  };
+
   if (thumbnail.isSuccess) {
     return (
       <>
@@ -145,8 +151,13 @@ function SdocImageRenderer({ sdocId }: { sdocId: number }) {
             }}
           />
         </Button>
-        <Dialog open={open} TransitionComponent={Transition} keepMounted onClose={handleClose}>
-          <DialogTitle>{"Image Preview"}</DialogTitle>
+        <Dialog open={open} TransitionComponent={Transition} keepMounted onClose={handleClose} fullScreen={isMaximized}>
+          <DATSDialogHeader
+            title="Image Preview"
+            onClose={handleClose}
+            isMaximized={isMaximized}
+            onToggleMaximize={handleToggleMaximize}
+          />
           <DialogContent>
             <img src={thumbnail.data} />
           </DialogContent>

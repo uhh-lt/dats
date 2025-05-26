@@ -5,7 +5,7 @@ import { get } from "http";
 import process from "process";
 
 // get env variables
-dotenv.config({ path: ".env.development" });
+dotenv.config({ path: ".env" });
 
 // settings
 const openapiFilePath = "src/openapi.json";

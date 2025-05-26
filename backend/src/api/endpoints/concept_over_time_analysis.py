@@ -1,9 +1,5 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
-from api.dependencies import get_current_user, get_db_session
 from app.core.analysis.cota.service import COTAService
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
@@ -18,6 +14,10 @@ from app.core.data.dto.concept_over_time_analysis import (
     COTAUpdate,
 )
 from app.core.db.redis_service import RedisService
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from api.dependencies import get_current_user, get_db_session
 
 cotas: COTAService = COTAService()
 redis: RedisService = RedisService()
