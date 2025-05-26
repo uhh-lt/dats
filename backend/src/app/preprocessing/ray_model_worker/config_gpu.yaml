@@ -224,9 +224,9 @@ docling:
       max_replicas: 1
 
 promptembedder:
-  model: "nvidia/NV-Embed-v2"
-  max_seq_length: 16384
-  batch_size: 2
+  model: "intfloat/multilingual-e5-large-instruct"
+  max_seq_length: 512
+  batch_size: 8
   device: cuda
   deployment:
     ray_actor_options:
