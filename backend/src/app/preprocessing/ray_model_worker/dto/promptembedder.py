@@ -10,9 +10,11 @@ class PromptEmbedderInput(BaseModel):
     prompt: str = Field(description="Prompt for the model")
     data: List[str] = Field(description="Text Data to embed")
     train_docs: Optional[List[str]] = Field(
-        description="Documents to train the model on"
+        default=None, description="Documents to train the model on"
     )
-    train_labels: Optional[List[str]] = Field(description="Labels for the documents")
+    train_labels: Optional[List[str]] = Field(
+        default=None, description="Labels for the documents"
+    )
 
 
 class PromptEmbedderOutput(BaseModel):
