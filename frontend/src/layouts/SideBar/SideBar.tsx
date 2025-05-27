@@ -205,6 +205,33 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
             </ListItem>
 
             <ListItem disablePadding sx={{ display: "block" }}>
+              <Tooltip title="Atlas (⌘M)" placement="right" arrow disableHoverListener={isExpanded}>
+                <ListItemButton
+                  component={Link}
+                  to={`/project/${projectId}/atlas`}
+                  sx={{
+                    minHeight: 48,
+                    justifyContent: isExpanded ? "initial" : "center",
+                    px: 2.5,
+                    bgcolor: isActive("/atlas") ? "rgba(0, 0, 0, 0.08)" : "transparent",
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 0,
+                      mr: isExpanded ? 3 : "auto",
+                      justifyContent: "center",
+                      color: "primary.contrastText",
+                    }}
+                  >
+                    {getIconComponent(Icon.ATLAS)}
+                  </ListItemIcon>
+                  {isExpanded && <ListItemText>Atlas</ListItemText>}
+                </ListItemButton>
+              </Tooltip>
+            </ListItem>
+
+            <ListItem disablePadding sx={{ display: "block" }}>
               <Tooltip title="Annotation (⌘⇧A)" placement="right" arrow disableHoverListener={isExpanded}>
                 <ListItemButton
                   component={Link}

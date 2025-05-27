@@ -23,6 +23,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import ImageIcon from "@mui/icons-material/Image";
 import ImageSearchIcon from "@mui/icons-material/ImageSearch";
 import LabelIcon from "@mui/icons-material/Label";
+import MapIcon from "@mui/icons-material/Map";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import NotesIcon from "@mui/icons-material/Notes";
@@ -43,6 +44,8 @@ import TuneIcon from "@mui/icons-material/Tune";
 import VideoFileIcon from "@mui/icons-material/VideoFile";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+
+import ExploreIcon from "@mui/icons-material/Explore";
 import { SvgIconProps } from "@mui/material";
 
 import React from "react";
@@ -106,6 +109,10 @@ export enum Icon {
 
   // Logbook
   LOGBOOK = "logbook",
+
+  // Atlas
+  ATLAS = "atlas",
+  MAP = "map",
 
   // SETTINGS
   SETTINGS = "project_settings",
@@ -206,6 +213,10 @@ const iconMap: Record<Icon, IconFactory> = {
 
   // Logbook
   [Icon.LOGBOOK]: (iconProps) => <MenuBookIcon {...iconProps} />,
+
+  // Atlas
+  [Icon.ATLAS]: (iconProps) => <ExploreIcon {...iconProps} />,
+  [Icon.MAP]: (iconProps) => <MapIcon {...iconProps} />,
 
   // SETTINGS
   [Icon.SETTINGS]: (iconProps) => <SettingsIcon {...iconProps} />,
