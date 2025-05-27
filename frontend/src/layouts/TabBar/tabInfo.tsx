@@ -41,6 +41,8 @@ function getIconForBase(base: string): Icon {
       return Icon.ML_AUTOMATION;
     case "atlas":
       return Icon.ATLAS;
+    case "map":
+      return Icon.MAP;
     default:
       return Icon.PROJECT;
   }
