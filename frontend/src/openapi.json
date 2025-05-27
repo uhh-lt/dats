@@ -719,7 +719,7 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/ProjectMetadataRead" },
+                  "items": { "$ref": "#/components/schemas/AspectRead" },
                   "title": "Response Project-Get All Aspects"
                 }
               }

@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { AspectRead } from "../models/AspectRead";
 import type { Body_project_upload_project_sdoc } from "../models/Body_project_upload_project_sdoc";
 import type { CodeRead } from "../models/CodeRead";
 import type { DocumentTagRead } from "../models/DocumentTagRead";
@@ -311,10 +312,10 @@ export class ProjectService {
   }
   /**
    * Returns all Aspects of the Project with the given ID if it exists
-   * @returns ProjectMetadataRead Successful Response
+   * @returns AspectRead Successful Response
    * @throws ApiError
    */
-  public static getAllAspects({ projId }: { projId: number }): CancelablePromise<Array<ProjectMetadataRead>> {
+  public static getAllAspects({ projId }: { projId: number }): CancelablePromise<Array<AspectRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/project/{proj_id}/aspects",

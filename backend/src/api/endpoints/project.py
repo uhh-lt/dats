@@ -364,7 +364,7 @@ def get_all_metadata(
 
 @router.get(
     "/{proj_id}/aspects",
-    response_model=List[ProjectMetadataRead],
+    response_model=List[AspectRead],
     summary="Returns all Aspects of the Project with the given ID if it exists",
 )
 def get_all_aspects(
