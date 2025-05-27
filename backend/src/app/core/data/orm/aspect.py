@@ -22,7 +22,9 @@ class AspectORM(ORMBase):
         Boolean, default=False, nullable=False
     )
     most_recent_job_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    embedding_model: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    embedding_model: Mapped[str] = mapped_column(
+        String, server_default="default", nullable=False
+    )
 
     # many to one
     project_id: Mapped[int] = mapped_column(
