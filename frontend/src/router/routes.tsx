@@ -15,6 +15,9 @@ import TimelineAnalysis from "../views/analysis/TimelineAnalysis/TimelineAnalysi
 import TimelineAnalysisDashboard from "../views/analysis/TimelineAnalysis/TimelineAnalysisDashboard.tsx";
 import WordFrequency from "../views/analysis/WordFrequency/WordFrequency.tsx";
 import Annotation from "../views/annotation/Annotation.tsx";
+import AtlasDashboard from "../views/atlas/AtlasDashboard.tsx";
+import Map from "../views/atlas/Map.tsx";
+import MapDashboard from "../views/atlas/MapDashboard.tsx";
 import Logbook from "../views/logbook/Logbook.tsx";
 import Login from "../views/login/Login.tsx";
 import Register from "../views/login/Register.tsx";
@@ -175,6 +178,22 @@ const router = createBrowserRouter([
       {
         path: "/project/:projectId/tools/ml-automation",
         element: <MlAutomation />,
+      },
+      {
+        path: "/project/:projectId/whiteboard",
+        element: <WhiteboardDashboard />,
+      },
+      {
+        path: "/project/:projectId/atlas",
+        element: <AtlasDashboard />,
+      },
+      {
+        path: "/project/:projectId/atlas/:atlasId",
+        element: <MapDashboard />,
+      },
+      {
+        path: "/project/:projectId/atlas/:atlasId/map",
+        element: <Map />,
       },
     ],
   },
