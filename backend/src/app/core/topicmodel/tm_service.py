@@ -198,7 +198,7 @@ class TMService:
             embeddings, coords = self.__compute_embeddings_and_coordinates(
                 project_id=aspect.project_id,
                 aspect_id=aspect.id,
-                embedding_model=aspect.embedding_model or "default",
+                embedding_model=aspect.embedding_model,
                 embedding_prompt=aspect.doc_embedding_prompt,
                 doc_aspects=doc_aspects,
             )
