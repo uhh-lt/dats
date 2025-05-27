@@ -101,6 +101,14 @@ export const QueryKey = {
   // SourceDocumentMetadataRead with given key of a document (by sdoc id, metadata key)
   SDOC_METADATA_BY_KEY: "sdocMetadataByKey",
 
+  // managed by TopicModellingHooks:
+  // Aspects of a Project (by project id)
+  PROJECT_ASPECTS: "projectAspects",
+  // A single aspect (by aspect id)
+  ASPECT: "aspect",
+  // A single TopicModelling Job (by tm job id)
+  TM_JOB: "tmJob",
+
   // managed by SearchStatisticsHooks:
   FILTER_ENTITY_STATISTICS: "filterEntityStatistics",
   FILTER_KEYWORD_STATISTICS: "filterKeywordStatistics",
