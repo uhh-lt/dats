@@ -104,7 +104,7 @@ const useStartTMJob = () =>
     },
   });
 
-const usePollTMJob = (tmJobId: string | undefined, initialData: TMJobRead | undefined) => {
+const usePollTMJob = (tmJobId: string | null | undefined, initialData: TMJobRead | undefined) => {
   return useQuery<TMJobRead, Error>({
     queryKey: [QueryKey.TM_JOB, tmJobId],
     queryFn: () =>
