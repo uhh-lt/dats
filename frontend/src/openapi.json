@@ -448,33 +448,6 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         }
-      },
-      "delete": {
-        "tags": ["project"],
-        "summary": "Removes all SourceDocuments of the Project with the given ID if it exists",
-        "operationId": "delete_project_sdocs",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "type": "integer" },
-                  "title": "Response Project-Delete Project Sdocs"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
       }
     },
     "/project/{proj_id}/user": {
@@ -578,33 +551,6 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         }
-      },
-      "delete": {
-        "tags": ["project"],
-        "summary": "Removes all Codes of the Project with the given ID if it exists",
-        "operationId": "delete_project_codes",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "type": "integer" },
-                  "title": "Response Project-Delete Project Codes"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
       }
     },
     "/project/{proj_id}/tag": {
@@ -625,33 +571,6 @@
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/DocumentTagRead" },
                   "title": "Response Project-Get Project Tags"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      },
-      "delete": {
-        "tags": ["project"],
-        "summary": "Removes all DocumentTags of the Project with the given ID if it exists",
-        "operationId": "delete_project_tags",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "type": "integer" },
-                  "title": "Response Project-Delete Project Tags"
                 }
               }
             }
@@ -758,7 +677,7 @@
     "/project/{proj_id}/metadata": {
       "get": {
         "tags": ["project"],
-        "summary": "Returns all ProjectMetadata of the SourceDocument with the given ID if it exists",
+        "summary": "Returns all ProjectMetadata of the Project with the given ID if it exists",
         "operationId": "get_all_metadata",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -773,6 +692,35 @@
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/ProjectMetadataRead" },
                   "title": "Response Project-Get All Metadata"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/project/{proj_id}/aspects": {
+      "get": {
+        "tags": ["project"],
+        "summary": "Returns all Aspects of the Project with the given ID if it exists",
+        "operationId": "get_all_aspects",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ProjectMetadataRead" },
+                  "title": "Response Project-Get All Aspects"
                 }
               }
             }
@@ -5577,10 +5525,286 @@
           }
         }
       }
+    },
+    "/topic_model/job/{aspect_id}": {
+      "post": {
+        "tags": ["topic_model"],
+        "summary": "Starts the TMJob for the given Parameters. If a job is already running, this will raise an error.",
+        "operationId": "start_tm_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  { "$ref": "#/components/schemas/AddMissingDocsToAspectParams" },
+                  { "$ref": "#/components/schemas/AddTopicParams" },
+                  { "$ref": "#/components/schemas/RemoveTopicParams" },
+                  { "$ref": "#/components/schemas/MergeTopicsParams" },
+                  { "$ref": "#/components/schemas/SplitTopicParams" },
+                  { "$ref": "#/components/schemas/RefineTopicModelParams" },
+                  { "$ref": "#/components/schemas/ResetTopicModelParams" }
+                ],
+                "title": "Tm Job Params"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TMJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/topic_model/job/{tm_job_id}": {
+      "get": {
+        "tags": ["topic_model"],
+        "summary": "Returns the TMJob for the given ID if it exists",
+        "operationId": "get_tm_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "tm_job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Tm Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TMJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/topic_model/aspect": {
+      "put": {
+        "tags": ["topic_model"],
+        "summary": "Creates a new Aspect",
+        "operationId": "create_aspect",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectCreate" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/topic_model/aspect/{aspect_id}": {
+      "get": {
+        "tags": ["topic_model"],
+        "summary": "Returns the Aspect with the given ID.",
+        "operationId": "get_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["topic_model"],
+        "summary": "Updates the Aspect with the given ID.",
+        "operationId": "update_aspect_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectUpdate" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["topic_model"],
+        "summary": "Removes the Aspect with the given ID.",
+        "operationId": "remove_aspect_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/topic_model/label_accept/{aspect_id}": {
+      "post": {
+        "tags": ["topic_model"],
+        "summary": "Accept the label of the provided SourceDocuments (by ID).",
+        "operationId": "accept_label",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "Sdoc Ids" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/topic_model/label_revert/{aspect_id}": {
+      "post": {
+        "tags": ["topic_model"],
+        "summary": "Reverts the label of the provided SourceDocuments (by ID).",
+        "operationId": "revert_label",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "Sdoc Ids" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/topic_model/visualize_documents/{aspect_id}": {
+      "get": {
+        "tags": ["topic_model"],
+        "summary": "Returns data for visualizing the documents of the given aspect.",
+        "operationId": "visualize_documents",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/topic_model/visualize_topics/{aspect_id}": {
+      "get": {
+        "tags": ["topic_model"],
+        "summary": "Returns data for visualizing the topics of the given aspect.",
+        "operationId": "visualize_topics",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AddMissingDocsToAspectParams": {
+        "properties": {
+          "tm_job_type": {
+            "type": "string",
+            "const": "add_missing_docs_to_aspect",
+            "title": "Tm Job Type",
+            "description": "Type of the TMJob",
+            "default": "add_missing_docs_to_aspect"
+          },
+          "aspect_id": {
+            "type": "integer",
+            "title": "Aspect Id",
+            "description": "ID of the aspect to which documents will be added."
+          }
+        },
+        "type": "object",
+        "required": ["aspect_id"],
+        "title": "AddMissingDocsToAspectParams"
+      },
+      "AddTopicParams": {
+        "properties": {
+          "tm_job_type": {
+            "type": "string",
+            "const": "add_topic",
+            "title": "Tm Job Type",
+            "description": "Type of the TMJob",
+            "default": "add_topic"
+          },
+          "create_dto": { "$ref": "#/components/schemas/TopicCreate", "description": "DTO for creating a new topic." }
+        },
+        "type": "object",
+        "required": ["create_dto"],
+        "title": "AddTopicParams"
+      },
       "AnnoscalingConfirmSuggest": {
         "properties": {
           "project_id": { "type": "integer", "title": "Project Id", "description": "Project to apply suggestions" },
@@ -5712,6 +5936,79 @@
         "type": "string",
         "enum": ["LLM_ZERO_SHOT", "LLM_FEW_SHOT", "MODEL_TRAINING"],
         "title": "ApproachType"
+      },
+      "AspectCreate": {
+        "properties": {
+          "name": { "type": "string", "title": "Name", "description": "Name of the aspect" },
+          "doc_embedding_prompt": {
+            "type": "string",
+            "title": "Doc Embedding Prompt",
+            "description": "Prompt for document embedding"
+          },
+          "doc_modification_prompt": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Doc Modification Prompt",
+            "description": "Prompt for document modification"
+          },
+          "is_hierarchical": {
+            "type": "boolean",
+            "title": "Is Hierarchical",
+            "description": "Whether the aspect is hierarchical"
+          },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "ID of the project this aspect belongs to"
+          }
+        },
+        "type": "object",
+        "required": ["name", "doc_embedding_prompt", "is_hierarchical", "project_id"],
+        "title": "AspectCreate"
+      },
+      "AspectRead": {
+        "properties": {
+          "name": { "type": "string", "title": "Name", "description": "Name of the aspect" },
+          "doc_embedding_prompt": {
+            "type": "string",
+            "title": "Doc Embedding Prompt",
+            "description": "Prompt for document embedding"
+          },
+          "doc_modification_prompt": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Doc Modification Prompt",
+            "description": "Prompt for document modification"
+          },
+          "is_hierarchical": {
+            "type": "boolean",
+            "title": "Is Hierarchical",
+            "description": "Whether the aspect is hierarchical"
+          },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the aspect" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "ID of the project this aspect belongs to"
+          },
+          "most_recent_job_id": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Most Recent Job Id",
+            "description": "ID of the most recent job associated with the aspect"
+          }
+        },
+        "type": "object",
+        "required": ["name", "doc_embedding_prompt", "is_hierarchical", "id", "project_id"],
+        "title": "AspectRead"
+      },
+      "AspectUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Name",
+            "description": "New name of the aspect"
+          }
+        },
+        "type": "object",
+        "title": "AspectUpdate"
       },
       "AttachedObjectType": {
         "type": "string",
@@ -6784,6 +7081,21 @@
           "updated"
         ],
         "title": "CrawlerJobRead"
+      },
+      "CreateAspectParams": {
+        "properties": {
+          "tm_job_type": {
+            "type": "string",
+            "const": "create_aspect",
+            "title": "Tm Job Type",
+            "description": "Type of the TMJob",
+            "default": "create_aspect"
+          },
+          "aspect_id": { "type": "integer", "title": "Aspect Id", "description": "ID of the created aspect." }
+        },
+        "type": "object",
+        "required": ["aspect_id"],
+        "title": "CreateAspectParams"
       },
       "DateGroupBy": { "type": "string", "enum": ["YEAR", "MONTH", "DAY"], "title": "DateGroupBy" },
       "DateOperator": {
@@ -8288,6 +8600,30 @@
         "type": "object",
         "title": "MemoUpdate"
       },
+      "MergeTopicsParams": {
+        "properties": {
+          "tm_job_type": {
+            "type": "string",
+            "const": "merge_topics",
+            "title": "Tm Job Type",
+            "description": "Type of the TMJob",
+            "default": "merge_topics"
+          },
+          "topic_to_keep": {
+            "type": "integer",
+            "title": "Topic To Keep",
+            "description": "ID of the topic to keep after merging."
+          },
+          "topic_to_merge": {
+            "type": "integer",
+            "title": "Topic To Merge",
+            "description": "ID of the topic to delete after merging."
+          }
+        },
+        "type": "object",
+        "required": ["topic_to_keep", "topic_to_merge"],
+        "title": "MergeTopicsParams"
+      },
       "MetaType": { "type": "string", "enum": ["STRING", "NUMBER", "DATE", "BOOLEAN", "LIST"], "title": "MetaType" },
       "MetadataExtractionLLMJobResult": {
         "properties": {
@@ -8747,6 +9083,51 @@
         "type": "object",
         "required": ["ml_job_type"],
         "title": "QuotationAttributionParams"
+      },
+      "RefineTopicModelParams": {
+        "properties": {
+          "tm_job_type": {
+            "type": "string",
+            "const": "refine_topic_model",
+            "title": "Tm Job Type",
+            "description": "Type of the TMJob",
+            "default": "refine_topic_model"
+          },
+          "aspect_id": { "type": "integer", "title": "Aspect Id", "description": "ID of the aspect to refine." }
+        },
+        "type": "object",
+        "required": ["aspect_id"],
+        "title": "RefineTopicModelParams"
+      },
+      "RemoveTopicParams": {
+        "properties": {
+          "tm_job_type": {
+            "type": "string",
+            "const": "remove_topic",
+            "title": "Tm Job Type",
+            "description": "Type of the TMJob",
+            "default": "remove_topic"
+          },
+          "topic_id": { "type": "integer", "title": "Topic Id", "description": "ID of the topic to remove." }
+        },
+        "type": "object",
+        "required": ["topic_id"],
+        "title": "RemoveTopicParams"
+      },
+      "ResetTopicModelParams": {
+        "properties": {
+          "tm_job_type": {
+            "type": "string",
+            "const": "reset_topic_model",
+            "title": "Tm Job Type",
+            "description": "Type of the TMJob",
+            "default": "reset_topic_model"
+          },
+          "aspect_id": { "type": "integer", "title": "Aspect Id", "description": "ID of the aspect to reset." }
+        },
+        "type": "object",
+        "required": ["aspect_id"],
+        "title": "ResetTopicModelParams"
       },
       "SDocStatus": { "type": "string", "enum": ["unfinished_or_erroneous", "finished"], "title": "SDocStatus" },
       "SampledSdocsResults": {
@@ -9943,6 +10324,26 @@
         "required": ["name", "id", "user_id", "sdoc_id", "created", "updated", "span_annotations"],
         "title": "SpanGroupWithAnnotationsRead"
       },
+      "SplitTopicParams": {
+        "properties": {
+          "tm_job_type": {
+            "type": "string",
+            "const": "split_topic",
+            "title": "Tm Job Type",
+            "description": "Type of the TMJob",
+            "default": "split_topic"
+          },
+          "topic_id": { "type": "integer", "title": "Topic Id", "description": "ID of the topic to split." },
+          "split_into": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Split Into",
+            "description": "Number of topics to split the topic into. Must be greater than 1. If not set, the topic will be split automatically."
+          }
+        },
+        "type": "object",
+        "required": ["topic_id", "split_into"],
+        "title": "SplitTopicParams"
+      },
       "StringOperator": {
         "type": "string",
         "enum": ["STRING_CONTAINS", "STRING_EQUALS", "STRING_NOT_EQUALS", "STRING_STARTS_WITH", "STRING_ENDS_WITH"],
@@ -9952,6 +10353,79 @@
         "type": "string",
         "enum": ["unit", "annotation", "document"],
         "title": "TAAnnotationAggregationType"
+      },
+      "TMJobRead": {
+        "properties": {
+          "status_msg": { "type": "string", "title": "Status Msg", "description": "Status message of the TMJob" },
+          "tm_job_type": { "$ref": "#/components/schemas/TMJobType", "description": "Type of the TMJob" },
+          "parameters": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/CreateAspectParams" },
+              { "$ref": "#/components/schemas/AddMissingDocsToAspectParams" },
+              { "$ref": "#/components/schemas/AddTopicParams" },
+              { "$ref": "#/components/schemas/RemoveTopicParams" },
+              { "$ref": "#/components/schemas/MergeTopicsParams" },
+              { "$ref": "#/components/schemas/SplitTopicParams" },
+              { "$ref": "#/components/schemas/RefineTopicModelParams" },
+              { "$ref": "#/components/schemas/ResetTopicModelParams" }
+            ],
+            "title": "Parameters",
+            "description": "Parameters for the TMJob. The type depends on the TMJobType.",
+            "discriminator": {
+              "propertyName": "tm_job_type",
+              "mapping": {
+                "add_missing_docs_to_aspect": "#/components/schemas/AddMissingDocsToAspectParams",
+                "add_topic": "#/components/schemas/AddTopicParams",
+                "create_aspect": "#/components/schemas/CreateAspectParams",
+                "merge_topics": "#/components/schemas/MergeTopicsParams",
+                "refine_topic_model": "#/components/schemas/RefineTopicModelParams",
+                "remove_topic": "#/components/schemas/RemoveTopicParams",
+                "reset_topic_model": "#/components/schemas/ResetTopicModelParams",
+                "split_topic": "#/components/schemas/SplitTopicParams"
+              }
+            }
+          },
+          "status": {
+            "$ref": "#/components/schemas/BackgroundJobStatus",
+            "description": "Status of the BackgroundJob",
+            "default": "Waiting"
+          },
+          "id": { "type": "string", "title": "Id", "description": "UUID of the BackgroundJob" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "The ID of the Project for which the BackgroundJob is executed."
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the BackgroundJob"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated",
+            "description": "Updated timestamp of the BackgroundJob"
+          }
+        },
+        "type": "object",
+        "required": ["status_msg", "tm_job_type", "parameters", "id", "project_id", "created", "updated"],
+        "title": "TMJobRead"
+      },
+      "TMJobType": {
+        "type": "string",
+        "enum": [
+          "create_aspect",
+          "add_missing_docs_to_aspect",
+          "add_topic",
+          "remove_topic",
+          "merge_topics",
+          "split_topic",
+          "refine_topic_model",
+          "reset_topic_model"
+        ],
+        "title": "TMJobType"
       },
       "TagNodeData": {
         "properties": {
@@ -10245,6 +10719,27 @@
         },
         "type": "object",
         "title": "TimelineAnalysisUpdate"
+      },
+      "TopicCreate": {
+        "properties": {
+          "parent_topic_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Parent Topic Id",
+            "description": "ID of the parent topic, if any"
+          },
+          "aspect_id": {
+            "type": "integer",
+            "title": "Aspect Id",
+            "description": "ID of the aspect this topic belongs to"
+          },
+          "level": { "type": "integer", "title": "Level", "description": "Hierarchical level of the topic" },
+          "name": { "type": "string", "title": "Name", "description": "Name of the topic" },
+          "description": { "type": "string", "title": "Description", "description": "Description of the topic" },
+          "color": { "type": "string", "title": "Color", "description": "Color code for the topic visualization" }
+        },
+        "type": "object",
+        "required": ["aspect_id", "level", "name", "description", "color"],
+        "title": "TopicCreate"
       },
       "TrainerJobParameters": {
         "properties": {
