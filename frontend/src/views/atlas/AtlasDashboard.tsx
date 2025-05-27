@@ -3,12 +3,12 @@ import ContentContainerLayout from "../../layouts/ContentLayouts/ContentContaine
 import MapCard from "./MapCard.tsx";
 
 import { ChangeEvent, useState } from "react";
+import TopicModellingHooks from "../../api/TopicModellingHooks.ts";
 import { useDebounce } from "../../utils/useDebounce.ts";
 import CreateMapCard from "./CreateMapCard.tsx";
 
 function AtlasDashboard() {
-  // mock data
-  const data = Array.from({ length: 100 }).map((_, idx) => idx);
+  const aspects = TopicModellingHooks.useGetAllAspectsList();
 
   // filter query state
   const [filterQuery, setFilterQuery] = useState("");
@@ -24,9 +24,10 @@ function AtlasDashboard() {
   };
 
   // filtered data
-  const filteredData = data.filter((data) => {
-    return String(data).includes(debouncedFilterQuery);
-  });
+  const filteredAspects =
+    aspects.data?.filter((data) => {
+      return data.name.includes(debouncedFilterQuery);
+    }) || [];
 
   return (
     <ContentContainerLayout>
@@ -70,8 +71,14 @@ function AtlasDashboard() {
         </Stack>
         <Box display="flex" gap={2} paddingY={0} flexWrap="wrap">
           <CreateMapCard />
-          {filteredData.map((data, idx) => (
-            <MapCard key={idx} to={`./${data}`} title={`Test Map ${data}`} color={"#77dd77"} description={""} />
+          {filteredAspects.map((aspect) => (
+            <MapCard
+              key={aspect.id}
+              to={`./map-details/${aspect.id}`}
+              title={aspect.name}
+              color={"#77dd77"}
+              description={""}
+            />
           ))}
         </Box>
       </Stack>
