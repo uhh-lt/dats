@@ -719,7 +719,6 @@ dependencies = [
     { name = "celery" },
     { name = "cssselect" },
     { name = "debugpy" },
-    { name = "einops" },
     { name = "elasticsearch" },
     { name = "email-validator" },
     { name = "fastapi" },
@@ -821,7 +820,6 @@ requires-dist = [
     { name = "celery", specifier = "==5.2" },
     { name = "cssselect", specifier = "==1.2.0" },
     { name = "debugpy", specifier = "==1.8.0" },
-    { name = "einops", specifier = ">=0.8.1" },
     { name = "elasticsearch", specifier = "==7.17" },
     { name = "email-validator", specifier = "==2.2.0" },
     { name = "fastapi", specifier = "==0.115.12" },
@@ -905,7 +903,7 @@ dev = [
     { name = "setfit", specifier = "==1.1.2" },
     { name = "spacy", specifier = "==3.8.4" },
     { name = "spacy-curated-transformers", specifier = "==0.3.0" },
-    { name = "spacy-transformers", specifier = "==1.3.8" },
+    { name = "spacy-transformers", specifier = "==1.3.9" },
     { name = "timm", specifier = "==1.0.15" },
     { name = "torch", specifier = "==2.6.0" },
     { name = "torchaudio", specifier = "==2.6.0" },
@@ -1125,15 +1123,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c0/1f/924e3caae75f471eae4b26bd13b698f6af2c44279f67af317439c2f4c46a/ecdsa-0.19.1.tar.gz", hash = "sha256:478cba7b62555866fcb3bb3fe985e06decbdb68ef55713c4e5ab98c57d508e61", size = 201793 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/cb/a3/460c57f094a4a165c84a1341c373b0a4f5ec6ac244b998d5021aade89b77/ecdsa-0.19.1-py2.py3-none-any.whl", hash = "sha256:30638e27cf77b7e15c4c4cc1973720149e1033827cfd00661ca5c8cc0cdb24c3", size = 150607 },
-]
-
-[[package]]
-name = "einops"
-version = "0.8.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/e5/81/df4fbe24dff8ba3934af99044188e20a98ed441ad17a274539b74e82e126/einops-0.8.1.tar.gz", hash = "sha256:de5d960a7a761225532e0f1959e5315ebeafc0cd43394732f103ca44b9837e84", size = 54805 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/87/62/9773de14fe6c45c23649e98b83231fffd7b9892b6cf863251dc2afa73643/einops-0.8.1-py3-none-any.whl", hash = "sha256:919387eb55330f5757c6bea9165c5ff5cfe63a642682ea788a6d472576d81737", size = 64359 },
 ]
 
 [[package]]
@@ -4145,7 +4134,7 @@ wheels = [
 
 [[package]]
 name = "spacy-transformers"
-version = "1.3.8"
+version = "1.3.9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
@@ -4155,15 +4144,15 @@ dependencies = [
     { name = "torch" },
     { name = "transformers" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b6/0b/b6d5c9a4c235f1d0f93dae5e90890eb9eb79297f46df93bd334e64052267/spacy_transformers-1.3.8.tar.gz", hash = "sha256:87cf77094cf27737a7fc0c29da2cd8879756b5d58ff016d2ad01da54a0c8058a", size = 49514 }
+sdist = { url = "https://files.pythonhosted.org/packages/92/ce/1ab5eacd4bf216fce2c1cee347742a8addc9ee4006240f03d2de4e289507/spacy_transformers-1.3.9.tar.gz", hash = "sha256:f4050dfe3bf085aebc89ddb7841f7325778f101cde0d2c9952367c74e10fcb83", size = 49565 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f8/34/98f7c2bd2a494fd82bcf030dde6b7708bf3e9d62b8fc02acbd92c778f51e/spacy_transformers-1.3.8-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:895930a8d6862b1c7e28c460949e3bd445af257fae35a53a7b65aebde3705fd5", size = 177254 },
-    { url = "https://files.pythonhosted.org/packages/9b/ce/a121bab7747ce169f1fac7b19c33ce411f74cfa6d4197a1468f63c57c6e9/spacy_transformers-1.3.8-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:5a20b2e791ff2177142412b38c08c7b393e163931ea3022407e3e67bf12bddb1", size = 171047 },
-    { url = "https://files.pythonhosted.org/packages/5f/32/8d4009c435e001bee4860d0b7ee5e9b471562ef0d5022dce8953e74406f5/spacy_transformers-1.3.8-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:fd952a6dabd5c03b7062ff255c1016226390126a8f340a48f0b2f2ca9884d3cd", size = 747840 },
-    { url = "https://files.pythonhosted.org/packages/42/da/708aba3434be6211173199121b4e95cb692d66f5cbf6bfa5506d679690be/spacy_transformers-1.3.8-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b5d40319be0b651c14aefb918ba325fbfe89f22c12df8cd86feaf89a8e349384", size = 756226 },
-    { url = "https://files.pythonhosted.org/packages/dd/bd/3009a2052de8963262edb1276d92b297a2343c2eeb2b08971ae9ae098178/spacy_transformers-1.3.8-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:542743c55a7b6dd0298ce947347b32c25a30be98958bce0fdcdc4d6a0846a237", size = 1644154 },
-    { url = "https://files.pythonhosted.org/packages/27/73/3cf3198486a512b2370ab6f1f50410ffa7ae9a9ec604aab0a520e0b3f872/spacy_transformers-1.3.8-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:f9e96a0c2d4d12885c38fa2878aed9246808e9f06e426e4af053636c9b8c44d1", size = 1710697 },
-    { url = "https://files.pythonhosted.org/packages/1f/87/ebb958353a0ff824e11a3f35768accc541f93777d720d7514e1877c2ea97/spacy_transformers-1.3.8-cp311-cp311-win_amd64.whl", hash = "sha256:615467a597dbfdd5a70d3a69e7b2cb0698a0c781da0acc7c27ac1f14a489cd39", size = 344608 },
+    { url = "https://files.pythonhosted.org/packages/d2/f4/0a58b2d48c165a0d0b3f40570cd095ef6491624acd0a8aa68a49d2db0792/spacy_transformers-1.3.9-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:f05c8f83cb15c5c81b105b2c5216aa5264ec8436727a9dd54f6d7bc8517697ba", size = 171357 },
+    { url = "https://files.pythonhosted.org/packages/82/65/9891d4302a3bfa151c161af79c76a61a1f788312fe4732865b14ce8c92a8/spacy_transformers-1.3.9-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:fde174c8a82af85586c29f0d6e1b8201c1d036b882dc77d8635b752f920bf822", size = 164218 },
+    { url = "https://files.pythonhosted.org/packages/1b/8a/e07d5be4c15d73a805e6ea9cb5238d958dd1cbafddd916c3cd47739acbcb/spacy_transformers-1.3.9-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:1c2669bac06ff3f6709418561018454aaaaae73bfdc903b8670ce3f0a634dbd6", size = 749487 },
+    { url = "https://files.pythonhosted.org/packages/bf/d7/1a7ec23ee91a4d32553ff3315abc49afc9ce934a1c89eb5ca4f7d228ea93/spacy_transformers-1.3.9-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5ffa6c6b248da52230e9c1e5fe6447b02ef06389202b4b65338183bd71c56997", size = 758753 },
+    { url = "https://files.pythonhosted.org/packages/3f/04/ef5e323f66e1b88aa4e3006eaad0e3be67040565a29a5af50e2f746c369b/spacy_transformers-1.3.9-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:92b87b52dd5c5fae7e2c7721bf95ae327475b1dbde8614034ab3a76480a01eff", size = 1634288 },
+    { url = "https://files.pythonhosted.org/packages/92/0d/7a2cb0dbd695e6314e05c926ed219276d2846979e33454aa972684ac3f8c/spacy_transformers-1.3.9-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:2b59535ed40c8d5f92f038e7d33cf4de957c9d509720d02f1d07275965e9f127", size = 1697457 },
+    { url = "https://files.pythonhosted.org/packages/b0/ec/aa350ee046df53b894deb1d26acafc1ca8e74c9c043c6c7be6ee0eb45702/spacy_transformers-1.3.9-cp311-cp311-win_amd64.whl", hash = "sha256:9a2274a71a4ef356900b39c10d85d49491a769093485614ee12f8b9f78340ba7", size = 342614 },
 ]
 
 [[package]]
