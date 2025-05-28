@@ -43,8 +43,8 @@ class PromptEmbedderModel:
 
     def _init_encoder_for_inference(self):
         self.encoder.max_seq_length = MAX_SEQ_LEN
-        self.encoder.half().to(DEVICE)
-        self.encoder.eval()
+        self.encoder = self.encoder.half().to(DEVICE)
+        self.encoder = self.encoder.eval()
 
     def __get_checkpoints_dir(
         self,

@@ -1,5 +1,5 @@
 import re
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Callable, Dict, List, Optional, Set, Tuple
 
 import joblib
 import numpy as np
@@ -30,8 +30,8 @@ from app.core.topicmodel.tm_job import (
     RemoveTopicParams,
     ResetTopicModelParams,
     SplitTopicParams,
+    TMJobRead,
 )
-from app.core.topicmodel.tm_job_service import TMJUpdateFN
 from app.core.vector.crud.aspect_embedding import crud_aspect_embedding
 from app.core.vector.crud.topic_embedding import crud_topic_embedding
 from app.core.vector.dto.aspect_embedding import AspectObjectIdentifier
@@ -44,6 +44,8 @@ from pydantic import BaseModel
 from sklearn.feature_extraction.text import CountVectorizer
 from sqlalchemy.orm import Session
 from umap import UMAP
+
+TMJUpdateFN = Callable[[Optional[int], Optional[str]], TMJobRead]
 
 
 class TMService:
@@ -316,8 +318,9 @@ class TMService:
         # 3. Cluster the reduced embeddings
         self._log_status_msg("Clustering the reduced embeddings with HDBSCAN...")
         hdbscan_model = HDBSCAN(min_cluster_size=10, metric="euclidean")
-        clusters = hdbscan_model.fit_predict(reduced_embeddings)
-        cluster_ids = np.unique(clusters).tolist()
+        clusters = hdbscan_model.fit_predict(reduced_embeddings).tolist()
+        cluster_ids = set(clusters)
+        cluster_ids.discard(-1)  # remove outliers
         self._log_status_msg(f"Found {len(cluster_ids)} clusters with HDBSCAN")
 
         # 4. Store the topics (clusters) in the DB
@@ -326,7 +329,6 @@ class TMService:
             create_dtos=[
                 TopicCreateIntern(aspect_id=aspect_id, level=0)
                 for cluster in cluster_ids
-                if cluster != -1  # no outliers
             ],
         )
         cluster_id2topic_id = {
@@ -393,7 +395,9 @@ class TMService:
         documents = self.__preprocess_text(documents_per_topic)
 
         # Compute bag-of-words representation
-        vectorizer_model = CountVectorizer(ngram_range=(1, 1), lowercase=True)
+        vectorizer_model = CountVectorizer(
+            ngram_range=(1, 1), lowercase=True, stop_words="english"
+        )
         X = vectorizer_model.fit_transform(documents)
         words = vectorizer_model.get_feature_names_out().tolist()
 
@@ -402,6 +406,7 @@ class TMService:
             bm25_weighting=True, reduce_frequent_words=True
         )
         c_tf_idf = ctfidf_model.fit_transform(X)
+        c_tf_idf = np.array(c_tf_idf.todense())  # type: ignore
 
         return c_tf_idf, words
 
@@ -467,12 +472,12 @@ class TMService:
 
         # 4. Compute the c-TF-IDF
         self._log_status_msg(
-            f"Computing c-TF-IDF for {len(documents_per_topic)} documents (1 doc per topic)..."
+            f"Computing c-TF-IDF for {len(documents_per_topic)} topics..."
         )
         c_tf_idf, words = self.__c_tf_idf(documents_per_topic=documents_per_topic)
 
         # 5. Find the most important words for each topic
-        scores, indices = torch.topk(torch.tensor(c_tf_idf), k=10)
+        scores, indices = torch.topk(torch.tensor(c_tf_idf), k=50)
         scores = scores.tolist()
         indices = indices.tolist()
         assert (
@@ -518,6 +523,10 @@ class TMService:
             )
         )
 
+        self._log_status_msg(
+            f"Computing topic embeddings & top documents for {len(tids)} topics."
+        )
+
         topic_centroids: Dict[int, np.ndarray] = {}
         top_docs: List[List[int]] = []
         assigned_topics_arr = np.array(assigned_topics)
@@ -535,7 +544,6 @@ class TMService:
             # .. compute the top 3 documents
             similarities = doc_embeddings @ topic_centroids[topic_id]
             num_top_docs_to_retrieve = min(3, len(doc_embeddings))
-            # TODO: Is this correct? How do I want to sort? i think it is ascending now! vllt einfach torchtopk nutzen?
             top_doc_indices = np.argsort(similarities)[:num_top_docs_to_retrieve]
             top_doc_ids = [
                 topic_to_doc_aspects[topic_id][i].sdoc_id for i in top_doc_indices
@@ -635,6 +643,8 @@ class TMService:
                 aspect_id=aspect_id,
                 topic_ids=None,
             )
+
+            self._log_status_msg("Successfully created aspect!")
 
     def add_missing_docs_to_aspect(
         self,

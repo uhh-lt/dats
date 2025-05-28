@@ -2,6 +2,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.util.color import get_next_color
+
 from .dto_base import UpdateDTOBase
 
 
@@ -25,8 +27,9 @@ class TopicCreateIntern(BaseModel):
     description: Optional[str] = Field(
         default=None, description="Description of the topic"
     )
-    color: Optional[str] = Field(
-        default=None, description="Color code for the topic visualization"
+    color: str = Field(
+        description="Color code for the topic visualization",
+        default_factory=get_next_color,
     )
     parent_topic_id: Optional[int] = Field(
         default=None, description="ID of the parent topic, if any"
