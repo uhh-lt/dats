@@ -14,6 +14,14 @@ import type { SplitTopicParams } from "./SplitTopicParams";
 import type { TMJobType } from "./TMJobType";
 export type TMJobRead = {
   /**
+   * Current step of the TMJob. Starts at 0 and increments with each major step.
+   */
+  step: number;
+  /**
+   * List of steps that the TMJob consists of. Each step is a string describing the action taken.
+   */
+  steps: Array<string>;
+  /**
    * Status message of the TMJob
    */
   status_msg: string;
