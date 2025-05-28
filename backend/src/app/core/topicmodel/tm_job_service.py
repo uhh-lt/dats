@@ -18,6 +18,7 @@ from app.core.topicmodel.tm_job import (
     TMJobUpdate,
 )
 from app.util.singleton_meta import SingletonMeta
+from loguru import logger
 
 
 class TMJobPreparationError(Exception):
@@ -106,7 +107,16 @@ class TMJobService(metaclass=SingletonMeta):
 
     def update_status_callback(self, tm_job_id: str) -> TMJUpdateFN:
         def callback(step: Optional[int], status_msg: Optional[str]) -> TMJobRead:
-            update = TMJobUpdate(step=step, status_msg=status_msg)
+            if step is None and status_msg is None:
+                raise ValueError("At least one of step or status_msg must be provided.")
+
+            if step is not None and status_msg is not None:
+                update = TMJobUpdate(step=step, status_msg=status_msg)
+            elif status_msg is not None:
+                update = TMJobUpdate(status_msg=status_msg)
+            else:
+                update = TMJobUpdate(step=step)
+
             return self.update_tm_job(tm_job_id, update)
 
         return callback
@@ -209,6 +219,7 @@ class TMJobService(metaclass=SingletonMeta):
                 ),
             )
         except Exception as e:
+            logger.exception(e)
             tmj = self.update_tm_job(
                 tm_job_id,
                 TMJobUpdate(status=BackgroundJobStatus.ERROR, status_msg=repr(e)),

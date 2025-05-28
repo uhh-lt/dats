@@ -107,7 +107,6 @@ TMJobParams = Union[
 
 class TMJobBase(BaseModel):
     step: int = Field(
-        default=0,
         description="Current step of the TMJob. Starts at 0 and increments with each major step.",
     )
     steps: list[str] = Field(

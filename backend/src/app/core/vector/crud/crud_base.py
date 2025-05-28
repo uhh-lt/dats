@@ -340,7 +340,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
         if not result.objects:
             raise WeaviateObjectIDNotFoundException(id=id, collection=collection)
 
-        embedding = result.objects[0].vector["vector"]
+        embedding = result.objects[0].vector["default"]
         assert isinstance(
             embedding, list
         ), f"Expected embedding to be a list, got {type(embedding)}"
@@ -393,7 +393,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
             # Map each result to its ID and embedding
             for obj in result.objects:
                 obj_id = self.object_identifier.model_validate(obj.properties)
-                vector = obj.vector["vector"]
+                vector = obj.vector["default"]
                 assert isinstance(
                     vector, list
                 ), f"Expected embedding to be a list, got {type(vector)}"
@@ -436,7 +436,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
             include_vector=True,
         )
 
-        return data_obj.vector["vector"]  # type: ignore
+        return data_obj.vector["default"]  # type: ignore
 
     def get_embeddings_by_uuids(
         self, project_id: int, uuids: List[str]
@@ -454,10 +454,14 @@ class CRUDBase(Generic[ID, COLLECTION]):
         result = collection.query.fetch_objects_by_ids(
             ids=uuids,
             include_vector=True,
+            limit=len(uuids),  # Ensure we fetch all requested UUIDs
         )
-        for obj, uuid in zip(result.objects, uuids):
-            assert obj.uuid == uuid, "UUIDs do not match"
-        return [obj.vector["vector"] for obj in result.objects]  # type: ignore
+
+        uuid2vector: Dict[str, List[float]] = {
+            str(obj.uuid): obj.vector["default"]
+            for obj in result.objects  # type: ignore
+        }
+        return [uuid2vector[uuid] for uuid in uuids]
 
     def find_embeddings_by_filters(
         self, project_id: int, filters: _Filters
@@ -484,7 +488,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
         embeddings: List[EmbeddingSearchResult[ID]] = []
         for obj in result.objects:
             obj_id = self.object_identifier.model_validate(obj.properties)
-            vector = obj.vector["vector"]
+            vector = obj.vector["default"]
             assert isinstance(
                 vector, list
             ), f"Expected embedding to be a list, got {type(vector)}"
