@@ -31,7 +31,7 @@ from app.core.topicmodel.tm_job import (
     ResetTopicModelParams,
     SplitTopicParams,
 )
-from app.core.topicmodel.tm_job_service import TMJobService
+from app.core.topicmodel.tm_job_service import TMJUpdateFN
 from app.core.vector.crud.aspect_embedding import crud_aspect_embedding
 from app.core.vector.crud.topic_embedding import crud_topic_embedding
 from app.core.vector.dto.aspect_embedding import AspectObjectIdentifier
@@ -47,12 +47,19 @@ from umap import UMAP
 
 
 class TMService:
-    def __init__(self, tm_job_service: TMJobService):
-        self.tmjs: TMJobService = tm_job_service
+    def __init__(self, update_status_clbk: TMJUpdateFN):
+        self.update_status_clbk: TMJUpdateFN = update_status_clbk
         self.rms: RayModelService = RayModelService()
         self.ollama: OllamaService = OllamaService()
         self.sqls: SQLService = SQLService()
         self.repo: RepoService = RepoService()
+
+    def _log_status_msg(self, status_msg: str):
+        self.update_status_clbk(None, status_msg)
+        logger.info(status_msg)
+
+    def _log_status_step(self, step: int):
+        self.update_status_clbk(step, None)
 
     def _modify_documents(self, db: Session, aspect_id: int):
         aspect = crud_aspect.read(db=db, id=aspect_id)
@@ -64,7 +71,9 @@ class TMService:
                 db=db, aspect_id=aspect_id
             )
         ]
-        logger.info(f"Found {len(sdoc_data)} source documents without an aspect. ")
+        self._log_status_msg(
+            f"Found {len(sdoc_data)} source documents without an aspect. Modifying them..."
+        )
 
         # 2. Modify the documents
         class OllamaResponse(BaseModel):
@@ -73,8 +82,11 @@ class TMService:
         create_dtos: List[DocumentAspectCreate] = []
         if aspect.doc_modification_prompt:
             # if prompt is provided, use ollama to generate a modified document
-            logger.info(f"Using Ollama to modify {len(sdoc_data)} source documents...")
-            for sdoc_id, sdoc_content in sdoc_data:
+            for idx, (sdoc_id, sdoc_content) in enumerate(sdoc_data):
+                self._log_status_msg(
+                    f"Modifying documents with LLM ({idx + 1} / {len(sdoc_data)})..."
+                )
+
                 response = self.ollama.llm_chat(
                     system_prompt="You are a document modification assistant.",
                     user_prompt=aspect.doc_modification_prompt,
@@ -87,11 +99,13 @@ class TMService:
                         content=response.content,
                     )
                 )
+
         else:
             # if no prompt is provided, use the original document
-            logger.info(
+            self._log_status_msg(
                 f"No prompt provided. Using the original document for {len(sdoc_data)} source documents."
             )
+
             create_dtos.extend(
                 [
                     DocumentAspectCreate(
@@ -102,8 +116,11 @@ class TMService:
                     for sdoc_id, sdoc_content in sdoc_data
                 ]
             )
+
         crud_document_aspect.create_multi(db=db, create_dtos=create_dtos)
-        logger.info(f"Stored {len(create_dtos)} document aspects.")
+        self._log_status_msg(
+            f"Modified {len(create_dtos)} source documents and created DocumentAspects."
+        )
 
     def __compute_embeddings_and_coordinates(
         self,
@@ -116,7 +133,7 @@ class TMService:
         assert len(doc_aspects) > 0, "No document aspects provided."
 
         # 1. Embed the document aspects
-        logger.info(
+        self._log_status_msg(
             f"Computing embeddings for {len(doc_aspects)} document aspects with model {embedding_model}..."
         )
         embedding_output = self.rms.promptembedder_embedding(
@@ -140,7 +157,7 @@ class TMService:
 
         # No model exists, we need to fit a new UMAP model
         if not umap_model_path.exists():
-            logger.info(
+            self._log_status_msg(
                 f"Fitting a new UMAP model for {len(doc_aspects)} document aspects..."
             )
 
@@ -150,23 +167,31 @@ class TMService:
 
             # Store the fitted UMAP model
             joblib.dump(reducer, umap_model_path)
-            logger.info(f"Stored new UMAP model at {umap_model_path}")
+            self._log_status_msg(
+                f"Fitted and stored new UMAP model at {umap_model_path}."
+            )
 
         # A model exists, we need load the existing UMAP model
         else:
             reducer = joblib.load(umap_model_path)
-            logger.info(f"Loaded existing UMAP model from {umap_model_path}.")
+            self._log_status_msg(f"Loaded existing UMAP model from {umap_model_path}.")
 
-        # Compute the OG 2D coordinates
-        logger.info(
-            f"Computing 2D coordinates for {len(doc_aspects)} document aspects..."
+        # Compute the 2D coordinates
+        self._log_status_msg(
+            f"Computing 2D coordinates for {len(doc_aspects)} document aspects using the UMAP model..."
         )
         coords = reducer.transform(embeddings).tolist()
+        self._log_status_msg(
+            f"Computed 2D coordinates for {len(doc_aspects)} document aspects."
+        )
 
         return embedding_output.embeddings, coords
 
     def _embed_documents(
-        self, db: Session, aspect_id: int, sdoc_ids: Optional[List[int]] = None
+        self,
+        db: Session,
+        aspect_id: int,
+        sdoc_ids: Optional[List[int]] = None,
     ):
         """
         Embeds all DocumentAspects of the given Aspect:
@@ -194,7 +219,9 @@ class TMService:
 
         # 2. Compute embedding & coordinates, then store them in the DB
         if len(doc_aspects) > 0:
-            logger.info(f"Embedding {len(doc_aspects)} document aspects...")
+            self._log_status_msg(
+                f"Embedding {len(doc_aspects)} document aspects for aspect {aspect_id}..."
+            )
             embeddings, coords = self.__compute_embeddings_and_coordinates(
                 project_id=aspect.project_id,
                 aspect_id=aspect.id,
@@ -230,7 +257,7 @@ class TMService:
                 ],
             )
 
-            logger.info(
+            self._log_status_msg(
                 f"Stored embeddings and coordinates for {len(doc_aspects)} document aspects."
             )
 
@@ -270,28 +297,28 @@ class TMService:
                 project_id=aspect.project_id, uuids=embedding_uuids
             )
         )
-        logger.info(
+        self._log_status_msg(
             f"Found {len(doc_aspects)} document aspects with embeddings for clustering."
         )
 
         # 2. Reduce the dimensionality of the embeddings
-        logger.info(
+        self._log_status_msg(
             f"Reducing the dimensionality of the embeddings from {embeddings.shape} to 10 dimensions..."
         )
         reducer = UMAP(
             n_neighbors=15, n_components=10, metric="cosine", low_memory=False
         )
         reduced_embeddings = np.array(reducer.fit_transform(embeddings))
-        logger.info(
+        self._log_status_msg(
             f"Reduced the dimensionality of the embeddings from {embeddings.shape} to {reduced_embeddings.shape}."
         )
 
         # 3. Cluster the reduced embeddings
-        logger.info("Clustering the reduced embeddings with HDBSCAN...")
+        self._log_status_msg("Clustering the reduced embeddings with HDBSCAN...")
         hdbscan_model = HDBSCAN(min_cluster_size=10, metric="euclidean")
         clusters = hdbscan_model.fit_predict(reduced_embeddings)
         cluster_ids = np.unique(clusters).tolist()
-        logger.info(f"Found {len(cluster_ids)} clusters with HDBSCAN")
+        self._log_status_msg(f"Found {len(cluster_ids)} clusters with HDBSCAN")
 
         # 4. Store the topics (clusters) in the DB
         topics = crud_topic.create_multi(
@@ -305,7 +332,7 @@ class TMService:
         cluster_id2topic_id = {
             cluster_id: topic.id for cluster_id, topic in zip(cluster_ids, topics)
         }
-        logger.info(
+        self._log_status_msg(
             f"Stored {len(cluster_id2topic_id)} topics in the database corresponding to {len(cluster_ids)} clusters."
         )
 
@@ -321,7 +348,7 @@ class TMService:
                 if cluster != -1  # no outliers
             ],
         )
-        logger.info(
+        self._log_status_msg(
             f"Assigned {len(doc_aspects)} document aspects to {len(cluster_id2topic_id)} topics."
         )
 
@@ -379,7 +406,10 @@ class TMService:
         return c_tf_idf, words
 
     def _extract_topics(
-        self, db: Session, aspect_id: int, topic_ids: Optional[List[int]]
+        self,
+        db: Session,
+        aspect_id: int,
+        topic_ids: Optional[List[int]],
     ):
         """
         Extracts all topis of the given Aspect by:
@@ -407,7 +437,7 @@ class TMService:
             # TODO: aber es sollten wahrscheinlich trotzdem nur die topics geupdated werden, die in topic_ids sind!
             topics = crud_topic.read_by_ids(db=db, ids=topic_ids)
         topic_ids = [topic.id for topic in topics]
-        logger.info(f"Extracting data for {len(topic_ids)} topics.")
+        self._log_status_msg(f"Extracting data for {len(topic_ids)} topics.")
 
         # 2. Read the document aspects
         doc_aspects, assigned_topics = (
@@ -419,7 +449,7 @@ class TMService:
         assert all(
             at in topic_ids for at in assigned_topics
         ), "Assigned topics are not in the list of topics."
-        logger.info(
+        self._log_status_msg(
             f"Found {len(doc_aspects)} document aspects assigned to {len(topic_ids)} topics."
         )
 
@@ -436,7 +466,7 @@ class TMService:
         tids = list(topic_to_doc_aspects.keys())
 
         # 4. Compute the c-TF-IDF
-        logger.info(
+        self._log_status_msg(
             f"Computing c-TF-IDF for {len(documents_per_topic)} documents (1 doc per topic)..."
         )
         c_tf_idf, words = self.__c_tf_idf(documents_per_topic=documents_per_topic)
@@ -453,7 +483,7 @@ class TMService:
         for scores, indices, topic_id in zip(scores, indices, tids):
             top_words.append([words[i] for i in indices])
             top_word_scores.append([float(s) for s in scores])
-        logger.info("Extracted top words and scores for each topic!")
+        self._log_status_msg("Extracted top words and scores for each topic!")
 
         # 6. Generate topic name and description with LLM
         class OllamaResponse(BaseModel):
@@ -462,9 +492,11 @@ class TMService:
 
         topic_names = []
         topic_descriptions = []
-        logger.info("Generating topic names and descriptions with LLM...")
+        self._log_status_msg("Generating topic names and descriptions with LLM...")
         for tw in top_words:
-            logger.info(f"Generating name and description for topic {tw[:5]}...")
+            self._log_status_msg(
+                f"Generating name and description for topic {tw[:5]}..."
+            )
             response = self.ollama.llm_chat(
                 system_prompt="You are a topic name and description generator.",
                 user_prompt=f"Generate a name and description for the topic with the following words: {', '.join(tw)}",
@@ -516,7 +548,7 @@ class TMService:
                     DocumentTopicUpdate(distance=1.0 - similarity)
                 )
 
-        logger.info(
+        self._log_status_msg(
             f"Computed topic embeddings & top documents for {len(topic_centroids)} topics."
         )
 
@@ -563,20 +595,32 @@ class TMService:
                 update_dtos=distance_update_dtos,
             )
 
-        logger.info(
+        self._log_status_msg(
             f"Updated {len(update_dtos)} topics in the database with names, descriptions, top words, top word scores, and top documents."
         )
 
-    def create_aspect(self, tm_job_id: str, params: CreateAspectParams):
+    def create_aspect(
+        self,
+        params: CreateAspectParams,
+    ):
         aspect_id = params.aspect_id
         with self.sqls.db_session() as db:
             # 1. Modify the documents based on the prompt
-            self._modify_documents(db=db, aspect_id=aspect_id)
+            self._log_status_step(0)
+            self._modify_documents(
+                db=db,
+                aspect_id=aspect_id,
+            )
 
             # 2. Embedd the documents based on the prompt
-            self._embed_documents(db=db, aspect_id=aspect_id)
+            self._log_status_step(1)
+            self._embed_documents(
+                db=db,
+                aspect_id=aspect_id,
+            )
 
             # 3. Cluster the documents
+            self._log_status_step(2)
             self._cluster_documents(
                 db=db,
                 aspect_id=aspect_id,
@@ -585,6 +629,7 @@ class TMService:
             )
 
             # 4. Extract the topics
+            self._log_status_step(3)
             self._extract_topics(
                 db=db,
                 aspect_id=aspect_id,
@@ -593,12 +638,11 @@ class TMService:
 
     def add_missing_docs_to_aspect(
         self,
-        tm_job_id: str,
         params: AddMissingDocsToAspectParams,
     ):
         pass
 
-    def add_topic(self, tm_job_id: str, params: AddTopicParams):
+    def add_topic(self, params: AddTopicParams):
         with self.sqls.db_session() as db:
             # Read the aspect
             aspect = crud_aspect.read(db=db, id=params.create_dto.aspect_id)
@@ -614,8 +658,10 @@ class TMService:
                 len(document_topics) == len(doc2topic)
             ), f"There are duplicate document-topic assignments in the database for aspect {aspect.id}!"
 
-        # 2. Embedd the new topic
-        logger.info(
+        # 1. Topic creation
+        # - Embedd the new topic
+        self._log_status_step(0)
+        self._log_status_msg(
             f"Computing embeddings for the new topic with model {aspect.embedding_model}..."
         )
         embedding_output = self.rms.promptembedder_embedding(
@@ -629,7 +675,7 @@ class TMService:
             len(embedding_output.embeddings) == 1
         ), "Expected exactly one embedding output for the new topic."
 
-        # 3. Create the new topic in the database
+        # - Create the new topic in the database
         new_topic = crud_topic.create(
             db=db,
             create_dto=TopicCreateIntern(
@@ -642,7 +688,9 @@ class TMService:
             ),
         )
 
-        # 4. For all source documents in the aspect, decide whether to assign the new topic or not. Track the changes/affected topics!
+        # 2. Document assignment
+        # - For all source documents in the aspect, decide whether to assign the new topic or not. Track the changes/affected topics!
+        self._log_status_step(1)
         update_dtos: List[DocumentTopicUpdate] = []
         update_ids: List[int] = []
         modified_topics: Set[int] = set()
@@ -671,18 +719,20 @@ class TMService:
                 modified_topics.add(doc_topic.topic_id)
                 modified_topics.add(new_topic.id)
 
-        # 5. Store the new topic assignments in the database
+        # - Store the new topic assignments in the database
         if len(update_dtos) > 0:
             crud_document_topic.update_multi(
                 db=db, ids=update_ids, update_dtos=update_dtos
             )
-            logger.info(
+            self._log_status_msg(
                 f"Updated {len(update_dtos)} document-topic assignments with the new topic {new_topic.id}."
             )
 
-        # 6. Extract the topics for all affected ones (computing top words, top docs, embedding, etc)
+        # 3. Topic Extraction
+        # - Extract the topics for all affected ones (computing top words, top docs, embedding, etc)
+        self._log_status_step(2)
         if len(modified_topics) > 0:
-            logger.info(
+            self._log_status_msg(
                 f"Extracting topics for {len(modified_topics)} modified topics: {modified_topics}."
             )
             self._extract_topics(
@@ -691,9 +741,9 @@ class TMService:
                 topic_ids=list(modified_topics),
             )
 
-    def remove_topic(self, tm_job_id: str, params: RemoveTopicParams):
+    def remove_topic(self, params: RemoveTopicParams):
         with self.sqls.db_session() as db:
-            # 1. Read all relevant data
+            # 0. Read all relevant data
             # - Read the topic to remove
             topic = crud_topic.read(db=db, id=params.topic_id)
 
@@ -733,10 +783,13 @@ class TMService:
                 len(aspect_embedding_uuids) == len(document_topics)
             ), "The number of document aspect embeddings does not match the number of document topics."
 
-            # 2. Compute the similarities of the document embeddings to the remaining topic embeddings
+            # 1. Document Assignment
+            # - Compute the similarities of the document embeddings to the remaining topic embeddings
+            self._log_status_step(0)
+
             similarities = document_embeddings @ topic_embeddings.T
 
-            # 3. For each document aspect, find the most similar topic embedding and update the document topic assignment
+            # - For each document aspect, find the most similar topic embedding and update the document topic assignment
             update_dtos: List[DocumentTopicUpdate] = []
             update_ids: List[int] = []
             modified_topics: Set[int] = set()
@@ -753,21 +806,23 @@ class TMService:
                 )
                 modified_topics.add(most_similar_topic_id)
 
-            # 4. Update the document-topic assignments in the database
+            # - Update the document-topic assignments in the database
             if len(update_dtos) > 0:
                 crud_document_topic.update_multi(
                     db=db, ids=update_ids, update_dtos=update_dtos
                 )
-                logger.info(
+                self._log_status_msg(
                     f"Updated {len(update_dtos)} document-topic assignments to the most similar topics."
                 )
 
-            # 5. Remove the topic from the database
+            # 2. Topic Removal: Remove the topic from the database
+            self._log_status_step(1)
             crud_topic.remove(db=db, id=params.topic_id)
 
-        # 6. Extract the topics for all affected ones (computing top words, top docs, embedding, etc)
+        # 3. Topic Extraction: Extract the topics for all affected ones (computing top words, top docs, embedding, etc)
+        self._log_status_step(2)
         if len(modified_topics) > 0:
-            logger.info(
+            self._log_status_msg(
                 f"Extracting topics for {len(modified_topics)} modified topics: {modified_topics}."
             )
             self._extract_topics(
@@ -776,9 +831,9 @@ class TMService:
                 topic_ids=list(modified_topics),
             )
 
-    def merge_topics(self, tm_job_id: str, params: MergeTopicsParams):
+    def merge_topics(self, params: MergeTopicsParams):
         with self.sqls.db_session() as db:
-            # 1. Read the topics to merge
+            # 0. Read the topics to merge
             topic1 = crud_topic.read(db=db, id=params.topic_to_keep)
             topic2 = crud_topic.read(db=db, id=params.topic_to_merge)
             aspect = topic1.aspect
@@ -786,33 +841,36 @@ class TMService:
                 topic1.aspect_id == topic2.aspect_id
             ), "Cannot merge topics from different aspects."
 
-            # 2. Merge the topics (updating the topic id)
+            # 1. Merge the topics (updating the topic id)
+            self._log_status_step(0)
             crud_document_topic.merge_topics(
                 db=db,
                 topic_to_keep=params.topic_to_keep,
                 topic_to_merge=params.topic_to_merge,
             )
 
-            # 3. Delete the merged topic from the database
+            # 2. Delete the merged topic from the database
+            self._log_status_step(1)
             crud_topic.remove(db=db, id=params.topic_to_merge)
-            logger.info(
+            self._log_status_msg(
                 f"Merged topics {params.topic_to_keep} and {params.topic_to_merge}."
             )
 
-        # 4. Extract the topics for the remaining topic (computing top words, top docs, embedding, etc)
+        # 3. Extract the topics for the remaining topic (computing top words, top docs, embedding, etc)
+        self._log_status_step(2)
         self._extract_topics(
             db=db,
             aspect_id=aspect.id,
             topic_ids=[params.topic_to_keep],
         )
 
-    def split_topic(self, tm_job_id: str, params: SplitTopicParams):
+    def split_topic(self, params: SplitTopicParams):
         with self.sqls.db_session() as db:
-            # 1. Read the topic to split
+            # 0. Read the topic to split
             topic = crud_topic.read(db=db, id=params.topic_id)
             aspect = topic.aspect
 
-            # 2. Find all sdoc_ids associated with the topic
+            # 0. Find all sdoc_ids associated with the topic
             sdoc_ids = [
                 da.sdoc_id
                 for da in crud_document_aspect.read_by_aspect_and_topic_id(
@@ -820,15 +878,17 @@ class TMService:
                 )
             ]
             assert len(sdoc_ids) > 0, "Cannot split a topic without document aspects."
-            logger.info(
+            self._log_status_msg(
                 f"Found {len(sdoc_ids)} source documents associated with topic {params.topic_id}."
             )
 
-            # 3. Remove the topic from the database
+            # 1. Remove the topic from the database
+            self._log_status_step(0)
             crud_topic.remove(db=db, id=params.topic_id)
-            logger.info(f"Removed topic {params.topic_id} from the database.")
+            self._log_status_msg(f"Removed topic {params.topic_id} from the database.")
 
-            # 4. Cluster the documents, creating new topics and assigning them to the documents
+            # 2. Cluster the documents, creating new topics and assigning them to the documents
+            self._log_status_step(1)
             created_topic_ids = self._cluster_documents(
                 db=db,
                 aspect_id=aspect.id,
@@ -836,15 +896,16 @@ class TMService:
                 num_clusters=None,
             )
 
-            # 5. Extract the topics
+            # 3. Extract the topics
+            self._log_status_step(2)
             self._extract_topics(
                 db=db,
                 aspect_id=aspect.id,
                 topic_ids=created_topic_ids,
             )
 
-    def refine_topic_model(self, tm_job_id: str, params: RefineTopicModelParams):
+    def refine_topic_model(self, params: RefineTopicModelParams):
         pass
 
-    def reset_topic_model(self, tm_job_id: str, params: ResetTopicModelParams):
+    def reset_topic_model(self, params: ResetTopicModelParams):
         pass
