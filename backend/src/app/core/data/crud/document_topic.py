@@ -175,5 +175,43 @@ class CRUDDocumentTopic(
 
         return results.rowcount if results.rowcount is not None else 0
 
+    def set_labels2(
+        self,
+        db: Session,
+        *,
+        aspect_id: int,
+        topic_id: int,
+        sdoc_ids: list[int],
+        is_accepted: bool,
+    ) -> int:
+        """
+        Sets the Topic <-> SourceDocument assignments to the provided Topic.
+        Args:
+            db: The database session
+            aspect_id: The ID of the aspect to which the topic belongs
+            topic_id: The ID of the topic to which the SourceDocuments should be assigned
+            sdoc_ids: List of SourceDocument IDs to set topic for
+            is_accepted: Whether to set the labels as accepted
+        Returns:
+            The number of DocumentTopicORM objects that were updated
+        """
+        if not sdoc_ids:
+            return 0
+
+        stmt = (
+            update(self.model)
+            .where(
+                self.model.sdoc_id.in_(sdoc_ids),
+                self.model.topic_id == TopicORM.id,
+                TopicORM.aspect_id == aspect_id,
+            )
+            .values(topic_id=topic_id, is_accepted=is_accepted)
+            .execution_options(synchronize_session=False)
+        )
+        results = db.execute(stmt)
+        db.commit()
+
+        return results.rowcount if results.rowcount is not None else 0
+
 
 crud_document_topic = CRUDDocumentTopic(DocumentTopicORM)

@@ -186,7 +186,7 @@ def remove_aspect_by_id(
 
 @router.post(
     "/label_accept/{aspect_id}",
-    response_model=AspectRead,
+    response_model=int,
     summary="Accept the label of the provided SourceDocuments (by ID).",
 )
 def accept_label(
@@ -207,7 +207,7 @@ def accept_label(
 
 @router.post(
     "/label_revert/{aspect_id}",
-    response_model=AspectRead,
+    response_model=int,
     summary="Reverts the label of the provided SourceDocuments (by ID).",
 )
 def revert_label(
@@ -223,6 +223,29 @@ def revert_label(
         aspect_id=aspect_id,
         sdoc_ids=sdoc_ids,
         is_accepted=False,
+    )
+
+
+@router.post(
+    "/label_set/{aspect_id}",
+    response_model=int,
+    summary="Sets the label of the provided SourceDocuments (by ID) to the Topic (by ID).",
+)
+def set_label(
+    *,
+    db: Session = Depends(get_db_session),
+    aspect_id: int,
+    topic_id: int,
+    sdoc_ids: list[int],
+    authz_user: AuthzUser = Depends(),
+) -> int:
+    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
+    return crud_document_topic.set_labels2(
+        db=db,
+        aspect_id=aspect_id,
+        topic_id=topic_id,
+        sdoc_ids=sdoc_ids,
+        is_accepted=True,
     )
 
 
