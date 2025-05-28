@@ -10356,6 +10356,17 @@
       },
       "TMJobRead": {
         "properties": {
+          "step": {
+            "type": "integer",
+            "title": "Step",
+            "description": "Current step of the TMJob. Starts at 0 and increments with each major step."
+          },
+          "steps": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Steps",
+            "description": "List of steps that the TMJob consists of. Each step is a string describing the action taken."
+          },
           "status_msg": { "type": "string", "title": "Status Msg", "description": "Status message of the TMJob" },
           "tm_job_type": { "$ref": "#/components/schemas/TMJobType", "description": "Type of the TMJob" },
           "parameters": {
@@ -10410,7 +10421,17 @@
           }
         },
         "type": "object",
-        "required": ["status_msg", "tm_job_type", "parameters", "id", "project_id", "created", "updated"],
+        "required": [
+          "step",
+          "steps",
+          "status_msg",
+          "tm_job_type",
+          "parameters",
+          "id",
+          "project_id",
+          "created",
+          "updated"
+        ],
         "title": "TMJobRead"
       },
       "TMJobType": {
