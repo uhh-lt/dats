@@ -3,6 +3,7 @@ from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.aspect import crud_aspect
 from app.core.data.crud.document_topic import crud_document_topic
+from app.core.data.crud.topic import crud_topic
 from app.core.data.dto.aspect import (
     AspectCreate,
     AspectRead,
@@ -10,6 +11,8 @@ from app.core.data.dto.aspect import (
     AspectUpdateIntern,
 )
 from app.core.data.dto.background_job_base import BackgroundJobStatus
+from app.core.data.dto.tm_vis import TMDoc, TMVisualization
+from app.core.data.dto.topic import TopicRead
 from app.core.topicmodel.tm_job import (
     CreateAspectParams,
     TMJobParamsNoCreate,
@@ -228,7 +231,7 @@ def revert_label(
 
 @router.get(
     "/visualize_documents/{aspect_id}",
-    response_model=AspectRead,
+    response_model=TMVisualization,
     summary="Returns data for visualizing the documents of the given aspect.",
 )
 def visualize_documents(
@@ -236,11 +239,37 @@ def visualize_documents(
     db: Session = Depends(get_db_session),
     aspect_id: int,
     authz_user: AuthzUser = Depends(),
-) -> AspectRead:
+) -> TMVisualization:
     authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
 
-    # TODO: implement
-    raise NotImplementedError("visualize_documents not implemented yet")
+    # Fetch data for visualization
+    aspect = crud_aspect.read(db=db, id=aspect_id)
+    document_aspects = aspect.document_aspects
+
+    # Color by
+    topics = aspect.topics
+    document_topics = crud_document_topic.read_by_aspect(db=db, aspect_id=aspect_id)
+    sdoc_id2dt = {dt.sdoc_id: dt for dt in document_topics}
+    assert len(document_aspects) == len(
+        document_topics
+    ), "The number of DocumentAspects and DocumentTopics must match for visualization."
+
+    # Prepare the visualization data
+    docs = [
+        TMDoc(
+            sdoc_id=doc.sdoc_id,
+            topic_id=sdoc_id2dt[doc.sdoc_id].topic_id,
+            x=doc.x,
+            y=doc.y,
+        )
+        for doc in document_aspects
+    ]
+
+    return TMVisualization(
+        aspect_id=aspect.id,
+        topics=[TopicRead.model_validate(t) for t in topics],
+        docs=docs,
+    )
 
 
 @router.get(
@@ -258,3 +287,24 @@ def visualize_topics(
 
     # TODO: implement
     raise NotImplementedError("visualize_topics not implemented yet")
+
+
+@router.get(
+    "/topics/{aspect_id}/sdoc/{sdoc_id}",
+    response_model=list[TopicRead],
+    summary="Returns the topics for the given SourceDocument (sdoc_id) in the specified Aspect (aspect_id).",
+)
+def get_topics_for_sdoc(
+    *,
+    db: Session = Depends(get_db_session),
+    aspect_id: int,
+    sdoc_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> list[TopicRead]:
+    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
+
+    # Fetch the topics for the given SourceDocument
+    document_topics = crud_topic.read_by_aspect_and_sdoc(
+        db=db, aspect_id=aspect_id, sdoc_id=sdoc_id
+    )
+    return [TopicRead.model_validate(dt) for dt in document_topics]
