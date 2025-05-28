@@ -1,3 +1,4 @@
+import { Box } from "@mui/material";
 import { useParams } from "react-router";
 import SidebarContentSidebarLayout from "../../layouts/ContentLayouts/SidebarContentSidebarLayout.tsx";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
@@ -5,6 +6,7 @@ import { AtlasActions } from "./atlasSlice.ts";
 import MapContent from "./MapContent.tsx";
 import MapDetailsSidePanel from "./MapDetailsSidePanel.tsx";
 import MapSettingsSidePanel from "./MapSettingsSidePanel.tsx";
+import MapToolbar from "./MapToolbar.tsx";
 import { useInitAtlasFilterSlice } from "./useInitAtlasFilterSlice.ts";
 
 function Map() {
@@ -23,7 +25,12 @@ function Map() {
   return (
     <SidebarContentSidebarLayout
       leftSidebar={<MapSettingsSidePanel />}
-      content={<MapContent projectId={projectId} aspectId={aspectId} />}
+      content={
+        <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+          <MapToolbar />
+          <MapContent projectId={projectId} aspectId={aspectId} />
+        </Box>
+      }
       rightSidebar={<MapDetailsSidePanel aspectId={aspectId} />}
     />
   );
