@@ -13,6 +13,8 @@ import type { RemoveTopicParams } from "../models/RemoveTopicParams";
 import type { ResetTopicModelParams } from "../models/ResetTopicModelParams";
 import type { SplitTopicParams } from "../models/SplitTopicParams";
 import type { TMJobRead } from "../models/TMJobRead";
+import type { TMVisualization } from "../models/TMVisualization";
+import type { TopicRead } from "../models/TopicRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -193,10 +195,10 @@ export class TopicModelService {
   }
   /**
    * Returns data for visualizing the documents of the given aspect.
-   * @returns AspectRead Successful Response
+   * @returns TMVisualization Successful Response
    * @throws ApiError
    */
-  public static visualizeDocuments({ aspectId }: { aspectId: number }): CancelablePromise<AspectRead> {
+  public static visualizeDocuments({ aspectId }: { aspectId: number }): CancelablePromise<TMVisualization> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/topic_model/visualize_documents/{aspect_id}",
@@ -219,6 +221,30 @@ export class TopicModelService {
       url: "/topic_model/visualize_topics/{aspect_id}",
       path: {
         aspect_id: aspectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the topics for the given SourceDocument (sdoc_id) in the specified Aspect (aspect_id).
+   * @returns TopicRead Successful Response
+   * @throws ApiError
+   */
+  public static getTopicsForSdoc({
+    aspectId,
+    sdocId,
+  }: {
+    aspectId: number;
+    sdocId: number;
+  }): CancelablePromise<Array<TopicRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/topic_model/topics/{aspect_id}/sdoc/{sdoc_id}",
+      path: {
+        aspect_id: aspectId,
+        sdoc_id: sdocId,
       },
       errors: {
         422: `Validation Error`,

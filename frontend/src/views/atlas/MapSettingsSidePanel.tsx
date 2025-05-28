@@ -4,7 +4,7 @@ import { useState } from "react";
 import AnalysisAssistant from "./AnalysisAssistant.tsx";
 import ViewSettings from "./ViewSettings.tsx";
 
-function MapSidePanel() {
+function MapSettingsSidePanel() {
   // explorer
   const [tab, setTab] = useState("view");
   const handleTabChange = (_event: React.SyntheticEvent, newValue: string): void => {
@@ -32,4 +32,4 @@ function MapSidePanel() {
   );
 }
 
-export default MapSidePanel;
+export default MapSettingsSidePanel;

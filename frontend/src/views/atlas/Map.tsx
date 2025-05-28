@@ -1,15 +1,30 @@
+import { useParams } from "react-router";
 import SidebarContentSidebarLayout from "../../layouts/ContentLayouts/SidebarContentSidebarLayout.tsx";
+import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { AtlasActions } from "./atlasSlice.ts";
 import MapContent from "./MapContent.tsx";
-import MapSidePanel from "./MapSidePanel.tsx";
-import SelectionInformation from "./SelectionInformation.tsx";
+import MapDetailsSidePanel from "./MapDetailsSidePanel.tsx";
+import MapSettingsSidePanel from "./MapSettingsSidePanel.tsx";
+import { useInitAtlasFilterSlice } from "./useInitAtlasFilterSlice.ts";
 
 function Map() {
+  const urlParams = useParams() as { projectId: string; aspectId: string };
+  const projectId = parseInt(urlParams.projectId);
+  const aspectId = parseInt(urlParams.aspectId);
+
+  // initialize the filtering
+  useInitAtlasFilterSlice({ projectId });
+
+  // dispatch changeMap Event!
+  const dispatch = useAppDispatch();
+  dispatch(AtlasActions.onOpenMap({ projectId, atlasId: aspectId }));
+
   // render
   return (
     <SidebarContentSidebarLayout
-      leftSidebar={<MapSidePanel />}
-      content={<MapContent />}
-      rightSidebar={<SelectionInformation />}
+      leftSidebar={<MapSettingsSidePanel />}
+      content={<MapContent projectId={projectId} aspectId={aspectId} />}
+      rightSidebar={<MapDetailsSidePanel aspectId={aspectId} />}
     />
   );
 }

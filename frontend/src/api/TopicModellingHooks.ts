@@ -171,6 +171,25 @@ const useUnlabelDocs = () =>
     },
   });
 
+// VISUALIZATION
+
+const useGetDocVisualization = (aspectId: number) =>
+  useQuery({
+    queryKey: [QueryKey.DOCUMENT_VISUALIZATION, aspectId],
+    queryFn: () => TopicModelService.visualizeDocuments({ aspectId }),
+    staleTime: 1000 * 60 * 5,
+  });
+
+// Topics
+
+const useGetTopicsBySdocId = (aspectId: number | null | undefined, sdocId: number | null | undefined) =>
+  useQuery({
+    queryKey: [QueryKey.SDOC_TOPICS, aspectId, sdocId],
+    queryFn: () => TopicModelService.getTopicsForSdoc({ aspectId: aspectId!, sdocId: sdocId! }),
+    enabled: !!aspectId && !!sdocId,
+    staleTime: 1000 * 60 * 5,
+  });
+
 const TopicModellingHooks = {
   // aspects
   useGetAllAspectsList,
@@ -184,6 +203,10 @@ const TopicModellingHooks = {
   // labeling
   useLabelDocs,
   useUnlabelDocs,
+  // visualization
+  useGetDocVisualization,
+  // topics
+  useGetTopicsBySdocId,
 };
 
 export default TopicModellingHooks;

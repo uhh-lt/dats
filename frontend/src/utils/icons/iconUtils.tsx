@@ -8,8 +8,10 @@ import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import AutoGraphIcon from "@mui/icons-material/AutoGraph";
 import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import BarChartIcon from "@mui/icons-material/BarChart";
+import BubbleChartIcon from "@mui/icons-material/BubbleChart";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import CheckBoxOutlinedIcon from "@mui/icons-material/CheckBoxOutlined";
+import CircleIcon from "@mui/icons-material/Circle";
 import CommentIcon from "@mui/icons-material/Comment";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DescriptionIcon from "@mui/icons-material/Description";
@@ -113,6 +115,8 @@ export enum Icon {
   // Atlas
   ATLAS = "atlas",
   MAP = "map",
+  TOPICS = "topics",
+  TOPIC = "topic",
 
   // SETTINGS
   SETTINGS = "project_settings",
@@ -217,6 +221,8 @@ const iconMap: Record<Icon, IconFactory> = {
   // Atlas
   [Icon.ATLAS]: (iconProps) => <ExploreIcon {...iconProps} />,
   [Icon.MAP]: (iconProps) => <MapIcon {...iconProps} />,
+  [Icon.TOPICS]: (iconProps) => <BubbleChartIcon {...iconProps} />,
+  [Icon.TOPIC]: (iconProps) => <CircleIcon {...iconProps} />,
 
   // SETTINGS
   [Icon.SETTINGS]: (iconProps) => <SettingsIcon {...iconProps} />,

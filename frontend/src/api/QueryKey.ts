@@ -108,6 +108,10 @@ export const QueryKey = {
   ASPECT: "aspect",
   // A single TopicModelling Job (by tm job id)
   TM_JOB: "tmJob",
+  // A DocumentVisualization (by aspect id)
+  DOCUMENT_VISUALIZATION: "documentVisualization",
+  // Topics of a SourceDocument (by aspect id, sdoc id)
+  SDOC_TOPICS: "sdocTopics",
 
   // managed by SearchStatisticsHooks:
   FILTER_ENTITY_STATISTICS: "filterEntityStatistics",
