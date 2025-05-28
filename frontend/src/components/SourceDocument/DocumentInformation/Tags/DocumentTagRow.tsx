@@ -18,7 +18,7 @@ function DocumentTagRow({ tagId, sdocId }: DocumentTagRow) {
         <>
           <TagRenderer tag={tag.data} />
           <Box sx={{ flexGrow: 1 }} />
-          <TagUnlinkButton sdocId={sdocId} tag={tag.data} />
+          <TagUnlinkButton sdocId={sdocId} tag={tag.data} size="small" />
         </>
       ) : tag.isLoading ? (
         <span>Loading...</span>

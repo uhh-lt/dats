@@ -188,7 +188,7 @@ const router = createBrowserRouter([
         element: <MapDashboard />,
       },
       {
-        path: "/project/:projectId/atlas/map/:atlasId",
+        path: "/project/:projectId/atlas/map/:aspectId",
         element: <Map />,
       },
     ],

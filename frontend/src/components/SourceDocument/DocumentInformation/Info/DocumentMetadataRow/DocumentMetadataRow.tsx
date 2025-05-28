@@ -1,5 +1,5 @@
 import { ErrorMessage } from "@hookform/error-message";
-import { Stack } from "@mui/material";
+import { Box, Stack } from "@mui/material";
 import { memo, useCallback, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import MetadataHooks from "../../../../../api/MetadataHooks.ts";
@@ -101,14 +101,17 @@ function DocumentMetadataRowContent({
             name="str_value"
             control={control}
             textFieldProps={{
+              placeholder: projectMetadata.description,
               error: Boolean(errors.str_value),
               helperText: <ErrorMessage errors={errors} name="str_value" />,
               variant: "standard",
               disabled: projectMetadata.read_only,
               onBlur: handleInputBlur,
+              fullWidth: true,
               sx: {
-                flexGrow: 1,
-                flexBasis: 1,
+                "& .MuiInput-underline::before": {
+                  borderBottom: "1px solid rgba(0, 0, 0, 0)",
+                },
               },
             }}
           />
@@ -124,9 +127,11 @@ function DocumentMetadataRowContent({
               variant: "standard",
               disabled: projectMetadata.read_only,
               onBlur: handleInputBlur,
+              fullWidth: true,
               sx: {
-                flexGrow: 1,
-                flexBasis: 1,
+                "& .MuiInput-underline::before": {
+                  borderBottom: "1px solid rgba(0, 0, 0, 0)", // Hide the line by default
+                },
               },
             }}
           />
@@ -151,9 +156,11 @@ function DocumentMetadataRowContent({
               variant: "standard",
               disabled: projectMetadata.read_only,
               onBlur: handleInputBlur,
+              fullWidth: true,
               sx: {
-                flexGrow: 1,
-                flexBasis: 1,
+                "& .MuiInput-underline::before": {
+                  borderBottom: "1px solid rgba(0, 0, 0, 0)", // Hide the line by default
+                },
               },
             }}
           />
@@ -165,10 +172,7 @@ function DocumentMetadataRowContent({
             control={control}
             rules={{ required: true }}
             autoCompleteProps={{
-              sx: {
-                flexGrow: 1,
-                flexBasis: 1,
-              },
+              fullWidth: true,
               disabled: projectMetadata.read_only,
             }}
             textFieldProps={{
@@ -178,6 +182,12 @@ function DocumentMetadataRowContent({
               onBlur: handleInputBlur,
               error: Boolean(errors.list_value),
               helperText: <ErrorMessage errors={errors} name="list_value" />,
+              sx: {
+                "& .MuiInput-underline::before": {
+                  borderBottom: "1px solid rgba(0, 0, 0, 0)", // Hide the line by default
+                },
+                ...(projectMetadata.read_only ? { "& .MuiInputBase-input": { display: "none" } } : {}),
+              },
             }}
           />
         );
@@ -185,18 +195,22 @@ function DocumentMetadataRowContent({
   }, [projectMetadata, control, errors, handleInputBlur]);
 
   return (
-    <Stack direction="row" alignItems="flex-end" mt={1}>
-      <MetadataEditMenu projectMetadata={projectMetadata} />
-      {inputField}
-      {isLink && <DocumentMetadataGoToButton link={metadata.str_value!} size="small" />}
-      {filterName && (
-        <DocumentMetadataAddFilterButton
-          metadata={metadata}
-          projectMetadata={projectMetadata}
-          filterName={filterName}
-          size="small"
-        />
-      )}
+    <Stack p={1} sx={{ borderTop: 1, borderColor: "divider" }}>
+      <Stack direction="row" alignItems="center">
+        <MetadataEditMenu projectMetadata={projectMetadata} />
+        {filterName && (
+          <DocumentMetadataAddFilterButton
+            metadata={metadata}
+            projectMetadata={projectMetadata}
+            filterName={filterName}
+            size="small"
+          />
+        )}
+        {isLink && <DocumentMetadataGoToButton link={metadata.str_value!} size="small" />}
+      </Stack>
+      <Box width="100%" px={0.5}>
+        {inputField}
+      </Box>
     </Stack>
   );
 }

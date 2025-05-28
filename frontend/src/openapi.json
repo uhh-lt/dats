@@ -5738,7 +5738,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectRead" } } }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TMVisualization" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -5760,6 +5760,41 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/topic_model/topics/{aspect_id}/sdoc/{sdoc_id}": {
+      "get": {
+        "tags": ["topic_model"],
+        "summary": "Returns the topics for the given SourceDocument (sdoc_id) in the specified Aspect (aspect_id).",
+        "operationId": "get_topics_for_sdoc",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "aspect_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Aspect Id" }
+          },
+          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TopicRead" },
+                  "title": "Response Topic Model-Get Topics For Sdoc"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -10354,6 +10389,21 @@
         "enum": ["unit", "annotation", "document"],
         "title": "TAAnnotationAggregationType"
       },
+      "TMDoc": {
+        "properties": {
+          "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
+          "topic_id": {
+            "type": "integer",
+            "title": "Topic Id",
+            "description": "ID of the topic this document belongs to"
+          },
+          "x": { "type": "number", "title": "X", "description": "X coordinate of the document in the visualization" },
+          "y": { "type": "number", "title": "Y", "description": "Y coordinate of the document in the visualization" }
+        },
+        "type": "object",
+        "required": ["sdoc_id", "topic_id", "x", "y"],
+        "title": "TMDoc"
+      },
       "TMJobRead": {
         "properties": {
           "step": {
@@ -10447,6 +10497,30 @@
           "reset_topic_model"
         ],
         "title": "TMJobType"
+      },
+      "TMVisualization": {
+        "properties": {
+          "aspect_id": {
+            "type": "integer",
+            "title": "Aspect Id",
+            "description": "ID of the aspect this visualization belongs to"
+          },
+          "topics": {
+            "items": { "$ref": "#/components/schemas/TopicRead" },
+            "type": "array",
+            "title": "Topics",
+            "description": "List of topics in the visualization"
+          },
+          "docs": {
+            "items": { "$ref": "#/components/schemas/TMDoc" },
+            "type": "array",
+            "title": "Docs",
+            "description": "List of documents in the visualization"
+          }
+        },
+        "type": "object",
+        "required": ["aspect_id", "topics", "docs"],
+        "title": "TMVisualization"
       },
       "TagNodeData": {
         "properties": {
@@ -10761,6 +10835,54 @@
         "type": "object",
         "required": ["aspect_id", "level", "name", "description", "color"],
         "title": "TopicCreate"
+      },
+      "TopicRead": {
+        "properties": {
+          "id": { "type": "integer", "title": "Id", "description": "ID of the topic" },
+          "aspect_id": {
+            "type": "integer",
+            "title": "Aspect Id",
+            "description": "ID of the aspect this topic belongs to"
+          },
+          "parent_topic_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Parent Topic Id",
+            "description": "ID of the parent topic, if any"
+          },
+          "name": { "type": "string", "title": "Name", "description": "Name of the topic" },
+          "description": { "type": "string", "title": "Description", "description": "Description of the topic" },
+          "level": { "type": "integer", "title": "Level", "description": "Hierarchical level of the topic" },
+          "color": { "type": "string", "title": "Color", "description": "Color code for the topic visualization" },
+          "top_words": {
+            "anyOf": [{ "items": { "type": "string" }, "type": "array" }, { "type": "null" }],
+            "title": "Top Words",
+            "description": "Top words associated with the topic"
+          },
+          "top_word_scores": {
+            "anyOf": [{ "items": { "type": "number" }, "type": "array" }, { "type": "null" }],
+            "title": "Top Word Scores",
+            "description": "Scores of the top words"
+          },
+          "top_docs": {
+            "anyOf": [{ "items": { "type": "integer" }, "type": "array" }, { "type": "null" }],
+            "title": "Top Docs",
+            "description": "IDs of top documents for the topic"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "aspect_id",
+          "parent_topic_id",
+          "name",
+          "description",
+          "level",
+          "color",
+          "top_words",
+          "top_word_scores",
+          "top_docs"
+        ],
+        "title": "TopicRead"
       },
       "TrainerJobParameters": {
         "properties": {
