@@ -106,6 +106,13 @@ TMJobParams = Union[
 
 
 class TMJobBase(BaseModel):
+    step: int = Field(
+        default=0,
+        description="Current step of the TMJob. Starts at 0 and increments with each major step.",
+    )
+    steps: list[str] = Field(
+        description="List of steps that the TMJob consists of. Each step is a string describing the action taken.",
+    )
     status_msg: str = Field(description="Status message of the TMJob")
     tm_job_type: TMJobType = Field(description="Type of the TMJob")
     parameters: TMJobParams = Field(
@@ -119,6 +126,10 @@ class TMJobCreate(BackgroundJobBaseCreate, TMJobBase):
 
 
 class TMJobUpdate(BackgroundJobBaseUpdate):
+    step: Optional[int] = Field(
+        default=None,
+        description="Current step of the TMJob. Starts at 0 and increments with each major step.",
+    )
     status_msg: Optional[str] = Field(
         default=None, description="Status message of the TMJob"
     )
@@ -135,6 +146,8 @@ class TMJobRead(BackgroundJobBaseRead, TMJobBase):
 # updated: datetime
 # status: BackgroundJobStatus
 #
+# step: int
+# steps: List[str]
 # status_msg: str
 # tm_job_type: TMJobType
 # parameters: TMJobParams
