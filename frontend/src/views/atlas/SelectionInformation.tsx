@@ -1,6 +1,6 @@
 import { ArrowBackIosNew, ArrowForwardIos } from "@mui/icons-material";
 import { Box, Button, ButtonGroup, CircularProgress, Stack, Tooltip, Typography } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import MetadataHooks from "../../api/MetadataHooks.ts";
 import SdocHooks from "../../api/SdocHooks.ts";
 import TagHooks from "../../api/TagHooks.ts";
@@ -8,8 +8,9 @@ import TopicModellingHooks from "../../api/TopicModellingHooks.ts";
 import DocumentMetadataRow from "../../components/SourceDocument/DocumentInformation/Info/DocumentMetadataRow/DocumentMetadataRow.tsx";
 import DocumentTagRow from "../../components/SourceDocument/DocumentInformation/Tags/DocumentTagRow.tsx";
 import TagMenuButton from "../../components/Tag/TagMenu/TagMenuButton.tsx";
-import { useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
+import { AtlasActions } from "./atlasSlice.ts";
 
 interface SelectionInformationProps {
   aspectId: number;
@@ -18,28 +19,31 @@ interface SelectionInformationProps {
 function SelectionInformation({ aspectId }: SelectionInformationProps) {
   // global client state
   const selectedSdocIds = useAppSelector((state) => state.atlas.selectedSdocIds);
+  const selectedSdocIdsIndex = useAppSelector((state) => state.atlas.selectedSdocIdsIndex);
 
   // selection index management
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const dispatch = useAppDispatch();
   useEffect(() => {
-    setCurrentIndex(0); // Reset index when selection changes
-  }, [selectedSdocIds]);
+    dispatch(AtlasActions.onSelectionIndexChange(0)); // Reset index when selection changes
+  }, [dispatch, selectedSdocIds]);
 
   const handlePrevious = () => {
     if (selectedSdocIds.length === 0) return;
-    setCurrentIndex((prevIndex) => (prevIndex === 0 ? selectedSdocIds.length - 1 : prevIndex - 1));
+    const newIndex = selectedSdocIdsIndex === 0 ? selectedSdocIds.length - 1 : selectedSdocIdsIndex - 1;
+    dispatch(AtlasActions.onSelectionIndexChange(newIndex));
   };
 
   const handleNext = () => {
     if (selectedSdocIds.length === 0) return;
-    setCurrentIndex((prevIndex) => (prevIndex === selectedSdocIds.length - 1 ? 0 : prevIndex + 1));
+    const newIndex = selectedSdocIdsIndex === selectedSdocIds.length - 1 ? 0 : selectedSdocIdsIndex + 1;
+    dispatch(AtlasActions.onSelectionIndexChange(newIndex));
   };
 
   // global server state
-  const metadata = MetadataHooks.useGetSdocMetadata(selectedSdocIds[currentIndex]);
-  const documentTagIds = TagHooks.useGetAllTagIdsBySdocId(selectedSdocIds[currentIndex]);
-  const topics = TopicModellingHooks.useGetTopicsBySdocId(aspectId, selectedSdocIds[currentIndex]);
-  const sdoc = SdocHooks.useGetDocument(selectedSdocIds[currentIndex]);
+  const metadata = MetadataHooks.useGetSdocMetadata(selectedSdocIds[selectedSdocIdsIndex]);
+  const documentTagIds = TagHooks.useGetAllTagIdsBySdocId(selectedSdocIds[selectedSdocIdsIndex]);
+  const topics = TopicModellingHooks.useGetTopicsBySdocId(aspectId, selectedSdocIds[selectedSdocIdsIndex]);
+  const sdoc = SdocHooks.useGetDocument(selectedSdocIds[selectedSdocIdsIndex]);
 
   return (
     <Box>
@@ -55,7 +59,7 @@ function SelectionInformation({ aspectId }: SelectionInformationProps) {
               </Button>
             </ButtonGroup>
             <Typography sx={{ mx: 1 }}>
-              Document #{currentIndex + 1} of {selectedSdocIds.length}
+              Document #{selectedSdocIdsIndex + 1} of {selectedSdocIds.length}
             </Typography>
           </Box>
           <Stack direction="column" spacing={0}>
@@ -104,7 +108,7 @@ function SelectionInformation({ aspectId }: SelectionInformationProps) {
                     <Stack
                       spacing={1}
                       direction="row"
-                      key={`sdoc-${selectedSdocIds[currentIndex]}-topic${topic.id}`}
+                      key={`sdoc-${selectedSdocIds[selectedSdocIdsIndex]}-topic${topic.id}`}
                       alignItems="center"
                     >
                       {getIconComponent(Icon.TOPIC, {
@@ -128,7 +132,7 @@ function SelectionInformation({ aspectId }: SelectionInformationProps) {
                 <TagMenuButton
                   popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
                   type={"addBtn"}
-                  selectedSdocIds={[selectedSdocIds[currentIndex]]}
+                  selectedSdocIds={[selectedSdocIds[selectedSdocIdsIndex]]}
                 />
               </Stack>
               <Stack direction="column" pl={0.5}>
@@ -141,8 +145,8 @@ function SelectionInformation({ aspectId }: SelectionInformationProps) {
                 {documentTagIds.isSuccess &&
                   documentTagIds.data.map((tagId) => (
                     <DocumentTagRow
-                      key={`sdoc-${selectedSdocIds[currentIndex]}-tag${tagId}`}
-                      sdocId={selectedSdocIds[currentIndex]}
+                      key={`sdoc-${selectedSdocIds[selectedSdocIdsIndex]}-tag${tagId}`}
+                      sdocId={selectedSdocIds[selectedSdocIdsIndex]}
                       tagId={tagId}
                     />
                   ))}

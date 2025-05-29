@@ -14,6 +14,7 @@ import { ProjectActions } from "../../components/Project/projectSlice.ts";
 export interface AtlasState {
   lastMapId: number | undefined;
   selectedSdocIds: number[];
+  selectedSdocIdsIndex: number;
   selectedTopicId: number | undefined;
   // view settings
   colorBy: string | undefined;
@@ -32,8 +33,9 @@ const defaultFilterExpression: MyFilterExpression = {
 const initialState: AtlasState & FilterState = {
   ...createInitialFilterState(defaultFilterExpression),
   lastMapId: undefined,
-  selectedTopicId: undefined,
   selectedSdocIds: [],
+  selectedSdocIdsIndex: 0,
+  selectedTopicId: undefined,
   // view settings
   colorBy: undefined,
   colorScheme: "viridis",
@@ -52,8 +54,13 @@ export const atlasSlice = createSlice({
   initialState,
   reducers: {
     ...filterReducer,
-    onRowSelectionChange: (state, action: PayloadAction<number[]>) => {
+    // selection
+    onSelectionChange: (state, action: PayloadAction<number[]>) => {
       state.selectedSdocIds = action.payload.slice();
+    },
+    // navigate through the selection
+    onSelectionIndexChange: (state, action: PayloadAction<number>) => {
+      state.selectedSdocIdsIndex = action.payload;
     },
     onScatterPlotDotClick: (state, action: PayloadAction<number>) => {
       const index = state.selectedSdocIds.indexOf(action.payload);

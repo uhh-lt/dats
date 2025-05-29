@@ -3,9 +3,10 @@ import { Box } from "@mui/material";
 import { Datum, ScatterData } from "plotly.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Plot, { Figure } from "react-plotly.js";
+import { TMDoc } from "../../api/openapi/models/TMDoc.ts";
 import { TMVisualization } from "../../api/openapi/models/TMVisualization.ts";
 import TopicModellingHooks from "../../api/TopicModellingHooks.ts";
-import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { AtlasActions } from "./atlasSlice.ts";
 import MapTooltip, { MapTooltipData } from "./MapTooltip.tsx";
 
@@ -29,18 +30,20 @@ function MapContent({ aspectId, projectId }: MapContentProps) {
 function MapContent2({ vis }: { vis: TMVisualization }) {
   // global client state
   const dispatch = useAppDispatch();
+  const selectedSdocIds = useAppSelector((state) => state.atlas.selectedSdocIds);
+  const selectedSdocIdsIndex = useAppSelector((state) => state.atlas.selectedSdocIdsIndex);
 
   // chart data
   const { chartData, labels } = useMemo(() => {
     const chartData: Record<string, Partial<ScatterData>> = {};
     const labels: { x: number; y: number; text: string }[] = [];
 
-    const sdocId2Pos: Record<string, { x: number; y: number }> = vis.docs.reduce(
+    const sdocId2Doc = vis.docs.reduce(
       (acc, doc) => {
-        acc[doc.sdoc_id] = { x: doc.x, y: doc.y };
+        acc[doc.sdoc_id] = doc;
         return acc;
       },
-      {} as Record<string, { x: number; y: number }>,
+      {} as Record<number, TMDoc>,
     );
 
     // prepare the legend & labels
@@ -57,30 +60,51 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
         marker: {
           color: topic.color,
           size: 10,
+          line: {
+            color: "black",
+            width: [],
+          },
         },
         selected: {
-          marker: { size: 20 },
+          marker: {
+            size: 20,
+          },
         },
         visible: true,
       } as Partial<ScatterData>;
 
       labels.push({
         text: topic.name,
-        x: sdocId2Pos[topic.top_docs![0]].x,
-        y: sdocId2Pos[topic.top_docs![0]].y,
+        x: sdocId2Doc[topic.top_docs![0]].x,
+        y: sdocId2Doc[topic.top_docs![0]].y,
       });
     });
 
     // fill the coordinates
+    const selectedSdocId = selectedSdocIds[selectedSdocIdsIndex];
     vis.docs.forEach((doc) => {
+      if (doc.sdoc_id == selectedSdocId) return;
       const trace = chartData[doc.topic_id];
       (trace.x as Datum[]).push(doc.x);
       (trace.y as Datum[]).push(doc.y);
       (trace.ids as string[]).push(`${doc.sdoc_id}`);
+      (trace.marker!.line!.width! as number[]).push(0);
     });
 
+    // special treatment for the selected document
+    const doc = sdocId2Doc[selectedSdocId];
+    if (doc) {
+      const trace = chartData[doc.topic_id];
+      (trace.x as Datum[]).push(doc.x);
+      (trace.y as Datum[]).push(doc.y);
+      (trace.ids as string[]).push(`${doc.sdoc_id}`);
+      (trace.marker!.line!.width! as number[]).push(2);
+    }
+
+    console.log("chartData", chartData);
+
     return { chartData, labels };
-  }, [vis]);
+  }, [selectedSdocIds, selectedSdocIdsIndex, vis.docs, vis.topics]);
 
   // plot state
   const [figure, setFigure] = useState<Figure>({
@@ -170,11 +194,11 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
                 },
               };
             });
-            dispatch(AtlasActions.onRowSelectionChange([]));
+            dispatch(AtlasActions.onSelectionChange([]));
             return;
           }
           dispatch(
-            AtlasActions.onRowSelectionChange(
+            AtlasActions.onSelectionChange(
               event.points.reduce((acc: number[], point: any) => {
                 acc.push(point.id);
                 return acc;
