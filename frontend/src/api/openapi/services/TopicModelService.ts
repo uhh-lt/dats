@@ -145,7 +145,7 @@ export class TopicModelService {
   }
   /**
    * Accept the label of the provided SourceDocuments (by ID).
-   * @returns AspectRead Successful Response
+   * @returns number Successful Response
    * @throws ApiError
    */
   public static acceptLabel({
@@ -154,7 +154,7 @@ export class TopicModelService {
   }: {
     aspectId: number;
     requestBody: Array<number>;
-  }): CancelablePromise<AspectRead> {
+  }): CancelablePromise<number> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/topic_model/label_accept/{aspect_id}",
@@ -170,7 +170,7 @@ export class TopicModelService {
   }
   /**
    * Reverts the label of the provided SourceDocuments (by ID).
-   * @returns AspectRead Successful Response
+   * @returns number Successful Response
    * @throws ApiError
    */
   public static revertLabel({
@@ -179,12 +179,42 @@ export class TopicModelService {
   }: {
     aspectId: number;
     requestBody: Array<number>;
-  }): CancelablePromise<AspectRead> {
+  }): CancelablePromise<number> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/topic_model/label_revert/{aspect_id}",
       path: {
         aspect_id: aspectId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Sets the label of the provided SourceDocuments (by ID) to the Topic (by ID).
+   * @returns number Successful Response
+   * @throws ApiError
+   */
+  public static setLabel({
+    aspectId,
+    topicId,
+    requestBody,
+  }: {
+    aspectId: number;
+    topicId: number;
+    requestBody: Array<number>;
+  }): CancelablePromise<number> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/topic_model/label_set/{aspect_id}",
+      path: {
+        aspect_id: aspectId,
+      },
+      query: {
+        topic_id: topicId,
       },
       body: requestBody,
       mediaType: "application/json",

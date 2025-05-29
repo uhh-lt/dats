@@ -12,9 +12,14 @@ import { MyFilterExpression } from "../../components/FilterDialog/filterUtils.ts
 import { ProjectActions } from "../../components/Project/projectSlice.ts";
 
 export interface AtlasState {
-  lastAtlasCotaId: number | undefined;
+  lastMapId: number | undefined;
   selectedSdocIds: number[];
-  selectedTopicId: string | undefined;
+  selectedTopicId: number | undefined;
+  // view settings
+  colorBy: string | undefined;
+  colorScheme: string;
+  pointSize: number;
+  showLabels: boolean;
 }
 
 const defaultFilterExpression: MyFilterExpression = {
@@ -26,13 +31,18 @@ const defaultFilterExpression: MyFilterExpression = {
 
 const initialState: AtlasState & FilterState = {
   ...createInitialFilterState(defaultFilterExpression),
-  lastAtlasCotaId: undefined,
+  lastMapId: undefined,
   selectedTopicId: undefined,
   selectedSdocIds: [],
+  // view settings
+  colorBy: undefined,
+  colorScheme: "viridis",
+  pointSize: 5,
+  showLabels: false,
 };
 
 const resetAtlasState = (state: Draft<AtlasState>) => {
-  state.lastAtlasCotaId = initialState.lastAtlasCotaId;
+  state.lastMapId = initialState.lastMapId;
   state.selectedTopicId = initialState.selectedTopicId;
   state.selectedSdocIds = initialState.selectedSdocIds;
 };
@@ -55,15 +65,15 @@ export const atlasSlice = createSlice({
         state.selectedSdocIds.push(action.payload);
       }
     },
-    onSelectTopic: (state, action: PayloadAction<{ topicId: string }>) => {
-      if (state.selectedTopicId === action.payload.topicId) {
+    onSelectTopic: (state, action: PayloadAction<number>) => {
+      if (state.selectedTopicId === action.payload) {
         state.selectedTopicId = undefined;
         return;
       }
-      state.selectedTopicId = action.payload.topicId;
+      state.selectedTopicId = action.payload;
     },
     onOpenMap: (state, action: PayloadAction<{ projectId: number; atlasId: number }>) => {
-      if (state.lastAtlasCotaId !== action.payload.atlasId) {
+      if (state.lastMapId !== action.payload.atlasId) {
         console.log("Atlas changed! Resetting 'atlas' state.");
         resetAtlasState(state);
         resetProjectFilterState({
@@ -72,8 +82,21 @@ export const atlasSlice = createSlice({
           projectId: action.payload.projectId,
           sliceName: "atlas",
         });
-        state.lastAtlasCotaId = action.payload.atlasId;
+        state.lastMapId = action.payload.atlasId;
       }
+    },
+    // View settings
+    onChangeColorBy: (state, action: PayloadAction<string | undefined>) => {
+      state.colorBy = action.payload;
+    },
+    onChangeColorScheme: (state, action: PayloadAction<string>) => {
+      state.colorScheme = action.payload;
+    },
+    onChangePointSize: (state, action: PayloadAction<number>) => {
+      state.pointSize = action.payload;
+    },
+    onChangeShowLabels: (state, action: PayloadAction<boolean>) => {
+      state.showLabels = action.payload;
     },
   },
   extraReducers: (builder) => {
