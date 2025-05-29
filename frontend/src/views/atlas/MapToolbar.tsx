@@ -1,21 +1,26 @@
 import SearchIcon from "@mui/icons-material/Search";
-import { Box, InputAdornment, TextField } from "@mui/material";
+import { Box, IconButton, InputAdornment, Stack, TextField, Typography } from "@mui/material";
 import { ChangeEvent, useRef, useState } from "react";
 import ReduxFilterDialog from "../../components/FilterDialog/ReduxFilterDialog.tsx";
 import DATSToolbar from "../../components/MUI/DATSToolbar.tsx";
-import { selectSelectedDocumentIds } from "../../components/tableSlice.ts";
 import TagMenuButton from "../../components/Tag/TagMenu/TagMenuButton.tsx";
 import { useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { RootState } from "../../store/store.ts";
+import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
 import SearchOptionsMenu from "../search/DocumentSearch/SearchOptionsMenu.tsx";
 import { AtlasActions } from "./atlasSlice.ts";
+import TopicMenuButton from "./TopicMenuButton.tsx";
 
 const filterStateSelector = (state: RootState) => state.atlas;
 const filterName = "root";
 
-function MapToolbar() {
+interface MapToolbarProps {
+  aspectId: number;
+}
+
+function MapToolbar({ aspectId }: MapToolbarProps) {
   // selection
-  const selectedDocumentIds = useAppSelector((state) => selectSelectedDocumentIds(state.search));
+  const selectedDocumentIds = useAppSelector((state) => state.atlas.selectedSdocIds);
 
   // filter dialog
   const toolbarRef = useRef<HTMLDivElement>(null);
@@ -28,24 +33,33 @@ function MapToolbar() {
 
   return (
     <DATSToolbar variant="dense" ref={toolbarRef}>
+      {selectedDocumentIds.length > 0 && (
+        <Stack direction="row" alignItems="center">
+          <Typography color="textSecondary">
+            {selectedDocumentIds.length} doc{selectedDocumentIds.length > 1 ? "s" : ""} selected
+          </Typography>
+          <TopicMenuButton
+            aspectId={aspectId}
+            selectedSdocIds={selectedDocumentIds}
+            popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
+          />
+          <TagMenuButton
+            selectedSdocIds={selectedDocumentIds}
+            popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
+          />
+          <IconButton>{getIconComponent(Icon.DELETE)}</IconButton>
+        </Stack>
+      )}
+      <Box sx={{ flexGrow: 1 }} />
       <ReduxFilterDialog
         anchorEl={toolbarRef.current}
         buttonProps={{ size: "small" }}
         filterName={filterName}
         filterStateSelector={filterStateSelector}
         filterActions={AtlasActions}
-        transformOrigin={{ horizontal: "left", vertical: "top" }}
-        anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
+        transformOrigin={{ horizontal: "right", vertical: "top" }}
+        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       />
-      {selectedDocumentIds.length > 0 && (
-        <>
-          <TagMenuButton
-            selectedSdocIds={selectedDocumentIds}
-            popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
-          />
-        </>
-      )}
-      <Box sx={{ flexGrow: 1 }} />
       <TextField
         type="text"
         value={searchQuery}

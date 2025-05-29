@@ -156,7 +156,7 @@ const useLabelDocs = () =>
       console.log("TODO: Invalidate something!!!");
     },
     meta: {
-      successMessage: (data: AspectRead) => `Accepted labels in aspect ${data.name}`,
+      successMessage: (data: AspectRead) => `Accepted topic(s) for ${data.name} documents`,
     },
   });
 
@@ -167,7 +167,18 @@ const useUnlabelDocs = () =>
       console.log("TODO: Invalidate something!!!");
     },
     meta: {
-      successMessage: (data: AspectRead) => `Reverted labels in aspect ${data.name}`,
+      successMessage: (data: number) => `Reverted topic(s) for ${data} documents`,
+    },
+  });
+
+const useSetTopic = () =>
+  useMutation({
+    mutationFn: TopicModelService.setLabel,
+    onSuccess: () => {
+      console.log("TODO: Invalidate something!!!");
+    },
+    meta: {
+      successMessage: (data: number) => `Set topic for ${data} documents`,
     },
   });
 
@@ -203,6 +214,7 @@ const TopicModellingHooks = {
   // labeling
   useLabelDocs,
   useUnlabelDocs,
+  useSetTopic,
   // visualization
   useGetDocVisualization,
   // topics

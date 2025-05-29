@@ -5690,7 +5690,9 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectRead" } } }
+            "content": {
+              "application/json": { "schema": { "type": "integer", "title": "Response Topic Model-Accept Label" } }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -5717,7 +5719,44 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectRead" } } }
+            "content": {
+              "application/json": { "schema": { "type": "integer", "title": "Response Topic Model-Revert Label" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/topic_model/label_set/{aspect_id}": {
+      "post": {
+        "tags": ["topic_model"],
+        "summary": "Sets the label of the provided SourceDocuments (by ID) to the Topic (by ID).",
+        "operationId": "set_label",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "aspect_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Aspect Id" }
+          },
+          { "name": "topic_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Topic Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "Sdoc Ids" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "type": "integer", "title": "Response Topic Model-Set Label" } }
+            }
           },
           "422": {
             "description": "Validation Error",

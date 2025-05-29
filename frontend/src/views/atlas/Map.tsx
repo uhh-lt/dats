@@ -24,10 +24,10 @@ function Map() {
   // render
   return (
     <SidebarContentSidebarLayout
-      leftSidebar={<MapSettingsSidePanel />}
+      leftSidebar={<MapSettingsSidePanel aspectId={aspectId} />}
       content={
         <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-          <MapToolbar />
+          <MapToolbar aspectId={aspectId} />
           <MapContent projectId={projectId} aspectId={aspectId} />
         </Box>
       }
