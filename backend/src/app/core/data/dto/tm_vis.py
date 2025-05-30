@@ -13,6 +13,9 @@ class TMDoc(BaseModel):
     is_accepted: bool = Field(
         description="Indicates whether the document<->topic assignment is accepted by a user",
     )
+    in_searchresult: bool = Field(
+        description="Indicates whether the document is part of the search result",
+    )
 
 
 class TMVisualization(BaseModel):
