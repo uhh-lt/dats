@@ -28,10 +28,6 @@ export type TopicRead = {
    */
   level: number;
   /**
-   * Color code for the topic visualization
-   */
-  color: string;
-  /**
    * X coordinate for visualization
    */
   x: number;

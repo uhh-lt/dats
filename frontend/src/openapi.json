@@ -10459,10 +10459,15 @@
             "description": "ID of the topic this document belongs to"
           },
           "x": { "type": "number", "title": "X", "description": "X coordinate of the document in the visualization" },
-          "y": { "type": "number", "title": "Y", "description": "Y coordinate of the document in the visualization" }
+          "y": { "type": "number", "title": "Y", "description": "Y coordinate of the document in the visualization" },
+          "is_accepted": {
+            "type": "boolean",
+            "title": "Is Accepted",
+            "description": "Indicates whether the document<->topic assignment is accepted by a user"
+          }
         },
         "type": "object",
-        "required": ["sdoc_id", "topic_id", "x", "y"],
+        "required": ["sdoc_id", "topic_id", "x", "y", "is_accepted"],
         "title": "TMDoc"
       },
       "TMJobRead": {
@@ -10896,11 +10901,10 @@
           },
           "level": { "type": "integer", "title": "Level", "description": "Hierarchical level of the topic" },
           "name": { "type": "string", "title": "Name", "description": "Name of the topic" },
-          "description": { "type": "string", "title": "Description", "description": "Description of the topic" },
-          "color": { "type": "string", "title": "Color", "description": "Color code for the topic visualization" }
+          "description": { "type": "string", "title": "Description", "description": "Description of the topic" }
         },
         "type": "object",
-        "required": ["aspect_id", "level", "name", "description", "color"],
+        "required": ["aspect_id", "level", "name", "description"],
         "title": "TopicCreate"
       },
       "TopicRead": {
@@ -10919,7 +10923,6 @@
           "name": { "type": "string", "title": "Name", "description": "Name of the topic" },
           "description": { "type": "string", "title": "Description", "description": "Description of the topic" },
           "level": { "type": "integer", "title": "Level", "description": "Hierarchical level of the topic" },
-          "color": { "type": "string", "title": "Color", "description": "Color code for the topic visualization" },
           "x": { "type": "number", "title": "X", "description": "X coordinate for visualization" },
           "y": { "type": "number", "title": "Y", "description": "Y coordinate for visualization" },
           "top_words": {
@@ -10946,7 +10949,6 @@
           "name",
           "description",
           "level",
-          "color",
           "x",
           "y",
           "top_words",
