@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Box } from "@mui/material";
-import { Datum, ScatterData } from "plotly.js";
+import { Annotations, Datum, ScatterData } from "plotly.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Plot, { Figure } from "react-plotly.js";
 import { TMDoc } from "../../api/openapi/models/TMDoc.ts";
@@ -33,6 +33,7 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
   const selectedSdocIds = useAppSelector((state) => state.atlas.selectedSdocIds);
   const selectedSdocIdsIndex = useAppSelector((state) => state.atlas.selectedSdocIdsIndex);
   const pointSize = useAppSelector((state) => state.atlas.pointSize);
+  const showLabels = useAppSelector((state) => state.atlas.showLabels);
 
   // chart data
   const { chartData, labels } = useMemo(() => {
@@ -105,6 +106,24 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
     return { chartData, labels };
   }, [pointSize, selectedSdocIds, selectedSdocIdsIndex, vis.docs, vis.topics]);
 
+  // labelss
+  const labelAnnotations: Partial<Annotations>[] | undefined = useMemo(
+    () =>
+      labels.map((label) => ({
+        text: label.text,
+        x: label.x,
+        y: label.y,
+        xref: "x",
+        yref: "y",
+        showarrow: false,
+        font: { size: 14, color: "#666" },
+        // bgcolor: "#f9f9f9",
+        // bordercolor: "#ccc",
+        visible: true,
+      })),
+    [labels],
+  );
+
   // plot state
   const [figure, setFigure] = useState<Figure>({
     data: Object.values(chartData),
@@ -121,18 +140,7 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
       xaxis: { zeroline: false },
       yaxis: { zeroline: false },
       showlegend: false,
-      annotations: labels.map((label) => ({
-        text: label.text,
-        x: label.x,
-        y: label.y,
-        xref: "x",
-        yref: "y",
-        showarrow: false,
-        font: { size: 14, color: "#666" },
-        // bgcolor: "#f9f9f9",
-        // bordercolor: "#ccc",
-        visible: true,
-      })),
+      annotations: showLabels ? labelAnnotations : undefined,
     },
     frames: null,
   });
@@ -140,9 +148,16 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
   // update figure when chartData changes
   useEffect(() => {
     setFigure((oldFigure) => {
-      return { ...oldFigure, data: Object.values(chartData) };
+      return {
+        ...oldFigure,
+        data: Object.values(chartData),
+        layout: {
+          ...oldFigure.layout,
+          annotations: showLabels ? labelAnnotations : undefined,
+        },
+      };
     });
-  }, [chartData]);
+  }, [labelAnnotations, showLabels, chartData]);
 
   // tooltip
   const [tooltipData, setTooltipData] = useState<MapTooltipData>({
