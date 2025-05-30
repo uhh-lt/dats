@@ -39,7 +39,7 @@ const initialState: AtlasState & FilterState = {
   // view settings
   colorBy: undefined,
   colorScheme: "viridis",
-  pointSize: 5,
+  pointSize: 10,
   showLabels: false,
 };
 

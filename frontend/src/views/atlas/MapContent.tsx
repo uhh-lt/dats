@@ -32,6 +32,7 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
   const dispatch = useAppDispatch();
   const selectedSdocIds = useAppSelector((state) => state.atlas.selectedSdocIds);
   const selectedSdocIdsIndex = useAppSelector((state) => state.atlas.selectedSdocIdsIndex);
+  const pointSize = useAppSelector((state) => state.atlas.pointSize);
 
   // chart data
   const { chartData, labels } = useMemo(() => {
@@ -59,7 +60,7 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
         selectedpoints: [],
         marker: {
           color: topic.color,
-          size: 10,
+          size: pointSize,
           line: {
             color: "black",
             width: [],
@@ -67,7 +68,7 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
         },
         selected: {
           marker: {
-            size: 20,
+            size: pointSize * 1.5,
           },
         },
         visible: true,
@@ -104,7 +105,7 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
     console.log("chartData", chartData);
 
     return { chartData, labels };
-  }, [selectedSdocIds, selectedSdocIdsIndex, vis.docs, vis.topics]);
+  }, [pointSize, selectedSdocIds, selectedSdocIdsIndex, vis.docs, vis.topics]);
 
   // plot state
   const [figure, setFigure] = useState<Figure>({
