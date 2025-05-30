@@ -32,6 +32,14 @@ export type TopicRead = {
    */
   color: string;
   /**
+   * X coordinate for visualization
+   */
+  x: number;
+  /**
+   * Y coordinate for visualization
+   */
+  y: number;
+  /**
    * Top words associated with the topic
    */
   top_words: Array<string> | null;

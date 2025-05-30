@@ -171,17 +171,6 @@ const useUnlabelDocs = () =>
     },
   });
 
-const useSetTopic = () =>
-  useMutation({
-    mutationFn: TopicModelService.setLabel,
-    onSuccess: () => {
-      console.log("TODO: Invalidate something!!!");
-    },
-    meta: {
-      successMessage: (data: number) => `Set topic for ${data} documents`,
-    },
-  });
-
 // VISUALIZATION
 
 const useGetDocVisualization = (aspectId: number) =>
@@ -214,7 +203,6 @@ const TopicModellingHooks = {
   // labeling
   useLabelDocs,
   useUnlabelDocs,
-  useSetTopic,
   // visualization
   useGetDocVisualization,
   // topics

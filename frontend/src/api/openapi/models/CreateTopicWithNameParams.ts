@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { TopicCreate } from "./TopicCreate";
-export type AddTopicParams = {
+export type CreateTopicWithNameParams = {
   /**
    * Type of the TMJob
    */

@@ -3,10 +3,12 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AddMissingDocsToAspectParams } from "../models/AddMissingDocsToAspectParams";
-import type { AddTopicParams } from "../models/AddTopicParams";
 import type { AspectCreate } from "../models/AspectCreate";
 import type { AspectRead } from "../models/AspectRead";
 import type { AspectUpdate } from "../models/AspectUpdate";
+import type { ChangeTopicParams } from "../models/ChangeTopicParams";
+import type { CreateTopicWithNameParams } from "../models/CreateTopicWithNameParams";
+import type { CreateTopicWithSdocsParams } from "../models/CreateTopicWithSdocsParams";
 import type { MergeTopicsParams } from "../models/MergeTopicsParams";
 import type { RefineTopicModelParams } from "../models/RefineTopicModelParams";
 import type { RemoveTopicParams } from "../models/RemoveTopicParams";
@@ -31,10 +33,12 @@ export class TopicModelService {
     aspectId: number;
     requestBody:
       | AddMissingDocsToAspectParams
-      | AddTopicParams
+      | CreateTopicWithNameParams
+      | CreateTopicWithSdocsParams
       | RemoveTopicParams
       | MergeTopicsParams
       | SplitTopicParams
+      | ChangeTopicParams
       | RefineTopicModelParams
       | ResetTopicModelParams;
   }): CancelablePromise<TMJobRead> {
@@ -185,36 +189,6 @@ export class TopicModelService {
       url: "/topic_model/label_revert/{aspect_id}",
       path: {
         aspect_id: aspectId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Sets the label of the provided SourceDocuments (by ID) to the Topic (by ID).
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static setLabel({
-    aspectId,
-    topicId,
-    requestBody,
-  }: {
-    aspectId: number;
-    topicId: number;
-    requestBody: Array<number>;
-  }): CancelablePromise<number> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/topic_model/label_set/{aspect_id}",
-      path: {
-        aspect_id: aspectId,
-      },
-      query: {
-        topic_id: topicId,
       },
       body: requestBody,
       mediaType: "application/json",
