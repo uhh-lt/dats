@@ -9,9 +9,10 @@ interface TopicMenuButtonProps {
   aspectId: number;
   popoverOrigin?: PopoverOrigin;
   selectedSdocIds: number[];
+  colorScheme: string[];
 }
 
-function TopicMenuButton({ aspectId, popoverOrigin, selectedSdocIds }: TopicMenuButtonProps) {
+function TopicMenuButton({ aspectId, popoverOrigin, selectedSdocIds, colorScheme }: TopicMenuButtonProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const handleClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -28,6 +29,7 @@ function TopicMenuButton({ aspectId, popoverOrigin, selectedSdocIds }: TopicMenu
         anchorEl={anchorEl}
         setAnchorEl={setAnchorEl}
         popoverOrigin={popoverOrigin}
+        colorScheme={colorScheme}
       />
     </>
   );

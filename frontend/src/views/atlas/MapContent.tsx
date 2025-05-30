@@ -9,7 +9,6 @@ import TopicModellingHooks from "../../api/TopicModellingHooks.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { AtlasActions } from "./atlasSlice.ts";
 import MapTooltip, { MapTooltipData } from "./MapTooltip.tsx";
-
 interface MapContentProps {
   aspectId: number;
   projectId: number;
@@ -34,6 +33,7 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
   const selectedSdocIdsIndex = useAppSelector((state) => state.atlas.selectedSdocIdsIndex);
   const pointSize = useAppSelector((state) => state.atlas.pointSize);
   const showLabels = useAppSelector((state) => state.atlas.showLabels);
+  const colorScheme = useAppSelector((state) => state.atlas.colorScheme);
 
   // chart data
   const { chartData, labels } = useMemo(() => {
@@ -60,7 +60,6 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
         hoverinfo: "none",
         selectedpoints: [],
         marker: {
-          color: topic.color,
           size: pointSize,
           line: {
             color: "black",
@@ -128,6 +127,7 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
   const [figure, setFigure] = useState<Figure>({
     data: Object.values(chartData),
     layout: {
+      colorway: colorScheme,
       dragmode: "select",
       autosize: true,
       margin: {
@@ -153,11 +153,12 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
         data: Object.values(chartData),
         layout: {
           ...oldFigure.layout,
+          colorway: colorScheme,
           annotations: showLabels ? labelAnnotations : undefined,
         },
       };
     });
-  }, [labelAnnotations, showLabels, chartData]);
+  }, [labelAnnotations, showLabels, chartData, colorScheme]);
 
   // tooltip
   const [tooltipData, setTooltipData] = useState<MapTooltipData>({

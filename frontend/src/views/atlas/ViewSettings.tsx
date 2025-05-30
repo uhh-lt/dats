@@ -17,6 +17,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import * as d3 from "d3";
 import { useState } from "react";
 import { TMJobType } from "../../api/openapi/models/TMJobType.ts";
 import TopicModellingHooks from "../../api/TopicModellingHooks.ts";
@@ -25,6 +26,20 @@ import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
 import { AtlasActions } from "./atlasSlice.ts";
 import TopicCreationDialog from "./TopicCreationDialog.tsx";
 
+const colorSchemes: Record<string, string[]> = {
+  category: d3.schemeCategory10 as string[],
+  accent: d3.schemeAccent as string[],
+  dark: d3.schemeDark2 as string[],
+  observable: d3.schemeObservable10 as string[],
+  paired: d3.schemePaired as string[],
+  pastel1: d3.schemePastel1 as string[],
+  pastel2: d3.schemePastel2 as string[],
+  set1: d3.schemeSet1 as string[],
+  set2: d3.schemeSet2 as string[],
+  set3: d3.schemeSet3 as string[],
+  tableau: d3.schemeTableau10 as string[],
+};
+
 interface ViewSettingsProps {
   aspectId: number;
 }
@@ -32,7 +47,7 @@ interface ViewSettingsProps {
 function ViewSettings({ aspectId }: ViewSettingsProps) {
   // view settings
   const colorBy = useAppSelector((state) => state.atlas.colorBy);
-  const colorScheme = useAppSelector((state) => state.atlas.colorScheme);
+  const colorSchemeName = useAppSelector((state) => state.atlas.colorSchemeName);
   const pointSize = useAppSelector((state) => state.atlas.pointSize);
   const showLabels = useAppSelector((state) => state.atlas.showLabels);
 
@@ -42,7 +57,12 @@ function ViewSettings({ aspectId }: ViewSettingsProps) {
     dispatch(AtlasActions.onChangeColorBy(event.target.value));
   };
   const handleColorSchemeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch(AtlasActions.onChangeColorScheme(event.target.value));
+    dispatch(
+      AtlasActions.onChangeColorScheme({
+        colorSchemeName: event.target.value,
+        colorScheme: colorSchemes[event.target.value],
+      }),
+    );
   };
   const handlePointSizeChange = (_event: React.SyntheticEvent | Event, value: number | number[]) => {
     dispatch(AtlasActions.onChangePointSize(value as number));
@@ -187,26 +207,73 @@ function ViewSettings({ aspectId }: ViewSettingsProps) {
           size="small"
           variant="outlined"
         >
-          <MenuItem value="name">Topics: Broad</MenuItem>
-          <MenuItem value="creationDate">Topics: Medium</MenuItem>
-          <MenuItem value="size">Topics: Fine</MenuItem>
+          <MenuItem value="topic-broad">Topics: Broad</MenuItem>
+          <MenuItem value="topic-medium">Topics: Medium</MenuItem>
+          <MenuItem value="topic-fine">Topics: Fine</MenuItem>
         </TextField>
         <TextField
           select
-          label="Color scheme"
-          value={colorScheme}
+          fullWidth
+          label="Color Scheme"
+          value={colorSchemeName}
           onChange={handleColorSchemeChange}
           size="small"
           variant="outlined"
+          slotProps={{
+            select: {
+              MenuProps: {
+                PaperProps: {
+                  style: {
+                    maxHeight: 300, // Adjust dropdown max height if needed
+                  },
+                },
+              },
+              renderValue: () => {
+                const colors = colorSchemes[colorSchemeName];
+                return (
+                  <Stack direction={"row"} spacing={1} alignItems="center">
+                    <Typography width="90px" flexShrink={0}>
+                      {colorSchemeName}
+                    </Typography>
+                    <Stack direction={"row"} spacing={0.5} width="100%">
+                      {colors.map((color, index) => (
+                        <Box
+                          key={`${colorSchemeName}-selected-${color}-${index}`}
+                          sx={{
+                            height: "12px",
+                            width: "12px",
+                            backgroundColor: color,
+                          }}
+                        />
+                      ))}
+                    </Stack>
+                  </Stack>
+                );
+              },
+            },
+          }}
         >
-          <MenuItem value="default">Default</MenuItem>
-          <MenuItem value="viridis">Viridis</MenuItem>
-          <MenuItem value="plasma">Plasma</MenuItem>
-          <MenuItem value="inferno">Inferno</MenuItem>
-          <MenuItem value="magma">Magma</MenuItem>
-          <MenuItem value="cividis">Cividis</MenuItem>
-          <MenuItem value="turbo">Turbo</MenuItem>
-          <MenuItem value="cubehelix">Cubehelix</MenuItem>
+          {Object.entries(colorSchemes).map(([schemeName, colors]) => (
+            <MenuItem key={schemeName} value={schemeName}>
+              <Stack direction={"row"} spacing={1} alignItems="center">
+                <Typography width="90px" flexShrink={0}>
+                  {schemeName}
+                </Typography>
+                <Stack direction={"row"} spacing={0.5} width="100%">
+                  {colors.map((color, index) => (
+                    <Box
+                      key={`${schemeName}-selected-${color}-${index}`}
+                      sx={{
+                        height: "12px",
+                        width: "12px",
+                        backgroundColor: color,
+                      }}
+                    />
+                  ))}
+                </Stack>
+              </Stack>
+            </MenuItem>
+          ))}
         </TextField>
         <Box>
           <Typography color="textSecondary">Point Size</Typography>
@@ -288,7 +355,8 @@ function ViewSettings({ aspectId }: ViewSettingsProps) {
                 : "Click topic to higlight corresponding documents:"}
         </Typography>
         <List sx={{ width: "100%" }} disablePadding>
-          {vis.data?.topics.map((topic) => {
+          {vis.data?.topics.map((topic, index) => {
+            const colors = colorSchemes[colorSchemeName];
             return (
               <ListItem
                 key={topic.id}
@@ -312,7 +380,7 @@ function ViewSettings({ aspectId }: ViewSettingsProps) {
                       <Checkbox edge="start" checked={checked.includes(topic.id)} tabIndex={-1} disableRipple />
                     ) : (
                       <Box width={42} height={42} display="flex" alignItems="center" justifyContent="flex-start">
-                        {getIconComponent(Icon.TOPIC, { style: { color: topic.color } })}
+                        {getIconComponent(Icon.TOPIC, { style: { color: colors[index % colors.length] } })}
                       </Box>
                     )}
                   </ListItemIcon>
