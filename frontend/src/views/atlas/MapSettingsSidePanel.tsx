@@ -2,8 +2,8 @@ import { TabContext, TabPanel } from "@mui/lab";
 import { Box, Tab, Tabs } from "@mui/material";
 import { useState } from "react";
 import AnalysisAssistant from "./AnalysisAssistant.tsx";
+import ColorSettings from "./ColorSettings.tsx";
 import PositionSettings from "./PositionSettings.tsx";
-import ViewSettings from "./ViewSettings.tsx";
 
 interface MapSettingsSidePanelProps {
   aspectId: number;
@@ -11,7 +11,7 @@ interface MapSettingsSidePanelProps {
 
 function MapSettingsSidePanel({ aspectId }: MapSettingsSidePanelProps) {
   // explorer
-  const [tab, setTab] = useState("view");
+  const [tab, setTab] = useState("color");
   const handleTabChange = (_event: React.SyntheticEvent, newValue: string): void => {
     setTab(newValue);
   };
@@ -20,14 +20,14 @@ function MapSettingsSidePanel({ aspectId }: MapSettingsSidePanelProps) {
       <TabContext value={tab}>
         <Box sx={{ borderBottom: 1, borderColor: "divider" }} className="myFlexFitContentContainer">
           <Tabs value={tab} onChange={handleTabChange} variant="scrollable">
-            <Tab label="View Settings" value="view" />
+            <Tab label="Color Settings" value="color" />
             <Tab label="Position Settings" value="position" />
             <Tab label="Analysis Assistant" value="assistant" />
           </Tabs>
         </Box>
         <Box className="myFlexFillAllContainer">
-          <TabPanel value="view" style={{ padding: 0 }} className="h100">
-            {tab === "view" && <ViewSettings aspectId={aspectId} />}
+          <TabPanel value="color" style={{ padding: 0 }} className="h100">
+            {tab === "color" && <ColorSettings aspectId={aspectId} />}
           </TabPanel>
           <TabPanel value="position" style={{ padding: 0 }} className="h100">
             {tab === "position" && <PositionSettings />}

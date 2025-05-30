@@ -1,4 +1,5 @@
 import {
+  Alert,
   Box,
   Button,
   Checkbox,
@@ -40,11 +41,11 @@ const colorSchemes: Record<string, string[]> = {
   tableau: d3.schemeTableau10 as string[],
 };
 
-interface ViewSettingsProps {
+interface ColorSettingsProps {
   aspectId: number;
 }
 
-function ViewSettings({ aspectId }: ViewSettingsProps) {
+function ColorSettings({ aspectId }: ColorSettingsProps) {
   // view settings
   const colorBy = useAppSelector((state) => state.atlas.colorBy);
   const colorSchemeName = useAppSelector((state) => state.atlas.colorSchemeName);
@@ -390,9 +391,14 @@ function ViewSettings({ aspectId }: ViewSettingsProps) {
             );
           })}
         </List>
+        <Box px={2}>
+          <Alert severity="info">
+            Tipp: Changing document&harr;topic assignments updates the affected topics (name, description, words, etc.)!
+          </Alert>
+        </Box>
       </Stack>
     </Box>
   );
 }
 
-export default ViewSettings;
+export default ColorSettings;
