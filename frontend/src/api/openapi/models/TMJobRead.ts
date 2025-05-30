@@ -3,9 +3,11 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AddMissingDocsToAspectParams } from "./AddMissingDocsToAspectParams";
-import type { AddTopicParams } from "./AddTopicParams";
 import type { BackgroundJobStatus } from "./BackgroundJobStatus";
+import type { ChangeTopicParams } from "./ChangeTopicParams";
 import type { CreateAspectParams } from "./CreateAspectParams";
+import type { CreateTopicWithNameParams } from "./CreateTopicWithNameParams";
+import type { CreateTopicWithSdocsParams } from "./CreateTopicWithSdocsParams";
 import type { MergeTopicsParams } from "./MergeTopicsParams";
 import type { RefineTopicModelParams } from "./RefineTopicModelParams";
 import type { RemoveTopicParams } from "./RemoveTopicParams";
@@ -35,10 +37,12 @@ export type TMJobRead = {
   parameters:
     | CreateAspectParams
     | AddMissingDocsToAspectParams
-    | AddTopicParams
+    | CreateTopicWithNameParams
+    | CreateTopicWithSdocsParams
     | RemoveTopicParams
     | MergeTopicsParams
     | SplitTopicParams
+    | ChangeTopicParams
     | RefineTopicModelParams
     | ResetTopicModelParams;
   /**
