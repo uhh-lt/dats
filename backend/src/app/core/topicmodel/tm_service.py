@@ -692,7 +692,6 @@ class TMService:
                 level=params.create_dto.level,
                 name=params.create_dto.name,
                 description=params.create_dto.description,
-                color=params.create_dto.color,
             ),
         )
 

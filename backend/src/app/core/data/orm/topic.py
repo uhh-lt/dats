@@ -21,7 +21,6 @@ class TopicORM(ORMBase):
         ARRAY(Float), nullable=True
     )
     level: Mapped[int] = mapped_column(Integer)
-    color: Mapped[str] = mapped_column(String, nullable=False)
     top_docs: Mapped[Optional[List[int]]] = mapped_column(ARRAY(Integer), nullable=True)
 
     # 2D coordinates for visualization
