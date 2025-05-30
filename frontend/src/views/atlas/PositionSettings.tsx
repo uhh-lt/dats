@@ -1,3 +1,4 @@
+import RuleIcon from "@mui/icons-material/Rule";
 import {
   Alert,
   Box,
@@ -107,7 +108,7 @@ function PositionSettings({ aspectId }: PositionSettingsProps) {
       <Divider />
       <Stack spacing={1} mt={2}>
         <Typography px={1.5} variant="h6" alignItems="center" display="flex" gap={1} color="textSecondary">
-          {getIconComponent(Icon.ANALYSIS, { style: {} })}
+          <RuleIcon />
           Review Statistics
         </Typography>
         <Stack direction="row" px={1} spacing={1} alignItems="center">
@@ -120,12 +121,12 @@ function PositionSettings({ aspectId }: PositionSettingsProps) {
             const total = topic2total[topic.id];
             const color = colorScheme[index % colorScheme.length];
             return (
-              <Box>
-                <Typography key={topic.id} variant="caption" color="textSecondary">
+              <Box key={topic.id}>
+                <Typography variant="caption" color="textSecondary">
                   {getIconComponent(Icon.TOPIC, { style: { fontSize: "10px", marginRight: "4px", color: color } })}
                   {topic.name}
                 </Typography>
-                <Box key={topic.id} sx={{ display: "flex", alignItems: "center" }}>
+                <Box sx={{ display: "flex", alignItems: "center" }}>
                   <Box sx={{ width: "100%", mr: 1 }}>
                     <LinearProgress
                       variant="determinate"
