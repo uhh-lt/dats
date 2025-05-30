@@ -86,10 +86,12 @@ export class SearchService {
     codeId,
     requestBody,
     sortByGlobal = false,
+    topK = 20,
   }: {
     codeId: number;
     requestBody: Array<number>;
     sortByGlobal?: boolean;
+    topK?: number;
   }): CancelablePromise<Array<SpanEntityStat>> {
     return __request(OpenAPI, {
       method: "POST",
@@ -97,6 +99,7 @@ export class SearchService {
       query: {
         code_id: codeId,
         sort_by_global: sortByGlobal,
+        top_k: topK,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -114,7 +117,7 @@ export class SearchService {
     projectId,
     requestBody,
     sortByGlobal = false,
-    topK = 50,
+    topK = 20,
   }: {
     projectId: number;
     requestBody: Array<number>;
@@ -144,15 +147,18 @@ export class SearchService {
   public static filterTagStats({
     requestBody,
     sortByGlobal = false,
+    topK = 20,
   }: {
     requestBody: Array<number>;
     sortByGlobal?: boolean;
+    topK?: number;
   }): CancelablePromise<Array<TagStat>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/tag_stats_by_sdocs",
       query: {
         sort_by_global: sortByGlobal,
+        top_k: topK,
       },
       body: requestBody,
       mediaType: "application/json",

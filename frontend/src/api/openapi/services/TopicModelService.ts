@@ -2,9 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { CancelablePromise } from "../core/CancelablePromise";
-import { OpenAPI } from "../core/OpenAPI";
-import { request as __request } from "../core/request";
 import type { AddMissingDocsToAspectParams } from "../models/AddMissingDocsToAspectParams";
 import type { AspectCreate } from "../models/AspectCreate";
 import type { AspectRead } from "../models/AspectRead";
@@ -21,6 +18,9 @@ import type { SplitTopicParams } from "../models/SplitTopicParams";
 import type { TMJobRead } from "../models/TMJobRead";
 import type { TMVisualization } from "../models/TMVisualization";
 import type { TopicRead } from "../models/TopicRead";
+import type { CancelablePromise } from "../core/CancelablePromise";
+import { OpenAPI } from "../core/OpenAPI";
+import { request as __request } from "../core/request";
 export class TopicModelService {
   /**
    * Starts the TMJob for the given Parameters. If a job is already running, this will raise an error.
