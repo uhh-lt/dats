@@ -6,9 +6,10 @@ import SelectionStatistics from "./SelectionStatistics.tsx";
 
 interface SelectionStatisticsProps {
   aspectId: number;
+  projectId: number;
 }
 
-function MapDetailsSidePanel({ aspectId }: SelectionStatisticsProps) {
+function MapDetailsSidePanel({ aspectId, projectId }: SelectionStatisticsProps) {
   // explorer
   const [tab, setTab] = useState("info");
   const handleTabChange = (_event: React.SyntheticEvent, newValue: string): void => {
@@ -28,7 +29,7 @@ function MapDetailsSidePanel({ aspectId }: SelectionStatisticsProps) {
             {tab === "info" && <SelectionInformation aspectId={aspectId} />}
           </TabPanel>
           <TabPanel value="statistics" style={{ padding: 0 }} className="h100">
-            {tab === "statistics" && <SelectionStatistics aspectId={aspectId} />}
+            {tab === "statistics" && <SelectionStatistics aspectId={aspectId} projectId={projectId} />}
           </TabPanel>
         </Box>
       </TabContext>

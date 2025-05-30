@@ -1,3 +1,4 @@
+import MenuIcon from "@mui/icons-material/Menu";
 import PublicIcon from "@mui/icons-material/Public";
 import PublicOffIcon from "@mui/icons-material/PublicOff";
 import SearchIcon from "@mui/icons-material/Search";
@@ -73,7 +74,11 @@ function SearchStatistics({
           <SearchStatisticsMenu
             menuItems={projectCodes.data || []}
             handleMenuItemClick={handleMenuItemClick}
-            sx={{ ml: 1 }}
+            renderButton={(onClick) => (
+              <IconButton onClick={onClick} sx={{ ml: 1 }}>
+                <MenuIcon />
+              </IconButton>
+            )}
           />
           <Tabs value={tab} onChange={handleTabChange} variant="scrollable">
             <Tab label="Keywords" value="keywords" />

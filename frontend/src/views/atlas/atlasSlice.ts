@@ -36,6 +36,8 @@ export interface AtlasState {
   highlightReviewedDocs: boolean;
   // search state
   searchQuery: string; // This can be used to store the search query if needed
+  // statistics
+  pinnedStatistics: string[]; // "keywords", "tags", "<codeId>", etc.
 }
 
 const defaultFilterExpression: MyFilterExpression = {
@@ -66,6 +68,8 @@ const initialState: AtlasState & FilterState = {
   highlightReviewedDocs: false,
   // search state
   searchQuery: "",
+  // statistics
+  pinnedStatistics: ["keywords", "tags"],
 };
 
 const resetAtlasState = (state: Draft<AtlasState>) => {
@@ -211,6 +215,15 @@ export const atlasSlice = createSlice({
           value: [action.payload.codeId.toString(), action.payload.spanText],
         },
       ];
+    },
+    // statistics
+    onPinStatistics: (state, action: PayloadAction<string>) => {
+      if (!state.pinnedStatistics.includes(action.payload)) {
+        state.pinnedStatistics.push(action.payload);
+      }
+    },
+    onUnpinStatistics: (state, action: PayloadAction<string>) => {
+      state.pinnedStatistics = state.pinnedStatistics.filter((stat) => stat !== action.payload);
     },
   },
   extraReducers: (builder) => {
