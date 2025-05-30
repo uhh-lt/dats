@@ -1,15 +1,15 @@
 import SearchIcon from "@mui/icons-material/Search";
-import { Box, IconButton, InputAdornment, Stack, TextField, Typography } from "@mui/material";
+import { Box, InputAdornment, Stack, TextField, Typography } from "@mui/material";
 import { ChangeEvent, useRef, useState } from "react";
 import ReduxFilterDialog from "../../components/FilterDialog/ReduxFilterDialog.tsx";
 import DATSToolbar from "../../components/MUI/DATSToolbar.tsx";
 import TagMenuButton from "../../components/Tag/TagMenu/TagMenuButton.tsx";
 import { useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { RootState } from "../../store/store.ts";
-import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
 import SearchOptionsMenu from "../search/DocumentSearch/SearchOptionsMenu.tsx";
 import { AtlasActions } from "./atlasSlice.ts";
 import TopicMenuButton from "./TopicMenuButton.tsx";
+import TopicReviewButtons from "./TopicReviewButtons.tsx";
 
 const filterStateSelector = (state: RootState) => state.atlas;
 const filterName = "root";
@@ -49,7 +49,7 @@ function MapToolbar({ aspectId }: MapToolbarProps) {
             selectedSdocIds={selectedDocumentIds}
             popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
           />
-          <IconButton>{getIconComponent(Icon.DELETE)}</IconButton>
+          <TopicReviewButtons aspectId={aspectId} selectedSdocIds={selectedDocumentIds} />
         </Stack>
       )}
       <Box sx={{ flexGrow: 1 }} />

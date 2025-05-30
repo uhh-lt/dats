@@ -152,19 +152,19 @@ const usePollTMJob = (tmJobId: string | null | undefined, initialData: TMJobRead
 const useLabelDocs = () =>
   useMutation({
     mutationFn: TopicModelService.acceptLabel,
-    onSuccess: () => {
-      console.log("TODO: Invalidate something!!!");
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [QueryKey.DOCUMENT_VISUALIZATION, variables.aspectId] });
     },
     meta: {
-      successMessage: (data: AspectRead) => `Accepted topic(s) for ${data.name} documents`,
+      successMessage: (data: number) => `Accepted topic(s) for ${data} documents`,
     },
   });
 
 const useUnlabelDocs = () =>
   useMutation({
     mutationFn: TopicModelService.revertLabel,
-    onSuccess: () => {
-      console.log("TODO: Invalidate something!!!");
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [QueryKey.DOCUMENT_VISUALIZATION, variables.aspectId] });
     },
     meta: {
       successMessage: (data: number) => `Reverted topic(s) for ${data} documents`,
