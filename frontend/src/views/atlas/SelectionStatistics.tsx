@@ -99,6 +99,19 @@ function SelectionStatistics({ projectId, aspectId }: SelectionStatisticsProps) 
           </Box>
         </Box>
       )}
+      <Box flexGrow={0} px={1}>
+        <SearchStatisticsMenu
+          menuItems={projectCodes.data || []}
+          handleMenuItemClick={handlePinStatistics}
+          renderButton={(onClick) => (
+            <Tooltip title={"Pin new Statistics"} placement="left">
+              <Button startIcon={<PushPinOutlinedIcon />} onClick={onClick}>
+                Pin new statistics
+              </Button>
+            </Tooltip>
+          )}
+        />
+      </Box>
       {pinnedStatistics.map((stat) => {
         if (stat === "keywords") {
           return (
@@ -106,7 +119,7 @@ function SelectionStatistics({ projectId, aspectId }: SelectionStatisticsProps) 
               <Divider />
               <Box px={1}>
                 <Tooltip title={"Unpin Keyword Statistics"} placement="left">
-                  <Button startIcon={<PushPinOutlinedIcon />} onClick={() => handleUnpinStatistics("keywords")}>
+                  <Button startIcon={<PushPinIcon />} onClick={() => handleUnpinStatistics("keywords")}>
                     Keyword Statistics
                   </Button>
                 </Tooltip>
@@ -122,7 +135,7 @@ function SelectionStatistics({ projectId, aspectId }: SelectionStatisticsProps) 
               <Divider />
               <Box px={1} flexShrink={0}>
                 <Tooltip title={"Unpin Tag Statistics"} placement="left">
-                  <Button startIcon={<PushPinOutlinedIcon />} onClick={() => handleUnpinStatistics("tags")}>
+                  <Button startIcon={<PushPinIcon />} onClick={() => handleUnpinStatistics("tags")}>
                     Tag Statistics
                   </Button>
                 </Tooltip>
@@ -139,7 +152,7 @@ function SelectionStatistics({ projectId, aspectId }: SelectionStatisticsProps) 
               <Divider />
               <Box px={1}>
                 <Tooltip title={"Unpin Code Statistics"} placement="left">
-                  <Button startIcon={<PushPinOutlinedIcon />} onClick={() => handleUnpinStatistics(stat)}>
+                  <Button startIcon={<PushPinIcon />} onClick={() => handleUnpinStatistics(stat)}>
                     <span style={{ marginRight: "6px" }}>Code</span>
                     <CodeRenderer code={codeId} />
                     <span style={{ marginLeft: "6px" }}>Statistics</span>
@@ -153,20 +166,6 @@ function SelectionStatistics({ projectId, aspectId }: SelectionStatisticsProps) 
           );
         }
       })}
-      <Divider />
-      <Box flexGrow={0} px={1}>
-        <SearchStatisticsMenu
-          menuItems={projectCodes.data || []}
-          handleMenuItemClick={handlePinStatistics}
-          renderButton={(onClick) => (
-            <Tooltip title={"Pin new Statistics"} placement="left">
-              <Button startIcon={<PushPinIcon />} onClick={onClick}>
-                Pin new statistics
-              </Button>
-            </Tooltip>
-          )}
-        />
-      </Box>
     </Box>
   );
 }
