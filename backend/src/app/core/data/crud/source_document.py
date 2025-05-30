@@ -99,7 +99,8 @@ class CRUDSourceDocument(
                 & (DocumentAspectORM.aspect_id == aspect_id),
             )
             .filter(
-                DocumentAspectORM.id.is_(None),
+                DocumentAspectORM.sdoc_id.is_(None),
+                DocumentAspectORM.aspect_id.is_(None),
                 SourceDocumentORM.doctype == DocType.text,
             )
             .all()

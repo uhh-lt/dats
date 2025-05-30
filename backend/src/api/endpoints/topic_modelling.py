@@ -226,29 +226,6 @@ def revert_label(
     )
 
 
-@router.post(
-    "/label_set/{aspect_id}",
-    response_model=int,
-    summary="Sets the label of the provided SourceDocuments (by ID) to the Topic (by ID).",
-)
-def set_label(
-    *,
-    db: Session = Depends(get_db_session),
-    aspect_id: int,
-    topic_id: int,
-    sdoc_ids: list[int],
-    authz_user: AuthzUser = Depends(),
-) -> int:
-    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
-    return crud_document_topic.set_labels2(
-        db=db,
-        aspect_id=aspect_id,
-        topic_id=topic_id,
-        sdoc_ids=sdoc_ids,
-        is_accepted=True,
-    )
-
-
 # --- START VISUALIZATIONS --- #
 
 
