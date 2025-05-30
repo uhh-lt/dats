@@ -259,6 +259,7 @@ def visualize_documents(
         TMDoc(
             sdoc_id=doc.sdoc_id,
             topic_id=sdoc_id2dt[doc.sdoc_id].topic_id,
+            is_accepted=sdoc_id2dt[doc.sdoc_id].is_accepted,
             x=doc.x,
             y=doc.y,
         )
