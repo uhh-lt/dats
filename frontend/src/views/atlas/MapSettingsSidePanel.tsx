@@ -30,7 +30,7 @@ function MapSettingsSidePanel({ aspectId }: MapSettingsSidePanelProps) {
             {tab === "color" && <ColorSettings aspectId={aspectId} />}
           </TabPanel>
           <TabPanel value="position" style={{ padding: 0 }} className="h100">
-            {tab === "position" && <PositionSettings />}
+            {tab === "position" && <PositionSettings aspectId={aspectId} />}
           </TabPanel>
           <TabPanel value="assistant" style={{ padding: 0 }} className="h100">
             {tab === "assistant" && <AnalysisAssistant />}

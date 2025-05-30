@@ -23,6 +23,11 @@ export interface AtlasState {
   colorScheme: string[];
   pointSize: number;
   showLabels: boolean;
+  // position settings
+  xAxis: string;
+  yAxis: string;
+  showTicks: boolean;
+  showGrid: boolean;
 }
 
 const defaultFilterExpression: MyFilterExpression = {
@@ -44,6 +49,11 @@ const initialState: AtlasState & FilterState = {
   colorScheme: d3.schemeCategory10 as string[],
   pointSize: 10,
   showLabels: true,
+  // position settingsq
+  xAxis: "Topic Dimension 1",
+  yAxis: "Topic Dimension 2",
+  showTicks: false,
+  showGrid: true,
 };
 
 const resetAtlasState = (state: Draft<AtlasState>) => {
@@ -108,6 +118,19 @@ export const atlasSlice = createSlice({
     },
     onChangeShowLabels: (state, action: PayloadAction<boolean>) => {
       state.showLabels = action.payload;
+    },
+    // Position settings
+    onChangeXAxis: (state, action: PayloadAction<string>) => {
+      state.xAxis = action.payload;
+    },
+    onChangeYAxis: (state, action: PayloadAction<string>) => {
+      state.yAxis = action.payload;
+    },
+    onChangeShowTicks: (state, action: PayloadAction<boolean>) => {
+      state.showTicks = action.payload;
+    },
+    onChangeShowGrid: (state, action: PayloadAction<boolean>) => {
+      state.showGrid = action.payload;
     },
   },
   extraReducers: (builder) => {

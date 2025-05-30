@@ -51,7 +51,6 @@ function TopicCreationDialog({ aspectId }: TopicCreationDialogProps) {
             aspect_id: aspectId,
             name: data.name,
             description: data.description,
-            color: "#000000", // default color, can be changed later
             parent_topic_id: null, // no parent topic for new topics
             level: 0, // default level for new topics
           },
