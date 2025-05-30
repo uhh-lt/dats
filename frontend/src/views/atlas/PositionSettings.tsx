@@ -1,3 +1,5 @@
+import LightbulbIcon from "@mui/icons-material/Lightbulb";
+import LightbulbOutlinedIcon from "@mui/icons-material/LightbulbOutlined";
 import RuleIcon from "@mui/icons-material/Rule";
 import {
   Alert,
@@ -17,7 +19,6 @@ import TopicModellingHooks from "../../api/TopicModellingHooks.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
 import { AtlasActions } from "./atlasSlice.ts";
-
 interface PositionSettingsProps {
   aspectId: number;
 }
@@ -29,6 +30,7 @@ function PositionSettings({ aspectId }: PositionSettingsProps) {
   const showTicks = useAppSelector((state) => state.atlas.showTicks);
   const showGrid = useAppSelector((state) => state.atlas.showGrid);
   const colorScheme = useAppSelector((state) => state.atlas.colorScheme);
+  const highlightReviewedDocs = useAppSelector((state) => state.atlas.highlightReviewedDocs);
 
   // event handlers
   const dispatch = useAppDispatch();
@@ -43,6 +45,9 @@ function PositionSettings({ aspectId }: PositionSettingsProps) {
   };
   const handleShowGrid = (event: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(AtlasActions.onChangeShowGrid(event.target.checked));
+  };
+  const handleToggleHighlightReviewedDocs = () => {
+    dispatch(AtlasActions.onChangeHighlightReviewedDocs(!highlightReviewedDocs));
   };
 
   // statistics
@@ -113,7 +118,12 @@ function PositionSettings({ aspectId }: PositionSettingsProps) {
         </Typography>
         <Stack direction="row" px={1} spacing={1} alignItems="center">
           <Button>Refine Positioning</Button>
-          <Button>Highlight reviewed docs</Button>
+          <Button
+            startIcon={highlightReviewedDocs ? <LightbulbIcon /> : <LightbulbOutlinedIcon />}
+            onClick={handleToggleHighlightReviewedDocs}
+          >
+            Highlight reviewed docs
+          </Button>
         </Stack>
         <Stack px={2} spacing={2}>
           {vis.data?.topics.map((topic, index) => {

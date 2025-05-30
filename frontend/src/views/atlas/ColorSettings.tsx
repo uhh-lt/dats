@@ -90,7 +90,7 @@ function ColorSettings({ aspectId }: ColorSettingsProps) {
   };
 
   // topic selection
-  const selectedTopicId = useAppSelector((state) => state.atlas.selectedTopicId);
+  const highlightedTopicId = useAppSelector((state) => state.atlas.highlightedTopicId);
   const handleSelectTopic = (topicId: number) => {
     dispatch(AtlasActions.onSelectTopic(topicId));
   };
@@ -369,7 +369,7 @@ function ColorSettings({ aspectId }: ColorSettingsProps) {
                 disablePadding
               >
                 <ListItemButton
-                  selected={selectedTopicId === topic.id}
+                  selected={highlightedTopicId === topic.id}
                   role={undefined}
                   dense
                   onClick={handleTopicClick(topic.id)}
