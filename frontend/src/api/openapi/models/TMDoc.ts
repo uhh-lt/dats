@@ -23,4 +23,8 @@ export type TMDoc = {
    * Indicates whether the document<->topic assignment is accepted by a user
    */
   is_accepted: boolean;
+  /**
+   * Indicates whether the document is part of the search result
+   */
+  in_searchresult: boolean;
 };

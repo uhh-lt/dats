@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { MyFilter } from "../components/FilterDialog/filterUtils.ts";
 import queryClient from "../plugins/ReactQueryClient.ts";
 import { useAppSelector } from "../plugins/ReduxHooks.ts";
 import { RootState } from "../store/store.ts";
@@ -7,6 +8,7 @@ import { QueryKey } from "./QueryKey.ts";
 import { AspectRead } from "./openapi/models/AspectRead.ts";
 import { BackgroundJobStatus } from "./openapi/models/BackgroundJobStatus.ts";
 import { CodeRead } from "./openapi/models/CodeRead.ts";
+import { SdocColumns } from "./openapi/models/SdocColumns.ts";
 import { TMJobRead } from "./openapi/models/TMJobRead.ts";
 import { ProjectService } from "./openapi/services/ProjectService.ts";
 import { TopicModelService } from "./openapi/services/TopicModelService.ts";
@@ -173,12 +175,24 @@ const useUnlabelDocs = () =>
 
 // VISUALIZATION
 
-const useGetDocVisualization = (aspectId: number) =>
-  useQuery({
-    queryKey: [QueryKey.DOCUMENT_VISUALIZATION, aspectId],
-    queryFn: () => TopicModelService.visualizeDocuments({ aspectId }),
+const useGetDocVisualization = (aspectId: number) => {
+  const searchQuery = useAppSelector((state: RootState) => state.atlas.searchQuery);
+  const filter = useAppSelector((state: RootState) => state.atlas.filter["root"]);
+  console.log("searchQuery", searchQuery);
+  return useQuery({
+    queryKey: [QueryKey.DOCUMENT_VISUALIZATION, aspectId, searchQuery, filter],
+    queryFn: () =>
+      TopicModelService.visualizeDocuments({
+        aspectId,
+        searchQuery,
+        requestBody: {
+          filter: filter as MyFilter<SdocColumns>,
+          sorts: [],
+        },
+      }),
     staleTime: 1000 * 60 * 5,
   });
+};
 
 // Topics
 

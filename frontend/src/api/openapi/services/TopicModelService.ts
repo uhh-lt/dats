@@ -2,10 +2,14 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { CancelablePromise } from "../core/CancelablePromise";
+import { OpenAPI } from "../core/OpenAPI";
+import { request as __request } from "../core/request";
 import type { AddMissingDocsToAspectParams } from "../models/AddMissingDocsToAspectParams";
 import type { AspectCreate } from "../models/AspectCreate";
 import type { AspectRead } from "../models/AspectRead";
 import type { AspectUpdate } from "../models/AspectUpdate";
+import type { Body_topic_model_visualize_documents } from "../models/Body_topic_model_visualize_documents";
 import type { ChangeTopicParams } from "../models/ChangeTopicParams";
 import type { CreateTopicWithNameParams } from "../models/CreateTopicWithNameParams";
 import type { CreateTopicWithSdocsParams } from "../models/CreateTopicWithSdocsParams";
@@ -17,9 +21,6 @@ import type { SplitTopicParams } from "../models/SplitTopicParams";
 import type { TMJobRead } from "../models/TMJobRead";
 import type { TMVisualization } from "../models/TMVisualization";
 import type { TopicRead } from "../models/TopicRead";
-import type { CancelablePromise } from "../core/CancelablePromise";
-import { OpenAPI } from "../core/OpenAPI";
-import { request as __request } from "../core/request";
 export class TopicModelService {
   /**
    * Starts the TMJob for the given Parameters. If a job is already running, this will raise an error.
@@ -202,13 +203,26 @@ export class TopicModelService {
    * @returns TMVisualization Successful Response
    * @throws ApiError
    */
-  public static visualizeDocuments({ aspectId }: { aspectId: number }): CancelablePromise<TMVisualization> {
+  public static visualizeDocuments({
+    aspectId,
+    searchQuery,
+    requestBody,
+  }: {
+    aspectId: number;
+    searchQuery: string;
+    requestBody: Body_topic_model_visualize_documents;
+  }): CancelablePromise<TMVisualization> {
     return __request(OpenAPI, {
-      method: "GET",
+      method: "POST",
       url: "/topic_model/visualize_documents/{aspect_id}",
       path: {
         aspect_id: aspectId,
       },
+      query: {
+        search_query: searchQuery,
+      },
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },
