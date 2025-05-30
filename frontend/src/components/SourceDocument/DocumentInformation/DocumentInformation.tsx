@@ -9,7 +9,7 @@ import TagPanel from "./Tags/TagPanel.tsx";
 interface DocumentInformationProps {
   sdocId: number | undefined;
   isIdleContent?: React.ReactNode;
-  filterName?: string;
+  filterName: string;
 }
 
 function DocumentInformation({

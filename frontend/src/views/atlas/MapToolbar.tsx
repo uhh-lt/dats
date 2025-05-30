@@ -7,7 +7,6 @@ import TagMenuButton from "../../components/Tag/TagMenu/TagMenuButton.tsx";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { RootState } from "../../store/store.ts";
 import { useDebounce } from "../../utils/useDebounce.ts";
-import SearchOptionsMenu from "../search/DocumentSearch/SearchOptionsMenu.tsx";
 import { AtlasActions } from "./atlasSlice.ts";
 import TopicMenuButton from "./TopicMenuButton.tsx";
 import TopicReviewButtons from "./TopicReviewButtons.tsx";
@@ -84,7 +83,6 @@ function MapToolbar({ aspectId }: MapToolbarProps) {
           },
         }}
       />
-      <SearchOptionsMenu />
     </DATSToolbar>
   );
 }

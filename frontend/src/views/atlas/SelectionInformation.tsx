@@ -2,6 +2,8 @@ import { ArrowBackIosNew, ArrowForwardIos } from "@mui/icons-material";
 import { Box, Button, ButtonGroup, CircularProgress, Stack, Tooltip, Typography } from "@mui/material";
 import { useEffect } from "react";
 import MetadataHooks from "../../api/MetadataHooks.ts";
+import { ProjectMetadataRead } from "../../api/openapi/models/ProjectMetadataRead.ts";
+import { SourceDocumentMetadataRead } from "../../api/openapi/models/SourceDocumentMetadataRead.ts";
 import SdocHooks from "../../api/SdocHooks.ts";
 import TagHooks from "../../api/TagHooks.ts";
 import TopicModellingHooks from "../../api/TopicModellingHooks.ts";
@@ -46,6 +48,11 @@ function SelectionInformation({ aspectId }: SelectionInformationProps) {
   const docTopics = TopicModellingHooks.useGetTopicsBySdocId(aspectId, selectedSdocIds[selectedSdocIdsIndex]);
   const vis = TopicModellingHooks.useGetDocVisualization(aspectId);
   const sdoc = SdocHooks.useGetDocument(selectedSdocIds[selectedSdocIdsIndex]);
+
+  // filtering
+  const handleAddMetadataFilter = (metadata: SourceDocumentMetadataRead, projectMetadata: ProjectMetadataRead) => {
+    dispatch(AtlasActions.onAddMetadataFilter({ metadata, projectMetadata, filterName: `aspect-${aspectId}` }));
+  };
 
   return (
     <Box>
@@ -172,7 +179,9 @@ function SelectionInformation({ aspectId }: SelectionInformationProps) {
             {metadata.isSuccess &&
               metadata.data
                 .sort((a, b) => a.id - b.id)
-                .map((data) => <DocumentMetadataRow key={data.id} metadata={data} filterName={`aspect-${aspectId}`} />)}
+                .map((data) => (
+                  <DocumentMetadataRow key={data.id} metadata={data} onAddFilterClick={handleAddMetadataFilter} />
+                ))}
           </Stack>
         </Stack>
       ) : (
