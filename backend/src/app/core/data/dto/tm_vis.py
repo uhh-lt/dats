@@ -10,6 +10,9 @@ class TMDoc(BaseModel):
     topic_id: int = Field(description="ID of the topic this document belongs to")
     x: float = Field(description="X coordinate of the document in the visualization")
     y: float = Field(description="Y coordinate of the document in the visualization")
+    is_accepted: bool = Field(
+        description="Indicates whether the document<->topic assignment is accepted by a user",
+    )
 
 
 class TMVisualization(BaseModel):
