@@ -59,7 +59,7 @@ def search(
     page_number: Optional[int] = None,
     page_size: Optional[int] = None,
 ) -> PaginatedSDocHits:
-    data = __search(
+    data = search_ids(
         project_id,
         search_query,
         expert_mode,
@@ -95,7 +95,7 @@ def search(
     )
 
 
-def __search(
+def search_ids(
     project_id: int,
     search_query: str,
     expert_mode: bool,

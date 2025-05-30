@@ -1,3 +1,5 @@
+from typing import Dict, List
+
 from app.celery.background_jobs import prepare_and_start_tm_job_async
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
@@ -13,6 +15,10 @@ from app.core.data.dto.aspect import (
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.tm_vis import TMDoc, TMVisualization
 from app.core.data.dto.topic import TopicRead
+from app.core.search.filtering import Filter
+from app.core.search.sdoc_search import sdoc_search
+from app.core.search.sdoc_search.sdoc_search_columns import SdocColumns
+from app.core.search.sorting import Sort
 from app.core.topicmodel.tm_job import (
     CreateAspectParams,
     TMJobParamsNoCreate,
@@ -229,7 +235,7 @@ def revert_label(
 # --- START VISUALIZATIONS --- #
 
 
-@router.get(
+@router.post(
     "/visualize_documents/{aspect_id}",
     response_model=TMVisualization,
     summary="Returns data for visualizing the documents of the given aspect.",
@@ -238,6 +244,9 @@ def visualize_documents(
     *,
     db: Session = Depends(get_db_session),
     aspect_id: int,
+    search_query: str,
+    filter: Filter[SdocColumns],
+    sorts: List[Sort[SdocColumns]],
     authz_user: AuthzUser = Depends(),
 ) -> TMVisualization:
     authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
@@ -254,17 +263,43 @@ def visualize_documents(
         document_topics
     ), "The number of DocumentAspects and DocumentTopics must match for visualization."
 
-    # Prepare the visualization data
-    docs = [
-        TMDoc(
-            sdoc_id=doc.sdoc_id,
-            topic_id=sdoc_id2dt[doc.sdoc_id].topic_id,
-            is_accepted=sdoc_id2dt[doc.sdoc_id].is_accepted,
-            x=doc.x,
-            y=doc.y,
+    # Search documents
+    sdoc_id_in_search_result: Dict[int, bool]
+    if len(filter.items) > 0 or search_query.strip() != "":
+        hits = sdoc_search.search_ids(
+            search_query=search_query,
+            expert_mode=False,
+            highlight=False,
+            project_id=aspect.project_id,
+            filter=filter,
+            sorts=sorts,
+            page_number=None,
+            page_size=None,
         )
-        for doc in document_aspects
-    ]
+        sdoc_id_in_search_result: Dict[int, bool] = {hit.id: True for hit in hits.hits}
+        docs = [
+            TMDoc(
+                sdoc_id=doc.sdoc_id,
+                topic_id=sdoc_id2dt[doc.sdoc_id].topic_id,
+                is_accepted=sdoc_id2dt[doc.sdoc_id].is_accepted,
+                in_searchresult=sdoc_id_in_search_result.get(doc.sdoc_id, False),
+                x=doc.x,
+                y=doc.y,
+            )
+            for doc in document_aspects
+        ]
+    else:
+        docs = [
+            TMDoc(
+                sdoc_id=doc.sdoc_id,
+                topic_id=sdoc_id2dt[doc.sdoc_id].topic_id,
+                is_accepted=sdoc_id2dt[doc.sdoc_id].is_accepted,
+                in_searchresult=True,
+                x=doc.x,
+                y=doc.y,
+            )
+            for doc in document_aspects
+        ]
 
     return TMVisualization(
         aspect_id=aspect.id,
