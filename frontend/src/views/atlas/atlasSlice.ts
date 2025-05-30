@@ -4,7 +4,9 @@ import { v4 as uuidv4 } from "uuid";
 import { IDListOperator } from "../../api/openapi/models/IDListOperator.ts";
 import { ListOperator } from "../../api/openapi/models/ListOperator.ts";
 import { LogicalOperator } from "../../api/openapi/models/LogicalOperator.ts";
+import { ProjectMetadataRead } from "../../api/openapi/models/ProjectMetadataRead.ts";
 import { SdocColumns } from "../../api/openapi/models/SdocColumns.ts";
+import { SourceDocumentMetadataRead } from "../../api/openapi/models/SourceDocumentMetadataRead.ts";
 import { StringOperator } from "../../api/openapi/models/StringOperator.ts";
 import {
   createInitialFilterState,
@@ -13,8 +15,13 @@ import {
   getOrCreateFilter,
   resetProjectFilterState,
 } from "../../components/FilterDialog/filterSlice.ts";
-import { MyFilterExpression } from "../../components/FilterDialog/filterUtils.ts";
+import {
+  filterOperator2FilterOperatorType,
+  getDefaultOperator,
+  MyFilterExpression,
+} from "../../components/FilterDialog/filterUtils.ts";
 import { ProjectActions } from "../../components/Project/projectSlice.ts";
+import { getValue } from "../search/metadataUtils.ts";
 
 export interface AtlasState {
   lastMapId: number | undefined;
@@ -213,6 +220,29 @@ export const atlasSlice = createSlice({
           column: SdocColumns.SD_SPAN_ANNOTATIONS,
           operator: ListOperator.LIST_CONTAINS,
           value: [action.payload.codeId.toString(), action.payload.spanText],
+        },
+      ];
+    },
+    onAddMetadataFilter: (
+      state,
+      action: PayloadAction<{
+        metadata: SourceDocumentMetadataRead;
+        projectMetadata: ProjectMetadataRead;
+        filterName: string;
+      }>,
+    ) => {
+      // the column of a metadata filter is the project_metadata_id
+      const filterOperator = state.column2Info[action.payload.metadata.project_metadata_id.toString()].operator;
+      const filterOperatorType = filterOperator2FilterOperatorType[filterOperator];
+
+      const currentFilter = getOrCreateFilter(state, action.payload.filterName);
+      currentFilter.items = [
+        ...currentFilter.items,
+        {
+          id: uuidv4(),
+          column: action.payload.metadata.project_metadata_id,
+          operator: getDefaultOperator(filterOperatorType),
+          value: getValue(action.payload.metadata, action.payload.projectMetadata)!,
         },
       ];
     },

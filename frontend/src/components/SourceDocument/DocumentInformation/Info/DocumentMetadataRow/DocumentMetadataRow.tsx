@@ -1,5 +1,8 @@
 import { ErrorMessage } from "@hookform/error-message";
+import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import { Box, Stack } from "@mui/material";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
 import { memo, useCallback, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import MetadataHooks from "../../../../../api/MetadataHooks.ts";
@@ -14,20 +17,23 @@ import FormNumber from "../../../../FormInputs/FormNumber.tsx";
 import FormSwitch from "../../../../FormInputs/FormSwitch.tsx";
 import FormText from "../../../../FormInputs/FormText.tsx";
 import MetadataEditMenu from "../MetadataEditMenu.tsx";
-import DocumentMetadataAddFilterButton from "./DocumentMetadataAddFilterButton.tsx";
 import DocumentMetadataGoToButton from "./DocumentMetadataGoToButton.tsx";
 import { isValidHttpUrl } from "./utils.ts";
 
 interface DocumentMetadataRowProps {
   metadata: SourceDocumentMetadataRead;
-  filterName?: string;
+  onAddFilterClick: (metadata: SourceDocumentMetadataRead, projectMetadata: ProjectMetadataRead) => void;
 }
 
-function DocumentMetadataRow({ metadata, filterName }: DocumentMetadataRowProps) {
+function DocumentMetadataRow({ metadata, onAddFilterClick }: DocumentMetadataRowProps) {
   const projectMetadata = MetadataHooks.useGetProjectMetadata(metadata.project_metadata_id);
   if (projectMetadata.data) {
     return (
-      <DocumentMetadataRowContent metadata={metadata} projectMetadata={projectMetadata.data} filterName={filterName} />
+      <DocumentMetadataRowContent
+        metadata={metadata}
+        projectMetadata={projectMetadata.data}
+        onAddFilterClick={onAddFilterClick}
+      />
     );
   }
   return null;
@@ -36,7 +42,7 @@ function DocumentMetadataRow({ metadata, filterName }: DocumentMetadataRowProps)
 function DocumentMetadataRowContent({
   metadata,
   projectMetadata,
-  filterName,
+  onAddFilterClick,
 }: DocumentMetadataRowProps & { projectMetadata: ProjectMetadataRead }) {
   // use react hook form
   const {
@@ -198,14 +204,13 @@ function DocumentMetadataRowContent({
     <Stack p={1} sx={{ borderTop: 1, borderColor: "divider" }}>
       <Stack direction="row" alignItems="center">
         <MetadataEditMenu projectMetadata={projectMetadata} />
-        {filterName && (
-          <DocumentMetadataAddFilterButton
-            metadata={metadata}
-            projectMetadata={projectMetadata}
-            filterName={filterName}
-            size="small"
-          />
-        )}
+        <Tooltip title="Add as filter">
+          <span>
+            <IconButton size="small" onClick={() => onAddFilterClick(metadata, projectMetadata)}>
+              <FilterAltIcon />
+            </IconButton>
+          </span>
+        </Tooltip>
         {isLink && <DocumentMetadataGoToButton link={metadata.str_value!} size="small" />}
       </Stack>
       <Box width="100%" px={0.5}>
