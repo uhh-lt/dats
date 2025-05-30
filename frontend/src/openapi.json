@@ -5733,14 +5733,31 @@
       }
     },
     "/topic_model/visualize_documents/{aspect_id}": {
-      "get": {
+      "post": {
         "tags": ["topic_model"],
         "summary": "Returns data for visualizing the documents of the given aspect.",
         "operationId": "visualize_documents",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
+          {
+            "name": "aspect_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Aspect Id" }
+          },
+          {
+            "name": "search_query",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "title": "Search Query" }
+          }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_topic_model-visualize_documents" } }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -6430,6 +6447,15 @@
         "type": "object",
         "required": ["filter", "sorts"],
         "title": "Body_search-search_sdocs"
+      },
+      "Body_topic_model-visualize_documents": {
+        "properties": {
+          "filter": { "$ref": "#/components/schemas/Filter_SdocColumns_-Input" },
+          "sorts": { "items": { "$ref": "#/components/schemas/Sort_SdocColumns_" }, "type": "array", "title": "Sorts" }
+        },
+        "type": "object",
+        "required": ["filter", "sorts"],
+        "title": "Body_topic_model-visualize_documents"
       },
       "BooleanOperator": {
         "type": "string",
@@ -10464,10 +10490,15 @@
             "type": "boolean",
             "title": "Is Accepted",
             "description": "Indicates whether the document<->topic assignment is accepted by a user"
+          },
+          "in_searchresult": {
+            "type": "boolean",
+            "title": "In Searchresult",
+            "description": "Indicates whether the document is part of the search result"
           }
         },
         "type": "object",
-        "required": ["sdoc_id", "topic_id", "x", "y", "is_accepted"],
+        "required": ["sdoc_id", "topic_id", "x", "y", "is_accepted", "in_searchresult"],
         "title": "TMDoc"
       },
       "TMJobRead": {
