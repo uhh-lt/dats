@@ -16,7 +16,6 @@ export interface AtlasState {
   lastMapId: number | undefined;
   selectedSdocIds: number[];
   selectedSdocIdsIndex: number;
-  selectedTopicId: number | undefined;
   // view settings
   colorBy: string;
   colorSchemeName: string;
@@ -28,6 +27,9 @@ export interface AtlasState {
   yAxis: string;
   showTicks: boolean;
   showGrid: boolean;
+  // highlighting
+  highlightedTopicId: number | undefined;
+  highlightReviewedDocs: boolean;
 }
 
 const defaultFilterExpression: MyFilterExpression = {
@@ -42,23 +44,25 @@ const initialState: AtlasState & FilterState = {
   lastMapId: undefined,
   selectedSdocIds: [],
   selectedSdocIdsIndex: 0,
-  selectedTopicId: undefined,
   // view settings
   colorBy: "topic-broad",
   colorSchemeName: "category",
   colorScheme: d3.schemeCategory10 as string[],
   pointSize: 10,
   showLabels: true,
-  // position settingsq
+  // position settings
   xAxis: "Topic Dimension 1",
   yAxis: "Topic Dimension 2",
   showTicks: false,
   showGrid: true,
+  // highlighting
+  highlightedTopicId: undefined,
+  highlightReviewedDocs: false,
 };
 
 const resetAtlasState = (state: Draft<AtlasState>) => {
   state.lastMapId = initialState.lastMapId;
-  state.selectedTopicId = initialState.selectedTopicId;
+  state.highlightedTopicId = initialState.highlightedTopicId;
   state.selectedSdocIds = initialState.selectedSdocIds;
 };
 
@@ -84,13 +88,6 @@ export const atlasSlice = createSlice({
         // If the ID is not selected, add it to the selection
         state.selectedSdocIds.push(action.payload);
       }
-    },
-    onSelectTopic: (state, action: PayloadAction<number>) => {
-      if (state.selectedTopicId === action.payload) {
-        state.selectedTopicId = undefined;
-        return;
-      }
-      state.selectedTopicId = action.payload;
     },
     onOpenMap: (state, action: PayloadAction<{ projectId: number; atlasId: number }>) => {
       if (state.lastMapId !== action.payload.atlasId) {
@@ -131,6 +128,25 @@ export const atlasSlice = createSlice({
     },
     onChangeShowGrid: (state, action: PayloadAction<boolean>) => {
       state.showGrid = action.payload;
+    },
+    // Highlighting
+    onSelectTopic: (state, action: PayloadAction<number>) => {
+      if (state.highlightedTopicId === action.payload) {
+        state.highlightedTopicId = undefined;
+        return;
+      }
+      state.highlightedTopicId = action.payload;
+      // only one highlight at a time
+      if (state.highlightedTopicId) {
+        state.highlightReviewedDocs = false;
+      }
+    },
+    onChangeHighlightReviewedDocs: (state, action: PayloadAction<boolean>) => {
+      state.highlightReviewedDocs = action.payload;
+      // only one highlight at a time
+      if (state.highlightReviewedDocs) {
+        state.highlightedTopicId = undefined;
+      }
     },
   },
   extraReducers: (builder) => {

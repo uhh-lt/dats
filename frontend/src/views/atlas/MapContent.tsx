@@ -36,7 +36,9 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
   const colorScheme = useAppSelector((state) => state.atlas.colorScheme);
   const showTicks = useAppSelector((state) => state.atlas.showTicks);
   const showGrid = useAppSelector((state) => state.atlas.showGrid);
-  const selectedTopicId = useAppSelector((state) => state.atlas.selectedTopicId);
+  // highlighting
+  const selectedTopicId = useAppSelector((state) => state.atlas.highlightedTopicId);
+  const highlightReviewedDocs = useAppSelector((state) => state.atlas.highlightReviewedDocs);
 
   // chart data
   const { chartData, labels } = useMemo(() => {
@@ -68,12 +70,13 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
         hoverinfo: "none",
         selectedpoints: [],
         marker: {
-          size: selectedTopicId && selectedTopicId !== topic.id ? 3 : pointSize,
+          size: highlightReviewedDocs ? [] : selectedTopicId && selectedTopicId !== topic.id ? 3 : pointSize,
           line: {
             color: "black",
             width: [],
           },
-          color: selectedTopicId && selectedTopicId !== topic.id ? "lightgrey" : [],
+          color: highlightReviewedDocs ? [] : selectedTopicId && selectedTopicId !== topic.id ? "lightgrey" : [],
+          opacity: 1,
         },
         selected: {
           marker: {
@@ -100,12 +103,18 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
       (trace.y as Datum[]).push(doc.y);
       (trace.ids as string[]).push(`${doc.sdoc_id}`);
       (trace.marker!.line!.width! as number[]).push(0);
-      if (Array.isArray(trace.marker!.color)) {
-        (trace.marker!.color as Color[]).push(
-          colorScheme[topicIndex % colorScheme.length] + (doc.is_accepted ? "" : "80"),
-        );
+      if (Array.isArray(trace.marker!.size)) {
+        (trace.marker!.size as number[]).push(highlightReviewedDocs && !doc.is_accepted ? 4 : pointSize);
       }
-      console.log(colorScheme[topicIndex % colorScheme.length]);
+      if (Array.isArray(trace.marker!.color)) {
+        if (highlightReviewedDocs && !doc.is_accepted) {
+          (trace.marker!.color as Color[]).push("lightgrey");
+        } else {
+          (trace.marker!.color as Color[]).push(
+            colorScheme[topicIndex % colorScheme.length] + (doc.is_accepted ? "ff" : "80"),
+          );
+        }
+      }
     });
 
     // special treatment for the selected document
@@ -118,14 +127,27 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
       (trace.ids as string[]).push(`${doc.sdoc_id}`);
       (trace.marker!.line!.width! as number[]).push(2);
       if (Array.isArray(trace.marker!.color)) {
-        (trace.marker!.color! as Color[]).push(
-          colorScheme[topicIndex % colorScheme.length] + (doc.is_accepted ? "" : "80"),
-        );
+        if (highlightReviewedDocs && !doc.is_accepted) {
+          (trace.marker!.color as Color[]).push("#c0c0c080");
+        } else {
+          (trace.marker!.color as Color[]).push(
+            colorScheme[topicIndex % colorScheme.length] + (doc.is_accepted ? "ff" : "80"),
+          );
+        }
       }
     }
 
     return { chartData, labels };
-  }, [colorScheme, pointSize, selectedSdocIds, selectedSdocIdsIndex, selectedTopicId, vis.docs, vis.topics]);
+  }, [
+    colorScheme,
+    highlightReviewedDocs,
+    pointSize,
+    selectedSdocIds,
+    selectedSdocIdsIndex,
+    selectedTopicId,
+    vis.docs,
+    vis.topics,
+  ]);
 
   // labels
   const labelAnnotations: Partial<Annotations>[] | undefined = useMemo(
