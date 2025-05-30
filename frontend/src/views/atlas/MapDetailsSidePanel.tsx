@@ -28,7 +28,7 @@ function MapDetailsSidePanel({ aspectId }: SelectionStatisticsProps) {
             {tab === "info" && <SelectionInformation aspectId={aspectId} />}
           </TabPanel>
           <TabPanel value="statistics" style={{ padding: 0 }} className="h100">
-            {tab === "statistics" && <SelectionStatistics />}
+            {tab === "statistics" && <SelectionStatistics aspectId={aspectId} />}
           </TabPanel>
         </Box>
       </TabContext>

@@ -9,6 +9,7 @@ import TopicModellingHooks from "../../api/TopicModellingHooks.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { AtlasActions } from "./atlasSlice.ts";
 import MapTooltip, { MapTooltipData } from "./MapTooltip.tsx";
+
 interface MapContentProps {
   aspectId: number;
   projectId: number;

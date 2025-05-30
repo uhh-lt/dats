@@ -1,12 +1,16 @@
 import { createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
 import * as d3 from "d3";
 import { v4 as uuidv4 } from "uuid";
+import { IDListOperator } from "../../api/openapi/models/IDListOperator.ts";
+import { ListOperator } from "../../api/openapi/models/ListOperator.ts";
+import { LogicalOperator } from "../../api/openapi/models/LogicalOperator.ts";
 import { SdocColumns } from "../../api/openapi/models/SdocColumns.ts";
 import { StringOperator } from "../../api/openapi/models/StringOperator.ts";
 import {
   createInitialFilterState,
   filterReducer,
   FilterState,
+  getOrCreateFilter,
   resetProjectFilterState,
 } from "../../components/FilterDialog/filterSlice.ts";
 import { MyFilterExpression } from "../../components/FilterDialog/filterUtils.ts";
@@ -93,17 +97,17 @@ export const atlasSlice = createSlice({
         state.selectedSdocIds.push(action.payload);
       }
     },
-    onOpenMap: (state, action: PayloadAction<{ projectId: number; atlasId: number }>) => {
-      if (state.lastMapId !== action.payload.atlasId) {
+    onOpenMap: (state, action: PayloadAction<{ projectId: number; aspectId: number }>) => {
+      if (state.lastMapId !== action.payload.aspectId) {
         console.log("Atlas changed! Resetting 'atlas' state.");
         resetAtlasState(state);
-        resetProjectFilterState({
-          state,
-          defaultFilterExpression,
-          projectId: action.payload.projectId,
-          sliceName: "atlas",
-        });
-        state.lastMapId = action.payload.atlasId;
+        // create empty filter for the new map
+        state.filter[`aspect-${action.payload.aspectId}`] = {
+          id: `aspect-${action.payload.aspectId}`,
+          logic_operator: LogicalOperator.AND,
+          items: [],
+        };
+        state.lastMapId = action.payload.aspectId;
       }
     },
     // View settings
@@ -156,13 +160,76 @@ export const atlasSlice = createSlice({
     onChangeSearchQuery: (state, action: PayloadAction<string>) => {
       state.searchQuery = action.payload;
     },
+    // filtering
+    onAddKeywordFilter: (
+      state,
+      action: PayloadAction<{ keywordMetadataIds: number[]; keyword: string; filterName: string }>,
+    ) => {
+      const filterItems: MyFilterExpression[] = action.payload.keywordMetadataIds?.map((keywordMetadataId) => {
+        return {
+          id: uuidv4(),
+          column: keywordMetadataId,
+          operator: ListOperator.LIST_CONTAINS,
+          value: [action.payload.keyword],
+        };
+      });
+
+      const currentFilter = getOrCreateFilter(state, action.payload.filterName);
+      console.log(currentFilter);
+      currentFilter.items = [
+        ...currentFilter.items,
+        {
+          id: uuidv4(),
+          logic_operator: LogicalOperator.OR,
+          items: filterItems,
+        },
+      ];
+    },
+    onAddTagFilter: (state, action: PayloadAction<{ tagId: number | string; filterName: string }>) => {
+      const currentFilter = getOrCreateFilter(state, action.payload.filterName);
+      currentFilter.items = [
+        ...currentFilter.items,
+        {
+          id: uuidv4(),
+          column: SdocColumns.SD_DOCUMENT_TAG_ID_LIST,
+          operator: IDListOperator.ID_LIST_CONTAINS,
+          value: action.payload.tagId,
+        },
+      ];
+    },
+    onAddSpanAnnotationFilter: (
+      state,
+      action: PayloadAction<{ codeId: number; spanText: string; filterName: string }>,
+    ) => {
+      const currentFilter = getOrCreateFilter(state, action.payload.filterName);
+      currentFilter.items = [
+        ...currentFilter.items,
+        {
+          id: uuidv4(),
+          column: SdocColumns.SD_SPAN_ANNOTATIONS,
+          operator: ListOperator.LIST_CONTAINS,
+          value: [action.payload.codeId.toString(), action.payload.spanText],
+        },
+      ];
+    },
   },
   extraReducers: (builder) => {
-    builder.addCase(ProjectActions.changeProject, (state, action) => {
-      console.log("Project changed! Resetting 'atlas' state.");
-      resetAtlasState(state);
-      resetProjectFilterState({ state, defaultFilterExpression, projectId: action.payload, sliceName: "atlas" });
-    });
+    builder
+      .addCase(ProjectActions.changeProject, (state, action) => {
+        console.log("Project changed! Resetting 'atlas' state.");
+        resetAtlasState(state);
+        resetProjectFilterState({ state, defaultFilterExpression, projectId: action.payload, sliceName: "atlas" });
+      })
+      .addMatcher(
+        (action) =>
+          (action.type.startsWith("atlas/onAdd") && action.type.toLowerCase().includes("filter")) || // add filter
+          (action.type.startsWith("atlas/") && action.type.includes("onFinishFilterEdit")), // edit filter
+        (state) => {
+          console.log("Atlas search filters changed! Resetting search parameter dependent variables.");
+          // reset variables that depend on search parameters
+          state.selectedSdocIds = [];
+        },
+      );
   },
 });
 
