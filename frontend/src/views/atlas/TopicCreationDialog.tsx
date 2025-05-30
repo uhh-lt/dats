@@ -46,7 +46,7 @@ function TopicCreationDialog({ aspectId }: TopicCreationDialogProps) {
       {
         aspectId: aspectId,
         requestBody: {
-          tm_job_type: TMJobType.ADD_TOPIC,
+          tm_job_type: TMJobType.CREATE_TOPIC_WITH_NAME,
           create_dto: {
             aspect_id: aspectId,
             name: data.name,

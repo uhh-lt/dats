@@ -16,6 +16,7 @@ import {
 import { isEqual } from "lodash";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { TMDoc } from "../../api/openapi/models/TMDoc.ts";
+import { TMJobType } from "../../api/openapi/models/TMJobType.ts";
 import { TopicRead } from "../../api/openapi/models/TopicRead.ts";
 import TopicModellingHooks from "../../api/TopicModellingHooks.ts";
 import { CheckboxState } from "../../components/Tag/TagMenu/CheckboxState.ts";
@@ -43,15 +44,20 @@ function TopicMenu(props: TopicMenuProps) {
       {} as Record<number, TMDoc>,
     );
 
-    const topicCounts: Record<number, number> = props.sdocIds.reduce(
-      (acc, sdocId) => {
-        const doc = sdocId2doc[sdocId];
-        acc[doc.topic_id] = (acc[doc.topic_id] || 0) + 1;
+    // init topic counts
+    const topicCounts: Record<number, number> = vis.data.topics.reduce(
+      (acc, topic) => {
+        acc[topic.id] = 0;
         return acc;
       },
       {} as Record<number, number>,
     );
-    console.log("Topic counts:", topicCounts);
+
+    // fill topics counts
+    props.sdocIds.forEach((sdocId) => {
+      const doc = sdocId2doc[sdocId];
+      topicCounts[doc.topic_id] = (topicCounts[doc.topic_id] || 0) + 1;
+    });
 
     // Depending on the count, set the CheckboxState
     const maxTags = props.sdocIds.length;
@@ -94,16 +100,24 @@ function TopicMenuContent({
     setChecked(new Map(initialChecked));
   }, [initialChecked]);
   const hasChanged = useMemo(() => !isEqual(initialChecked, checked), [initialChecked, checked]);
+  const hasNoChecked = useMemo(
+    () => Array.from(checked.values()).every((state) => state === CheckboxState.NOT_CHECKED),
+    [checked],
+  );
   const handleCheck = (topicId: number) => () => {
-    setChecked(
-      (checked) =>
-        new Map(
-          checked.set(
-            topicId,
-            checked.get(topicId) === CheckboxState.CHECKED ? CheckboxState.NOT_CHECKED : CheckboxState.CHECKED,
-          ),
-        ),
-    );
+    setChecked((checked) => {
+      const newCheckStatus =
+        checked.get(topicId) === CheckboxState.CHECKED ? CheckboxState.NOT_CHECKED : CheckboxState.CHECKED;
+      return new Map(
+        topics.map((topic) => {
+          if (topic.id !== topicId) {
+            return [topic.id, CheckboxState.NOT_CHECKED];
+          } else {
+            return [topic.id, newCheckStatus];
+          }
+        }),
+      );
+    });
   };
 
   // filter feature
@@ -116,35 +130,23 @@ function TopicMenuContent({
   };
 
   // actions
-  const { mutate: setTopicMutation, isPending } = TopicModellingHooks.useSetTopic();
-  const handleClickTopic = (topicId: number) => () => {
-    setTopicMutation(
-      {
-        aspectId: aspectId,
-        topicId: topicId,
-        requestBody: sdocIds,
-      },
-      {
-        onSuccess: () => {
-          handleClose();
-        },
-      },
-    );
-  };
-
+  const { mutate: startTMJobMutation, isPending } = TopicModellingHooks.useStartTMJob();
   const handleApplyTags = useCallback(() => {
     // find entry where CheckboxState is Checked
     const checkedTopics = Object.entries(checked).filter(([, state]) => state === CheckboxState.CHECKED);
-    if (checkedTopics.length !== 1) {
-      console.error("Expected exactly one topic to be checked, but found:", checkedTopics.length);
+    if (checkedTopics.length > 1) {
+      console.error("Expected at most one topic to be checked, but found:", checkedTopics.length);
       return;
     }
-
-    setTopicMutation(
+    startTMJobMutation(
       {
         aspectId: aspectId,
-        topicId: parseInt(checkedTopics[0][0]),
-        requestBody: sdocIds,
+        requestBody: {
+          tm_job_type: TMJobType.CHANGE_TOPIC,
+          aspect_id: aspectId,
+          topic_id: checkedTopics.length === 1 ? parseInt(checkedTopics[0][0]) : -1, // -1 means "no topic / outlier",
+          sdoc_ids: sdocIds,
+        },
       },
       {
         onSuccess: () => {
@@ -152,7 +154,24 @@ function TopicMenuContent({
         },
       },
     );
-  }, [aspectId, checked, handleClose, sdocIds, setTopicMutation]);
+  }, [aspectId, checked, handleClose, sdocIds, startTMJobMutation]);
+  const handleCreateTopic = useCallback(() => {
+    startTMJobMutation(
+      {
+        aspectId: aspectId,
+        requestBody: {
+          tm_job_type: TMJobType.CREATE_TOPIC_WITH_SDOCS,
+          aspect_id: aspectId,
+          sdoc_ids: sdocIds,
+        },
+      },
+      {
+        onSuccess: () => {
+          handleClose();
+        },
+      },
+    );
+  }, [aspectId, startTMJobMutation, handleClose, sdocIds]);
 
   // Display buttons depending on state
   const actionMenu: React.ReactNode = useMemo(() => {
@@ -161,7 +180,7 @@ function TopicMenuContent({
         <ListItem disablePadding dense key={"apply"}>
           <ListItemButton onClick={handleApplyTags} dense disabled={isPending}>
             <Typography align={"center"} sx={{ width: "100%" }}>
-              Apply
+              {hasNoChecked ? "Mark as outlier (removing docs)" : "Set to new topic"}
             </Typography>
           </ListItemButton>
         </ListItem>
@@ -170,10 +189,15 @@ function TopicMenuContent({
       search.trim().length === 0 ||
       (search.trim().length > 0 && filteredTopics.map((tag) => tag.name).indexOf(search.trim()) === -1)
     ) {
-      return <ListItemButton>DO SOMETHING!</ListItemButton>;
+      return (
+        <ListItemButton onClick={handleCreateTopic}>
+          <ListItemIcon>{getIconComponent(Icon.CREATE)}</ListItemIcon>
+          <ListItemText primary={search.length > 0 ? `"${search}" (Create new)` : "Create new topic"} />
+        </ListItemButton>
+      );
     }
     return null;
-  }, [filteredTopics, handleApplyTags, hasChanged, isPending, search]);
+  }, [filteredTopics, handleApplyTags, handleCreateTopic, hasChanged, hasNoChecked, isPending, search]);
 
   return (
     <Popover
@@ -233,7 +257,7 @@ function TopicMenuContent({
                   />
                 }
               >
-                <ListItemButton onClick={handleClickTopic(topic.id)} dense>
+                <ListItemButton onClick={handleCheck(topic.id)} dense>
                   <ListItemIcon sx={{ minWidth: "32px" }}>
                     {getIconComponent(Icon.TOPIC, { style: { color: topic.color } })}
                   </ListItemIcon>
