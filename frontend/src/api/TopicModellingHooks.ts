@@ -177,8 +177,7 @@ const useUnlabelDocs = () =>
 
 const useGetDocVisualization = (aspectId: number) => {
   const searchQuery = useAppSelector((state: RootState) => state.atlas.searchQuery);
-  const filter = useAppSelector((state: RootState) => state.atlas.filter["root"]);
-  console.log("searchQuery", searchQuery);
+  const filter = useAppSelector((state: RootState) => state.atlas.filter[`aspect-${aspectId}`]);
   return useQuery({
     queryKey: [QueryKey.DOCUMENT_VISUALIZATION, aspectId, searchQuery, filter],
     queryFn: () =>

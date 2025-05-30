@@ -2817,6 +2817,12 @@
             "in": "query",
             "required": false,
             "schema": { "type": "boolean", "default": false, "title": "Sort By Global" }
+          },
+          {
+            "name": "top_k",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 20, "title": "Top K" }
           }
         ],
         "requestBody": {
@@ -2868,7 +2874,7 @@
             "name": "top_k",
             "in": "query",
             "required": false,
-            "schema": { "type": "integer", "default": 50, "title": "Top K" }
+            "schema": { "type": "integer", "default": 20, "title": "Top K" }
           }
         ],
         "requestBody": {
@@ -2909,6 +2915,12 @@
             "in": "query",
             "required": false,
             "schema": { "type": "boolean", "default": false, "title": "Sort By Global" }
+          },
+          {
+            "name": "top_k",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 20, "title": "Top K" }
           }
         ],
         "requestBody": {
