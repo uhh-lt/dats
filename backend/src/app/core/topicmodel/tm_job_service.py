@@ -4,8 +4,10 @@ from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.db.redis_service import RedisService
 from app.core.topicmodel.tm_job import (
     AddMissingDocsToAspectParams,
-    AddTopicParams,
+    ChangeTopicParams,
     CreateAspectParams,
+    CreateTopicWithNameParams,
+    CreateTopicWithSdocsParams,
     MergeTopicsParams,
     RefineTopicModelParams,
     RemoveTopicParams,
@@ -48,7 +50,7 @@ class TMJobService(metaclass=SingletonMeta):
             "Topic Extraction",
         ],
         TMJobType.ADD_MISSING_DOCS_TO_ASPECT: ["Add Missing Docs to Aspect"],
-        TMJobType.ADD_TOPIC: [
+        TMJobType.CREATE_TOPIC_WITH_NAME: [
             "Topic Creation",
             "Document Assignment",
             "Topic Extraction",
@@ -158,12 +160,20 @@ class TMJobService(metaclass=SingletonMeta):
                     tms.add_missing_docs_to_aspect(
                         params=tmj.parameters,
                     )
-                case TMJobType.ADD_TOPIC:
+                case TMJobType.CREATE_TOPIC_WITH_NAME:
                     assert isinstance(
                         tmj.parameters,
-                        AddTopicParams,
-                    ), "AddTopicParams expected"
-                    tms.add_topic(
+                        CreateTopicWithNameParams,
+                    ), "CreateTopicWithNameParams expected"
+                    tms.create_topic_with_name(
+                        params=tmj.parameters,
+                    )
+                case TMJobType.CREATE_TOPIC_WITH_SDOCS:
+                    assert isinstance(
+                        tmj.parameters,
+                        CreateTopicWithSdocsParams,
+                    ), "CreateTopicWithSdocsParams expected"
+                    tms.create_topic_with_sdocs(
                         params=tmj.parameters,
                     )
                 case TMJobType.REMOVE_TOPIC:
@@ -188,6 +198,14 @@ class TMJobService(metaclass=SingletonMeta):
                         SplitTopicParams,
                     ), "SplitTopicParams expected"
                     tms.split_topic(
+                        params=tmj.parameters,
+                    )
+                case TMJobType.CHANGE_TOPIC:
+                    assert isinstance(
+                        tmj.parameters,
+                        ChangeTopicParams,
+                    ), "ChangeTopicParams expected"
+                    tms.change_topic(
                         params=tmj.parameters,
                     )
                 case TMJobType.REFINE_TOPIC_MODEL:

@@ -52,6 +52,12 @@ class TopicUpdateIntern(TopicUpdate):
     description: Optional[str] = Field(
         default=None, description="New description of the topic"
     )
+    x: Optional[float] = Field(
+        default=None, description="Updated X coordinate for visualization"
+    )
+    y: Optional[float] = Field(
+        default=None, description="Updated Y coordinate for visualization"
+    )
     top_words: Optional[List[str]] = Field(
         default=None, description="Updated top words for the topic"
     )
@@ -73,6 +79,9 @@ class TopicRead(BaseModel):
     description: str = Field(description="Description of the topic")
     level: int = Field(description="Hierarchical level of the topic")
     color: str = Field(description="Color code for the topic visualization")
+
+    x: float = Field(description="X coordinate for visualization")
+    y: float = Field(description="Y coordinate for visualization")
 
     top_words: Optional[List[str]] = Field(
         description="Top words associated with the topic"

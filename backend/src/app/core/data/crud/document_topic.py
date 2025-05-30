@@ -14,6 +14,37 @@ from app.core.data.orm.topic import TopicORM
 class CRUDDocumentTopic(
     CRUDBase[DocumentTopicORM, DocumentTopicCreate, DocumentTopicUpdate]
 ):
+    def read(self, db: Session, id: tuple[int, int]) -> DocumentTopicORM:
+        """
+        Read a DocumentTopicORM by a tuple of (sdoc_id, topic_id).
+        """
+
+        db_obj = (
+            db.query(self.model)
+            .filter(
+                self.model.sdoc_id == id[0],
+                self.model.topic_id == id[1],
+            )
+            .first()
+        )
+        if db_obj is None:
+            raise NoSuchElementError(self.model, sdoc_id=id[0], topic_id=id[1])
+        return db_obj
+
+    def read_by_ids(
+        self, db: Session, ids: list[tuple[int, int]]
+    ) -> list[DocumentTopicORM]:
+        """
+        Read DocumentTopicORMs by a list of (sdoc_id, topic_id) tuples.
+        """
+        if not ids:
+            return []
+        return (
+            db.query(self.model)
+            .filter(tuple_(self.model.sdoc_id, self.model.topic_id).in_(ids))
+            .all()
+        )
+
     def read_by_aspect(self, db: Session, *, aspect_id: int) -> list[DocumentTopicORM]:
         return (
             db.query(self.model)
@@ -32,39 +63,19 @@ class CRUDDocumentTopic(
             .all()
         )
 
-    def read_by_sdoc_topic(
-        self, db: Session, *, sdoc_id: int, topic_id: int
-    ) -> DocumentTopicORM:
-        db_obj = (
-            db.query(self.model)
-            .filter(
-                self.model.sdoc_id == sdoc_id,
-                self.model.topic_id == topic_id,
-            )
-            .first()
-        )
-        if db_obj is None:
-            raise NoSuchElementError(self.model, sdoc_id=sdoc_id, topic_id=topic_id)
-        return db_obj
-
-    def read_by_sdoc_topic_ids(
-        self, db: Session, *, sdoc_topic_ids: list[tuple[int, int]]
-    ) -> list[DocumentTopicORM]:
-        return (
-            db.query(self.model)
-            .filter(tuple_(self.model.sdoc_id, self.model.topic_id).in_(sdoc_topic_ids))
-            .all()
-        )
-
-    def update_by_sdoc_topic(
+    def update(
         self,
         db: Session,
         *,
+        id: tuple[int, int],
         sdoc_id: int,
         topic_id: int,
         update_dto: DocumentTopicUpdate,
     ) -> DocumentTopicORM:
-        db_obj = self.read_by_sdoc_topic(db=db, sdoc_id=sdoc_id, topic_id=topic_id)
+        """
+        Update a DocumentTopicORM by a tuple of (sdoc_id, topic_id) and an update DTO.
+        """
+        db_obj = self.read(db=db, id=id)
 
         obj_data = jsonable_encoder(db_obj.as_dict())
         update_data = update_dto.model_dump(exclude_unset=True)
@@ -77,24 +88,31 @@ class CRUDDocumentTopic(
 
         return db_obj
 
-    def update_multi_by_sdoc_topic_ids(
+    def update_multi(
         self,
         db: Session,
         *,
-        sdoc_topic_ids: list[tuple[int, int]],
+        ids: list[tuple[int, int]],
         update_dtos: list[DocumentTopicUpdate],
     ) -> list[DocumentTopicORM]:
-        db_objs = self.read_by_sdoc_topic_ids(db=db, sdoc_topic_ids=sdoc_topic_ids)
+        """
+        Update multiple DocumentTopicORMs by a list of (sdoc_id, topic_id) tuples and corresponding update DTOs.
+        """
+        if len(ids) != len(update_dtos):
+            raise ValueError(
+                f"The number of IDs and Update DTO objects must equal! {len(ids)} IDs and {len(update_dtos)} Update DTOs received."
+            )
+        db_objects = self.read_by_ids(db, ids)
 
-        for db_obj, update_dto in zip(db_objs, update_dtos):
+        for db_obj, update_dto in zip(db_objects, update_dtos):
             obj_data = jsonable_encoder(db_obj.as_dict())
             update_data = update_dto.model_dump(exclude_unset=True)
             for field in obj_data:
                 if field in update_data:
                     setattr(db_obj, field, update_data[field])
-        db.add_all(db_objs)
+        db.add_all(db_objects)
         db.commit()
-        return db_objs
+        return db_objects
 
     def merge_topics(
         self,
@@ -117,10 +135,6 @@ class CRUDDocumentTopic(
         # No actual merge operation needed.
         if topic_to_keep == topic_to_merge:
             return
-
-        # Check if the topic to merge exists
-        self.read(db=db, id=topic_to_merge)
-        self.read(db=db, id=topic_to_keep)
 
         # Update all DocumentTopicORM entries that reference the topic to merge
         stmt = (

@@ -24,6 +24,10 @@ class TopicORM(ORMBase):
     color: Mapped[str] = mapped_column(String, nullable=False)
     top_docs: Mapped[Optional[List[int]]] = mapped_column(ARRAY(Integer), nullable=True)
 
+    # 2D coordinates for visualization
+    x: Mapped[float] = mapped_column(Float, nullable=True)
+    y: Mapped[float] = mapped_column(Float, nullable=True)
+
     # many to one
     parent_topic_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("topic.id", ondelete="SET NULL"), nullable=True, index=True

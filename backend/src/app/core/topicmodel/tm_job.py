@@ -13,10 +13,12 @@ from pydantic import BaseModel, Field
 class TMJobType(str, Enum):
     CREATE_ASPECT = "create_aspect"
     ADD_MISSING_DOCS_TO_ASPECT = "add_missing_docs_to_aspect"
-    ADD_TOPIC = "add_topic"
+    CREATE_TOPIC_WITH_NAME = "create_topic_with_name"
+    CREATE_TOPIC_WITH_SDOCS = "create_topic_with_sdocs"
     REMOVE_TOPIC = "remove_topic"
     MERGE_TOPICS = "merge_topics"
     SPLIT_TOPIC = "split_topic"
+    CHANGE_TOPIC = "change_topic"
     REFINE_TOPIC_MODEL = "refine_topic_model"
     RESET_TOPIC_MODEL = "reset_topic_model"
 
@@ -37,11 +39,23 @@ class AddMissingDocsToAspectParams(BaseModel):
     )
 
 
-class AddTopicParams(BaseModel):
-    tm_job_type: Literal[TMJobType.ADD_TOPIC] = Field(
-        default=TMJobType.ADD_TOPIC, description="Type of the TMJob"
+class CreateTopicWithNameParams(BaseModel):
+    tm_job_type: Literal[TMJobType.CREATE_TOPIC_WITH_NAME] = Field(
+        default=TMJobType.CREATE_TOPIC_WITH_NAME, description="Type of the TMJob"
     )
     create_dto: TopicCreate = Field(description="DTO for creating a new topic.")
+
+
+class CreateTopicWithSdocsParams(BaseModel):
+    tm_job_type: Literal[TMJobType.CREATE_TOPIC_WITH_SDOCS] = Field(
+        default=TMJobType.CREATE_TOPIC_WITH_SDOCS, description="Type of the TMJob"
+    )
+    aspect_id: int = Field(
+        description="ID of the aspect to which documents will be added."
+    )
+    sdoc_ids: list[int] = Field(
+        description="List of source document IDs to include in the topic."
+    )
 
 
 class RemoveTopicParams(BaseModel):
@@ -69,6 +83,21 @@ class SplitTopicParams(BaseModel):
     )
 
 
+class ChangeTopicParams(BaseModel):
+    tm_job_type: Literal[TMJobType.CHANGE_TOPIC] = Field(
+        default=TMJobType.CHANGE_TOPIC, description="Type of the TMJob"
+    )
+    aspect_id: int = Field(
+        description="ID of the aspect to which the documents belong."
+    )
+    sdoc_ids: list[int] = Field(
+        description="List of source document IDs to change the topic for."
+    )
+    topic_id: int = Field(
+        description="ID of the topic to change to. (-1 will be treated as 'removing' the documents / marking them as outliers)"
+    )
+
+
 class RefineTopicModelParams(BaseModel):
     tm_job_type: Literal[TMJobType.REFINE_TOPIC_MODEL] = Field(
         default=TMJobType.REFINE_TOPIC_MODEL, description="Type of the TMJob"
@@ -85,10 +114,12 @@ class ResetTopicModelParams(BaseModel):
 
 TMJobParamsNoCreate = Union[
     AddMissingDocsToAspectParams,
-    AddTopicParams,
+    CreateTopicWithNameParams,
+    CreateTopicWithSdocsParams,
     RemoveTopicParams,
     MergeTopicsParams,
     SplitTopicParams,
+    ChangeTopicParams,
     RefineTopicModelParams,
     ResetTopicModelParams,
 ]
@@ -96,10 +127,12 @@ TMJobParamsNoCreate = Union[
 TMJobParams = Union[
     CreateAspectParams,
     AddMissingDocsToAspectParams,
-    AddTopicParams,
+    CreateTopicWithNameParams,
+    CreateTopicWithSdocsParams,
     RemoveTopicParams,
     MergeTopicsParams,
     SplitTopicParams,
+    ChangeTopicParams,
     RefineTopicModelParams,
     ResetTopicModelParams,
 ]
