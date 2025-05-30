@@ -2,8 +2,6 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.util.color import get_next_color
-
 from .dto_base import UpdateDTOBase
 
 
@@ -16,7 +14,6 @@ class TopicCreate(BaseModel):
     level: int = Field(description="Hierarchical level of the topic")
     name: str = Field(description="Name of the topic")
     description: str = Field(description="Description of the topic")
-    color: str = Field(description="Color code for the topic visualization")
 
 
 # Properties for internal creation (if some fields are system-set)
@@ -27,10 +24,6 @@ class TopicCreateIntern(BaseModel):
     description: Optional[str] = Field(
         default=None, description="Description of the topic"
     )
-    color: str = Field(
-        description="Color code for the topic visualization",
-        default_factory=get_next_color,
-    )
     parent_topic_id: Optional[int] = Field(
         default=None, description="ID of the parent topic, if any"
     )
@@ -38,9 +31,7 @@ class TopicCreateIntern(BaseModel):
 
 # Properties for updating
 class TopicUpdate(BaseModel, UpdateDTOBase):
-    color: Optional[str] = Field(
-        default=None, description="Updated color code for the topic"
-    )
+    pass
 
 
 # Properties for internal update
@@ -78,7 +69,6 @@ class TopicRead(BaseModel):
     name: str = Field(description="Name of the topic")
     description: str = Field(description="Description of the topic")
     level: int = Field(description="Hierarchical level of the topic")
-    color: str = Field(description="Color code for the topic visualization")
 
     x: float = Field(description="X coordinate for visualization")
     y: float = Field(description="Y coordinate for visualization")
