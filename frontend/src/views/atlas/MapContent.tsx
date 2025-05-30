@@ -70,12 +70,12 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
         hoverinfo: "none",
         selectedpoints: [],
         marker: {
-          size: highlightReviewedDocs ? [] : selectedTopicId && selectedTopicId !== topic.id ? 3 : pointSize,
+          size: [],
           line: {
             color: "black",
             width: [],
           },
-          color: highlightReviewedDocs ? [] : selectedTopicId && selectedTopicId !== topic.id ? "lightgrey" : [],
+          color: [],
           opacity: 1,
         },
         selected: {
@@ -102,18 +102,23 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
       (trace.x as Datum[]).push(doc.x);
       (trace.y as Datum[]).push(doc.y);
       (trace.ids as string[]).push(`${doc.sdoc_id}`);
+      // no border
       (trace.marker!.line!.width! as number[]).push(0);
-      if (Array.isArray(trace.marker!.size)) {
-        (trace.marker!.size as number[]).push(highlightReviewedDocs && !doc.is_accepted ? 4 : pointSize);
-      }
-      if (Array.isArray(trace.marker!.color)) {
-        if (highlightReviewedDocs && !doc.is_accepted) {
-          (trace.marker!.color as Color[]).push("lightgrey");
-        } else {
-          (trace.marker!.color as Color[]).push(
-            colorScheme[topicIndex % colorScheme.length] + (doc.is_accepted ? "ff" : "80"),
-          );
-        }
+      // size & color
+      if (!doc.in_searchresult) {
+        (trace.marker!.size as number[]).push(4);
+        (trace.marker!.color as Color[]).push("lightgrey");
+      } else if (highlightReviewedDocs && !doc.is_accepted) {
+        (trace.marker!.size as number[]).push(4);
+        (trace.marker!.color as Color[]).push("lightgrey");
+      } else if (selectedTopicId && selectedTopicId !== doc.topic_id) {
+        (trace.marker!.size as number[]).push(4);
+        (trace.marker!.color as Color[]).push("lightgrey");
+      } else {
+        (trace.marker!.size as number[]).push(pointSize);
+        (trace.marker!.color as Color[]).push(
+          colorScheme[topicIndex % colorScheme.length] + (doc.is_accepted ? "ff" : "80"),
+        );
       }
     });
 
@@ -125,15 +130,23 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
       (trace.x as Datum[]).push(doc.x);
       (trace.y as Datum[]).push(doc.y);
       (trace.ids as string[]).push(`${doc.sdoc_id}`);
+      // border for the selected document
       (trace.marker!.line!.width! as number[]).push(2);
-      if (Array.isArray(trace.marker!.color)) {
-        if (highlightReviewedDocs && !doc.is_accepted) {
-          (trace.marker!.color as Color[]).push("#c0c0c080");
-        } else {
-          (trace.marker!.color as Color[]).push(
-            colorScheme[topicIndex % colorScheme.length] + (doc.is_accepted ? "ff" : "80"),
-          );
-        }
+      // size & color
+      if (!doc.in_searchresult) {
+        (trace.marker!.size as number[]).push(4);
+        (trace.marker!.color as Color[]).push("lightgrey");
+      } else if (highlightReviewedDocs && !doc.is_accepted) {
+        (trace.marker!.size as number[]).push(4);
+        (trace.marker!.color as Color[]).push("lightgrey");
+      } else if (selectedTopicId && selectedTopicId !== doc.topic_id) {
+        (trace.marker!.size as number[]).push(4);
+        (trace.marker!.color as Color[]).push("lightgrey");
+      } else {
+        (trace.marker!.size as number[]).push(pointSize);
+        (trace.marker!.color as Color[]).push(
+          colorScheme[topicIndex % colorScheme.length] + (doc.is_accepted ? "ff" : "80"),
+        );
       }
     }
 

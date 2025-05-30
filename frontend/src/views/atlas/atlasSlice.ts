@@ -30,6 +30,8 @@ export interface AtlasState {
   // highlighting
   highlightedTopicId: number | undefined;
   highlightReviewedDocs: boolean;
+  // search state
+  searchQuery: string; // This can be used to store the search query if needed
 }
 
 const defaultFilterExpression: MyFilterExpression = {
@@ -58,6 +60,8 @@ const initialState: AtlasState & FilterState = {
   // highlighting
   highlightedTopicId: undefined,
   highlightReviewedDocs: false,
+  // search state
+  searchQuery: "",
 };
 
 const resetAtlasState = (state: Draft<AtlasState>) => {
@@ -147,6 +151,10 @@ export const atlasSlice = createSlice({
       if (state.highlightReviewedDocs) {
         state.highlightedTopicId = undefined;
       }
+    },
+    // Search state
+    onChangeSearchQuery: (state, action: PayloadAction<string>) => {
+      state.searchQuery = action.payload;
     },
   },
   extraReducers: (builder) => {

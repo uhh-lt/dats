@@ -1,11 +1,12 @@
 import SearchIcon from "@mui/icons-material/Search";
 import { Box, InputAdornment, Stack, TextField, Typography } from "@mui/material";
-import { ChangeEvent, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import ReduxFilterDialog from "../../components/FilterDialog/ReduxFilterDialog.tsx";
 import DATSToolbar from "../../components/MUI/DATSToolbar.tsx";
 import TagMenuButton from "../../components/Tag/TagMenu/TagMenuButton.tsx";
-import { useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { RootState } from "../../store/store.ts";
+import { useDebounce } from "../../utils/useDebounce.ts";
 import SearchOptionsMenu from "../search/DocumentSearch/SearchOptionsMenu.tsx";
 import { AtlasActions } from "./atlasSlice.ts";
 import TopicMenuButton from "./TopicMenuButton.tsx";
@@ -27,10 +28,15 @@ function MapToolbar({ aspectId }: MapToolbarProps) {
   const toolbarRef = useRef<HTMLDivElement>(null);
 
   // search bar
+  const dispatch = useAppDispatch();
   const [searchQuery, setSearchQuery] = useState("");
   const handleSearchQueryChange = (event: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
   };
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  useEffect(() => {
+    dispatch(AtlasActions.onChangeSearchQuery(debouncedSearchQuery));
+  }, [debouncedSearchQuery, dispatch]);
 
   return (
     <DATSToolbar variant="dense" ref={toolbarRef}>
