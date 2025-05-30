@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Box } from "@mui/material";
-import { Annotations, Datum, ScatterData } from "plotly.js";
+import { Annotations, Color, Datum, ScatterData } from "plotly.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Plot, { Figure } from "react-plotly.js";
 import { TMDoc } from "../../api/openapi/models/TMDoc.ts";
@@ -34,6 +34,8 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
   const pointSize = useAppSelector((state) => state.atlas.pointSize);
   const showLabels = useAppSelector((state) => state.atlas.showLabels);
   const colorScheme = useAppSelector((state) => state.atlas.colorScheme);
+  const showTicks = useAppSelector((state) => state.atlas.showTicks);
+  const showGrid = useAppSelector((state) => state.atlas.showGrid);
 
   // chart data
   const { chartData, labels } = useMemo(() => {
@@ -47,6 +49,11 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
       },
       {} as Record<number, TMDoc>,
     );
+
+    const topicid2topicindex: Record<number, number> = {};
+    vis.topics.forEach((topic, index) => {
+      topicid2topicindex[topic.id] = index;
+    });
 
     // prepare the legend & labels
     vis.topics.forEach((topic) => {
@@ -65,6 +72,7 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
             color: "black",
             width: [],
           },
+          color: [],
         },
         selected: {
           marker: {
@@ -86,26 +94,35 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
     vis.docs.forEach((doc) => {
       if (doc.sdoc_id == selectedSdocId) return;
       const trace = chartData[doc.topic_id];
+      const topicIndex = topicid2topicindex[doc.topic_id];
       (trace.x as Datum[]).push(doc.x);
       (trace.y as Datum[]).push(doc.y);
       (trace.ids as string[]).push(`${doc.sdoc_id}`);
       (trace.marker!.line!.width! as number[]).push(0);
+      (trace.marker!.color! as Color[]).push(
+        colorScheme[topicIndex % colorScheme.length] + (doc.is_accepted ? "" : "80"),
+      );
+      console.log(colorScheme[topicIndex % colorScheme.length]);
     });
 
     // special treatment for the selected document
     const doc = sdocId2Doc[selectedSdocId];
     if (doc) {
       const trace = chartData[doc.topic_id];
+      const topicIndex = topicid2topicindex[doc.topic_id];
       (trace.x as Datum[]).push(doc.x);
       (trace.y as Datum[]).push(doc.y);
       (trace.ids as string[]).push(`${doc.sdoc_id}`);
       (trace.marker!.line!.width! as number[]).push(2);
+      (trace.marker!.color! as Color[]).push(
+        colorScheme[topicIndex % colorScheme.length] + (doc.is_accepted ? "" : "80"),
+      );
     }
 
     return { chartData, labels };
-  }, [pointSize, selectedSdocIds, selectedSdocIdsIndex, vis.docs, vis.topics]);
+  }, [colorScheme, pointSize, selectedSdocIds, selectedSdocIdsIndex, vis.docs, vis.topics]);
 
-  // labelss
+  // labels
   const labelAnnotations: Partial<Annotations>[] | undefined = useMemo(
     () =>
       labels.map((label) => ({
@@ -137,8 +154,8 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
         t: 32,
         pad: 4,
       },
-      xaxis: { zeroline: false },
-      yaxis: { zeroline: false },
+      xaxis: { zeroline: false, showticklabels: showTicks, showgrid: showGrid },
+      yaxis: { zeroline: false, showticklabels: showTicks, showgrid: showGrid },
       showlegend: false,
       annotations: showLabels ? labelAnnotations : undefined,
     },
@@ -155,10 +172,12 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
           ...oldFigure.layout,
           colorway: colorScheme,
           annotations: showLabels ? labelAnnotations : undefined,
+          xaxis: { ...oldFigure.layout.xaxis, showticklabels: showTicks, showgrid: showGrid },
+          yaxis: { ...oldFigure.layout.yaxis, showticklabels: showTicks, showgrid: showGrid },
         },
       };
     });
-  }, [labelAnnotations, showLabels, chartData, colorScheme]);
+  }, [labelAnnotations, showLabels, chartData, colorScheme, showTicks, showGrid]);
 
   // tooltip
   const [tooltipData, setTooltipData] = useState<MapTooltipData>({
