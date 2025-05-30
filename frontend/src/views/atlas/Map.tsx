@@ -31,7 +31,7 @@ function Map() {
           <MapContent projectId={projectId} aspectId={aspectId} />
         </Box>
       }
-      rightSidebar={<MapDetailsSidePanel aspectId={aspectId} />}
+      rightSidebar={<MapDetailsSidePanel projectId={projectId} aspectId={aspectId} />}
     />
   );
 }

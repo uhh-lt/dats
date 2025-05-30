@@ -1,9 +1,6 @@
-import MenuIcon from "@mui/icons-material/Menu";
 import {
   Autocomplete,
   Box,
-  IconButton,
-  IconButtonProps,
   Popover,
   PopoverPosition,
   TextField,
@@ -28,13 +25,10 @@ const filter = createFilterOptions<StatisticsFilter>();
 interface SearchMenuProps {
   menuItems: CodeRead[];
   handleMenuItemClick: (navigateTo: string) => void;
+  renderButton: (onClick: (event: React.MouseEvent<HTMLButtonElement>) => void) => React.ReactNode;
 }
 
-function SearchStatisticsMenu({
-  menuItems,
-  handleMenuItemClick,
-  ...props
-}: SearchMenuProps & Omit<IconButtonProps, "onClick">) {
+function SearchStatisticsMenu({ menuItems, handleMenuItemClick, renderButton }: SearchMenuProps) {
   const [position, setPosition] = useState<PopoverPosition | undefined>();
   const debouncedPosition = useDebounce(position, 200);
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -81,9 +75,7 @@ function SearchStatisticsMenu({
 
   return (
     <>
-      <IconButton onClick={handleClick} {...(props as IconButtonProps)}>
-        <MenuIcon />
-      </IconButton>
+      {renderButton(handleClick)}
       <Popover
         open={Boolean(position)}
         onClose={handleClose}
