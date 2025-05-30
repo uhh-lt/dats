@@ -76,8 +76,8 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
 
       labels.push({
         text: topic.name,
-        x: sdocId2Doc[topic.top_docs![0]].x,
-        y: sdocId2Doc[topic.top_docs![0]].y,
+        x: topic.x,
+        y: topic.y,
       });
     });
 
@@ -101,8 +101,6 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
       (trace.ids as string[]).push(`${doc.sdoc_id}`);
       (trace.marker!.line!.width! as number[]).push(2);
     }
-
-    console.log("chartData", chartData);
 
     return { chartData, labels };
   }, [pointSize, selectedSdocIds, selectedSdocIdsIndex, vis.docs, vis.topics]);
