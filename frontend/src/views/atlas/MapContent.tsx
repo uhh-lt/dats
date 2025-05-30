@@ -36,6 +36,7 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
   const colorScheme = useAppSelector((state) => state.atlas.colorScheme);
   const showTicks = useAppSelector((state) => state.atlas.showTicks);
   const showGrid = useAppSelector((state) => state.atlas.showGrid);
+  const selectedTopicId = useAppSelector((state) => state.atlas.selectedTopicId);
 
   // chart data
   const { chartData, labels } = useMemo(() => {
@@ -67,12 +68,12 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
         hoverinfo: "none",
         selectedpoints: [],
         marker: {
-          size: pointSize,
+          size: selectedTopicId && selectedTopicId !== topic.id ? 3 : pointSize,
           line: {
             color: "black",
             width: [],
           },
-          color: [],
+          color: selectedTopicId && selectedTopicId !== topic.id ? "lightgrey" : [],
         },
         selected: {
           marker: {
@@ -99,9 +100,11 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
       (trace.y as Datum[]).push(doc.y);
       (trace.ids as string[]).push(`${doc.sdoc_id}`);
       (trace.marker!.line!.width! as number[]).push(0);
-      (trace.marker!.color! as Color[]).push(
-        colorScheme[topicIndex % colorScheme.length] + (doc.is_accepted ? "" : "80"),
-      );
+      if (Array.isArray(trace.marker!.color)) {
+        (trace.marker!.color as Color[]).push(
+          colorScheme[topicIndex % colorScheme.length] + (doc.is_accepted ? "" : "80"),
+        );
+      }
       console.log(colorScheme[topicIndex % colorScheme.length]);
     });
 
@@ -114,13 +117,15 @@ function MapContent2({ vis }: { vis: TMVisualization }) {
       (trace.y as Datum[]).push(doc.y);
       (trace.ids as string[]).push(`${doc.sdoc_id}`);
       (trace.marker!.line!.width! as number[]).push(2);
-      (trace.marker!.color! as Color[]).push(
-        colorScheme[topicIndex % colorScheme.length] + (doc.is_accepted ? "" : "80"),
-      );
+      if (Array.isArray(trace.marker!.color)) {
+        (trace.marker!.color! as Color[]).push(
+          colorScheme[topicIndex % colorScheme.length] + (doc.is_accepted ? "" : "80"),
+        );
+      }
     }
 
     return { chartData, labels };
-  }, [colorScheme, pointSize, selectedSdocIds, selectedSdocIdsIndex, vis.docs, vis.topics]);
+  }, [colorScheme, pointSize, selectedSdocIds, selectedSdocIdsIndex, selectedTopicId, vis.docs, vis.topics]);
 
   // labels
   const labelAnnotations: Partial<Annotations>[] | undefined = useMemo(
