@@ -21,6 +21,7 @@ interface MapToolbarProps {
 function MapToolbar({ aspectId }: MapToolbarProps) {
   // selection
   const selectedDocumentIds = useAppSelector((state) => state.atlas.selectedSdocIds);
+  const colorScheme = useAppSelector((state) => state.atlas.colorScheme);
 
   // filter dialog
   const toolbarRef = useRef<HTMLDivElement>(null);
@@ -42,6 +43,7 @@ function MapToolbar({ aspectId }: MapToolbarProps) {
             aspectId={aspectId}
             selectedSdocIds={selectedDocumentIds}
             popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
+            colorScheme={colorScheme}
           />
           <TagMenuButton
             selectedSdocIds={selectedDocumentIds}

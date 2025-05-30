@@ -1,4 +1,5 @@
 import { createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
+import * as d3 from "d3";
 import { v4 as uuidv4 } from "uuid";
 import { SdocColumns } from "../../api/openapi/models/SdocColumns.ts";
 import { StringOperator } from "../../api/openapi/models/StringOperator.ts";
@@ -17,8 +18,9 @@ export interface AtlasState {
   selectedSdocIdsIndex: number;
   selectedTopicId: number | undefined;
   // view settings
-  colorBy: string | undefined;
-  colorScheme: string;
+  colorBy: string;
+  colorSchemeName: string;
+  colorScheme: string[];
   pointSize: number;
   showLabels: boolean;
 }
@@ -37,10 +39,11 @@ const initialState: AtlasState & FilterState = {
   selectedSdocIdsIndex: 0,
   selectedTopicId: undefined,
   // view settings
-  colorBy: undefined,
-  colorScheme: "viridis",
+  colorBy: "topic-broad",
+  colorSchemeName: "category",
+  colorScheme: d3.schemeCategory10 as string[],
   pointSize: 10,
-  showLabels: false,
+  showLabels: true,
 };
 
 const resetAtlasState = (state: Draft<AtlasState>) => {
@@ -93,11 +96,12 @@ export const atlasSlice = createSlice({
       }
     },
     // View settings
-    onChangeColorBy: (state, action: PayloadAction<string | undefined>) => {
+    onChangeColorBy: (state, action: PayloadAction<string>) => {
       state.colorBy = action.payload;
     },
-    onChangeColorScheme: (state, action: PayloadAction<string>) => {
-      state.colorScheme = action.payload;
+    onChangeColorScheme: (state, action: PayloadAction<{ colorSchemeName: string; colorScheme: string[] }>) => {
+      state.colorSchemeName = action.payload.colorSchemeName;
+      state.colorScheme = action.payload.colorScheme;
     },
     onChangePointSize: (state, action: PayloadAction<number>) => {
       state.pointSize = action.payload;

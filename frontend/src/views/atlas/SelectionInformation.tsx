@@ -20,6 +20,7 @@ function SelectionInformation({ aspectId }: SelectionInformationProps) {
   // global client state
   const selectedSdocIds = useAppSelector((state) => state.atlas.selectedSdocIds);
   const selectedSdocIdsIndex = useAppSelector((state) => state.atlas.selectedSdocIdsIndex);
+  const colorScheme = useAppSelector((state) => state.atlas.colorScheme);
 
   // selection index management
   const dispatch = useAppDispatch();
@@ -42,7 +43,8 @@ function SelectionInformation({ aspectId }: SelectionInformationProps) {
   // global server state
   const metadata = MetadataHooks.useGetSdocMetadata(selectedSdocIds[selectedSdocIdsIndex]);
   const documentTagIds = TagHooks.useGetAllTagIdsBySdocId(selectedSdocIds[selectedSdocIdsIndex]);
-  const topics = TopicModellingHooks.useGetTopicsBySdocId(aspectId, selectedSdocIds[selectedSdocIdsIndex]);
+  const docTopics = TopicModellingHooks.useGetTopicsBySdocId(aspectId, selectedSdocIds[selectedSdocIdsIndex]);
+  const vis = TopicModellingHooks.useGetDocVisualization(aspectId);
   const sdoc = SdocHooks.useGetDocument(selectedSdocIds[selectedSdocIdsIndex]);
 
   return (
@@ -97,26 +99,34 @@ function SelectionInformation({ aspectId }: SelectionInformationProps) {
               </Stack>
 
               <Stack direction="column" pl={0.5}>
-                {topics.isLoading && (
+                {docTopics.isLoading && (
                   <Box textAlign={"center"} pt={2}>
                     <CircularProgress />
                   </Box>
                 )}
-                {topics.isError && <span>{topics.error.message}</span>}
-                {topics.isSuccess &&
-                  topics.data.map((topic) => (
-                    <Stack
-                      spacing={1}
-                      direction="row"
-                      key={`sdoc-${selectedSdocIds[selectedSdocIdsIndex]}-topic${topic.id}`}
-                      alignItems="center"
-                    >
-                      {getIconComponent(Icon.TOPIC, {
-                        style: { color: topic.color, fontSize: "10px", width: "24px" },
-                      })}
-                      <Typography>{topic.name}</Typography>
-                    </Stack>
-                  ))}
+                {docTopics.isError && <span>{docTopics.error.message}</span>}
+                {docTopics.isSuccess &&
+                  vis.data &&
+                  docTopics.data.map((topic) => {
+                    const topicIndex = vis.data.topics.findIndex((t) => t.id === topic.id);
+                    return (
+                      <Stack
+                        spacing={1}
+                        direction="row"
+                        key={`sdoc-${selectedSdocIds[selectedSdocIdsIndex]}-topic${topic.id}`}
+                        alignItems="center"
+                      >
+                        {getIconComponent(Icon.TOPIC, {
+                          style: {
+                            color: colorScheme[topicIndex % colorScheme.length],
+                            fontSize: "10px",
+                            width: "24px",
+                          },
+                        })}
+                        <Typography>{topic.name}</Typography>
+                      </Stack>
+                    );
+                  })}
               </Stack>
             </Stack>
 

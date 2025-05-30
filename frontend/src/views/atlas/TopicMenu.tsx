@@ -28,6 +28,7 @@ interface TopicMenuProps {
   anchorEl: HTMLElement | null;
   setAnchorEl: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
   sdocIds: number[];
+  colorScheme: string[];
 }
 
 function TopicMenu(props: TopicMenuProps) {
@@ -87,6 +88,7 @@ function TopicMenuContent({
   popoverOrigin,
   topics,
   initialChecked,
+  colorScheme,
 }: { topics: TopicRead[]; initialChecked: Map<number, CheckboxState> } & TopicMenuProps) {
   // menu state
   const open = Boolean(anchorEl);
@@ -122,8 +124,10 @@ function TopicMenuContent({
 
   // filter feature
   const [search, setSearch] = useState<string>("");
-  const filteredTopics: TopicRead[] | undefined = useMemo(() => {
-    return topics.filter((topic) => topic.name.toLowerCase().startsWith(search.toLowerCase()));
+  const filteredTopicIndexes: number[] = useMemo(() => {
+    return topics
+      .map((topic, index) => (topic.name.toLowerCase().startsWith(search.toLowerCase()) ? index : -1))
+      .filter((index) => index !== -1);
   }, [topics, search]);
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
@@ -187,7 +191,8 @@ function TopicMenuContent({
       );
     } else if (
       search.trim().length === 0 ||
-      (search.trim().length > 0 && filteredTopics.map((tag) => tag.name).indexOf(search.trim()) === -1)
+      (search.trim().length > 0 &&
+        filteredTopicIndexes.map((index) => topics[index].name).indexOf(search.trim()) === -1)
     ) {
       return (
         <ListItemButton onClick={handleCreateTopic}>
@@ -197,7 +202,7 @@ function TopicMenuContent({
       );
     }
     return null;
-  }, [filteredTopics, handleApplyTags, handleCreateTopic, hasChanged, hasNoChecked, isPending, search]);
+  }, [filteredTopicIndexes, handleApplyTags, handleCreateTopic, hasChanged, hasNoChecked, isPending, search, topics]);
 
   return (
     <Popover
@@ -232,7 +237,8 @@ function TopicMenuContent({
         <Divider />
 
         <Box sx={{ maxHeight: "240px", overflowY: "auto" }}>
-          {filteredTopics.map((topic) => {
+          {filteredTopicIndexes.map((index) => {
+            const topic = topics[index];
             const labelId = `tag-menu-list-label-${topic.name}`;
 
             return (
@@ -259,7 +265,7 @@ function TopicMenuContent({
               >
                 <ListItemButton onClick={handleCheck(topic.id)} dense>
                   <ListItemIcon sx={{ minWidth: "32px" }}>
-                    {getIconComponent(Icon.TOPIC, { style: { color: topic.color } })}
+                    {getIconComponent(Icon.TOPIC, { style: { color: colorScheme[index % colorScheme.length] } })}
                   </ListItemIcon>
                   <ListItemText id={labelId} primary={topic.name} />
                 </ListItemButton>
