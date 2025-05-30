@@ -14,7 +14,7 @@ function TopicReviewButtons({ aspectId, selectedSdocIds }: TopicReviewButtonsPro
   // check which buttons to show
   const vis = TopicModellingHooks.useGetDocVisualization(aspectId);
   const sdocId2Doc = useMemo(() => {
-    if (!vis.data) return {};
+    if (!vis.data) return undefined;
     return vis.data.docs.reduce(
       (acc, doc) => {
         acc[doc.sdoc_id] = doc;
@@ -24,6 +24,7 @@ function TopicReviewButtons({ aspectId, selectedSdocIds }: TopicReviewButtonsPro
     );
   }, [vis.data]);
   const { isAllAccepted, isAllUnaccepted } = useMemo(() => {
+    if (!sdocId2Doc) return { isAllAccepted: false, isAllUnaccepted: false };
     const tmDocs = selectedSdocIds.map((sdocId) => sdocId2Doc[sdocId]);
 
     const isAllAccepted = tmDocs.every((doc) => doc.is_accepted);

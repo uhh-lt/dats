@@ -13,7 +13,6 @@ import TopicMenuButton from "./TopicMenuButton.tsx";
 import TopicReviewButtons from "./TopicReviewButtons.tsx";
 
 const filterStateSelector = (state: RootState) => state.atlas;
-const filterName = "root";
 
 interface MapToolbarProps {
   aspectId: number;
@@ -62,7 +61,7 @@ function MapToolbar({ aspectId }: MapToolbarProps) {
       <ReduxFilterDialog
         anchorEl={toolbarRef.current}
         buttonProps={{ size: "small" }}
-        filterName={filterName}
+        filterName={`aspect-${aspectId}`}
         filterStateSelector={filterStateSelector}
         filterActions={AtlasActions}
         transformOrigin={{ horizontal: "right", vertical: "top" }}

@@ -172,7 +172,7 @@ function SelectionInformation({ aspectId }: SelectionInformationProps) {
             {metadata.isSuccess &&
               metadata.data
                 .sort((a, b) => a.id - b.id)
-                .map((data) => <DocumentMetadataRow key={data.id} metadata={data} filterName={"atlas"} />)}
+                .map((data) => <DocumentMetadataRow key={data.id} metadata={data} filterName={`aspect-${aspectId}`} />)}
           </Stack>
         </Stack>
       ) : (

@@ -19,7 +19,7 @@ function Map() {
 
   // dispatch changeMap Event!
   const dispatch = useAppDispatch();
-  dispatch(AtlasActions.onOpenMap({ projectId, atlasId: aspectId }));
+  dispatch(AtlasActions.onOpenMap({ projectId, aspectId: aspectId }));
 
   // render
   return (
