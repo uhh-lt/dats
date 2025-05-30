@@ -23,8 +23,4 @@ export type TopicCreate = {
    * Description of the topic
    */
   description: string;
-  /**
-   * Color code for the topic visualization
-   */
-  color: string;
 };
