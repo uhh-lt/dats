@@ -181,6 +181,7 @@ function ColorSettings({ aspectId }: ColorSettingsProps) {
           requestBody: {
             tm_job_type: TMJobType.SPLIT_TOPIC,
             topic_id: choosen,
+            split_into: null, // null means automatic splitting
           },
         },
         {

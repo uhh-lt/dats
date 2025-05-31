@@ -99,6 +99,7 @@ const useStartTMJob = () =>
   useMutation({
     mutationFn: TopicModelService.startTmJob,
     onSuccess: (job) => {
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_ASPECTS, job.project_id] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.TM_JOB, job.id] });
     },
     meta: {
