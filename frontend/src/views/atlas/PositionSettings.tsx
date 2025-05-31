@@ -15,6 +15,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useMemo } from "react";
+import { TMJobType } from "../../api/openapi/models/TMJobType.ts";
 import TopicModellingHooks from "../../api/TopicModellingHooks.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
@@ -68,6 +69,17 @@ function PositionSettings({ aspectId }: PositionSettingsProps) {
     return { topic2count, topic2total };
   }, [vis.data]);
 
+  // refinement
+  const { mutate: startTMJob, isPending } = TopicModellingHooks.useStartTMJob();
+  const handleRefineTM = () => {
+    startTMJob({
+      aspectId,
+      requestBody: {
+        tm_job_type: TMJobType.REFINE_TOPIC_MODEL,
+      },
+    });
+  };
+
   return (
     <Box>
       <Stack spacing={3} p={2}>
@@ -117,7 +129,9 @@ function PositionSettings({ aspectId }: PositionSettingsProps) {
           Review Statistics
         </Typography>
         <Stack direction="row" px={1} spacing={1} alignItems="center">
-          <Button>Refine Positioning</Button>
+          <Button onClick={handleRefineTM} disabled={isPending}>
+            Refine Positioning
+          </Button>
           <Button
             startIcon={highlightReviewedDocs ? <LightbulbIcon /> : <LightbulbOutlinedIcon />}
             onClick={handleToggleHighlightReviewedDocs}
