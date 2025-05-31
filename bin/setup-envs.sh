@@ -31,6 +31,7 @@ fi
 
 JWT_SECRET=$(pwgen 32 1)
 SESSION_SECRET=$(pwgen 32 1)
+UUID_NAMESPACE=$(python -c "import uuid; print(uuid.uuid4())")
 REPO_ROOT="$(pwd)/docker/backend_repo"
 
 cp docker/.env.example docker/.env
@@ -42,6 +43,7 @@ sed -i "s/COMPOSE_PROJECT_NAME=demo/COMPOSE_PROJECT_NAME=${PROJECT_NAME}/" docke
 sed -i "s/131/${PORT_PREFIX}/g" docker/.env
 sed -i "s/JWT_SECRET=/JWT_SECRET=${JWT_SECRET}/" docker/.env
 sed -i "s/SESSION_SECRET=/SESSION_SECRET=${SESSION_SECRET}/" docker/.env
+sed -i "s/UUID_NAMESPACE=/UUID_NAMESPACE=${UUID_NAMESPACE}/" docker/.env
 sed -i "s/DOCKER_UID=121/DOCKER_UID=$(id -u)/" docker/.env
 sed -i "s/DOCKER_GID=126/DOCKER_GID=$(id -g)/" docker/.env
 
@@ -49,6 +51,7 @@ sed -i "s/DOCKER_GID=126/DOCKER_GID=$(id -g)/" docker/.env
 sed -i "s/131/${PORT_PREFIX}/g" backend/.env
 sed -i "s/JWT_SECRET=/JWT_SECRET=${JWT_SECRET}/" backend/.env
 sed -i "s/SESSION_SECRET=/SESSION_SECRET=${SESSION_SECRET}/" backend/.env
+sed -i "s/UUID_NAMESPACE=/UUID_NAMESPACE=${UUID_NAMESPACE}/" backend/.env
 sed -i "s|REPO_ROOT=/insert_path_to_dats_repo/docker/backend_repo|REPO_ROOT=${REPO_ROOT}|" backend/.env
 
 # setup frontend .env file

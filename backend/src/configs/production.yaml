@@ -3,6 +3,7 @@ api:
   max_upload_file_size: 104857600 # 100 MB in bytes
   production_mode: 1
   is_stable: ${oc.env:IS_STABLE, False}
+  uuid_namespace: ${oc.env:UUID_NAMESPACE, ""}
   auth:
     jwt:
       token_url: /authentication/login
