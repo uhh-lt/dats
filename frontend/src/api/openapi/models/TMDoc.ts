@@ -27,4 +27,8 @@ export type TMDoc = {
    * Indicates whether the document is part of the search result
    */
   in_searchresult: boolean;
+  /**
+   * Indicates whether the document is an outlier
+   */
+  is_outlier: boolean;
 };

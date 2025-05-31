@@ -147,7 +147,6 @@ function TopicMenuContent({
         aspectId: aspectId,
         requestBody: {
           tm_job_type: TMJobType.CHANGE_TOPIC,
-          aspect_id: aspectId,
           topic_id: checkedTopics.length === 1 ? parseInt(checkedTopics[0][0]) : -1, // -1 means "no topic / outlier",
           sdoc_ids: sdocIds,
         },
@@ -165,7 +164,6 @@ function TopicMenuContent({
         aspectId: aspectId,
         requestBody: {
           tm_job_type: TMJobType.CREATE_TOPIC_WITH_SDOCS,
-          aspect_id: aspectId,
           sdoc_ids: sdocIds,
         },
       },

@@ -16,6 +16,10 @@ export type TopicRead = {
    */
   parent_topic_id: number | null;
   /**
+   * Whether the topic is an outlier
+   */
+  is_outlier: boolean;
+  /**
    * Name of the topic
    */
   name: string;
