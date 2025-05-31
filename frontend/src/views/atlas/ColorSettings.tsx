@@ -432,6 +432,7 @@ function ColorSettings({ aspectId }: ColorSettingsProps) {
         </Typography>
         <List sx={{ width: "100%" }} disablePadding>
           {vis.data?.topics.map((topic, index) => {
+            if (topic.is_outlier) return null;
             const colors = colorSchemes[colorSchemeName];
             return (
               <ListItem

@@ -127,6 +127,7 @@ function PositionSettings({ aspectId }: PositionSettingsProps) {
         </Stack>
         <Stack px={2} spacing={2}>
           {vis.data?.topics.map((topic, index) => {
+            if (topic.is_outlier) return null; // skip outlier topics
             const count = topic2count[topic.id];
             const total = topic2total[topic.id];
             const color = colorScheme[index % colorScheme.length];

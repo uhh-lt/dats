@@ -130,7 +130,7 @@ function SelectionInformation({ aspectId }: SelectionInformationProps) {
                             width: "24px",
                           },
                         })}
-                        <Typography>{topic.name}</Typography>
+                        <Typography>{topic.is_outlier ? "Outlier Topic / No Topic" : topic.name}</Typography>
                       </Stack>
                     );
                   })}
