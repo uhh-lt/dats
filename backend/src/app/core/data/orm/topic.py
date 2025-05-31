@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import ARRAY, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import ARRAY, Boolean, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.data.orm.orm_base import ORMBase
@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 class TopicORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
+    is_outlier: Mapped[bool] = mapped_column(Boolean, nullable=True)
     name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     top_words: Mapped[Optional[List[str]]] = mapped_column(ARRAY(String), nullable=True)

@@ -19,6 +19,7 @@ class TopicCreate(BaseModel):
 # Properties for internal creation (if some fields are system-set)
 class TopicCreateIntern(BaseModel):
     aspect_id: int = Field(description="ID of the aspect this topic belongs to")
+    is_outlier: bool = Field(description="Whether the topic is an outlier")
     level: int = Field(description="Hierarchical level of the topic")
     name: Optional[str] = Field(default=None, description="Name of the topic")
     description: Optional[str] = Field(
@@ -66,6 +67,7 @@ class TopicRead(BaseModel):
     aspect_id: int = Field(description="ID of the aspect this topic belongs to")
     parent_topic_id: Optional[int] = Field(description="ID of the parent topic, if any")
 
+    is_outlier: bool = Field(description="Whether the topic is an outlier")
     name: str = Field(description="Name of the topic")
     description: str = Field(description="Description of the topic")
     level: int = Field(description="Hierarchical level of the topic")

@@ -259,6 +259,7 @@ def visualize_documents(
     topics = aspect.topics
     document_topics = crud_document_topic.read_by_aspect(db=db, aspect_id=aspect_id)
     sdoc_id2dt = {dt.sdoc_id: dt for dt in document_topics}
+    topic_id2topic = {t.id: t for t in topics}
     assert len(document_aspects) == len(
         document_topics
     ), "The number of DocumentAspects and DocumentTopics must match for visualization."
@@ -277,29 +278,37 @@ def visualize_documents(
             page_size=None,
         )
         sdoc_id_in_search_result: Dict[int, bool] = {hit.id: True for hit in hits.hits}
-        docs = [
-            TMDoc(
-                sdoc_id=doc.sdoc_id,
-                topic_id=sdoc_id2dt[doc.sdoc_id].topic_id,
-                is_accepted=sdoc_id2dt[doc.sdoc_id].is_accepted,
-                in_searchresult=sdoc_id_in_search_result.get(doc.sdoc_id, False),
-                x=doc.x,
-                y=doc.y,
+        docs: List[TMDoc] = []
+        for doc in document_aspects:
+            dt = sdoc_id2dt[doc.sdoc_id]
+            topic_id2topic[dt.topic_id]
+            docs.append(
+                TMDoc(
+                    sdoc_id=doc.sdoc_id,
+                    topic_id=dt.topic_id,
+                    is_accepted=dt.is_accepted,
+                    in_searchresult=sdoc_id_in_search_result.get(doc.sdoc_id, False),
+                    is_outlier=topic_id2topic[dt.topic_id].is_outlier,
+                    x=doc.x,
+                    y=doc.y,
+                )
             )
-            for doc in document_aspects
-        ]
     else:
-        docs = [
-            TMDoc(
-                sdoc_id=doc.sdoc_id,
-                topic_id=sdoc_id2dt[doc.sdoc_id].topic_id,
-                is_accepted=sdoc_id2dt[doc.sdoc_id].is_accepted,
-                in_searchresult=True,
-                x=doc.x,
-                y=doc.y,
+        docs: List[TMDoc] = []
+        for doc in document_aspects:
+            dt = sdoc_id2dt[doc.sdoc_id]
+            topic_id2topic[dt.topic_id]
+            docs.append(
+                TMDoc(
+                    sdoc_id=doc.sdoc_id,
+                    topic_id=dt.topic_id,
+                    is_accepted=dt.is_accepted,
+                    in_searchresult=True,
+                    is_outlier=topic_id2topic[dt.topic_id].is_outlier,
+                    x=doc.x,
+                    y=doc.y,
+                )
             )
-            for doc in document_aspects
-        ]
 
     return TMVisualization(
         aspect_id=aspect.id,
