@@ -54,6 +54,7 @@ const useCreateAspect = () =>
   useMutation({
     mutationFn: TopicModelService.createAspect,
     onSuccess: (data, variables) => {
+      console.log("Aspect created:", data);
       queryClient.setQueryData<AspectMap>([QueryKey.PROJECT_ASPECTS, variables.requestBody.project_id], (oldData) =>
         oldData ? { ...oldData, [data.id]: data } : { [data.id]: data },
       );
@@ -175,6 +176,7 @@ const useUnlabelDocs = () =>
 const useGetDocVisualization = (aspectId: number) => {
   const searchQuery = useAppSelector((state: RootState) => state.atlas.searchQuery);
   const filter = useAppSelector((state: RootState) => state.atlas.filter[`aspect-${aspectId}`]);
+  console.log("Hi from useGetDocVisualization");
   return useQuery({
     queryKey: [QueryKey.DOCUMENT_VISUALIZATION, aspectId, searchQuery, filter],
     queryFn: () =>

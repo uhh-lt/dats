@@ -94,6 +94,11 @@ export const atlasSlice = createSlice({
     onSelectionChange: (state, action: PayloadAction<number[]>) => {
       state.selectedSdocIds = action.payload.slice();
     },
+    onResetSelection: (state) => {
+      if (state.selectedSdocIds.length > 0) {
+        state.selectedSdocIds = [];
+      }
+    },
     // navigate through the selection
     onSelectionIndexChange: (state, action: PayloadAction<number>) => {
       state.selectedSdocIdsIndex = action.payload;
