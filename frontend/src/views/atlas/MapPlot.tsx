@@ -30,7 +30,7 @@ function MapPlot({ vis }: MapPlotProps) {
   // chart data
   const { chartData, labels } = useMemo(() => {
     const chartData: Record<string, Partial<ScatterData>> = {};
-    const labels: { x: number; y: number; text: string }[] = [];
+    const labels: Partial<Annotations>[] = [];
 
     const sdocId2Doc = vis.docs.reduce(
       (acc, doc) => {
@@ -73,11 +73,26 @@ function MapPlot({ vis }: MapPlotProps) {
         visible: true,
       } as Partial<ScatterData>;
 
-      labels.push({
-        text: topic.name,
-        x: topic.x,
-        y: topic.y,
-      });
+      if (!topic.is_outlier) {
+        labels.push({
+          text: topic.name,
+          x: topic.x,
+          y: topic.y,
+          xref: "x",
+          yref: "y",
+          showarrow: false,
+          font: {
+            size: 14,
+            color: "white",
+            weight: 1000,
+            shadow: "0px 0px 6px black, -1px 0 DimGray, 0 1px DimGray, 1px 0 DimGray, 0 -1px DimGray",
+            family: "Roboto",
+          },
+          // bgcolor: "#f9f9f9",
+          // bordercolor: "#ccc",
+          visible: true,
+        });
+      }
     });
 
     // fill the coordinates
@@ -155,30 +170,6 @@ function MapPlot({ vis }: MapPlotProps) {
     vis.topics,
   ]);
 
-  // labels
-  const labelAnnotations: Partial<Annotations>[] | undefined = useMemo(
-    () =>
-      labels.map((label) => ({
-        text: label.text,
-        x: label.x,
-        y: label.y,
-        xref: "x",
-        yref: "y",
-        showarrow: false,
-        font: {
-          size: 14,
-          color: "white",
-          weight: 1000,
-          shadow: "0px 0px 6px black, -1px 0 DimGray, 0 1px DimGray, 1px 0 DimGray, 0 -1px DimGray",
-          family: "Roboto",
-        },
-        // bgcolor: "#f9f9f9",
-        // bordercolor: "#ccc",
-        visible: true,
-      })),
-    [labels],
-  );
-
   // plot state
   const [figure, setFigure] = useState<Figure>({
     data: Object.values(chartData),
@@ -196,7 +187,7 @@ function MapPlot({ vis }: MapPlotProps) {
       xaxis: { zeroline: false, showticklabels: showTicks, showgrid: showGrid },
       yaxis: { zeroline: false, showticklabels: showTicks, showgrid: showGrid },
       showlegend: false,
-      annotations: showLabels ? labelAnnotations : undefined,
+      annotations: showLabels ? labels : undefined,
     },
     frames: null,
   });
@@ -210,13 +201,13 @@ function MapPlot({ vis }: MapPlotProps) {
         layout: {
           ...oldFigure.layout,
           colorway: colorScheme,
-          annotations: showLabels ? labelAnnotations : undefined,
+          annotations: showLabels ? labels : undefined,
           xaxis: { ...oldFigure.layout.xaxis, showticklabels: showTicks, showgrid: showGrid },
           yaxis: { ...oldFigure.layout.yaxis, showticklabels: showTicks, showgrid: showGrid },
         },
       };
     });
-  }, [labelAnnotations, showLabels, chartData, colorScheme, showTicks, showGrid]);
+  }, [showLabels, chartData, colorScheme, showTicks, showGrid, labels]);
 
   // tooltip
   const [tooltipData, setTooltipData] = useState<MapTooltipData>({
