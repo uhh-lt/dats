@@ -17,8 +17,5 @@ class DocumentAspectUpdate(BaseModel, UpdateDTOBase):
     content: Optional[str] = Field(
         default=None, description="Updated content of the document aspect"
     )
-    embedding_uuid: Optional[str] = Field(
-        default=None, description="Updated UUID of the embedding"
-    )
     x: Optional[float] = Field(default=None, description="Updated current X coordinate")
     y: Optional[float] = Field(default=None, description="Updated current Y coordinate")

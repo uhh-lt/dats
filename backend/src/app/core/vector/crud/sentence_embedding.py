@@ -32,10 +32,9 @@ class CRUDSentenceEmbedding(CRUDBase[SentenceObjectIdentifier, SentenceCollectio
         Returns:
             List of SimSearchResult[DocumentObjectIdentifier]
         """
-        uuid = self.get_uuid(project_id=project_id, id=id)
         return self.search_near_object(
             project_id=project_id,
-            uuid=uuid,
+            uuid=id.uuidv5(),
             k=k,
             threshold=threshold,
         )

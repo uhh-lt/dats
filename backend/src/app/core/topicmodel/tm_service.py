@@ -72,7 +72,7 @@ class TMService:
         sdoc_data = [
             (data.id, data.content)
             for data in crud_sdoc.read_text_data_with_no_aspect(
-                db=db, aspect_id=aspect_id
+                db=db, aspect_id=aspect_id, project_id=aspect.project_id
             )
         ]
         self._log_status_msg(
@@ -235,7 +235,7 @@ class TMService:
             )
 
             # Store embeddings in the vector DB
-            uuids = crud_aspect_embedding.add_embedding_batch(
+            crud_aspect_embedding.add_embedding_batch(
                 project_id=aspect.project_id,
                 ids=[
                     AspectObjectIdentifier(
@@ -253,11 +253,10 @@ class TMService:
                 ids=[(da.sdoc_id, da.aspect_id) for da in doc_aspects],
                 update_dtos=[
                     DocumentAspectUpdate(
-                        embedding_uuid=str(uuid),
                         x=float(coord[0]),
                         y=float(coord[1]),
                     )
-                    for uuid, coord in zip(uuids, coords)
+                    for coord in coords
                 ],
             )
 
@@ -291,14 +290,13 @@ class TMService:
             )
 
         # ... and their embeddings
-        # Assert that all document aspects have embeddings
-        assert all(
-            da.embedding_uuid is not None for da in doc_aspects
-        ), "Not all document aspects have embeddings."
-        embedding_uuids = [da.embedding_uuid for da in doc_aspects]
         embeddings = np.array(
-            crud_aspect_embedding.get_embeddings_by_uuids(
-                project_id=aspect.project_id, uuids=embedding_uuids
+            crud_aspect_embedding.get_embeddings(
+                project_id=aspect.project_id,
+                ids=[
+                    AspectObjectIdentifier(aspect_id=da.aspect_id, sdoc_id=da.sdoc_id)
+                    for da in doc_aspects
+                ],
             )
         )
         self._log_status_msg(
@@ -508,17 +506,15 @@ class TMService:
             topic_description[topic_id] = response.description
 
         # 3. Based on embeddings...
-        # Assert that all document aspects have embeddings
-        assert all(
-            da.embedding_uuid is not None for da in doc_aspects
-        ), "Not all document aspects have embeddings."
         coordinates = np.array([[da.x, da.y] for da in doc_aspects])
-        embedding_uuids = [da.embedding_uuid for da in doc_aspects]
         embedding_sdoc_ids = np.array([da.sdoc_id for da in doc_aspects])
-        # TODO: Vielleicht können wir das noch verbessern!
         embeddings = np.array(
-            crud_aspect_embedding.get_embeddings_by_uuids(
-                project_id=aspect.project_id, uuids=embedding_uuids
+            crud_aspect_embedding.get_embeddings(
+                project_id=aspect.project_id,
+                ids=[
+                    AspectObjectIdentifier(aspect_id=da.aspect_id, sdoc_id=da.sdoc_id)
+                    for da in doc_aspects
+                ],
             )
         )
 
@@ -670,92 +666,92 @@ class TMService:
                 len(document_topics) == len(doc2topic)
             ), f"There are duplicate document-topic assignments in the database for aspect {aspect.id}!"
 
-        # 1. Topic creation
-        # - Embedd the new topic
-        self._log_status_step(0)
-        self._log_status_msg(
-            f"Computing embeddings for the new topic with model {aspect.embedding_model}..."
-        )
-        embedding_output = self.rms.promptembedder_embedding(
-            input=PromptEmbedderInput(
-                model_name=aspect.embedding_model,
-                prompt=aspect.doc_embedding_prompt,
-                data=[f"{params.create_dto.name}\n{params.create_dto.description}"],
-            ),
-        )
-        assert (
-            len(embedding_output.embeddings) == 1
-        ), "Expected exactly one embedding output for the new topic."
-
-        # - Create the new topic in the database
-        new_topic = crud_topic.create(
-            db=db,
-            create_dto=TopicCreateIntern(
-                parent_topic_id=params.create_dto.parent_topic_id,
-                aspect_id=params.create_dto.aspect_id,
-                level=params.create_dto.level,
-                name=params.create_dto.name,
-                description=params.create_dto.description,
-                is_outlier=False,
-            ),
-        )
-
-        # 2. Document assignment
-        # - For all source documents in the aspect, decide whether to assign the new topic or not. Track the changes/affected topics!
-        # - Do not reassign documents that are accepted
-        self._log_status_step(1)
-        update_dtos: List[DocumentTopicUpdate] = []
-        update_ids: List[tuple[int, int]] = []
-        modified_topics: Set[int] = set()
-        results = crud_aspect_embedding.search_near_vector_in_aspect(
-            project_id=aspect.project_id,
-            aspect_id=aspect.id,
-            vector=embedding_output.embeddings[0],
-            k=len(document_topics),
-        )
-        for result in results:
-            doc_topic = doc2topic.get(result.id.sdoc_id, None)
+            # 1. Topic creation
+            # - Embedd the new topic
+            self._log_status_step(0)
+            self._log_status_msg(
+                f"Computing embeddings for the new topic with model {aspect.embedding_model}..."
+            )
+            embedding_output = self.rms.promptembedder_embedding(
+                input=PromptEmbedderInput(
+                    model_name=aspect.embedding_model,
+                    prompt=aspect.doc_embedding_prompt,
+                    data=[f"{params.create_dto.name}\n{params.create_dto.description}"],
+                ),
+            )
             assert (
-                doc_topic is not None
-            ), f"Document {result.id.sdoc_id} does not have a topic assignment in aspect {aspect.id}."
-            if doc_topic.is_accepted:
-                # skip documents that are already accepted
-                continue
+                len(embedding_output.embeddings) == 1
+            ), "Expected exactly one embedding output for the new topic."
 
-            # assign the new topic if the distance is smaller than the current topic's distance
-            if result.score < doc_topic.distance:
-                update_ids.append((doc_topic.sdoc_id, doc_topic.topic_id))
-                update_dtos.append(
-                    DocumentTopicUpdate(
-                        topic_id=new_topic.id,
-                        distance=result.score,
-                    )
-                )
-                # track changes
-                modified_topics.add(doc_topic.topic_id)
-                modified_topics.add(new_topic.id)
-
-        # - Store the new topic assignments in the database
-        if len(update_dtos) > 0:
-            crud_document_topic.update_multi(
-                db=db, ids=update_ids, update_dtos=update_dtos
-            )
-            self._log_status_msg(
-                f"Updated {len(update_dtos)} document-topic assignments with the new topic {new_topic.id}."
-            )
-
-        # 3. Topic Extraction
-        # - Extract the topics for all affected ones (computing top words, top docs, embedding, etc)
-        self._log_status_step(2)
-        if len(modified_topics) > 0:
-            self._log_status_msg(
-                f"Extracting topics for {len(modified_topics)} modified topics: {modified_topics}."
-            )
-            self._extract_topics(
+            # - Create the new topic in the database
+            new_topic = crud_topic.create(
                 db=db,
-                aspect_id=aspect.id,
-                topic_ids=list(modified_topics),
+                create_dto=TopicCreateIntern(
+                    parent_topic_id=params.create_dto.parent_topic_id,
+                    aspect_id=params.create_dto.aspect_id,
+                    level=params.create_dto.level,
+                    name=params.create_dto.name,
+                    description=params.create_dto.description,
+                    is_outlier=False,
+                ),
             )
+
+            # 2. Document assignment
+            # - For all source documents in the aspect, decide whether to assign the new topic or not. Track the changes/affected topics!
+            # - Do not reassign documents that are accepted
+            self._log_status_step(1)
+            update_dtos: List[DocumentTopicUpdate] = []
+            update_ids: List[tuple[int, int]] = []
+            modified_topics: Set[int] = set()
+            results = crud_aspect_embedding.search_near_vector_in_aspect(
+                project_id=aspect.project_id,
+                aspect_id=aspect.id,
+                vector=embedding_output.embeddings[0],
+                k=len(document_topics),
+            )
+            for result in results:
+                doc_topic = doc2topic.get(result.id.sdoc_id, None)
+                assert (
+                    doc_topic is not None
+                ), f"Document {result.id.sdoc_id} does not have a topic assignment in aspect {aspect.id}."
+                if doc_topic.is_accepted:
+                    # skip documents that are already accepted
+                    continue
+
+                # assign the new topic if the distance is smaller than the current topic's distance
+                if result.score < doc_topic.distance:
+                    update_ids.append((doc_topic.sdoc_id, doc_topic.topic_id))
+                    update_dtos.append(
+                        DocumentTopicUpdate(
+                            topic_id=new_topic.id,
+                            distance=result.score,
+                        )
+                    )
+                    # track changes
+                    modified_topics.add(doc_topic.topic_id)
+                    modified_topics.add(new_topic.id)
+
+            # - Store the new topic assignments in the database
+            if len(update_dtos) > 0:
+                crud_document_topic.update_multi(
+                    db=db, ids=update_ids, update_dtos=update_dtos
+                )
+                self._log_status_msg(
+                    f"Updated {len(update_dtos)} document-topic assignments with the new topic {new_topic.id}."
+                )
+
+            # 3. Topic Extraction
+            # - Extract the topics for all affected ones (computing top words, top docs, embedding, etc)
+            self._log_status_step(2)
+            if len(modified_topics) > 0:
+                self._log_status_msg(
+                    f"Extracting topics for {len(modified_topics)} modified topics: {modified_topics}."
+                )
+                self._extract_topics(
+                    db=db,
+                    aspect_id=aspect.id,
+                    topic_ids=list(modified_topics),
+                )
 
     def create_topic_with_sdocs(
         self, aspect_id: int, params: CreateTopicWithSdocsParams
@@ -772,52 +768,52 @@ class TMService:
                 len(document_topics) == len(doc2topic)
             ), f"There are duplicate document-topic assignments in the database for aspect {aspect_id}!"
 
-        # 1. Topic creation
-        # - Create the new topic in the database
-        self._log_status_step(0)
-        self._log_status_msg("Creating new empty topic...")
-        new_topic = crud_topic.create(
-            db=db,
-            create_dto=TopicCreateIntern(
-                name="New Topic",
-                aspect_id=aspect_id,
-                level=0,
-                is_outlier=False,
-            ),
-        )
-
-        # 2. Document assignment
-        # - Assign the new topic to the given source documents
-        self._log_status_step(1)
-        self._log_status_msg(
-            f"Assigning new topic {new_topic.id} to {len(params.sdoc_ids)} source documents..."
-        )
-        # track the changes/affected topics!
-        modified_topics: Set[int] = set(
-            [doc2topic[sdoc_id].topic_id for sdoc_id in params.sdoc_ids]
-        )
-        modified_topics.add(new_topic.id)
-        # assign the new topic to the source documents
-        crud_document_topic.set_labels2(
-            db=db,
-            aspect_id=aspect_id,
-            topic_id=new_topic.id,
-            sdoc_ids=params.sdoc_ids,
-            is_accepted=True,
-        )
-
-        # 3. Topic Extraction
-        # - Extract the topics for all affected ones (computing top words, top docs, embedding, etc)
-        self._log_status_step(2)
-        if len(modified_topics) > 0:
-            self._log_status_msg(
-                f"Extracting topics for {len(modified_topics)} modified topics: {modified_topics}."
+            # 1. Topic creation
+            # - Create the new topic in the database
+            self._log_status_step(0)
+            self._log_status_msg("Creating new empty topic...")
+            new_topic = crud_topic.create(
+                db=db,
+                create_dto=TopicCreateIntern(
+                    name="New Topic",
+                    aspect_id=aspect_id,
+                    level=0,
+                    is_outlier=False,
+                ),
             )
-            self._extract_topics(
+
+            # 2. Document assignment
+            # - Assign the new topic to the given source documents
+            self._log_status_step(1)
+            self._log_status_msg(
+                f"Assigning new topic {new_topic.id} to {len(params.sdoc_ids)} source documents..."
+            )
+            # track the changes/affected topics!
+            modified_topics: Set[int] = set(
+                [doc2topic[sdoc_id].topic_id for sdoc_id in params.sdoc_ids]
+            )
+            modified_topics.add(new_topic.id)
+            # assign the new topic to the source documents
+            crud_document_topic.set_labels2(
                 db=db,
                 aspect_id=aspect_id,
-                topic_ids=list(modified_topics),
+                topic_id=new_topic.id,
+                sdoc_ids=params.sdoc_ids,
+                is_accepted=True,
             )
+
+            # 3. Topic Extraction
+            # - Extract the topics for all affected ones (computing top words, top docs, embedding, etc)
+            self._log_status_step(2)
+            if len(modified_topics) > 0:
+                self._log_status_msg(
+                    f"Extracting topics for {len(modified_topics)} modified topics: {modified_topics}."
+                )
+                self._extract_topics(
+                    db=db,
+                    aspect_id=aspect_id,
+                    topic_ids=list(modified_topics),
+                )
 
     def remove_topic(self, aspect_id: int, params: RemoveTopicParams):
         with self.sqls.db_session() as db:
@@ -829,14 +825,17 @@ class TMService:
             aspect = topic.aspect
 
             # - Read the document aspect embeddings of all affected documents
-            document_aspects = crud_document_aspect.read_by_aspect_and_topic_id(
+            doc_aspects = crud_document_aspect.read_by_aspect_and_topic_id(
                 db=db, aspect_id=topic.aspect_id, topic_id=topic.id
             )
-            aspect_embedding_uuids = [da.embedding_uuid for da in document_aspects]
+            embedding_ids = [
+                AspectObjectIdentifier(aspect_id=da.aspect_id, sdoc_id=da.sdoc_id)
+                for da in doc_aspects
+            ]
             document_embeddings = np.array(
-                crud_aspect_embedding.get_embeddings_by_uuids(
+                crud_aspect_embedding.get_embeddings(
                     project_id=aspect.project_id,
-                    uuids=aspect_embedding_uuids,
+                    ids=embedding_ids,
                 )
             )
 
@@ -858,7 +857,7 @@ class TMService:
             )
 
             assert (
-                len(aspect_embedding_uuids) == len(document_topics)
+                len(embedding_ids) == len(document_topics)
             ), "The number of document aspect embeddings does not match the number of document topics."
 
             # 1. Document Assignment
@@ -871,7 +870,7 @@ class TMService:
             modified_topics: Set[int] = set()
             sdoc_id2new_topic_id: Dict[int, int] = {}
             sdoc_id2new_topic_distance: Dict[int, float] = {}
-            for da, similarity in zip(document_aspects, similarities):
+            for da, similarity in zip(doc_aspects, similarities):
                 most_similar_topic_index = np.argmax(similarity)
                 most_similar_topic_id = topic_ids[most_similar_topic_index]
 
@@ -905,18 +904,25 @@ class TMService:
             # 2. Topic Removal: Remove the topic from the database
             self._log_status_step(1)
             crud_topic.remove(db=db, id=params.topic_id)
+            crud_topic_embedding.remove_embedding(
+                project_id=aspect.project_id,
+                id=TopicObjectIdentifier(
+                    aspect_id=aspect.id,
+                    topic_id=params.topic_id,
+                ),
+            )
 
-        # 3. Topic Extraction: Extract the topics for all affected ones (computing top words, top docs, embedding, etc)
-        self._log_status_step(2)
-        if len(modified_topics) > 0:
-            self._log_status_msg(
-                f"Extracting topics for {len(modified_topics)} modified topics: {modified_topics}."
-            )
-            self._extract_topics(
-                db=db,
-                aspect_id=aspect.id,
-                topic_ids=list(modified_topics),
-            )
+            # 3. Topic Extraction: Extract the topics for all affected ones (computing top words, top docs, embedding, etc)
+            self._log_status_step(2)
+            if len(modified_topics) > 0:
+                self._log_status_msg(
+                    f"Extracting topics for {len(modified_topics)} modified topics: {modified_topics}."
+                )
+                self._extract_topics(
+                    db=db,
+                    aspect_id=aspect.id,
+                    topic_ids=list(modified_topics),
+                )
 
     def merge_topics(self, aspect_id: int, params: MergeTopicsParams):
         with self.sqls.db_session() as db:
@@ -939,17 +945,24 @@ class TMService:
             # 2. Delete the merged topic from the database
             self._log_status_step(1)
             crud_topic.remove(db=db, id=params.topic_to_merge)
+            crud_topic_embedding.remove_embedding(
+                project_id=aspect.project_id,
+                id=TopicObjectIdentifier(
+                    aspect_id=aspect.id,
+                    topic_id=params.topic_to_merge,
+                ),
+            )
             self._log_status_msg(
                 f"Merged topics {params.topic_to_keep} and {params.topic_to_merge}."
             )
 
-        # 3. Extract the topics for the remaining topic (computing top words, top docs, embedding, etc)
-        self._log_status_step(2)
-        self._extract_topics(
-            db=db,
-            aspect_id=aspect.id,
-            topic_ids=[params.topic_to_keep],
-        )
+            # 3. Extract the topics for the remaining topic (computing top words, top docs, embedding, etc)
+            self._log_status_step(2)
+            self._extract_topics(
+                db=db,
+                aspect_id=aspect.id,
+                topic_ids=[params.topic_to_keep],
+            )
 
     def split_topic(self, aspect_id: int, params: SplitTopicParams):
         with self.sqls.db_session() as db:
@@ -972,6 +985,13 @@ class TMService:
             # 1. Remove the topic from the database
             self._log_status_step(0)
             crud_topic.remove(db=db, id=params.topic_id)
+            crud_topic_embedding.remove_embedding(
+                project_id=aspect.project_id,
+                id=TopicObjectIdentifier(
+                    aspect_id=aspect.id,
+                    topic_id=params.topic_id,
+                ),
+            )
             self._log_status_msg(f"Removed topic {params.topic_id} from the database.")
 
             # 2. Cluster the documents, creating new topics and assigning them to the documents
@@ -1009,38 +1029,38 @@ class TMService:
                 dt.sdoc_id: dt for dt in document_topics
             }
 
-        # 1. Document assignment
-        # - Assign the new topic to the given source documents
-        self._log_status_step(0)
-        self._log_status_msg(
-            f"Assigning the topic '{topic.name}' to {len(params.sdoc_ids)} documents..."
-        )
-        # track the changes/affected topics!
-        modified_topics: Set[int] = set(
-            [doc2topic[sdoc_id].topic_id for sdoc_id in params.sdoc_ids]
-        )
-        modified_topics.add(params.topic_id)
-        # assign the topic to the source documents
-        crud_document_topic.set_labels2(
-            db=db,
-            aspect_id=aspect_id,
-            topic_id=topic.id,
-            sdoc_ids=params.sdoc_ids,
-            is_accepted=True,
-        )
-
-        # 3. Topic Extraction
-        # - Extract the topics for all affected ones (computing top words, top docs, embedding, etc)
-        self._log_status_step(1)
-        if len(modified_topics) > 0:
+            # 1. Document assignment
+            # - Assign the new topic to the given source documents
+            self._log_status_step(0)
             self._log_status_msg(
-                f"Extracting topics for {len(modified_topics)} modified topics: {modified_topics}."
+                f"Assigning the topic '{topic.name}' to {len(params.sdoc_ids)} documents..."
             )
-            self._extract_topics(
+            # track the changes/affected topics!
+            modified_topics: Set[int] = set(
+                [doc2topic[sdoc_id].topic_id for sdoc_id in params.sdoc_ids]
+            )
+            modified_topics.add(params.topic_id)
+            # assign the topic to the source documents
+            crud_document_topic.set_labels2(
                 db=db,
                 aspect_id=aspect_id,
-                topic_ids=list(modified_topics),
+                topic_id=topic.id,
+                sdoc_ids=params.sdoc_ids,
+                is_accepted=True,
             )
+
+            # 2. Topic Extraction
+            # - Extract the topics for all affected ones (computing top words, top docs, embedding, etc)
+            self._log_status_step(1)
+            if len(modified_topics) > 0:
+                self._log_status_msg(
+                    f"Extracting topics for {len(modified_topics)} modified topics: {modified_topics}."
+                )
+                self._extract_topics(
+                    db=db,
+                    aspect_id=aspect_id,
+                    topic_ids=list(modified_topics),
+                )
 
     def refine_topic_model(self, aspect_id: int, params: RefineTopicModelParams):
         pass
