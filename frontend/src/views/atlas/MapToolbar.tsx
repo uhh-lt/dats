@@ -1,6 +1,6 @@
 import SearchIcon from "@mui/icons-material/Search";
 import { Box, InputAdornment, Stack, TextField, Typography } from "@mui/material";
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, memo, useEffect, useRef, useState } from "react";
 import ReduxFilterDialog from "../../components/FilterDialog/ReduxFilterDialog.tsx";
 import DATSToolbar from "../../components/MUI/DATSToolbar.tsx";
 import TagMenuButton from "../../components/Tag/TagMenu/TagMenuButton.tsx";
@@ -87,4 +87,4 @@ function MapToolbar({ aspectId }: MapToolbarProps) {
   );
 }
 
-export default MapToolbar;
+export default memo(MapToolbar);
