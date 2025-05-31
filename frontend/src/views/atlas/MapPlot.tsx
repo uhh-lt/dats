@@ -261,7 +261,7 @@ function MapPlot({ vis }: MapPlotProps) {
                 },
               };
             });
-            dispatch(AtlasActions.onSelectionChange([]));
+            dispatch(AtlasActions.onResetSelection());
             return;
           }
           dispatch(

@@ -6,6 +6,7 @@ import MapContent from "./MapContent.tsx";
 import MapDetailsSidePanel from "./MapDetailsSidePanel.tsx";
 import MapSettingsSidePanel from "./MapSettingsSidePanel.tsx";
 import { useInitAtlasFilterSlice } from "./useInitAtlasFilterSlice.ts";
+import TMJobProgressDialog from "./TMJobProgressDialog.tsx";
 
 function Map() {
   const urlParams = useParams() as { projectId: string; aspectId: string };
@@ -21,11 +22,14 @@ function Map() {
 
   // render
   return (
-    <SidebarContentSidebarLayout
-      leftSidebar={<MapSettingsSidePanel aspectId={aspectId} />}
-      content={<MapContent projectId={projectId} aspectId={aspectId} />}
-      rightSidebar={<MapDetailsSidePanel projectId={projectId} aspectId={aspectId} />}
-    />
+    <>
+      <SidebarContentSidebarLayout
+        leftSidebar={<MapSettingsSidePanel aspectId={aspectId} />}
+        content={<MapContent aspectId={aspectId} />}
+        rightSidebar={<MapDetailsSidePanel projectId={projectId} aspectId={aspectId} />}
+      />
+      <TMJobProgressDialog aspectId={aspectId} />
+    </>
   );
 }
 
