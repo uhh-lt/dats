@@ -49,7 +49,6 @@ class TMJobService(metaclass=SingletonMeta):
             "Document Clustering",
             "Topic Extraction",
         ],
-        TMJobType.ADD_MISSING_DOCS_TO_ASPECT: ["Add Missing Docs to Aspect"],
         TMJobType.CREATE_TOPIC_WITH_NAME: [
             "Topic Creation",
             "Document Assignment",
@@ -76,6 +75,7 @@ class TMJobService(metaclass=SingletonMeta):
             "Topic Extraction",
         ],
         TMJobType.REFINE_TOPIC_MODEL: ["Refine Topic Model"],
+        TMJobType.ADD_MISSING_DOCS_TO_ASPECT: ["Add Missing Docs to Aspect"],
         TMJobType.RESET_TOPIC_MODEL: ["Reset Topic Model"],
     }
 
