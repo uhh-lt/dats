@@ -1015,11 +1015,25 @@ class TMService:
         with self.sqls.db_session() as db:
             # 0. Read the topic to change to
             if params.topic_id == -1:
-                topic = crud_topic.read_outlier_topic(
-                    db=db, aspect_id=aspect_id, level=0
-                )
+                try:
+                    topic = crud_topic.read_outlier_topic(
+                        db=db, aspect_id=aspect_id, level=0
+                    )
+                except ValueError:
+                    # If the outlier topic does not exist, create it
+                    topic = crud_topic.create(
+                        db=db,
+                        create_dto=TopicCreateIntern(
+                            aspect_id=aspect_id,
+                            level=0,
+                            name="Outlier",
+                            is_outlier=True,
+                        ),
+                    )
+                topic_id = topic.id
             else:
                 topic = crud_topic.read(db=db, id=params.topic_id)
+                topic_id = topic.id
 
             # Read the current document <-> topic assignments
             document_topics = crud_document_topic.read_by_aspect(
@@ -1039,7 +1053,7 @@ class TMService:
             modified_topics: Set[int] = set(
                 [doc2topic[sdoc_id].topic_id for sdoc_id in params.sdoc_ids]
             )
-            modified_topics.add(params.topic_id)
+            modified_topics.add(topic_id)
             # assign the topic to the source documents
             crud_document_topic.set_labels2(
                 db=db,
