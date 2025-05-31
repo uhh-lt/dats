@@ -256,6 +256,16 @@ def visualize_documents(
     aspect = crud_aspect.read(db=db, id=aspect_id)
     document_aspects = aspect.document_aspects
 
+    # If a job is in progress, return early with empty visualization
+    if aspect.most_recent_job_id:
+        most_recent_job = tmjs.get_tm_job(aspect.most_recent_job_id)
+        if most_recent_job and most_recent_job.status != BackgroundJobStatus.FINISHED:
+            return TMVisualization(
+                aspect_id=aspect.id,
+                topics=[],
+                docs=[],
+            )
+
     # Color by
     topics = aspect.topics
     document_topics = crud_document_topic.read_by_aspect(db=db, aspect_id=aspect_id)
