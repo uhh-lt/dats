@@ -71,7 +71,7 @@ def start_tm_job(
 
     # No job running, so we can start a new one
     tm_job = prepare_and_start_tm_job_async(
-        project_id=aspect.project_id, tm_job_params=tm_job_params
+        project_id=aspect.project_id, aspect_id=aspect_id, tm_job_params=tm_job_params
     )
 
     # Update the aspect with the new job ID
@@ -121,7 +121,8 @@ def create_aspect(
     db_aspect = crud_aspect.create(db=db, create_dto=aspect)
     tm_job = prepare_and_start_tm_job_async(
         project_id=aspect.project_id,
-        tm_job_params=CreateAspectParams(aspect_id=db_aspect.id),
+        aspect_id=db_aspect.id,
+        tm_job_params=CreateAspectParams(),
     )
     db_aspect = crud_aspect.update(
         db=db,

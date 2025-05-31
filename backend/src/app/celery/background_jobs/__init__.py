@@ -135,6 +135,7 @@ def prepare_and_start_ml_job_async(
 
 def prepare_and_start_tm_job_async(
     project_id: int,
+    aspect_id: int,
     tm_job_params: TMJobParams,
 ) -> TMJobRead:
     from app.celery.background_jobs.tasks import start_tm_job
@@ -142,7 +143,9 @@ def prepare_and_start_tm_job_async(
     assert isinstance(start_tm_job, Task), "Not a Celery Task"
 
     tmjs: TMJobService = TMJobService()
-    tm_job = tmjs.prepare_tm_job(project_id=project_id, tm_params=tm_job_params)
+    tm_job = tmjs.prepare_tm_job(
+        project_id=project_id, aspect_id=aspect_id, tm_params=tm_job_params
+    )
     start_tm_job.apply_async(kwargs={"tm_job": tm_job})
     return tm_job
 

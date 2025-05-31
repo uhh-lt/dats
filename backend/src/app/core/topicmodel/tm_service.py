@@ -610,9 +610,9 @@ class TMService:
 
     def create_aspect(
         self,
+        aspect_id: int,
         params: CreateAspectParams,
     ):
-        aspect_id = params.aspect_id
         with self.sqls.db_session() as db:
             # 1. Modify the documents based on the prompt
             self._log_status_step(0)
@@ -649,14 +649,15 @@ class TMService:
 
     def add_missing_docs_to_aspect(
         self,
+        aspect_id: int,
         params: AddMissingDocsToAspectParams,
     ):
         pass
 
-    def create_topic_with_name(self, params: CreateTopicWithNameParams):
+    def create_topic_with_name(self, aspect_id: int, params: CreateTopicWithNameParams):
         with self.sqls.db_session() as db:
             # Read the aspect
-            aspect = crud_aspect.read(db=db, id=params.create_dto.aspect_id)
+            aspect = crud_aspect.read(db=db, id=aspect_id)
 
             # Read the current document <-> topic assignments
             document_topics = crud_document_topic.read_by_aspect(
@@ -756,18 +757,20 @@ class TMService:
                 topic_ids=list(modified_topics),
             )
 
-    def create_topic_with_sdocs(self, params: CreateTopicWithSdocsParams):
+    def create_topic_with_sdocs(
+        self, aspect_id: int, params: CreateTopicWithSdocsParams
+    ):
         with self.sqls.db_session() as db:
             # Read the current document <-> topic assignments
             document_topics = crud_document_topic.read_by_aspect(
-                db=db, aspect_id=params.aspect_id
+                db=db, aspect_id=aspect_id
             )
             doc2topic: Dict[int, DocumentTopicORM] = {
                 dt.sdoc_id: dt for dt in document_topics
             }
             assert (
                 len(document_topics) == len(doc2topic)
-            ), f"There are duplicate document-topic assignments in the database for aspect {params.aspect_id}!"
+            ), f"There are duplicate document-topic assignments in the database for aspect {aspect_id}!"
 
         # 1. Topic creation
         # - Create the new topic in the database
@@ -777,7 +780,7 @@ class TMService:
             db=db,
             create_dto=TopicCreateIntern(
                 name="New Topic",
-                aspect_id=params.aspect_id,
+                aspect_id=aspect_id,
                 level=0,
                 is_outlier=False,
             ),
@@ -797,7 +800,7 @@ class TMService:
         # assign the new topic to the source documents
         crud_document_topic.set_labels2(
             db=db,
-            aspect_id=params.aspect_id,
+            aspect_id=aspect_id,
             topic_id=new_topic.id,
             sdoc_ids=params.sdoc_ids,
             is_accepted=True,
@@ -812,11 +815,11 @@ class TMService:
             )
             self._extract_topics(
                 db=db,
-                aspect_id=params.aspect_id,
+                aspect_id=aspect_id,
                 topic_ids=list(modified_topics),
             )
 
-    def remove_topic(self, params: RemoveTopicParams):
+    def remove_topic(self, aspect_id: int, params: RemoveTopicParams):
         with self.sqls.db_session() as db:
             # 0. Read all relevant data
             # - Read the topic to remove
@@ -915,7 +918,7 @@ class TMService:
                 topic_ids=list(modified_topics),
             )
 
-    def merge_topics(self, params: MergeTopicsParams):
+    def merge_topics(self, aspect_id: int, params: MergeTopicsParams):
         with self.sqls.db_session() as db:
             # 0. Read the topics to merge
             topic1 = crud_topic.read(db=db, id=params.topic_to_keep)
@@ -948,7 +951,7 @@ class TMService:
             topic_ids=[params.topic_to_keep],
         )
 
-    def split_topic(self, params: SplitTopicParams):
+    def split_topic(self, aspect_id: int, params: SplitTopicParams):
         with self.sqls.db_session() as db:
             # 0. Read the topic to split
             topic = crud_topic.read(db=db, id=params.topic_id)
@@ -988,19 +991,19 @@ class TMService:
                 topic_ids=created_topic_ids,
             )
 
-    def change_topic(self, params: ChangeTopicParams):
+    def change_topic(self, aspect_id: int, params: ChangeTopicParams):
         with self.sqls.db_session() as db:
             # 0. Read the topic to change to
             if params.topic_id == -1:
                 topic = crud_topic.read_outlier_topic(
-                    db=db, aspect_id=params.aspect_id, level=0
+                    db=db, aspect_id=aspect_id, level=0
                 )
             else:
                 topic = crud_topic.read(db=db, id=params.topic_id)
 
             # Read the current document <-> topic assignments
             document_topics = crud_document_topic.read_by_aspect(
-                db=db, aspect_id=params.aspect_id
+                db=db, aspect_id=aspect_id
             )
             doc2topic: Dict[int, DocumentTopicORM] = {
                 dt.sdoc_id: dt for dt in document_topics
@@ -1020,7 +1023,7 @@ class TMService:
         # assign the topic to the source documents
         crud_document_topic.set_labels2(
             db=db,
-            aspect_id=params.aspect_id,
+            aspect_id=aspect_id,
             topic_id=topic.id,
             sdoc_ids=params.sdoc_ids,
             is_accepted=True,
@@ -1035,12 +1038,12 @@ class TMService:
             )
             self._extract_topics(
                 db=db,
-                aspect_id=params.aspect_id,
+                aspect_id=aspect_id,
                 topic_ids=list(modified_topics),
             )
 
-    def refine_topic_model(self, params: RefineTopicModelParams):
+    def refine_topic_model(self, aspect_id: int, params: RefineTopicModelParams):
         pass
 
-    def reset_topic_model(self, params: ResetTopicModelParams):
+    def reset_topic_model(self, aspect_id: int, params: ResetTopicModelParams):
         pass

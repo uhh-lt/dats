@@ -74,9 +74,12 @@ class TMJobService(metaclass=SingletonMeta):
         cls.redis: RedisService = RedisService()
         return super(TMJobService, cls).__new__(cls)
 
-    def prepare_tm_job(self, project_id: int, tm_params: TMJobParams) -> TMJobRead:
+    def prepare_tm_job(
+        self, project_id: int, aspect_id: int, tm_params: TMJobParams
+    ) -> TMJobRead:
         tmj_create = TMJobCreate(
             project_id=project_id,
+            aspect_id=aspect_id,
             step=0,
             steps=self.tm_job_steps.get(tm_params.tm_job_type, []),
             status_msg="Waiting...",
@@ -150,6 +153,7 @@ class TMJobService(metaclass=SingletonMeta):
                         CreateAspectParams,
                     ), "CreateAspectParams expected"
                     tms.create_aspect(
+                        aspect_id=tmj.aspect_id,
                         params=tmj.parameters,
                     )
                 case TMJobType.ADD_MISSING_DOCS_TO_ASPECT:
@@ -158,6 +162,7 @@ class TMJobService(metaclass=SingletonMeta):
                         AddMissingDocsToAspectParams,
                     ), "AddMissingDocsToAspectParams expected"
                     tms.add_missing_docs_to_aspect(
+                        aspect_id=tmj.aspect_id,
                         params=tmj.parameters,
                     )
                 case TMJobType.CREATE_TOPIC_WITH_NAME:
@@ -166,6 +171,7 @@ class TMJobService(metaclass=SingletonMeta):
                         CreateTopicWithNameParams,
                     ), "CreateTopicWithNameParams expected"
                     tms.create_topic_with_name(
+                        aspect_id=tmj.aspect_id,
                         params=tmj.parameters,
                     )
                 case TMJobType.CREATE_TOPIC_WITH_SDOCS:
@@ -174,6 +180,7 @@ class TMJobService(metaclass=SingletonMeta):
                         CreateTopicWithSdocsParams,
                     ), "CreateTopicWithSdocsParams expected"
                     tms.create_topic_with_sdocs(
+                        aspect_id=tmj.aspect_id,
                         params=tmj.parameters,
                     )
                 case TMJobType.REMOVE_TOPIC:
@@ -182,6 +189,7 @@ class TMJobService(metaclass=SingletonMeta):
                         RemoveTopicParams,
                     ), "RemoveTopicParams expected"
                     tms.remove_topic(
+                        aspect_id=tmj.aspect_id,
                         params=tmj.parameters,
                     )
                 case TMJobType.MERGE_TOPICS:
@@ -190,6 +198,7 @@ class TMJobService(metaclass=SingletonMeta):
                         MergeTopicsParams,
                     ), "MergeTopicsParams expected"
                     tms.merge_topics(
+                        aspect_id=tmj.aspect_id,
                         params=tmj.parameters,
                     )
                 case TMJobType.SPLIT_TOPIC:
@@ -198,6 +207,7 @@ class TMJobService(metaclass=SingletonMeta):
                         SplitTopicParams,
                     ), "SplitTopicParams expected"
                     tms.split_topic(
+                        aspect_id=tmj.aspect_id,
                         params=tmj.parameters,
                     )
                 case TMJobType.CHANGE_TOPIC:
@@ -206,6 +216,7 @@ class TMJobService(metaclass=SingletonMeta):
                         ChangeTopicParams,
                     ), "ChangeTopicParams expected"
                     tms.change_topic(
+                        aspect_id=tmj.aspect_id,
                         params=tmj.parameters,
                     )
                 case TMJobType.REFINE_TOPIC_MODEL:
@@ -214,6 +225,7 @@ class TMJobService(metaclass=SingletonMeta):
                         RefineTopicModelParams,
                     ), "RefineTopicModelParams expected"
                     tms.refine_topic_model(
+                        aspect_id=tmj.aspect_id,
                         params=tmj.parameters,
                     )
                 case TMJobType.RESET_TOPIC_MODEL:
@@ -222,6 +234,7 @@ class TMJobService(metaclass=SingletonMeta):
                         ResetTopicModelParams,
                     ), "ResetTopicModelParams expected"
                     tms.reset_topic_model(
+                        aspect_id=tmj.aspect_id,
                         params=tmj.parameters,
                     )
                 case _:

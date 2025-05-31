@@ -27,15 +27,11 @@ class CreateAspectParams(BaseModel):
     tm_job_type: Literal[TMJobType.CREATE_ASPECT] = Field(
         default=TMJobType.CREATE_ASPECT, description="Type of the TMJob"
     )
-    aspect_id: int = Field(description="ID of the created aspect.")
 
 
 class AddMissingDocsToAspectParams(BaseModel):
     tm_job_type: Literal[TMJobType.ADD_MISSING_DOCS_TO_ASPECT] = Field(
         default=TMJobType.ADD_MISSING_DOCS_TO_ASPECT, description="Type of the TMJob"
-    )
-    aspect_id: int = Field(
-        description="ID of the aspect to which documents will be added."
     )
 
 
@@ -49,9 +45,6 @@ class CreateTopicWithNameParams(BaseModel):
 class CreateTopicWithSdocsParams(BaseModel):
     tm_job_type: Literal[TMJobType.CREATE_TOPIC_WITH_SDOCS] = Field(
         default=TMJobType.CREATE_TOPIC_WITH_SDOCS, description="Type of the TMJob"
-    )
-    aspect_id: int = Field(
-        description="ID of the aspect to which documents will be added."
     )
     sdoc_ids: list[int] = Field(
         description="List of source document IDs to include in the topic."
@@ -87,9 +80,6 @@ class ChangeTopicParams(BaseModel):
     tm_job_type: Literal[TMJobType.CHANGE_TOPIC] = Field(
         default=TMJobType.CHANGE_TOPIC, description="Type of the TMJob"
     )
-    aspect_id: int = Field(
-        description="ID of the aspect to which the documents belong."
-    )
     sdoc_ids: list[int] = Field(
         description="List of source document IDs to change the topic for."
     )
@@ -102,14 +92,12 @@ class RefineTopicModelParams(BaseModel):
     tm_job_type: Literal[TMJobType.REFINE_TOPIC_MODEL] = Field(
         default=TMJobType.REFINE_TOPIC_MODEL, description="Type of the TMJob"
     )
-    aspect_id: int = Field(description="ID of the aspect to refine.")
 
 
 class ResetTopicModelParams(BaseModel):
     tm_job_type: Literal[TMJobType.RESET_TOPIC_MODEL] = Field(
         default=TMJobType.RESET_TOPIC_MODEL, description="Type of the TMJob"
     )
-    aspect_id: int = Field(description="ID of the aspect to reset.")
 
 
 TMJobParamsNoCreate = Union[
@@ -147,6 +135,9 @@ class TMJobBase(BaseModel):
     )
     status_msg: str = Field(description="Status message of the TMJob")
     tm_job_type: TMJobType = Field(description="Type of the TMJob")
+    aspect_id: int = Field(
+        description="ID of the aspect associated with the TMJob. -1 if not applicable.",
+    )
     parameters: TMJobParams = Field(
         description="Parameters for the TMJob. The type depends on the TMJobType.",
         discriminator="tm_job_type",
@@ -178,6 +169,7 @@ class TMJobRead(BackgroundJobBaseRead, TMJobBase):
 # updated: datetime
 # status: BackgroundJobStatus
 #
+# aspect_id: int
 # step: int
 # steps: List[str]
 # status_msg: str
