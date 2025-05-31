@@ -16,12 +16,15 @@ import {
   Stack,
   Switch,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import * as d3 from "d3";
 import { useState } from "react";
 import { TMJobType } from "../../api/openapi/models/TMJobType.ts";
+import { TMVisualization } from "../../api/openapi/models/TMVisualization.ts";
 import TopicModellingHooks from "../../api/TopicModellingHooks.ts";
+import ConfirmationAPI from "../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
 import { AtlasActions } from "./atlasSlice.ts";
@@ -39,6 +42,10 @@ const colorSchemes: Record<string, string[]> = {
   set2: d3.schemeSet2 as string[],
   set3: d3.schemeSet3 as string[],
   tableau: d3.schemeTableau10 as string[],
+};
+
+const getAcceptedAssignmentsOfTopic = (topicId: number, vis: TMVisualization) => {
+  return vis.docs.filter((doc) => doc.topic_id === topicId).filter((doc) => doc.is_accepted).length;
 };
 
 interface ColorSettingsProps {
@@ -129,21 +136,34 @@ function ColorSettings({ aspectId }: ColorSettingsProps) {
   };
   const handleConfirmDeletion = () => {
     if (choosen === undefined) return;
-    startTMJob(
-      {
-        aspectId,
-        requestBody: {
-          tm_job_type: TMJobType.REMOVE_TOPIC,
-          topic_id: choosen,
+    const startJob = () => {
+      startTMJob(
+        {
+          aspectId,
+          requestBody: {
+            tm_job_type: TMJobType.REMOVE_TOPIC,
+            topic_id: choosen,
+          },
         },
-      },
-      {
-        onSuccess: () => {
-          setDeleteMode(false);
-          setChoosen(undefined);
+        {
+          onSuccess: () => {
+            setDeleteMode(false);
+            setChoosen(undefined);
+          },
         },
-      },
-    );
+      );
+    };
+    const numAccepted = getAcceptedAssignmentsOfTopic(choosen, vis.data!);
+    if (numAccepted === 0) {
+      startJob();
+    } else {
+      ConfirmationAPI.openConfirmationDialog({
+        text: `Are you sure you want to delete topic ${choosen}? This will also reset your ${numAccepted} reviewed document&harr;topic assignments.`,
+        onAccept: () => {
+          startJob();
+        },
+      });
+    }
   };
 
   // splitting
@@ -154,21 +174,34 @@ function ColorSettings({ aspectId }: ColorSettingsProps) {
   };
   const handleConfirmSplit = () => {
     if (choosen === undefined) return;
-    startTMJob(
-      {
-        aspectId,
-        requestBody: {
-          tm_job_type: TMJobType.SPLIT_TOPIC,
-          topic_id: choosen,
+    const startJob = () => {
+      startTMJob(
+        {
+          aspectId,
+          requestBody: {
+            tm_job_type: TMJobType.SPLIT_TOPIC,
+            topic_id: choosen,
+          },
         },
-      },
-      {
-        onSuccess: () => {
-          setSplitMode(false);
-          setChoosen(undefined);
+        {
+          onSuccess: () => {
+            setSplitMode(false);
+            setChoosen(undefined);
+          },
         },
-      },
-    );
+      );
+    };
+    const numAccepted = getAcceptedAssignmentsOfTopic(choosen, vis.data!);
+    if (numAccepted === 0) {
+      startJob();
+    } else {
+      ConfirmationAPI.openConfirmationDialog({
+        text: `Are you sure you want to split topic ${choosen}? This will also reset your ${numAccepted} reviewed document&harr;topic assignments.`,
+        onAccept: () => {
+          startJob();
+        },
+      });
+    }
   };
 
   // multi select with checkboxes
@@ -304,15 +337,57 @@ function ColorSettings({ aspectId }: ColorSettingsProps) {
           {!mergeMode && !deleteMode && !splitMode && (
             <>
               <TopicCreationDialog aspectId={aspectId} />
-              <Button onClick={handleToggleDeleteMode} disabled={isPending}>
-                Remove Topic
-              </Button>
-              <Button onClick={handleToggleSplitMode} disabled={isPending}>
-                Split Topic
-              </Button>
-              <Button onClick={handleToggleMergeMode} disabled={isPending}>
-                Merge Topics
-              </Button>
+              <Tooltip
+                enterDelay={500}
+                placement="bottom-start"
+                title={
+                  <>
+                    <Typography color="inherit">Topic Removal</Typography>
+                    This action <em>deletes</em> the topic. The documents are assigned to the closest topic. Your
+                    document&harr;topic assignments are reset!
+                  </>
+                }
+              >
+                <span>
+                  <Button onClick={handleToggleDeleteMode} disabled={isPending}>
+                    Remove Topic
+                  </Button>
+                </span>
+              </Tooltip>
+              <Tooltip
+                enterDelay={500}
+                placement="bottom-start"
+                title={
+                  <>
+                    <Typography color="inherit">Topic Splitting</Typography>
+                    This action analyzes and <em>splits documents into new topics</em>. It <u>deletes</u> the topic, but
+                    creates several new ones. Your document&harr;topic assignments are reset!
+                  </>
+                }
+              >
+                <span>
+                  <Button onClick={handleToggleSplitMode} disabled={isPending}>
+                    Split Topic
+                  </Button>
+                </span>
+              </Tooltip>
+              <Tooltip
+                enterDelay={500}
+                placement="bottom-start"
+                title={
+                  <>
+                    <Typography color="inherit">Topic Merging</Typography>
+                    This action <em>merges two topics</em>. One topic is kept, one is <u>deleted</u>. All documents are
+                    assigned to the kept topic.
+                  </>
+                }
+              >
+                <span>
+                  <Button onClick={handleToggleMergeMode} disabled={isPending}>
+                    Merge Topics
+                  </Button>
+                </span>
+              </Tooltip>
             </>
           )}
           {mergeMode && (

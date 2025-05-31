@@ -1,6 +1,6 @@
 import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
-import { Button, Dialog, DialogActions, DialogContent, Stack, Typography } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, Stack, Tooltip, Typography } from "@mui/material";
 import { useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { TMJobType } from "../../api/openapi/models/TMJobType.ts";
@@ -73,9 +73,23 @@ function TopicCreationDialog({ aspectId }: TopicCreationDialogProps) {
 
   return (
     <>
-      <Button onClick={handleOpen} disabled={isPending}>
-        Add Topic
-      </Button>
+      <Tooltip
+        enterDelay={500}
+        placement="bottom-start"
+        title={
+          <>
+            <Typography color="inherit">Topic Creation</Typography>
+            This action allows you to <em>create</em> a new topic. Based on your provided title and description, similar
+            documents are assigned to the new topic.
+          </>
+        }
+      >
+        <span>
+          <Button onClick={handleOpen} disabled={isPending}>
+            Add Topic
+          </Button>
+        </span>
+      </Tooltip>
       <Dialog
         open={open}
         onClose={handleClose}
