@@ -140,9 +140,9 @@ function TopicMenuContent({
 
   // actions
   const { mutate: startTMJobMutation, isPending } = TopicModellingHooks.useStartTMJob();
-  const handleApplyTags = useCallback(() => {
+  const handleSetTopic = useCallback(() => {
     // find entry where CheckboxState is Checked
-    const checkedTopics = Object.entries(checked).filter(([, state]) => state === CheckboxState.CHECKED);
+    const checkedTopics = Array.from(checked).filter(([, state]) => state === CheckboxState.CHECKED);
     if (checkedTopics.length > 1) {
       console.error("Expected at most one topic to be checked, but found:", checkedTopics.length);
       return;
@@ -152,7 +152,7 @@ function TopicMenuContent({
         aspectId: aspectId,
         requestBody: {
           tm_job_type: TMJobType.CHANGE_TOPIC,
-          topic_id: checkedTopics.length === 1 ? parseInt(checkedTopics[0][0]) : -1, // -1 means "no topic / outlier",
+          topic_id: checkedTopics.length === 1 ? checkedTopics[0][0] : -1, // -1 means "no topic / outlier",
           sdoc_ids: sdocIds,
         },
       },
@@ -185,7 +185,7 @@ function TopicMenuContent({
     if (hasChanged) {
       return (
         <ListItem disablePadding dense key={"apply"}>
-          <ListItemButton onClick={handleApplyTags} dense disabled={isPending}>
+          <ListItemButton onClick={handleSetTopic} dense disabled={isPending}>
             <Typography align={"center"} sx={{ width: "100%" }}>
               {hasNoChecked ? "Mark as outlier (removing docs)" : "Set to new topic"}
             </Typography>
@@ -205,7 +205,7 @@ function TopicMenuContent({
       );
     }
     return null;
-  }, [filteredTopicIndexes, handleApplyTags, handleCreateTopic, hasChanged, hasNoChecked, isPending, search, topics]);
+  }, [filteredTopicIndexes, handleSetTopic, handleCreateTopic, hasChanged, hasNoChecked, isPending, search, topics]);
 
   return (
     <Popover
