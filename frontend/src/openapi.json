@@ -5849,15 +5849,9 @@
             "title": "Tm Job Type",
             "description": "Type of the TMJob",
             "default": "add_missing_docs_to_aspect"
-          },
-          "aspect_id": {
-            "type": "integer",
-            "title": "Aspect Id",
-            "description": "ID of the aspect to which documents will be added."
           }
         },
         "type": "object",
-        "required": ["aspect_id"],
         "title": "AddMissingDocsToAspectParams"
       },
       "AnnoscalingConfirmSuggest": {
@@ -6829,11 +6823,6 @@
             "description": "Type of the TMJob",
             "default": "change_topic"
           },
-          "aspect_id": {
-            "type": "integer",
-            "title": "Aspect Id",
-            "description": "ID of the aspect to which the documents belong."
-          },
           "sdoc_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -6847,7 +6836,7 @@
           }
         },
         "type": "object",
-        "required": ["aspect_id", "sdoc_ids", "topic_id"],
+        "required": ["sdoc_ids", "topic_id"],
         "title": "ChangeTopicParams"
       },
       "CodeCreate": {
@@ -7184,11 +7173,9 @@
             "title": "Tm Job Type",
             "description": "Type of the TMJob",
             "default": "create_aspect"
-          },
-          "aspect_id": { "type": "integer", "title": "Aspect Id", "description": "ID of the created aspect." }
+          }
         },
         "type": "object",
-        "required": ["aspect_id"],
         "title": "CreateAspectParams"
       },
       "CreateTopicWithNameParams": {
@@ -7215,11 +7202,6 @@
             "description": "Type of the TMJob",
             "default": "create_topic_with_sdocs"
           },
-          "aspect_id": {
-            "type": "integer",
-            "title": "Aspect Id",
-            "description": "ID of the aspect to which documents will be added."
-          },
           "sdoc_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -7228,7 +7210,7 @@
           }
         },
         "type": "object",
-        "required": ["aspect_id", "sdoc_ids"],
+        "required": ["sdoc_ids"],
         "title": "CreateTopicWithSdocsParams"
       },
       "DateGroupBy": { "type": "string", "enum": ["YEAR", "MONTH", "DAY"], "title": "DateGroupBy" },
@@ -9226,11 +9208,9 @@
             "title": "Tm Job Type",
             "description": "Type of the TMJob",
             "default": "refine_topic_model"
-          },
-          "aspect_id": { "type": "integer", "title": "Aspect Id", "description": "ID of the aspect to refine." }
+          }
         },
         "type": "object",
-        "required": ["aspect_id"],
         "title": "RefineTopicModelParams"
       },
       "RemoveTopicParams": {
@@ -9256,11 +9236,9 @@
             "title": "Tm Job Type",
             "description": "Type of the TMJob",
             "default": "reset_topic_model"
-          },
-          "aspect_id": { "type": "integer", "title": "Aspect Id", "description": "ID of the aspect to reset." }
+          }
         },
         "type": "object",
-        "required": ["aspect_id"],
         "title": "ResetTopicModelParams"
       },
       "SDocStatus": { "type": "string", "enum": ["unfinished_or_erroneous", "finished"], "title": "SDocStatus" },
@@ -10507,10 +10485,15 @@
             "type": "boolean",
             "title": "In Searchresult",
             "description": "Indicates whether the document is part of the search result"
+          },
+          "is_outlier": {
+            "type": "boolean",
+            "title": "Is Outlier",
+            "description": "Indicates whether the document is an outlier"
           }
         },
         "type": "object",
-        "required": ["sdoc_id", "topic_id", "x", "y", "is_accepted", "in_searchresult"],
+        "required": ["sdoc_id", "topic_id", "x", "y", "is_accepted", "in_searchresult", "is_outlier"],
         "title": "TMDoc"
       },
       "TMJobRead": {
@@ -10528,6 +10511,11 @@
           },
           "status_msg": { "type": "string", "title": "Status Msg", "description": "Status message of the TMJob" },
           "tm_job_type": { "$ref": "#/components/schemas/TMJobType", "description": "Type of the TMJob" },
+          "aspect_id": {
+            "type": "integer",
+            "title": "Aspect Id",
+            "description": "ID of the aspect associated with the TMJob. -1 if not applicable."
+          },
           "parameters": {
             "oneOf": [
               { "$ref": "#/components/schemas/CreateAspectParams" },
@@ -10589,6 +10577,7 @@
           "steps",
           "status_msg",
           "tm_job_type",
+          "aspect_id",
           "parameters",
           "id",
           "project_id",
@@ -10963,6 +10952,7 @@
             "title": "Parent Topic Id",
             "description": "ID of the parent topic, if any"
           },
+          "is_outlier": { "type": "boolean", "title": "Is Outlier", "description": "Whether the topic is an outlier" },
           "name": { "type": "string", "title": "Name", "description": "Name of the topic" },
           "description": { "type": "string", "title": "Description", "description": "Description of the topic" },
           "level": { "type": "integer", "title": "Level", "description": "Hierarchical level of the topic" },
@@ -10989,6 +10979,7 @@
           "id",
           "aspect_id",
           "parent_topic_id",
+          "is_outlier",
           "name",
           "description",
           "level",

@@ -8,10 +8,6 @@ export type ChangeTopicParams = {
    */
   tm_job_type?: string;
   /**
-   * ID of the aspect to which the documents belong.
-   */
-  aspect_id: number;
-  /**
    * List of source document IDs to change the topic for.
    */
   sdoc_ids: Array<number>;

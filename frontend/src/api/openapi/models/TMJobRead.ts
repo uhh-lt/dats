@@ -32,6 +32,10 @@ export type TMJobRead = {
    */
   tm_job_type: TMJobType;
   /**
+   * ID of the aspect associated with the TMJob. -1 if not applicable.
+   */
+  aspect_id: number;
+  /**
    * Parameters for the TMJob. The type depends on the TMJobType.
    */
   parameters:

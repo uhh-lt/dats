@@ -8,10 +8,6 @@ export type CreateTopicWithSdocsParams = {
    */
   tm_job_type?: string;
   /**
-   * ID of the aspect to which documents will be added.
-   */
-  aspect_id: number;
-  /**
    * List of source document IDs to include in the topic.
    */
   sdoc_ids: Array<number>;

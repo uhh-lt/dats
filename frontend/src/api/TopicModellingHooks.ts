@@ -98,7 +98,6 @@ const useStartTMJob = () =>
   useMutation({
     mutationFn: TopicModelService.startTmJob,
     onSuccess: (job) => {
-      // force refetch of all ml jobs when adding a new one
       queryClient.invalidateQueries({ queryKey: [QueryKey.TM_JOB, job.id] });
     },
     meta: {
@@ -127,9 +126,7 @@ const usePollTMJob = (tmJobId: string | null | undefined, initialData: TMJobRead
           query.state.data.status === BackgroundJobStatus.FINISHED &&
           localDate.getTime() - localUpdatedDate.getTime() < 3 * 60 * 1000
         ) {
-          console.log("TODO: Invalidate something!!!");
-          // const projectId = query.state.data.project_id;
-          // queryClient.invalidateQueries({ queryKey: [QueryKey.TM, projectId] });
+          queryClient.invalidateQueries({ queryKey: [QueryKey.DOCUMENT_VISUALIZATION, query.state.data.aspect_id] });
         }
       }
 

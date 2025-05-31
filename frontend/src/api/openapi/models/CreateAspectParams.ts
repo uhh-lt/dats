@@ -7,8 +7,4 @@ export type CreateAspectParams = {
    * Type of the TMJob
    */
   tm_job_type?: string;
-  /**
-   * ID of the created aspect.
-   */
-  aspect_id: number;
 };

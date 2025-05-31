@@ -7,8 +7,4 @@ export type ResetTopicModelParams = {
    * Type of the TMJob
    */
   tm_job_type?: string;
-  /**
-   * ID of the aspect to reset.
-   */
-  aspect_id: number;
 };
