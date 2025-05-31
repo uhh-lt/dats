@@ -3,11 +3,11 @@ from app.core.data.dto.topic import TopicCreateIntern, TopicUpdateIntern
 from app.core.data.orm.document_topic import DocumentTopicORM
 from app.core.data.orm.topic import TopicORM
 
-OUTLIER_TOPIC_NAME = "Outlier"
-
 
 class CRUDTopic(CRUDBase[TopicORM, TopicCreateIntern, TopicUpdateIntern]):
-    def read_outlier_topic(self, db, *, aspect_id: int, level: int) -> TopicORM:
+    def read_or_create_outlier_topic(
+        self, db, *, aspect_id: int, level: int
+    ) -> TopicORM:
         db_obj = (
             db.query(self.model)
             .filter(
@@ -18,8 +18,14 @@ class CRUDTopic(CRUDBase[TopicORM, TopicCreateIntern, TopicUpdateIntern]):
             .first()
         )
         if db_obj is None:
-            raise ValueError(
-                f"Outlier topic with name '{OUTLIER_TOPIC_NAME}' not found for aspect_id={aspect_id} and level={level}."
+            db_obj = crud_topic.create(
+                db=db,
+                create_dto=TopicCreateIntern(
+                    aspect_id=aspect_id,
+                    level=level,
+                    name="Outlier",
+                    is_outlier=True,
+                ),
             )
         return db_obj
 

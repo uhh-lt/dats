@@ -1,4 +1,6 @@
 import re
+from collections import Counter, defaultdict
+from datetime import datetime
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
 import joblib
@@ -9,6 +11,7 @@ from app.core.data.crud.document_aspect import crud_document_aspect
 from app.core.data.crud.document_topic import crud_document_topic
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.topic import crud_topic
+from app.core.data.dto.aspect import AspectUpdateIntern
 from app.core.data.dto.document_aspect import DocumentAspectCreate, DocumentAspectUpdate
 from app.core.data.dto.document_topic import DocumentTopicCreate, DocumentTopicUpdate
 from app.core.data.dto.topic import (
@@ -133,6 +136,8 @@ class TMService:
         embedding_model: str,
         embedding_prompt: str,
         doc_aspects: List[DocumentAspectORM],
+        train_docs: Optional[List[str]] = None,
+        train_labels: Optional[List[str]] = None,
     ) -> Tuple[List[List[float]], List[Tuple[float, float]]]:
         assert len(doc_aspects) > 0, "No document aspects provided."
 
@@ -145,6 +150,8 @@ class TMService:
                 model_name=embedding_model,
                 prompt=embedding_prompt,
                 data=[da.content for da in doc_aspects],
+                train_docs=train_docs,
+                train_labels=train_labels,
             ),
         )
         assert len(embedding_output.embeddings) == len(
@@ -191,11 +198,112 @@ class TMService:
 
         return embedding_output.embeddings, coords
 
+    # def __build_training_data(
+    #     self,
+    #     db: Session,
+    #     aspect_id: int,
+    # ) -> Tuple[List[str], List[str], List[int]]:
+    #     # Read all topics
+    #     all_topics = crud_topic.read_by_aspect_and_level(
+    #         db=db, aspect_id=aspect_id, level=0
+    #     )
+
+    #     # Read the current document <-> topic assignments
+    #     document_topics = crud_document_topic.read_by_aspect(db=db, aspect_id=aspect_id)
+
+    #     # Build training_data, consisting of all accepted documents
+    #     train_labels: List[str] = []
+    #     train_doc_ids: List[int] = []
+    #     topic2accepted_docs: Dict[int, List[int]] = {t.id: [] for t in all_topics}
+    #     for dt in document_topics:
+    #         if dt.is_accepted:
+    #             topic2accepted_docs[dt.topic_id].append(dt.sdoc_id)
+    #             train_labels.append(f"{dt.topic_id}")
+    #             train_doc_ids.append(dt.sdoc_id)
+
+    #     # Ensure that every topic has at least one accepted document by using a topic's top documents
+    #     empty_topics = [
+    #         topic for topic in all_topics if len(topic2accepted_docs[topic.id]) == 0
+    #     ]
+    #     for topic in empty_topics:
+    #         assert topic.top_docs is not None, (
+    #             f"Topic {topic.id} has no accepted documents, but top_docs is not None."
+    #         )
+    #         for top_doc in topic.top_docs:
+    #             topic2accepted_docs[topic.id].append(top_doc)
+    #             train_labels.append(f"{topic.id}")
+    #             train_doc_ids.append(top_doc)
+
+    #     # Read the corresponding aspect texts
+    #     doc_aspects = crud_document_aspect.read_by_aspect_and_sdoc_ids(
+    #         db=db,
+    #         sdoc_ids=train_doc_ids,
+    #         aspect_id=aspect_id,
+    #     )
+    #     sdoc_id2doc_aspect: Dict[int, DocumentAspectORM] = {
+    #         da.sdoc_id: da for da in doc_aspects
+    #     }
+    #     train_docs = [sdoc_id2doc_aspect[doc_id].content for doc_id in train_doc_ids]
+
+    #     return train_docs, train_labels, train_doc_ids
+
+    def __build_training_data(
+        self,
+        db: Session,
+        aspect_id: int,
+    ) -> Tuple[List[str], List[str], List[int]]:
+        # Read the aspect
+        aspect = crud_aspect.read(db=db, id=aspect_id)
+
+        # Read all topics
+        all_topics = crud_topic.read_by_aspect_and_level(
+            db=db, aspect_id=aspect.id, level=0
+        )
+        topic2accepted_docs: Dict[int, List[int]] = {t.id: [] for t in all_topics}
+
+        # Read the document aspects
+        doc_aspects = aspect.document_aspects
+        sdoc_id2doc_aspect: Dict[int, DocumentAspectORM] = {
+            da.sdoc_id: da for da in doc_aspects
+        }
+
+        # Read the current document <-> topic assignments
+        document_topics = crud_document_topic.read_by_aspect(db=db, aspect_id=aspect.id)
+        for dt in document_topics:
+            if dt.is_accepted:
+                topic2accepted_docs[dt.topic_id].append(dt.sdoc_id)
+
+        # Build training_data
+        train_labels: List[str] = []
+        train_docs: List[str] = []
+        train_doc_ids: List[int] = []
+        for topic in all_topics:
+            if topic.is_outlier:
+                continue
+
+            accepted_sdoc_ids = topic2accepted_docs[topic.id]
+            if len(accepted_sdoc_ids) == 0:
+                # If there are no accepted documents, use the top documents
+                assert (
+                    topic.top_docs is not None
+                ), f"Topic {topic.id} has no accepted documents, but top_docs is not None."
+                accepted_sdoc_ids = topic.top_docs
+
+            for sdoc_id in accepted_sdoc_ids:
+                da = sdoc_id2doc_aspect[sdoc_id]
+                train_docs.append(da.content)
+                train_labels.append(f"{topic.id}")
+                train_doc_ids.append(da.sdoc_id)
+
+        return train_docs, train_labels, train_doc_ids
+
     def _embed_documents(
         self,
         db: Session,
         aspect_id: int,
         sdoc_ids: Optional[List[int]] = None,
+        train_docs: Optional[List[str]] = None,
+        train_labels: Optional[List[str]] = None,
     ):
         """
         Embeds all DocumentAspects of the given Aspect:
@@ -207,6 +315,7 @@ class TMService:
 
         :param db: The database session
         :param aspect_id: The ID of the Aspect
+        :param improve_embeddings: If True, the embeddings will be improved by training the embedding model
         :return: None
         """
 
@@ -232,6 +341,8 @@ class TMService:
                 embedding_model=aspect.embedding_model,
                 embedding_prompt=aspect.doc_embedding_prompt,
                 doc_aspects=doc_aspects,
+                train_docs=train_docs,
+                train_labels=train_labels,
             )
 
             # Store embeddings in the vector DB
@@ -264,12 +375,45 @@ class TMService:
                 f"Stored embeddings and coordinates for {len(doc_aspects)} document aspects."
             )
 
+    def __find_new_to_old_topic_mapping(
+        self,
+        labeled_documents: List[Tuple[int, int]],
+    ) -> Dict[int, int]:
+        """
+        Maps new topic IDs to the most frequent old topic ID.
+
+        Input is a list of (old_topic_id, new_topic_id) integer pairs.
+
+        Args:
+            labeled_documents: List of (old_topic_id, new_topic_id) tuples.
+
+        Returns:
+            Dictionary mapping new_topic_id (int) to its most frequent
+            associated old_topic_id (int).
+        """
+        new_topic_to_old_topic_candidates: Dict[int, List[int]] = defaultdict(list)
+
+        # Group old_ids by new_id
+        for old_id, new_id in labeled_documents:
+            new_topic_to_old_topic_candidates[new_id].append(old_id)
+
+        final_mapping: Dict[int, int] = {}
+        # For each new_id, find the most common old_id
+        for new_id, old_id_list in new_topic_to_old_topic_candidates.items():
+            count: Counter[int] = Counter(old_id_list)
+            most_common_old_id: int = count.most_common(1)[0][0]
+            final_mapping[new_id] = most_common_old_id
+
+        return final_mapping
+
     def _cluster_documents(
         self,
         db: Session,
         aspect_id: int,
         sdoc_ids: Optional[List[int]],
         num_clusters: Optional[int],
+        train_doc_ids: List[int] = [],
+        train_topic_ids: List[int] = [],
     ) -> List[int]:
         """
         Clusters the document aspects of the given Aspect using HDBSCAN.
@@ -322,40 +466,105 @@ class TMService:
         cluster_ids = set(clusters)
         self._log_status_msg(f"Found {len(cluster_ids)} clusters with HDBSCAN")
 
-        # 4. Store the topics (clusters) in the DB
-        topics = crud_topic.create_multi(
-            db=db,
-            create_dtos=[
-                TopicCreateIntern(
-                    aspect_id=aspect_id,
-                    level=0,
-                    name="Outlier" if cluster == -1 else None,
-                    is_outlier=(cluster == -1),
-                )
-                for cluster in cluster_ids
-            ],
-        )
-        cluster_id2topic_id = {
-            cluster_id: topic.id for cluster_id, topic in zip(cluster_ids, topics)
-        }
-        self._log_status_msg(
-            f"Stored {len(cluster_id2topic_id)} topics in the database corresponding to {len(cluster_ids)} clusters."
-        )
+        # 4. Storing / reusing the topics
+        if len(train_doc_ids) > 0 and len(train_topic_ids) > 0:
+            # Either: Reuse existing topics, automatically inferring a mapping from existing topics to clusters
+            train_doc2top: Dict[int, int] = {
+                doc_id: topic_id
+                for doc_id, topic_id in zip(train_doc_ids, train_topic_ids)
+            }
+            new_doc2top: Dict[int, int] = {
+                da.sdoc_id: cluster for da, cluster in zip(doc_aspects, clusters)
+            }
+            labeled_docs = [
+                (train_doc2top[doc_id], new_doc2top[doc_id]) for doc_id in train_doc_ids
+            ]
+            cluster_id2topic_id = self.__find_new_to_old_topic_mapping(labeled_docs)
 
-        # 5. Store the cluster assignments in the database
-        crud_document_topic.create_multi(
-            db=db,
-            create_dtos=[
-                DocumentTopicCreate(
-                    sdoc_id=da.sdoc_id,
-                    topic_id=cluster_id2topic_id[cluster],
+            # add mapping for outlier topic
+            outlier_topic = crud_topic.read_or_create_outlier_topic(
+                db=db, aspect_id=aspect_id, level=0
+            )
+            cluster_id2topic_id[-1] = outlier_topic.id  # -1 is the outlier cluster ID
+            self._log_status_msg(
+                f"Computed a mapping from {len(cluster_id2topic_id)} clusters to existing topics."
+            )
+
+            # Construct update DTOS
+            doc_topics = crud_document_topic.read_by_aspect(db=db, aspect_id=aspect_id)
+            sdoc_id2doctopic = {dt.sdoc_id: dt for dt in doc_topics}
+            update_dtos: List[DocumentTopicUpdate] = []
+            update_ids: list[tuple[int, int]] = []
+            for da, cluster in zip(doc_aspects, clusters):
+                if da.sdoc_id in train_doc_ids:
+                    continue  # Skip documents that were used for training!
+
+                dt = sdoc_id2doctopic[da.sdoc_id]
+                if dt.is_accepted:
+                    continue  # Skip already accepted assignments!
+
+                new_topic_id = cluster_id2topic_id[cluster]
+                if dt.topic_id == new_topic_id:
+                    continue
+
+                # Update the document topic with the new topic ID
+                update_ids.append(
+                    (
+                        dt.sdoc_id,
+                        dt.topic_id,
+                    )
                 )
-                for da, cluster in zip(doc_aspects, clusters)
-            ],
-        )
-        self._log_status_msg(
-            f"Assigned {len(doc_aspects)} document aspects to {len(cluster_id2topic_id)} topics."
-        )
+                update_dtos.append(
+                    DocumentTopicUpdate(
+                        topic_id=new_topic_id,
+                    )
+                )
+
+            # Update!
+            crud_document_topic.update_multi(
+                db=db,
+                ids=update_ids,
+                update_dtos=update_dtos,
+            )
+            self._log_status_msg(
+                f"Updated {len(update_ids)}/{len(doc_topics)} document topic assignments."
+            )
+
+        else:
+            # Or: Store the topics (clusters) in the DB
+            topics = crud_topic.create_multi(
+                db=db,
+                create_dtos=[
+                    TopicCreateIntern(
+                        aspect_id=aspect_id,
+                        level=0,
+                        name="Outlier" if cluster == -1 else None,
+                        is_outlier=(cluster == -1),
+                    )
+                    for cluster in cluster_ids
+                ],
+            )
+            cluster_id2topic_id = {
+                cluster_id: topic.id for cluster_id, topic in zip(cluster_ids, topics)
+            }
+            self._log_status_msg(
+                f"Stored {len(cluster_id2topic_id)} topics in the database corresponding to {len(cluster_ids)} clusters."
+            )
+
+            # 5. Store the cluster assignments in the database
+            crud_document_topic.create_multi(
+                db=db,
+                create_dtos=[
+                    DocumentTopicCreate(
+                        sdoc_id=da.sdoc_id,
+                        topic_id=cluster_id2topic_id[cluster],
+                    )
+                    for da, cluster in zip(doc_aspects, clusters)
+                ],
+            )
+            self._log_status_msg(
+                f"Assigned {len(doc_aspects)} document aspects to {len(cluster_id2topic_id)} topics."
+            )
 
         return list(cluster_id2topic_id.values())
 
@@ -456,14 +665,16 @@ class TMService:
 
         # 1. Identify key words for each topic
         # 1.1. Group the documents by topic, creating a "big" topicdocument per topic, which is required by c-TF-IDF
-        topic_to_doc_aspects: Dict[int, List[DocumentAspectORM]] = {}
+        topic_to_doc_aspects: Dict[int, List[DocumentAspectORM]] = {
+            t.id: [] for t in all_topics
+        }
         for da, topic_id in zip(doc_aspects, assigned_topics):
-            if topic_id not in topic_to_doc_aspects:
-                topic_to_doc_aspects[topic_id] = []
             topic_to_doc_aspects[topic_id].append(da)
         topic_to_topicdoc: Dict[int, str] = {
-            topic_id: " ".join([da.content for da in das])
-            for topic_id, das in topic_to_doc_aspects.items()
+            t.id: " ".join([da.content for da in topic_to_doc_aspects[t.id]])
+            if len(topic_to_doc_aspects[t.id]) > 0
+            else "emptydoc"
+            for t in all_topics
         }
 
         # 1.2 Compute the c-TF-IDF
@@ -753,6 +964,8 @@ class TMService:
                     topic_ids=list(modified_topics),
                 )
 
+            self._log_status_msg("Successfully created topic with name&description!")
+
     def create_topic_with_sdocs(
         self, aspect_id: int, params: CreateTopicWithSdocsParams
     ):
@@ -814,6 +1027,8 @@ class TMService:
                     aspect_id=aspect_id,
                     topic_ids=list(modified_topics),
                 )
+
+            self._log_status_msg("Successfully created topic with source documents!")
 
     def remove_topic(self, aspect_id: int, params: RemoveTopicParams):
         with self.sqls.db_session() as db:
@@ -924,6 +1139,8 @@ class TMService:
                     topic_ids=list(modified_topics),
                 )
 
+            self._log_status_msg("Successfully removed topic!")
+
     def merge_topics(self, aspect_id: int, params: MergeTopicsParams):
         with self.sqls.db_session() as db:
             # 0. Read the topics to merge
@@ -963,6 +1180,8 @@ class TMService:
                 aspect_id=aspect.id,
                 topic_ids=[params.topic_to_keep],
             )
+
+            self._log_status_msg("Successfully merged topics!")
 
     def split_topic(self, aspect_id: int, params: SplitTopicParams):
         with self.sqls.db_session() as db:
@@ -1011,25 +1230,15 @@ class TMService:
                 topic_ids=created_topic_ids,
             )
 
+            self._log_status_msg("Successfully split topic!")
+
     def change_topic(self, aspect_id: int, params: ChangeTopicParams):
         with self.sqls.db_session() as db:
             # 0. Read the topic to change to
             if params.topic_id == -1:
-                try:
-                    topic = crud_topic.read_outlier_topic(
-                        db=db, aspect_id=aspect_id, level=0
-                    )
-                except ValueError:
-                    # If the outlier topic does not exist, create it
-                    topic = crud_topic.create(
-                        db=db,
-                        create_dto=TopicCreateIntern(
-                            aspect_id=aspect_id,
-                            level=0,
-                            name="Outlier",
-                            is_outlier=True,
-                        ),
-                    )
+                topic = crud_topic.read_or_create_outlier_topic(
+                    db=db, aspect_id=aspect_id, level=0
+                )
                 topic_id = topic.id
             else:
                 topic = crud_topic.read(db=db, id=params.topic_id)
@@ -1076,8 +1285,61 @@ class TMService:
                     topic_ids=list(modified_topics),
                 )
 
+            self._log_status_msg("Successfully changed topic!")
+
     def refine_topic_model(self, aspect_id: int, params: RefineTopicModelParams):
-        pass
+        with self.sqls.db_session() as db:
+            # Update the model name, so that a new model is trained
+            aspect = crud_aspect.read(db=db, id=aspect_id)
+            model_name = f"project_{aspect.project_id}_aspect_{aspect.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            crud_aspect.update(
+                db=db,
+                id=aspect_id,
+                update_dto=AspectUpdateIntern(
+                    embedding_model=model_name,
+                ),
+            )
+
+            # 1. Build the training data for the embedding model
+            self._log_status_step(0)
+            self._log_status_msg("Building training data for the embedding model...")
+            train_docs, train_labels, train_doc_ids = self.__build_training_data(
+                db=db,
+                aspect_id=aspect_id,
+            )
+
+            # 2. Embed the documents (training the model)
+            self._log_status_step(1)
+            self._log_status_msg(
+                f"Refining topic model for aspect {aspect_id} with model {model_name}."
+            )
+            self._embed_documents(
+                db=db,
+                aspect_id=aspect_id,
+                train_docs=train_docs,
+                train_labels=train_labels,
+            )
+
+            # 3. Cluster the documents
+            self._log_status_step(2)
+            self._cluster_documents(
+                db=db,
+                aspect_id=aspect_id,
+                sdoc_ids=None,
+                num_clusters=None,
+                train_doc_ids=train_doc_ids,
+                train_topic_ids=[int(tl) for tl in train_labels],
+            )
+
+            # 4. Extract the topics
+            self._log_status_step(3)
+            self._extract_topics(
+                db=db,
+                aspect_id=aspect_id,
+                topic_ids=None,
+            )
+
+            self._log_status_msg("Successfully refined map!")
 
     def reset_topic_model(self, aspect_id: int, params: ResetTopicModelParams):
         pass
