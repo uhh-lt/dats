@@ -80,15 +80,16 @@ class CRUDSourceDocument(
         return [id2data.get(id) for id in ids]
 
     def read_text_data_with_no_aspect(
-        self, db: Session, *, aspect_id: int
+        self, db: Session, *, project_id: int, aspect_id: int
     ) -> List[SourceDocumentDataORM]:
         """
         Read all source documents that have no aspect and are of type text.
         This is used to find all source documents that need to be preprocessed.
 
         :param db: The database session.
+        :param project_id: The ID of the project.
         :param aspect_id: The ID of the aspect.
-        :return: A list of source documents that have no aspect and are of type text.
+        :return: A list of source documents of the given project that have no aspect and are of type text.
         """
         return (
             db.query(SourceDocumentDataORM)
@@ -101,6 +102,7 @@ class CRUDSourceDocument(
             .filter(
                 DocumentAspectORM.sdoc_id.is_(None),
                 DocumentAspectORM.aspect_id.is_(None),
+                SourceDocumentORM.project_id == project_id,
                 SourceDocumentORM.doctype == DocType.text,
             )
             .all()

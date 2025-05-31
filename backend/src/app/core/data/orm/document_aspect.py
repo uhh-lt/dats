@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Float, ForeignKey, Integer, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.data.orm.orm_base import ORMBase
@@ -25,9 +25,6 @@ class DocumentAspectORM(ORMBase):
     )
 
     content: Mapped[str] = mapped_column(Text, nullable=False)
-
-    # UUID of the embedding (VectorDB)
-    embedding_uuid: Mapped[str] = mapped_column(String, nullable=True, index=True)
 
     # 2D coordinates for visualization
     x: Mapped[float] = mapped_column(Float, nullable=True)

@@ -6,12 +6,11 @@ from app.core.vector.dto.search_results import EmbeddingSearchResult, SimSearchR
 from app.core.vector.weaviate_exceptions import (
     WeaviateBatchImportError,
     WeaviateObjectIDNotFoundException,
-    WeaviateObjectIDsNotFoundException,
     WeaviateObjectUUIDNotFoundException,
 )
 from loguru import logger
 from weaviate import WeaviateClient
-from weaviate.classes.query import Filter, MetadataQuery
+from weaviate.classes.query import MetadataQuery
 from weaviate.collections.classes.filters import _Filters
 from weaviate.types import UUID
 
@@ -77,52 +76,20 @@ class CRUDBase(Generic[ID, COLLECTION]):
                     f"Property '{key}' must be of type '{expected_type}', got '{type(value)}'"
                 )
 
-    def _convert_identifier_to_properties(self, identifier: ID) -> Dict[str, Any]:
-        """Convert an identifier to a properties dictionary"""
-        return identifier.model_dump()
-
-    def _build_filter_from_properties(self, properties: Dict[str, Any]) -> _Filters:
-        """
-        Build a filter from the properties dictionary
-        Args:
-            properties: Dictionary of properties to build the filter from
-        Returns:
-            Filter object or None if no properties are provided
-        Raises:
-            ValueError: If properties are empty
-        """
-        if not properties or len(properties) == 0:
-            raise ValueError("Properties cannot be empty")
-
-        filter_query: Optional[_Filters] = None
-        for key, value in properties.items():
-            if filter_query is None:
-                filter_query = Filter.by_property(key).equal(value)
-            else:
-                filter_query = filter_query & Filter.by_property(key).equal(value)
-
-        assert filter_query is not None, "Filter query should not be None"
-        return filter_query
-
-    def add_embedding(self, project_id: int, id: ID, embedding: List[float]) -> UUID:
+    def add_embedding(self, project_id: int, id: ID, embedding: List[float]) -> None:
         """
         Add a single embedding to Weaviate
         Args:
             id: Object identifier
             embedding: Vector embedding
-        Returns:
-            UUID of the created object
         """
         collection = self._get_collection(project_id=project_id)
-
-        # Convert identifier to properties
-        properties = self._convert_identifier_to_properties(id)
-        self._validate_properties(properties, must_identify_object=True)
-
-        # Create the object with properties and vector
-        obj_uuid = collection.data.insert(properties, vector=embedding)
-
-        return obj_uuid
+        collection.data.replace(
+            uuid=id.uuidv5(),
+            properties=id.model_dump(),
+            references=None,
+            vector=embedding,
+        )
 
     def add_embedding_batch(
         self, project_id: int, ids: List[ID], embeddings: List[List[float]]
@@ -149,15 +116,10 @@ class CRUDBase(Generic[ID, COLLECTION]):
         uuids: List[UUID] = []
         with collection.batch.dynamic() as batch:
             for id, embedding in zip(ids, embeddings):
-                # Convert id to properties
-                properties = self._convert_identifier_to_properties(id)
-
-                # Validate that properties can exactly identify the object
-                self._validate_properties(properties, must_identify_object=True)
-
-                obj_uuid = batch.add_object(properties=properties, vector=embedding)
+                obj_uuid = batch.add_object(
+                    uuid=id.uuidv5(), properties=id.model_dump(), vector=embedding
+                )
                 uuids.append(obj_uuid)
-
                 if batch.number_errors > 0:
                     logger.error("Batch import stopped because an error occurred!")
                     break
@@ -170,36 +132,14 @@ class CRUDBase(Generic[ID, COLLECTION]):
 
         return uuids
 
-    def remove_embedding(self, project_id: int, id: ID) -> UUID:
+    def remove_embedding(self, project_id: int, id: ID) -> bool:
         """
         Remove an embedding from Weaviate
         Args:
             id: Object identifier
         """
         collection = self._get_collection(project_id=project_id)
-
-        # Convert identifier to properties
-        properties = self._convert_identifier_to_properties(id)
-
-        # Validate that properties can exactly identify the object
-        self._validate_properties(properties, must_identify_object=True)
-
-        # Build filter from identifier properties
-        filter_query = self._build_filter_from_properties(properties)
-
-        # Query to find the object
-        result = collection.query.fetch_objects(
-            filters=filter_query,
-            limit=1,
-        )
-
-        if len(result.objects) == 0:
-            raise WeaviateObjectIDNotFoundException(id=id, collection=collection)
-
-        # Delete if found
-        uuid = result.objects[0].uuid
-        collection.data.delete_by_id(uuid)
-        return uuid
+        return collection.data.delete_by_id(id.uuidv5())
 
     def remove_embeddings_by_project(self, project_id: int) -> None:
         """
@@ -212,107 +152,6 @@ class CRUDBase(Generic[ID, COLLECTION]):
             [f"Project{project_id}"]
         )
 
-    def get_uuid(self, project_id: int, id: ID) -> UUID:
-        """
-        Get the UUID of an object from Weaviate
-        Args:
-            id: Object identifier
-        Returns:
-            UUID of the object or None if not found
-        """
-        collection = self._get_collection(project_id=project_id)
-
-        # Convert identifier to properties
-        properties = self._convert_identifier_to_properties(id)
-
-        # Validate that properties can exactly identify the object
-        self._validate_properties(properties, must_identify_object=True)
-
-        # Build filter from identifier properties
-        filter_query = self._build_filter_from_properties(properties)
-
-        # Query to find the object
-        result = collection.query.fetch_objects(
-            filters=filter_query,
-            limit=1,
-        )
-
-        if len(result.objects) == 0:
-            raise WeaviateObjectIDNotFoundException(id=id, collection=collection)
-
-        return result.objects[0].uuid
-
-    def get_uuids(self, project_id: int, ids: List[ID]) -> List[UUID]:
-        """
-        Get the UUIDs of multiple objects from Weaviate
-        Args:
-            ids: List of object identifiers
-        Returns:
-            List of UUIDs of the objects
-        Raises:
-            WeaviateObjectIDsNotFoundException: If not all IDs are found
-            WeaviateObjectIDNotFoundException: If an ID is not found
-        """
-
-        if not ids:
-            return []
-
-        collection = self._get_collection(project_id=project_id)
-
-        # Convert identifiers to properties
-        properties_list = [self._convert_identifier_to_properties(id) for id in ids]
-
-        # Validate that properties can exactly identify the objects
-        for properties in properties_list:
-            self._validate_properties(properties, must_identify_object=True)
-
-        # Create a mapping to maintain the original order
-        found_uuids: Dict[str, UUID] = {}
-
-        # Process in batches of 100
-        batch_size = 100
-        for i in range(0, len(ids), batch_size):
-            batch_properties = properties_list[i : i + batch_size]
-
-            # Build an OR filter from all identifiers in this batch
-            filter_query: Optional[_Filters] = None
-            for properties in batch_properties:
-                obj_filter = self._build_filter_from_properties(properties)
-                if filter_query is None:
-                    filter_query = obj_filter
-                else:
-                    filter_query = filter_query | obj_filter
-
-            # Query to find the objects
-            result = collection.query.fetch_objects(
-                filters=filter_query,
-                limit=len(batch_properties),
-                return_properties=True,
-            )
-
-            # Map each result to its ID
-            for obj in result.objects:
-                obj_id = self.object_identifier.model_validate(obj.properties)
-                found_uuids[str(obj_id)] = obj.uuid
-
-        # Check if all objects were found
-        if len(found_uuids) < len(ids):
-            raise WeaviateObjectIDsNotFoundException(
-                num_requested_ids=len(ids),
-                num_found_ids=len(found_uuids),
-                collection=collection,
-            )
-
-        # Return UUIDs in the same order as the input ids
-        uuids = []
-        for id in ids:
-            try:
-                uuids.append(found_uuids[str(id)])
-            except KeyError:
-                raise WeaviateObjectIDNotFoundException(id=id, collection=collection)
-
-        return uuids
-
     def get_embedding(self, project_id: int, id: ID) -> List[float]:
         """
         Get an embedding from Weaviate
@@ -322,32 +161,11 @@ class CRUDBase(Generic[ID, COLLECTION]):
             Object with embedding or None if not found
         """
         collection = self._get_collection(project_id=project_id)
-
-        # Convert identifier to properties
-        properties = self._convert_identifier_to_properties(id)
-
-        # Validate that properties can exactly identify the object
-        self._validate_properties(properties, must_identify_object=True)
-
-        # Build filter from identifier properties
-        filter_query = self._build_filter_from_properties(properties)
-
-        # Query to find the object with vector
-        result = collection.query.fetch_objects(
-            filters=filter_query, include_vector=True, limit=1
-        )
-
-        if not result.objects:
+        obj = collection.query.fetch_object_by_id(id.uuidv5(), include_vector=True)
+        if not obj:
             raise WeaviateObjectIDNotFoundException(id=id, collection=collection)
 
-        embedding = result.objects[0].vector["default"]
-        assert isinstance(
-            embedding, list
-        ), f"Expected embedding to be a list, got {type(embedding)}"
-        assert isinstance(
-            embedding[0], float
-        ), "Expected all elements of embedding to be float"
-        return embedding  # type: ignore
+        return obj.vector["default"]  # type: ignore
 
     def get_embeddings(self, project_id: int, ids: List[ID]) -> List[List[float]]:
         """
@@ -357,111 +175,27 @@ class CRUDBase(Generic[ID, COLLECTION]):
         Returns:
             List of embeddings
         """
+        uuid_list = [id.uuidv5() for id in ids]
         collection = self._get_collection(project_id=project_id)
-
-        # Convert identifiers to properties
-        properties_list = [self._convert_identifier_to_properties(id) for id in ids]
-
-        # Validate that properties can exactly identify the objects
-        for properties in properties_list:
-            self._validate_properties(properties, must_identify_object=True)
-
-        # Create a mapping to maintain the original order
-        found_embeddings: Dict[str, List[float]] = {}
-
-        # Process in batches of 100
-        batch_size = 100
-        for i in range(0, len(ids), batch_size):
-            batch_properties = properties_list[i : i + batch_size]
-
-            # Build an OR filter from all identifiers in this batch
-            filter_query: Optional[_Filters] = None
-            for properties in batch_properties:
-                obj_filter = self._build_filter_from_properties(properties)
-                if filter_query is None:
-                    filter_query = obj_filter
-                else:
-                    filter_query = filter_query | obj_filter
-
-            # Query to find the objects with vector
-            result = collection.query.fetch_objects(
-                filters=filter_query,
-                include_vector=True,
-                limit=len(batch_properties),
-            )
-
-            # Map each result to its ID and embedding
-            for obj in result.objects:
-                obj_id = self.object_identifier.model_validate(obj.properties)
-                vector = obj.vector["default"]
-                assert isinstance(
-                    vector, list
-                ), f"Expected embedding to be a list, got {type(vector)}"
-                assert isinstance(
-                    vector[0], float
-                ), "Expected all elements of embedding to be float"
-                found_embeddings[str(obj_id)] = vector  # type: ignore
-
-        # Check if all objects were found
-        if len(found_embeddings) < len(ids):
-            raise WeaviateObjectIDsNotFoundException(
-                num_requested_ids=len(ids),
-                num_found_ids=len(found_embeddings),
-                collection=collection,
-            )
+        objs = collection.query.fetch_objects_by_ids(
+            ids=uuid_list,
+            include_vector=True,
+            limit=len(ids),
+        )
+        uuid2vector: Dict[str, List[float]] = {
+            str(obj.uuid): obj.vector["default"]  # type: ignore
+            for obj in objs.objects
+        }
 
         # Return embeddings in the same order as the input ids
-        embeddings = []
-        for id in ids:
+        result = []
+        for id, uuid in zip(ids, uuid_list):
             try:
-                embeddings.append(found_embeddings[str(id)])
+                result.append(uuid2vector[uuid])
             except KeyError:
                 raise WeaviateObjectIDNotFoundException(id=id, collection=collection)
 
-        return embeddings
-
-    def get_embedding_by_uuid(self, project_id: int, uuid: str) -> List[float]:
-        """
-        Get an embedding from Weaviate using its UUID
-        Args:
-            uuid: UUID of the object
-        Returns:
-            Object with embedding or None if not found
-        """
-        collection = self._get_collection(project_id=project_id)
-
-        # Query to find the object with vector
-        data_obj = collection.query.fetch_object_by_id(
-            uuid=uuid,
-            include_vector=True,
-        )
-
-        return data_obj.vector["default"]  # type: ignore
-
-    def get_embeddings_by_uuids(
-        self, project_id: int, uuids: List[str]
-    ) -> List[List[float]]:
-        """
-        Get multiple embeddings from Weaviate using their UUIDs
-        Args:
-            uuids: List of UUIDs of the objects
-        Returns:
-            List of embeddings
-        """
-        collection = self._get_collection(project_id=project_id)
-
-        # Query to find the objects with vector
-        result = collection.query.fetch_objects_by_ids(
-            ids=uuids,
-            include_vector=True,
-            limit=len(uuids),  # Ensure we fetch all requested UUIDs
-        )
-
-        uuid2vector: Dict[str, List[float]] = {
-            str(obj.uuid): obj.vector["default"]
-            for obj in result.objects  # type: ignore
-        }
-        return [uuid2vector[uuid] for uuid in uuids]
+        return result
 
     def find_embeddings_by_filters(
         self, project_id: int, filters: _Filters

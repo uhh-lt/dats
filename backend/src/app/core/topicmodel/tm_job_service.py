@@ -55,6 +55,11 @@ class TMJobService(metaclass=SingletonMeta):
             "Document Assignment",
             "Topic Extraction",
         ],
+        TMJobType.CREATE_TOPIC_WITH_SDOCS: [
+            "Topic Creation",
+            "Document Assignment",
+            "Topic Extraction",
+        ],
         TMJobType.REMOVE_TOPIC: [
             "Document Assignment",
             "Topic Removal",
@@ -64,6 +69,10 @@ class TMJobService(metaclass=SingletonMeta):
         TMJobType.SPLIT_TOPIC: [
             "Remove Topic",
             "Document Clustering",
+            "Topic Extraction",
+        ],
+        TMJobType.CHANGE_TOPIC: [
+            "Document Assignment",
             "Topic Extraction",
         ],
         TMJobType.REFINE_TOPIC_MODEL: ["Refine Topic Model"],
