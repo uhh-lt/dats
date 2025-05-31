@@ -322,14 +322,18 @@ class TMService:
         hdbscan_model = HDBSCAN(min_cluster_size=10, metric="euclidean")
         clusters = hdbscan_model.fit_predict(reduced_embeddings).tolist()
         cluster_ids = set(clusters)
-        cluster_ids.discard(-1)  # remove outliers
         self._log_status_msg(f"Found {len(cluster_ids)} clusters with HDBSCAN")
 
         # 4. Store the topics (clusters) in the DB
         topics = crud_topic.create_multi(
             db=db,
             create_dtos=[
-                TopicCreateIntern(aspect_id=aspect_id, level=0)
+                TopicCreateIntern(
+                    aspect_id=aspect_id,
+                    level=0,
+                    name="Outlier" if cluster == -1 else None,
+                    is_outlier=(cluster == -1),
+                )
                 for cluster in cluster_ids
             ],
         )
@@ -349,7 +353,6 @@ class TMService:
                     topic_id=cluster_id2topic_id[cluster],
                 )
                 for da, cluster in zip(doc_aspects, clusters)
-                if cluster != -1  # no outliers
             ],
         )
         self._log_status_msg(
@@ -434,8 +437,8 @@ class TMService:
         aspect = crud_aspect.read(db=db, id=aspect_id)
         level = 0  # TODO: we only consider 1 level for now (level 0)
 
-        # 0. Read all requird data
-        # - Read the topics
+        # 0. Read all required data
+        # - Read the topics (but the outlier topic)
         all_topics = crud_topic.read_by_aspect_and_level(
             db=db, aspect_id=aspect_id, level=level
         )
@@ -692,11 +695,13 @@ class TMService:
                 level=params.create_dto.level,
                 name=params.create_dto.name,
                 description=params.create_dto.description,
+                is_outlier=False,
             ),
         )
 
         # 2. Document assignment
         # - For all source documents in the aspect, decide whether to assign the new topic or not. Track the changes/affected topics!
+        # - Do not reassign documents that are accepted
         self._log_status_step(1)
         update_dtos: List[DocumentTopicUpdate] = []
         update_ids: List[tuple[int, int]] = []
@@ -712,6 +717,9 @@ class TMService:
             assert (
                 doc_topic is not None
             ), f"Document {result.id.sdoc_id} does not have a topic assignment in aspect {aspect.id}."
+            if doc_topic.is_accepted:
+                # skip documents that are already accepted
+                continue
 
             # assign the new topic if the distance is smaller than the current topic's distance
             if result.score < doc_topic.distance:
@@ -771,6 +779,7 @@ class TMService:
                 name="New Topic",
                 aspect_id=params.aspect_id,
                 level=0,
+                is_outlier=False,
             ),
         )
 
@@ -877,6 +886,7 @@ class TMService:
                     DocumentTopicUpdate(
                         topic_id=sdoc_id2new_topic_id[dt.sdoc_id],
                         distance=sdoc_id2new_topic_distance[dt.sdoc_id],
+                        is_accepted=False,  # Reset acceptance status
                     )
                 )
                 update_ids.append((dt.sdoc_id, dt.topic_id))

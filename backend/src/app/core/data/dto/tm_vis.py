@@ -16,6 +16,9 @@ class TMDoc(BaseModel):
     in_searchresult: bool = Field(
         description="Indicates whether the document is part of the search result",
     )
+    is_outlier: bool = Field(
+        description="Indicates whether the document is an outlier",
+    )
 
 
 class TMVisualization(BaseModel):

@@ -13,7 +13,7 @@ class CRUDTopic(CRUDBase[TopicORM, TopicCreateIntern, TopicUpdateIntern]):
             .filter(
                 self.model.aspect_id == aspect_id,
                 self.model.level == level,
-                self.model.name == OUTLIER_TOPIC_NAME,
+                self.model.is_outlier.is_(True),
             )
             .first()
         )
