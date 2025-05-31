@@ -92,7 +92,10 @@ function MapPlot({ vis }: MapPlotProps) {
       // no border
       (trace.marker!.line!.width! as number[]).push(0);
       // size & color
-      if (!doc.in_searchresult) {
+      if (doc.is_outlier) {
+        (trace.marker!.size as number[]).push(4);
+        (trace.marker!.color as Color[]).push("lightgrey");
+      } else if (!doc.in_searchresult) {
         (trace.marker!.size as number[]).push(4);
         (trace.marker!.color as Color[]).push("lightgrey");
       } else if (highlightReviewedDocs && !doc.is_accepted) {
@@ -120,7 +123,10 @@ function MapPlot({ vis }: MapPlotProps) {
       // border for the selected document
       (trace.marker!.line!.width! as number[]).push(2);
       // size & color
-      if (!doc.in_searchresult) {
+      if (doc.is_outlier) {
+        (trace.marker!.size as number[]).push(4);
+        (trace.marker!.color as Color[]).push("lightgrey");
+      } else if (!doc.in_searchresult) {
         (trace.marker!.size as number[]).push(4);
         (trace.marker!.color as Color[]).push("lightgrey");
       } else if (highlightReviewedDocs && !doc.is_accepted) {

@@ -34,6 +34,11 @@ interface TopicMenuProps {
 function TopicMenu(props: TopicMenuProps) {
   // global server state (react-query)
   const vis = TopicModellingHooks.useGetDocVisualization(props.aspectId);
+  const topics = useMemo(() => {
+    if (!vis.data) return [];
+    return vis.data.topics.filter((topic) => !topic.is_outlier); // filter out outlier topics
+  }, [vis.data]);
+
   const initialChecked: Map<number, CheckboxState> | undefined = useMemo(() => {
     if (!vis.data) return undefined;
 
@@ -46,7 +51,7 @@ function TopicMenu(props: TopicMenuProps) {
     );
 
     // init topic counts
-    const topicCounts: Record<number, number> = vis.data.topics.reduce(
+    const topicCounts: Record<number, number> = topics.reduce(
       (acc, topic) => {
         acc[topic.id] = 0;
         return acc;
@@ -72,12 +77,12 @@ function TopicMenu(props: TopicMenuProps) {
             : CheckboxState.CHECKED,
       ]),
     );
-  }, [vis.data, props.sdocIds]);
+  }, [vis.data, topics, props.sdocIds]);
 
-  if (!vis.data || !initialChecked) {
+  if (!vis.data || !initialChecked || topics.length === 0) {
     return null;
   }
-  return <TopicMenuContent topics={vis.data.topics} initialChecked={initialChecked} {...props} />;
+  return <TopicMenuContent topics={topics} initialChecked={initialChecked} {...props} />;
 }
 
 function TopicMenuContent({
@@ -237,6 +242,7 @@ function TopicMenuContent({
         <Box sx={{ maxHeight: "240px", overflowY: "auto" }}>
           {filteredTopicIndexes.map((index) => {
             const topic = topics[index];
+            if (topic.is_outlier) return null; // skip outlier topics
             const labelId = `tag-menu-list-label-${topic.name}`;
 
             return (
