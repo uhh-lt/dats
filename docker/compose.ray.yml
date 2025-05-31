@@ -43,4 +43,4 @@ services:
 
 networks:
   ray_network:
-    name: ray_network
+    name: ray_network_tim

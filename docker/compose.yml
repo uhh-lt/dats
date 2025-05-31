@@ -175,6 +175,7 @@ services:
       API_WORKERS: ${API_WORKERS:-10}
       JWT_SECRET: ${JWT_SECRET:?jwt secret required}
       SESSION_SECRET: ${SESSION_SECRET:?session secret required}
+      UUID_NAMESPACE: ${UUID_NAMESPACE:?uuid namespace required}
       SYSTEM_USER_EMAIL: ${SYSTEM_USER_EMAIL}
       SYSTEM_USER_PASSWORD: ${SYSTEM_USER_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:-dats}
@@ -257,5 +258,5 @@ networks:
     name: ollama_network
     external: true
   ray_network:
-    name: ray_network
+    name: ray_network_tim
     external: true
