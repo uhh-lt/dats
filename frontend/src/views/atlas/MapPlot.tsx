@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Box } from "@mui/material";
 import { Annotations, Color, Datum, ScatterData } from "plotly.js";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"; // Added useRef
 import Plot, { Figure } from "react-plotly.js";
 import { TMDoc } from "../../api/openapi/models/TMDoc.ts";
 import { TMVisualization } from "../../api/openapi/models/TMVisualization.ts";
@@ -240,8 +240,104 @@ function MapPlot({ vis }: MapPlotProps) {
     setTooltipData({ id: undefined, position: undefined });
   }, []);
 
+  // PANNING FEATURE
+  // Ref for the plot container
+  const plotContainerRef = useRef<HTMLDivElement>(null);
+
+  // State for custom panning
+  const panStartCoordsForEventRef = useRef<{ x: number; y: number } | null>(null);
+  const panInitialRangesRef = useRef<{ xaxis: [number, number]; yaxis: [number, number] } | null>(null);
+
+  // panning event handlers
+  const handleMouseMove = useCallback(
+    (event: MouseEvent) => {
+      // Use panStartCoordsForEventRef.current for up-to-date drag start coordinates
+      if (!panStartCoordsForEventRef.current || !panInitialRangesRef.current || !plotContainerRef.current) return;
+
+      const plotRect = plotContainerRef.current.getBoundingClientRect();
+      if (plotRect.width === 0 || plotRect.height === 0) return;
+
+      const dx = event.clientX - panStartCoordsForEventRef.current.x;
+      const dy = event.clientY - panStartCoordsForEventRef.current.y;
+
+      const { xaxis: initialXRange, yaxis: initialYRange } = panInitialRangesRef.current;
+
+      const xRangeSpan = initialXRange[1] - initialXRange[0];
+      const yRangeSpan = initialYRange[1] - initialYRange[0];
+
+      const dataPerPixelX = xRangeSpan / plotRect.width;
+      const dataPerPixelY = yRangeSpan / plotRect.height;
+
+      const newXMin = initialXRange[0] - dx * dataPerPixelX;
+      const newXMax = initialXRange[1] - dx * dataPerPixelX;
+      const newYMin = initialYRange[0] + dy * dataPerPixelY; // Screen Y is inverted relative to typical data Y
+      const newYMax = initialYRange[1] + dy * dataPerPixelY;
+
+      setFigure((prevFigure) => ({
+        ...prevFigure,
+        layout: {
+          ...prevFigure.layout,
+          xaxis: {
+            ...prevFigure.layout.xaxis,
+            range: [newXMin, newXMax],
+            autorange: false,
+          },
+          yaxis: {
+            ...prevFigure.layout.yaxis,
+            range: [newYMin, newYMax],
+            autorange: false,
+          },
+        },
+      }));
+    },
+    [setFigure], // setFigure is stable, panStartCoordsForEventRef is read directly
+  );
+
+  const handleMouseUp = useCallback(() => {
+    document.removeEventListener("mousemove", handleMouseMove);
+    document.removeEventListener("mouseup", handleMouseUp); // Self-removal is fine with stable handleMouseUp
+    panStartCoordsForEventRef.current = null; // Clear the ref
+  }, [handleMouseMove]); // handleMouseMove is now stable, setPanStartCoords is stable
+
+  const handleMouseDown = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (event.button === 2 && plotContainerRef.current) {
+        event.preventDefault();
+        const newPanStart = { x: event.clientX, y: event.clientY };
+        panStartCoordsForEventRef.current = newPanStart; // Set ref immediately for event handlers
+
+        const currentXAxis = figure.layout.xaxis;
+        const currentYAxis = figure.layout.yaxis;
+        if (currentXAxis && currentYAxis && currentXAxis.range && currentYAxis.range) {
+          panInitialRangesRef.current = {
+            xaxis: [...currentXAxis.range] as [number, number],
+            yaxis: [...currentYAxis.range] as [number, number],
+          };
+        } else {
+          panInitialRangesRef.current = null;
+        }
+        // Add event listeners directly
+        // console.log("Mouse Down - Adding Listeners");
+        document.addEventListener("mousemove", handleMouseMove);
+        document.addEventListener("mouseup", handleMouseUp);
+      }
+    },
+    // Dependencies: figure.layout parts, stable handlers, and setPanStartCoords (stable)
+    [figure.layout.xaxis, figure.layout.yaxis, handleMouseMove, handleMouseUp],
+  );
+
   return (
-    <Box sx={{ flexGrow: 1, overflow: "hidden" }}>
+    <Box
+      sx={{ flexGrow: 1, overflow: "hidden" }}
+      ref={plotContainerRef}
+      onMouseDown={handleMouseDown}
+      onContextMenu={(e) => {
+        // Prevent context menu if right click is initiating pan or during pan
+        if (e.button === 2) {
+          e.preventDefault();
+        }
+      }}
+    >
       <Plot
         data={figure.data}
         layout={figure.layout}
@@ -251,7 +347,9 @@ function MapPlot({ vis }: MapPlotProps) {
           displayModeBar: true,
           responsive: true,
           displaylogo: false,
-          toImageButtonOptions: { filename: `atlas-map-${name}` },
+          scrollZoom: true,
+          toImageButtonOptions: { filename: "atlas-map" },
+          modeBarButtonsToRemove: ["pan2d", "zoomIn2d", "zoomOut2d"],
         }}
         style={{ width: "100%", height: "100%" }}
         onHover={handleHover}
