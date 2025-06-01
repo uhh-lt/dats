@@ -1,10 +1,15 @@
+import BarChartIcon from "@mui/icons-material/BarChart";
+import PieChartIcon from "@mui/icons-material/PieChart";
 import ReplyIcon from "@mui/icons-material/Reply";
-import { Box, Button, Card, CardContent, CardMedia, Stack, Typography } from "@mui/material";
+import { Box, Button, Card, CardContent, CardMedia, IconButton, Stack, Tooltip, Typography } from "@mui/material";
+import { useState } from "react";
 import { Link as RouterLink, useParams } from "react-router-dom";
 import TopicModellingHooks from "../../api/TopicModellingHooks.ts";
+import ExportChartButton from "../../components/ExportChartButton.tsx";
 import ContentContainerLayout from "../../layouts/ContentLayouts/ContentContainerLayout.tsx";
 import BackgroundJobStatusBadge from "./BackgroundJobStatusBadge.tsx";
 import TMJobProgressCard from "./TMJobProgressCard.tsx";
+import TopicDistributionPlot from "./TopicDistributionPlot.tsx";
 
 function MapDashboard() {
   const urlParams = useParams() as { projectId: string; aspectId: string };
@@ -15,7 +20,11 @@ function MapDashboard() {
   const aspect = TopicModellingHooks.useGetAspect(aspectId);
   const tmJob = TopicModellingHooks.usePollTMJob(aspect.data?.most_recent_job_id, undefined);
 
-  console.log("projectId", projectId);
+  // show pie chart or bar chart
+  const [showPieChart, setShowPieChart] = useState<boolean>(false);
+  const handleToggleShowPieChart = () => {
+    setShowPieChart((prev) => !prev);
+  };
 
   return (
     <ContentContainerLayout>
@@ -54,10 +63,13 @@ function MapDashboard() {
           </Stack>
 
           <Stack spacing={4} direction={"row"}>
-            <Box width="400px">
-              <Typography variant="button">Map Preview</Typography>
-              <Card sx={{ bgcolor: "grey.300" }}>
+            <Box width="360px" flexShrink={0}>
+              <Stack height={40} alignItems="center" direction="row">
+                <Typography variant="button">Map Preview</Typography>
+              </Stack>
+              <Card variant="outlined" sx={{ bgcolor: "grey.300" }}>
                 <CardMedia
+                  sx={{ height: 360, width: 360, objectFit: "cover" }}
                   component="img"
                   image={`/content/projects/${projectId}/plots/aspect_${aspectId}_map_thumbnail.png`}
                   title="Atlas Map Preview"
@@ -69,8 +81,20 @@ function MapDashboard() {
                 </CardContent>
               </Card>
             </Box>
-            <Box>
-              <Typography variant="button">Data Statistics</Typography>
+            <Box flexGrow={1}>
+              <Stack direction="row" alignItems="center">
+                <Typography variant="button">Topic Distribution</Typography>
+                <Tooltip title={showPieChart ? "View as Bar Chart" : "View as Pie Chart"}>
+                  <IconButton onClick={handleToggleShowPieChart}>
+                    {showPieChart ? <BarChartIcon /> : <PieChartIcon />}
+                  </IconButton>
+                </Tooltip>
+                <ExportChartButton
+                  chartName={"topic-frequency-" + (showPieChart ? "pie-chart-" : "bar-chart-") + aspectId}
+                  chartIdentifier={`topic-frequency-chart-${aspectId}`}
+                />
+              </Stack>
+              <TopicDistributionPlot aspectId={aspectId} height={360} showPieChart={showPieChart} />
             </Box>
           </Stack>
 
