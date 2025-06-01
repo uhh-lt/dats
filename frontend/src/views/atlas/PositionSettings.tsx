@@ -8,6 +8,8 @@ import {
   Divider,
   FormControlLabel,
   LinearProgress,
+  ListItem,
+  ListItemButton,
   MenuItem,
   Stack,
   Switch,
@@ -80,6 +82,12 @@ function PositionSettings({ aspectId }: PositionSettingsProps) {
     });
   };
 
+  // topic selection
+  const highlightedTopicId = useAppSelector((state) => state.atlas.highlightedTopicId);
+  const handleSelectTopic = (topicId: number) => () => {
+    dispatch(AtlasActions.onSelectTopic(topicId));
+  };
+
   return (
     <Box>
       <Stack spacing={3} p={2}>
@@ -139,36 +147,45 @@ function PositionSettings({ aspectId }: PositionSettingsProps) {
             Highlight reviewed docs
           </Button>
         </Stack>
-        <Stack px={2} spacing={2}>
+        <Stack spacing={2}>
           {vis.data?.topics.map((topic, index) => {
             if (topic.is_outlier) return null; // skip outlier topics
             const count = topic2count[topic.id];
             const total = topic2total[topic.id];
             const color = colorScheme[index % colorScheme.length];
             return (
-              <Box key={topic.id}>
-                <Typography variant="caption" color="textSecondary">
-                  {getIconComponent(Icon.TOPIC, { style: { fontSize: "10px", marginRight: "4px", color: color } })}
-                  {topic.name}
-                </Typography>
-                <Box sx={{ display: "flex", alignItems: "center" }}>
-                  <Box sx={{ width: "100%", mr: 1 }}>
-                    <LinearProgress
-                      variant="determinate"
-                      value={(count / total) * 100}
-                      sx={{
-                        backgroundColor: color + "80",
-                        "& .MuiLinearProgress-bar": {
-                          backgroundColor: color,
-                        },
-                      }}
-                    />
+              <ListItem key={topic.id} disablePadding>
+                <ListItemButton
+                  selected={highlightedTopicId === topic.id}
+                  role={undefined}
+                  dense
+                  onClick={handleSelectTopic(topic.id)}
+                >
+                  <Box width="100%">
+                    <Typography variant="caption" color="textSecondary">
+                      {getIconComponent(Icon.TOPIC, { style: { fontSize: "10px", marginRight: "4px", color: color } })}
+                      {topic.name}
+                    </Typography>
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                      <Box sx={{ width: "100%", mr: 1 }}>
+                        <LinearProgress
+                          variant="determinate"
+                          value={(count / total) * 100}
+                          sx={{
+                            backgroundColor: color + "80",
+                            "& .MuiLinearProgress-bar": {
+                              backgroundColor: color,
+                            },
+                          }}
+                        />
+                      </Box>
+                      <Box flexShrink={0}>
+                        <Typography variant="body2" color="text.secondary">{`${count}/${total}`}</Typography>
+                      </Box>
+                    </Box>
                   </Box>
-                  <Box flexShrink={0}>
-                    <Typography variant="body2" color="text.secondary">{`${count}/${total}`}</Typography>
-                  </Box>
-                </Box>
-              </Box>
+                </ListItemButton>
+              </ListItem>
             );
           })}
         </Stack>
