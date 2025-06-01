@@ -282,6 +282,7 @@ class RepoService(metaclass=SingletonMeta):
     def create_directory_structure_for_project(self, proj_id: int) -> Optional[Path]:
         paths = [
             self.get_models_root_path(proj_id=proj_id),
+            self.get_plots_root_path(proj_id=proj_id),
             self.get_dataloaders_root_dir(proj_id=proj_id),
             self._get_project_repo_sdocs_root_path(proj_id=proj_id),
         ]
@@ -596,6 +597,17 @@ class RepoService(metaclass=SingletonMeta):
             **extra_data,
         )
         return dst_path, create_dto
+
+    def get_plots_root_path(self, proj_id: int) -> Path:
+        return self.get_project_repo_root_path(proj_id=proj_id).joinpath("plots")
+
+    def get_plot_path(
+        self,
+        proj_id: int,
+        plot_name: str,
+    ) -> Path:
+        name = self.get_plots_root_path(proj_id=proj_id) / f"{plot_name}"
+        return name
 
     def get_models_root_path(self, proj_id: int) -> Path:
         return self.get_project_repo_root_path(proj_id=proj_id).joinpath("models")
