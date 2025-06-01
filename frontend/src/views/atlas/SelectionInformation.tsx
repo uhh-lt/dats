@@ -1,6 +1,8 @@
 import { ArrowBackIosNew, ArrowForwardIos } from "@mui/icons-material";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { Box, Button, ButtonGroup, CircularProgress, Stack, Tooltip, Typography } from "@mui/material";
 import { useEffect } from "react";
+import { Link } from "react-router-dom";
 import MetadataHooks from "../../api/MetadataHooks.ts";
 import { ProjectMetadataRead } from "../../api/openapi/models/ProjectMetadataRead.ts";
 import { SourceDocumentMetadataRead } from "../../api/openapi/models/SourceDocumentMetadataRead.ts";
@@ -77,10 +79,19 @@ function SelectionInformation({ aspectId }: SelectionInformationProps) {
                 <Tooltip title={"Filename/Title of this document"} placement="left">
                   <span style={{ flexGrow: 1, flexBasis: 1, justifyContent: "start" }}>
                     <Button color="inherit" startIcon={getIconComponent(Icon.TEXT_DOCUMENT)} disabled>
-                      Title
+                      Filename
                     </Button>
                   </span>
                 </Tooltip>
+                <Button
+                  component={Link}
+                  to={`../annotation/${selectedSdocIds[selectedSdocIdsIndex]}`}
+                  variant="text"
+                  size="small"
+                  startIcon={<OpenInNewIcon />}
+                >
+                  Open Doc
+                </Button>
               </Stack>
 
               <Stack direction="column" pl={0.5}>
