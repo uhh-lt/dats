@@ -43,7 +43,7 @@ function AtlasDashboard() {
     <>
       <AspectCreationDialog open={open} onClose={handleClose} />
       <ContentContainerLayout>
-        <Stack spacing={2}>
+        <Stack spacing={2} pb={2}>
           <Stack spacing={2} direction={"row"} alignItems="center" justifyContent="space-between">
             <Box>
               <Typography variant="h4" component="h1" color="primary.dark">
