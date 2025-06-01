@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
 import joblib
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from app.core.data.crud.aspect import crud_aspect
@@ -45,6 +46,8 @@ from app.preprocessing.ray_model_service import RayModelService
 from app.preprocessing.ray_model_worker.dto.promptembedder import PromptEmbedderInput
 from hdbscan import HDBSCAN
 from loguru import logger
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 from pydantic import BaseModel
 from sklearn.feature_extraction.text import CountVectorizer
 from sqlalchemy.orm import Session
@@ -247,55 +250,51 @@ class TMService:
 
     #     return train_docs, train_labels, train_doc_ids
 
-    def __build_training_data(
+    def __generate_map_thumbnail(
         self,
         db: Session,
         aspect_id: int,
-    ) -> Tuple[List[str], List[str], List[int]]:
-        # Read the aspect
+    ) -> None:
+        # Read all relevant data
         aspect = crud_aspect.read(db=db, id=aspect_id)
-
-        # Read all topics
-        all_topics = crud_topic.read_by_aspect_and_level(
-            db=db, aspect_id=aspect.id, level=0
-        )
-        topic2accepted_docs: Dict[int, List[int]] = {t.id: [] for t in all_topics}
-
-        # Read the document aspects
         doc_aspects = aspect.document_aspects
-        sdoc_id2doc_aspect: Dict[int, DocumentAspectORM] = {
-            da.sdoc_id: da for da in doc_aspects
-        }
+        doc_topics = crud_document_topic.read_by_aspect(db=db, aspect_id=aspect_id)
+        doc_id2_dt = {dt.sdoc_id: dt for dt in doc_topics}
 
-        # Read the current document <-> topic assignments
-        document_topics = crud_document_topic.read_by_aspect(db=db, aspect_id=aspect.id)
-        for dt in document_topics:
-            if dt.is_accepted:
-                topic2accepted_docs[dt.topic_id].append(dt.sdoc_id)
+        # Prepare data for the map
+        coords_x: List[float] = []
+        coords_y: List[float] = []
+        labels: List[int] = []
+        for da in doc_aspects:
+            coords_x.append(da.x)
+            coords_y.append(da.y)
+            labels.append(doc_id2_dt[da.sdoc_id].topic_id)
 
-        # Build training_data
-        train_labels: List[str] = []
-        train_docs: List[str] = []
-        train_doc_ids: List[int] = []
-        for topic in all_topics:
-            if topic.is_outlier:
-                continue
+        # Generate the map thumbnail
+        width_inches = 5.12  # 512 pixels at 100 DPI
+        height_inches = 5.12  # 512 pixels at 100 DPI
+        dpi = 100  # Dots per inch
 
-            accepted_sdoc_ids = topic2accepted_docs[topic.id]
-            if len(accepted_sdoc_ids) == 0:
-                # If there are no accepted documents, use the top documents
-                assert (
-                    topic.top_docs is not None
-                ), f"Topic {topic.id} has no accepted documents, but top_docs is not None."
-                accepted_sdoc_ids = topic.top_docs
+        figure, axis = plt.subplots(figsize=(width_inches, height_inches), dpi=dpi)
+        assert isinstance(figure, Figure), "Figure is not an instance of Figure"
+        assert isinstance(axis, Axes), "Axis is not an instance of Axes"
+        axis.scatter(
+            coords_x, coords_y, c=labels, cmap="tab20", s=10
+        )  # s is marker size
+        axis.set_frame_on(False)  # Removes the frame/spines;
+        axis.xaxis.set_visible(False)  # Ensure x-axis line/labels are not visible
+        axis.yaxis.set_visible(False)  # Ensure y-axis line/labels are not visible
+        axis.grid(False)
+        figure.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
 
-            for sdoc_id in accepted_sdoc_ids:
-                da = sdoc_id2doc_aspect[sdoc_id]
-                train_docs.append(da.content)
-                train_labels.append(f"{topic.id}")
-                train_doc_ids.append(da.sdoc_id)
-
-        return train_docs, train_labels, train_doc_ids
+        # Save the map thumbnail
+        output_path = self.repo.get_plot_path(
+            proj_id=aspect.project_id,
+            plot_name=f"aspect_{aspect_id}_map_thumbnail.png",
+        )
+        plt.savefig(output_path, dpi=dpi, pad_inches=0)
+        plt.close(figure)  # Close the figure to free memory
+        self._log_status_msg(f"Generated map thumbnail at {output_path}")
 
     def _embed_documents(
         self,
@@ -370,7 +369,6 @@ class TMService:
                     for coord in coords
                 ],
             )
-
             self._log_status_msg(
                 f"Stored embeddings and coordinates for {len(doc_aspects)} document aspects."
             )
@@ -565,6 +563,13 @@ class TMService:
             self._log_status_msg(
                 f"Assigned {len(doc_aspects)} document aspects to {len(cluster_id2topic_id)} topics."
             )
+
+        # 5. Generate a map thumbnail
+        self._log_status_msg("Generating map thumbnail for the map...")
+        self.__generate_map_thumbnail(
+            db=db,
+            aspect_id=aspect.id,
+        )
 
         return list(cluster_id2topic_id.values())
 
@@ -1286,6 +1291,56 @@ class TMService:
                 )
 
             self._log_status_msg("Successfully changed topic!")
+
+    def __build_training_data(
+        self,
+        db: Session,
+        aspect_id: int,
+    ) -> Tuple[List[str], List[str], List[int]]:
+        # Read the aspect
+        aspect = crud_aspect.read(db=db, id=aspect_id)
+
+        # Read all topics
+        all_topics = crud_topic.read_by_aspect_and_level(
+            db=db, aspect_id=aspect.id, level=0
+        )
+        topic2accepted_docs: Dict[int, List[int]] = {t.id: [] for t in all_topics}
+
+        # Read the document aspects
+        doc_aspects = aspect.document_aspects
+        sdoc_id2doc_aspect: Dict[int, DocumentAspectORM] = {
+            da.sdoc_id: da for da in doc_aspects
+        }
+
+        # Read the current document <-> topic assignments
+        document_topics = crud_document_topic.read_by_aspect(db=db, aspect_id=aspect.id)
+        for dt in document_topics:
+            if dt.is_accepted:
+                topic2accepted_docs[dt.topic_id].append(dt.sdoc_id)
+
+        # Build training_data
+        train_labels: List[str] = []
+        train_docs: List[str] = []
+        train_doc_ids: List[int] = []
+        for topic in all_topics:
+            if topic.is_outlier:
+                continue
+
+            accepted_sdoc_ids = topic2accepted_docs[topic.id]
+            if len(accepted_sdoc_ids) == 0:
+                # If there are no accepted documents, use the top documents
+                assert (
+                    topic.top_docs is not None
+                ), f"Topic {topic.id} has no accepted documents, but top_docs is not None."
+                accepted_sdoc_ids = topic.top_docs
+
+            for sdoc_id in accepted_sdoc_ids:
+                da = sdoc_id2doc_aspect[sdoc_id]
+                train_docs.append(da.content)
+                train_labels.append(f"{topic.id}")
+                train_doc_ids.append(da.sdoc_id)
+
+        return train_docs, train_labels, train_doc_ids
 
     def refine_topic_model(self, aspect_id: int, params: RefineTopicModelParams):
         with self.sqls.db_session() as db:
