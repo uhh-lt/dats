@@ -16,6 +16,7 @@ import type { RemoveTopicParams } from "../models/RemoveTopicParams";
 import type { ResetTopicModelParams } from "../models/ResetTopicModelParams";
 import type { SplitTopicParams } from "../models/SplitTopicParams";
 import type { TMJobRead } from "../models/TMJobRead";
+import type { TMTopicSimilarities } from "../models/TMTopicSimilarities";
 import type { TMVisualization } from "../models/TMVisualization";
 import type { TopicRead } from "../models/TopicRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -223,6 +224,23 @@ export class TopicModelService {
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns data for visualizing the topic similarities of the given aspect.
+   * @returns TMTopicSimilarities Successful Response
+   * @throws ApiError
+   */
+  public static getTopicSimilarities({ aspectId }: { aspectId: number }): CancelablePromise<TMTopicSimilarities> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/topic_model/topic_similarities/{aspect_id}",
+      path: {
+        aspect_id: aspectId,
+      },
       errors: {
         422: `Validation Error`,
       },

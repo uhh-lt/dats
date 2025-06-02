@@ -5782,6 +5782,27 @@
         }
       }
     },
+    "/topic_model/topic_similarities/{aspect_id}": {
+      "get": {
+        "tags": ["topic_model"],
+        "summary": "Returns data for visualizing the topic similarities of the given aspect.",
+        "operationId": "get_topic_similarities",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TMTopicSimilarities" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/topic_model/visualize_topics/{aspect_id}": {
       "get": {
         "tags": ["topic_model"],
@@ -10601,6 +10622,30 @@
           "reset_topic_model"
         ],
         "title": "TMJobType"
+      },
+      "TMTopicSimilarities": {
+        "properties": {
+          "aspect_id": {
+            "type": "integer",
+            "title": "Aspect Id",
+            "description": "ID of the aspect this visualization belongs to"
+          },
+          "topics": {
+            "items": { "$ref": "#/components/schemas/TopicRead" },
+            "type": "array",
+            "title": "Topics",
+            "description": "List of topics in the visualization"
+          },
+          "similarities": {
+            "items": { "items": { "type": "number" }, "type": "array" },
+            "type": "array",
+            "title": "Similarities",
+            "description": "Matrix of topic similarities, where similarities[i][j] is the similarity between topics[i] and topics[j]"
+          }
+        },
+        "type": "object",
+        "required": ["aspect_id", "topics", "similarities"],
+        "title": "TMTopicSimilarities"
       },
       "TMVisualization": {
         "properties": {
