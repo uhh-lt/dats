@@ -27,6 +27,7 @@ from app.core.topicmodel.tm_job import (
     TMJobRead,
 )
 from app.core.topicmodel.tm_job_service import TMJobService
+from app.core.vector.crud.aspect_embedding import crud_aspect_embedding
 from app.core.vector.crud.topic_embedding import crud_topic_embedding
 from app.core.vector.dto.topic_embedding import TopicObjectIdentifier
 from fastapi import APIRouter, Depends
@@ -206,6 +207,14 @@ def remove_aspect_by_id(
 ) -> AspectRead:
     authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
 
+    aspect = crud_aspect.read(db=db, id=aspect_id)
+
+    crud_topic_embedding.remove_embeddings_by_aspect(
+        project_id=aspect.project_id, aspect_id=aspect_id
+    )
+    crud_aspect_embedding.remove_embeddings_by_aspect(
+        project_id=aspect.project_id, aspect_id=aspect_id
+    )
     db_obj = crud_aspect.remove(db=db, id=aspect_id)
     return AspectRead.model_validate(db_obj)
 

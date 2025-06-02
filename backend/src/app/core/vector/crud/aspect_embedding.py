@@ -42,6 +42,19 @@ class CRUDAspectEmbedding(CRUDBase[AspectObjectIdentifier, AspectCollection]):
             ).equal(aspect_id),
         )
 
+    def remove_embeddings_by_aspect(self, project_id: int, aspect_id: int) -> None:
+        """
+        Remove all topic embeddings of a certain Aspect from Weaviate
+        :param project_id: The project ID
+        :param aspect_id: The Aspect ID
+        """
+        collection = self._get_collection(project_id=project_id)
+        collection.data.delete_many(
+            where=Filter.by_property(
+                self.collection_class.properties["aspect_id"].name
+            ).equal(aspect_id),
+        )
+
     def remove_by_sdoc_id(self, project_id: int, sdoc_id: int) -> None:
         """
         Remove all embeddings for a given SourceDocument by sdoc_id
