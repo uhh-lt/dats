@@ -34,7 +34,7 @@ interface TMJobProgressCardProps {
 function TMJobProgressCard({ tmJob }: TMJobProgressCardProps) {
   return (
     <Card variant="outlined">
-      <CardContent sx={{ p: 3 }}>
+      <CardContent sx={{ p: 1, pb: "8px !important" }}>
         <Stack spacing={4}>
           <Stack direction={"row"} spacing={2} alignItems="center" justifyContent="center">
             <Typography variant="h6" color="primary.dark" textAlign="center">
@@ -64,7 +64,7 @@ function TMJobProgressCard({ tmJob }: TMJobProgressCardProps) {
               );
             })}
           </Stepper>
-          <Typography variant="body1" color="textSecondary">
+          <Typography variant="body1" color="textSecondary" pl={1}>
             Detailed status: {tmJob.status_msg}
           </Typography>
         </Stack>

@@ -130,7 +130,9 @@ function MapDashboard() {
 
           {tmJob.data && (
             <Box>
-              <Typography variant="button">Most recent job</Typography>
+              <Stack height={40} alignItems="center" direction="row">
+                <Typography variant="button">Most recent job</Typography>
+              </Stack>
               <TMJobProgressCard tmJob={tmJob.data} />
             </Box>
           )}
