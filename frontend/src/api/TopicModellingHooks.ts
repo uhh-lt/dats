@@ -193,6 +193,17 @@ const useGetDocVisualization = (aspectId: number) => {
   });
 };
 
+const useGetTopicSimilarities = (aspectId: number) => {
+  return useQuery({
+    queryKey: [QueryKey.TOPIC_SIMILARITIES, aspectId],
+    queryFn: () =>
+      TopicModelService.getTopicSimilarities({
+        aspectId,
+      }),
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
 // Topics
 
 const useGetTopicsBySdocId = (aspectId: number | null | undefined, sdocId: number | null | undefined) =>
@@ -218,6 +229,7 @@ const TopicModellingHooks = {
   useUnlabelDocs,
   // visualization
   useGetDocVisualization,
+  useGetTopicSimilarities,
   // topics
   useGetTopicsBySdocId,
 };

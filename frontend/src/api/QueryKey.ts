@@ -110,6 +110,8 @@ export const QueryKey = {
   TM_JOB: "tmJob",
   // A DocumentVisualization (by aspect id)
   DOCUMENT_VISUALIZATION: "documentVisualization",
+  // TopicSimilarities (by aspect id)
+  TOPIC_SIMILARITIES: "topicSimilarities",
   // Topics of a SourceDocument (by aspect id, sdoc id)
   SDOC_TOPICS: "sdocTopics",
 
