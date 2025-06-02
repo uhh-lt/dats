@@ -10,6 +10,7 @@ from spacy.language import Language
 cc = conf.spacy
 
 DEVICE = cc.device
+MODEL_DIR = cc.model_dir
 MODELS = cc.models
 MAX_TEXT_LENGTH = cc.max_text_length
 
@@ -39,7 +40,7 @@ class SpacyModel:
             if lang == "default":
                 continue
             logger.info(f"Loading spaCy Model '{model}' ...")
-            nlp[lang] = spacy.load(model)
+            nlp[lang] = spacy.load(f"{MODEL_DIR}/{model}")
 
         logger.debug("Loading spaCy Models... Done!")
 

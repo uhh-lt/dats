@@ -1,42 +1,28 @@
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import TagHooks from "../../../api/TagHooks.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
-import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import ConfirmationAPI from "../../ConfirmationDialog/ConfirmationAPI.ts";
 
 function TagUnlinkButton({ sdocId, tag, ...props }: IconButtonProps & { sdocId: number; tag: DocumentTagRead }) {
   // mutations
   const { mutate: removeTagMutation, isPending } = TagHooks.useBulkUnlinkDocumentTags();
 
-  // snackbar
-  const openSnackbar = useOpenSnackbar();
-
   // actions
   const handleDeleteDocumentTag = useCallback(() => {
     ConfirmationAPI.openConfirmationDialog({
       text: `Do you really want to remove the DocumentTag "${tag.name}" from SourceDocument ${sdocId} ? You can reassign this tag later!`,
       onAccept: () => {
-        removeTagMutation(
-          {
-            requestBody: {
-              source_document_ids: [sdocId],
-              document_tag_ids: [tag.id],
-            },
+        removeTagMutation({
+          requestBody: {
+            source_document_ids: [sdocId],
+            document_tag_ids: [tag.id],
           },
-          {
-            onSuccess: () => {
-              openSnackbar({
-                text: `Removed tag from document ${sdocId}!`,
-                severity: "success",
-              });
-            },
-          },
-        );
+        });
       },
     });
-  }, [removeTagMutation, tag, sdocId, openSnackbar]);
+  }, [removeTagMutation, tag, sdocId]);
 
   return (
     <Tooltip title="Remove tag from document">
@@ -49,4 +35,4 @@ function TagUnlinkButton({ sdocId, tag, ...props }: IconButtonProps & { sdocId: 
   );
 }
 
-export default TagUnlinkButton;
+export default memo(TagUnlinkButton);

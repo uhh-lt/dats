@@ -1,30 +1,46 @@
-from typing import List, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import weaviate
+import weaviate.gql
+from config import conf
 from loguru import logger
 
-from app.core.data.dto.search import SimSearchImageHit, SimSearchSentenceHit
+from app.core.data.dto.search import (
+    SimSearchDocumentHit,
+    SimSearchImageHit,
+    SimSearchSentenceHit,
+)
 from app.core.db.index_type import IndexType
 from app.core.db.vector_index_service import VectorIndexService
-from config import conf
+
+
+class WeaviateError(RuntimeError):
+    pass
+
+
+class WeaviateVectorLengthError(WeaviateError):
+    def __init__(self):
+        super().__init__(
+            "New embedding vector lengths are different from already indexed vectors!"
+        )
 
 
 class WeaviateService(VectorIndexService):
-    def __new__(cls, *args, **kwargs):
-        cls._sentence_class_name = "Sentence"
-        cls._image_class_name = "Image"
-        cls._named_entity_class_name = "NamedEntity"
-        cls._document_class_name = "Document"
+    def __init__(self, *args, **kwargs):
+        self._sentence_class_name = "Sentence"
+        self._image_class_name = "Image"
+        self._named_entity_class_name = "NamedEntity"
+        self._document_class_name = "Document"
 
-        cls.class_names = {
-            IndexType.SENTENCE: cls._sentence_class_name,
-            IndexType.IMAGE: cls._image_class_name,
-            IndexType.NAMED_ENTITY: cls._named_entity_class_name,
-            IndexType.DOCUMENT: cls._document_class_name,
+        self.class_names = {
+            IndexType.SENTENCE: self._sentence_class_name,
+            IndexType.IMAGE: self._image_class_name,
+            IndexType.NAMED_ENTITY: self._named_entity_class_name,
+            IndexType.DOCUMENT: self._document_class_name,
         }
 
-        cls._common_properties = [
+        self._common_properties = [
             {
                 "name": "project_id",
                 "description": "The id of the project this sentence belongs to",
@@ -37,11 +53,11 @@ class WeaviateService(VectorIndexService):
             },
         ]
 
-        cls._sentence_class_obj = {
-            "class": cls._sentence_class_name,
+        self._sentence_class_obj = {
+            "class": self._sentence_class_name,
             "vectorizer": "none",
             "properties": [
-                *cls._common_properties,
+                *self._common_properties,
                 {
                     "name": "sentence_id",
                     "description": "The id of this sentence",
@@ -50,32 +66,11 @@ class WeaviateService(VectorIndexService):
             ],
         }
 
-        cls._sentence_schema = {
-            "name": cls._sentence_class_name,
-            "fields": [
-                {"name": "text", "type": "string"},
-                {"name": "vec", "type": "float[]", "num_dim": 512},
-                {"name": "project_id", "type": "int32"},
-                {"name": "sdoc_id", "type": "int32"},
-                {"name": "sentence_id", "type": "int32"},
-            ],
-        }
-
-        cls._document_schema = {
-            "name": cls._document_class_name,
-            "fields": [
-                {"name": "text", "type": "string"},
-                {"name": "vec", "type": "float[]", "num_dim": 512},
-                {"name": "project_id", "type": "int32"},
-                {"name": "sdoc_id", "type": "int32"},
-            ],
-        }
-
-        cls._named_entity_class_obj = {
-            "class": cls._named_entity_class_name,
+        self._named_entity_class_obj = {
+            "class": self._named_entity_class_name,
             "vectorizer": "none",
             "properties": [
-                *cls._common_properties,
+                *self._common_properties,
                 {
                     "name": "span_id",
                     "description": "The id of this span annotation",
@@ -84,19 +79,19 @@ class WeaviateService(VectorIndexService):
             ],
         }
 
-        cls._document_class_obj = {
-            "class": cls._document_class_name,
+        self._document_class_obj = {
+            "class": self._document_class_name,
             "vectorizer": "none",
             "properties": [
-                *cls._common_properties,
+                *self._common_properties,
             ],
         }
 
-        cls._image_class_obj = {
-            "class": cls._image_class_name,
+        self._image_class_obj = {
+            "class": self._image_class_name,
             "vectorizer": "none",
             "properties": [
-                *cls._common_properties,
+                *self._common_properties,
             ],
         }
 
@@ -105,75 +100,109 @@ class WeaviateService(VectorIndexService):
             w_host = conf.weaviate.host
             w_port = conf.weaviate.port
             url = f"http://{w_host}:{w_port}"
-            cls._client = weaviate.Client(url)
+            self._client = weaviate.Client(url)
 
-            if not cls._client.is_ready():
+            if not self._client.is_ready():
                 msg = f"Weaviate client at {url} not ready!"
                 logger.error(msg)
                 raise RuntimeError(msg)
 
-            cls._client.batch.configure(
+            self._client.batch.configure(
                 batch_size=100,
                 num_workers=2,
             )
 
             if kwargs["flush"] if "flush" in kwargs else False:
                 logger.warning("Flushing DATS Weaviate Data!")
-                if cls._client.schema.exists(cls._sentence_class_name):
-                    cls._client.schema.delete_class(cls._sentence_class_name)
-                if cls._client.schema.exists(cls._image_class_name):
-                    cls._client.schema.delete_class(cls._image_class_name)
-                if cls._client.schema.exists(cls._named_entity_class_name):
-                    cls._client.schema.delete_class(cls._named_entity_class_name)
-                if cls._client.schema.exists(cls._document_class_name):
-                    cls._client.schema.delete_class(cls._document_class_name)
+                if self._client.schema.exists(self._sentence_class_name):
+                    self._client.schema.delete_class(self._sentence_class_name)
+                if self._client.schema.exists(self._image_class_name):
+                    self._client.schema.delete_class(self._image_class_name)
+                if self._client.schema.exists(self._named_entity_class_name):
+                    self._client.schema.delete_class(self._named_entity_class_name)
+                if self._client.schema.exists(self._document_class_name):
+                    self._client.schema.delete_class(self._document_class_name)
 
             # create classes
-            if not cls._client.schema.exists(cls._sentence_class_name):
-                logger.debug(f"Creating class {cls._sentence_class_obj}!")
-                cls._client.schema.create_class(cls._sentence_class_obj)
-            if not cls._client.schema.exists(cls._image_class_name):
-                logger.debug(f"Creating class {cls._image_class_obj}!")
-                cls._client.schema.create_class(cls._image_class_obj)
-            if not cls._client.schema.exists(cls._named_entity_class_name):
-                logger.debug(f"Creating class {cls._named_entity_class_obj}!")
-                cls._client.schema.create_class(cls._named_entity_class_obj)
-            if not cls._client.schema.exists(cls._document_class_name):
-                logger.debug(f"Creating class {cls._document_class_obj}!")
-                cls._client.schema.create_class(cls._document_class_obj)
+            if not self._client.schema.exists(self._sentence_class_name):
+                logger.debug(f"Creating class {self._sentence_class_obj}!")
+                self._client.schema.create_class(self._sentence_class_obj)
+            if not self._client.schema.exists(self._image_class_name):
+                logger.debug(f"Creating class {self._image_class_obj}!")
+                self._client.schema.create_class(self._image_class_obj)
+            if not self._client.schema.exists(self._named_entity_class_name):
+                logger.debug(f"Creating class {self._named_entity_class_obj}!")
+                self._client.schema.create_class(self._named_entity_class_obj)
+            if not self._client.schema.exists(self._document_class_name):
+                logger.debug(f"Creating class {self._document_class_obj}!")
+                self._client.schema.create_class(self._document_class_obj)
 
-            cls._sentence_props = list(
-                map(lambda p: p["name"], cls._sentence_class_obj["properties"])
+            self._sentence_props = list(
+                map(lambda p: p["name"], self._sentence_class_obj["properties"])
             )
-            cls._image_props = list(
-                map(lambda p: p["name"], cls._image_class_obj["properties"])
+            self._image_props = list(
+                map(lambda p: p["name"], self._image_class_obj["properties"])
             )
-            cls._named_entity_props = list(
-                map(lambda p: p["name"], cls._named_entity_class_obj["properties"])
+            self._named_entity_props = list(
+                map(lambda p: p["name"], self._named_entity_class_obj["properties"])
+            )
+            self._document_props = list(
+                map(lambda p: p["name"], self._document_class_obj["properties"])
             )
         except Exception as e:
             msg = f"Cannot connect or initialize to Weaviate DB - Error '{e}'"
             logger.error(msg)
             raise SystemExit(msg)
-        return super(WeaviateService, cls).__new__(cls)
+        return super(WeaviateService, self)
 
     def add_embeddings_to_index(
-        self, type: IndexType, proj_id: int, sdoc_id: int, embeddings: List[np.ndarray]
+        self,
+        type: IndexType,
+        proj_id: int,
+        sdoc_ids: List[int],
+        embeddings: List[np.ndarray],
     ):
+        assert len(sdoc_ids) == len(embeddings), (
+            "`sdoc_ids` and `embeddings` must have the same length"
+        )
         logger.debug(
-            f"Adding {type} SDoc {sdoc_id} in Project {proj_id} to Weaviate ..."
+            f"Adding {type} SDocs {sdoc_ids} in Project {proj_id} to Weaviate ..."
         )
 
-        with self._client.batch as batch:
-            for sent_id, sent_emb in enumerate(embeddings):
-                batch.add_data_object(
-                    data_object={
+        def check_batch_result(
+            results: Optional[List[Dict[str, Any]]],
+        ) -> None:
+            if results is None:
+                return
+            for result in results:
+                if "result" in result and "errors" in result["result"]:
+                    if "error" in result["result"]["errors"]:
+                        error = result["result"]["errors"]["error"]
+                        if len(error) > 0 and "vector lengths don't match" in error[
+                            0
+                        ].get("message", ""):
+                            raise WeaviateVectorLengthError()
+                        else:
+                            raise WeaviateError(result["result"]["errors"])
+
+        with self._client.batch(callback=check_batch_result) as batch:
+            for sent_id, (sdoc_id, emb) in enumerate(zip(sdoc_ids, embeddings)):
+                if type == IndexType.SENTENCE:
+                    data_object = {
                         "project_id": proj_id,
                         "sdoc_id": sdoc_id,
                         "sentence_id": sent_id,
-                    },
+                    }
+
+                else:
+                    data_object = {
+                        "project_id": proj_id,
+                        "sdoc_id": sdoc_id,
+                    }
+                batch.add_data_object(
+                    data_object,
                     class_name=self.class_names[type],
-                    vector=sent_emb,  # type: ignore
+                    vector=emb,  # type: ignore
                 )
 
     def remove_embeddings_from_index(self, type: IndexType, sdoc_id: int):
@@ -229,7 +258,7 @@ class WeaviateService(VectorIndexService):
             .do()
         )
         if len(response["data"]["Get"][self.class_names[IndexType.IMAGE]]) == 0:
-            msg = f"No Sentence with sentence_id {sdoc_id} found!"
+            msg = f"No Image embedding for sdoc id '{sdoc_id}' found!"
             logger.error(msg)
             raise KeyError(msg)
 
@@ -380,17 +409,46 @@ class WeaviateService(VectorIndexService):
 
     def suggest(
         self,
-        index_type: IndexType,
+        data_ids: Union[Iterable[int], Iterable[Tuple[int, int]]],
         proj_id: int,
-        sdoc_sent_ids: List[Tuple[int, int]],
         top_k: int,
+        index_type: IndexType = IndexType.DOCUMENT,
+    ) -> Union[List[SimSearchDocumentHit], List[SimSearchSentenceHit]]:
+        match index_type:
+            case IndexType.DOCUMENT:
+                assert isinstance(data_ids, Iterable)
+                assert isinstance(next(iter(data_ids)), int)
+                if not all(isinstance(i, int) for i in data_ids):
+                    raise ValueError(
+                        "Expected a list of integers for DOCUMENT index type"
+                    )
+                return self._suggest_similar_documents(
+                    proj_id=proj_id,
+                    sdoc_ids=data_ids,  # type: ignore
+                    top_k=top_k,
+                    index_type=index_type,
+                )
+            case IndexType.SENTENCE:
+                return self._suggest_similar_sentences(
+                    proj_id=proj_id,
+                    sdoc_sent_ids=data_ids,  # type: ignore
+                    top_k=top_k,
+                    index_type=index_type,
+                )
+            case IndexType.IMAGE:
+                return []
+            case IndexType.NAMED_ENTITY:
+                return []
+
+    def _suggest_similar_sentences(
+        self,
+        proj_id: int,
+        sdoc_sent_ids: Iterable[Tuple[int, int]],
+        top_k: int,
+        index_type: IndexType,
     ) -> List[SimSearchSentenceHit]:
-        obj_ids = [
-            # TODO weaviate does not support batch/bulk queries.
-            # need some other solution as this is dead-slow for many objects
-            self._get_sentence_object_ids_by_sdoc_id_sentence_id(proj_id, sdoc, sent)
-            for sdoc, sent in sdoc_sent_ids
-        ]
+        sdoc_ids, sent_ids = zip(*sdoc_sent_ids)
+        obj_ids = self._get_object_ids(proj_id, sdoc_ids, index_type, sent_ids)
 
         project_filter = {
             "path": ["project_id"],
@@ -401,7 +459,7 @@ class WeaviateService(VectorIndexService):
         hits: List[SimSearchSentenceHit] = []
 
         for obj in obj_ids:
-            # TODO weaviate does not support batch/bulk queries.
+            # TODO weaviate does not support batch/bulk queries.IndexType
             # need some other solution as this is dead-slow for many objects
             query = self._client.query.get(
                 self._sentence_class_name,
@@ -427,12 +485,74 @@ class WeaviateService(VectorIndexService):
                 )
         return hits
 
-    def _get_sentence_object_ids_by_sdoc_id_sentence_id(
+    def _suggest_similar_documents(
+        self,
+        proj_id: int,
+        sdoc_ids: Sequence[int],
+        top_k: int,
+        index_type: IndexType,
+    ) -> List[SimSearchDocumentHit]:
+        obj_ids = self._get_object_ids(proj_id, sdoc_ids, index_type)
+        project_filter = {
+            "path": "project_id",
+            "operator": "Equal",
+            "valueInt": proj_id,
+        }
+
+        exclude_self_filter = {
+            "path": "id",
+            "operator": "NotEqual",
+            "valueText": None,
+        }
+
+        combined_filter = {
+            "operator": "And",
+            "operands": [
+                project_filter,
+                exclude_self_filter,
+            ],
+        }
+
+        hits: List[SimSearchDocumentHit] = []
+
+        for obj, sdoc_id in zip(obj_ids, sdoc_ids):
+            # TODO weaviate does not support batch/bulk queries.IndexType
+            # need some other solution as this is dead-slow for many objects
+            query = self._client.query.get(
+                self._document_class_name,
+                self._document_props,
+            )
+
+            exclude_self_filter["valueText"] = obj
+
+            query = (
+                query.with_near_object({"id": obj})
+                .with_additional(["certainty"])
+                .with_where(combined_filter)
+                .with_limit(top_k)
+            )
+
+            res = query.do()["data"]["Get"][self._document_class_name]
+            for r in res:
+                hits.append(
+                    SimSearchDocumentHit(
+                        sdoc_id=r["sdoc_id"],
+                        score=r["_additional"]["certainty"],
+                        compared_sdoc_id=sdoc_id,
+                    )
+                )
+        return hits
+
+    def _build_object_id_request(
         self,
         proj_id: int,
         sdoc_id: int,
-        sentence_id: int,
-    ) -> str:
+        alias: str,
+        index_type: IndexType,
+        sentence_id: Optional[int] = None,
+    ) -> weaviate.gql.query.GetBuilder:
+        object_class_name = ""
+        id = ""
         id_filter = {
             "operator": "And",
             "operands": [
@@ -446,27 +566,67 @@ class WeaviateService(VectorIndexService):
                     "operator": "Equal",
                     "valueInt": sdoc_id,
                 },
-                {
-                    "path": ["sentence_id"],
-                    "operator": "Equal",
-                    "valueInt": sentence_id,
-                },
             ],
         }
-        response = (
-            self._client.query.get(self._sentence_class_name, ["sentence_id"])
+        match index_type:
+            case IndexType.DOCUMENT:
+                object_class_name = self._document_class_name
+                id = "sdoc_id"
+            case IndexType.SENTENCE:
+                object_class_name = self._sentence_class_name
+                id = "sentence_id"
+                id_filter["operands"].append(
+                    {
+                        "path": ["sentence_id"],
+                        "operator": "Equal",
+                        "valueInt": sentence_id,
+                    },
+                )
+            case IndexType.IMAGE:
+                raise ValueError("Images are not supported.")
+            case IndexType.NAMED_ENTITY:
+                raise ValueError("Named Entities are not supported.")
+
+        req = (
+            self._client.query.get(object_class_name, [id])
             .with_where(id_filter)
             .with_additional("id")
-            .do()
+            .with_alias(alias)
         )
-        if len(response["data"]["Get"][self._sentence_class_name]) == 0:
-            msg = f"No Sentences for SDoc {sdoc_id} found!"
-            logger.error(msg)
-            raise KeyError(msg)
+        return req
 
-        return response["data"]["Get"][self._sentence_class_name][0]["_additional"][
-            "id"
-        ]
+    def _get_object_ids(
+        self,
+        proj_id: int,
+        sdoc_ids: Sequence[int],
+        index_type: IndexType,
+        sentence_ids: Optional[Iterable[int]] = None,
+    ) -> List[str]:
+        """Returns the weaviviate-internal IDs required for the `near_object` query"""
+        aliases = [f"doc_{id}" for id in range(len(sdoc_ids))]
+
+        requests = (
+            [
+                self._build_object_id_request(proj_id, sdoc_id, alias, index_type)
+                for sdoc_id, alias in zip(sdoc_ids, aliases)
+            ]
+            if sentence_ids is None
+            else [
+                self._build_object_id_request(
+                    proj_id, sdoc_id, alias, index_type, sent_id
+                )
+                for sdoc_id, sent_id, alias in zip(sdoc_ids, sentence_ids, aliases)
+            ]
+        )
+
+        try:
+            response = self._client.query.multi_get(requests).do()
+        except Exception as e:
+            raise e
+
+        results = response["data"]["Get"]
+
+        return [results[alias][0]["_additional"]["id"] for alias in aliases]
 
     def get_sentence_embeddings_by_sdoc_id(self, sdoc_id: int) -> np.ndarray:
         query = (
@@ -496,9 +656,14 @@ class WeaviateService(VectorIndexService):
 
         return np.array(sorted_res)
 
-    def get_sentence_embeddings(
-        self, search_tuples: List[Tuple[int, int]]
+    def get_embeddings(
+        self,
+        search_tuples: List[Tuple[int, int]],
+        index_type: IndexType,
     ) -> np.ndarray:
+        if index_type != IndexType.SENTENCE:
+            raise NotImplementedError("get_embeddings only implemented for sentences")
+
         # First prepare the query to run through data
         def run_batch(batch):
             query = (
@@ -562,8 +727,175 @@ class WeaviateService(VectorIndexService):
 
         return np.array(embeddings)
 
+    def get_document_embedding_by_sdoc_id(self, sdoc_id: int) -> np.ndarray:
+        query = (
+            self._client.query.get(
+                self._document_class_name,
+                self._document_props,
+            )
+            .with_additional(["vector"])
+            .with_where(
+                {
+                    "path": ["sdoc_id"],
+                    "operator": "Equal",
+                    "valueInt": sdoc_id,
+                },
+            )
+        )
+        result = query.do()
+        result = result["data"]["Get"][self._document_class_name]
+        result_dict = {r["sdoc_id"]: r["_additional"]["vector"] for r in result}
+        return np.array(result_dict[sdoc_id])
+
+    def get_document_embeddings(self, search_ids: List[int]) -> np.ndarray:
+        # First prepare the query to run through data
+        def run_batch(batch):
+            query = (
+                self._client.query.get(
+                    self._document_class_name,
+                    self._document_props,
+                )
+                .with_additional(["vector"])
+                .with_where(
+                    {
+                        "operator": "Or",
+                        "operands": [
+                            {
+                                "path": ["sdoc_id"],
+                                "operator": "Equal",
+                                "valueInt": sdoc_id,
+                            }
+                            for sdoc_id in batch
+                        ],
+                    }
+                )
+            )
+            result = query.do()["data"]["Get"][self._document_class_name]
+            result_dict = {r["sdoc_id"]: r["_additional"]["vector"] for r in result}
+            sorted_res = []
+            for sdoc_id in batch:
+                sorted_res.append(result_dict[sdoc_id])
+            return sorted_res
+
+        embeddings = []
+        batch = search_ids
+        while True:
+            if len(batch) >= 100:
+                minibatch = batch[:100]
+                batch = batch[100:]
+            else:
+                minibatch = batch
+                batch = []
+
+            # Get the next batch of objects
+            embeddings_minibatch = run_batch(minibatch)
+            embeddings.extend(embeddings_minibatch)
+
+            if len(batch) == 0:
+                break
+
+        return np.array(embeddings)
+
+    def get_image_embedding_by_sdoc_id(self, sdoc_id: int) -> np.ndarray:
+        query = (
+            self._client.query.get(
+                self._image_class_name,
+                self._document_props,
+            )
+            .with_additional(["vector"])
+            .with_where(
+                {
+                    "path": ["sdoc_id"],
+                    "operator": "Equal",
+                    "valueInt": sdoc_id,
+                },
+            )
+        )
+        result = query.do()
+        result = result["data"]["Get"][self._image_class_name]
+        result_dict = {r["sdoc_id"]: r["_additional"]["vector"] for r in result}
+        return np.array(result_dict[sdoc_id])
+
     def drop_indices(self) -> None:
         logger.warning("Dropping all Weaviate indices!")
         for name in self.class_names.values():
             if self._client.schema.exists(name):
                 self._client.schema.delete_class(name)
+
+    def knn(
+        self,
+        proj_id: int,
+        index_type: IndexType,
+        sdoc_ids_to_search: Sequence[int],
+        sdoc_ids_known: Sequence[int],
+        k: int = 3,
+    ) -> List[List[SimSearchDocumentHit]]:
+        obj_ids = self._get_object_ids(proj_id, sdoc_ids_to_search, index_type)
+
+        project_filter = {
+            "path": "project_id",
+            "operator": "Equal",
+            "valueInt": proj_id,
+        }
+
+        allowed_documents_filter = {
+            "path": "sdoc_id",
+            "operator": "ContainsAny",
+            "valueInt": list(sdoc_ids_known),
+        }
+
+        combined_filter = {
+            "operator": "And",
+            "operands": [
+                project_filter,
+                allowed_documents_filter,
+            ],
+        }
+
+        aliases = [f"doc_{id}" for id in sdoc_ids_to_search]
+        queries: list[weaviate.gql.query.GetBuilder] = []
+
+        for a, obj, sdoc_id in zip(aliases, obj_ids, sdoc_ids_to_search):
+            query = self._client.query.get(
+                self._document_class_name,
+                self._document_props,
+            )
+
+            query = (
+                query.with_near_object({"id": obj})
+                .with_additional(["certainty"])
+                .with_where(combined_filter)
+                .with_limit(k)
+                .with_alias(a)
+            )
+
+            queries.append(query)
+
+        response = self._client.query.multi_get(queries).do()
+
+        res = response["data"]["Get"]
+        hits: List[List[SimSearchDocumentHit]] = []
+        for a, sdoc_id in zip(aliases, sdoc_ids_to_search):
+            hits_per_source = []
+            for r in res[a]:
+                hits_per_source.append(
+                    SimSearchDocumentHit(
+                        sdoc_id=r["sdoc_id"],
+                        score=r["_additional"]["certainty"],
+                        compared_sdoc_id=sdoc_id,
+                    )
+                )
+            hits.append(hits_per_source)
+        return hits
+
+    def remove_project_index(self, proj_id: int, type: IndexType):
+        name = self.class_names[type]
+        if self._client.schema.exists(name):
+            self._client.batch.delete_objects(
+                class_name=name,
+                where={
+                    "path": ["project_id"],
+                    "operator": "Equal",
+                    "valueInt": proj_id,
+                },
+            )

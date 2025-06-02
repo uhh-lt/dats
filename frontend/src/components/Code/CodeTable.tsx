@@ -6,11 +6,11 @@ import {
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useMemo } from "react";
-import ProjectHooks from "../../api/ProjectHooks.ts";
+import { memo, useCallback, useMemo } from "react";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 
 import SquareIcon from "@mui/icons-material/Square";
+import CodeHooks from "../../api/CodeHooks.ts";
 
 const createDataTree = (dataset: CodeRead[]): CodeTableRow[] => {
   const hashTable: Record<number, CodeTableRow> = Object.create(null);
@@ -63,22 +63,21 @@ export interface CodeTableProps {
   rowSelectionModel: MRT_RowSelectionState;
   onRowSelectionChange: MRT_TableOptions<CodeTableRow>["onRowSelectionChange"];
   // toolbar
-  renderToolbarInternalActions?: (props: CodeTableActionProps) => React.ReactNode;
-  renderTopToolbarCustomActions?: (props: CodeTableActionProps) => React.ReactNode;
-  renderBottomToolbarCustomActions?: (props: CodeTableActionProps) => React.ReactNode;
+  renderTopRightToolbar?: (props: CodeTableActionProps) => React.ReactNode;
+  renderTopLeftToolbar?: (props: CodeTableActionProps) => React.ReactNode;
+  renderBottomToolbar?: (props: CodeTableActionProps) => React.ReactNode;
 }
 
 function CodeTable({
-  projectId,
   enableMultiRowSelection = true,
   rowSelectionModel,
   onRowSelectionChange,
-  renderToolbarInternalActions,
-  renderTopToolbarCustomActions,
-  renderBottomToolbarCustomActions,
+  renderTopRightToolbar,
+  renderTopLeftToolbar,
+  renderBottomToolbar,
 }: CodeTableProps) {
   // global server state
-  const projectCodes = ProjectHooks.useGetAllCodes(projectId);
+  const projectCodes = CodeHooks.useGetEnabledCodes();
 
   // computed
   const { projectCodesMap, projectCodesRows } = useMemo(() => {
@@ -97,6 +96,43 @@ function CodeTable({
 
     return { projectCodesMap, projectCodesRows };
   }, [projectCodes.data]);
+
+  // rendering
+  const renderTopLeftToolbarContent = useMemo(
+    () =>
+      renderTopLeftToolbar
+        ? (props: { table: MRT_TableInstance<CodeTableRow> }) =>
+            renderTopLeftToolbar({
+              table: props.table,
+              selectedCodes: Object.keys(rowSelectionModel).map((codeId) => projectCodesMap[codeId]),
+            })
+        : undefined,
+    [renderTopLeftToolbar, rowSelectionModel, projectCodesMap],
+  );
+  const renderBottomToolbarContent = useMemo(
+    () =>
+      renderBottomToolbar
+        ? (props: { table: MRT_TableInstance<CodeTableRow> }) =>
+            renderBottomToolbar({
+              table: props.table,
+              selectedCodes: Object.values(projectCodesMap).filter((row) => rowSelectionModel[row.id]),
+            })
+        : undefined,
+    [renderBottomToolbar, projectCodesMap, rowSelectionModel],
+  );
+  const renderTopRightToolbarContent = useMemo(
+    () =>
+      renderTopRightToolbar
+        ? (props: { table: MRT_TableInstance<CodeTableRow> }) =>
+            renderTopRightToolbar({
+              table: props.table,
+              selectedCodes: Object.values(projectCodesMap).filter((row) => rowSelectionModel[row.id]),
+            })
+        : undefined,
+    [renderTopRightToolbar, projectCodesMap, rowSelectionModel],
+  );
+
+  const getSubRows = useCallback((originalRow: CodeTableRow) => originalRow.subRows, []);
 
   // table
   const table = useMaterialReactTable<CodeTableRow>({
@@ -130,31 +166,13 @@ function CodeTable({
     enableRowVirtualization: true,
     // selection
     enableRowSelection: true,
-    enableMultiRowSelection: enableMultiRowSelection,
+    enableMultiRowSelection,
     onRowSelectionChange,
     // toolbar
-    enableBottomToolbar: true,
-    renderTopToolbarCustomActions: renderTopToolbarCustomActions
-      ? (props) =>
-          renderTopToolbarCustomActions({
-            table: props.table,
-            selectedCodes: Object.keys(rowSelectionModel).map((codeId) => projectCodesMap[codeId]),
-          })
-      : undefined,
-    renderToolbarInternalActions: renderToolbarInternalActions
-      ? (props) =>
-          renderToolbarInternalActions({
-            table: props.table,
-            selectedCodes: Object.values(projectCodesMap).filter((row) => rowSelectionModel[row.id]),
-          })
-      : undefined,
-    renderBottomToolbarCustomActions: renderBottomToolbarCustomActions
-      ? (props) =>
-          renderBottomToolbarCustomActions({
-            table: props.table,
-            selectedCodes: Object.values(projectCodesMap).filter((row) => rowSelectionModel[row.id]),
-          })
-      : undefined,
+    enableBottomToolbar: !!renderBottomToolbarContent,
+    renderTopToolbarCustomActions: renderTopLeftToolbarContent,
+    renderToolbarInternalActions: renderTopRightToolbarContent,
+    renderBottomToolbarCustomActions: renderBottomToolbarContent,
     // hide columns per default
     initialState: {
       columnVisibility: {
@@ -163,11 +181,11 @@ function CodeTable({
     },
     // tree structure
     enableExpanding: true,
-    getSubRows: (originalRow) => originalRow.subRows,
+    getSubRows,
     filterFromLeafRows: true, //search for child rows and preserve parent rows
     enableSubRowSelection: false,
   });
 
   return <MaterialReactTable table={table} />;
 }
-export default CodeTable;
+export default memo(CodeTable);

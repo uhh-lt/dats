@@ -104,6 +104,25 @@ function CotaConceptList({ cota }: CotaConceptListProps) {
     dispatch(CotaActions.onSelectConcept({ conceptId: concept.id }));
   };
 
+  const handleDuplicateConcept = (concept: COTAConcept) => {
+    const cotaConcepts = JSON.parse(JSON.stringify(cota.concepts)) as COTAConcept[];
+    const index = cotaConcepts.findIndex((c) => c.id === concept.id);
+    if (index !== -1) {
+      const duplicatedConcept = {
+        ...cotaConcepts[index],
+        id: uuidv4(),
+        name: `${cotaConcepts[index].name} (copy)`,
+      };
+      cotaConcepts.push(duplicatedConcept);
+      updateCota.mutate({
+        cotaId: cota.id,
+        requestBody: {
+          concepts: cotaConcepts,
+        },
+      });
+    }
+  };
+
   return (
     <>
       <Card className="myFlexContainer h100">
@@ -138,6 +157,7 @@ function CotaConceptList({ cota }: CotaConceptListProps) {
                 onEditClick={handleStartEditConcept}
                 onDeleteClick={handleDeleteConcept}
                 onToggleVisibilityClick={handleToggleVisibilityConcept}
+                onDuplicateClick={handleDuplicateConcept}
                 isDeleteEnabled={canDeleteConcept(cota)}
               />
             ))}

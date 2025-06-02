@@ -1,4 +1,3 @@
-import { Stack } from "@mui/material";
 import UserHooks from "../../api/UserHooks.ts";
 import { PublicUserRead } from "../../api/openapi/models/PublicUserRead.ts";
 import { UserRead } from "../../api/openapi/models/UserRead.ts";
@@ -29,9 +28,9 @@ function UserRendererWithoutData({ userId }: { userId: number }) {
 
 function UserRendererWithData({ user }: { user: PublicUserRead }) {
   return (
-    <Stack direction="row" alignItems="center">
+    <span>
       {user.first_name} {user.last_name}
-    </Stack>
+    </span>
   );
 }
 

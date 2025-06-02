@@ -8,7 +8,7 @@ on:
 jobs:
   build_release:
     name: build_release
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: checkout
         uses: actions/checkout@v3
@@ -28,16 +28,16 @@ jobs:
           echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
         shell: bash
 
-      - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          docker-images: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
+      # - name: Free Disk Space (Ubuntu)
+      #   uses: jlumbroso/free-disk-space@main
+      #   with:
+      #     tool-cache: false
+      #     docker-images: false
+      #     android: true
+      #     dotnet: true
+      #     haskell: true
+      #     large-packages: true
+      #     swap-storage: true
 
       - name: Build and push backend container
         uses: docker/build-push-action@v4
@@ -46,9 +46,6 @@ jobs:
           push: true
           tags: |
             "uhhlt/dats_backend:${{ steps.extract_version.outputs.version }}"
-      - name: Prepare environment
-        working-directory: frontend
-        run: cp .env.production.example .env.production
       - name: Build and push frontend container
         uses: docker/build-push-action@v4
         with:
@@ -68,39 +65,39 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           generateReleaseNotes: true
-  deploy_demo:
-    name: deploy_demo
-    needs: build_release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        id: checkout
-        uses: actions/checkout@v3
+  # deploy_demo:
+  #   name: deploy_demo
+  #   needs: build_release
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       id: checkout
+  #       uses: actions/checkout@v3
 
-      - name: Write SSH config & key
-        id: write_ssh_keys
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_CONFIG: ${{ secrets.SSH_CONFIG }}
-        run: |
-          install -m 600 -D /dev/null ~/.ssh/id_ed25519
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
-          echo "$SSH_CONFIG" > ~/.ssh/config
-        shell: bash
+  #     - name: Write SSH config & key
+  #       id: write_ssh_keys
+  #       env:
+  #         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+  #         SSH_CONFIG: ${{ secrets.SSH_CONFIG }}
+  #       run: |
+  #         install -m 600 -D /dev/null ~/.ssh/id_ed25519
+  #         echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+  #         echo "$SSH_CONFIG" > ~/.ssh/config
+  #       shell: bash
 
-      - name: Add server to known hosts
-        env:
-          SSH_JUMP_HOST: ${{ secrets.SSH_JUMP_HOST }}
-        run: |
-          ssh-keyscan -H $SSH_JUMP_HOST >> ~/.ssh/known_hosts
-        shell: bash
+  #     - name: Add server to known hosts
+  #       env:
+  #         SSH_JUMP_HOST: ${{ secrets.SSH_JUMP_HOST }}
+  #       run: |
+  #         ssh-keyscan -H $SSH_JUMP_HOST >> ~/.ssh/known_hosts
+  #       shell: bash
 
-      - name: Deploy
-        id: deploy
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-        run: |
-          scp -o StrictHostKeyChecking=no bin/deploy.sh $SSH_HOST:~/deploy.sh
-          ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=5 -o StrictHostKeyChecking=no $SSH_HOST './deploy.sh'
-          ssh -o StrictHostKeyChecking=no $SSH_HOST 'rm ./deploy.sh'
-        shell: bash
+  #     - name: Deploy
+  #       id: deploy
+  #       env:
+  #         SSH_HOST: ${{ secrets.SSH_HOST }}
+  #       run: |
+  #         scp -o StrictHostKeyChecking=no bin/deploy.sh $SSH_HOST:~/deploy.sh
+  #         ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=5 -o StrictHostKeyChecking=no $SSH_HOST './deploy.sh'
+  #         ssh -o StrictHostKeyChecking=no $SSH_HOST 'rm ./deploy.sh'
+  #       shell: bash

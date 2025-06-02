@@ -2,12 +2,8 @@ from typing import List, Optional
 
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.doc_type import DocType
-from app.core.data.dto.analysis import (
-    SpanAnnotationRow,
-    SpanAnnotationSearchResult,
-)
+from app.core.data.dto.analysis import SpanAnnotationRow, SpanAnnotationSearchResult
 from app.core.data.dto.code import CodeRead
-from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
@@ -16,15 +12,11 @@ from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.db.sql_service import SQLService
-from app.core.search.column_info import (
-    ColumnInfo,
-)
+from app.core.search.column_info import ColumnInfo
 from app.core.search.filtering import Filter
 from app.core.search.search_builder import SearchBuilder
 from app.core.search.sorting import Sort
-from app.core.search.span_anno_search.span_anno_search_columns import (
-    SpanColumns,
-)
+from app.core.search.span_anno_search.span_anno_search_columns import SpanColumns
 
 
 def find_span_annotations_info(
@@ -56,32 +48,37 @@ def find_span_annotations(
     with SQLService().db_session() as db:
         builder = SearchBuilder(db, filter, sorts)
         # build the initial subquery that queries all necessary data for the desired output
-        subquery = builder.build_subquery(
-            subquery=(
-                db.query(
-                    SpanAnnotationORM.id,
-                ).group_by(
-                    SpanAnnotationORM.id,
-                )
+        subquery = builder.init_subquery(
+            db.query(
+                SpanAnnotationORM.id,
+            ).group_by(
+                SpanAnnotationORM.id,
             )
-        )
-        builder.build_query(
-            query=(
-                db.query(
-                    SpanAnnotationORM.id,
-                    SpanTextORM.text,
-                    AnnotationDocumentORM.user_id,
-                )
-                .add_entity(CodeORM)
-                .add_entity(SourceDocumentORM)
-                .join(SpanAnnotationORM.annotation_document)
-                .join(SpanAnnotationORM.span_text)
-                .join(SpanAnnotationORM.code)
-                .join(AnnotationDocumentORM.source_document)
-                .join(subquery, SpanAnnotationORM.id == subquery.c.id)
-                .filter(SourceDocumentORM.project_id == project_id)
+        ).build_subquery()
+        builder.init_query(
+            db.query(
+                SpanAnnotationORM.id,
+                SpanTextORM.text,
+                AnnotationDocumentORM.user_id,
             )
-        )
+            .add_entity(CodeORM)
+            .add_entity(SourceDocumentORM)
+            .join(subquery, SpanAnnotationORM.id == subquery.c.id)
+            .filter(SourceDocumentORM.project_id == project_id)
+            .filter(CodeORM.enabled == True)  # noqa: E712
+        )._join_query(
+            AnnotationDocumentORM,
+            AnnotationDocumentORM.id == SpanAnnotationORM.annotation_document_id,
+        )._join_query(
+            SourceDocumentORM,
+            SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+        )._join_query(
+            CodeORM,
+            CodeORM.id == SpanAnnotationORM.code_id,
+        )._join_query(
+            SpanTextORM,
+            SpanTextORM.id == SpanAnnotationORM.span_text_id,
+        ).build_query()
         result_rows, total_results = builder.execute_query(
             page_number=page,
             page_size=page_size,
@@ -97,10 +94,7 @@ def find_span_annotations(
                     user_id=row[2],
                     code=CodeRead.model_validate(row[3]),
                     sdoc=SourceDocumentRead.model_validate(sdoc_orm),
-                    tags=[
-                        DocumentTagRead.model_validate(tag)
-                        for tag in sdoc_orm.document_tags
-                    ],
+                    tag_ids=[tag.id for tag in sdoc_orm.document_tags],
                     memo=None,
                 )
             )

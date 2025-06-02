@@ -1,7 +1,8 @@
 import uuid
-from typing import List, Tuple
+from typing import Iterable, List, Tuple, Union
 
 import numpy as np
+from config import conf
 from loguru import logger
 from qdrant_client import QdrantClient
 from qdrant_client.conversions.common_types import PointStruct, VectorParams
@@ -19,7 +20,6 @@ from qdrant_client.models import (
 from app.core.data.dto.search import SimSearchImageHit, SimSearchSentenceHit
 from app.core.db.index_type import IndexType
 from app.core.db.vector_index_service import VectorIndexService
-from config import conf
 
 
 class QdrantService(VectorIndexService):
@@ -53,9 +53,15 @@ class QdrantService(VectorIndexService):
         return super(QdrantService, cls).__new__(cls)
 
     def add_embeddings_to_index(
-        self, type: IndexType, proj_id: int, sdoc_id: int, embeddings: List[np.ndarray]
+        self,
+        type: IndexType,
+        proj_id: int,
+        sdoc_ids: Iterable[int],
+        embeddings: List[np.ndarray],
     ):
-        logger.debug(f"Adding {type} SDoc {sdoc_id} in Project {proj_id} to Qdrant ...")
+        logger.debug(
+            f"Adding {type} SDoc {sdoc_ids} in Project {proj_id} to Qdrant ..."
+        )
 
         points = [
             PointStruct(
@@ -71,7 +77,7 @@ class QdrantService(VectorIndexService):
                     "sentence_id": id,
                 },
             )
-            for id, emb in enumerate(embeddings)
+            for id, (sdoc_id, emb) in enumerate(zip(sdoc_ids, embeddings))
         ]
         self._client.upsert(type, points)  # type: ignore
 
@@ -109,14 +115,14 @@ class QdrantService(VectorIndexService):
         proj_id: int,
         index_type: IndexType,
         query_emb: np.ndarray,
-        sdoc_ids_to_search: List[int],
+        sdoc_ids_to_search: List[int] | None,
         top_k: int = 10,
         threshold: float = 0.0,
     ) -> List[SimSearchSentenceHit] | List[SimSearchImageHit]:
         filter = Filter(
             must=[
-                FieldCondition(key="proj_id", match=MatchValue(value=proj_id)),
-                FieldCondition(key="sdoc_id", match=MatchAny(any=sdoc_ids_to_search)),
+                FieldCondition(key="proj_id", match=MatchValue(value=proj_id)),  # type: ignore
+                FieldCondition(key="sdoc_id", match=MatchAny(any=sdoc_ids_to_search)),  # type: ignore
             ]
         )
         res = self._client.search(
@@ -147,9 +153,10 @@ class QdrantService(VectorIndexService):
 
     def suggest(
         self,
-        index_type: IndexType,
+        data_ids: Union[Iterable[int], Iterable[Tuple[int, int]]],
         proj_id: int,
-        sdoc_sent_ids: List[Tuple[int, int]],
+        top_k: int,
+        index_type: IndexType = IndexType.DOCUMENT,
     ) -> List[SimSearchSentenceHit]:
         filter = Filter(
             must=[FieldCondition(key="proj_id", match=MatchValue(value=proj_id))]
@@ -162,7 +169,7 @@ class QdrantService(VectorIndexService):
                 with_payload=True,
                 positive=[self._sentence_uuid(sdoc_id, sent_id)],
             )
-            for sdoc_id, sent_id in sdoc_sent_ids
+            for sdoc_id, sent_id in data_ids  # type: ignore
         ]
         res = self._client.recommend_batch(index_type, req)
 
@@ -175,7 +182,11 @@ class QdrantService(VectorIndexService):
             for r in res
         ]
 
-    def get_sentence_embeddings(self, search_tuples: List[Tuple[int]]) -> np.ndarray:
+    def get_embeddings(
+        self,
+        search_tuples: List[Tuple[int]],
+        index_type: IndexType,
+    ) -> np.ndarray:
         # TODO implement
         raise NotImplementedError("get_sentence_embeddings not implemented for qdrant")
 
@@ -185,3 +196,9 @@ class QdrantService(VectorIndexService):
 
     def _sentence_uuid(self, sdoc_id: int, id: int):
         return str(uuid.UUID(int=(sdoc_id << 64) + id))
+
+    def knn(self, proj_id, index_type, sdoc_ids_to_search, sdoc_ids_known, k=3):
+        raise NotImplementedError
+
+    def remove_project_index(self, proj_id, type):
+        raise NotImplementedError

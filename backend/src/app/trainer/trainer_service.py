@@ -1,6 +1,3 @@
-from loguru import logger
-from sqlalchemy.orm import Session
-
 from app.celery.background_jobs import start_trainer_job_async
 from app.core.data.crud.project import crud_project
 from app.core.data.dto.background_job_base import BackgroundJobStatus
@@ -12,6 +9,8 @@ from app.core.data.dto.trainer_job import (
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.redis_service import RedisService
 from app.util.singleton_meta import SingletonMeta
+from loguru import logger
+from sqlalchemy.orm import Session
 
 
 class TrainerService(metaclass=SingletonMeta):

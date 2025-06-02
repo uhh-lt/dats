@@ -7,7 +7,6 @@ from app.core.data.dto.analysis import (
     SentenceAnnotationSearchResult,
 )
 from app.core.data.dto.code import CodeRead
-from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
@@ -15,9 +14,7 @@ from app.core.data.orm.code import CodeORM
 from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.db.sql_service import SQLService
-from app.core.search.column_info import (
-    ColumnInfo,
-)
+from app.core.search.column_info import ColumnInfo
 from app.core.search.filtering import Filter
 from app.core.search.search_builder import SearchBuilder
 from app.core.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
@@ -53,32 +50,35 @@ def find_sentence_annotations(
     with SQLService().db_session() as db:
         builder = SearchBuilder(db, filter, sorts)
         # build the initial subquery that queries all necessary data for the desired output
-        subquery = builder.build_subquery(
-            subquery=(
-                db.query(
-                    SentenceAnnotationORM.id,
-                ).group_by(
-                    SentenceAnnotationORM.id,
-                )
+        subquery = builder.init_subquery(
+            db.query(
+                SentenceAnnotationORM.id,
+            ).group_by(
+                SentenceAnnotationORM.id,
             )
-        )
-        builder.build_query(
-            query=(
-                db.query(
-                    SentenceAnnotationORM.id,
-                    SentenceAnnotationORM.sentence_id_start,
-                    SentenceAnnotationORM.sentence_id_end,
-                    AnnotationDocumentORM.user_id,
-                )
-                .add_entity(CodeORM)
-                .add_entity(SourceDocumentORM)
-                .join(SentenceAnnotationORM.annotation_document)
-                .join(SentenceAnnotationORM.code)
-                .join(AnnotationDocumentORM.source_document)
-                .join(subquery, SentenceAnnotationORM.id == subquery.c.id)
-                .filter(SourceDocumentORM.project_id == project_id)
+        ).build_subquery()
+        builder.init_query(
+            db.query(
+                SentenceAnnotationORM.id,
+                SentenceAnnotationORM.sentence_id_start,
+                SentenceAnnotationORM.sentence_id_end,
+                AnnotationDocumentORM.user_id,
             )
-        )
+            .add_entity(CodeORM)
+            .add_entity(SourceDocumentORM)
+            .join(subquery, SentenceAnnotationORM.id == subquery.c.id)
+            .filter(SourceDocumentORM.project_id == project_id)
+            .filter(CodeORM.enabled == True)  # noqa: E712
+        )._join_query(
+            AnnotationDocumentORM,
+            AnnotationDocumentORM.id == SentenceAnnotationORM.annotation_document_id,
+        )._join_query(
+            SourceDocumentORM,
+            SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+        )._join_query(
+            CodeORM,
+            CodeORM.id == SentenceAnnotationORM.code_id,
+        ).build_query()
         result_rows, total_results = builder.execute_query(
             page_number=page,
             page_size=page_size,
@@ -95,10 +95,7 @@ def find_sentence_annotations(
                     user_id=row[3],
                     code=CodeRead.model_validate(row[4]),
                     sdoc=SourceDocumentRead.model_validate(sdoc_orm),
-                    tags=[
-                        DocumentTagRead.model_validate(tag)
-                        for tag in sdoc_orm.document_tags
-                    ],
+                    tag_ids=[tag.id for tag in sdoc_orm.document_tags],
                     text=" ".join(sdoc_orm.data.sentences[sent_start : sent_end + 1]),
                     memo=None,
                 )

@@ -1,7 +1,6 @@
 import { Card, CardActionArea, CardContent, CardHeader, Divider, Stack, Typography } from "@mui/material";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
-import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
+import { SpanAnnotationRead } from "../../../api/openapi/models/SpanAnnotationRead.ts";
 import CodeRenderer from "../../../components/Code/CodeRenderer.tsx";
 import UserName from "../../../components/User/UserName.tsx";
 import AnnotationCardActionsMenu from "./AnnotationCardActionMenu.tsx";
@@ -11,13 +10,14 @@ import { AnnotationCardProps } from "./types/AnnotationCardProps.ts";
 function SpanAnnotationCard({
   isSelected,
   annotation,
+  code,
   onClick,
   cardProps,
-}: AnnotationCardProps<SpanAnnotationReadResolved>) {
+}: AnnotationCardProps<SpanAnnotationRead>) {
   return (
     <Card {...cardProps}>
       <CardHeader
-        title={<CodeRenderer key={annotation.code.id} code={annotation.code} />}
+        title={<CodeRenderer key={annotation.code_id} code={annotation.code_id} />}
         action={
           <AnnotationCardActionsMenu
             annotationId={annotation.id}
@@ -40,7 +40,7 @@ function SpanAnnotationCard({
             sx={{
               wordBreak: "break-word",
               borderLeft: "3px solid",
-              borderColor: annotation.code.color,
+              borderColor: code.color,
               pl: 1,
             }}
           >
@@ -59,9 +59,8 @@ function SpanAnnotationCard({
           <AnnotationCardMemo
             annotationId={annotation.id}
             annotationType={AttachedObjectType.SPAN_ANNOTATION}
-            codeName={annotation.code.name}
+            codeName={code.name}
             annotationText={annotation.text}
-            useGetAnnotationMemo={SpanAnnotationHooks.useGetUserMemo}
           />
         </>
       )}
