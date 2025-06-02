@@ -1,5 +1,6 @@
 from typing import Dict, List
 
+import numpy as np
 from app.celery.background_jobs import prepare_and_start_tm_job_async
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
@@ -13,7 +14,7 @@ from app.core.data.dto.aspect import (
     AspectUpdateIntern,
 )
 from app.core.data.dto.background_job_base import BackgroundJobStatus
-from app.core.data.dto.tm_vis import TMDoc, TMVisualization
+from app.core.data.dto.tm_vis import TMDoc, TMTopicSimilarities, TMVisualization
 from app.core.data.dto.topic import TopicRead
 from app.core.search.filtering import Filter
 from app.core.search.sdoc_search import sdoc_search
@@ -25,6 +26,8 @@ from app.core.topicmodel.tm_job import (
     TMJobRead,
 )
 from app.core.topicmodel.tm_job_service import TMJobService
+from app.core.vector.crud.topic_embedding import crud_topic_embedding
+from app.core.vector.dto.topic_embedding import TopicObjectIdentifier
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -325,6 +328,53 @@ def visualize_documents(
         aspect_id=aspect.id,
         topics=[TopicRead.model_validate(t) for t in topics],
         docs=docs,
+    )
+
+
+@router.get(
+    "/topic_similarities/{aspect_id}",
+    response_model=TMTopicSimilarities,
+    summary="Returns data for visualizing the topic similarities of the given aspect.",
+)
+def get_topic_similarities(
+    *,
+    db: Session = Depends(get_db_session),
+    aspect_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> TMTopicSimilarities:
+    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
+
+    # Fetch the topics for the given Aspect
+    aspect = crud_aspect.read(db=db, id=aspect_id)
+    topics = aspect.topics
+
+    if len(topics) == 0:
+        return TMTopicSimilarities(
+            aspect_id=aspect_id,
+            topics=[],
+            similarities=[],
+        )
+
+    # Fetch the topic embeddings
+    topic_embeddings = crud_topic_embedding.get_embeddings(
+        project_id=aspect.project_id,
+        ids=[
+            TopicObjectIdentifier(
+                aspect_id=aspect_id,
+                topic_id=topic.id,
+            )
+            for topic in topics
+        ],
+    )
+
+    # Compute similarities
+    t_arr = np.array(topic_embeddings)
+    similarities = np.dot(t_arr, t_arr.T).tolist()
+
+    return TMTopicSimilarities(
+        aspect_id=aspect_id,
+        topics=[TopicRead.model_validate(t) for t in topics],
+        similarities=similarities,
     )
 
 

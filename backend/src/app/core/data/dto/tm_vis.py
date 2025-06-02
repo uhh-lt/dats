@@ -27,3 +27,11 @@ class TMVisualization(BaseModel):
     docs: List[TMDoc] = Field(
         description="List of documents in the visualization",
     )
+
+
+class TMTopicSimilarities(BaseModel):
+    aspect_id: int = Field(description="ID of the aspect this visualization belongs to")
+    topics: List[TopicRead] = Field(description="List of topics in the visualization")
+    similarities: List[List[float]] = Field(
+        description="Matrix of topic similarities, where similarities[i][j] is the similarity between topics[i] and topics[j]",
+    )
