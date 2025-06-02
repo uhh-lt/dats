@@ -1,7 +1,7 @@
 import BarChartIcon from "@mui/icons-material/BarChart";
 import PieChartIcon from "@mui/icons-material/PieChart";
 import ReplyIcon from "@mui/icons-material/Reply";
-import { Box, Button, Card, CardContent, CardMedia, IconButton, Stack, Tooltip, Typography } from "@mui/material";
+import { Box, Button, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import { useState } from "react";
 import { Link as RouterLink, useParams } from "react-router-dom";
 import TopicModellingHooks from "../../api/TopicModellingHooks.ts";
@@ -11,14 +11,14 @@ import BackgroundJobStatusBadge from "./BackgroundJobStatusBadge.tsx";
 import ColorScalePicker from "./ColorScalePicker.tsx";
 import { D3ColorScale } from "./D3ColorScale.ts";
 import DocAspectTable from "./DocAspectTable.tsx";
+import DocumentTopicScatterPlot from "./DocumentTopicScatterPlot.tsx";
 import TMJobProgressCard from "./TMJobProgressCard.tsx";
 import TopicDistributionPlot from "./TopicDistributionPlot.tsx";
 import TopicList from "./TopicList.tsx";
 import TopicSimilarityPlot from "./TopicSimilarityPlot.tsx";
 
 function MapDashboard() {
-  const urlParams = useParams() as { projectId: string; aspectId: string };
-  const projectId = parseInt(urlParams.projectId);
+  const urlParams = useParams() as { aspectId: string };
   const aspectId = parseInt(urlParams.aspectId);
 
   // global server state
@@ -75,19 +75,7 @@ function MapDashboard() {
               <Stack height={40} alignItems="center" direction="row">
                 <Typography variant="button">Map Preview</Typography>
               </Stack>
-              <Card variant="outlined" sx={{ bgcolor: "grey.300" }}>
-                <CardMedia
-                  sx={{ height: 360, width: 360, objectFit: "cover" }}
-                  component="img"
-                  image={`/content/projects/${projectId}/plots/aspect_${aspectId}_map_thumbnail.png`}
-                  title="Atlas Map Preview"
-                />
-                <CardContent sx={{ padding: 0.5, pb: "4px !important" }}>
-                  <Typography variant="body2" sx={{ color: "text.secondary", textAlign: "center" }}>
-                    This map is cool!
-                  </Typography>
-                </CardContent>
-              </Card>
+              <DocumentTopicScatterPlot aspectId={aspectId} height={359} />
             </Box>
             <Box flexGrow={1} flexBasis="0%" sx={{ maxWidth: "100%", overflow: "hidden" }}>
               <Stack height={40} alignItems="center" direction="row">
