@@ -3,6 +3,7 @@ import { memo, useMemo } from "react";
 import { ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis } from "recharts";
 import { TMDoc } from "../../api/openapi/models/TMDoc.ts";
 import TopicModellingHooks from "../../api/TopicModellingHooks.ts";
+import CardContainer from "../../components/MUI/CardContainer.tsx";
 import { useAppSelector } from "../../plugins/ReduxHooks.ts";
 
 interface DocumentTopicScatterPlotProps {
@@ -49,13 +50,18 @@ function DocumentTopicScatterPlot({ aspectId, height }: DocumentTopicScatterPlot
             ))}
           </ScatterChart>
         </ResponsiveContainer>
-      ) : vis.isSuccess && chartData === undefined ? (
-        <>No plot available!</>
-      ) : vis.isLoading || vis.isFetching ? (
-        <CircularProgress />
-      ) : vis.isError ? (
-        <>An Error occurred: {vis.error.message}</>
-      ) : null}
+      ) : (
+        <CardContainer sx={{ height, display: "flex", justifyContent: "center", alignItems: "center" }}>
+          {vis.isSuccess && chartData === undefined ? (
+            <>No plot available!</>
+          ) : vis.isLoading || vis.isFetching ? (
+            <CircularProgress />
+          ) : vis.isError ? (
+            <>An Error occurred: {vis.error.message}</>
+          ) : null}
+        </CardContainer>
+      )}
+
       <CardContent sx={{ padding: 0.5, pb: "4px !important" }}>
         <Typography variant="body2" sx={{ color: "text.secondary", textAlign: "center" }}>
           This map is cool!

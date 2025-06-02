@@ -13,6 +13,7 @@ import {
   YAxis,
 } from "recharts";
 import TopicModellingHooks from "../../api/TopicModellingHooks.ts";
+import CardContainer from "../../components/MUI/CardContainer.tsx";
 import { useAppSelector } from "../../plugins/ReduxHooks.ts";
 
 interface Data {
@@ -108,13 +109,17 @@ function TopicDistributionPlot({ aspectId, height, showPieChart }: TopicDistribu
             </BarChart>
           )}
         </ResponsiveContainer>
-      ) : vis.isSuccess && chartData.length === 0 ? (
-        <>No plot available!</>
-      ) : vis.isLoading || vis.isFetching ? (
-        <CircularProgress />
-      ) : vis.isError ? (
-        <>An Error occurred: {vis.error.message}</>
-      ) : null}
+      ) : (
+        <CardContainer sx={{ height, display: "flex", justifyContent: "center", alignItems: "center" }}>
+          {vis.isSuccess && chartData === undefined ? (
+            <>No plot available!</>
+          ) : vis.isLoading || vis.isFetching ? (
+            <CircularProgress />
+          ) : vis.isError ? (
+            <>An Error occurred: {vis.error.message}</>
+          ) : null}
+        </CardContainer>
+      )}
       <CardContent sx={{ padding: 0.5, pb: "4px !important" }}>
         <Typography variant="body2" sx={{ color: "text.secondary", textAlign: "center" }}>
           This map is cool!
