@@ -6,7 +6,7 @@ import { ChangeEvent, useState } from "react";
 import TopicModellingHooks from "../../api/TopicModellingHooks.ts";
 import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
 import { useDebounce } from "../../utils/useDebounce.ts";
-import AspectCreationDialog from "./AspectCreationDialog.tsx";
+import MapCreationDialog from "./AspectCreationDialog.tsx";
 
 function AtlasDashboard() {
   const aspects = TopicModellingHooks.useGetAllAspectsList();
@@ -41,7 +41,7 @@ function AtlasDashboard() {
 
   return (
     <>
-      <AspectCreationDialog open={open} onClose={handleClose} />
+      <MapCreationDialog open={open} onClose={handleClose} />
       <ContentContainerLayout>
         <Stack spacing={2} pb={2}>
           <Stack spacing={2} direction={"row"} alignItems="center" justifyContent="space-between">
