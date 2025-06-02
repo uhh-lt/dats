@@ -22,7 +22,7 @@ function TopicList({ aspectId, height }: TopicListProps) {
   };
 
   return (
-    <Card variant="outlined" sx={{ height }}>
+    <Card variant="outlined" sx={{ height, borderColor: "grey.500" }}>
       {vis.isSuccess && vis.data.topics.length > 0 ? (
         <List sx={{ width: "100%", overflowY: "auto" }} disablePadding>
           {vis.data.topics.map((topic, index) => {

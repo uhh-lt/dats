@@ -63,7 +63,7 @@ function TopicDistributionPlot({ aspectId, height, showPieChart }: TopicDistribu
   }, [vis.data]);
 
   return (
-    <Card variant="outlined" sx={{ bgcolor: "grey.300" }}>
+    <Card variant="outlined" sx={{ bgcolor: "grey.300", borderColor: "grey.500" }}>
       {vis.isSuccess && chartData.length > 0 ? (
         <ResponsiveContainer width="100%" height={height} style={{ backgroundColor: "white" }}>
           {showPieChart ? (

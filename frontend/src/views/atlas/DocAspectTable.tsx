@@ -106,6 +106,9 @@ function DocAspectTable({ aspectId, height, sdocIds }: DocAspectTableProps) {
     muiTablePaperProps: {
       variant: "outlined",
       style: { height },
+      sx: {
+        borderColor: "grey.500",
+      },
     },
     // Enable column resizing
     enableColumnResizing: true,
