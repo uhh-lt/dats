@@ -2,12 +2,14 @@ import ConstructionIcon from "@mui/icons-material/Construction";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import WarningIcon from "@mui/icons-material/Warning";
-import { Box, Card, CardActionArea, CardContent, CardMedia, Stack, Typography } from "@mui/material";
+import { Box, Card, CardActionArea, CardContent, CardMedia, IconButton, Stack, Typography } from "@mui/material";
 import React from "react";
 import { Link } from "react-router-dom";
 import { AspectRead } from "../../api/openapi/models/AspectRead.ts";
 import { BackgroundJobStatus } from "../../api/openapi/models/BackgroundJobStatus.ts";
 import TopicModellingHooks from "../../api/TopicModellingHooks.ts";
+import ConfirmationAPI from "../../components/ConfirmationDialog/ConfirmationAPI.ts";
+import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
 import BackgroundJobStatusBadge from "./BackgroundJobStatusBadge.tsx";
 
 const statusToIcon: Record<BackgroundJobStatus, React.ReactElement> = {
@@ -35,9 +37,20 @@ interface MapCardProps {
 function MapCard({ aspect, to, title }: MapCardProps) {
   const tmJob = TopicModellingHooks.usePollTMJob(aspect.most_recent_job_id, undefined);
 
+  const { mutate: deleteMutation, isPending } = TopicModellingHooks.useDeleteAspect();
+  const handleDelete: React.MouseEventHandler<HTMLButtonElement> = (event) => {
+    event.preventDefault();
+    ConfirmationAPI.openConfirmationDialog({
+      text: `Are you sure you want to delete the map "${title}"? This action cannot be undone.`,
+      onAccept: () => {
+        deleteMutation({ aspectId: aspect.id });
+      },
+    });
+  };
+
   if (!tmJob.data) return null;
   return (
-    <Card sx={{ flexShrink: 0, position: "relative" }}>
+    <Card sx={{ flexShrink: 0, position: "relative", "&:hover .delete-button": { opacity: 1 } }}>
       <Box position={"absolute"} top={8} right={8} zIndex={1}>
         <BackgroundJobStatusBadge status={tmJob.data?.status} />
       </Box>
@@ -67,9 +80,19 @@ function MapCard({ aspect, to, title }: MapCardProps) {
         )}
 
         <CardContent sx={{ py: 0.5, pb: "4px !important", borderTop: "1px solid", borderColor: "grey.300" }}>
-          <Typography variant="subtitle1" fontWeight="800" color="primary.dark">
-            {title}
-          </Typography>
+          <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <Typography variant="subtitle1" fontWeight="800" color="primary.dark">
+              {title}
+            </Typography>
+            <IconButton
+              className="delete-button"
+              sx={{ opacity: 0, transition: "opacity 0.3s" }}
+              onClick={handleDelete}
+              disabled={isPending}
+            >
+              {getIconComponent(Icon.DELETE)}
+            </IconButton>
+          </Stack>
         </CardContent>
       </CardActionArea>
     </Card>
