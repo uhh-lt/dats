@@ -13,6 +13,7 @@ import { D3ColorScale } from "./D3ColorScale.ts";
 import DocAspectTable from "./DocAspectTable.tsx";
 import DocumentTopicScatterPlot from "./DocumentTopicScatterPlot.tsx";
 import TMJobProgressCard from "./TMJobProgressCard.tsx";
+import TopicDetailDialog from "./TopicDetailDialog.tsx";
 import TopicDistributionPlot from "./TopicDistributionPlot.tsx";
 import TopicList from "./TopicList.tsx";
 import TopicSimilarityPlot from "./TopicSimilarityPlot.tsx";
@@ -124,6 +125,8 @@ function MapDashboard() {
               <TMJobProgressCard tmJob={tmJob.data} />
             </Box>
           )}
+
+          <TopicDetailDialog aspectId={aspectId} />
         </Stack>
       ) : (
         <>LOADING!</>

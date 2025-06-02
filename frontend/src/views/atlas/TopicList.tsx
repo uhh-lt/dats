@@ -1,7 +1,8 @@
 import { Box, Card, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 import TopicModellingHooks from "../../api/TopicModellingHooks.ts";
-import { useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
+import { AtlasActions } from "./atlasSlice.ts";
 
 interface TopicListProps {
   aspectId: number;
@@ -13,6 +14,12 @@ function TopicList({ aspectId, height }: TopicListProps) {
   const vis = TopicModellingHooks.useGetDocVisualization(aspectId);
   const colorScheme = useAppSelector((state) => state.atlas.colorScheme);
 
+  // open topic dialog
+  const dispatch = useAppDispatch();
+  const handleClick = (topicId: number) => () => {
+    dispatch(AtlasActions.onOpenTopicDialog(topicId));
+  };
+
   return (
     <Card variant="outlined" sx={{ height, overflowY: "auto" }}>
       <List sx={{ width: "100%" }} disablePadding>
@@ -20,7 +27,7 @@ function TopicList({ aspectId, height }: TopicListProps) {
           if (topic.is_outlier) return null;
           return (
             <ListItem key={topic.id} disablePadding>
-              <ListItemButton role={undefined} dense>
+              <ListItemButton role={undefined} dense onClick={handleClick(topic.id)}>
                 <ListItemIcon>
                   <Box width={42} height={42} display="flex" alignItems="center" justifyContent="flex-start">
                     {getIconComponent(Icon.TOPIC, { style: { color: colorScheme[index % colorScheme.length] } })}

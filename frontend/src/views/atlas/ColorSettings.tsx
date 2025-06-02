@@ -1,3 +1,4 @@
+import InfoIcon from "@mui/icons-material/Info";
 import {
   Alert,
   Box,
@@ -5,6 +6,7 @@ import {
   Checkbox,
   Divider,
   FormControlLabel,
+  IconButton,
   List,
   ListItem,
   ListItemButton,
@@ -231,6 +233,11 @@ function ColorSettings({ aspectId }: ColorSettingsProps) {
 
   const selectType = mergeMode ? "multi" : deleteMode || splitMode ? "single" : "none";
 
+  // info click
+  const handleInfoClick = (topicId: number) => () => {
+    dispatch(AtlasActions.onOpenTopicDialog(topicId));
+  };
+
   return (
     <Box>
       <Stack spacing={3} p={2}>
@@ -438,11 +445,11 @@ function ColorSettings({ aspectId }: ColorSettingsProps) {
             return (
               <ListItem
                 key={topic.id}
-                // secondaryAction={
-                //   <IconButton edge="end" aria-label="comments">
-                //     <CommentIcon />
-                //   </IconButton>
-                // }
+                secondaryAction={
+                  <IconButton edge="end" onClick={handleInfoClick(topic.id)}>
+                    <InfoIcon />
+                  </IconButton>
+                }
                 disablePadding
               >
                 <ListItemButton
