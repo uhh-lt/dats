@@ -7,6 +7,8 @@ import { Link as RouterLink, useParams } from "react-router-dom";
 import TopicModellingHooks from "../../api/TopicModellingHooks.ts";
 import ExportChartButton from "../../components/ExportChartButton.tsx";
 import ContentContainerLayout from "../../layouts/ContentLayouts/ContentContainerLayout.tsx";
+import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { AtlasActions } from "./atlasSlice.ts";
 import BackgroundJobStatusBadge from "./BackgroundJobStatusBadge.tsx";
 import ColorScalePicker from "./ColorScalePicker.tsx";
 import { D3ColorScale } from "./D3ColorScale.ts";
@@ -17,10 +19,19 @@ import TopicDetailDialog from "./TopicDetailDialog.tsx";
 import TopicDistributionPlot from "./TopicDistributionPlot.tsx";
 import TopicList from "./TopicList.tsx";
 import TopicSimilarityPlot from "./TopicSimilarityPlot.tsx";
+import { useInitAtlasFilterSlice } from "./useInitAtlasFilterSlice.ts";
 
 function MapDashboard() {
-  const urlParams = useParams() as { aspectId: string };
+  const urlParams = useParams() as { projectId: string; aspectId: string };
+  const projectId = parseInt(urlParams.projectId);
   const aspectId = parseInt(urlParams.aspectId);
+
+  // initialize the filtering
+  useInitAtlasFilterSlice({ projectId });
+
+  // dispatch changeMap Event!
+  const dispatch = useAppDispatch();
+  dispatch(AtlasActions.onOpenMap({ projectId, aspectId: aspectId }));
 
   // global server state
   const aspect = TopicModellingHooks.useGetAspect(aspectId);
