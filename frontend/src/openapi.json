@@ -5686,6 +5686,37 @@
         }
       }
     },
+    "/topic_model/aspect/{aspect_id}/sdoc/{sdoc_id}": {
+      "get": {
+        "tags": ["topic_model"],
+        "summary": "Returns the Document Aspect Content for the given IDs.",
+        "operationId": "get_docaspect_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "aspect_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Aspect Id" }
+          },
+          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "string", "title": "Response Topic Model-Get Docaspect By Id" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/topic_model/label_accept/{aspect_id}": {
       "post": {
         "tags": ["topic_model"],
