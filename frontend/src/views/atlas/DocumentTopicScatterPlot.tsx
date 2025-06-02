@@ -33,7 +33,7 @@ function DocumentTopicScatterPlot({ aspectId, height }: DocumentTopicScatterPlot
   }, [vis.data]);
 
   return (
-    <Card variant="outlined" sx={{ bgcolor: "grey.300" }}>
+    <Card variant="outlined" sx={{ bgcolor: "grey.300", borderColor: "grey.500" }}>
       {vis.isSuccess && chartData !== undefined ? (
         <ResponsiveContainer width="100%" height={height} style={{ backgroundColor: "white" }}>
           <ScatterChart>

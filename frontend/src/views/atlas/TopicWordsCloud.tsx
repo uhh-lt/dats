@@ -34,7 +34,7 @@ function TopicWordsCloud({ width, height, topic }: TopicWordsCloudProps) {
   }, [topic]);
 
   return (
-    <Card variant="outlined" sx={{ height }}>
+    <Card variant="outlined" sx={{ height, borderColor: "grey.500" }}>
       <Wordcloud
         words={words}
         width={width}

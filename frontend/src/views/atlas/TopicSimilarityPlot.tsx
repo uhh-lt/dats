@@ -41,7 +41,10 @@ function TopicSimilarityPlot({ aspectId, height, colorName }: TopicSimilarityPlo
   const tickValues = d3.range(0, 1.01, 1 / (numTicks - 1)); // Generate tick values
 
   return (
-    <Card variant="outlined" sx={{ width: "100%", bgcolor: "grey.300", display: "flex", flexDirection: "column" }}>
+    <Card
+      variant="outlined"
+      sx={{ width: "100%", bgcolor: "grey.300", borderColor: "grey.500", display: "flex", flexDirection: "column" }}
+    >
       {(() => {
         if (vis.isLoading || vis.isFetching) {
           return (

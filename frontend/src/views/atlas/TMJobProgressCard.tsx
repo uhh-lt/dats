@@ -33,7 +33,7 @@ interface TMJobProgressCardProps {
 
 function TMJobProgressCard({ tmJob }: TMJobProgressCardProps) {
   return (
-    <Card variant="outlined">
+    <Card variant="outlined" sx={{ borderColor: "grey.500" }}>
       <CardContent sx={{ p: 1, pb: "8px !important" }}>
         <Stack spacing={4}>
           <Stack direction={"row"} spacing={2} alignItems="center" justifyContent="center">
