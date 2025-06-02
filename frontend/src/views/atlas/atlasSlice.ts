@@ -45,6 +45,9 @@ export interface AtlasState {
   searchQuery: string; // This can be used to store the search query if needed
   // statistics
   pinnedStatistics: string[]; // "keywords", "tags", "<codeId>", etc.
+  // dialog
+  isTopicDialogOpen: boolean;
+  topicDialogTopicId: number | undefined;
 }
 
 const defaultFilterExpression: MyFilterExpression = {
@@ -77,6 +80,9 @@ const initialState: AtlasState & FilterState = {
   searchQuery: "",
   // statistics
   pinnedStatistics: ["keywords", "tags"],
+  // dialog
+  isTopicDialogOpen: false,
+  topicDialogTopicId: undefined,
 };
 
 const resetAtlasState = (state: Draft<AtlasState>) => {
@@ -259,6 +265,15 @@ export const atlasSlice = createSlice({
     },
     onUnpinStatistics: (state, action: PayloadAction<string>) => {
       state.pinnedStatistics = state.pinnedStatistics.filter((stat) => stat !== action.payload);
+    },
+    // dialog
+    onOpenTopicDialog: (state, action: PayloadAction<number | undefined>) => {
+      state.isTopicDialogOpen = true;
+      state.topicDialogTopicId = action.payload;
+    },
+    onCloseTopicDialog: (state) => {
+      state.isTopicDialogOpen = false;
+      state.topicDialogTopicId = undefined;
     },
   },
   extraReducers: (builder) => {

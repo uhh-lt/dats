@@ -10,9 +10,10 @@ import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
 interface DocAspectTableProps {
   aspectId: number;
   height: number;
+  sdocIds?: number[];
 }
 
-function DocAspectTable({ aspectId, height }: DocAspectTableProps) {
+function DocAspectTable({ aspectId, height, sdocIds }: DocAspectTableProps) {
   // global server state
   const vis = TopicModellingHooks.useGetDocVisualization(aspectId);
   const colorScheme = useAppSelector((state) => state.atlas.colorScheme);
@@ -20,19 +21,33 @@ function DocAspectTable({ aspectId, height }: DocAspectTableProps) {
   // computed
   const { data, topic2Index } = useMemo(() => {
     if (!vis.data) return { data: [], topic2Index: {} };
+
+    let data: TMDoc[] = [];
+    if (sdocIds && sdocIds.length > 0) {
+      const sdocId2TMDoc: Record<number, TMDoc> = vis.data.docs.reduce(
+        (acc, doc) => {
+          acc[doc.sdoc_id] = doc;
+          return acc;
+        },
+        {} as Record<number, TMDoc>,
+      );
+      sdocIds.forEach((sdocId) => {
+        data.push(sdocId2TMDoc[sdocId]);
+      });
+    } else {
+      data = vis.data.docs.slice(0, 9); // default to first 9 documents if no sdocIds provided
+    }
     return {
-      data: vis.data.docs.slice(0, 9),
+      data,
       topic2Index: vis.data.topics.reduce(
         (acc, topic, index) => {
-          if (!topic.is_outlier) {
-            acc[topic.id] = index;
-          }
+          acc[topic.id] = index;
           return acc;
         },
         {} as Record<number, number>,
       ),
     };
-  }, [vis]);
+  }, [vis, sdocIds]);
 
   const columns: MRT_ColumnDef<TMDoc>[] = useMemo(
     () => [
