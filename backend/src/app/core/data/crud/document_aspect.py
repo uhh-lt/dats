@@ -2,7 +2,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy import tuple_
 from sqlalchemy.orm import Session
 
-from app.core.data.crud.crud_base import CRUDBase
+from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
 from app.core.data.dto.document_aspect import (
     DocumentAspectCreate,
     DocumentAspectUpdate,
@@ -15,6 +15,23 @@ from app.core.data.orm.topic import TopicORM
 class CRUDDocumentAspect(
     CRUDBase[DocumentAspectORM, DocumentAspectCreate, DocumentAspectUpdate]
 ):
+    def read(self, db: Session, id: tuple[int, int]) -> DocumentAspectORM:
+        """
+        Read a DocumentAspectORM by a tuple of (sdoc_id, aspect_id).
+        """
+
+        db_obj = (
+            db.query(self.model)
+            .filter(
+                self.model.sdoc_id == id[0],
+                self.model.aspect_id == id[1],
+            )
+            .first()
+        )
+        if db_obj is None:
+            raise NoSuchElementError(self.model, sdoc_id=id[0], aspect_id=id[1])
+        return db_obj
+
     def read_by_ids(
         self, db: Session, ids: list[tuple[int, int]]
     ) -> list[DocumentAspectORM]:
