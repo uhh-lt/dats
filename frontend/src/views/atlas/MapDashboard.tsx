@@ -12,6 +12,7 @@ import ColorScalePicker from "./ColorScalePicker.tsx";
 import { D3ColorScale } from "./D3ColorScale.ts";
 import TMJobProgressCard from "./TMJobProgressCard.tsx";
 import TopicDistributionPlot from "./TopicDistributionPlot.tsx";
+import TopicList from "./TopicList.tsx";
 import TopicSimilarityPlot from "./TopicSimilarityPlot.tsx";
 
 function MapDashboard() {
@@ -108,6 +109,15 @@ function MapDashboard() {
                 <ColorScalePicker onColorChange={setColors} />
               </Stack>
               <TopicSimilarityPlot aspectId={aspectId} height={360} colorName={colors} />
+            </Box>
+          </Stack>
+
+          <Stack spacing={4} direction={"row"}>
+            <Box width="360px" flexShrink={0}>
+              <Stack height={40} alignItems="center" direction="row">
+                <Typography variant="button">Topics</Typography>
+              </Stack>
+              <TopicList aspectId={aspectId} height={390} />
             </Box>
           </Stack>
 
