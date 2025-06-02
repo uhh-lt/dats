@@ -1,6 +1,17 @@
 import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
-import { Button, Dialog, DialogActions, DialogContent, Stack, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Card,
+  CardActionArea,
+  CardContent,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  Stack,
+  Typography,
+} from "@mui/material";
 import { useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -12,12 +23,50 @@ import DATSDialogHeader from "../../components/MUI/DATSDialogHeader.tsx";
 import { useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { RootState } from "../../store/store.ts";
 
-interface AspectCreationDialogProps {
+interface AspectTemplate {
+  name: string;
+  description: string;
+  doc_embedding_prompt: string;
+  doc_modification_prompt?: string | null;
+}
+
+const templates: AspectTemplate[] = [
+  {
+    name: "Topic Clustering",
+    description: "Group documents by their main topics.",
+    doc_embedding_prompt: "Identify the main topic or theme of the document",
+    doc_modification_prompt:
+      "Summarize the document, analyzing the topics of the document. Conclude with a possible topic categorization of it.",
+  },
+  {
+    name: "Sentiment Analysis",
+    description: "Group documents by their overall sentiment.",
+    doc_embedding_prompt: "Identify the main sentiment of the document",
+    doc_modification_prompt:
+      "Summarize the document, analyzing the sentiment of the document. Conclude with a categorization of it as positive, negative, or neutral.",
+  },
+  {
+    name: "Style Analysis",
+    description: "Group documents by their writing style.",
+    doc_embedding_prompt: "Identify the main writing style of the document",
+    doc_modification_prompt:
+      "Summarize the document, analyzing the writing style of the document. Conclude with a possible style categorization of it.",
+  },
+  {
+    name: "Narrative Structure",
+    description: "Group documents by their narrative structure.",
+    doc_embedding_prompt: "Identify the main narrative structure of the document",
+    doc_modification_prompt:
+      "Summarize the document, analyzing the narrative structure of the document. Conclude with a possible narrative structure categorization of it.",
+  },
+];
+
+interface MapCreationDialogProps {
   open: boolean;
   onClose: () => void;
 }
 
-function AspectCreationDialog({ open, onClose }: AspectCreationDialogProps) {
+function MapCreationDialog({ open, onClose }: MapCreationDialogProps) {
   const projectId = useAppSelector((state: RootState) => state.project.projectId);
 
   // project creation
@@ -26,6 +75,8 @@ function AspectCreationDialog({ open, onClose }: AspectCreationDialogProps) {
     handleSubmit,
     formState: { errors },
     control,
+    setValue,
+    reset,
   } = useForm<AspectCreate>({
     defaultValues: {
       name: "",
@@ -59,6 +110,13 @@ function AspectCreationDialog({ open, onClose }: AspectCreationDialogProps) {
     console.error(error);
   };
 
+  // handle click on card
+  const handleClick = (template: AspectTemplate) => () => {
+    setValue("name", template.name);
+    setValue("doc_embedding_prompt", template.doc_embedding_prompt);
+    setValue("doc_modification_prompt", template.doc_modification_prompt || "");
+  };
+
   // maximize dialog
   const [isMaximized, setIsMaximized] = useState(false);
   const handleToggleMaximize = () => {
@@ -76,42 +134,43 @@ function AspectCreationDialog({ open, onClose }: AspectCreationDialogProps) {
       onSubmit={handleSubmit(handleAspectCreation, handleError)}
     >
       <DATSDialogHeader
-        title="Create new aspect"
+        title="Create Map"
         onClose={onClose}
         isMaximized={isMaximized}
         onToggleMaximize={handleToggleMaximize}
       />
       <DialogContent>
-        <Stack spacing={2} pt={1}>
-          <Typography variant="body2">
-            TODO: Offer pre-defined aspects to choose from, or allow users to create their own aspects.
-          </Typography>
+        <Stack spacing={2}>
+          <Box>
+            <Typography variant="button">Templates</Typography>
+            <Stack direction="row" spacing={2} sx={{ overflowX: "auto", paddingBottom: 2, mt: 0.5 }}>
+              {templates.map((template, index) => (
+                <Card key={index} elevation={5} style={{ width: "100%" }} sx={{ backgroundColor: "primary.dark" }}>
+                  <CardActionArea onClick={handleClick(template)}>
+                    <CardContent style={{ textAlign: "center" }} sx={{ color: "primary.contrastText", p: 2 }}>
+                      <h3 style={{ marginTop: 0 }}>{template.name}</h3>
+                      {template.description}
+                    </CardContent>
+                  </CardActionArea>
+                </Card>
+              ))}
+            </Stack>
+          </Box>
+          <Typography variant="button">Parameters</Typography>
           <FormText
             name="name"
             control={control}
             rules={{
-              required: "Aspect name is required",
+              required: "Map name is required",
             }}
             textFieldProps={{
-              label: "Aspect name",
+              label: "Map name",
               variant: "outlined",
               fullWidth: true,
               error: Boolean(errors.name),
             }}
           />
-          <FormTextMultiline
-            name="doc_modification_prompt"
-            control={control}
-            textFieldProps={{
-              label: "Document modification prompt",
-              placeholder: "Describe how you want to modify the document.",
-              variant: "outlined",
-              fullWidth: true,
-              error: Boolean(errors.doc_modification_prompt),
-              helperText: <ErrorMessage errors={errors} name="doc_modification_prompt" />,
-            }}
-          />
-          <FormTextMultiline
+          <FormText
             name="doc_embedding_prompt"
             control={control}
             rules={{
@@ -119,30 +178,42 @@ function AspectCreationDialog({ open, onClose }: AspectCreationDialogProps) {
             }}
             textFieldProps={{
               label: "Document embedding prompt",
-              placeholder: "Describe your project aim, method, and material used in a short abstract.",
+              placeholder: "Describe on which aspect you want the model to focus.",
               variant: "outlined",
               fullWidth: true,
               error: Boolean(errors.doc_embedding_prompt),
               helperText: <ErrorMessage errors={errors} name="doc_embedding_prompt" />,
             }}
           />
+          <FormTextMultiline
+            name="doc_modification_prompt"
+            control={control}
+            textFieldProps={{
+              label: "Document modification prompt",
+              placeholder: "Optional! Describe how you want to modify the document.",
+              variant: "outlined",
+              fullWidth: true,
+              error: Boolean(errors.doc_modification_prompt),
+              helperText: <ErrorMessage errors={errors} name="doc_modification_prompt" />,
+            }}
+          />
         </Stack>
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={{ px: 3 }}>
+        <Button onClick={() => reset()}>Reset Parameters</Button>
         <Button
           variant="contained"
-          color="success"
+          color="primary"
           startIcon={<SaveIcon />}
           type="submit"
           loading={createAspectMutation.isPending}
           loadingPosition="start"
-          fullWidth
         >
-          Create Aspect
+          Create Map
         </Button>
       </DialogActions>
     </Dialog>
   );
 }
 
-export default AspectCreationDialog;
+export default MapCreationDialog;
