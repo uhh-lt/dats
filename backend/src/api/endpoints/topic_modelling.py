@@ -5,6 +5,7 @@ from app.celery.background_jobs import prepare_and_start_tm_job_async
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.aspect import crud_aspect
+from app.core.data.crud.document_aspect import crud_document_aspect
 from app.core.data.crud.document_topic import crud_document_topic
 from app.core.data.crud.topic import crud_topic
 from app.core.data.dto.aspect import (
@@ -153,6 +154,24 @@ def get_by_id(
 
     db_obj = crud_aspect.read(db=db, id=aspect_id)
     return AspectRead.model_validate(db_obj)
+
+
+@router.get(
+    "/aspect/{aspect_id}/sdoc/{sdoc_id}",
+    response_model=str,
+    summary="Returns the Document Aspect Content for the given IDs.",
+)
+def get_docaspect_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    aspect_id: int,
+    sdoc_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> str:
+    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
+
+    db_obj = crud_document_aspect.read(id=(sdoc_id, aspect_id), db=db)
+    return db_obj.content
 
 
 @router.patch(
