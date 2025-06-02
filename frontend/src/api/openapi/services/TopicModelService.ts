@@ -150,6 +150,30 @@ export class TopicModelService {
     });
   }
   /**
+   * Returns the Document Aspect Content for the given IDs.
+   * @returns string Successful Response
+   * @throws ApiError
+   */
+  public static getDocaspectById({
+    aspectId,
+    sdocId,
+  }: {
+    aspectId: number;
+    sdocId: number;
+  }): CancelablePromise<string> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/topic_model/aspect/{aspect_id}/sdoc/{sdoc_id}",
+      path: {
+        aspect_id: aspectId,
+        sdoc_id: sdocId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Accept the label of the provided SourceDocuments (by ID).
    * @returns number Successful Response
    * @throws ApiError

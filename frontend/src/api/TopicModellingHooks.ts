@@ -49,7 +49,15 @@ const useGetAspect = (aspectId: number | null | undefined) =>
 
 const useGetAllAspectsList = () => useProjectAspectsQuery({ select: (data) => Object.values(data) });
 
-// CODE MUTATIONS
+const useGetDocumentAspect = (aspectId: number | null | undefined, sdocId: number | null | undefined) =>
+  useQuery<string, Error>({
+    queryKey: [QueryKey.SDOC_ASPECT_CONTENT, aspectId, sdocId],
+    queryFn: () => TopicModelService.getDocaspectById({ aspectId: aspectId!, sdocId: sdocId! }),
+    enabled: !!aspectId && !!sdocId,
+    staleTime: Infinity,
+  });
+
+// ASPECT MUTATIONS
 const useCreateAspect = () =>
   useMutation({
     mutationFn: TopicModelService.createAspect,
@@ -218,6 +226,7 @@ const TopicModellingHooks = {
   // aspects
   useGetAllAspectsList,
   useGetAspect,
+  useGetDocumentAspect,
   useCreateAspect,
   useUpdateAspect,
   useDeleteAspect,

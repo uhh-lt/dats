@@ -114,6 +114,8 @@ export const QueryKey = {
   TOPIC_SIMILARITIES: "topicSimilarities",
   // Topics of a SourceDocument (by aspect id, sdoc id)
   SDOC_TOPICS: "sdocTopics",
+  // Document Aspect content (by aspect id, sdoc id)
+  SDOC_ASPECT_CONTENT: "sdocAspectContent",
 
   // managed by SearchStatisticsHooks:
   FILTER_ENTITY_STATISTICS: "filterEntityStatistics",
