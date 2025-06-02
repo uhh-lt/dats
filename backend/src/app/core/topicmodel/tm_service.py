@@ -749,8 +749,11 @@ class TMService:
             doc_embeddings = embeddings[assigned_topics_arr == topic_id]
             sdoc_ids = embedding_sdoc_ids[assigned_topics_arr == topic_id]
 
-            # ... compute the topic embeddings (cluster centroids)
+            # ... compute the topic embeddings & normalize(cluster centroids)
             topic_centroids[topic_id] = np.mean(doc_embeddings, axis=0)
+            norm_of_mean = np.linalg.norm(topic_centroids[topic_id])
+            if norm_of_mean > 0:  # Avoid division by zero
+                topic_centroids[topic_id] = topic_centroids[topic_id] / norm_of_mean
 
             # ... compute the topic coordinates (mean of the 2D coordinates)
             topic_coordinates[topic_id] = np.mean(doc_coordinates, axis=0)
