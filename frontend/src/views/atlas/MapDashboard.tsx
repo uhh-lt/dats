@@ -8,8 +8,11 @@ import TopicModellingHooks from "../../api/TopicModellingHooks.ts";
 import ExportChartButton from "../../components/ExportChartButton.tsx";
 import ContentContainerLayout from "../../layouts/ContentLayouts/ContentContainerLayout.tsx";
 import BackgroundJobStatusBadge from "./BackgroundJobStatusBadge.tsx";
+import ColorScalePicker from "./ColorScalePicker.tsx";
+import { D3ColorScale } from "./D3ColorScale.ts";
 import TMJobProgressCard from "./TMJobProgressCard.tsx";
 import TopicDistributionPlot from "./TopicDistributionPlot.tsx";
+import TopicSimilarityPlot from "./TopicSimilarityPlot.tsx";
 
 function MapDashboard() {
   const urlParams = useParams() as { projectId: string; aspectId: string };
@@ -25,6 +28,9 @@ function MapDashboard() {
   const handleToggleShowPieChart = () => {
     setShowPieChart((prev) => !prev);
   };
+
+  // color palette
+  const [colors, setColors] = useState<D3ColorScale>(D3ColorScale.blues);
 
   return (
     <ContentContainerLayout>
@@ -81,7 +87,7 @@ function MapDashboard() {
                 </CardContent>
               </Card>
             </Box>
-            <Box flexGrow={1}>
+            <Box flexGrow={1} flexBasis="0%">
               <Stack direction="row" alignItems="center">
                 <Typography variant="button">Topic Distribution</Typography>
                 <Tooltip title={showPieChart ? "View as Bar Chart" : "View as Pie Chart"}>
@@ -95,6 +101,13 @@ function MapDashboard() {
                 />
               </Stack>
               <TopicDistributionPlot aspectId={aspectId} height={360} showPieChart={showPieChart} />
+            </Box>
+            <Box flexGrow={1} flexBasis="0%">
+              <Stack height={40} alignItems="center" direction="row">
+                <Typography variant="button">Topic Similarities</Typography>
+                <ColorScalePicker onColorChange={setColors} />
+              </Stack>
+              <TopicSimilarityPlot aspectId={aspectId} height={360} colorName={colors} />
             </Box>
           </Stack>
 
