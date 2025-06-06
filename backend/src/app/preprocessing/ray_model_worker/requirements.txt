@@ -3,6 +3,7 @@ bitsandbytes==0.45.4
 ctranslate2==4.5.0
 cupy-cuda11x==13.4.1
 datasets==3.5.0
+docling==2.36.1
 faster-whisper==1.1.1
 fasttext==0.9.3
 ffmpeg-python==0.2.0
