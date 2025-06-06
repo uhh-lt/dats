@@ -39,7 +39,7 @@ assistant_user:
 
 ray:
   protocol: http
-  host: localhost
+  host: ${oc.env:RAY_HOST, localhost}
   port: ${oc.env:RAY_PORT, 13130}
 
 repo:
@@ -137,7 +137,7 @@ elasticsearch:
     memos: configs/default_memo_index_settings.json
 
 ollama:
-  host: localhost
+  host: ${oc.env:OLLAMA_HOST, localhost}
   port: ${oc.env:OLLAMA_PORT, 13133}
   llm:
     model: ${oc.env:OLLAMA_LLM_MODEL, gemma3:27b}

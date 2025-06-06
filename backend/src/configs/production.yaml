@@ -39,8 +39,8 @@ assistant_user:
 
 ray:
   protocol: http
-  host: ray
-  port: 8000
+  host: ${oc.env:RAY_HOST, ray}
+  port: ${oc.env:RAY_PORT, 8000}
 
 repo:
   root_directory: /tmp/dats
@@ -137,8 +137,8 @@ elasticsearch:
     memos: configs/default_memo_index_settings.json
 
 ollama:
-  host: ollama
-  port: 11434
+  host: ${oc.env:OLLAMA_HOST, ollama}
+  port: ${oc.env:OLLAMA_PORT, 11434}
   llm:
     model: ${oc.env:OLLAMA_LLM_MODEL, gemma3:27b}
     default_params:
