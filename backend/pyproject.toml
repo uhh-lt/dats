@@ -68,6 +68,7 @@ dependencies = [
     "sqlalchemy-utils==0.41.1",
     "srsly==2.4.8",
     "starlette==0.46.1",
+    "tenacity>=9.1.2",
     "tqdm==4.66.3",
     "twisted==22.10.0",
     "typesense==0.21.0",
