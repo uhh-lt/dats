@@ -146,13 +146,13 @@ ollama:
   vlm:
     model: ${oc.env:OLLAMA_VLM_MODEL, gemma3:27b}
     default_params:
-      temperature: 0.0
-      seed: 1337
-      num_predict: 8192
       num_ctx: 16384
-      top_p: 0.9
-      top_k: 40
-      repetition_penalty: 1.1
+      # temperature: 0.0
+      # seed: 1337
+      # num_predict: 8192
+      # top_p: 0.9
+      # top_k: 40
+      # repetition_penalty: 1.1
   emb:
     model: ${oc.env:OLLAMA_EMB_MODEL, snowflake-arctic-embed2:568m}
     default_params:
