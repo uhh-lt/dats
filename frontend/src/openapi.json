@@ -1,6 +1,6 @@
 {
   "openapi": "3.1.0",
-  "info": { "title": "Discourse Analysis Tool Suite API", "version": "1.6.3" },
+  "info": { "title": "Discourse Analysis Tool Suite API", "version": "1.6.4" },
   "paths": {
     "/heartbeat": {
       "get": {
@@ -2630,6 +2630,40 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/memo/generate_suggestion/{attached_obj_type}/{attached_obj_id}": {
+      "get": {
+        "tags": ["memo"],
+        "summary": "Generates a 1–2 sentence memo suggestion using Ollama based on the attached object",
+        "operationId": "generate_memo_suggestion",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "attached_obj_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Attached Obj Id" }
+          },
+          {
+            "name": "attached_obj_type",
+            "in": "path",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/AttachedObjectType" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "type": "string", "title": "Response Memo-Generate Memo Suggestion" } }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -6797,8 +6831,7 @@
             "title": "Recompute",
             "description": "Whether to recompute already processed documents",
             "default": false
-          },
-          "model": { "type": "string", "title": "Model", "default": "snowflake-arctic-embed2:568m" }
+          }
         },
         "type": "object",
         "required": ["ml_job_type"],
