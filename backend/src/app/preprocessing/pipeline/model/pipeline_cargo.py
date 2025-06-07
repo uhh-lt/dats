@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Any, Dict, List
 
+from loguru import logger
 from pydantic import BaseModel, ConfigDict, Field, SkipValidation
 
 from app.core.data.dto.preprocessing_job import PreprocessingJobPayloadRead
@@ -27,3 +28,21 @@ class PipelineCargo(BaseModel):
 
     data: Dict[str, Any] = Field(description="data", default_factory=dict)
     model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    def _flush_next_steps(self) -> None:
+        # Gracefully finish the cargo by flushing all next steps to finished steps. This way, the PreProService
+        #  will skip the steps... If you change this or the mechanism in the PPS, be aware ...
+        try:
+            fn = self.data["pptd"].filepath.name
+        except Exception:
+            fn = None
+
+        logger.info(
+            f"Gracefully finishing preprocessing {'for ' + fn if fn else ''} cargo..."
+        )
+        logger.debug(
+            f"Preemptively flushing all {len(self.next_steps)} next steps{'for ' + fn if fn else ''} to finished steps...."
+        )
+        while len(self.next_steps) > 0:
+            step = self.next_steps.pop(0)
+            self.finished_steps.append(step)

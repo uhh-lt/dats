@@ -26,7 +26,7 @@ def extract_sdoc_links_from_html_of_mixed_documents(
     elif filepath.suffix == ".docx" and not cc.preprocessing.extract_images_from_docx:
         create_dtos = []
     else:
-        img_links = soup.findAll("img")
+        img_links = soup.findAll("img")  # type: ignore
         img_srcs = set([img["src"].strip() for img in img_links if img.has_attr("src")])
         for img_src in img_srcs:
             create_dtos.append(
@@ -37,7 +37,7 @@ def extract_sdoc_links_from_html_of_mixed_documents(
             )
 
     # extract and create text -> audio links
-    audio_links = soup.findAll("audio")
+    audio_links = soup.findAll("audio")  # type: ignore
     for audio in audio_links:
         sources = audio.findChildren("source")
         if len(sources) > 0:
@@ -54,7 +54,7 @@ def extract_sdoc_links_from_html_of_mixed_documents(
         )
 
     # extract and create text -> video links
-    video_links = soup.findAll("video")
+    video_links = soup.findAll("video")  # type: ignore
     for video in video_links:
         sources = video.findChildren("source")
         if len(sources) > 0:

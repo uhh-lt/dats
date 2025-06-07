@@ -19,6 +19,7 @@ from app.preprocessing.ray_model_worker.dto.detr import (
     DETRImageInput,
     DETRObjectDetectionOutput,
 )
+from app.preprocessing.ray_model_worker.dto.docling import DoclingPDF2HTMLOutput
 from app.preprocessing.ray_model_worker.dto.glotlid import GlotLIDInput, GlotLIDOutput
 from app.preprocessing.ray_model_worker.dto.quote import QuoteJobInput, QuoteJobOutput
 from app.preprocessing.ray_model_worker.dto.seqsenttagger import (
@@ -173,3 +174,9 @@ class RayModelService(metaclass=SingletonMeta):
             "/coref/predict", input.model_dump()
         )
         return CorefJobOutput.model_validate(response.json())
+
+    def docling_pdf_to_html(self, pdf_bytes: bytes) -> DoclingPDF2HTMLOutput:
+        response = self._make_post_request_with_binary_data(
+            "/docling/pdf2html", pdf_bytes
+        )
+        return DoclingPDF2HTMLOutput.model_validate(response.json())

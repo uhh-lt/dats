@@ -69,8 +69,10 @@ class UnsupportedDocTypeForSourceDocument(Exception):
 
 
 class ErroneousArchiveException(Exception):
-    def __init__(self, archive_path: Path):
-        super().__init__(f"Error with Archive {archive_path}")
+    def __init__(self, archive_path: Path, msg: Optional[str] = None):
+        super().__init__(
+            f"Error with Archive {archive_path}{' :' + msg if msg else ''}"
+        )
 
 
 class RepoService(metaclass=SingletonMeta):
@@ -465,7 +467,10 @@ class RepoService(metaclass=SingletonMeta):
 
         logger.info(f"Extracting archive at {archive_path_in_project} ...")
         if not zipfile.is_zipfile(archive_path_in_project):
-            raise ErroneousArchiveException(archive_path=archive_path_in_project)
+            raise ErroneousArchiveException(
+                archive_path=archive_path_in_project,
+                msg="Not a valid zip file!",
+            )
         logger.info(f"Extracting archive {archive_path_in_project.name} to {dst} ...")
         # taken from: https://stackoverflow.com/a/4917469
         # flattens the extracted file hierarchy

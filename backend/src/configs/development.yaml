@@ -64,6 +64,7 @@ celery:
   preprocessing:
     extract_images_from_pdf: True
     extract_images_from_docx: True
+    max_pages_per_pdf_chunk: 5
 
 vector_index:
   service: ${oc.env:VECTOR_INDEX, weaviate}
