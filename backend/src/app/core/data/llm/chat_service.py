@@ -1,7 +1,8 @@
 from collections import defaultdict
-from typing import List, Union
+from typing import List, Optional, Union
 
 from app.core.data.crud.source_document import crud_sdoc
+from app.core.data.dto.chat import LLMSessionResponse
 from app.core.data.llm.ollama_service import OllamaService
 from app.core.search.filtering import Filter
 from app.core.search.sdoc_search import sdoc_search
@@ -15,14 +16,15 @@ class RAGResult(BaseModel):
     answer: str
 
 
-def retrieval_augmented_generation(
+def retrieval_augmented_generation_with_session(
     proj_id: int,
     query: Union[str, List[str], int],
     top_k: int,
     threshold: float,
     filter: Filter[SdocColumns],
     db: Session,
-) -> str:
+    session_id: Optional[str] = None,
+) -> LLMSessionResponse:
     # Retrieve top-k similar sentences using vector search
     similar_sentences = sdoc_search.find_similar_sentences(
         proj_id=proj_id,
@@ -58,11 +60,28 @@ def retrieval_augmented_generation(
         f"Answer:"
     )
 
-    response = OllamaService().llm_chat(
+    response, session_id = OllamaService().llm_chat_with_session(
         system_prompt="You are an assistant helping answer questions based on internal documentation.",
         user_prompt=RAG_PROMPT,
-        response_model=RAGResult,
+        session_id=session_id,
     )
 
     logger.info("Got chat response for RAG!")
-    return response.answer.strip()
+    return LLMSessionResponse(
+        session_id=session_id,
+        response=response.strip(),
+    )
+
+
+def chat_session(prompt: str, session_id: Optional[str] = None) -> LLMSessionResponse:
+    response, session_id = OllamaService().llm_chat_with_session(
+        system_prompt="You are having a chat session with a user. Respond to their queries.",
+        user_prompt=prompt,
+        session_id=session_id,
+    )
+    print(f"Chat session ID: {session_id}")
+    print(f"Response: {response}")
+    return LLMSessionResponse(
+        session_id=session_id,
+        response=response.strip(),
+    )

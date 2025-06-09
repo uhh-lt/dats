@@ -75,6 +75,11 @@ class OllamaService(metaclass=SingletonMeta):
                     f"Default parameters for {model_type} {model_name}: {cls.__default_kwargs[model_type]}"
                 )
 
+            cls.__llm_chat_sessions: Dict[str, List[Dict]] = dict()
+            cls.__llm_chat_session_timestamps: Dict[str, float] = dict()
+            cls.__max_llm_chat_sessions = 50
+            cls.__max_llm_chat_session_age = 7 * 24 * 60 * 60  # 7 days
+
             cls.__vlm_chat_sessions: Dict[str, List[Dict]] = dict()
             cls.__vlm_chat_session_timestamps: Dict[str, float] = dict()
             cls.__max_vlm_chat_sessions = 50
@@ -105,6 +110,105 @@ class OllamaService(metaclass=SingletonMeta):
         logger.info("Successfully established connection to Ollama!")
 
         return super(OllamaService, cls).__new__(cls)
+
+    def _start_llm_chat_session(self) -> str:
+        session_id = str(uuid4())
+        logger.info(f"Started new LLM chat session {session_id}.")
+        self.__llm_chat_sessions[session_id] = []
+        self.__llm_chat_session_timestamps[session_id] = time.time()
+
+        if len(self.__llm_chat_sessions) > self.__max_llm_chat_sessions:
+            for session_id, timestamp in self.__llm_chat_session_timestamps.items():
+                if time.time() - timestamp > self.__max_llm_chat_session_age:
+                    logger.warning(
+                        f"Removing session ID {session_id} due to age of {time.time() - timestamp} seconds."
+                    )
+                    self.__llm_chat_sessions.pop(session_id)
+                    self.__llm_chat_session_timestamps.pop(session_id)
+
+        return session_id
+
+    def _get_llm_chat_session(self, session_id: str) -> List[Dict]:
+        history = self.__llm_chat_sessions.get(session_id, [])
+        if len(history) == 0:
+            logger.warning(f"Session ID {session_id} does not exist.")
+        return history
+
+    def llm_chat_with_session(
+        self,
+        user_prompt: str,
+        system_prompt: Optional[str] = None,
+        response_model: Optional[Type[T]] = None,
+        gen_kwargs: Optional[Dict[str, str]] = None,
+        session_id: Optional[str] = None,
+    ) -> Tuple[str | T, str]:
+        if gen_kwargs is None:
+            gen_kwargs = self.__default_kwargs["llm"]
+
+        if session_id is None:
+            session_id = self._start_llm_chat_session()
+            messages = self.__llm_chat_sessions[session_id]
+        else:
+            messages = self.__llm_chat_sessions.get(session_id, None)
+            if messages is None:
+                logger.warning(
+                    f"Session ID {session_id} is not valid. Creating a new session."
+                )
+                session_id = self._start_llm_chat_session()
+                messages = self.__llm_chat_sessions[session_id]
+
+        # only add system prompt if it is the first message
+        if len(messages) == 0 and system_prompt is not None:
+            messages.append(
+                {
+                    "role": "system",
+                    "content": system_prompt.strip(),
+                }
+            )
+        # build user message
+        user_message: Dict = {
+            "role": "user",
+            "content": user_prompt.strip(),
+        }
+        messages.append(user_message)
+        print(messages)
+        print("" + "-" * 50)
+        # get response
+        response_model_schema = None
+        if response_model is not None:
+            response_model_schema = response_model.model_json_schema()
+        response = self.__client.chat(
+            model=self.__model["llm"],
+            messages=messages,
+            format=response_model_schema,
+            options=gen_kwargs,
+            stream=False,
+        )
+        max_context_size = int(gen_kwargs.get("num_ctx", "-1"))
+        if (
+            max_context_size != -1
+            and response.prompt_eval_count is not None
+            and response.prompt_eval_count > max_context_size
+        ):
+            raise Exception(
+                f"Your input is too long! Max context size of {max_context_size} exceeded. Cannot process your request."
+            )
+        if response.message.content is None:
+            raise RuntimeWarning(f"Ollama response is None: {response}")
+        messages.append(response.message.model_dump())
+
+        # update chat history
+        self.__llm_chat_sessions[session_id] = messages
+
+        if response_model is None:
+            return response.message.content, session_id
+        try:
+            return response_model.model_validate_json(
+                response.message.content
+            ), session_id
+        except Exception as e:
+            logger.error(f"Error while validating Ollama response: {e}")
+            return response.message.content, session_id
 
     def llm_chat(
         self,
