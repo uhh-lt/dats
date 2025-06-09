@@ -14,16 +14,14 @@ from app.core.data.dto.search import (
     SimSearchSentenceHit,
 )
 from app.core.data.dto.search_stats import KeywordStat, SpanEntityStat, TagStat
-from app.core.data.llm.rag_service import retrieval_augmented_generation
 from app.core.db.elasticsearch_service import ElasticSearchService
 from app.core.search.column_info import ColumnInfo
 from app.core.search.filtering import Filter
 from app.core.search.sdoc_search.sdoc_search_columns import SdocColumns
 from app.core.search.sorting import Sort
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
-from api.dependencies import get_current_user, get_db_session
+from api.dependencies import get_current_user
 
 router = APIRouter(
     prefix="/search", dependencies=[Depends(get_current_user)], tags=["search"]
@@ -187,30 +185,4 @@ def find_similar_images(
 
     return sdoc_search.find_similar_images(
         proj_id=proj_id, query=query, top_k=top_k, threshold=threshold, filter=filter
-    )
-
-
-@router.post(
-    "/rag",
-    response_model=str,
-    summary="Answer a query using Retrieval-Augmented Generation (RAG)",
-)
-def rag(
-    proj_id: int,
-    query: Union[str, List[str], int],
-    top_k: int,
-    threshold: float,
-    filter: Filter[SdocColumns],
-    authz_user: AuthzUser = Depends(),
-    db: Session = Depends(get_db_session),
-) -> str:
-    authz_user.assert_in_project(proj_id)
-
-    return retrieval_augmented_generation(
-        proj_id=proj_id,
-        query=query,
-        top_k=top_k,
-        threshold=threshold,
-        filter=filter,
-        db=db,
     )
