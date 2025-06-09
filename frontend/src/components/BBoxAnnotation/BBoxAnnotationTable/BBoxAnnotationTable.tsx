@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardProps, Stack, Typography } from "@mui/material";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   MRT_ColumnDef,
@@ -10,31 +9,35 @@ import {
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useEffect, useMemo, useRef, useState, type UIEvent } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { BBoxAnnotationRow } from "../../../api/openapi/models/BBoxAnnotationRow.ts";
 import { BBoxAnnotationSearchResult } from "../../../api/openapi/models/BBoxAnnotationSearchResult.ts";
 import { BBoxColumns } from "../../../api/openapi/models/BBoxColumns.ts";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
+import { QueryKey } from "../../../api/QueryKey.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { RootState } from "../../../store/store.ts";
 import { useTableInfiniteScroll } from "../../../utils/useTableInfiniteScroll.ts";
 import ImageCropper from "../../../views/whiteboard/nodes/ImageCropper.tsx";
 import CodeRenderer from "../../Code/CodeRenderer.tsx";
 import { MyFilter, createEmptyFilter } from "../../FilterDialog/filterUtils.ts";
+import FilterTableToolbarLeft from "../../FilterTable/FilterTableToolbarLeft.tsx";
+import { FilterTableToolbarProps } from "../../FilterTable/FilterTableToolbarProps.ts";
+import FilterTableToolbarRight from "../../FilterTable/FilterTableToolbarRight.tsx";
+import { useRenderToolbars } from "../../FilterTable/hooks/useRenderToolbars.tsx";
+import { FilterTableProps } from "../../FilterTable/types/FilterTableProps.ts";
 import MemoRenderer2 from "../../Memo/MemoRenderer2.tsx";
 import SdocMetadataRenderer from "../../Metadata/SdocMetadataRenderer.tsx";
 import SdocTagsRenderer from "../../SourceDocument/SdocTagRenderer.tsx";
-import UserSelectorSingle from "../../User/UserSelectorSingle.tsx";
-import BBoxToolbar, { BBoxToolbarProps } from "./BBoxToolbar.tsx";
+import { BBoxFilterActions } from "./bboxFilterSlice.ts";
 import { useInitBBoxFilterSlice } from "./useInitBBoxFilterSlice.ts";
 
-const fetchSize = 20;
 const flatMapData = (page: BBoxAnnotationSearchResult) => page.data;
 
 export interface BBoxAnnotationTableProps {
-  title?: string;
   projectId: number;
   filterName: string;
   // selection
@@ -47,15 +50,17 @@ export interface BBoxAnnotationTableProps {
   columnVisibilityModel: MRT_VisibilityState;
   onColumnVisibilityChange: MRT_TableOptions<BBoxAnnotationRow>["onColumnVisibilityChange"];
   // components
-  cardProps?: CardProps;
   positionToolbarAlertBanner?: MRT_TableOptions<BBoxAnnotationRow>["positionToolbarAlertBanner"];
-  renderToolbarInternalActions?: (props: BBoxToolbarProps) => React.ReactNode;
-  renderTopToolbarCustomActions?: (props: BBoxToolbarProps) => React.ReactNode;
-  renderBottomToolbarCustomActions?: (props: BBoxToolbarProps) => React.ReactNode;
+  renderTopRightToolbar?: (props: FilterTableToolbarProps<BBoxAnnotationRow>) => React.ReactNode;
+  renderTopLeftToolbar?: (props: FilterTableToolbarProps<BBoxAnnotationRow>) => React.ReactNode;
+  renderBottomToolbar?: (props: FilterTableToolbarProps<BBoxAnnotationRow>) => React.ReactNode;
 }
 
+// this defines which filter slice is used
+const filterStateSelector = (state: RootState) => state.bboxFilter;
+const filterActions = BBoxFilterActions;
+
 function BBoxAnnotationTable({
-  title = "BBox Annotation Table",
   projectId,
   filterName,
   rowSelectionModel,
@@ -64,17 +69,15 @@ function BBoxAnnotationTable({
   onSortingChange,
   columnVisibilityModel,
   onColumnVisibilityChange,
-  cardProps,
+  fetchSize,
+  onFetchSizeChange,
   positionToolbarAlertBanner = "top",
-  renderToolbarInternalActions = BBoxToolbar,
-  renderTopToolbarCustomActions,
-  renderBottomToolbarCustomActions,
-}: BBoxAnnotationTableProps) {
+  renderTopRightToolbar = FilterTableToolbarRight,
+  renderTopLeftToolbar = FilterTableToolbarLeft,
+  renderBottomToolbar,
+}: FilterTableProps<BBoxAnnotationRow>) {
   // global client state (react router)
   const { user } = useAuth();
-
-  // user id selector
-  const [selectedUserId, setSelectedUserId] = useState<number>(user?.id || 1);
 
   // filtering
   const filter = useAppSelector((state) => state.bboxFilter.filter[filterName]) || createEmptyFilter(filterName);
@@ -103,7 +106,7 @@ function BBoxAnnotationTable({
         case BBoxColumns.BB_DOCUMENT_DOCUMENT_TAG_ID_LIST:
           return {
             ...colDef,
-            Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.sdoc.id} tags={row.original.tags} />,
+            Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.sdoc.id} tagIds={row.original.tag_ids} />,
           } as MRT_ColumnDef<BBoxAnnotationRow>;
         case BBoxColumns.BB_CODE_ID:
           return {
@@ -149,7 +152,7 @@ function BBoxAnnotationTable({
       accessorFn: (row) => row.x,
       Cell: ({ row }) => (
         <ImageCropper
-          imageUrl={encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + row.original.url)}
+          imageUrl={encodeURI("/content/" + row.original.url)}
           x={row.original.x}
           y={row.original.y}
           width={row.original.width}
@@ -169,10 +172,11 @@ function BBoxAnnotationTable({
   // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<BBoxAnnotationSearchResult>({
     queryKey: [
-      "bbox-table-data",
+      QueryKey.BBOX_TABLE,
       projectId,
       filter, //refetch when columnFilters changes
       sortingModel, //refetch when sorting changes
+      fetchSize,
     ],
     queryFn: ({ pageParam }) =>
       AnalysisService.bboxAnnotationSearch({
@@ -188,9 +192,7 @@ function BBoxAnnotationTable({
         pageSize: fetchSize,
       }),
     initialPageParam: 0,
-    getNextPageParam: (_lastGroup, groups) => {
-      return groups.length;
-    },
+    getNextPageParam: (_lastGroup, groups) => groups.length,
     refetchOnWindowFocus: false,
   });
 
@@ -212,7 +214,35 @@ function BBoxAnnotationTable({
     } catch (error) {
       console.error(error);
     }
-  }, [projectId, selectedUserId, sortingModel]);
+  }, [projectId, sortingModel]);
+
+  // Table event handlers
+  const handleTableScroll = useCallback(
+    (event: UIEvent<HTMLDivElement>) => fetchMoreOnScroll(event.target as HTMLDivElement),
+    [fetchMoreOnScroll],
+  );
+
+  // fetch all
+  const handleFetchAll = useCallback(() => {
+    onFetchSizeChange(totalResults);
+  }, [onFetchSizeChange, totalResults]);
+
+  // rendering
+  const { renderTopLeftToolbarContent, renderTopRightToolbarContent, renderBottomToolbarContent } = useRenderToolbars({
+    name: "bbox annotations",
+    flatData,
+    totalFetched,
+    totalResults,
+    handleFetchAll,
+    renderTopRightToolbar,
+    renderTopLeftToolbar,
+    renderBottomToolbar,
+    filterStateSelector,
+    filterActions,
+    filterName,
+    rowSelectionModel,
+    tableContainerRef,
+  });
 
   // table
   const table = useMaterialReactTable<BBoxAnnotationRow>({
@@ -251,8 +281,8 @@ function BBoxAnnotationTable({
       style: { height: "100%", display: "flex", flexDirection: "column" },
     },
     muiTableContainerProps: {
-      ref: tableContainerRef, //get access to the table container element
-      onScroll: (event: UIEvent<HTMLDivElement>) => fetchMoreOnScroll(event.target as HTMLDivElement), //add an event listener to the table container element
+      ref: tableContainerRef,
+      onScroll: handleTableScroll,
       style: { flexGrow: 1 },
     },
     muiToolbarAlertBannerProps: isError
@@ -263,59 +293,12 @@ function BBoxAnnotationTable({
       : undefined,
     // toolbar
     positionToolbarAlertBanner,
-    renderTopToolbarCustomActions: renderTopToolbarCustomActions
-      ? (props) =>
-          renderTopToolbarCustomActions({
-            table: props.table,
-            filterName,
-            anchor: tableContainerRef,
-            selectedUserId: selectedUserId,
-            selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
-          })
-      : undefined,
-    renderToolbarInternalActions: (props) =>
-      renderToolbarInternalActions({
-        table: props.table,
-        filterName,
-        anchor: tableContainerRef,
-        selectedUserId: selectedUserId,
-        selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
-      }),
-    renderBottomToolbarCustomActions: (props) => (
-      <Stack direction={"row"} spacing={1} alignItems="center">
-        <Typography>
-          Fetched {totalFetched} of {totalResults} total rows.
-        </Typography>
-        {renderBottomToolbarCustomActions &&
-          renderBottomToolbarCustomActions({
-            table: props.table,
-            filterName,
-            anchor: tableContainerRef,
-            selectedUserId: selectedUserId,
-            selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
-          })}
-      </Stack>
-    ),
+    renderTopToolbarCustomActions: renderTopLeftToolbarContent,
+    renderToolbarInternalActions: renderTopRightToolbarContent,
+    renderBottomToolbarCustomActions: renderBottomToolbarContent,
   });
 
-  return (
-    <Card className="myFlexContainer" {...cardProps}>
-      <CardHeader
-        title={title}
-        action={
-          <UserSelectorSingle
-            title="Annotations"
-            projectId={projectId}
-            userId={selectedUserId}
-            onUserIdChange={setSelectedUserId}
-          />
-        }
-      />
-      <CardContent className="myFlexFillAllContainer" style={{ padding: 0 }}>
-        <MaterialReactTable table={table} />
-      </CardContent>
-    </Card>
-  );
+  return <MaterialReactTable table={table} />;
 }
 
-export default BBoxAnnotationTable;
+export default memo(BBoxAnnotationTable);

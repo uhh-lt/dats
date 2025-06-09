@@ -1,9 +1,12 @@
 import { ErrorMessage } from "@hookform/error-message";
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack } from "@mui/material";
+import SaveIcon from "@mui/icons-material/Save";
+import { Button, Dialog, DialogActions, DialogContent, Stack } from "@mui/material";
+import { useEffect, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { COTAConcept } from "../../../api/openapi/models/COTAConcept.ts";
 import FormColorPicker from "../../../components/FormInputs/FormColorPicker.tsx";
 import FormText from "../../../components/FormInputs/FormText.tsx";
+import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 
 interface CotaConceptEditorProps {
@@ -12,7 +15,7 @@ interface CotaConceptEditorProps {
   isDescriptionEditable: boolean;
 }
 
-function CotaConceptEditor({ onCancel, ...props }: CotaConceptEditorProps) {
+function CotaConceptEditor({ onUpdate, onCancel, isDescriptionEditable }: CotaConceptEditorProps) {
   // redux
   const currentConcept = useAppSelector((state) => state.cota.currentConcept);
   const conceptEditorOpen = useAppSelector((state) => state.cota.conceptEditorOpen);
@@ -22,29 +25,20 @@ function CotaConceptEditor({ onCancel, ...props }: CotaConceptEditorProps) {
     onCancel(currentConcept);
   };
 
-  return (
-    <Dialog open={conceptEditorOpen} onClose={handleClose} fullWidth maxWidth="md">
-      <CotaConceptEditorForm concept={currentConcept} onClose={handleClose} {...props} />
-    </Dialog>
-  );
-}
-
-interface CotaConceptEditorFormProps {
-  concept: COTAConcept;
-  onUpdate: (concept: COTAConcept) => void;
-  onClose: () => void;
-  isDescriptionEditable: boolean;
-}
-
-function CotaConceptEditorForm({ concept, onUpdate, onClose, isDescriptionEditable }: CotaConceptEditorFormProps) {
-  // use react hook form
+  // form
   const {
     handleSubmit,
     formState: { errors },
     control,
-  } = useForm<COTAConcept>({
-    defaultValues: concept,
-  });
+    reset,
+  } = useForm<COTAConcept>();
+
+  // reset form when dialog opens
+  useEffect(() => {
+    if (conceptEditorOpen) {
+      reset(currentConcept);
+    }
+  }, [conceptEditorOpen, currentConcept, reset]);
 
   // form handling
   const handleUpdate: SubmitHandler<COTAConcept> = (data) => {
@@ -52,9 +46,28 @@ function CotaConceptEditorForm({ concept, onUpdate, onClose, isDescriptionEditab
   };
   const handleError: SubmitErrorHandler<COTAConcept> = (data) => console.error(data);
 
+  // maximize dialog
+  const [isMaximized, setIsMaximized] = useState(false);
+  const handleToggleMaximize = () => {
+    setIsMaximized((prev) => !prev);
+  };
+
   return (
-    <form onSubmit={handleSubmit(handleUpdate, handleError)}>
-      <DialogTitle>Add / edit concept</DialogTitle>
+    <Dialog
+      open={conceptEditorOpen}
+      onClose={handleClose}
+      fullWidth
+      maxWidth="md"
+      fullScreen={isMaximized}
+      component="form"
+      onSubmit={handleSubmit(handleUpdate, handleError)}
+    >
+      <DATSDialogHeader
+        title="Edit concept"
+        onClose={handleClose}
+        isMaximized={isMaximized}
+        onToggleMaximize={handleToggleMaximize}
+      />
       <DialogContent>
         <Stack spacing={3} sx={{ mt: 1 }}>
           <FormText
@@ -119,12 +132,11 @@ function CotaConceptEditorForm({ concept, onUpdate, onClose, isDescriptionEditab
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Close</Button>
-        <Button variant="contained" color="success" type="submit">
+        <Button variant="contained" color="success" type="submit" fullWidth startIcon={<SaveIcon />}>
           Save
         </Button>
       </DialogActions>
-    </form>
+    </Dialog>
   );
 }
 

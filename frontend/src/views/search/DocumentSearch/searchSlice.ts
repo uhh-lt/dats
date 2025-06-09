@@ -5,8 +5,9 @@ import { v4 as uuidv4 } from "uuid";
 import { IDListOperator } from "../../../api/openapi/models/IDListOperator.ts";
 import { ListOperator } from "../../../api/openapi/models/ListOperator.ts";
 import { LogicalOperator } from "../../../api/openapi/models/LogicalOperator.ts";
+import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
 import { SdocColumns } from "../../../api/openapi/models/SdocColumns.ts";
-import { SourceDocumentMetadataReadResolved } from "../../../api/openapi/models/SourceDocumentMetadataReadResolved.ts";
+import { SourceDocumentMetadataRead } from "../../../api/openapi/models/SourceDocumentMetadataRead.ts";
 import { StringOperator } from "../../../api/openapi/models/StringOperator.ts";
 import {
   FilterState,
@@ -29,6 +30,7 @@ interface SearchState {
   // project state:
   selectedDocumentId: number | undefined; // the id of the selected document. Used to highlight the selected document in the table, and to show the document information (tags, metadata etc.).
   expandedTagIds: string[]; // the ids of the tags that are expanded in the tag tree.
+  scrollPosition: number; // the scroll position of the document table, used to restore position when returning to the table
   // app state:
   expertSearchMode: boolean; // whether the expert search mode is enabled.
   sortStatsByGlobal: boolean; // whether the search statistics are sorted by the global frequency or the "local" ().
@@ -47,6 +49,7 @@ const initialState: FilterState & TableState & SearchState = {
   // project state:
   selectedDocumentId: undefined,
   expandedTagIds: [],
+  scrollPosition: 0,
   // app state:
   expertSearchMode: false,
   sortStatsByGlobal: false,
@@ -83,6 +86,13 @@ export const searchSlice = createSlice({
       } else {
         state.selectedDocumentId = action.payload;
       }
+    },
+    // scroll position handling
+    onSaveScrollPosition: (state, action: PayloadAction<number>) => {
+      state.scrollPosition = action.payload;
+    },
+    onResetScrollPosition: (state) => {
+      state.scrollPosition = 0;
     },
     updateSelectedDocumentsOnMultiDelete: (state, action: PayloadAction<number[]>) => {
       for (const sdocId of action.payload) {
@@ -161,10 +171,14 @@ export const searchSlice = createSlice({
     },
     onAddMetadataFilter: (
       state,
-      action: PayloadAction<{ metadata: SourceDocumentMetadataReadResolved; filterName: string }>,
+      action: PayloadAction<{
+        metadata: SourceDocumentMetadataRead;
+        projectMetadata: ProjectMetadataRead;
+        filterName: string;
+      }>,
     ) => {
-      // the column of a metadata filter is the project_metadata.id
-      const filterOperator = state.column2Info[action.payload.metadata.project_metadata.id.toString()].operator;
+      // the column of a metadata filter is the project_metadata_id
+      const filterOperator = state.column2Info[action.payload.metadata.project_metadata_id.toString()].operator;
       const filterOperatorType = filterOperator2FilterOperatorType[filterOperator];
 
       const currentFilter = getOrCreateFilter(state, action.payload.filterName);
@@ -172,9 +186,9 @@ export const searchSlice = createSlice({
         ...currentFilter.items,
         {
           id: uuidv4(),
-          column: action.payload.metadata.project_metadata.id,
+          column: action.payload.metadata.project_metadata_id,
           operator: getDefaultOperator(filterOperatorType),
-          value: getValue(action.payload.metadata)!,
+          value: getValue(action.payload.metadata, action.payload.projectMetadata)!,
         },
       ];
     },
@@ -185,6 +199,7 @@ export const searchSlice = createSlice({
         console.log("Project changed! Resetting 'search' state.");
         state.selectedDocumentId = initialState.selectedDocumentId;
         state.expandedTagIds = initialState.expandedTagIds;
+        state.scrollPosition = initialState.scrollPosition;
         resetProjectTableState(state);
         resetProjectFilterState({ state, defaultFilterExpression, projectId: action.payload, sliceName: "search" });
       })

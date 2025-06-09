@@ -2,7 +2,6 @@ import { AlertProps } from "@mui/material";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
 import { ApproachRecommendation } from "../api/openapi/models/ApproachRecommendation.ts";
 import { ApproachType } from "../api/openapi/models/ApproachType.ts";
-import { BBoxAnnotationReadResolved } from "../api/openapi/models/BBoxAnnotationReadResolved.ts";
 import { CodeRead } from "../api/openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "../api/openapi/models/DocumentTagRead.ts";
 import { LLMJobRead } from "../api/openapi/models/LLMJobRead.ts";
@@ -17,28 +16,31 @@ import { LLMAssistanceEvent } from "./LLMDialog/LLMEvent.ts";
 
 interface DialogState {
   // tags
-  isTagEditDialogOpen: boolean;
   isTagCreateDialogOpen: boolean;
-  tagId?: number;
   tagName?: string;
-  parentTagId?: number;
+  isTagEditDialogOpen: boolean;
+  tag?: DocumentTagRead;
   // codes
   isCodeCreateDialogOpen: boolean;
-  isCodeEditDialogOpen: boolean;
   codeName?: string;
   parentCodeId?: number;
-  codeCreateSuccessHandler: CodeCreateSuccessHandler;
+  isCodeEditDialogOpen: boolean;
   code?: CodeRead;
+  codeCreateSuccessHandler: CodeCreateSuccessHandler;
   // span
   isSpanAnnotationEditDialogOpen: boolean;
   spanAnnotationIds: number[];
-  // span
+  spanAnnotationEditDialogOnEdit?: () => void;
+  // sentence
   isSentenceAnnotationEditDialogOpen: boolean;
   sentenceAnnotationIds: number[];
+  sentenceAnnotationEditDialogOnEdit?: () => void;
   // bbox
   isBBoxAnnotationEditDialogOpen: boolean;
-  isBBoxAnnotationCreateDialogOpen: boolean;
-  bboxAnnotation?: BBoxAnnotationReadResolved;
+  bboxAnnotationIds: number[];
+  bboxAnnotationEditDialogOnEdit?: () => void;
+  // document import
+  isDocumentUploadOpen: boolean;
   // snackbar
   isSnackbarOpen: boolean;
   snackbarData: SnackbarEvent;
@@ -55,19 +57,21 @@ interface DialogState {
   llmCodes: CodeRead[];
   llmApproach: ApproachType;
   llmApproachRecommendation: ApproachRecommendation;
+  llmDeleteExistingAnnotations: boolean;
   llmPrompts: LLMPromptTemplates[];
   llmParameters: TrainingParameters;
   llmJobId?: string;
   llmJobResult: LLMJobResult | null | undefined;
+  // quick command menu
+  isQuickCommandMenuOpen: boolean;
 }
 
 const initialState: DialogState = {
   // tags
   isTagEditDialogOpen: false,
   isTagCreateDialogOpen: false,
-  tagId: undefined,
+  tag: undefined,
   tagName: undefined,
-  parentTagId: undefined,
   // codes
   isCodeCreateDialogOpen: false,
   isCodeEditDialogOpen: false,
@@ -78,13 +82,16 @@ const initialState: DialogState = {
   // span
   isSpanAnnotationEditDialogOpen: false,
   spanAnnotationIds: [],
+  spanAnnotationEditDialogOnEdit: undefined,
   // sentence
   isSentenceAnnotationEditDialogOpen: false,
   sentenceAnnotationIds: [],
+  sentenceAnnotationEditDialogOnEdit: undefined,
   // bbox
   isBBoxAnnotationEditDialogOpen: false,
-  isBBoxAnnotationCreateDialogOpen: false,
-  bboxAnnotation: undefined,
+  bboxAnnotationIds: [],
+  // document import
+  isDocumentUploadOpen: false,
   // snackbar
   isSnackbarOpen: false,
   snackbarData: {
@@ -109,6 +116,7 @@ const initialState: DialogState = {
     recommended_approach: ApproachType.LLM_ZERO_SHOT,
     reasoning: "",
   },
+  llmDeleteExistingAnnotations: false,
   llmPrompts: [],
   llmParameters: {
     batch_size: 1,
@@ -117,35 +125,60 @@ const initialState: DialogState = {
   },
   llmJobId: undefined,
   llmJobResult: undefined,
+  // quick command menu
+  isQuickCommandMenuOpen: false,
 };
 
 export const dialogSlice = createSlice({
   name: "dialog",
   initialState,
   reducers: {
-    openSpanAnnotationEditDialog: (state, action: PayloadAction<{ spanAnnotationIds: number[] }>) => {
+    openSpanAnnotationEditDialog: (
+      state,
+      action: PayloadAction<{ spanAnnotationIds: number[]; onEdit?: () => void }>,
+    ) => {
       state.isSpanAnnotationEditDialogOpen = true;
       state.spanAnnotationIds = action.payload.spanAnnotationIds;
+      state.spanAnnotationEditDialogOnEdit = action.payload.onEdit;
     },
     closeSpanAnnotationEditDialog: (state) => {
       state.isSpanAnnotationEditDialogOpen = false;
       state.spanAnnotationIds = [];
+      state.spanAnnotationEditDialogOnEdit = undefined;
     },
-    openSentenceAnnotationEditDialog: (state, action: PayloadAction<{ sentenceAnnotationIds: number[] }>) => {
+    openSentenceAnnotationEditDialog: (
+      state,
+      action: PayloadAction<{ sentenceAnnotationIds: number[]; onEdit?: () => void }>,
+    ) => {
       state.isSentenceAnnotationEditDialogOpen = true;
       state.sentenceAnnotationIds = action.payload.sentenceAnnotationIds;
+      state.sentenceAnnotationEditDialogOnEdit = action.payload.onEdit;
     },
     closeSentenceAnnotationEditDialog: (state) => {
       state.isSentenceAnnotationEditDialogOpen = false;
       state.sentenceAnnotationIds = [];
+      state.sentenceAnnotationEditDialogOnEdit = undefined;
     },
-    openTagEditDialog: (state, action: PayloadAction<{ tagId: number }>) => {
+    openBBoxAnnotationEditDialog: (
+      state,
+      action: PayloadAction<{ bboxAnnotationIds: number[]; onEdit?: () => void }>,
+    ) => {
+      state.isBBoxAnnotationEditDialogOpen = true;
+      state.bboxAnnotationIds = action.payload.bboxAnnotationIds;
+      state.bboxAnnotationEditDialogOnEdit = action.payload.onEdit;
+    },
+    closeBBoxAnnotationEditDialog: (state) => {
+      state.isBBoxAnnotationEditDialogOpen = false;
+      state.bboxAnnotationIds = [];
+      state.bboxAnnotationEditDialogOnEdit = undefined;
+    },
+    openTagEditDialog: (state, action: PayloadAction<{ tag: DocumentTagRead }>) => {
       state.isTagEditDialogOpen = true;
-      state.tagId = action.payload.tagId;
+      state.tag = action.payload.tag;
     },
     closeTagEditDialog: (state) => {
       state.isTagEditDialogOpen = false;
-      state.tagId = undefined;
+      state.tag = undefined;
     },
     openTagCreateDialog: (state, action: PayloadAction<{ tagName?: string }>) => {
       state.isTagCreateDialogOpen = true;
@@ -182,19 +215,11 @@ export const dialogSlice = createSlice({
       state.isCodeEditDialogOpen = false;
       state.code = undefined;
     },
-    openBBoxAnnotationEditDialog: (state, action: PayloadAction<{ annotation: BBoxAnnotationReadResolved }>) => {
-      state.isBBoxAnnotationEditDialogOpen = true;
-      state.bboxAnnotation = action.payload.annotation;
+    openDocumentUpload: (state) => {
+      state.isDocumentUploadOpen = true;
     },
-    closeBBoxAnnotationEditDialog: (state) => {
-      state.isBBoxAnnotationEditDialogOpen = false;
-      state.bboxAnnotation = undefined;
-    },
-    openBBoxAnnotationCreateDialog: (state) => {
-      state.isBBoxAnnotationCreateDialogOpen = true;
-    },
-    closeBBoxAnnotationCreateDialog: (state) => {
-      state.isBBoxAnnotationCreateDialogOpen = false;
+    closeDocumentUpload: (state) => {
+      state.isDocumentUploadOpen = false;
     },
     openSnackbar: (
       state,
@@ -242,18 +267,29 @@ export const dialogSlice = createSlice({
       state.llmMetadata = action.payload.metadata;
       state.llmCodes = action.payload.codes;
     },
-    // Step 3: Select the approach (zero-shot, few-shot, or model training)
+    // Step 3: Select the approach and deletion strategy (zero-shot, few-shot, or model training)
     // -> For zero-shot and few-shot, go to the prompt editor
     llmDialogGoToPromptEditor: (
       state,
       action: PayloadAction<{
         approach: ApproachType;
         prompts: LLMPromptTemplates[];
+        deleteExistingAnnotations: boolean;
       }>,
     ) => {
       state.llmStep = 3;
       state.llmPrompts = action.payload.prompts;
       state.llmApproach = action.payload.approach;
+      state.llmDeleteExistingAnnotations = action.payload.deleteExistingAnnotations;
+    },
+    llmDialogUpdatePromptEditor: (
+      state,
+      action: PayloadAction<{
+        prompts: LLMPromptTemplates[];
+      }>,
+    ) => {
+      state.llmStep = 3;
+      state.llmPrompts = action.payload.prompts;
     },
     // -> For model training, go to the training parameters editor
     llmDialogGoToTrainingParameterEditor: (
@@ -316,6 +352,7 @@ export const dialogSlice = createSlice({
       state.llmParameters = initialState.llmParameters;
       state.llmApproach = initialState.llmApproach;
       state.llmApproachRecommendation = initialState.llmApproachRecommendation;
+      state.llmDeleteExistingAnnotations = initialState.llmDeleteExistingAnnotations;
       state.llmJobId = initialState.llmJobId;
       state.llmJobResult = initialState.llmJobResult;
     },
@@ -334,6 +371,16 @@ export const dialogSlice = createSlice({
         state.llmMetadata = initialState.llmMetadata;
         state.llmCodes = initialState.llmCodes;
       }
+    },
+    // quick command menu
+    openQuickCommandMenu: (state) => {
+      state.isQuickCommandMenuOpen = true;
+    },
+    closeQuickCommandMenu: (state) => {
+      state.isQuickCommandMenuOpen = false;
+    },
+    toggleQuickCommandMenu: (state) => {
+      state.isQuickCommandMenuOpen = !state.isQuickCommandMenuOpen;
     },
   },
 });

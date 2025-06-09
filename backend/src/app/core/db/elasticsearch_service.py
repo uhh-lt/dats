@@ -2,19 +2,20 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Union
 
 import srsly
+from config import conf
 from elasticsearch import Elasticsearch, helpers
 from loguru import logger
 
 from app.core.data.dto.search import (
     ElasticSearchDocumentCreate,
     ElasticSearchDocumentHit,
+    ElasticSearchDocumentRead,
     ElasticSearchMemoCreate,
     ElasticSearchMemoRead,
     ElasticSearchMemoUpdate,
     PaginatedElasticSearchDocumentHits,
 )
 from app.util.singleton_meta import SingletonMeta
-from config import conf
 
 
 class NoSuchMemoInElasticSearchError(Exception):
@@ -22,6 +23,16 @@ class NoSuchMemoInElasticSearchError(Exception):
         super().__init__(
             (
                 f"There exists no Memo with ID={memo_id} in Project {proj_id}"
+                " in the respective ElasticSearch Index!"
+            )
+        )
+
+
+class NoSuchSdocInElasticSearchError(Exception):
+    def __init__(self, proj_id: int, sdoc_id: int):
+        super().__init__(
+            (
+                f"There exists no Sdoc with ID={sdoc_id} in Project {proj_id}"
                 " in the respective ElasticSearch Index!"
             )
         )
@@ -143,6 +154,18 @@ class ElasticSearchService(metaclass=SingletonMeta):
         else:
             raise NotImplementedError("Only Document and Memo indices exist!")
 
+    def exist_project_indices(self, *, proj_id: int) -> bool:
+        """
+        Check if the ElasticSearch indices for a project exist
+        :param proj_id: The ID of the project
+        :return: True if the indices exist, False otherwise
+        """
+        return self.__client.indices.exists(
+            index=self.__get_index_name(proj_id=proj_id, index_type="doc")
+        ) and self.__client.indices.exists(
+            index=self.__get_index_name(proj_id=proj_id, index_type="memo")
+        )
+
     def create_project_indices(self, *, proj_id: int) -> None:
         # create the ES Index for Documents
         doc_settings_path = Path(conf.elasticsearch.index_settings.docs)
@@ -225,6 +248,28 @@ class ElasticSearchService(metaclass=SingletonMeta):
             f"Deleted Document with ID={sdoc_id} from Index '{self.__get_index_name(proj_id=proj_id, index_type='doc')}'!"
         )
 
+    def get_esdoc_by_sdoc_id(
+        self, *, proj_id: int, sdoc_id: int, fields: Optional[Set[str]] = None
+    ) -> ElasticSearchDocumentRead:
+        if fields is not None and not fields.union(self.doc_index_fields):
+            raise NoSuchFieldInIndexError(
+                index=self.__get_index_name(proj_id=proj_id, index_type="doc"),
+                fields=fields,
+                index_fields=self.doc_index_fields,
+            )
+        elif fields is None:
+            fields = set()
+
+        res = self.__client.get(
+            index=self.__get_index_name(proj_id=proj_id, index_type="doc"),
+            id=str(sdoc_id),
+            _source=list(fields),
+        )
+        if not res["found"]:
+            raise NoSuchSdocInElasticSearchError(proj_id=proj_id, sdoc_id=sdoc_id)
+
+        return ElasticSearchDocumentRead(**res["_source"])
+
     def add_memo_to_index(self, proj_id: int, esmemo: ElasticSearchMemoCreate) -> int:
         res = self.__client.index(
             index=self.__get_index_name(proj_id=proj_id, index_type="memo"),
@@ -244,11 +289,11 @@ class ElasticSearchService(metaclass=SingletonMeta):
     def get_esmemo_by_memo_id(
         self, *, proj_id: int, memo_id: int, fields: Optional[Set[str]] = None
     ) -> Optional[ElasticSearchMemoRead]:
-        if fields is not None and not fields.union(self.doc_index_fields):
+        if fields is not None and not fields.union(self.memo_index_fields):
             raise NoSuchFieldInIndexError(
-                index=self.__get_index_name(proj_id=proj_id, index_type="doc"),
+                index=self.__get_index_name(proj_id=proj_id, index_type="memo"),
                 fields=fields,
-                index_fields=self.doc_index_fields,
+                index_fields=self.memo_index_fields,
             )
         elif fields is None:
             fields = set()
@@ -355,7 +400,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
                     document["highlight"]["content"] if "highlight" in document else []
                 )
                 document_hit = ElasticSearchDocumentHit(
-                    document_id=document["_id"],
+                    id=document["_id"],
                     score=document["_score"],
                     highlights=highlights,
                 )
@@ -376,7 +421,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
             for hit in client_response["hits"]["hits"]:
                 highlights = hit["highlight"]["content"] if "highlight" in hit else []
                 document = ElasticSearchDocumentHit(
-                    document_id=hit["_id"], score=hit["_score"], highlights=highlights
+                    id=hit["_id"], score=hit["_score"], highlights=highlights
                 )
                 hits.append(document)
             total_results = client_response["hits"]["total"]["value"]

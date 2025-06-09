@@ -1,8 +1,6 @@
 from typing import List
 
 import srsly
-from fastapi.encoders import jsonable_encoder
-
 from app.core.analysis.cota.pipeline.cargo import Cargo
 from app.core.data.crud.concept_over_time_analysis import crud_cota
 from app.core.data.dto.concept_over_time_analysis import (
@@ -10,6 +8,7 @@ from app.core.data.dto.concept_over_time_analysis import (
     COTAUpdateIntern,
 )
 from app.core.db.sql_service import SQLService
+from fastapi.encoders import jsonable_encoder
 
 sqls: SQLService = SQLService()
 

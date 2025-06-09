@@ -7,7 +7,6 @@ from sqlalchemy import func
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 from app.core.data.dto.code import CodeRead
-from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import MemoRead
 from app.core.data.dto.source_document import SourceDocumentRead
 
@@ -38,9 +37,7 @@ class SpanAnnotationRow(BaseModel):
     sdoc: SourceDocumentRead = Field(
         description="SourceDocument the SpanAnnotation refers to"
     )
-    tags: List[DocumentTagRead] = Field(
-        description="The DocumentTags of the SourceDocument."
-    )
+    tag_ids: List[int] = Field(description="The DocumentTagIDs of the SourceDocument.")
     memo: Optional[MemoRead] = Field(description="The Memo of the Annotation.")
 
 
@@ -59,9 +56,7 @@ class SentenceAnnotationRow(BaseModel):
     sdoc: SourceDocumentRead = Field(
         description="SourceDocument the SentenceAnnotation refers to"
     )
-    tags: List[DocumentTagRead] = Field(
-        description="The DocumentTags of the SourceDocument."
-    )
+    tag_ids: List[int] = Field(description="The DocumentTagIDs of the SourceDocument.")
     memo: Optional[MemoRead] = Field(description="The Memo of the Annotation.")
 
 
@@ -84,9 +79,7 @@ class BBoxAnnotationRow(BaseModel):
     sdoc: SourceDocumentRead = Field(
         description="SourceDocument the BBoxAnnotation refers to"
     )
-    tags: List[DocumentTagRead] = Field(
-        description="The DocumentTags of the SourceDocument."
-    )
+    tag_ids: List[int] = Field(description="The DocumentTagIDs of the SourceDocument.")
     memo: Optional[MemoRead] = Field(description="The Memo of the Annotation.")
 
 
@@ -95,11 +88,6 @@ class BBoxAnnotationSearchResult(BaseModel):
         description="The total number of bbox_annotation_ids. Used for pagination."
     )
     data: List[BBoxAnnotationRow] = Field(description="The Annotations.")
-
-
-class TimelineAnalysisResult(BaseModel):
-    date: str = Field(description="The date.")
-    sdoc_ids: List[int] = Field(description="The SourceDoument IDs.")
 
 
 class WordFrequencyStat(BaseModel):

@@ -1,10 +1,5 @@
 from typing import List
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
-from api.dependencies import get_current_user, get_db_session
-from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
@@ -12,9 +7,13 @@ from app.core.data.dto.source_document_metadata import (
     SourceDocumentMetadataBulkUpdate,
     SourceDocumentMetadataCreate,
     SourceDocumentMetadataRead,
-    SourceDocumentMetadataReadResolved,
     SourceDocumentMetadataUpdate,
 )
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from api.dependencies import get_current_user, get_db_session
+from api.validation import Validate
 
 router = APIRouter(
     prefix="/sdocmeta", dependencies=[Depends(get_current_user)], tags=["sdocMetadata"]
@@ -52,7 +51,7 @@ def create_new_metadata(
 
 @router.get(
     "/{metadata_id}",
-    response_model=SourceDocumentMetadataReadResolved,
+    response_model=SourceDocumentMetadataRead,
     summary="Returns the Metadata with the given ID.",
 )
 def get_by_id(
@@ -60,11 +59,11 @@ def get_by_id(
     db: Session = Depends(get_db_session),
     metadata_id: int,
     authz_user: AuthzUser = Depends(),
-) -> SourceDocumentMetadataReadResolved:
+) -> SourceDocumentMetadataRead:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT_METADATA, metadata_id)
 
     db_obj = crud_sdoc_meta.read(db=db, id=metadata_id)
-    return SourceDocumentMetadataReadResolved.model_validate(db_obj)
+    return SourceDocumentMetadataRead.model_validate(db_obj)
 
 
 @router.patch(

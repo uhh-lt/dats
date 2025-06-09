@@ -101,4 +101,43 @@ export class AuthenticationService {
       },
     });
   }
+  /**
+   * Oidc Login
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static oidcLogin({ redirectUri }: { redirectUri: string }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/authentication/oidc/login",
+      query: {
+        redirect_uri: redirectUri,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Oidc Callback
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static oidcCallback(): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/authentication/oidc/callback",
+    });
+  }
+  /**
+   * Sync Session
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static syncSession(): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/authentication/sync-session",
+    });
+  }
 }

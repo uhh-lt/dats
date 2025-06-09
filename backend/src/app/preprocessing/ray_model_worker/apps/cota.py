@@ -11,7 +11,7 @@ logger = logging.getLogger("ray.serve")
 api = FastAPI()
 
 
-@serve.deployment(num_replicas=1, route_prefix="/cota")
+@serve.deployment(num_replicas=1, name="cota")
 @serve.ingress(api)
 class CotaApi:
     def __init__(self, cota_model_handle: DeploymentHandle) -> None:
@@ -19,7 +19,7 @@ class CotaApi:
 
     @api.post("/finetune_apply_compute", response_model=RayCOTAJobResponse)
     async def finetune_apply_compute(self, input: RayCOTAJobInput):
-        return await self.cota.finetune_apply_compute.remote(input)
+        return await self.cota.finetune_apply_compute.remote(input)  # type: ignore
 
 
 app = CotaApi.bind(

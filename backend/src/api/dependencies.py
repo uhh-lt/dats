@@ -1,5 +1,10 @@
 from typing import AsyncGenerator, Dict, Optional
 
+from app.core.data.crud.user import crud_user
+from app.core.data.orm.user import UserORM
+from app.core.db.sql_service import SQLService
+from app.core.security import decode_jwt
+from config import conf
 from fastapi import Depends, Query
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
@@ -7,11 +12,6 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from api.util import credentials_exception
-from app.core.data.crud.user import crud_user
-from app.core.data.orm.user import UserORM
-from app.core.db.sql_service import SQLService
-from app.core.security import decode_jwt
-from config import conf
 
 # instantiate here to so that it is reusable for consecutive calls
 reusable_oauth2_scheme = OAuth2PasswordBearer(tokenUrl=conf.api.auth.jwt.token_url)
@@ -40,18 +40,6 @@ async def skip_limit_params(
         result["limit"] = limit
 
     return result
-
-
-async def resolve_code_param(
-    resolve: bool = Query(
-        title="Resolve Code",
-        description="If true, the code_id of the"
-        " SpanAnnotation gets resolved and replaced"
-        " by the respective Code entity",
-        default=True,
-    ),
-) -> bool:
-    return resolve
 
 
 async def get_db_session() -> AsyncGenerator[Session, None]:

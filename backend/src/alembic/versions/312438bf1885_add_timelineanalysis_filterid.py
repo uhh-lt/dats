@@ -11,7 +11,6 @@ from typing import Any, Sequence, Union
 
 import sqlalchemy as sa
 import srsly
-
 from alembic import op
 
 # revision identifiers, used by Alembic.

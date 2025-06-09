@@ -6,7 +6,7 @@ import {
   SuggestionMenuController,
   useCreateBlockNote,
 } from "@blocknote/react";
-import { useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { useDebounce } from "../../utils/useDebounce.ts";
 
 interface MemoBlockEditorViewProps {
@@ -20,10 +20,12 @@ interface MemoBlockEditorViewProps {
 
 // define the slash menu items
 const itemsToDelete = new Set(["Image", "Video", "Audio", "File"]);
+
 const getCustomSlashMenuItems = (editor: BlockNoteEditor): DefaultReactSuggestionItem[] => {
   const defaultItems = getDefaultReactSlashMenuItems(editor);
   return defaultItems.filter((item) => !itemsToDelete.has(item.title));
 };
+
 function MemoBlockEditorView({ initialContentJson, onChange, editable, debounce, style }: MemoBlockEditorViewProps) {
   // local state
   const [content, setContent] = useState<string>(initialContentJson);
@@ -31,15 +33,21 @@ function MemoBlockEditorView({ initialContentJson, onChange, editable, debounce,
 
   // persist changes automatically feature
   const debouncedContent = useDebounce(content, debounce ?? 1000);
-  const handleChange = () => {
+
+  const handleChange = useCallback(() => {
     if (!editor) return;
     setContent(JSON.stringify(editor.document));
-  };
+  }, [editor]);
+
+  const getItemsCallback = useCallback(
+    async (query: string) => filterSuggestionItems(getCustomSlashMenuItems(editor), query),
+    [editor],
+  );
+
   useEffect(() => {
     if (!editor || !debouncedContent) return;
     // only update if there are actually changes
     if (debouncedContent === initialContentJson) return;
-
     editor.blocksToMarkdownLossy().then((markdown) => {
       onChange(markdown, debouncedContent);
     });
@@ -59,10 +67,10 @@ function MemoBlockEditorView({ initialContentJson, onChange, editable, debounce,
       <SuggestionMenuController
         triggerCharacter={"/"}
         // Replaces the default Slash Menu items with our custom ones.
-        getItems={async (query) => filterSuggestionItems(getCustomSlashMenuItems(editor), query)}
+        getItems={getItemsCallback}
       />
     </BlockNoteView>
   );
 }
 
-export default MemoBlockEditorView;
+export default memo(MemoBlockEditorView);

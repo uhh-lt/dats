@@ -1,9 +1,8 @@
-from typing import List
-
-from sqlalchemy.orm import Session
+from typing import List, Optional
 
 from app.core.data.crud.project import crud_project
 from app.core.data.dto.llm_job import LLMPromptTemplates
+from sqlalchemy.orm import Session
 
 # ENGLISH
 
@@ -81,10 +80,17 @@ class PromptBuilder:
     def _build_system_prompt_template(self, language: str) -> str:
         return self.system_prompt_templates[language]
 
-    def _build_user_prompt_template(self, language: str, **kwargs) -> str:
+    def _build_user_prompt_template(
+        self, *, language: str, example_ids: Optional[List[int]] = None, **kwargs
+    ) -> str:
         raise NotImplementedError()
 
-    def build_prompt_templates(self, **kwargs) -> List[LLMPromptTemplates]:
+    def build_prompt_templates(
+        self, example_ids: Optional[List[int]] = None, **kwargs
+    ) -> List[LLMPromptTemplates]:
+        if example_ids is not None and not self.is_fewshot:
+            raise ValueError("Example IDs are only allowed for few-shot learning!")
+
         # create the prompt templates for all supported languages
         result: List[LLMPromptTemplates] = []
         for language in self.supported_languages:
@@ -92,7 +98,9 @@ class PromptBuilder:
                 LLMPromptTemplates(
                     language=language,
                     system_prompt=self._build_system_prompt_template(language),
-                    user_prompt=self._build_user_prompt_template(language, **kwargs),
+                    user_prompt=self._build_user_prompt_template(
+                        language=language, example_ids=example_ids, **kwargs
+                    ),
                 )
             )
         return result

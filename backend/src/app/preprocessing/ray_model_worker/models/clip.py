@@ -1,20 +1,16 @@
 import logging
-from pathlib import Path
 
+import numpy as np
 import torch
 from dto.clip import (
     ClipEmbeddingOutput,
     ClipImageEmbeddingInput,
     ClipTextEmbeddingInput,
 )
-from numpy import ndarray
-from PIL import Image
 from ray import serve
 from ray_config import build_ray_model_deployment_config, conf
 from sentence_transformers import SentenceTransformer
-from utils import (
-    get_sdoc_path_for_project_and_sdoc_name,
-)
+from utils import base64_to_image
 
 cc = conf.clip
 
@@ -28,23 +24,16 @@ IMAGE_BATCH_SIZE = cc.image_encoder.batch_size
 logger = logging.getLogger("ray.serve")
 
 
-def load_image(img_p: str | Path) -> Image.Image:
-    img = Image.open(img_p)
-    if img.mode != "RGB":
-        img = img.convert("RGB")
-    return img
-
-
 @serve.deployment(**build_ray_model_deployment_config("clip"))
 class ClipModel:
     def __init__(self):
         logger.debug(f"Loading ClipModel {TEXT_MODEL} for text ...")
-        text_encoder = SentenceTransformer(TEXT_MODEL, device=TEXT_DEVICE)
+        text_encoder = SentenceTransformer(TEXT_MODEL).to(TEXT_DEVICE)
         text_encoder.eval()
         self.text_encoder = text_encoder
 
         logger.debug(f"Loading ClipModel {IMAGE_MODEL} for image ...")
-        image_encoder = SentenceTransformer(IMAGE_MODEL, device=IMAGE_DEVICE)
+        image_encoder = SentenceTransformer(IMAGE_MODEL).to(IMAGE_DEVICE)
         image_encoder.eval()
         self.image_encoder = image_encoder
 
@@ -58,19 +47,12 @@ class ClipModel:
                 device=TEXT_DEVICE,
                 convert_to_numpy=True,
             )
-            assert isinstance(encoded_text, ndarray), "Failed to encode texts"
+            assert isinstance(encoded_text, np.ndarray), "Failed to encode texts"
 
             return ClipEmbeddingOutput(embeddings=encoded_text.tolist())
 
     def image_embedding(self, input: ClipImageEmbeddingInput) -> ClipEmbeddingOutput:
-        images = [
-            load_image(
-                get_sdoc_path_for_project_and_sdoc_name(
-                    proj_id=project_id, sdoc_name=img_p
-                )
-            )
-            for project_id, img_p in zip(input.project_ids, input.image_fps)
-        ]
+        images = [base64_to_image(b64) for b64 in input.base64_images]
 
         with torch.no_grad():
             encoded_images = self.image_encoder.encode(
@@ -81,7 +63,7 @@ class ClipModel:
                 device=IMAGE_DEVICE,
                 convert_to_numpy=True,
             )
-            assert isinstance(encoded_images, ndarray), "Failed to encode images"
+            assert isinstance(encoded_images, np.ndarray), "Failed to encode images"
 
             # close the images
             for img in images:
