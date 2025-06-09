@@ -19,49 +19,6 @@ TMP_DIR = Path(cc.tmp_dir)
 logger = logging.getLogger("ray.serve")
 
 
-def __read_html_and_replace_absolute_image_paths(
-    html_filename: Path, rel_to: Path
-) -> str:
-    if (
-        not html_filename.exists()
-        or not html_filename.is_file()
-        or not html_filename.suffix.lower() == ".html"
-    ):
-        raise ValueError(f"Input file {html_filename} is not a valid HTML file.")
-    if not rel_to.exists() or not rel_to.is_dir():
-        raise ValueError(
-            f"Relative path {rel_to} does not exist or is not a directory."
-        )
-    # load html and replace absolute image paths with relative ones
-    html_content = html_filename.read_text(encoding="utf-8")
-    soup = BeautifulSoup(html_content, "html.parser")
-    for img in soup.find_all("img"):
-        img_src = Path(img["src"])  # type: ignore
-        if img_src.is_absolute():
-            img["src"] = str(img_src.relative_to(rel_to))  # type: ignore
-    html_content = str(soup)
-    return html_content
-
-
-def __create_docling_pdf_conversion_output(
-    html_filename: Path,
-    out_dir: Path,
-) -> DoclingPDF2HTMLOutput:
-    html_content = __read_html_and_replace_absolute_image_paths(
-        html_filename,
-        out_dir,
-    )
-
-    base64_images = {}
-    for img_path in out_dir.glob("**/*.png"):
-        base64_images[img_path.name] = image_to_base64(img_path)
-
-    return DoclingPDF2HTMLOutput(
-        html_content=html_content,
-        base64_images=base64_images,
-    )
-
-
 @serve.deployment(**build_ray_model_deployment_config("docling"))
 class DoclingModel:
     def __init__(
@@ -81,6 +38,50 @@ class DoclingModel:
         # this initalizes and loades the models to GPU
         doc_converter.initialize_pipeline(InputFormat.PDF)
         self.doc_converter = doc_converter
+
+    def __read_html_and_replace_absolute_image_paths(
+        self,
+        html_filename: Path,
+        rel_to: Path,
+    ) -> str:
+        if (
+            not html_filename.exists()
+            or not html_filename.is_file()
+            or not html_filename.suffix.lower() == ".html"
+        ):
+            raise ValueError(f"Input file {html_filename} is not a valid HTML file.")
+        if not rel_to.exists() or not rel_to.is_dir():
+            raise ValueError(
+                f"Relative path {rel_to} does not exist or is not a directory."
+            )
+        # load html and replace absolute image paths with relative ones
+        html_content = html_filename.read_text(encoding="utf-8")
+        soup = BeautifulSoup(html_content, "html.parser")
+        for img in soup.find_all("img"):
+            img_src = Path(img["src"])  # type: ignore
+            if img_src.is_absolute():
+                img["src"] = str(img_src.relative_to(rel_to))  # type: ignore
+        html_content = str(soup)
+        return html_content
+
+    def __create_docling_pdf_conversion_output(
+        self,
+        html_filename: Path,
+        out_dir: Path,
+    ) -> DoclingPDF2HTMLOutput:
+        html_content = self.__read_html_and_replace_absolute_image_paths(
+            html_filename,
+            out_dir,
+        )
+
+        base64_images = {}
+        for img_path in out_dir.glob("**/*.png"):
+            base64_images[img_path.name] = image_to_base64(img_path)
+
+        return DoclingPDF2HTMLOutput(
+            html_content=html_content,
+            base64_images=base64_images,
+        )
 
     def pdf2html(self, pdf_chunk: Path) -> DoclingPDF2HTMLOutput:
         # Here we assume that the pdf_chunk is a valid PDF file chunk
@@ -109,7 +110,7 @@ class DoclingModel:
         )
 
         logger.info(f"Creating Docling PDF conversion output for {pdf_chunk} ...")
-        conversion_output = __create_docling_pdf_conversion_output(
+        conversion_output = self.__create_docling_pdf_conversion_output(
             html_filename=html_filename,
             out_dir=out_dir,
         )
