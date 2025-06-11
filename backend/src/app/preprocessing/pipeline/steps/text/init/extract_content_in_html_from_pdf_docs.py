@@ -36,6 +36,9 @@ def __split_large_pdf_into_chunks(
         src.close()
         return None
 
+    # Calculate the number of digits needed for zero-padding
+    total_digits = len(str(total_pages))
+
     # If yes, we proceed to split the PDF and save the chunks to disk in the project repo
     out_dir = input_doc.parent
     logger.info(
@@ -47,7 +50,8 @@ def __split_large_pdf_into_chunks(
     for i in range(num_splits):
         start_page = i * max_pages_per_chunk + 1
         end_page = min((i + 1) * max_pages_per_chunk, total_pages)
-        page_range_str = f"{start_page}-{end_page}"
+        # Format page range with zero-padding
+        page_range_str = f"{start_page:0{total_digits}}-{end_page:0{total_digits}}"
         output_fn = out_dir / f"{input_doc.stem}_pages_{page_range_str}.pdf"
         try:
             # Create a new PDF for the chunk
