@@ -39,6 +39,7 @@ from api.endpoints import (
     annoscaling,
     authentication,
     bbox_annotation,
+    chat,
     code,
     concept_over_time_analysis,
     crawler,
@@ -277,6 +278,7 @@ app.include_router(llm.router)
 app.include_router(sentence_annotation.router)
 app.include_router(import_.router)
 app.include_router(ml.router)
+app.include_router(chat.router)
 
 
 def main() -> None:
