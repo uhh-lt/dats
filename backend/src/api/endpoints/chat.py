@@ -2,7 +2,7 @@ from typing import List, Optional, Union
 
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.dto.chat import LLMSessionResponse
-from app.core.data.llm.chat_service import (
+from app.core.data.llm.llm_chat import (
     chat_session,
     retrieval_augmented_generation_with_session,
 )
@@ -49,7 +49,7 @@ def rag_with_session(
 @router.get(
     "/chat_session",
     response_model=LLMSessionResponse,
-    summary="TEST CHAT SESSION",
+    summary="Initiate or continue a chat session with the LLM using a prompt",
 )
 def chat_sesh(
     *,
