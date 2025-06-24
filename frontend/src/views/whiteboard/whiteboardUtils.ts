@@ -19,9 +19,11 @@ import { SpanAnnotationNodeData } from "../../api/openapi/models/SpanAnnotationN
 import { SpanAnnotationRead } from "../../api/openapi/models/SpanAnnotationRead.ts";
 import { TagNodeData } from "../../api/openapi/models/TagNodeData.ts";
 import { TextNodeData } from "../../api/openapi/models/TextNodeData.ts";
+import { TimelineAnalysisRead } from "../../api/openapi/models/TimelineAnalysisRead.ts";
 import { VerticalAlign } from "../../api/openapi/models/VerticalAlign.ts";
 import { WhiteboardNodeType } from "../../api/openapi/models/WhiteboardNodeType.ts";
 import { theme } from "../../plugins/ReactMUI.ts";
+import { TimelineAnalysisNodeData } from "./types/TimelineAnalysisNodeData.ts";
 
 const positionOffset = 50;
 
@@ -66,6 +68,7 @@ export const isCodeNodeId = (nodeId: string): boolean => nodeId.startsWith("code
 export const isSpanAnnotationNodeId = (nodeId: string): boolean => nodeId.startsWith("spanAnnotation-");
 export const isSentenceAnnotationNodeId = (nodeId: string): boolean => nodeId.startsWith("sentenceAnnotation-");
 export const isBBoxAnnotationNodeId = (nodeId: string): boolean => nodeId.startsWith("bboxAnnotation-");
+export const isTimelineAnalysisNodeId = (nodeId: string): boolean => nodeId.startsWith("timelineAnalysis-");
 
 export const isConnectionAllowed = (sourceNodeId: string, targetNodeId: string) => {
   // do not allow self-connections
@@ -586,4 +589,24 @@ export const isTagSdocEdge = (edge: Edge): boolean => {
 
 export const isTagSdocEdgeArray = (edges: Edge[]): boolean => {
   return edges.every(isTagSdocEdge);
+};
+
+export const createTimelineAnalysisNodes = ({
+  analyses,
+  position,
+}: {
+  analyses: number[] | TimelineAnalysisRead[];
+  position?: XYPosition;
+}): Node<TimelineAnalysisNodeData>[] => {
+  const analysisIds = analyses.map((analysis) => (typeof analysis === "number" ? analysis : analysis.id));
+  return analysisIds.map((analysisId, index) => ({
+    id: `timelineAnalysis-${analysisId}-${uuidv4()}`,
+    type: "timelineAnalysis",
+    data: {
+      ...defaultDatabaseNodeData,
+      timelineAnalysisId: analysisId,
+      type: "timelineAnalysis",
+    },
+    position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
+  }));
 };

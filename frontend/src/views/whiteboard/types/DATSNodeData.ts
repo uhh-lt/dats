@@ -8,6 +8,7 @@ import { SentenceAnnotationNodeData } from "../../../api/openapi/models/Sentence
 import { SpanAnnotationNodeData } from "../../../api/openapi/models/SpanAnnotationNodeData.ts";
 import { TagNodeData } from "../../../api/openapi/models/TagNodeData.ts";
 import { TextNodeData } from "../../../api/openapi/models/TextNodeData.ts";
+import { TimelineAnalysisNodeData } from "./TimelineAnalysisNodeData.ts";
 
 export type DATSNodeData =
   | TextNodeData
@@ -19,4 +20,5 @@ export type DATSNodeData =
   | TagNodeData
   | SpanAnnotationNodeData
   | SentenceAnnotationNodeData
-  | BBoxAnnotationNodeData;
+  | BBoxAnnotationNodeData
+  | TimelineAnalysisNodeData;

@@ -33,6 +33,7 @@ import BboxAnnotationHooks from "../../api/BboxAnnotationHooks.ts";
 import CodeHooks from "../../api/CodeHooks.ts";
 import { WhiteboardContent_Output } from "../../api/openapi/models/WhiteboardContent_Output.ts";
 import { WhiteboardEdgeData_Output } from "../../api/openapi/models/WhiteboardEdgeData_Output.ts";
+import { WhiteboardNode_Input } from "../../api/openapi/models/WhiteboardNode_Input.ts";
 import { WhiteboardNodeType } from "../../api/openapi/models/WhiteboardNodeType.ts";
 import { WhiteboardRead } from "../../api/openapi/models/WhiteboardRead.ts";
 import SentenceAnnotationHooks from "../../api/SentenceAnnotationHooks.ts";
@@ -60,6 +61,8 @@ import SentenceAnnotationNode from "./nodes/SentenceAnnotationNode.tsx";
 import SpanAnnotationNode from "./nodes/SpanAnnotationNode.tsx";
 import TagNode from "./nodes/TagNode.tsx";
 import TextNode from "./nodes/TextNode.tsx";
+import TimelineAnalysisNode from "./nodes/TImelineAnalysisNode.tsx";
+import AddAnalysisNodeDialog from "./toolbar/AddAnalysisNodeDialog.tsx";
 import AddBBoxAnnotationNodeDialog from "./toolbar/AddBBoxAnnotationNodeDialog.tsx";
 import AddBorderNodeButton from "./toolbar/AddBorderNodeButton.tsx";
 import AddCodeNodeDialog from "./toolbar/AddCodeNodeDialog.tsx";
@@ -104,6 +107,7 @@ const nodeTypes: NodeTypes = {
   [WhiteboardNodeType.SPAN_ANNOTATION]: SpanAnnotationNode,
   [WhiteboardNodeType.SENTENCE_ANNOTATION]: SentenceAnnotationNode,
   [WhiteboardNodeType.BBOX_ANNOTATION]: BboxAnnotationNode,
+  timelineAnalysis: TimelineAnalysisNode,
 };
 
 const edgeTypes = {
@@ -192,6 +196,8 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
   const [shapeMenuAnchor, setShapeMenuAnchor] = useState<null | HTMLElement>(null);
   const shapeMenuOpen = Boolean(shapeMenuAnchor);
+  const [analysisMenuAnchor, setAnalysisMenuAnchor] = useState<null | HTMLElement>(null);
+  const analysisMenuOpen = Boolean(analysisMenuAnchor);
 
   const handleChangePendingAction = useCallback(
     (action: PendingAddNodeAction | undefined) => {
@@ -348,11 +354,13 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   const updateWhiteboard = WhiteboardHooks.useUpdateWhiteboard();
   const handleSaveWhiteboard = useCallback(() => {
     const mutation = updateWhiteboard.mutate;
+    // Filter out timeline analysis nodes as they're not supported by the API yet
+    const filteredNodes = nodes.filter((node) => node.type !== "timelineAnalysis") as WhiteboardNode_Input[];
     mutation({
       whiteboardId: whiteboard.id,
       requestBody: {
         title: whiteboard.title,
-        content: { nodes: nodes, edges: edges },
+        content: { nodes: filteredNodes, edges: edges },
       },
     });
   }, [edges, nodes, updateWhiteboard.mutate, whiteboard.id, whiteboard.title]);
@@ -370,7 +378,8 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
     setOldData(JSON.stringify(whiteboard.content));
   }, [whiteboard.content]);
   useBlocker(() => {
-    const newData: WhiteboardContent_Output = { nodes: nodes, edges: edges };
+    const filteredNodes = nodes.filter((node) => node.type !== "timelineAnalysis") as WhiteboardNode_Input[];
+    const newData: WhiteboardContent_Output = { nodes: filteredNodes, edges: edges };
     if (oldData !== JSON.stringify(newData)) {
       handleSaveWhiteboard();
     }
@@ -397,6 +406,14 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
 
   const handleShapeMenuClose = () => {
     setShapeMenuAnchor(null);
+  };
+
+  const handleAnalysisMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnalysisMenuAnchor(event.currentTarget);
+  };
+
+  const handleAnalysisMenuClose = () => {
+    setAnalysisMenuAnchor(null);
   };
 
   const handleExportWhiteboard = useCallback(() => {
@@ -541,6 +558,15 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
                         onClick={handleChangePendingAction}
                         buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
                       />
+                      <Tooltip title="Add analysis" placement="right" arrow>
+                        <Button
+                          onClick={handleAnalysisMenuClick}
+                          sx={{ minWidth: 0, p: 1, color: "black" }}
+                          variant="text"
+                        >
+                          {getIconComponent(Icon.ANALYSIS)}
+                        </Button>
+                      </Tooltip>
                     </Stack>
                   </Paper>
                   <Paper elevation={1} sx={{ width: "fit-content" }}>
@@ -608,6 +634,45 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
                           <AddBorderNodeButton
                             type="Rounded"
                             onClick={handleChangePendingAction}
+                            buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
+                          />
+                        </MenuItem>
+                      </Menu>
+                      <Menu
+                        id="analysis-menu"
+                        anchorEl={analysisMenuAnchor}
+                        open={analysisMenuOpen}
+                        onClose={handleAnalysisMenuClose}
+                        anchorOrigin={{
+                          vertical: "top",
+                          horizontal: "right",
+                        }}
+                        transformOrigin={{
+                          vertical: "top",
+                          horizontal: "left",
+                        }}
+                        slotProps={{
+                          paper: {
+                            sx: {
+                              minWidth: "auto",
+                              width: "fit-content",
+                              marginLeft: 0.8,
+                              elevation: 1,
+                              boxShadow: 1,
+                            },
+                          },
+                          list: {
+                            sx: { p: 0 },
+                          },
+                        }}
+                      >
+                        <MenuItem onClick={(e) => e.stopPropagation()} sx={{ p: 0, px: 0, py: 0, minHeight: "auto" }}>
+                          <AddAnalysisNodeDialog
+                            projectId={projectId}
+                            onClick={(action) => {
+                              handleChangePendingAction(action);
+                              handleAnalysisMenuClose();
+                            }}
                             buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
                           />
                         </MenuItem>

@@ -6,10 +6,11 @@ import { SdocNodeData } from "../../../api/openapi/models/SdocNodeData.ts";
 import { SentenceAnnotationNodeData } from "../../../api/openapi/models/SentenceAnnotationNodeData.ts";
 import { SpanAnnotationNodeData } from "../../../api/openapi/models/SpanAnnotationNodeData.ts";
 import { TagNodeData } from "../../../api/openapi/models/TagNodeData.ts";
-import { DATSNodeData } from "./DATSNodeData.ts";
 import { BackgroundColorData } from "./base/BackgroundColorData.ts";
 import { BorderData } from "./base/BorderData.ts";
 import { TextData } from "./base/TextData.ts";
+import { DATSNodeData } from "./DATSNodeData.ts";
+import { TimelineAnalysisNodeData } from "./TimelineAnalysisNodeData.ts";
 
 export const hasBorderData = (node: Node): node is Node<BorderData> => {
   const data = node.data as BorderData;
@@ -85,4 +86,8 @@ export const isMemoNode = (node: Node<DATSNodeData>): node is Node<MemoNodeData>
 
 export const isCodeNode = (node: Node<DATSNodeData>): node is Node<CodeNodeData> => {
   return (node.data as CodeNodeData).codeId !== undefined;
+};
+
+export const isTimelineAnalysisNode = (node: Node<DATSNodeData>): node is Node<TimelineAnalysisNodeData> => {
+  return (node.data as TimelineAnalysisNodeData).timelineAnalysisId !== undefined;
 };
