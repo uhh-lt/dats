@@ -86,7 +86,7 @@ function TopicCreationDialog({ aspectId }: TopicCreationDialogProps) {
       >
         <span>
           <Button onClick={handleOpen} disabled={isPending}>
-            Add Topic
+            Add
           </Button>
         </span>
       </Tooltip>
@@ -148,7 +148,7 @@ function TopicCreationDialog({ aspectId }: TopicCreationDialogProps) {
             loadingPosition="start"
             fullWidth
           >
-            Create Topic
+            Create Cluster
           </Button>
         </DialogActions>
       </Dialog>

@@ -20,7 +20,7 @@ function TopicMenuButton({ aspectId, popoverOrigin, selectedSdocIds, colorScheme
 
   return (
     <>
-      <Tooltip title="Change Topic">
+      <Tooltip title="Change Cluster">
         <IconButton onClick={handleClick}>{getIconComponent(Icon.TOPICS)}</IconButton>
       </Tooltip>
       <TopicMenu

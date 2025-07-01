@@ -249,9 +249,9 @@ function ColorSettings({ aspectId }: ColorSettingsProps) {
           size="small"
           variant="outlined"
         >
-          <MenuItem value="topic-broad">Topics: Broad</MenuItem>
-          <MenuItem value="topic-medium">Topics: Medium</MenuItem>
-          <MenuItem value="topic-fine">Topics: Fine</MenuItem>
+          <MenuItem value="topic-broad">Clusters: Broad</MenuItem>
+          <MenuItem value="topic-medium">Clusters: Medium</MenuItem>
+          <MenuItem value="topic-fine">Clusters: Fine</MenuItem>
         </TextField>
         <TextField
           select
@@ -331,7 +331,7 @@ function ColorSettings({ aspectId }: ColorSettingsProps) {
         <Box style={{ marginTop: "12px" }}>
           <FormControlLabel
             control={<Switch checked={showLabels} onChange={handleShowLabelsChange} />}
-            label={<Typography color="textSecondary">Show Topic Labels</Typography>}
+            label={<Typography color="textSecondary">Show Cluster Labels</Typography>}
           />
         </Box>
       </Stack>
@@ -339,7 +339,7 @@ function ColorSettings({ aspectId }: ColorSettingsProps) {
       <Stack spacing={1} mt={2}>
         <Typography px={1.5} variant="h6" alignItems="center" display="flex" gap={1} color="textSecondary">
           {getIconComponent(Icon.TOPICS, { style: {} })}
-          Legend/Topics
+          Clusters
         </Typography>
         <Stack direction="row" px={1} spacing={1} alignItems="center">
           {!mergeMode && !deleteMode && !splitMode && (
@@ -350,15 +350,15 @@ function ColorSettings({ aspectId }: ColorSettingsProps) {
                 placement="bottom-start"
                 title={
                   <>
-                    <Typography color="inherit">Topic Removal</Typography>
-                    This action <em>deletes</em> the topic. The documents are assigned to the closest topic. Your
-                    document&harr;topic assignments are reset!
+                    <Typography color="inherit">Cluster Removal</Typography>
+                    This action <em>deletes</em> the cluster. The documents are assigned to the closest cluster. Your
+                    document&harr;cluster assignments are reset!
                   </>
                 }
               >
                 <span>
                   <Button onClick={handleToggleDeleteMode} disabled={isPending}>
-                    Remove Topic
+                    Remove
                   </Button>
                 </span>
               </Tooltip>
@@ -367,15 +367,15 @@ function ColorSettings({ aspectId }: ColorSettingsProps) {
                 placement="bottom-start"
                 title={
                   <>
-                    <Typography color="inherit">Topic Splitting</Typography>
-                    This action analyzes and <em>splits documents into new topics</em>. It <u>deletes</u> the topic, but
-                    creates several new ones. Your document&harr;topic assignments are reset!
+                    <Typography color="inherit">Cluster Splitting</Typography>
+                    This action analyzes and <em>splits documents into new clusters</em>. It <u>deletes</u> the cluster,
+                    but creates several new ones. Your document&harr;cluster assignments are reset!
                   </>
                 }
               >
                 <span>
                   <Button onClick={handleToggleSplitMode} disabled={isPending}>
-                    Split Topic
+                    Split
                   </Button>
                 </span>
               </Tooltip>
@@ -384,15 +384,15 @@ function ColorSettings({ aspectId }: ColorSettingsProps) {
                 placement="bottom-start"
                 title={
                   <>
-                    <Typography color="inherit">Topic Merging</Typography>
-                    This action <em>merges two topics</em>. One topic is kept, one is <u>deleted</u>. All documents are
-                    assigned to the kept topic.
+                    <Typography color="inherit">Cluster Merging</Typography>
+                    This action <em>merges two clusters</em>. One cluster is kept, one is <u>deleted</u>. All documents
+                    are assigned to the kept cluster.
                   </>
                 }
               >
                 <span>
                   <Button onClick={handleToggleMergeMode} disabled={isPending}>
-                    Merge Topics
+                    Merge
                   </Button>
                 </span>
               </Tooltip>
@@ -431,12 +431,12 @@ function ColorSettings({ aspectId }: ColorSettingsProps) {
         </Stack>
         <Typography px={2} variant="caption" color="textSecondary">
           {mergeMode
-            ? "Select 2 topics to merge:"
+            ? "Select 2 clusters to merge:"
             : deleteMode
-              ? "Select topic to delete:"
+              ? "Select cluster to delete:"
               : splitMode
-                ? "Select topic to split:"
-                : "Click topic to higlight corresponding documents:"}
+                ? "Select cluster to split:"
+                : "Click cluster to highlight corresponding documents:"}
         </Typography>
         <List sx={{ width: "100%" }} disablePadding>
           {vis.data?.topics.map((topic, index) => {
@@ -477,7 +477,8 @@ function ColorSettings({ aspectId }: ColorSettingsProps) {
         </List>
         <Box px={2}>
           <Alert severity="info">
-            Tipp: Changing document&harr;topic assignments updates the affected topics (name, description, words, etc.)!
+            Tipp: Changing document&harr;cluster assignments updates the affected clusters (name, description, words,
+            etc.)!
           </Alert>
         </Box>
       </Stack>

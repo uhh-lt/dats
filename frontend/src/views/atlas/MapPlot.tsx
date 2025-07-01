@@ -82,7 +82,7 @@ function MapPlot({ vis }: MapPlotProps) {
           yref: "y",
           showarrow: false,
           font: {
-            size: 14,
+            size: 16,
             color: "white",
             weight: 1000,
             shadow: "0px 0px 6px black, -1px 0 DimGray, 0 1px DimGray, 1px 0 DimGray, 0 -1px DimGray",
