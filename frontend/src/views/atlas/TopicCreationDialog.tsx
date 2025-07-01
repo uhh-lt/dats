@@ -78,9 +78,9 @@ function TopicCreationDialog({ aspectId }: TopicCreationDialogProps) {
         placement="bottom-start"
         title={
           <>
-            <Typography color="inherit">Topic Creation</Typography>
-            This action allows you to <em>create</em> a new topic. Based on your provided title and description, similar
-            documents are assigned to the new topic.
+            <Typography color="inherit">Cluster Creation</Typography>
+            This action allows you to <em>create</em> a new cluster. Based on your provided title and description,
+            similar documents are assigned to the new cluster.
           </>
         }
       >
@@ -100,22 +100,26 @@ function TopicCreationDialog({ aspectId }: TopicCreationDialogProps) {
         onSubmit={handleSubmit(handleTopicCreation, handleError)}
       >
         <DATSDialogHeader
-          title="Create new topic"
+          title="Create new cluster"
           onClose={handleClose}
           isMaximized={isMaximized}
           onToggleMaximize={handleToggleMaximize}
         />
         <DialogContent>
           <Stack spacing={2} pt={1}>
-            <Typography variant="body2">TODO: Color selection etc...</Typography>
+            <Typography variant="body2">
+              {" "}
+              This action allows you to <em>create</em> a new cluster. Based on your provided title and description,
+              similar documents are assigned to the new cluster.
+            </Typography>
             <FormText
               name="name"
               control={control}
               rules={{
-                required: "Topic name is required",
+                required: "Cluster name is required",
               }}
               textFieldProps={{
-                label: "Topic name",
+                label: "Cluster name",
                 variant: "outlined",
                 fullWidth: true,
                 error: Boolean(errors.name),
@@ -128,8 +132,8 @@ function TopicCreationDialog({ aspectId }: TopicCreationDialogProps) {
                 required: "Description is required",
               }}
               textFieldProps={{
-                label: "Topic description",
-                placeholder: "Describe the topic in detail...",
+                label: "Cluster description",
+                placeholder: "Cluster the topic in detail...",
                 variant: "outlined",
                 fullWidth: true,
                 error: Boolean(errors.description),

@@ -58,14 +58,14 @@ function TopicReviewButtons({ aspectId, selectedSdocIds }: TopicReviewButtonsPro
   return (
     <>
       {!isAllAccepted && (
-        <Tooltip title="Accept doc&harr;topic assignment(s)">
+        <Tooltip title="Accept doc&harr;cluster assignment(s)">
           <IconButton onClick={handleLabelDocs} disabled={isLabelPending || isUnlabelPending}>
             <CheckIcon />
           </IconButton>
         </Tooltip>
       )}
       {!isAllUnaccepted && (
-        <Tooltip title="Revert doc&harr;topic assignment(s)">
+        <Tooltip title="Revert doc&harr;cluster assignment(s)">
           <IconButton onClick={handleUnlabelDocs} disabled={isUnlabelPending || isLabelPending}>
             <ClearIcon />
           </IconButton>

@@ -107,10 +107,10 @@ function SelectionInformation({ aspectId }: SelectionInformationProps) {
 
             <Stack p={1} sx={{ borderTop: 1, borderColor: "divider" }}>
               <Stack direction="row">
-                <Tooltip title={"Automatically detected topics of this document"} placement="left">
+                <Tooltip title={"Automatically detected cluster of this document"} placement="left">
                   <span style={{ flexGrow: 1, flexBasis: 1, justifyContent: "start" }}>
                     <Button color="inherit" startIcon={getIconComponent(Icon.TOPICS)} disabled>
-                      Topics
+                      Cluster
                     </Button>
                   </span>
                 </Tooltip>
@@ -141,7 +141,7 @@ function SelectionInformation({ aspectId }: SelectionInformationProps) {
                             width: "24px",
                           },
                         })}
-                        <Typography>{topic.is_outlier ? "Outlier Topic / No Topic" : topic.name}</Typography>
+                        <Typography>{topic.is_outlier ? "Outlier Cluster / No Cluster" : topic.name}</Typography>
                       </Stack>
                     );
                   })}

@@ -8,15 +8,15 @@ const tmJobType2Title: Record<TMJobType, string> = {
   [TMJobType.CREATE_ASPECT]: "Map Creation",
   [TMJobType.ADD_MISSING_DOCS_TO_ASPECT]: "Add Missing Documents to Map",
   // Topics
-  [TMJobType.CREATE_TOPIC_WITH_NAME]: "Topic Creation",
-  [TMJobType.CREATE_TOPIC_WITH_SDOCS]: "Topic Creation",
-  [TMJobType.REMOVE_TOPIC]: "Remove Topic from Map",
-  [TMJobType.SPLIT_TOPIC]: "Split Topic in Map",
-  [TMJobType.MERGE_TOPICS]: "Merge Topics in Map",
-  [TMJobType.CHANGE_TOPIC]: "Change Topic",
+  [TMJobType.CREATE_TOPIC_WITH_NAME]: "Cluster Creation",
+  [TMJobType.CREATE_TOPIC_WITH_SDOCS]: "Cluster Creation",
+  [TMJobType.REMOVE_TOPIC]: "Remove Cluster from Map",
+  [TMJobType.SPLIT_TOPIC]: "Split Cluster in Map",
+  [TMJobType.MERGE_TOPICS]: "Merge Cluster in Map",
+  [TMJobType.CHANGE_TOPIC]: "Change Cluster",
   // Topic Model
-  [TMJobType.REFINE_TOPIC_MODEL]: "Refine Topic Model",
-  [TMJobType.RESET_TOPIC_MODEL]: "Reset Topic Model",
+  [TMJobType.REFINE_TOPIC_MODEL]: "Refine Model",
+  [TMJobType.RESET_TOPIC_MODEL]: "Reset Model",
 };
 
 const jobStatus2Title: Record<BackgroundJobStatus, string> = {
