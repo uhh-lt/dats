@@ -60,10 +60,10 @@ function DocAspectTable({ aspectId, height, sdocIds }: DocAspectTableProps) {
         Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdoc_id} link renderFilename />,
       },
       {
-        id: "Topic",
-        header: "Topic",
-        minSize: 80,
-        size: 80,
+        id: "Cluster",
+        header: "Cluster",
+        minSize: 90,
+        size: 90,
         grow: false,
         Cell: ({ row }) => (
           <Box width={42} height={42} display="flex" alignItems="center" justifyContent="flex-start">

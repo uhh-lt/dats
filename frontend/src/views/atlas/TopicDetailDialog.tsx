@@ -37,7 +37,7 @@ function TopicDetailDialog({ aspectId }: TopicDetailDialogProps) {
   return (
     <Dialog open={open && !!topic} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
       <DATSDialogHeader
-        title="Topic Details"
+        title="Cluster Details"
         onClose={handleClose}
         isMaximized={isMaximized}
         onToggleMaximize={handleToggleMaximize}

@@ -100,13 +100,13 @@ function MapDashboard() {
           <Stack spacing={4} direction={"row"}>
             <Box width="360px" flexShrink={0}>
               <Stack height={40} alignItems="center" direction="row">
-                <Typography variant="button">Topics</Typography>
+                <Typography variant="button">Clusters</Typography>
               </Stack>
               <TopicList aspectId={aspectId} height={390} />
             </Box>
             <Box flexGrow={1} flexBasis="0%">
               <Stack direction="row" alignItems="center">
-                <Typography variant="button">Topic Distribution</Typography>
+                <Typography variant="button">Cluster Distribution</Typography>
                 <Tooltip title={showPieChart ? "View as Bar Chart" : "View as Pie Chart"}>
                   <IconButton onClick={handleToggleShowPieChart}>
                     {showPieChart ? <BarChartIcon /> : <PieChartIcon />}
@@ -121,7 +121,7 @@ function MapDashboard() {
             </Box>
             <Box flexGrow={1} flexBasis="0%">
               <Stack height={40} alignItems="center" direction="row">
-                <Typography variant="button">Topic Similarities</Typography>
+                <Typography variant="button">Cluster Similarities</Typography>
                 <ColorScalePicker onColorChange={setColors} />
               </Stack>
               <TopicSimilarityPlot aspectId={aspectId} height={360} colorName={colors} />
