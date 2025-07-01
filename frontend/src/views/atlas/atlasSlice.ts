@@ -3,6 +3,7 @@ import * as d3 from "d3";
 import { v4 as uuidv4 } from "uuid";
 import { IDListOperator } from "../../api/openapi/models/IDListOperator.ts";
 import { ListOperator } from "../../api/openapi/models/ListOperator.ts";
+import { LLMSessionResponse } from "../../api/openapi/models/LLMSessionResponse.ts";
 import { LogicalOperator } from "../../api/openapi/models/LogicalOperator.ts";
 import { ProjectMetadataRead } from "../../api/openapi/models/ProjectMetadataRead.ts";
 import { SdocColumns } from "../../api/openapi/models/SdocColumns.ts";
@@ -22,6 +23,12 @@ import {
 } from "../../components/FilterDialog/filterUtils.ts";
 import { ProjectActions } from "../../components/Project/projectSlice.ts";
 import { getValue } from "../search/metadataUtils.ts";
+
+interface ChatMessage {
+  id: string;
+  message: string;
+  speaker: "user" | "agent";
+}
 
 export interface AtlasState {
   lastMapId: number | undefined;
@@ -48,6 +55,10 @@ export interface AtlasState {
   // dialog
   isTopicDialogOpen: boolean;
   topicDialogTopicId: number | undefined;
+  // chat
+  chatSessionId?: string;
+  chatMessages: ChatMessage[];
+  lastDeletedChatMessages: ChatMessage[]; // For redo functionality
 }
 
 const defaultFilterExpression: MyFilterExpression = {
@@ -83,6 +94,10 @@ const initialState: AtlasState & FilterState = {
   // dialog
   isTopicDialogOpen: false,
   topicDialogTopicId: undefined,
+  // chat
+  chatSessionId: undefined,
+  chatMessages: [],
+  lastDeletedChatMessages: [],
 };
 
 const resetAtlasState = (state: Draft<AtlasState>) => {
@@ -274,6 +289,54 @@ export const atlasSlice = createSlice({
     onCloseTopicDialog: (state) => {
       state.isTopicDialogOpen = false;
       state.topicDialogTopicId = undefined;
+    },
+    // chat
+    onChatReset: (state) => {
+      state.chatSessionId = undefined;
+      state.chatMessages = [];
+      state.lastDeletedChatMessages = [];
+    },
+    onChatMessageSent: (state, action: PayloadAction<ChatMessage>) => {
+      state.chatMessages.push(action.payload);
+      state.lastDeletedChatMessages = [];
+    },
+    onChatResponseReceived: (state, action: PayloadAction<LLMSessionResponse>) => {
+      const agentMessage: ChatMessage = {
+        id: `agent-${Date.now()}`,
+        message: action.payload.response,
+        speaker: "agent",
+      };
+      state.chatSessionId = action.payload.session_id;
+      state.chatMessages.push(agentMessage);
+      state.lastDeletedChatMessages = [];
+    },
+    onChatRevert: (state) => {
+      if (state.chatMessages.length === 0) return;
+      let messagesToRevert: ChatMessage[] = [];
+      const lastMessage = state.chatMessages[state.chatMessages.length - 1];
+      if (lastMessage.speaker === "agent" && state.chatMessages.length > 1) {
+        const userMessageBeforeAgent = state.chatMessages[state.chatMessages.length - 2];
+        if (userMessageBeforeAgent.speaker === "user") {
+          messagesToRevert = [userMessageBeforeAgent, lastMessage];
+          state.chatMessages.splice(-2, 2);
+        } else {
+          messagesToRevert = [lastMessage];
+          state.chatMessages.splice(-1, 1);
+        }
+      } else if (lastMessage.speaker === "user") {
+        messagesToRevert = [lastMessage];
+        state.chatMessages.splice(-1, 1);
+      } else {
+        messagesToRevert = [lastMessage];
+        state.chatMessages.splice(-1, 1);
+      }
+      state.lastDeletedChatMessages = messagesToRevert;
+    },
+    onChatRedo: (state) => {
+      if (state.lastDeletedChatMessages.length > 0) {
+        state.chatMessages.push(...state.lastDeletedChatMessages);
+        state.lastDeletedChatMessages = [];
+      }
     },
   },
   extraReducers: (builder) => {

@@ -2,19 +2,12 @@ import AddCommentIcon from "@mui/icons-material/AddComment";
 import RedoIcon from "@mui/icons-material/Redo"; // Redo (using Redo for clarity, though user asked for Undo for restore)
 import SendIcon from "@mui/icons-material/Send";
 import UndoIcon from "@mui/icons-material/Undo"; // Revert
-import {
-  Box,
-  IconButton,
-  LinearProgress,
-  Paper,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography,
-  alpha,
-  useTheme,
-} from "@mui/material";
+import { Box, IconButton, Paper, Stack, TextField, Tooltip, Typography, alpha, useTheme } from "@mui/material";
 import { useState } from "react";
+import Markdown from "react-markdown";
+import TopicModellingHooks from "../../api/TopicModellingHooks.ts";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { AtlasActions } from "./atlasSlice.ts";
 
 interface ChatMessage {
   id: string;
@@ -24,31 +17,48 @@ interface ChatMessage {
 
 function AnalysisAssistant() {
   const theme = useTheme();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState<string>("");
-  const [lastDeleted, setLastDeleted] = useState<ChatMessage[]>([]); // For revert/redo
 
+  const selectedSdocIds = useAppSelector((state) => state.atlas.selectedSdocIds);
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const sessionId = useAppSelector((state) => state.atlas.chatSessionId);
+  const messages = useAppSelector((state) => state.atlas.chatMessages);
+  const lastDeleted = useAppSelector((state) => state.atlas.lastDeletedChatMessages);
+  const dispatch = useAppDispatch();
+  const ragChat = TopicModellingHooks.useRAGChat();
   const handleSendMessage = () => {
     if (inputText.trim() === "") return;
+    if (!projectId) return;
 
     const newUserMessage: ChatMessage = {
       id: `user-${Date.now()}`,
       message: inputText,
       speaker: "user",
     };
-    setMessages((prevMessages) => [...prevMessages, newUserMessage]);
+    dispatch(AtlasActions.onChatMessageSent(newUserMessage));
     setInputText("");
-    setLastDeleted([]); // Clear redo history on new message
 
-    // Mock agent response
-    setTimeout(() => {
-      const agentMessage: ChatMessage = {
-        id: `agent-${Date.now()}`,
-        message: `This is a mock response to: "${newUserMessage.message}"`,
-        speaker: "agent",
-      };
-      setMessages((prevMessages) => [...prevMessages, agentMessage]);
-    }, 1000);
+    ragChat.mutate(
+      {
+        sessionId: sessionId,
+        projId: projectId,
+        requestBody: {
+          query: newUserMessage.message,
+          sdoc_ids: selectedSdocIds,
+        },
+        threshold: 0.5,
+        topK: selectedSdocIds.length, // Adjust as needed
+      },
+      {
+        onSuccess: (response) => {
+          dispatch(AtlasActions.onChatResponseReceived(response));
+        },
+        onError: (error) => {
+          console.error("Error sending message:", error);
+          // Handle error appropriately
+        },
+      },
+    );
   };
 
   const handleKeyPress = (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -59,43 +69,16 @@ function AnalysisAssistant() {
   };
 
   const handleStartNewChat = () => {
-    setMessages([]);
     setInputText("");
-    setLastDeleted([]);
+    dispatch(AtlasActions.onChatReset());
   };
 
   const handleRevert = () => {
-    if (messages.length === 0) return;
-
-    let messagesToRevert: ChatMessage[] = [];
-    const lastMessage = messages[messages.length - 1];
-
-    if (lastMessage.speaker === "agent" && messages.length > 1) {
-      const userMessageBeforeAgent = messages[messages.length - 2];
-      if (userMessageBeforeAgent.speaker === "user") {
-        messagesToRevert = [userMessageBeforeAgent, lastMessage];
-        setMessages((prev) => prev.slice(0, -2));
-      } else {
-        // Only agent message left or multiple agent messages
-        messagesToRevert = [lastMessage];
-        setMessages((prev) => prev.slice(0, -1));
-      }
-    } else if (lastMessage.speaker === "user") {
-      messagesToRevert = [lastMessage];
-      setMessages((prev) => prev.slice(0, -1));
-    } else {
-      // Only one agent message exists
-      messagesToRevert = [lastMessage];
-      setMessages((prev) => prev.slice(0, -1));
-    }
-    setLastDeleted(messagesToRevert);
+    dispatch(AtlasActions.onChatRevert());
   };
 
   const handleRedo = () => {
-    if (lastDeleted.length > 0) {
-      setMessages((prevMessages) => [...prevMessages, ...lastDeleted]);
-      setLastDeleted([]);
-    }
+    dispatch(AtlasActions.onChatRedo());
   };
 
   return (
@@ -114,20 +97,13 @@ function AnalysisAssistant() {
           backgroundColor: theme.palette.background.paper,
           display: "flex",
           gap: 1,
+          alignItems: "center",
         }}
       >
         <Box flexGrow={2}>
           <Typography variant="caption" color="textSecondary">
-            Chat about 5 selected docs
+            Chat about {selectedSdocIds.length} selected docs
           </Typography>
-          <Box sx={{ display: "flex", alignItems: "center", mt: -0.5 }}>
-            <Box sx={{ width: "100%", mr: 1 }}>
-              <LinearProgress variant="determinate" value={(5 / 100) * 100} />
-            </Box>
-            <Box flexShrink={0}>
-              <Typography variant="body2" color="text.secondary">{`5/100`}</Typography>
-            </Box>
-          </Box>
         </Box>
         <Box flexGrow={1} />
         <Stack direction={"row"} spacing={1}>
@@ -182,14 +158,26 @@ function AnalysisAssistant() {
                 borderRadius: msg.speaker === "user" ? "10px 10px 0 10px" : "10px 10px 10px 0",
               }}
             >
-              <Typography variant="body1">{msg.message}</Typography>
+              <Typography variant="body1">
+                <Markdown>{msg.message}</Markdown>
+              </Typography>
             </Paper>
           </Box>
         ))}
+        {ragChat.isPending && (
+          <Box sx={{ textAlign: "center", color: theme.palette.text.secondary, mt: 2 }}>
+            <Typography variant="body2">Thinking...</Typography>
+          </Box>
+        )}
         {messages.length === 0 && (
           <Box sx={{ textAlign: "center", color: theme.palette.text.secondary, mt: 4 }}>
             <Typography variant="h6">Analysis Assistant</Typography>
-            <Typography variant="body1">Start a conversation by typing your message below.</Typography>
+            <Typography variant="body1">
+              Start a conversation by typing your message below.
+              <br />
+              <br />
+              <b>Warning: This is still under development!</b>
+            </Typography>
           </Box>
         )}
       </Box>
