@@ -122,7 +122,7 @@ function TopicDistributionPlot({ aspectId, height, showPieChart }: TopicDistribu
       )}
       <CardContent sx={{ padding: 0.5, pb: "4px !important" }}>
         <Typography variant="body2" sx={{ color: "text.secondary", textAlign: "center" }}>
-          This map is cool!
+          Distribution of documents across clusters
         </Typography>
       </CardContent>
     </Card>

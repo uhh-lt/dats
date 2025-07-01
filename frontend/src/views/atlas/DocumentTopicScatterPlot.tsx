@@ -65,7 +65,7 @@ function DocumentTopicScatterPlot({ aspectId, height }: DocumentTopicScatterPlot
 
       <CardContent sx={{ padding: 0.5, pb: "4px !important" }}>
         <Typography variant="body2" sx={{ color: "text.secondary", textAlign: "center" }}>
-          This map is cool!
+          Map of all documents colored by their cluster
         </Typography>
       </CardContent>
     </Card>

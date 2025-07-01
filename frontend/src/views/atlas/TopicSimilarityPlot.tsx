@@ -111,25 +111,35 @@ function TopicSimilarityPlot({ aspectId, height, colorName }: TopicSimilarityPlo
                   <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
                     {vis.data.similarities.map((sims, i) => (
                       <Box key={`similarity-row-${i}`} sx={{ display: "flex", flexDirection: "row", flex: 1 }}>
-                        {sims.map((sim, j) => (
-                          <Box
-                            key={`similarity-${i}-${j}`}
-                            sx={{
-                              flex: 1,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              bgcolor: colorScale(sim),
-                              fontSize: cellFontSize,
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                              color: "lightgrey",
-                            }}
-                          >
-                            {sim.toFixed(2)}
-                          </Box>
-                        ))}
+                        {sims.map((sim, j) =>
+                          i >= j ? (
+                            <Box
+                              key={`similarity-${i}-${j}`}
+                              sx={{
+                                flex: 1,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                bgcolor: colorScale(sim),
+                                fontSize: cellFontSize,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                color: "lightgrey",
+                              }}
+                            >
+                              {sim.toFixed(2)}
+                            </Box>
+                          ) : (
+                            <Box
+                              key={`similarity-${i}-${j}`}
+                              sx={{
+                                flex: 1,
+                                bgcolor: "transparent",
+                              }}
+                            />
+                          ),
+                        )}
                       </Box>
                     ))}
                   </Box>
@@ -198,22 +208,28 @@ function TopicSimilarityPlot({ aspectId, height, colorName }: TopicSimilarityPlo
                     justifyContent: "space-between",
                   }}
                 >
-                  {tickValues.map((value, index) => (
-                    <Box
-                      key={`tick-${index}`}
-                      sx={{
-                        width: "100%",
-                        textAlign: "center",
-                        position: "absolute",
-                        bottom: `${value === 0 ? 3 : value === 1 ? 97 : value * 100}%`,
-                        transform: "translateY(50%)",
-                        fontSize: "0.75rem",
-                        color: "lightgrey",
-                      }}
-                    >
-                      {value.toFixed(1)}
-                    </Box>
-                  ))}
+                  {tickValues.map((value, index) => {
+                    // Interpolate color from black (first tick) to white (last tick)
+                    const t = index / (tickValues.length - 1);
+                    const grey = Math.round(255 * t);
+                    const tickColor = `rgb(${grey},${grey},${grey})`;
+                    return (
+                      <Box
+                        key={`tick-${index}`}
+                        sx={{
+                          width: "100%",
+                          textAlign: "center",
+                          position: "absolute",
+                          bottom: `${value === 0 ? 3 : value === 1 ? 97 : value * 100}%`,
+                          transform: "translateY(50%)",
+                          fontSize: "0.75rem",
+                          color: tickColor,
+                        }}
+                      >
+                        {value.toFixed(1)}
+                      </Box>
+                    );
+                  })}
                 </Box>
               </Box>
             </Box>
@@ -230,7 +246,7 @@ function TopicSimilarityPlot({ aspectId, height, colorName }: TopicSimilarityPlo
       })()}
       <CardContent sx={{ padding: 0.5, pb: "4px !important" }}>
         <Typography variant="body2" sx={{ color: "text.secondary", textAlign: "center" }}>
-          This map is cool!
+          Inter-cluster similarities
         </Typography>
       </CardContent>
     </Card>
