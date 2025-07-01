@@ -60,7 +60,7 @@ function MapCard({ aspect, to, title }: MapCardProps) {
             sx={{ height: 360, width: 360, objectFit: "cover" }}
             component="img"
             image={`/content/projects/${aspect.project_id}/plots/aspect_${aspect.id}_map_thumbnail.png`}
-            title="Atlas Map Preview"
+            title="Perspectives Map Preview"
           />
         ) : (
           <Stack

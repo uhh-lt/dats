@@ -32,8 +32,8 @@ interface AspectTemplate {
 
 const templates: AspectTemplate[] = [
   {
-    name: "Topic Clustering",
-    description: "Group documents by their main topics.",
+    name: "Topic Discovery",
+    description: "Group documents by their main topic.",
     doc_embedding_prompt: "Identify the main topic or theme of the document",
     doc_modification_prompt:
       "Summarize the document, analyzing the topics of the document. Conclude with a possible topic categorization of it.",
@@ -102,7 +102,7 @@ function MapCreationDialog({ open, onClose }: MapCreationDialogProps) {
         },
       },
       {
-        onSuccess: (aspect) => navigate(`/project/${aspect.project_id}/atlas/map-details/${aspect.id}`),
+        onSuccess: (aspect) => navigate(`/project/${aspect.project_id}/perspectives/map-details/${aspect.id}`),
       },
     );
   };
@@ -134,7 +134,7 @@ function MapCreationDialog({ open, onClose }: MapCreationDialogProps) {
       onSubmit={handleSubmit(handleAspectCreation, handleError)}
     >
       <DATSDialogHeader
-        title="Create Map"
+        title="Create Perspective"
         onClose={onClose}
         isMaximized={isMaximized}
         onToggleMaximize={handleToggleMaximize}
@@ -161,10 +161,10 @@ function MapCreationDialog({ open, onClose }: MapCreationDialogProps) {
             name="name"
             control={control}
             rules={{
-              required: "Map name is required",
+              required: "Perspective name is required",
             }}
             textFieldProps={{
-              label: "Map name",
+              label: "Perspective name",
               variant: "outlined",
               fullWidth: true,
               error: Boolean(errors.name),

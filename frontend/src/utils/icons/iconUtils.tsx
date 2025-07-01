@@ -112,7 +112,7 @@ export enum Icon {
   // Logbook
   LOGBOOK = "logbook",
 
-  // Atlas
+  // Perspectives
   ATLAS = "atlas",
   MAP = "map",
   TOPICS = "topics",

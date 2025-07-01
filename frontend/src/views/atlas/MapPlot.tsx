@@ -339,7 +339,7 @@ function MapPlot({ vis }: MapPlotProps) {
           responsive: true,
           displaylogo: false,
           scrollZoom: true,
-          toImageButtonOptions: { filename: "atlas-map" },
+          toImageButtonOptions: { filename: "perspectives-map" },
           modeBarButtonsToRemove: ["pan2d", "zoomIn2d", "zoomOut2d"],
         }}
         style={{ width: "100%", height: "100%" }}

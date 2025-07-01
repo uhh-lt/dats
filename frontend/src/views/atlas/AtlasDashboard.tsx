@@ -47,20 +47,14 @@ function AtlasDashboard() {
           <Stack spacing={2} direction={"row"} alignItems="center" justifyContent="space-between">
             <Box>
               <Typography variant="h4" component="h1" color="primary.dark">
-                Atlas Dashboard
+                Perspectives Dashboard
               </Typography>
               <Typography pt={1} color="textSecondary">
                 Create your custom document visualization!
               </Typography>
             </Box>
-            <Button
-              onClick={handleOpen}
-              variant="contained"
-              color="primary"
-              sx={{ width: 174 }}
-              endIcon={getIconComponent(Icon.CREATE)}
-            >
-              Create Map
+            <Button onClick={handleOpen} variant="contained" color="primary" endIcon={getIconComponent(Icon.CREATE)}>
+              Create Perspective
             </Button>
           </Stack>
           <Stack direction={"row"} spacing={2} alignItems="center">

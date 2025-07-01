@@ -39,7 +39,7 @@ function getIconForBase(base: string): Icon {
       return Icon.DOCUMENT_SAMPLER;
     case "ml-automation":
       return Icon.ML_AUTOMATION;
-    case "atlas":
+    case "perspectives":
       return Icon.ATLAS;
     case "map-details":
       return Icon.MAP;

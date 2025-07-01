@@ -180,15 +180,15 @@ const router = createBrowserRouter([
         element: <MlAutomation />,
       },
       {
-        path: "/project/:projectId/atlas",
+        path: "/project/:projectId/perspectives",
         element: <AtlasDashboard />,
       },
       {
-        path: "/project/:projectId/atlas/map-details/:aspectId",
+        path: "/project/:projectId/perspectives/map-details/:aspectId",
         element: <MapDashboard />,
       },
       {
-        path: "/project/:projectId/atlas/map/:aspectId",
+        path: "/project/:projectId/perspectives/map/:aspectId",
         element: <Map />,
       },
     ],

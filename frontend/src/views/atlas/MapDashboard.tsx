@@ -76,7 +76,7 @@ function MapDashboard() {
               color="primary"
               endIcon={<ReplyIcon sx={{ transform: "rotate(90deg)" }} />}
               component={RouterLink}
-              to={`../atlas/map/${aspectId}`}
+              to={`../perspectives/map/${aspectId}`}
             >
               Open Map
             </Button>

@@ -74,13 +74,13 @@ export const useDefaultCommands = (projectId: string | undefined): CommandItem[]
         keywords: ["find", "search", "sentences", "navigate"],
       },
       {
-        id: "atlas",
-        title: "Open Atlas",
-        description: "Go to project atlas",
+        id: "perspectives",
+        title: "Open Perspectives",
+        description: "Go to project perspectives",
         category: "Navigation",
         icon: getIconComponent(Icon.ATLAS),
-        route: `/project/${projectId}/atlas`,
-        keywords: ["atlas", "map"],
+        route: `/project/${projectId}/perspectives`,
+        keywords: ["perspectives", "map"],
       },
       {
         id: "annotation-view",

@@ -56,7 +56,10 @@ export function useShortcuts() {
 
       // Navigation shortcuts
       createShortcut("goToSearch", "s", "Go to Search", () => navigate("search"), { ctrlmeta: true, shift: true }),
-      createShortcut("goToAtlas", "m", "Go to Atlas", () => navigate("atlas"), { ctrlmeta: true, shift: true }),
+      createShortcut("goToPerspectives", "m", "Go to Perspectives", () => navigate("perspectives"), {
+        ctrlmeta: true,
+        shift: true,
+      }),
       createShortcut("goToAnnotation", "a", "Go to Annotation", () => navigate("annotation"), {
         ctrlmeta: true,
         shift: true,
