@@ -124,6 +124,7 @@ function TopicSimilarityPlot({ aspectId, height, colorName }: TopicSimilarityPlo
                               overflow: "hidden",
                               textOverflow: "ellipsis",
                               whiteSpace: "nowrap",
+                              color: "lightgrey",
                             }}
                           >
                             {sim.toFixed(2)}
@@ -207,6 +208,7 @@ function TopicSimilarityPlot({ aspectId, height, colorName }: TopicSimilarityPlo
                         bottom: `${value === 0 ? 3 : value === 1 ? 97 : value * 100}%`,
                         transform: "translateY(50%)",
                         fontSize: "0.75rem",
+                        color: "lightgrey",
                       }}
                     >
                       {value.toFixed(1)}
