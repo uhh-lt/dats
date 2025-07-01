@@ -4,9 +4,7 @@ from typing import List, Optional, Union
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.chat import LLMSessionResponse
 from app.core.data.llm.ollama_service import OllamaService
-from app.core.search.filtering import Filter
-from app.core.search.sdoc_search import sdoc_search
-from app.core.search.sdoc_search.sdoc_search_columns import SdocColumns
+from app.core.db.simsearch_service import SimSearchService
 from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -21,18 +19,25 @@ def retrieval_augmented_generation_with_session(
     query: Union[str, List[str], int],
     top_k: int,
     threshold: float,
-    filter: Filter[SdocColumns],
     db: Session,
     session_id: Optional[str] = None,
+    sdoc_ids: Optional[List[int]] = None,
 ) -> LLMSessionResponse:
     # Retrieve top-k similar sentences using vector search
-    similar_sentences = sdoc_search.find_similar_sentences(
+    similar_sentences = SimSearchService().find_similar_sentences(
+        sdoc_ids_to_search=sdoc_ids,
         proj_id=proj_id,
         query=query,
         top_k=top_k,
         threshold=threshold,
-        filter=filter,
     )
+    # similar_sentences = sdoc_search.find_similar_sentences(
+    #     proj_id=proj_id,
+    #     query=query,
+    #     top_k=top_k,
+    #     threshold=threshold,
+    #     filter=filter,
+    # )
 
     # Group hits by source document ID
     sdoc_to_hits = defaultdict(list)
