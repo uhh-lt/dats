@@ -5538,6 +5538,71 @@
         }
       }
     },
+    "/chat/rag": {
+      "post": {
+        "tags": ["chat"],
+        "summary": "Answer a query using Retrieval-Augmented Generation (RAG)",
+        "operationId": "rag_with_session",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          { "name": "top_k", "in": "query", "required": true, "schema": { "type": "integer", "title": "Top K" } },
+          {
+            "name": "threshold",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "number", "title": "Threshold" }
+          },
+          {
+            "name": "session_id",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Session Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Body_chat-rag_with_session" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMSessionResponse" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/chat/chat_session": {
+      "get": {
+        "tags": ["chat"],
+        "summary": "Initiate or continue a chat session with the LLM using a prompt",
+        "operationId": "chat_sesh",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "prompt", "in": "query", "required": true, "schema": { "type": "string", "title": "Prompt" } },
+          {
+            "name": "session_id",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Session Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMSessionResponse" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/topic_model/job/{aspect_id}": {
       "post": {
         "tags": ["topic_model"],
@@ -6413,6 +6478,18 @@
         "type": "object",
         "required": ["username", "password"],
         "title": "Body_authentication-login"
+      },
+      "Body_chat-rag_with_session": {
+        "properties": {
+          "query": {
+            "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }, { "type": "integer" }],
+            "title": "Query"
+          },
+          "filter": { "$ref": "#/components/schemas/Filter_SdocColumns_-Input" }
+        },
+        "type": "object",
+        "required": ["query", "filter"],
+        "title": "Body_chat-rag_with_session"
       },
       "Body_documentTag-update_document_tags_batch": {
         "properties": {
@@ -8546,6 +8623,15 @@
         "type": "object",
         "required": ["language", "system_prompt", "user_prompt"],
         "title": "LLMPromptTemplates"
+      },
+      "LLMSessionResponse": {
+        "properties": {
+          "response": { "type": "string", "title": "Response", "description": "The response of the LLM" },
+          "session_id": { "type": "string", "title": "Session Id", "description": "The session ID of the LLM chat" }
+        },
+        "type": "object",
+        "required": ["response", "session_id"],
+        "title": "LLMSessionResponse"
       },
       "ListOperator": { "type": "string", "enum": ["LIST_CONTAINS", "LIST_NOT_CONTAINS"], "title": "ListOperator" },
       "LogicalOperator": {
