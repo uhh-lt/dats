@@ -2,8 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Filter_SdocColumns__Input } from "./Filter_SdocColumns__Input";
 export type Body_chat_rag_with_session = {
   query: string | Array<string> | number;
-  filter: Filter_SdocColumns__Input;
+  sdoc_ids: Array<number> | null;
 };

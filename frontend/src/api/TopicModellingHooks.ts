@@ -10,6 +10,7 @@ import { BackgroundJobStatus } from "./openapi/models/BackgroundJobStatus.ts";
 import { CodeRead } from "./openapi/models/CodeRead.ts";
 import { SdocColumns } from "./openapi/models/SdocColumns.ts";
 import { TMJobRead } from "./openapi/models/TMJobRead.ts";
+import { ChatService } from "./openapi/services/ChatService.ts";
 import { ProjectService } from "./openapi/services/ProjectService.ts";
 import { TopicModelService } from "./openapi/services/TopicModelService.ts";
 
@@ -222,6 +223,15 @@ const useGetTopicsBySdocId = (aspectId: number | null | undefined, sdocId: numbe
     staleTime: 1000 * 60 * 5,
   });
 
+// CHAT
+const useRAGChat = () =>
+  useMutation({
+    mutationFn: ChatService.ragWithSession,
+    onSuccess: (data) => {
+      console.log(data);
+    },
+  });
+
 const TopicModellingHooks = {
   // aspects
   useGetAllAspectsList,
@@ -241,6 +251,8 @@ const TopicModellingHooks = {
   useGetTopicSimilarities,
   // topics
   useGetTopicsBySdocId,
+  // chat
+  useRAGChat,
 };
 
 export default TopicModellingHooks;

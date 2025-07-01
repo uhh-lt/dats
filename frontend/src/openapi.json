@@ -6485,10 +6485,13 @@
             "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }, { "type": "integer" }],
             "title": "Query"
           },
-          "filter": { "$ref": "#/components/schemas/Filter_SdocColumns_-Input" }
+          "sdoc_ids": {
+            "anyOf": [{ "items": { "type": "integer" }, "type": "array" }, { "type": "null" }],
+            "title": "Sdoc Ids"
+          }
         },
         "type": "object",
-        "required": ["query", "filter"],
+        "required": ["query", "sdoc_ids"],
         "title": "Body_chat-rag_with_session"
       },
       "Body_documentTag-update_document_tags_batch": {
