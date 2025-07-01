@@ -1,4 +1,5 @@
-import { Box, Card, CardContent, PopoverPosition } from "@mui/material";
+import { Box, Card, CardContent, PopoverPosition, Typography } from "@mui/material";
+import SdocHooks from "../../api/SdocHooks.ts";
 
 export interface MapTooltipData {
   id?: string;
@@ -10,6 +11,8 @@ interface MapTooltipProps {
 }
 
 function MapTooltip({ data }: MapTooltipProps) {
+  const sdocId = parseInt(data.id || "0", 10);
+  const sdocData = SdocHooks.useGetDocumentData(sdocId);
   if (data.id && data.position) {
     return (
       <Box
@@ -23,7 +26,15 @@ function MapTooltip({ data }: MapTooltipProps) {
         }}
       >
         <Card>
-          <CardContent>Hi was geht ab!</CardContent>
+          <CardContent>
+            {sdocData.data ? (
+              <Typography>
+                <b>Preview:</b> {sdocData.data.sentences[0]}...
+              </Typography>
+            ) : (
+              <Typography>Loading...</Typography>
+            )}
+          </CardContent>
         </Card>
       </Box>
     );
