@@ -248,6 +248,7 @@ function ColorSettings({ aspectId }: ColorSettingsProps) {
           onChange={handleColorByChange}
           size="small"
           variant="outlined"
+          disabled
         >
           <MenuItem value="topic-broad">Clusters: Broad</MenuItem>
           <MenuItem value="topic-medium">Clusters: Medium</MenuItem>

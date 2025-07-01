@@ -99,10 +99,11 @@ function PositionSettings({ aspectId }: PositionSettingsProps) {
           size="small"
           variant="outlined"
           helperText="This is interpreted as a continuous variable."
+          disabled
         >
-          <MenuItem value="Topic Dimension 1">Topic Dimension 1</MenuItem>
-          <MenuItem value="Topic Dimension 2">Topic Dimension 2</MenuItem>
-          <MenuItem value="Topic Dimension 3">Topic Dimension 3</MenuItem>
+          <MenuItem value="Cluster Dimension 1">Cluster Dimension 1</MenuItem>
+          <MenuItem value="Cluster Dimension 2">Cluster Dimension 2</MenuItem>
+          <MenuItem value="Cluster Dimension 3">Cluster Dimension 3</MenuItem>
         </TextField>
         <TextField
           select
@@ -112,10 +113,11 @@ function PositionSettings({ aspectId }: PositionSettingsProps) {
           size="small"
           variant="outlined"
           helperText="This is interpreted as a continuous variable."
+          disabled
         >
-          <MenuItem value="Topic Dimension 1">Topic Dimension 1</MenuItem>
-          <MenuItem value="Topic Dimension 2">Topic Dimension 2</MenuItem>
-          <MenuItem value="Topic Dimension 3">Topic Dimension 3</MenuItem>
+          <MenuItem value="Cluster Dimension 1">Cluster Dimension 1</MenuItem>
+          <MenuItem value="Cluster Dimension 2">Cluster Dimension 2</MenuItem>
+          <MenuItem value="Cluster Dimension 3">Cluster Dimension 3</MenuItem>
         </TextField>
         <Box style={{ marginTop: "12px" }}>
           <FormControlLabel

@@ -80,8 +80,8 @@ const initialState: AtlasState & FilterState = {
   pointSize: 10,
   showLabels: true,
   // position settings
-  xAxis: "Topic Dimension 1",
-  yAxis: "Topic Dimension 2",
+  xAxis: "Cluster Dimension 1",
+  yAxis: "Cluster Dimension 2",
   showTicks: false,
   showGrid: true,
   // highlighting
