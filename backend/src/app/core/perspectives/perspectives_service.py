@@ -6,7 +6,6 @@ from typing import Callable, Dict, List, Optional, Set, Tuple
 import joblib
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
 from app.core.data.crud.aspect import crud_aspect
 from app.core.data.crud.cluster import crud_cluster
 from app.core.data.crud.document_aspect import crud_document_aspect
@@ -203,55 +202,6 @@ class PerspectivesService:
         )
 
         return embedding_output.embeddings, coords
-
-    # def __build_training_data(
-    #     self,
-    #     db: Session,
-    #     aspect_id: int,
-    # ) -> Tuple[List[str], List[str], List[int]]:
-    #     # Read all clusters
-    #     all_clusters = crud_cluster.read_by_aspect_and_level(
-    #         db=db, aspect_id=aspect_id, level=0
-    #     )
-
-    #     # Read the current document <-> cluster assignments
-    #     document_clusters = crud_document_cluster.read_by_aspect(db=db, aspect_id=aspect_id)
-
-    #     # Build training_data, consisting of all accepted documents
-    #     train_labels: List[str] = []
-    #     train_doc_ids: List[int] = []
-    #     cluster2accepted_docs: Dict[int, List[int]] = {t.id: [] for t in all_clusters}
-    #     for dt in document_clusters:
-    #         if dt.is_accepted:
-    #             cluster2accepted_docs[dt.cluster_id].append(dt.sdoc_id)
-    #             train_labels.append(f"{dt.cluster_id}")
-    #             train_doc_ids.append(dt.sdoc_id)
-
-    #     # Ensure that every cluster has at least one accepted document by using a cluster's top documents
-    #     empty_clusters = [
-    #         cluster for cluster in all_clusters if len(cluster2accepted_docs[cluster.id]) == 0
-    #     ]
-    #     for cluster in empty_clusters:
-    #         assert cluster.top_docs is not None, (
-    #             f"Cluster {cluster.id} has no accepted documents, but top_docs is not None."
-    #         )
-    #         for top_doc in cluster.top_docs:
-    #             cluster2accepted_docs[cluster.id].append(top_doc)
-    #             train_labels.append(f"{cluster.id}")
-    #             train_doc_ids.append(top_doc)
-
-    #     # Read the corresponding aspect texts
-    #     doc_aspects = crud_document_aspect.read_by_aspect_and_sdoc_ids(
-    #         db=db,
-    #         sdoc_ids=train_doc_ids,
-    #         aspect_id=aspect_id,
-    #     )
-    #     sdoc_id2doc_aspect: Dict[int, DocumentAspectORM] = {
-    #         da.sdoc_id: da for da in doc_aspects
-    #     }
-    #     train_docs = [sdoc_id2doc_aspect[doc_id].content for doc_id in train_doc_ids]
-
-    #     return train_docs, train_labels, train_doc_ids
 
     def __generate_map_thumbnail(
         self,
@@ -702,16 +652,20 @@ class PerspectivesService:
         )
 
         # 1.3. Find the most important words for each cluster
-        scores, indices = torch.topk(torch.tensor(c_tf_idf), k=50)
-        scores = scores.tolist()
-        indices = indices.tolist()
+        # Use numpy to get top-k values and indices for each cluster (row)
+        k = 50
         top_words: Dict[int, List[str]] = {}
         top_word_scores: Dict[int, List[float]] = {}
-        for scores, indices, cluster_id in zip(
-            scores, indices, cluster_to_clusterdoc.keys()
-        ):
-            top_words[cluster_id] = [words[i] for i in indices]
-            top_word_scores[cluster_id] = [float(s) for s in scores]
+        for row, cluster_id in zip(c_tf_idf, cluster_to_clusterdoc.keys()):
+            # Get indices of top-k elements in descending order
+            if len(row) < k:
+                topk_idx = np.argsort(row)[::-1]
+            else:
+                topk_idx = np.argpartition(row, -k)[-k:]
+                # Sort these top-k indices by value descending
+                topk_idx = topk_idx[np.argsort(row[topk_idx])[::-1]]
+            top_words[cluster_id] = [words[i] for i in topk_idx]
+            top_word_scores[cluster_id] = [float(row[i]) for i in topk_idx]
         self._log_status_msg("Extracted top words and scores for each cluster!")
 
         # 2. Generate cluster name and description with LLM
