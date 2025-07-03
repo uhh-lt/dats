@@ -1,7 +1,7 @@
 import { Box } from "@mui/material";
 import { MaterialReactTable, MRT_ColumnDef, useMaterialReactTable } from "material-react-table";
 import { memo, useMemo } from "react";
-import { TMDoc } from "../../../api/openapi/models/TMDoc.ts";
+import { PerspectivesDoc } from "../../../api/openapi/models/PerspectivesDoc.ts";
 import PerspectivesHooks from "../../../api/PerspectivesHooks.ts";
 import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
@@ -19,27 +19,27 @@ function DocAspectTable({ aspectId, height, sdocIds }: DocAspectTableProps) {
   const colorScheme = useAppSelector((state) => state.perspectives.colorScheme);
 
   // computed
-  const { data, topic2Index } = useMemo(() => {
-    if (!vis.data) return { data: [], topic2Index: {} };
+  const { data, cluster2Index } = useMemo(() => {
+    if (!vis.data) return { data: [], cluster2Index: {} };
 
-    let data: TMDoc[] = [];
+    let data: PerspectivesDoc[] = [];
     if (sdocIds && sdocIds.length > 0) {
-      const sdocId2TMDoc: Record<number, TMDoc> = vis.data.docs.reduce(
+      const sdocId2PerspectivesDoc: Record<number, PerspectivesDoc> = vis.data.docs.reduce(
         (acc, doc) => {
           acc[doc.sdoc_id] = doc;
           return acc;
         },
-        {} as Record<number, TMDoc>,
+        {} as Record<number, PerspectivesDoc>,
       );
       sdocIds.forEach((sdocId) => {
-        data.push(sdocId2TMDoc[sdocId]);
+        data.push(sdocId2PerspectivesDoc[sdocId]);
       });
     } else {
       data = vis.data.docs.slice(0, 9); // default to first 9 documents if no sdocIds provided
     }
     return {
       data,
-      topic2Index: vis.data.topics.reduce(
+      cluster2Index: vis.data.clusters.reduce(
         (acc, cluster, index) => {
           acc[cluster.id] = index;
           return acc;
@@ -49,7 +49,7 @@ function DocAspectTable({ aspectId, height, sdocIds }: DocAspectTableProps) {
     };
   }, [vis, sdocIds]);
 
-  const columns: MRT_ColumnDef<TMDoc>[] = useMemo(
+  const columns: MRT_ColumnDef<PerspectivesDoc>[] = useMemo(
     () => [
       {
         id: "Filename",
@@ -68,7 +68,7 @@ function DocAspectTable({ aspectId, height, sdocIds }: DocAspectTableProps) {
         Cell: ({ row }) => (
           <Box width={42} height={42} display="flex" alignItems="center" justifyContent="flex-start">
             {getIconComponent(Icon.CLUSTER, {
-              style: { color: colorScheme[topic2Index[row.original.topic_id] % colorScheme.length] },
+              style: { color: colorScheme[cluster2Index[row.original.cluster_id] % colorScheme.length] },
             })}
           </Box>
         ),
@@ -90,11 +90,11 @@ function DocAspectTable({ aspectId, height, sdocIds }: DocAspectTableProps) {
         Cell: ({ row }) => <ContentRenderer aspectId={aspectId} sdocId={row.original.sdoc_id} />,
       },
     ],
-    [aspectId, colorScheme, topic2Index],
+    [aspectId, colorScheme, cluster2Index],
   );
 
   // table
-  const table = useMaterialReactTable<TMDoc>({
+  const table = useMaterialReactTable<PerspectivesDoc>({
     data: data,
     columns: columns,
     state: {

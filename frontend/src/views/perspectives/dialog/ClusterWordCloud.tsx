@@ -3,7 +3,7 @@ import { scaleLog } from "@visx/scale";
 import { Text } from "@visx/text";
 import { Wordcloud } from "@visx/wordcloud";
 import { useCallback, useMemo } from "react";
-import { TopicRead } from "../../../api/openapi/models/TopicRead.ts";
+import { ClusterRead } from "../../../api/openapi/models/ClusterRead.ts";
 
 const fixedValueGenerator = () => 0.5;
 const colors = ["#143059", "#2F6B9A", "#82a6c2"];
@@ -11,7 +11,7 @@ const colors = ["#143059", "#2F6B9A", "#82a6c2"];
 interface ClusterWordCloudProps {
   width: number;
   height: number;
-  cluster: TopicRead;
+  cluster: ClusterRead;
 }
 function ClusterWordCloud({ width, height, cluster }: ClusterWordCloudProps) {
   const fontSizeSetter = useCallback(

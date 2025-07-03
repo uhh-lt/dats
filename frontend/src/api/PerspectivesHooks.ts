@@ -8,11 +8,11 @@ import { QueryKey } from "./QueryKey.ts";
 import { AspectRead } from "./openapi/models/AspectRead.ts";
 import { BackgroundJobStatus } from "./openapi/models/BackgroundJobStatus.ts";
 import { CodeRead } from "./openapi/models/CodeRead.ts";
+import { PerspectivesJobRead } from "./openapi/models/PerspectivesJobRead.ts";
 import { SdocColumns } from "./openapi/models/SdocColumns.ts";
-import { TMJobRead } from "./openapi/models/TMJobRead.ts";
 import { ChatService } from "./openapi/services/ChatService.ts";
+import { PerspectivesService } from "./openapi/services/PerspectivesService.ts";
 import { ProjectService } from "./openapi/services/ProjectService.ts";
-import { TopicModelService } from "./openapi/services/TopicModelService.ts";
 
 // ASPECTS
 
@@ -53,7 +53,7 @@ const useGetAllAspectsList = () => useProjectAspectsQuery({ select: (data) => Ob
 const useGetDocumentAspect = (aspectId: number | null | undefined, sdocId: number | null | undefined) =>
   useQuery<string, Error>({
     queryKey: [QueryKey.SDOC_ASPECT_CONTENT, aspectId, sdocId],
-    queryFn: () => TopicModelService.getDocaspectById({ aspectId: aspectId!, sdocId: sdocId! }),
+    queryFn: () => PerspectivesService.getDocaspectById({ aspectId: aspectId!, sdocId: sdocId! }),
     enabled: !!aspectId && !!sdocId,
     staleTime: Infinity,
   });
@@ -61,7 +61,7 @@ const useGetDocumentAspect = (aspectId: number | null | undefined, sdocId: numbe
 // ASPECT MUTATIONS
 const useCreateAspect = () =>
   useMutation({
-    mutationFn: TopicModelService.createAspect,
+    mutationFn: PerspectivesService.createAspect,
     onSuccess: (data, variables) => {
       console.log("Aspect created:", data);
       queryClient.setQueryData<AspectMap>([QueryKey.PROJECT_ASPECTS, variables.requestBody.project_id], (oldData) =>
@@ -75,7 +75,7 @@ const useCreateAspect = () =>
 
 const useUpdateAspect = () =>
   useMutation({
-    mutationFn: TopicModelService.updateAspectById,
+    mutationFn: PerspectivesService.updateAspectById,
     onSuccess: (data) => {
       queryClient.setQueryData<AspectMap>([QueryKey.PROJECT_ASPECTS, data.project_id], (oldData) =>
         oldData ? { ...oldData, [data.id]: data } : { [data.id]: data },
@@ -88,7 +88,7 @@ const useUpdateAspect = () =>
 
 const useDeleteAspect = () =>
   useMutation({
-    mutationFn: TopicModelService.removeAspectById,
+    mutationFn: PerspectivesService.removeAspectById,
     onSuccess: (data) => {
       queryClient.setQueryData<AspectMap>([QueryKey.PROJECT_ASPECTS, data.project_id], (oldData) => {
         if (!oldData) return oldData;
@@ -102,28 +102,31 @@ const useDeleteAspect = () =>
     },
   });
 
-// TM JOBS
+// PERSPECTIVES JOBS
 
-const useStartTMJob = () =>
+const useStartPerspectivesJob = () =>
   useMutation({
-    mutationFn: TopicModelService.startTmJob,
+    mutationFn: PerspectivesService.startPerspectivesJob,
     onSuccess: (job) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_ASPECTS, job.project_id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.TM_JOB, job.id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PERSPECTIVES_JOB, job.id] });
     },
     meta: {
-      successMessage: (data: TMJobRead) => `Started TM Job as a new background task (ID: ${data.id})`,
+      successMessage: (data: PerspectivesJobRead) => `Started TM Job as a new background task (ID: ${data.id})`,
     },
   });
 
-const usePollTMJob = (tmJobId: string | null | undefined, initialData: TMJobRead | undefined) => {
-  return useQuery<TMJobRead, Error>({
-    queryKey: [QueryKey.TM_JOB, tmJobId],
+const usePollPerspectivesJob = (
+  perspectivesJobId: string | null | undefined,
+  initialData: PerspectivesJobRead | undefined,
+) => {
+  return useQuery<PerspectivesJobRead, Error>({
+    queryKey: [QueryKey.PERSPECTIVES_JOB, perspectivesJobId],
     queryFn: () =>
-      TopicModelService.getTmJob({
-        tmJobId: tmJobId!,
+      PerspectivesService.getPerspectivesJob({
+        perspectivesJobId: perspectivesJobId!,
       }),
-    enabled: !!tmJobId,
+    enabled: !!perspectivesJobId,
     refetchInterval: (query) => {
       if (!query.state.data) {
         return 1000;
@@ -161,23 +164,23 @@ const usePollTMJob = (tmJobId: string | null | undefined, initialData: TMJobRead
 
 const useLabelDocs = () =>
   useMutation({
-    mutationFn: TopicModelService.acceptLabel,
+    mutationFn: PerspectivesService.acceptLabel,
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.DOCUMENT_VISUALIZATION, variables.aspectId] });
     },
     meta: {
-      successMessage: (data: number) => `Accepted topic(s) for ${data} documents`,
+      successMessage: (data: number) => `Accepted cluster(s) for ${data} documents`,
     },
   });
 
 const useUnlabelDocs = () =>
   useMutation({
-    mutationFn: TopicModelService.revertLabel,
+    mutationFn: PerspectivesService.revertLabel,
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.DOCUMENT_VISUALIZATION, variables.aspectId] });
     },
     meta: {
-      successMessage: (data: number) => `Reverted topic(s) for ${data} documents`,
+      successMessage: (data: number) => `Reverted cluster(s) for ${data} documents`,
     },
   });
 
@@ -190,7 +193,7 @@ const useGetDocVisualization = (aspectId: number) => {
   return useQuery({
     queryKey: [QueryKey.DOCUMENT_VISUALIZATION, aspectId, searchQuery, filter],
     queryFn: () =>
-      TopicModelService.visualizeDocuments({
+      PerspectivesService.visualizeDocuments({
         aspectId,
         searchQuery,
         requestBody: {
@@ -204,21 +207,21 @@ const useGetDocVisualization = (aspectId: number) => {
 
 const useGetClusterSimilarities = (aspectId: number) => {
   return useQuery({
-    queryKey: [QueryKey.TOPIC_SIMILARITIES, aspectId],
+    queryKey: [QueryKey.CLUSTER_SIMILARITIES, aspectId],
     queryFn: () =>
-      TopicModelService.getTopicSimilarities({
+      PerspectivesService.getClusterSimilarities({
         aspectId,
       }),
     staleTime: 1000 * 60 * 5,
   });
 };
 
-// Topics
+// Clusters
 
 const useGetClustersBySdocId = (aspectId: number | null | undefined, sdocId: number | null | undefined) =>
   useQuery({
-    queryKey: [QueryKey.SDOC_TOPICS, aspectId, sdocId],
-    queryFn: () => TopicModelService.getTopicsForSdoc({ aspectId: aspectId!, sdocId: sdocId! }),
+    queryKey: [QueryKey.SDOC_CLUSTES, aspectId, sdocId],
+    queryFn: () => PerspectivesService.getClustersForSdoc({ aspectId: aspectId!, sdocId: sdocId! }),
     enabled: !!aspectId && !!sdocId,
     staleTime: 1000 * 60 * 5,
   });
@@ -241,8 +244,8 @@ const PerspectivesHooks = {
   useUpdateAspect,
   useDeleteAspect,
   // tm jobs
-  useStartTMJob,
-  usePollTMJob,
+  useStartPerspectivesJob,
+  usePollPerspectivesJob,
   // labeling
   useLabelDocs,
   useUnlabelDocs,

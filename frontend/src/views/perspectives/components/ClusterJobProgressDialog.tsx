@@ -10,7 +10,7 @@ interface ClusterJobProgressDialog {
 
 function ClusterJobProgressDialog({ aspectId }: ClusterJobProgressDialog) {
   const aspect = PerspectivesHooks.useGetAspect(aspectId);
-  const job = PerspectivesHooks.usePollTMJob(aspect.data?.most_recent_job_id, undefined);
+  const job = PerspectivesHooks.usePollPerspectivesJob(aspect.data?.most_recent_job_id, undefined);
 
   if (!job.data) {
     return null;
@@ -35,7 +35,7 @@ function ClusterJobProgressDialog({ aspectId }: ClusterJobProgressDialog) {
         },
       }}
     >
-      <ClusterJobProgressCard tmJob={job.data} />
+      <ClusterJobProgressCard perspectivesJob={job.data} />
     </Dialog>
   );
 }

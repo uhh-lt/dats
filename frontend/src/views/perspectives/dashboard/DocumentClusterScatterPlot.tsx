@@ -1,10 +1,10 @@
 import { Card, CardContent, CircularProgress, Typography } from "@mui/material";
 import { memo, useMemo } from "react";
 import { ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis, ZAxis } from "recharts";
-import { TMDoc } from "../../../api/openapi/models/TMDoc.ts";
 import PerspectivesHooks from "../../../api/PerspectivesHooks.ts";
 import CardContainer from "../../../components/MUI/CardContainer.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { PerspectivesDoc } from "../../../api/openapi/models/PerspectivesDoc.ts";
 
 interface DocumentClusterScatterPlotProps {
   aspectId: number;
@@ -22,12 +22,12 @@ function DocumentClusterScatterPlot({ aspectId, height }: DocumentClusterScatter
   const chartData = useMemo(() => {
     if (!vis.data) return undefined;
 
-    const data: Record<number, TMDoc[]> = {};
-    vis.data.topics.forEach((cluster) => {
+    const data: Record<number, PerspectivesDoc[]> = {};
+    vis.data.clusters.forEach((cluster) => {
       data[cluster.id] = [];
     });
     vis.data.docs.forEach((doc) => {
-      data[doc.topic_id].push(doc);
+      data[doc.cluster_id].push(doc);
     });
     return data;
   }, [vis.data]);

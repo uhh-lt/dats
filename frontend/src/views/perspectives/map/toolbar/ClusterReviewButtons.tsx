@@ -2,7 +2,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import ClearIcon from "@mui/icons-material/Clear";
 import { IconButton, Tooltip } from "@mui/material";
 import { useMemo } from "react";
-import { TMDoc } from "../../../../api/openapi/models/TMDoc.ts";
+import { PerspectivesDoc } from "../../../../api/openapi/models/PerspectivesDoc.ts";
 import PerspectivesHooks from "../../../../api/PerspectivesHooks.ts";
 
 interface ClusterReviewButtonsProps {
@@ -20,15 +20,15 @@ function ClusterReviewButtons({ aspectId, selectedSdocIds }: ClusterReviewButton
         acc[doc.sdoc_id] = doc;
         return acc;
       },
-      {} as Record<number, TMDoc>,
+      {} as Record<number, PerspectivesDoc>,
     );
   }, [vis.data]);
   const { isAllAccepted, isAllUnaccepted } = useMemo(() => {
     if (!sdocId2Doc) return { isAllAccepted: false, isAllUnaccepted: false };
-    const tmDocs = selectedSdocIds.map((sdocId) => sdocId2Doc[sdocId]);
+    const PerspectivesDocs = selectedSdocIds.map((sdocId) => sdocId2Doc[sdocId]);
 
-    const isAllAccepted = tmDocs.every((doc) => doc.is_accepted);
-    const isAllUnaccepted = tmDocs.every((doc) => !doc.is_accepted);
+    const isAllAccepted = PerspectivesDocs.every((doc) => doc.is_accepted);
+    const isAllUnaccepted = PerspectivesDocs.every((doc) => !doc.is_accepted);
 
     return {
       isAllAccepted,

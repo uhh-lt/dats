@@ -25,7 +25,7 @@ function ClusterDetailDialog({ aspectId }: ClusterDetailDialogProps) {
   const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
   const cluster = useMemo(() => {
     if (!vis.data) return null;
-    return vis.data.topics.find((t) => t.id === clusterId);
+    return vis.data.clusters.find((t) => t.id === clusterId);
   }, [vis.data, clusterId]);
 
   // maximize dialog

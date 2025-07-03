@@ -17,7 +17,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useMemo } from "react";
-import { TMJobType } from "../../../../api/openapi/models/TMJobType.ts";
+import { PerspectivesJobType } from "../../../../api/openapi/models/PerspectivesJobType.ts";
 import PerspectivesHooks from "../../../../api/PerspectivesHooks.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 import { getIconComponent, Icon } from "../../../../utils/icons/iconUtils.tsx";
@@ -55,29 +55,29 @@ function PositionSettings({ aspectId }: PositionSettingsProps) {
 
   // statistics
   const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
-  const { topic2count: cluster2count, topic2total: cluster2total } = useMemo(() => {
+  const { cluster2count, cluster2total } = useMemo(() => {
     const cluster2count: Record<number, number> = {};
     const cluster2total: Record<number, number> = {};
-    vis.data?.topics.forEach((cluster) => {
+    vis.data?.clusters.forEach((cluster) => {
       cluster2count[cluster.id] = 0; // initialize with 0
       cluster2total[cluster.id] = 0; // initialize with 0
     });
     vis.data?.docs.forEach((doc) => {
       if (doc.is_accepted) {
-        cluster2count[doc.topic_id] = cluster2count[doc.topic_id] + 1;
+        cluster2count[doc.cluster_id] = cluster2count[doc.cluster_id] + 1;
       }
-      cluster2total[doc.topic_id] = cluster2total[doc.topic_id] + 1;
+      cluster2total[doc.cluster_id] = cluster2total[doc.cluster_id] + 1;
     });
-    return { topic2count: cluster2count, topic2total: cluster2total };
+    return { cluster2count: cluster2count, cluster2total: cluster2total };
   }, [vis.data]);
 
   // refinement
-  const { mutate: startTMJob, isPending } = PerspectivesHooks.useStartTMJob();
+  const { mutate: startPerspectivesJob, isPending } = PerspectivesHooks.useStartPerspectivesJob();
   const handleRefineTM = () => {
-    startTMJob({
+    startPerspectivesJob({
       aspectId,
       requestBody: {
-        tm_job_type: TMJobType.REFINE_TOPIC_MODEL,
+        perspectives_job_type: PerspectivesJobType.REFINE_MODEL,
       },
     });
   };
@@ -150,8 +150,8 @@ function PositionSettings({ aspectId }: PositionSettingsProps) {
           </Button>
         </Stack>
         <Stack spacing={2}>
-          {vis.data?.topics.map((cluster, index) => {
-            if (cluster.is_outlier) return null; // skip outlier topics
+          {vis.data?.clusters.map((cluster, index) => {
+            if (cluster.is_outlier) return null; // skip outlier clusters
             const count = cluster2count[cluster.id];
             const total = cluster2total[cluster.id];
             const color = colorScheme[index % colorScheme.length];

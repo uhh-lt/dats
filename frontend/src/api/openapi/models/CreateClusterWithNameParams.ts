@@ -2,9 +2,14 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type CreateAspectParams = {
+import type { ClusterCreate } from "./ClusterCreate";
+export type CreateClusterWithNameParams = {
   /**
    * Type of the PerspectivesJob
    */
   perspectives_job_type?: string;
+  /**
+   * DTO for creating a new cluster.
+   */
+  create_dto: ClusterCreate;
 };

@@ -35,7 +35,7 @@ interface PerspectiveCardProps {
 }
 
 function PerspectiveCard({ aspect, to, title }: PerspectiveCardProps) {
-  const tmJob = PerspectivesHooks.usePollTMJob(aspect.most_recent_job_id, undefined);
+  const perspectivesJob = PerspectivesHooks.usePollPerspectivesJob(aspect.most_recent_job_id, undefined);
 
   const { mutate: deleteMutation, isPending } = PerspectivesHooks.useDeleteAspect();
   const handleDelete: React.MouseEventHandler<HTMLButtonElement> = (event) => {
@@ -48,14 +48,14 @@ function PerspectiveCard({ aspect, to, title }: PerspectiveCardProps) {
     });
   };
 
-  if (!tmJob.data) return null;
+  if (!perspectivesJob.data) return null;
   return (
     <Card sx={{ flexShrink: 0, position: "relative", "&:hover .delete-button": { opacity: 1 } }}>
       <Box position={"absolute"} top={8} right={8} zIndex={1}>
-        <BackgroundJobStatusBadge status={tmJob.data?.status} />
+        <BackgroundJobStatusBadge status={perspectivesJob.data?.status} />
       </Box>
       <CardActionArea component={Link} to={to}>
-        {tmJob.data.status === BackgroundJobStatus.FINISHED ? (
+        {perspectivesJob.data.status === BackgroundJobStatus.FINISHED ? (
           <CardMedia
             sx={{ height: 360, width: 360, objectFit: "cover" }}
             component="img"
@@ -73,9 +73,9 @@ function PerspectiveCard({ aspect, to, title }: PerspectiveCardProps) {
               textAlign: "center",
             }}
           >
-            {statusToIcon[tmJob.data.status!]}
-            <Typography variant="h6">{tmJob.data.status}</Typography>
-            <Typography variant="body1">{statusToText[tmJob.data.status!]}</Typography>
+            {statusToIcon[perspectivesJob.data.status!]}
+            <Typography variant="h6">{perspectivesJob.data.status}</Typography>
+            <Typography variant="body1">{statusToText[perspectivesJob.data.status!]}</Typography>
           </Stack>
         )}
 

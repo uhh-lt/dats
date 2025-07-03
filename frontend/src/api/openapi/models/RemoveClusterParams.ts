@@ -2,13 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type RemoveTopicParams = {
+export type RemoveClusterParams = {
   /**
-   * Type of the TMJob
+   * Type of the PerspectivesJob
    */
-  tm_job_type?: string;
+  perspectives_job_type?: string;
   /**
-   * ID of the topic to remove.
+   * ID of the cluster to remove.
    */
-  topic_id: number;
+  cluster_id: number;
 };

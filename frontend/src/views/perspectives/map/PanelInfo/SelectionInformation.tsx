@@ -126,7 +126,7 @@ function SelectionInformation({ aspectId }: SelectionInformationProps) {
                 {docClusters.isSuccess &&
                   vis.data &&
                   docClusters.data.map((cluster) => {
-                    const clusterIndex = vis.data.topics.findIndex((t) => t.id === cluster.id);
+                    const clusterIndex = vis.data.clusters.findIndex((t) => t.id === cluster.id);
                     return (
                       <Stack
                         spacing={1}

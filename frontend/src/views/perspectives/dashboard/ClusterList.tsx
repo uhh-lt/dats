@@ -23,9 +23,9 @@ function ClusterList({ aspectId, height }: ClusterListProps) {
 
   return (
     <Card variant="outlined" sx={{ height, borderColor: "grey.500" }}>
-      {vis.isSuccess && vis.data.topics.length > 0 ? (
+      {vis.isSuccess && vis.data.clusters.length > 0 ? (
         <List sx={{ width: "100%", height, overflowY: "auto" }} disablePadding>
-          {vis.data.topics.map((cluster, index) => {
+          {vis.data.clusters.map((cluster, index) => {
             if (cluster.is_outlier) return null;
             return (
               <ListItem key={cluster.id} disablePadding>

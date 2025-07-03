@@ -6,47 +6,47 @@ import type { AddMissingDocsToAspectParams } from "../models/AddMissingDocsToAsp
 import type { AspectCreate } from "../models/AspectCreate";
 import type { AspectRead } from "../models/AspectRead";
 import type { AspectUpdate } from "../models/AspectUpdate";
-import type { Body_topic_model_visualize_documents } from "../models/Body_topic_model_visualize_documents";
-import type { ChangeTopicParams } from "../models/ChangeTopicParams";
-import type { CreateTopicWithNameParams } from "../models/CreateTopicWithNameParams";
-import type { CreateTopicWithSdocsParams } from "../models/CreateTopicWithSdocsParams";
-import type { MergeTopicsParams } from "../models/MergeTopicsParams";
-import type { RefineTopicModelParams } from "../models/RefineTopicModelParams";
-import type { RemoveTopicParams } from "../models/RemoveTopicParams";
-import type { ResetTopicModelParams } from "../models/ResetTopicModelParams";
-import type { SplitTopicParams } from "../models/SplitTopicParams";
-import type { TMJobRead } from "../models/TMJobRead";
-import type { TMTopicSimilarities } from "../models/TMTopicSimilarities";
-import type { TMVisualization } from "../models/TMVisualization";
-import type { TopicRead } from "../models/TopicRead";
+import type { Body_perspectives_visualize_documents } from "../models/Body_perspectives_visualize_documents";
+import type { ChangeClusterParams } from "../models/ChangeClusterParams";
+import type { ClusterRead } from "../models/ClusterRead";
+import type { CreateClusterWithNameParams } from "../models/CreateClusterWithNameParams";
+import type { CreateClusterWithSdocsParams } from "../models/CreateClusterWithSdocsParams";
+import type { MergeClustersParams } from "../models/MergeClustersParams";
+import type { PerspectivesClusterSimilarities } from "../models/PerspectivesClusterSimilarities";
+import type { PerspectivesJobRead } from "../models/PerspectivesJobRead";
+import type { PerspectivesVisualization } from "../models/PerspectivesVisualization";
+import type { RefineModelParams } from "../models/RefineModelParams";
+import type { RemoveClusterParams } from "../models/RemoveClusterParams";
+import type { ResetModelParams } from "../models/ResetModelParams";
+import type { SplitClusterParams } from "../models/SplitClusterParams";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-export class TopicModelService {
+export class PerspectivesService {
   /**
-   * Starts the TMJob for the given Parameters. If a job is already running, this will raise an error.
-   * @returns TMJobRead Successful Response
+   * Starts the PerspectivesJob for the given Parameters. If a job is already running, this will raise an error.
+   * @returns PerspectivesJobRead Successful Response
    * @throws ApiError
    */
-  public static startTmJob({
+  public static startPerspectivesJob({
     aspectId,
     requestBody,
   }: {
     aspectId: number;
     requestBody:
       | AddMissingDocsToAspectParams
-      | CreateTopicWithNameParams
-      | CreateTopicWithSdocsParams
-      | RemoveTopicParams
-      | MergeTopicsParams
-      | SplitTopicParams
-      | ChangeTopicParams
-      | RefineTopicModelParams
-      | ResetTopicModelParams;
-  }): CancelablePromise<TMJobRead> {
+      | CreateClusterWithNameParams
+      | CreateClusterWithSdocsParams
+      | RemoveClusterParams
+      | MergeClustersParams
+      | SplitClusterParams
+      | ChangeClusterParams
+      | RefineModelParams
+      | ResetModelParams;
+  }): CancelablePromise<PerspectivesJobRead> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/topic_model/job/{aspect_id}",
+      url: "/perspectives/job/{aspect_id}",
       path: {
         aspect_id: aspectId,
       },
@@ -58,16 +58,20 @@ export class TopicModelService {
     });
   }
   /**
-   * Returns the TMJob for the given ID if it exists
-   * @returns TMJobRead Successful Response
+   * Returns the PerspectivesJob for the given ID if it exists
+   * @returns PerspectivesJobRead Successful Response
    * @throws ApiError
    */
-  public static getTmJob({ tmJobId }: { tmJobId: string }): CancelablePromise<TMJobRead> {
+  public static getPerspectivesJob({
+    perspectivesJobId,
+  }: {
+    perspectivesJobId: string;
+  }): CancelablePromise<PerspectivesJobRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/topic_model/job/{tm_job_id}",
+      url: "/perspectives/job/{perspectives_job_id}",
       path: {
-        tm_job_id: tmJobId,
+        perspectives_job_id: perspectivesJobId,
       },
       errors: {
         422: `Validation Error`,
@@ -82,7 +86,7 @@ export class TopicModelService {
   public static createAspect({ requestBody }: { requestBody: AspectCreate }): CancelablePromise<AspectRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/topic_model/aspect",
+      url: "/perspectives/aspect",
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -98,7 +102,7 @@ export class TopicModelService {
   public static getById({ aspectId }: { aspectId: number }): CancelablePromise<AspectRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/topic_model/aspect/{aspect_id}",
+      url: "/perspectives/aspect/{aspect_id}",
       path: {
         aspect_id: aspectId,
       },
@@ -121,7 +125,7 @@ export class TopicModelService {
   }): CancelablePromise<AspectRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/topic_model/aspect/{aspect_id}",
+      url: "/perspectives/aspect/{aspect_id}",
       path: {
         aspect_id: aspectId,
       },
@@ -140,7 +144,7 @@ export class TopicModelService {
   public static removeAspectById({ aspectId }: { aspectId: number }): CancelablePromise<AspectRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/topic_model/aspect/{aspect_id}",
+      url: "/perspectives/aspect/{aspect_id}",
       path: {
         aspect_id: aspectId,
       },
@@ -163,7 +167,7 @@ export class TopicModelService {
   }): CancelablePromise<string> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/topic_model/aspect/{aspect_id}/sdoc/{sdoc_id}",
+      url: "/perspectives/aspect/{aspect_id}/sdoc/{sdoc_id}",
       path: {
         aspect_id: aspectId,
         sdoc_id: sdocId,
@@ -187,7 +191,7 @@ export class TopicModelService {
   }): CancelablePromise<number> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/topic_model/label_accept/{aspect_id}",
+      url: "/perspectives/label_accept/{aspect_id}",
       path: {
         aspect_id: aspectId,
       },
@@ -212,7 +216,7 @@ export class TopicModelService {
   }): CancelablePromise<number> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/topic_model/label_revert/{aspect_id}",
+      url: "/perspectives/label_revert/{aspect_id}",
       path: {
         aspect_id: aspectId,
       },
@@ -225,7 +229,7 @@ export class TopicModelService {
   }
   /**
    * Returns data for visualizing the documents of the given aspect.
-   * @returns TMVisualization Successful Response
+   * @returns PerspectivesVisualization Successful Response
    * @throws ApiError
    */
   public static visualizeDocuments({
@@ -235,11 +239,11 @@ export class TopicModelService {
   }: {
     aspectId: number;
     searchQuery: string;
-    requestBody: Body_topic_model_visualize_documents;
-  }): CancelablePromise<TMVisualization> {
+    requestBody: Body_perspectives_visualize_documents;
+  }): CancelablePromise<PerspectivesVisualization> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/topic_model/visualize_documents/{aspect_id}",
+      url: "/perspectives/visualize_documents/{aspect_id}",
       path: {
         aspect_id: aspectId,
       },
@@ -254,14 +258,18 @@ export class TopicModelService {
     });
   }
   /**
-   * Returns data for visualizing the topic similarities of the given aspect.
-   * @returns TMTopicSimilarities Successful Response
+   * Returns data for visualizing the cluster similarities of the given aspect.
+   * @returns PerspectivesClusterSimilarities Successful Response
    * @throws ApiError
    */
-  public static getTopicSimilarities({ aspectId }: { aspectId: number }): CancelablePromise<TMTopicSimilarities> {
+  public static getClusterSimilarities({
+    aspectId,
+  }: {
+    aspectId: number;
+  }): CancelablePromise<PerspectivesClusterSimilarities> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/topic_model/topic_similarities/{aspect_id}",
+      url: "/perspectives/cluster_similarities/{aspect_id}",
       path: {
         aspect_id: aspectId,
       },
@@ -271,14 +279,14 @@ export class TopicModelService {
     });
   }
   /**
-   * Returns data for visualizing the topics of the given aspect.
+   * Returns data for visualizing the clusters of the given aspect.
    * @returns AspectRead Successful Response
    * @throws ApiError
    */
-  public static visualizeTopics({ aspectId }: { aspectId: number }): CancelablePromise<AspectRead> {
+  public static visualizeClusters({ aspectId }: { aspectId: number }): CancelablePromise<AspectRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/topic_model/visualize_topics/{aspect_id}",
+      url: "/perspectives/visualize_clusters/{aspect_id}",
       path: {
         aspect_id: aspectId,
       },
@@ -288,20 +296,20 @@ export class TopicModelService {
     });
   }
   /**
-   * Returns the topics for the given SourceDocument (sdoc_id) in the specified Aspect (aspect_id).
-   * @returns TopicRead Successful Response
+   * Returns the clusters for the given SourceDocument (sdoc_id) in the specified Aspect (aspect_id).
+   * @returns ClusterRead Successful Response
    * @throws ApiError
    */
-  public static getTopicsForSdoc({
+  public static getClustersForSdoc({
     aspectId,
     sdocId,
   }: {
     aspectId: number;
     sdocId: number;
-  }): CancelablePromise<Array<TopicRead>> {
+  }): CancelablePromise<Array<ClusterRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/topic_model/topics/{aspect_id}/sdoc/{sdoc_id}",
+      url: "/perspectives/clusters/{aspect_id}/sdoc/{sdoc_id}",
       path: {
         aspect_id: aspectId,
         sdoc_id: sdocId,

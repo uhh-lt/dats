@@ -2,13 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type CreateTopicWithSdocsParams = {
+export type CreateClusterWithSdocsParams = {
   /**
-   * Type of the TMJob
+   * Type of the PerspectivesJob
    */
-  tm_job_type?: string;
+  perspectives_job_type?: string;
   /**
-   * List of source document IDs to include in the topic.
+   * List of source document IDs to include in the cluster.
    */
   sdoc_ids: Array<number>;
 };

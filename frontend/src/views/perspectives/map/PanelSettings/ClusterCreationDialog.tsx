@@ -3,8 +3,8 @@ import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, Stack, Tooltip, Typography } from "@mui/material";
 import { useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { TMJobType } from "../../../../api/openapi/models/TMJobType.ts";
-import { TopicCreate } from "../../../../api/openapi/models/TopicCreate.ts";
+import { ClusterCreate } from "../../../../api/openapi/models/ClusterCreate.ts";
+import { PerspectivesJobType } from "../../../../api/openapi/models/PerspectivesJobType.ts";
 import PerspectivesHooks from "../../../../api/PerspectivesHooks.ts";
 import FormText from "../../../../components/FormInputs/FormText.tsx";
 import FormTextMultiline from "../../../../components/FormInputs/FormTextMultiline.tsx";
@@ -29,29 +29,29 @@ function ClusterCreationDialog({ aspectId }: ClusterCreationDialogProps) {
     handleSubmit,
     formState: { errors },
     control,
-  } = useForm<TopicCreate>({
+  } = useForm<ClusterCreate>({
     defaultValues: {
       name: "",
       description: "",
     },
   });
-  const { mutate: startTMJobMutation, isPending } = PerspectivesHooks.useStartTMJob();
-  const handleTopicCreation: SubmitHandler<TopicCreate> = (data) => {
+  const { mutate: startPerspectivesJobMutation, isPending } = PerspectivesHooks.useStartPerspectivesJob();
+  const handleClusterCreation: SubmitHandler<ClusterCreate> = (data) => {
     if (!projectId) {
       console.error("Project ID is not set");
       return;
     }
 
-    startTMJobMutation(
+    startPerspectivesJobMutation(
       {
         aspectId: aspectId,
         requestBody: {
-          tm_job_type: TMJobType.CREATE_TOPIC_WITH_NAME,
+          perspectives_job_type: PerspectivesJobType.CREATE_CLUSTER_WITH_NAME,
           create_dto: {
             aspect_id: aspectId,
             name: data.name,
             description: data.description,
-            parent_topic_id: null, // no parent cluster for new clusters
+            parent_cluster_id: null, // no parent cluster for new clusters
             level: 0, // default level for new clusters
           },
         },
@@ -61,7 +61,7 @@ function ClusterCreationDialog({ aspectId }: ClusterCreationDialogProps) {
       },
     );
   };
-  const handleError: SubmitErrorHandler<TopicCreate> = (error) => {
+  const handleError: SubmitErrorHandler<ClusterCreate> = (error) => {
     console.error(error);
   };
 
@@ -97,7 +97,7 @@ function ClusterCreationDialog({ aspectId }: ClusterCreationDialogProps) {
         fullWidth
         fullScreen={isMaximized}
         component="form"
-        onSubmit={handleSubmit(handleTopicCreation, handleError)}
+        onSubmit={handleSubmit(handleClusterCreation, handleError)}
       >
         <DATSDialogHeader
           title="Create new cluster"

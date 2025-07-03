@@ -2,33 +2,33 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type TopicRead = {
+export type ClusterRead = {
   /**
-   * ID of the topic
+   * ID of the cluster
    */
   id: number;
   /**
-   * ID of the aspect this topic belongs to
+   * ID of the aspect this cluster belongs to
    */
   aspect_id: number;
   /**
-   * ID of the parent topic, if any
+   * ID of the parent cluster, if any
    */
-  parent_topic_id: number | null;
+  parent_cluster_id: number | null;
   /**
-   * Whether the topic is an outlier
+   * Whether the cluster is an outlier
    */
   is_outlier: boolean;
   /**
-   * Name of the topic
+   * Name of the cluster
    */
   name: string;
   /**
-   * Description of the topic
+   * Description of the cluster
    */
   description: string;
   /**
-   * Hierarchical level of the topic
+   * Hierarchical level of the cluster
    */
   level: number;
   /**
@@ -40,7 +40,7 @@ export type TopicRead = {
    */
   y: number;
   /**
-   * Top words associated with the topic
+   * Top words associated with the cluster
    */
   top_words: Array<string> | null;
   /**
@@ -48,7 +48,7 @@ export type TopicRead = {
    */
   top_word_scores: Array<number> | null;
   /**
-   * IDs of top documents for the topic
+   * IDs of top documents for the cluster
    */
   top_docs: Array<number> | null;
 };

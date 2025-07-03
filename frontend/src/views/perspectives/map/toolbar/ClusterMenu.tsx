@@ -15,9 +15,9 @@ import {
 } from "@mui/material";
 import { isEqual } from "lodash";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { TMDoc } from "../../../../api/openapi/models/TMDoc.ts";
-import { TMJobType } from "../../../../api/openapi/models/TMJobType.ts";
-import { TopicRead } from "../../../../api/openapi/models/TopicRead.ts";
+import { ClusterRead } from "../../../../api/openapi/models/ClusterRead.ts";
+import { PerspectivesDoc } from "../../../../api/openapi/models/PerspectivesDoc.ts";
+import { PerspectivesJobType } from "../../../../api/openapi/models/PerspectivesJobType.ts";
 import PerspectivesHooks from "../../../../api/PerspectivesHooks.ts";
 import { CheckboxState } from "../../../../components/Tag/TagMenu/CheckboxState.ts";
 import { getIconComponent, Icon } from "../../../../utils/icons/iconUtils.tsx";
@@ -36,7 +36,7 @@ function ClusterMenu(props: ClusterMenuProps) {
   const vis = PerspectivesHooks.useGetDocVisualization(props.aspectId);
   const clusters = useMemo(() => {
     if (!vis.data) return [];
-    return vis.data.topics.filter((cluster) => !cluster.is_outlier); // filter out outlier topics
+    return vis.data.clusters.filter((cluster) => !cluster.is_outlier); // filter out outlier clusters
   }, [vis.data]);
 
   const initialChecked: Map<number, CheckboxState> | undefined = useMemo(() => {
@@ -47,7 +47,7 @@ function ClusterMenu(props: ClusterMenuProps) {
         acc[doc.sdoc_id] = doc;
         return acc;
       },
-      {} as Record<number, TMDoc>,
+      {} as Record<number, PerspectivesDoc>,
     );
 
     // init cluster counts
@@ -62,7 +62,7 @@ function ClusterMenu(props: ClusterMenuProps) {
     // fill cluster counts
     props.sdocIds.forEach((sdocId) => {
       const doc = sdocId2doc[sdocId];
-      clusterCounts[doc.topic_id] = (clusterCounts[doc.topic_id] || 0) + 1;
+      clusterCounts[doc.cluster_id] = (clusterCounts[doc.cluster_id] || 0) + 1;
     });
 
     // Depending on the count, set the CheckboxState
@@ -94,7 +94,7 @@ function ClusterMenuContent({
   clusters,
   initialChecked,
   colorScheme,
-}: { clusters: TopicRead[]; initialChecked: Map<number, CheckboxState> } & ClusterMenuProps) {
+}: { clusters: ClusterRead[]; initialChecked: Map<number, CheckboxState> } & ClusterMenuProps) {
   // menu state
   const open = Boolean(anchorEl);
   const handleClose = useCallback(() => {
@@ -129,7 +129,7 @@ function ClusterMenuContent({
 
   // filter feature
   const [search, setSearch] = useState<string>("");
-  const filteredTopicIndexes: number[] = useMemo(() => {
+  const filteredClusterIndexes: number[] = useMemo(() => {
     return clusters
       .map((cluster, index) => (cluster.name.toLowerCase().startsWith(search.toLowerCase()) ? index : -1))
       .filter((index) => index !== -1);
@@ -139,7 +139,7 @@ function ClusterMenuContent({
   };
 
   // actions
-  const { mutate: startTMJobMutation, isPending } = PerspectivesHooks.useStartTMJob();
+  const { mutate: startPerspectivesJobMutation, isPending } = PerspectivesHooks.useStartPerspectivesJob();
   const handleSetCluster = useCallback(() => {
     // find entry where CheckboxState is Checked
     const checkedClusters = Array.from(checked).filter(([, state]) => state === CheckboxState.CHECKED);
@@ -147,12 +147,12 @@ function ClusterMenuContent({
       console.error("Expected at most one cluster to be checked, but found:", checkedClusters.length);
       return;
     }
-    startTMJobMutation(
+    startPerspectivesJobMutation(
       {
         aspectId: aspectId,
         requestBody: {
-          tm_job_type: TMJobType.CHANGE_TOPIC,
-          topic_id: checkedClusters.length === 1 ? checkedClusters[0][0] : -1, // -1 means "no cluster / outlier",
+          perspectives_job_type: PerspectivesJobType.CHANGE_CLUSTER,
+          cluster_id: checkedClusters.length === 1 ? checkedClusters[0][0] : -1, // -1 means "no cluster / outlier",
           sdoc_ids: sdocIds,
         },
       },
@@ -162,13 +162,13 @@ function ClusterMenuContent({
         },
       },
     );
-  }, [aspectId, checked, handleClose, sdocIds, startTMJobMutation]);
+  }, [aspectId, checked, handleClose, sdocIds, startPerspectivesJobMutation]);
   const handleCreateCluster = useCallback(() => {
-    startTMJobMutation(
+    startPerspectivesJobMutation(
       {
         aspectId: aspectId,
         requestBody: {
-          tm_job_type: TMJobType.CREATE_TOPIC_WITH_SDOCS,
+          perspectives_job_type: PerspectivesJobType.CREATE_CLUSTER_WITH_SDOCS,
           sdoc_ids: sdocIds,
         },
       },
@@ -178,7 +178,7 @@ function ClusterMenuContent({
         },
       },
     );
-  }, [aspectId, startTMJobMutation, handleClose, sdocIds]);
+  }, [aspectId, startPerspectivesJobMutation, handleClose, sdocIds]);
 
   // Display buttons depending on state
   const actionMenu: React.ReactNode = useMemo(() => {
@@ -195,7 +195,7 @@ function ClusterMenuContent({
     } else if (
       search.trim().length === 0 ||
       (search.trim().length > 0 &&
-        filteredTopicIndexes.map((index) => clusters[index].name).indexOf(search.trim()) === -1)
+        filteredClusterIndexes.map((index) => clusters[index].name).indexOf(search.trim()) === -1)
     ) {
       return (
         <ListItemButton onClick={handleCreateCluster}>
@@ -206,7 +206,7 @@ function ClusterMenuContent({
     }
     return null;
   }, [
-    filteredTopicIndexes,
+    filteredClusterIndexes,
     handleSetCluster,
     handleCreateCluster,
     hasChanged,
@@ -249,9 +249,9 @@ function ClusterMenuContent({
         <Divider />
 
         <Box sx={{ maxHeight: "240px", overflowY: "auto" }}>
-          {filteredTopicIndexes.map((index) => {
+          {filteredClusterIndexes.map((index) => {
             const cluster = clusters[index];
-            if (cluster.is_outlier) return null; // skip outlier topics
+            if (cluster.is_outlier) return null; // skip outlier clusters
             const labelId = `tag-menu-list-label-${cluster.name}`;
 
             return (

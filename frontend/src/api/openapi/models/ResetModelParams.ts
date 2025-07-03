@@ -2,9 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type RefineTopicModelParams = {
+export type ResetModelParams = {
   /**
-   * Type of the TMJob
+   * Type of the PerspectivesJob
    */
-  tm_job_type?: string;
+  perspectives_job_type?: string;
 };

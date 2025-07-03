@@ -23,8 +23,8 @@ import {
 } from "@mui/material";
 import * as d3 from "d3";
 import { useState } from "react";
-import { TMJobType } from "../../../../api/openapi/models/TMJobType.ts";
-import { TMVisualization } from "../../../../api/openapi/models/TMVisualization.ts";
+import { PerspectivesJobType } from "../../../../api/openapi/models/PerspectivesJobType.ts";
+import { PerspectivesVisualization } from "../../../../api/openapi/models/PerspectivesVisualization.ts";
 import PerspectivesHooks from "../../../../api/PerspectivesHooks.ts";
 import ConfirmationAPI from "../../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
@@ -46,8 +46,8 @@ const colorSchemes: Record<string, string[]> = {
   tableau: d3.schemeTableau10 as string[],
 };
 
-const getAcceptedAssignmentsOfCluster = (clusterId: number, vis: TMVisualization) => {
-  return vis.docs.filter((doc) => doc.topic_id === clusterId).filter((doc) => doc.is_accepted).length;
+const getAcceptedAssignmentsOfCluster = (clusterId: number, vis: PerspectivesVisualization) => {
+  return vis.docs.filter((doc) => doc.cluster_id === clusterId).filter((doc) => doc.is_accepted).length;
 };
 
 interface ColorSettingsProps {
@@ -81,27 +81,27 @@ function ColorSettings({ aspectId }: ColorSettingsProps) {
     dispatch(PerspectivesActions.onChangeShowLabels(event.target.checked));
   };
 
-  // topics / legend
-  const { mutate: startTMJob, isPending } = PerspectivesHooks.useStartTMJob();
+  // legend
+  const { mutate: startPerspectivesJob, isPending } = PerspectivesHooks.useStartPerspectivesJob();
 
   // global server state
   const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
 
   // cluster click
-  const handleClusterClick = (topicId: number) => () => {
+  const handleClusterClick = (clusterId: number) => () => {
     if (mergeMode) {
-      handleToggleTopic(topicId);
+      handleToggleCluster(clusterId);
     } else if (deleteMode || splitMode) {
-      handleSingleSelect(topicId);
+      handleSingleSelect(clusterId);
     } else {
-      handleSelectCluster(topicId);
+      handleSelectCluster(clusterId);
     }
   };
 
   // cluster selection
   const highlightedClusterId = useAppSelector((state) => state.perspectives.highlightedClusterId);
-  const handleSelectCluster = (topicId: number) => {
-    dispatch(PerspectivesActions.onSelectCluster(topicId));
+  const handleSelectCluster = (clusterId: number) => {
+    dispatch(PerspectivesActions.onSelectCluster(clusterId));
   };
 
   // merging
@@ -112,13 +112,13 @@ function ColorSettings({ aspectId }: ColorSettingsProps) {
   };
   const handleConfirmMerge = () => {
     if (checked.length !== 2) return;
-    startTMJob(
+    startPerspectivesJob(
       {
         aspectId,
         requestBody: {
-          tm_job_type: TMJobType.MERGE_TOPICS,
-          topic_to_keep: checked[0],
-          topic_to_merge: checked[1],
+          perspectives_job_type: PerspectivesJobType.MERGE_CLUSTERS,
+          cluster_to_keep: checked[0],
+          cluster_to_merge: checked[1],
         },
       },
       {
@@ -139,12 +139,12 @@ function ColorSettings({ aspectId }: ColorSettingsProps) {
   const handleConfirmDeletion = () => {
     if (choosen === undefined) return;
     const startJob = () => {
-      startTMJob(
+      startPerspectivesJob(
         {
           aspectId,
           requestBody: {
-            tm_job_type: TMJobType.REMOVE_TOPIC,
-            topic_id: choosen,
+            perspectives_job_type: PerspectivesJobType.REMOVE_CLUSTER,
+            cluster_id: choosen,
           },
         },
         {
@@ -177,12 +177,12 @@ function ColorSettings({ aspectId }: ColorSettingsProps) {
   const handleConfirmSplit = () => {
     if (choosen === undefined) return;
     const startJob = () => {
-      startTMJob(
+      startPerspectivesJob(
         {
           aspectId,
           requestBody: {
-            tm_job_type: TMJobType.SPLIT_TOPIC,
-            topic_id: choosen,
+            perspectives_job_type: PerspectivesJobType.SPLIT_CLUSTER,
+            cluster_id: choosen,
             split_into: null, // null means automatic splitting
           },
         },
@@ -209,11 +209,11 @@ function ColorSettings({ aspectId }: ColorSettingsProps) {
 
   // multi select with checkboxes
   const [checked, setChecked] = useState<number[]>([]);
-  const handleToggleTopic = (topicId: number) => {
-    const currentIndex = checked.indexOf(topicId);
+  const handleToggleCluster = (clusterId: number) => {
+    const currentIndex = checked.indexOf(clusterId);
     const newChecked = [...checked];
     if (currentIndex === -1) {
-      newChecked.push(topicId);
+      newChecked.push(clusterId);
     } else {
       newChecked.splice(currentIndex, 1);
     }
@@ -223,19 +223,19 @@ function ColorSettings({ aspectId }: ColorSettingsProps) {
 
   // single select
   const [choosen, setChoosen] = useState<number | undefined>(undefined);
-  const handleSingleSelect = (topicId: number) => {
-    if (choosen === topicId) {
+  const handleSingleSelect = (clusterId: number) => {
+    if (choosen === clusterId) {
       setChoosen(undefined);
     } else {
-      setChoosen(topicId);
+      setChoosen(clusterId);
     }
   };
 
   const selectType = mergeMode ? "multi" : deleteMode || splitMode ? "single" : "none";
 
   // info click
-  const handleInfoClick = (topicId: number) => () => {
-    dispatch(PerspectivesActions.onOpenClusterDialog(topicId));
+  const handleInfoClick = (clusterId: number) => () => {
+    dispatch(PerspectivesActions.onOpenClusterDialog(clusterId));
   };
 
   return (
@@ -440,7 +440,7 @@ function ColorSettings({ aspectId }: ColorSettingsProps) {
                 : "Click cluster to highlight corresponding documents:"}
         </Typography>
         <List sx={{ width: "100%" }} disablePadding>
-          {vis.data?.topics.map((cluster, index) => {
+          {vis.data?.clusters.map((cluster, index) => {
             if (cluster.is_outlier) return null;
             const colors = colorSchemes[colorSchemeName];
             return (

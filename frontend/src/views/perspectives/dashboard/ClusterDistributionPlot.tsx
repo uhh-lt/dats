@@ -44,7 +44,7 @@ function ClusterDistributionPlot({ aspectId, height, showPieChart }: ClusterDist
     const counts: Record<number, Data> = {};
     if (!vis.data) return [];
 
-    vis.data.topics.forEach((cluster) => {
+    vis.data.clusters.forEach((cluster) => {
       counts[cluster.id] = {
         clusterId: cluster.id,
         clusterName: cluster.name,
@@ -53,11 +53,11 @@ function ClusterDistributionPlot({ aspectId, height, showPieChart }: ClusterDist
     });
     console.log("Cluster counts:", counts);
     vis.data.docs.forEach((doc) => {
-      if (!counts[doc.topic_id]) {
-        console.warn(`Cluster ID ${doc.topic_id} not found in counts array.`);
+      if (!counts[doc.cluster_id]) {
+        console.warn(`Cluster ID ${doc.cluster_id} not found in counts array.`);
         return;
       }
-      counts[doc.topic_id].count += 1;
+      counts[doc.cluster_id].count += 1;
     });
     return Object.values(counts);
   }, [vis.data]);
@@ -72,15 +72,15 @@ function ClusterDistributionPlot({ aspectId, height, showPieChart }: ClusterDist
               <Pie
                 data={chartData}
                 dataKey={(obj) => obj.count}
-                nameKey={(obj) => obj.topicName}
+                nameKey={(obj) => obj.clusterName}
                 cx="50%"
                 cy="50%"
                 fill="#8884d8"
                 label={renderCustomizedLabel}
               >
-                {chartData.map((topicFrequency, index) => (
+                {chartData.map((clusterFrequency, index) => (
                   <Cell
-                    key={`topiccell-${topicFrequency.clusterId}`}
+                    key={`clustercell-${clusterFrequency.clusterId}`}
                     fill={colorScheme[index % colorScheme.length]}
                     stroke={undefined}
                     strokeWidth={2}
@@ -96,9 +96,9 @@ function ClusterDistributionPlot({ aspectId, height, showPieChart }: ClusterDist
               <CartesianGrid stroke="#eee" />
               <ChartTooltip />
               <Bar dataKey={(data) => data.count} fill="black">
-                {chartData.map((topicFrequency, index) => (
+                {chartData.map((clusterFrequency, index) => (
                   <Cell
-                    key={`clustercell-${topicFrequency.clusterId}`}
+                    key={`clustercell-${clusterFrequency.clusterId}`}
                     fill={colorScheme[index % colorScheme.length]}
                     stroke={undefined}
                     strokeWidth={2}

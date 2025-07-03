@@ -16,13 +16,13 @@ import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { D3ColorScale, d3ColorSchemes } from "../../../utils/D3ColorScale.ts";
 import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 
-interface TopicSimilarityPlotProps {
+interface ClusterSimilarityPlotProps {
   aspectId: number;
   height: number;
   colorName: D3ColorScale;
 }
 
-function ClusterSimilarityPlot({ aspectId, height, colorName }: TopicSimilarityPlotProps) {
+function ClusterSimilarityPlot({ aspectId, height, colorName }: ClusterSimilarityPlotProps) {
   // global client state
   const colorScheme = useAppSelector((state) => state.perspectives.colorScheme);
 
@@ -87,7 +87,7 @@ function ClusterSimilarityPlot({ aspectId, height, colorName }: TopicSimilarityP
                     }}
                   >
                     {vis.data.similarities.map((_, i) => (
-                      <HtmlTooltip title={vis.data.topics[i]?.name || `Cluster ${i + 1}`}>
+                      <HtmlTooltip title={vis.data.clusters[i]?.name || `Cluster ${i + 1}`}>
                         <Box
                           key={`row-label-${i}`}
                           sx={{
@@ -162,7 +162,7 @@ function ClusterSimilarityPlot({ aspectId, height, colorName }: TopicSimilarityP
                     {/* Actual Column Labels */}
                     <Box sx={{ flex: 1, display: "flex", flexDirection: "row" }}>
                       {Array.from({ length: numCols }).map((_, j) => (
-                        <HtmlTooltip title={vis.data.topics[j]?.name || `Cluster ${j + 1}`}>
+                        <HtmlTooltip title={vis.data.clusters[j]?.name || `Cluster ${j + 1}`}>
                           <Box
                             key={`col-label-${j}`}
                             sx={{

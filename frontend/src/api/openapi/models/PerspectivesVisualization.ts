@@ -2,19 +2,19 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { TMDoc } from "./TMDoc";
-import type { TopicRead } from "./TopicRead";
-export type TMVisualization = {
+import type { ClusterRead } from "./ClusterRead";
+import type { PerspectivesDoc } from "./PerspectivesDoc";
+export type PerspectivesVisualization = {
   /**
    * ID of the aspect this visualization belongs to
    */
   aspect_id: number;
   /**
-   * List of topics in the visualization
+   * List of clusters in the visualization
    */
-  topics: Array<TopicRead>;
+  clusters: Array<ClusterRead>;
   /**
    * List of documents in the visualization
    */
-  docs: Array<TMDoc>;
+  docs: Array<PerspectivesDoc>;
 };

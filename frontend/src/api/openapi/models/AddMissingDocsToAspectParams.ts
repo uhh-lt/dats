@@ -4,7 +4,7 @@
 /* eslint-disable */
 export type AddMissingDocsToAspectParams = {
   /**
-   * Type of the TMJob
+   * Type of the PerspectivesJob
    */
-  tm_job_type?: string;
+  perspectives_job_type?: string;
 };

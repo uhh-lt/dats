@@ -2,15 +2,15 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type TMDoc = {
+export type PerspectivesDoc = {
   /**
    * ID of the source document
    */
   sdoc_id: number;
   /**
-   * ID of the topic this document belongs to
+   * ID of the cluster this document belongs to
    */
-  topic_id: number;
+  cluster_id: number;
   /**
    * X coordinate of the document in the visualization
    */
@@ -20,7 +20,7 @@ export type TMDoc = {
    */
   y: number;
   /**
-   * Indicates whether the document<->topic assignment is accepted by a user
+   * Indicates whether the document<->cluster assignment is accepted by a user
    */
   is_accepted: boolean;
   /**

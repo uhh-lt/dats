@@ -3,14 +3,14 @@ import { Box } from "@mui/material";
 import { Annotations, Color, Datum, ScatterData } from "plotly.js";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"; // Added useRef
 import Plot, { Figure } from "react-plotly.js";
-import { TMDoc } from "../../../api/openapi/models/TMDoc.ts";
-import { TMVisualization } from "../../../api/openapi/models/TMVisualization.ts";
+import { PerspectivesDoc } from "../../../api/openapi/models/PerspectivesDoc.ts";
+import { PerspectivesVisualization } from "../../../api/openapi/models/PerspectivesVisualization.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { PerspectivesActions } from "../perspectivesSlice.ts";
 import MapTooltip, { MapTooltipData } from "./MapTooltip.tsx";
 
 interface MapPlotProps {
-  vis: TMVisualization;
+  vis: PerspectivesVisualization;
 }
 
 function MapPlot({ vis }: MapPlotProps) {
@@ -24,7 +24,7 @@ function MapPlot({ vis }: MapPlotProps) {
   const showTicks = useAppSelector((state) => state.perspectives.showTicks);
   const showGrid = useAppSelector((state) => state.perspectives.showGrid);
   // highlighting
-  const selectedTopicId = useAppSelector((state) => state.perspectives.highlightedClusterId);
+  const selectedClusterId = useAppSelector((state) => state.perspectives.highlightedClusterId);
   const highlightReviewedDocs = useAppSelector((state) => state.perspectives.highlightReviewedDocs);
 
   // chart data
@@ -37,16 +37,16 @@ function MapPlot({ vis }: MapPlotProps) {
         acc[doc.sdoc_id] = doc;
         return acc;
       },
-      {} as Record<number, TMDoc>,
+      {} as Record<number, PerspectivesDoc>,
     );
 
-    const topicid2topicindex: Record<number, number> = {};
-    vis.topics.forEach((cluster, index) => {
-      topicid2topicindex[cluster.id] = index;
+    const clusterid2clusterindex: Record<number, number> = {};
+    vis.clusters.forEach((cluster, index) => {
+      clusterid2clusterindex[cluster.id] = index;
     });
 
     // prepare the legend & labels
-    vis.topics.forEach((cluster) => {
+    vis.clusters.forEach((cluster) => {
       chartData[cluster.id] = {
         x: [],
         y: [],
@@ -99,8 +99,8 @@ function MapPlot({ vis }: MapPlotProps) {
     const selectedSdocId = selectedSdocIds[selectedSdocIdsIndex];
     vis.docs.forEach((doc) => {
       if (doc.sdoc_id == selectedSdocId) return;
-      const trace = chartData[doc.topic_id];
-      const topicIndex = topicid2topicindex[doc.topic_id];
+      const trace = chartData[doc.cluster_id];
+      const clusterIndex = clusterid2clusterindex[doc.cluster_id];
       (trace.x as Datum[]).push(doc.x);
       (trace.y as Datum[]).push(doc.y);
       (trace.ids as string[]).push(`${doc.sdoc_id}`);
@@ -116,13 +116,13 @@ function MapPlot({ vis }: MapPlotProps) {
       } else if (highlightReviewedDocs && !doc.is_accepted) {
         (trace.marker!.size as number[]).push(4);
         (trace.marker!.color as Color[]).push("lightgrey");
-      } else if (selectedTopicId && selectedTopicId !== doc.topic_id) {
+      } else if (selectedClusterId && selectedClusterId !== doc.cluster_id) {
         (trace.marker!.size as number[]).push(4);
         (trace.marker!.color as Color[]).push("lightgrey");
       } else {
         (trace.marker!.size as number[]).push(pointSize);
         (trace.marker!.color as Color[]).push(
-          colorScheme[topicIndex % colorScheme.length] + (doc.is_accepted ? "ff" : "80"),
+          colorScheme[clusterIndex % colorScheme.length] + (doc.is_accepted ? "ff" : "80"),
         );
       }
     });
@@ -130,8 +130,8 @@ function MapPlot({ vis }: MapPlotProps) {
     // special treatment for the selected document
     const doc = sdocId2Doc[selectedSdocId];
     if (doc) {
-      const trace = chartData[doc.topic_id];
-      const topicIndex = topicid2topicindex[doc.topic_id];
+      const trace = chartData[doc.cluster_id];
+      const clusterIndex = clusterid2clusterindex[doc.cluster_id];
       (trace.x as Datum[]).push(doc.x);
       (trace.y as Datum[]).push(doc.y);
       (trace.ids as string[]).push(`${doc.sdoc_id}`);
@@ -147,13 +147,13 @@ function MapPlot({ vis }: MapPlotProps) {
       } else if (highlightReviewedDocs && !doc.is_accepted) {
         (trace.marker!.size as number[]).push(4);
         (trace.marker!.color as Color[]).push("lightgrey");
-      } else if (selectedTopicId && selectedTopicId !== doc.topic_id) {
+      } else if (selectedClusterId && selectedClusterId !== doc.cluster_id) {
         (trace.marker!.size as number[]).push(4);
         (trace.marker!.color as Color[]).push("lightgrey");
       } else {
         (trace.marker!.size as number[]).push(pointSize);
         (trace.marker!.color as Color[]).push(
-          colorScheme[topicIndex % colorScheme.length] + (doc.is_accepted ? "ff" : "80"),
+          colorScheme[clusterIndex % colorScheme.length] + (doc.is_accepted ? "ff" : "80"),
         );
       }
     }
@@ -165,9 +165,9 @@ function MapPlot({ vis }: MapPlotProps) {
     pointSize,
     selectedSdocIds,
     selectedSdocIdsIndex,
-    selectedTopicId,
+    selectedClusterId,
     vis.docs,
-    vis.topics,
+    vis.clusters,
   ]);
 
   // plot state
