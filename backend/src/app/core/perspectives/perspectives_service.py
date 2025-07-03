@@ -8,40 +8,43 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from app.core.data.crud.aspect import crud_aspect
+from app.core.data.crud.cluster import crud_cluster
 from app.core.data.crud.document_aspect import crud_document_aspect
-from app.core.data.crud.document_topic import crud_document_topic
+from app.core.data.crud.document_cluster import crud_document_cluster
 from app.core.data.crud.source_document import crud_sdoc
-from app.core.data.crud.topic import crud_topic
 from app.core.data.dto.aspect import AspectUpdateIntern
+from app.core.data.dto.cluster import (
+    ClusterCreateIntern,
+    ClusterUpdateIntern,
+)
 from app.core.data.dto.document_aspect import DocumentAspectCreate, DocumentAspectUpdate
-from app.core.data.dto.document_topic import DocumentTopicCreate, DocumentTopicUpdate
-from app.core.data.dto.topic import (
-    TopicCreateIntern,
-    TopicUpdateIntern,
+from app.core.data.dto.document_cluster import (
+    DocumentClusterCreate,
+    DocumentClusterUpdate,
 )
 from app.core.data.llm.ollama_service import OllamaService
 from app.core.data.orm.document_aspect import DocumentAspectORM
-from app.core.data.orm.document_topic import DocumentTopicORM
+from app.core.data.orm.document_cluster import DocumentClusterORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
-from app.core.topicmodel.ctfidf import ClassTfidfTransformer
-from app.core.topicmodel.tm_job import (
+from app.core.perspectives.ctfidf import ClassTfidfTransformer
+from app.core.perspectives.perspectives_job import (
     AddMissingDocsToAspectParams,
-    ChangeTopicParams,
+    ChangeClusterParams,
     CreateAspectParams,
-    CreateTopicWithNameParams,
-    CreateTopicWithSdocsParams,
-    MergeTopicsParams,
-    RefineTopicModelParams,
-    RemoveTopicParams,
-    ResetTopicModelParams,
-    SplitTopicParams,
-    TMJobRead,
+    CreateClusterWithNameParams,
+    CreateClusterWithSdocsParams,
+    MergeClustersParams,
+    PerspectivesJobRead,
+    RefineModelParams,
+    RemoveClusterParams,
+    ResetModelParams,
+    SplitClusterParams,
 )
 from app.core.vector.crud.aspect_embedding import crud_aspect_embedding
-from app.core.vector.crud.topic_embedding import crud_topic_embedding
+from app.core.vector.crud.cluster_embedding import crud_cluster_embedding
 from app.core.vector.dto.aspect_embedding import AspectObjectIdentifier
-from app.core.vector.dto.topic_embedding import TopicObjectIdentifier
+from app.core.vector.dto.cluster_embedding import ClusterObjectIdentifier
 from app.preprocessing.ray_model_service import RayModelService
 from app.preprocessing.ray_model_worker.dto.promptembedder import PromptEmbedderInput
 from hdbscan import HDBSCAN
@@ -53,10 +56,10 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sqlalchemy.orm import Session
 from umap import UMAP
 
-TMJUpdateFN = Callable[[Optional[int], Optional[str]], TMJobRead]
+TMJUpdateFN = Callable[[Optional[int], Optional[str]], PerspectivesJobRead]
 
 
-class TMService:
+class PerspectivesService:
     def __init__(self, update_status_clbk: TMJUpdateFN):
         self.update_status_clbk: TMJUpdateFN = update_status_clbk
         self.rms: RayModelService = RayModelService()
@@ -206,35 +209,35 @@ class TMService:
     #     db: Session,
     #     aspect_id: int,
     # ) -> Tuple[List[str], List[str], List[int]]:
-    #     # Read all topics
-    #     all_topics = crud_topic.read_by_aspect_and_level(
+    #     # Read all clusters
+    #     all_clusters = crud_cluster.read_by_aspect_and_level(
     #         db=db, aspect_id=aspect_id, level=0
     #     )
 
-    #     # Read the current document <-> topic assignments
-    #     document_topics = crud_document_topic.read_by_aspect(db=db, aspect_id=aspect_id)
+    #     # Read the current document <-> cluster assignments
+    #     document_clusters = crud_document_cluster.read_by_aspect(db=db, aspect_id=aspect_id)
 
     #     # Build training_data, consisting of all accepted documents
     #     train_labels: List[str] = []
     #     train_doc_ids: List[int] = []
-    #     topic2accepted_docs: Dict[int, List[int]] = {t.id: [] for t in all_topics}
-    #     for dt in document_topics:
+    #     cluster2accepted_docs: Dict[int, List[int]] = {t.id: [] for t in all_clusters}
+    #     for dt in document_clusters:
     #         if dt.is_accepted:
-    #             topic2accepted_docs[dt.topic_id].append(dt.sdoc_id)
-    #             train_labels.append(f"{dt.topic_id}")
+    #             cluster2accepted_docs[dt.cluster_id].append(dt.sdoc_id)
+    #             train_labels.append(f"{dt.cluster_id}")
     #             train_doc_ids.append(dt.sdoc_id)
 
-    #     # Ensure that every topic has at least one accepted document by using a topic's top documents
-    #     empty_topics = [
-    #         topic for topic in all_topics if len(topic2accepted_docs[topic.id]) == 0
+    #     # Ensure that every cluster has at least one accepted document by using a cluster's top documents
+    #     empty_clusters = [
+    #         cluster for cluster in all_clusters if len(cluster2accepted_docs[cluster.id]) == 0
     #     ]
-    #     for topic in empty_topics:
-    #         assert topic.top_docs is not None, (
-    #             f"Topic {topic.id} has no accepted documents, but top_docs is not None."
+    #     for cluster in empty_clusters:
+    #         assert cluster.top_docs is not None, (
+    #             f"Cluster {cluster.id} has no accepted documents, but top_docs is not None."
     #         )
-    #         for top_doc in topic.top_docs:
-    #             topic2accepted_docs[topic.id].append(top_doc)
-    #             train_labels.append(f"{topic.id}")
+    #         for top_doc in cluster.top_docs:
+    #             cluster2accepted_docs[cluster.id].append(top_doc)
+    #             train_labels.append(f"{cluster.id}")
     #             train_doc_ids.append(top_doc)
 
     #     # Read the corresponding aspect texts
@@ -258,8 +261,8 @@ class TMService:
         # Read all relevant data
         aspect = crud_aspect.read(db=db, id=aspect_id)
         doc_aspects = aspect.document_aspects
-        doc_topics = crud_document_topic.read_by_aspect(db=db, aspect_id=aspect_id)
-        doc_id2_dt = {dt.sdoc_id: dt for dt in doc_topics}
+        doc_clusters = crud_document_cluster.read_by_aspect(db=db, aspect_id=aspect_id)
+        doc_id2_dt = {dt.sdoc_id: dt for dt in doc_clusters}
 
         # Prepare data for the map
         coords_x: List[float] = []
@@ -268,7 +271,7 @@ class TMService:
         for da in doc_aspects:
             coords_x.append(da.x)
             coords_y.append(da.y)
-            labels.append(doc_id2_dt[da.sdoc_id].topic_id)
+            labels.append(doc_id2_dt[da.sdoc_id].cluster_id)
 
         # Generate the map thumbnail
         width_inches = 5.12  # 512 pixels at 100 DPI
@@ -373,31 +376,31 @@ class TMService:
                 f"Stored embeddings and coordinates for {len(doc_aspects)} document aspects."
             )
 
-    def __find_new_to_old_topic_mapping(
+    def __find_new_to_old_cluster_mapping(
         self,
         labeled_documents: List[Tuple[int, int]],
     ) -> Dict[int, int]:
         """
-        Maps new topic IDs to the most frequent old topic ID.
+        Maps new cluster IDs to the most frequent old cluster ID.
 
-        Input is a list of (old_topic_id, new_topic_id) integer pairs.
+        Input is a list of (old_cluster_id, new_cluster_id) integer pairs.
 
         Args:
-            labeled_documents: List of (old_topic_id, new_topic_id) tuples.
+            labeled_documents: List of (old_cluster_id, new_cluster_id) tuples.
 
         Returns:
-            Dictionary mapping new_topic_id (int) to its most frequent
-            associated old_topic_id (int).
+            Dictionary mapping new_cluster_id (int) to its most frequent
+            associated old_cluster_id (int).
         """
-        new_topic_to_old_topic_candidates: Dict[int, List[int]] = defaultdict(list)
+        new_cluster_to_old_cluster_candidates: Dict[int, List[int]] = defaultdict(list)
 
         # Group old_ids by new_id
         for old_id, new_id in labeled_documents:
-            new_topic_to_old_topic_candidates[new_id].append(old_id)
+            new_cluster_to_old_cluster_candidates[new_id].append(old_id)
 
         final_mapping: Dict[int, int] = {}
         # For each new_id, find the most common old_id
-        for new_id, old_id_list in new_topic_to_old_topic_candidates.items():
+        for new_id, old_id_list in new_cluster_to_old_cluster_candidates.items():
             count: Counter[int] = Counter(old_id_list)
             most_common_old_id: int = count.most_common(1)[0][0]
             final_mapping[new_id] = most_common_old_id
@@ -411,14 +414,14 @@ class TMService:
         sdoc_ids: Optional[List[int]],
         num_clusters: Optional[int],
         train_doc_ids: List[int] = [],
-        train_topic_ids: List[int] = [],
+        train_cluster_ids: List[int] = [],
     ) -> List[int]:
         """
         Clusters the document aspects of the given Aspect using HDBSCAN.
         If sdoc_ids are provided, only those source documents will be clustered.
         :param db: The database session
         :param aspect_id: The ID of the Aspect
-        :return: List of topic IDs that were assigned to the documents.
+        :return: List of cluster IDs that were assigned to the documents.
         """
 
         aspect = crud_aspect.read(db=db, id=aspect_id)
@@ -464,12 +467,12 @@ class TMService:
         cluster_ids = set(clusters)
         self._log_status_msg(f"Found {len(cluster_ids)} clusters with HDBSCAN")
 
-        # 4. Storing / reusing the topics
-        if len(train_doc_ids) > 0 and len(train_topic_ids) > 0:
-            # Either: Reuse existing topics, automatically inferring a mapping from existing topics to clusters
+        # 4. Storing / reusing the clusters
+        if len(train_doc_ids) > 0 and len(train_cluster_ids) > 0:
+            # Either: Reuse existing clusters, automatically inferring a mapping from existing clusters to clusters
             train_doc2top: Dict[int, int] = {
-                doc_id: topic_id
-                for doc_id, topic_id in zip(train_doc_ids, train_topic_ids)
+                doc_id: cluster_id
+                for doc_id, cluster_id in zip(train_doc_ids, train_cluster_ids)
             }
             new_doc2top: Dict[int, int] = {
                 da.sdoc_id: cluster for da, cluster in zip(doc_aspects, clusters)
@@ -477,63 +480,67 @@ class TMService:
             labeled_docs = [
                 (train_doc2top[doc_id], new_doc2top[doc_id]) for doc_id in train_doc_ids
             ]
-            cluster_id2topic_id = self.__find_new_to_old_topic_mapping(labeled_docs)
+            cluster_id2cluster_id = self.__find_new_to_old_cluster_mapping(labeled_docs)
 
-            # add mapping for outlier topic
-            outlier_topic = crud_topic.read_or_create_outlier_topic(
+            # add mapping for outlier cluster
+            outlier_cluster = crud_cluster.read_or_create_outlier_cluster(
                 db=db, aspect_id=aspect_id, level=0
             )
-            cluster_id2topic_id[-1] = outlier_topic.id  # -1 is the outlier cluster ID
+            cluster_id2cluster_id[-1] = (
+                outlier_cluster.id
+            )  # -1 is the outlier cluster ID
             self._log_status_msg(
-                f"Computed a mapping from {len(cluster_id2topic_id)} clusters to existing topics."
+                f"Computed a mapping from {len(cluster_id2cluster_id)} clusters to existing clusters."
             )
 
             # Construct update DTOS
-            doc_topics = crud_document_topic.read_by_aspect(db=db, aspect_id=aspect_id)
-            sdoc_id2doctopic = {dt.sdoc_id: dt for dt in doc_topics}
-            update_dtos: List[DocumentTopicUpdate] = []
+            doc_clusters = crud_document_cluster.read_by_aspect(
+                db=db, aspect_id=aspect_id
+            )
+            sdoc_id2doccluster = {dt.sdoc_id: dt for dt in doc_clusters}
+            update_dtos: List[DocumentClusterUpdate] = []
             update_ids: list[tuple[int, int]] = []
             for da, cluster in zip(doc_aspects, clusters):
                 if da.sdoc_id in train_doc_ids:
                     continue  # Skip documents that were used for training!
 
-                dt = sdoc_id2doctopic[da.sdoc_id]
+                dt = sdoc_id2doccluster[da.sdoc_id]
                 if dt.is_accepted:
                     continue  # Skip already accepted assignments!
 
-                new_topic_id = cluster_id2topic_id[cluster]
-                if dt.topic_id == new_topic_id:
+                new_cluster_id = cluster_id2cluster_id[cluster]
+                if dt.cluster_id == new_cluster_id:
                     continue
 
-                # Update the document topic with the new topic ID
+                # Update the document cluster with the new cluster ID
                 update_ids.append(
                     (
                         dt.sdoc_id,
-                        dt.topic_id,
+                        dt.cluster_id,
                     )
                 )
                 update_dtos.append(
-                    DocumentTopicUpdate(
-                        topic_id=new_topic_id,
+                    DocumentClusterUpdate(
+                        cluster_id=new_cluster_id,
                     )
                 )
 
             # Update!
-            crud_document_topic.update_multi(
+            crud_document_cluster.update_multi(
                 db=db,
                 ids=update_ids,
                 update_dtos=update_dtos,
             )
             self._log_status_msg(
-                f"Updated {len(update_ids)}/{len(doc_topics)} document topic assignments."
+                f"Updated {len(update_ids)}/{len(doc_clusters)} document cluster assignments."
             )
 
         else:
-            # Or: Store the topics (clusters) in the DB
-            topics = crud_topic.create_multi(
+            # Or: Store the clusters (clusters) in the DB
+            clusters = crud_cluster.create_multi(
                 db=db,
                 create_dtos=[
-                    TopicCreateIntern(
+                    ClusterCreateIntern(
                         aspect_id=aspect_id,
                         level=0,
                         name="Outlier" if cluster == -1 else None,
@@ -542,26 +549,27 @@ class TMService:
                     for cluster in cluster_ids
                 ],
             )
-            cluster_id2topic_id = {
-                cluster_id: topic.id for cluster_id, topic in zip(cluster_ids, topics)
+            cluster_id2cluster_id = {
+                cluster_id: cluster.id
+                for cluster_id, cluster in zip(cluster_ids, clusters)
             }
             self._log_status_msg(
-                f"Stored {len(cluster_id2topic_id)} topics in the database corresponding to {len(cluster_ids)} clusters."
+                f"Stored {len(cluster_id2cluster_id)} clusters in the database corresponding to {len(cluster_ids)} clusters."
             )
 
             # 5. Store the cluster assignments in the database
-            crud_document_topic.create_multi(
+            crud_document_cluster.create_multi(
                 db=db,
                 create_dtos=[
-                    DocumentTopicCreate(
+                    DocumentClusterCreate(
                         sdoc_id=da.sdoc_id,
-                        topic_id=cluster_id2topic_id[cluster],
+                        cluster_id=cluster_id2cluster_id[cluster],
                     )
                     for da, cluster in zip(doc_aspects, clusters)
                 ],
             )
             self._log_status_msg(
-                f"Assigned {len(doc_aspects)} document aspects to {len(cluster_id2topic_id)} topics."
+                f"Assigned {len(doc_aspects)} document aspects to {len(cluster_id2cluster_id)} clusters."
             )
 
         # 5. Generate a map thumbnail
@@ -571,7 +579,7 @@ class TMService:
             aspect_id=aspect.id,
         )
 
-        return list(cluster_id2topic_id.values())
+        return list(cluster_id2cluster_id.values())
 
     def __preprocess_text(self, documents: List[str]) -> List[str]:
         r"""Basic preprocessing of text.
@@ -594,22 +602,22 @@ class TMService:
 
     def __c_tf_idf(
         self,
-        documents_per_topic: List[str],
+        documents_per_cluster: List[str],
     ) -> Tuple[np.ndarray, List[str]]:
         """Calculate a class-based TF-IDF where m is the number of total documents.
 
         Arguments:
-            documents_per_topic: The joined documents per topic such that each topic has a single
+            documents_per_cluster: The joined documents per cluster such that each cluster has a single
                                  string made out of multiple documents
             m: The total number of documents (unjoined)
             fit: Whether to fit a new vectorizer or use the fitted self.vectorizer_model
             partial_fit: Whether to run `partial_fit` for online learning
 
         Returns:
-            tf_idf: The resulting matrix giving a value (importance score) for each word per topic
+            tf_idf: The resulting matrix giving a value (importance score) for each word per cluster
             words: The names of the words to which values were given
         """
-        documents = self.__preprocess_text(documents_per_topic)
+        documents = self.__preprocess_text(documents_per_cluster)
 
         # Compute bag-of-words representation
         vectorizer_model = CountVectorizer(
@@ -627,22 +635,22 @@ class TMService:
 
         return c_tf_idf, words
 
-    def _extract_topics(
+    def _extract_clusters(
         self,
         db: Session,
         aspect_id: int,
-        topic_ids: Optional[List[int]],
+        cluster_ids: Optional[List[int]],
     ):
         """
         Extracts all topis of the given Aspect by:
-        1. Finding the most important words for each topic ( group documents by topic, create one "big" document per topic, compute c-TF-IDF, identify top words )
-        2. Generating topic name and description with LLM
-        3. Computing the topic embeddings (cluster centroids)
+        1. Finding the most important words for each cluster ( group documents by cluster, create one "big" document per cluster, compute c-TF-IDF, identify top words )
+        2. Generating cluster name and description with LLM
+        3. Computing the cluster embeddings (cluster centroids)
         4. Identifying the top similar documents
-        5. Storing the topics in the database and vector DB
+        5. Storing the clusters in the database and vector DB
         :param db: The database session
         :param aspect_id: The ID of the Aspect
-        :param topic_ids: Optional list of topic IDs to consider. If None, all topics for the aspect will be considered.
+        :param cluster_ids: Optional list of cluster IDs to consider. If None, all clusters for the aspect will be considered.
         :return: None
         """
 
@@ -650,76 +658,82 @@ class TMService:
         level = 0  # TODO: we only consider 1 level for now (level 0)
 
         # 0. Read all required data
-        # - Read the topics (but the outlier topic)
-        all_topics = crud_topic.read_by_aspect_and_level(
+        # - Read the clusters (but the outlier cluster)
+        all_clusters = crud_cluster.read_by_aspect_and_level(
             db=db, aspect_id=aspect_id, level=level
         )
         # - Read the document aspects
-        doc_aspects, assigned_topics = (
-            crud_document_aspect.read_by_aspect_and_topic_ids(
-                db=db, aspect_id=aspect_id, topic_ids=[t.id for t in all_topics]
+        doc_aspects, assigned_clusters = (
+            crud_document_aspect.read_by_aspect_and_cluster_ids(
+                db=db, aspect_id=aspect_id, cluster_ids=[t.id for t in all_clusters]
             )
         )
-        assigned_topics_arr = np.array(assigned_topics)
+        assigned_clusters_arr = np.array(assigned_clusters)
 
-        # determine which topics to update
-        topic_ids_to_update = (
-            topic_ids if topic_ids is not None else [topic.id for topic in all_topics]
+        # determine which clusters to update
+        cluster_ids_to_update = (
+            cluster_ids
+            if cluster_ids is not None
+            else [cluster.id for cluster in all_clusters]
         )
-        self._log_status_msg(f"Extracting data for {len(topic_ids_to_update)} topics.")
+        self._log_status_msg(
+            f"Extracting data for {len(cluster_ids_to_update)} clusters."
+        )
 
-        # 1. Identify key words for each topic
-        # 1.1. Group the documents by topic, creating a "big" topicdocument per topic, which is required by c-TF-IDF
-        topic_to_doc_aspects: Dict[int, List[DocumentAspectORM]] = {
-            t.id: [] for t in all_topics
+        # 1. Identify key words for each cluster
+        # 1.1. Group the documents by cluster, creating a "big" clusterdocument per cluster, which is required by c-TF-IDF
+        cluster_to_doc_aspects: Dict[int, List[DocumentAspectORM]] = {
+            t.id: [] for t in all_clusters
         }
-        for da, topic_id in zip(doc_aspects, assigned_topics):
-            topic_to_doc_aspects[topic_id].append(da)
-        topic_to_topicdoc: Dict[int, str] = {
-            t.id: " ".join([da.content for da in topic_to_doc_aspects[t.id]])
-            if len(topic_to_doc_aspects[t.id]) > 0
+        for da, cluster_id in zip(doc_aspects, assigned_clusters):
+            cluster_to_doc_aspects[cluster_id].append(da)
+        cluster_to_clusterdoc: Dict[int, str] = {
+            t.id: " ".join([da.content for da in cluster_to_doc_aspects[t.id]])
+            if len(cluster_to_doc_aspects[t.id]) > 0
             else "emptydoc"
-            for t in all_topics
+            for t in all_clusters
         }
 
         # 1.2 Compute the c-TF-IDF
-        # The first row in c-TF-IDF corresponds to the first topic in tids, the second row to the second topic, etc.
-        self._log_status_msg(f"Computing c-TF-IDF for {len(all_topics)} topics...")
+        # The first row in c-TF-IDF corresponds to the first cluster in tids, the second row to the second cluster, etc.
+        self._log_status_msg(f"Computing c-TF-IDF for {len(all_clusters)} clusters...")
         c_tf_idf, words = self.__c_tf_idf(
-            documents_per_topic=list(topic_to_topicdoc.values())
+            documents_per_cluster=list(cluster_to_clusterdoc.values())
         )
 
-        # 1.3. Find the most important words for each topic
+        # 1.3. Find the most important words for each cluster
         scores, indices = torch.topk(torch.tensor(c_tf_idf), k=50)
         scores = scores.tolist()
         indices = indices.tolist()
         top_words: Dict[int, List[str]] = {}
         top_word_scores: Dict[int, List[float]] = {}
-        for scores, indices, topic_id in zip(scores, indices, topic_to_topicdoc.keys()):
-            top_words[topic_id] = [words[i] for i in indices]
-            top_word_scores[topic_id] = [float(s) for s in scores]
-        self._log_status_msg("Extracted top words and scores for each topic!")
+        for scores, indices, cluster_id in zip(
+            scores, indices, cluster_to_clusterdoc.keys()
+        ):
+            top_words[cluster_id] = [words[i] for i in indices]
+            top_word_scores[cluster_id] = [float(s) for s in scores]
+        self._log_status_msg("Extracted top words and scores for each cluster!")
 
-        # 2. Generate topic name and description with LLM
+        # 2. Generate cluster name and description with LLM
         class OllamaResponse(BaseModel):
             description: str
             title: str
 
-        topic_name: Dict[int, str] = {}
-        topic_description: Dict[int, str] = {}
-        self._log_status_msg("Generating topic names and descriptions with LLM...")
-        for topic_id in topic_ids_to_update:
-            tw = top_words[topic_id]
+        cluster_name: Dict[int, str] = {}
+        cluster_description: Dict[int, str] = {}
+        self._log_status_msg("Generating cluster names and descriptions with LLM...")
+        for cluster_id in cluster_ids_to_update:
+            tw = top_words[cluster_id]
             self._log_status_msg(
-                f"Generating name and description for topic {tw[:5]}..."
+                f"Generating name and description for cluster {tw[:5]}..."
             )
             response = self.ollama.llm_chat(
-                system_prompt="You are a topic name and description generator.",
-                user_prompt=f"Generate a name and description for the topic with the following words: {', '.join(tw)}",
+                system_prompt="You are a cluster name and description generator.",
+                user_prompt=f"Generate a name and description for the cluster with the following words: {', '.join(tw)}",
                 response_model=OllamaResponse,
             )
-            topic_name[topic_id] = response.title
-            topic_description[topic_id] = response.description
+            cluster_name[cluster_id] = response.title
+            cluster_description[cluster_id] = response.description
 
         # 3. Based on embeddings...
         coordinates = np.array([[da.x, da.y] for da in doc_aspects])
@@ -735,92 +749,97 @@ class TMService:
         )
 
         self._log_status_msg(
-            f"Computing topic embeddings & top documents for {len(topic_ids_to_update)} topics."
+            f"Computing cluster embeddings & top documents for {len(cluster_ids_to_update)} clusters."
         )
-        topic_centroids: Dict[int, np.ndarray] = {}
-        topic_coordinates: Dict[int, np.ndarray] = {}
+        cluster_centroids: Dict[int, np.ndarray] = {}
+        cluster_coordinates: Dict[int, np.ndarray] = {}
         top_docs: Dict[int, List[int]] = {}
         distance_update_ids: List[
             Tuple[int, int]
-        ] = []  # List of (sdoc_id, topic_id) tuples
-        distance_update_dtos: List[DocumentTopicUpdate] = []
-        for topic_id in topic_ids_to_update:
-            doc_coordinates = coordinates[assigned_topics_arr == topic_id]
-            doc_embeddings = embeddings[assigned_topics_arr == topic_id]
-            sdoc_ids = embedding_sdoc_ids[assigned_topics_arr == topic_id]
+        ] = []  # List of (sdoc_id, cluster_id) tuples
+        distance_update_dtos: List[DocumentClusterUpdate] = []
+        for cluster_id in cluster_ids_to_update:
+            doc_coordinates = coordinates[assigned_clusters_arr == cluster_id]
+            doc_embeddings = embeddings[assigned_clusters_arr == cluster_id]
+            sdoc_ids = embedding_sdoc_ids[assigned_clusters_arr == cluster_id]
 
-            # ... compute the topic embeddings & normalize(cluster centroids)
-            topic_centroids[topic_id] = np.mean(doc_embeddings, axis=0)
-            norm_of_mean = np.linalg.norm(topic_centroids[topic_id])
+            # ... compute the cluster embeddings & normalize(cluster centroids)
+            cluster_centroids[cluster_id] = np.mean(doc_embeddings, axis=0)
+            norm_of_mean = np.linalg.norm(cluster_centroids[cluster_id])
             if norm_of_mean > 0:  # Avoid division by zero
-                topic_centroids[topic_id] = topic_centroids[topic_id] / norm_of_mean
+                cluster_centroids[cluster_id] = (
+                    cluster_centroids[cluster_id] / norm_of_mean
+                )
 
-            # ... compute the topic coordinates (mean of the 2D coordinates)
-            topic_coordinates[topic_id] = np.mean(doc_coordinates, axis=0)
+            # ... compute the cluster coordinates (mean of the 2D coordinates)
+            cluster_coordinates[cluster_id] = np.mean(doc_coordinates, axis=0)
 
             # .. compute the top 3 documents
-            similarities = doc_embeddings @ topic_centroids[topic_id]
+            similarities = doc_embeddings @ cluster_centroids[cluster_id]
             num_top_docs_to_retrieve = min(3, len(doc_embeddings))
             top_doc_indices = np.argsort(similarities)[:num_top_docs_to_retrieve]
             top_doc_ids = [
-                topic_to_doc_aspects[topic_id][i].sdoc_id for i in top_doc_indices
+                cluster_to_doc_aspects[cluster_id][i].sdoc_id for i in top_doc_indices
             ]
-            top_docs[topic_id] = top_doc_ids
+            top_docs[cluster_id] = top_doc_ids
 
-            # ... update the distances of the document topics
+            # ... update the distances of the document clusters
             for sdoc_id, similarity in zip(sdoc_ids, similarities):
-                distance_update_ids.append((sdoc_id.item(), topic_id))
+                distance_update_ids.append((sdoc_id.item(), cluster_id))
                 distance_update_dtos.append(
-                    DocumentTopicUpdate(distance=1.0 - similarity.item())
+                    DocumentClusterUpdate(distance=1.0 - similarity.item())
                 )
 
         self._log_status_msg(
-            f"Computed topic embeddings & top documents for {len(topic_centroids)} topics."
+            f"Computed cluster embeddings & top documents for {len(cluster_centroids)} clusters."
         )
 
-        # 8. Store the topics in the databases ...
-        # ... store the topic embeddings in vector DB
-        crud_topic_embedding.add_embedding_batch(
+        # 8. Store the clusters in the databases ...
+        # ... store the cluster embeddings in vector DB
+        crud_cluster_embedding.add_embedding_batch(
             project_id=aspect.project_id,
             ids=[
-                TopicObjectIdentifier(
+                ClusterObjectIdentifier(
                     aspect_id=aspect.id,
-                    topic_id=topic_id,
+                    cluster_id=cluster_id,
                 )
-                for topic_id in topic_ids_to_update
+                for cluster_id in cluster_ids_to_update
             ],
             embeddings=[
-                topic_centroids[topic_id].tolist() for topic_id in topic_ids_to_update
+                cluster_centroids[cluster_id].tolist()
+                for cluster_id in cluster_ids_to_update
             ],
         )
 
-        # ... store the topics in the database
-        update_dtos: List[TopicUpdateIntern] = []
-        for topic_id in topic_ids_to_update:
+        # ... store the clusters in the database
+        update_dtos: List[ClusterUpdateIntern] = []
+        for cluster_id in cluster_ids_to_update:
             update_dtos.append(
-                TopicUpdateIntern(
-                    name=topic_name[topic_id],
-                    description=topic_description[topic_id],
-                    top_words=top_words[topic_id],
-                    top_word_scores=top_word_scores[topic_id],
-                    top_docs=top_docs[topic_id],
-                    x=topic_coordinates[topic_id][0],
-                    y=topic_coordinates[topic_id][1],
+                ClusterUpdateIntern(
+                    name=cluster_name[cluster_id],
+                    description=cluster_description[cluster_id],
+                    top_words=top_words[cluster_id],
+                    top_word_scores=top_word_scores[cluster_id],
+                    top_docs=top_docs[cluster_id],
+                    x=cluster_coordinates[cluster_id][0],
+                    y=cluster_coordinates[cluster_id][1],
                 )
             )
-        crud_topic.update_multi(db=db, ids=topic_ids_to_update, update_dtos=update_dtos)
+        crud_cluster.update_multi(
+            db=db, ids=cluster_ids_to_update, update_dtos=update_dtos
+        )
 
-        # ... update the document topics with the new distances
+        # ... update the document clusters with the new distances
         if len(distance_update_dtos) > 0:
-            # Update the distances of the document topics
-            crud_document_topic.update_multi(
+            # Update the distances of the document clusters
+            crud_document_cluster.update_multi(
                 db=db,
                 ids=distance_update_ids,
                 update_dtos=distance_update_dtos,
             )
 
         self._log_status_msg(
-            f"Updated {len(update_dtos)} topics in the database with names, descriptions, top words, top word scores, and top documents."
+            f"Updated {len(update_dtos)} clusters in the database with names, descriptions, top words, top word scores, and top documents."
         )
 
     def create_aspect(
@@ -852,12 +871,12 @@ class TMService:
                 num_clusters=None,
             )
 
-            # 4. Extract the topics
+            # 4. Extract the clusters
             self._log_status_step(3)
-            self._extract_topics(
+            self._extract_clusters(
                 db=db,
                 aspect_id=aspect_id,
-                topic_ids=None,
+                cluster_ids=None,
             )
 
             self._log_status_msg("Successfully created aspect!")
@@ -869,27 +888,29 @@ class TMService:
     ):
         pass
 
-    def create_topic_with_name(self, aspect_id: int, params: CreateTopicWithNameParams):
+    def create_cluster_with_name(
+        self, aspect_id: int, params: CreateClusterWithNameParams
+    ):
         with self.sqls.db_session() as db:
             # Read the aspect
             aspect = crud_aspect.read(db=db, id=aspect_id)
 
-            # Read the current document <-> topic assignments
-            document_topics = crud_document_topic.read_by_aspect(
+            # Read the current document <-> cluster assignments
+            document_clusters = crud_document_cluster.read_by_aspect(
                 db=db, aspect_id=aspect.id
             )
-            doc2topic: Dict[int, DocumentTopicORM] = {
-                dt.sdoc_id: dt for dt in document_topics
+            doc2cluster: Dict[int, DocumentClusterORM] = {
+                dt.sdoc_id: dt for dt in document_clusters
             }
             assert (
-                len(document_topics) == len(doc2topic)
-            ), f"There are duplicate document-topic assignments in the database for aspect {aspect.id}!"
+                len(document_clusters) == len(doc2cluster)
+            ), f"There are duplicate document-cluster assignments in the database for aspect {aspect.id}!"
 
-            # 1. Topic creation
-            # - Embedd the new topic
+            # 1. Cluster creation
+            # - Embedd the new cluster
             self._log_status_step(0)
             self._log_status_msg(
-                f"Computing embeddings for the new topic with model {aspect.embedding_model}..."
+                f"Computing embeddings for the new cluster with model {aspect.embedding_model}..."
             )
             embedding_output = self.rms.promptembedder_embedding(
                 input=PromptEmbedderInput(
@@ -900,13 +921,13 @@ class TMService:
             )
             assert (
                 len(embedding_output.embeddings) == 1
-            ), "Expected exactly one embedding output for the new topic."
+            ), "Expected exactly one embedding output for the new cluster."
 
-            # - Create the new topic in the database
-            new_topic = crud_topic.create(
+            # - Create the new cluster in the database
+            new_cluster = crud_cluster.create(
                 db=db,
-                create_dto=TopicCreateIntern(
-                    parent_topic_id=params.create_dto.parent_topic_id,
+                create_dto=ClusterCreateIntern(
+                    parent_cluster_id=params.create_dto.parent_cluster_id,
                     aspect_id=params.create_dto.aspect_id,
                     level=params.create_dto.level,
                     name=params.create_dto.name,
@@ -916,87 +937,87 @@ class TMService:
             )
 
             # 2. Document assignment
-            # - For all source documents in the aspect, decide whether to assign the new topic or not. Track the changes/affected topics!
+            # - For all source documents in the aspect, decide whether to assign the new cluster or not. Track the changes/affected clusters!
             # - Do not reassign documents that are accepted
             self._log_status_step(1)
-            update_dtos: List[DocumentTopicUpdate] = []
+            update_dtos: List[DocumentClusterUpdate] = []
             update_ids: List[tuple[int, int]] = []
-            modified_topics: Set[int] = set()
+            modified_clusters: Set[int] = set()
             results = crud_aspect_embedding.search_near_vector_in_aspect(
                 project_id=aspect.project_id,
                 aspect_id=aspect.id,
                 vector=embedding_output.embeddings[0],
-                k=len(document_topics),
+                k=len(document_clusters),
             )
             for result in results:
-                doc_topic = doc2topic.get(result.id.sdoc_id, None)
+                doc_cluster = doc2cluster.get(result.id.sdoc_id, None)
                 assert (
-                    doc_topic is not None
-                ), f"Document {result.id.sdoc_id} does not have a topic assignment in aspect {aspect.id}."
-                if doc_topic.is_accepted:
+                    doc_cluster is not None
+                ), f"Document {result.id.sdoc_id} does not have a cluster assignment in aspect {aspect.id}."
+                if doc_cluster.is_accepted:
                     # skip documents that are already accepted
                     continue
 
-                # assign the new topic if the distance is smaller than the current topic's distance
-                if result.score < doc_topic.distance:
-                    update_ids.append((doc_topic.sdoc_id, doc_topic.topic_id))
+                # assign the new cluster if the distance is smaller than the current cluster's distance
+                if result.score < doc_cluster.distance:
+                    update_ids.append((doc_cluster.sdoc_id, doc_cluster.cluster_id))
                     update_dtos.append(
-                        DocumentTopicUpdate(
-                            topic_id=new_topic.id,
+                        DocumentClusterUpdate(
+                            cluster_id=new_cluster.id,
                             distance=result.score,
                         )
                     )
                     # track changes
-                    modified_topics.add(doc_topic.topic_id)
-                    modified_topics.add(new_topic.id)
+                    modified_clusters.add(doc_cluster.cluster_id)
+                    modified_clusters.add(new_cluster.id)
 
-            # - Store the new topic assignments in the database
+            # - Store the new cluster assignments in the database
             if len(update_dtos) > 0:
-                crud_document_topic.update_multi(
+                crud_document_cluster.update_multi(
                     db=db, ids=update_ids, update_dtos=update_dtos
                 )
                 self._log_status_msg(
-                    f"Updated {len(update_dtos)} document-topic assignments with the new topic {new_topic.id}."
+                    f"Updated {len(update_dtos)} document-cluster assignments with the new cluster {new_cluster.id}."
                 )
 
-            # 3. Topic Extraction
-            # - Extract the topics for all affected ones (computing top words, top docs, embedding, etc)
+            # 3. Cluster Extraction
+            # - Extract the clusters for all affected ones (computing top words, top docs, embedding, etc)
             self._log_status_step(2)
-            if len(modified_topics) > 0:
+            if len(modified_clusters) > 0:
                 self._log_status_msg(
-                    f"Extracting topics for {len(modified_topics)} modified topics: {modified_topics}."
+                    f"Extracting clusters for {len(modified_clusters)} modified clusters: {modified_clusters}."
                 )
-                self._extract_topics(
+                self._extract_clusters(
                     db=db,
                     aspect_id=aspect.id,
-                    topic_ids=list(modified_topics),
+                    cluster_ids=list(modified_clusters),
                 )
 
-            self._log_status_msg("Successfully created topic with name&description!")
+            self._log_status_msg("Successfully created cluster with name&description!")
 
-    def create_topic_with_sdocs(
-        self, aspect_id: int, params: CreateTopicWithSdocsParams
+    def create_cluster_with_sdocs(
+        self, aspect_id: int, params: CreateClusterWithSdocsParams
     ):
         with self.sqls.db_session() as db:
-            # Read the current document <-> topic assignments
-            document_topics = crud_document_topic.read_by_aspect(
+            # Read the current document <-> cluster assignments
+            document_clusters = crud_document_cluster.read_by_aspect(
                 db=db, aspect_id=aspect_id
             )
-            doc2topic: Dict[int, DocumentTopicORM] = {
-                dt.sdoc_id: dt for dt in document_topics
+            doc2cluster: Dict[int, DocumentClusterORM] = {
+                dt.sdoc_id: dt for dt in document_clusters
             }
             assert (
-                len(document_topics) == len(doc2topic)
-            ), f"There are duplicate document-topic assignments in the database for aspect {aspect_id}!"
+                len(document_clusters) == len(doc2cluster)
+            ), f"There are duplicate document-cluster assignments in the database for aspect {aspect_id}!"
 
-            # 1. Topic creation
-            # - Create the new topic in the database
+            # 1. Cluster creation
+            # - Create the new cluster in the database
             self._log_status_step(0)
-            self._log_status_msg("Creating new empty topic...")
-            new_topic = crud_topic.create(
+            self._log_status_msg("Creating new empty cluster...")
+            new_cluster = crud_cluster.create(
                 db=db,
-                create_dto=TopicCreateIntern(
-                    name="New Topic",
+                create_dto=ClusterCreateIntern(
+                    name="New Cluster",
                     aspect_id=aspect_id,
                     level=0,
                     is_outlier=False,
@@ -1004,52 +1025,52 @@ class TMService:
             )
 
             # 2. Document assignment
-            # - Assign the new topic to the given source documents
+            # - Assign the new cluster to the given source documents
             self._log_status_step(1)
             self._log_status_msg(
-                f"Assigning new topic {new_topic.id} to {len(params.sdoc_ids)} source documents..."
+                f"Assigning new cluster {new_cluster.id} to {len(params.sdoc_ids)} source documents..."
             )
-            # track the changes/affected topics!
-            modified_topics: Set[int] = set(
-                [doc2topic[sdoc_id].topic_id for sdoc_id in params.sdoc_ids]
+            # track the changes/affected clusters!
+            modified_clusters: Set[int] = set(
+                [doc2cluster[sdoc_id].cluster_id for sdoc_id in params.sdoc_ids]
             )
-            modified_topics.add(new_topic.id)
-            # assign the new topic to the source documents
-            crud_document_topic.set_labels2(
+            modified_clusters.add(new_cluster.id)
+            # assign the new cluster to the source documents
+            crud_document_cluster.set_labels2(
                 db=db,
                 aspect_id=aspect_id,
-                topic_id=new_topic.id,
+                cluster_id=new_cluster.id,
                 sdoc_ids=params.sdoc_ids,
                 is_accepted=True,
             )
 
-            # 3. Topic Extraction
-            # - Extract the topics for all affected ones (computing top words, top docs, embedding, etc)
+            # 3. Cluster Extraction
+            # - Extract the clusters for all affected ones (computing top words, top docs, embedding, etc)
             self._log_status_step(2)
-            if len(modified_topics) > 0:
+            if len(modified_clusters) > 0:
                 self._log_status_msg(
-                    f"Extracting topics for {len(modified_topics)} modified topics: {modified_topics}."
+                    f"Extracting clusters for {len(modified_clusters)} modified clusters: {modified_clusters}."
                 )
-                self._extract_topics(
+                self._extract_clusters(
                     db=db,
                     aspect_id=aspect_id,
-                    topic_ids=list(modified_topics),
+                    cluster_ids=list(modified_clusters),
                 )
 
-            self._log_status_msg("Successfully created topic with source documents!")
+            self._log_status_msg("Successfully created cluster with source documents!")
 
-    def remove_topic(self, aspect_id: int, params: RemoveTopicParams):
+    def remove_cluster(self, aspect_id: int, params: RemoveClusterParams):
         with self.sqls.db_session() as db:
             # 0. Read all relevant data
-            # - Read the topic to remove
-            topic = crud_topic.read(db=db, id=params.topic_id)
+            # - Read the cluster to remove
+            cluster = crud_cluster.read(db=db, id=params.cluster_id)
 
             # - Read the aspect
-            aspect = topic.aspect
+            aspect = cluster.aspect
 
             # - Read the document aspect embeddings of all affected documents
-            doc_aspects = crud_document_aspect.read_by_aspect_and_topic_id(
-                db=db, aspect_id=topic.aspect_id, topic_id=topic.id
+            doc_aspects = crud_document_aspect.read_by_aspect_and_cluster_id(
+                db=db, aspect_id=cluster.aspect_id, cluster_id=cluster.id
             )
             embedding_ids = [
                 AspectObjectIdentifier(aspect_id=da.aspect_id, sdoc_id=da.sdoc_id)
@@ -1062,238 +1083,246 @@ class TMService:
                 )
             )
 
-            # - Read all topic embeddings, but exclude the topic to remove
-            te_search_result = crud_topic_embedding.find_embeddings_by_aspect_id(
+            # - Read all cluster embeddings, but exclude the cluster to remove
+            te_search_result = crud_cluster_embedding.find_embeddings_by_aspect_id(
                 project_id=aspect.project_id,
-                aspect_id=topic.aspect_id,
+                aspect_id=cluster.aspect_id,
             )
-            topic_embeddings = np.array(
-                [te.embedding for te in te_search_result if te.id.topic_id != topic.id]
+            cluster_embeddings = np.array(
+                [
+                    te.embedding
+                    for te in te_search_result
+                    if te.id.cluster_id != cluster.id
+                ]
             )
-            topic_ids = [
-                te.id.topic_id for te in te_search_result if te.id.topic_id != topic.id
+            cluster_ids = [
+                te.id.cluster_id
+                for te in te_search_result
+                if te.id.cluster_id != cluster.id
             ]
 
-            # - Read the current document-topic assignments (which will be updated)
-            document_topics = crud_document_topic.read_by_aspect_and_topic_id(
-                db=db, aspect_id=topic.aspect_id, topic_id=topic.id
+            # - Read the current document-cluster assignments (which will be updated)
+            document_clusters = crud_document_cluster.read_by_aspect_and_cluster_id(
+                db=db, aspect_id=cluster.aspect_id, cluster_id=cluster.id
             )
 
             assert (
-                len(embedding_ids) == len(document_topics)
-            ), "The number of document aspect embeddings does not match the number of document topics."
+                len(embedding_ids) == len(document_clusters)
+            ), "The number of document aspect embeddings does not match the number of document clusters."
 
             # 1. Document Assignment
-            # - Compute the similarities of the document embeddings to the remaining topic embeddings
+            # - Compute the similarities of the document embeddings to the remaining cluster embeddings
             self._log_status_step(0)
 
-            similarities = document_embeddings @ topic_embeddings.T
+            similarities = document_embeddings @ cluster_embeddings.T
 
-            # - For each document aspect, find the most similar topic embedding and update the document topic assignment
-            modified_topics: Set[int] = set()
-            sdoc_id2new_topic_id: Dict[int, int] = {}
-            sdoc_id2new_topic_distance: Dict[int, float] = {}
+            # - For each document aspect, find the most similar cluster embedding and update the document cluster assignment
+            modified_clusters: Set[int] = set()
+            sdoc_id2new_cluster_id: Dict[int, int] = {}
+            sdoc_id2new_cluster_distance: Dict[int, float] = {}
             for da, similarity in zip(doc_aspects, similarities):
-                most_similar_topic_index = np.argmax(similarity)
-                most_similar_topic_id = topic_ids[most_similar_topic_index]
+                most_similar_cluster_index = np.argmax(similarity)
+                most_similar_cluster_id = cluster_ids[most_similar_cluster_index]
 
-                sdoc_id2new_topic_id[da.sdoc_id] = most_similar_topic_id
-                sdoc_id2new_topic_distance[da.sdoc_id] = (
-                    1.0 - similarity[most_similar_topic_index].item()
+                sdoc_id2new_cluster_id[da.sdoc_id] = most_similar_cluster_id
+                sdoc_id2new_cluster_distance[da.sdoc_id] = (
+                    1.0 - similarity[most_similar_cluster_index].item()
                 )
-                modified_topics.add(most_similar_topic_id)
+                modified_clusters.add(most_similar_cluster_id)
 
-            # - Update the document-topic assignments in the database
-            update_dtos: List[DocumentTopicUpdate] = []
+            # - Update the document-cluster assignments in the database
+            update_dtos: List[DocumentClusterUpdate] = []
             update_ids: List[tuple[int, int]] = []
-            for dt in document_topics:
+            for dt in document_clusters:
                 update_dtos.append(
-                    DocumentTopicUpdate(
-                        topic_id=sdoc_id2new_topic_id[dt.sdoc_id],
-                        distance=sdoc_id2new_topic_distance[dt.sdoc_id],
+                    DocumentClusterUpdate(
+                        cluster_id=sdoc_id2new_cluster_id[dt.sdoc_id],
+                        distance=sdoc_id2new_cluster_distance[dt.sdoc_id],
                         is_accepted=False,  # Reset acceptance status
                     )
                 )
-                update_ids.append((dt.sdoc_id, dt.topic_id))
+                update_ids.append((dt.sdoc_id, dt.cluster_id))
 
             if len(update_dtos) > 0:
-                crud_document_topic.update_multi(
+                crud_document_cluster.update_multi(
                     db=db, ids=update_ids, update_dtos=update_dtos
                 )
                 self._log_status_msg(
-                    f"Updated {len(update_dtos)} document-topic assignments to the most similar topics."
+                    f"Updated {len(update_dtos)} document-cluster assignments to the most similar clusters."
                 )
 
-            # 2. Topic Removal: Remove the topic from the database
+            # 2. Cluster Removal: Remove the cluster from the database
             self._log_status_step(1)
-            crud_topic.remove(db=db, id=params.topic_id)
-            crud_topic_embedding.remove_embedding(
+            crud_cluster.remove(db=db, id=params.cluster_id)
+            crud_cluster_embedding.remove_embedding(
                 project_id=aspect.project_id,
-                id=TopicObjectIdentifier(
+                id=ClusterObjectIdentifier(
                     aspect_id=aspect.id,
-                    topic_id=params.topic_id,
+                    cluster_id=params.cluster_id,
                 ),
             )
 
-            # 3. Topic Extraction: Extract the topics for all affected ones (computing top words, top docs, embedding, etc)
+            # 3. Cluster Extraction: Extract the clusters for all affected ones (computing top words, top docs, embedding, etc)
             self._log_status_step(2)
-            if len(modified_topics) > 0:
+            if len(modified_clusters) > 0:
                 self._log_status_msg(
-                    f"Extracting topics for {len(modified_topics)} modified topics: {modified_topics}."
+                    f"Extracting clusters for {len(modified_clusters)} modified clusters: {modified_clusters}."
                 )
-                self._extract_topics(
+                self._extract_clusters(
                     db=db,
                     aspect_id=aspect.id,
-                    topic_ids=list(modified_topics),
+                    cluster_ids=list(modified_clusters),
                 )
 
-            self._log_status_msg("Successfully removed topic!")
+            self._log_status_msg("Successfully removed cluster!")
 
-    def merge_topics(self, aspect_id: int, params: MergeTopicsParams):
+    def merge_clusters(self, aspect_id: int, params: MergeClustersParams):
         with self.sqls.db_session() as db:
-            # 0. Read the topics to merge
-            topic1 = crud_topic.read(db=db, id=params.topic_to_keep)
-            topic2 = crud_topic.read(db=db, id=params.topic_to_merge)
-            aspect = topic1.aspect
+            # 0. Read the clusters to merge
+            cluster1 = crud_cluster.read(db=db, id=params.cluster_to_keep)
+            cluster2 = crud_cluster.read(db=db, id=params.cluster_to_merge)
+            aspect = cluster1.aspect
             assert (
-                topic1.aspect_id == topic2.aspect_id
-            ), "Cannot merge topics from different aspects."
+                cluster1.aspect_id == cluster2.aspect_id
+            ), "Cannot merge clusters from different aspects."
 
-            # 1. Merge the topics (updating the topic id)
+            # 1. Merge the clusters (updating the cluster id)
             self._log_status_step(0)
-            crud_document_topic.merge_topics(
+            crud_document_cluster.merge_clusters(
                 db=db,
-                topic_to_keep=params.topic_to_keep,
-                topic_to_merge=params.topic_to_merge,
+                cluster_to_keep=params.cluster_to_keep,
+                cluster_to_merge=params.cluster_to_merge,
             )
 
-            # 2. Delete the merged topic from the database
+            # 2. Delete the merged cluster from the database
             self._log_status_step(1)
-            crud_topic.remove(db=db, id=params.topic_to_merge)
-            crud_topic_embedding.remove_embedding(
+            crud_cluster.remove(db=db, id=params.cluster_to_merge)
+            crud_cluster_embedding.remove_embedding(
                 project_id=aspect.project_id,
-                id=TopicObjectIdentifier(
+                id=ClusterObjectIdentifier(
                     aspect_id=aspect.id,
-                    topic_id=params.topic_to_merge,
+                    cluster_id=params.cluster_to_merge,
                 ),
             )
             self._log_status_msg(
-                f"Merged topics {params.topic_to_keep} and {params.topic_to_merge}."
+                f"Merged clusters {params.cluster_to_keep} and {params.cluster_to_merge}."
             )
 
-            # 3. Extract the topics for the remaining topic (computing top words, top docs, embedding, etc)
+            # 3. Extract the clusters for the remaining cluster (computing top words, top docs, embedding, etc)
             self._log_status_step(2)
-            self._extract_topics(
+            self._extract_clusters(
                 db=db,
                 aspect_id=aspect.id,
-                topic_ids=[params.topic_to_keep],
+                cluster_ids=[params.cluster_to_keep],
             )
 
-            self._log_status_msg("Successfully merged topics!")
+            self._log_status_msg("Successfully merged clusters!")
 
-    def split_topic(self, aspect_id: int, params: SplitTopicParams):
+    def split_cluster(self, aspect_id: int, params: SplitClusterParams):
         with self.sqls.db_session() as db:
-            # 0. Read the topic to split
-            topic = crud_topic.read(db=db, id=params.topic_id)
-            aspect = topic.aspect
+            # 0. Read the cluster to split
+            cluster = crud_cluster.read(db=db, id=params.cluster_id)
+            aspect = cluster.aspect
 
-            # 0. Find all sdoc_ids associated with the topic
+            # 0. Find all sdoc_ids associated with the cluster
             sdoc_ids = [
                 da.sdoc_id
-                for da in crud_document_aspect.read_by_aspect_and_topic_id(
-                    db=db, aspect_id=topic.aspect_id, topic_id=topic.id
+                for da in crud_document_aspect.read_by_aspect_and_cluster_id(
+                    db=db, aspect_id=cluster.aspect_id, cluster_id=cluster.id
                 )
             ]
-            assert len(sdoc_ids) > 0, "Cannot split a topic without document aspects."
+            assert len(sdoc_ids) > 0, "Cannot split a cluster without document aspects."
             self._log_status_msg(
-                f"Found {len(sdoc_ids)} source documents associated with topic {params.topic_id}."
+                f"Found {len(sdoc_ids)} source documents associated with cluster {params.cluster_id}."
             )
 
-            # 1. Remove the topic from the database
+            # 1. Remove the cluster from the database
             self._log_status_step(0)
-            crud_topic.remove(db=db, id=params.topic_id)
-            crud_topic_embedding.remove_embedding(
+            crud_cluster.remove(db=db, id=params.cluster_id)
+            crud_cluster_embedding.remove_embedding(
                 project_id=aspect.project_id,
-                id=TopicObjectIdentifier(
+                id=ClusterObjectIdentifier(
                     aspect_id=aspect.id,
-                    topic_id=params.topic_id,
+                    cluster_id=params.cluster_id,
                 ),
             )
-            self._log_status_msg(f"Removed topic {params.topic_id} from the database.")
+            self._log_status_msg(
+                f"Removed cluster {params.cluster_id} from the database."
+            )
 
-            # 2. Cluster the documents, creating new topics and assigning them to the documents
+            # 2. Cluster the documents, creating new clusters and assigning them to the documents
             self._log_status_step(1)
-            created_topic_ids = self._cluster_documents(
+            created_cluster_ids = self._cluster_documents(
                 db=db,
                 aspect_id=aspect.id,
                 sdoc_ids=sdoc_ids,  # TODO: could be optimized by providing the document aspects directly
                 num_clusters=None,
             )
 
-            # 3. Extract the topics
+            # 3. Extract the clusters
             self._log_status_step(2)
-            self._extract_topics(
+            self._extract_clusters(
                 db=db,
                 aspect_id=aspect.id,
-                topic_ids=created_topic_ids,
+                cluster_ids=created_cluster_ids,
             )
 
-            self._log_status_msg("Successfully split topic!")
+            self._log_status_msg("Successfully split cluster!")
 
-    def change_topic(self, aspect_id: int, params: ChangeTopicParams):
+    def change_cluster(self, aspect_id: int, params: ChangeClusterParams):
         with self.sqls.db_session() as db:
-            # 0. Read the topic to change to
-            if params.topic_id == -1:
-                topic = crud_topic.read_or_create_outlier_topic(
+            # 0. Read the cluster to change to
+            if params.cluster_id == -1:
+                cluster = crud_cluster.read_or_create_outlier_cluster(
                     db=db, aspect_id=aspect_id, level=0
                 )
-                topic_id = topic.id
+                cluster_id = cluster.id
             else:
-                topic = crud_topic.read(db=db, id=params.topic_id)
-                topic_id = topic.id
+                cluster = crud_cluster.read(db=db, id=params.cluster_id)
+                cluster_id = cluster.id
 
-            # Read the current document <-> topic assignments
-            document_topics = crud_document_topic.read_by_aspect(
+            # Read the current document <-> cluster assignments
+            document_clusters = crud_document_cluster.read_by_aspect(
                 db=db, aspect_id=aspect_id
             )
-            doc2topic: Dict[int, DocumentTopicORM] = {
-                dt.sdoc_id: dt for dt in document_topics
+            doc2cluster: Dict[int, DocumentClusterORM] = {
+                dt.sdoc_id: dt for dt in document_clusters
             }
 
             # 1. Document assignment
-            # - Assign the new topic to the given source documents
+            # - Assign the new cluster to the given source documents
             self._log_status_step(0)
             self._log_status_msg(
-                f"Assigning the topic '{topic.name}' to {len(params.sdoc_ids)} documents..."
+                f"Assigning the cluster '{cluster.name}' to {len(params.sdoc_ids)} documents..."
             )
-            # track the changes/affected topics!
-            modified_topics: Set[int] = set(
-                [doc2topic[sdoc_id].topic_id for sdoc_id in params.sdoc_ids]
+            # track the changes/affected clusters!
+            modified_clusters: Set[int] = set(
+                [doc2cluster[sdoc_id].cluster_id for sdoc_id in params.sdoc_ids]
             )
-            modified_topics.add(topic_id)
-            # assign the topic to the source documents
-            crud_document_topic.set_labels2(
+            modified_clusters.add(cluster_id)
+            # assign the cluster to the source documents
+            crud_document_cluster.set_labels2(
                 db=db,
                 aspect_id=aspect_id,
-                topic_id=topic.id,
+                cluster_id=cluster.id,
                 sdoc_ids=params.sdoc_ids,
                 is_accepted=True,
             )
 
-            # 2. Topic Extraction
-            # - Extract the topics for all affected ones (computing top words, top docs, embedding, etc)
+            # 2. Cluster Extraction
+            # - Extract the clusters for all affected ones (computing top words, top docs, embedding, etc)
             self._log_status_step(1)
-            if len(modified_topics) > 0:
+            if len(modified_clusters) > 0:
                 self._log_status_msg(
-                    f"Extracting topics for {len(modified_topics)} modified topics: {modified_topics}."
+                    f"Extracting clusters for {len(modified_clusters)} modified clusters: {modified_clusters}."
                 )
-                self._extract_topics(
+                self._extract_clusters(
                     db=db,
                     aspect_id=aspect_id,
-                    topic_ids=list(modified_topics),
+                    cluster_ids=list(modified_clusters),
                 )
 
-            self._log_status_msg("Successfully changed topic!")
+            self._log_status_msg("Successfully changed cluster!")
 
     def __build_training_data(
         self,
@@ -1303,11 +1332,11 @@ class TMService:
         # Read the aspect
         aspect = crud_aspect.read(db=db, id=aspect_id)
 
-        # Read all topics
-        all_topics = crud_topic.read_by_aspect_and_level(
+        # Read all clusters
+        all_clusters = crud_cluster.read_by_aspect_and_level(
             db=db, aspect_id=aspect.id, level=0
         )
-        topic2accepted_docs: Dict[int, List[int]] = {t.id: [] for t in all_topics}
+        cluster2accepted_docs: Dict[int, List[int]] = {t.id: [] for t in all_clusters}
 
         # Read the document aspects
         doc_aspects = aspect.document_aspects
@@ -1315,37 +1344,39 @@ class TMService:
             da.sdoc_id: da for da in doc_aspects
         }
 
-        # Read the current document <-> topic assignments
-        document_topics = crud_document_topic.read_by_aspect(db=db, aspect_id=aspect.id)
-        for dt in document_topics:
+        # Read the current document <-> cluster assignments
+        document_clusters = crud_document_cluster.read_by_aspect(
+            db=db, aspect_id=aspect.id
+        )
+        for dt in document_clusters:
             if dt.is_accepted:
-                topic2accepted_docs[dt.topic_id].append(dt.sdoc_id)
+                cluster2accepted_docs[dt.cluster_id].append(dt.sdoc_id)
 
         # Build training_data
         train_labels: List[str] = []
         train_docs: List[str] = []
         train_doc_ids: List[int] = []
-        for topic in all_topics:
-            if topic.is_outlier:
+        for cluster in all_clusters:
+            if cluster.is_outlier:
                 continue
 
-            accepted_sdoc_ids = topic2accepted_docs[topic.id]
+            accepted_sdoc_ids = cluster2accepted_docs[cluster.id]
             if len(accepted_sdoc_ids) == 0:
                 # If there are no accepted documents, use the top documents
                 assert (
-                    topic.top_docs is not None
-                ), f"Topic {topic.id} has no accepted documents, but top_docs is not None."
-                accepted_sdoc_ids = topic.top_docs
+                    cluster.top_docs is not None
+                ), f"Cluster {cluster.id} has no accepted documents, but top_docs is not None."
+                accepted_sdoc_ids = cluster.top_docs
 
             for sdoc_id in accepted_sdoc_ids:
                 da = sdoc_id2doc_aspect[sdoc_id]
                 train_docs.append(da.content)
-                train_labels.append(f"{topic.id}")
+                train_labels.append(f"{cluster.id}")
                 train_doc_ids.append(da.sdoc_id)
 
         return train_docs, train_labels, train_doc_ids
 
-    def refine_topic_model(self, aspect_id: int, params: RefineTopicModelParams):
+    def refine_cluster_model(self, aspect_id: int, params: RefineModelParams):
         with self.sqls.db_session() as db:
             # Update the model name, so that a new model is trained
             aspect = crud_aspect.read(db=db, id=aspect_id)
@@ -1369,7 +1400,7 @@ class TMService:
             # 2. Embed the documents (training the model)
             self._log_status_step(1)
             self._log_status_msg(
-                f"Refining topic model for aspect {aspect_id} with model {model_name}."
+                f"Refining cluster model for aspect {aspect_id} with model {model_name}."
             )
             self._embed_documents(
                 db=db,
@@ -1386,18 +1417,18 @@ class TMService:
                 sdoc_ids=None,
                 num_clusters=None,
                 train_doc_ids=train_doc_ids,
-                train_topic_ids=[int(tl) for tl in train_labels],
+                train_cluster_ids=[int(tl) for tl in train_labels],
             )
 
-            # 4. Extract the topics
+            # 4. Extract the clusters
             self._log_status_step(3)
-            self._extract_topics(
+            self._extract_clusters(
                 db=db,
                 aspect_id=aspect_id,
-                topic_ids=None,
+                cluster_ids=None,
             )
 
             self._log_status_msg("Successfully refined map!")
 
-    def reset_topic_model(self, aspect_id: int, params: ResetTopicModelParams):
+    def reset_cluster_model(self, aspect_id: int, params: ResetModelParams):
         pass

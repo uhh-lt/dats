@@ -2,16 +2,16 @@ from typing import List
 
 from pydantic import BaseModel, Field
 
-from app.core.data.dto.topic import TopicRead
+from app.core.data.dto.cluster import ClusterRead
 
 
-class TMDoc(BaseModel):
+class PerspectivesDoc(BaseModel):
     sdoc_id: int = Field(description="ID of the source document")
-    topic_id: int = Field(description="ID of the topic this document belongs to")
+    cluster_id: int = Field(description="ID of the cluster this document belongs to")
     x: float = Field(description="X coordinate of the document in the visualization")
     y: float = Field(description="Y coordinate of the document in the visualization")
     is_accepted: bool = Field(
-        description="Indicates whether the document<->topic assignment is accepted by a user",
+        description="Indicates whether the document<->cluster assignment is accepted by a user",
     )
     in_searchresult: bool = Field(
         description="Indicates whether the document is part of the search result",
@@ -21,17 +21,21 @@ class TMDoc(BaseModel):
     )
 
 
-class TMVisualization(BaseModel):
+class PerspectivesVisualization(BaseModel):
     aspect_id: int = Field(description="ID of the aspect this visualization belongs to")
-    topics: List[TopicRead] = Field(description="List of topics in the visualization")
-    docs: List[TMDoc] = Field(
+    clusters: List[ClusterRead] = Field(
+        description="List of clusters in the visualization"
+    )
+    docs: List[PerspectivesDoc] = Field(
         description="List of documents in the visualization",
     )
 
 
-class TMTopicSimilarities(BaseModel):
+class PerspectivesClusterSimilarities(BaseModel):
     aspect_id: int = Field(description="ID of the aspect this visualization belongs to")
-    topics: List[TopicRead] = Field(description="List of topics in the visualization")
+    clusters: List[ClusterRead] = Field(
+        description="List of clusters in the visualization"
+    )
     similarities: List[List[float]] = Field(
-        description="Matrix of topic similarities, where similarities[i][j] is the similarity between topics[i] and topics[j]",
+        description="Matrix of cluster similarities, where similarities[i][j] is the similarity between clusters[i] and clusters[j]",
     )

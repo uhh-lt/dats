@@ -6,10 +6,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
+    from app.core.data.orm.cluster import ClusterORM
     from app.core.data.orm.document_aspect import DocumentAspectORM
     from app.core.data.orm.project import ProjectORM
     from app.core.data.orm.source_document import SourceDocumentORM
-    from app.core.data.orm.topic import TopicORM
 
 
 class AspectORM(ORMBase):
@@ -36,8 +36,8 @@ class AspectORM(ORMBase):
     project: Mapped["ProjectORM"] = relationship("ProjectORM", back_populates="aspects")
 
     # one to many
-    topics: Mapped[List["TopicORM"]] = relationship(
-        "TopicORM", back_populates="aspect", cascade="all, delete-orphan"
+    clusters: Mapped[List["ClusterORM"]] = relationship(
+        "ClusterORM", back_populates="aspect", cascade="all, delete-orphan"
     )
 
     # many to many

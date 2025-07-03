@@ -7,9 +7,9 @@ from app.core.data.dto.document_aspect import (
     DocumentAspectCreate,
     DocumentAspectUpdate,
 )
+from app.core.data.orm.cluster import ClusterORM
 from app.core.data.orm.document_aspect import DocumentAspectORM
-from app.core.data.orm.document_topic import DocumentTopicORM
-from app.core.data.orm.topic import TopicORM
+from app.core.data.orm.document_cluster import DocumentClusterORM
 
 
 class CRUDDocumentAspect(
@@ -58,43 +58,43 @@ class CRUDDocumentAspect(
             .all()
         )
 
-    def read_by_aspect_and_topic_id(
-        self, db, *, aspect_id: int, topic_id: int
+    def read_by_aspect_and_cluster_id(
+        self, db, *, aspect_id: int, cluster_id: int
     ) -> list[DocumentAspectORM]:
         return (
             db.query(self.model)
-            .join(DocumentTopicORM, DocumentTopicORM.sdoc_id == self.model.sdoc_id)
+            .join(DocumentClusterORM, DocumentClusterORM.sdoc_id == self.model.sdoc_id)
             .filter(
                 self.model.aspect_id == aspect_id,
-                DocumentTopicORM.topic_id == topic_id,
+                DocumentClusterORM.cluster_id == cluster_id,
             )
             .all()
         )
 
-    def read_by_aspect_and_topic_ids(
-        self, db, *, aspect_id: int, topic_ids: list[int]
+    def read_by_aspect_and_cluster_ids(
+        self, db, *, aspect_id: int, cluster_ids: list[int]
     ) -> tuple[list[DocumentAspectORM], list[int]]:
         query = (
-            db.query(self.model, DocumentTopicORM.topic_id)
-            .join(DocumentTopicORM, DocumentTopicORM.sdoc_id == self.model.sdoc_id)
+            db.query(self.model, DocumentClusterORM.cluster_id)
+            .join(DocumentClusterORM, DocumentClusterORM.sdoc_id == self.model.sdoc_id)
             .filter(
                 self.model.aspect_id == aspect_id,
-                DocumentTopicORM.topic_id.in_(topic_ids),
+                DocumentClusterORM.cluster_id.in_(cluster_ids),
             )
             .all()
         )
         return zip(*query) if query else ([], [])  # type: ignore
 
-    def read_all_with_topics_of_level(
+    def read_all_with_clusters_of_level(
         self, db, *, aspect_id: int, level: int
     ) -> list[DocumentAspectORM]:
         return (
             db.query(self.model)
-            .join(DocumentTopicORM, DocumentTopicORM.sdoc_id == self.model.sdoc_id)
-            .join(TopicORM, TopicORM.id == DocumentTopicORM.topic_id)
+            .join(DocumentClusterORM, DocumentClusterORM.sdoc_id == self.model.sdoc_id)
+            .join(ClusterORM, ClusterORM.id == DocumentClusterORM.cluster_id)
             .filter(
-                TopicORM.aspect_id == aspect_id,
-                TopicORM.level == level,
+                ClusterORM.aspect_id == aspect_id,
+                ClusterORM.level == level,
             )
             .all()
         )

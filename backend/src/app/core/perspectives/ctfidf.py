@@ -38,7 +38,7 @@ class ClassTfidfTransformer(TfidfTransformer):
     transformer = ClassTfidfTransformer()
     ```
 
-    Copied from: https://github.com/MaartenGr/BERTopic/blob/master/bertopic/vectorizers/_ctfidf.py
+    Copied from: https://github.com/MaartenGr/BERCluster/blob/master/bercluster/vectorizers/_ctfidf.py
     """
 
     def __init__(

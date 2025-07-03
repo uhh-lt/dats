@@ -6,20 +6,20 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
+    from app.core.data.orm.cluster import ClusterORM
     from app.core.data.orm.source_document import SourceDocumentORM
-    from app.core.data.orm.topic import TopicORM
 
 
-class DocumentTopicORM(ORMBase):
+class DocumentClusterORM(ORMBase):
     sdoc_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("sourcedocument.id", ondelete="CASCADE"),
         primary_key=True,
         index=True,
     )
-    topic_id: Mapped[int] = mapped_column(
+    cluster_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("topic.id", ondelete="CASCADE"),
+        ForeignKey("cluster.id", ondelete="CASCADE"),
         primary_key=True,
         index=True,
     )
@@ -30,12 +30,12 @@ class DocumentTopicORM(ORMBase):
     # many to one
     source_document: Mapped["SourceDocumentORM"] = relationship(
         "SourceDocumentORM",
-        back_populates="document_topics",
+        back_populates="document_clusters",
     )
-    topic: Mapped["TopicORM"] = relationship(
-        "TopicORM",
-        back_populates="document_topics",
+    cluster: Mapped["ClusterORM"] = relationship(
+        "ClusterORM",
+        back_populates="document_clusters",
     )
 
     def __repr__(self) -> str:
-        return f"<DocumentTopicORM(sdoc_id={self.sdoc_id}, topic_id={self.topic_id}, is_accepted={self.is_accepted})>"
+        return f"<DocumentClusterORM(sdoc_id={self.sdoc_id}, cluster_id={self.cluster_id}, is_accepted={self.is_accepted})>"

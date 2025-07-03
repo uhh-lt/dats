@@ -1,13 +1,13 @@
 from typing import Dict, List
 
 import numpy as np
-from app.celery.background_jobs import prepare_and_start_tm_job_async
+from app.celery.background_jobs import prepare_and_start_perspectives_job_async
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.aspect import crud_aspect
+from app.core.data.crud.cluster import crud_cluster
 from app.core.data.crud.document_aspect import crud_document_aspect
-from app.core.data.crud.document_topic import crud_document_topic
-from app.core.data.crud.topic import crud_topic
+from app.core.data.crud.document_cluster import crud_document_cluster
 from app.core.data.dto.aspect import (
     AspectCreate,
     AspectRead,
@@ -15,32 +15,36 @@ from app.core.data.dto.aspect import (
     AspectUpdateIntern,
 )
 from app.core.data.dto.background_job_base import BackgroundJobStatus
-from app.core.data.dto.tm_vis import TMDoc, TMTopicSimilarities, TMVisualization
-from app.core.data.dto.topic import TopicRead
+from app.core.data.dto.cluster import ClusterRead
+from app.core.data.dto.perspectives_vis import (
+    PerspectivesClusterSimilarities,
+    PerspectivesDoc,
+    PerspectivesVisualization,
+)
+from app.core.perspectives.perspectives_job import (
+    CreateAspectParams,
+    PerspectivesJobParamsNoCreate,
+    PerspectivesJobRead,
+)
+from app.core.perspectives.perspectives_job_service import PerspectivesJobService
 from app.core.search.filtering import Filter
 from app.core.search.sdoc_search import sdoc_search
 from app.core.search.sdoc_search.sdoc_search_columns import SdocColumns
 from app.core.search.sorting import Sort
-from app.core.topicmodel.tm_job import (
-    CreateAspectParams,
-    TMJobParamsNoCreate,
-    TMJobRead,
-)
-from app.core.topicmodel.tm_job_service import TMJobService
 from app.core.vector.crud.aspect_embedding import crud_aspect_embedding
-from app.core.vector.crud.topic_embedding import crud_topic_embedding
-from app.core.vector.dto.topic_embedding import TopicObjectIdentifier
+from app.core.vector.crud.cluster_embedding import crud_cluster_embedding
+from app.core.vector.dto.cluster_embedding import ClusterObjectIdentifier
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
 
-tmjs = TMJobService()
+tmjs = PerspectivesJobService()
 
 router = APIRouter(
-    prefix="/topic_model",
+    prefix="/cluster_model",
     dependencies=[Depends(get_current_user)],
-    tags=["topic_model"],
+    tags=["cluster_model"],
 )
 
 # --- START JOBS --- #
@@ -48,35 +52,37 @@ router = APIRouter(
 
 @router.post(
     "/job/{aspect_id}",
-    response_model=TMJobRead,
-    summary="Starts the TMJob for the given Parameters. If a job is already running, this will raise an error.",
+    response_model=PerspectivesJobRead,
+    summary="Starts the PerspectivesJob for the given Parameters. If a job is already running, this will raise an error.",
 )
-def start_tm_job(
+def start_perspectives_job(
     *,
     db: Session = Depends(get_db_session),
     aspect_id: int,
-    tm_job_params: TMJobParamsNoCreate,
+    perspectives_job_params: PerspectivesJobParamsNoCreate,
     authz_user: AuthzUser = Depends(),
-) -> TMJobRead:
+) -> PerspectivesJobRead:
     authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
 
     aspect = crud_aspect.read(db=db, id=aspect_id)
 
     # Check if there is a job running already for this aspect
     if aspect.most_recent_job_id:
-        most_recent_job = tmjs.get_tm_job(aspect.most_recent_job_id)
+        most_recent_job = tmjs.get_perspectives_job(aspect.most_recent_job_id)
         if most_recent_job and most_recent_job.status not in [
             BackgroundJobStatus.ABORTED,
             BackgroundJobStatus.ERROR,
             BackgroundJobStatus.FINISHED,
         ]:
             raise Exception(
-                f"TMJob {most_recent_job.id} is still running. Please wait until it is finished."
+                f"PerspectivesJob {most_recent_job.id} is still running. Please wait until it is finished."
             )
 
     # No job running, so we can start a new one
-    tm_job = prepare_and_start_tm_job_async(
-        project_id=aspect.project_id, aspect_id=aspect_id, tm_job_params=tm_job_params
+    perspectives_job = prepare_and_start_perspectives_job_async(
+        project_id=aspect.project_id,
+        aspect_id=aspect_id,
+        perspectives_job_params=perspectives_job_params,
     )
 
     # Update the aspect with the new job ID
@@ -84,25 +90,25 @@ def start_tm_job(
         db=db,
         id=aspect.id,
         update_dto=AspectUpdateIntern(
-            most_recent_job_id=tm_job.id,
+            most_recent_job_id=perspectives_job.id,
         ),
     )
 
-    return tm_job
+    return perspectives_job
 
 
 @router.get(
-    "/job/{tm_job_id}",
-    response_model=TMJobRead,
-    summary="Returns the TMJob for the given ID if it exists",
+    "/job/{perspectives_job_id}",
+    response_model=PerspectivesJobRead,
+    summary="Returns the PerspectivesJob for the given ID if it exists",
 )
-def get_tm_job(
+def get_perspectives_job(
     *,
     db: Session = Depends(get_db_session),
-    tm_job_id: str,
+    perspectives_job_id: str,
     authz_user: AuthzUser = Depends(),
-) -> TMJobRead:
-    job = tmjs.get_tm_job(tm_job_id)
+) -> PerspectivesJobRead:
+    job = tmjs.get_perspectives_job(perspectives_job_id)
     authz_user.assert_in_project(job.project_id)
     return job
 
@@ -124,16 +130,16 @@ def create_aspect(
     authz_user.assert_in_project(aspect.project_id)
 
     db_aspect = crud_aspect.create(db=db, create_dto=aspect)
-    tm_job = prepare_and_start_tm_job_async(
+    perspectives_job = prepare_and_start_perspectives_job_async(
         project_id=aspect.project_id,
         aspect_id=db_aspect.id,
-        tm_job_params=CreateAspectParams(),
+        perspectives_job_params=CreateAspectParams(),
     )
     db_aspect = crud_aspect.update(
         db=db,
         id=db_aspect.id,
         update_dto=AspectUpdateIntern(
-            most_recent_job_id=tm_job.id,
+            most_recent_job_id=perspectives_job.id,
         ),
     )
 
@@ -209,7 +215,7 @@ def remove_aspect_by_id(
 
     aspect = crud_aspect.read(db=db, id=aspect_id)
 
-    crud_topic_embedding.remove_embeddings_by_aspect(
+    crud_cluster_embedding.remove_embeddings_by_aspect(
         project_id=aspect.project_id, aspect_id=aspect_id
     )
     crud_aspect_embedding.remove_embeddings_by_aspect(
@@ -235,7 +241,7 @@ def accept_label(
     authz_user: AuthzUser = Depends(),
 ) -> int:
     authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
-    return crud_document_topic.set_labels(
+    return crud_document_cluster.set_labels(
         db=db,
         aspect_id=aspect_id,
         sdoc_ids=sdoc_ids,
@@ -256,7 +262,7 @@ def revert_label(
     authz_user: AuthzUser = Depends(),
 ) -> int:
     authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
-    return crud_document_topic.set_labels(
+    return crud_document_cluster.set_labels(
         db=db,
         aspect_id=aspect_id,
         sdoc_ids=sdoc_ids,
@@ -269,7 +275,7 @@ def revert_label(
 
 @router.post(
     "/visualize_documents/{aspect_id}",
-    response_model=TMVisualization,
+    response_model=PerspectivesVisualization,
     summary="Returns data for visualizing the documents of the given aspect.",
 )
 def visualize_documents(
@@ -280,7 +286,7 @@ def visualize_documents(
     filter: Filter[SdocColumns],
     sorts: List[Sort[SdocColumns]],
     authz_user: AuthzUser = Depends(),
-) -> TMVisualization:
+) -> PerspectivesVisualization:
     authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
 
     # Fetch data for visualization
@@ -289,22 +295,22 @@ def visualize_documents(
 
     # If a job is in progress, return early with empty visualization
     if aspect.most_recent_job_id:
-        most_recent_job = tmjs.get_tm_job(aspect.most_recent_job_id)
+        most_recent_job = tmjs.get_perspectives_job(aspect.most_recent_job_id)
         if most_recent_job and most_recent_job.status != BackgroundJobStatus.FINISHED:
-            return TMVisualization(
+            return PerspectivesVisualization(
                 aspect_id=aspect.id,
-                topics=[],
+                clusters=[],
                 docs=[],
             )
 
     # Color by
-    topics = aspect.topics
-    document_topics = crud_document_topic.read_by_aspect(db=db, aspect_id=aspect_id)
-    sdoc_id2dt = {dt.sdoc_id: dt for dt in document_topics}
-    topic_id2topic = {t.id: t for t in topics}
-    assert len(document_aspects) == len(
-        document_topics
-    ), "The number of DocumentAspects and DocumentTopics must match for visualization."
+    clusters = aspect.clusters
+    document_clusters = crud_document_cluster.read_by_aspect(db=db, aspect_id=aspect_id)
+    sdoc_id2dt = {dt.sdoc_id: dt for dt in document_clusters}
+    cluster_id2cluster = {t.id: t for t in clusters}
+    assert (
+        len(document_aspects) == len(document_clusters)
+    ), "The number of DocumentAspects and DocumentClusters must match for visualization."
 
     # Search documents
     sdoc_id_in_search_result: Dict[int, bool]
@@ -320,98 +326,111 @@ def visualize_documents(
             page_size=None,
         )
         sdoc_id_in_search_result: Dict[int, bool] = {hit.id: True for hit in hits.hits}
-        docs: List[TMDoc] = []
+        docs: List[PerspectivesDoc] = []
         for doc in document_aspects:
             dt = sdoc_id2dt[doc.sdoc_id]
-            topic_id2topic[dt.topic_id]
+            cluster_id2cluster[dt.cluster_id]
             docs.append(
-                TMDoc(
+                PerspectivesDoc(
                     sdoc_id=doc.sdoc_id,
-                    topic_id=dt.topic_id,
+                    cluster_id=dt.cluster_id,
                     is_accepted=dt.is_accepted,
                     in_searchresult=sdoc_id_in_search_result.get(doc.sdoc_id, False),
-                    is_outlier=topic_id2topic[dt.topic_id].is_outlier,
+                    is_outlier=cluster_id2cluster[dt.cluster_id].is_outlier,
                     x=doc.x,
                     y=doc.y,
                 )
             )
     else:
-        docs: List[TMDoc] = []
+        docs: List[PerspectivesDoc] = []
         for doc in document_aspects:
             dt = sdoc_id2dt[doc.sdoc_id]
-            topic_id2topic[dt.topic_id]
+            cluster_id2cluster[dt.cluster_id]
             docs.append(
-                TMDoc(
+                PerspectivesDoc(
                     sdoc_id=doc.sdoc_id,
-                    topic_id=dt.topic_id,
+                    cluster_id=dt.cluster_id,
                     is_accepted=dt.is_accepted,
                     in_searchresult=True,
-                    is_outlier=topic_id2topic[dt.topic_id].is_outlier,
+                    is_outlier=cluster_id2cluster[dt.cluster_id].is_outlier,
                     x=doc.x,
                     y=doc.y,
                 )
             )
 
-    return TMVisualization(
+    filtered_clusters = [
+        cluster
+        for cluster in clusters
+        if not np.isnan(cluster.x)
+        and not np.isinf(cluster.x)
+        and not np.isnan(cluster.y)
+        and not np.isinf(cluster.y)
+    ]
+
+    print(
+        f"Filtered {len(filtered_clusters)} clusters from {len(clusters)} total clusters."
+    )
+
+    return PerspectivesVisualization(
         aspect_id=aspect.id,
-        topics=[TopicRead.model_validate(t) for t in topics],
+        clusters=[ClusterRead.model_validate(t) for t in filtered_clusters],
         docs=docs,
     )
 
 
 @router.get(
-    "/topic_similarities/{aspect_id}",
-    response_model=TMTopicSimilarities,
-    summary="Returns data for visualizing the topic similarities of the given aspect.",
+    "/cluster_similarities/{aspect_id}",
+    response_model=PerspectivesClusterSimilarities,
+    summary="Returns data for visualizing the cluster similarities of the given aspect.",
 )
-def get_topic_similarities(
+def get_cluster_similarities(
     *,
     db: Session = Depends(get_db_session),
     aspect_id: int,
     authz_user: AuthzUser = Depends(),
-) -> TMTopicSimilarities:
+) -> PerspectivesClusterSimilarities:
     authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
 
-    # Fetch the topics for the given Aspect
+    # Fetch the clusters for the given Aspect
     aspect = crud_aspect.read(db=db, id=aspect_id)
-    topics = aspect.topics
+    clusters = aspect.clusters
 
-    if len(topics) == 0:
-        return TMTopicSimilarities(
+    if len(clusters) == 0:
+        return PerspectivesClusterSimilarities(
             aspect_id=aspect_id,
-            topics=[],
+            clusters=[],
             similarities=[],
         )
 
-    # Fetch the topic embeddings
-    topic_embeddings = crud_topic_embedding.get_embeddings(
+    # Fetch the cluster embeddings
+    cluster_embeddings = crud_cluster_embedding.get_embeddings(
         project_id=aspect.project_id,
         ids=[
-            TopicObjectIdentifier(
+            ClusterObjectIdentifier(
                 aspect_id=aspect_id,
-                topic_id=topic.id,
+                cluster_id=cluster.id,
             )
-            for topic in topics
+            for cluster in clusters
         ],
     )
 
     # Compute similarities
-    t_arr = np.array(topic_embeddings)
+    t_arr = np.array(cluster_embeddings)
     similarities = np.dot(t_arr, t_arr.T).tolist()
 
-    return TMTopicSimilarities(
+    return PerspectivesClusterSimilarities(
         aspect_id=aspect_id,
-        topics=[TopicRead.model_validate(t) for t in topics],
+        clusters=[ClusterRead.model_validate(t) for t in clusters],
         similarities=similarities,
     )
 
 
 @router.get(
-    "/visualize_topics/{aspect_id}",
+    "/visualize_clusters/{aspect_id}",
     response_model=AspectRead,
-    summary="Returns data for visualizing the topics of the given aspect.",
+    summary="Returns data for visualizing the clusters of the given aspect.",
 )
-def visualize_topics(
+def visualize_clusters(
     *,
     db: Session = Depends(get_db_session),
     aspect_id: int,
@@ -420,25 +439,25 @@ def visualize_topics(
     authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
 
     # TODO: implement
-    raise NotImplementedError("visualize_topics not implemented yet")
+    raise NotImplementedError("visualize_clusters not implemented yet")
 
 
 @router.get(
-    "/topics/{aspect_id}/sdoc/{sdoc_id}",
-    response_model=list[TopicRead],
-    summary="Returns the topics for the given SourceDocument (sdoc_id) in the specified Aspect (aspect_id).",
+    "/clusters/{aspect_id}/sdoc/{sdoc_id}",
+    response_model=list[ClusterRead],
+    summary="Returns the clusters for the given SourceDocument (sdoc_id) in the specified Aspect (aspect_id).",
 )
-def get_topics_for_sdoc(
+def get_clusters_for_sdoc(
     *,
     db: Session = Depends(get_db_session),
     aspect_id: int,
     sdoc_id: int,
     authz_user: AuthzUser = Depends(),
-) -> list[TopicRead]:
+) -> list[ClusterRead]:
     authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
 
-    # Fetch the topics for the given SourceDocument
-    document_topics = crud_topic.read_by_aspect_and_sdoc(
+    # Fetch the clusters for the given SourceDocument
+    document_clusters = crud_cluster.read_by_aspect_and_sdoc(
         db=db, aspect_id=aspect_id, sdoc_id=sdoc_id
     )
-    return [TopicRead.model_validate(dt) for dt in document_topics]
+    return [ClusterRead.model_validate(dt) for dt in document_clusters]

@@ -106,7 +106,7 @@ redis:
     llm: 6
     import_: 7
     ml: 8
-    tm: 9
+    perspectives: 9
 
 logging:
   max_file_size: 500 # MB

@@ -1,9 +1,9 @@
 import weaviate
 from app.core.vector.collections.aspect_collection import AspectCollection
+from app.core.vector.collections.cluster_collection import ClusterCollection
 from app.core.vector.collections.document_collection import DocumentCollection
 from app.core.vector.collections.image_collection import ImageCollection
 from app.core.vector.collections.sentence_collection import SentenceCollection
-from app.core.vector.collections.topic_collection import TopicCollection
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 from loguru import logger
@@ -38,7 +38,7 @@ class WeaviateService(metaclass=SingletonMeta):
             SentenceCollection.create_collection(cls.client)
             ImageCollection.create_collection(cls.client)
             AspectCollection.create_collection(cls.client)
-            TopicCollection.create_collection(cls.client)
+            ClusterCollection.create_collection(cls.client)
 
             return super(WeaviateService, cls).__new__(cls)
 

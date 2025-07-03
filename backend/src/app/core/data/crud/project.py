@@ -17,10 +17,10 @@ from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.user import UserORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.vector.crud.aspect_embedding import crud_aspect_embedding
+from app.core.vector.crud.cluster_embedding import crud_cluster_embedding
 from app.core.vector.crud.document_embedding import crud_document_embedding
 from app.core.vector.crud.image_embedding import crud_image_embedding
 from app.core.vector.crud.sentence_embedding import crud_sentence_embedding
-from app.core.vector.crud.topic_embedding import crud_topic_embedding
 
 
 class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
@@ -66,7 +66,7 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         crud_document_embedding.remove_embeddings_by_project(project_id=id)
         crud_image_embedding.remove_embeddings_by_project(project_id=id)
         crud_sentence_embedding.remove_embeddings_by_project(project_id=id)
-        crud_topic_embedding.remove_embeddings_by_project(project_id=id)
+        crud_cluster_embedding.remove_embeddings_by_project(project_id=id)
         crud_aspect_embedding.remove_embeddings_by_project(project_id=id)
 
         return proj_db_obj

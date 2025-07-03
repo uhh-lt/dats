@@ -1,18 +1,18 @@
-from app.core.vector.collections.topic_collection import TopicCollection
+from app.core.vector.collections.cluster_collection import ClusterCollection
 from app.core.vector.crud.crud_base import CRUDBase
-from app.core.vector.dto.topic_embedding import TopicObjectIdentifier
+from app.core.vector.dto.cluster_embedding import ClusterObjectIdentifier
 from app.core.vector.weaviate_service import WeaviateService
 from weaviate.classes.query import Filter
 
 
-class CRUDTopicEmbedding(CRUDBase[TopicObjectIdentifier, TopicCollection]):
+class CRUDClusterEmbedding(CRUDBase[ClusterObjectIdentifier, ClusterCollection]):
     """
-    CRUD operations for topic embeddings in Weaviate
+    CRUD operations for cluster embeddings in Weaviate
     """
 
     def remove_embeddings_by_aspect(self, project_id: int, aspect_id: int) -> None:
         """
-        Remove all topic embeddings of a certain Aspect from Weaviate
+        Remove all cluster embeddings of a certain Aspect from Weaviate
         :param project_id: The project ID
         :param aspect_id: The Aspect ID
         """
@@ -39,8 +39,8 @@ class CRUDTopicEmbedding(CRUDBase[TopicObjectIdentifier, TopicCollection]):
 
 
 client = WeaviateService().get_client()
-crud_topic_embedding = CRUDTopicEmbedding(
+crud_cluster_embedding = CRUDClusterEmbedding(
     client=client,
-    collection_class=TopicCollection,
-    object_identifier=TopicObjectIdentifier,
+    collection_class=ClusterCollection,
+    object_identifier=ClusterObjectIdentifier,
 )

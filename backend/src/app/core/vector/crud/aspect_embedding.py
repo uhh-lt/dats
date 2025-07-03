@@ -44,7 +44,7 @@ class CRUDAspectEmbedding(CRUDBase[AspectObjectIdentifier, AspectCollection]):
 
     def remove_embeddings_by_aspect(self, project_id: int, aspect_id: int) -> None:
         """
-        Remove all topic embeddings of a certain Aspect from Weaviate
+        Remove all cluster embeddings of a certain Aspect from Weaviate
         :param project_id: The project ID
         :param aspect_id: The Aspect ID
         """

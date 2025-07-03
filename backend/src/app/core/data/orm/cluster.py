@@ -7,11 +7,11 @@ from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from app.core.data.orm.aspect import AspectORM
-    from app.core.data.orm.document_topic import DocumentTopicORM
+    from app.core.data.orm.document_cluster import DocumentClusterORM
     from app.core.data.orm.source_document import SourceDocumentORM
 
 
-class TopicORM(ORMBase):
+class ClusterORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     is_outlier: Mapped[bool] = mapped_column(Boolean, nullable=False)
@@ -29,31 +29,34 @@ class TopicORM(ORMBase):
     y: Mapped[float] = mapped_column(Float, nullable=True)
 
     # many to one
-    parent_topic_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("topic.id", ondelete="SET NULL"), nullable=True, index=True
+    parent_cluster_id: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        ForeignKey("cluster.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
     )
-    parent_topic: Mapped[Optional["TopicORM"]] = relationship(
-        "TopicORM", remote_side=[id], back_populates="child_topics"
+    parent_cluster: Mapped[Optional["ClusterORM"]] = relationship(
+        "ClusterORM", remote_side=[id], back_populates="child_clusters"
     )
-    child_topics: Mapped[List["TopicORM"]] = relationship(
-        "TopicORM", back_populates="parent_topic"
+    child_clusters: Mapped[List["ClusterORM"]] = relationship(
+        "ClusterORM", back_populates="parent_cluster"
     )
 
     aspect_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("aspect.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    aspect: Mapped["AspectORM"] = relationship("AspectORM", back_populates="topics")
+    aspect: Mapped["AspectORM"] = relationship("AspectORM", back_populates="clusters")
 
     # many to many
-    document_topics: Mapped[List["DocumentTopicORM"]] = relationship(
-        "DocumentTopicORM", back_populates="topic", cascade="all, delete-orphan"
+    document_clusters: Mapped[List["DocumentClusterORM"]] = relationship(
+        "DocumentClusterORM", back_populates="cluster", cascade="all, delete-orphan"
     )
     source_documents: Mapped[List["SourceDocumentORM"]] = relationship(
         "SourceDocumentORM",
-        secondary="documenttopic",
-        back_populates="topics",
-        overlaps="document_topics,source_document,topic",
+        secondary="documentcluster",
+        back_populates="clusters",
+        overlaps="document_clusters,source_document,cluster",
     )
 
     def __repr__(self) -> str:
-        return f"<TopicORM(id={self.id}, name='{self.name}')>"
+        return f"<ClusterORM(id={self.id}, name='{self.name}')>"

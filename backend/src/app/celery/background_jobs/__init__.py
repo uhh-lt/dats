@@ -17,8 +17,11 @@ from app.core.data.eximport.export_service import ExportService
 from app.core.data.eximport.import_service import ImportService
 from app.core.data.llm.llm_service import LLMService
 from app.core.ml.ml_service import MLService
-from app.core.topicmodel.tm_job import TMJobParams, TMJobRead
-from app.core.topicmodel.tm_job_service import TMJobService
+from app.core.perspectives.perspectives_job import (
+    PerspectivesJobParams,
+    PerspectivesJobRead,
+)
+from app.core.perspectives.perspectives_job_service import PerspectivesJobService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 
 
@@ -133,21 +136,21 @@ def prepare_and_start_ml_job_async(
     return ml_job
 
 
-def prepare_and_start_tm_job_async(
+def prepare_and_start_perspectives_job_async(
     project_id: int,
     aspect_id: int,
-    tm_job_params: TMJobParams,
-) -> TMJobRead:
-    from app.celery.background_jobs.tasks import start_tm_job
+    perspectives_job_params: PerspectivesJobParams,
+) -> PerspectivesJobRead:
+    from app.celery.background_jobs.tasks import start_perspectives_job
 
-    assert isinstance(start_tm_job, Task), "Not a Celery Task"
+    assert isinstance(start_perspectives_job, Task), "Not a Celery Task"
 
-    tmjs: TMJobService = TMJobService()
-    tm_job = tmjs.prepare_tm_job(
-        project_id=project_id, aspect_id=aspect_id, tm_params=tm_job_params
+    tmjs: PerspectivesJobService = PerspectivesJobService()
+    perspectives_job = tmjs.prepare_perspectives_job(
+        project_id=project_id, aspect_id=aspect_id, tm_params=perspectives_job_params
     )
-    start_tm_job.apply_async(kwargs={"tm_job": tm_job})
-    return tm_job
+    start_perspectives_job.apply_async(kwargs={"perspectives_job": perspectives_job})
+    return perspectives_job
 
 
 def execute_text_preprocessing_pipeline_apply_async(
