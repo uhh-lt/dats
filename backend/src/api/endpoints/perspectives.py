@@ -42,9 +42,9 @@ from api.dependencies import get_current_user, get_db_session
 tmjs = PerspectivesJobService()
 
 router = APIRouter(
-    prefix="/cluster_model",
+    prefix="/perspectives",
     dependencies=[Depends(get_current_user)],
-    tags=["cluster_model"],
+    tags=["perspectives"],
 )
 
 # --- START JOBS --- #

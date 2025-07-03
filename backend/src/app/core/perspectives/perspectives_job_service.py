@@ -99,7 +99,7 @@ class PerspectivesJobService(metaclass=SingletonMeta):
     def prepare_perspectives_job(
         self, project_id: int, aspect_id: int, tm_params: PerspectivesJobParams
     ) -> PerspectivesJobRead:
-        tmj_create = PerspectivesJobCreate(
+        pj_create = PerspectivesJobCreate(
             project_id=project_id,
             aspect_id=aspect_id,
             step=0,
@@ -109,32 +109,32 @@ class PerspectivesJobService(metaclass=SingletonMeta):
             parameters=tm_params,
         )
         try:
-            tmj_read = self.redis.store_perspectives_job(perspectives_job=tmj_create)
+            pj_read = self.redis.store_perspectives_job(perspectives_job=pj_create)
         except Exception as e:
             raise PerspectivesJobPreparationError(cause=e)
 
-        return tmj_read
+        return pj_read
 
     def get_all_perspectives_jobs(self, project_id: int) -> List[PerspectivesJobRead]:
         return self.redis.get_all_perspectives_jobs(project_id=project_id)
 
     def get_perspectives_job(self, perspectives_job_id: str) -> PerspectivesJobRead:
         try:
-            tmj = self.redis.load_perspectives_job(key=perspectives_job_id)
+            pj = self.redis.load_perspectives_job(key=perspectives_job_id)
         except Exception as e:
             raise NoSuchPerspectivesJobError(perspectives_job_id, cause=e)
-        return tmj
+        return pj
 
     def update_perspectives_job(
         self, perspectives_job_id: str, update: PerspectivesJobUpdate
     ) -> PerspectivesJobRead:
         try:
-            tmj = self.redis.update_perspectives_job(
+            pj = self.redis.update_perspectives_job(
                 key=perspectives_job_id, update=update
             )
         except Exception as e:
             raise NoSuchPerspectivesJobError(perspectives_job_id, cause=e)
-        return tmj
+        return pj
 
     def update_status_callback(self, perspectives_job_id: str) -> TMJUpdateFN:
         def callback(
@@ -159,122 +159,122 @@ class PerspectivesJobService(metaclass=SingletonMeta):
     ) -> PerspectivesJobRead:
         from app.core.perspectives.perspectives_service import PerspectivesService
 
-        tms: PerspectivesService = PerspectivesService(
+        ps: PerspectivesService = PerspectivesService(
             update_status_clbk=self.update_status_callback(perspectives_job_id)
         )
 
-        tmj = self.get_perspectives_job(perspectives_job_id)
+        pj = self.get_perspectives_job(perspectives_job_id)
 
         if (
-            tmj.status == BackgroundJobStatus.RUNNING
-            or tmj.status == BackgroundJobStatus.FINISHED
+            pj.status == BackgroundJobStatus.RUNNING
+            or pj.status == BackgroundJobStatus.FINISHED
         ):
             raise PerspectivesJobAlreadyStartedOrDoneError(perspectives_job_id)
 
-        tmj = self.update_perspectives_job(
+        pj = self.update_perspectives_job(
             perspectives_job_id,
             PerspectivesJobUpdate(status=BackgroundJobStatus.RUNNING),
         )
 
         try:
-            match tmj.parameters.perspectives_job_type:
+            match pj.parameters.perspectives_job_type:
                 case PerspectivesJobType.CREATE_ASPECT:
                     assert isinstance(
-                        tmj.parameters,
+                        pj.parameters,
                         CreateAspectParams,
                     ), "CreateAspectParams expected"
-                    tms.create_aspect(
-                        aspect_id=tmj.aspect_id,
-                        params=tmj.parameters,
+                    ps.create_aspect(
+                        aspect_id=pj.aspect_id,
+                        params=pj.parameters,
                     )
                 case PerspectivesJobType.ADD_MISSING_DOCS_TO_ASPECT:
                     assert isinstance(
-                        tmj.parameters,
+                        pj.parameters,
                         AddMissingDocsToAspectParams,
                     ), "AddMissingDocsToAspectParams expected"
-                    tms.add_missing_docs_to_aspect(
-                        aspect_id=tmj.aspect_id,
-                        params=tmj.parameters,
+                    ps.add_missing_docs_to_aspect(
+                        aspect_id=pj.aspect_id,
+                        params=pj.parameters,
                     )
                 case PerspectivesJobType.CREATE_CLUSTER_WITH_NAME:
                     assert isinstance(
-                        tmj.parameters,
+                        pj.parameters,
                         CreateClusterWithNameParams,
                     ), "CreateClusterWithNameParams expected"
-                    tms.create_cluster_with_name(
-                        aspect_id=tmj.aspect_id,
-                        params=tmj.parameters,
+                    ps.create_cluster_with_name(
+                        aspect_id=pj.aspect_id,
+                        params=pj.parameters,
                     )
                 case PerspectivesJobType.CREATE_CLUSTER_WITH_SDOCS:
                     assert isinstance(
-                        tmj.parameters,
+                        pj.parameters,
                         CreateClusterWithSdocsParams,
                     ), "CreateClusterWithSdocsParams expected"
-                    tms.create_cluster_with_sdocs(
-                        aspect_id=tmj.aspect_id,
-                        params=tmj.parameters,
+                    ps.create_cluster_with_sdocs(
+                        aspect_id=pj.aspect_id,
+                        params=pj.parameters,
                     )
                 case PerspectivesJobType.REMOVE_CLUSTER:
                     assert isinstance(
-                        tmj.parameters,
+                        pj.parameters,
                         RemoveClusterParams,
                     ), "RemoveClusterParams expected"
-                    tms.remove_cluster(
-                        aspect_id=tmj.aspect_id,
-                        params=tmj.parameters,
+                    ps.remove_cluster(
+                        aspect_id=pj.aspect_id,
+                        params=pj.parameters,
                     )
                 case PerspectivesJobType.MERGE_CLUSTERS:
                     assert isinstance(
-                        tmj.parameters,
+                        pj.parameters,
                         MergeClustersParams,
                     ), "MergeClustersParams expected"
-                    tms.merge_clusters(
-                        aspect_id=tmj.aspect_id,
-                        params=tmj.parameters,
+                    ps.merge_clusters(
+                        aspect_id=pj.aspect_id,
+                        params=pj.parameters,
                     )
                 case PerspectivesJobType.SPLIT_CLUSTER:
                     assert isinstance(
-                        tmj.parameters,
+                        pj.parameters,
                         SplitClusterParams,
                     ), "SplitClusterParams expected"
-                    tms.split_cluster(
-                        aspect_id=tmj.aspect_id,
-                        params=tmj.parameters,
+                    ps.split_cluster(
+                        aspect_id=pj.aspect_id,
+                        params=pj.parameters,
                     )
                 case PerspectivesJobType.CHANGE_CLUSTER:
                     assert isinstance(
-                        tmj.parameters,
+                        pj.parameters,
                         ChangeClusterParams,
                     ), "ChangeClusterParams expected"
-                    tms.change_cluster(
-                        aspect_id=tmj.aspect_id,
-                        params=tmj.parameters,
+                    ps.change_cluster(
+                        aspect_id=pj.aspect_id,
+                        params=pj.parameters,
                     )
                 case PerspectivesJobType.REFINE_MODEL:
                     assert isinstance(
-                        tmj.parameters,
+                        pj.parameters,
                         RefineModelParams,
                     ), "RefineModelParams expected"
-                    tms.refine_cluster_model(
-                        aspect_id=tmj.aspect_id,
-                        params=tmj.parameters,
+                    ps.refine_cluster_model(
+                        aspect_id=pj.aspect_id,
+                        params=pj.parameters,
                     )
                 case PerspectivesJobType.RESET_MODEL:
                     assert isinstance(
-                        tmj.parameters,
+                        pj.parameters,
                         ResetModelParams,
                     ), "ResetModelParams expected"
-                    tms.reset_cluster_model(
-                        aspect_id=tmj.aspect_id,
-                        params=tmj.parameters,
+                    ps.reset_cluster_model(
+                        aspect_id=pj.aspect_id,
+                        params=pj.parameters,
                     )
                 case _:
                     # Handle unknown job types if necessary, or raise an error
                     raise NotImplementedError(
-                        f"PerspectivesJobType {tmj.parameters.perspectives_job_type} not implemented."
+                        f"PerspectivesJobType {pj.parameters.perspectives_job_type} not implemented."
                     )
 
-            tmj = self.update_perspectives_job(
+            pj = self.update_perspectives_job(
                 perspectives_job_id,
                 PerspectivesJobUpdate(
                     status=BackgroundJobStatus.FINISHED, status_msg="Finished!"
@@ -282,11 +282,11 @@ class PerspectivesJobService(metaclass=SingletonMeta):
             )
         except Exception as e:
             logger.exception(e)
-            tmj = self.update_perspectives_job(
+            pj = self.update_perspectives_job(
                 perspectives_job_id,
                 PerspectivesJobUpdate(
                     status=BackgroundJobStatus.ERROR, status_msg=repr(e)
                 ),
             )
 
-        return tmj
+        return pj
