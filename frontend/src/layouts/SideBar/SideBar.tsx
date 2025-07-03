@@ -224,7 +224,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                       color: "primary.contrastText",
                     }}
                   >
-                    {getIconComponent(Icon.ATLAS)}
+                    {getIconComponent(Icon.PERSPECTIVES)}
                   </ListItemIcon>
                   {isExpanded && <ListItemText>Perspectives</ListItemText>}
                 </ListItemButton>

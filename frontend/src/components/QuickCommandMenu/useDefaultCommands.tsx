@@ -78,7 +78,7 @@ export const useDefaultCommands = (projectId: string | undefined): CommandItem[]
         title: "Open Perspectives",
         description: "Go to project perspectives",
         category: "Navigation",
-        icon: getIconComponent(Icon.ATLAS),
+        icon: getIconComponent(Icon.PERSPECTIVES),
         route: `/project/${projectId}/perspectives`,
         keywords: ["perspectives", "map"],
       },

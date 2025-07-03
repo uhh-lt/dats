@@ -16,8 +16,8 @@ import spanAnnotationAnalysisReducer from "../views/analysis/SpanAnnotationAnaly
 import timelineAnalysisReducer from "../views/analysis/TimelineAnalysis/timelineAnalysisSlice.ts";
 import wordFrequencyReducer from "../views/analysis/WordFrequency/wordFrequencySlice.ts";
 import annoReducer from "../views/annotation/annoSlice.ts";
-import atlasReducer from "../views/atlas/atlasSlice.ts";
 import logbookReducer from "../views/logbook/logbookSlice.ts";
+import perspectivesReducer from "../views/perspectives/perspectivesSlice.ts";
 import searchReducer from "../views/search/DocumentSearch/searchSlice.ts";
 import imageSearchReducer from "../views/search/ImageSearch/imageSearchSlice.ts";
 import sentenceSearchReducer from "../views/search/SentenceSearch/sentenceSearchSlice.ts";
@@ -48,7 +48,7 @@ export const store = configureStore({
     cota: cotaReducer,
     dialog: dialogReducer,
     documentSampler: documentSamplerReducer,
-    atlas: atlasReducer,
+    perspectives: perspectivesReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

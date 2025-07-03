@@ -15,13 +15,13 @@ import TimelineAnalysis from "../views/analysis/TimelineAnalysis/TimelineAnalysi
 import TimelineAnalysisDashboard from "../views/analysis/TimelineAnalysis/TimelineAnalysisDashboard.tsx";
 import WordFrequency from "../views/analysis/WordFrequency/WordFrequency.tsx";
 import Annotation from "../views/annotation/Annotation.tsx";
-import AtlasDashboard from "../views/atlas/AtlasDashboard.tsx";
-import Map from "../views/atlas/Map.tsx";
-import MapDashboard from "../views/atlas/MapDashboard.tsx";
 import Logbook from "../views/logbook/Logbook.tsx";
 import Login from "../views/login/Login.tsx";
 import Register from "../views/login/Register.tsx";
 import NotFound from "../views/NotFound.tsx";
+import PerspectiveDashboard from "../views/perspectives/dashboard/PerspectiveDashboard.tsx";
+import Map from "../views/perspectives/map/Map.tsx";
+import Perspectives from "../views/perspectives/Perspectives.tsx";
 import Profile from "../views/profile/Profile.tsx";
 import Projects from "../views/projects/Projects.tsx";
 import Search from "../views/search/DocumentSearch/Search.tsx";
@@ -181,11 +181,11 @@ const router = createBrowserRouter([
       },
       {
         path: "/project/:projectId/perspectives",
-        element: <AtlasDashboard />,
+        element: <Perspectives />,
       },
       {
-        path: "/project/:projectId/perspectives/map-details/:aspectId",
-        element: <MapDashboard />,
+        path: "/project/:projectId/perspectives/dashboard/:aspectId",
+        element: <PerspectiveDashboard />,
       },
       {
         path: "/project/:projectId/perspectives/map/:aspectId",

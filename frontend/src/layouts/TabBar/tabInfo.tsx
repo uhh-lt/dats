@@ -40,8 +40,8 @@ function getIconForBase(base: string): Icon {
     case "ml-automation":
       return Icon.ML_AUTOMATION;
     case "perspectives":
-      return Icon.ATLAS;
-    case "map-details":
+      return Icon.PERSPECTIVES;
+    case "dashboard":
       return Icon.MAP;
     case "map":
       return Icon.MAP;

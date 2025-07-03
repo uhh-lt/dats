@@ -113,10 +113,10 @@ export enum Icon {
   LOGBOOK = "logbook",
 
   // Perspectives
-  ATLAS = "atlas",
+  PERSPECTIVES = "perspectives",
   MAP = "map",
-  TOPICS = "topics",
-  TOPIC = "topic",
+  CLUSTERS = "clusters",
+  CLUSTER = "cluster",
 
   // SETTINGS
   SETTINGS = "project_settings",
@@ -219,10 +219,10 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.LOGBOOK]: (iconProps) => <MenuBookIcon {...iconProps} />,
 
   // Atlas
-  [Icon.ATLAS]: (iconProps) => <ExploreIcon {...iconProps} />,
+  [Icon.PERSPECTIVES]: (iconProps) => <ExploreIcon {...iconProps} />,
   [Icon.MAP]: (iconProps) => <MapIcon {...iconProps} />,
-  [Icon.TOPICS]: (iconProps) => <BubbleChartIcon {...iconProps} />,
-  [Icon.TOPIC]: (iconProps) => <CircleIcon {...iconProps} />,
+  [Icon.CLUSTERS]: (iconProps) => <BubbleChartIcon {...iconProps} />,
+  [Icon.CLUSTER]: (iconProps) => <CircleIcon {...iconProps} />,
 
   // SETTINGS
   [Icon.SETTINGS]: (iconProps) => <SettingsIcon {...iconProps} />,
