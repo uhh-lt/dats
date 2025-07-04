@@ -42,6 +42,19 @@ class CRUDBase(Generic[ID, COLLECTION]):
             f"Project{project_id}"
         )
 
+    def _tenant_exists(self, client: WeaviateClient, project_id: int) -> bool:
+        """
+        Check if the tenant for the given project ID exists in Weaviate
+        Args:
+            client: Weaviate client
+            project_id: Project ID
+        Returns:
+            True if tenant exists, False otherwise
+        """
+        collection = client.collections.get(self.collection_name)
+        tenant = f"Project{project_id}"
+        return collection.tenants.exists(tenant)
+
     def _validate_properties(
         self, properties: Dict[str, Any], must_identify_object: bool
     ) -> None:

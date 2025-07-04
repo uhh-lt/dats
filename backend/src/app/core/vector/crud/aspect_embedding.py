@@ -53,11 +53,12 @@ class CRUDAspectEmbedding(CRUDBase[AspectObjectIdentifier, AspectCollection]):
         :param aspect_id: The Aspect ID
         """
         collection = self._get_collection(client=client, project_id=project_id)
-        collection.data.delete_many(
-            where=Filter.by_property(
-                self.collection_class.properties["aspect_id"].name
-            ).equal(aspect_id),
-        )
+        if self._tenant_exists(client=client, project_id=project_id):
+            collection.data.delete_many(
+                where=Filter.by_property(
+                    self.collection_class.properties["aspect_id"].name
+                ).equal(aspect_id),
+            )
 
     def remove_by_sdoc_id(
         self, client: WeaviateClient, project_id: int, sdoc_id: int
@@ -69,11 +70,12 @@ class CRUDAspectEmbedding(CRUDBase[AspectObjectIdentifier, AspectCollection]):
             sdoc_id: The SourceDocument ID
         """
         collection = self._get_collection(client=client, project_id=project_id)
-        collection.data.delete_many(
-            where=Filter.by_property(
-                self.collection_class.properties["sdoc_id"].name
-            ).equal(sdoc_id)
-        )
+        if self._tenant_exists(client=client, project_id=project_id):
+            collection.data.delete_many(
+                where=Filter.by_property(
+                    self.collection_class.properties["sdoc_id"].name
+                ).equal(sdoc_id)
+            )
 
 
 crud_aspect_embedding = CRUDAspectEmbedding(

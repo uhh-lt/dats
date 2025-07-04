@@ -19,11 +19,12 @@ class CRUDClusterEmbedding(CRUDBase[ClusterObjectIdentifier, ClusterCollection])
         :param aspect_id: The Aspect ID
         """
         collection = self._get_collection(client=client, project_id=project_id)
-        collection.data.delete_many(
-            where=Filter.by_property(
-                self.collection_class.properties["aspect_id"].name
-            ).equal(aspect_id),
-        )
+        if self._tenant_exists(client=client, project_id=project_id):
+            collection.data.delete_many(
+                where=Filter.by_property(
+                    self.collection_class.properties["aspect_id"].name
+                ).equal(aspect_id),
+            )
 
     def find_embeddings_by_aspect_id(
         self, client: WeaviateClient, project_id: int, aspect_id: int
