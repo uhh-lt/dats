@@ -32,14 +32,8 @@ class PromptEmbedderModel:
         self.encoder = SentenceTransformer(
             DEFAULT_MODEL, trust_remote_code=True, device="cpu"
         )
+        self.encoder_name = "default"
         self._init_encoder_for_inference()
-        # encoder.tokenizer.padding_side = "right"
-
-    # def add_eos(self, input_examples):
-    #     return [
-    #         input_example + self.encoder.tokenizer.eos_token
-    #         for input_example in input_examples
-    #     ]
 
     def _init_encoder_for_inference(self):
         self.encoder.max_seq_length = MAX_SEQ_LEN
@@ -135,7 +129,7 @@ class PromptEmbedderModel:
 
     def embed(self, input: PromptEmbedderInput) -> PromptEmbedderOutput:
         # Check if correct model is not loaded
-        if not (self.encoder and self.encoder._get_name() == input.model_name):
+        if self.encoder_name != input.model_name:
             # Load (or train) model
             if input.model_name == "default":
                 # Use default model
@@ -145,10 +139,10 @@ class PromptEmbedderModel:
                 )
             else:
                 model_path = self.__get_model_path(model_name=input.model_name)
-                if not model_path.exists() or (
-                    input.train_docs is not None and input.train_labels is not None
-                ):
+                if not model_path.exists():
                     # Train custom model
+                    logger.info(f"Training custom model {input.model_name}...")
+
                     if not input.train_docs:
                         raise ValueError(
                             "Training documents are required for custom model training."
@@ -173,10 +167,11 @@ class PromptEmbedderModel:
                     self.encoder = setfit_model.model_body
 
             # init model correctly for inference
+            self.encoder_name = input.model_name
             self._init_encoder_for_inference()
         else:
             logger.info(
-                f"Using already loaded model {self.encoder._get_name()} for embedding."
+                f"Using already loaded model {self.encoder_name} for embedding."
             )
 
         # Embed data
@@ -188,8 +183,6 @@ class PromptEmbedderModel:
                     )
                     for text in input.data
                 ],
-                # sentences=self.add_eos(input.data),
-                # prompt="Instruct: " + input.prompt + "\nQuery: ",
                 batch_size=BATCH_SIZE,
                 show_progress_bar=False,
                 normalize_embeddings=True,
