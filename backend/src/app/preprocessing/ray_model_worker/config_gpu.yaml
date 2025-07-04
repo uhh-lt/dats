@@ -27,7 +27,7 @@ whisper:
 
   deployment:
     ray_actor_options:
-      num_gpus: .125
+      num_gpus: .1
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
@@ -37,7 +37,7 @@ detr:
   device: cuda
   deployment:
     ray_actor_options:
-      num_gpus: .125
+      num_gpus: .1
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
@@ -148,7 +148,7 @@ clip:
     device: cuda
   deployment:
     ray_actor_options:
-      num_gpus: .125
+      num_gpus: .1
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
@@ -159,7 +159,7 @@ cota:
   device: cuda
   deployment:
     ray_actor_options:
-      num_gpus: .125
+      num_gpus: .1
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
@@ -170,7 +170,7 @@ seqsenttagger:
   device: cuda
   deployment:
     ray_actor_options:
-      num_gpus: .125
+      num_gpus: .1
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
@@ -183,7 +183,7 @@ quote:
   device: cuda
   deployment:
     ray_actor_options:
-      num_gpus: .125
+      num_gpus: .1
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
@@ -204,7 +204,7 @@ coref:
   device: cuda
   deployment:
     ray_actor_options:
-      num_gpus: .125
+      num_gpus: .1
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
@@ -218,7 +218,7 @@ docling:
   tmp_dir: /tmp/dats/ray/docling
   deployment:
     ray_actor_options:
-      num_gpus: .125
+      num_gpus: .1
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
@@ -230,7 +230,7 @@ promptembedder:
   device: cuda
   deployment:
     ray_actor_options:
-      num_gpus: .125
+      num_gpus: .1
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
