@@ -280,7 +280,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
             filters=filters,
             limit=k,
             certainty=threshold,
-            return_metadata=MetadataQuery(distance=True),
+            return_metadata=MetadataQuery(certainty=True),
             return_properties=True,
         )
 
@@ -288,7 +288,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
             SimSearchResult[ID](
                 uuid=obj.uuid,
                 id=self.object_identifier.model_validate(obj.properties),
-                score=obj.metadata.distance or 0.0,
+                score=obj.metadata.certainty or 0.0,
             )
             for obj in query_result.objects
         ]
@@ -319,7 +319,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
             filters=filters,
             limit=k,
             certainty=threshold,
-            return_metadata=MetadataQuery(distance=True),
+            return_metadata=MetadataQuery(certainty=True),
             return_properties=True,
         )
 
@@ -327,7 +327,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
             SimSearchResult[ID](
                 uuid=obj.uuid,
                 id=self.object_identifier.model_validate(obj.properties),
-                score=obj.metadata.distance or 0.0,
+                score=obj.metadata.certainty or 0.0,
             )
             for obj in query_result.objects
         ]
