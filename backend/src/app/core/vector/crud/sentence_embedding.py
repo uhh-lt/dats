@@ -36,7 +36,7 @@ class CRUDSentenceEmbedding(CRUDBase[SentenceObjectIdentifier, SentenceCollectio
         return self.search_near_object(
             client=client,
             project_id=project_id,
-            uuid=id.uuidv5(),
+            id=id,
             k=k,
             threshold=threshold,
         )

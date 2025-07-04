@@ -32,7 +32,6 @@ class CRUDDocumentEmbedding(CRUDBase[DocumentObjectIdentifier, DocumentCollectio
         Returns:
             List of SimSearchResult[DocumentObjectIdentifier]
         """
-        uuid = DocumentObjectIdentifier(sdoc_id=sdoc_id).uuidv5()
         filters = (
             Filter.by_property(
                 self.collection_class.properties["sdoc_id"].name
@@ -43,7 +42,7 @@ class CRUDDocumentEmbedding(CRUDBase[DocumentObjectIdentifier, DocumentCollectio
         return self.search_near_object(
             client=client,
             project_id=project_id,
-            uuid=uuid,
+            id=DocumentObjectIdentifier(sdoc_id=sdoc_id),
             filters=filters,
             k=k,
             threshold=threshold,

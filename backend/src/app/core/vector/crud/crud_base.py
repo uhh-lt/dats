@@ -253,7 +253,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
         self,
         client: WeaviateClient,
         project_id,
-        uuid: UUID,
+        id: ID,
         k: int,
         threshold: float,
         filters: Optional[_Filters] = None,
@@ -269,6 +269,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
             List of objects found
         """
         collection = self._get_collection(client=client, project_id=project_id)
+        uuid = id.uuidv5()
 
         # Validate that object exists
         if not collection.data.exists(uuid):
