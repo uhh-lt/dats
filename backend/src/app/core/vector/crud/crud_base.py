@@ -28,19 +28,17 @@ class CRUDBase(Generic[ID, COLLECTION]):
 
     def __init__(
         self,
-        client: WeaviateClient,
         collection_class: Type[COLLECTION],
         object_identifier: Type[ID],
     ):
         """Initialize with collection class"""
         self.object_identifier = object_identifier
-        self.client = client
         self.collection_class = collection_class
         self.collection_name = collection_class.name
 
-    def _get_collection(self, project_id: int):
+    def _get_collection(self, client: WeaviateClient, project_id: int):
         """Get the collection from weaviate client"""
-        return self.client.collections.get(self.collection_name).with_tenant(
+        return client.collections.get(self.collection_name).with_tenant(
             f"Project{project_id}"
         )
 
@@ -76,14 +74,16 @@ class CRUDBase(Generic[ID, COLLECTION]):
                     f"Property '{key}' must be of type '{expected_type}', got '{type(value)}'"
                 )
 
-    def add_embedding(self, project_id: int, id: ID, embedding: List[float]) -> None:
+    def add_embedding(
+        self, client: WeaviateClient, project_id: int, id: ID, embedding: List[float]
+    ) -> None:
         """
         Add a single embedding to Weaviate
         Args:
             id: Object identifier
             embedding: Vector embedding
         """
-        collection = self._get_collection(project_id=project_id)
+        collection = self._get_collection(client=client, project_id=project_id)
         collection.data.replace(
             uuid=id.uuidv5(),
             properties=id.model_dump(),
@@ -92,7 +92,11 @@ class CRUDBase(Generic[ID, COLLECTION]):
         )
 
     def add_embedding_batch(
-        self, project_id: int, ids: List[ID], embeddings: List[List[float]]
+        self,
+        client: WeaviateClient,
+        project_id: int,
+        ids: List[ID],
+        embeddings: List[List[float]],
     ) -> List[UUID]:
         """
         Add multiple embeddings to Weaviate in a batch
@@ -106,7 +110,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
             WeaviateVectorLengthError: If the embedding dimensions do not match the collection's dimensions
         """
 
-        collection = self._get_collection(project_id=project_id)
+        collection = self._get_collection(client=client, project_id=project_id)
 
         # Check if lists have the same length
         if len(ids) != len(embeddings):
@@ -132,27 +136,31 @@ class CRUDBase(Generic[ID, COLLECTION]):
 
         return uuids
 
-    def remove_embedding(self, project_id: int, id: ID) -> bool:
+    def remove_embedding(self, client: WeaviateClient, project_id: int, id: ID) -> bool:
         """
         Remove an embedding from Weaviate
         Args:
             id: Object identifier
         """
-        collection = self._get_collection(project_id=project_id)
+        collection = self._get_collection(client=client, project_id=project_id)
         return collection.data.delete_by_id(id.uuidv5())
 
-    def remove_embeddings_by_project(self, project_id: int) -> None:
+    def remove_embeddings_by_project(
+        self, client: WeaviateClient, project_id: int
+    ) -> None:
         """
         Remove all embeddings for a project.
         Internally, this completely removes the tenant from Weaviate.
         Args:
             project_id: Project ID
         """
-        self.client.collections.get(self.collection_name).tenants.remove(
+        client.collections.get(self.collection_name).tenants.remove(
             [f"Project{project_id}"]
         )
 
-    def get_embedding(self, project_id: int, id: ID) -> List[float]:
+    def get_embedding(
+        self, client: WeaviateClient, project_id: int, id: ID
+    ) -> List[float]:
         """
         Get an embedding from Weaviate
         Args:
@@ -160,14 +168,16 @@ class CRUDBase(Generic[ID, COLLECTION]):
         Returns:
             Object with embedding or None if not found
         """
-        collection = self._get_collection(project_id=project_id)
+        collection = self._get_collection(client=client, project_id=project_id)
         obj = collection.query.fetch_object_by_id(id.uuidv5(), include_vector=True)
         if not obj:
             raise WeaviateObjectIDNotFoundException(id=id, collection=collection)
 
         return obj.vector["default"]  # type: ignore
 
-    def get_embeddings(self, project_id: int, ids: List[ID]) -> List[List[float]]:
+    def get_embeddings(
+        self, client: WeaviateClient, project_id: int, ids: List[ID]
+    ) -> List[List[float]]:
         """
         Get multiple embeddings from Weaviate
         Args:
@@ -176,7 +186,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
             List of embeddings
         """
         uuid_list = [id.uuidv5() for id in ids]
-        collection = self._get_collection(project_id=project_id)
+        collection = self._get_collection(client=client, project_id=project_id)
         objs = collection.query.fetch_objects_by_ids(
             ids=uuid_list,
             include_vector=True,
@@ -198,7 +208,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
         return result
 
     def find_embeddings_by_filters(
-        self, project_id: int, filters: _Filters
+        self, client: WeaviateClient, project_id: int, filters: _Filters
     ) -> List[EmbeddingSearchResult[ID]]:
         """
         Get embeddings from Weaviate based on filters
@@ -208,7 +218,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
         Returns:
             List of embeddings
         """
-        collection = self._get_collection(project_id=project_id)
+        collection = self._get_collection(client=client, project_id=project_id)
 
         # Query to find the objects with vector
         result = collection.query.fetch_objects(
@@ -241,6 +251,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
 
     def search_near_object(
         self,
+        client: WeaviateClient,
         project_id,
         uuid: UUID,
         k: int,
@@ -257,7 +268,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
         Returns:
             List of objects found
         """
-        collection = self._get_collection(project_id=project_id)
+        collection = self._get_collection(client=client, project_id=project_id)
 
         # Validate that object exists
         if not collection.data.exists(uuid):
@@ -283,6 +294,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
 
     def search_near_vector(
         self,
+        client: WeaviateClient,
         project_id: int,
         vector: List[float],
         k: int,
@@ -299,7 +311,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
         Returns:
             List of objects found
         """
-        collection = self._get_collection(project_id=project_id)
+        collection = self._get_collection(client=client, project_id=project_id)
 
         query_result = collection.query.near_vector(
             near_vector=vector,

@@ -6,7 +6,7 @@ from app.core.vector.dto.search_results import EmbeddingSearchResult
 from app.core.vector.dto.sentence_embedding import (
     SentenceObjectIdentifier,
 )
-from app.core.vector.weaviate_service import WeaviateService
+from weaviate import WeaviateClient
 from weaviate.classes.query import Filter
 
 
@@ -17,6 +17,7 @@ class CRUDSentenceEmbedding(CRUDBase[SentenceObjectIdentifier, SentenceCollectio
 
     def search_near_sentence(
         self,
+        client: WeaviateClient,
         project_id: int,
         id: SentenceObjectIdentifier,
         k: int,
@@ -33,6 +34,7 @@ class CRUDSentenceEmbedding(CRUDBase[SentenceObjectIdentifier, SentenceCollectio
             List of SimSearchResult[DocumentObjectIdentifier]
         """
         return self.search_near_object(
+            client=client,
             project_id=project_id,
             uuid=id.uuidv5(),
             k=k,
@@ -41,6 +43,7 @@ class CRUDSentenceEmbedding(CRUDBase[SentenceObjectIdentifier, SentenceCollectio
 
     def search_near_vector_in_sdoc_ids(
         self,
+        client: WeaviateClient,
         project_id: int,
         vector: list[float],
         k: int,
@@ -67,6 +70,7 @@ class CRUDSentenceEmbedding(CRUDBase[SentenceObjectIdentifier, SentenceCollectio
             else None
         )
         return self.search_near_vector(
+            client=client,
             project_id=project_id,
             filters=filters,
             vector=vector,
@@ -75,7 +79,7 @@ class CRUDSentenceEmbedding(CRUDBase[SentenceObjectIdentifier, SentenceCollectio
         )
 
     def get_embeddings_by_sdoc_id(
-        self, project_id: int, sdoc_id: int
+        self, client: WeaviateClient, project_id: int, sdoc_id: int
     ) -> List[EmbeddingSearchResult[SentenceObjectIdentifier]]:
         """
         Get all sentence embeddings for a given SourceDocument by sdoc_id
@@ -86,20 +90,23 @@ class CRUDSentenceEmbedding(CRUDBase[SentenceObjectIdentifier, SentenceCollectio
             List of SentenceObjectIdentifier
         """
         return self.find_embeddings_by_filters(
+            client=client,
             project_id=project_id,
             filters=Filter.by_property(
                 self.collection_class.properties["sdoc_id"].name
             ).equal(sdoc_id),
         )
 
-    def remove_by_sdoc_id(self, project_id: int, sdoc_id: int) -> None:
+    def remove_by_sdoc_id(
+        self, client: WeaviateClient, project_id: int, sdoc_id: int
+    ) -> None:
         """
         Remove all embeddings for a given SourceDocument by sdoc_id
         Args:
             project_id: The project ID
             sdoc_id: The SourceDocument ID
         """
-        collection = self._get_collection(project_id=project_id)
+        collection = self._get_collection(client=client, project_id=project_id)
         collection.data.delete_many(
             where=Filter.by_property(
                 self.collection_class.properties["sdoc_id"].name
@@ -107,9 +114,7 @@ class CRUDSentenceEmbedding(CRUDBase[SentenceObjectIdentifier, SentenceCollectio
         )
 
 
-client = WeaviateService().get_client()
 crud_sentence_embedding = CRUDSentenceEmbedding(
-    client=client,
     collection_class=SentenceCollection,
     object_identifier=SentenceObjectIdentifier,
 )

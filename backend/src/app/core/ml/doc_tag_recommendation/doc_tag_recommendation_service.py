@@ -27,7 +27,9 @@ from app.core.data.dto.search import (
 from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.db.sql_service import SQLService
 from app.core.vector.crud.document_embedding import crud_document_embedding
+from app.core.vector.weaviate_service import WeaviateService
 from app.util.singleton_meta import SingletonMeta
+from weaviate import WeaviateClient
 
 SimSearchHit = TypeVar("SimSearchHit")
 
@@ -49,6 +51,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
             DocumentClassificationService: An instance of the class.
         """
         cls.sqls: SQLService = SQLService()
+        cls.weaviate: WeaviateService = WeaviateService()
         return super(DocumentClassificationService, cls).__new__(cls)
 
     def classify_untagged_documents(
@@ -86,19 +89,25 @@ class DocumentClassificationService(metaclass=SingletonMeta):
             )
 
         # Suggest similar documents based on the already tagged documents
-        match method:
-            case DocumentTagRecommendationMethod.EXCLUSIVE:
-                dto_iter = self._exclusive_suggestions(
-                    ml_job_id, project_id, sdoc_ids, sdocs_and_tags
-                )
-            case DocumentTagRecommendationMethod.KNN:
-                dto_iter = self._knn_suggestions(
-                    ml_job_id, project_id, list(sdoc_ids), sdocs_and_tags, tag_ids
-                )
-            case DocumentTagRecommendationMethod.SIMPLE:
-                dto_iter = self._simple_suggestions(
-                    ml_job_id, project_id, sdoc_ids, sdocs_and_tags
-                )
+        with self.weaviate.weaviate_session() as client:
+            match method:
+                case DocumentTagRecommendationMethod.EXCLUSIVE:
+                    dto_iter = self._exclusive_suggestions(
+                        client, ml_job_id, project_id, sdoc_ids, sdocs_and_tags
+                    )
+                case DocumentTagRecommendationMethod.KNN:
+                    dto_iter = self._knn_suggestions(
+                        client,
+                        ml_job_id,
+                        project_id,
+                        list(sdoc_ids),
+                        sdocs_and_tags,
+                        tag_ids,
+                    )
+                case DocumentTagRecommendationMethod.SIMPLE:
+                    dto_iter = self._simple_suggestions(
+                        client, ml_job_id, project_id, sdoc_ids, sdocs_and_tags
+                    )
 
         dtos = self._deduplicate_document_classifications(dto_iter, multi_class)
 
@@ -107,6 +116,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
 
     def __suggest_similar_documents(
         self,
+        client: WeaviateClient,
         proj_id: int,
         pos_sdoc_ids: Set[int],
         neg_sdoc_ids: Set[int],
@@ -119,6 +129,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         hits: List[SimSearchDocumentHit] = []
         for sdoc_id in pos_sdoc_ids:
             search_result = crud_document_embedding.search_near_sdoc(
+                client=client,
                 project_id=proj_id,
                 sdoc_id=sdoc_id,
                 k=top_k,
@@ -148,6 +159,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
             nearest: List[SimSearchDocumentHit] = []
             for sdoc_id in candidates:
                 search_result = crud_document_embedding.search_near_sdoc(
+                    client=client,
                     project_id=proj_id,
                     sdoc_id=sdoc_id,
                     k=top_k,
@@ -188,6 +200,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
 
     def _exclusive_suggestions(
         self,
+        client: WeaviateClient,
         ml_job_id: str,
         project_id: int,
         sdoc_ids: Iterable[int],
@@ -205,6 +218,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
             neg_sodc_ids_lists = [ids for t, ids in tag_to_docs.items() if t != tag]
             neg_sodc_ids = {item for items in neg_sodc_ids_lists for item in items}
             similar_docs = self.__suggest_similar_documents(
+                client=client,
                 proj_id=project_id,
                 pos_sdoc_ids=pos_sdocs_ids,
                 neg_sdoc_ids=neg_sodc_ids,
@@ -229,6 +243,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
 
     def _knn_suggestions(
         self,
+        client: WeaviateClient,
         ml_job_id: str,
         project_id: int,
         sdoc_ids: Sequence[int],
@@ -249,6 +264,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         for sdoc_id in sdoc_ids_to_classify:
             # 1. Find k-nearest neighbors for the current sdoc_id
             crud_document_embedding.search_near_sdoc(
+                client=client,
                 project_id=project_id,
                 sdoc_id=sdoc_id,
                 k=5,
@@ -276,6 +292,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
 
     def _simple_suggestions(
         self,
+        client: WeaviateClient,
         ml_job_id: str,
         project_id: int,
         sdoc_ids: Set[int],
@@ -283,6 +300,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
     ) -> Iterator[DocumentTagRecommendationLinkCreate]:
         """simply get suggestions only using positive examples"""
         similar_docs = self.__suggest_similar_documents(
+            client=client,
             proj_id=project_id,
             pos_sdoc_ids=sdoc_ids,
             neg_sdoc_ids=set(),

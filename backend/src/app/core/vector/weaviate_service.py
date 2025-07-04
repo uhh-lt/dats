@@ -12,33 +12,23 @@ from loguru import logger
 class WeaviateService(metaclass=SingletonMeta):
     def __new__(cls, flush: bool = False):
         try:
-            # Initialize Weaviate client with v4 syntax
-            cls.client = weaviate.connect_to_custom(
-                http_host=conf.weaviate.host,
-                http_port=conf.weaviate.port,
-                http_secure=False,
-                grpc_host=conf.weaviate.host,
-                grpc_port=conf.weaviate.grpc_port,
-                grpc_secure=False,
-            )
+            with cls.weaviate_session() as client:
+                # Check if client is ready
+                if not client.is_ready():
+                    msg = "Weaviate client not ready!"
+                    logger.error(msg)
+                    raise RuntimeError(msg)
+                logger.info("Successfully established connection to Weaviate DB!")
 
-            # Check if client is ready
-            if not cls.client.is_ready():
-                msg = "Weaviate client not ready!"
-                logger.error(msg)
-                raise RuntimeError(msg)
+                if flush:
+                    client.collections.delete_all()
 
-            logger.info("Weaviate client initialized successfully.")
-
-            if flush:
-                cls.drop_indices()
-
-            # Initialize collections
-            DocumentCollection.create_collection(cls.client)
-            SentenceCollection.create_collection(cls.client)
-            ImageCollection.create_collection(cls.client)
-            AspectCollection.create_collection(cls.client)
-            ClusterCollection.create_collection(cls.client)
+                # Initialize collections
+                DocumentCollection.create_collection(client)
+                SentenceCollection.create_collection(client)
+                ImageCollection.create_collection(client)
+                AspectCollection.create_collection(client)
+                ClusterCollection.create_collection(client)
 
             return super(WeaviateService, cls).__new__(cls)
 
@@ -48,10 +38,19 @@ class WeaviateService(metaclass=SingletonMeta):
             raise SystemExit(msg)
 
     @classmethod
+    def weaviate_session(cls):
+        """Return the Weaviate client instance"""
+        return weaviate.connect_to_custom(
+            http_host=conf.weaviate.host,
+            http_port=conf.weaviate.port,
+            http_secure=False,
+            grpc_host=conf.weaviate.host,
+            grpc_port=conf.weaviate.grpc_port,
+            grpc_secure=False,
+        )
+
+    @classmethod
     def drop_indices(cls) -> None:
         logger.warning("Dropping all Weaviate indices!")
-        cls.client.collections.delete_all()
-
-    def get_client(self):
-        """Return the Weaviate client instance"""
-        return self.client
+        with cls.weaviate_session() as client:
+            client.collections.delete_all()

@@ -72,6 +72,7 @@ from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
 from app.core.vector.crud.sentence_embedding import crud_sentence_embedding
 from app.core.vector.dto.sentence_embedding import SentenceObjectIdentifier
+from app.core.vector.weaviate_service import WeaviateService
 from app.preprocessing.ray_model_service import RayModelService
 from app.preprocessing.ray_model_worker.dto.seqsenttagger import (
     SeqSentTaggerDoc,
@@ -112,6 +113,7 @@ class LLMService(metaclass=SingletonMeta):
         cls.sqls: SQLService = SQLService()
         cls.ollamas: OllamaService = OllamaService()
         cls.rms: RayModelService = RayModelService()
+        cls.weaviate: WeaviateService = WeaviateService()
 
         # map from job_type to function
         cls.llm_method_for_job_approach_type: Dict[
@@ -1190,22 +1192,24 @@ class LLMService(metaclass=SingletonMeta):
                 )
 
             # 1.3 - Find the corresponding sentence embeddings
-            search_tuples = [
-                (sent_id, sdoc_data.id)
-                for sdoc_data in training_sdocs
-                if sdoc_data is not None
-                for sent_id in range(len(sdoc_data.sentences))
-            ]
-            sentence_embeddings = crud_sentence_embedding.get_embeddings(
-                project_id=project_id,
-                ids=[
-                    SentenceObjectIdentifier(sdoc_id=sdoc_id, sentence_id=sent_id)
-                    for sent_id, sdoc_id in search_tuples
-                ],
-            )
-            logger.debug(
-                f"Found {len(sentence_embeddings)} corresponding sentence embeddings."
-            )
+            with self.weaviate.weaviate_session() as client:
+                search_tuples = [
+                    (sent_id, sdoc_data.id)
+                    for sdoc_data in training_sdocs
+                    if sdoc_data is not None
+                    for sent_id in range(len(sdoc_data.sentences))
+                ]
+                sentence_embeddings = crud_sentence_embedding.get_embeddings(
+                    client=client,
+                    project_id=project_id,
+                    ids=[
+                        SentenceObjectIdentifier(sdoc_id=sdoc_id, sentence_id=sent_id)
+                        for sent_id, sdoc_id in search_tuples
+                    ],
+                )
+                logger.debug(
+                    f"Found {len(sentence_embeddings)} corresponding sentence embeddings."
+                )
 
             sdoc_id2sent_embs: Dict[int, List[List[float]]] = {}
             for sent_emb, (sent_id, sdoc_id) in zip(sentence_embeddings, search_tuples):
@@ -1271,26 +1275,28 @@ class LLMService(metaclass=SingletonMeta):
             ]
 
             # 3. Find the corresponding sentence embeddings
-            search_tuples = [
-                (sent_id, sdoc_data.id)
-                for sdoc_data in test_sdocs
-                if sdoc_data is not None
-                for sent_id in range(len(sdoc_data.sentences))
-            ]
-            test_sentence_embeddings = crud_sentence_embedding.get_embeddings(
-                project_id=project_id,
-                ids=[
-                    SentenceObjectIdentifier(sdoc_id=sdoc_id, sentence_id=sent_id)
-                    for sent_id, sdoc_id in search_tuples
-                ],
-            )
-            test_sdoc_id2sent_embs: Dict[int, List[List[float]]] = {}
-            for sent_emb, (sent_id, sdoc_id) in zip(
-                test_sentence_embeddings, search_tuples
-            ):
-                if sdoc_id not in test_sdoc_id2sent_embs:
-                    test_sdoc_id2sent_embs[sdoc_id] = []
-                test_sdoc_id2sent_embs[sdoc_id].append(sent_emb)
+            with self.weaviate.weaviate_session() as client:
+                search_tuples = [
+                    (sent_id, sdoc_data.id)
+                    for sdoc_data in test_sdocs
+                    if sdoc_data is not None
+                    for sent_id in range(len(sdoc_data.sentences))
+                ]
+                test_sentence_embeddings = crud_sentence_embedding.get_embeddings(
+                    client=client,
+                    project_id=project_id,
+                    ids=[
+                        SentenceObjectIdentifier(sdoc_id=sdoc_id, sentence_id=sent_id)
+                        for sent_id, sdoc_id in search_tuples
+                    ],
+                )
+                test_sdoc_id2sent_embs: Dict[int, List[List[float]]] = {}
+                for sent_emb, (sent_id, sdoc_id) in zip(
+                    test_sentence_embeddings, search_tuples
+                ):
+                    if sdoc_id not in test_sdoc_id2sent_embs:
+                        test_sdoc_id2sent_embs[sdoc_id] = []
+                    test_sdoc_id2sent_embs[sdoc_id].append(sent_emb)
 
         # Build the test data
         test_dataset: List[SeqSentTaggerDoc] = []

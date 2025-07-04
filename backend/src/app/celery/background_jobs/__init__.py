@@ -145,9 +145,11 @@ def prepare_and_start_perspectives_job_async(
 
     assert isinstance(start_perspectives_job, Task), "Not a Celery Task"
 
-    tmjs: PerspectivesJobService = PerspectivesJobService()
-    perspectives_job = tmjs.prepare_perspectives_job(
-        project_id=project_id, aspect_id=aspect_id, tm_params=perspectives_job_params
+    pmjs: PerspectivesJobService = PerspectivesJobService()
+    perspectives_job = pmjs.prepare_perspectives_job(
+        project_id=project_id,
+        aspect_id=aspect_id,
+        perspectives_params=perspectives_job_params,
     )
     start_perspectives_job.apply_async(kwargs={"perspectives_job": perspectives_job})
     return perspectives_job

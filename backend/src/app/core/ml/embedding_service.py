@@ -19,6 +19,7 @@ from app.core.data.repo.utils import image_to_base64, load_image
 from app.core.db.sql_service import SQLService
 from app.core.vector.crud.document_embedding import crud_document_embedding
 from app.core.vector.dto.document_embedding import DocumentObjectIdentifier
+from app.core.vector.weaviate_service import WeaviateService
 from app.preprocessing.ray_model_service import RayModelService
 from app.preprocessing.ray_model_worker.dto.clip import (
     ClipImageEmbeddingInput,
@@ -26,6 +27,7 @@ from app.preprocessing.ray_model_worker.dto.clip import (
 )
 from app.util.singleton_meta import SingletonMeta
 from sqlalchemy import ColumnElement, and_
+from weaviate import WeaviateClient
 
 
 class EmbeddingService(metaclass=SingletonMeta):
@@ -34,6 +36,7 @@ class EmbeddingService(metaclass=SingletonMeta):
         cls.repo = RepoService()
         cls.rms: RayModelService = RayModelService()
         cls.llm: OllamaService = OllamaService()
+        cls.weaviate: WeaviateService = WeaviateService()
         return super(EmbeddingService, cls).__new__(cls)
 
     def encode_document(self, text: str) -> np.ndarray:
@@ -71,20 +74,26 @@ class EmbeddingService(metaclass=SingletonMeta):
     ) -> int:
         total_processed = 0
         num_processed = -1
-        if recompute:
-            crud_document_embedding.remove_embeddings_by_project(project_id=project_id)
 
-        while num_processed != 0:
-            num_processed = self._process_document_batch(
-                filter_criterion,
-                project_id,
-                force_override=(recompute and (total_processed == 0)),
-            )
-            total_processed = +num_processed
-        return total_processed
+        with self.weaviate.weaviate_session() as client:
+            if recompute:
+                crud_document_embedding.remove_embeddings_by_project(
+                    client=client, project_id=project_id
+                )
+
+            while num_processed != 0:
+                num_processed = self._process_document_batch(
+                    client,
+                    filter_criterion,
+                    project_id,
+                    force_override=(recompute and (total_processed == 0)),
+                )
+                total_processed = +num_processed
+            return total_processed
 
     def _process_document_batch(
         self,
+        client: WeaviateClient,
         filter_criterion: ColumnElement,
         project_id: int,
         batch_size=8,
@@ -117,6 +126,7 @@ class EmbeddingService(metaclass=SingletonMeta):
 
         # Store the embeddings
         crud_document_embedding.add_embedding_batch(
+            client=client,
             project_id=project_id,
             ids=[DocumentObjectIdentifier(sdoc_id=sdoc_id) for sdoc_id in sdoc_ids],
             embeddings=embeddings,

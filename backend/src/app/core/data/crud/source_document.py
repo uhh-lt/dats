@@ -25,6 +25,7 @@ from app.core.vector.crud.aspect_embedding import crud_aspect_embedding
 from app.core.vector.crud.document_embedding import crud_document_embedding
 from app.core.vector.crud.image_embedding import crud_image_embedding
 from app.core.vector.crud.sentence_embedding import crud_sentence_embedding
+from app.core.vector.weaviate_service import WeaviateService
 
 
 class SourceDocumentPreprocessingUnfinishedError(Exception):
@@ -122,18 +123,19 @@ class CRUDSourceDocument(
         )
 
         # remove from index
-        crud_aspect_embedding.remove_by_sdoc_id(
-            project_id=sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
-        )
-        crud_document_embedding.remove_by_sdoc_id(
-            project_id=sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
-        )
-        crud_image_embedding.remove_by_sdoc_id(
-            project_id=sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
-        )
-        crud_sentence_embedding.remove_by_sdoc_id(
-            project_id=sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
-        )
+        with WeaviateService().weaviate_session() as client:
+            crud_aspect_embedding.remove_by_sdoc_id(
+                client=client, project_id=sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
+            )
+            crud_document_embedding.remove_by_sdoc_id(
+                client=client, project_id=sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
+            )
+            crud_image_embedding.remove_by_sdoc_id(
+                client=client, project_id=sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
+            )
+            crud_sentence_embedding.remove_by_sdoc_id(
+                client=client, project_id=sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
+            )
 
         return sdoc_db_obj
 

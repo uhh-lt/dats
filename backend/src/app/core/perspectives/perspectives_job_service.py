@@ -97,16 +97,21 @@ class PerspectivesJobService(metaclass=SingletonMeta):
         return super(PerspectivesJobService, cls).__new__(cls)
 
     def prepare_perspectives_job(
-        self, project_id: int, aspect_id: int, tm_params: PerspectivesJobParams
+        self,
+        project_id: int,
+        aspect_id: int,
+        perspectives_params: PerspectivesJobParams,
     ) -> PerspectivesJobRead:
         pj_create = PerspectivesJobCreate(
             project_id=project_id,
             aspect_id=aspect_id,
             step=0,
-            steps=self.perspectives_job_steps.get(tm_params.perspectives_job_type, []),
+            steps=self.perspectives_job_steps.get(
+                perspectives_params.perspectives_job_type, []
+            ),
             status_msg="Waiting...",
-            perspectives_job_type=tm_params.perspectives_job_type,
-            parameters=tm_params,
+            perspectives_job_type=perspectives_params.perspectives_job_type,
+            parameters=perspectives_params,
         )
         try:
             pj_read = self.redis.store_perspectives_job(perspectives_job=pj_create)

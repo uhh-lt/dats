@@ -16,12 +16,14 @@ from app.core.data.dto.search import (
 from app.core.ml.embedding_service import EmbeddingService
 from app.core.vector.crud.image_embedding import crud_image_embedding
 from app.core.vector.crud.sentence_embedding import crud_sentence_embedding
+from app.core.vector.weaviate_service import WeaviateService
 from app.util.singleton_meta import SingletonMeta
 
 
 class SimSearchService(metaclass=SingletonMeta):
     def __new__(cls):
         cls.emb = EmbeddingService()
+        cls.weaviate = WeaviateService()
         return super(SimSearchService, cls).__new__(cls)
 
     def _encode_query(
@@ -80,13 +82,17 @@ class SimSearchService(metaclass=SingletonMeta):
         query_emb = self._encode_query(
             **self.__parse_query_param(query),
         ).tolist()
-        results = crud_sentence_embedding.search_near_vector_in_sdoc_ids(
-            vector=query_emb,
-            project_id=proj_id,
-            k=top_k,
-            threshold=threshold,
-            sdoc_ids=sdoc_ids_to_search,
-        )
+
+        with self.weaviate.weaviate_session() as client:
+            results = crud_sentence_embedding.search_near_vector_in_sdoc_ids(
+                client=client,
+                vector=query_emb,
+                project_id=proj_id,
+                k=top_k,
+                threshold=threshold,
+                sdoc_ids=sdoc_ids_to_search,
+            )
+
         return [
             SimSearchSentenceHit(
                 sdoc_id=result.id.sdoc_id,
@@ -107,13 +113,17 @@ class SimSearchService(metaclass=SingletonMeta):
         query_emb = self._encode_query(
             **self.__parse_query_param(query),
         ).tolist()
-        results = crud_image_embedding.search_near_vector_in_sdoc_ids(
-            vector=query_emb,
-            project_id=proj_id,
-            k=top_k,
-            threshold=threshold,
-            sdoc_ids=sdoc_ids_to_search,
-        )
+
+        with self.weaviate.weaviate_session() as client:
+            results = crud_image_embedding.search_near_vector_in_sdoc_ids(
+                client=client,
+                vector=query_emb,
+                project_id=proj_id,
+                k=top_k,
+                threshold=threshold,
+                sdoc_ids=sdoc_ids_to_search,
+            )
+
         return [
             SimSearchImageHit(
                 sdoc_id=result.id.sdoc_id,

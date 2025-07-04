@@ -582,11 +582,11 @@ class RedisService(metaclass=SingletonMeta):
     def store_perspectives_job(
         self, perspectives_job: Union[PerspectivesJobCreate, PerspectivesJobRead]
     ) -> PerspectivesJobRead:
-        client = self._get_client("tm")
+        client = self._get_client("perspectives")
 
         if isinstance(perspectives_job, PerspectivesJobCreate):
             key = self._generate_random_key()
-            tmj = PerspectivesJobRead(
+            pj = PerspectivesJobRead(
                 id=key,
                 **perspectives_job.model_dump(),
                 created=datetime.now(),
@@ -594,55 +594,55 @@ class RedisService(metaclass=SingletonMeta):
             )
         elif isinstance(perspectives_job, PerspectivesJobRead):
             key = perspectives_job.id
-            tmj = perspectives_job
+            pj = perspectives_job
         else:
             msg = "Invalid type for perspectives_job parameter."
             logger.error(msg)
             raise TypeError(msg)
 
-        if client.set(key.encode("utf-8"), tmj.model_dump_json()) != 1:
+        if client.set(key.encode("utf-8"), pj.model_dump_json()) != 1:
             msg = "Cannot store PerspectivesJob!"
             logger.error(msg)
             raise RuntimeError(msg)
 
         logger.debug(f"Successfully stored PerspectivesJob {key}!")
-        return tmj
+        return pj
 
     def get_all_perspectives_jobs(self, project_id: int) -> List[PerspectivesJobRead]:
-        client = self._get_client("tm")
+        client = self._get_client("perspectives")
         all_perspectives_jobs: List[PerspectivesJobRead] = [
             self.load_perspectives_job(str(key, "utf-8")) for key in client.keys()
         ]
         return [job for job in all_perspectives_jobs if job.project_id == project_id]
 
     def load_perspectives_job(self, key: str) -> PerspectivesJobRead:
-        client = self._get_client("tm")
-        tmj = client.get(key.encode("utf-8"))
-        if tmj is None:
+        client = self._get_client("perspectives")
+        pj = client.get(key.encode("utf-8"))
+        if pj is None:
             msg = f"PerspectivesJob with ID {key} does not exist!"
             logger.error(msg)
             raise KeyError(msg)
 
         logger.debug(f"Successfully loaded PerspectivesJob {key}")
-        return PerspectivesJobRead.model_validate_json(tmj)
+        return PerspectivesJobRead.model_validate_json(pj)
 
     def update_perspectives_job(
         self, key: str, update: PerspectivesJobUpdate
     ) -> PerspectivesJobRead:
-        tmj = self.load_perspectives_job(key=key)
-        data = tmj.model_dump(exclude={"updated"})
+        pj = self.load_perspectives_job(key=key)
+        data = pj.model_dump(exclude={"updated"})
         data.update(**update.model_dump(exclude_unset=True))
-        tmj = PerspectivesJobRead(**data, updated=datetime.now())
-        tmj = self.store_perspectives_job(perspectives_job=tmj)
+        pj = PerspectivesJobRead(**data, updated=datetime.now())
+        pj = self.store_perspectives_job(perspectives_job=pj)
         logger.debug(f"Updated PerspectivesJob {key}")
-        return tmj
+        return pj
 
     def delete_perspectives_job(self, key: str) -> PerspectivesJobRead:
-        tmj = self.load_perspectives_job(key=key)
+        pj = self.load_perspectives_job(key=key)
         client = self._get_client("tm")
         if client.delete(key.encode("utf-8")) != 1:
             msg = f"Cannot delete PerspectivesJob {key}"
             logger.error(msg)
             raise RuntimeError(msg)
         logger.debug(f"Deleted PerspectivesJob {key}")
-        return tmj
+        return pj

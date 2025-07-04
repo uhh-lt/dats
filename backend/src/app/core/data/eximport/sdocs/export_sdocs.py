@@ -18,6 +18,7 @@ from app.core.vector.crud.image_embedding import crud_image_embedding
 from app.core.vector.crud.sentence_embedding import crud_sentence_embedding
 from app.core.vector.dto.document_embedding import DocumentObjectIdentifier
 from app.core.vector.dto.image_embedding import ImageObjectIdentifier
+from app.core.vector.weaviate_service import WeaviateService
 from sqlalchemy.orm import Session
 
 
@@ -118,23 +119,28 @@ def __export_sdocs(
         # Word frequencies
         word_frequencies = [(wf.word, wf.count) for wf in sdoc.word_frequencies]
 
-        # Get document embeddings
-        doc_embedding = crud_document_embedding.get_embedding(
-            project_id=sdoc.project_id, id=DocumentObjectIdentifier(sdoc_id=sdoc.id)
-        )
-
-        # Get sentence embeddings
-        sentence_embeddings = crud_sentence_embedding.get_embeddings_by_sdoc_id(
-            project_id=sdoc.project_id, sdoc_id=sdoc.id
-        )
-        sentence_embeddings = [se.embedding for se in sentence_embeddings]
-
-        # Get image embeddings
-        image_embedding = None
-        if sdoc.doctype == "image":
-            image_embedding = crud_image_embedding.get_embedding(
-                project_id=sdoc.project_id, id=ImageObjectIdentifier(sdoc_id=sdoc.id)
+        with WeaviateService().weaviate_session() as client:
+            # Get document embeddings
+            doc_embedding = crud_document_embedding.get_embedding(
+                client=client,
+                project_id=sdoc.project_id,
+                id=DocumentObjectIdentifier(sdoc_id=sdoc.id),
             )
+
+            # Get sentence embeddings
+            sentence_embeddings = crud_sentence_embedding.get_embeddings_by_sdoc_id(
+                client=client, project_id=sdoc.project_id, sdoc_id=sdoc.id
+            )
+            sentence_embeddings = [se.embedding for se in sentence_embeddings]
+
+            # Get image embeddings
+            image_embedding = None
+            if sdoc.doctype == "image":
+                image_embedding = crud_image_embedding.get_embedding(
+                    client=client,
+                    project_id=sdoc.project_id,
+                    id=ImageObjectIdentifier(sdoc_id=sdoc.id),
+                )
 
         # Create export schema for the document
         export_schema = SourceDocumentExportSchema(

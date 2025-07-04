@@ -3,7 +3,7 @@ from typing import Optional
 from app.core.vector.collections.document_collection import DocumentCollection
 from app.core.vector.crud.crud_base import CRUDBase
 from app.core.vector.dto.document_embedding import DocumentObjectIdentifier
-from app.core.vector.weaviate_service import WeaviateService
+from weaviate import WeaviateClient
 from weaviate.classes.query import Filter
 
 
@@ -14,6 +14,7 @@ class CRUDDocumentEmbedding(CRUDBase[DocumentObjectIdentifier, DocumentCollectio
 
     def search_near_sdoc(
         self,
+        client: WeaviateClient,
         project_id: int,
         sdoc_id: int,
         k: int,
@@ -40,6 +41,7 @@ class CRUDDocumentEmbedding(CRUDBase[DocumentObjectIdentifier, DocumentCollectio
             else None
         )
         return self.search_near_object(
+            client=client,
             project_id=project_id,
             uuid=uuid,
             filters=filters,
@@ -47,14 +49,16 @@ class CRUDDocumentEmbedding(CRUDBase[DocumentObjectIdentifier, DocumentCollectio
             threshold=threshold,
         )
 
-    def remove_by_sdoc_id(self, project_id: int, sdoc_id: int) -> None:
+    def remove_by_sdoc_id(
+        self, client: WeaviateClient, project_id: int, sdoc_id: int
+    ) -> None:
         """
         Remove all embeddings for a given SourceDocument by sdoc_id
         Args:
             project_id: The project ID
             sdoc_id: The SourceDocument ID
         """
-        collection = self._get_collection(project_id=project_id)
+        collection = self._get_collection(client=client, project_id=project_id)
         collection.data.delete_many(
             where=Filter.by_property(
                 self.collection_class.properties["sdoc_id"].name
@@ -62,9 +66,7 @@ class CRUDDocumentEmbedding(CRUDBase[DocumentObjectIdentifier, DocumentCollectio
         )
 
 
-client = WeaviateService().get_client()
 crud_document_embedding = CRUDDocumentEmbedding(
-    client=client,
     collection_class=DocumentCollection,
     object_identifier=DocumentObjectIdentifier,
 )

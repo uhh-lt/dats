@@ -36,10 +36,11 @@ from app.core.vector.crud.cluster_embedding import crud_cluster_embedding
 from app.core.vector.dto.cluster_embedding import ClusterObjectIdentifier
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from weaviate import WeaviateClient
 
-from api.dependencies import get_current_user, get_db_session
+from api.dependencies import get_current_user, get_db_session, get_weaviate_session
 
-tmjs = PerspectivesJobService()
+pmjs = PerspectivesJobService()
 
 router = APIRouter(
     prefix="/perspectives",
@@ -68,7 +69,7 @@ def start_perspectives_job(
 
     # Check if there is a job running already for this aspect
     if aspect.most_recent_job_id:
-        most_recent_job = tmjs.get_perspectives_job(aspect.most_recent_job_id)
+        most_recent_job = pmjs.get_perspectives_job(aspect.most_recent_job_id)
         if most_recent_job and most_recent_job.status not in [
             BackgroundJobStatus.ABORTED,
             BackgroundJobStatus.ERROR,
@@ -108,7 +109,7 @@ def get_perspectives_job(
     perspectives_job_id: str,
     authz_user: AuthzUser = Depends(),
 ) -> PerspectivesJobRead:
-    job = tmjs.get_perspectives_job(perspectives_job_id)
+    job = pmjs.get_perspectives_job(perspectives_job_id)
     authz_user.assert_in_project(job.project_id)
     return job
 
@@ -208,6 +209,7 @@ def update_aspect_by_id(
 def remove_aspect_by_id(
     *,
     db: Session = Depends(get_db_session),
+    weaviate: WeaviateClient = Depends(get_weaviate_session),
     aspect_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> AspectRead:
@@ -216,10 +218,10 @@ def remove_aspect_by_id(
     aspect = crud_aspect.read(db=db, id=aspect_id)
 
     crud_cluster_embedding.remove_embeddings_by_aspect(
-        project_id=aspect.project_id, aspect_id=aspect_id
+        client=weaviate, project_id=aspect.project_id, aspect_id=aspect_id
     )
     crud_aspect_embedding.remove_embeddings_by_aspect(
-        project_id=aspect.project_id, aspect_id=aspect_id
+        client=weaviate, project_id=aspect.project_id, aspect_id=aspect_id
     )
     db_obj = crud_aspect.remove(db=db, id=aspect_id)
     return AspectRead.model_validate(db_obj)
@@ -295,7 +297,7 @@ def visualize_documents(
 
     # If a job is in progress, return early with empty visualization
     if aspect.most_recent_job_id:
-        most_recent_job = tmjs.get_perspectives_job(aspect.most_recent_job_id)
+        most_recent_job = pmjs.get_perspectives_job(aspect.most_recent_job_id)
         if most_recent_job and most_recent_job.status != BackgroundJobStatus.FINISHED:
             return PerspectivesVisualization(
                 aspect_id=aspect.id,
@@ -386,6 +388,7 @@ def visualize_documents(
 def get_cluster_similarities(
     *,
     db: Session = Depends(get_db_session),
+    weaviate: WeaviateClient = Depends(get_weaviate_session),
     aspect_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> PerspectivesClusterSimilarities:
@@ -404,6 +407,7 @@ def get_cluster_similarities(
 
     # Fetch the cluster embeddings
     cluster_embeddings = crud_cluster_embedding.get_embeddings(
+        client=weaviate,
         project_id=aspect.project_id,
         ids=[
             ClusterObjectIdentifier(

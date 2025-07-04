@@ -28,6 +28,7 @@ from app.core.vector.crud.sentence_embedding import crud_sentence_embedding
 from app.core.vector.dto.document_embedding import DocumentObjectIdentifier
 from app.core.vector.dto.image_embedding import ImageObjectIdentifier
 from app.core.vector.dto.sentence_embedding import SentenceObjectIdentifier
+from app.core.vector.weaviate_service import WeaviateService
 from app.preprocessing.pipeline.steps.image.process.convert_to_webp_and_generate_thumbnail import (
     generate_thumbnails,
 )
@@ -248,33 +249,37 @@ def import_sdocs_to_proj(
         crud_sdoc_link.create_multi(db=db, create_dtos=link_create_dtos)
 
         # 5. Add embeddings to the vector database
-        # Document embeddings
-        crud_document_embedding.add_embedding(
-            project_id=project_id,
-            id=DocumentObjectIdentifier(sdoc_id=created_sdoc.id),
-            embedding=sdoc_export.document_embedding,
-        )
-
-        # Sentence embeddings
-        crud_sentence_embedding.add_embedding_batch(
-            project_id=project_id,
-            ids=[
-                SentenceObjectIdentifier(sdoc_id=created_sdoc.id, sentence_id=i)
-                for i in range(len(sdoc_export.sentence_embeddings))
-            ],
-            embeddings=[se for se in sdoc_export.sentence_embeddings],
-        )
-
-        # Image embedding
-        if (
-            sdoc_export.image_embedding is not None
-            and DocType(sdoc_export.doctype) == DocType.image
-        ):
-            crud_image_embedding.add_embedding(
+        with WeaviateService().weaviate_session() as client:
+            # Document embeddings
+            crud_document_embedding.add_embedding(
+                client=client,
                 project_id=project_id,
-                id=ImageObjectIdentifier(sdoc_id=created_sdoc.id),
-                embedding=sdoc_export.image_embedding,
+                id=DocumentObjectIdentifier(sdoc_id=created_sdoc.id),
+                embedding=sdoc_export.document_embedding,
             )
+
+            # Sentence embeddings
+            crud_sentence_embedding.add_embedding_batch(
+                client=client,
+                project_id=project_id,
+                ids=[
+                    SentenceObjectIdentifier(sdoc_id=created_sdoc.id, sentence_id=i)
+                    for i in range(len(sdoc_export.sentence_embeddings))
+                ],
+                embeddings=[se for se in sdoc_export.sentence_embeddings],
+            )
+
+            # Image embedding
+            if (
+                sdoc_export.image_embedding is not None
+                and DocType(sdoc_export.doctype) == DocType.image
+            ):
+                crud_image_embedding.add_embedding(
+                    client=client,
+                    project_id=project_id,
+                    id=ImageObjectIdentifier(sdoc_id=created_sdoc.id),
+                    embedding=sdoc_export.image_embedding,
+                )
 
         # 6. Add the source documents to the Elasticsearch index
         elastic_index.add_document_to_index(
