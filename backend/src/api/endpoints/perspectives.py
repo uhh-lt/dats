@@ -40,7 +40,7 @@ from weaviate import WeaviateClient
 
 from api.dependencies import get_current_user, get_db_session, get_weaviate_session
 
-pmjs = PerspectivesJobService()
+pjs = PerspectivesJobService()
 
 router = APIRouter(
     prefix="/perspectives",
@@ -69,7 +69,7 @@ def start_perspectives_job(
 
     # Check if there is a job running already for this aspect
     if aspect.most_recent_job_id:
-        most_recent_job = pmjs.get_perspectives_job(aspect.most_recent_job_id)
+        most_recent_job = pjs.get_perspectives_job(aspect.most_recent_job_id)
         if most_recent_job and most_recent_job.status not in [
             BackgroundJobStatus.ABORTED,
             BackgroundJobStatus.ERROR,
@@ -109,7 +109,7 @@ def get_perspectives_job(
     perspectives_job_id: str,
     authz_user: AuthzUser = Depends(),
 ) -> PerspectivesJobRead:
-    job = pmjs.get_perspectives_job(perspectives_job_id)
+    job = pjs.get_perspectives_job(perspectives_job_id)
     authz_user.assert_in_project(job.project_id)
     return job
 
@@ -297,7 +297,7 @@ def visualize_documents(
 
     # If a job is in progress, return early with empty visualization
     if aspect.most_recent_job_id:
-        most_recent_job = pmjs.get_perspectives_job(aspect.most_recent_job_id)
+        most_recent_job = pjs.get_perspectives_job(aspect.most_recent_job_id)
         if most_recent_job and most_recent_job.status != BackgroundJobStatus.FINISHED:
             return PerspectivesVisualization(
                 aspect_id=aspect.id,

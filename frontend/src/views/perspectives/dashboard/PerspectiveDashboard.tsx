@@ -48,7 +48,7 @@ function PerspectiveDashboard() {
 
   return (
     <ContentContainerLayout>
-      {aspect.data ? (
+      {aspect.data && (
         <Stack spacing={4}>
           <Stack spacing={2} direction={"row"} alignItems="flex-start" justifyContent="space-between">
             <Box maxWidth="66%">
@@ -139,8 +139,6 @@ function PerspectiveDashboard() {
 
           <ClusterDetailDialog aspectId={aspectId} />
         </Stack>
-      ) : (
-        <>LOADING!</>
       )}
     </ContentContainerLayout>
   );

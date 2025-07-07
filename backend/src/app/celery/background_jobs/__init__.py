@@ -145,8 +145,8 @@ def prepare_and_start_perspectives_job_async(
 
     assert isinstance(start_perspectives_job, Task), "Not a Celery Task"
 
-    pmjs: PerspectivesJobService = PerspectivesJobService()
-    perspectives_job = pmjs.prepare_perspectives_job(
+    pjs: PerspectivesJobService = PerspectivesJobService()
+    perspectives_job = pjs.prepare_perspectives_job(
         project_id=project_id,
         aspect_id=aspect_id,
         perspectives_params=perspectives_job_params,

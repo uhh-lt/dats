@@ -31,7 +31,7 @@ fi
 
 JWT_SECRET=$(pwgen 32 1)
 SESSION_SECRET=$(pwgen 32 1)
-UUID_NAMESPACE=$(python -c "import uuid; print(uuid.uuid4())")
+UUID_NAMESPACE=$(uv run python -c "import uuid; print(uuid.uuid4())")
 REPO_ROOT="$(pwd)/docker/backend_repo"
 
 cp docker/.env.example docker/.env

@@ -218,7 +218,7 @@ const iconMap: Record<Icon, IconFactory> = {
   // Logbook
   [Icon.LOGBOOK]: (iconProps) => <MenuBookIcon {...iconProps} />,
 
-  // Atlas
+  // Perspectives
   [Icon.PERSPECTIVES]: (iconProps) => <ExploreIcon {...iconProps} />,
   [Icon.MAP]: (iconProps) => <MapIcon {...iconProps} />,
   [Icon.CLUSTERS]: (iconProps) => <BubbleChartIcon {...iconProps} />,

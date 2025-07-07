@@ -1,4 +1,4 @@
-import uuid  # Import the uuid module
+import uuid
 from abc import ABC, abstractmethod
 
 from config import conf

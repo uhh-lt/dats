@@ -31,13 +31,6 @@ def retrieval_augmented_generation_with_session(
         top_k=top_k,
         threshold=threshold,
     )
-    # similar_sentences = sdoc_search.find_similar_sentences(
-    #     proj_id=proj_id,
-    #     query=query,
-    #     top_k=top_k,
-    #     threshold=threshold,
-    #     filter=filter,
-    # )
 
     # Group hits by source document ID
     sdoc_to_hits = defaultdict(list)
