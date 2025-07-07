@@ -20,6 +20,7 @@ interface Data {
   clusterId: number;
   clusterName: string;
   count: number;
+  index: number; // used to render the correct color
 }
 
 const renderCustomizedLabel = (data: { value: string; percent: number }) => {
@@ -44,14 +45,14 @@ function ClusterDistributionPlot({ aspectId, height, showPieChart }: ClusterDist
     const counts: Record<number, Data> = {};
     if (!vis.data) return [];
 
-    vis.data.clusters.forEach((cluster) => {
+    vis.data.clusters.forEach((cluster, index) => {
       counts[cluster.id] = {
         clusterId: cluster.id,
         clusterName: cluster.name,
         count: 0,
+        index,
       };
     });
-    console.log("Cluster counts:", counts);
     vis.data.docs.forEach((doc) => {
       if (!counts[doc.cluster_id]) {
         console.warn(`Cluster ID ${doc.cluster_id} not found in counts array.`);
@@ -59,6 +60,13 @@ function ClusterDistributionPlot({ aspectId, height, showPieChart }: ClusterDist
       }
       counts[doc.cluster_id].count += 1;
     });
+
+    // remove outlier cluster
+    const outlierClusterId = vis.data.clusters.find((c) => c.is_outlier)?.id;
+    if (outlierClusterId) {
+      delete counts[outlierClusterId];
+    }
+
     return Object.values(counts);
   }, [vis.data]);
 
@@ -78,10 +86,10 @@ function ClusterDistributionPlot({ aspectId, height, showPieChart }: ClusterDist
                 fill="#8884d8"
                 label={renderCustomizedLabel}
               >
-                {chartData.map((clusterFrequency, index) => (
+                {chartData.map((clusterFrequency) => (
                   <Cell
                     key={`clustercell-${clusterFrequency.clusterId}`}
-                    fill={colorScheme[index % colorScheme.length]}
+                    fill={colorScheme[clusterFrequency.index % colorScheme.length]}
                     stroke={undefined}
                     strokeWidth={2}
                     style={{ cursor: "pointer" }}
@@ -96,10 +104,10 @@ function ClusterDistributionPlot({ aspectId, height, showPieChart }: ClusterDist
               <CartesianGrid stroke="#eee" />
               <ChartTooltip />
               <Bar dataKey={(data) => data.count} fill="black">
-                {chartData.map((clusterFrequency, index) => (
+                {chartData.map((clusterFrequency) => (
                   <Cell
                     key={`clustercell-${clusterFrequency.clusterId}`}
-                    fill={colorScheme[index % colorScheme.length]}
+                    fill={colorScheme[clusterFrequency.index % colorScheme.length]}
                     stroke={undefined}
                     strokeWidth={2}
                     style={{ cursor: "pointer" }}
