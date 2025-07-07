@@ -365,7 +365,9 @@ def visualize_documents(
     filtered_clusters = [
         cluster
         for cluster in clusters
-        if not np.isnan(cluster.x)
+        if cluster.x is not None
+        and cluster.y is not None
+        and not np.isnan(cluster.x)
         and not np.isinf(cluster.x)
         and not np.isnan(cluster.y)
         and not np.isinf(cluster.y)

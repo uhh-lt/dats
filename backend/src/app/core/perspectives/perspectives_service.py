@@ -793,7 +793,7 @@ class PerspectivesService:
             for sdoc_id, similarity in zip(sdoc_ids, similarities):
                 distance_update_ids.append((sdoc_id.item(), cluster_id))
                 distance_update_dtos.append(
-                    DocumentClusterUpdate(distance=1.0 - similarity.item())
+                    DocumentClusterUpdate(similarity=similarity.item())
                 )
 
         self._log_status_msg(
@@ -973,13 +973,13 @@ class PerspectivesService:
                         # skip documents that are already accepted
                         continue
 
-                    # assign the new cluster if the distance is smaller than the current cluster's distance
-                    if result.score < doc_cluster.distance:
+                    # assign the new cluster if the similarity is larger than the current cluster's distance
+                    if result.score > doc_cluster.similarity:
                         update_ids.append((doc_cluster.sdoc_id, doc_cluster.cluster_id))
                         update_dtos.append(
                             DocumentClusterUpdate(
                                 cluster_id=new_cluster.id,
-                                distance=result.score,
+                                similarity=result.score,
                             )
                         )
                         # track changes
@@ -1148,9 +1148,9 @@ class PerspectivesService:
                     most_similar_cluster_id = cluster_ids[most_similar_cluster_index]
 
                     sdoc_id2new_cluster_id[da.sdoc_id] = most_similar_cluster_id
-                    sdoc_id2new_cluster_distance[da.sdoc_id] = (
-                        1.0 - similarity[most_similar_cluster_index].item()
-                    )
+                    sdoc_id2new_cluster_distance[da.sdoc_id] = similarity[
+                        most_similar_cluster_index
+                    ].item()
                     modified_clusters.add(most_similar_cluster_id)
 
                 # - Update the document-cluster assignments in the database
@@ -1160,7 +1160,7 @@ class PerspectivesService:
                     update_dtos.append(
                         DocumentClusterUpdate(
                             cluster_id=sdoc_id2new_cluster_id[dt.sdoc_id],
-                            distance=sdoc_id2new_cluster_distance[dt.sdoc_id],
+                            similarity=sdoc_id2new_cluster_distance[dt.sdoc_id],
                             is_accepted=False,  # Reset acceptance status
                         )
                     )

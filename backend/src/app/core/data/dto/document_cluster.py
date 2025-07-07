@@ -17,6 +17,6 @@ class DocumentClusterUpdate(BaseModel, UpdateDTOBase):
     is_accepted: Optional[bool] = Field(
         default=None, description="Update the acceptance status"
     )
-    distance: Optional[float] = Field(
+    similarity: Optional[float] = Field(
         default=None, description="Update distance to the assigned cluster"
     )

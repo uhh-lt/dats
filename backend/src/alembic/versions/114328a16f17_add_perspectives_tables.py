@@ -93,7 +93,7 @@ def upgrade() -> None:
         "documentcluster",
         sa.Column("sdoc_id", sa.Integer(), nullable=False),
         sa.Column("cluster_id", sa.Integer(), nullable=False),
-        sa.Column("distance", sa.Float(), nullable=True),
+        sa.Column("similarity", sa.Float(), nullable=True),
         sa.Column("is_accepted", sa.Boolean(), nullable=False),
         sa.ForeignKeyConstraint(["cluster_id"], ["cluster.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["sdoc_id"], ["sourcedocument.id"], ondelete="CASCADE"),
