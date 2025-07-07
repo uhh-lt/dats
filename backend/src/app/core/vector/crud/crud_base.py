@@ -97,20 +97,12 @@ class CRUDBase(Generic[ID, COLLECTION]):
             embedding: Vector embedding
         """
         collection = self._get_collection(client=client, project_id=project_id)
-        if collection.data.exists(uuid=id.uuidv5()):
-            collection.data.replace(
-                uuid=id.uuidv5(),
-                properties=id.model_dump(),
-                references=None,
-                vector=embedding,
-            )
-        else:
-            collection.data.insert(
-                uuid=id.uuidv5(),
-                properties=id.model_dump(),
-                references=None,
-                vector=embedding,
-            )
+        collection.data.insert(
+            uuid=id.uuidv5(),
+            properties=id.model_dump(),
+            references=None,
+            vector=embedding,
+        )
 
     def add_embedding_batch(
         self,
