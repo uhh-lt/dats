@@ -75,7 +75,7 @@ function ClusterSimilarityPlot({ aspectId, height, colorName }: ClusterSimilarit
             </Box>
           );
         } else if (vis.isSuccess && vis.data.similarities.length > 0) {
-          const numCols = vis.data.similarities[0]?.length || 0;
+          const numCols = vis.data.clusters.filter((c) => !c.is_outlier).length; // Count non-outlier clusters
           return (
             <Box
               sx={{
@@ -100,62 +100,74 @@ function ClusterSimilarityPlot({ aspectId, height, colorName }: ClusterSimilarit
                       flexDirection: "column",
                     }}
                   >
-                    {vis.data.similarities.map((_, i) => (
-                      <HtmlTooltip title={vis.data.clusters[i]?.name || `Cluster ${i + 1}`}>
-                        <Box
-                          key={`row-label-${i}`}
-                          sx={{
-                            flex: 1,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: labelFontSize,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            px: 0.5,
-                          }}
-                        >
-                          {getIconComponent(Icon.CLUSTER, { style: { color: colorScheme[i % colorScheme.length] } })}
-                        </Box>
-                      </HtmlTooltip>
-                    ))}
+                    {vis.data.similarities.map((_, i) => {
+                      const cluster = vis.data.clusters[i];
+                      if (cluster.is_outlier) return null; // Skip outlier clusters
+                      return (
+                        <HtmlTooltip title={cluster.name}>
+                          <Box
+                            key={`row-label-${i}`}
+                            sx={{
+                              flex: 1,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: labelFontSize,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                              px: 0.5,
+                            }}
+                          >
+                            {getIconComponent(Icon.CLUSTER, { style: { color: colorScheme[i % colorScheme.length] } })}
+                          </Box>
+                        </HtmlTooltip>
+                      );
+                    })}
                   </Box>
                   {/* Column for Heatmap Grid */}
                   <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                    {vis.data.similarities.map((sims, i) => (
-                      <Box key={`similarity-row-${i}`} sx={{ display: "flex", flexDirection: "row", flex: 1 }}>
-                        {sims.map((sim, j) =>
-                          i >= j ? (
-                            <Box
-                              key={`similarity-${i}-${j}`}
-                              sx={{
-                                flex: 1,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                bgcolor: colorScale(sim),
-                                fontSize: cellFontSize,
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                                color: "lightgrey",
-                              }}
-                            >
-                              {sim.toFixed(2)}
-                            </Box>
-                          ) : (
-                            <Box
-                              key={`similarity-${i}-${j}`}
-                              sx={{
-                                flex: 1,
-                                bgcolor: "transparent",
-                              }}
-                            />
-                          ),
-                        )}
-                      </Box>
-                    ))}
+                    {vis.data.similarities.map((sims, i) => {
+                      if (vis.data.clusters[i].is_outlier) return null; // Skip outlier clusters
+                      return (
+                        <Box key={`similarity-row-${i}`} sx={{ display: "flex", flexDirection: "row", flex: 1 }}>
+                          {sims.map((sim, j) => {
+                            if (vis.data.clusters[j].is_outlier) return null; // Skip outlier clusters
+                            if (i >= j) {
+                              return (
+                                <Box
+                                  key={`similarity-${i}-${j}`}
+                                  sx={{
+                                    flex: 1,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    bgcolor: colorScale(sim),
+                                    fontSize: cellFontSize,
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                    color: "lightgrey",
+                                  }}
+                                >
+                                  {sim.toFixed(2)}
+                                </Box>
+                              );
+                            } else {
+                              return (
+                                <Box
+                                  key={`similarity-${i}-${j}`}
+                                  sx={{
+                                    flex: 1,
+                                    bgcolor: "transparent",
+                                  }}
+                                />
+                              );
+                            }
+                          })}
+                        </Box>
+                      );
+                    })}
                   </Box>
                 </Box>
                 {/* Row for Column Labels */}
