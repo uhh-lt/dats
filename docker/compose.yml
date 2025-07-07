@@ -259,5 +259,5 @@ networks:
     name: ollama_network
     external: true
   ray_network:
-    name: ray_network_tim
+    name: ray_network
     external: true
