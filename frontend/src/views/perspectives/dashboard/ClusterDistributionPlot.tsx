@@ -111,7 +111,7 @@ function ClusterDistributionPlot({ aspectId, height, showPieChart }: ClusterDist
         </ResponsiveContainer>
       ) : (
         <CardContainer sx={{ height, display: "flex", justifyContent: "center", alignItems: "center" }}>
-          {vis.isSuccess && chartData === undefined ? (
+          {vis.isSuccess && chartData.length === 0 ? (
             <>No plot available!</>
           ) : vis.isLoading || vis.isFetching ? (
             <CircularProgress />

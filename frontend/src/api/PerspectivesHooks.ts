@@ -141,6 +141,7 @@ const usePollPerspectivesJob = (
           localDate.getTime() - localUpdatedDate.getTime() < 3 * 60 * 1000
         ) {
           queryClient.invalidateQueries({ queryKey: [QueryKey.DOCUMENT_VISUALIZATION, query.state.data.aspect_id] });
+          queryClient.invalidateQueries({ queryKey: [QueryKey.CLUSTER_SIMILARITIES, query.state.data.aspect_id] });
         }
       }
 
@@ -189,7 +190,6 @@ const useUnlabelDocs = () =>
 const useGetDocVisualization = (aspectId: number) => {
   const searchQuery = useAppSelector((state: RootState) => state.perspectives.searchQuery);
   const filter = useAppSelector((state: RootState) => state.perspectives.filter[`aspect-${aspectId}`]);
-  console.log("Hi from useGetDocVisualization");
   return useQuery({
     queryKey: [QueryKey.DOCUMENT_VISUALIZATION, aspectId, searchQuery, filter],
     queryFn: () =>

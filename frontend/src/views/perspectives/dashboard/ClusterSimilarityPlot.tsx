@@ -48,19 +48,33 @@ function ClusterSimilarityPlot({ aspectId, height, colorName }: ClusterSimilarit
       {(() => {
         if (vis.isLoading || vis.isFetching) {
           return (
-            <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Box
+              sx={{
+                height,
+                bgcolor: "white",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
               <CircularProgress />
             </Box>
           );
-        }
-        if (vis.isError) {
+        } else if (vis.isError) {
           return (
-            <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Box
+              sx={{
+                height,
+                bgcolor: "white",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
               An Error occurred: {vis.error.message}
             </Box>
           );
-        }
-        if (vis.isSuccess && vis.data.similarities.length > 0) {
+        } else if (vis.isSuccess && vis.data.similarities.length > 0) {
           const numCols = vis.data.similarities[0]?.length || 0;
           return (
             <Box
@@ -234,10 +248,17 @@ function ClusterSimilarityPlot({ aspectId, height, colorName }: ClusterSimilarit
               </Box>
             </Box>
           );
-        }
-        if (vis.isSuccess && (!vis.data.similarities || vis.data.similarities.length === 0)) {
+        } else if (vis.isSuccess && (!vis.data.similarities || vis.data.similarities.length === 0)) {
           return (
-            <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Box
+              sx={{
+                height,
+                bgcolor: "white",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
               No plot available!
             </Box>
           );
