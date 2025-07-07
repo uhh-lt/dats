@@ -1,5 +1,3 @@
-root_dir: ${oc.env:RAY_ROOT, /tmp/dats/ray}
-
 spacy:
   # note that the spacy models have to be installed in the env to use it! (docker!)
   model_dir: ${oc.env:SPACY_MODELS_DIR, /spacy_models}
@@ -23,6 +21,7 @@ whisper:
   model: base
   device: cpu
   options:
+    word_timestamps: True
     beam_size: 5
     best_of: 5
 

@@ -1,6 +1,6 @@
 spacy:
   # note that the spacy models have to be installed in the env to use it! (docker!)
-  model_dir: ${oc.env:SPACY_MODELS_DIR, /spacy_models2}
+  model_dir: ${oc.env:SPACY_MODELS_DIR, /spacy_models}
   models:
     en: en_core_web_trf-3.8.0
     de: de_core_news_lg-3.8.0
