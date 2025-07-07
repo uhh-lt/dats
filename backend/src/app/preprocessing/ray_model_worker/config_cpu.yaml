@@ -214,7 +214,7 @@ docling:
   # scaling factor for images extracted from PDFs
   image_resolution_scale: 3.0
   # pages per PDF chunk
-  max_pages_per_pdf_chunk: 5
+  max_pages_per_pdf_chunk: 10
   # tmp directory for docling
   tmp_dir: /tmp/dats/ray/docling
   deployment:

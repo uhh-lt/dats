@@ -65,7 +65,7 @@ celery:
   preprocessing:
     extract_images_from_pdf: True
     extract_images_from_docx: True
-    max_pages_per_pdf_chunk: 5
+    max_pages_per_pdf_chunk: 10
 
 weaviate:
   host: localhost
