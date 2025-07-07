@@ -88,8 +88,6 @@ function MapPlot({ vis }: MapPlotProps) {
             shadow: "0px 0px 6px black, -1px 0 DimGray, 0 1px DimGray, 1px 0 DimGray, 0 -1px DimGray",
             family: "Roboto",
           },
-          // bgcolor: "#f9f9f9",
-          // bordercolor: "#ccc",
           visible: true,
         });
       }
@@ -340,33 +338,34 @@ function MapPlot({ vis }: MapPlotProps) {
           displaylogo: false,
           scrollZoom: true,
           toImageButtonOptions: { filename: "perspectives-map" },
-          modeBarButtonsToRemove: ["pan2d", "zoomIn2d", "zoomOut2d"],
+          modeBarButtonsToRemove: ["pan2d", "zoomIn2d", "zoomOut2d", "zoom2d"],
         }}
         style={{ width: "100%", height: "100%" }}
         onHover={handleHover}
         onUnhover={handleUnhover}
+        onDeselect={() => {
+          setFigure((oldFigure) => {
+            return {
+              ...oldFigure,
+              layout: {
+                ...oldFigure.layout,
+                selections: [],
+              },
+            };
+          });
+          dispatch(PerspectivesActions.onResetSelection());
+        }}
         onSelected={(event) => {
-          if (!event) {
-            setFigure((oldFigure) => {
-              return {
-                ...oldFigure,
-                layout: {
-                  ...oldFigure.layout,
-                  selections: [],
-                },
-              };
-            });
-            dispatch(PerspectivesActions.onResetSelection());
-            return;
+          if (event) {
+            dispatch(
+              PerspectivesActions.onSelectionChange(
+                event.points.reduce((acc: number[], point: any) => {
+                  acc.push(point.id);
+                  return acc;
+                }, [] as number[]),
+              ),
+            );
           }
-          dispatch(
-            PerspectivesActions.onSelectionChange(
-              event.points.reduce((acc: number[], point: any) => {
-                acc.push(point.id);
-                return acc;
-              }, [] as number[]),
-            ),
-          );
         }}
       />
       <MapTooltip data={tooltipData} />

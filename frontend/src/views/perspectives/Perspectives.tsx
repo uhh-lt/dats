@@ -1,4 +1,4 @@
-import { Box, Button, MenuItem, Stack, TextField, Typography } from "@mui/material";
+import { Box, Button, CircularProgress, MenuItem, Stack, TextField, Typography } from "@mui/material";
 import { ChangeEvent, useState } from "react";
 
 import PerspectivesHooks from "../../api/PerspectivesHooks.ts";
@@ -85,6 +85,7 @@ function Perspectives() {
                 boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
                 borderRadius: "4px",
               }}
+              disabled
             >
               <MenuItem value="name">Name</MenuItem>
               <MenuItem value="creationDate">Creation Date</MenuItem>
@@ -92,9 +93,32 @@ function Perspectives() {
             </TextField>
           </Stack>
           <Box display="flex" gap={2} paddingY={0} flexWrap="wrap">
-            {filteredAspects.map((aspect) => (
-              <PerspectiveCard key={aspect.id} to={`./dashboard/${aspect.id}`} title={aspect.name} aspect={aspect} />
-            ))}
+            {aspects.isLoading ? (
+              <Box
+                sx={{
+                  pt: 4,
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  width: "100%",
+                }}
+              >
+                <CircularProgress color="primary" />
+              </Box>
+            ) : aspects.isError ? (
+              <Typography color="error">Error loading aspects</Typography>
+            ) : (
+              <>
+                {filteredAspects.map((aspect) => (
+                  <PerspectiveCard
+                    key={aspect.id}
+                    to={`./dashboard/${aspect.id}`}
+                    title={aspect.name}
+                    aspect={aspect}
+                  />
+                ))}
+              </>
+            )}
           </Box>
         </Stack>
       </ContentContainerLayout>

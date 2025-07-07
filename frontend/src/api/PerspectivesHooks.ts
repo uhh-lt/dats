@@ -202,6 +202,7 @@ const useGetDocVisualization = (aspectId: number) => {
         },
       }),
     staleTime: 1000 * 60 * 5,
+    placeholderData: (prev) => prev,
   });
 };
 

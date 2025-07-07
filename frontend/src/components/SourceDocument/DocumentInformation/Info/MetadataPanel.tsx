@@ -34,9 +34,11 @@ function MetadataPanelContent({ sdocId, filterName }: MetadataPanelProps) {
   );
 
   return (
-    <TabPanel value="info" sx={{ p: 1 }} className="h100">
-      <MetadataCreateButton sdocId={sdocId} />
-      <Stack direction="column" spacing={0.5}>
+    <TabPanel value="info" sx={{ p: 0 }} className="h100">
+      <Box p={1}>
+        <MetadataCreateButton sdocId={sdocId} />
+      </Box>
+      <Stack direction="column" spacing={0}>
         {metadata.isLoading && (
           <Box textAlign={"center"} pt={2}>
             <CircularProgress />

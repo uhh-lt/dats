@@ -1,6 +1,6 @@
 import { Card, CardContent, CircularProgress, Typography } from "@mui/material";
 import { memo, useMemo } from "react";
-import { ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis, ZAxis } from "recharts";
+import { ResponsiveContainer, Scatter, ScatterChart, XAxis, YAxis, ZAxis } from "recharts";
 import { PerspectivesDoc } from "../../../api/openapi/models/PerspectivesDoc.ts";
 import PerspectivesHooks from "../../../api/PerspectivesHooks.ts";
 import CardContainer from "../../../components/MUI/CardContainer.tsx";
@@ -41,7 +41,6 @@ function DocumentClusterScatterPlot({ aspectId, height }: DocumentClusterScatter
             <XAxis dataKey="x" type="number" name="X" hide />
             <YAxis dataKey="y" type="number" name="Y" hide />
             <ZAxis range={[10]} />
-            <Tooltip />
             {Object.entries(chartData).map(([clusterId, docs], index) => (
               <Scatter
                 key={clusterId}

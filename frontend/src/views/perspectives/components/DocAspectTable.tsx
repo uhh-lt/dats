@@ -26,20 +26,19 @@ function DocAspectTable({ aspectId, height, cluster }: DocAspectTableProps) {
     let data: PerspectivesDoc[] = [];
 
     if (cluster) {
-      data = vis.data.docs.filter((doc) => doc.cluster_id === cluster.id);
-
-      // if (cluster.top_docs) {
-      //   const sdocId2PerspectivesDoc: Record<number, PerspectivesDoc> = vis.data.docs.reduce(
-      //     (acc, doc) => {
-      //       acc[doc.sdoc_id] = doc;
-      //       return acc;
-      //     },
-      //     {} as Record<number, PerspectivesDoc>,
-      //   );
-      //   cluster.top_docs.forEach((sdocId) => {
-      //     data.push(sdocId2PerspectivesDoc[sdocId]);
-      //   });
-      // }
+      // data = vis.data.docs.filter((doc) => doc.cluster_id === cluster.id);
+      if (cluster.top_docs) {
+        const sdocId2PerspectivesDoc: Record<number, PerspectivesDoc> = vis.data.docs.reduce(
+          (acc, doc) => {
+            acc[doc.sdoc_id] = doc;
+            return acc;
+          },
+          {} as Record<number, PerspectivesDoc>,
+        );
+        cluster.top_docs.forEach((sdocId) => {
+          data.push(sdocId2PerspectivesDoc[sdocId]);
+        });
+      }
     } else {
       data = vis.data.docs.slice(0, 9); // default to first 9 documents if no sdocIds provided
     }

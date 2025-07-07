@@ -14,7 +14,7 @@ function MapContent({ aspectId }: MapContentProps) {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <MapToolbar aspectId={aspectId} />
-      {vis.data && <MapPlot vis={vis.data} />}
+      {vis.isSuccess && <MapPlot vis={vis.data} />}
     </Box>
   );
 }
