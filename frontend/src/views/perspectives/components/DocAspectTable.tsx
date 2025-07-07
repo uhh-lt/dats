@@ -1,6 +1,7 @@
 import { Box } from "@mui/material";
 import { MaterialReactTable, MRT_ColumnDef, useMaterialReactTable } from "material-react-table";
 import { memo, useMemo } from "react";
+import { ClusterRead } from "../../../api/openapi/models/ClusterRead.ts";
 import { PerspectivesDoc } from "../../../api/openapi/models/PerspectivesDoc.ts";
 import PerspectivesHooks from "../../../api/PerspectivesHooks.ts";
 import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
@@ -10,10 +11,10 @@ import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 interface DocAspectTableProps {
   aspectId: number;
   height: number;
-  sdocIds?: number[];
+  cluster?: ClusterRead;
 }
 
-function DocAspectTable({ aspectId, height, sdocIds }: DocAspectTableProps) {
+function DocAspectTable({ aspectId, height, cluster }: DocAspectTableProps) {
   // global server state
   const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
   const colorScheme = useAppSelector((state) => state.perspectives.colorScheme);
@@ -23,17 +24,22 @@ function DocAspectTable({ aspectId, height, sdocIds }: DocAspectTableProps) {
     if (!vis.data) return { data: [], cluster2Index: {} };
 
     let data: PerspectivesDoc[] = [];
-    if (sdocIds && sdocIds.length > 0) {
-      const sdocId2PerspectivesDoc: Record<number, PerspectivesDoc> = vis.data.docs.reduce(
-        (acc, doc) => {
-          acc[doc.sdoc_id] = doc;
-          return acc;
-        },
-        {} as Record<number, PerspectivesDoc>,
-      );
-      sdocIds.forEach((sdocId) => {
-        data.push(sdocId2PerspectivesDoc[sdocId]);
-      });
+
+    if (cluster) {
+      data = vis.data.docs.filter((doc) => doc.cluster_id === cluster.id);
+
+      // if (cluster.top_docs) {
+      //   const sdocId2PerspectivesDoc: Record<number, PerspectivesDoc> = vis.data.docs.reduce(
+      //     (acc, doc) => {
+      //       acc[doc.sdoc_id] = doc;
+      //       return acc;
+      //     },
+      //     {} as Record<number, PerspectivesDoc>,
+      //   );
+      //   cluster.top_docs.forEach((sdocId) => {
+      //     data.push(sdocId2PerspectivesDoc[sdocId]);
+      //   });
+      // }
     } else {
       data = vis.data.docs.slice(0, 9); // default to first 9 documents if no sdocIds provided
     }
@@ -47,7 +53,7 @@ function DocAspectTable({ aspectId, height, sdocIds }: DocAspectTableProps) {
         {} as Record<number, number>,
       ),
     };
-  }, [vis, sdocIds]);
+  }, [vis.data, cluster]);
 
   const columns: MRT_ColumnDef<PerspectivesDoc>[] = useMemo(
     () => [
@@ -73,14 +79,6 @@ function DocAspectTable({ aspectId, height, sdocIds }: DocAspectTableProps) {
           </Box>
         ),
       },
-      // {
-      //   id: "Tags",
-      //   header: "Tags",
-      //   minSize: 70,
-      //   size: 200,
-      //   grow: false,
-      //   Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.sdoc_id} />,
-      // },
       {
         id: "Content",
         header: "Content",
@@ -108,6 +106,11 @@ function DocAspectTable({ aspectId, height, sdocIds }: DocAspectTableProps) {
       style: { height },
       sx: {
         borderColor: "grey.500",
+      },
+    },
+    muiTableContainerProps: {
+      style: {
+        height: height,
       },
     },
     // Enable column resizing

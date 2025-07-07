@@ -64,7 +64,7 @@ function ClusterDetailDialog({ aspectId }: ClusterDetailDialogProps) {
                 <Stack height={40} alignItems="center" direction="row">
                   <Typography variant="button">Top Documents</Typography>
                 </Stack>
-                <DocAspectTable aspectId={aspectId} height={390} sdocIds={cluster.top_docs || undefined} />
+                <DocAspectTable aspectId={aspectId} height={390} cluster={cluster} />
               </Box>
             </Stack>
           </Stack>
