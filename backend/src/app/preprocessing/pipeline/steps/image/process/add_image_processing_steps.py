@@ -14,6 +14,9 @@ def add_image_processing_steps(pipeline: PreprocessingPipeline) -> None:
     from app.preprocessing.pipeline.steps.image.process.run_object_detection import (
         run_object_detection,
     )
+    # from app.preprocessing.pipeline.steps.image.process.generate_image_description import (
+    #     generate_image_description,
+    # )
 
     pipeline.register_step(
         func=create_image_metadata,
@@ -34,3 +37,8 @@ def add_image_processing_steps(pipeline: PreprocessingPipeline) -> None:
         func=generate_image_caption,
         required_data=["ppid"],
     )
+
+    # pipeline.register_step(
+    #     func=generate_image_description,
+    #     required_data=["ppid"],
+    # )

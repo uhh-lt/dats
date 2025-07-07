@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+from config import conf
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -13,7 +14,6 @@ from app.core.data.dto.project_metadata import (
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.data.meta_type import MetaType
 from app.core.data.orm.project_metadata import ProjectMetadataORM
-from config import conf
 
 
 class CRUDProjectMetadata(

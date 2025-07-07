@@ -12,4 +12,8 @@ export type SentenceAnnotationParams = {
    * IDs of the codes to use for the sentence annotation
    */
   code_ids: Array<number>;
+  /**
+   * Delete existing annotations before creating new ones
+   */
+  delete_existing_annotations?: boolean;
 };

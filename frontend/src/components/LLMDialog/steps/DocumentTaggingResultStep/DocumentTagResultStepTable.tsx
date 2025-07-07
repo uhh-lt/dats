@@ -1,5 +1,6 @@
 import { Box, Button, Stack, Typography } from "@mui/material";
 import {
+  getMRT_RowSelectionHandler,
   MaterialReactTable,
   MRT_ColumnDef,
   MRT_RowModel,
@@ -8,7 +9,7 @@ import {
   MRT_ToggleDensePaddingButton,
   useMaterialReactTable,
 } from "material-react-table";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { DocumentTagRead } from "../../../../api/openapi/models/DocumentTagRead.ts";
 import SdocRenderer from "../../../SourceDocument/SdocRenderer.tsx";
 import TagRenderer from "../../../Tag/TagRenderer.tsx";
@@ -27,42 +28,46 @@ function CustomTagsRenderer({ tags }: { tags: DocumentTagRead[] }) {
   );
 }
 
-const columns: MRT_ColumnDef<DocumentTaggingResultRow>[] = [
-  {
-    id: "Filename",
-    header: "Document",
-    Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdocId} renderFilename />,
-  },
-  {
-    id: "CurrentTags",
-    header: "Current Tags",
-    Cell: ({ row }) => <CustomTagsRenderer tags={row.original.current_tags} />,
-  },
-  {
-    id: "SuggestedTags",
-    header: "Suggested Tags",
-    Cell: ({ row }) => <CustomTagsRenderer tags={row.original.suggested_tags} />,
-  },
-  {
-    id: "FinalTags",
-    header: "Final Tags",
-    Cell: ({ row }) => <CustomTagsRenderer tags={row.original.merged_tags} />,
-  },
-];
-
-function DocumentTagResultStepTable({
+function DocumentTagResultStepTable<T extends DocumentTaggingResultRow>({
   rows,
   onUpdateRows,
 }: {
-  rows: DocumentTaggingResultRow[];
-  onUpdateRows: React.Dispatch<React.SetStateAction<DocumentTaggingResultRow[]>>;
+  rows: T[];
+  onUpdateRows: React.Dispatch<React.SetStateAction<T[]>>;
 }) {
   // local state
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
   const buttonsDisabled = Object.keys(rowSelectionModel).length === 0;
 
+  // columns
+  const columns: MRT_ColumnDef<T>[] = useMemo(
+    () => [
+      {
+        id: "Filename",
+        header: "Document",
+        Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdocId} renderFilename />,
+      },
+      {
+        id: "CurrentTags",
+        header: "Current Tags",
+        Cell: ({ row }) => <CustomTagsRenderer tags={row.original.current_tags} />,
+      },
+      {
+        id: "SuggestedTags",
+        header: "Suggested Tags",
+        Cell: ({ row }) => <CustomTagsRenderer tags={row.original.suggested_tags} />,
+      },
+      {
+        id: "FinalTags",
+        header: "Final Tags",
+        Cell: ({ row }) => <CustomTagsRenderer tags={row.original.merged_tags} />,
+      },
+    ],
+    [],
+  );
+
   // actions
-  const applyCurrentTags = (selectedRows: MRT_RowModel<DocumentTaggingResultRow>) => () => {
+  const applyCurrentTags = (selectedRows: MRT_RowModel<T>) => () => {
     onUpdateRows((rows) => {
       const result = [...rows];
       selectedRows.rows.forEach((selectedRow) => {
@@ -75,7 +80,7 @@ function DocumentTagResultStepTable({
     });
   };
 
-  const applySuggestedTags = (selectedRows: MRT_RowModel<DocumentTaggingResultRow>) => () => {
+  const applySuggestedTags = (selectedRows: MRT_RowModel<T>) => () => {
     onUpdateRows((rows) => {
       const result = [...rows];
       selectedRows.rows.forEach((selectedRow) => {
@@ -88,7 +93,7 @@ function DocumentTagResultStepTable({
     });
   };
 
-  const applyMergeTags = (selectedRows: MRT_RowModel<DocumentTaggingResultRow>) => () => {
+  const applyMergeTags = (selectedRows: MRT_RowModel<T>) => () => {
     onUpdateRows((rows) => {
       const result = [...rows];
       selectedRows.rows.forEach((selectedRow) => {
@@ -104,7 +109,7 @@ function DocumentTagResultStepTable({
   };
 
   // table
-  const table = useMaterialReactTable<DocumentTaggingResultRow>({
+  const table = useMaterialReactTable<T>({
     data: rows,
     columns: columns,
     getRowId: (row) => `${row.sdocId}`,
@@ -114,6 +119,11 @@ function DocumentTagResultStepTable({
     },
     // selection
     enableRowSelection: true,
+    //clicking anywhere on the row will select it
+    muiTableBodyRowProps: ({ row, staticRowIndex, table }) => ({
+      onClick: (event) => getMRT_RowSelectionHandler({ row, staticRowIndex, table })(event),
+      sx: { cursor: "pointer" },
+    }),
     positionToolbarAlertBanner: "bottom",
     onRowSelectionChange: setRowSelectionModel,
     // expansion
@@ -156,7 +166,7 @@ function DocumentTagResultStepTable({
       },
     },
     // toolbars
-    enableBottomToolbar: true,
+    enableBottomToolbar: false,
     renderTopToolbarCustomActions: ({ table }) => (
       <Stack direction="row" alignItems="center" gap={0.5} mx={1}>
         <Typography variant="body1" mr={1}>

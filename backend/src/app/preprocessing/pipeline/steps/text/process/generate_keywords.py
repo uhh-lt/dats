@@ -1,9 +1,8 @@
 import yake
-from loguru import logger
-
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from config import conf
+from loguru import logger
 
 
 def generate_keywords(cargo: PipelineCargo) -> PipelineCargo:
@@ -22,9 +21,9 @@ def generate_keywords(cargo: PipelineCargo) -> PipelineCargo:
         if isinstance(language, list):
             language = language[0]
 
-        assert isinstance(
-            language, str
-        ), f"Language has to be string, but was {type(language)} instead."
+        assert isinstance(language, str), (
+            f"Language has to be string, but was {type(language)} instead."
+        )
         kw_extractor = yake.KeywordExtractor(
             lan=language,
             n=conf.keyword_extraction.max_ngram_size,

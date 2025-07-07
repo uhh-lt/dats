@@ -14,6 +14,7 @@ from fastapi.routing import APIRoute
 from loguru import logger
 from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
+from starlette.middleware.sessions import SessionMiddleware
 from uvicorn.main import run
 
 #####################################################################################################################
@@ -35,20 +36,21 @@ if not STARTUP_DONE:
 
 from api.endpoints import (
     analysis,
-    analysis_table,
     annoscaling,
     authentication,
     bbox_annotation,
+    chat,
     code,
     concept_over_time_analysis,
     crawler,
     document_tag,
+    document_tag_recommendation,
     export,
-    feedback,
     general,
     import_,
     llm,
     memo,
+    ml,
     prepro,
     project,
     project_metadata,
@@ -74,12 +76,12 @@ from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.source_document import (
     SourceDocumentPreprocessingUnfinishedError,
 )
-from app.core.data.export.export_service import (
+from app.core.data.eximport.export_service import (
     ExportJobPreparationError,
-    NoDataToExportError,
-    NoSuchExportFormatError,
     NoSuchExportJobError,
 )
+from app.core.data.eximport.import_service import ImportJobPreparationError
+from app.core.data.eximport.no_data_export_error import NoDataToExportError
 from app.core.data.repo.repo_service import (
     FileAlreadyExistsInRepositoryError,
     FileNotFoundInRepositoryError,
@@ -148,6 +150,11 @@ app.add_middleware(
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
 
+# Middleware required for Oauth2
+# see https://docs.authlib.org/en/latest/client/fastapi.html
+app.add_middleware(SessionMiddleware, secret_key=conf.api.auth.session.secret)
+
+
 # add custom exception handlers
 # TODO Flo: find a better place for this! (and Exceptions in general. move into own file)
 @app.exception_handler(NoSuchElementError)
@@ -180,13 +187,13 @@ async def no_such_export_job_handler(_, exc: NoSuchExportJobError):
     return PlainTextResponse(str(exc), status_code=404)
 
 
-@app.exception_handler(NoSuchExportFormatError)
-async def no_such_export_format_handler(_, exc: NoSuchExportFormatError):
-    return PlainTextResponse(str(exc), status_code=400)
-
-
 @app.exception_handler(ExportJobPreparationError)
 async def export_job_preparation_error_handler(_, exc: ExportJobPreparationError):
+    return PlainTextResponse(str(exc), status_code=500)
+
+
+@app.exception_handler(ImportJobPreparationError)
+async def import_job_preparation_error_handler(_, exc: ImportJobPreparationError):
     return PlainTextResponse(str(exc), status_code=500)
 
 
@@ -249,6 +256,7 @@ app.include_router(user.router)
 app.include_router(project.router)
 app.include_router(source_document.router)
 app.include_router(document_tag.router)
+app.include_router(document_tag_recommendation.router)
 app.include_router(span_annotation.router)
 app.include_router(span_group.router)
 app.include_router(bbox_annotation.router)
@@ -256,12 +264,10 @@ app.include_router(code.router)
 app.include_router(memo.router)
 app.include_router(search.router)
 app.include_router(source_document_metadata.router)
-app.include_router(feedback.router)
 app.include_router(analysis.router)
 app.include_router(prepro.router)
 app.include_router(export.router)
 app.include_router(crawler.router)
-app.include_router(analysis_table.router)
 app.include_router(annoscaling.router)
 app.include_router(whiteboard.router)
 app.include_router(project_metadata.router)
@@ -271,14 +277,16 @@ app.include_router(timeline_analysis.router)
 app.include_router(llm.router)
 app.include_router(sentence_annotation.router)
 app.include_router(import_.router)
+app.include_router(ml.router)
+app.include_router(chat.router)
 
 
 def main() -> None:
     # read port from config
     port = int(conf.api.port)
-    assert (
-        port is not None and isinstance(port, int) and port > 0
-    ), "The API port has to be a positive integer! E.g. 8081"
+    assert port is not None and isinstance(port, int) and port > 0, (
+        "The API port has to be a positive integer! E.g. 8081"
+    )
 
     is_debug = conf.api.production_mode == "0"
 

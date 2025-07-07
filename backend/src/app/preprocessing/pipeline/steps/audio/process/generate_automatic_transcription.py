@@ -1,15 +1,13 @@
-import os
-
-from loguru import logger
+from pathlib import Path
 
 from app.core.data.dto.source_document_data import WordLevelTranscription
 from app.preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.ray_model_service import RayModelService
 from app.preprocessing.ray_model_worker.dto.whisper import (
-    WhisperFilePathInput,
     WhisperTranscriptionOutput,
 )
+from loguru import logger
 
 rms = RayModelService()
 
@@ -25,17 +23,24 @@ def generate_automatic_transcription(cargo: PipelineCargo) -> PipelineCargo:
                 "Please run the 'convert_to_pcm' step first!"
             )
 
-        # Create Whisper Input
-        whisper_input = WhisperFilePathInput(
-            uncompressed_audio_fp=os.path.basename(
-                str(ppad.uncompressed_audio_filepath)
-            ),
-            project_id=ppad.project_id,
-        )
+        # read the audio file as bytes to be sent to the whisper model
+        audio_fp = Path(ppad.uncompressed_audio_filepath)
+        if not audio_fp.exists():
+            raise FileNotFoundError(
+                f"Uncompressed audio file {ppad.uncompressed_audio_filepath} not found!"
+            )
+        audio_bytes = audio_fp.read_bytes()
+        if len(audio_bytes) == 0:
+            raise ValueError(
+                f"Uncompressed audio file {ppad.uncompressed_audio_filepath} is empty!"
+            )
+
+        # send the audio bytes to the whisper model to get the transcript
         transcription: WhisperTranscriptionOutput = rms.whisper_transcribe(
-            whisper_input
+            audio_bytes=audio_bytes
         )
         logger.info(f"Generated transcript {transcription}")
+
         # Create Wordlevel Transcriptions
         # use whisper tokenization
         for segment in transcription.segments:

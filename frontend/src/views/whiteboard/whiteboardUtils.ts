@@ -1,27 +1,49 @@
 import { DefaultEdgeOptions, Edge, MarkerType, Node, XYPosition, getRectOfNodes } from "reactflow";
 import { v4 as uuidv4 } from "uuid";
+import { BBoxAnnotationNodeData } from "../../api/openapi/models/BBoxAnnotationNodeData.ts";
 import { BBoxAnnotationRead } from "../../api/openapi/models/BBoxAnnotationRead.ts";
-import { BBoxAnnotationReadResolved } from "../../api/openapi/models/BBoxAnnotationReadResolved.ts";
+import { BorderNodeData } from "../../api/openapi/models/BorderNodeData.ts";
+import { BorderStyle } from "../../api/openapi/models/BorderStyle.ts";
+import { CodeNodeData } from "../../api/openapi/models/CodeNodeData.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
+import { HorizontalAlign } from "../../api/openapi/models/HorizontalAlign.ts";
+import { MemoNodeData } from "../../api/openapi/models/MemoNodeData.ts";
 import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
-import { SentenceAnnotationReadResolved } from "../../api/openapi/models/SentenceAnnotationReadResolved.ts";
+import { NoteNodeData } from "../../api/openapi/models/NoteNodeData.ts";
+import { SdocNodeData } from "../../api/openapi/models/SdocNodeData.ts";
+import { SentenceAnnotationNodeData } from "../../api/openapi/models/SentenceAnnotationNodeData.ts";
+import { SentenceAnnotationRead } from "../../api/openapi/models/SentenceAnnotationRead.ts";
 import { SourceDocumentRead } from "../../api/openapi/models/SourceDocumentRead.ts";
-import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import { SpanAnnotationNodeData } from "../../api/openapi/models/SpanAnnotationNodeData.ts";
+import { SpanAnnotationRead } from "../../api/openapi/models/SpanAnnotationRead.ts";
+import { TagNodeData } from "../../api/openapi/models/TagNodeData.ts";
+import { TextNodeData } from "../../api/openapi/models/TextNodeData.ts";
+import { VerticalAlign } from "../../api/openapi/models/VerticalAlign.ts";
+import { WhiteboardNodeType } from "../../api/openapi/models/WhiteboardNodeType.ts";
 import { theme } from "../../plugins/ReactMUI.ts";
-import { BackgroundColorData } from "./types/base/BackgroundColorData.ts";
-import { BorderNodeData } from "./types/customnodes/BorderNodeData.ts";
-import { NoteNodeData } from "./types/customnodes/NoteNodeData.ts";
-import { TextNodeData } from "./types/customnodes/TextNodeData.ts";
-import { BBoxAnnotationNodeData } from "./types/dbnodes/BBoxAnnotationNodeData.ts";
-import { CodeNodeData } from "./types/dbnodes/CodeNodeData.ts";
-import { MemoNodeData } from "./types/dbnodes/MemoNodeData.ts";
-import { SdocNodeData } from "./types/dbnodes/SdocNodeData.ts";
-import { SentenceAnnotationNodeData } from "./types/dbnodes/SentenceAnnotationNodeData.ts";
-import { SpanAnnotationNodeData } from "./types/dbnodes/SpanAnnotationNodeData.ts";
-import { TagNodeData } from "./types/dbnodes/TagNodeData.ts";
 
 const positionOffset = 50;
+
+export const FONT_FAMILIES = ["Arial", "Times New Roman", "Courier New", "Verdana", "Georgia"];
+
+export const PREDEFINED_COLORS = [
+  "#ffffff", // White
+  "#000000", // Black
+  "#ff0000", // Red
+  "#00ff00", // Green
+  "#0000ff", // Blue
+  "#ffff00", // Yellow
+  "#ff00ff", // Magenta
+  "#00ffff", // Cyan
+  "#808080", // Gray
+  "#800000", // Maroon
+  "#808000", // Olive
+  "#008000", // Dark Green
+  "#800080", // Purple
+  "#008080", // Teal
+  "#000080", // Navy
+];
 
 export const defaultDatabaseEdgeOptions: DefaultEdgeOptions = {
   style: { strokeWidth: 3, stroke: theme.palette.grey[400] },
@@ -32,7 +54,7 @@ export const defaultDatabaseEdgeOptions: DefaultEdgeOptions = {
   },
 };
 
-const defaultDatabaseNodeData: BackgroundColorData = {
+const defaultDatabaseNodeData = {
   bgcolor: "#ffffff",
   bgalpha: 255,
 };
@@ -94,16 +116,19 @@ export const createTextNode = ({ position }: { position?: XYPosition }): Node<Te
   return {
     id: uuidv4(),
     data: {
+      type: WhiteboardNodeType.TEXT,
       text: "test",
-      variant: "h3",
       color: "#000000",
+      horizontalAlign: HorizontalAlign.LEFT,
+      verticalAlign: VerticalAlign.TOP,
       bold: false,
       italic: false,
       underline: false,
-      horizontalAlign: "left",
-      verticalAlign: "top",
+      strikethrough: false,
+      fontFamily: "Arial",
+      fontSize: 12,
     },
-    type: "text",
+    type: WhiteboardNodeType.TEXT,
     position: { x: position?.x || 0, y: position?.y || 0 },
   };
 };
@@ -112,18 +137,21 @@ export const createNoteNode = ({ position }: { position?: XYPosition }): Node<No
   return {
     id: uuidv4(),
     data: {
+      type: WhiteboardNodeType.NOTE,
       text: "test",
-      variant: "h3",
       color: "#000000",
       bgcolor: "#ffffff",
       bgalpha: 255,
       bold: false,
       italic: false,
       underline: false,
-      horizontalAlign: "left",
-      verticalAlign: "top",
+      strikethrough: false,
+      fontFamily: "Arial",
+      fontSize: 12,
+      horizontalAlign: HorizontalAlign.LEFT,
+      verticalAlign: VerticalAlign.TOP,
     },
-    type: "note",
+    type: WhiteboardNodeType.NOTE,
     position: { x: position?.x || 0, y: position?.y || 0 },
   };
 };
@@ -138,22 +166,25 @@ export const createBorderNode = ({
   return {
     id: uuidv4(),
     data: {
+      type: WhiteboardNodeType.BORDER,
       text: "test",
-      variant: "h3",
       color: "#000000",
       bgcolor: "#ffffff",
       bgalpha: 127,
       bold: false,
       italic: false,
       underline: false,
-      horizontalAlign: "center",
-      verticalAlign: "center",
+      strikethrough: false,
+      fontFamily: "Arial",
+      fontSize: 12,
+      horizontalAlign: HorizontalAlign.CENTER,
+      verticalAlign: VerticalAlign.CENTER,
       borderColor: "#000000",
       borderRadius: borderRadius,
-      borderStyle: "solid",
+      borderStyle: BorderStyle.SOLID,
       borderWidth: 1,
     },
-    type: "border",
+    type: WhiteboardNodeType.BORDER,
     position: { x: position?.x || 0, y: position?.y || 0 },
   };
 };
@@ -168,8 +199,8 @@ export const createTagNodes = ({
   const tagIds = tags.map((tag) => (typeof tag === "number" ? tag : tag.id));
   return tagIds.map((tagId, index) => ({
     id: `tag-${tagId}`,
-    type: "tag",
-    data: { ...defaultDatabaseNodeData, tagId },
+    type: WhiteboardNodeType.TAG,
+    data: { ...defaultDatabaseNodeData, tagId, type: WhiteboardNodeType.TAG },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
 };
@@ -184,8 +215,8 @@ export const createMemoNodes = ({
   const memoIds = memos.map((memo) => (typeof memo === "number" ? memo : memo.id));
   return memoIds.map((memoId, index) => ({
     id: `memo-${memoId}`,
-    type: "memo",
-    data: { ...defaultDatabaseNodeData, memoId },
+    type: WhiteboardNodeType.MEMO,
+    data: { ...defaultDatabaseNodeData, memoId, type: WhiteboardNodeType.MEMO },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
 };
@@ -200,8 +231,8 @@ export const createSdocNodes = ({
   const sdocIds = sdocs.map((sdoc) => (typeof sdoc === "number" ? sdoc : sdoc.id));
   return sdocIds.map((sdocId, index) => ({
     id: `sdoc-${sdocId}`,
-    type: "sdoc",
-    data: { ...defaultDatabaseNodeData, sdocId: sdocId },
+    type: WhiteboardNodeType.SDOC,
+    data: { ...defaultDatabaseNodeData, sdocId, type: WhiteboardNodeType.SDOC },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
 };
@@ -215,8 +246,8 @@ export const createCodeNodes = ({
 }): Node<CodeNodeData>[] => {
   return codes.map((code, index) => ({
     id: `code-${code.id}`,
-    type: "code",
-    data: { ...defaultDatabaseNodeData, codeId: code.id, parentCodeId: code.parent_id },
+    type: WhiteboardNodeType.CODE,
+    data: { ...defaultDatabaseNodeData, codeId: code.id, parentCodeId: code.parent_id, type: WhiteboardNodeType.CODE },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
 };
@@ -225,14 +256,14 @@ export const createSpanAnnotationNodes = ({
   spanAnnotations,
   position,
 }: {
-  spanAnnotations: number[] | SpanAnnotationReadResolved[];
+  spanAnnotations: number[] | SpanAnnotationRead[];
   position?: XYPosition;
 }): Node<SpanAnnotationNodeData>[] => {
   const spanAnnotationIds = spanAnnotations.map((span) => (typeof span === "number" ? span : span.id));
   return spanAnnotationIds.map((spanAnnotationId, index) => ({
     id: `spanAnnotation-${spanAnnotationId}`,
-    type: "spanAnnotation",
-    data: { ...defaultDatabaseNodeData, spanAnnotationId },
+    type: WhiteboardNodeType.SPAN_ANNOTATION,
+    data: { ...defaultDatabaseNodeData, spanAnnotationId, type: WhiteboardNodeType.SPAN_ANNOTATION },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
 };
@@ -241,14 +272,14 @@ export const createSentenceAnnotationNodes = ({
   sentenceAnnotations,
   position,
 }: {
-  sentenceAnnotations: number[] | SentenceAnnotationReadResolved[];
+  sentenceAnnotations: number[] | SentenceAnnotationRead[];
   position?: XYPosition;
 }): Node<SentenceAnnotationNodeData>[] => {
   const sentenceAnnotationIds = sentenceAnnotations.map((span) => (typeof span === "number" ? span : span.id));
   return sentenceAnnotationIds.map((sentenceAnnotationId, index) => ({
     id: `sentenceAnnotation-${sentenceAnnotationId}`,
-    type: "sentenceAnnotation",
-    data: { ...defaultDatabaseNodeData, sentenceAnnotationId },
+    type: WhiteboardNodeType.SENTENCE_ANNOTATION,
+    data: { ...defaultDatabaseNodeData, sentenceAnnotationId, type: WhiteboardNodeType.SENTENCE_ANNOTATION },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
 };
@@ -257,14 +288,14 @@ export const createBBoxAnnotationNodes = ({
   bboxAnnotations,
   position,
 }: {
-  bboxAnnotations: number[] | BBoxAnnotationReadResolved[] | BBoxAnnotationRead[];
+  bboxAnnotations: number[] | BBoxAnnotationRead[] | BBoxAnnotationRead[];
   position?: XYPosition;
 }): Node<BBoxAnnotationNodeData>[] => {
   const bboxAnnotationIds = bboxAnnotations.map((bbox) => (typeof bbox === "number" ? bbox : bbox.id));
   return bboxAnnotationIds.map((bboxAnnotationId, index) => ({
     id: `bboxAnnotation-${bboxAnnotationId}`,
-    type: "bboxAnnotation",
-    data: { ...defaultDatabaseNodeData, bboxAnnotationId },
+    type: WhiteboardNodeType.BBOX_ANNOTATION,
+    data: { ...defaultDatabaseNodeData, bboxAnnotationId, type: WhiteboardNodeType.BBOX_ANNOTATION },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
 };

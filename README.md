@@ -46,8 +46,7 @@ See the [Features](#features) section to learn more about the various functional
 - 🔓 Free open source software
 
 ## Quick start
-
-The best way to getting started is to watch our [Tutorial Video Series](https://www.youtube.com/), read the [User Guide](https://github.com/uhh-lt/dats/wiki/User-Guide) and play with DATS on our [Demo Instance](https://dats.ltdemos.informatik.uni-hamburg.de/).
+The best way to get started is to watch our [Tutorial Video Series](https://www.youtube.com/watch?v=_ft3RvKhyXM&list=PLVRi8E_6wxgQV4MOAMIkRhhnjCC_JqvTb), read the [User Guide](https://github.com/uhh-lt/dats/wiki/User-Guide), and play with DATS on our [Demo Instance](https://dats.ltdemos.informatik.uni-hamburg.de/).
 
 <details>
   <summary>Host it yourself</summary>
@@ -66,7 +65,7 @@ git clone https://github.com/uhh-lt/dats.git
 #### 2. Run setup scripts
 
 ```bash
-./bin/setup-envs.sh --project_name dats --port-prefix 101
+./bin/setup-envs.sh --project_name dats --port_prefix 101
 ```
 
 ```bash
@@ -77,6 +76,10 @@ git clone https://github.com/uhh-lt/dats.git
 
 ```bash
 docker compose -f compose.ollama.yml up -d
+```
+
+```bash
+docker compose -f compose.ray.yml up -d
 ```
 
 ```bash

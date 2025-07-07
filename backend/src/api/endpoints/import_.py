@@ -1,21 +1,22 @@
-import uuid
+from typing import Dict, List, TypedDict
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
-from sqlalchemy.orm import Session
-
-from api.dependencies import get_current_user, get_db_session
 from app.celery.background_jobs import prepare_and_start_import_job_async
 from app.core.authorization.authz_user import AuthzUser
-from app.core.data.crud.project import crud_project
 from app.core.data.dto.import_job import (
     ImportJobParameters,
     ImportJobRead,
     ImportJobType,
 )
-from app.core.data.dto.project import ProjectCreate
 from app.core.data.dto.user import UserRead
-from app.core.data.import_.import_service import ImportService
+from app.core.data.eximport.import_service import (
+    ImportJobPreparationError,
+    ImportService,
+)
 from app.core.data.repo.repo_service import RepoService
+from fastapi import APIRouter, Depends, UploadFile
+from sqlalchemy.orm import Session
+
+from api.dependencies import get_current_user, get_db_session
 
 router = APIRouter(
     prefix="/import", dependencies=[Depends(get_current_user)], tags=["import"]
@@ -25,132 +26,135 @@ ims: ImportService = ImportService()
 repo: RepoService = RepoService()
 
 
-@router.post(
-    "/{proj_id}/codes",
-    response_model=ImportJobRead,
-    summary="Starts the import codes job on given project id.",
-)
-def start_import_codes_job(
-    *,
-    # Ahmad: Since we're uploading a file we have to use multipart/form-data directly in the router method (see project put)
-    proj_id: int,
-    uploaded_file: UploadFile = File(
-        ...,
-        description=("CSV file of codes that gets uploaded into project"),
-    ),
-    authz_user: AuthzUser = Depends(),
-) -> ImportJobRead:
-    authz_user.assert_in_project(proj_id)
-    if not uploaded_file:
-        raise HTTPException(
-            status_code=418,
-            detail="Missing codes file.",
-        )
-    if not __is_file_csv(uploaded_file=uploaded_file):
-        raise HTTPException(
-            status_code=415,
-            detail="Codes need to be in csv format.",
-        )
-    user_id = authz_user.user.id
-    filename = f"import_user_code_{user_id}_{proj_id}.csv"
-    filepath = repo.get_dst_path_for_temp_file(filename)
-    filepath = repo.store_uploaded_file(
-        uploaded_file=uploaded_file, filepath=filepath, fn=filename
-    )
+class FileFormat(TypedDict):
+    """File format definition for import jobs."""
 
-    import_job_params = ImportJobParameters(
-        proj_id=proj_id,
-        filename=filename,
-        user_id=user_id,
-        import_job_type=ImportJobType.CODES,
-    )
-    return prepare_and_start_import_job_async(import_job_params=import_job_params)
+    mime_types: List[str]
+    suffix: str
 
 
-@router.post(
-    "/{proj_id}/tags",
-    response_model=ImportJobRead,
-    summary="Starts the import tags job on given project.",
-)
-def start_import_tags_job(
-    *,
-    # Ahmad: Since we're uploading a file we have to use multipart/form-data directly in the router method (see project put)
-    proj_id: int,
-    uploaded_file: UploadFile = File(
-        ...,
-        description=("CSV file of codes that gets uploaded into project"),
-    ),
-    authz_user: AuthzUser = Depends(),
-) -> ImportJobRead:
-    authz_user.assert_in_project(proj_id)
-    if not __is_file_csv(uploaded_file=uploaded_file):
-        raise HTTPException(
-            status_code=415,
-            detail="Codes need to be in csv format.",
-        )
-    user_id = authz_user.user.id
-    filename = f"import_tags_{user_id}_{proj_id}.csv"
-    filepath = repo.get_dst_path_for_temp_file(filename)
-    filepath = repo.store_uploaded_file(
-        uploaded_file=uploaded_file, filepath=filepath, fn=filename
-    )
+ZIP_FILE_FORMAT: FileFormat = {
+    "mime_types": [
+        "application/zip",
+        "application/x-zip",
+        "application/x-zip-compressed",
+        "application/x-compress",
+        "application/x-compressed",
+        "application/octet-stream",
+        "multipart/x-zip",
+    ],
+    "suffix": ".zip",
+}
 
-    import_job_params = ImportJobParameters(
-        proj_id=proj_id,
-        filename=filename,
-        user_id=user_id,
-        import_job_type=ImportJobType.TAGS,
-    )
-    return prepare_and_start_import_job_async(import_job_params=import_job_params)
+CSV_FILE_FORMAT: FileFormat = {
+    "mime_types": [
+        "text/csv",
+        "application/csv",
+        "application/vnd.ms-excel",
+    ],
+    "suffix": ".csv",
+}
+
+# Single mapping for file format information by import job type
+import_job_file_formats: Dict[ImportJobType, FileFormat] = {
+    ImportJobType.PROJECT: ZIP_FILE_FORMAT,
+    ImportJobType.DOCUMENTS: ZIP_FILE_FORMAT,
+    ImportJobType.CODES: CSV_FILE_FORMAT,
+    ImportJobType.TAGS: CSV_FILE_FORMAT,
+    ImportJobType.BBOX_ANNOTATIONS: CSV_FILE_FORMAT,
+    ImportJobType.SPAN_ANNOTATIONS: CSV_FILE_FORMAT,
+    ImportJobType.SENTENCE_ANNOTATIONS: CSV_FILE_FORMAT,
+    ImportJobType.USERS: CSV_FILE_FORMAT,
+    ImportJobType.PROJECT_METADATA: CSV_FILE_FORMAT,
+    ImportJobType.WHITEBOARDS: CSV_FILE_FORMAT,
+    ImportJobType.TIMELINE_ANALYSES: CSV_FILE_FORMAT,
+    ImportJobType.COTA: CSV_FILE_FORMAT,
+    ImportJobType.MEMOS: CSV_FILE_FORMAT,
+}
 
 
 @router.post(
-    "",
+    "/{project_id}/type/{import_job_type}",
     response_model=ImportJobRead,
-    summary="Starts the import project job on given project",
+    summary="Starts an import job with the given parameters and file",
 )
-def start_import_project_job(
+async def start_import_job(
     *,
+    project_id: int,
+    import_job_type: ImportJobType,
+    uploaded_file: UploadFile,
     db: Session = Depends(get_db_session),
-    uploaded_file: UploadFile = File(
-        ...,
-        description=("Zip file of project metadata that gets uploaded into project"),
-    ),
+    authz_user: AuthzUser = Depends(),
     current_user: UserRead = Depends(get_current_user),
 ) -> ImportJobRead:
-    if not __is_file_zip(uploaded_file=uploaded_file):
-        raise HTTPException(
-            status_code=415,
-            detail="Project need to be in zip format.",
+    authz_user.assert_in_project(project_id)
+
+    file_format = import_job_file_formats[import_job_type]
+
+    # Based on the import job type, check the file type and contents
+    if uploaded_file.content_type not in file_format["mime_types"]:
+        raise ImportJobPreparationError(
+            cause=Exception(
+                f"Invalid file type for import job {import_job_type}. Expected one of {file_format['mime_types']}, but got {uploaded_file.content_type}"
+            )
         )
-    user_id = current_user.id
-    random_temp_project_name = str(uuid.uuid4())
-    filename = f"import_project_{random_temp_project_name}_for_user_{user_id}.zip"
+
+    # Check the file suffix
+    if uploaded_file.filename and not uploaded_file.filename.endswith(
+        file_format["suffix"]
+    ):
+        raise ImportJobPreparationError(
+            cause=Exception(
+                f"Invalid file suffix for import job {import_job_type}. Expected {file_format['suffix']}, but got {uploaded_file.filename}"
+            )
+        )
+
+    if uploaded_file.filename is None:
+        raise ImportJobPreparationError(
+            cause=Exception("Uploaded file has no filename")
+        )
+
+    # Store the uploaded file
+    suffix = uploaded_file.filename.split(".")[-1]
+    filename = f"import_{import_job_type}_{authz_user.user.id}_{project_id}.{suffix}"
     filepath = repo.get_dst_path_for_temp_file(filename)
     filepath = repo.store_uploaded_file(
         uploaded_file=uploaded_file, filepath=filepath, fn=filename
     )
-    project_create = ProjectCreate(title=random_temp_project_name, description="")
-    db_obj = crud_project.create(
-        db=db, create_dto=project_create, creating_user=current_user
+
+    # Start the import job
+    return prepare_and_start_import_job_async(
+        import_job_params=ImportJobParameters(
+            import_job_type=import_job_type,
+            project_id=project_id,
+            user_id=authz_user.user.id,
+            file_name=filename,
+        )
     )
 
-    import_job_params = ImportJobParameters(
-        proj_id=db_obj.id,
-        filename=filename,
-        user_id=user_id,
-        import_job_type=ImportJobType.PROJECT,
-    )
-    return prepare_and_start_import_job_async(import_job_params=import_job_params)
+
+@router.get(
+    "/{import_job_id}",
+    response_model=ImportJobRead,
+    summary="Returns the ImportJob for the given ID if it exists",
+)
+def get_import_job(
+    *, import_job_id: str, authz_user: AuthzUser = Depends()
+) -> ImportJobRead:
+    job = ims.get_import_job(import_job_id=import_job_id)
+    authz_user.assert_in_project(job.parameters.project_id)
+    return job
 
 
-def __is_file_csv(uploaded_file: UploadFile):
-    return uploaded_file.content_type == "text/csv"
-
-
-def __is_file_json(uploaded_file: UploadFile):
-    return uploaded_file.content_type == "application/json"
-
-
-def __is_file_zip(uploaded_file: UploadFile):
-    return uploaded_file.content_type == "application/zip"
+@router.get(
+    "/project/{project_id}",
+    response_model=List[ImportJobRead],
+    summary="Returns all ImportJobs for the given project ID if it exists",
+)
+def get_all_import_jobs(
+    *, project_id: int, authz_user: AuthzUser = Depends()
+) -> List[ImportJobRead]:
+    authz_user.assert_in_project(project_id)
+    import_jobs = ims.get_all_import_jobs(project_id=project_id)
+    import_jobs.sort(key=lambda x: x.created, reverse=True)
+    return import_jobs

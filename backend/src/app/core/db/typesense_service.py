@@ -1,13 +1,13 @@
-from typing import List, Tuple
+from typing import Iterable, List, Tuple, Union
 
 import numpy as np
 import typesense
+from config import conf
 from loguru import logger
 
 from app.core.data.dto.search import SimSearchImageHit, SimSearchSentenceHit
 from app.core.db.index_type import IndexType
 from app.core.db.vector_index_service import VectorIndexService
-from config import conf
 
 
 class TypesenseService(VectorIndexService):
@@ -83,12 +83,16 @@ class TypesenseService(VectorIndexService):
         return super(TypesenseService, cls).__new__(cls)
 
     def add_embeddings_to_index(
-        self, type: IndexType, proj_id: int, sdoc_id: int, embeddings: List[np.ndarray]
+        self,
+        type: IndexType,
+        proj_id: int,
+        sdoc_ids: Iterable[int],
+        embeddings: List[np.ndarray],
     ):
         collection_name = self.class_names[type]
         logger.debug(
             f"Adding {len(embeddings)} embeddeddings "
-            f"from SDoc {sdoc_id} in Project {proj_id} to Typesense ..."
+            f"from SDoc {sdoc_ids} in Project {proj_id} to Typesense ..."
         )
         sents = [
             {
@@ -102,7 +106,7 @@ class TypesenseService(VectorIndexService):
                 "sentence_id": sent_id,
                 "vec": sent_emb.tolist(),
             }
-            for sent_id, sent_emb in enumerate(embeddings)
+            for sent_id, (sdoc_id, sent_emb) in enumerate(zip(sdoc_ids, embeddings))
         ]
         res = self._client.collections[collection_name].documents.import_(  # type: ignore
             sents, {"action": "create"}
@@ -130,7 +134,7 @@ class TypesenseService(VectorIndexService):
         proj_id: int,
         index_type: IndexType,
         query_emb: np.ndarray,
-        sdoc_ids_to_search: List[int],
+        sdoc_ids_to_search: List[int] | None,
         top_k: int = 10,
         threshold: float = 0.0,
     ) -> List[SimSearchSentenceHit] | List[SimSearchImageHit]:
@@ -164,15 +168,16 @@ class TypesenseService(VectorIndexService):
 
     def suggest(
         self,
-        index_type: IndexType,
+        data_ids: Union[Iterable[int], Iterable[Tuple[int, int]]],
         proj_id: int,
-        sdoc_sent_ids: List[Tuple[int, int]],
+        top_k: int,
+        index_type: IndexType = IndexType.DOCUMENT,
     ) -> List[SimSearchSentenceHit]:
         candidates: List[SimSearchSentenceHit] = []
         vc = "vector_query"
         queries = [
             {vc: f"vec:([], id: {sdoc_id}-{sent_id}, k:1)"}
-            for sdoc_id, sent_id in sdoc_sent_ids
+            for sdoc_id, sent_id in data_ids  # type: ignore
         ]
 
         res = self._client.multi_search.perform(
@@ -197,9 +202,10 @@ class TypesenseService(VectorIndexService):
 
         return candidates
 
-    def get_sentence_embeddings(
+    def get_embeddings(
         self,
         search_tuples: List[Tuple[int, int]],
+        index_type: IndexType,
     ) -> np.ndarray:
         # TODO implement
         raise NotImplementedError(
@@ -209,3 +215,9 @@ class TypesenseService(VectorIndexService):
     def drop_indices(self) -> None:
         # TODO implement
         raise NotImplementedError("drop_indices not implemented for typesense")
+
+    def knn(self, proj_id, index_type, sdoc_ids_to_search, sdoc_ids_known, k=3):
+        raise NotImplementedError
+
+    def remove_project_index(self, proj_id, type):
+        raise NotImplementedError

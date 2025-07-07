@@ -17,8 +17,11 @@ cd ~/dats_prod || exit
 # Stop all containers
 cd ~/dats_prod/docker || exit
 docker compose -f compose.yml -f compose.production.yml down
+docker compose -f compose.ollama.yml down
+docker compose -f compose.ray.yml down
 
 # Pull latest changes
+git switch main
 git pull
 
 # update .env file
@@ -27,5 +30,9 @@ cd ~/dats_prod || exit
 
 # pull & start docker containers
 cd ~/dats_prod/docker || exit
-docker compose pull
+docker compose -f compose.ollama.yml pull
+docker compose -f compose.ollama.yml up --wait
+docker compose -f compose.ray.yml pull
+docker compose -f compose.ray.yml up --wait
+docker compose -f compose.yml -f compose.production.yml pull
 docker compose -f compose.yml -f compose.production.yml up --wait

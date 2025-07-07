@@ -1,3 +1,5 @@
+from typing import List
+
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
@@ -10,6 +12,7 @@ from app.core.db.sql_utils import aggregate_ids
 from app.core.search.column_info import AbstractColumns
 from app.core.search.filtering_operators import FilterOperator, FilterValueType
 from app.core.search.search_builder import SearchBuilder
+from sqlalchemy.orm import Session
 
 # TODO: How to do text search?
 
@@ -29,7 +32,7 @@ class SentAnnoColumns(str, AbstractColumns):
             case SentAnnoColumns.DOCUMENT_TAG_ID_LIST:
                 return subquery_dict[SentAnnoColumns.DOCUMENT_TAG_ID_LIST.value]
             case SentAnnoColumns.CODE_ID:
-                return CodeORM.id
+                return SentenceAnnotationORM.code_id
             # case SentAnnoColumns.TEXT:
             #     return SpanTextORM.text
             case SentAnnoColumns.MEMO_CONTENT:
@@ -106,22 +109,110 @@ class SentAnnoColumns(str, AbstractColumns):
                         label=SentAnnoColumns.DOCUMENT_TAG_ID_LIST.value,
                     )
                 )
-                query_builder._join_subquery(SentenceAnnotationORM.annotation_document)
-                query_builder._join_subquery(AnnotationDocumentORM.source_document)
+                query_builder._join_subquery(
+                    AnnotationDocumentORM,
+                    AnnotationDocumentORM.id
+                    == SentenceAnnotationORM.annotation_document_id,
+                )
+                query_builder._join_subquery(
+                    SourceDocumentORM,
+                    SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+                )
                 query_builder._join_subquery(
                     SourceDocumentORM.document_tags, isouter=True
                 )
 
     def add_query_filter_statements(self, query_builder: SearchBuilder):
         match self:
+            case SentAnnoColumns.SOURCE_DOCUMENT_FILENAME:
+                query_builder._join_query(
+                    AnnotationDocumentORM,
+                    AnnotationDocumentORM.id
+                    == SentenceAnnotationORM.annotation_document_id,
+                )._join_query(
+                    SourceDocumentORM,
+                    SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+                )
             case SentAnnoColumns.MEMO_CONTENT:
-                # TODO, i need join_query for this, subquery is for aggregates, query for normal columns
-                assert query_builder.query is not None, "Query is not initialized"
-                query_builder.query = query_builder.query.join(
+                query_builder._join_query(
                     SentenceAnnotationORM.object_handle, isouter=True
-                ).join(
+                )._join_query(
                     ObjectHandleORM.attached_memos.and_(
                         MemoORM.user_id == AnnotationDocumentORM.user_id
                     ),
                     isouter=True,
                 )
+            case SentAnnoColumns.USER_ID:
+                query_builder._join_query(
+                    AnnotationDocumentORM,
+                    AnnotationDocumentORM.id
+                    == SentenceAnnotationORM.annotation_document_id,
+                )
+
+    def resolve_ids(self, db: Session, ids: List[int]) -> List[str]:
+        match self:
+            case SentAnnoColumns.DOCUMENT_TAG_ID_LIST:
+                result = (
+                    db.query(DocumentTagORM)
+                    .filter(
+                        DocumentTagORM.id.in_(ids),
+                    )
+                    .all()
+                )
+                return [tag.name for tag in result]
+            case SentAnnoColumns.CODE_ID:
+                result = (
+                    db.query(CodeORM)
+                    .filter(
+                        CodeORM.id.in_(ids),
+                    )
+                    .all()
+                )
+                return [code.name for code in result]
+            case SentAnnoColumns.USER_ID:
+                result = (
+                    db.query(UserORM)
+                    .filter(
+                        UserORM.id.in_(ids),
+                    )
+                    .all()
+                )
+                return [user.email for user in result]
+            case _:
+                raise NotImplementedError(f"Cannot resolve ID for {self}!")
+
+    def resolve_names(
+        self, db: Session, project_id: int, names: List[str]
+    ) -> List[int]:
+        match self:
+            case SentAnnoColumns.DOCUMENT_TAG_ID_LIST:
+                result = (
+                    db.query(DocumentTagORM)
+                    .filter(
+                        DocumentTagORM.project_id == project_id,
+                        DocumentTagORM.name.in_(names),
+                    )
+                    .all()
+                )
+                return [tag.id for tag in result]
+            case SentAnnoColumns.CODE_ID:
+                result = (
+                    db.query(CodeORM)
+                    .filter(
+                        CodeORM.project_id == project_id,
+                        CodeORM.name.in_(names),
+                    )
+                    .all()
+                )
+                return [code.id for code in result]
+            case SentAnnoColumns.USER_ID:
+                result = (
+                    db.query(UserORM)
+                    .filter(
+                        UserORM.email.in_(names),
+                    )
+                    .all()
+                )
+                return [user.id for user in result]
+            case _:
+                raise NotImplementedError(f"Cannot resolve name for {self}!")

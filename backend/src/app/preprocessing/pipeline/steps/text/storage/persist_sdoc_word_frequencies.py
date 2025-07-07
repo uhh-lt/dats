@@ -1,12 +1,11 @@
 import traceback
 
-from loguru import logger
-
 from app.core.data.crud.word_frequency import crud_word_frequency
 from app.core.data.dto.word_frequency import WordFrequencyCreate
 from app.core.db.sql_service import SQLService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
+from loguru import logger
 
 sql: SQLService = SQLService()
 
