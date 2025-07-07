@@ -214,7 +214,9 @@ class PerspectivesService:
         # Read all relevant data
         aspect = crud_aspect.read(db=db, id=aspect_id)
         doc_aspects = aspect.document_aspects
-        doc_clusters = crud_document_cluster.read_by_aspect(db=db, aspect_id=aspect_id)
+        doc_clusters = crud_document_cluster.read_by_aspect_id(
+            db=db, aspect_id=aspect_id
+        )
         doc_id2_dt = {dt.sdoc_id: dt for dt in doc_clusters}
 
         # Prepare data for the map
@@ -453,7 +455,7 @@ class PerspectivesService:
             )
 
             # Construct update DTOS
-            doc_clusters = crud_document_cluster.read_by_aspect(
+            doc_clusters = crud_document_cluster.read_by_aspect_id(
                 db=db, aspect_id=aspect_id
             )
             sdoc_id2doccluster = {dt.sdoc_id: dt for dt in doc_clusters}
@@ -603,6 +605,57 @@ class PerspectivesService:
 
         return c_tf_idf, words
 
+    def __compute_top_words(
+        self,
+        db: Session,
+        all_cluster_ids: List[int],
+        doc_aspects: List[DocumentAspectORM],
+        assigned_clusters: List[int],
+    ) -> Tuple[Dict[int, List[str]], Dict[int, List[float]]]:
+        # 1.1. Group the documents by cluster, creating a "big" clusterdocument per cluster, which is required by c-TF-IDF
+        cluster_to_doc_aspects: Dict[int, List[DocumentAspectORM]] = {
+            cid: [] for cid in all_cluster_ids
+        }
+        for da, cluster_id in zip(doc_aspects, assigned_clusters):
+            cluster_to_doc_aspects[cluster_id].append(da)
+        cluster_to_clusterdoc: Dict[int, str] = {
+            cid: " ".join([da.content for da in cluster_to_doc_aspects[cid]])
+            if len(cluster_to_doc_aspects[cid]) > 0
+            else "emptydoc"
+            for cid in all_cluster_ids
+        }
+
+        # 1.2 Compute the c-TF-IDF
+        # The first row in c-TF-IDF corresponds to the first cluster in tids, the second row to the second cluster, etc.
+        self._log_status_msg(
+            f"Computing c-TF-IDF for {len(all_cluster_ids)} clusters..."
+        )
+        c_tf_idf, words = self.__c_tf_idf(
+            documents_per_cluster=[
+                cluster_to_clusterdoc[cid] for cid in all_cluster_ids
+            ]
+        )
+
+        # 1.3. Find the most important words for each cluster
+        # Use numpy to get top-k values and indices for each cluster (row)
+        k = 50
+        top_words: Dict[int, List[str]] = {}
+        top_word_scores: Dict[int, List[float]] = {}
+        for row, cluster_id in zip(c_tf_idf, all_cluster_ids):
+            # Get indices of top-k elements in descending order
+            if len(row) < k:
+                topk_idx = np.argsort(row)[::-1]
+            else:
+                topk_idx = np.argpartition(row, -k)[-k:]
+                # Sort these top-k indices by value descending
+                topk_idx = topk_idx[np.argsort(row[topk_idx])[::-1]]
+            top_words[cluster_id] = [words[i] for i in topk_idx]
+            top_word_scores[cluster_id] = [float(row[i]) for i in topk_idx]
+
+        self._log_status_msg("Extracted top words and scores for each cluster!")
+
+        return top_words, top_word_scores
+
     def _extract_clusters(
         self,
         db: Session,
@@ -627,17 +680,28 @@ class PerspectivesService:
         level = 0  # TODO: we only consider 1 level for now (level 0)
 
         # 0. Read all required data
-        # - Read the clusters (but the outlier cluster)
+        # - Read the clusters
         all_clusters = crud_cluster.read_by_aspect_and_level(
             db=db, aspect_id=aspect_id, level=level
         )
-        # - Read the document aspects
-        doc_aspects, assigned_clusters = (
-            crud_document_aspect.read_by_aspect_and_cluster_ids(
-                db=db, aspect_id=aspect_id, cluster_ids=[t.id for t in all_clusters]
-            )
+        # - Read all document aspects
+        doc_aspects = crud_document_aspect.read_by_aspect_id(db=db, aspect_id=aspect_id)
+        doc_aspects.sort(key=lambda da: da.sdoc_id)  # Sort by source document ID
+        doc_clusters = crud_document_cluster.read_by_aspect_id(
+            db=db, aspect_id=aspect_id
         )
-        assigned_clusters_arr = np.array(assigned_clusters)
+        doc_clusters.sort(key=lambda dt: dt.sdoc_id)  # Sort by source document ID
+
+        assigned_clusters: List[int] = []
+        assert len(doc_aspects) == len(
+            doc_clusters
+        ), "The number of aspects and cluster assignments does not match."
+        for da, dt in zip(doc_aspects, doc_clusters):
+            if da.sdoc_id != dt.sdoc_id:
+                raise ValueError(
+                    f"DocumentAspect and DocumentCluster do not match: {da.sdoc_id} != {dt.sdoc_id}"
+                )
+            assigned_clusters.append(dt.cluster_id)
 
         # determine which clusters to update
         cluster_ids_to_update = (
@@ -650,42 +714,12 @@ class PerspectivesService:
         )
 
         # 1. Identify key words for each cluster
-        # 1.1. Group the documents by cluster, creating a "big" clusterdocument per cluster, which is required by c-TF-IDF
-        cluster_to_doc_aspects: Dict[int, List[DocumentAspectORM]] = {
-            t.id: [] for t in all_clusters
-        }
-        for da, cluster_id in zip(doc_aspects, assigned_clusters):
-            cluster_to_doc_aspects[cluster_id].append(da)
-        cluster_to_clusterdoc: Dict[int, str] = {
-            t.id: " ".join([da.content for da in cluster_to_doc_aspects[t.id]])
-            if len(cluster_to_doc_aspects[t.id]) > 0
-            else "emptydoc"
-            for t in all_clusters
-        }
-
-        # 1.2 Compute the c-TF-IDF
-        # The first row in c-TF-IDF corresponds to the first cluster in tids, the second row to the second cluster, etc.
-        self._log_status_msg(f"Computing c-TF-IDF for {len(all_clusters)} clusters...")
-        c_tf_idf, words = self.__c_tf_idf(
-            documents_per_cluster=list(cluster_to_clusterdoc.values())
+        top_words, top_word_scores = self.__compute_top_words(
+            db=db,
+            all_cluster_ids=[c.id for c in all_clusters],
+            doc_aspects=doc_aspects,
+            assigned_clusters=assigned_clusters,
         )
-
-        # 1.3. Find the most important words for each cluster
-        # Use numpy to get top-k values and indices for each cluster (row)
-        k = 50
-        top_words: Dict[int, List[str]] = {}
-        top_word_scores: Dict[int, List[float]] = {}
-        for row, cluster_id in zip(c_tf_idf, cluster_to_clusterdoc.keys()):
-            # Get indices of top-k elements in descending order
-            if len(row) < k:
-                topk_idx = np.argsort(row)[::-1]
-            else:
-                topk_idx = np.argpartition(row, -k)[-k:]
-                # Sort these top-k indices by value descending
-                topk_idx = topk_idx[np.argsort(row[topk_idx])[::-1]]
-            top_words[cluster_id] = [words[i] for i in topk_idx]
-            top_word_scores[cluster_id] = [float(row[i]) for i in topk_idx]
-        self._log_status_msg("Extracted top words and scores for each cluster!")
 
         # 2. Generate cluster name and description with LLM
         class OllamaResponse(BaseModel):
@@ -721,6 +755,7 @@ class PerspectivesService:
                 ],
             )
         )
+        assigned_clusters_arr = np.array(assigned_clusters)
 
         self._log_status_msg(
             f"Computing cluster embeddings & top documents for {len(cluster_ids_to_update)} clusters."
@@ -752,10 +787,7 @@ class PerspectivesService:
             similarities = doc_embeddings @ cluster_centroids[cluster_id]
             num_top_docs_to_retrieve = min(3, len(doc_embeddings))
             top_doc_indices = np.argsort(similarities)[:num_top_docs_to_retrieve]
-            top_doc_ids = [
-                cluster_to_doc_aspects[cluster_id][i].sdoc_id for i in top_doc_indices
-            ]
-            top_docs[cluster_id] = top_doc_ids
+            top_docs[cluster_id] = [sdoc_ids[i].item() for i in top_doc_indices]
 
             # ... update the distances of the document clusters
             for sdoc_id, similarity in zip(sdoc_ids, similarities):
@@ -876,7 +908,7 @@ class PerspectivesService:
                 aspect = crud_aspect.read(db=db, id=aspect_id)
 
                 # Read the current document <-> cluster assignments
-                document_clusters = crud_document_cluster.read_by_aspect(
+                document_clusters = crud_document_cluster.read_by_aspect_id(
                     db=db, aspect_id=aspect.id
                 )
                 doc2cluster: Dict[int, DocumentClusterORM] = {
@@ -986,7 +1018,7 @@ class PerspectivesService:
     ):
         with self.sqls.db_session() as db:
             # Read the current document <-> cluster assignments
-            document_clusters = crud_document_cluster.read_by_aspect(
+            document_clusters = crud_document_cluster.read_by_aspect_id(
                 db=db, aspect_id=aspect_id
             )
             doc2cluster: Dict[int, DocumentClusterORM] = {
@@ -1279,12 +1311,14 @@ class PerspectivesService:
                     db=db, aspect_id=aspect_id, level=0
                 )
                 cluster_id = cluster.id
+                logger.info(f"Changing to outlier cluster {cluster.name}.")
             else:
                 cluster = crud_cluster.read(db=db, id=params.cluster_id)
                 cluster_id = cluster.id
+                logger.info(f"Changing to normal cluster {cluster.name}.")
 
             # Read the current document <-> cluster assignments
-            document_clusters = crud_document_cluster.read_by_aspect(
+            document_clusters = crud_document_cluster.read_by_aspect_id(
                 db=db, aspect_id=aspect_id
             )
             doc2cluster: Dict[int, DocumentClusterORM] = {
@@ -1349,7 +1383,7 @@ class PerspectivesService:
         }
 
         # Read the current document <-> cluster assignments
-        document_clusters = crud_document_cluster.read_by_aspect(
+        document_clusters = crud_document_cluster.read_by_aspect_id(
             db=db, aspect_id=aspect.id
         )
         for dt in document_clusters:

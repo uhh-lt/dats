@@ -307,7 +307,9 @@ def visualize_documents(
 
     # Color by
     clusters = aspect.clusters
-    document_clusters = crud_document_cluster.read_by_aspect(db=db, aspect_id=aspect_id)
+    document_clusters = crud_document_cluster.read_by_aspect_id(
+        db=db, aspect_id=aspect_id
+    )
     sdoc_id2dt = {dt.sdoc_id: dt for dt in document_clusters}
     cluster_id2cluster = {t.id: t for t in clusters}
     assert (
@@ -373,6 +375,9 @@ def visualize_documents(
         f"Filtered {len(filtered_clusters)} clusters from {len(clusters)} total clusters."
     )
 
+    # sort the clusters by their ID
+    filtered_clusters.sort(key=lambda c: c.id)
+
     return PerspectivesVisualization(
         aspect_id=aspect.id,
         clusters=[ClusterRead.model_validate(t) for t in filtered_clusters],
@@ -397,6 +402,7 @@ def get_cluster_similarities(
     # Fetch the clusters for the given Aspect
     aspect = crud_aspect.read(db=db, id=aspect_id)
     clusters = aspect.clusters
+    clusters.sort(key=lambda c: c.id)
 
     if len(clusters) == 0:
         return PerspectivesClusterSimilarities(

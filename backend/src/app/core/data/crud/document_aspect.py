@@ -71,19 +71,14 @@ class CRUDDocumentAspect(
             .all()
         )
 
-    def read_by_aspect_and_cluster_ids(
-        self, db, *, aspect_id: int, cluster_ids: list[int]
-    ) -> tuple[list[DocumentAspectORM], list[int]]:
-        query = (
-            db.query(self.model, DocumentClusterORM.cluster_id)
-            .join(DocumentClusterORM, DocumentClusterORM.sdoc_id == self.model.sdoc_id)
+    def read_by_aspect_id(self, db, *, aspect_id: int) -> list[DocumentAspectORM]:
+        return (
+            db.query(self.model)
             .filter(
                 self.model.aspect_id == aspect_id,
-                DocumentClusterORM.cluster_id.in_(cluster_ids),
             )
             .all()
         )
-        return zip(*query) if query else ([], [])  # type: ignore
 
     def read_all_with_clusters_of_level(
         self, db, *, aspect_id: int, level: int

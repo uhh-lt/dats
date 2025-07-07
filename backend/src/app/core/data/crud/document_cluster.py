@@ -45,7 +45,7 @@ class CRUDDocumentCluster(
             .all()
         )
 
-    def read_by_aspect(
+    def read_by_aspect_id(
         self, db: Session, *, aspect_id: int
     ) -> list[DocumentClusterORM]:
         return (
