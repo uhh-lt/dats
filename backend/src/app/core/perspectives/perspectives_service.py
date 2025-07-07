@@ -420,9 +420,9 @@ class PerspectivesService:
         # 3. Cluster the reduced embeddings
         self._log_status_msg("Clustering the reduced embeddings with HDBSCAN...")
         hdbscan_model = HDBSCAN(min_cluster_size=10, metric="euclidean")
-        clusters = hdbscan_model.fit_predict(reduced_embeddings).tolist()
-        cluster_ids = set(clusters)
-        self._log_status_msg(f"Found {len(cluster_ids)} clusters with HDBSCAN")
+        hdb_clusters = hdbscan_model.fit_predict(reduced_embeddings).tolist()
+        hdb_cluster_ids = set(hdb_clusters)
+        self._log_status_msg(f"Found {len(hdb_cluster_ids)} clusters with HDBSCAN")
 
         # 4. Storing / reusing the clusters
         if len(train_doc_ids) > 0 and len(train_cluster_ids) > 0:
@@ -432,22 +432,24 @@ class PerspectivesService:
                 for doc_id, cluster_id in zip(train_doc_ids, train_cluster_ids)
             }
             new_doc2top: Dict[int, int] = {
-                da.sdoc_id: cluster for da, cluster in zip(doc_aspects, clusters)
+                da.sdoc_id: cluster for da, cluster in zip(doc_aspects, hdb_clusters)
             }
             labeled_docs = [
                 (train_doc2top[doc_id], new_doc2top[doc_id]) for doc_id in train_doc_ids
             ]
-            cluster_id2cluster_id = self.__find_new_to_old_cluster_mapping(labeled_docs)
+            hdb_cluster_id2db_cluster_id = self.__find_new_to_old_cluster_mapping(
+                labeled_docs
+            )
 
             # add mapping for outlier cluster
             outlier_cluster = crud_cluster.read_or_create_outlier_cluster(
                 db=db, aspect_id=aspect_id, level=0
             )
-            cluster_id2cluster_id[-1] = (
+            hdb_cluster_id2db_cluster_id[-1] = (
                 outlier_cluster.id
             )  # -1 is the outlier cluster ID
             self._log_status_msg(
-                f"Computed a mapping from {len(cluster_id2cluster_id)} clusters to existing clusters."
+                f"Computed a mapping from {len(hdb_cluster_id2db_cluster_id)} clusters to existing clusters."
             )
 
             # Construct update DTOS
@@ -457,7 +459,7 @@ class PerspectivesService:
             sdoc_id2doccluster = {dt.sdoc_id: dt for dt in doc_clusters}
             update_dtos: List[DocumentClusterUpdate] = []
             update_ids: list[tuple[int, int]] = []
-            for da, cluster in zip(doc_aspects, clusters):
+            for da, hdb_cluster in zip(doc_aspects, hdb_clusters):
                 if da.sdoc_id in train_doc_ids:
                     continue  # Skip documents that were used for training!
 
@@ -465,7 +467,7 @@ class PerspectivesService:
                 if dt.is_accepted:
                     continue  # Skip already accepted assignments!
 
-                new_cluster_id = cluster_id2cluster_id[cluster]
+                new_cluster_id = hdb_cluster_id2db_cluster_id[hdb_cluster]
                 if dt.cluster_id == new_cluster_id:
                     continue
 
@@ -494,24 +496,33 @@ class PerspectivesService:
 
         else:
             # Or: Store the clusters (clusters) in the DB
-            clusters = crud_cluster.create_multi(
+            hdb_cluster_id2db_cluster_id: Dict[int, int] = {}
+
+            # Treat outlier cluster separately. We only want 1 outlier cluster per aspect.
+            if -1 in hdb_cluster_ids:
+                outlier_cluster = crud_cluster.read_or_create_outlier_cluster(
+                    db=db, aspect_id=aspect_id, level=0
+                )
+                hdb_cluster_ids.remove(-1)
+                hdb_cluster_id2db_cluster_id[-1] = outlier_cluster.id
+
+            db_clusters = crud_cluster.create_multi(
                 db=db,
                 create_dtos=[
                     ClusterCreateIntern(
                         aspect_id=aspect_id,
                         level=0,
-                        name="Outlier" if cluster == -1 else None,
-                        is_outlier=(cluster == -1),
+                        name=None,
+                        is_outlier=False,
                     )
-                    for cluster in cluster_ids
+                    for cluster_id in hdb_cluster_ids
                 ],
             )
-            cluster_id2cluster_id = {
-                cluster_id: cluster.id
-                for cluster_id, cluster in zip(cluster_ids, clusters)
-            }
+            for hdb_cluster_id, db_cluster in zip(hdb_cluster_ids, db_clusters):
+                hdb_cluster_id2db_cluster_id[hdb_cluster_id] = db_cluster.id
+
             self._log_status_msg(
-                f"Stored {len(cluster_id2cluster_id)} clusters in the database corresponding to {len(cluster_ids)} clusters."
+                f"Stored {len(hdb_cluster_id2db_cluster_id)} clusters in the database corresponding to {len(hdb_cluster_ids)} clusters."
             )
 
             # 5. Store the cluster assignments in the database
@@ -520,13 +531,13 @@ class PerspectivesService:
                 create_dtos=[
                     DocumentClusterCreate(
                         sdoc_id=da.sdoc_id,
-                        cluster_id=cluster_id2cluster_id[cluster],
+                        cluster_id=hdb_cluster_id2db_cluster_id[hdb_cluster],
                     )
-                    for da, cluster in zip(doc_aspects, clusters)
+                    for da, hdb_cluster in zip(doc_aspects, hdb_clusters)
                 ],
             )
             self._log_status_msg(
-                f"Assigned {len(doc_aspects)} document aspects to {len(cluster_id2cluster_id)} clusters."
+                f"Assigned {len(doc_aspects)} document aspects to {len(hdb_cluster_id2db_cluster_id)} clusters."
             )
 
         # 5. Generate a map thumbnail
@@ -536,7 +547,7 @@ class PerspectivesService:
             aspect_id=aspect.id,
         )
 
-        return list(cluster_id2cluster_id.values())
+        return list(hdb_cluster_id2db_cluster_id.values())
 
     def __preprocess_text(self, documents: List[str]) -> List[str]:
         r"""Basic preprocessing of text.
