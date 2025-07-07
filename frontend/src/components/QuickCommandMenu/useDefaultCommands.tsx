@@ -74,6 +74,15 @@ export const useDefaultCommands = (projectId: string | undefined): CommandItem[]
         keywords: ["find", "search", "sentences", "navigate"],
       },
       {
+        id: "perspectives",
+        title: "Open Perspectives",
+        description: "Go to project perspectives",
+        category: "Navigation",
+        icon: getIconComponent(Icon.PERSPECTIVES),
+        route: `/project/${projectId}/perspectives`,
+        keywords: ["perspectives", "map"],
+      },
+      {
         id: "annotation-view",
         title: "Annotation View",
         description: "Go to annotation view",
@@ -90,6 +99,15 @@ export const useDefaultCommands = (projectId: string | undefined): CommandItem[]
         icon: getIconComponent(Icon.LOGBOOK),
         route: `/project/${projectId}/logbook`,
         keywords: ["log", "notes", "journal", "memo"],
+      },
+      {
+        id: "whiteboard",
+        title: "Open Whiteboards",
+        description: "Go to project whiteboards",
+        category: "Navigation",
+        icon: getIconComponent(Icon.WHITEBOARD),
+        route: `/project/${projectId}/whiteboard`,
+        keywords: ["whiteboard", "board", "visualization", "brainstorming"],
       },
       // Analysis commands
       {

@@ -1,7 +1,6 @@
 from pathlib import Path
 from typing import Dict, List, Set, Tuple
 
-import numpy as np
 import pandas as pd
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.project import crud_project
@@ -23,15 +22,19 @@ from app.core.data.eximport.sdocs.sdoc_export_schema import (
 from app.core.data.orm.project_metadata import ProjectMetadataORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.elasticsearch_service import ElasticSearchService
-from app.core.db.index_type import IndexType
-from app.core.db.weaviate_service import WeaviateService
+from app.core.vector.crud.document_embedding import crud_document_embedding
+from app.core.vector.crud.image_embedding import crud_image_embedding
+from app.core.vector.crud.sentence_embedding import crud_sentence_embedding
+from app.core.vector.dto.document_embedding import DocumentObjectIdentifier
+from app.core.vector.dto.image_embedding import ImageObjectIdentifier
+from app.core.vector.dto.sentence_embedding import SentenceObjectIdentifier
+from app.core.vector.weaviate_service import WeaviateService
 from app.preprocessing.pipeline.steps.image.process.convert_to_webp_and_generate_thumbnail import (
     generate_thumbnails,
 )
 from loguru import logger
 from sqlalchemy.orm import Session
 
-vector_index = WeaviateService()
 elastic_index = ElasticSearchService()
 repo = RepoService()
 
@@ -246,33 +249,37 @@ def import_sdocs_to_proj(
         crud_sdoc_link.create_multi(db=db, create_dtos=link_create_dtos)
 
         # 5. Add embeddings to the vector database
-        # Document embeddings
-        vector_index.add_embeddings_to_index(
-            type=IndexType.DOCUMENT,
-            proj_id=project_id,
-            sdoc_ids=[created_sdoc.id],
-            embeddings=[np.array(sdoc_export.document_embedding)],
-        )
-
-        # Sentence embeddings
-        vector_index.add_embeddings_to_index(
-            type=IndexType.SENTENCE,
-            proj_id=project_id,
-            sdoc_ids=[created_sdoc.id] * len(sdoc_export.sentence_embeddings),
-            embeddings=[np.array(se) for se in sdoc_export.sentence_embeddings],
-        )
-
-        # Image embedding
-        if (
-            sdoc_export.image_embedding is not None
-            and DocType(sdoc_export.doctype) == DocType.image
-        ):
-            vector_index.add_embeddings_to_index(
-                type=IndexType.IMAGE,
-                proj_id=project_id,
-                sdoc_ids=[created_sdoc.id],
-                embeddings=[np.array(sdoc_export.image_embedding)],
+        with WeaviateService().weaviate_session() as client:
+            # Document embeddings
+            crud_document_embedding.add_embedding(
+                client=client,
+                project_id=project_id,
+                id=DocumentObjectIdentifier(sdoc_id=created_sdoc.id),
+                embedding=sdoc_export.document_embedding,
             )
+
+            # Sentence embeddings
+            crud_sentence_embedding.add_embedding_batch(
+                client=client,
+                project_id=project_id,
+                ids=[
+                    SentenceObjectIdentifier(sdoc_id=created_sdoc.id, sentence_id=i)
+                    for i in range(len(sdoc_export.sentence_embeddings))
+                ],
+                embeddings=[se for se in sdoc_export.sentence_embeddings],
+            )
+
+            # Image embedding
+            if (
+                sdoc_export.image_embedding is not None
+                and DocType(sdoc_export.doctype) == DocType.image
+            ):
+                crud_image_embedding.add_embedding(
+                    client=client,
+                    project_id=project_id,
+                    id=ImageObjectIdentifier(sdoc_id=created_sdoc.id),
+                    embedding=sdoc_export.image_embedding,
+                )
 
         # 6. Add the source documents to the Elasticsearch index
         elastic_index.add_document_to_index(

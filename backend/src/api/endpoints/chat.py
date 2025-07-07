@@ -6,8 +6,6 @@ from app.core.data.llm.llm_chat import (
     chat_session,
     retrieval_augmented_generation_with_session,
 )
-from app.core.search.filtering import Filter
-from app.core.search.sdoc_search.sdoc_search_columns import SdocColumns
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -28,7 +26,7 @@ def rag_with_session(
     query: Union[str, List[str], int],
     top_k: int,
     threshold: float,
-    filter: Filter[SdocColumns],
+    sdoc_ids: Optional[List[int]],
     authz_user: AuthzUser = Depends(),
     session_id: Optional[str] = None,
     db: Session = Depends(get_db_session),
@@ -40,7 +38,7 @@ def rag_with_session(
         query=query,
         top_k=top_k,
         threshold=threshold,
-        filter=filter,
+        sdoc_ids=sdoc_ids,
         db=db,
         session_id=session_id,
     )

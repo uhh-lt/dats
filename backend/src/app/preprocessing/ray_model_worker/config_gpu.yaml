@@ -1,6 +1,6 @@
 spacy:
   # note that the spacy models have to be installed in the env to use it! (docker!)
-  model_dir: ${oc.env:SPACY_MODELS_DIR, /spacy_models2}
+  model_dir: ${oc.env:SPACY_MODELS_DIR, /spacy_models}
   models:
     en: en_core_web_trf-3.8.0
     de: de_core_news_lg-3.8.0
@@ -27,7 +27,7 @@ whisper:
 
   deployment:
     ray_actor_options:
-      num_gpus: .125
+      num_gpus: .1
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
@@ -37,7 +37,7 @@ detr:
   device: cuda
   deployment:
     ray_actor_options:
-      num_gpus: .125
+      num_gpus: .1
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
@@ -148,7 +148,7 @@ clip:
     device: cuda
   deployment:
     ray_actor_options:
-      num_gpus: .125
+      num_gpus: .1
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
@@ -159,7 +159,7 @@ cota:
   device: cuda
   deployment:
     ray_actor_options:
-      num_gpus: .125
+      num_gpus: .1
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
@@ -167,10 +167,10 @@ cota:
 
 seqsenttagger:
   batch_size: 16
-  device: gpu
+  device: cuda
   deployment:
     ray_actor_options:
-      num_gpus: .125
+      num_gpus: .1
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
@@ -183,7 +183,7 @@ quote:
   device: cuda
   deployment:
     ray_actor_options:
-      num_gpus: .125
+      num_gpus: .1
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
@@ -204,7 +204,7 @@ coref:
   device: cuda
   deployment:
     ray_actor_options:
-      num_gpus: .125
+      num_gpus: .1
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
@@ -213,12 +213,25 @@ docling:
   # scaling factor for images extracted from PDFs
   image_resolution_scale: 3.0
   # pages per PDF chunk
-  max_pages_per_pdf_chunk: 5
+  max_pages_per_pdf_chunk: 10
   # tmp directory for docling
   tmp_dir: /tmp/dats/ray/docling
   deployment:
     ray_actor_options:
-      num_gpus: .125
+      num_gpus: .1
     autoscaling_config:
       min_replicas: 1
       max_replicas: 1
+
+promptembedder:
+  model: "intfloat/multilingual-e5-large-instruct"
+  max_seq_length: 512
+  batch_size: 8
+  device: cuda
+  deployment:
+    ray_actor_options:
+      num_gpus: .1
+    autoscaling_config:
+      min_replicas: 1
+      max_replicas: 1
+  root_dir: /tmp/dats/ray/promptembedder

@@ -8,8 +8,10 @@ import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import AutoGraphIcon from "@mui/icons-material/AutoGraph";
 import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import BarChartIcon from "@mui/icons-material/BarChart";
+import BubbleChartIcon from "@mui/icons-material/BubbleChart";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import CheckBoxOutlinedIcon from "@mui/icons-material/CheckBoxOutlined";
+import CircleIcon from "@mui/icons-material/Circle";
 import CommentIcon from "@mui/icons-material/Comment";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DescriptionIcon from "@mui/icons-material/Description";
@@ -23,6 +25,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import ImageIcon from "@mui/icons-material/Image";
 import ImageSearchIcon from "@mui/icons-material/ImageSearch";
 import LabelIcon from "@mui/icons-material/Label";
+import MapIcon from "@mui/icons-material/Map";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import NotesIcon from "@mui/icons-material/Notes";
@@ -43,6 +46,8 @@ import TuneIcon from "@mui/icons-material/Tune";
 import VideoFileIcon from "@mui/icons-material/VideoFile";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+
+import ExploreIcon from "@mui/icons-material/Explore";
 import { SvgIconProps } from "@mui/material";
 
 import React from "react";
@@ -106,6 +111,12 @@ export enum Icon {
 
   // Logbook
   LOGBOOK = "logbook",
+
+  // Perspectives
+  PERSPECTIVES = "perspectives",
+  MAP = "map",
+  CLUSTERS = "clusters",
+  CLUSTER = "cluster",
 
   // SETTINGS
   SETTINGS = "project_settings",
@@ -206,6 +217,12 @@ const iconMap: Record<Icon, IconFactory> = {
 
   // Logbook
   [Icon.LOGBOOK]: (iconProps) => <MenuBookIcon {...iconProps} />,
+
+  // Perspectives
+  [Icon.PERSPECTIVES]: (iconProps) => <ExploreIcon {...iconProps} />,
+  [Icon.MAP]: (iconProps) => <MapIcon {...iconProps} />,
+  [Icon.CLUSTERS]: (iconProps) => <BubbleChartIcon {...iconProps} />,
+  [Icon.CLUSTER]: (iconProps) => <CircleIcon {...iconProps} />,
 
   // SETTINGS
   [Icon.SETTINGS]: (iconProps) => <SettingsIcon {...iconProps} />,

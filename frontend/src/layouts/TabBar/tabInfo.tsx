@@ -39,6 +39,12 @@ function getIconForBase(base: string): Icon {
       return Icon.DOCUMENT_SAMPLER;
     case "ml-automation":
       return Icon.ML_AUTOMATION;
+    case "perspectives":
+      return Icon.PERSPECTIVES;
+    case "dashboard":
+      return Icon.MAP;
+    case "map":
+      return Icon.MAP;
     default:
       return Icon.PROJECT;
   }

@@ -3,6 +3,7 @@ api:
   max_upload_file_size: 104857600 # 100 MB in bytes
   production_mode: 1
   is_stable: ${oc.env:IS_STABLE, False}
+  uuid_namespace: ${oc.env:UUID_NAMESPACE, ""}
   auth:
     jwt:
       token_url: /authentication/login
@@ -64,24 +65,12 @@ celery:
   preprocessing:
     extract_images_from_pdf: True
     extract_images_from_docx: True
-    max_pages_per_pdf_chunk: 5
-
-vector_index:
-  service: ${oc.env:VECTOR_INDEX, weaviate}
+    max_pages_per_pdf_chunk: 10
 
 weaviate:
   host: weaviate
   port: 8080
-
-typesense:
-  host: typesense
-  port: 8108
-  api_key: ${oc.env:TYPESENSE_API_KEY, dats123}
-
-qdrant:
-  host: qdrant
-  port: 6333
-  grpc_port: 6334
+  grpc_port: 50051
 
 postgres:
   host: postgres
@@ -117,6 +106,7 @@ redis:
     llm: 6
     import_: 7
     ml: 8
+    perspectives: 9
 
 logging:
   max_file_size: 500 # MB

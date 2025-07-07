@@ -101,6 +101,22 @@ export const QueryKey = {
   // SourceDocumentMetadataRead with given key of a document (by sdoc id, metadata key)
   SDOC_METADATA_BY_KEY: "sdocMetadataByKey",
 
+  // managed by PerspectivesHooks:
+  // Aspects of a Project (by project id)
+  PROJECT_ASPECTS: "projectAspects",
+  // A single aspect (by aspect id)
+  ASPECT: "aspect",
+  // A single Perspectives Job (by perspectives job id)
+  PERSPECTIVES_JOB: "perspectivesJob",
+  // A DocumentVisualization (by aspect id)
+  DOCUMENT_VISUALIZATION: "documentVisualization",
+  // ClusterSimilarities (by aspect id)
+  CLUSTER_SIMILARITIES: "clusterSimilarities",
+  // Cluster of a SourceDocument (by aspect id, sdoc id)
+  SDOC_CLUSTES: "sdocClusters",
+  // Document Aspect content (by aspect id, sdoc id)
+  SDOC_ASPECT_CONTENT: "sdocAspectContent",
+
   // managed by SearchStatisticsHooks:
   FILTER_ENTITY_STATISTICS: "filterEntityStatistics",
   FILTER_KEYWORD_STATISTICS: "filterKeywordStatistics",

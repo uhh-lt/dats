@@ -17,6 +17,11 @@ from app.core.data.eximport.export_service import ExportService
 from app.core.data.eximport.import_service import ImportService
 from app.core.data.llm.llm_service import LLMService
 from app.core.ml.ml_service import MLService
+from app.core.perspectives.perspectives_job import (
+    PerspectivesJobParams,
+    PerspectivesJobRead,
+)
+from app.core.perspectives.perspectives_job_service import PerspectivesJobService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 
 
@@ -129,6 +134,25 @@ def prepare_and_start_ml_job_async(
     ml_job = mls.prepare_ml_job(ml_job_params)
     start_ml_job.apply_async(kwargs={"ml_job": ml_job})
     return ml_job
+
+
+def prepare_and_start_perspectives_job_async(
+    project_id: int,
+    aspect_id: int,
+    perspectives_job_params: PerspectivesJobParams,
+) -> PerspectivesJobRead:
+    from app.celery.background_jobs.tasks import start_perspectives_job
+
+    assert isinstance(start_perspectives_job, Task), "Not a Celery Task"
+
+    pjs: PerspectivesJobService = PerspectivesJobService()
+    perspectives_job = pjs.prepare_perspectives_job(
+        project_id=project_id,
+        aspect_id=aspect_id,
+        perspectives_params=perspectives_job_params,
+    )
+    start_perspectives_job.apply_async(kwargs={"perspectives_job": perspectives_job})
+    return perspectives_job
 
 
 def execute_text_preprocessing_pipeline_apply_async(

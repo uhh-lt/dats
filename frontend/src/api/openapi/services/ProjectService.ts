@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { AspectRead } from "../models/AspectRead";
 import type { Body_project_upload_project_sdoc } from "../models/Body_project_upload_project_sdoc";
 import type { CodeRead } from "../models/CodeRead";
 import type { DocumentTagRead } from "../models/DocumentTagRead";
@@ -118,23 +119,6 @@ export class ProjectService {
     });
   }
   /**
-   * Removes all SourceDocuments of the Project with the given ID if it exists
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static deleteProjectSdocs({ projId }: { projId: number }): CancelablePromise<Array<number>> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/project/{proj_id}/sdoc",
-      path: {
-        proj_id: projId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Associates an existing User to the Project with the given ID if it exists
    * @returns UserRead Successful Response
    * @throws ApiError
@@ -218,23 +202,6 @@ export class ProjectService {
     });
   }
   /**
-   * Removes all Codes of the Project with the given ID if it exists
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static deleteProjectCodes({ projId }: { projId: number }): CancelablePromise<Array<number>> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/project/{proj_id}/code",
-      path: {
-        proj_id: projId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Returns all DocumentTags of the Project with the given ID
    * @returns DocumentTagRead Successful Response
    * @throws ApiError
@@ -242,23 +209,6 @@ export class ProjectService {
   public static getProjectTags({ projId }: { projId: number }): CancelablePromise<Array<DocumentTagRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/project/{proj_id}/tag",
-      path: {
-        proj_id: projId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Removes all DocumentTags of the Project with the given ID if it exists
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static deleteProjectTags({ projId }: { projId: number }): CancelablePromise<Array<number>> {
-    return __request(OpenAPI, {
-      method: "DELETE",
       url: "/project/{proj_id}/tag",
       path: {
         proj_id: projId,
@@ -344,7 +294,7 @@ export class ProjectService {
     });
   }
   /**
-   * Returns all ProjectMetadata of the SourceDocument with the given ID if it exists
+   * Returns all ProjectMetadata of the Project with the given ID if it exists
    * @returns ProjectMetadataRead Successful Response
    * @throws ApiError
    */
@@ -352,6 +302,23 @@ export class ProjectService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/project/{proj_id}/metadata",
+      path: {
+        proj_id: projId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns all Aspects of the Project with the given ID if it exists
+   * @returns AspectRead Successful Response
+   * @throws ApiError
+   */
+  public static getAllAspects({ projId }: { projId: number }): CancelablePromise<Array<AspectRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/project/{proj_id}/aspects",
       path: {
         proj_id: projId,
       },

@@ -84,6 +84,7 @@ def filter_code_stats(
     # code stat params
     code_id: int,
     sort_by_global: bool = False,
+    top_k: int = 20,
     # filter params
     sdoc_ids: List[int],
 ) -> List[SpanEntityStat]:
@@ -92,7 +93,9 @@ def filter_code_stats(
 
     # compute code stats
     authz_user.assert_in_same_project_as(Crud.CODE, code_id)
-    code_stats = compute_code_statistics(code_id=code_id, sdoc_ids=set(sdoc_ids))
+    code_stats = compute_code_statistics(
+        code_id=code_id, sdoc_ids=set(sdoc_ids), top_k=top_k
+    )
     if sort_by_global:
         code_stats.sort(key=lambda x: x.global_count, reverse=True)
     return code_stats
@@ -109,7 +112,7 @@ def filter_keyword_stats(
     project_id: int,
     # keyword stat params
     sort_by_global: bool = False,
-    top_k: int = 50,
+    top_k: int = 20,
     # filter params
     sdoc_ids: List[int],
 ) -> List[KeywordStat]:
@@ -135,6 +138,7 @@ def filter_tag_stats(
     authz_user: AuthzUser = Depends(),
     # keyword stat params
     sort_by_global: bool = False,
+    top_k: int = 20,
     # filter params
     sdoc_ids: List[int],
 ) -> List[TagStat]:
@@ -142,7 +146,7 @@ def filter_tag_stats(
         return []
 
     # compute tag stats
-    tag_stats = compute_tag_statistics(sdoc_ids=set(sdoc_ids))
+    tag_stats = compute_tag_statistics(sdoc_ids=set(sdoc_ids), top_k=top_k)
     if sort_by_global:
         tag_stats.sort(key=lambda x: x.global_count, reverse=True)
     return tag_stats

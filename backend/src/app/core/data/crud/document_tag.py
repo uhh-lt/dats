@@ -25,18 +25,6 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
 
         return super().update(db, id=id, update_dto=update_dto)
 
-    def remove_by_project(self, db: Session, *, proj_id: int) -> List[int]:
-        # find all document tags to be removed
-        query = db.query(self.model).filter(self.model.project_id == proj_id)
-        removed_orms = query.all()
-        ids = [removed_orm.id for removed_orm in removed_orms]
-
-        # delete the tags
-        query.delete()
-        db.commit()
-
-        return ids
-
     def exists_by_project_and_tag_name_and_parent_id(
         self, db: Session, tag_name: str, project_id: int, parent_id: Optional[int]
     ) -> bool:

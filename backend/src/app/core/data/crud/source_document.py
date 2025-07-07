@@ -4,6 +4,7 @@ from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
+from app.core.data.doc_type import DocType
 from app.core.data.dto.source_document import (
     SDocStatus,
     SourceDocumentCreate,
@@ -12,6 +13,7 @@ from app.core.data.dto.source_document import (
 )
 from app.core.data.dto.source_document_data import SourceDocumentDataRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
+from app.core.data.orm.document_aspect import DocumentAspectORM
 from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.source_document_data import SourceDocumentDataORM
@@ -19,6 +21,11 @@ from app.core.data.orm.source_document_link import SourceDocumentLinkORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.elasticsearch_service import ElasticSearchService
 from app.core.db.sql_utils import aggregate_ids
+from app.core.vector.crud.aspect_embedding import crud_aspect_embedding
+from app.core.vector.crud.document_embedding import crud_document_embedding
+from app.core.vector.crud.image_embedding import crud_image_embedding
+from app.core.vector.crud.sentence_embedding import crud_sentence_embedding
+from app.core.vector.weaviate_service import WeaviateService
 
 
 class SourceDocumentPreprocessingUnfinishedError(Exception):
@@ -73,10 +80,36 @@ class CRUDSourceDocument(
         id2data = {db_obj.id: db_obj for db_obj in db_objs}
         return [id2data.get(id) for id in ids]
 
-    def remove(self, db: Session, *, id: int) -> SourceDocumentORM:
-        # Import EmbeddingService here to prevent a cyclic dependency
-        from app.core.ml.embedding_service import EmbeddingService
+    def read_text_data_with_no_aspect(
+        self, db: Session, *, project_id: int, aspect_id: int
+    ) -> List[SourceDocumentDataORM]:
+        """
+        Read all source documents that have no aspect and are of type text.
+        This is used to find all source documents that need to be preprocessed.
 
+        :param db: The database session.
+        :param project_id: The ID of the project.
+        :param aspect_id: The ID of the aspect.
+        :return: A list of source documents of the given project that have no aspect and are of type text.
+        """
+        return (
+            db.query(SourceDocumentDataORM)
+            .join(SourceDocumentORM, SourceDocumentORM.id == SourceDocumentDataORM.id)
+            .outerjoin(
+                DocumentAspectORM,
+                (DocumentAspectORM.sdoc_id == SourceDocumentDataORM.id)
+                & (DocumentAspectORM.aspect_id == aspect_id),
+            )
+            .filter(
+                DocumentAspectORM.sdoc_id.is_(None),
+                DocumentAspectORM.aspect_id.is_(None),
+                SourceDocumentORM.project_id == project_id,
+                SourceDocumentORM.doctype == DocType.text,
+            )
+            .all()
+        )
+
+    def remove(self, db: Session, *, id: int) -> SourceDocumentORM:
         sdoc_db_obj = super().remove(db=db, id=id)
 
         # remove file from repo
@@ -90,36 +123,21 @@ class CRUDSourceDocument(
         )
 
         # remove from index
-        EmbeddingService().remove_sdoc_embeddings(sdoc_db_obj.doctype, sdoc_db_obj.id)
-
-        return sdoc_db_obj
-
-    def remove_by_project(self, db: Session, *, proj_id: int) -> List[int]:
-        # Import SimSearchService here to prevent a cyclic dependency
-        from app.core.ml.embedding_service import EmbeddingService
-
-        # find all sdocs to be removed
-        query = db.query(self.model).filter(self.model.project_id == proj_id)
-        removed_orms = query.all()
-
-        # remove files from repo
-        RepoService().remove_all_project_sdoc_files(proj_id=proj_id)
-
-        # remove from elasticsearch
-        for sdoc in removed_orms:
-            ElasticSearchService().delete_document_from_index(
-                proj_id=proj_id, sdoc_id=sdoc.id
+        with WeaviateService().weaviate_session() as client:
+            crud_aspect_embedding.remove_by_sdoc_id(
+                client=client, project_id=sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
+            )
+            crud_document_embedding.remove_by_sdoc_id(
+                client=client, project_id=sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
+            )
+            crud_image_embedding.remove_by_sdoc_id(
+                client=client, project_id=sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
+            )
+            crud_sentence_embedding.remove_by_sdoc_id(
+                client=client, project_id=sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
             )
 
-            EmbeddingService().remove_sdoc_embeddings(sdoc.doctype, sdoc.id)
-
-        ids = [removed_orm.id for removed_orm in removed_orms]
-
-        # delete the sdocs
-        query.delete()
-        db.commit()
-
-        return ids
+        return sdoc_db_obj
 
     def read_by_project_and_document_tag(
         self,

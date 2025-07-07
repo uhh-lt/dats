@@ -7,6 +7,7 @@ from app.celery.background_jobs.export import start_export_job_
 from app.celery.background_jobs.import_ import start_import_job_
 from app.celery.background_jobs.llm import start_llm_job_
 from app.celery.background_jobs.ml import start_ml_job_
+from app.celery.background_jobs.perspectives import start_perspectives_job_
 from app.celery.background_jobs.preprocess import (
     execute_audio_preprocessing_pipeline_,
     execute_image_preprocessing_pipeline_,
@@ -21,6 +22,7 @@ from app.core.data.dto.export_job import ExportJobRead
 from app.core.data.dto.import_job import ImportJobRead
 from app.core.data.dto.llm_job import LLMJobRead
 from app.core.data.dto.ml_job import MLJobRead
+from app.core.perspectives.perspectives_job import PerspectivesJobRead
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 
 
@@ -66,6 +68,11 @@ def start_llm_job(llm_job: LLMJobRead) -> None:
 @celery_worker.task(acks_late=True)
 def start_ml_job(ml_job: MLJobRead) -> None:
     start_ml_job_(ml_job=ml_job)
+
+
+@celery_worker.task(acks_late=True)
+def start_perspectives_job(perspectives_job: PerspectivesJobRead) -> None:
+    start_perspectives_job_(perspectives_job=perspectives_job)
 
 
 @celery_worker.task(

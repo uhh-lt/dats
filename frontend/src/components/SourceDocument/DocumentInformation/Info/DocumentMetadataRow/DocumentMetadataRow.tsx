@@ -1,5 +1,8 @@
 import { ErrorMessage } from "@hookform/error-message";
-import { Stack } from "@mui/material";
+import FilterAltIcon from "@mui/icons-material/FilterAlt";
+import { Box, Stack } from "@mui/material";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
 import { memo, useCallback, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import MetadataHooks from "../../../../../api/MetadataHooks.ts";
@@ -14,20 +17,23 @@ import FormNumber from "../../../../FormInputs/FormNumber.tsx";
 import FormSwitch from "../../../../FormInputs/FormSwitch.tsx";
 import FormText from "../../../../FormInputs/FormText.tsx";
 import MetadataEditMenu from "../MetadataEditMenu.tsx";
-import DocumentMetadataAddFilterButton from "./DocumentMetadataAddFilterButton.tsx";
 import DocumentMetadataGoToButton from "./DocumentMetadataGoToButton.tsx";
 import { isValidHttpUrl } from "./utils.ts";
 
 interface DocumentMetadataRowProps {
   metadata: SourceDocumentMetadataRead;
-  filterName?: string;
+  onAddFilterClick: (metadata: SourceDocumentMetadataRead, projectMetadata: ProjectMetadataRead) => void;
 }
 
-function DocumentMetadataRow({ metadata, filterName }: DocumentMetadataRowProps) {
+function DocumentMetadataRow({ metadata, onAddFilterClick }: DocumentMetadataRowProps) {
   const projectMetadata = MetadataHooks.useGetProjectMetadata(metadata.project_metadata_id);
   if (projectMetadata.data) {
     return (
-      <DocumentMetadataRowContent metadata={metadata} projectMetadata={projectMetadata.data} filterName={filterName} />
+      <DocumentMetadataRowContent
+        metadata={metadata}
+        projectMetadata={projectMetadata.data}
+        onAddFilterClick={onAddFilterClick}
+      />
     );
   }
   return null;
@@ -36,7 +42,7 @@ function DocumentMetadataRow({ metadata, filterName }: DocumentMetadataRowProps)
 function DocumentMetadataRowContent({
   metadata,
   projectMetadata,
-  filterName,
+  onAddFilterClick,
 }: DocumentMetadataRowProps & { projectMetadata: ProjectMetadataRead }) {
   // use react hook form
   const {
@@ -101,14 +107,17 @@ function DocumentMetadataRowContent({
             name="str_value"
             control={control}
             textFieldProps={{
+              placeholder: projectMetadata.description,
               error: Boolean(errors.str_value),
               helperText: <ErrorMessage errors={errors} name="str_value" />,
               variant: "standard",
               disabled: projectMetadata.read_only,
               onBlur: handleInputBlur,
+              fullWidth: true,
               sx: {
-                flexGrow: 1,
-                flexBasis: 1,
+                "& .MuiInput-underline::before": {
+                  borderBottom: "1px solid rgba(0, 0, 0, 0)",
+                },
               },
             }}
           />
@@ -124,9 +133,11 @@ function DocumentMetadataRowContent({
               variant: "standard",
               disabled: projectMetadata.read_only,
               onBlur: handleInputBlur,
+              fullWidth: true,
               sx: {
-                flexGrow: 1,
-                flexBasis: 1,
+                "& .MuiInput-underline::before": {
+                  borderBottom: "1px solid rgba(0, 0, 0, 0)", // Hide the line by default
+                },
               },
             }}
           />
@@ -151,9 +162,11 @@ function DocumentMetadataRowContent({
               variant: "standard",
               disabled: projectMetadata.read_only,
               onBlur: handleInputBlur,
+              fullWidth: true,
               sx: {
-                flexGrow: 1,
-                flexBasis: 1,
+                "& .MuiInput-underline::before": {
+                  borderBottom: "1px solid rgba(0, 0, 0, 0)", // Hide the line by default
+                },
               },
             }}
           />
@@ -165,10 +178,7 @@ function DocumentMetadataRowContent({
             control={control}
             rules={{ required: true }}
             autoCompleteProps={{
-              sx: {
-                flexGrow: 1,
-                flexBasis: 1,
-              },
+              fullWidth: true,
               disabled: projectMetadata.read_only,
             }}
             textFieldProps={{
@@ -178,6 +188,12 @@ function DocumentMetadataRowContent({
               onBlur: handleInputBlur,
               error: Boolean(errors.list_value),
               helperText: <ErrorMessage errors={errors} name="list_value" />,
+              sx: {
+                "& .MuiInput-underline::before": {
+                  borderBottom: "1px solid rgba(0, 0, 0, 0)", // Hide the line by default
+                },
+                ...(projectMetadata.read_only ? { "& .MuiInputBase-input": { display: "none" } } : {}),
+              },
             }}
           />
         );
@@ -185,18 +201,21 @@ function DocumentMetadataRowContent({
   }, [projectMetadata, control, errors, handleInputBlur]);
 
   return (
-    <Stack direction="row" alignItems="flex-end" mt={1}>
-      <MetadataEditMenu projectMetadata={projectMetadata} />
-      {inputField}
-      {isLink && <DocumentMetadataGoToButton link={metadata.str_value!} size="small" />}
-      {filterName && (
-        <DocumentMetadataAddFilterButton
-          metadata={metadata}
-          projectMetadata={projectMetadata}
-          filterName={filterName}
-          size="small"
-        />
-      )}
+    <Stack p={1} sx={{ borderTop: 1, borderColor: "divider" }}>
+      <Stack direction="row" alignItems="center">
+        <MetadataEditMenu projectMetadata={projectMetadata} />
+        <Tooltip title="Add as filter">
+          <span>
+            <IconButton size="small" onClick={() => onAddFilterClick(metadata, projectMetadata)}>
+              <FilterAltIcon />
+            </IconButton>
+          </span>
+        </Tooltip>
+        {isLink && <DocumentMetadataGoToButton link={metadata.str_value!} size="small" />}
+      </Stack>
+      <Box width="100%" px={0.5}>
+        {inputField}
+      </Box>
     </Stack>
   );
 }

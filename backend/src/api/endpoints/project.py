@@ -3,14 +3,13 @@ from uuid import uuid4
 
 from app.core.analysis.duplicate_finder.duplicate_finder import find_duplicates
 from app.core.authorization.authz_user import AuthzUser
-from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import NoSuchElementError
-from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.user import crud_user
+from app.core.data.dto.aspect import AspectRead
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import (
@@ -161,22 +160,6 @@ def upload_project_sdoc(
     )
 
 
-@router.delete(
-    "/{proj_id}/sdoc",
-    response_model=List[int],
-    summary="Removes all SourceDocuments of the Project with the given ID if it exists",
-)
-def delete_project_sdocs(
-    *,
-    proj_id: int,
-    db: Session = Depends(get_db_session),
-    authz_user: AuthzUser = Depends(),
-) -> List[int]:
-    authz_user.assert_in_project(proj_id)
-
-    return crud_sdoc.remove_by_project(db=db, proj_id=proj_id)
-
-
 @router.patch(
     "/{proj_id}/user",
     response_model=UserRead,
@@ -250,22 +233,6 @@ def get_project_codes(
     return result
 
 
-@router.delete(
-    "/{proj_id}/code",
-    response_model=List[int],
-    summary="Removes all Codes of the Project with the given ID if it exists",
-)
-def delete_project_codes(
-    *,
-    proj_id: int,
-    db: Session = Depends(get_db_session),
-    authz_user: AuthzUser = Depends(),
-) -> List[int]:
-    authz_user.assert_in_project(proj_id)
-
-    return crud_code.remove_by_project(db=db, proj_id=proj_id)
-
-
 @router.get(
     "/{proj_id}/tag",
     response_model=List[DocumentTagRead],
@@ -281,22 +248,6 @@ def get_project_tags(
 
     proj_db_obj = crud_project.read(db=db, id=proj_id)
     return [DocumentTagRead.model_validate(tag) for tag in proj_db_obj.document_tags]
-
-
-@router.delete(
-    "/{proj_id}/tag",
-    response_model=List[int],
-    summary="Removes all DocumentTags of the Project with the given ID if it exists",
-)
-def delete_project_tags(
-    *,
-    proj_id: int,
-    db: Session = Depends(get_db_session),
-    authz_user: AuthzUser = Depends(),
-) -> List[int]:
-    authz_user.assert_in_project(proj_id)
-
-    return crud_document_tag.remove_by_project(db=db, proj_id=proj_id)
 
 
 @router.get(
@@ -396,7 +347,7 @@ def resolve_filename(
 @router.get(
     "/{proj_id}/metadata",
     response_model=List[ProjectMetadataRead],
-    summary="Returns all ProjectMetadata of the SourceDocument with the given ID if it exists",
+    summary="Returns all ProjectMetadata of the Project with the given ID if it exists",
 )
 def get_all_metadata(
     *,
@@ -409,6 +360,24 @@ def get_all_metadata(
     db_objs = crud_project_meta.read_by_project(db=db, proj_id=proj_id)
     metadata = [ProjectMetadataRead.model_validate(meta) for meta in db_objs]
     return metadata
+
+
+@router.get(
+    "/{proj_id}/aspects",
+    response_model=List[AspectRead],
+    summary="Returns all Aspects of the Project with the given ID if it exists",
+)
+def get_all_aspects(
+    *,
+    db: Session = Depends(get_db_session),
+    proj_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> List[AspectRead]:
+    authz_user.assert_in_project(proj_id)
+
+    project = crud_project.read(db=db, id=proj_id)
+    aspects = [AspectRead.model_validate(a) for a in project.aspects]
+    return aspects
 
 
 @router.post(

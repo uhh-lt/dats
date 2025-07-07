@@ -17,6 +17,7 @@ import timelineAnalysisReducer from "../views/analysis/TimelineAnalysis/timeline
 import wordFrequencyReducer from "../views/analysis/WordFrequency/wordFrequencySlice.ts";
 import annoReducer from "../views/annotation/annoSlice.ts";
 import logbookReducer from "../views/logbook/logbookSlice.ts";
+import perspectivesReducer from "../views/perspectives/perspectivesSlice.ts";
 import searchReducer from "../views/search/DocumentSearch/searchSlice.ts";
 import imageSearchReducer from "../views/search/ImageSearch/imageSearchSlice.ts";
 import sentenceSearchReducer from "../views/search/SentenceSearch/sentenceSearchSlice.ts";
@@ -47,6 +48,7 @@ export const store = configureStore({
     cota: cotaReducer,
     dialog: dialogReducer,
     documentSampler: documentSamplerReducer,
+    perspectives: perspectivesReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

@@ -448,33 +448,6 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         }
-      },
-      "delete": {
-        "tags": ["project"],
-        "summary": "Removes all SourceDocuments of the Project with the given ID if it exists",
-        "operationId": "delete_project_sdocs",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "type": "integer" },
-                  "title": "Response Project-Delete Project Sdocs"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
       }
     },
     "/project/{proj_id}/user": {
@@ -578,33 +551,6 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         }
-      },
-      "delete": {
-        "tags": ["project"],
-        "summary": "Removes all Codes of the Project with the given ID if it exists",
-        "operationId": "delete_project_codes",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "type": "integer" },
-                  "title": "Response Project-Delete Project Codes"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
       }
     },
     "/project/{proj_id}/tag": {
@@ -625,33 +571,6 @@
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/DocumentTagRead" },
                   "title": "Response Project-Get Project Tags"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      },
-      "delete": {
-        "tags": ["project"],
-        "summary": "Removes all DocumentTags of the Project with the given ID if it exists",
-        "operationId": "delete_project_tags",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "type": "integer" },
-                  "title": "Response Project-Delete Project Tags"
                 }
               }
             }
@@ -758,7 +677,7 @@
     "/project/{proj_id}/metadata": {
       "get": {
         "tags": ["project"],
-        "summary": "Returns all ProjectMetadata of the SourceDocument with the given ID if it exists",
+        "summary": "Returns all ProjectMetadata of the Project with the given ID if it exists",
         "operationId": "get_all_metadata",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -773,6 +692,35 @@
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/ProjectMetadataRead" },
                   "title": "Response Project-Get All Metadata"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/project/{proj_id}/aspects": {
+      "get": {
+        "tags": ["project"],
+        "summary": "Returns all Aspects of the Project with the given ID if it exists",
+        "operationId": "get_all_aspects",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AspectRead" },
+                  "title": "Response Project-Get All Aspects"
                 }
               }
             }
@@ -2869,6 +2817,12 @@
             "in": "query",
             "required": false,
             "schema": { "type": "boolean", "default": false, "title": "Sort By Global" }
+          },
+          {
+            "name": "top_k",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 20, "title": "Top K" }
           }
         ],
         "requestBody": {
@@ -2920,7 +2874,7 @@
             "name": "top_k",
             "in": "query",
             "required": false,
-            "schema": { "type": "integer", "default": 50, "title": "Top K" }
+            "schema": { "type": "integer", "default": 20, "title": "Top K" }
           }
         ],
         "requestBody": {
@@ -2961,6 +2915,12 @@
             "in": "query",
             "required": false,
             "schema": { "type": "boolean", "default": false, "title": "Sort By Global" }
+          },
+          {
+            "name": "top_k",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 20, "title": "Top K" }
           }
         ],
         "requestBody": {
@@ -5577,10 +5537,449 @@
           }
         }
       }
+    },
+    "/chat/rag": {
+      "post": {
+        "tags": ["chat"],
+        "summary": "Answer a query using Retrieval-Augmented Generation (RAG)",
+        "operationId": "rag_with_session",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          { "name": "top_k", "in": "query", "required": true, "schema": { "type": "integer", "title": "Top K" } },
+          {
+            "name": "threshold",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "number", "title": "Threshold" }
+          },
+          {
+            "name": "session_id",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Session Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Body_chat-rag_with_session" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMSessionResponse" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/chat/chat_session": {
+      "get": {
+        "tags": ["chat"],
+        "summary": "Initiate or continue a chat session with the LLM using a prompt",
+        "operationId": "chat_sesh",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "prompt", "in": "query", "required": true, "schema": { "type": "string", "title": "Prompt" } },
+          {
+            "name": "session_id",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Session Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMSessionResponse" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/perspectives/job/{aspect_id}": {
+      "post": {
+        "tags": ["perspectives"],
+        "summary": "Starts the PerspectivesJob for the given Parameters. If a job is already running, this will raise an error.",
+        "operationId": "start_perspectives_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  { "$ref": "#/components/schemas/AddMissingDocsToAspectParams" },
+                  { "$ref": "#/components/schemas/CreateClusterWithNameParams" },
+                  { "$ref": "#/components/schemas/CreateClusterWithSdocsParams" },
+                  { "$ref": "#/components/schemas/RemoveClusterParams" },
+                  { "$ref": "#/components/schemas/MergeClustersParams" },
+                  { "$ref": "#/components/schemas/SplitClusterParams" },
+                  { "$ref": "#/components/schemas/ChangeClusterParams" },
+                  { "$ref": "#/components/schemas/RefineModelParams" },
+                  { "$ref": "#/components/schemas/ResetModelParams" }
+                ],
+                "title": "Perspectives Job Params"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PerspectivesJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/perspectives/job/{perspectives_job_id}": {
+      "get": {
+        "tags": ["perspectives"],
+        "summary": "Returns the PerspectivesJob for the given ID if it exists",
+        "operationId": "get_perspectives_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "perspectives_job_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "title": "Perspectives Job Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PerspectivesJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/perspectives/aspect": {
+      "put": {
+        "tags": ["perspectives"],
+        "summary": "Creates a new Aspect",
+        "operationId": "create_aspect",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectCreate" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/perspectives/aspect/{aspect_id}": {
+      "get": {
+        "tags": ["perspectives"],
+        "summary": "Returns the Aspect with the given ID.",
+        "operationId": "get_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["perspectives"],
+        "summary": "Updates the Aspect with the given ID.",
+        "operationId": "update_aspect_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectUpdate" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["perspectives"],
+        "summary": "Removes the Aspect with the given ID.",
+        "operationId": "remove_aspect_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/perspectives/aspect/{aspect_id}/sdoc/{sdoc_id}": {
+      "get": {
+        "tags": ["perspectives"],
+        "summary": "Returns the Document Aspect Content for the given IDs.",
+        "operationId": "get_docaspect_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "aspect_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Aspect Id" }
+          },
+          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "string", "title": "Response Perspectives-Get Docaspect By Id" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/perspectives/label_accept/{aspect_id}": {
+      "post": {
+        "tags": ["perspectives"],
+        "summary": "Accept the label of the provided SourceDocuments (by ID).",
+        "operationId": "accept_label",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "Sdoc Ids" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "type": "integer", "title": "Response Perspectives-Accept Label" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/perspectives/label_revert/{aspect_id}": {
+      "post": {
+        "tags": ["perspectives"],
+        "summary": "Reverts the label of the provided SourceDocuments (by ID).",
+        "operationId": "revert_label",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "Sdoc Ids" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "type": "integer", "title": "Response Perspectives-Revert Label" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/perspectives/visualize_documents/{aspect_id}": {
+      "post": {
+        "tags": ["perspectives"],
+        "summary": "Returns data for visualizing the documents of the given aspect.",
+        "operationId": "visualize_documents",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "aspect_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Aspect Id" }
+          },
+          {
+            "name": "search_query",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "title": "Search Query" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_perspectives-visualize_documents" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PerspectivesVisualization" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/perspectives/cluster_similarities/{aspect_id}": {
+      "get": {
+        "tags": ["perspectives"],
+        "summary": "Returns data for visualizing the cluster similarities of the given aspect.",
+        "operationId": "get_cluster_similarities",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PerspectivesClusterSimilarities" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/perspectives/visualize_clusters/{aspect_id}": {
+      "get": {
+        "tags": ["perspectives"],
+        "summary": "Returns data for visualizing the clusters of the given aspect.",
+        "operationId": "visualize_clusters",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/perspectives/clusters/{aspect_id}/sdoc/{sdoc_id}": {
+      "get": {
+        "tags": ["perspectives"],
+        "summary": "Returns the clusters for the given SourceDocument (sdoc_id) in the specified Aspect (aspect_id).",
+        "operationId": "get_clusters_for_sdoc",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "aspect_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Aspect Id" }
+          },
+          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ClusterRead" },
+                  "title": "Response Perspectives-Get Clusters For Sdoc"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AddMissingDocsToAspectParams": {
+        "properties": {
+          "perspectives_job_type": {
+            "type": "string",
+            "const": "add_missing_docs_to_aspect",
+            "title": "Perspectives Job Type",
+            "description": "Type of the PerspectivesJob",
+            "default": "add_missing_docs_to_aspect"
+          }
+        },
+        "type": "object",
+        "title": "AddMissingDocsToAspectParams"
+      },
       "AnnoscalingConfirmSuggest": {
         "properties": {
           "project_id": { "type": "integer", "title": "Project Id", "description": "Project to apply suggestions" },
@@ -5712,6 +6111,79 @@
         "type": "string",
         "enum": ["LLM_ZERO_SHOT", "LLM_FEW_SHOT", "MODEL_TRAINING"],
         "title": "ApproachType"
+      },
+      "AspectCreate": {
+        "properties": {
+          "name": { "type": "string", "title": "Name", "description": "Name of the aspect" },
+          "doc_embedding_prompt": {
+            "type": "string",
+            "title": "Doc Embedding Prompt",
+            "description": "Prompt for document embedding"
+          },
+          "doc_modification_prompt": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Doc Modification Prompt",
+            "description": "Prompt for document modification"
+          },
+          "is_hierarchical": {
+            "type": "boolean",
+            "title": "Is Hierarchical",
+            "description": "Whether the aspect is hierarchical"
+          },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "ID of the project this aspect belongs to"
+          }
+        },
+        "type": "object",
+        "required": ["name", "doc_embedding_prompt", "is_hierarchical", "project_id"],
+        "title": "AspectCreate"
+      },
+      "AspectRead": {
+        "properties": {
+          "name": { "type": "string", "title": "Name", "description": "Name of the aspect" },
+          "doc_embedding_prompt": {
+            "type": "string",
+            "title": "Doc Embedding Prompt",
+            "description": "Prompt for document embedding"
+          },
+          "doc_modification_prompt": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Doc Modification Prompt",
+            "description": "Prompt for document modification"
+          },
+          "is_hierarchical": {
+            "type": "boolean",
+            "title": "Is Hierarchical",
+            "description": "Whether the aspect is hierarchical"
+          },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the aspect" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "ID of the project this aspect belongs to"
+          },
+          "most_recent_job_id": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Most Recent Job Id",
+            "description": "ID of the most recent job associated with the aspect"
+          }
+        },
+        "type": "object",
+        "required": ["name", "doc_embedding_prompt", "is_hierarchical", "id", "project_id"],
+        "title": "AspectRead"
+      },
+      "AspectUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Name",
+            "description": "New name of the aspect"
+          }
+        },
+        "type": "object",
+        "title": "AspectUpdate"
       },
       "AttachedObjectType": {
         "type": "string",
@@ -6016,6 +6488,21 @@
         "required": ["username", "password"],
         "title": "Body_authentication-login"
       },
+      "Body_chat-rag_with_session": {
+        "properties": {
+          "query": {
+            "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }, { "type": "integer" }],
+            "title": "Query"
+          },
+          "sdoc_ids": {
+            "anyOf": [{ "items": { "type": "integer" }, "type": "array" }, { "type": "null" }],
+            "title": "Sdoc Ids"
+          }
+        },
+        "type": "object",
+        "required": ["query", "sdoc_ids"],
+        "title": "Body_chat-rag_with_session"
+      },
       "Body_documentTag-update_document_tags_batch": {
         "properties": {
           "sdoc_ids": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" },
@@ -6061,6 +6548,15 @@
         "type": "object",
         "required": ["filter", "sorts"],
         "title": "Body_memo-search_memos"
+      },
+      "Body_perspectives-visualize_documents": {
+        "properties": {
+          "filter": { "$ref": "#/components/schemas/Filter_SdocColumns_-Input" },
+          "sorts": { "items": { "$ref": "#/components/schemas/Sort_SdocColumns_" }, "type": "array", "title": "Sorts" }
+        },
+        "type": "object",
+        "required": ["filter", "sorts"],
+        "title": "Body_perspectives-visualize_documents"
       },
       "Body_project-upload_project_sdoc": {
         "properties": {
@@ -6459,6 +6955,107 @@
         "type": "object",
         "title": "COTAUpdate"
       },
+      "ChangeClusterParams": {
+        "properties": {
+          "perspectives_job_type": {
+            "type": "string",
+            "const": "change_cluster",
+            "title": "Perspectives Job Type",
+            "description": "Type of the PerspectivesJob",
+            "default": "change_cluster"
+          },
+          "sdoc_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sdoc Ids",
+            "description": "List of source document IDs to change the cluster for."
+          },
+          "cluster_id": {
+            "type": "integer",
+            "title": "Cluster Id",
+            "description": "ID of the cluster to change to. (-1 will be treated as 'removing' the documents / marking them as outliers)"
+          }
+        },
+        "type": "object",
+        "required": ["sdoc_ids", "cluster_id"],
+        "title": "ChangeClusterParams"
+      },
+      "ClusterCreate": {
+        "properties": {
+          "parent_cluster_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Parent Cluster Id",
+            "description": "ID of the parent cluster, if any"
+          },
+          "aspect_id": {
+            "type": "integer",
+            "title": "Aspect Id",
+            "description": "ID of the aspect this cluster belongs to"
+          },
+          "level": { "type": "integer", "title": "Level", "description": "Hierarchical level of the cluster" },
+          "name": { "type": "string", "title": "Name", "description": "Name of the cluster" },
+          "description": { "type": "string", "title": "Description", "description": "Description of the cluster" }
+        },
+        "type": "object",
+        "required": ["aspect_id", "level", "name", "description"],
+        "title": "ClusterCreate"
+      },
+      "ClusterRead": {
+        "properties": {
+          "id": { "type": "integer", "title": "Id", "description": "ID of the cluster" },
+          "aspect_id": {
+            "type": "integer",
+            "title": "Aspect Id",
+            "description": "ID of the aspect this cluster belongs to"
+          },
+          "parent_cluster_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Parent Cluster Id",
+            "description": "ID of the parent cluster, if any"
+          },
+          "is_outlier": {
+            "type": "boolean",
+            "title": "Is Outlier",
+            "description": "Whether the cluster is an outlier"
+          },
+          "name": { "type": "string", "title": "Name", "description": "Name of the cluster" },
+          "description": { "type": "string", "title": "Description", "description": "Description of the cluster" },
+          "level": { "type": "integer", "title": "Level", "description": "Hierarchical level of the cluster" },
+          "x": { "type": "number", "title": "X", "description": "X coordinate for visualization" },
+          "y": { "type": "number", "title": "Y", "description": "Y coordinate for visualization" },
+          "top_words": {
+            "anyOf": [{ "items": { "type": "string" }, "type": "array" }, { "type": "null" }],
+            "title": "Top Words",
+            "description": "Top words associated with the cluster"
+          },
+          "top_word_scores": {
+            "anyOf": [{ "items": { "type": "number" }, "type": "array" }, { "type": "null" }],
+            "title": "Top Word Scores",
+            "description": "Scores of the top words"
+          },
+          "top_docs": {
+            "anyOf": [{ "items": { "type": "integer" }, "type": "array" }, { "type": "null" }],
+            "title": "Top Docs",
+            "description": "IDs of top documents for the cluster"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "aspect_id",
+          "parent_cluster_id",
+          "is_outlier",
+          "name",
+          "description",
+          "level",
+          "x",
+          "y",
+          "top_words",
+          "top_word_scores",
+          "top_docs"
+        ],
+        "title": "ClusterRead"
+      },
       "CodeCreate": {
         "properties": {
           "name": { "type": "string", "title": "Name", "description": "Name of the Code" },
@@ -6784,6 +7381,57 @@
           "updated"
         ],
         "title": "CrawlerJobRead"
+      },
+      "CreateAspectParams": {
+        "properties": {
+          "perspectives_job_type": {
+            "type": "string",
+            "const": "create_aspect",
+            "title": "Perspectives Job Type",
+            "description": "Type of the PerspectivesJob",
+            "default": "create_aspect"
+          }
+        },
+        "type": "object",
+        "title": "CreateAspectParams"
+      },
+      "CreateClusterWithNameParams": {
+        "properties": {
+          "perspectives_job_type": {
+            "type": "string",
+            "const": "create_cluster_with_name",
+            "title": "Perspectives Job Type",
+            "description": "Type of the PerspectivesJob",
+            "default": "create_cluster_with_name"
+          },
+          "create_dto": {
+            "$ref": "#/components/schemas/ClusterCreate",
+            "description": "DTO for creating a new cluster."
+          }
+        },
+        "type": "object",
+        "required": ["create_dto"],
+        "title": "CreateClusterWithNameParams"
+      },
+      "CreateClusterWithSdocsParams": {
+        "properties": {
+          "perspectives_job_type": {
+            "type": "string",
+            "const": "create_cluster_with_sdocs",
+            "title": "Perspectives Job Type",
+            "description": "Type of the PerspectivesJob",
+            "default": "create_cluster_with_sdocs"
+          },
+          "sdoc_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sdoc Ids",
+            "description": "List of source document IDs to include in the cluster."
+          }
+        },
+        "type": "object",
+        "required": ["sdoc_ids"],
+        "title": "CreateClusterWithSdocsParams"
       },
       "DateGroupBy": { "type": "string", "enum": ["YEAR", "MONTH", "DAY"], "title": "DateGroupBy" },
       "DateOperator": {
@@ -8067,6 +8715,15 @@
         "required": ["language", "system_prompt", "user_prompt"],
         "title": "LLMPromptTemplates"
       },
+      "LLMSessionResponse": {
+        "properties": {
+          "response": { "type": "string", "title": "Response", "description": "The response of the LLM" },
+          "session_id": { "type": "string", "title": "Session Id", "description": "The session ID of the LLM chat" }
+        },
+        "type": "object",
+        "required": ["response", "session_id"],
+        "title": "LLMSessionResponse"
+      },
       "ListOperator": { "type": "string", "enum": ["LIST_CONTAINS", "LIST_NOT_CONTAINS"], "title": "ListOperator" },
       "LogicalOperator": {
         "type": "string",
@@ -8288,6 +8945,30 @@
         "type": "object",
         "title": "MemoUpdate"
       },
+      "MergeClustersParams": {
+        "properties": {
+          "perspectives_job_type": {
+            "type": "string",
+            "const": "merge_clusters",
+            "title": "Perspectives Job Type",
+            "description": "Type of the PerspectivesJob",
+            "default": "merge_clusters"
+          },
+          "cluster_to_keep": {
+            "type": "integer",
+            "title": "Cluster To Keep",
+            "description": "ID of the cluster to keep after merging."
+          },
+          "cluster_to_merge": {
+            "type": "integer",
+            "title": "Cluster To Merge",
+            "description": "ID of the cluster to delete after merging."
+          }
+        },
+        "type": "object",
+        "required": ["cluster_to_keep", "cluster_to_merge"],
+        "title": "MergeClustersParams"
+      },
       "MetaType": { "type": "string", "enum": ["STRING", "NUMBER", "DATE", "BOOLEAN", "LIST"], "title": "MetaType" },
       "MetadataExtractionLLMJobResult": {
         "properties": {
@@ -8466,6 +9147,197 @@
         "type": "object",
         "required": ["hits", "sdocs", "annotators", "tags", "total_results"],
         "title": "PaginatedSDocHits"
+      },
+      "PerspectivesClusterSimilarities": {
+        "properties": {
+          "aspect_id": {
+            "type": "integer",
+            "title": "Aspect Id",
+            "description": "ID of the aspect this visualization belongs to"
+          },
+          "clusters": {
+            "items": { "$ref": "#/components/schemas/ClusterRead" },
+            "type": "array",
+            "title": "Clusters",
+            "description": "List of clusters in the visualization"
+          },
+          "similarities": {
+            "items": { "items": { "type": "number" }, "type": "array" },
+            "type": "array",
+            "title": "Similarities",
+            "description": "Matrix of cluster similarities, where similarities[i][j] is the similarity between clusters[i] and clusters[j]"
+          }
+        },
+        "type": "object",
+        "required": ["aspect_id", "clusters", "similarities"],
+        "title": "PerspectivesClusterSimilarities"
+      },
+      "PerspectivesDoc": {
+        "properties": {
+          "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
+          "cluster_id": {
+            "type": "integer",
+            "title": "Cluster Id",
+            "description": "ID of the cluster this document belongs to"
+          },
+          "x": { "type": "number", "title": "X", "description": "X coordinate of the document in the visualization" },
+          "y": { "type": "number", "title": "Y", "description": "Y coordinate of the document in the visualization" },
+          "is_accepted": {
+            "type": "boolean",
+            "title": "Is Accepted",
+            "description": "Indicates whether the document<->cluster assignment is accepted by a user"
+          },
+          "in_searchresult": {
+            "type": "boolean",
+            "title": "In Searchresult",
+            "description": "Indicates whether the document is part of the search result"
+          },
+          "is_outlier": {
+            "type": "boolean",
+            "title": "Is Outlier",
+            "description": "Indicates whether the document is an outlier"
+          }
+        },
+        "type": "object",
+        "required": ["sdoc_id", "cluster_id", "x", "y", "is_accepted", "in_searchresult", "is_outlier"],
+        "title": "PerspectivesDoc"
+      },
+      "PerspectivesJobRead": {
+        "properties": {
+          "step": {
+            "type": "integer",
+            "title": "Step",
+            "description": "Current step of the PerspectivesJob. Starts at 0 and increments with each major step."
+          },
+          "steps": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Steps",
+            "description": "List of steps that the PerspectivesJob consists of. Each step is a string describing the action taken."
+          },
+          "status_msg": {
+            "type": "string",
+            "title": "Status Msg",
+            "description": "Status message of the PerspectivesJob"
+          },
+          "perspectives_job_type": {
+            "$ref": "#/components/schemas/PerspectivesJobType",
+            "description": "Type of the PerspectivesJob"
+          },
+          "aspect_id": {
+            "type": "integer",
+            "title": "Aspect Id",
+            "description": "ID of the aspect associated with the PerspectivesJob. -1 if not applicable."
+          },
+          "parameters": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/CreateAspectParams" },
+              { "$ref": "#/components/schemas/AddMissingDocsToAspectParams" },
+              { "$ref": "#/components/schemas/CreateClusterWithNameParams" },
+              { "$ref": "#/components/schemas/CreateClusterWithSdocsParams" },
+              { "$ref": "#/components/schemas/RemoveClusterParams" },
+              { "$ref": "#/components/schemas/MergeClustersParams" },
+              { "$ref": "#/components/schemas/SplitClusterParams" },
+              { "$ref": "#/components/schemas/ChangeClusterParams" },
+              { "$ref": "#/components/schemas/RefineModelParams" },
+              { "$ref": "#/components/schemas/ResetModelParams" }
+            ],
+            "title": "Parameters",
+            "description": "Parameters for the PerspectivesJob. The type depends on the PerspectivesJobType.",
+            "discriminator": {
+              "propertyName": "perspectives_job_type",
+              "mapping": {
+                "add_missing_docs_to_aspect": "#/components/schemas/AddMissingDocsToAspectParams",
+                "change_cluster": "#/components/schemas/ChangeClusterParams",
+                "create_aspect": "#/components/schemas/CreateAspectParams",
+                "create_cluster_with_name": "#/components/schemas/CreateClusterWithNameParams",
+                "create_cluster_with_sdocs": "#/components/schemas/CreateClusterWithSdocsParams",
+                "merge_clusters": "#/components/schemas/MergeClustersParams",
+                "refine_model": "#/components/schemas/RefineModelParams",
+                "remove_cluster": "#/components/schemas/RemoveClusterParams",
+                "reset_model": "#/components/schemas/ResetModelParams",
+                "split_cluster": "#/components/schemas/SplitClusterParams"
+              }
+            }
+          },
+          "status": {
+            "$ref": "#/components/schemas/BackgroundJobStatus",
+            "description": "Status of the BackgroundJob",
+            "default": "Waiting"
+          },
+          "id": { "type": "string", "title": "Id", "description": "UUID of the BackgroundJob" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "The ID of the Project for which the BackgroundJob is executed."
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the BackgroundJob"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated",
+            "description": "Updated timestamp of the BackgroundJob"
+          }
+        },
+        "type": "object",
+        "required": [
+          "step",
+          "steps",
+          "status_msg",
+          "perspectives_job_type",
+          "aspect_id",
+          "parameters",
+          "id",
+          "project_id",
+          "created",
+          "updated"
+        ],
+        "title": "PerspectivesJobRead"
+      },
+      "PerspectivesJobType": {
+        "type": "string",
+        "enum": [
+          "create_aspect",
+          "add_missing_docs_to_aspect",
+          "create_cluster_with_name",
+          "create_cluster_with_sdocs",
+          "remove_cluster",
+          "merge_clusters",
+          "split_cluster",
+          "change_cluster",
+          "refine_model",
+          "reset_model"
+        ],
+        "title": "PerspectivesJobType"
+      },
+      "PerspectivesVisualization": {
+        "properties": {
+          "aspect_id": {
+            "type": "integer",
+            "title": "Aspect Id",
+            "description": "ID of the aspect this visualization belongs to"
+          },
+          "clusters": {
+            "items": { "$ref": "#/components/schemas/ClusterRead" },
+            "type": "array",
+            "title": "Clusters",
+            "description": "List of clusters in the visualization"
+          },
+          "docs": {
+            "items": { "$ref": "#/components/schemas/PerspectivesDoc" },
+            "type": "array",
+            "title": "Docs",
+            "description": "List of documents in the visualization"
+          }
+        },
+        "type": "object",
+        "required": ["aspect_id", "clusters", "docs"],
+        "title": "PerspectivesVisualization"
       },
       "PreProProjectStatus": {
         "properties": {
@@ -8747,6 +9619,47 @@
         "type": "object",
         "required": ["ml_job_type"],
         "title": "QuotationAttributionParams"
+      },
+      "RefineModelParams": {
+        "properties": {
+          "perspectives_job_type": {
+            "type": "string",
+            "const": "refine_model",
+            "title": "Perspectives Job Type",
+            "description": "Type of the PerspectivesJob",
+            "default": "refine_model"
+          }
+        },
+        "type": "object",
+        "title": "RefineModelParams"
+      },
+      "RemoveClusterParams": {
+        "properties": {
+          "perspectives_job_type": {
+            "type": "string",
+            "const": "remove_cluster",
+            "title": "Perspectives Job Type",
+            "description": "Type of the PerspectivesJob",
+            "default": "remove_cluster"
+          },
+          "cluster_id": { "type": "integer", "title": "Cluster Id", "description": "ID of the cluster to remove." }
+        },
+        "type": "object",
+        "required": ["cluster_id"],
+        "title": "RemoveClusterParams"
+      },
+      "ResetModelParams": {
+        "properties": {
+          "perspectives_job_type": {
+            "type": "string",
+            "const": "reset_model",
+            "title": "Perspectives Job Type",
+            "description": "Type of the PerspectivesJob",
+            "default": "reset_model"
+          }
+        },
+        "type": "object",
+        "title": "ResetModelParams"
       },
       "SDocStatus": { "type": "string", "enum": ["unfinished_or_erroneous", "finished"], "title": "SDocStatus" },
       "SampledSdocsResults": {
@@ -9942,6 +10855,26 @@
         "type": "object",
         "required": ["name", "id", "user_id", "sdoc_id", "created", "updated", "span_annotations"],
         "title": "SpanGroupWithAnnotationsRead"
+      },
+      "SplitClusterParams": {
+        "properties": {
+          "perspectives_job_type": {
+            "type": "string",
+            "const": "split_cluster",
+            "title": "Perspectives Job Type",
+            "description": "Type of the PerspectivesJob",
+            "default": "split_cluster"
+          },
+          "cluster_id": { "type": "integer", "title": "Cluster Id", "description": "ID of the cluster to split." },
+          "split_into": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Split Into",
+            "description": "Number of clusters to split the cluster into. Must be greater than 1. If not set, the cluster will be split automatically."
+          }
+        },
+        "type": "object",
+        "required": ["cluster_id", "split_into"],
+        "title": "SplitClusterParams"
       },
       "StringOperator": {
         "type": "string",

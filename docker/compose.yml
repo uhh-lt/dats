@@ -38,34 +38,6 @@ services:
     networks:
       - dats_network
 
-  typesense:
-    image: typesense/typesense:27.1
-    restart: on-failure
-    environment:
-      - TYPESENSE_API_KEY=${TYPESENSE_API_KEY:-dats123}
-      - TYPESENSE_DATA_DIR=/data
-    networks:
-      - dats_network
-    healthcheck:
-      test: [ "CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/8108' || exit 1" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-    profiles:
-      - typesense
-
-  qdrant:
-    image: qdrant/qdrant:v1.9.2
-    networks:
-      - dats_network
-    healthcheck:
-      test: [ "CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/6333' || exit 1" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-    profiles:
-      - qdrant
-
   weaviate:
     command:
       - --host
@@ -74,7 +46,7 @@ services:
       - "8080"
       - --scheme
       - http
-    image: semitechnologies/weaviate:1.21.3
+    image: semitechnologies/weaviate:1.30.4
     healthcheck:
       test: [ "CMD-SHELL", "wget -q --spider http://localhost:8080/v1/.well-known/ready || exit 1" ]
       interval: 30s
@@ -144,6 +116,7 @@ services:
       DATS_BACKEND_CONFIG: /dats_code/src/configs/production.yaml
       LOG_LEVEL: ${CELERY_LOG_LEVEL:-info}
       CELERY_BACKGROUND_JOBS_WORKER_CONCURRENCY: ${CELERY_BACKGROUND_JOBS_WORKER_CONCURRENCY:-1}
+      UUID_NAMESPACE: ${UUID_NAMESPACE:?uuid namespace required}
       POSTGRES_DB: ${POSTGRES_DB:-dats}
       POSTGRES_USER: ${POSTGRES_USER:-datsuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dats123}
@@ -203,6 +176,7 @@ services:
       API_WORKERS: ${API_WORKERS:-10}
       JWT_SECRET: ${JWT_SECRET:?jwt secret required}
       SESSION_SECRET: ${SESSION_SECRET:?session secret required}
+      UUID_NAMESPACE: ${UUID_NAMESPACE:?uuid namespace required}
       SYSTEM_USER_EMAIL: ${SYSTEM_USER_EMAIL}
       SYSTEM_USER_PASSWORD: ${SYSTEM_USER_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:-dats}

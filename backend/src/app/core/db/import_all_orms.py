@@ -3,9 +3,13 @@
 """we import all ORM here so that SQLAlchemy knows about them to generate the SQL tables"""
 
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
+from app.core.data.orm.aspect import AspectORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
+from app.core.data.orm.cluster import ClusterORM
 from app.core.data.orm.code import CodeORM
 from app.core.data.orm.concept_over_time_analysis import ConceptOverTimeAnalysisORM
+from app.core.data.orm.document_aspect import DocumentAspectORM
+from app.core.data.orm.document_cluster import DocumentClusterORM
 from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.document_tag_recommendation import (
     DocumentTagRecommendationLinkORM,

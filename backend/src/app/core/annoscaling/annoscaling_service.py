@@ -1,9 +1,20 @@
 from time import perf_counter_ns
-from typing import Dict, Iterable, List, Tuple
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Tuple,
+    TypeVar,
+)
 
 import numpy as np
 
 from app.core.data.crud.span_annotation import crud_span_anno
+from app.core.data.dto.search import (
+    SimSearchSentenceHit,
+)
 from app.core.data.dto.span_annotation import SpanAnnotationCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.source_document import SourceDocumentORM
@@ -11,15 +22,19 @@ from app.core.data.orm.source_document_data import SourceDocumentDataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.db.simsearch_service import SimSearchService
 from app.core.db.sql_service import SQLService
-
-# from app.core.search.typesense_service import TypesenseService
+from app.core.vector.crud.sentence_embedding import crud_sentence_embedding
+from app.core.vector.dto.sentence_embedding import SentenceObjectIdentifier
+from app.core.vector.weaviate_service import WeaviateService
 from app.util.singleton_meta import SingletonMeta
+
+SimSearchHit = TypeVar("SimSearchHit")
 
 
 class AnnoScalingService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.sqls = SQLService()
         cls.sim = SimSearchService()
+        cls.weaviate = WeaviateService()
 
         return super(AnnoScalingService, cls).__new__(cls)
 
@@ -76,6 +91,92 @@ class AnnoScalingService(metaclass=SingletonMeta):
 
             crud_span_anno.create_bulk(db, user_id=user_id, create_dtos=to_create)
 
+    def __suggest_similar_sentences(
+        self,
+        proj_id: int,
+        pos_sdoc_sent_ids: List[Tuple[int, int]],
+        neg_sdoc_sent_ids: List[Tuple[int, int]],
+        top_k: int,
+    ) -> List[SimSearchSentenceHit]:
+        # suggest
+        hits: List[SimSearchSentenceHit] = []
+
+        with self.weaviate.weaviate_session() as client:
+            for sdoc_id, sent_id in pos_sdoc_sent_ids:
+                search_result = crud_sentence_embedding.search_near_sentence(
+                    client=client,
+                    project_id=proj_id,
+                    id=SentenceObjectIdentifier(sdoc_id=sdoc_id, sentence_id=sent_id),
+                    k=top_k,
+                    threshold=0.0,
+                )
+                hits.extend(
+                    [
+                        SimSearchSentenceHit(
+                            sdoc_id=r.id.sdoc_id,
+                            sentence_id=r.id.sentence_id,
+                            score=r.score,
+                        )
+                        for r in search_result
+                    ]
+                )
+
+            marked_sdoc_sent_ids = {
+                entry for entry in pos_sdoc_sent_ids + neg_sdoc_sent_ids
+            }
+            hits = [
+                h
+                for h in hits
+                if (h.sdoc_id, h.sentence_id) not in marked_sdoc_sent_ids
+            ]
+            hits.sort(key=lambda x: (x.sdoc_id, x.sentence_id))
+            hits = self.__unique_consecutive(
+                hits, key=lambda x: (x.sdoc_id, x.sentence_id)
+            )
+            candidates = [(h.sdoc_id, h.sentence_id) for h in hits]
+
+            # suggest
+            nearest: List[SimSearchSentenceHit] = []
+            for sdoc_id, sent_id in candidates:
+                search_result = crud_sentence_embedding.search_near_sentence(
+                    client=client,
+                    project_id=proj_id,
+                    id=SentenceObjectIdentifier(sdoc_id=sdoc_id, sentence_id=sent_id),
+                    k=top_k,
+                    threshold=0.0,
+                )
+                nearest.extend(
+                    [
+                        SimSearchSentenceHit(
+                            sdoc_id=r.id.sdoc_id,
+                            sentence_id=r.id.sentence_id,
+                            score=r.score,
+                        )
+                        for r in search_result
+                    ]
+                )
+
+            results = []
+            for hit, near in zip(hits, nearest):
+                assert type(near) is SimSearchSentenceHit
+                if (near.sdoc_id, near.sentence_id) not in neg_sdoc_sent_ids:
+                    results.append(hit)
+            results.sort(key=lambda x: x.score, reverse=True)
+            return results[0 : min(len(results), top_k)]
+
+    def __unique_consecutive(
+        self, hits: List[SimSearchHit], key: Callable[[SimSearchHit], Any]
+    ) -> List[SimSearchHit]:
+        if len(hits) == 0:
+            return []
+        current = hits[0]
+        result = [current]
+        for hit in hits:
+            if key(hit) != key(current):
+                current = hit
+                result.append(hit)
+        return result
+
     def suggest(
         self,
         project_id: int,
@@ -107,7 +208,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
         print("it took", end_time - start_time, "ns to match annotations to sentences")
         start_time = perf_counter_ns()
         # takes around 20ms per object. so, 50 annotations take already 1 full second
-        hits = self.sim.suggest_similar_sentences(
+        hits = self.__suggest_similar_sentences(
             project_id, pos_sdoc_sent_ids, neg_sdoc_sent_ids, top_k
         )
         end_time = perf_counter_ns()

@@ -254,7 +254,7 @@ function Annotation() {
           </Box>
         </Box>
       }
-      rightSidebar={<DocumentInformation sdocId={sdocId} />}
+      rightSidebar={<DocumentInformation sdocId={sdocId} filterName="root" />}
     />
   );
 }

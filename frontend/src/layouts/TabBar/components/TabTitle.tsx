@@ -1,6 +1,7 @@
 import { Box } from "@mui/material";
 import { memo, useMemo } from "react";
 import CotaHooks from "../../../api/CotaHooks.ts";
+import PerspectivesHooks from "../../../api/PerspectivesHooks.ts";
 import SdocHooks from "../../../api/SdocHooks";
 import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
 import WhiteboardHooks from "../../../api/WhiteboardHooks";
@@ -26,6 +27,9 @@ function TabTitle({ tab }: TabTitleProps) {
   const timeline = TimelineAnalysisHooks.useGetTimelineAnalysis(
     tab.base === "timeline" ? parseInt(tab.data_id!) : undefined,
   );
+  const aspect = PerspectivesHooks.useGetAspect(
+    tab.base === "map" || tab.base === "dashboard" ? parseInt(tab.data_id!) : undefined,
+  );
 
   const label = useMemo(() => {
     if (!tab.data_id) {
@@ -41,10 +45,23 @@ function TabTitle({ tab }: TabTitleProps) {
         return cota?.data?.name || `COTA ${tab.data_id}`;
       case "timeline":
         return timeline?.data?.name || `Timeline ${tab.data_id}`;
+      case "dashboard":
+        return `${aspect?.data?.name} - Details`;
+      case "map":
+        return aspect?.data?.name || `Map ${tab.data_id}`;
       default:
         return getDefaultLabel(tab.base);
     }
-  }, [tab, sdoc?.data, whiteboard?.data?.title, cota?.data?.name, timeline?.data?.name]);
+  }, [
+    tab.data_id,
+    tab.base,
+    sdoc.data?.name,
+    sdoc.data?.filename,
+    whiteboard?.data?.title,
+    cota?.data?.name,
+    timeline?.data?.name,
+    aspect?.data?.name,
+  ]);
 
   return (
     <Box>

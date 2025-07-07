@@ -40,7 +40,8 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         return db_obj
 
     def read_by_ids(self, db: Session, ids: List[int]) -> List[ORMModelType]:
-        return db.query(self.model).filter(self.model.id.in_(ids)).all()
+        db_objects = db.query(self.model).filter(self.model.id.in_(ids)).all()
+        return sorted(db_objects, key=lambda x: ids.index(x.id))
 
     def read_multi(
         self, db: Session, *, skip: int = 0, limit: int = 100

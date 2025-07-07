@@ -49,5 +49,6 @@
   },
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "python.analysis.exclude": ["**/node_modules", "**/__pycache__", ".git", "./backend/.venv", "./docker"]
 }
