@@ -34,10 +34,6 @@ interface ClusterMenuProps {
 function ClusterMenu(props: ClusterMenuProps) {
   // global server state (react-query)
   const vis = PerspectivesHooks.useGetDocVisualization(props.aspectId);
-  const clusters = useMemo(() => {
-    if (!vis.data) return [];
-    return vis.data.clusters.filter((cluster) => !cluster.is_outlier); // filter out outlier clusters
-  }, [vis.data]);
 
   const initialChecked: Map<number, CheckboxState> | undefined = useMemo(() => {
     if (!vis.data) return undefined;
@@ -51,7 +47,7 @@ function ClusterMenu(props: ClusterMenuProps) {
     );
 
     // init cluster counts
-    const clusterCounts: Record<number, number> = clusters.reduce(
+    const clusterCounts: Record<number, number> = vis.data.clusters.reduce(
       (acc, cluster) => {
         acc[cluster.id] = 0;
         return acc;
@@ -77,12 +73,12 @@ function ClusterMenu(props: ClusterMenuProps) {
             : CheckboxState.CHECKED,
       ]),
     );
-  }, [vis.data, clusters, props.sdocIds]);
+  }, [vis.data, props.sdocIds]);
 
-  if (!vis.data || !initialChecked || clusters.length === 0) {
+  if (!vis.data || !initialChecked || vis.data.clusters.length === 0) {
     return null;
   }
-  return <ClusterMenuContent clusters={clusters} initialChecked={initialChecked} {...props} />;
+  return <ClusterMenuContent clusters={vis.data.clusters} initialChecked={initialChecked} {...props} />;
 }
 
 function ClusterMenuContent({
