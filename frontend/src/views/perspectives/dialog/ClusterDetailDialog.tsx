@@ -1,5 +1,6 @@
 import { Box, Dialog, DialogContent, Stack, Typography } from "@mui/material";
 import { useMemo, useState } from "react";
+import Markdown from "react-markdown";
 import PerspectivesHooks from "../../../api/PerspectivesHooks.ts";
 import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
@@ -50,7 +51,7 @@ function ClusterDetailDialog({ aspectId }: ClusterDetailDialogProps) {
                 {cluster.name}
               </Typography>
               <Typography pt={1} color="textSecondary">
-                {cluster.description}
+                <Markdown>{cluster.description}</Markdown>
               </Typography>
             </Box>
             <Stack spacing={4} direction={"row"}>
