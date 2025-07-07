@@ -58,11 +58,12 @@ class CRUDImageEmbedding(CRUDBase[ImageObjectIdentifier, ImageCollection]):
             sdoc_id: The SourceDocument ID
         """
         collection = self._get_collection(client=client, project_id=project_id)
-        collection.data.delete_many(
-            where=Filter.by_property(
-                self.collection_class.properties["sdoc_id"].name
-            ).equal(sdoc_id)
-        )
+        if self._tenant_exists(client=client, project_id=project_id):
+            collection.data.delete_many(
+                where=Filter.by_property(
+                    self.collection_class.properties["sdoc_id"].name
+                ).equal(sdoc_id)
+            )
 
 
 crud_image_embedding = CRUDImageEmbedding(
