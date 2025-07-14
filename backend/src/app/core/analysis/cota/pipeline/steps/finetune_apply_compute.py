@@ -1,26 +1,24 @@
 from typing import Dict, List, Tuple
 
 import numpy as np
-from loguru import logger
-from umap.umap_ import UMAP
-
 from app.core.analysis.cota.pipeline.cargo import Cargo
-from app.core.data.dto.concept_over_time_analysis import (
-    COTAConcept,
-    COTASentence,
-)
+from app.core.data.dto.concept_over_time_analysis import COTAConcept, COTASentence
 from app.core.data.repo.repo_service import RepoService
-from app.core.db.simsearch_service import SimSearchService
+from app.core.vector.crud.sentence_embedding import crud_sentence_embedding
+from app.core.vector.dto.sentence_embedding import SentenceObjectIdentifier
+from app.core.vector.weaviate_service import WeaviateService
 from app.preprocessing.ray_model_service import RayModelService
 from app.preprocessing.ray_model_worker.dto.cota import (
     RayCOTAJobInput,
     RayCOTAJobResponse,
     RayCOTASentenceBase,
 )
+from loguru import logger
+from umap.umap_ import UMAP
 
 rms: RayModelService = RayModelService()
 repo: RepoService = RepoService()
-sims: SimSearchService = SimSearchService()
+weaviate: WeaviateService = WeaviateService()
 
 
 def finetune_apply_compute(cargo: Cargo) -> Cargo:
@@ -46,11 +44,20 @@ def finetune_apply_compute(cargo: Cargo) -> Cargo:
                 sentence.concept_similarities[concept_id] = similarity
 
     else:
-        embeddings_tensor = sims.get_sentence_embeddings(
-            search_tuples=[
-                (cota_sent.sentence_id, cota_sent.sdoc_id) for cota_sent in search_space
-            ]
-        )
+        with WeaviateService().weaviate_session() as client:
+            embeddings = crud_sentence_embedding.get_embeddings(
+                client=client,
+                project_id=cargo.job.cota.project_id,
+                ids=[
+                    SentenceObjectIdentifier(
+                        sdoc_id=cota_sent.sdoc_id,
+                        sentence_id=cota_sent.sentence_id,
+                    )
+                    for cota_sent in search_space
+                ],
+            )
+
+        embeddings_tensor = np.array(embeddings)
         probabilities = [[0.5, 0.5] for _ in search_space]
         logger.debug("No model exists. We use weaviate embeddings.")
         visual_refined_embeddings = __apply_umap(embs=embeddings_tensor, n_components=2)

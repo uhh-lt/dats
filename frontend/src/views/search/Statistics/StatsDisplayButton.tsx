@@ -8,6 +8,7 @@ export interface StatsDisplayButtonProps {
   maxCount: number;
   translateY: number;
   handleClick: React.MouseEventHandler<HTMLDivElement>;
+  tooltipPlacement?: "top" | "bottom" | "left" | "right";
 }
 
 function StatsDisplayButton({
@@ -17,6 +18,7 @@ function StatsDisplayButton({
   maxCount,
   translateY,
   handleClick,
+  tooltipPlacement,
   ...btnProps
 }: StatsDisplayButtonProps & ButtonProps) {
   const gradRatio = Math.sqrt(count / totalCount) * 100;
@@ -36,7 +38,7 @@ function StatsDisplayButton({
       }}
       onClick={handleClick}
     >
-      <Tooltip title={term}>
+      <Tooltip title={term} placement={tooltipPlacement}>
         <Typography
           fontSize={16}
           minWidth={100}

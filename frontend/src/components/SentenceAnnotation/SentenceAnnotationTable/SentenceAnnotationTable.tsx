@@ -1,16 +1,7 @@
-import { Card, CardContent, CardHeader, CardProps, Stack, Typography } from "@mui/material";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import {
-  MRT_ColumnDef,
-  MRT_RowSelectionState,
-  MRT_RowVirtualizer,
-  MRT_SortingState,
-  MRT_TableOptions,
-  MRT_VisibilityState,
-  MaterialReactTable,
-  useMaterialReactTable,
-} from "material-react-table";
-import { useEffect, useMemo, useRef } from "react";
+import { MRT_ColumnDef, MRT_RowVirtualizer, MaterialReactTable, useMaterialReactTable } from "material-react-table";
+import { memo, useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
+import { QueryKey } from "../../../api/QueryKey.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { SentAnnoColumns } from "../../../api/openapi/models/SentAnnoColumns.ts";
 import { SentenceAnnotationRow } from "../../../api/openapi/models/SentenceAnnotationRow.ts";
@@ -19,43 +10,29 @@ import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { RootState } from "../../../store/store.ts";
 import { useTableInfiniteScroll } from "../../../utils/useTableInfiniteScroll.ts";
 import CodeRenderer from "../../Code/CodeRenderer.tsx";
 import { MyFilter, createEmptyFilter } from "../../FilterDialog/filterUtils.ts";
+import FilterTableToolbarLeft from "../../FilterTable/FilterTableToolbarLeft.tsx";
+import FilterTableToolbarRight from "../../FilterTable/FilterTableToolbarRight.tsx";
+import { useRenderToolbars } from "../../FilterTable/hooks/useRenderToolbars.tsx";
+import { FilterTableProps } from "../../FilterTable/types/FilterTableProps.ts";
 import MemoRenderer2 from "../../Memo/MemoRenderer2.tsx";
 import SdocMetadataRenderer from "../../Metadata/SdocMetadataRenderer.tsx";
 import SdocTagsRenderer from "../../SourceDocument/SdocTagRenderer.tsx";
 import UserRenderer from "../../User/UserRenderer.tsx";
-import SATToolbar, { SEATToolbarProps } from "./SEATToolbar.tsx";
 import SdocAnnotationLink from "./SdocAnnotationLink.tsx";
+import { SEATFilterActions } from "./seatFilterSlice.ts";
 import { useInitSEATFilterSlice } from "./useInitSEATFilterSlice.ts";
 
-const fetchSize = 20;
 const flatMapData = (page: SentenceAnnotationSearchResult) => page.data;
 
-export interface SentenceAnnotationTableProps {
-  title?: string;
-  projectId: number;
-  filterName: string;
-  // selection
-  rowSelectionModel: MRT_RowSelectionState;
-  onRowSelectionChange: MRT_TableOptions<SentenceAnnotationRow>["onRowSelectionChange"];
-  // sorting
-  sortingModel: MRT_SortingState;
-  onSortingChange: MRT_TableOptions<SentenceAnnotationRow>["onSortingChange"];
-  // column visibility
-  columnVisibilityModel: MRT_VisibilityState;
-  onColumnVisibilityChange: MRT_TableOptions<SentenceAnnotationRow>["onColumnVisibilityChange"];
-  // components
-  cardProps?: CardProps;
-  positionToolbarAlertBanner?: MRT_TableOptions<SentenceAnnotationRow>["positionToolbarAlertBanner"];
-  renderToolbarInternalActions?: (props: SEATToolbarProps) => React.ReactNode;
-  renderTopToolbarCustomActions?: (props: SEATToolbarProps) => React.ReactNode;
-  renderBottomToolbarCustomActions?: (props: SEATToolbarProps) => React.ReactNode;
-}
+// this defines which filter slice is used
+const filterStateSelector = (state: RootState) => state.seatFilter;
+const filterActions = SEATFilterActions;
 
 function SentenceAnnotationTable({
-  title = "Sentence Annotation Table",
   projectId,
   filterName,
   rowSelectionModel,
@@ -64,18 +41,20 @@ function SentenceAnnotationTable({
   onSortingChange,
   columnVisibilityModel,
   onColumnVisibilityChange,
-  cardProps,
+  fetchSize,
+  onFetchSizeChange,
   positionToolbarAlertBanner = "top",
-  renderToolbarInternalActions = SATToolbar,
-  renderTopToolbarCustomActions,
-  renderBottomToolbarCustomActions,
-}: SentenceAnnotationTableProps) {
+  renderTopRightToolbar = FilterTableToolbarRight,
+  renderTopLeftToolbar = FilterTableToolbarLeft,
+  renderBottomToolbar,
+}: FilterTableProps<SentenceAnnotationRow>) {
   // global client state (react router)
   const { user } = useAuth();
   const userId = user?.id;
 
   // filtering
-  const filter = useAppSelector((state) => state.seatFilter.filter[filterName]) || createEmptyFilter(filterName);
+  const filter =
+    useAppSelector((state) => filterStateSelector(state).filter[filterName]) || createEmptyFilter(filterName);
 
   // virtualization
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
@@ -102,8 +81,8 @@ function SentenceAnnotationTable({
         case SentAnnoColumns.SENT_ANNO_DOCUMENT_DOCUMENT_TAG_ID_LIST:
           return {
             ...colDef,
-            accessorFn: (row) => row.tags,
-            Cell: ({ row }) => <SdocTagsRenderer tags={row.original.tags} />,
+            accessorFn: (row) => row.tag_ids,
+            Cell: ({ row }) => <SdocTagsRenderer tagIds={row.original.tag_ids} />,
           } as MRT_ColumnDef<SentenceAnnotationRow>;
         case SentAnnoColumns.SENT_ANNO_CODE_ID:
           return {
@@ -170,10 +149,11 @@ function SentenceAnnotationTable({
   // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<SentenceAnnotationSearchResult>({
     queryKey: [
-      "sentence-annotation-table-data",
+      QueryKey.SENT_ANNO_TABLE,
       projectId,
       filter, //refetch when columnFilters changes
       sortingModel, //refetch when sorting changes
+      fetchSize,
     ],
     queryFn: ({ pageParam }) =>
       AnalysisService.sentenceAnnotationSearch({
@@ -216,6 +196,34 @@ function SentenceAnnotationTable({
     }
   }, [projectId, sortingModel]);
 
+  // Table event handlers
+  const handleTableScroll = useCallback(
+    (event: UIEvent<HTMLDivElement>) => fetchMoreOnScroll(event.target as HTMLDivElement),
+    [fetchMoreOnScroll],
+  );
+
+  // fetch all
+  const handleFetchAll = useCallback(() => {
+    onFetchSizeChange(totalResults);
+  }, [onFetchSizeChange, totalResults]);
+
+  // rendering
+  const { renderTopLeftToolbarContent, renderTopRightToolbarContent, renderBottomToolbarContent } = useRenderToolbars({
+    name: "sentence annotations",
+    flatData,
+    totalFetched,
+    totalResults,
+    handleFetchAll,
+    renderTopRightToolbar,
+    renderTopLeftToolbar,
+    renderBottomToolbar,
+    filterStateSelector,
+    filterActions,
+    filterName,
+    rowSelectionModel,
+    tableContainerRef,
+  });
+
   // table
   const table = useMaterialReactTable<SentenceAnnotationRow>({
     data: flatData,
@@ -254,7 +262,7 @@ function SentenceAnnotationTable({
     },
     muiTableContainerProps: {
       ref: tableContainerRef, //get access to the table container element
-      onScroll: (event) => fetchMoreOnScroll(event.target as HTMLDivElement), //add an event listener to the table container element
+      onScroll: handleTableScroll,
       style: { flexGrow: 1 },
     },
     muiToolbarAlertBannerProps: isError
@@ -265,46 +273,12 @@ function SentenceAnnotationTable({
       : undefined,
     // toolbar
     positionToolbarAlertBanner,
-    renderTopToolbarCustomActions: renderTopToolbarCustomActions
-      ? (props) =>
-          renderTopToolbarCustomActions({
-            table: props.table,
-            filterName,
-            anchor: tableContainerRef,
-            selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
-          })
-      : undefined,
-    renderToolbarInternalActions: (props) =>
-      renderToolbarInternalActions({
-        table: props.table,
-        filterName,
-        anchor: tableContainerRef,
-        selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
-      }),
-    renderBottomToolbarCustomActions: (props) => (
-      <Stack direction={"row"} spacing={1} alignItems="center">
-        <Typography>
-          Fetched {totalFetched} of {totalResults} total rows.
-        </Typography>
-        {renderBottomToolbarCustomActions &&
-          renderBottomToolbarCustomActions({
-            table: props.table,
-            filterName,
-            anchor: tableContainerRef,
-            selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
-          })}
-      </Stack>
-    ),
+    renderTopToolbarCustomActions: renderTopLeftToolbarContent,
+    renderToolbarInternalActions: renderTopRightToolbarContent,
+    renderBottomToolbarCustomActions: renderBottomToolbarContent,
   });
 
-  return (
-    <Card className="myFlexContainer" {...cardProps}>
-      <CardHeader title={title} />
-      <CardContent className="myFlexFillAllContainer" style={{ padding: 0 }}>
-        <MaterialReactTable table={table} />
-      </CardContent>
-    </Card>
-  );
+  return <MaterialReactTable table={table} />;
 }
 
-export default SentenceAnnotationTable;
+export default memo(SentenceAnnotationTable);

@@ -1,4 +1,4 @@
-import { Box, Slider } from "@mui/material";
+import { Box, Slider, Tooltip } from "@mui/material";
 
 interface SliderToolProps {
   value: number | undefined;
@@ -6,14 +6,16 @@ interface SliderToolProps {
 }
 
 function SliderTool({ value, onValueChange }: SliderToolProps) {
-  const handleBGAlphaChange = (_event: React.SyntheticEvent | Event, value: number | number[]) => {
+  const handleChange = (_event: React.SyntheticEvent | Event, value: number | number[]) => {
     onValueChange(value as number);
   };
 
   return (
-    <Box sx={{ width: 40, display: "flex", alignItems: "center", mr: 1 }}>
-      <Slider size="small" defaultValue={value} step={1} min={0} max={255} onChangeCommitted={handleBGAlphaChange} />
-    </Box>
+    <Tooltip title="Opacity" arrow>
+      <Box sx={{ width: 40, display: "flex", alignItems: "center", mr: 1 }}>
+        <Slider size="small" defaultValue={value} step={1} min={0} max={255} onChangeCommitted={handleChange} />
+      </Box>
+    </Tooltip>
   );
 }
 

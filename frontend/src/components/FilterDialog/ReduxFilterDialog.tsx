@@ -1,3 +1,4 @@
+import { memo, useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import FilterDialog, { FilterDialogProps } from "./FilterDialog.tsx";
 import { ReduxFilterDialogProps } from "./ReduxFilterDialogProps.ts";
@@ -16,6 +17,13 @@ function ReduxFilterDialog({
   const expertMode = useAppSelector((state) => filterStateSelector(state).expertMode);
   const dispatch = useAppDispatch();
 
+  const handleExpertModeChange = useCallback(
+    (expertMode: boolean) => {
+      dispatch(filterActions.onChangeFilterExpertMode({ expertMode }));
+    },
+    [dispatch, filterActions],
+  );
+
   return (
     <FilterDialog
       anchorEl={anchorEl}
@@ -27,10 +35,10 @@ function ReduxFilterDialog({
       filterActions={filterActions}
       column2Info={column2Info}
       expertMode={expertMode}
-      onChangeExpertMode={(expertMode) => dispatch(filterActions.onChangeFilterExpertMode({ expertMode }))}
+      onChangeExpertMode={handleExpertModeChange}
       buttonProps={buttonProps}
     />
   );
 }
 
-export default ReduxFilterDialog;
+export default memo(ReduxFilterDialog);

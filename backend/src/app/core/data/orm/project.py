@@ -7,7 +7,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
-    from app.core.data.orm.analysis_table import AnalysisTableORM
+    from app.core.data.orm.aspect import AspectORM
+    from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
     from app.core.data.orm.code import CodeORM
     from app.core.data.orm.document_tag import DocumentTagORM
     from app.core.data.orm.memo import MemoORM
@@ -15,7 +16,9 @@ if TYPE_CHECKING:
     from app.core.data.orm.preprocessing_job import PreprocessingJobORM
     from app.core.data.orm.preprocessing_job_payload import PreprocessingJobPayloadORM
     from app.core.data.orm.project_metadata import ProjectMetadataORM
+    from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
     from app.core.data.orm.source_document import SourceDocumentORM
+    from app.core.data.orm.span_annotation import SpanAnnotationORM
     from app.core.data.orm.user import UserORM
     from app.core.data.orm.whiteboard import WhiteboardORM
 
@@ -52,8 +55,16 @@ class ProjectORM(ORMBase):
         "DocumentTagORM", back_populates="project", passive_deletes=True
     )
 
-    analysis_tables: Mapped[List["AnalysisTableORM"]] = relationship(
-        "AnalysisTableORM", back_populates="project", passive_deletes=True
+    span_annotations: Mapped[List["SpanAnnotationORM"]] = relationship(
+        "SpanAnnotationORM", back_populates="project", passive_deletes=True
+    )
+
+    sentence_annotations: Mapped[List["SentenceAnnotationORM"]] = relationship(
+        "SentenceAnnotationORM", back_populates="project", passive_deletes=True
+    )
+
+    bbox_annotations: Mapped[List["BBoxAnnotationORM"]] = relationship(
+        "BBoxAnnotationORM", back_populates="project", passive_deletes=True
     )
 
     whiteboards: Mapped[List["WhiteboardORM"]] = relationship(
@@ -72,6 +83,10 @@ class ProjectORM(ORMBase):
         "ProjectMetadataORM",
         back_populates="project",
         passive_deletes=True,
+    )
+
+    aspects: Mapped[List["AspectORM"]] = relationship(
+        "AspectORM", back_populates="project", passive_deletes=True
     )
 
     # many to many

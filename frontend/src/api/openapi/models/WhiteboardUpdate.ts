@@ -2,13 +2,14 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { WhiteboardContent_Input } from "./WhiteboardContent_Input";
 export type WhiteboardUpdate = {
   /**
    * Title of the Whiteboard
    */
   title?: string | null;
   /**
-   * Content of the Whiteboard
+   * Conten of the Whiteboard
    */
-  content?: string | null;
+  content?: WhiteboardContent_Input | null;
 };

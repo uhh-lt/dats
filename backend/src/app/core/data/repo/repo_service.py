@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import urllib.parse as url
@@ -5,10 +6,12 @@ import uuid
 import zipfile
 from http.client import BAD_REQUEST
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 from zipfile import ZipFile
 
 import magic
+import pandas as pd
+from config import conf
 from fastapi import HTTPException, UploadFile
 from loguru import logger
 
@@ -21,7 +24,6 @@ from app.core.data.dto.source_document import (
     SourceDocumentRead,
 )
 from app.util.singleton_meta import SingletonMeta
-from config import conf
 
 # TODO Flo: Currently only supports localhost but in future it could be that processes running on a different host use
 #           this service...
@@ -67,8 +69,10 @@ class UnsupportedDocTypeForSourceDocument(Exception):
 
 
 class ErroneousArchiveException(Exception):
-    def __init__(self, archive_path: Path):
-        super().__init__(f"Error with Archive {archive_path}")
+    def __init__(self, archive_path: Path, msg: Optional[str] = None):
+        super().__init__(
+            f"Error with Archive {archive_path}{' :' + msg if msg else ''}"
+        )
 
 
 class RepoService(metaclass=SingletonMeta):
@@ -278,6 +282,7 @@ class RepoService(metaclass=SingletonMeta):
     def create_directory_structure_for_project(self, proj_id: int) -> Optional[Path]:
         paths = [
             self.get_models_root_path(proj_id=proj_id),
+            self.get_plots_root_path(proj_id=proj_id),
             self.get_dataloaders_root_dir(proj_id=proj_id),
             self._get_project_repo_sdocs_root_path(proj_id=proj_id),
         ]
@@ -327,6 +332,71 @@ class RepoService(metaclass=SingletonMeta):
         logger.info(f"Created Temporary File at {p}")
 
         return p
+
+    def write_files_to_temp_zip_file(
+        self,
+        files: List[Path],
+        fn: Optional[str] = None,
+    ) -> Path:
+        if len(files) == 0:
+            raise ValueError("No files to export!")
+
+        # check that all files exist
+        print(files)
+        for file in files:
+            if not file.exists():
+                raise FileNotFoundInRepositoryError(
+                    proj_id=-1, filename=file.name, dst=file
+                )
+
+        temp_file = self.create_temp_file(fn=fn)
+        temp_file = temp_file.parent / (temp_file.name + ".zip")
+
+        logger.info(f"Writing Files to {temp_file} !")
+        with zipfile.ZipFile(temp_file, mode="w") as zipf:
+            for file in files:
+                zipf.write(file, file.name)
+
+        return temp_file
+
+    def write_df_to_temp_file(
+        self,
+        df: pd.DataFrame,
+        fn: Optional[str] = None,
+    ) -> Path:
+        temp_file = self.create_temp_file(fn=fn)
+        temp_file = temp_file.parent / (temp_file.name + ".csv")
+
+        logger.info(f"Writing DataFrame to {temp_file} !")
+        df.to_csv(temp_file, sep=",", index=False, header=True)
+        return temp_file
+
+    def write_text_to_temp_file(
+        self,
+        text: str,
+        fn: Optional[str] = None,
+    ) -> Path:
+        temp_file = self.create_temp_file(fn=fn)
+        temp_file = temp_file.parent / (temp_file.name + ".txt")
+
+        logger.info(f"Writing text to {temp_file} !")
+        with open(temp_file, "w") as f:
+            f.write(text)
+        return temp_file
+
+    def write_json_to_temp_file(
+        self,
+        json_obj: Union[List[Dict[str, Any]], Dict[str, Any]],
+        fn: Optional[str] = None,
+    ) -> Path:
+        temp_file = self.create_temp_file(fn=fn)
+        temp_file = temp_file.parent / (temp_file.name + ".json")
+
+        logger.info(f"Writing json_obj to {temp_file} !")
+        with open(temp_file, "w") as f:
+            json.dump(json_obj, f, indent=4)
+
+        return temp_file
 
     def create_temp_dir(self, name: Optional[Union[str, Path]] = None) -> Path:
         if name is None:
@@ -398,7 +468,10 @@ class RepoService(metaclass=SingletonMeta):
 
         logger.info(f"Extracting archive at {archive_path_in_project} ...")
         if not zipfile.is_zipfile(archive_path_in_project):
-            raise ErroneousArchiveException(archive_path=archive_path_in_project)
+            raise ErroneousArchiveException(
+                archive_path=archive_path_in_project,
+                msg="Not a valid zip file!",
+            )
         logger.info(f"Extracting archive {archive_path_in_project.name} to {dst} ...")
         # taken from: https://stackoverflow.com/a/4917469
         # flattens the extracted file hierarchy
@@ -524,6 +597,17 @@ class RepoService(metaclass=SingletonMeta):
             **extra_data,
         )
         return dst_path, create_dto
+
+    def get_plots_root_path(self, proj_id: int) -> Path:
+        return self.get_project_repo_root_path(proj_id=proj_id).joinpath("plots")
+
+    def get_plot_path(
+        self,
+        proj_id: int,
+        plot_name: str,
+    ) -> Path:
+        name = self.get_plots_root_path(proj_id=proj_id) / f"{plot_name}"
+        return name
 
     def get_models_root_path(self, proj_id: int) -> Path:
         return self.get_project_repo_root_path(proj_id=proj_id).joinpath("models")

@@ -1,8 +1,6 @@
 from typing import List
 
 import pandas as pd
-from sqlalchemy import and_, case, func
-
 from app.core.data.dto.analysis import (
     SampledSdocsResults,
 )
@@ -10,6 +8,7 @@ from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.db.sql_service import SQLService
 from app.core.db.sql_utils import aggregate_ids
+from sqlalchemy import and_, case, func
 
 
 def document_sampler_by_tags(

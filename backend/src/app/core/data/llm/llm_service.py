@@ -1,8 +1,5 @@
 from datetime import datetime
-from typing import Callable, Dict, List, Type, Union
-
-from loguru import logger
-from sqlalchemy.orm import Session
+from typing import Callable, Dict, List, Optional, Type, Union
 
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.sentence_annotation import crud_sentence_anno
@@ -12,10 +9,9 @@ from app.core.data.crud.user import (
     ASSISTANT_FEWSHOT_ID,
     ASSISTANT_TRAINED_ID,
     ASSISTANT_ZEROSHOT_ID,
-    SYSTEM_USER_ID,
+    SYSTEM_USER_IDS,
 )
 from app.core.data.dto.background_job_base import BackgroundJobStatus
-from app.core.data.dto.code import CodeRead
 from app.core.data.dto.llm_job import (
     AnnotationLLMJobResult,
     AnnotationParams,
@@ -46,12 +42,12 @@ from app.core.data.dto.llm_job import (
 )
 from app.core.data.dto.sentence_annotation import (
     SentenceAnnotationCreate,
-    SentenceAnnotationReadResolved,
+    SentenceAnnotationRead,
 )
 from app.core.data.dto.source_document_metadata import (
     SourceDocumentMetadataReadResolved,
 )
-from app.core.data.dto.span_annotation import SpanAnnotationReadResolved
+from app.core.data.dto.span_annotation import SpanAnnotationRead
 from app.core.data.llm.ollama_service import OllamaService
 from app.core.data.llm.prompts.annotation_prompt_builder import (
     AnnotationPromptBuilder,
@@ -74,7 +70,9 @@ from app.core.data.orm.sentence_annotation import SentenceAnnotationORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
-from app.core.db.weaviate_service import WeaviateService
+from app.core.vector.crud.sentence_embedding import crud_sentence_embedding
+from app.core.vector.dto.sentence_embedding import SentenceObjectIdentifier
+from app.core.vector.weaviate_service import WeaviateService
 from app.preprocessing.ray_model_service import RayModelService
 from app.preprocessing.ray_model_worker.dto.seqsenttagger import (
     SeqSentTaggerDoc,
@@ -82,15 +80,10 @@ from app.preprocessing.ray_model_worker.dto.seqsenttagger import (
 )
 from app.util.singleton_meta import SingletonMeta
 from config import conf
+from loguru import logger
+from sqlalchemy.orm import Session
 
 lac = conf.llm_assistant
-
-SYSTEM_USER_IDS = [
-    SYSTEM_USER_ID,
-    ASSISTANT_ZEROSHOT_ID,
-    ASSISTANT_FEWSHOT_ID,
-    ASSISTANT_TRAINED_ID,
-]
 
 
 class LLMJobPreparationError(Exception):
@@ -120,7 +113,7 @@ class LLMService(metaclass=SingletonMeta):
         cls.sqls: SQLService = SQLService()
         cls.ollamas: OllamaService = OllamaService()
         cls.rms: RayModelService = RayModelService()
-        cls.sss: WeaviateService = WeaviateService()
+        cls.weaviate: WeaviateService = WeaviateService()
 
         # map from job_type to function
         cls.llm_method_for_job_approach_type: Dict[
@@ -388,6 +381,38 @@ class LLMService(metaclass=SingletonMeta):
             case _:
                 raise UnsupportedLLMJobTypeError(llm_job_params.llm_job_type)
 
+    def count_existing_assistant_annotations(
+        self,
+        task_type: TaskType,
+        code_ids: List[int],
+        sdoc_ids: List[int],
+        approach_type: ApproachType,
+    ) -> Dict[int, int]:
+        match task_type:
+            case TaskType.SENTENCE_ANNOTATION:
+                # 1. Find existing annotations
+                with self.sqls.db_session() as db:
+                    approachtype2userid = {
+                        ApproachType.LLM_ZERO_SHOT: ASSISTANT_ZEROSHOT_ID,
+                        ApproachType.LLM_FEW_SHOT: ASSISTANT_FEWSHOT_ID,
+                        ApproachType.MODEL_TRAINING: ASSISTANT_TRAINED_ID,
+                    }
+                    existing_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
+                        db=db,
+                        user_id=approachtype2userid[approach_type],
+                        sdoc_ids=sdoc_ids,
+                        code_ids=code_ids,
+                    )
+
+                # 2. Count the number of existing annotations per code
+                code_id2num_existing_annos = {code_id: 0 for code_id in code_ids}
+                for existing_anno in existing_annotations:
+                    code_id2num_existing_annos[existing_anno.code_id] += 1
+
+                return code_id2num_existing_annos
+            case _:
+                return {}
+
     def create_training_parameters(
         self, llm_job_params: LLMJobParameters
     ) -> TrainingParameters:
@@ -398,7 +423,10 @@ class LLMService(metaclass=SingletonMeta):
         )
 
     def create_prompt_templates(
-        self, llm_job_params: LLMJobParameters, approach_type: ApproachType
+        self,
+        llm_job_params: LLMJobParameters,
+        approach_type: ApproachType,
+        example_ids: Optional[List[int]] = None,
     ) -> List[LLMPromptTemplates]:
         with self.sqls.db_session() as db:
             # get the llm method based on the jobtype
@@ -415,9 +443,10 @@ class LLMService(metaclass=SingletonMeta):
                 is_fewshot=approach_type == ApproachType.LLM_FEW_SHOT,
             )
             return prompt_builder.build_prompt_templates(
+                example_ids=example_ids,
                 **llm_job_params.specific_task_parameters.model_dump(
                     exclude={"llm_job_type"}
-                )
+                ),
             )
 
     def construct_prompt_dict(
@@ -448,12 +477,12 @@ class LLMService(metaclass=SingletonMeta):
         approach_parameters: ZeroShotParams,
         task_parameters: DocumentTaggingParams,
     ) -> LLMJobResult:
-        assert isinstance(
-            task_parameters, DocumentTaggingParams
-        ), "Wrong task parameters!"
-        assert isinstance(
-            approach_parameters, ZeroShotParams
-        ), "Wrong approach parameters!"
+        assert isinstance(task_parameters, DocumentTaggingParams), (
+            "Wrong task parameters!"
+        )
+        assert isinstance(approach_parameters, ZeroShotParams), (
+            "Wrong approach parameters!"
+        )
 
         msg = f"Started LLMJob - Document Tagging, num docs: {len(task_parameters.sdoc_ids)}"
         self._update_llm_job_description(
@@ -522,7 +551,7 @@ class LLMService(metaclass=SingletonMeta):
                 )
 
                 # prompt the model
-                response = self.ollamas.chat(
+                response = self.ollamas.llm_chat(
                     system_prompt=system_prompt,
                     user_prompt=user_prompt,
                     response_model=OllamaDocumentTaggingResult,
@@ -573,12 +602,12 @@ class LLMService(metaclass=SingletonMeta):
         approach_parameters: ZeroShotParams,
         task_parameters: MetadataExtractionParams,
     ) -> LLMJobResult:
-        assert isinstance(
-            task_parameters, MetadataExtractionParams
-        ), "Wrong task parameters!"
-        assert isinstance(
-            approach_parameters, ZeroShotParams
-        ), "Wrong approach parameters!"
+        assert isinstance(task_parameters, MetadataExtractionParams), (
+            "Wrong task parameters!"
+        )
+        assert isinstance(approach_parameters, ZeroShotParams), (
+            "Wrong approach parameters!"
+        )
 
         msg = f"Started LLMJob - Metadata Extraction, num docs: {len(task_parameters.sdoc_ids)}"
         self._update_llm_job_description(
@@ -653,7 +682,7 @@ class LLMService(metaclass=SingletonMeta):
                 )
 
                 # prompt the model
-                response = self.ollamas.chat(
+                response = self.ollamas.llm_chat(
                     system_prompt=system_prompt,
                     user_prompt=user_prompt,
                     response_model=OllamaMetadataExtractionResults,
@@ -721,9 +750,9 @@ class LLMService(metaclass=SingletonMeta):
         task_parameters: AnnotationParams,
     ) -> LLMJobResult:
         assert isinstance(task_parameters, AnnotationParams), "Wrong task parameters!"
-        assert isinstance(
-            approach_parameters, ZeroShotParams
-        ), "Wrong approach parameters!"
+        assert isinstance(approach_parameters, ZeroShotParams), (
+            "Wrong approach parameters!"
+        )
 
         msg = f"Started LLMJob - Annotation, num docs: {len(task_parameters.sdoc_ids)}"
         self._update_llm_job_description(
@@ -788,7 +817,7 @@ class LLMService(metaclass=SingletonMeta):
                 )
 
                 # prompt the model
-                response = self.ollamas.chat(
+                response = self.ollamas.llm_chat(
                     system_prompt=system_prompt,
                     user_prompt=user_prompt,
                     response_model=OllamaAnnotationResults,
@@ -799,7 +828,7 @@ class LLMService(metaclass=SingletonMeta):
                 parsed_response = prompt_builder.parse_result(result=response)
 
                 # validate the response and create the suggested annotation
-                suggested_annotations: List[SpanAnnotationReadResolved] = []
+                suggested_annotations: List[SpanAnnotationRead] = []
                 for x in parsed_response:
                     code_id = x.code_id
                     span_text = x.text
@@ -833,7 +862,7 @@ class LLMService(metaclass=SingletonMeta):
 
                     # create the suggested annotation
                     suggested_annotations.append(
-                        SpanAnnotationReadResolved(
+                        SpanAnnotationRead(
                             id=annotation_id,
                             sdoc_id=sdoc_data.id,
                             user_id=ASSISTANT_ZEROSHOT_ID,
@@ -842,9 +871,10 @@ class LLMService(metaclass=SingletonMeta):
                             begin_token=begin_token,
                             end_token=end_token,
                             text=span_text,
-                            code=CodeRead.model_validate(project_codes.get(code_id)),
+                            code_id=code_id,
                             created=datetime.now(),
                             updated=datetime.now(),
+                            group_ids=[],
                         )
                     )
                     annotation_id += 1
@@ -887,9 +917,9 @@ class LLMService(metaclass=SingletonMeta):
         approach_parameters: Union[ZeroShotParams, FewShotParams],
         task_parameters: SentenceAnnotationParams,
     ) -> LLMJobResult:
-        assert isinstance(
-            task_parameters, SentenceAnnotationParams
-        ), "Wrong task parameters!"
+        assert isinstance(task_parameters, SentenceAnnotationParams), (
+            "Wrong task parameters!"
+        )
         assert isinstance(approach_parameters, ZeroShotParams) or isinstance(
             approach_parameters, FewShotParams
         ), "Wrong approach parameters!"
@@ -918,19 +948,20 @@ class LLMService(metaclass=SingletonMeta):
         sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=task_parameters.sdoc_ids)
 
         # Delete all existing sentence annotations for the sdocs
-        previous_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
-            db=db,
-            user_id=ASSISTANT_FEWSHOT_ID if is_fewshot else ASSISTANT_ZEROSHOT_ID,
-            sdoc_ids=task_parameters.sdoc_ids,
-            code_ids=task_parameters.code_ids,
-        )
+        if task_parameters.delete_existing_annotations:
+            previous_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
+                db=db,
+                user_id=ASSISTANT_FEWSHOT_ID if is_fewshot else ASSISTANT_ZEROSHOT_ID,
+                sdoc_ids=task_parameters.sdoc_ids,
+                code_ids=task_parameters.code_ids,
+            )
 
-        msg = f"Deleting {len(previous_annotations)} previous sentence annotations."
-        logger.info(msg)
+            msg = f"Deleting {len(previous_annotations)} previous sentence annotations."
+            logger.info(msg)
 
-        crud_sentence_anno.remove_bulk(
-            db=db, ids=[sa.id for sa in previous_annotations]
-        )
+            crud_sentence_anno.remove_bulk(
+                db=db, ids=[sa.id for sa in previous_annotations]
+            )
 
         # automatic annotation
         annotation_id = 0
@@ -981,7 +1012,7 @@ class LLMService(metaclass=SingletonMeta):
                 )
 
                 # prompt the model
-                response = self.ollamas.chat(
+                response = self.ollamas.llm_chat(
                     system_prompt=system_prompt,
                     user_prompt=user_prompt,
                     response_model=OllamaSentenceAnnotationResults,
@@ -1069,7 +1100,7 @@ class LLMService(metaclass=SingletonMeta):
                         status_message="Sentence annotation successful",
                         sdoc_id=sdoc_data.id,
                         suggested_annotations=[
-                            SentenceAnnotationReadResolved.model_validate(anno)
+                            SentenceAnnotationRead.model_validate(anno)
                             for anno in created_annos
                         ],
                     )
@@ -1101,12 +1132,12 @@ class LLMService(metaclass=SingletonMeta):
         approach_parameters: ModelTrainingParams,
         task_parameters: SentenceAnnotationParams,
     ) -> LLMJobResult:
-        assert isinstance(
-            task_parameters, SentenceAnnotationParams
-        ), "Wrong task parameters!"
-        assert isinstance(
-            approach_parameters, ModelTrainingParams
-        ), "Wrong approach parameters!"
+        assert isinstance(task_parameters, SentenceAnnotationParams), (
+            "Wrong task parameters!"
+        )
+        assert isinstance(approach_parameters, ModelTrainingParams), (
+            "Wrong approach parameters!"
+        )
 
         msg = f"Started LLMJob - Sentence Annotation (RAY), num docs: {len(task_parameters.sdoc_ids)}"
         self._update_llm_job(
@@ -1160,34 +1191,25 @@ class LLMService(metaclass=SingletonMeta):
                     f"Got data of {len(training_sdocs)} from {len(sdoc_id2sentence_annotations)} sdocs."
                 )
 
-            # 1.3 - Sanity check, number of embeddings should match the number of sentences
-            for training_sdoc in training_sdocs:
-                if training_sdoc is None:
-                    continue
-
-                # get embeddings
-                sentence_embeddings = self.sss.get_sentence_embeddings_by_sdoc_id(
-                    sdoc_id=training_sdoc.id
-                ).tolist()
-
-                if len(sentence_embeddings) != len(training_sdoc.sentences):
-                    logger.error(
-                        f"Number of embeddings ({len(sentence_embeddings)}) and sentences ({len(training_sdoc.sentences)}) do not match for sdoc {training_sdoc.id}."
-                    )
-
-            # 1.4 - Find the corresponding sentence embeddings
-            search_tuples = [
-                (sent_id, sdoc_data.id)
-                for sdoc_data in training_sdocs
-                if sdoc_data is not None
-                for sent_id in range(len(sdoc_data.sentences))
-            ]
-            sentence_embeddings = self.sss.get_sentence_embeddings(
-                search_tuples=search_tuples
-            ).tolist()
-            logger.debug(
-                f"Found {len(sentence_embeddings)} corresponding sentence embeddings."
-            )
+            # 1.3 - Find the corresponding sentence embeddings
+            with self.weaviate.weaviate_session() as client:
+                search_tuples = [
+                    (sent_id, sdoc_data.id)
+                    for sdoc_data in training_sdocs
+                    if sdoc_data is not None
+                    for sent_id in range(len(sdoc_data.sentences))
+                ]
+                sentence_embeddings = crud_sentence_embedding.get_embeddings(
+                    client=client,
+                    project_id=project_id,
+                    ids=[
+                        SentenceObjectIdentifier(sdoc_id=sdoc_id, sentence_id=sent_id)
+                        for sent_id, sdoc_id in search_tuples
+                    ],
+                )
+                logger.debug(
+                    f"Found {len(sentence_embeddings)} corresponding sentence embeddings."
+                )
 
             sdoc_id2sent_embs: Dict[int, List[List[float]]] = {}
             for sent_emb, (sent_id, sdoc_id) in zip(sentence_embeddings, search_tuples):
@@ -1198,13 +1220,13 @@ class LLMService(metaclass=SingletonMeta):
                 f"Mapped the embeddings to the documents. {[f'{sdoc_id}:{len(embeddings)}' for sdoc_id, embeddings in sdoc_id2sent_embs.items()]}"
             )
 
-            # 1.5 - Find the code names
+            # 1.4 - Find the code names
             codes = crud_code.read_by_ids(db=db, ids=task_parameters.code_ids)
             code_id2name = {code.id: code.name for code in codes}
             code_name2id = {code.name: code.id for code in codes}
             logger.debug(f"Found the {len(codes)} codes.")
 
-        # 1.6 - Build the training data
+        # 1.5 - Build the training data
         training_dataset: List[SeqSentTaggerDoc] = []
         for sdoc_id, annotations in sdoc_id2sentence_annotations.items():
             sentence_embeddings = sdoc_id2sent_embs.get(sdoc_id, [])
@@ -1253,22 +1275,28 @@ class LLMService(metaclass=SingletonMeta):
             ]
 
             # 3. Find the corresponding sentence embeddings
-            search_tuples = [
-                (sent_id, sdoc_data.id)
-                for sdoc_data in test_sdocs
-                if sdoc_data is not None
-                for sent_id in range(len(sdoc_data.sentences))
-            ]
-            test_sentence_embeddings = self.sss.get_sentence_embeddings(
-                search_tuples=search_tuples
-            ).tolist()
-            test_sdoc_id2sent_embs: Dict[int, List[List[float]]] = {}
-            for sent_emb, (sent_id, sdoc_id) in zip(
-                test_sentence_embeddings, search_tuples
-            ):
-                if sdoc_id not in test_sdoc_id2sent_embs:
-                    test_sdoc_id2sent_embs[sdoc_id] = []
-                test_sdoc_id2sent_embs[sdoc_id].append(sent_emb)
+            with self.weaviate.weaviate_session() as client:
+                search_tuples = [
+                    (sent_id, sdoc_data.id)
+                    for sdoc_data in test_sdocs
+                    if sdoc_data is not None
+                    for sent_id in range(len(sdoc_data.sentences))
+                ]
+                test_sentence_embeddings = crud_sentence_embedding.get_embeddings(
+                    client=client,
+                    project_id=project_id,
+                    ids=[
+                        SentenceObjectIdentifier(sdoc_id=sdoc_id, sentence_id=sent_id)
+                        for sent_id, sdoc_id in search_tuples
+                    ],
+                )
+                test_sdoc_id2sent_embs: Dict[int, List[List[float]]] = {}
+                for sent_emb, (sent_id, sdoc_id) in zip(
+                    test_sentence_embeddings, search_tuples
+                ):
+                    if sdoc_id not in test_sdoc_id2sent_embs:
+                        test_sdoc_id2sent_embs[sdoc_id] = []
+                    test_sdoc_id2sent_embs[sdoc_id].append(sent_emb)
 
         # Build the test data
         test_dataset: List[SeqSentTaggerDoc] = []
@@ -1315,24 +1343,32 @@ class LLMService(metaclass=SingletonMeta):
         logger.info(msg)
 
         # Step: 4 - Delete all existing sentence annotations for the test sdocs
-        with self.sqls.db_session() as db:
-            previous_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
-                db=db,
-                user_id=ASSISTANT_TRAINED_ID,
-                sdoc_ids=task_parameters.sdoc_ids,
-                code_ids=task_parameters.code_ids,
-            )
+        if task_parameters.delete_existing_annotations:
+            with self.sqls.db_session() as db:
+                previous_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
+                    db=db,
+                    user_id=ASSISTANT_TRAINED_ID,
+                    sdoc_ids=task_parameters.sdoc_ids,
+                    code_ids=task_parameters.code_ids,
+                )
 
-            msg = f"Deleting {len(previous_annotations)} previous sentence annotations."
+                msg = f"Deleting {len(previous_annotations)} previous sentence annotations."
+                self._next_llm_job_step(
+                    llm_job_id=llm_job_id,
+                    description=msg,
+                )
+                logger.info(msg)
+
+                crud_sentence_anno.remove_bulk(
+                    db=db, ids=[sa.id for sa in previous_annotations]
+                )
+        else:
+            msg = "Keeping existing annotations."
             self._next_llm_job_step(
                 llm_job_id=llm_job_id,
                 description=msg,
             )
             logger.info(msg)
-
-            crud_sentence_anno.remove_bulk(
-                db=db, ids=[sa.id for sa in previous_annotations]
-            )
 
         # Step: 5 - Apply the new predictions
         msg = "Applying suggested annotations."
@@ -1391,7 +1427,7 @@ class LLMService(metaclass=SingletonMeta):
                         status_message="Sentence annotation successful",
                         sdoc_id=sdoc_data.id,
                         suggested_annotations=[
-                            SentenceAnnotationReadResolved.model_validate(anno)
+                            SentenceAnnotationRead.model_validate(anno)
                             for anno in created_annos
                         ],
                     )

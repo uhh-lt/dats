@@ -1,5 +1,4 @@
 import ffmpeg
-
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.video.preprovideodoc import PreProVideoDoc
 

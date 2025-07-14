@@ -8,7 +8,14 @@ from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from app.core.data.orm.annotation_document import AnnotationDocumentORM
+    from app.core.data.orm.aspect import AspectORM
+    from app.core.data.orm.cluster import ClusterORM
+    from app.core.data.orm.document_aspect import DocumentAspectORM
+    from app.core.data.orm.document_cluster import DocumentClusterORM
     from app.core.data.orm.document_tag import DocumentTagORM
+    from app.core.data.orm.document_tag_recommendation import (
+        DocumentTagRecommendationLinkORM,
+    )
     from app.core.data.orm.object_handle import ObjectHandleORM
     from app.core.data.orm.project import ProjectORM
     from app.core.data.orm.source_document_data import SourceDocumentDataORM
@@ -85,6 +92,39 @@ class SourceDocumentORM(ORMBase):
         back_populates="source_documents",
         passive_deletes=True,
     )
+
+    document_tag_recommendation_link: Mapped[
+        List["DocumentTagRecommendationLinkORM"]
+    ] = relationship(
+        "DocumentTagRecommendationLinkORM",
+        back_populates="source_document",
+        passive_deletes=True,
+    )
+
+    document_aspects: Mapped[List["DocumentAspectORM"]] = relationship(
+        "DocumentAspectORM",
+        back_populates="source_document",
+        cascade="all, delete-orphan",
+    )
+    aspects: Mapped[List["AspectORM"]] = relationship(
+        "AspectORM",
+        secondary="documentaspect",
+        back_populates="source_documents",
+        overlaps="document_aspects,aspect,source_document",
+    )
+
+    document_clusters: Mapped[List["DocumentClusterORM"]] = relationship(
+        "DocumentClusterORM",
+        back_populates="source_document",
+        cascade="all, delete-orphan",
+    )
+    clusters: Mapped[List["ClusterORM"]] = relationship(
+        "ClusterORM",
+        secondary="documentcluster",
+        back_populates="source_documents",
+        overlaps="document_clusters,cluster,source_document",
+    )
+
     __table_args__ = (
         UniqueConstraint(
             "project_id", "filename", name="UC_unique_filename_in_project"

@@ -2,11 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { AspectRead } from "../models/AspectRead";
 import type { Body_project_upload_project_sdoc } from "../models/Body_project_upload_project_sdoc";
 import type { CodeRead } from "../models/CodeRead";
 import type { DocumentTagRead } from "../models/DocumentTagRead";
 import type { MemoRead } from "../models/MemoRead";
 import type { PreprocessingJobRead } from "../models/PreprocessingJobRead";
+import type { ProjectAddUser } from "../models/ProjectAddUser";
 import type { ProjectCreate } from "../models/ProjectCreate";
 import type { ProjectMetadataRead } from "../models/ProjectMetadataRead";
 import type { ProjectRead } from "../models/ProjectRead";
@@ -117,40 +119,41 @@ export class ProjectService {
     });
   }
   /**
-   * Removes all SourceDocuments of the Project with the given ID if it exists
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static deleteProjectSdocs({ projId }: { projId: number }): CancelablePromise<Array<number>> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/project/{proj_id}/sdoc",
-      path: {
-        proj_id: projId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Associates an existing User to the Project with the given ID if it exists
    * @returns UserRead Successful Response
    * @throws ApiError
    */
   public static associateUserToProject({
     projId,
-    userId,
+    requestBody,
   }: {
     projId: number;
-    userId: number;
+    requestBody: ProjectAddUser;
   }): CancelablePromise<UserRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/project/{proj_id}/user/{user_id}",
+      url: "/project/{proj_id}/user",
       path: {
         proj_id: projId,
-        user_id: userId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns all Users of the Project with the given ID
+   * @returns UserRead Successful Response
+   * @throws ApiError
+   */
+  public static getProjectUsers({ projId }: { projId: number }): CancelablePromise<Array<UserRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/project/{proj_id}/user",
+      path: {
+        proj_id: projId,
       },
       errors: {
         422: `Validation Error`,
@@ -182,23 +185,6 @@ export class ProjectService {
     });
   }
   /**
-   * Returns all Users of the Project with the given ID
-   * @returns UserRead Successful Response
-   * @throws ApiError
-   */
-  public static getProjectUsers({ projId }: { projId: number }): CancelablePromise<Array<UserRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/project/{proj_id}/user",
-      path: {
-        proj_id: projId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Returns all Codes of the Project with the given ID
    * @returns CodeRead Successful Response
    * @throws ApiError
@@ -216,23 +202,6 @@ export class ProjectService {
     });
   }
   /**
-   * Removes all Codes of the Project with the given ID if it exists
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static deleteProjectCodes({ projId }: { projId: number }): CancelablePromise<Array<number>> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/project/{proj_id}/code",
-      path: {
-        proj_id: projId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Returns all DocumentTags of the Project with the given ID
    * @returns DocumentTagRead Successful Response
    * @throws ApiError
@@ -240,23 +209,6 @@ export class ProjectService {
   public static getProjectTags({ projId }: { projId: number }): CancelablePromise<Array<DocumentTagRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/project/{proj_id}/tag",
-      path: {
-        proj_id: projId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Removes all DocumentTags of the Project with the given ID if it exists
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static deleteProjectTags({ projId }: { projId: number }): CancelablePromise<Array<number>> {
-    return __request(OpenAPI, {
-      method: "DELETE",
       url: "/project/{proj_id}/tag",
       path: {
         proj_id: projId,
@@ -289,23 +241,6 @@ export class ProjectService {
       },
       query: {
         only_starred: onlyStarred,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the Memos of the current User for the Project with the given ID.
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static getMemos({ projId }: { projId: number }): CancelablePromise<Array<MemoRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/project/{proj_id}/memo",
-      path: {
-        proj_id: projId,
       },
       errors: {
         422: `Validation Error`,
@@ -359,7 +294,7 @@ export class ProjectService {
     });
   }
   /**
-   * Returns all ProjectMetadata of the SourceDocument with the given ID if it exists
+   * Returns all ProjectMetadata of the Project with the given ID if it exists
    * @returns ProjectMetadataRead Successful Response
    * @throws ApiError
    */
@@ -367,6 +302,23 @@ export class ProjectService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/project/{proj_id}/metadata",
+      path: {
+        proj_id: projId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns all Aspects of the Project with the given ID if it exists
+   * @returns AspectRead Successful Response
+   * @throws ApiError
+   */
+  public static getAllAspects({ projId }: { projId: number }): CancelablePromise<Array<AspectRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/project/{proj_id}/aspects",
       path: {
         proj_id: projId,
       },

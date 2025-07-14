@@ -7,11 +7,21 @@ from celery.result import GroupResult
 from app.core.data.crawler.crawler_service import CrawlerService
 from app.core.data.dto.crawler_job import CrawlerJobParameters, CrawlerJobRead
 from app.core.data.dto.export_job import ExportJobParameters, ExportJobRead
-from app.core.data.dto.import_job import ImportJobParameters, ImportJobRead
+from app.core.data.dto.import_job import (
+    ImportJobParameters,
+    ImportJobRead,
+)
 from app.core.data.dto.llm_job import LLMJobParameters2, LLMJobRead
-from app.core.data.export.export_service import ExportService
-from app.core.data.import_.import_service import ImportService
+from app.core.data.dto.ml_job import MLJobParameters, MLJobRead
+from app.core.data.eximport.export_service import ExportService
+from app.core.data.eximport.import_service import ImportService
 from app.core.data.llm.llm_service import LLMService
+from app.core.ml.ml_service import MLService
+from app.core.perspectives.perspectives_job import (
+    PerspectivesJobParams,
+    PerspectivesJobRead,
+)
+from app.core.perspectives.perspectives_job_service import PerspectivesJobService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 
 
@@ -94,6 +104,7 @@ def prepare_and_start_crawling_job_async(
     assert job2 is not None, "Job 2 is None"
 
     start_export_job_chain = job1 | job2
+    assert start_export_job_chain is not None, "Job chain is None"
     start_export_job_chain.apply_async()
 
     return cj
@@ -112,6 +123,38 @@ def prepare_and_start_llm_job_async(
     return llm_job
 
 
+def prepare_and_start_ml_job_async(
+    ml_job_params: MLJobParameters,
+) -> MLJobRead:
+    from app.celery.background_jobs.tasks import start_ml_job
+
+    assert isinstance(start_ml_job, Task), "Not a Celery Task"
+
+    mls: MLService = MLService()
+    ml_job = mls.prepare_ml_job(ml_job_params)
+    start_ml_job.apply_async(kwargs={"ml_job": ml_job})
+    return ml_job
+
+
+def prepare_and_start_perspectives_job_async(
+    project_id: int,
+    aspect_id: int,
+    perspectives_job_params: PerspectivesJobParams,
+) -> PerspectivesJobRead:
+    from app.celery.background_jobs.tasks import start_perspectives_job
+
+    assert isinstance(start_perspectives_job, Task), "Not a Celery Task"
+
+    pjs: PerspectivesJobService = PerspectivesJobService()
+    perspectives_job = pjs.prepare_perspectives_job(
+        project_id=project_id,
+        aspect_id=aspect_id,
+        perspectives_params=perspectives_job_params,
+    )
+    start_perspectives_job.apply_async(kwargs={"perspectives_job": perspectives_job})
+    return perspectives_job
+
+
 def execute_text_preprocessing_pipeline_apply_async(
     cargos: List[PipelineCargo],
 ) -> GroupResult:
@@ -119,9 +162,9 @@ def execute_text_preprocessing_pipeline_apply_async(
         execute_text_preprocessing_pipeline_task,
     )
 
-    assert isinstance(
-        execute_text_preprocessing_pipeline_task, Task
-    ), "Not a Celery Task"
+    assert isinstance(execute_text_preprocessing_pipeline_task, Task), (
+        "Not a Celery Task"
+    )
 
     tasks = []
     for cargo in cargos:
@@ -136,9 +179,9 @@ def execute_image_preprocessing_pipeline_apply_async(
         execute_image_preprocessing_pipeline_task,
     )
 
-    assert isinstance(
-        execute_image_preprocessing_pipeline_task, Task
-    ), "Not a Celery Task"
+    assert isinstance(execute_image_preprocessing_pipeline_task, Task), (
+        "Not a Celery Task"
+    )
 
     for cargo in cargos:
         execute_image_preprocessing_pipeline_task.apply_async(kwargs={"cargo": cargo})
@@ -151,9 +194,9 @@ def execute_audio_preprocessing_pipeline_apply_async(
         execute_audio_preprocessing_pipeline_task,
     )
 
-    assert isinstance(
-        execute_audio_preprocessing_pipeline_task, Task
-    ), "Not a Celery Task"
+    assert isinstance(execute_audio_preprocessing_pipeline_task, Task), (
+        "Not a Celery Task"
+    )
 
     for cargo in cargos:
         execute_audio_preprocessing_pipeline_task.apply_async(kwargs={"cargo": cargo})
@@ -166,9 +209,9 @@ def execute_video_preprocessing_pipeline_apply_async(
         execute_video_preprocessing_pipeline_task,
     )
 
-    assert isinstance(
-        execute_video_preprocessing_pipeline_task, Task
-    ), "Not a Celery Task"
+    assert isinstance(execute_video_preprocessing_pipeline_task, Task), (
+        "Not a Celery Task"
+    )
 
     for cargo in cargos:
         execute_video_preprocessing_pipeline_task.apply_async(kwargs={"cargo": cargo})

@@ -1,0 +1,8 @@
+/* generated using openapi-typescript-codegen -- do not edit */
+/* istanbul ignore file */
+/* tslint:disable */
+/* eslint-disable */
+export type Body_chat_rag_with_session = {
+  query: string | Array<string> | number;
+  sdoc_ids: Array<number> | null;
+};

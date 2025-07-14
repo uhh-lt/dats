@@ -1,9 +1,6 @@
-import MenuIcon from "@mui/icons-material/Menu";
 import {
   Autocomplete,
   Box,
-  IconButton,
-  IconButtonProps,
   Popover,
   PopoverPosition,
   TextField,
@@ -12,6 +9,7 @@ import {
 } from "@mui/material";
 import { useMemo, useState } from "react";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
+import { useCodesWithLevel } from "../../../components/Code/useCodesWithLevel.ts";
 import { useDebounce } from "../../../utils/useDebounce.ts";
 
 interface StatisticsFilter {
@@ -19,6 +17,7 @@ interface StatisticsFilter {
   title: string;
   navigateTo: string;
   color?: string;
+  level: number;
 }
 
 const filter = createFilterOptions<StatisticsFilter>();
@@ -26,13 +25,10 @@ const filter = createFilterOptions<StatisticsFilter>();
 interface SearchMenuProps {
   menuItems: CodeRead[];
   handleMenuItemClick: (navigateTo: string) => void;
+  renderButton: (onClick: (event: React.MouseEvent<HTMLButtonElement>) => void) => React.ReactNode;
 }
 
-function SearchStatisticsMenu({
-  menuItems,
-  handleMenuItemClick,
-  ...props
-}: SearchMenuProps & Omit<IconButtonProps, "onClick">) {
+function SearchStatisticsMenu({ menuItems, handleMenuItemClick, renderButton }: SearchMenuProps) {
   const [position, setPosition] = useState<PopoverPosition | undefined>();
   const debouncedPosition = useDebounce(position, 200);
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -46,14 +42,22 @@ function SearchStatisticsMenu({
     setPosition(undefined);
   };
 
+  const codesWithLevel = useCodesWithLevel(menuItems);
+
   // filter feature
   const options: StatisticsFilter[] = useMemo(() => {
     return [
-      { id: -1, title: "Keywords", navigateTo: "keywords" },
-      { id: -2, title: "Tags", navigateTo: "tags" },
-      ...menuItems.map((code) => ({ id: code.id, title: code.name, navigateTo: `${code.id}`, color: code.color })),
+      { id: -1, title: "Keywords", navigateTo: "keywords", level: 0 },
+      { id: -2, title: "Tags", navigateTo: "tags", level: 0 },
+      ...codesWithLevel.map((code) => ({
+        id: code.data.id,
+        title: code.data.name,
+        navigateTo: `${code.data.id}`,
+        color: code.data.color,
+        level: code.level,
+      })),
     ];
-  }, [menuItems]);
+  }, [codesWithLevel]);
   const handleChange: UseAutocompleteProps<StatisticsFilter, false, false, true>["onChange"] = (event, newValue) => {
     event.stopPropagation();
     if (typeof newValue === "string") {
@@ -71,9 +75,7 @@ function SearchStatisticsMenu({
 
   return (
     <>
-      <IconButton onClick={handleClick} {...(props as IconButtonProps)}>
-        <MenuIcon />
-      </IconButton>
+      {renderButton(handleClick)}
       <Popover
         open={Boolean(position)}
         onClose={handleClose}
@@ -107,8 +109,15 @@ function SearchStatisticsMenu({
               return option.title;
             }}
             renderOption={(props, option) => (
-              <li {...props} key={option.id}>
-                <Box style={{ width: 20, height: 20, backgroundColor: option.color, marginRight: 8 }}></Box>{" "}
+              <li {...props} key={option.id} style={{ paddingLeft: option.level * 10 + 6 }}>
+                <Box
+                  style={{
+                    width: 20,
+                    height: 20,
+                    backgroundColor: option.color,
+                    marginRight: 8,
+                  }}
+                ></Box>{" "}
                 {option.title}
               </li>
             )}

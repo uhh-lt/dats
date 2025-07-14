@@ -4,10 +4,10 @@ import { Divider, Stack, TextField } from "@mui/material";
 interface TreeDataFilterProps {
   dataFilter: string;
   onDataFilterChange: (newDataFilter: string) => void;
-  actions: React.ReactNode;
+  children?: React.ReactNode;
 }
 
-export function TreeDataFilter({ dataFilter, onDataFilterChange, actions }: TreeDataFilterProps) {
+function TreeDataFilter({ dataFilter, onDataFilterChange, children }: TreeDataFilterProps) {
   return (
     <>
       <Stack direction="row" alignItems="center" spacing={2} pl={2} pr={1}>
@@ -22,9 +22,11 @@ export function TreeDataFilter({ dataFilter, onDataFilterChange, actions }: Tree
             onDataFilterChange(event.target.value);
           }}
         />
-        {actions}
+        {children}
       </Stack>
       <Divider />
     </>
   );
 }
+
+export default TreeDataFilter;

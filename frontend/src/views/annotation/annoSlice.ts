@@ -23,7 +23,6 @@ export interface AnnoState {
   compareWithUserId: number | undefined; // the user id of the user whose annotations are shown in the Annotator.
   isCompareMode: boolean; // whether the Annotator is in comparison mode.
   // app state:
-  disabledCodeIds: number[]; // the code ids of the disabled codes. Disabled codes are neither shown in the CodeExplorer nor in the Annotator.
   annotationMode: AnnotationMode; // the annotation mode.
   tagStyle: TagStyle; // position of the tag in the Annotator.
 }
@@ -40,7 +39,6 @@ const initialState: AnnoState = {
   compareWithUserId: undefined,
   isCompareMode: false,
   // app state:
-  disabledCodeIds: [],
   annotationMode: AnnotationMode.Reader,
   tagStyle: TagStyle.Inline,
 };
@@ -111,39 +109,6 @@ export const annoSlice = createSlice({
       if (action.payload !== undefined && action.payload !== null) {
         state.tagStyle = action.payload;
       }
-    },
-    // code enable / disable
-    disableCode: (state, action: PayloadAction<number>) => {
-      const codeId = action.payload;
-      const disabledCodeIds = state.disabledCodeIds;
-      if (disabledCodeIds.indexOf(codeId) === -1) {
-        disabledCodeIds.push(codeId);
-        state.disabledCodeIds = disabledCodeIds;
-      }
-    },
-    toggleCodeDisabled: (state, action: PayloadAction<number[]>) => {
-      if (action.payload.length === 0) {
-        return;
-      }
-      const codeId = action.payload[0];
-      const disabledCodeIds = state.disabledCodeIds;
-      if (disabledCodeIds.indexOf(codeId) === -1) {
-        // add codes
-        action.payload.forEach((codeId) => {
-          if (disabledCodeIds.indexOf(codeId) === -1) {
-            disabledCodeIds.push(codeId);
-          }
-        });
-      } else {
-        // delete codes
-        action.payload.forEach((codeId) => {
-          const index = disabledCodeIds.indexOf(codeId);
-          if (index !== -1) {
-            disabledCodeIds.splice(index, 1);
-          }
-        });
-      }
-      state.disabledCodeIds = disabledCodeIds;
     },
     compareWithUser: (state, action: PayloadAction<number>) => {
       console.log("compareWithUser", action.payload);

@@ -1,12 +1,9 @@
 from collections import Counter
 from typing import Dict, List, Optional, Set
 
-from sqlalchemy import func
-
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.dto.search_stats import KeywordStat, SpanEntityStat, TagStat
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
-from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import (
     DocumentTagORM,
     SourceDocumentDocumentTagLinkTable,
@@ -15,11 +12,10 @@ from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.db.sql_service import SQLService
+from sqlalchemy import func
 
 
-def compute_tag_statistics(
-    sdoc_ids: Set[int],
-) -> List[TagStat]:
+def compute_tag_statistics(sdoc_ids: Set[int], top_k: int = 20) -> List[TagStat]:
     with SQLService().db_session() as db:
         # tag statistics for the sdoc_ids
         count = func.count().label("count")
@@ -36,6 +32,7 @@ def compute_tag_statistics(
             )
             .group_by(DocumentTagORM.id)
             .order_by(count.desc())
+            .limit(top_k)
         )
         filtered_res = query.all()
         tag_ids = [tag.id for tag, _ in filtered_res]
@@ -76,7 +73,7 @@ def __count_keywords(
 
 
 def compute_keyword_statistics(
-    proj_id: int, sdoc_ids: Set[int], top_k: int = 50
+    proj_id: int, sdoc_ids: Set[int], top_k: int = 20
 ) -> List[KeywordStat]:
     with SQLService().db_session() as db:
         # 1. query keyword project metadadta
@@ -91,9 +88,7 @@ def compute_keyword_statistics(
         filtered_keywords_metadata = (
             db.query(SourceDocumentMetadataORM)
             .filter(
-                SourceDocumentMetadataORM.project_metadata_id.in_(
-                    [pm_id for pm_id in project_metadata_ids]
-                ),
+                SourceDocumentMetadataORM.project_metadata_id.in_(project_metadata_ids),
                 SourceDocumentMetadataORM.source_document_id.in_(sdoc_ids),
             )
             .all()
@@ -106,9 +101,7 @@ def compute_keyword_statistics(
         all_keywords_metadata = (
             db.query(SourceDocumentMetadataORM)
             .filter(
-                SourceDocumentMetadataORM.project_metadata_id.in_(
-                    [pm_id for pm_id in project_metadata_ids]
-                )
+                SourceDocumentMetadataORM.project_metadata_id.in_(project_metadata_ids)
             )
             .all()
         )
@@ -128,11 +121,13 @@ def compute_keyword_statistics(
 def compute_code_statistics(
     code_id: int,
     sdoc_ids: Set[int],
-    limit: Optional[int] = None,
+    top_k: int = 20,
 ) -> List[SpanEntityStat]:
     with SQLService().db_session() as db:
         # code statistics for the sdoc_ids
-        count = func.count().label("count")
+        count = func.count(AnnotationDocumentORM.source_document_id.distinct()).label(
+            "count"
+        )
         query = (
             db.query(
                 SpanTextORM.id,
@@ -141,23 +136,22 @@ def compute_code_statistics(
             )
             .join(SpanTextORM.span_annotations)
             .join(SpanAnnotationORM.annotation_document)
-            .join(SpanAnnotationORM.code)
             .group_by(SpanTextORM.id)
             .filter(
-                CodeORM.id == code_id,
+                SpanAnnotationORM.code_id == code_id,
                 AnnotationDocumentORM.source_document_id.in_(list(sdoc_ids)),
             )
             .order_by(count.desc())
+            .limit(top_k)
         )
-
-        if limit is not None:
-            query = query.limit(limit)
 
         filtered_res = query.all()
         span_text_ids = [row[0] for row in filtered_res]
 
         # global code statistics
-        count = func.count().label("count")
+        count = func.count(AnnotationDocumentORM.source_document_id.distinct()).label(
+            "global_doc_count"
+        )
         query = (
             db.query(
                 SpanTextORM.id,
@@ -169,7 +163,7 @@ def compute_code_statistics(
             .join(SpanAnnotationORM.code)
             .group_by(SpanTextORM.id)
             .filter(
-                CodeORM.id == code_id,
+                SpanAnnotationORM.code_id == code_id,
                 SpanTextORM.id.in_(span_text_ids),
             )
             .order_by(func.array_position(span_text_ids, SpanTextORM.id))

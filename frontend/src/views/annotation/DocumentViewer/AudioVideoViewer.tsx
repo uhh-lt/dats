@@ -67,7 +67,7 @@ function AudioVideoViewer({ sdocData, width, height }: AudioVideoViewerProps) {
     <>
       <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
         <ReactPlayer
-          url={encodeURI(import.meta.env.VITE_APP_CONTENT + "/" + sdocData.repo_url)}
+          url={encodeURI("/content/" + sdocData.repo_url)}
           controls={true}
           width={width}
           height={height}

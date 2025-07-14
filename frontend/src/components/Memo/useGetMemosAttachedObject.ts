@@ -1,6 +1,7 @@
 import BboxAnnotationHooks from "../../api/BboxAnnotationHooks.ts";
 import CodeHooks from "../../api/CodeHooks.ts";
 import SdocHooks from "../../api/SdocHooks.ts";
+import SentenceAnnotationHooks from "../../api/SentenceAnnotationHooks.ts";
 import SpanAnnotationHooks from "../../api/SpanAnnotationHooks.ts";
 import TagHooks from "../../api/TagHooks.ts";
 import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
@@ -17,7 +18,10 @@ const useGetMemosAttachedObject = (type: AttachedObjectType | undefined) => {
       return SpanAnnotationHooks.useGetAnnotation;
     case AttachedObjectType.BBOX_ANNOTATION:
       return BboxAnnotationHooks.useGetAnnotation;
+    case AttachedObjectType.SENTENCE_ANNOTATION:
+      return SentenceAnnotationHooks.useGetAnnotation;
     default:
+      console.warn("Unknown attached object type:", type);
       return CodeHooks.useGetCode;
   }
 };

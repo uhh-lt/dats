@@ -101,6 +101,78 @@ export class MemoService {
     });
   }
   /**
+   * Returns all Memos attached to the object if it exists
+   * @returns MemoRead Successful Response
+   * @throws ApiError
+   */
+  public static getMemosByAttachedObjectId({
+    attachedObjId,
+    attachedObjType,
+  }: {
+    attachedObjId: number;
+    attachedObjType: AttachedObjectType;
+  }): CancelablePromise<Array<MemoRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/memo/attached_obj/{attached_obj_type}/to/{attached_obj_id}",
+      path: {
+        attached_obj_id: attachedObjId,
+        attached_obj_type: attachedObjType,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the logged-in User's Memo attached to the object if it exists
+   * @returns MemoRead Successful Response
+   * @throws ApiError
+   */
+  public static getUserMemoByAttachedObjectId({
+    attachedObjId,
+    attachedObjType,
+  }: {
+    attachedObjId: number;
+    attachedObjType: AttachedObjectType;
+  }): CancelablePromise<MemoRead> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/memo/attached_obj/{attached_obj_type}/to/{attached_obj_id}/user",
+      path: {
+        attached_obj_id: attachedObjId,
+        attached_obj_type: attachedObjType,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Generates a 1–2 sentence memo suggestion using Ollama based on the attached object
+   * @returns string Successful Response
+   * @throws ApiError
+   */
+  public static generateMemoSuggestion({
+    attachedObjId,
+    attachedObjType,
+  }: {
+    attachedObjId: number;
+    attachedObjType: AttachedObjectType;
+  }): CancelablePromise<string> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/memo/generate_suggestion/{attached_obj_type}/{attached_obj_id}",
+      path: {
+        attached_obj_id: attachedObjId,
+        attached_obj_type: attachedObjType,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Returns Memo Table Info.
    * @returns ColumnInfo_MemoColumns_ Successful Response
    * @throws ApiError

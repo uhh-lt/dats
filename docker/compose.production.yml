@@ -1,15 +1,26 @@
 services:
+  postgres:
+    volumes:
+      - "./pg_data:/var/lib/postgresql/data"
+    shm_size: 2gb
+    command: -c full_page_writes=off -c wal_init_zero=off -c wal_recycle=off
+
+  rabbitmq:
+    volumes:
+      - "./rabbitmq_data:/var/lib/rabbitmq/data"
+
+  redis:
+    volumes:
+      - "./redis_data:/var/lib/redis/data"
+
+  weaviate:
+    volumes:
+      - "./weaviate_data:/var/lib/weaviate"
+
   elasticsearch:
     environment:
       - xpack.security.enabled=false # no auth
       - discovery.type=single-node # single node cluster
       - ES_JAVA_OPTS=-Xms8g -Xmx8g
-
-  ray:
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              device_ids: [ "0" ] # use first gpu for production
-              capabilities: [ gpu ]
+    volumes:
+      - "./elasticsearch_data:/usr/share/elasticsearch/data"

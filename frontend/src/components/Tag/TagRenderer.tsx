@@ -1,7 +1,7 @@
-import LabelIcon from "@mui/icons-material/Label";
-import { Stack, StackProps } from "@mui/material";
+import { Stack, StackProps, Typography } from "@mui/material";
 import TagHooks from "../../api/TagHooks.ts";
 import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
+import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
 
 interface TagRendererProps {
   tag: number | DocumentTagRead;
@@ -18,7 +18,7 @@ function TagRenderer({ tag, ...props }: TagRendererProps & Omit<StackProps, "dir
 function TagRendererWithoutData({ tagId, ...props }: { tagId: number } & Omit<StackProps, "direction" | "alignItems">) {
   const tag = TagHooks.useGetTag(tagId);
 
-  if (tag.isSuccess) {
+  if (tag.data) {
     return <TagRendererWithData tag={tag.data} {...props} />;
   } else if (tag.isError) {
     return <div>{tag.error.message}</div>;
@@ -32,9 +32,9 @@ function TagRendererWithData({
   ...props
 }: { tag: DocumentTagRead } & Omit<StackProps, "direction" | "alignItems">) {
   return (
-    <Stack direction="row" alignItems="center" {...props}>
-      <LabelIcon style={{ color: tag.color }} />
-      {tag.name}
+    <Stack spacing={1} direction="row" alignItems="center" {...props}>
+      {getIconComponent(Icon.TAG, { style: { color: tag.color } })}
+      <Typography>{tag.name}</Typography>
     </Stack>
   );
 }

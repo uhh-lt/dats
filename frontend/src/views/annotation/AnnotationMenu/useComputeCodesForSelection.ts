@@ -10,7 +10,6 @@ export const useComputeCodesForSelection = () => {
 
   // global client state
   const selectedCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
-  const mostRecentCode = useAppSelector((state) => state.annotations.mostRecentCode);
 
   // computed
   const codesForSelection = useMemo(() => {
@@ -26,17 +25,7 @@ export const useComputeCodesForSelection = () => {
       }
       codesForSelection = flatTreeWithRoot(parentCode.model) as CodeRead[];
     }
-
-    // add the most recent code to the top of the list
-    const idx = codesForSelection.findIndex((t) => t.id === mostRecentCode?.id);
-    if (idx !== -1) {
-      const code = codesForSelection[idx];
-      codesForSelection.splice(idx, 1);
-      codesForSelection.unshift(code);
-    }
-
     return codesForSelection;
-  }, [allCodes, codeTree, mostRecentCode, selectedCodeId]);
-
+  }, [allCodes, codeTree, selectedCodeId]);
   return codesForSelection;
 };

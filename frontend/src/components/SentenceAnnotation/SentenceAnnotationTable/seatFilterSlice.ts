@@ -8,7 +8,7 @@ import { ProjectActions } from "../../Project/projectSlice.ts";
 
 const defaultFilterExpression: MyFilterExpression = {
   id: uuidv4(),
-  column: SentAnnoColumns.SENT_ANNO_MEMO_CONTENT,
+  column: SentAnnoColumns.SENT_ANNO_SOURCE_SOURCE_DOCUMENT_FILENAME,
   operator: StringOperator.STRING_CONTAINS,
   value: "",
 };

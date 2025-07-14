@@ -1,20 +1,23 @@
 import SquareIcon from "@mui/icons-material/Square";
-import { Box, BoxProps, Typography } from "@mui/material";
+import { Box, BoxProps } from "@mui/material";
 import * as React from "react";
 import { useCallback, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { AnnoActions, isHiddenCodeId } from "../../../views/annotation/annoSlice.ts";
-import ExporterButton from "../../Exporter/ExporterButton.tsx";
+import { AnnoActions } from "../../../views/annotation/annoSlice.ts";
+import ExportCodesButton from "../../Export/ExportCodesButton.tsx";
 import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
 import CodeCreateListItemButton from "../CodeCreateListItemButton.tsx";
-import CodeEditDialog from "../CodeEditDialog.tsx";
-import CodeExplorerMenu from "./CodeExplorerMenu.tsx";
+import CodeExplorerActionMenu from "./CodeExplorerActionMenu.tsx";
+import CodeExplorerNodeRenderer from "./CodeExplorerNodeRenderer.tsx";
 import useComputeCodeTree from "./useComputeCodeTree.ts";
+
+const renderNode = (node: IDataTree) => <CodeExplorerNodeRenderer node={node} />;
+const renderActions = (node: IDataTree) => <CodeExplorerActionMenu node={node} />;
 
 function CodeExplorer(props: BoxProps) {
   // custom hooks
-  const { codeTree, allCodes } = useComputeCodeTree();
+  const { codeTree } = useComputeCodeTree();
 
   // global client state (redux)
   const selectedCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
@@ -32,69 +35,54 @@ function CodeExplorer(props: BoxProps) {
     [dispatch],
   );
 
-  const handleSelectedCodeChange = (_event: React.SyntheticEvent, nodeIds: string[] | string | null) => {
-    if (nodeIds === null) {
-      dispatch(AnnoActions.setSelectedCodeId(undefined));
-    } else {
-      const id = parseInt(Array.isArray(nodeIds) ? nodeIds[0] : nodeIds);
-      dispatch(AnnoActions.setSelectedCodeId(selectedCodeId === id ? undefined : id));
-    }
-  };
+  const handleSelectedCodeChange = useCallback(
+    (_event: React.SyntheticEvent, nodeIds: string[] | string | null) => {
+      if (nodeIds === null) {
+        dispatch(AnnoActions.setSelectedCodeId(undefined));
+      } else {
+        const id = parseInt(Array.isArray(nodeIds) ? nodeIds[0] : nodeIds);
+        dispatch(AnnoActions.setSelectedCodeId(selectedCodeId === id ? undefined : id));
+      }
+    },
+    [dispatch, selectedCodeId],
+  );
 
   return (
     <Box {...props}>
-      {allCodes.isSuccess && codeTree && (
-        <>
-          <TreeExplorer
-            sx={{ pt: 0 }}
-            dataIcon={SquareIcon}
-            // data
-            dataTree={codeTree}
-            // filter
-            showFilter
-            dataFilter={codeFilter}
-            onDataFilterChange={setCodeFilter}
-            // expansion
-            expandedItems={expandedCodeIds}
-            onExpandedItemsChange={handleExpandedCodeIdsChange}
-            // selection
-            selectedItems={selectedCodeId}
-            onSelectedItemsChange={handleSelectedCodeChange}
-            // render node
-            renderNode={(node) => <CodeNodeRenderer node={node} />}
-            // actions
-            renderActions={(node) => <CodeExplorerMenu code={node} />}
-            renderListActions={() => (
-              <>
-                <CodeCreateListItemButton parentCodeId={undefined} />
-                <ExporterButton
-                  tooltip="Export codeset"
-                  exporterInfo={{ type: "Codeset", singleUser: true, users: [], sdocId: -1 }}
-                  iconButtonProps={{ color: "inherit" }}
-                />
-              </>
-            )}
-          />
-          <CodeEditDialog codes={allCodes.data} />
-        </>
+      {codeTree && (
+        <TreeExplorer
+          sx={{ pt: 0 }}
+          dataIcon={SquareIcon}
+          // data
+          dataTree={codeTree}
+          // filter
+          showFilter
+          dataFilter={codeFilter}
+          onDataFilterChange={setCodeFilter}
+          // expansion
+          expandedItems={expandedCodeIds}
+          onExpandedItemsChange={handleExpandedCodeIdsChange}
+          // selection
+          selectedItems={selectedCodeId}
+          onSelectedItemsChange={handleSelectedCodeChange}
+          // render node
+          renderNode={renderNode}
+          // actions
+          renderActions={renderActions}
+          // components
+          listActions={<ListActions />}
+        />
       )}
     </Box>
   );
 }
 
-function CodeNodeRenderer({ node }: { node: IDataTree }) {
-  const isHidden = useAppSelector(isHiddenCodeId(node.data.id));
-  const dispatch = useAppDispatch();
-
+function ListActions() {
   return (
-    <Typography
-      variant="body2"
-      sx={{ fontWeight: "inherit", flexGrow: 1, ...(isHidden && { textDecoration: "line-through" }) }}
-      onMouseEnter={() => dispatch(AnnoActions.setHoveredCodeId(node.data.id))}
-      onMouseLeave={() => dispatch(AnnoActions.setHoveredCodeId(undefined))}
-    >
-      {node.data.name}
-    </Typography>
+    <>
+      <CodeCreateListItemButton parentCodeId={undefined} />
+      <ExportCodesButton />
+    </>
   );
 }
 

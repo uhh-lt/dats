@@ -40,7 +40,8 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         return db_obj
 
     def read_by_ids(self, db: Session, ids: List[int]) -> List[ORMModelType]:
-        return db.query(self.model).filter(self.model.id.in_(ids)).all()
+        db_objects = db.query(self.model).filter(self.model.id.in_(ids)).all()
+        return sorted(db_objects, key=lambda x: ids.index(x.id))
 
     def read_multi(
         self, db: Session, *, skip: int = 0, limit: int = 100
@@ -85,10 +86,32 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
 
         return db_obj
 
+    def update_multi(
+        self, db: Session, *, ids: List[int], update_dtos: List[UpdateDTOType]
+    ) -> List[ORMModelType]:
+        if len(ids) != len(update_dtos):
+            raise ValueError(
+                f"The number of IDs and Update DTO objects must equal! {len(ids)} IDs and {len(update_dtos)} Update DTOs received."
+            )
+        db_objects = self.read_by_ids(db, ids)
+
+        for db_obj, update_dto in zip(db_objects, update_dtos):
+            obj_data = jsonable_encoder(db_obj.as_dict())
+            update_data = update_dto.model_dump(exclude_unset=True)
+            for field in obj_data:
+                if field in update_data:
+                    setattr(db_obj, field, update_data[field])
+        db.add_all(db_objects)
+        db.commit()
+        return db_objects
+
     def remove(self, db: Session, *, id: int) -> ORMModelType:
         db_obj = self.read(db=db, id=id)
         db.delete(db_obj)
         db.commit()
         return db_obj
 
-    # TODO: remove_multi ?
+    def remove_multi(self, db: Session, *, ids: List[int]) -> int:
+        count = db.query(self.model).filter(self.model.id.in_(ids)).delete()
+        db.commit()
+        return count

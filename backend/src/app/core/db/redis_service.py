@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import List, Optional, Union
 
 import redis
+from config import conf
 from loguru import logger
 
 from app.core.data.dto.concept_over_time_analysis import (
@@ -19,19 +20,20 @@ from app.core.data.dto.crawler_job import (
     CrawlerJobUpdate,
 )
 from app.core.data.dto.export_job import ExportJobCreate, ExportJobRead, ExportJobUpdate
-from app.core.data.dto.feedback import (
-    FeedbackCreateIntern,
-    FeedbackRead,
-)
 from app.core.data.dto.import_job import ImportJobCreate, ImportJobRead, ImportJobUpdate
 from app.core.data.dto.llm_job import LLMJobCreate, LLMJobRead, LLMJobUpdate
+from app.core.data.dto.ml_job import MLJobCreate, MLJobRead, MLJobUpdate
 from app.core.data.dto.trainer_job import (
     TrainerJobCreate,
     TrainerJobRead,
     TrainerJobUpdate,
 )
+from app.core.perspectives.perspectives_job import (
+    PerspectivesJobCreate,
+    PerspectivesJobRead,
+    PerspectivesJobUpdate,
+)
 from app.util.singleton_meta import SingletonMeta
-from config import conf
 
 
 class RedisService(metaclass=SingletonMeta):
@@ -156,7 +158,10 @@ class RedisService(metaclass=SingletonMeta):
         if isinstance(import_job, ImportJobCreate):
             key = self._generate_random_key()
             imj = ImportJobRead(
-                id=key, created=datetime.now(), **import_job.model_dump()
+                id=key,
+                **import_job.model_dump(),
+                created=datetime.now(),
+                updated=datetime.now(),
             )
         elif isinstance(import_job, ImportJobRead):
             key = import_job.id
@@ -170,6 +175,15 @@ class RedisService(metaclass=SingletonMeta):
         logger.debug(f"Successfully stored ImportJob {key}!")
 
         return imj
+
+    def get_all_import_jobs(self, project_id: int) -> List[ImportJobRead]:
+        client = self._get_client("import_")
+        all_import_jobs: List[ImportJobRead] = [
+            self.load_import_job(str(key, "utf-8")) for key in client.keys()
+        ]
+        return [
+            job for job in all_import_jobs if job.parameters.project_id == project_id
+        ]
 
     def load_import_job(self, key: str) -> ImportJobRead:
         client = self._get_client("import_")
@@ -209,7 +223,10 @@ class RedisService(metaclass=SingletonMeta):
         if isinstance(crawler_job, CrawlerJobCreate):
             key = self._generate_random_key()
             cj = CrawlerJobRead(
-                id=key, created=datetime.now(), **crawler_job.model_dump()
+                id=key,
+                **crawler_job.model_dump(),
+                created=datetime.now(),
+                updated=datetime.now(),
             )
         elif isinstance(crawler_job, CrawlerJobRead):
             key = crawler_job.id
@@ -235,9 +252,9 @@ class RedisService(metaclass=SingletonMeta):
 
     def update_crawler_job(self, key: str, update: CrawlerJobUpdate) -> CrawlerJobRead:
         cj = self.load_crawler_job(key=key)
-        data = cj.model_dump()
+        data = cj.model_dump(exclude={"updated"})
         data.update(**update.model_dump())
-        cj = CrawlerJobRead(**data)
+        cj = CrawlerJobRead(**data, updated=datetime.now())
         cj = self.store_crawler_job(crawler_job=cj)
         logger.debug(f"Updated CrawlerJob {key}")
         return cj
@@ -440,43 +457,6 @@ class RedisService(metaclass=SingletonMeta):
         else:
             return sorted(all_cota_jobs_by_cota_id, key=lambda x: x.updated)[-1]
 
-    def store_feedback(self, feedback: FeedbackCreateIntern) -> FeedbackRead:
-        client = self._get_client("feedback")
-        key = self._generate_random_key()
-        fb = FeedbackRead(
-            id=key,
-            user_content=feedback.user_content,
-            user_id=feedback.user_id,
-            created=datetime.now(),
-        )
-        if client.set(key.encode("utf-8"), fb.model_dump_json()) != 1:
-            msg = "Cannot store Feedback!"
-            logger.error(msg)
-            raise RuntimeError(msg)
-
-        logger.debug("Successfully stored Feedback!")
-
-        return fb
-
-    def load_feedback(self, key: str) -> FeedbackRead:
-        client = self._get_client("feedback")
-        fb = client.get(key.encode("utf-8"))
-        if fb is None:
-            msg = f"Feedback with ID {key} does not exist!"
-            logger.error(msg)
-            raise KeyError(msg)
-
-        logger.debug(f"Successfully loaded Feedback {key}")
-        return FeedbackRead.model_validate_json(fb)
-
-    def get_all_feedbacks(self) -> List[FeedbackRead]:
-        client = self._get_client("feedback")
-        return [self.load_feedback(str(key, "utf-8")) for key in client.keys()]
-
-    def get_all_feedbacks_of_user(self, user_id: int) -> List[FeedbackRead]:
-        fbs = self.get_all_feedbacks()
-        return [fb for fb in fbs if fb.user_id == user_id]
-
     def store_llm_job(self, llm_job: Union[LLMJobCreate, LLMJobRead]) -> LLMJobRead:
         client = self._get_client("llm")
 
@@ -537,3 +517,132 @@ class RedisService(metaclass=SingletonMeta):
             raise RuntimeError(msg)
         logger.debug(f"Deleted LLMJob {key}")
         return llmj
+
+    def store_ml_job(self, ml_job: Union[MLJobCreate, MLJobRead]) -> MLJobRead:
+        client = self._get_client("ml")
+
+        if isinstance(ml_job, MLJobCreate):
+            key = self._generate_random_key()
+            mlj = MLJobRead(
+                id=key,
+                **ml_job.model_dump(),
+                created=datetime.now(),
+                updated=datetime.now(),
+            )
+        elif isinstance(ml_job, MLJobRead):
+            key = ml_job.id
+            mlj = ml_job
+
+        if client.set(key.encode("utf-8"), mlj.model_dump_json()) != 1:
+            msg = "Cannot store MLJob!"
+            logger.error(msg)
+            raise RuntimeError(msg)
+
+        logger.debug(f"Successfully stored MLJob {key}!")
+
+        return mlj
+
+    def get_all_ml_jobs(self, project_id: int) -> List[MLJobRead]:
+        client = self._get_client("ml")
+        all_ml_jobs: List[MLJobRead] = [
+            self.load_ml_job(str(key, "utf-8")) for key in client.keys()
+        ]
+        return [job for job in all_ml_jobs if job.parameters.project_id == project_id]
+
+    def load_ml_job(self, key: str) -> MLJobRead:
+        client = self._get_client("ml")
+        mlj = client.get(key.encode("utf-8"))
+        if mlj is None:
+            msg = f"MLJob with ID {key} does not exist!"
+            logger.error(msg)
+            raise KeyError(msg)
+
+        logger.debug(f"Successfully loaded MLJob {key}")
+        return MLJobRead.model_validate_json(mlj)
+
+    def update_ml_job(self, key: str, update: MLJobUpdate) -> MLJobRead:
+        mlj = self.load_ml_job(key=key)
+        data = mlj.model_dump(exclude={"updated"})
+        data.update(**update.model_dump(exclude_unset=True))
+        mlj = MLJobRead(**data, updated=datetime.now())
+        mlj = self.store_ml_job(ml_job=mlj)
+        logger.debug(f"Updated MLJob {key}")
+        return mlj
+
+    def delete_ML_job(self, key: str) -> MLJobRead:
+        mlj = self.load_ml_job(key=key)
+        client = self._get_client("ml")
+        if client.delete(key.encode("utf-8")) != 1:
+            msg = f"Cannot delete MLJob {key}"
+            logger.error(msg)
+            raise RuntimeError(msg)
+        logger.debug(f"Deleted MLJob {key}")
+        return mlj
+
+    def store_perspectives_job(
+        self, perspectives_job: Union[PerspectivesJobCreate, PerspectivesJobRead]
+    ) -> PerspectivesJobRead:
+        client = self._get_client("perspectives")
+
+        if isinstance(perspectives_job, PerspectivesJobCreate):
+            key = self._generate_random_key()
+            pj = PerspectivesJobRead(
+                id=key,
+                **perspectives_job.model_dump(),
+                created=datetime.now(),
+                updated=datetime.now(),
+            )
+        elif isinstance(perspectives_job, PerspectivesJobRead):
+            key = perspectives_job.id
+            pj = perspectives_job
+        else:
+            msg = "Invalid type for perspectives_job parameter."
+            logger.error(msg)
+            raise TypeError(msg)
+
+        if client.set(key.encode("utf-8"), pj.model_dump_json()) != 1:
+            msg = "Cannot store PerspectivesJob!"
+            logger.error(msg)
+            raise RuntimeError(msg)
+
+        logger.debug(f"Successfully stored PerspectivesJob {key}!")
+        return pj
+
+    def get_all_perspectives_jobs(self, project_id: int) -> List[PerspectivesJobRead]:
+        client = self._get_client("perspectives")
+        all_perspectives_jobs: List[PerspectivesJobRead] = [
+            self.load_perspectives_job(str(key, "utf-8")) for key in client.keys()
+        ]
+        return [job for job in all_perspectives_jobs if job.project_id == project_id]
+
+    def load_perspectives_job(self, key: str) -> PerspectivesJobRead:
+        client = self._get_client("perspectives")
+        pj = client.get(key.encode("utf-8"))
+        if pj is None:
+            msg = f"PerspectivesJob with ID {key} does not exist!"
+            logger.error(msg)
+            raise KeyError(msg)
+
+        logger.debug(f"Successfully loaded PerspectivesJob {key}")
+        return PerspectivesJobRead.model_validate_json(pj)
+
+    def update_perspectives_job(
+        self, key: str, update: PerspectivesJobUpdate
+    ) -> PerspectivesJobRead:
+        pj = self.load_perspectives_job(key=key)
+        data = pj.model_dump(exclude={"updated"})
+        data.update(**update.model_dump(exclude_unset=True))
+        pj = PerspectivesJobRead(**data, updated=datetime.now())
+        pj = self.store_perspectives_job(perspectives_job=pj)
+        logger.debug(f"Updated PerspectivesJob {key}")
+        return pj
+
+    def delete_perspectives_job(self, key: str) -> PerspectivesJobRead:
+        pj = self.load_perspectives_job(key=key)
+        client = self._get_client("tm")
+        if client.delete(key.encode("utf-8")) != 1:
+            msg = f"Cannot delete PerspectivesJob {key}"
+            logger.error(msg)
+            raise RuntimeError(msg)
+        logger.debug(f"Deleted PerspectivesJob {key}")
+        return pj

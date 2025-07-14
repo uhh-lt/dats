@@ -1,22 +1,15 @@
 from typing import List, Optional
+from uuid import uuid4
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
-from sqlalchemy.orm import Session
-
-from api.dependencies import (
-    get_current_user,
-    get_db_session,
-)
-from api.util import get_object_memo_for_user, get_object_memos
 from app.core.analysis.duplicate_finder.duplicate_finder import find_duplicates
 from app.core.authorization.authz_user import AuthzUser
-from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import NoSuchElementError
-from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.crud.source_document import crud_sdoc
+from app.core.data.crud.user import crud_user
+from app.core.data.dto.aspect import AspectRead
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import (
@@ -26,12 +19,25 @@ from app.core.data.dto.memo import (
     MemoRead,
 )
 from app.core.data.dto.preprocessing_job import PreprocessingJobRead
-from app.core.data.dto.project import ProjectCreate, ProjectRead, ProjectUpdate
+from app.core.data.dto.project import (
+    ProjectAddUser,
+    ProjectCreate,
+    ProjectRead,
+    ProjectUpdate,
+)
 from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.dto.user import UserRead
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.db.elasticsearch_service import ElasticSearchService
 from app.preprocessing.preprocessing_service import PreprocessingService
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from sqlalchemy.orm import Session
+
+from api.dependencies import (
+    get_current_user,
+    get_db_session,
+)
+from api.util import get_object_memo_for_user
 
 router = APIRouter(
     prefix="/project",
@@ -154,37 +160,22 @@ def upload_project_sdoc(
     )
 
 
-@router.delete(
-    "/{proj_id}/sdoc",
-    response_model=List[int],
-    summary="Removes all SourceDocuments of the Project with the given ID if it exists",
-)
-def delete_project_sdocs(
-    *,
-    proj_id: int,
-    db: Session = Depends(get_db_session),
-    authz_user: AuthzUser = Depends(),
-) -> List[int]:
-    authz_user.assert_in_project(proj_id)
-
-    return crud_sdoc.remove_by_project(db=db, proj_id=proj_id)
-
-
 @router.patch(
-    "/{proj_id}/user/{user_id}",
+    "/{proj_id}/user",
     response_model=UserRead,
     summary="Associates an existing User to the Project with the given ID if it exists",
 )
 def associate_user_to_project(
     *,
     proj_id: int,
-    user_id: int,
+    user: ProjectAddUser,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
 ) -> UserRead:
     authz_user.assert_in_project(proj_id)
 
-    user_db_obj = crud_project.associate_user(db=db, proj_id=proj_id, user_id=user_id)
+    user_db_obj = crud_user.read_by_email(db=db, email=user.email)
+    crud_project.associate_user(db=db, proj_id=proj_id, user_id=user_db_obj.id)
     return UserRead.model_validate(user_db_obj)
 
 
@@ -242,22 +233,6 @@ def get_project_codes(
     return result
 
 
-@router.delete(
-    "/{proj_id}/code",
-    response_model=List[int],
-    summary="Removes all Codes of the Project with the given ID if it exists",
-)
-def delete_project_codes(
-    *,
-    proj_id: int,
-    db: Session = Depends(get_db_session),
-    authz_user: AuthzUser = Depends(),
-) -> List[int]:
-    authz_user.assert_in_project(proj_id)
-
-    return crud_code.remove_by_project(db=db, proj_id=proj_id)
-
-
 @router.get(
     "/{proj_id}/tag",
     response_model=List[DocumentTagRead],
@@ -273,22 +248,6 @@ def get_project_tags(
 
     proj_db_obj = crud_project.read(db=db, id=proj_id)
     return [DocumentTagRead.model_validate(tag) for tag in proj_db_obj.document_tags]
-
-
-@router.delete(
-    "/{proj_id}/tag",
-    response_model=List[int],
-    summary="Removes all DocumentTags of the Project with the given ID if it exists",
-)
-def delete_project_tags(
-    *,
-    proj_id: int,
-    db: Session = Depends(get_db_session),
-    authz_user: AuthzUser = Depends(),
-) -> List[int]:
-    authz_user.assert_in_project(proj_id)
-
-    return crud_document_tag.remove_by_project(db=db, proj_id=proj_id)
 
 
 @router.get(
@@ -318,23 +277,6 @@ def get_user_memos_of_project(
 
 
 @router.get(
-    "/{proj_id}/memo",
-    response_model=List[MemoRead],
-    summary="Returns the Memos of the current User for the Project with the given ID.",
-)
-def get_memos(
-    *,
-    db: Session = Depends(get_db_session),
-    proj_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> List[MemoRead]:
-    authz_user.assert_in_project(proj_id)
-
-    db_obj = crud_project.read(db=db, id=proj_id)
-    return get_object_memos(db_obj=db_obj)
-
-
-@router.get(
     "/{proj_id}/memo/user",
     response_model=MemoRead,
     summary=(
@@ -358,6 +300,7 @@ def get_or_create_user_memo(
             attached_object_id=proj_id,
             attached_object_type=AttachedObjectType.project,
             create_dto=MemoCreateIntern(
+                uuid=str(uuid4()),
                 title="Project Memo",
                 content="",
                 content_json="",
@@ -404,7 +347,7 @@ def resolve_filename(
 @router.get(
     "/{proj_id}/metadata",
     response_model=List[ProjectMetadataRead],
-    summary="Returns all ProjectMetadata of the SourceDocument with the given ID if it exists",
+    summary="Returns all ProjectMetadata of the Project with the given ID if it exists",
 )
 def get_all_metadata(
     *,
@@ -417,6 +360,24 @@ def get_all_metadata(
     db_objs = crud_project_meta.read_by_project(db=db, proj_id=proj_id)
     metadata = [ProjectMetadataRead.model_validate(meta) for meta in db_objs]
     return metadata
+
+
+@router.get(
+    "/{proj_id}/aspects",
+    response_model=List[AspectRead],
+    summary="Returns all Aspects of the Project with the given ID if it exists",
+)
+def get_all_aspects(
+    *,
+    db: Session = Depends(get_db_session),
+    proj_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> List[AspectRead]:
+    authz_user.assert_in_project(proj_id)
+
+    project = crud_project.read(db=db, id=proj_id)
+    aspects = [AspectRead.model_validate(a) for a in project.aspects]
+    return aspects
 
 
 @router.post(

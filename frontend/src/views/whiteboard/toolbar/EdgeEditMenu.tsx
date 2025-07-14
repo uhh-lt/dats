@@ -1,61 +1,26 @@
 import DeleteIcon from "@mui/icons-material/Delete";
-import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
-import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
-import MovingIcon from "@mui/icons-material/Moving";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import StraightIcon from "@mui/icons-material/Straight";
-import TurnRightIcon from "@mui/icons-material/TurnRight";
-import UTurnRightIcon from "@mui/icons-material/UTurnRight";
-
-import {
-  Button,
-  ButtonGroup,
-  Divider,
-  MenuItem,
-  Paper,
-  Select,
-  SelectChangeEvent,
-  Stack,
-  TypographyVariant,
-} from "@mui/material";
-import React, { forwardRef, useCallback, useImperativeHandle, useState } from "react";
+import { Button, ButtonGroup, Divider, Paper, SelectChangeEvent, Stack } from "@mui/material";
+import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 import { Edge, EdgeMarker, MarkerType, useReactFlow } from "reactflow";
+import { WhiteboardEdgeData_Input } from "../../../api/openapi/models/WhiteboardEdgeData_Input.ts";
+import { WhiteboardEdgeType } from "../../../api/openapi/models/WhiteboardEdgeType.ts";
 import { isDashed, isDotted } from "../edges/edgeUtils.ts";
-import { CustomEdgeData } from "../types/CustomEdgeData.ts";
+import { StrokeStyle } from "../types/base/StrokeStyle.ts";
 import { DATSNodeData } from "../types/DATSNodeData.ts";
-import ColorTool from "./tools/ColorTool.tsx";
+import BgColorTool from "./tools/BgColorTool.tsx";
+import EdgeMarkerTool from "./tools/EdgeMarkerTool.tsx";
+import EdgeStyleTool from "./tools/EdgeStyleTool.tsx";
+import FontColorTool from "./tools/FontColorTool.tsx";
 import NumberTool from "./tools/NumberTool.tsx";
-import SliderTool from "./tools/SliderTool.tsx";
-import SolidDashedDottedTool from "./tools/SolidDashedDottedTool.tsx";
-import TypographyVariantTool from "./tools/TypographyVariantTool.tsx";
-
-const arrow2icon: Record<string, React.ReactElement> = {
-  noarrow: <HorizontalRuleIcon />,
-  arrow: <KeyboardArrowRightIcon />,
-  arrowclosed: <PlayArrowIcon />,
-};
-
-const arrow2rotatedicon: Record<string, React.ReactElement> = {
-  noarrow: <HorizontalRuleIcon style={{ transform: "rotate(180deg)" }} />,
-  arrow: <KeyboardArrowRightIcon style={{ transform: "rotate(180deg)" }} />,
-  arrowclosed: <PlayArrowIcon style={{ transform: "rotate(180deg)" }} />,
-};
-
-const type2icon: Record<string, React.ReactElement> = {
-  bezier: <MovingIcon />,
-  simplebezier: <UTurnRightIcon style={{ transform: "rotate(270deg)" }} />,
-  straight: <StraightIcon style={{ transform: "rotate(90deg)" }} />,
-  smoothstep: <TurnRightIcon />,
-};
 
 export interface EdgeEditMenuHandle {
-  open: (edges: Edge<CustomEdgeData>[]) => void;
+  open: (edges: Edge<WhiteboardEdgeData_Input>[]) => void;
   close: () => void;
 }
 
 const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
-  const reactFlowInstance = useReactFlow<DATSNodeData, CustomEdgeData>();
-  const [edges, setEdges] = useState<Edge<CustomEdgeData>[]>([]);
+  const reactFlowInstance = useReactFlow<DATSNodeData, WhiteboardEdgeData_Input>();
+  const [edges, setEdges] = useState<Edge<WhiteboardEdgeData_Input>[]>([]);
 
   // exposed methods (via ref)
   useImperativeHandle(ref, () => ({
@@ -64,7 +29,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
   }));
 
   // methods
-  const openMenu = (edges: Edge<CustomEdgeData>[]) => {
+  const openMenu = (edges: Edge<WhiteboardEdgeData_Input>[]) => {
     // TODO: This is a workaround. It seems there is a bug in react-flow
     setEdges(edges.map((edge) => reactFlowInstance.getEdge(edge.id)!));
   };
@@ -74,9 +39,9 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
   };
 
   const updateEdges = useCallback(
-    (updateFnc: (oldEdge: Edge<CustomEdgeData>) => Edge<CustomEdgeData>) => {
+    (updateFnc: (oldEdge: Edge<WhiteboardEdgeData_Input>) => Edge<WhiteboardEdgeData_Input>) => {
       const idsToCheck = new Set(edges.map((edge) => edge.id));
-      const updatedEdges: Edge<CustomEdgeData>[] = [];
+      const updatedEdges: Edge<WhiteboardEdgeData_Input>[] = [];
       reactFlowInstance.setEdges((edges) => {
         const newEdges = edges.map((edge) => {
           if (idsToCheck.has(edge.id)) {
@@ -94,14 +59,14 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
     [edges, reactFlowInstance],
   );
 
-  const handleTypeChange = (event: SelectChangeEvent<"smoothstep" | "bezier" | "simplebezier" | "straight">) => {
+  const handleTypeChange = (type: WhiteboardEdgeType) => {
     updateEdges((oldEdge) => {
       return {
         ...oldEdge,
         ...(oldEdge.data && {
           data: {
             ...oldEdge.data,
-            type: event.target.value as "smoothstep" | "bezier" | "simplebezier" | "straight",
+            type: type,
           },
         }),
       };
@@ -167,53 +132,39 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
 
   const handleMarkerStartChange = (event: SelectChangeEvent) => {
     updateEdges((oldEdge) => {
-      if (event.target.value === "noarrow") {
-        return {
-          ...oldEdge,
-          markerStart: undefined,
-        };
-      } else {
-        return {
-          ...oldEdge,
-          markerStart: {
-            color: oldEdge.style?.stroke,
-            type: event.target.value as MarkerType,
-          },
-        };
-      }
+      return {
+        ...oldEdge,
+        markerStart: {
+          type: event.target.value as MarkerType,
+          color: oldEdge.style?.stroke || "#000000",
+        },
+      };
     });
   };
 
   const handleMarkerEndChange = (event: SelectChangeEvent) => {
     updateEdges((oldEdge) => {
-      if (event.target.value === "noarrow") {
-        return {
-          ...oldEdge,
-          markerEnd: undefined,
-        };
-      } else {
-        return {
-          ...oldEdge,
-          markerEnd: {
-            color: oldEdge.style?.stroke,
-            type: event.target.value as MarkerType,
-          },
-        };
-      }
+      return {
+        ...oldEdge,
+        markerEnd: {
+          type: event.target.value as MarkerType,
+          color: oldEdge.style?.stroke || "#000000",
+        },
+      };
     });
   };
 
-  const handleStrokeStyleChange = (borderStyle: "dashed" | "solid" | "dotted" | undefined) => {
+  const handleStrokeStyleChange = (strokeStyle: "dashed" | "solid" | "dotted" | undefined) => {
     updateEdges((oldEdge) => {
       return {
         ...oldEdge,
         style: {
           ...oldEdge.style,
           strokeDasharray:
-            borderStyle === "solid"
+            strokeStyle === "solid"
               ? undefined
-              : borderStyle === "dashed"
-                ? `${2 * (oldEdge.style!.strokeWidth! as number)} ${2 * (oldEdge.style!.strokeWidth! as number)}`
+              : strokeStyle === "dashed"
+                ? `${2 * (oldEdge.style!.strokeWidth! as number)} ${oldEdge.style!.strokeWidth! as number}`
                 : `${oldEdge.style!.strokeWidth! as number} ${oldEdge.style!.strokeWidth! as number}`,
         },
       };
@@ -254,20 +205,22 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
     });
   };
 
-  const handleFontSizeChange = (variant: TypographyVariant) => {
+  const handleFontSizeChange = (fontSize: number) => {
     updateEdges((oldEdge) => {
-      return {
-        ...oldEdge,
-        ...(oldEdge.data && {
+      if (edges.some((edge) => edge.id === oldEdge.id) && oldEdge.data) {
+        return {
+          ...oldEdge,
           data: {
             ...oldEdge.data,
+            type: oldEdge.data.type || "bezier",
             label: {
               ...oldEdge.data.label,
-              variant: variant,
+              fontSize,
             },
           },
-        }),
-      };
+        };
+      }
+      return oldEdge;
     });
   };
 
@@ -311,78 +264,54 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
     closeMenu();
   };
 
+  const getStrokeStyle = (edge: Edge) => {
+    if (!edge.style?.strokeDasharray) return StrokeStyle.SOLID;
+    const dashArray = edge.style.strokeDasharray.toString();
+    return dashArray.split(" ")[0] === dashArray.split(" ")[1] ? StrokeStyle.DOTTED : StrokeStyle.DASHED;
+  };
+
   return (
     <>
       {edges.length > 0 && (
-        <Paper sx={{ p: 1, mb: 1, width: "fit-content" }}>
-          <Stack direction="row" alignItems="center">
-            <Select
-              key={`markerStart-${edges[0].id}`}
-              style={{ height: "32px" }}
-              sx={{ mr: 0.5 }}
-              size="small"
-              defaultValue={edges[0].markerStart ? (edges[0].markerStart as EdgeMarker).type : "noarrow"}
-              onChange={handleMarkerStartChange}
-            >
-              {["noarrow", "arrow", "arrowclosed"].map((type) => (
-                <MenuItem key={type} value={type}>
-                  {arrow2rotatedicon[type]}
-                </MenuItem>
-              ))}
-            </Select>
-            <Select
-              key={`markerEnd-${edges[0].id}`}
-              style={{ height: "32px" }}
-              sx={{ mr: 1 }}
-              size="small"
-              defaultValue={edges[0].markerEnd ? (edges[0].markerEnd as EdgeMarker).type : "noarrow"}
-              onChange={handleMarkerEndChange}
-            >
-              {["noarrow", "arrow", "arrowclosed"].map((type) => (
-                <MenuItem key={type} value={type}>
-                  {arrow2icon[type]}
-                </MenuItem>
-              ))}
-            </Select>
-            <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
-            <ColorTool
+        <Paper sx={{ p: 1, width: "fit-content" }}>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <EdgeMarkerTool
+              markerStart={edges[0].markerStart as EdgeMarker}
+              markerEnd={edges[0].markerEnd as EdgeMarker}
+              onMarkerStartChange={handleMarkerStartChange}
+              onMarkerEndChange={handleMarkerEndChange}
+            />
+            <Divider orientation="vertical" flexItem />
+            <EdgeStyleTool
               key={`stroke-color-${edges[0].id}`}
-              caption="Edge:"
-              color={edges[0].style?.stroke}
+              color={edges[0].style?.stroke || "#000000"}
               onColorChange={handleColorChange}
+              strokeStyle={getStrokeStyle(edges[0])}
+              onStrokeStyleChange={handleStrokeStyleChange}
+              edgeType={edges[0].data?.type || WhiteboardEdgeType.BEZIER}
+              onEdgeTypeChange={handleTypeChange}
             />
             <NumberTool
+              tooltip="Edge size"
               key={`stroke-width-${edges[0].id}`}
-              value={edges[0].style?.strokeWidth as number | undefined}
+              value={(edges[0].style?.strokeWidth as number | undefined) || 1}
               onValueChange={handleStrokeWidthChange}
               min={1}
               max={20}
             />
-            <SolidDashedDottedTool
-              key={`stroke-style-${edges[0].id}`}
-              value={isDashed(edges[0]) ? "dashed" : isDotted(edges[0]) ? "dotted" : "solid"}
-              onValueChange={handleStrokeStyleChange}
-            />
-            <Select
-              key={`type-${edges[0].id}`}
-              style={{ height: "32px" }}
-              sx={{ mr: 1 }}
-              size="small"
-              defaultValue={edges[0].data?.type}
-              onChange={handleTypeChange}
-            >
-              {["bezier", "simplebezier", "straight", "smoothstep"].map((type) => (
-                <MenuItem key={type} value={type}>
-                  {type2icon[type]}
-                </MenuItem>
-              ))}
-            </Select>
             {edges.every((edge) => edge.data?.label === undefined || edge.data?.label.text.trim() === "") && (
               <>
-                <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
+                <Divider orientation="vertical" flexItem />
                 <ButtonGroup size="small" className="nodrag" sx={{ mr: 1, bgcolor: "background.paper" }}>
                   <Button
-                    variant={!edges[0].style?.strokeDasharray ? "contained" : "outlined"}
+                    variant="text"
+                    sx={{
+                      color: "black",
+                      "&:hover": {
+                        backgroundColor: "transparent",
+                        color: "black",
+                      },
+                    }}
                     onClick={handleAddTextClick}
                   >
                     Add Text
@@ -394,37 +323,38 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
               (edge) => edge.data && edge.data.label !== undefined && edge.data.label.text.trim().length > 0,
             ) && (
               <>
-                <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
-                <TypographyVariantTool
-                  key={`variant-${edges[0].id}`}
-                  variant={edges[0].data!.label.variant}
-                  onVariantChange={handleFontSizeChange}
+                <Divider orientation="vertical" flexItem />
+                <NumberTool
+                  tooltip="Font size"
+                  key={`font-size-${edges[0].id}`}
+                  value={edges[0].data!.label.fontSize || 1}
+                  onValueChange={handleFontSizeChange}
+                  min={8}
+                  max={72}
                 />
-                <ColorTool
+                <FontColorTool
                   key={`font-color-${edges[0].id}`}
-                  caption={undefined}
                   color={edges[0].data!.label.color}
                   onColorChange={handleFontColorChange}
                 />
-                <ColorTool
-                  key={`bg-color-${edges[0].id}`}
-                  caption="BG:"
+                <BgColorTool
+                  key={`edge-color-${edges[0].id}`}
                   color={edges[0].data!.label.bgcolor}
+                  alpha={edges[0].data!.label.bgalpha}
                   onColorChange={handleBGColorChange}
-                />
-                <SliderTool
-                  key={`bg-alpha-${edges[0].id}`}
-                  value={edges[0].data!.label.bgalpha}
-                  onValueChange={handleBGAlphaChange}
+                  onAlphaChange={handleBGAlphaChange}
                 />
               </>
             )}
-            <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
-            <ButtonGroup size="small" className="nodrag" sx={{ bgcolor: "background.paper" }}>
-              <Button onClick={handleDeleteClick}>
-                <DeleteIcon />
-              </Button>
-            </ButtonGroup>
+            <Divider orientation="vertical" flexItem />
+            <Button
+              size="small"
+              variant="text"
+              onClick={handleDeleteClick}
+              sx={{ color: "text.secondary", minWidth: 0 }}
+            >
+              <DeleteIcon />
+            </Button>
           </Stack>
         </Paper>
       )}

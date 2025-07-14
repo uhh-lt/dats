@@ -7,7 +7,6 @@ from app.core.data.dto.analysis import (
     BBoxAnnotationSearchResult,
 )
 from app.core.data.dto.code import CodeRead
-from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
@@ -56,31 +55,33 @@ def find_bbox_annotations(
 ) -> BBoxAnnotationSearchResult:
     with SQLService().db_session() as db:
         builder = SearchBuilder(db, filter, sorts)
-        subquery = builder.build_subquery(
-            subquery=(
-                db.query(
-                    BBoxAnnotationORM.id,
-                ).group_by(
-                    BBoxAnnotationORM.id,
-                )
+        subquery = builder.init_subquery(
+            db.query(
+                BBoxAnnotationORM.id,
+            ).group_by(
+                BBoxAnnotationORM.id,
             )
-        )
-        builder.build_query(
-            query=(
-                db.query(
-                    BBoxAnnotationORM.id,
-                    AnnotationDocumentORM.user_id,
-                )
-                .add_entity(BBoxAnnotationORM)
-                .add_entity(CodeORM)
-                .add_entity(SourceDocumentORM)
-                .join(BBoxAnnotationORM.annotation_document)
-                .join(BBoxAnnotationORM.code)
-                .join(AnnotationDocumentORM.source_document)
-                .join(subquery, BBoxAnnotationORM.id == subquery.c.id)
-                .filter(SourceDocumentORM.project_id == project_id)
+        ).build_subquery()
+        builder.init_query(
+            db.query(
+                BBoxAnnotationORM.id,
+                AnnotationDocumentORM.user_id,
             )
-        )
+            .add_entity(BBoxAnnotationORM)
+            .add_entity(CodeORM)
+            .add_entity(SourceDocumentORM)
+            .join(subquery, BBoxAnnotationORM.id == subquery.c.id)
+            .filter(SourceDocumentORM.project_id == project_id)
+        )._join_query(
+            AnnotationDocumentORM,
+            AnnotationDocumentORM.id == BBoxAnnotationORM.annotation_document_id,
+        )._join_query(
+            SourceDocumentORM,
+            SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+        )._join_query(
+            CodeORM,
+            CodeORM.id == BBoxAnnotationORM.code_id,
+        ).build_query()
         result_rows, total_results = builder.execute_query(
             page_number=page,
             page_size=page_size,
@@ -107,10 +108,7 @@ def find_bbox_annotations(
                     ),
                     code=CodeRead.model_validate(code_orm),
                     sdoc=SourceDocumentRead.model_validate(sdoc_orm),
-                    tags=[
-                        DocumentTagRead.model_validate(tag)
-                        for tag in sdoc_orm.document_tags
-                    ],
+                    tag_ids=[tag.id for tag in sdoc_orm.document_tags],
                     memo=None,
                 )
             )

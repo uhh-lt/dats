@@ -1,10 +1,12 @@
-from typing import List
+from typing import Dict, List, Optional
+from uuid import uuid4
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.crud_base import CRUDBase
+from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.span_group import crud_span_group
 from app.core.data.crud.span_text import crud_span_text
 from app.core.data.dto.span_annotation import (
@@ -15,6 +17,8 @@ from app.core.data.dto.span_annotation import (
 )
 from app.core.data.dto.span_text import SpanTextCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
+from app.core.data.orm.code import CodeORM
+from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 
 
@@ -37,6 +41,8 @@ class CRUDSpanAnnotation(
         # create the SpanAnnotation (and link the SpanText via FK)
         dto_obj_data = jsonable_encoder(
             SpanAnnotationCreateIntern(
+                project_id=adoc.source_document.project_id,
+                uuid=str(uuid4()),
                 annotation_document_id=adoc.id,
                 begin=create_dto.begin,
                 end=create_dto.end,
@@ -92,18 +98,19 @@ class CRUDSpanAnnotation(
     def create_bulk(
         self, db: Session, *, user_id: int, create_dtos: List[SpanAnnotationCreate]
     ) -> List[SpanAnnotationORM]:
-        # group by user and sdoc_id
-        # identify codes
-        annotations_by_user_sdoc = {
-            (user_id, create_dto.sdoc_id): [] for create_dto in create_dtos
-        }
-        for create_dto in create_dtos:
-            annotations_by_user_sdoc[(user_id, create_dto.sdoc_id)].append(create_dto)
+        # find affected sdocs
+        sdoc_ids = {create_dto.sdoc_id for create_dto in create_dtos}
 
-        # find or create annotation documents for each user and sdoc_id
-        adoc_id_by_user_sdoc = {}
-        for user_id, sdoc_id in annotations_by_user_sdoc.keys():
-            adoc_id_by_user_sdoc[(user_id, sdoc_id)] = crud_adoc.exists_or_create(
+        # find project id for each sdoc_id
+        sdocs = crud_sdoc.read_by_ids(db=db, ids=list(sdoc_ids))
+        project_id_by_sdoc_id: Dict[int, int] = {}
+        for sdoc in sdocs:
+            project_id_by_sdoc_id[sdoc.id] = sdoc.project_id
+
+        # find or create annotation documents for each sdoc_id
+        adoc_id_by_sdoc_id: Dict[int, int] = {}
+        for sdoc_id in sdoc_ids:
+            adoc_id_by_sdoc_id[sdoc_id] = crud_adoc.exists_or_create(
                 db=db, user_id=user_id, sdoc_id=sdoc_id
             ).id
 
@@ -112,19 +119,55 @@ class CRUDSpanAnnotation(
             db=db,
             create_dtos=[
                 SpanAnnotationCreateIntern(
+                    project_id=project_id_by_sdoc_id[create_dto.sdoc_id],
+                    uuid=str(uuid4()),
                     begin=create_dto.begin,
                     end=create_dto.end,
                     span_text=create_dto.span_text,
                     begin_token=create_dto.begin_token,
                     end_token=create_dto.end_token,
                     code_id=create_dto.code_id,
-                    annotation_document_id=adoc_id_by_user_sdoc[
-                        (user_id, create_dto.sdoc_id)
-                    ],
+                    annotation_document_id=adoc_id_by_sdoc_id[create_dto.sdoc_id],
                 )
                 for create_dto in create_dtos
             ],
         )
+
+    def read_by_project(
+        self,
+        db: Session,
+        *,
+        project_id: int,
+    ) -> List[SpanAnnotationORM]:
+        query = (
+            db.query(self.model)
+            .join(
+                AnnotationDocumentORM,
+                AnnotationDocumentORM.id == self.model.annotation_document_id,
+            )
+            .join(
+                SourceDocumentORM,
+                SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+            )
+            .where(
+                SourceDocumentORM.project_id == project_id,
+            )
+        )
+
+        return query.all()
+
+    def read_by_project_and_uuid(
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        uuid: str,
+    ) -> Optional[SpanAnnotationORM]:
+        query = db.query(self.model).where(
+            self.model.project_id == project_id,
+            self.model.uuid == uuid,
+        )
+        return query.first()
 
     def read_by_user_and_sdoc(
         self,
@@ -132,6 +175,7 @@ class CRUDSpanAnnotation(
         *,
         user_id: int,
         sdoc_id: int,
+        exclude_disabled_codes: bool = True,
     ) -> List[SpanAnnotationORM]:
         query = (
             db.query(self.model)
@@ -141,7 +185,8 @@ class CRUDSpanAnnotation(
                 AnnotationDocumentORM.source_document_id == sdoc_id,
             )
         )
-
+        if exclude_disabled_codes:
+            query = query.join(self.model.code).where(CodeORM.enabled == True)  # noqa: E712
         return query.all()
 
     def read_by_users_and_sdoc(
@@ -150,6 +195,7 @@ class CRUDSpanAnnotation(
         *,
         user_ids: List[int],
         sdoc_id: int,
+        exclude_disabled_codes: bool = True,
     ) -> List[SpanAnnotationORM]:
         query = (
             db.query(self.model)
@@ -159,11 +205,18 @@ class CRUDSpanAnnotation(
                 AnnotationDocumentORM.source_document_id == sdoc_id,
             )
         )
+        if exclude_disabled_codes:
+            query = query.join(self.model.code).where(CodeORM.enabled == True)  # noqa: E712
 
         return query.all()
 
     def read_by_code_and_user(
-        self, db: Session, *, code_id: int, user_id: int
+        self,
+        db: Session,
+        *,
+        code_id: int,
+        user_id: int,
+        exclude_disabled_codes: bool = True,
     ) -> List[SpanAnnotationORM]:
         query = (
             db.query(self.model)
@@ -172,6 +225,8 @@ class CRUDSpanAnnotation(
                 self.model.code_id == code_id, AnnotationDocumentORM.user_id == user_id
             )
         )
+        if exclude_disabled_codes:
+            query = query.join(self.model.code).where(CodeORM.enabled == True)  # noqa: E712
 
         return query.all()
 
@@ -204,6 +259,20 @@ class CRUDSpanAnnotation(
         crud_adoc.update_timestamp(db=db, id=span_anno.annotation_document_id)
 
         return span_anno
+
+    def remove_bulk(self, db: Session, *, ids: List[int]) -> List[SpanAnnotationORM]:
+        span_annos = []
+        for id in ids:
+            span_annos.append(self.remove(db, id=id))
+
+        # find the annotation document ids
+        adoc_ids = {span_anno.annotation_document_id for span_anno in span_annos}
+
+        # update the annotation documents' timestamp
+        for adoc_id in adoc_ids:
+            crud_adoc.update_timestamp(db=db, id=adoc_id)
+
+        return span_annos
 
     def remove_by_adoc(self, db: Session, *, adoc_id: int) -> List[int]:
         # find all span annotations to be removed

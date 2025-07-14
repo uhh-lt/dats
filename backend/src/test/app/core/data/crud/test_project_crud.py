@@ -1,17 +1,13 @@
 import random
 import string
 from typing import Any, Dict
+from uuid import uuid4
 
 import pytest
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
-
-from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.user import SYSTEM_USER_ID, crud_user
-from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import (
     AttachedObjectType,
@@ -25,6 +21,8 @@ from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.user import UserORM
 from app.core.db.sql_service import SQLService
 from config import conf
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
 
 def get_number_of_system_codes() -> int:
@@ -168,25 +166,6 @@ def test_project_users(db: Session, project: ProjectORM, user: UserORM) -> None:
     assert project_users[4].id == user.id
 
 
-# project codes
-
-
-def test_get_remove_project_codes(db: Session, project: ProjectORM) -> None:
-    proj_db_obj = crud_project.read(db=db, id=project.id)
-
-    s = [CodeRead.model_validate(code) for code in proj_db_obj.codes]
-
-    assert len(s) == get_number_of_system_codes()
-
-    # removes all project codes
-    crud_code.remove_by_project(db=db, proj_id=project.id)
-
-    proj_db_obj = crud_project.read(db=db, id=project.id)
-    s = [CodeRead.model_validate(code) for code in proj_db_obj.codes]
-
-    assert len(s) == 0
-
-
 # project tags
 
 
@@ -195,18 +174,6 @@ def test_get_project_tags(db: Session, project: ProjectORM) -> None:
     s = [DocumentTagRead.model_validate(tag) for tag in proj_db_obj.document_tags]
 
     assert len(s) == 0
-
-
-# project codes!
-
-
-def test_get_remove_all_project_codes(db: Session, project: ProjectORM) -> None:
-    assert len(project.codes) == get_number_of_system_codes()
-
-    # remove project codes
-    crud_code.remove_by_project(db=db, proj_id=project.id)
-
-    assert len(project.codes) == 0
 
 
 # user memos
@@ -230,6 +197,7 @@ def test_get_add_remove_memos_project(
     json1 = "{}"
     starred1 = False
     memo1 = MemoCreateIntern(
+        uuid=str(uuid4()),
         title=title1,
         content=content1,
         content_json=json1,
@@ -261,6 +229,7 @@ def test_get_add_remove_memos_project(
     json2 = "{}"
     starred2 = True
     memo2 = MemoCreateIntern(
+        uuid=str(uuid4()),
         title=title2,
         content=content2,
         content_json=json2,
