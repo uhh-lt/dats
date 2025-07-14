@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 
 def test_create_delete_user(db: Session) -> None:
-    email = f'{"".join(random.choices(string.ascii_letters, k=15))}@gmail.com'
+    email = f"{''.join(random.choices(string.ascii_letters, k=15))}@gmail.com"
     first_name = "".join(random.choices(string.ascii_letters, k=15))
     last_name = "".join(random.choices(string.ascii_letters, k=15))
     password = "".join(random.choices(string.ascii_letters, k=15))
@@ -43,7 +43,7 @@ def test_create_delete_user(db: Session) -> None:
 
 
 def test_update_user(db: Session, user: UserORM) -> None:
-    email = f'{"".join(random.choices(string.ascii_letters, k=15))}@gmail.com'
+    email = f"{''.join(random.choices(string.ascii_letters, k=15))}@gmail.com"
     first_name = "".join(random.choices(string.ascii_letters, k=15))
     last_name = "".join(random.choices(string.ascii_letters, k=15))
     password = "".join(random.choices(string.ascii_letters, k=15))
