@@ -89,6 +89,8 @@ class PreprocessingPipeline:
                 cargo.ppj_payload.status == BackgroundJobStatus.ABORTED
                 or cargo.ppj_payload.status == BackgroundJobStatus.ERROR
             ):
+                # usually it would make sense here to remove the file. However, since the background job
+                #  (celery) automatically retries the task, which is why we need the file for future retries
                 break
 
         if cargo.ppj_payload.status == BackgroundJobStatus.RUNNING:
@@ -143,9 +145,7 @@ class PreprocessingPipeline:
     ) -> PipelineCargo:
         ppj_id = cargo.ppj_payload.prepro_job_id
         update_dto = PreprocessingJobUpdate(status=status)
-        logger.info(
-            f"Updating PreprocessingJob {ppj_id} " f"Status to {status.value}..."
-        )
+        logger.info(f"Updating PreprocessingJob {ppj_id} Status to {status.value}...")
         with self.sqls.db_session() as db:
             _ = crud_prepro_job.update(db=db, uuid=ppj_id, update_dto=update_dto)
         return cargo
