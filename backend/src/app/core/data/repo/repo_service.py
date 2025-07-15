@@ -325,12 +325,19 @@ class RepoService(metaclass=SingletonMeta):
             proj_id=proj_id, filename=filename
         )
         if dst_path.exists():
-            logger.warning(
-                "Cannot store uploaded file because a file with the same name already exists!"
-            )
-            raise FileAlreadyExistsInRepositoryError(
-                proj_id=proj_id, filename=filename, dst=str(dst_path)
-            )
+            try:
+                self._safe_remove_file_from_project_repo(
+                    proj_id=proj_id, filename=filename
+                )
+            except FileDeletionNotAllowedError:
+                logger.warning(
+                    f"File {filename} already exists in Project {proj_id} and a SourceDocument with that filename"
+                    " exists in the DB. Cannot overwrite it!"
+                )
+                raise FileAlreadyExistsInRepositoryError(
+                    proj_id=proj_id, filename=filename
+                )
+
         elif not dst_path.parent.exists():
             dst_path.parent.mkdir(parents=True, exist_ok=True)
 
