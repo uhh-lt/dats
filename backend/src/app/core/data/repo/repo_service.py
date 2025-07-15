@@ -47,10 +47,27 @@ class FileNotFoundInRepositoryError(Exception):
 
 
 class FileAlreadyExistsInRepositoryError(Exception):
-    def __init__(self, proj_id: int, filename: Union[str, Path], dst: str):
+    def __init__(self, proj_id: int, filename: Union[str, Path]):
         super().__init__(
             f"Cannot store the file '{filename}' of Project {proj_id} because there is a file with the "
-            f"same name in the DATS Repository at {dst}"
+            f"same name in the DATS Repository associated with a SourceDocument!"
+        )
+
+
+class FileDeletionNotAllowedError(Exception):
+    def __init__(
+        self, proj_id: int, sdoc_id: int, filename: Union[str, Path], dst: str
+    ):
+        super().__init__(
+            f"Cannot remove the file '{filename}' of Project {proj_id} because it is associated"
+            f" with SourceDocument {sdoc_id}!"
+        )
+
+
+class FileRemovalError(Exception):
+    def __init__(self, proj_id: int, filename: Union[str, Path], dst: str):
+        super().__init__(
+            f"Cannot remove the file '{filename}' of Project {proj_id} at {dst}!"
         )
 
 
