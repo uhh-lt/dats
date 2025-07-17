@@ -18,7 +18,9 @@ from app.core.data.repo.repo_service import RepoService
 from app.core.data.repo.utils import image_to_base64, load_image
 from app.core.db.sql_service import SQLService
 from app.core.vector.crud.document_embedding import crud_document_embedding
+from app.core.vector.crud.sentence_embedding import crud_sentence_embedding
 from app.core.vector.dto.document_embedding import DocumentObjectIdentifier
+from app.core.vector.dto.sentence_embedding import SentenceObjectIdentifier
 from app.core.vector.weaviate_service import WeaviateService
 from app.preprocessing.ray_model_service import RayModelService
 from app.preprocessing.ray_model_worker.dto.clip import (
@@ -46,10 +48,7 @@ class EmbeddingService(metaclass=SingletonMeta):
         encoded_query = self.rms.clip_text_embedding(
             ClipTextEmbeddingInput(text=sentences)
         )
-        if len(encoded_query.embeddings) == 1:
-            return encoded_query.numpy().squeeze()
-        else:
-            return encoded_query.numpy()
+        return encoded_query.numpy()
 
     def encode_image(self, sdoc_id: int) -> np.ndarray:
         with self.sqls.db_session() as db:
@@ -68,6 +67,87 @@ class EmbeddingService(metaclass=SingletonMeta):
             )
         )
         return encoded_query.numpy().squeeze()
+
+    def embed_sentences(
+        self, project_id: int, filter_criterion: ColumnElement, recompute=False
+    ) -> int:
+        total_processed = 0
+        num_processed = -1
+
+        with self.weaviate.weaviate_session() as client:
+            if recompute:
+                crud_sentence_embedding.remove_embeddings_by_project(client, project_id)
+
+            while num_processed != 0:
+                num_processed = self._process_sentences_batch(
+                    client,
+                    filter_criterion,
+                    project_id,
+                )
+                total_processed += num_processed
+            return total_processed
+
+    def _process_sentences_batch(
+        self,
+        client: WeaviateClient,
+        filter_criterion: ColumnElement,
+        project_id: int,
+        batch_size=16,
+    ):
+        with self.sqls.db_session() as db:
+            query = (
+                db.query(SourceDocumentDataORM)
+                .outerjoin(
+                    SourceDocumentJobStatusORM,
+                    and_(
+                        SourceDocumentJobStatusORM.id == SourceDocumentDataORM.id,
+                        SourceDocumentJobStatusORM.type == JobType.SENTENCE_EMBEDDING,
+                    ),
+                    full=True,
+                )
+                .filter(filter_criterion)
+                .limit(batch_size)
+            )
+            sdoc_data = query.all()
+        doc_sentences = [doc.sentences for doc in sdoc_data]
+        sdoc_ids = [doc.id for doc in sdoc_data]
+        num_docs = len(doc_sentences)
+
+        if num_docs == 0:
+            return num_docs
+
+        # Embed the sentences for a batch of documents
+        embeddings = self.encode_sentences(
+            [s for sents in doc_sentences for s in sents]
+        ).tolist()
+
+        ids = [
+            SentenceObjectIdentifier(sdoc_id=sdoc_id, sentence_id=i)
+            for sdoc_id, sents in zip(sdoc_ids, doc_sentences)
+            for i in range(len(sents))
+        ]
+
+        # Store the embeddings of a batch of documents
+        crud_sentence_embedding.add_embedding_batch(
+            client,
+            project_id,
+            ids=ids,
+            embeddings=embeddings,
+        )
+
+        crud_sdoc_job_status.create_multi(
+            db,
+            create_dtos=[
+                SourceDocumentJobStatusCreate(
+                    id=id,
+                    type=JobType.SENTENCE_EMBEDDING,
+                    status=JobStatus.FINISHED,
+                    timestamp=datetime.now(),
+                )
+                for id in sdoc_ids
+            ],
+        )
+        return num_docs
 
     def embed_documents(
         self, project_id: int, filter_criterion: ColumnElement, recompute=False
@@ -88,7 +168,7 @@ class EmbeddingService(metaclass=SingletonMeta):
                     project_id,
                     force_override=(recompute and (total_processed == 0)),
                 )
-                total_processed = +num_processed
+                total_processed += num_processed
             return total_processed
 
     def _process_document_batch(

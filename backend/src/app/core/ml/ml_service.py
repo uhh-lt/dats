@@ -12,6 +12,7 @@ from app.core.data.dto.ml_job import (
     MLJobType,
     MLJobUpdate,
     QuotationAttributionParams,
+    SentenceEmbeddingParams,
 )
 from app.core.data.orm.source_document_job_status import (
     JobStatus,
@@ -122,6 +123,19 @@ class MLService(metaclass=SingletonMeta):
                     EmbeddingService().embed_documents(
                         mlj.parameters.project_id, filter_criterion, recompute
                     )
+                case MLJobType.SENTENCE_EMBEDDING:
+                    assert isinstance(
+                        mlj.parameters.specific_ml_job_parameters,
+                        SentenceEmbeddingParams,
+                    ), "SentencetEmbeddingParams expected"
+                    recompute = mlj.parameters.specific_ml_job_parameters.recompute
+                    filter_criterion = self._build_filter_criterion(
+                        start_time, recompute
+                    )
+                    EmbeddingService().embed_sentences(
+                        mlj.parameters.project_id, filter_criterion, recompute
+                    )
+
             mlj = self._update_ml_job(
                 ml_job_id, MLJobUpdate(status=BackgroundJobStatus.FINISHED)
             )

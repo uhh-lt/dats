@@ -1,18 +1,9 @@
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional,
-    Union,
-)
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 from loguru import logger
 
-from app.core.data.dto.search import (
-    SimSearchImageHit,
-    SimSearchSentenceHit,
-)
+from app.core.data.dto.search import SimSearchImageHit, SimSearchSentenceHit
 from app.core.ml.embedding_service import EmbeddingService
 from app.core.vector.crud.image_embedding import crud_image_embedding
 from app.core.vector.crud.sentence_embedding import crud_sentence_embedding
@@ -44,7 +35,7 @@ class SimSearchService(metaclass=SingletonMeta):
             query_emb = (
                 self.emb.encode_document(" ".join(text_query))
                 if document_query
-                else self.emb.encode_sentences(sentences=text_query)
+                else self.emb.encode_sentences(sentences=text_query)[0]
             )
         elif image_query_id is not None:
             query_emb = self.emb.encode_image(sdoc_id=image_query_id)

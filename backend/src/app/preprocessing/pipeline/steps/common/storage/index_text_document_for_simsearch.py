@@ -19,7 +19,6 @@ def index_text_document_for_simsearch(cargo: PipelineCargo) -> PipelineCargo:
     if len(sentences) > 0:
         # embed the sentences
         embeddings = emb.encode_sentences(sentences=sentences).tolist()
-        embeddings = embeddings if len(sentences) > 1 else [embeddings]
 
         # store the embeddings
         logger.debug(

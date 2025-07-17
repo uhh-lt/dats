@@ -8742,7 +8742,8 @@
                   { "$ref": "#/components/schemas/QuotationAttributionParams" },
                   { "$ref": "#/components/schemas/DocTagRecommendationParams" },
                   { "$ref": "#/components/schemas/CoreferenceResolutionParams" },
-                  { "$ref": "#/components/schemas/DocumentEmbeddingParams" }
+                  { "$ref": "#/components/schemas/DocumentEmbeddingParams" },
+                  { "$ref": "#/components/schemas/SentenceEmbeddingParams" }
                 ],
                 "discriminator": {
                   "propertyName": "ml_job_type",
@@ -8750,7 +8751,8 @@
                     "COREFERENCE_RESOLUTION": "#/components/schemas/CoreferenceResolutionParams",
                     "DOCUMENT_EMBEDDING": "#/components/schemas/DocumentEmbeddingParams",
                     "DOC_TAG_RECOMMENDATION": "#/components/schemas/DocTagRecommendationParams",
-                    "QUOTATION_ATTRIBUTION": "#/components/schemas/QuotationAttributionParams"
+                    "QUOTATION_ATTRIBUTION": "#/components/schemas/QuotationAttributionParams",
+                    "SENTENCE_EMBEDDING": "#/components/schemas/SentenceEmbeddingParams"
                   }
                 }
               },
@@ -8775,7 +8777,8 @@
                   { "$ref": "#/components/schemas/QuotationAttributionParams" },
                   { "$ref": "#/components/schemas/DocTagRecommendationParams" },
                   { "$ref": "#/components/schemas/CoreferenceResolutionParams" },
-                  { "$ref": "#/components/schemas/DocumentEmbeddingParams" }
+                  { "$ref": "#/components/schemas/DocumentEmbeddingParams" },
+                  { "$ref": "#/components/schemas/SentenceEmbeddingParams" }
                 ],
                 "discriminator": {
                   "propertyName": "ml_job_type",
@@ -8783,7 +8786,8 @@
                     "COREFERENCE_RESOLUTION": "#/components/schemas/CoreferenceResolutionParams",
                     "DOCUMENT_EMBEDDING": "#/components/schemas/DocumentEmbeddingParams",
                     "DOC_TAG_RECOMMENDATION": "#/components/schemas/DocTagRecommendationParams",
-                    "QUOTATION_ATTRIBUTION": "#/components/schemas/QuotationAttributionParams"
+                    "QUOTATION_ATTRIBUTION": "#/components/schemas/QuotationAttributionParams",
+                    "SENTENCE_EMBEDDING": "#/components/schemas/SentenceEmbeddingParams"
                   }
                 }
               },
@@ -8833,7 +8837,13 @@
       },
       "MLJobType": {
         "type": "string",
-        "enum": ["QUOTATION_ATTRIBUTION", "DOC_TAG_RECOMMENDATION", "COREFERENCE_RESOLUTION", "DOCUMENT_EMBEDDING"],
+        "enum": [
+          "QUOTATION_ATTRIBUTION",
+          "DOC_TAG_RECOMMENDATION",
+          "COREFERENCE_RESOLUTION",
+          "DOCUMENT_EMBEDDING",
+          "SENTENCE_EMBEDDING"
+        ],
         "title": "MLJobType"
       },
       "MemoColumns": {
@@ -10026,6 +10036,20 @@
         "type": "object",
         "required": ["sentence_annotations"],
         "title": "SentenceAnnotatorResult"
+      },
+      "SentenceEmbeddingParams": {
+        "properties": {
+          "ml_job_type": { "type": "string", "const": "SENTENCE_EMBEDDING", "title": "Ml Job Type" },
+          "recompute": {
+            "type": "boolean",
+            "title": "Recompute",
+            "description": "Whether to recompute already processed documents",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": ["ml_job_type"],
+        "title": "SentenceEmbeddingParams"
       },
       "SimSearchImageHit": {
         "properties": {
