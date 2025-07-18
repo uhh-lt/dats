@@ -1,20 +1,10 @@
 from time import perf_counter_ns
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Tuple,
-    TypeVar,
-)
+from typing import Any, Callable, Dict, Iterable, List, Tuple, TypeVar
 
 import numpy as np
 
 from app.core.data.crud.span_annotation import crud_span_anno
-from app.core.data.dto.search import (
-    SimSearchSentenceHit,
-)
+from app.core.data.dto.search import SimSearchSentenceHit
 from app.core.data.dto.span_annotation import SpanAnnotationCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.source_document import SourceDocumentORM
@@ -142,7 +132,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
                     client=client,
                     project_id=proj_id,
                     id=SentenceObjectIdentifier(sdoc_id=sdoc_id, sentence_id=sent_id),
-                    k=top_k,
+                    k=1,
                     threshold=0.0,
                 )
                 nearest.extend(
