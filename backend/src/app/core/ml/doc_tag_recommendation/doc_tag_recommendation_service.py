@@ -1,16 +1,6 @@
 import statistics
 from collections import defaultdict
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Sequence,
-    Set,
-    TypeVar,
-)
+from typing import Any, Callable, Dict, Iterable, Iterator, List, Sequence, Set, TypeVar
 
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.document_tag_recommendation import (
@@ -21,12 +11,12 @@ from app.core.data.dto.document_tag_recommendation import (
     DocumentTagRecommendationLinkCreate,
     DocumentTagRecommendationMethod,
 )
-from app.core.data.dto.search import (
-    SimSearchDocumentHit,
-)
+from app.core.data.dto.search import SimSearchDocumentHit
 from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.db.sql_service import SQLService
 from app.core.vector.crud.document_embedding import crud_document_embedding
+from app.core.vector.dto.document_embedding import DocumentObjectIdentifier
+from app.core.vector.dto.search_results import SimSearchResult
 from app.core.vector.weaviate_service import WeaviateService
 from app.util.singleton_meta import SingletonMeta
 from weaviate import WeaviateClient
@@ -109,7 +99,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
                         client, ml_job_id, project_id, sdoc_ids, sdocs_and_tags
                     )
 
-        dtos = self._deduplicate_document_classifications(dto_iter, multi_class)
+            dtos = self._deduplicate_document_classifications(dto_iter, multi_class)
 
         # Insert all generated tag recommendation DTOs into the database at once.
         crud_document_tag_recommendation_link.create_multi(db=db, create_dtos=dtos)
@@ -162,7 +152,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
                     client=client,
                     project_id=proj_id,
                     sdoc_id=sdoc_id,
-                    k=top_k,
+                    k=1,
                     threshold=0.0,
                 )
                 nearest.extend(
@@ -257,26 +247,25 @@ class DocumentClassificationService(metaclass=SingletonMeta):
             )
         sdoc_ids_to_classify = [sdoc.id for sdoc in sdocs_without_tags]
 
-        # TODO: Fix this
-        # nns = self.sim.knn_documents(project_id, sdoc_ids_to_classify, sdoc_ids, k=5)
-        nns = []
+        nns: List[List[SimSearchResult[DocumentObjectIdentifier]]] = []
 
         for sdoc_id in sdoc_ids_to_classify:
             # 1. Find k-nearest neighbors for the current sdoc_id
-            crud_document_embedding.search_near_sdoc(
+            result = crud_document_embedding.search_near_sdoc(
                 client=client,
                 project_id=project_id,
                 sdoc_id=sdoc_id,
                 k=5,
-                threshold=0.5,
+                threshold=0.0,
                 sdoc_ids=list(sdoc_ids),
             )
+            nns.append(result)
 
         for nn, sdoc in zip(nns, sdoc_ids_to_classify):
             pairs = [
                 (item.id, items.score)
                 for items in nn
-                for item in sdocs_and_tags[items.sdoc_id]
+                for item in sdocs_and_tags[items.id.sdoc_id]
             ]
             scores = defaultdict[int, list[float]](list)
             for id, score in pairs:
