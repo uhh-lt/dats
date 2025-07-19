@@ -4,6 +4,7 @@ from uuid import uuid4
 from app.core.analysis.duplicate_finder.duplicate_finder import find_duplicates
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud.crud_base import NoSuchElementError
+from app.core.data.crud.folder import crud_folder
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.project_metadata import crud_project_meta
@@ -12,6 +13,7 @@ from app.core.data.crud.user import crud_user
 from app.core.data.dto.aspect import AspectRead
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
+from app.core.data.dto.folder import FolderTreeRead
 from app.core.data.dto.memo import (
     AttachedObjectType,
     MemoCreateIntern,
@@ -394,3 +396,30 @@ def find_duplicate_text_sdocs(
 ) -> List[List[int]]:
     authz_user.assert_in_project(proj_id)
     return find_duplicates(project_id=proj_id, max_different_words=max_different_words)
+
+
+@router.get(
+    "/tree/{project_id}",
+    response_model=List[FolderTreeRead],
+    summary="Returns the folder tree of the project with the given ID",
+)
+def get_folder_tree(
+    project_id: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
+) -> List[FolderTreeRead]:
+    authz_user.assert_in_project(project_id)
+
+    folders = crud_folder.read_by_project(db=db, proj_id=project_id)
+
+    folder_map = {
+        folder.id: FolderTreeRead.model_validate(folder) for folder in folders
+    }
+
+    for folder in folders:
+        if folder.parent_id is not None:
+            parent_tree = folder_map.get(folder.parent_id)
+            if parent_tree:
+                parent_tree.children.append(folder_map[folder.id])
+
+    return [folder_map[folder.id] for folder in folders if folder.parent_id is None]

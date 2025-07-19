@@ -28,6 +28,10 @@ class SourceDocumentBaseDTO(BaseModel):
     doctype: DocType = Field(description="DOCTYPE of the SourceDocument")
     status: SDocStatus = Field(description="Status of the SourceDocument")
     project_id: int = Field(description="Project the SourceDocument belongs to")
+    # TODO: should it really be optional? only like that because its messing up the create crud
+    folder_id: Optional[int] = Field(
+        description="ID of the Folder this SourceDocument belongs to", default=None
+    )
 
 
 # Properties for updating
