@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
     from app.core.data.orm.code import CodeORM
     from app.core.data.orm.document_tag import DocumentTagORM
+    from app.core.data.orm.folder import FolderORM
     from app.core.data.orm.memo import MemoORM
     from app.core.data.orm.object_handle import ObjectHandleORM
     from app.core.data.orm.preprocessing_job import PreprocessingJobORM
@@ -32,6 +33,15 @@ class ProjectORM(ORMBase):
     )
     updated: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.current_timestamp()
+    )
+
+    # TODO list of folders
+    folders: Mapped[List["FolderORM"]] = relationship(
+        "FolderORM",
+        back_populates="project",
+        foreign_keys="folder.c.project_id",
+        cascade="all, delete",
+        passive_deletes=True,
     )
 
     object_handle: Mapped["ObjectHandleORM"] = relationship(

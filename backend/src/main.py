@@ -46,6 +46,7 @@ from api.endpoints import (
     document_tag,
     document_tag_recommendation,
     export,
+    folder,
     general,
     import_,
     llm,
@@ -281,6 +282,7 @@ app.include_router(import_.router)
 app.include_router(ml.router)
 app.include_router(chat.router)
 app.include_router(perspectives.router)
+app.include_router(folder.router)
 
 
 def main() -> None:

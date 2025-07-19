@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from app.core.data.orm.document_tag_recommendation import (
         DocumentTagRecommendationLinkORM,
     )
+    from app.core.data.orm.folder import FolderORM
     from app.core.data.orm.object_handle import ObjectHandleORM
     from app.core.data.orm.project import ProjectORM
     from app.core.data.orm.source_document_data import SourceDocumentDataORM
@@ -123,6 +124,17 @@ class SourceDocumentORM(ORMBase):
         secondary="documentcluster",
         back_populates="source_documents",
         overlaps="document_clusters,cluster,source_document",
+    )
+
+
+    folder_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("folder.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    folder: Mapped["FolderORM"] = relationship(
+        "FolderORM", back_populates="source_documents", passive_deletes=True
     )
 
     __table_args__ = (

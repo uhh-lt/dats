@@ -11,6 +11,7 @@ from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.document_tag_recommendation import (
     crud_document_tag_recommendation_link,
 )
+from app.core.data.crud.folder import crud_folder
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.object_handle import crud_object_handle
 from app.core.data.crud.preprocessing_job import crud_prepro_job
@@ -43,6 +44,7 @@ class Crud(Enum):
     DOCUMENT_ASPECT = crud_document_aspect
     DOCUMENT_TAG = crud_document_tag
     DOCUMENT_TAG_RECOMMENDATION = crud_document_tag_recommendation_link
+    FOLDER = crud_folder
     MEMO = crud_memo
     OBJECT_HANDLE = crud_object_handle
     PREPROCESSING_JOB_PAYLOAD = crud_prepro_job_payload
