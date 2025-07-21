@@ -47,10 +47,27 @@ class FileNotFoundInRepositoryError(Exception):
 
 
 class FileAlreadyExistsInRepositoryError(Exception):
-    def __init__(self, proj_id: int, filename: Union[str, Path], dst: str):
+    def __init__(self, proj_id: int, filename: Union[str, Path]):
         super().__init__(
             f"Cannot store the file '{filename}' of Project {proj_id} because there is a file with the "
-            f"same name in the DATS Repository at {dst}"
+            f"same name in the DATS Repository associated with a SourceDocument!"
+        )
+
+
+class FileDeletionNotAllowedError(Exception):
+    def __init__(
+        self, proj_id: int, sdoc_id: int, filename: Union[str, Path], dst: str
+    ):
+        super().__init__(
+            f"Cannot remove the file '{filename}' of Project {proj_id} because it is associated"
+            f" with SourceDocument {sdoc_id}!"
+        )
+
+
+class FileRemovalError(Exception):
+    def __init__(self, proj_id: int, filename: Union[str, Path], dst: str):
+        super().__init__(
+            f"Cannot remove the file '{filename}' of Project {proj_id} at {dst}!"
         )
 
 
@@ -308,12 +325,19 @@ class RepoService(metaclass=SingletonMeta):
             proj_id=proj_id, filename=filename
         )
         if dst_path.exists():
-            logger.warning(
-                "Cannot store uploaded file because a file with the same name already exists!"
-            )
-            raise FileAlreadyExistsInRepositoryError(
-                proj_id=proj_id, filename=filename, dst=str(dst_path)
-            )
+            try:
+                self._safe_remove_file_from_project_repo(
+                    proj_id=proj_id, filename=filename
+                )
+            except FileDeletionNotAllowedError:
+                logger.warning(
+                    f"File {filename} already exists in Project {proj_id} and a SourceDocument with that filename"
+                    " exists in the DB. Cannot overwrite it!"
+                )
+                raise FileAlreadyExistsInRepositoryError(
+                    proj_id=proj_id, filename=filename
+                )
+
         elif not dst_path.parent.exists():
             dst_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -517,6 +541,54 @@ class RepoService(metaclass=SingletonMeta):
         # move the file
         src_file.rename(in_project_dst)
         return in_project_dst
+
+    def _safe_remove_file_from_project_repo(
+        self, proj_id: int, filename: Union[str, Path]
+    ) -> None:
+        # We need to check whether an SDoc with that filename exists in the DB. If not, we can overwrite it.
+        from app.core.data.crud.source_document import crud_sdoc
+        from app.core.db.sql_service import SQLService
+
+        dst_path = self._get_dst_path_for_project_sdoc_file(
+            proj_id=proj_id, filename=filename
+        )
+
+        if not dst_path.exists():
+            logger.warning(
+                f"File {filename} does not exist in Project {proj_id} at {dst_path}. Nothing to remove!"
+            )
+            return
+
+        with SQLService().db_session() as db:
+            try:
+                sdoc = crud_sdoc.read_by_filename(
+                    db=db,
+                    proj_id=proj_id,
+                    filename=filename.name if isinstance(filename, Path) else filename,
+                    only_finished=False,
+                )
+                if sdoc is None:
+                    dst_path.unlink()
+                else:
+                    logger.error(
+                        f"File {filename} is associated with a SourceDocument in Project {proj_id} and cannot be removed!"
+                    )
+                    raise FileDeletionNotAllowedError(
+                        proj_id=proj_id,
+                        sdoc_id=sdoc.id,
+                        filename=filename,
+                        dst=str(dst_path),
+                    )
+            except Exception:
+                pass
+
+        if dst_path.exists():
+            logger.error(
+                f"Failed to remove file {filename} in Project {proj_id} at {dst_path}!"
+            )
+            raise FileRemovalError(
+                proj_id=proj_id, filename=filename, dst=str(dst_path)
+            )
 
     def store_uploaded_file(
         self, uploaded_file: UploadFile, filepath: Path, fn: Path | str

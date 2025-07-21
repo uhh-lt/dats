@@ -2,7 +2,11 @@ import math
 from pathlib import Path
 
 import fitz
-from app.core.data.repo.repo_service import RepoService
+from app.core.data.repo.repo_service import (
+    FileAlreadyExistsInRepositoryError,
+    FileDeletionNotAllowedError,
+    RepoService,
+)
 from app.core.data.repo.utils import base64_to_image
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
@@ -19,7 +23,9 @@ rms = RayModelService()
 
 
 def __split_large_pdf_into_chunks(
-    input_doc: Path, max_pages_per_chunk: int = 5
+    input_doc: Path,
+    proj_id: int,
+    max_pages_per_chunk: int = 5,
 ) -> list[Path] | None:
     try:
         src = fitz.open(str(input_doc))  # type: ignore
@@ -58,6 +64,20 @@ def __split_large_pdf_into_chunks(
             new_pdf = fitz.open()  # type: ignore
             new_pdf.insert_pdf(src, from_page=start_page - 1, to_page=end_page - 1)
 
+            # If the output file already exists, we try to remove it from the project repo
+            if output_fn.exists():
+                try:
+                    repo._safe_remove_file_from_project_repo(
+                        proj_id=proj_id, filename=output_fn.name
+                    )
+                except FileDeletionNotAllowedError:
+                    logger.warning(
+                        f"File {output_fn.name} already exists in Project {proj_id} and a SourceDocument with that filename"
+                        " exists in the DB. Cannot overwrite it!"
+                    )
+                    raise FileAlreadyExistsInRepositoryError(
+                        proj_id=proj_id, filename=output_fn.name
+                    )
             # Save the chunk to disk
             new_pdf.save(str(output_fn))
             new_pdf.close()
@@ -123,7 +143,9 @@ def extract_content_in_html_from_pdf_docs(
 
     # Split large PDFs into chunks if necessary
     chunks = __split_large_pdf_into_chunks(
-        filepath, max_pages_per_chunk=cc.preprocessing.max_pages_per_pdf_chunk
+        input_doc=filepath,
+        proj_id=cargo.ppj_payload.project_id,
+        max_pages_per_chunk=cc.preprocessing.max_pages_per_pdf_chunk,
     )
 
     if chunks:
