@@ -126,7 +126,6 @@ class SourceDocumentORM(ORMBase):
         overlaps="document_clusters,cluster,source_document",
     )
 
-
     folder_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("folder.id", ondelete="CASCADE"),
