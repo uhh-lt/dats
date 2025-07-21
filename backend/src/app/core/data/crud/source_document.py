@@ -6,8 +6,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
-from app.core.data.doc_type import DocType
 from app.core.data.crud.folder import crud_folder
+from app.core.data.doc_type import DocType
 from app.core.data.dto.folder import FolderCreate, FolderType
 from app.core.data.dto.source_document import (
     SDocStatus,
