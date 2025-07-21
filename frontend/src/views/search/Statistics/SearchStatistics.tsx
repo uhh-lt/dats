@@ -83,7 +83,9 @@ function SearchStatistics({
           <Tabs value={tab} onChange={handleTabChange} variant="scrollable">
             <Tab label="Keywords" value="keywords" />
             <Tab label="Tags" value="tags" />
-            {projectCodes.data?.map((code) => <Tab key={code.id} label={code.name} value={`${code.id}`} />)}
+            {projectCodes.data?.map((code) => (
+              <Tab key={code.id} label={code.name} value={`${code.id}`} />
+            ))}
           </Tabs>
         </Stack>
 
