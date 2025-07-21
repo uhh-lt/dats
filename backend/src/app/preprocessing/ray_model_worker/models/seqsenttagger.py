@@ -202,7 +202,9 @@ def collate_fn(batch: List[Tuple[torch.Tensor, List[int]]]):
         == len(new_padded_embeddings)
         == len(new_padded_labels)
         == len(new_mask)
-    ), f"Lengths must match: {len(padded_embeddings)}, {len(padded_labels)}, {len(mask)}, {len(new_padded_embeddings)}, {len(new_padded_labels)}, {len(new_mask)}"
+    ), (
+        f"Lengths must match: {len(padded_embeddings)}, {len(padded_labels)}, {len(mask)}, {len(new_padded_embeddings)}, {len(new_padded_labels)}, {len(new_mask)}"
+    )
 
     return (
         torch.tensor(new_padded_embeddings),
