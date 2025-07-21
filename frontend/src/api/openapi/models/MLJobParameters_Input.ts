@@ -7,6 +7,7 @@ import type { DocTagRecommendationParams } from "./DocTagRecommendationParams";
 import type { DocumentEmbeddingParams } from "./DocumentEmbeddingParams";
 import type { MLJobType } from "./MLJobType";
 import type { QuotationAttributionParams } from "./QuotationAttributionParams";
+import type { SentenceEmbeddingParams } from "./SentenceEmbeddingParams";
 export type MLJobParameters_Input = {
   /**
    * The type of the MLJob
@@ -20,6 +21,12 @@ export type MLJobParameters_Input = {
    * Specific parameters for the MLJob w.r.t it's type
    */
   specific_ml_job_parameters:
-    | (QuotationAttributionParams | DocTagRecommendationParams | CoreferenceResolutionParams | DocumentEmbeddingParams)
+    | (
+        | QuotationAttributionParams
+        | DocTagRecommendationParams
+        | CoreferenceResolutionParams
+        | DocumentEmbeddingParams
+        | SentenceEmbeddingParams
+      )
     | null;
 };
