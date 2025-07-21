@@ -1,7 +1,7 @@
 """Folder Management System
 
 Revision ID: b248f2f9a3ed
-Revises: 42c759c92f5b
+Revises: 114328a16f17
 Create Date: 2025-07-19 18:49:37.505003
 
 """
@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "b248f2f9a3ed"
-down_revision: Union[str, None] = "42c759c92f5b"
+down_revision: Union[str, None] = "114328a16f17"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
