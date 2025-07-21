@@ -246,12 +246,12 @@ class CRUDBase(Generic[ID, COLLECTION]):
         for obj in result.objects:
             obj_id = self.object_identifier.model_validate(obj.properties)
             vector = obj.vector["default"]
-            assert isinstance(
-                vector, list
-            ), f"Expected embedding to be a list, got {type(vector)}"
-            assert isinstance(
-                vector[0], float
-            ), "Expected all elements of embedding to be float"
+            assert isinstance(vector, list), (
+                f"Expected embedding to be a list, got {type(vector)}"
+            )
+            assert isinstance(vector[0], float), (
+                "Expected all elements of embedding to be float"
+            )
             embeddings.append(
                 EmbeddingSearchResult[ID](
                     uuid=obj.uuid,
