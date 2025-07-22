@@ -767,6 +767,40 @@
         }
       }
     },
+    "/project/tree/{project_id}": {
+      "get": {
+        "tags": ["project"],
+        "summary": "Returns the folder tree of the project with the given ID",
+        "operationId": "get_folder_tree",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/FolderTreeRead" },
+                  "title": "Response Project-Get Folder Tree"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/sdoc/{sdoc_id}": {
       "get": {
         "tags": ["sourceDocument"],
@@ -5963,6 +5997,141 @@
           }
         }
       }
+    },
+    "/folder/{folder_id}": {
+      "get": {
+        "tags": ["folder"],
+        "summary": "Get Folder By Id",
+        "operationId": "get_folder_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "folder_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Folder Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FolderRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "put": {
+        "tags": ["folder"],
+        "summary": "Update Folder",
+        "operationId": "update_folder",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "folder_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Folder Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FolderUpdate" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FolderRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["folder"],
+        "summary": "Delete Folder",
+        "operationId": "delete_folder",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "folder_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Folder Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FolderRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/folder/tree/{folder_id}": {
+      "get": {
+        "tags": ["folder"],
+        "summary": "Get Tree By Id",
+        "operationId": "get_tree_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "folder_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Folder Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FolderTreeRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/folder/": {
+      "post": {
+        "tags": ["folder"],
+        "summary": "Create Folder",
+        "operationId": "create_folder",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FolderCreate" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FolderRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/folder/subfolders/{folder_id}": {
+      "get": {
+        "tags": ["folder"],
+        "summary": "Get Subfolders",
+        "operationId": "get_subfolders",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "folder_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Folder Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/FolderRead" },
+                  "title": "Response Folder-Get Subfolders"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -8355,6 +8524,121 @@
         "required": ["id", "items", "logic_operator"],
         "title": "Filter[WordFrequencyColumns]"
       },
+      "FolderCreate": {
+        "properties": {
+          "name": { "type": "string", "maxLength": 231, "title": "Name", "description": "Name of the folder" },
+          "folder_type": {
+            "$ref": "#/components/schemas/FolderType",
+            "description": "Type of the folder (normal, sdoc_folder)"
+          },
+          "parent_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Parent Id",
+            "description": "ID of the parent folder (nullable)"
+          },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "ID of the project this folder belongs to (nullable)"
+          }
+        },
+        "type": "object",
+        "required": ["name", "folder_type", "project_id"],
+        "title": "FolderCreate"
+      },
+      "FolderRead": {
+        "properties": {
+          "name": { "type": "string", "maxLength": 231, "title": "Name", "description": "Name of the folder" },
+          "folder_type": {
+            "$ref": "#/components/schemas/FolderType",
+            "description": "Type of the folder (normal, sdoc_folder)"
+          },
+          "parent_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Parent Id",
+            "description": "ID of the parent folder (nullable)"
+          },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "ID of the project this folder belongs to (nullable)"
+          },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the Folder" },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Creation timestamp of the folder"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated",
+            "description": "Update timestamp of the folder"
+          }
+        },
+        "type": "object",
+        "required": ["name", "folder_type", "project_id", "id", "created", "updated"],
+        "title": "FolderRead"
+      },
+      "FolderTreeRead": {
+        "properties": {
+          "name": { "type": "string", "maxLength": 231, "title": "Name", "description": "Name of the folder" },
+          "folder_type": {
+            "$ref": "#/components/schemas/FolderType",
+            "description": "Type of the folder (normal, sdoc_folder)"
+          },
+          "parent_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Parent Id",
+            "description": "ID of the parent folder (nullable)"
+          },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "ID of the project this folder belongs to (nullable)"
+          },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the Folder" },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Creation timestamp of the folder"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated",
+            "description": "Update timestamp of the folder"
+          },
+          "children": {
+            "items": { "$ref": "#/components/schemas/FolderTreeRead" },
+            "type": "array",
+            "title": "Children",
+            "description": "Children folders"
+          }
+        },
+        "type": "object",
+        "required": ["name", "folder_type", "project_id", "id", "created", "updated", "children"],
+        "title": "FolderTreeRead"
+      },
+      "FolderType": { "type": "string", "enum": ["normal", "sdoc_folder"], "title": "FolderType" },
+      "FolderUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Name",
+            "description": "Updated name of the folder"
+          },
+          "parent_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Parent Id",
+            "description": "Updated parent folder ID"
+          }
+        },
+        "type": "object",
+        "title": "FolderUpdate"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": { "items": { "$ref": "#/components/schemas/ValidationError" }, "type": "array", "title": "Detail" }
@@ -10500,11 +10784,16 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated",
-            "description": "Updated timestamp of the Memo"
+            "description": "Updated timestamp of the SourceDocument"
+          },
+          "folder_id": {
+            "type": "integer",
+            "title": "Folder Id",
+            "description": "ID of the Folder this SourceDocument belongs to"
           }
         },
         "type": "object",
-        "required": ["filename", "doctype", "status", "project_id", "id", "created", "updated"],
+        "required": ["filename", "doctype", "status", "project_id", "id", "created", "updated", "folder_id"],
         "title": "SourceDocumentRead"
       },
       "SourceDocumentUpdate": {
@@ -10513,10 +10802,15 @@
             "type": "string",
             "title": "Name",
             "description": "User-defined name of the document (default is the filename)"
+          },
+          "folder_id": {
+            "type": "integer",
+            "title": "Folder Id",
+            "description": "ID of the Folder this SourceDocument belongs to"
           }
         },
         "type": "object",
-        "required": ["name"],
+        "required": ["name", "folder_id"],
         "title": "SourceDocumentUpdate"
       },
       "SpanAnnoTimelineAnalysisFilter-Input": {
