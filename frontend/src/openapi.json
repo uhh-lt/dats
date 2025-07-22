@@ -10799,18 +10799,17 @@
       "SourceDocumentUpdate": {
         "properties": {
           "name": {
-            "type": "string",
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
             "title": "Name",
             "description": "User-defined name of the document (default is the filename)"
           },
           "folder_id": {
-            "type": "integer",
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
             "title": "Folder Id",
             "description": "ID of the Folder this SourceDocument belongs to"
           }
         },
         "type": "object",
-        "required": ["name", "folder_id"],
         "title": "SourceDocumentUpdate"
       },
       "SpanAnnoTimelineAnalysisFilter-Input": {
