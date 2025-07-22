@@ -666,6 +666,7 @@ class RepoService(metaclass=SingletonMeta):
             doctype=doctype,
             project_id=proj_id,
             status=SDocStatus.unfinished_or_erroneous,
+            folder_id=None,  # Create folder automatically
             **extra_data,
         )
         return dst_path, create_dto

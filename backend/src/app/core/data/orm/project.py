@@ -35,15 +35,6 @@ class ProjectORM(ORMBase):
         DateTime, server_default=func.now(), onupdate=func.current_timestamp()
     )
 
-    # TODO list of folders
-    folders: Mapped[List["FolderORM"]] = relationship(
-        "FolderORM",
-        back_populates="project",
-        foreign_keys="folder.c.project_id",
-        cascade="all, delete",
-        passive_deletes=True,
-    )
-
     object_handle: Mapped["ObjectHandleORM"] = relationship(
         "ObjectHandleORM", uselist=False, back_populates="project", passive_deletes=True
     )
@@ -55,6 +46,12 @@ class ProjectORM(ORMBase):
 
     source_documents: Mapped[List["SourceDocumentORM"]] = relationship(
         "SourceDocumentORM", back_populates="project", passive_deletes=True
+    )
+
+    folders: Mapped[List["FolderORM"]] = relationship(
+        "FolderORM",
+        back_populates="project",
+        passive_deletes=True,
     )
 
     memos: Mapped[List["MemoORM"]] = relationship(

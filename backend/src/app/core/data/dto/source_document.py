@@ -28,10 +28,6 @@ class SourceDocumentBaseDTO(BaseModel):
     doctype: DocType = Field(description="DOCTYPE of the SourceDocument")
     status: SDocStatus = Field(description="Status of the SourceDocument")
     project_id: int = Field(description="Project the SourceDocument belongs to")
-    # TODO: should it really be optional? only like that because its messing up the create crud
-    folder_id: Optional[int] = Field(
-        description="ID of the Folder this SourceDocument belongs to", default=None
-    )
 
 
 # Properties for updating
@@ -39,15 +35,25 @@ class SourceDocumentUpdate(BaseModel, UpdateDTOBase):
     name: str = Field(
         description="User-defined name of the document (default is the filename)"
     )
+    folder_id: int = Field(
+        description="ID of the Folder this SourceDocument belongs to"
+    )
 
 
 # Properties for reading (as in ORM)
 class SourceDocumentRead(SourceDocumentBaseDTO):
     id: int = Field(description="ID of the SourceDocument")
     created: datetime = Field(description="The created timestamp of the SourceDocument")
-    updated: datetime = Field(description="Updated timestamp of the Memo")
+    updated: datetime = Field(description="Updated timestamp of the SourceDocument")
+    folder_id: int = Field(
+        description="ID of the Folder this SourceDocument belongs to"
+    )
+
     model_config = ConfigDict(from_attributes=True)
 
 
 class SourceDocumentCreate(SourceDocumentBaseDTO):
-    pass
+    folder_id: Optional[int] = Field(
+        description="ID of the Folder this SourceDocument belongs to. If not provided, a folder with the filename of the SourceDocument will be created automatically.",
+        default=None,
+    )

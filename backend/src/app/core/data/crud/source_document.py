@@ -16,7 +16,6 @@ from app.core.data.dto.source_document import (
     SourceDocumentUpdate,
 )
 from app.core.data.dto.source_document_data import SourceDocumentDataRead
-from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.document_aspect import DocumentAspectORM
 from app.core.data.orm.document_tag import DocumentTagORM
@@ -45,19 +44,21 @@ class CRUDSourceDocument(
         self, db: Session, *, create_dto: SourceDocumentCreate
     ) -> SourceDocumentORM:
         try:
-            # Create a folder with same name as the document
-            folder_create = FolderCreate(
-                name=create_dto.filename,
-                folder_type=FolderType.SDOC_FOLDER,
-                project_id=create_dto.project_id,
-            )
-            created_folder = crud_folder.create(db=db, create_dto=folder_create)
+            # If folder_id not provided, create a folder with same name as the document
+            if create_dto.folder_id is None:
+                folder_create = FolderCreate(
+                    name=create_dto.filename,
+                    folder_type=FolderType.SDOC_FOLDER,
+                    project_id=create_dto.project_id,
+                )
+                created_folder = crud_folder.create(db=db, create_dto=folder_create)
 
-            # Create the source document with the folder_id
-            sdoc_create_dto = create_dto.model_copy(
-                update={"folder_id": created_folder.id}
-            )
-            dto_obj_data = jsonable_encoder(sdoc_create_dto)
+                # Create the source document with the folder_id
+                create_dto = create_dto.model_copy(
+                    update={"folder_id": created_folder.id}
+                )
+
+            dto_obj_data = jsonable_encoder(create_dto)
             db_obj = self.model(**dto_obj_data)
             db.add(db_obj)
             db.commit()
@@ -345,25 +346,6 @@ class CRUDSourceDocument(
             .all()
         )
         return {row[0]: row[1] for row in rows}
-
-    def update_children(
-        self, db: Session, *, create_dtos: List[SourceDocumentLinkCreate]
-    ) -> None:
-        for create_dto in create_dtos:
-            if (
-                create_dto.parent_source_document_id is None
-                or create_dto.linked_source_document_id is None
-            ):
-                print("Skipping create_dto with None values...")
-                continue  # or handle this case as appropriate
-            parent_sdoc = self.read(db=db, id=create_dto.parent_source_document_id)
-            linked_sdoc = self.read(db=db, id=create_dto.linked_source_document_id)
-
-            # Update the folder of the linked source document
-            linked_sdoc.folder_id = parent_sdoc.folder_id
-            db.add(linked_sdoc)
-
-        db.commit()
 
 
 crud_sdoc = CRUDSourceDocument(SourceDocumentORM)

@@ -62,6 +62,16 @@ class SourceDocumentORM(ORMBase):
         "ProjectORM", back_populates="source_documents"
     )
 
+    folder_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("folder.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    folder: Mapped["FolderORM"] = relationship(
+        "FolderORM", back_populates="source_documents"
+    )
+
     # one to many
     metadata_: Mapped[List["SourceDocumentMetadataORM"]] = relationship(
         "SourceDocumentMetadataORM",
@@ -124,16 +134,6 @@ class SourceDocumentORM(ORMBase):
         secondary="documentcluster",
         back_populates="source_documents",
         overlaps="document_clusters,cluster,source_document",
-    )
-
-    folder_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("folder.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
-    folder: Mapped["FolderORM"] = relationship(
-        "FolderORM", back_populates="source_documents", passive_deletes=True
     )
 
     __table_args__ = (

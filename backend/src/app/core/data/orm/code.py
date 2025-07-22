@@ -66,9 +66,15 @@ class CodeORM(ORMBase):
 
     # hierarchy reference
     parent_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("code.id", ondelete="CASCADE")
+        Integer,
+        ForeignKey("code.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
     )
     parent: Mapped["CodeORM"] = relationship("CodeORM", remote_side=[id])
+    children: Mapped[List["CodeORM"]] = relationship(
+        "CodeORM", back_populates="parent", passive_deletes=True
+    )
 
     __table_args__ = (
         UniqueConstraint(

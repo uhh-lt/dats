@@ -188,6 +188,7 @@ def import_sdocs_to_proj(
             doctype=DocType(sdoc_export.doctype),
             project_id=project_id,
             status=SDocStatus[sdoc_export.status],
+            folder_id=None,  # Create folder automatically
         )
 
         created_sdoc = crud_sdoc.create(db=db, create_dto=sdoc_create)
