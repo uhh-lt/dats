@@ -57,6 +57,7 @@ const useCreateSentenceAnnotation = () => {
         user_id: user.id,
         created: new Date().toISOString(),
         updated: new Date().toISOString(),
+        memo_ids: [],
       };
       queryClient.setQueryData<SentenceAnnotatorResult>(affectedQueryKey, (old) => {
         if (!old) return old;
@@ -130,6 +131,7 @@ const useCreateBulkSentenceAnnotation = () => {
             user_id: user.id,
             created: new Date().toISOString(),
             updated: new Date().toISOString(),
+            memo_ids: [],
           };
           for (let sentenceId = data.sentence_id_start; sentenceId <= data.sentence_id_end; sentenceId++) {
             if (!sentAnnos[sentenceId]) {

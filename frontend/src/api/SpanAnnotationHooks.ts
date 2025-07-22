@@ -78,6 +78,7 @@ const useCreateSpanAnnotation = () => {
         created: "",
         updated: "",
         group_ids: [],
+        memo_ids: [],
       };
       queryClient.setQueryData<SpanAnnotationRead[]>(affectedQueryKey, (old) => {
         // check if there is already a fake annotation, if so, replace it with the new one

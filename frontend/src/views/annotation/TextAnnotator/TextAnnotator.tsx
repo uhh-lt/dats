@@ -168,24 +168,16 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
 
     // Add a fake annotation
     queryClient.setQueryData<SpanAnnotationRead[]>(affectedQueryKey, (old) => {
-      const spanAnnotation = {
+      const spanAnnotation: SpanAnnotationRead = {
         ...requestBody,
         id: FAKE_ANNOTATION_ID,
         text: requestBody.span_text,
-        code: {
-          name: "",
-          color: "",
-          description: "",
-          id: requestBody.code_id,
-          project_id: 0,
-          created: "",
-          updated: "",
-          is_system: false,
-        },
+        code_id: requestBody.code_id,
         created: "",
         updated: "",
         user_id: 0,
         group_ids: [],
+        memo_ids: [],
       };
       return old === undefined ? [spanAnnotation] : [...old, spanAnnotation];
     });
