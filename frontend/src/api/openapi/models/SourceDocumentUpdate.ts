@@ -7,4 +7,8 @@ export type SourceDocumentUpdate = {
    * User-defined name of the document (default is the filename)
    */
   name: string;
+  /**
+   * ID of the Folder this SourceDocument belongs to
+   */
+  folder_id: number;
 };

@@ -34,7 +34,11 @@ export type SourceDocumentRead = {
    */
   created: string;
   /**
-   * Updated timestamp of the Memo
+   * Updated timestamp of the SourceDocument
    */
   updated: string;
+  /**
+   * ID of the Folder this SourceDocument belongs to
+   */
+  folder_id: number;
 };

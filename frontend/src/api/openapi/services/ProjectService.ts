@@ -6,6 +6,7 @@ import type { AspectRead } from "../models/AspectRead";
 import type { Body_project_upload_project_sdoc } from "../models/Body_project_upload_project_sdoc";
 import type { CodeRead } from "../models/CodeRead";
 import type { DocumentTagRead } from "../models/DocumentTagRead";
+import type { FolderTreeRead } from "../models/FolderTreeRead";
 import type { MemoRead } from "../models/MemoRead";
 import type { PreprocessingJobRead } from "../models/PreprocessingJobRead";
 import type { ProjectAddUser } from "../models/ProjectAddUser";
@@ -347,6 +348,23 @@ export class ProjectService {
       },
       query: {
         max_different_words: maxDifferentWords,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the folder tree of the project with the given ID
+   * @returns FolderTreeRead Successful Response
+   * @throws ApiError
+   */
+  public static getFolderTree({ projectId }: { projectId: number }): CancelablePromise<Array<FolderTreeRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/project/tree/{project_id}",
+      path: {
+        project_id: projectId,
       },
       errors: {
         422: `Validation Error`,
