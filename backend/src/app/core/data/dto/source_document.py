@@ -32,11 +32,12 @@ class SourceDocumentBaseDTO(BaseModel):
 
 # Properties for updating
 class SourceDocumentUpdate(BaseModel, UpdateDTOBase):
-    name: str = Field(
-        description="User-defined name of the document (default is the filename)"
+    name: Optional[str] = Field(
+        description="User-defined name of the document (default is the filename)",
+        default=None,
     )
-    folder_id: int = Field(
-        description="ID of the Folder this SourceDocument belongs to"
+    folder_id: Optional[int] = Field(
+        description="ID of the Folder this SourceDocument belongs to", default=None
     )
 
 
