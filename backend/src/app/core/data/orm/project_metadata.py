@@ -22,6 +22,7 @@ class ProjectMetadataORM(ORMBase):
     sdoc_metadata: Mapped[List["SourceDocumentMetadataORM"]] = relationship(
         "SourceDocumentMetadataORM",
         back_populates="project_metadata",
+        cascade="all, delete-orphan",
         passive_deletes=True,
     )
 

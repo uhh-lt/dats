@@ -32,6 +32,7 @@ class BBoxAnnotationORM(ORMBase):
         "ObjectHandleORM",
         uselist=False,
         back_populates="bbox_annotation",
+        cascade="all, delete-orphan",
         passive_deletes=True,
     )
 

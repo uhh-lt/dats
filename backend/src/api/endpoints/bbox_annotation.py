@@ -119,8 +119,11 @@ def delete_by_id(
 ) -> BBoxAnnotationRead:
     authz_user.assert_in_same_project_as(Crud.BBOX_ANNOTATION, bbox_id)
 
-    db_obj = crud_bbox_anno.remove(db=db, id=bbox_id)
-    return BBoxAnnotationRead.model_validate(db_obj)
+    db_obj = crud_bbox_anno.read(db=db, id=bbox_id)
+    bbox_read = BBoxAnnotationRead.model_validate(db_obj)
+
+    crud_bbox_anno.remove(db=db, id=bbox_id)
+    return bbox_read
 
 
 @router.delete(

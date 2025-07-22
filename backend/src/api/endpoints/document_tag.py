@@ -220,8 +220,11 @@ def delete_by_id(
 ) -> DocumentTagRead:
     authz_user.assert_in_same_project_as(Crud.DOCUMENT_TAG, tag_id)
 
-    db_obj = crud_document_tag.remove(db=db, id=tag_id)
-    return DocumentTagRead.model_validate(db_obj)
+    db_obj = crud_document_tag.read(db=db, id=tag_id)
+    tag_read = DocumentTagRead.model_validate(db_obj)
+
+    crud_document_tag.remove(db=db, id=tag_id)
+    return tag_read
 
 
 @router.get(

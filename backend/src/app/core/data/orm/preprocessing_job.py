@@ -25,7 +25,10 @@ class PreprocessingJobORM(ORMBase):
 
     # one to many
     payloads: Mapped[List["PreprocessingJobPayloadORM"]] = relationship(
-        "PreprocessingJobPayloadORM", back_populates="prepro_job", passive_deletes=True
+        "PreprocessingJobPayloadORM",
+        back_populates="prepro_job",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     # many to one

@@ -30,6 +30,7 @@ class SentenceAnnotationORM(ORMBase):
         "ObjectHandleORM",
         uselist=False,
         back_populates="sentence_annotation",
+        cascade="all, delete-orphan",
         passive_deletes=True,
     )
 

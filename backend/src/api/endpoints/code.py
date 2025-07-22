@@ -78,5 +78,8 @@ def delete_by_id(
 ) -> CodeRead:
     authz_user.assert_in_same_project_as(Crud.CODE, code_id)
 
-    db_obj = crud_code.remove(db=db, id=code_id)
-    return CodeRead.model_validate(db_obj)
+    db_obj = crud_code.read(db=db, id=code_id)
+    code_read = CodeRead.model_validate(db_obj)
+
+    crud_code.remove(db=db, id=code_id)
+    return code_read

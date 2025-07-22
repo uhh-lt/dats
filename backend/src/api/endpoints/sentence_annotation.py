@@ -155,8 +155,11 @@ def delete_by_id(
 ) -> SentenceAnnotationRead:
     authz_user.assert_in_same_project_as(Crud.SENTENCE_ANNOTATION, sentence_anno_id)
 
-    db_obj = crud_sentence_anno.remove(db=db, id=sentence_anno_id)
-    return SentenceAnnotationRead.model_validate(db_obj)
+    db_obj = crud_sentence_anno.read(db=db, id=sentence_anno_id)
+    sentence_anno_read = SentenceAnnotationRead.model_validate(db_obj)
+
+    crud_sentence_anno.remove(db=db, id=sentence_anno_id)
+    return sentence_anno_read
 
 
 @router.delete(

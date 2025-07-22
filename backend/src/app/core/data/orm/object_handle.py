@@ -26,6 +26,7 @@ class ObjectHandleORM(ORMBase):
     attached_memos: Mapped[List["MemoORM"]] = relationship(
         "MemoORM",
         back_populates="attached_to",
+        cascade="all, delete-orphan",
         passive_deletes=True,
         foreign_keys="memo.c.attached_to_id",
     )

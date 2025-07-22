@@ -34,6 +34,7 @@ class SpanAnnotationORM(ORMBase):
         "ObjectHandleORM",
         uselist=False,
         back_populates="span_annotation",
+        cascade="all, delete-orphan",
         passive_deletes=True,
     )
 

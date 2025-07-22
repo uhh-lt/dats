@@ -32,6 +32,7 @@ class DocumentTagORM(ORMBase):
         "ObjectHandleORM",
         uselist=False,
         back_populates="document_tag",
+        cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
@@ -52,6 +53,7 @@ class DocumentTagORM(ORMBase):
     ] = relationship(
         "DocumentTagRecommendationLinkORM",
         back_populates="predicted_tag",
+        cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
@@ -72,7 +74,10 @@ class DocumentTagORM(ORMBase):
     )
     parent: Mapped["DocumentTagORM"] = relationship("DocumentTagORM", remote_side=[id])
     children: Mapped[List["DocumentTagORM"]] = relationship(
-        "DocumentTagORM", back_populates="parent", passive_deletes=True
+        "DocumentTagORM",
+        back_populates="parent",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     __table_args__ = (

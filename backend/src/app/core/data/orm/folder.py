@@ -50,7 +50,10 @@ class FolderORM(ORMBase):
 
     # one to many
     source_documents: Mapped[List["SourceDocumentORM"]] = relationship(
-        "SourceDocumentORM", back_populates="folder", passive_deletes=True
+        "SourceDocumentORM",
+        back_populates="folder",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     # hierarchy reference
@@ -64,7 +67,10 @@ class FolderORM(ORMBase):
         "FolderORM", remote_side=[id], back_populates="children"
     )
     children: Mapped[List["FolderORM"]] = relationship(
-        "FolderORM", back_populates="parent", passive_deletes=True
+        "FolderORM",
+        back_populates="parent",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     __table_args__ = (

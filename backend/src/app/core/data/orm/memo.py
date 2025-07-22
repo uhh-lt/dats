@@ -39,6 +39,7 @@ class MemoORM(ORMBase):
         "ObjectHandleORM",
         uselist=False,
         back_populates="memo",
+        cascade="all, delete-orphan",
         passive_deletes=True,
         foreign_keys="objecthandle.c.memo_id",
     )
