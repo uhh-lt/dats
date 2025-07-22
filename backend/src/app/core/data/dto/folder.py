@@ -5,7 +5,6 @@ from typing import List, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.data.dto.dto_base import UpdateDTOBase
-from app.core.data.dto.source_document import SourceDocumentRead
 
 
 class FolderType(str, Enum):
@@ -51,13 +50,8 @@ class FolderRead(FolderBaseDTO):
     model_config = ConfigDict(from_attributes=True)
 
 
-class FolderTreeRead(BaseModel):
-    id: int
-    name: str
-    parent_id: Optional[int]
-    children: List["FolderTreeRead"] = []
-    source_documents: List[SourceDocumentRead] = Field(default_factory=list)
-
+class FolderTreeRead(FolderRead):
+    children: List["FolderTreeRead"] = Field(description="Children folders")
     model_config = ConfigDict(from_attributes=True)
 
 

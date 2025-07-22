@@ -65,9 +65,15 @@ class DocumentTagORM(ORMBase):
 
     # hierarchy reference
     parent_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("documenttag.id", ondelete="CASCADE")
+        Integer,
+        ForeignKey("documenttag.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
     )
     parent: Mapped["DocumentTagORM"] = relationship("DocumentTagORM", remote_side=[id])
+    children: Mapped[List["DocumentTagORM"]] = relationship(
+        "DocumentTagORM", back_populates="parent", passive_deletes=True
+    )
 
     __table_args__ = (
         UniqueConstraint(

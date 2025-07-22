@@ -1,6 +1,5 @@
 from typing import Dict, List
 
-from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import (
@@ -43,8 +42,10 @@ class CRUDSourceDocumentLink(
         sdoc_fn_to_id: Dict[str, int] = {filename: id for filename, id in query2.all()}
 
         resolved_links: List[SourceDocumentLinkORM] = []
+        resolved_folders: List[SourceDocumentORM] = []
         folders_to_be_deleted: List[int] = []
         for link in unresolved_links:
+            # resolve links
             if link.linked_source_document_filename not in sdoc_fn_to_id:
                 continue
             link.linked_source_document_id = sdoc_fn_to_id[
@@ -52,20 +53,17 @@ class CRUDSourceDocumentLink(
             ]
             resolved_links.append(link)
 
-            try:
-                # changing the folder_id of the linked document to the parent document's folder and deleting original folder
-                linked_doc = db.get(SourceDocumentORM, link.linked_source_document_id)
-                parent_doc = db.get(SourceDocumentORM, link.parent_source_document_id)
-                if not linked_doc or not parent_doc:
-                    continue
-                logger.info("----------", linked_doc.folder_id, parent_doc.folder_id)
-                folders_to_be_deleted.append(linked_doc.folder_id)
-                linked_doc.folder_id = parent_doc.folder_id
-            except Exception as e:
-                logger.error(f"Error processing link {link.id}: {e}")
+            # resolve folders: change folder_id of linked document, remove old folder
+            linked_doc = db.get(SourceDocumentORM, link.linked_source_document_id)
+            parent_doc = db.get(SourceDocumentORM, link.parent_source_document_id)
+            if not linked_doc or not parent_doc:
                 continue
+            folders_to_be_deleted.append(linked_doc.folder_id)
+            linked_doc.folder_id = parent_doc.folder_id
+            resolved_folders.append(linked_doc)
 
         db.add_all(resolved_links)
+        db.add_all(resolved_folders)
         db.commit()
         crud_folder.remove_multi(db=db, ids=folders_to_be_deleted)
         return resolved_links

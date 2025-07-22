@@ -36,6 +36,24 @@ class FolderORM(ORMBase):
         DateTime, server_default=func.now(), onupdate=func.current_timestamp()
     )
 
+    # many to one
+    project_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("project.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    project: Mapped["ProjectORM"] = relationship(
+        "ProjectORM",
+        back_populates="folders",
+    )
+
+    # one to many
+    source_documents: Mapped[List["SourceDocumentORM"]] = relationship(
+        "SourceDocumentORM", back_populates="folder", passive_deletes=True
+    )
+
+    # hierarchy reference
     parent_id: Mapped[Optional[int]] = mapped_column(
         Integer,
         ForeignKey("folder.id", ondelete="CASCADE"),
@@ -43,26 +61,10 @@ class FolderORM(ORMBase):
         index=True,
     )
     parent: Mapped[Optional["FolderORM"]] = relationship(
-        "FolderORM", remote_side="FolderORM.id", back_populates="children"
+        "FolderORM", remote_side=[id], back_populates="children"
     )
-
     children: Mapped[List["FolderORM"]] = relationship(
         "FolderORM", back_populates="parent", passive_deletes=True
-    )
-
-    source_documents: Mapped[List["SourceDocumentORM"]] = relationship(
-        "SourceDocumentORM", back_populates="folder", passive_deletes=True
-    )
-
-    project_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("project.id", ondelete="CASCADE"),
-        nullable=True,  # Optional, as it can be a root folder
-        index=True,
-    )
-    project: Mapped["ProjectORM"] = relationship(
-        "ProjectORM",
-        back_populates="folders",
     )
 
     __table_args__ = (
