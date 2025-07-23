@@ -227,9 +227,9 @@ for em in endpoint_modules:
 def main() -> None:
     # read port from config
     port = int(conf.api.port)
-    assert port is not None and isinstance(port, int) and port > 0, (
-        "The API port has to be a positive integer! E.g. 8081"
-    )
+    assert (
+        port is not None and isinstance(port, int) and port > 0
+    ), "The API port has to be a positive integer! E.g. 8081"
 
     is_debug = conf.api.production_mode == "0"
 

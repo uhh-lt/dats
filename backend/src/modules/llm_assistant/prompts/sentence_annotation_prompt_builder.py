@@ -154,9 +154,9 @@ class SentenceAnnotationPromptBuilder(PromptBuilder):
             # select configured number of examples
             if example_ids is None:
                 for code_id, annotations in code_id2sentence_annotations.items():
-                    assert len(annotations) >= sent_anno_conf.few_shot_threshold, (
-                        f"Code {code_id} has less than {sent_anno_conf.few_shot_threshold} annotations!"
-                    )
+                    assert (
+                        len(annotations) >= sent_anno_conf.few_shot_threshold
+                    ), f"Code {code_id} has less than {sent_anno_conf.few_shot_threshold} annotations!"
                     code_id2sentence_annotations[code_id] = random.sample(
                         annotations, sent_anno_conf.few_shot_threshold
                     )

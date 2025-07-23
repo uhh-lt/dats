@@ -162,9 +162,9 @@ class PerspectivesService:
                 train_labels=train_labels,
             ),
         )
-        assert len(embedding_output.embeddings) == len(doc_aspects), (
-            "The number of embeddings does not match the number of documents."
-        )
+        assert len(embedding_output.embeddings) == len(
+            doc_aspects
+        ), "The number of embeddings does not match the number of documents."
 
         # 2. Compute the 2D coordinates
         umap_model_path = self.repo.get_model_dir(
@@ -693,9 +693,9 @@ class PerspectivesService:
         doc_clusters.sort(key=lambda dt: dt.sdoc_id)  # Sort by source document ID
 
         assigned_clusters: List[int] = []
-        assert len(doc_aspects) == len(doc_clusters), (
-            "The number of aspects and cluster assignments does not match."
-        )
+        assert len(doc_aspects) == len(
+            doc_clusters
+        ), "The number of aspects and cluster assignments does not match."
         for da, dt in zip(doc_aspects, doc_clusters):
             if da.sdoc_id != dt.sdoc_id:
                 raise ValueError(
@@ -914,9 +914,9 @@ class PerspectivesService:
                 doc2cluster: Dict[int, DocumentClusterORM] = {
                     dt.sdoc_id: dt for dt in document_clusters
                 }
-                assert len(document_clusters) == len(doc2cluster), (
-                    f"There are duplicate document-cluster assignments in the database for aspect {aspect.id}!"
-                )
+                assert (
+                    len(document_clusters) == len(doc2cluster)
+                ), f"There are duplicate document-cluster assignments in the database for aspect {aspect.id}!"
 
                 # 1. Cluster creation
                 # - Embedd the new cluster
@@ -933,9 +933,9 @@ class PerspectivesService:
                         ],
                     ),
                 )
-                assert len(embedding_output.embeddings) == 1, (
-                    "Expected exactly one embedding output for the new cluster."
-                )
+                assert (
+                    len(embedding_output.embeddings) == 1
+                ), "Expected exactly one embedding output for the new cluster."
 
                 # - Create the new cluster in the database
                 new_cluster = crud_cluster.create(
@@ -966,9 +966,9 @@ class PerspectivesService:
                 )
                 for result in results:
                     doc_cluster = doc2cluster.get(result.id.sdoc_id, None)
-                    assert doc_cluster is not None, (
-                        f"Document {result.id.sdoc_id} does not have a cluster assignment in aspect {aspect.id}."
-                    )
+                    assert (
+                        doc_cluster is not None
+                    ), f"Document {result.id.sdoc_id} does not have a cluster assignment in aspect {aspect.id}."
                     if doc_cluster.is_accepted:
                         # skip documents that are already accepted
                         continue
@@ -1024,9 +1024,9 @@ class PerspectivesService:
             doc2cluster: Dict[int, DocumentClusterORM] = {
                 dt.sdoc_id: dt for dt in document_clusters
             }
-            assert len(document_clusters) == len(doc2cluster), (
-                f"There are duplicate document-cluster assignments in the database for aspect {aspect_id}!"
-            )
+            assert (
+                len(document_clusters) == len(doc2cluster)
+            ), f"There are duplicate document-cluster assignments in the database for aspect {aspect_id}!"
 
             # 1. Cluster creation
             # - Create the new cluster in the database
@@ -1129,9 +1129,9 @@ class PerspectivesService:
                     db=db, aspect_id=cluster.aspect_id, cluster_id=cluster.id
                 )
 
-                assert len(embedding_ids) == len(document_clusters), (
-                    "The number of document aspect embeddings does not match the number of document clusters."
-                )
+                assert (
+                    len(embedding_ids) == len(document_clusters)
+                ), "The number of document aspect embeddings does not match the number of document clusters."
 
                 # 1. Document Assignment
                 # - Compute the similarities of the document embeddings to the remaining cluster embeddings
@@ -1208,9 +1208,9 @@ class PerspectivesService:
                 cluster1 = crud_cluster.read(db=db, id=params.cluster_to_keep)
                 cluster2 = crud_cluster.read(db=db, id=params.cluster_to_merge)
                 aspect = cluster1.aspect
-                assert cluster1.aspect_id == cluster2.aspect_id, (
-                    "Cannot merge clusters from different aspects."
-                )
+                assert (
+                    cluster1.aspect_id == cluster2.aspect_id
+                ), "Cannot merge clusters from different aspects."
 
                 # 1. Merge the clusters (updating the cluster id)
                 self._log_status_step(0)
@@ -1260,9 +1260,9 @@ class PerspectivesService:
                         db=db, aspect_id=cluster.aspect_id, cluster_id=cluster.id
                     )
                 ]
-                assert len(sdoc_ids) > 0, (
-                    "Cannot split a cluster without document aspects."
-                )
+                assert (
+                    len(sdoc_ids) > 0
+                ), "Cannot split a cluster without document aspects."
                 self._log_status_msg(
                     f"Found {len(sdoc_ids)} source documents associated with cluster {params.cluster_id}."
                 )
@@ -1401,9 +1401,9 @@ class PerspectivesService:
             accepted_sdoc_ids = cluster2accepted_docs[cluster.id]
             if len(accepted_sdoc_ids) == 0:
                 # If there are no accepted documents, use the top documents
-                assert cluster.top_docs is not None, (
-                    f"Cluster {cluster.id} has no accepted documents, but top_docs is not None."
-                )
+                assert (
+                    cluster.top_docs is not None
+                ), f"Cluster {cluster.id} has no accepted documents, but top_docs is not None."
                 accepted_sdoc_ids = cluster.top_docs
 
             for sdoc_id in accepted_sdoc_ids:

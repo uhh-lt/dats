@@ -50,9 +50,9 @@ class EmbeddingService(metaclass=SingletonMeta):
     def encode_image(self, sdoc_id: int) -> np.ndarray:
         with self.sqls.db_session() as db:
             sdoc = SourceDocumentRead.model_validate(crud_sdoc.read(db=db, id=sdoc_id))
-            assert sdoc.doctype == DocType.image, (
-                f"SourceDocument with {sdoc_id=} is not an image!"
-            )
+            assert (
+                sdoc.doctype == DocType.image
+            ), f"SourceDocument with {sdoc_id=} is not an image!"
 
         image_fp = self.repo.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
         image = load_image(image_fp)
