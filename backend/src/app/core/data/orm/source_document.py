@@ -43,11 +43,13 @@ class SourceDocumentORM(ORMBase):
         "ObjectHandleORM",
         uselist=False,
         back_populates="source_document",
+        cascade="all, delete-orphan",
         passive_deletes=True,
     )
     data: Mapped["SourceDocumentDataORM"] = relationship(
         "SourceDocumentDataORM",
         uselist=False,
+        cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
@@ -76,16 +78,21 @@ class SourceDocumentORM(ORMBase):
     metadata_: Mapped[List["SourceDocumentMetadataORM"]] = relationship(
         "SourceDocumentMetadataORM",
         back_populates="source_document",
+        cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
     annotation_documents: Mapped[List["AnnotationDocumentORM"]] = relationship(
-        "AnnotationDocumentORM", back_populates="source_document", passive_deletes=True
+        "AnnotationDocumentORM",
+        back_populates="source_document",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     source_document_links: Mapped[List["SourceDocumentLinkORM"]] = relationship(
         "SourceDocumentLinkORM",
         back_populates="parent_source_document",
+        cascade="all, delete-orphan",
         passive_deletes=True,
         foreign_keys="sourcedocumentlink.c.parent_source_document_id",
     )
@@ -93,6 +100,7 @@ class SourceDocumentORM(ORMBase):
     word_frequencies: Mapped[List["WordFrequencyORM"]] = relationship(
         "WordFrequencyORM",
         back_populates="source_document",
+        cascade="all, delete-orphan",
         passive_deletes=True,
     )
 

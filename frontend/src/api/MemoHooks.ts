@@ -12,6 +12,7 @@ const useGetMemo = (memoId: number | null | undefined) =>
     queryKey: [QueryKey.MEMO, memoId],
     queryFn: () => MemoService.getById({ memoId: memoId! }),
     enabled: !!memoId,
+    staleTime: 1000 * 60 * 5,
   });
 
 const useGetUserMemo = (attachedObjType: AttachedObjectType, attachedObjId: number | null | undefined) =>

@@ -25,6 +25,7 @@ export function dataToTree(data: (DocumentTagRead | CodeRead)[]): IDataTree {
     id: -1,
     color: "",
     parent_id: undefined,
+    memo_ids: [],
   };
   // create children of the new root node (all nodes that have no parent!)
   const children = newData.filter((dataTree) => !dataTree.data.parent_id);

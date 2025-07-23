@@ -157,8 +157,11 @@ def delete_by_id(
 ) -> SpanAnnotationDeleted:
     authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
 
-    db_obj = crud_span_anno.remove(db=db, id=span_id)
-    return SpanAnnotationDeleted.model_validate(db_obj)
+    db_obj = crud_span_anno.read(db=db, id=span_id)
+    anno_read = SpanAnnotationDeleted.model_validate(db_obj)
+
+    crud_span_anno.remove(db=db, id=span_id)
+    return anno_read
 
 
 @router.delete(

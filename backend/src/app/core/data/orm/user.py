@@ -32,16 +32,26 @@ class UserORM(ORMBase):
 
     # one to one
     object_handle: Mapped["ObjectHandleORM"] = relationship(
-        "ObjectHandleORM", uselist=False, back_populates="user", passive_deletes=True
+        "ObjectHandleORM",
+        uselist=False,
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     # one to many
     annotation_documents: Mapped[List["AnnotationDocumentORM"]] = relationship(
-        "AnnotationDocumentORM", back_populates="user", passive_deletes=True
+        "AnnotationDocumentORM",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     memos: Mapped[List["MemoORM"]] = relationship(
-        "MemoORM", back_populates="user", passive_deletes=True
+        "MemoORM",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     timeline_analysis: Mapped[List["TimelineAnalysisORM"]] = relationship(
@@ -57,7 +67,10 @@ class UserORM(ORMBase):
     )
 
     refresh_tokens: Mapped[List["RefreshTokenORM"]] = relationship(
-        "RefreshTokenORM", back_populates="user", passive_deletes=True
+        "RefreshTokenORM",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     # many to many

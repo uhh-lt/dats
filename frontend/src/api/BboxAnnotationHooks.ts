@@ -20,6 +20,7 @@ const useGetAnnotation = (bboxId: number | undefined) =>
         bboxId: bboxId!,
       }) as CancelablePromise<BBoxAnnotationRead>,
     enabled: !!bboxId,
+    staleTime: 1000 * 60 * 5,
   });
 
 const useGetByCodeAndUser = (codeId: number | undefined) =>
@@ -60,22 +61,14 @@ const useCreateBBoxAnnotation = () => {
       const affectedQueryKey = [QueryKey.SDOC_BBOX_ANNOTATIONS, newBbox.sdoc_id, user.id];
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
       const previousBboxes = queryClient.getQueryData<BBoxAnnotationRead[]>(affectedQueryKey);
-      const bbox = {
+      const bbox: BBoxAnnotationRead = {
         ...newBbox,
         id: FAKE_BBOX_ID,
-        code: {
-          name: "",
-          color: "",
-          description: "",
-          id: newBbox.code_id,
-          project_id: 0,
-          created: "",
-          updated: "",
-          is_system: false,
-        },
+        code_id: newBbox.code_id,
         created: "",
         updated: "",
         user_id: user.id,
+        memo_ids: [],
       };
       queryClient.setQueryData<BBoxAnnotationRead[]>(affectedQueryKey, (old) => {
         return old ? [...old, bbox] : [bbox];

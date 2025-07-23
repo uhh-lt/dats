@@ -33,6 +33,7 @@ const useGetAnnotation = (sentenceAnnoId: number | undefined) =>
         sentenceAnnoId: sentenceAnnoId!,
       }) as CancelablePromise<SentenceAnnotationRead>,
     enabled: !!sentenceAnnoId,
+    staleTime: 1000 * 60 * 5,
   });
 
 // SENTENCE MUTATIONS
@@ -56,6 +57,7 @@ const useCreateSentenceAnnotation = () => {
         user_id: user.id,
         created: new Date().toISOString(),
         updated: new Date().toISOString(),
+        memo_ids: [],
       };
       queryClient.setQueryData<SentenceAnnotatorResult>(affectedQueryKey, (old) => {
         if (!old) return old;
@@ -129,6 +131,7 @@ const useCreateBulkSentenceAnnotation = () => {
             user_id: user.id,
             created: new Date().toISOString(),
             updated: new Date().toISOString(),
+            memo_ids: [],
           };
           for (let sentenceId = data.sentence_id_start; sentenceId <= data.sentence_id_end; sentenceId++) {
             if (!sentAnnos[sentenceId]) {

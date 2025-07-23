@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { WhiteboardCreate } from "../models/WhiteboardCreate";
+import type { WhiteboardData } from "../models/WhiteboardData";
 import type { WhiteboardRead } from "../models/WhiteboardRead";
 import type { WhiteboardUpdate } from "../models/WhiteboardUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -76,6 +77,23 @@ export class WhiteboardService {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/whiteboard/{whiteboard_id}",
+      path: {
+        whiteboard_id: whiteboardId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the Whiteboard with the given ID if it exists
+   * @returns WhiteboardData Successful Response
+   * @throws ApiError
+   */
+  public static getDataById({ whiteboardId }: { whiteboardId: number }): CancelablePromise<WhiteboardData> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/whiteboard/data/{whiteboard_id}",
       path: {
         whiteboard_id: whiteboardId,
       },

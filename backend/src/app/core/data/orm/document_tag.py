@@ -32,6 +32,7 @@ class DocumentTagORM(ORMBase):
         "ObjectHandleORM",
         uselist=False,
         back_populates="document_tag",
+        cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
@@ -52,6 +53,7 @@ class DocumentTagORM(ORMBase):
     ] = relationship(
         "DocumentTagRecommendationLinkORM",
         back_populates="predicted_tag",
+        cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
@@ -72,7 +74,10 @@ class DocumentTagORM(ORMBase):
     )
     parent: Mapped["DocumentTagORM"] = relationship("DocumentTagORM", remote_side=[id])
     children: Mapped[List["DocumentTagORM"]] = relationship(
-        "DocumentTagORM", back_populates="parent", passive_deletes=True
+        "DocumentTagORM",
+        back_populates="parent",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     __table_args__ = (
@@ -82,6 +87,12 @@ class DocumentTagORM(ORMBase):
             name="UC_tag_name_unique_per_project",
         ),
     )
+
+    @property
+    def memo_ids(self) -> List[int]:
+        if self.object_handle is None:
+            return []
+        return [memo.id for memo in self.object_handle.attached_memos]
 
 
 class SourceDocumentDocumentTagLinkTable(ORMBase):

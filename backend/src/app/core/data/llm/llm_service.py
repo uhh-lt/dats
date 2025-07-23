@@ -875,6 +875,7 @@ class LLMService(metaclass=SingletonMeta):
                             created=datetime.now(),
                             updated=datetime.now(),
                             group_ids=[],
+                            memo_ids=[],
                         )
                     )
                     annotation_id += 1

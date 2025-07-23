@@ -27,6 +27,7 @@ class SpanGroupORM(ORMBase):
         "ObjectHandleORM",
         uselist=False,
         back_populates="span_group",
+        cascade="all, delete-orphan",
         passive_deletes=True,
     )
 

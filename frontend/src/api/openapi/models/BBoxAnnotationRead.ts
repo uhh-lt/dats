@@ -43,4 +43,8 @@ export type BBoxAnnotationRead = {
    * Updated timestamp of the BBoxAnnotation
    */
   updated: string;
+  /**
+   * Memo IDs attached to the BBoxAnnotation
+   */
+  memo_ids: Array<number>;
 };

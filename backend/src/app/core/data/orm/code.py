@@ -38,7 +38,11 @@ class CodeORM(ORMBase):
 
     # one to one
     object_handle: Mapped["ObjectHandleORM"] = relationship(
-        "ObjectHandleORM", uselist=False, back_populates="code", passive_deletes=True
+        "ObjectHandleORM",
+        uselist=False,
+        back_populates="code",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     project_id: Mapped[int] = mapped_column(
@@ -51,17 +55,26 @@ class CodeORM(ORMBase):
 
     # one to many
     span_annotations: Mapped[List["SpanAnnotationORM"]] = relationship(
-        "SpanAnnotationORM", back_populates="code", passive_deletes=True
+        "SpanAnnotationORM",
+        back_populates="code",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     # one to many
     bbox_annotations: Mapped[List["BBoxAnnotationORM"]] = relationship(
-        "BBoxAnnotationORM", back_populates="code", passive_deletes=True
+        "BBoxAnnotationORM",
+        back_populates="code",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     # one to many
     sentence_annotations: Mapped[List["SentenceAnnotationORM"]] = relationship(
-        "SentenceAnnotationORM", back_populates="code", passive_deletes=True
+        "SentenceAnnotationORM",
+        back_populates="code",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     # hierarchy reference
@@ -73,7 +86,10 @@ class CodeORM(ORMBase):
     )
     parent: Mapped["CodeORM"] = relationship("CodeORM", remote_side=[id])
     children: Mapped[List["CodeORM"]] = relationship(
-        "CodeORM", back_populates="parent", passive_deletes=True
+        "CodeORM",
+        back_populates="parent",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     __table_args__ = (
@@ -83,3 +99,9 @@ class CodeORM(ORMBase):
             name="UC_code_name_unique_per_project",
         ),
     )
+
+    @property
+    def memo_ids(self) -> List[int]:
+        if self.object_handle is None:
+            return []
+        return [memo.id for memo in self.object_handle.attached_memos]

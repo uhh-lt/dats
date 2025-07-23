@@ -36,64 +36,103 @@ class ProjectORM(ORMBase):
     )
 
     object_handle: Mapped["ObjectHandleORM"] = relationship(
-        "ObjectHandleORM", uselist=False, back_populates="project", passive_deletes=True
+        "ObjectHandleORM",
+        uselist=False,
+        back_populates="project",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     # one to many
     codes: Mapped[List["CodeORM"]] = relationship(
-        "CodeORM", back_populates="project", passive_deletes=True
+        "CodeORM",
+        back_populates="project",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     source_documents: Mapped[List["SourceDocumentORM"]] = relationship(
-        "SourceDocumentORM", back_populates="project", passive_deletes=True
+        "SourceDocumentORM",
+        back_populates="project",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     folders: Mapped[List["FolderORM"]] = relationship(
         "FolderORM",
         back_populates="project",
+        cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
     memos: Mapped[List["MemoORM"]] = relationship(
-        "MemoORM", back_populates="project", passive_deletes=True
+        "MemoORM",
+        back_populates="project",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     document_tags: Mapped[List["DocumentTagORM"]] = relationship(
-        "DocumentTagORM", back_populates="project", passive_deletes=True
+        "DocumentTagORM",
+        back_populates="project",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     span_annotations: Mapped[List["SpanAnnotationORM"]] = relationship(
-        "SpanAnnotationORM", back_populates="project", passive_deletes=True
+        "SpanAnnotationORM",
+        back_populates="project",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     sentence_annotations: Mapped[List["SentenceAnnotationORM"]] = relationship(
-        "SentenceAnnotationORM", back_populates="project", passive_deletes=True
+        "SentenceAnnotationORM",
+        back_populates="project",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     bbox_annotations: Mapped[List["BBoxAnnotationORM"]] = relationship(
-        "BBoxAnnotationORM", back_populates="project", passive_deletes=True
+        "BBoxAnnotationORM",
+        back_populates="project",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     whiteboards: Mapped[List["WhiteboardORM"]] = relationship(
-        "WhiteboardORM", back_populates="project", passive_deletes=True
+        "WhiteboardORM",
+        back_populates="project",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     preprocessing_jobs: Mapped[List["PreprocessingJobORM"]] = relationship(
-        "PreprocessingJobORM", back_populates="project", passive_deletes=True
+        "PreprocessingJobORM",
+        back_populates="project",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     preprocessing_payloads: Mapped[List["PreprocessingJobPayloadORM"]] = relationship(
-        "PreprocessingJobPayloadORM", back_populates="project", passive_deletes=True
+        "PreprocessingJobPayloadORM",
+        back_populates="project",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     metadata_: Mapped[List["ProjectMetadataORM"]] = relationship(
         "ProjectMetadataORM",
         back_populates="project",
+        cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
     aspects: Mapped[List["AspectORM"]] = relationship(
-        "AspectORM", back_populates="project", passive_deletes=True
+        "AspectORM",
+        back_populates="project",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     # many to many

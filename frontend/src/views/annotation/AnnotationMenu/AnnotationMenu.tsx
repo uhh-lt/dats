@@ -201,6 +201,7 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
                       description: "",
                       project_id: -1,
                       is_system: false,
+                      memo_ids: [],
                     },
                     title: `Add "${inputValue.trim()}"`,
                     level: 0,

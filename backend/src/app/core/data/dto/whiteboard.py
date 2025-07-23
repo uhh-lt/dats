@@ -4,7 +4,14 @@ from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.core.data.dto.bbox_annotation import BBoxAnnotationRead
+from app.core.data.dto.code import CodeRead
+from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.dto_base import UpdateDTOBase
+from app.core.data.dto.memo import MemoRead
+from app.core.data.dto.sentence_annotation import SentenceAnnotationRead
+from app.core.data.dto.source_document import SourceDocumentRead
+from app.core.data.dto.span_annotation import SpanAnnotationRead
 
 # --- DATA START ---
 
@@ -236,6 +243,34 @@ class WhiteboardEdge(BaseModel):
 
 # --- EDGES END ---
 
+# --- DATA START ---
+
+
+class WhiteboardData(BaseModel):
+    sdocs: List[SourceDocumentRead] = Field(
+        description="List of source documents",
+    )
+    codes: List[CodeRead] = Field(
+        description="List of codes",
+    )
+    tags: List[DocumentTagRead] = Field(
+        description="List of tags",
+    )
+    span_annotations: List[SpanAnnotationRead] = Field(
+        description="List of span annotations",
+    )
+    sent_annotations: List[SentenceAnnotationRead] = Field(
+        description="List of sentence annotations",
+    )
+    bbox_annotations: List[BBoxAnnotationRead] = Field(
+        description="List of bbox annotations",
+    )
+    memos: List[MemoRead] = Field(
+        description="List of memos",
+    )
+
+
+# --- DATA END ---
 
 # --- CRUD DTOS START ---
 

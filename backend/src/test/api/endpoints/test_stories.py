@@ -651,6 +651,12 @@ def test_span_annotation_and_memo(client, api_code, api_user, api_document) -> N
     assert span1_memo1_read_response["attached_object_id"] == span1_id
     assert span1_memo1_read_response["attached_object_type"] == "span_annotation"
 
+    # Alice removes span
+    span1_remove_response = client.delete(
+        f"span/{span1_id}", headers=alice["AuthHeader"]
+    )
+    assert span1_remove_response.status_code == 200
+
     # Alice creates an annotation for Textdoc2
     project_text_doc2 = api_document.document_list[text_doc2[1]]
     code3 = api_code.code_list["code3"]
