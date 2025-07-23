@@ -247,7 +247,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
         if (isCodeNode(sourceNode) && isSpanAnnotationNode(targetNode)) {
           const mutation = updateSpanAnnotationMutation.mutate;
           mutation({
-            spanAnnotationToUpdate: targetNode.data.spanAnnotationId,
+            spanId: targetNode.data.spanAnnotationId,
             requestBody: {
               code_id: sourceNode.data.codeId,
             },
