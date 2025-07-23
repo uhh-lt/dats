@@ -198,8 +198,6 @@ def initialize_tool(tool: OCRMethod) -> ToolBase:
             return Img2TableTool()
         case OCRMethod.docling:
             return DoclingTool()
-        case _:
-            raise ValueError(f"Invalid tool: {tool}")
 
 
 @app.command()

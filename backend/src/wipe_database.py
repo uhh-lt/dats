@@ -1,6 +1,6 @@
-from app.core.db.sql_service import SQLService
-from app.core.startup import startup
 from config import conf
+from repos.db.sql_repo import SQLService
+from startup import startup
 
 answer = input(
     f"Really delete all data from postgres db '{conf.postgres.db}', redis, elasticsearch, etc.? [yes/No] "

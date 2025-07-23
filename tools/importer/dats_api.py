@@ -212,8 +212,8 @@ class DATSAPI:
                 headers={"Authorization": f"Bearer {self.access_token}"},
             )
             r.raise_for_status()
-            return r.json()
             logger.info(f"Started uploading {len(files)} files.")
+            return r.json()
         else:
             logger.info("No files to upload!")
             return None

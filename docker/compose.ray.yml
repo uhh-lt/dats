@@ -7,7 +7,7 @@ services:
       - ${RAY_API_EXPOSED:-13130}:8000
       - ${RAY_DASHBOARD_EXPOSED:-13131}:8265
     build:
-      context: ../backend/src/app/preprocessing/ray_model_worker
+      context: ../backend/src/ray_model_worker
       dockerfile: Dockerfile
     healthcheck:
       test: [ "CMD-SHELL", "python /dats_code_ray/check_ray_health.py" ]
@@ -28,8 +28,9 @@ services:
       TORCHINDUCTOR_CACHE_DIR: /ray_cache/torch_inductor_cache
       TRITON_CACHE_DIR: /ray_cache/triton_cache
     volumes:
-      # - ../backend/src/app/preprocessing/ray_model_worker:/dats_code_ray # uncomment for dev
+      # - ../backend/src/ray_model_worker:/dats_code_ray # uncomment for dev
       - "${RAY_CACHE_DIR:-./ray_cache}:/ray_cache"
+      #- "${RAY_CONFIG:-../backend/src/ray_model_worker/config_gpu.yaml}:/dats_code_ray/config_gpu.yaml" # uncomment to change config
     shm_size: 12gb
     deploy:
       resources:

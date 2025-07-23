@@ -1,0 +1,221 @@
+proxy_location: EveryNode
+http_options:
+  host: 0.0.0.0
+  port: 8000
+grpc_options:
+  port: 9000
+  grpc_servicer_functions: []
+logging_config:
+  encoding: TEXT
+  log_level: INFO
+  logs_dir: null
+  enable_access_log: true
+applications:
+  - name: clip
+    route_prefix: /clip
+    import_path: apps.clip:app
+    runtime_env: {}
+    deployments:
+      - name: ClipModel
+        autoscaling_config:
+          min_replicas: 1
+          initial_replicas: null
+          max_replicas: 1
+          target_num_ongoing_requests_per_replica: 2.0
+          target_ongoing_requests: null
+          metrics_interval_s: 10.0
+          look_back_period_s: 30.0
+          smoothing_factor: 1.0
+          upscale_smoothing_factor: null
+          downscale_smoothing_factor: null
+          upscaling_factor: null
+          downscaling_factor: null
+          downscale_delay_s: 600.0
+          upscale_delay_s: 30.0
+        ray_actor_options:
+          num_cpus: 1.0
+          num_gpus: 0.125
+      - name: ClipApi
+        num_replicas: 1
+  - name: blip2
+    route_prefix: /blip2
+    import_path: apps.blip2:app
+    runtime_env: {}
+    deployments:
+      - name: Blip2Model
+        autoscaling_config:
+          min_replicas: 1
+          initial_replicas: null
+          max_replicas: 1
+          target_num_ongoing_requests_per_replica: 2.0
+          target_ongoing_requests: null
+          metrics_interval_s: 10.0
+          look_back_period_s: 30.0
+          smoothing_factor: 1.0
+          upscale_smoothing_factor: null
+          downscale_smoothing_factor: null
+          upscaling_factor: null
+          downscaling_factor: null
+          downscale_delay_s: 600.0
+          upscale_delay_s: 30.0
+        ray_actor_options:
+          num_cpus: 1.0
+          num_gpus: 0.125
+      - name: Blip2Api
+        num_replicas: 1
+  - name: quote
+    route_prefix: /quote
+    import_path: apps.quote:app
+    runtime_env: {}
+    deployments:
+      - name: QuoteModel
+        autoscaling_config:
+          min_replicas: 1
+          initial_replicas: null
+          max_replicas: 1
+          target_num_ongoing_requests_per_replica: 2.0
+          target_ongoing_requests: null
+          metrics_interval_s: 10.0
+          look_back_period_s: 30.0
+          smoothing_factor: 1.0
+          upscale_smoothing_factor: null
+          downscale_smoothing_factor: null
+          upscaling_factor: null
+          downscaling_factor: null
+          downscale_delay_s: 600.0
+          upscale_delay_s: 30.0
+        ray_actor_options:
+          num_cpus: 1.0
+          num_gpus: 0.125
+      - name: QuoteApi
+        num_replicas: 1
+  - name: seqsenttagger
+    route_prefix: /seqsenttagger
+    import_path: apps.seqsenttagger:app
+    runtime_env: {}
+    deployments:
+      - name: SeqSentTaggerModel
+        autoscaling_config:
+          min_replicas: 1
+          initial_replicas: null
+          max_replicas: 1
+          target_num_ongoing_requests_per_replica: 2.0
+          target_ongoing_requests: null
+          metrics_interval_s: 10.0
+          look_back_period_s: 30.0
+          smoothing_factor: 1.0
+          upscale_smoothing_factor: null
+          downscale_smoothing_factor: null
+          upscaling_factor: null
+          downscaling_factor: null
+          downscale_delay_s: 600.0
+          upscale_delay_s: 30.0
+        ray_actor_options:
+          num_cpus: 1.0
+          num_gpus: 0.125
+      - name: SeqSentTaggerApi
+        num_replicas: 1
+  - name: spacy
+    route_prefix: /spacy
+    import_path: apps.spacy:app
+    runtime_env: {}
+    deployments:
+      - name: SpacyModel
+        autoscaling_config:
+          min_replicas: 1
+          initial_replicas: null
+          max_replicas: 1
+          target_num_ongoing_requests_per_replica: 2.0
+          target_ongoing_requests: null
+          metrics_interval_s: 10.0
+          look_back_period_s: 30.0
+          smoothing_factor: 1.0
+          upscale_smoothing_factor: null
+          downscale_smoothing_factor: null
+          upscaling_factor: null
+          downscaling_factor: null
+          downscale_delay_s: 600.0
+          upscale_delay_s: 30.0
+        ray_actor_options:
+          num_cpus: 1.0
+          num_gpus: 0.0
+      - name: SpacyApi
+        num_replicas: 1
+  - name: cota
+    route_prefix: /cota
+    import_path: apps.cota:app
+    runtime_env: {}
+    deployments:
+      - name: CotaModel
+        autoscaling_config:
+          min_replicas: 1
+          initial_replicas: null
+          max_replicas: 1
+          target_num_ongoing_requests_per_replica: 2.0
+          target_ongoing_requests: null
+          metrics_interval_s: 10.0
+          look_back_period_s: 30.0
+          smoothing_factor: 1.0
+          upscale_smoothing_factor: null
+          downscale_smoothing_factor: null
+          upscaling_factor: null
+          downscaling_factor: null
+          downscale_delay_s: 600.0
+          upscale_delay_s: 30.0
+        ray_actor_options:
+          num_cpus: 1.0
+          num_gpus: 0.125
+      - name: CotaApi
+        num_replicas: 1
+  - name: detr
+    route_prefix: /detr
+    import_path: apps.detr:app
+    runtime_env: {}
+    deployments:
+      - name: DETRModel
+        autoscaling_config:
+          min_replicas: 1
+          initial_replicas: null
+          max_replicas: 1
+          target_num_ongoing_requests_per_replica: 2.0
+          target_ongoing_requests: null
+          metrics_interval_s: 10.0
+          look_back_period_s: 30.0
+          smoothing_factor: 1.0
+          upscale_smoothing_factor: null
+          downscale_smoothing_factor: null
+          upscaling_factor: null
+          downscaling_factor: null
+          downscale_delay_s: 600.0
+          upscale_delay_s: 30.0
+        ray_actor_options:
+          num_cpus: 1.0
+          num_gpus: 0.125
+      - name: DbertApi
+        num_replicas: 1
+  - name: whisper
+    route_prefix: /whisper
+    import_path: apps.whisper:app
+    runtime_env: {}
+    deployments:
+      - name: WhisperModel
+        autoscaling_config:
+          min_replicas: 1
+          initial_replicas: null
+          max_replicas: 1
+          target_num_ongoing_requests_per_replica: 2.0
+          target_ongoing_requests: null
+          metrics_interval_s: 10.0
+          look_back_period_s: 30.0
+          smoothing_factor: 1.0
+          upscale_smoothing_factor: null
+          downscale_smoothing_factor: null
+          upscaling_factor: null
+          downscaling_factor: null
+          downscale_delay_s: 600.0
+          upscale_delay_s: 30.0
+        ray_actor_options:
+          num_cpus: 1.0
+          num_gpus: 0.125
+      - name: WhisperApi
+        num_replicas: 1
