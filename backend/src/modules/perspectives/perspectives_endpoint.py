@@ -311,9 +311,9 @@ def visualize_documents(
     )
     sdoc_id2dt = {dt.sdoc_id: dt for dt in document_clusters}
     cluster_id2cluster = {t.id: t for t in clusters}
-    assert len(document_aspects) == len(document_clusters), (
-        "The number of DocumentAspects and DocumentClusters must match for visualization."
-    )
+    assert (
+        len(document_aspects) == len(document_clusters)
+    ), "The number of DocumentAspects and DocumentClusters must match for visualization."
 
     # Search documents
     sdoc_id_in_search_result: Dict[int, bool]

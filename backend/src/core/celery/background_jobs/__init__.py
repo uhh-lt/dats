@@ -158,9 +158,9 @@ def execute_text_preprocessing_pipeline_apply_async(
         execute_text_preprocessing_pipeline_task,
     )
 
-    assert isinstance(execute_text_preprocessing_pipeline_task, Task), (
-        "Not a Celery Task"
-    )
+    assert isinstance(
+        execute_text_preprocessing_pipeline_task, Task
+    ), "Not a Celery Task"
 
     tasks = []
     for cargo in cargos:
@@ -175,9 +175,9 @@ def execute_image_preprocessing_pipeline_apply_async(
         execute_image_preprocessing_pipeline_task,
     )
 
-    assert isinstance(execute_image_preprocessing_pipeline_task, Task), (
-        "Not a Celery Task"
-    )
+    assert isinstance(
+        execute_image_preprocessing_pipeline_task, Task
+    ), "Not a Celery Task"
 
     for cargo in cargos:
         execute_image_preprocessing_pipeline_task.apply_async(kwargs={"cargo": cargo})
@@ -190,9 +190,9 @@ def execute_audio_preprocessing_pipeline_apply_async(
         execute_audio_preprocessing_pipeline_task,
     )
 
-    assert isinstance(execute_audio_preprocessing_pipeline_task, Task), (
-        "Not a Celery Task"
-    )
+    assert isinstance(
+        execute_audio_preprocessing_pipeline_task, Task
+    ), "Not a Celery Task"
 
     for cargo in cargos:
         execute_audio_preprocessing_pipeline_task.apply_async(kwargs={"cargo": cargo})
@@ -205,9 +205,9 @@ def execute_video_preprocessing_pipeline_apply_async(
         execute_video_preprocessing_pipeline_task,
     )
 
-    assert isinstance(execute_video_preprocessing_pipeline_task, Task), (
-        "Not a Celery Task"
-    )
+    assert isinstance(
+        execute_video_preprocessing_pipeline_task, Task
+    ), "Not a Celery Task"
 
     for cargo in cargos:
         execute_video_preprocessing_pipeline_task.apply_async(kwargs={"cargo": cargo})
