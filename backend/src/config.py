@@ -13,7 +13,7 @@ if __conf_file__ is None:
     )
 
 conf = OmegaConf.load(__conf_file__)
-version_conf = OmegaConf.load("./configs/version.yaml")
+version_conf = OmegaConf.load("../configs/version.yaml")
 conf = OmegaConf.merge(conf, version_conf)
 
 # setup loguru logging

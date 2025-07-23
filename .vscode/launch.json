@@ -28,7 +28,7 @@
         "PYTHONPATH": "${workspaceFolder}/backend/src",
         "RESET_DATABASE_FOR_TESTING": "1"
       },
-      "cwd": "${workspaceFolder}/backend/src",
+      "cwd": "${workspaceFolder}/backend/test",
       "envFile": "${workspaceFolder}/backend/.env"
     },
     {
@@ -43,7 +43,7 @@
       "name": "celery",
       "type": "node-terminal",
       "request": "launch",
-      "command": "uv run celery -A app.celery.background_jobs.tasks worker -Q bgJobsQ,celery -P threads -l info -c 1 --without-gossip --without-mingle --without-heartbeat",
+      "command": "uv run celery -A core.celery.background_jobs.tasks worker -Q bgJobsQ,celery -P threads -l info -c 1 --without-gossip --without-mingle --without-heartbeat",
       "cwd": "${workspaceFolder}/backend/src",
       "envFile": "${workspaceFolder}/backend/.env"
     },
@@ -54,7 +54,7 @@
       "program": "${workspaceFolder}/backend/.venv/bin/celery",
       "args": [
         "-A",
-        "app.celery.background_jobs.tasks",
+        "core.celery.background_jobs.tasks",
         "worker",
         "-Q",
         "bgJobsQ,celery",

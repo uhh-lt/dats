@@ -15,6 +15,7 @@ from loguru import logger
 from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from starlette.middleware.sessions import SessionMiddleware
+from util.import_util import import_by_suffix
 from uvicorn.main import run
 
 #####################################################################################################################
@@ -29,71 +30,37 @@ from uvicorn.main import run
 STARTUP_DONE = bool(int(os.environ.get("STARTUP_DONE", "0")))
 RESET_DATA = bool(int(os.environ.get("RESET_DATA", "0")))
 if not STARTUP_DONE:
-    from app.core.startup import startup  # isort: skip
+    from startup import startup  # isort: skip
 
     startup(reset_data=RESET_DATA, sql_echo=False)
     os.environ["STARTUP_DONE"] = "1"
 
-from api.endpoints import (
-    analysis,
-    annoscaling,
-    authentication,
-    bbox_annotation,
-    chat,
-    code,
-    concept_over_time_analysis,
-    crawler,
-    document_tag,
-    document_tag_recommendation,
-    export,
-    folder,
-    general,
-    import_,
-    llm,
-    memo,
-    ml,
-    perspectives,
-    prepro,
-    project,
-    project_metadata,
-    search,
-    sentence_annotation,
-    source_document,
-    source_document_metadata,
-    span_annotation,
-    span_group,
-    timeline_analysis,
-    trainer,
-    user,
-    whiteboard,
-)
-from api.validation import InvalidError
-from app.core.authorization.authz_user import ForbiddenError
-from app.core.data.crawler.crawler_service import (
+from config import conf
+from core.auth.authz_user import ForbiddenError
+from core.auth.validation import InvalidError
+from core.doc.source_document_crud import SourceDocumentPreprocessingUnfinishedError
+from modules.crawler.crawler_service import (
     CrawlerJobPreparationError,
     NoDataToCrawlError,
     NoSuchCrawlerJobError,
 )
-from app.core.data.crud.crud_base import NoSuchElementError
-from app.core.data.crud.source_document import (
-    SourceDocumentPreprocessingUnfinishedError,
-)
-from app.core.data.eximport.export_service import (
+from modules.eximport.export_service import (
     ExportJobPreparationError,
     NoSuchExportJobError,
 )
-from app.core.data.eximport.import_service import ImportJobPreparationError
-from app.core.data.eximport.no_data_export_error import NoDataToExportError
-from app.core.data.repo.repo_service import (
+from modules.eximport.import_service import ImportJobPreparationError
+from modules.eximport.no_data_export_error import NoDataToExportError
+from repos.db.crud_base import NoSuchElementError
+from repos.elasticsearch_repo import NoSuchMemoInElasticSearchError
+from repos.filesystem_repo import (
     FileAlreadyExistsInRepositoryError,
     FileNotFoundInRepositoryError,
     RepoService,
     SourceDocumentNotFoundInRepositoryError,
 )
-from app.core.db.elasticsearch_service import (
-    NoSuchMemoInElasticSearchError,
-)
-from config import conf
+
+# import all endpoints dynamically
+endpoint_modules = import_by_suffix("_endpoint.py")
 
 
 # custom method to generate OpenApi function names
@@ -251,46 +218,18 @@ def invalid_error_handler(_, exc: InvalidError):
     return PlainTextResponse(str(exc), status_code=HTTPStatus.BAD_REQUEST)
 
 
-# include the endpoint routers
-app.include_router(general.router)
-app.include_router(authentication.router)
-app.include_router(user.router)
-app.include_router(project.router)
-app.include_router(source_document.router)
-app.include_router(document_tag.router)
-app.include_router(document_tag_recommendation.router)
-app.include_router(span_annotation.router)
-app.include_router(span_group.router)
-app.include_router(bbox_annotation.router)
-app.include_router(code.router)
-app.include_router(memo.router)
-app.include_router(search.router)
-app.include_router(source_document_metadata.router)
-app.include_router(analysis.router)
-app.include_router(prepro.router)
-app.include_router(export.router)
-app.include_router(crawler.router)
-app.include_router(annoscaling.router)
-app.include_router(whiteboard.router)
-app.include_router(project_metadata.router)
-app.include_router(trainer.router)
-app.include_router(concept_over_time_analysis.router)
-app.include_router(timeline_analysis.router)
-app.include_router(llm.router)
-app.include_router(sentence_annotation.router)
-app.include_router(import_.router)
-app.include_router(ml.router)
-app.include_router(chat.router)
-app.include_router(perspectives.router)
-app.include_router(folder.router)
+# register all endpoints dynamically
+endpoint_modules.sort(key=lambda x: x.__name__.split(".")[-1])
+for em in endpoint_modules:
+    app.include_router(em.router)
 
 
 def main() -> None:
     # read port from config
     port = int(conf.api.port)
-    assert (
-        port is not None and isinstance(port, int) and port > 0
-    ), "The API port has to be a positive integer! E.g. 8081"
+    assert port is not None and isinstance(port, int) and port > 0, (
+        "The API port has to be a positive integer! E.g. 8081"
+    )
 
     is_debug = conf.api.production_mode == "0"
 

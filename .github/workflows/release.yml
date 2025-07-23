@@ -56,7 +56,7 @@ jobs:
       - name: Build and push ray container
         uses: docker/build-push-action@v4
         with:
-          context: ./backend/src/app/preprocessing/ray_model_worker
+          context: ./backend/src/ray_model_worker
           push: true
           tags: |
             "uhhlt/dats_ray:${{ steps.extract_version.outputs.version }}"

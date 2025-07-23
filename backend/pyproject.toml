@@ -140,3 +140,4 @@ exclude = ["**/__pycache__",
 extraPaths = ["src"]
 reportIncompatibleMethodOverride = false
 reportIncompatibleVariableOverride = false
+reportUnreachable = true

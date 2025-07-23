@@ -1,4 +1,4 @@
-src/app/preprocessing/ray_model_worker/spec.yaml
+src/ray_model_worker/spec.yaml
 src/dev_notebooks
 
 # backend logs
