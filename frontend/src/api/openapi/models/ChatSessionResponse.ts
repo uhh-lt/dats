@@ -2,13 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type LLMSessionResponse = {
+export type ChatSessionResponse = {
   /**
-   * The response of the LLM
+   * The response of the model
    */
   response: string;
   /**
-   * The session ID of the LLM chat
+   * The session ID of the chat
    */
   session_id: string;
 };

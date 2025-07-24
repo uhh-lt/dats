@@ -1,9 +1,9 @@
 import { createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
 import * as d3 from "d3";
 import { v4 as uuidv4 } from "uuid";
+import { ChatSessionResponse } from "../../api/openapi/models/ChatSessionResponse.ts";
 import { IDListOperator } from "../../api/openapi/models/IDListOperator.ts";
 import { ListOperator } from "../../api/openapi/models/ListOperator.ts";
-import { LLMSessionResponse } from "../../api/openapi/models/LLMSessionResponse.ts";
 import { LogicalOperator } from "../../api/openapi/models/LogicalOperator.ts";
 import { ProjectMetadataRead } from "../../api/openapi/models/ProjectMetadataRead.ts";
 import { SdocColumns } from "../../api/openapi/models/SdocColumns.ts";
@@ -300,7 +300,7 @@ export const perspectivesSlice = createSlice({
       state.chatMessages.push(action.payload);
       state.lastDeletedChatMessages = [];
     },
-    onChatResponseReceived: (state, action: PayloadAction<LLMSessionResponse>) => {
+    onChatResponseReceived: (state, action: PayloadAction<ChatSessionResponse>) => {
       const agentMessage: ChatMessage = {
         id: `agent-${Date.now()}`,
         message: action.payload.response,
