@@ -9,7 +9,7 @@ from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
-from modules.analysis.analysis_dto import (
+from modules.search.search_dto import (
     SentenceAnnotationRow,
     SentenceAnnotationSearchResult,
 )
