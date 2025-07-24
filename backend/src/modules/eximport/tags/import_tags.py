@@ -6,7 +6,7 @@ from core.tag.document_tag_dto import DocumentTagCreate
 from loguru import logger
 from modules.eximport.tags.tag_export_schema import TagExportCollection, TagExportSchema
 from sqlalchemy.orm import Session
-from util.color import get_next_color
+from utils.color_utils import get_next_color
 
 
 class ImportTagsError(Exception):

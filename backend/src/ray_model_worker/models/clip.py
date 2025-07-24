@@ -9,8 +9,8 @@ from dto.clip import (
 )
 from ray import serve
 from ray_config import build_ray_model_deployment_config, conf
+from ray_utils import base64_to_image
 from sentence_transformers import SentenceTransformer
-from utils import base64_to_image
 
 cc = conf.clip
 

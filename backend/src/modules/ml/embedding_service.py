@@ -25,7 +25,7 @@ from repos.ollama_repo import OllamaRepo
 from repos.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy import ColumnElement, and_
-from util.image_utils import image_to_base64, load_image
+from utils.image_utils import image_to_base64, load_image
 from weaviate import WeaviateClient
 
 

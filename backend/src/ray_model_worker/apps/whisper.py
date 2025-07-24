@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request
 from models.whisper import WhisperModel
 from ray import serve
 from ray.serve.handle import DeploymentHandle
-from utils import bytes_to_wav_data
+from ray_utils import bytes_to_wav_data
 
 api = FastAPI()
 

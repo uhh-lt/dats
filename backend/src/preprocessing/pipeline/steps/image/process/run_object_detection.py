@@ -5,7 +5,7 @@ from preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from ray_model_worker.dto.detr import DETRImageInput
 from repos.ray_repo import RayRepo
-from util.image_utils import image_to_base64, load_image
+from utils.image_utils import image_to_base64, load_image
 
 ray = RayRepo()
 

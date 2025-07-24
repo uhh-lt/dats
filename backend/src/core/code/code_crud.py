@@ -6,7 +6,7 @@ from core.code.code_orm import CodeORM
 from fastapi.encoders import jsonable_encoder
 from repos.db.crud_base import CRUDBase
 from sqlalchemy.orm import Session
-from util.color import get_next_color
+from utils.color_utils import get_next_color
 
 
 class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):

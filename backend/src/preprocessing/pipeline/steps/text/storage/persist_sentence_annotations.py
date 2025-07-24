@@ -11,7 +11,7 @@ from preprocessing.pipeline.model.text.autosentanno import AutoSentAnno
 from preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from psycopg2 import OperationalError
 from repos.db.sql_repo import SQLRepo
-from util.color import get_next_color
+from utils.color_utils import get_next_color
 
 sql: SQLRepo = SQLRepo()
 

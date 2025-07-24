@@ -4,7 +4,7 @@ from modules.llm_assistant.prompts.image_captioning_prompt import (
 from preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from repos.ollama_repo import OllamaRepo
-from util.image_utils import image_to_base64, load_image
+from utils.image_utils import image_to_base64, load_image
 
 ollama = OllamaRepo()
 

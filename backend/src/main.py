@@ -15,7 +15,7 @@ from loguru import logger
 from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from starlette.middleware.sessions import SessionMiddleware
-from util.import_util import import_by_suffix
+from utils.import_util import import_by_suffix
 from uvicorn.main import run
 
 #####################################################################################################################

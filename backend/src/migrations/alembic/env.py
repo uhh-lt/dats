@@ -4,7 +4,7 @@ from alembic import context
 from config import conf
 from repos.db.orm_base import ORMBase
 from sqlalchemy import engine_from_config, pool
-from util.import_util import import_by_suffix
+from utils.import_util import import_by_suffix
 
 # When autogenerating migrations, alembic looks at our ORM models.
 # it's important to import all models so alembic won't try to
