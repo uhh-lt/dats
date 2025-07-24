@@ -30,7 +30,7 @@ from modules.trainer.trainer_service import TrainerService
 from repos.db.sql_repo import SQLRepo
 from repos.elasticsearch_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
-from repos.redis_repo import RedisService
+from repos.redis_repo import RedisRepo
 from sqlalchemy.orm import Session
 
 
@@ -39,7 +39,7 @@ class COTAService(metaclass=SingletonMeta):
         cls.trainer: TrainerService = TrainerService()
         cls.sims: SimSearchService = SimSearchService()
         cls.es: ElasticSearchRepo = ElasticSearchRepo()
-        cls.redis: RedisService = RedisService()
+        cls.redis: RedisRepo = RedisRepo()
         cls.fsr: FilesystemRepo = FilesystemRepo()
         cls.sqlr: SQLRepo = SQLRepo()
 

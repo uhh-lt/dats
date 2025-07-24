@@ -5,10 +5,10 @@ from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.preprocessing_service import PreprocessingService
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
-from repos.redis_repo import RedisService
+from repos.redis_repo import RedisRepo
 
 sql: SQLRepo = SQLRepo(echo=False)
-redis: RedisService = RedisService()
+redis: RedisRepo = RedisRepo()
 fsr: FilesystemRepo = FilesystemRepo()
 prepro: PreprocessingService = PreprocessingService()
 

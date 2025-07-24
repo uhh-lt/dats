@@ -9,13 +9,13 @@ from modules.trainer.trainer_job_dto import (
     TrainerJobRead,
 )
 from repos.filesystem_repo import FilesystemRepo
-from repos.redis_repo import RedisService
+from repos.redis_repo import RedisRepo
 from sqlalchemy.orm import Session
 
 
 class TrainerService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.redis: RedisService = RedisService()
+        cls.redis: RedisRepo = RedisRepo()
         cls.fsr: FilesystemRepo = FilesystemRepo()
 
         return super(TrainerService, cls).__new__(cls)

@@ -8,7 +8,7 @@ from core.doc.source_document_dto import SDocStatus
 from core.job.background_job_base_dto import BackgroundJobStatus
 from core.project.project_crud import crud_project
 from fastapi import APIRouter, Depends
-from repos.redis_repo import RedisService
+from repos.redis_repo import RedisRepo
 from sqlalchemy.orm import Session
 
 from preprocessing.prepro_dto import PreProProjectStatus
@@ -22,7 +22,7 @@ router = APIRouter(
     prefix="/prepro", dependencies=[Depends(get_current_user)], tags=["prepro"]
 )
 
-redis: RedisService = RedisService()
+redis: RedisRepo = RedisRepo()
 pps: PreprocessingService = PreprocessingService()
 
 

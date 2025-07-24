@@ -16,7 +16,7 @@ from modules.crawler.crawler_job_dto import (
 )
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
-from repos.redis_repo import RedisService
+from repos.redis_repo import RedisRepo
 
 
 class NoDataToCrawlError(Exception):
@@ -107,7 +107,7 @@ class UnknownCrawlerJobError(Exception):
 class CrawlerService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.fsr: FilesystemRepo = FilesystemRepo()
-        cls.redis: RedisService = RedisService()
+        cls.redis: RedisRepo = RedisRepo()
         cls.sqlr: SQLRepo = SQLRepo()
 
         return super(CrawlerService, cls).__new__(cls)

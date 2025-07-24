@@ -76,7 +76,7 @@ from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.ollama_repo import OllamaRepo
 from repos.ray_repo import RayRepo
-from repos.redis_repo import RedisService
+from repos.redis_repo import RedisRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy.orm import Session
 
@@ -106,7 +106,7 @@ class UnsupportedLLMJobTypeError(Exception):
 class LLMService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.fsr: FilesystemRepo = FilesystemRepo()
-        cls.redis: RedisService = RedisService()
+        cls.redis: RedisRepo = RedisRepo()
         cls.sqlr: SQLRepo = SQLRepo()
         cls.ollama: OllamaRepo = OllamaRepo()
         cls.ray: RayRepo = RayRepo()

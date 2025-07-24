@@ -9,7 +9,7 @@ from modules.analysis.cota.concept_over_time_analysis_dto import (
 )
 from modules.analysis.cota.pipeline.cargo import Cargo
 from modules.analysis.cota.pipeline.step import PipelineStep
-from repos.redis_repo import RedisService
+from repos.redis_repo import RedisRepo
 
 
 class COTARefinementPipeline:
@@ -18,7 +18,7 @@ class COTARefinementPipeline:
     ):
         self._steps_by_ordering: Dict[int, PipelineStep] = dict()
         self._steps_by_name: Dict[str, PipelineStep] = dict()
-        self.redis: RedisService = RedisService()
+        self.redis: RedisRepo = RedisRepo()
 
         self.__is_frozen = False
 

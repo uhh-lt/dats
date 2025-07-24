@@ -36,7 +36,7 @@ from modules.eximport.user.import_users import import_users_to_proj
 from modules.eximport.whiteboards.import_whiteboards import import_whiteboards_to_proj
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
-from repos.redis_repo import RedisService
+from repos.redis_repo import RedisRepo
 from sqlalchemy.orm import Session
 
 
@@ -65,7 +65,7 @@ class UnsupportedImportJobTypeError(Exception):
 class ImportService(metaclass=SingletonMeta):
     def __new__(cls):
         cls.fsr: FilesystemRepo = FilesystemRepo()
-        cls.redis: RedisService = RedisService()
+        cls.redis: RedisRepo = RedisRepo()
         cls.sqlr: SQLRepo = SQLRepo()
         cls.import_method_for_job_type: Dict[ImportJobType, Callable[..., None]] = {
             ImportJobType.TAGS: cls._import_tags_to_proj,

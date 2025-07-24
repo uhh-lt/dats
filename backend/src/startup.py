@@ -128,9 +128,9 @@ def __init_services__(
 
     ElasticSearchRepo(remove_all_indices=reset_elasticsearch)
     # import and init RedisService
-    from repos.redis_repo import RedisService
+    from repos.redis_repo import RedisRepo
 
-    RedisService(flush_all_clients=reset_database)
+    RedisRepo(flush_all_clients=reset_database)
 
     # import and init MailService
     from repos.mail_repo import MailRepo
