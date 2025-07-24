@@ -1,9 +1,9 @@
 from modules.search.search_dto import ElasticSearchDocumentCreate
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
-from repos.elasticsearch_repo import ElasticSearchService
+from repos.elasticsearch_repo import ElasticSearchRepo
 
-es = ElasticSearchService()
+es = ElasticSearchRepo()
 
 
 def store_document_in_elasticsearch(cargo: PipelineCargo) -> PipelineCargo:

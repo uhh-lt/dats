@@ -12,7 +12,7 @@ from modules.search.search_dto import (
 )
 from modules.search.sorting import Sort
 from repos.db.sql_repo import SQLRepo
-from repos.elasticsearch_repo import ElasticSearchService
+from repos.elasticsearch_repo import ElasticSearchRepo
 
 
 def memo_info(
@@ -83,7 +83,7 @@ def memo_search(
             limit = None
 
         if search_content:
-            return ElasticSearchService().search_memos_by_content_query(
+            return ElasticSearchRepo().search_memos_by_content_query(
                 proj_id=project_id,
                 query=search_query,
                 memo_ids=set(filtered_memo_ids),
@@ -91,7 +91,7 @@ def memo_search(
                 limit=limit,
             )
         else:
-            return ElasticSearchService().search_memos_by_title_query(
+            return ElasticSearchRepo().search_memos_by_title_query(
                 proj_id=project_id,
                 query=search_query,
                 memo_ids=set(filtered_memo_ids),

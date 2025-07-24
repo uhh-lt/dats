@@ -28,12 +28,12 @@ from modules.search.search_dto import ElasticSearchDocumentCreate
 from preprocessing.pipeline.steps.image.process.convert_to_webp_and_generate_thumbnail import (
     generate_thumbnails,
 )
-from repos.elasticsearch_repo import ElasticSearchService
+from repos.elasticsearch_repo import ElasticSearchRepo
 from repos.filesystem_repo import RepoService
 from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy.orm import Session
 
-elastic_index = ElasticSearchService()
+es = ElasticSearchRepo()
 repo = RepoService()
 
 
@@ -281,7 +281,7 @@ def import_sdocs_to_proj(
                 )
 
         # 6. Add the source documents to the Elasticsearch index
-        elastic_index.add_document_to_index(
+        es.add_document_to_index(
             proj_id=project_id,
             esdoc=ElasticSearchDocumentCreate(
                 project_id=project_id,

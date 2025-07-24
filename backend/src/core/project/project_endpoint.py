@@ -29,7 +29,7 @@ from modules.perspectives.aspect_dto import AspectRead
 from preprocessing.preprocessing_job_dto import PreprocessingJobRead
 from preprocessing.preprocessing_service import PreprocessingService
 from repos.db.crud_base import NoSuchElementError
-from repos.elasticsearch_repo import ElasticSearchService
+from repos.elasticsearch_repo import ElasticSearchRepo
 from sqlalchemy.orm import Session
 
 router = APIRouter(
@@ -54,7 +54,7 @@ def create_new_project(
 
     try:
         # create the ES Indices
-        ElasticSearchService().create_project_indices(proj_id=db_obj.id)
+        ElasticSearchRepo().create_project_indices(proj_id=db_obj.id)
     except Exception:
         crud_project.remove(db=db, id=db_obj.id)
         raise HTTPException(
@@ -115,7 +115,7 @@ def delete_project(
 
     try:
         # remove the ES Indices # Flo Do we want this?!
-        ElasticSearchService().remove_project_indices(proj_id=db_obj.id)
+        ElasticSearchRepo().remove_project_indices(proj_id=db_obj.id)
     except Exception:
         crud_project.remove(db=db, id=db_obj.id)
         raise HTTPException(

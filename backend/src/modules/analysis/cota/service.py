@@ -28,7 +28,7 @@ from modules.analysis.cota.pipeline import build_cota_refinement_pipeline
 from modules.simsearch.simsearch_service import SimSearchService
 from modules.trainer.trainer_service import TrainerService
 from repos.db.sql_repo import SQLRepo
-from repos.elasticsearch_repo import ElasticSearchService
+from repos.elasticsearch_repo import ElasticSearchRepo
 from repos.filesystem_repo import RepoService
 from repos.redis_repo import RedisService
 from sqlalchemy.orm import Session
@@ -38,7 +38,7 @@ class COTAService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.trainer: TrainerService = TrainerService()
         cls.sims: SimSearchService = SimSearchService()
-        cls.es: ElasticSearchService = ElasticSearchService()
+        cls.es: ElasticSearchRepo = ElasticSearchRepo()
         cls.redis: RedisService = RedisService()
         cls.repo: RepoService = RepoService()
         cls.sqlr: SQLRepo = SQLRepo()

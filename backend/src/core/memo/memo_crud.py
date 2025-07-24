@@ -21,7 +21,7 @@ from core.tag.document_tag_orm import DocumentTagORM
 from fastapi.encoders import jsonable_encoder
 from modules.search.search_dto import ElasticSearchMemoCreate, ElasticSearchMemoUpdate
 from repos.db.crud_base import CRUDBase
-from repos.elasticsearch_repo import ElasticSearchService
+from repos.elasticsearch_repo import ElasticSearchRepo
 from sqlalchemy.orm import Session
 
 
@@ -254,7 +254,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             attached_object_id=attached_object_id,
             attached_object_type=attached_object_type,
         )
-        ElasticSearchService().add_memo_to_index(
+        ElasticSearchRepo().add_memo_to_index(
             proj_id=memo_orm.project_id, esmemo=esmemo
         )
 
@@ -269,7 +269,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             starred=memo_orm.starred,
         )
 
-        ElasticSearchService().update_memo_in_index(
+        ElasticSearchRepo().update_memo_in_index(
             proj_id=memo_orm.project_id, update=update_es_dto
         )
 

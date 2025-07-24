@@ -20,7 +20,7 @@ from modules.search.search_dto import (
 from modules.search.sorting import Sort
 from modules.simsearch.simsearch_service import SimSearchService
 from repos.db.sql_repo import SQLRepo
-from repos.elasticsearch_repo import ElasticSearchService
+from repos.elasticsearch_repo import ElasticSearchRepo
 from sqlalchemy.orm import Session
 
 
@@ -135,7 +135,7 @@ def search_ids(
         else:
             skip = None
             limit = None
-        return ElasticSearchService().search_sdocs_by_content_query(
+        return ElasticSearchRepo().search_sdocs_by_content_query(
             proj_id=project_id,
             query=search_query,
             sdoc_ids=filtered_sdoc_ids,

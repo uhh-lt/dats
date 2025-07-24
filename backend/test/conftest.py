@@ -22,7 +22,7 @@ from fastapi.testclient import TestClient
 from loguru import logger
 from pytest import FixtureRequest
 from repos.db.sql_repo import SQLRepo
-from repos.elasticsearch_repo import ElasticSearchService
+from repos.elasticsearch_repo import ElasticSearchRepo
 from repos.filesystem_repo import RepoService
 from repos.redis_repo import RedisService
 from repos.vector.weaviate_repo import WeaviateRepo
@@ -34,7 +34,7 @@ os.environ["RESET_DATA"] = "1"
 def pytest_sessionfinish():
     # Make sure the next test session starts with clean databases
     SQLRepo().drop_database()
-    ElasticSearchService().drop_indices()
+    ElasticSearchRepo().drop_indices()
     WeaviateRepo().drop_indices()
     RedisService().flush_all_clients()
     RepoService().purge_repo()

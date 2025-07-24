@@ -47,7 +47,7 @@ class NoSuchFieldInIndexError(Exception):
         )
 
 
-class ElasticSearchService(metaclass=SingletonMeta):
+class ElasticSearchRepo(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         try:
             memo_mappings_path = Path(conf.elasticsearch.index_mappings.memos)
@@ -116,7 +116,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
             logger.warning("Removing all DATS ElasticSearch indices!")
             esc.indices.delete(index="dats_*", allow_no_indices=True)
 
-        return super(ElasticSearchService, cls).__new__(cls)
+        return super(ElasticSearchRepo, cls).__new__(cls)
 
     def __delete_index(self, *, index: str) -> None:
         if self.__client.indices.exists(index=index):

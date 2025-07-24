@@ -23,7 +23,7 @@ from modules.perspectives.aspect_embedding_crud import crud_aspect_embedding
 from modules.perspectives.document_aspect_orm import DocumentAspectORM
 from repos.db.crud_base import CRUDBase, NoSuchElementError
 from repos.db.sql_utils import aggregate_ids
-from repos.elasticsearch_repo import ElasticSearchService
+from repos.elasticsearch_repo import ElasticSearchRepo
 from repos.filesystem_repo import RepoService
 from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy import and_, desc, func, or_
@@ -150,7 +150,7 @@ class CRUDSourceDocument(
         )
 
         # remove from elasticsearch
-        ElasticSearchService().delete_document_from_index(
+        ElasticSearchRepo().delete_document_from_index(
             sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
         )
 

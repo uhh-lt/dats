@@ -20,13 +20,13 @@ from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.pipeline.model.preprodoc_base import PreProDocBase
 from preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from repos.db.sql_repo import SQLRepo
-from repos.elasticsearch_repo import ElasticSearchService
+from repos.elasticsearch_repo import ElasticSearchRepo
 from repos.filesystem_repo import RepoService
 from sqlalchemy.orm import Session
 
 repo: RepoService = RepoService()
 sql: SQLRepo = SQLRepo()
-es = ElasticSearchService()
+es = ElasticSearchRepo()
 
 
 def __create_and_persist_sdoc(db: Session, ppdb: PreProDocBase) -> SourceDocumentORM:
