@@ -50,7 +50,7 @@ from ray_model_worker.dto.promptembedder import PromptEmbedderInput
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.ollama_repo import OllamaRepo
-from repos.ray_repo import RayModelService
+from repos.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from sklearn.feature_extraction.text import CountVectorizer
 from sqlalchemy.orm import Session
@@ -63,7 +63,7 @@ TMJUpdateFN = Callable[[Optional[int], Optional[str]], PerspectivesJobRead]
 class PerspectivesService:
     def __init__(self, update_status_clbk: TMJUpdateFN):
         self.update_status_clbk: TMJUpdateFN = update_status_clbk
-        self.rms: RayModelService = RayModelService()
+        self.ray: RayRepo = RayRepo()
         self.ollama: OllamaRepo = OllamaRepo()
         self.sqlr: SQLRepo = SQLRepo()
         self.weaviate: WeaviateRepo = WeaviateRepo()
@@ -153,7 +153,7 @@ class PerspectivesService:
         self._log_status_msg(
             f"Computing embeddings for {len(doc_aspects)} document aspects with model {embedding_model}..."
         )
-        embedding_output = self.rms.promptembedder_embedding(
+        embedding_output = self.ray.promptembedder_embedding(
             input=PromptEmbedderInput(
                 model_name=embedding_model,
                 prompt=embedding_prompt,
@@ -924,7 +924,7 @@ class PerspectivesService:
                 self._log_status_msg(
                     f"Computing embeddings for the new cluster with model {aspect.embedding_model}..."
                 )
-                embedding_output = self.rms.promptembedder_embedding(
+                embedding_output = self.ray.promptembedder_embedding(
                     input=PromptEmbedderInput(
                         model_name=aspect.embedding_model,
                         prompt=aspect.doc_embedding_prompt,

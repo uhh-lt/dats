@@ -15,11 +15,11 @@ from ray_model_worker.dto.cota import (
     RayCOTASentenceBase,
 )
 from repos.filesystem_repo import FilesystemRepo
-from repos.ray_repo import RayModelService
+from repos.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from umap.umap_ import UMAP
 
-rms: RayModelService = RayModelService()
+ray: RayRepo = RayRepo()
 fsr: FilesystemRepo = FilesystemRepo()
 weaviate: WeaviateRepo = WeaviateRepo()
 
@@ -98,7 +98,7 @@ def __ray_cota_finetune_apply_compute(
         concept_ids=concept_ids,
         search_space=ray_search_space,
     )
-    response: RayCOTAJobResponse = rms.cota_finetune_apply_compute(job)
+    response: RayCOTAJobResponse = ray.cota_finetune_apply_compute(job)
     return (
         response.visual_refined_embeddings,
         response.concept_similarities,

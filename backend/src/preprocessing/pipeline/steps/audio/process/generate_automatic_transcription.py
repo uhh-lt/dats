@@ -5,9 +5,9 @@ from loguru import logger
 from preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from ray_model_worker.dto.whisper import WhisperTranscriptionOutput
-from repos.ray_repo import RayModelService
+from repos.ray_repo import RayRepo
 
-rms = RayModelService()
+ray = RayRepo()
 
 
 def generate_automatic_transcription(cargo: PipelineCargo) -> PipelineCargo:
@@ -34,7 +34,7 @@ def generate_automatic_transcription(cargo: PipelineCargo) -> PipelineCargo:
             )
 
         # send the audio bytes to the whisper model to get the transcript
-        transcription: WhisperTranscriptionOutput = rms.whisper_transcribe(
+        transcription: WhisperTranscriptionOutput = ray.whisper_transcribe(
             audio_bytes=audio_bytes
         )
         logger.info(f"Generated transcript {transcription}")

@@ -137,9 +137,9 @@ def __init_services__(
 
     MailRepo()
     # import and init RayModelService
-    from repos.ray_repo import RayModelService
+    from repos.ray_repo import RayRepo
 
-    RayModelService()
+    RayRepo()
 
     # import and init WeaviateService
     from repos.vector.weaviate_repo import WeaviateRepo

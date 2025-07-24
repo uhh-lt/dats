@@ -22,7 +22,7 @@ from ray_model_worker.dto.clip import ClipImageEmbeddingInput, ClipTextEmbedding
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.ollama_repo import OllamaRepo
-from repos.ray_repo import RayModelService
+from repos.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy import ColumnElement, and_
 from util.image_utils import image_to_base64, load_image
@@ -33,7 +33,7 @@ class EmbeddingService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.sqlr: SQLRepo = SQLRepo()
         cls.fsr = FilesystemRepo()
-        cls.rms: RayModelService = RayModelService()
+        cls.ray: RayRepo = RayRepo()
         cls.ollama: OllamaRepo = OllamaRepo()
         cls.weaviate: WeaviateRepo = WeaviateRepo()
         return super(EmbeddingService, cls).__new__(cls)
@@ -42,7 +42,7 @@ class EmbeddingService(metaclass=SingletonMeta):
         return self.ollama.llm_embed([text])
 
     def encode_sentences(self, sentences: List[str]) -> np.ndarray:
-        encoded_query = self.rms.clip_text_embedding(
+        encoded_query = self.ray.clip_text_embedding(
             ClipTextEmbeddingInput(text=sentences)
         )
         return encoded_query.numpy()
@@ -58,7 +58,7 @@ class EmbeddingService(metaclass=SingletonMeta):
         image = load_image(image_fp)
         base64_image = image_to_base64(image)
 
-        encoded_query = self.rms.clip_image_embedding(
+        encoded_query = self.ray.clip_image_embedding(
             ClipImageEmbeddingInput(
                 base64_images=[base64_image],
             )

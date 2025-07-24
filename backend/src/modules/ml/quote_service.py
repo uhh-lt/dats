@@ -27,7 +27,7 @@ from modules.ml.source_document_job_status_orm import (
 )
 from ray_model_worker.dto.quote import QuoteInputDoc, QuoteJobInput, Span, Token
 from repos.db.sql_repo import SQLRepo
-from repos.ray_repo import RayModelService
+from repos.ray_repo import RayRepo
 from sqlalchemy import ColumnElement, and_
 from sqlalchemy.orm import Session
 
@@ -48,7 +48,7 @@ class _CodeQuoteId(NamedTuple):
 class QuoteService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.sqlr: SQLRepo = SQLRepo()
-        cls.rms: RayModelService = RayModelService()
+        cls.ray: RayRepo = RayRepo()
         return super(QuoteService, cls).__new__(cls)
 
     def perform_quotation_detection(
@@ -163,7 +163,7 @@ class QuoteService(metaclass=SingletonMeta):
 
         sdoc_by_id = {sdoc.id: sdoc for sdoc in sdoc_data}
 
-        quote_output = self.rms.quote_prediction(quote_input)
+        quote_output = self.ray.quote_prediction(quote_input)
 
         with self.sqlr.db_session() as db:
             if recompute:

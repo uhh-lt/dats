@@ -26,7 +26,7 @@ from modules.ml.source_document_job_status_orm import (
 )
 from ray_model_worker.dto.coref import CorefInputDoc, CorefJobInput
 from repos.db.sql_repo import SQLRepo
-from repos.ray_repo import RayModelService
+from repos.ray_repo import RayRepo
 from sqlalchemy import ColumnElement, and_
 from sqlalchemy.orm import Session
 
@@ -34,7 +34,7 @@ from sqlalchemy.orm import Session
 class CorefService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.sqlr: SQLRepo = SQLRepo()
-        cls.rms: RayModelService = RayModelService()
+        cls.ray: RayRepo = RayRepo()
         return super(CorefService, cls).__new__(cls)
 
     def perform_coreference_resolution(
@@ -122,7 +122,7 @@ class CorefService(metaclass=SingletonMeta):
 
         sdoc_by_id = {sdoc.id: sdoc for sdoc in sdoc_data}
 
-        coref_output = self.rms.coref_prediction(coref_input)
+        coref_output = self.ray.coref_prediction(coref_input)
 
         with self.sqlr.db_session() as db:
             if recompute:

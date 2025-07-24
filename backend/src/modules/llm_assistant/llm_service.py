@@ -75,7 +75,7 @@ from ray_model_worker.dto.seqsenttagger import SeqSentTaggerDoc, SeqSentTaggerJo
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.ollama_repo import OllamaRepo
-from repos.ray_repo import RayModelService
+from repos.ray_repo import RayRepo
 from repos.redis_repo import RedisService
 from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy.orm import Session
@@ -109,7 +109,7 @@ class LLMService(metaclass=SingletonMeta):
         cls.redis: RedisService = RedisService()
         cls.sqlr: SQLRepo = SQLRepo()
         cls.ollama: OllamaRepo = OllamaRepo()
-        cls.rms: RayModelService = RayModelService()
+        cls.ray: RayRepo = RayRepo()
         cls.weaviate: WeaviateRepo = WeaviateRepo()
 
         # map from job_type to function
@@ -1323,7 +1323,7 @@ class LLMService(metaclass=SingletonMeta):
         )
         logger.info(msg)
 
-        response = self.rms.seqsenttagger_train_apply(
+        response = self.ray.seqsenttagger_train_apply(
             input=SeqSentTaggerJobInput(
                 project_id=project_id,
                 training_data=training_dataset,

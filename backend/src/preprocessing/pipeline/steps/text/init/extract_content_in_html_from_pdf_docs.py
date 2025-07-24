@@ -12,14 +12,14 @@ from repos.filesystem_repo import (
     FileDeletionNotAllowedError,
     FilesystemRepo,
 )
-from repos.ray_repo import RayModelService
+from repos.ray_repo import RayRepo
 from util.image_utils import base64_to_image
 
 cc = conf.celery
 
 fsr = FilesystemRepo()
 pps = PreprocessingService()
-rms = RayModelService()
+ray = RayRepo()
 
 
 def __split_large_pdf_into_chunks(
@@ -101,7 +101,7 @@ def __extract_content_in_html_from_pdf_docs(
     logger.debug(f"Extracting content as HTML from {filepath.name} ...")
     pdf_bytes = filepath.read_bytes()
     # this will take some time ...
-    conversion_output = rms.docling_pdf_to_html(pdf_bytes=pdf_bytes)
+    conversion_output = ray.docling_pdf_to_html(pdf_bytes=pdf_bytes)
     doc_html = conversion_output.html_content
 
     # store all extracted images in the same directory as the PDF

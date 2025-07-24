@@ -1,9 +1,9 @@
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from ray_model_worker.dto.spacy import SpacyInput, SpacyPipelineOutput
-from repos.ray_repo import RayModelService
+from repos.ray_repo import RayRepo
 
-rms = RayModelService()
+ray = RayRepo()
 
 
 def run_spacy_pipeline(cargo: PipelineCargo) -> PipelineCargo:
@@ -14,7 +14,7 @@ def run_spacy_pipeline(cargo: PipelineCargo) -> PipelineCargo:
         text=pptd.text,
         language=pptd.metadata["language"],
     )
-    spacy_output: SpacyPipelineOutput = rms.spacy_pipline(spacy_input)
+    spacy_output: SpacyPipelineOutput = ray.spacy_pipline(spacy_input)
     pptd.spacy_pipeline_output = spacy_output
 
     return cargo

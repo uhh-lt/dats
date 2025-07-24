@@ -36,7 +36,6 @@ from modules.eximport.user.import_users import import_users_to_proj
 from modules.eximport.whiteboards.import_whiteboards import import_whiteboards_to_proj
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
-from repos.ray_repo import RayModelService
 from repos.redis_repo import RedisService
 from sqlalchemy.orm import Session
 
@@ -68,7 +67,6 @@ class ImportService(metaclass=SingletonMeta):
         cls.fsr: FilesystemRepo = FilesystemRepo()
         cls.redis: RedisService = RedisService()
         cls.sqlr: SQLRepo = SQLRepo()
-        cls.rms: RayModelService = RayModelService()
         cls.import_method_for_job_type: Dict[ImportJobType, Callable[..., None]] = {
             ImportJobType.TAGS: cls._import_tags_to_proj,
             ImportJobType.CODES: cls._import_codes_to_proj,
