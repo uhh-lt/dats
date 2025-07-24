@@ -33,8 +33,8 @@ from modules.perspectives.perspectives_vis_dto import (
     PerspectivesVisualization,
 )
 from modules.search.filtering import Filter
-from modules.search.sdoc_search import sdoc_search
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
+from modules.search.sdoc_search.sdoc_search_service import SdocSearchService
 from modules.search.sorting import Sort
 from sqlalchemy.orm import Session
 from weaviate import WeaviateClient
@@ -318,7 +318,7 @@ def visualize_documents(
     # Search documents
     sdoc_id_in_search_result: Dict[int, bool]
     if len(filter.items) > 0 or search_query.strip() != "":
-        hits = sdoc_search.search_ids(
+        hits = SdocSearchService().search_ids(
             search_query=search_query,
             expert_mode=False,
             highlight=False,
