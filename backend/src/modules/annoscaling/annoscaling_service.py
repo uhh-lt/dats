@@ -11,12 +11,15 @@ from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_orm import SourceDocumentORM
-from modules.search.search_dto import SimSearchSentenceHit
+from modules.simsearch.simsearch_dto import SimSearchSentenceHit
 from modules.simsearch.simsearch_service import SimSearchService
 from repos.db.sql_repo import SQLRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 
 SimSearchHit = TypeVar("SimSearchHit")
+
+
+# TODO: This should probably not use SimSearchSentenceHit! Instead, define own DTO
 
 
 class AnnoScalingService(metaclass=SingletonMeta):

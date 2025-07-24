@@ -9,7 +9,7 @@ from modules.ml.embedding_service import EmbeddingService
 from modules.search.filtering import Filter
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.search.sdoc_search.sdoc_search_service import SdocSearchService
-from modules.search.search_dto import SimSearchImageHit, SimSearchSentenceHit
+from modules.simsearch.simsearch_dto import SimSearchImageHit, SimSearchSentenceHit
 from repos.db.sql_repo import SQLRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 
