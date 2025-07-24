@@ -1,19 +1,8 @@
 from typing import List, Optional
 
-from common.crud_enum import Crud
 from common.dependencies import get_current_user
 from core.auth.authz_user import AuthzUser
 from fastapi import APIRouter, Depends
-from modules.analysis.search_statistics.search_statistics import (
-    compute_code_statistics,
-    compute_keyword_statistics,
-    compute_tag_statistics,
-)
-from modules.analysis.search_statistics.search_stats_dto import (
-    KeywordStat,
-    SpanEntityStat,
-    TagStat,
-)
 from modules.search.bbox_anno_search.bbox_anno_search import (
     find_bbox_annotations,
     find_bbox_annotations_info,
@@ -255,82 +244,3 @@ def search_bbox_annotations(
         page_size=page_size,
         sorts=sorts,
     )
-
-
-@router.post(
-    "/code_stats_by_sdocs",
-    response_model=List[SpanEntityStat],
-    summary="Returns SpanEntityStats for the given SourceDocuments.",
-)
-def filter_code_stats(
-    *,
-    authz_user: AuthzUser = Depends(),
-    # code stat params
-    code_id: int,
-    sort_by_global: bool = False,
-    top_k: int = 20,
-    # filter params
-    sdoc_ids: List[int],
-) -> List[SpanEntityStat]:
-    if len(sdoc_ids) == 0:
-        return []
-
-    # compute code stats
-    authz_user.assert_in_same_project_as(Crud.CODE, code_id)
-    code_stats = compute_code_statistics(
-        code_id=code_id, sdoc_ids=set(sdoc_ids), top_k=top_k
-    )
-    if sort_by_global:
-        code_stats.sort(key=lambda x: x.global_count, reverse=True)
-    return code_stats
-
-
-@router.post(
-    "/keyword_stats_by_sdocs",
-    response_model=List[KeywordStat],
-    summary="Returns KeywordStats for the given SourceDocuments.",
-)
-def filter_keyword_stats(
-    *,
-    authz_user: AuthzUser = Depends(),
-    project_id: int,
-    # keyword stat params
-    sort_by_global: bool = False,
-    top_k: int = 20,
-    # filter params
-    sdoc_ids: List[int],
-) -> List[KeywordStat]:
-    if len(sdoc_ids) == 0:
-        return []
-
-    # compute keyword stats
-    keyword_stats = compute_keyword_statistics(
-        proj_id=project_id, sdoc_ids=set(sdoc_ids), top_k=top_k
-    )
-    if sort_by_global:
-        keyword_stats.sort(key=lambda x: x.global_count, reverse=True)
-    return keyword_stats
-
-
-@router.post(
-    "/tag_stats_by_sdocs",
-    response_model=List[TagStat],
-    summary="Returns Stat for the given SourceDocuments.",
-)
-def filter_tag_stats(
-    *,
-    authz_user: AuthzUser = Depends(),
-    # keyword stat params
-    sort_by_global: bool = False,
-    top_k: int = 20,
-    # filter params
-    sdoc_ids: List[int],
-) -> List[TagStat]:
-    if len(sdoc_ids) == 0:
-        return []
-
-    # compute tag stats
-    tag_stats = compute_tag_statistics(sdoc_ids=set(sdoc_ids), top_k=top_k)
-    if sort_by_global:
-        tag_stats.sort(key=lambda x: x.global_count, reverse=True)
-    return tag_stats
