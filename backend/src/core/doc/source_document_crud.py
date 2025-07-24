@@ -25,7 +25,7 @@ from repos.db.crud_base import CRUDBase, NoSuchElementError
 from repos.db.sql_utils import aggregate_ids
 from repos.elasticsearch_repo import ElasticSearchService
 from repos.filesystem_repo import RepoService
-from repos.vector.weaviate_repo import WeaviateService
+from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -155,7 +155,7 @@ class CRUDSourceDocument(
         )
 
         # remove from index
-        with WeaviateService().weaviate_session() as client:
+        with WeaviateRepo().weaviate_session() as client:
             crud_aspect_embedding.remove_by_sdoc_id(
                 client=client, project_id=sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
             )

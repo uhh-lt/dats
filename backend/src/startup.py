@@ -142,9 +142,9 @@ def __init_services__(
     RayModelService()
 
     # import and init WeaviateService
-    from repos.vector.weaviate_repo import WeaviateService
+    from repos.vector.weaviate_repo import WeaviateRepo
 
-    WeaviateService(flush=reset_vector_index)
+    WeaviateRepo(flush=reset_vector_index)
 
     # import and init SimSearchService
     from modules.simsearch.simsearch_service import SimSearchService

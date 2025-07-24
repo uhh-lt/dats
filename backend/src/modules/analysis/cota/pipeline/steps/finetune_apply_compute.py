@@ -16,12 +16,12 @@ from ray_model_worker.dto.cota import (
 )
 from repos.filesystem_repo import RepoService
 from repos.ray_repo import RayModelService
-from repos.vector.weaviate_repo import WeaviateService
+from repos.vector.weaviate_repo import WeaviateRepo
 from umap.umap_ import UMAP
 
 rms: RayModelService = RayModelService()
 repo: RepoService = RepoService()
-weaviate: WeaviateService = WeaviateService()
+weaviate: WeaviateRepo = WeaviateRepo()
 
 
 def finetune_apply_compute(cargo: Cargo) -> Cargo:
@@ -47,7 +47,7 @@ def finetune_apply_compute(cargo: Cargo) -> Cargo:
                 sentence.concept_similarities[concept_id] = similarity
 
     else:
-        with WeaviateService().weaviate_session() as client:
+        with WeaviateRepo().weaviate_session() as client:
             embeddings = crud_sentence_embedding.get_embeddings(
                 client=client,
                 project_id=cargo.job.cota.project_id,

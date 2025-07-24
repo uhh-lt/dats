@@ -77,7 +77,7 @@ from repos.filesystem_repo import RepoService
 from repos.ollama_repo import OllamaService
 from repos.ray_repo import RayModelService
 from repos.redis_repo import RedisService
-from repos.vector.weaviate_repo import WeaviateService
+from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy.orm import Session
 
 lac = conf.llm_assistant
@@ -110,7 +110,7 @@ class LLMService(metaclass=SingletonMeta):
         cls.sqlr: SQLRepo = SQLRepo()
         cls.ollamas: OllamaService = OllamaService()
         cls.rms: RayModelService = RayModelService()
-        cls.weaviate: WeaviateService = WeaviateService()
+        cls.weaviate: WeaviateRepo = WeaviateRepo()
 
         # map from job_type to function
         cls.llm_method_for_job_approach_type: Dict[

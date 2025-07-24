@@ -19,7 +19,7 @@ from modules.perspectives.aspect_embedding_crud import crud_aspect_embedding
 from modules.perspectives.cluster_embedding_crud import crud_cluster_embedding
 from repos.db.crud_base import CRUDBase
 from repos.filesystem_repo import RepoService
-from repos.vector.weaviate_repo import WeaviateService
+from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy.orm import Session
 
 
@@ -63,7 +63,7 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         # 2) delete the files from repo
         RepoService().purge_project_data(proj_id=id)
         # 3) Remove embeddings
-        with WeaviateService().weaviate_session() as client:
+        with WeaviateRepo().weaviate_session() as client:
             crud_document_embedding.remove_embeddings_by_project(
                 client=client, project_id=id
             )

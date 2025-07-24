@@ -51,7 +51,7 @@ from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import RepoService
 from repos.ollama_repo import OllamaService
 from repos.ray_repo import RayModelService
-from repos.vector.weaviate_repo import WeaviateService
+from repos.vector.weaviate_repo import WeaviateRepo
 from sklearn.feature_extraction.text import CountVectorizer
 from sqlalchemy.orm import Session
 from umap import UMAP
@@ -66,7 +66,7 @@ class PerspectivesService:
         self.rms: RayModelService = RayModelService()
         self.ollama: OllamaService = OllamaService()
         self.sqlr: SQLRepo = SQLRepo()
-        self.weaviate: WeaviateService = WeaviateService()
+        self.weaviate: WeaviateRepo = WeaviateRepo()
         self.repo: RepoService = RepoService()
 
     def _log_status_msg(self, status_msg: str):

@@ -23,7 +23,7 @@ from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import RepoService
 from repos.ollama_repo import OllamaService
 from repos.ray_repo import RayModelService
-from repos.vector.weaviate_repo import WeaviateService
+from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy import ColumnElement, and_
 from util.image_utils import image_to_base64, load_image
 from weaviate import WeaviateClient
@@ -35,7 +35,7 @@ class EmbeddingService(metaclass=SingletonMeta):
         cls.repo = RepoService()
         cls.rms: RayModelService = RayModelService()
         cls.llm: OllamaService = OllamaService()
-        cls.weaviate: WeaviateService = WeaviateService()
+        cls.weaviate: WeaviateRepo = WeaviateRepo()
         return super(EmbeddingService, cls).__new__(cls)
 
     def encode_document(self, text: str) -> np.ndarray:

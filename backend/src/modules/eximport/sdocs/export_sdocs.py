@@ -18,7 +18,7 @@ from modules.eximport.sdocs.sdoc_export_schema import (
     SourceDocumentExportSchema,
 )
 from repos.filesystem_repo import RepoService
-from repos.vector.weaviate_repo import WeaviateService
+from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy.orm import Session
 
 
@@ -119,7 +119,7 @@ def __export_sdocs(
         # Word frequencies
         word_frequencies = [(wf.word, wf.count) for wf in sdoc.word_frequencies]
 
-        with WeaviateService().weaviate_session() as client:
+        with WeaviateRepo().weaviate_session() as client:
             # Get document embeddings
             doc_embedding = crud_document_embedding.get_embedding(
                 client=client,

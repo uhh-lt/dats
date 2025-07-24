@@ -7,13 +7,13 @@ from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from loguru import logger
 from modules.ml.embedding_service import EmbeddingService
 from modules.search.search_dto import SimSearchImageHit, SimSearchSentenceHit
-from repos.vector.weaviate_repo import WeaviateService
+from repos.vector.weaviate_repo import WeaviateRepo
 
 
 class SimSearchService(metaclass=SingletonMeta):
     def __new__(cls):
         cls.emb = EmbeddingService()
-        cls.weaviate = WeaviateService()
+        cls.weaviate = WeaviateRepo()
         return super(SimSearchService, cls).__new__(cls)
 
     def _encode_query(

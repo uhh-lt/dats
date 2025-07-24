@@ -10,7 +10,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from pydantic import ValidationError
 from repos.db.sql_repo import SQLRepo
-from repos.vector.weaviate_repo import WeaviateService
+from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy.orm import Session
 from weaviate import WeaviateClient
 
@@ -53,7 +53,7 @@ async def get_db_session() -> AsyncGenerator[Session, None]:
 
 
 async def get_weaviate_session() -> AsyncGenerator[WeaviateClient, None]:
-    session = WeaviateService().weaviate_session()
+    session = WeaviateRepo().weaviate_session()
     try:
         yield session
     finally:

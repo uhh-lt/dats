@@ -30,7 +30,7 @@ from preprocessing.pipeline.steps.image.process.convert_to_webp_and_generate_thu
 )
 from repos.elasticsearch_repo import ElasticSearchService
 from repos.filesystem_repo import RepoService
-from repos.vector.weaviate_repo import WeaviateService
+from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy.orm import Session
 
 elastic_index = ElasticSearchService()
@@ -248,7 +248,7 @@ def import_sdocs_to_proj(
         crud_sdoc_link.create_multi(db=db, create_dtos=link_create_dtos)
 
         # 5. Add embeddings to the vector database
-        with WeaviateService().weaviate_session() as client:
+        with WeaviateRepo().weaviate_session() as client:
             # Document embeddings
             crud_document_embedding.add_embedding(
                 client=client,

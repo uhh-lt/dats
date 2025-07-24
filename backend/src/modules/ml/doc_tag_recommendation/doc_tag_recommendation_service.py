@@ -18,7 +18,7 @@ from modules.ml.doc_tag_recommendation.document_tag_recommendation_dto import (
 from modules.search.search_dto import SimSearchDocumentHit
 from repos.db.sql_repo import SQLRepo
 from repos.vector.weaviate_models import SimSearchResult
-from repos.vector.weaviate_repo import WeaviateService
+from repos.vector.weaviate_repo import WeaviateRepo
 from weaviate import WeaviateClient
 
 SimSearchHit = TypeVar("SimSearchHit")
@@ -41,7 +41,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
             DocumentClassificationService: An instance of the class.
         """
         cls.sqlr: SQLRepo = SQLRepo()
-        cls.weaviate: WeaviateService = WeaviateService()
+        cls.weaviate: WeaviateRepo = WeaviateRepo()
         return super(DocumentClassificationService, cls).__new__(cls)
 
     def classify_untagged_documents(
