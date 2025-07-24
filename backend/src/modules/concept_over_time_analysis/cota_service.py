@@ -11,10 +11,10 @@ from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from fastapi.encoders import jsonable_encoder
 from loguru import logger
-from modules.concept_over_time_analysis.concept_over_time_analysis_crud import (
+from modules.concept_over_time_analysis.cota_crud import (
     crud_cota,
 )
-from modules.concept_over_time_analysis.concept_over_time_analysis_dto import (
+from modules.concept_over_time_analysis.cota_dto import (
     COTACreateIntern,
     COTARead,
     COTARefinementHyperparameters,

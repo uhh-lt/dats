@@ -19,7 +19,7 @@ from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.project.project_crud import crud_project
 from core.tag.document_tag_crud import crud_document_tag
 from core.user.user_crud import crud_user
-from modules.concept_over_time_analysis.concept_over_time_analysis_crud import (
+from modules.concept_over_time_analysis.cota_crud import (
     crud_cota,
 )
 from modules.ml.doc_tag_recommendation.document_tag_recommendation_crud import (

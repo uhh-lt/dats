@@ -24,7 +24,7 @@ from core.tag.document_tag_dto import DocumentTagRead
 from core.user.user_crud import crud_user
 from core.user.user_dto import UserRead
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
-from modules.analysis.duplicate_finder.duplicate_finder import find_duplicates
+from modules.analysis.duplicate_finder import find_duplicates
 from modules.perspectives.aspect_dto import AspectRead
 from preprocessing.preprocessing_job_dto import PreprocessingJobRead
 from preprocessing.preprocessing_service import PreprocessingService

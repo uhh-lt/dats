@@ -5,10 +5,10 @@ import srsly
 from core.project.project_crud import crud_project
 from fastapi.encoders import jsonable_encoder
 from loguru import logger
-from modules.concept_over_time_analysis.concept_over_time_analysis_crud import (
+from modules.concept_over_time_analysis.cota_crud import (
     crud_cota,
 )
-from modules.concept_over_time_analysis.concept_over_time_analysis_dto import (
+from modules.concept_over_time_analysis.cota_dto import (
     COTAConcept,
     COTACreateIntern,
     COTATimelineSettings,
