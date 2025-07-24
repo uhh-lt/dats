@@ -9,7 +9,7 @@ from modules.eximport.codes.code_export_schema import (
     CodeExportSchema,
 )
 from sqlalchemy.orm import Session
-from util.color import get_next_color
+from utils.color_utils import get_next_color
 
 
 class ImportCodesError(Exception):

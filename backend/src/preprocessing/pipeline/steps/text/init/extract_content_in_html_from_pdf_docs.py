@@ -13,7 +13,7 @@ from repos.filesystem_repo import (
     FilesystemRepo,
 )
 from repos.ray_repo import RayRepo
-from util.image_utils import base64_to_image
+from utils.image_utils import base64_to_image
 
 cc = conf.celery
 

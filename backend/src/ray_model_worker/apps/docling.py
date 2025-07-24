@@ -8,7 +8,7 @@ from models.docling import DoclingModel
 from ray import serve
 from ray.serve.handle import DeploymentHandle
 from ray_config import conf
-from utils import write_bytes_to_file
+from ray_utils import write_bytes_to_file
 
 api = FastAPI()
 

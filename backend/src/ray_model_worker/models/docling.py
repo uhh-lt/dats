@@ -9,7 +9,7 @@ from docling_core.types.doc.base import ImageRefMode
 from dto.docling import DoclingPDF2HTMLOutput
 from ray import serve
 from ray_config import build_ray_model_deployment_config, conf
-from utils import image_to_base64
+from ray_utils import image_to_base64
 
 cc = conf.docling
 

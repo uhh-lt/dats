@@ -6,7 +6,7 @@ from loguru import logger
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from repos.filesystem_repo import FilesystemRepo
-from util.image_utils import base64_to_image
+from utils.image_utils import base64_to_image
 
 fsr = FilesystemRepo()
 

@@ -19,7 +19,7 @@ from pydantic import BaseModel
 from repos.filesystem_repo import FilesystemRepo
 from repos.ollama_repo import OllamaRepo
 from sqlalchemy.orm import Session
-from util.image_utils import image_to_base64, load_image
+from utils.image_utils import image_to_base64, load_image
 
 
 class OllamaMemoResult(BaseModel):

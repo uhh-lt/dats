@@ -5,8 +5,8 @@ import torch
 from dto.detr import DETRImageInput, DETRObjectDetectionOutput, ObjectBBox
 from ray import serve
 from ray_config import build_ray_model_deployment_config, conf
+from ray_utils import base64_to_image
 from transformers import DetrFeatureExtractor, DetrForObjectDetection
-from utils import base64_to_image
 
 cc = conf.detr
 

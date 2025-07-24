@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session, sessionmaker
-from util.color import get_next_color
+from utils.color_utils import get_next_color
 
 # revision identifiers, used by Alembic.
 revision: str = "c970e0892bef"

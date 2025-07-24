@@ -13,7 +13,7 @@ from psycopg2 import OperationalError
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy.orm import Session
-from util.color import get_next_color
+from utils.color_utils import get_next_color
 
 fsr: FilesystemRepo = FilesystemRepo()
 sql: SQLRepo = SQLRepo()

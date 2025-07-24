@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 from repos.db.dto_base import UpdateDTOBase
-from util.color import get_next_color
+from utils.color_utils import get_next_color
 
 
 # Properties shared across all DTOs
