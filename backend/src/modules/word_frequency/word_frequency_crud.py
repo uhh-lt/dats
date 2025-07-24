@@ -2,11 +2,11 @@ from typing import List
 
 from common.doc_type import DocType
 from core.doc.source_document_orm import SourceDocumentORM
-from modules.analysis.word_frequency.word_frequency_dto import (
+from modules.word_frequency.word_frequency_dto import (
     WordFrequencyCreate,
     WordFrequencyRead,
 )
-from modules.analysis.word_frequency.word_frequency_orm import WordFrequencyORM
+from modules.word_frequency.word_frequency_orm import WordFrequencyORM
 from repos.db.crud_base import CRUDBase, UpdateNotAllowed
 from sqlalchemy.orm import Session
 

@@ -8,7 +8,6 @@ from modules.analysis.analysis_dto import (
     CodeFrequency,
     CodeOccurrence,
     SampledSdocsResults,
-    WordFrequencyResult,
 )
 from modules.analysis.code_frequency.code_frequency import (
     find_code_frequencies,
@@ -18,15 +17,6 @@ from modules.analysis.document_sampler.document_sampler import document_sampler_
 from modules.analysis.statistics.count_metadata import (
     compute_num_sdocs_with_date_metadata,
 )
-from modules.analysis.word_frequency.word_frequency import (
-    word_frequency,
-    word_frequency_export,
-    word_frequency_info,
-)
-from modules.analysis.word_frequency.word_frequency_columns import WordFrequencyColumns
-from modules.search_system.column_info import ColumnInfo
-from modules.search_system.filtering import Filter
-from modules.search_system.sorting import Sort
 from sqlalchemy.orm import Session
 
 router = APIRouter(
@@ -89,70 +79,6 @@ def count_sdocs_with_date_metadata(
     return compute_num_sdocs_with_date_metadata(
         project_id=project_id,
         date_metadata_id=date_metadata_id,
-    )
-
-
-@router.get(
-    "/word_frequency_analysis_info/{project_id}",
-    response_model=List[ColumnInfo[WordFrequencyColumns]],
-    summary="Returns WordFrequency Info.",
-)
-def word_frequency_analysis_info(
-    *,
-    project_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> List[ColumnInfo[WordFrequencyColumns]]:
-    authz_user.assert_in_project(project_id)
-
-    return word_frequency_info(
-        project_id=project_id,
-    )
-
-
-@router.post(
-    "/word_frequency_analysis",
-    response_model=WordFrequencyResult,
-    summary="Perform word frequency analysis.",
-)
-def word_frequency_analysis(
-    *,
-    db: Session = Depends(get_db_session),
-    project_id: int,
-    filter: Filter[WordFrequencyColumns],
-    page: int,
-    page_size: int,
-    sorts: List[Sort[WordFrequencyColumns]],
-    authz_user: AuthzUser = Depends(),
-) -> WordFrequencyResult:
-    authz_user.assert_in_project(project_id)
-
-    return word_frequency(
-        project_id=project_id,
-        filter=filter,
-        page=page,
-        page_size=page_size,
-        sorts=sorts,
-    )
-
-
-@router.post(
-    "/word_frequency_analysis_export",
-    response_model=str,
-    summary="Export the word frequency analysis.",
-)
-def word_frequency_analysis_export(
-    *,
-    db: Session = Depends(get_db_session),
-    project_id: int,
-    filter: Filter[WordFrequencyColumns],
-    sorts: List[Sort[WordFrequencyColumns]],
-    authz_user: AuthzUser = Depends(),
-) -> str:
-    authz_user.assert_in_project(project_id)
-
-    return word_frequency_export(
-        project_id=project_id,
-        filter=filter,
     )
 
 

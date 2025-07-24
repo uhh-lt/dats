@@ -14,10 +14,13 @@ from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
 from fastapi.encoders import jsonable_encoder
 from loguru import logger
 from modules.analysis.analysis_dto import DateGroupBy
-from modules.analysis.timeline_analysis.timeline_analysis_crud import (
+from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
+from modules.search_system.filtering import Filter
+from modules.search_system.search_builder import SearchBuilder
+from modules.timeline_analysis.timeline_analysis_crud import (
     crud_timeline_analysis,
 )
-from modules.analysis.timeline_analysis.timeline_analysis_dto import (
+from modules.timeline_analysis.timeline_analysis_dto import (
     BBoxAnnoTimelineAnalysisFilter,
     SdocTimelineAnalysisFilter,
     SentAnnoTimelineAnalysisFilter,
@@ -30,10 +33,7 @@ from modules.analysis.timeline_analysis.timeline_analysis_dto import (
     TimelineAnalysisUpdate,
     TimelineAnalysisUpdateIntern,
 )
-from modules.analysis.timeline_analysis.timeline_analysis_orm import TimelineAnalysisORM
-from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
-from modules.search_system.filtering import Filter
-from modules.search_system.search_builder import SearchBuilder
+from modules.timeline_analysis.timeline_analysis_orm import TimelineAnalysisORM
 from repos.db.sql_repo import SQLRepo
 from repos.db.sql_utils import aggregate_ids
 from sqlalchemy import and_, func

@@ -1,15 +1,21 @@
 from functools import lru_cache
 
-from modules.analysis.cota.pipeline.pipeline import COTARefinementPipeline
+from modules.concept_over_time_analysis.pipeline.pipeline import (
+    COTARefinementPipeline,
+)
 
 
 @lru_cache(maxsize=1)
 def build_cota_refinement_pipeline(foo: str = "bar") -> COTARefinementPipeline:
-    from modules.analysis.cota.pipeline.steps.finetune_apply_compute import (
+    from modules.concept_over_time_analysis.pipeline.steps.finetune_apply_compute import (
         finetune_apply_compute,
     )
-    from modules.analysis.cota.pipeline.steps.init_search_space import init_search_space
-    from modules.analysis.cota.pipeline.steps.store_in_db import store_in_db
+    from modules.concept_over_time_analysis.pipeline.steps.init_search_space import (
+        init_search_space,
+    )
+    from modules.concept_over_time_analysis.pipeline.steps.store_in_db import (
+        store_in_db,
+    )
 
     pipeline = COTARefinementPipeline()
 

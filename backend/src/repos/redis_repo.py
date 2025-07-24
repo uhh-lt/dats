@@ -6,7 +6,7 @@ import redis
 from common.singleton_meta import SingletonMeta
 from config import conf
 from loguru import logger
-from modules.analysis.cota.concept_over_time_analysis_dto import (
+from modules.concept_over_time_analysis.concept_over_time_analysis_dto import (
     COTAConcept,
     COTARead,
     COTARefinementJobCreate,

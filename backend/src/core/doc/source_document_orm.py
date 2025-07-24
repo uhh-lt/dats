@@ -14,7 +14,6 @@ if TYPE_CHECKING:
     from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
     from core.project.project_orm import ProjectORM
     from core.tag.document_tag_orm import DocumentTagORM
-    from modules.analysis.word_frequency.word_frequency_orm import WordFrequencyORM
     from modules.ml.doc_tag_recommendation.document_tag_recommendation_orm import (
         DocumentTagRecommendationLinkORM,
     )
@@ -22,6 +21,7 @@ if TYPE_CHECKING:
     from modules.perspectives.cluster_orm import ClusterORM
     from modules.perspectives.document_aspect_orm import DocumentAspectORM
     from modules.perspectives.document_cluster_orm import DocumentClusterORM
+    from modules.word_frequency.word_frequency_orm import WordFrequencyORM
 
 
 class SourceDocumentORM(ORMBase):

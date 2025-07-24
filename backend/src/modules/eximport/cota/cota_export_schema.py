@@ -2,7 +2,7 @@ from typing import List
 
 import pandas as pd
 import srsly
-from modules.analysis.cota.concept_over_time_analysis_dto import (
+from modules.concept_over_time_analysis.concept_over_time_analysis_dto import (
     COTAConcept,
     COTATimelineSettings,
     COTATrainingSettings,

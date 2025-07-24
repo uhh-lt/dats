@@ -5,7 +5,7 @@ import networkx as nx
 import numpy as np
 from common.doc_type import DocType
 from loguru import logger
-from modules.analysis.word_frequency.word_frequency_crud import crud_word_frequency
+from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from repos.db.sql_repo import SQLRepo
 from scipy import sparse
 from sklearn.metrics.pairwise import manhattan_distances

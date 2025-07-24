@@ -2,7 +2,7 @@ from typing import List
 
 import pandas as pd
 import srsly
-from modules.analysis.timeline_analysis.timeline_analysis_dto import (
+from modules.timeline_analysis.timeline_analysis_dto import (
     TimelineAnalysisConceptForExport,
     TimelineAnalysisSettingsForExport,
 )

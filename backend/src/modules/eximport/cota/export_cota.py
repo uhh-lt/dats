@@ -5,9 +5,13 @@ import pandas as pd
 import srsly
 from fastapi.encoders import jsonable_encoder
 from loguru import logger
-from modules.analysis.cota.concept_over_time_analysis_crud import crud_cota
-from modules.analysis.cota.concept_over_time_analysis_dto import COTARead
-from modules.analysis.cota.concept_over_time_analysis_orm import (
+from modules.concept_over_time_analysis.concept_over_time_analysis_crud import (
+    crud_cota,
+)
+from modules.concept_over_time_analysis.concept_over_time_analysis_dto import (
+    COTARead,
+)
+from modules.concept_over_time_analysis.concept_over_time_analysis_orm import (
     ConceptOverTimeAnalysisORM,
 )
 from modules.eximport.cota.cota_export_schema import (

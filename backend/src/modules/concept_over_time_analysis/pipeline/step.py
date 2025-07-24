@@ -1,6 +1,6 @@
 from typing import Callable, List
 
-from modules.analysis.cota.pipeline.cargo import Cargo
+from modules.concept_over_time_analysis.pipeline.cargo import Cargo
 from pydantic import BaseModel, Field
 
 

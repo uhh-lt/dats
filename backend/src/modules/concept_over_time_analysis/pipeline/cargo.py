@@ -1,10 +1,12 @@
 from typing import Any, Dict, List
 
-from modules.analysis.cota.concept_over_time_analysis_dto import COTARefinementJobRead
+from modules.concept_over_time_analysis.concept_over_time_analysis_dto import (
+    COTARefinementJobRead,
+)
 from pydantic import BaseModel, ConfigDict, Field, SkipValidation
 
 # if TYPE_CHECKING:
-#     from modules.analysis.cota.pipeline.step import PipelineStep
+#     from modules.concept_over_time_analysis.pipeline.step import PipelineStep
 
 
 class Cargo(BaseModel):

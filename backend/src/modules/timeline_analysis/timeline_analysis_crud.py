@@ -1,11 +1,11 @@
 from typing import List
 
-from modules.analysis.timeline_analysis.timeline_analysis_dto import (
+from modules.timeline_analysis.timeline_analysis_dto import (
     TimelineAnalysisCreateIntern,
     TimelineAnalysisType,
     TimelineAnalysisUpdateIntern,
 )
-from modules.analysis.timeline_analysis.timeline_analysis_orm import TimelineAnalysisORM
+from modules.timeline_analysis.timeline_analysis_orm import TimelineAnalysisORM
 from repos.db.crud_base import CRUDBase
 from sqlalchemy.orm import Session
 
