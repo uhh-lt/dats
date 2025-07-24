@@ -9,14 +9,14 @@ from modules.analysis.analysis_dto import (
     CodeOccurrence,
     SampledSdocsResults,
 )
-from modules.analysis.code_frequency.code_frequency import (
+from modules.analysis.code_frequency import (
     find_code_frequencies,
     find_code_occurrences,
 )
-from modules.analysis.document_sampler.document_sampler import document_sampler_by_tags
-from modules.analysis.statistics.count_metadata import (
+from modules.analysis.count_metadata import (
     compute_num_sdocs_with_date_metadata,
 )
+from modules.analysis.document_sampler import document_sampler_by_tags
 from sqlalchemy.orm import Session
 
 router = APIRouter(
