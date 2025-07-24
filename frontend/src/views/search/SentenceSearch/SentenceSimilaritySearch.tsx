@@ -6,7 +6,7 @@ import MetadataHooks from "../../../api/MetadataHooks.ts";
 import { SdocColumns } from "../../../api/openapi/models/SdocColumns.ts";
 import { SimSearchSentenceHit } from "../../../api/openapi/models/SimSearchSentenceHit.ts";
 import { SpanEntityStat } from "../../../api/openapi/models/SpanEntityStat.ts";
-import { SearchService } from "../../../api/openapi/services/SearchService.ts";
+import { SimsearchService } from "../../../api/openapi/services/SimsearchService.ts";
 import { QueryKey } from "../../../api/QueryKey.ts";
 import { MyFilter, createEmptyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 import DocumentInformation from "../../../components/SourceDocument/DocumentInformation/DocumentInformation.tsx";
@@ -74,7 +74,7 @@ function SentenceSimilaritySearch() {
       threshold,
     ],
     queryFn: () =>
-      SearchService.findSimilarSentences({
+      SimsearchService.findSimilarSentences({
         projId: projectId,
         threshold: threshold,
         topK: topK,

@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Filter_SdocColumns__Input } from "./Filter_SdocColumns__Input";
-export type Body_search_find_similar_images = {
+export type Body_simsearch_find_similar_images = {
   query: string | Array<string> | number;
   filter: Filter_SdocColumns__Input;
 };
