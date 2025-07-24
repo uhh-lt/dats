@@ -1,7 +1,17 @@
+from io import StringIO
+
 from loguru import logger
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
-from util.string_builder import StringBuilder
+
+
+class StringBuilder(StringIO):
+    def __iadd__(self, str: str):
+        self.write(str)
+        return self
+
+    def build(self):
+        return self.getvalue()
 
 
 def apply_html_source_mapping_with_custom_html_tags(
