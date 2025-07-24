@@ -2,18 +2,18 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_chat_rag_with_session } from "../models/Body_chat_rag_with_session";
-import type { LLMSessionResponse } from "../models/LLMSessionResponse";
+import type { Body_rag_rag_session } from "../models/Body_rag_rag_session";
+import type { ChatSessionResponse } from "../models/ChatSessionResponse";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-export class ChatService {
+export class RagService {
   /**
    * Answer a query using Retrieval-Augmented Generation (RAG)
-   * @returns LLMSessionResponse Successful Response
+   * @returns ChatSessionResponse Successful Response
    * @throws ApiError
    */
-  public static ragWithSession({
+  public static ragSession({
     projId,
     topK,
     threshold,
@@ -23,12 +23,12 @@ export class ChatService {
     projId: number;
     topK: number;
     threshold: number;
-    requestBody: Body_chat_rag_with_session;
+    requestBody: Body_rag_rag_session;
     sessionId?: string | null;
-  }): CancelablePromise<LLMSessionResponse> {
+  }): CancelablePromise<ChatSessionResponse> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/chat/rag",
+      url: "/rag/rag_session",
       query: {
         proj_id: projId,
         top_k: topK,
@@ -44,19 +44,19 @@ export class ChatService {
   }
   /**
    * Initiate or continue a chat session with the LLM using a prompt
-   * @returns LLMSessionResponse Successful Response
+   * @returns ChatSessionResponse Successful Response
    * @throws ApiError
    */
-  public static chatSesh({
+  public static chatSession({
     prompt,
     sessionId,
   }: {
     prompt: string;
     sessionId?: string | null;
-  }): CancelablePromise<LLMSessionResponse> {
+  }): CancelablePromise<ChatSessionResponse> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/chat/chat_session",
+      url: "/rag/chat_session",
       query: {
         prompt: prompt,
         session_id: sessionId,

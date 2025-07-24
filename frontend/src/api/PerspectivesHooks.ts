@@ -10,9 +10,9 @@ import { BackgroundJobStatus } from "./openapi/models/BackgroundJobStatus.ts";
 import { CodeRead } from "./openapi/models/CodeRead.ts";
 import { PerspectivesJobRead } from "./openapi/models/PerspectivesJobRead.ts";
 import { SdocColumns } from "./openapi/models/SdocColumns.ts";
-import { ChatService } from "./openapi/services/ChatService.ts";
 import { PerspectivesService } from "./openapi/services/PerspectivesService.ts";
 import { ProjectService } from "./openapi/services/ProjectService.ts";
+import { RagService } from "./openapi/services/RagService.ts";
 
 // ASPECTS
 
@@ -230,7 +230,7 @@ const useGetClustersBySdocId = (aspectId: number | null | undefined, sdocId: num
 // CHAT
 const useRAGChat = () =>
   useMutation({
-    mutationFn: ChatService.ragWithSession,
+    mutationFn: RagService.ragSession,
     onSuccess: (data) => {
       console.log(data);
     },
