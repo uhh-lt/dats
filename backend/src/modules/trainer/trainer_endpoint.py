@@ -5,14 +5,14 @@ from core.auth.authz_user import AuthzUser
 from fastapi import APIRouter, Depends
 from modules.trainer.trainer_job_dto import TrainerJobParameters, TrainerJobRead
 from modules.trainer.trainer_service import TrainerService
-from repos.redis_repo import RedisService
+from repos.redis_repo import RedisRepo
 from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/trainer", dependencies=[Depends(get_current_user)], tags=["trainer"]
 )
 
-redis: RedisService = RedisService()
+redis: RedisRepo = RedisRepo()
 ts: TrainerService = TrainerService()
 
 

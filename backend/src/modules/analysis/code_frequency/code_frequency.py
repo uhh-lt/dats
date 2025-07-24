@@ -14,7 +14,7 @@ from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
 from modules.analysis.analysis_dto import CodeFrequency, CodeOccurrence
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from sqlalchemy import and_, func
 
 
@@ -24,7 +24,7 @@ def find_code_frequencies(
     code_ids: List[int],
     doctypes: List[DocType],
 ) -> List[CodeFrequency]:
-    with SQLService().db_session() as db:
+    with SQLRepo().db_session() as db:
         # 1. find all codes of interest (that is the given code_ids and all their childrens code_ids)
         proj_db_obj = crud_project.read(db=db, id=project_id)
         all_codes = [code for code in proj_db_obj.codes if code.enabled]
@@ -134,7 +134,7 @@ def find_code_frequencies(
 def find_code_occurrences(
     project_id: int, user_ids: List[int], code_id: int
 ) -> List[CodeOccurrence]:
-    with SQLService().db_session() as db:
+    with SQLRepo().db_session() as db:
         # 1. query all span annotation occurrences of the code
         query = (
             db.query(

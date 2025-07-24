@@ -21,7 +21,7 @@ logger.remove()
 logger.add(sys.stderr, level=conf.logging.level.upper())
 
 # disabled to not write into containers, you might want to uncomment this for development
-# logger.add(str(Path(conf.repo.root_directory).joinpath("logs/{time}.log")),
+# logger.add(str(Path(conf.filesystem.root_directory).joinpath("logs/{time}.log")),
 #            rotation=f"{conf.logging.max_file_size} MB",
 #            level=conf.logging.level.upper())
 
@@ -35,8 +35,8 @@ def verify_config():
             "JWT Secret not set! Please provide a valid JWT Secret using the JWT_SECRET environment variable."
         )
 
-    repo_root = conf.repo.root_directory
-    if not repo_root or repo_root == "":
+    filesystem_root = conf.filesystem.root_directory
+    if not filesystem_root or filesystem_root == "":
         raise Exception(
-            "REPO_ROOT not set! Please provide a valid repo directory using the REPO_ROOT environment variable."
+            "FILESYSTEM_ROOT not set! Please provide a valid filesystem directory using the FILESYSTEM_ROOT environment variable."
         )

@@ -1,18 +1,18 @@
 from loguru import logger
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 
-repo = RepoService()
+fsr = FilesystemRepo()
 
 
 def create_pptd(cargo: PipelineCargo) -> PipelineCargo:
     logger.info(f"create pptd with ppj {cargo.ppj_id}")
-    filepath = repo._get_dst_path_for_project_sdoc_file(
+    filepath = fsr._get_dst_path_for_project_sdoc_file(
         proj_id=cargo.ppj_payload.project_id, filename=cargo.ppj_payload.filename
     )
     if not filepath.exists():
-        raise FileNotFoundError(f"File {filepath} not found in repository!")
+        raise FileNotFoundError(f"File {filepath} not found in filesystem!")
 
     # TODO: Ask Florian about cargo if its actually needed.
     additional_parameters = dict()

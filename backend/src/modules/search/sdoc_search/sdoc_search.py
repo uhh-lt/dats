@@ -19,13 +19,13 @@ from modules.search.search_dto import (
 )
 from modules.search.sorting import Sort
 from modules.simsearch.simsearch_service import SimSearchService
-from repos.db.sql_repo import SQLService
-from repos.elasticsearch_repo import ElasticSearchService
+from repos.db.sql_repo import SQLRepo
+from repos.elasticsearch_repo import ElasticSearchRepo
 from sqlalchemy.orm import Session
 
 
 def search_info(project_id) -> List[ColumnInfo[SdocColumns]]:
-    with SQLService().db_session() as db:
+    with SQLRepo().db_session() as db:
         project_metadata = [
             ProjectMetadataRead.model_validate(pm)
             for pm in crud_project_meta.read_by_project(db=db, proj_id=project_id)
@@ -69,7 +69,7 @@ def search(
     )
 
     # get the additional information about the documents
-    with SQLService().db_session() as db:
+    with SQLRepo().db_session() as db:
         sdoc_ids = [hit.id for hit in data.hits]
 
         # 1. the sdoc itself
@@ -104,7 +104,7 @@ def search_ids(
     page_size: Optional[int] = None,
 ) -> PaginatedElasticSearchDocumentHits:
     if search_query.strip() == "":
-        with SQLService().db_session() as db:
+        with SQLRepo().db_session() as db:
             filtered_sdoc_ids, total_results = filter_sdoc_ids(
                 db,
                 project_id,
@@ -124,7 +124,7 @@ def search_ids(
         if len(filter.items) == 0 and (sorts is None or len(sorts) == 0):
             filtered_sdoc_ids = None
         else:
-            with SQLService().db_session() as db:
+            with SQLRepo().db_session() as db:
                 filtered_sdoc_ids, _ = filter_sdoc_ids(db, project_id, filter, sorts)
                 filtered_sdoc_ids = set(filtered_sdoc_ids)
 
@@ -135,7 +135,7 @@ def search_ids(
         else:
             skip = None
             limit = None
-        return ElasticSearchService().search_sdocs_by_content_query(
+        return ElasticSearchRepo().search_sdocs_by_content_query(
             proj_id=project_id,
             query=search_query,
             sdoc_ids=filtered_sdoc_ids,
@@ -183,7 +183,7 @@ def find_similar_sentences(
     threshold: float,
     filter: Filter[SdocColumns],
 ) -> List[SimSearchSentenceHit]:
-    with SQLService().db_session() as db:
+    with SQLRepo().db_session() as db:
         filtered_sdoc_ids, _ = filter_sdoc_ids(db, proj_id, filter)
     return SimSearchService().find_similar_sentences(
         sdoc_ids_to_search=filtered_sdoc_ids,
@@ -201,7 +201,7 @@ def find_similar_images(
     threshold: float,
     filter: Filter[SdocColumns],
 ) -> List[SimSearchImageHit]:
-    with SQLService().db_session() as db:
+    with SQLRepo().db_session() as db:
         filtered_sdoc_ids, _ = filter_sdoc_ids(db, proj_id, filter)
     return SimSearchService().find_similar_images(
         sdoc_ids_to_search=filtered_sdoc_ids,

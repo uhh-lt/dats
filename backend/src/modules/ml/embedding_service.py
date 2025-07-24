@@ -19,11 +19,11 @@ from modules.ml.source_document_job_status_orm import (
     SourceDocumentJobStatusORM,
 )
 from ray_model_worker.dto.clip import ClipImageEmbeddingInput, ClipTextEmbeddingInput
-from repos.db.sql_repo import SQLService
-from repos.filesystem_repo import RepoService
-from repos.ollama_repo import OllamaService
-from repos.ray_repo import RayModelService
-from repos.vector.weaviate_repo import WeaviateService
+from repos.db.sql_repo import SQLRepo
+from repos.filesystem_repo import FilesystemRepo
+from repos.ollama_repo import OllamaRepo
+from repos.ray_repo import RayRepo
+from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy import ColumnElement, and_
 from util.image_utils import image_to_base64, load_image
 from weaviate import WeaviateClient
@@ -31,34 +31,34 @@ from weaviate import WeaviateClient
 
 class EmbeddingService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.sqls: SQLService = SQLService()
-        cls.repo = RepoService()
-        cls.rms: RayModelService = RayModelService()
-        cls.llm: OllamaService = OllamaService()
-        cls.weaviate: WeaviateService = WeaviateService()
+        cls.sqlr: SQLRepo = SQLRepo()
+        cls.fsr = FilesystemRepo()
+        cls.ray: RayRepo = RayRepo()
+        cls.ollama: OllamaRepo = OllamaRepo()
+        cls.weaviate: WeaviateRepo = WeaviateRepo()
         return super(EmbeddingService, cls).__new__(cls)
 
     def encode_document(self, text: str) -> np.ndarray:
-        return self.llm.llm_embed([text])
+        return self.ollama.llm_embed([text])
 
     def encode_sentences(self, sentences: List[str]) -> np.ndarray:
-        encoded_query = self.rms.clip_text_embedding(
+        encoded_query = self.ray.clip_text_embedding(
             ClipTextEmbeddingInput(text=sentences)
         )
         return encoded_query.numpy()
 
     def encode_image(self, sdoc_id: int) -> np.ndarray:
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             sdoc = SourceDocumentRead.model_validate(crud_sdoc.read(db=db, id=sdoc_id))
             assert (
                 sdoc.doctype == DocType.image
             ), f"SourceDocument with {sdoc_id=} is not an image!"
 
-        image_fp = self.repo.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
+        image_fp = self.fsr.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
         image = load_image(image_fp)
         base64_image = image_to_base64(image)
 
-        encoded_query = self.rms.clip_image_embedding(
+        encoded_query = self.ray.clip_image_embedding(
             ClipImageEmbeddingInput(
                 base64_images=[base64_image],
             )
@@ -91,7 +91,7 @@ class EmbeddingService(metaclass=SingletonMeta):
         project_id: int,
         batch_size=16,
     ):
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             query = (
                 db.query(SourceDocumentDataORM)
                 .outerjoin(
@@ -176,7 +176,7 @@ class EmbeddingService(metaclass=SingletonMeta):
         batch_size=8,
         force_override=False,
     ):
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             query = (
                 db.query(SourceDocumentDataORM)
                 .outerjoin(
@@ -199,7 +199,7 @@ class EmbeddingService(metaclass=SingletonMeta):
             return num_docs
 
         # Embed the documents
-        embeddings = self.llm.llm_embed(content).tolist()
+        embeddings = self.ollama.llm_embed(content).tolist()
 
         # Store the embeddings
         crud_document_embedding.add_embedding_batch(

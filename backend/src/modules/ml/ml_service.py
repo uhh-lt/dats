@@ -25,7 +25,7 @@ from modules.ml.source_document_job_status_orm import (
     JobStatus,
     SourceDocumentJobStatusORM,
 )
-from repos.redis_repo import RedisService
+from repos.redis_repo import RedisRepo
 from sqlalchemy import and_, or_
 
 
@@ -46,7 +46,7 @@ class NoSuchMLJobError(Exception):
 
 class MLService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.redis: RedisService = RedisService()
+        cls.redis: RedisRepo = RedisRepo()
         return super(MLService, cls).__new__(cls)
 
     def prepare_ml_job(self, ml_params: MLJobParameters) -> MLJobRead:

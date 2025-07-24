@@ -5,9 +5,9 @@ from core.doc.source_document_link_crud import crud_sdoc_link
 from loguru import logger
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 
-sql: SQLService = SQLService()
+sql: SQLRepo = SQLRepo()
 
 
 def persist_sdoc_links(cargo: PipelineCargo) -> PipelineCargo:

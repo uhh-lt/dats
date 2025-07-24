@@ -43,7 +43,7 @@ from modules.trainer.trainer_job_dto import (
 )
 
 
-class RedisService(metaclass=SingletonMeta):
+class RedisRepo(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         try:
             # setup redis
@@ -76,7 +76,7 @@ class RedisService(metaclass=SingletonMeta):
                 client.flushdb()
                 client.save()
 
-        return super(RedisService, cls).__new__(cls)
+        return super(RedisRepo, cls).__new__(cls)
 
     def shutdown(self) -> None:
         logger.info("Shutting down Redis Service!")

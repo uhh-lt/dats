@@ -23,9 +23,9 @@ from modules.perspectives.aspect_embedding_crud import crud_aspect_embedding
 from modules.perspectives.document_aspect_orm import DocumentAspectORM
 from repos.db.crud_base import CRUDBase, NoSuchElementError
 from repos.db.sql_utils import aggregate_ids
-from repos.elasticsearch_repo import ElasticSearchService
-from repos.filesystem_repo import RepoService
-from repos.vector.weaviate_repo import WeaviateService
+from repos.elasticsearch_repo import ElasticSearchRepo
+from repos.filesystem_repo import FilesystemRepo
+from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -144,18 +144,18 @@ class CRUDSourceDocument(
     def remove(self, db: Session, *, id: int) -> SourceDocumentORM:
         sdoc_db_obj = super().remove(db=db, id=id)
 
-        # remove file from repo
-        RepoService().remove_sdoc_file(
+        # remove file from filesystem
+        FilesystemRepo().remove_sdoc_file(
             sdoc=SourceDocumentRead.model_validate(sdoc_db_obj)
         )
 
         # remove from elasticsearch
-        ElasticSearchService().delete_document_from_index(
+        ElasticSearchRepo().delete_document_from_index(
             sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
         )
 
         # remove from index
-        with WeaviateService().weaviate_session() as client:
+        with WeaviateRepo().weaviate_session() as client:
             crud_aspect_embedding.remove_by_sdoc_id(
                 client=client, project_id=sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
             )

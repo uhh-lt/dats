@@ -8,18 +8,18 @@ from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from preprocessing.preprocessing_service import PreprocessingService
 from repos.filesystem_repo import (
-    FileAlreadyExistsInRepositoryError,
+    FileAlreadyExistsInFilesystemError,
     FileDeletionNotAllowedError,
-    RepoService,
+    FilesystemRepo,
 )
-from repos.ray_repo import RayModelService
+from repos.ray_repo import RayRepo
 from util.image_utils import base64_to_image
 
 cc = conf.celery
 
-repo = RepoService()
+fsr = FilesystemRepo()
 pps = PreprocessingService()
-rms = RayModelService()
+ray = RayRepo()
 
 
 def __split_large_pdf_into_chunks(
@@ -45,7 +45,7 @@ def __split_large_pdf_into_chunks(
     # Calculate the number of digits needed for zero-padding
     total_digits = len(str(total_pages))
 
-    # If yes, we proceed to split the PDF and save the chunks to disk in the project repo
+    # If yes, we proceed to split the PDF and save the chunks to disk in the project filesystem
     out_dir = input_doc.parent
     logger.info(
         f"Splitting PDF {input_doc.name} into {num_splits} chunks of "
@@ -64,10 +64,10 @@ def __split_large_pdf_into_chunks(
             new_pdf = fitz.open()  # type: ignore
             new_pdf.insert_pdf(src, from_page=start_page - 1, to_page=end_page - 1)
 
-            # If the output file already exists, we try to remove it from the project repo
+            # If the output file already exists, we try to remove it from the project filesystem
             if output_fn.exists():
                 try:
-                    repo._safe_remove_file_from_project_repo(
+                    fsr._safe_remove_file_from_project_dir(
                         proj_id=proj_id, filename=output_fn.name
                     )
                 except FileDeletionNotAllowedError:
@@ -75,7 +75,7 @@ def __split_large_pdf_into_chunks(
                         f"File {output_fn.name} already exists in Project {proj_id} and a SourceDocument with that filename"
                         " exists in the DB. Cannot overwrite it!"
                     )
-                    raise FileAlreadyExistsInRepositoryError(
+                    raise FileAlreadyExistsInFilesystemError(
                         proj_id=proj_id, filename=output_fn.name
                     )
             # Save the chunk to disk
@@ -101,7 +101,7 @@ def __extract_content_in_html_from_pdf_docs(
     logger.debug(f"Extracting content as HTML from {filepath.name} ...")
     pdf_bytes = filepath.read_bytes()
     # this will take some time ...
-    conversion_output = rms.docling_pdf_to_html(pdf_bytes=pdf_bytes)
+    conversion_output = ray.docling_pdf_to_html(pdf_bytes=pdf_bytes)
     doc_html = conversion_output.html_content
 
     # store all extracted images in the same directory as the PDF

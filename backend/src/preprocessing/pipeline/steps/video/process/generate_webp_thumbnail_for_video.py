@@ -5,9 +5,9 @@ from loguru import logger
 from PIL import Image
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.pipeline.model.video.preprovideodoc import PreProVideoDoc
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 
-repo = RepoService()
+fsr = FilesystemRepo()
 
 
 def generate_webp_thumbnail_for_video(cargo: PipelineCargo) -> PipelineCargo:
@@ -36,7 +36,7 @@ def generate_webp_thumbnail_for_video(cargo: PipelineCargo) -> PipelineCargo:
         logger.error(msg)
         raise IOError(msg)
 
-    thumbnail_filename = repo.generate_sdoc_filename(
+    thumbnail_filename = fsr.generate_sdoc_filename(
         ppvd.filepath, webp=True, thumbnail=True
     )
     with Image.open(BytesIO(half_time_frame)) as im:

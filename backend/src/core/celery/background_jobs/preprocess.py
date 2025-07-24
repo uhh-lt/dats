@@ -3,13 +3,13 @@ from pathlib import Path
 from loguru import logger
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.preprocessing_service import PreprocessingService
-from repos.db.sql_repo import SQLService
-from repos.filesystem_repo import RepoService
-from repos.redis_repo import RedisService
+from repos.db.sql_repo import SQLRepo
+from repos.filesystem_repo import FilesystemRepo
+from repos.redis_repo import RedisRepo
 
-sql: SQLService = SQLService(echo=False)
-redis: RedisService = RedisService()
-repo: RepoService = RepoService()
+sql: SQLRepo = SQLRepo(echo=False)
+redis: RedisRepo = RedisRepo()
+fsr: FilesystemRepo = FilesystemRepo()
 prepro: PreprocessingService = PreprocessingService()
 
 

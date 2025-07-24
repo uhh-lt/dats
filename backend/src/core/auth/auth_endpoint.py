@@ -7,7 +7,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from repos.db.crud_base import NoSuchElementError
-from repos.mail_repo import MailService
+from repos.mail_repo import MailRepo
 from sqlalchemy.orm import Session
 
 from core.auth.auth_exceptions import credentials_exception
@@ -53,7 +53,7 @@ async def register(
         )
 
     db_user = crud_user.create(db=db, create_dto=user)
-    await MailService().send_welcome_mail(user=UserRead.model_validate(db_user))
+    await MailRepo().send_welcome_mail(user=UserRead.model_validate(db_user))
     return UserRead.model_validate(db_user)
 
 

@@ -21,11 +21,11 @@ from fastapi.datastructures import Headers
 from fastapi.testclient import TestClient
 from loguru import logger
 from pytest import FixtureRequest
-from repos.db.sql_repo import SQLService
-from repos.elasticsearch_repo import ElasticSearchService
-from repos.filesystem_repo import RepoService
-from repos.redis_repo import RedisService
-from repos.vector.weaviate_repo import WeaviateService
+from repos.db.sql_repo import SQLRepo
+from repos.elasticsearch_repo import ElasticSearchRepo
+from repos.filesystem_repo import FilesystemRepo
+from repos.redis_repo import RedisRepo
+from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy.orm import Session
 
 os.environ["RESET_DATA"] = "1"
@@ -33,18 +33,18 @@ os.environ["RESET_DATA"] = "1"
 
 def pytest_sessionfinish():
     # Make sure the next test session starts with clean databases
-    SQLService().drop_database()
-    ElasticSearchService().drop_indices()
-    WeaviateService().drop_indices()
-    RedisService().flush_all_clients()
-    RepoService().purge_repo()
+    SQLRepo().drop_database()
+    ElasticSearchRepo().drop_indices()
+    WeaviateRepo().drop_indices()
+    RedisRepo().flush_all_clients()
+    FilesystemRepo().purge_filesystem()
 
 
 # Flo: just do it once. We have to check because if we start the main function, unvicorn will import this
 # file once more manually, so it would be executed twice.
 STARTUP_DONE = bool(int(os.environ.get("STARTUP_DONE", "0")))
 if not STARTUP_DONE:
-    if SQLService().database_contains_data():
+    if SQLRepo().database_contains_data():
         # Make sure we don't accidentally delete important data
         logger.error(
             f"Database '{conf.postgres.db}' is not empty. The tests will only run given a database without any tables in it. Drop database? Type 'yes' to clear all data"
@@ -101,13 +101,13 @@ def make_code(
 
 
 @pytest.fixture
-def sql_service() -> SQLService:
-    return SQLService()
+def sql_repo() -> SQLRepo:
+    return SQLRepo()
 
 
 @pytest.fixture
-def db(sql_service: SQLService) -> Generator[Session, None, None]:
-    db = sql_service.session_maker()
+def db(sql_repo: SQLRepo) -> Generator[Session, None, None]:
+    db = sql_repo.session_maker()
 
     yield db
 

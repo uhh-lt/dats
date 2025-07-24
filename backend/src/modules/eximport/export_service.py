@@ -42,9 +42,9 @@ from modules.eximport.whiteboards.export_whiteboards import (
     export_all_whiteboards,
     export_selected_whiteboards,
 )
-from repos.db.sql_repo import SQLService
-from repos.filesystem_repo import RepoService
-from repos.redis_repo import RedisService
+from repos.db.sql_repo import SQLRepo
+from repos.filesystem_repo import FilesystemRepo
+from repos.redis_repo import RedisRepo
 
 
 class ExportJobPreparationError(Exception):
@@ -71,9 +71,9 @@ class UnsupportedExportJobTypeError(Exception):
 
 class ExportService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.repo: RepoService = RepoService()
-        cls.redis: RedisService = RedisService()
-        cls.sqls: SQLService = SQLService()
+        cls.fsr: FilesystemRepo = FilesystemRepo()
+        cls.redis: RedisRepo = RedisRepo()
+        cls.sqlr: SQLRepo = SQLRepo()
 
         # map from job_type to function
         cls.export_method_for_job_type: Dict[ExportJobType, Callable[..., Path]] = {
@@ -105,7 +105,7 @@ class ExportService(metaclass=SingletonMeta):
         return super(ExportService, cls).__new__(cls)
 
     def prepare_export_job(self, export_params: ExportJobParameters) -> ExportJobRead:
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             crud_project.exists(
                 db=db,
                 id=export_params.project_id,
@@ -150,7 +150,7 @@ class ExportService(metaclass=SingletonMeta):
         )
 
         try:
-            with self.sqls.db_session() as db:
+            with self.sqlr.db_session() as db:
                 # get the export method based on the jobtype
                 export_method = self.export_method_for_job_type.get(
                     exj.parameters.export_job_type, None
@@ -161,7 +161,7 @@ class ExportService(metaclass=SingletonMeta):
                 # execute the export_method with the provided specific parameters
                 results_path = export_method(
                     db=db,
-                    repo=self.repo,
+                    fsr=self.fsr,
                     project_id=exj.parameters.project_id,
                     **(
                         exj.parameters.specific_export_job_parameters.model_dump(
@@ -171,7 +171,7 @@ class ExportService(metaclass=SingletonMeta):
                         else {}
                     ),
                 )
-                results_url = self.repo.get_temp_file_url(
+                results_url = self.fsr.get_temp_file_url(
                     results_path.name, relative=True
                 )
 

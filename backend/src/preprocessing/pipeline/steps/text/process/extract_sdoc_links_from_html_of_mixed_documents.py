@@ -5,10 +5,10 @@ from config import conf
 from core.doc.source_document_link_dto import SourceDocumentLinkCreate
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 
 cc = conf.celery
-repo: RepoService = RepoService()
+fsr: FilesystemRepo = FilesystemRepo()
 
 
 def extract_sdoc_links_from_html_of_mixed_documents(
@@ -32,7 +32,7 @@ def extract_sdoc_links_from_html_of_mixed_documents(
             create_dtos.append(
                 SourceDocumentLinkCreate(
                     parent_source_document_id=None,
-                    linked_source_document_filename=repo.truncate_filename(img_src),
+                    linked_source_document_filename=fsr.truncate_filename(img_src),
                 )
             )
 
@@ -49,7 +49,7 @@ def extract_sdoc_links_from_html_of_mixed_documents(
         create_dtos.append(
             SourceDocumentLinkCreate(
                 parent_source_document_id=None,
-                linked_source_document_filename=repo.truncate_filename(audio_src),
+                linked_source_document_filename=fsr.truncate_filename(audio_src),
             )
         )
 
@@ -66,7 +66,7 @@ def extract_sdoc_links_from_html_of_mixed_documents(
         create_dtos.append(
             SourceDocumentLinkCreate(
                 parent_source_document_id=None,
-                linked_source_document_filename=repo.truncate_filename(video_src),
+                linked_source_document_filename=fsr.truncate_filename(video_src),
             )
         )
 

@@ -24,7 +24,7 @@ class ModelParams(TypedDict):
     emb: Dict
 
 
-class OllamaService(metaclass=SingletonMeta):
+class OllamaRepo(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         try:
             # Ollama Connection
@@ -109,7 +109,7 @@ class OllamaService(metaclass=SingletonMeta):
 
         logger.info("Successfully established connection to Ollama!")
 
-        return super(OllamaService, cls).__new__(cls)
+        return super(OllamaRepo, cls).__new__(cls)
 
     def _start_llm_chat_session(self) -> str:
         session_id = str(uuid4())

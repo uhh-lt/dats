@@ -7,11 +7,11 @@ from modules.eximport.export_job_dto import (
     ExportJobRead,
     ExportJobUpdate,
 )
-from repos.redis_repo import RedisService
+from repos.redis_repo import RedisRepo
 
 
 def test_crud_cycle() -> None:
-    redis: RedisService = RedisService()
+    redis: RedisRepo = RedisRepo()
 
     assert True  # FIXME
     return

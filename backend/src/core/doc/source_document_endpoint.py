@@ -22,7 +22,7 @@ from core.metadata.source_document_metadata_dto import SourceDocumentMetadataRea
 from fastapi import APIRouter, Depends
 from loguru import logger
 from modules.analysis.word_frequency.word_frequency_dto import WordFrequencyRead
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy.orm import Session
 
 router = APIRouter(
@@ -140,7 +140,7 @@ def get_file_url(
 
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     # TODO: FIX TYPING
-    return RepoService().get_sdoc_url(
+    return FilesystemRepo().get_sdoc_url(
         sdoc=SourceDocumentRead.model_validate(sdoc_db_obj),
         relative=relative,
         webp=webp,

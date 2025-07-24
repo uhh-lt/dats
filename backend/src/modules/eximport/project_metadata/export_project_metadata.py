@@ -10,19 +10,19 @@ from modules.eximport.project_metadata.project_metadata_export_schema import (
     ProjectMetadataExportCollection,
     ProjectMetadataExportSchema,
 )
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy.orm import Session
 
 
 def export_all_project_metadatas(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     project_id: int,
 ) -> Path:
     project_metadatas = crud_project.read(db=db, id=project_id).metadata_
     return __export_project_metadatas(
         db=db,
-        repo=repo,
+        fsr=fsr,
         fn=f"project_{project_id}_all_project_metadatas",
         project_metadatas=project_metadatas,
     )
@@ -30,7 +30,7 @@ def export_all_project_metadatas(
 
 def __export_project_metadatas(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     fn: str,
     project_metadatas: List[ProjectMetadataORM],
 ) -> Path:
@@ -40,7 +40,7 @@ def __export_project_metadatas(
     export_data = __generate_export_df_for_project_metadata(
         project_metadatas=project_metadatas
     )
-    return repo.write_df_to_temp_file(
+    return fsr.write_df_to_temp_file(
         df=export_data,
         fn=fn,
     )

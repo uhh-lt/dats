@@ -13,7 +13,7 @@ from util.import_util import import_by_suffix
 import_by_suffix("_orm.py")
 
 
-class SQLService(metaclass=SingletonMeta):
+class SQLRepo(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         try:
             db_uri = f"postgresql://{conf.postgres.user}:{conf.postgres.password}@{conf.postgres.host}:{conf.postgres.port}/{conf.postgres.db}"
@@ -33,7 +33,7 @@ class SQLService(metaclass=SingletonMeta):
                     logger.warning("Dropping existing DB!")
                     drop_database(cls.__engine.url)
 
-            return super(SQLService, cls).__new__(cls)
+            return super(SQLRepo, cls).__new__(cls)
 
         except Exception as e:
             msg = f"Cannot connect to PostgresSQL - Error '{e}'"

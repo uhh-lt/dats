@@ -2,9 +2,9 @@ from loguru import logger
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from preprocessing.preprocessing_service import PreprocessingService
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 
-repo = RepoService()
+fsr = FilesystemRepo()
 pps = PreprocessingService()
 
 

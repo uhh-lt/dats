@@ -6,8 +6,8 @@ from common.singleton_meta import SingletonMeta
 from config import conf
 from fastapi import Request
 from loguru import logger
-from repos.db.sql_repo import SQLService
-from repos.mail_repo import MailService
+from repos.db.sql_repo import SQLRepo
+from repos.mail_repo import MailRepo
 
 from core.user.user_crud import crud_user
 from core.user.user_dto import UserCreate, UserRead
@@ -16,7 +16,7 @@ from core.user.user_orm import UserORM
 
 class OAuthService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.mail_service = MailService()
+        cls.mail_repo = MailRepo()
 
         cls.is_enabled = conf.api.auth.oidc.enabled == "True"
         cls.oauth = OAuth()
@@ -52,7 +52,7 @@ class OAuthService(metaclass=SingletonMeta):
             userinfo = token.get("userinfo")
             print(f"Userinfo: {userinfo}")
 
-            with SQLService().db_session() as db:
+            with SQLRepo().db_session() as db:
                 try:
                     # Warning: Security concern
                     user = crud_user.read_by_email(db=db, email=userinfo["email"])
@@ -75,7 +75,7 @@ class OAuthService(metaclass=SingletonMeta):
                             ),
                         ),
                     )
-                    await self.mail_service.send_welcome_mail(
+                    await self.mail_repo.send_welcome_mail(
                         user=UserRead.model_validate(user)
                     )
                     return user

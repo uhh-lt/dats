@@ -20,13 +20,13 @@ from modules.eximport.cota.cota_transformations import (
     transform_training_settings_for_export,
 )
 from modules.eximport.no_data_export_error import NoDataToExportError
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy.orm import Session
 
 
 def export_selected_cota(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     project_id: int,
     cota_ids: List[int],
 ) -> Path:
@@ -35,7 +35,7 @@ def export_selected_cota(
 
     Args:
         db: Database session
-        repo: Repository service for file operations
+        fsr: Filesystem repository service for file operations
         project_id: ID of the project
         cota_ids: List of concept over time analysis IDs to export
 
@@ -48,7 +48,7 @@ def export_selected_cota(
     cota_analyses = crud_cota.read_by_ids(db=db, ids=cota_ids)
     return __export_cota(
         db=db,
-        repo=repo,
+        fsr=fsr,
         fn=f"project_{project_id}_selected_cota",
         cota_analyses=cota_analyses,
     )
@@ -56,7 +56,7 @@ def export_selected_cota(
 
 def export_all_cota(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     project_id: int,
 ) -> Path:
     """
@@ -64,7 +64,7 @@ def export_all_cota(
 
     Args:
         db: Database session
-        repo: Repository service for file operations
+        fsr: Filesystem repository service for file operations
         project_id: ID of the project
 
     Returns:
@@ -76,7 +76,7 @@ def export_all_cota(
     cota_analyses = crud_cota.read_by_project(db=db, project_id=project_id)
     return __export_cota(
         db=db,
-        repo=repo,
+        fsr=fsr,
         fn=f"project_{project_id}_all_cota",
         cota_analyses=cota_analyses,
     )
@@ -84,7 +84,7 @@ def export_all_cota(
 
 def __export_cota(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     fn: str,
     cota_analyses: List[ConceptOverTimeAnalysisORM],
 ) -> Path:
@@ -93,7 +93,7 @@ def __export_cota(
 
     Args:
         db: Database session
-        repo: Repository service for file operations
+        fsr: Filesystem repository service for file operations
         fn: Filename for the export
         cota_analyses: List of COTA ORMs to export
 
@@ -107,7 +107,7 @@ def __export_cota(
         raise NoDataToExportError("No concept over time analyses to export.")
 
     export_data = __generate_export_df_for_cota(db=db, cota_analyses=cota_analyses)
-    return repo.write_df_to_temp_file(
+    return fsr.write_df_to_temp_file(
         df=export_data,
         fn=fn,
     )

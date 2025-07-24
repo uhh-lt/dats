@@ -67,10 +67,10 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
 
         # start and init services
         __init_services__(
-            create_root_repo_directory_structure=not startup_in_progress,
+            create_root_directory_structure=not startup_in_progress,
             sql_echo=sql_echo,
             reset_database=reset_data,
-            reset_repo=reset_data,
+            reset_filesystem=reset_data,
             reset_elasticsearch=reset_data,
             reset_vector_index=reset_data,
         )
@@ -101,50 +101,50 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
 
 # noinspection PyUnresolvedReferences,PyProtectedMember
 def __init_services__(
-    create_root_repo_directory_structure: bool = False,
+    create_root_directory_structure: bool = False,
     sql_echo: bool = False,
     reset_database: bool = False,
-    reset_repo: bool = False,
+    reset_filesystem: bool = False,
     reset_elasticsearch: bool = False,
     reset_vector_index: bool = False,
 ) -> None:
     # import celery workers to configure
     # import and init RepoService
-    from repos.filesystem_repo import RepoService
+    from repos.filesystem_repo import FilesystemRepo
 
-    repos = RepoService()
-    if create_root_repo_directory_structure:
-        repos._create_root_repo_directory_structure(remove_if_exists=reset_repo)
+    fsr = FilesystemRepo()
+    if create_root_directory_structure:
+        fsr._create_root_directory_structure(remove_if_exists=reset_filesystem)
     # create SQL DBs and Tables
-    from repos.db.sql_repo import SQLService
+    from repos.db.sql_repo import SQLRepo
 
-    SQLService(echo=sql_echo, reset_database=reset_database)
+    SQLRepo(echo=sql_echo, reset_database=reset_database)
 
     # create CRUDs
     from common.crud_enum import Crud  # noqa: F401
 
     # import and init ElasticSearch
-    from repos.elasticsearch_repo import ElasticSearchService
+    from repos.elasticsearch_repo import ElasticSearchRepo
 
-    ElasticSearchService(remove_all_indices=reset_elasticsearch)
+    ElasticSearchRepo(remove_all_indices=reset_elasticsearch)
     # import and init RedisService
-    from repos.redis_repo import RedisService
+    from repos.redis_repo import RedisRepo
 
-    RedisService(flush_all_clients=reset_database)
+    RedisRepo(flush_all_clients=reset_database)
 
     # import and init MailService
-    from repos.mail_repo import MailService
+    from repos.mail_repo import MailRepo
 
-    MailService()
+    MailRepo()
     # import and init RayModelService
-    from repos.ray_repo import RayModelService
+    from repos.ray_repo import RayRepo
 
-    RayModelService()
+    RayRepo()
 
     # import and init WeaviateService
-    from repos.vector.weaviate_repo import WeaviateService
+    from repos.vector.weaviate_repo import WeaviateRepo
 
-    WeaviateService(flush=reset_vector_index)
+    WeaviateRepo(flush=reset_vector_index)
 
     # import and init SimSearchService
     from modules.simsearch.simsearch_service import SimSearchService
@@ -152,9 +152,9 @@ def __init_services__(
     SimSearchService()
 
     # import and init OllamaService
-    from repos.ollama_repo import OllamaService
+    from repos.ollama_repo import OllamaRepo
 
-    OllamaService()
+    OllamaRepo()
 
     # import and init LLMService
     from modules.llm_assistant.llm_service import LLMService
@@ -171,9 +171,9 @@ def __create_system_user__() -> None:
     from config import conf
     from core.user.user_crud import crud_user
     from core.user.user_dto import UserCreate
-    from repos.db.sql_repo import SQLService
+    from repos.db.sql_repo import SQLRepo
 
-    with SQLService().db_session() as db_session:
+    with SQLRepo().db_session() as db_session:
         if not crud_user.exists(db=db_session, id=1):
             # TODO Flo: this is not nice.. make sure system user cannot be changed, seen from outside, login, etc
             create_dto = UserCreate(
@@ -189,9 +189,9 @@ def __create_demo_user__() -> None:
     from config import conf
     from core.user.user_crud import crud_user
     from core.user.user_dto import UserCreate
-    from repos.db.sql_repo import SQLService
+    from repos.db.sql_repo import SQLRepo
 
-    with SQLService().db_session() as db_session:
+    with SQLRepo().db_session() as db_session:
         if not crud_user.exists(db=db_session, id=2):
             create_dto = UserCreate(
                 email=str(conf.demo_user.email),
@@ -206,9 +206,9 @@ def __create_assistant_users__() -> None:
     from config import conf
     from core.user.user_crud import crud_user
     from core.user.user_dto import UserCreate
-    from repos.db.sql_repo import SQLService
+    from repos.db.sql_repo import SQLRepo
 
-    with SQLService().db_session() as db_session:
+    with SQLRepo().db_session() as db_session:
         for user_id, last_name in [
             (9990, "ZeroShot"),
             (9991, "FewShot"),

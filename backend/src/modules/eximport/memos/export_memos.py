@@ -18,20 +18,20 @@ from modules.eximport.memos.memo_export_schema import (
     MemoExportSchema,
 )
 from modules.eximport.no_data_export_error import NoDataToExportError
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy.orm import Session
 
 
 def export_selected_memos(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     project_id: int,
     memo_ids: List[int],
 ) -> Path:
     memos = crud_memo.read_by_ids(db=db, ids=memo_ids)
     return __export_memos(
         db=db,
-        repo=repo,
+        fsr=fsr,
         fn=f"project_{project_id}_selected_memos",
         memos=memos,
     )
@@ -39,13 +39,13 @@ def export_selected_memos(
 
 def export_all_memos(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     project_id: int,
 ) -> Path:
     memos = crud_memo.read_by_project(db=db, project_id=project_id)
     return __export_memos(
         db=db,
-        repo=repo,
+        fsr=fsr,
         fn=f"project_{project_id}_all_memos",
         memos=memos,
     )
@@ -53,7 +53,7 @@ def export_all_memos(
 
 def __export_memos(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     fn: str,
     memos: List[MemoORM],
 ) -> Path:
@@ -61,7 +61,7 @@ def __export_memos(
         raise NoDataToExportError("No memos to export.")
 
     export_data = __generate_export_df_for_memos(db=db, memos=memos)
-    return repo.write_df_to_temp_file(
+    return fsr.write_df_to_temp_file(
         df=export_data,
         fn=fn,
     )

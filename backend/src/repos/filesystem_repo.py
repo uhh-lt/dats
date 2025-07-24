@@ -28,28 +28,28 @@ from loguru import logger
 #           this service...
 
 
-class SourceDocumentNotFoundInRepositoryError(Exception):
+class SourceDocumentNotFoundInFilesystemError(Exception):
     def __init__(self, sdoc: SourceDocumentRead, dst: Union[str, Path]):
         super().__init__(
             (
                 f"The original file of SourceDocument {sdoc.id} ({sdoc.filename}) cannot be found in "
-                f"the DATS Repository at {dst}"
+                f"the DATS Filesystem at {dst}"
             )
         )
 
 
-class FileNotFoundInRepositoryError(Exception):
+class FileNotFoundInFilesystemError(Exception):
     def __init__(self, proj_id: int, filename: Union[str, Path], dst: Union[str, Path]):
         super().__init__(
-            f"The file '{filename}' of Project {proj_id} cannot be found in the DATS Repository at {dst}"
+            f"The file '{filename}' of Project {proj_id} cannot be found in the DATS Filesystem at {dst}"
         )
 
 
-class FileAlreadyExistsInRepositoryError(Exception):
+class FileAlreadyExistsInFilesystemError(Exception):
     def __init__(self, proj_id: int, filename: Union[str, Path]):
         super().__init__(
             f"Cannot store the file '{filename}' of Project {proj_id} because there is a file with the "
-            f"same name in the DATS Repository associated with a SourceDocument!"
+            f"same name in the DATS Filesystem associated with a SourceDocument!"
         )
 
 
@@ -70,7 +70,7 @@ class FileRemovalError(Exception):
         )
 
 
-class ProjectAlreadyExistsInRepositoryError(Exception):
+class ProjectAlreadyExistsInFilesystemError(Exception):
     def __init__(self, proj_id: int):
         super().__init__(
             f"Cannot create directory structure for Project {proj_id} because it already exists!"
@@ -91,23 +91,23 @@ class ErroneousArchiveException(Exception):
         )
 
 
-class RepoService(metaclass=SingletonMeta):
+class FilesystemRepo(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        repo_root = Path(conf.repo.root_directory)
-        logger.info(f"Using repo root {repo_root}")
-        cls.repo_root = repo_root
-        cls.temp_files_root = repo_root.joinpath("temporary_files")
-        cls.logs_root = repo_root.joinpath("logs")
-        cls.proj_root = repo_root.joinpath("projects")
+        root_dir = Path(conf.filesystem.root_directory)
+        logger.info(f"Using root directory {root_dir}")
+        cls.root_dir = root_dir
+        cls.temp_files_root = root_dir.joinpath("temporary_files")
+        cls.logs_root = root_dir.joinpath("logs")
+        cls.proj_root = root_dir.joinpath("projects")
 
         # setup base url where the content server can be reached
-        base_url = "https://" if conf.repo.content_server.https else "http://"
-        base_url += conf.repo.content_server.host + ":"
-        base_url += str(conf.repo.content_server.port)
-        base_url += conf.repo.content_server.context_path
+        base_url = "https://" if conf.filesystem.content_server.https else "http://"
+        base_url += conf.filesystem.content_server.host + ":"
+        base_url += str(conf.filesystem.content_server.port)
+        base_url += conf.filesystem.content_server.context_path
         cls.base_url = base_url
 
-        return super(RepoService, cls).__new__(cls)
+        return super(FilesystemRepo, cls).__new__(cls)
 
     @staticmethod
     def truncate_filename(filename: Union[str, Path]) -> str:
@@ -126,12 +126,12 @@ class RepoService(metaclass=SingletonMeta):
             ).with_suffix(suffix)  # and add suffix again
         return str(filename)
 
-    def _create_root_repo_directory_structure(self, remove_if_exists: bool = False):
+    def _create_root_directory_structure(self, remove_if_exists: bool = False):
         try:
-            if self.repo_root.exists() and remove_if_exists:
-                logger.warning(f"Removing DATS Repo at {self.repo_root}")
-                for filename in self.repo_root.iterdir():
-                    file_path = self.repo_root.joinpath(self.repo_root, filename)
+            if self.root_dir.exists() and remove_if_exists:
+                logger.warning(f"Removing DATS Filesystem at {self.root_dir}")
+                for filename in self.root_dir.iterdir():
+                    file_path = self.root_dir.joinpath(self.root_dir, filename)
                     try:
                         if file_path.is_file() or file_path.is_symlink():
                             os.unlink(file_path)
@@ -140,10 +140,10 @@ class RepoService(metaclass=SingletonMeta):
                     except Exception as e:
                         logger.error(f"Failed to remove {file_path} because: {e}")
 
-            # make sure repository root dir exists
-            if not self.repo_root.exists():
-                self.repo_root.mkdir(parents=True)
-                logger.info(f"Created DATS repository at {str(self.repo_root)}")
+            # make sure filesystem root dir exists
+            if not self.root_dir.exists():
+                self.root_dir.mkdir(parents=True)
+                logger.info(f"Created DATS filesystem at {str(self.root_dir)}")
 
             # make sure projtemp_files_root exists
             if not self.temp_files_root.exists():
@@ -163,13 +163,13 @@ class RepoService(metaclass=SingletonMeta):
                 logger.info(f"Created DATS project root at {str(self.proj_root)}")
 
         except Exception as e:
-            msg = f"Cannot create repository directory structure at {conf.repo.root_directory}: {e}"
+            msg = f"Cannot create filesystem directory structure at {conf.filesystem.root_directory}: {e}"
             logger.error(msg)
             raise SystemExit(msg)
 
-    def purge_repo(self) -> None:
-        logger.warning("Removing ALL FILES in repo")
-        for item in self.repo_root.iterdir():
+    def purge_filesystem(self) -> None:
+        logger.warning(f"Removing ALL FILES in root directory ({self.root_dir})!")
+        for item in self.root_dir.iterdir():
             try:
                 if item.is_file() or item.is_symlink():
                     os.unlink(item)
@@ -179,14 +179,16 @@ class RepoService(metaclass=SingletonMeta):
                 logger.error(f"Failed to remove {item} because: {e}")
 
     def purge_temporary_files(self) -> None:
-        logger.warning("Removing temporary files in repo!")
+        logger.warning(f"Removing temporary files ({self.temp_files_root}!")
         shutil.rmtree(self.temp_files_root)
         self.temp_files_root.mkdir(parents=True)
 
     def purge_project_data(self, proj_id: int) -> None:
-        logger.warning(f"Removing ALL FILES in repo of project with ID={proj_id}")
-        proj_repo_path = self.get_project_repo_root_path(proj_id=proj_id)
-        shutil.rmtree(proj_repo_path)
+        proj_dir_path = self.get_project_root_dir_path(proj_id=proj_id)
+        logger.warning(
+            f"Removing ALL FILES of project with ID={proj_id} ({proj_dir_path})!"
+        )
+        shutil.rmtree(proj_dir_path)
 
     def remove_sdoc_file(self, sdoc: SourceDocumentRead) -> None:
         logger.info(
@@ -198,7 +200,7 @@ class RepoService(metaclass=SingletonMeta):
         logger.info(f"Removing all SourceDocument Files of project with ID={proj_id}")
         for f in map(
             Path,
-            os.scandir(self._get_project_repo_sdocs_root_path(proj_id=proj_id)),
+            os.scandir(self._get_project_dir_sdocs_root_path(proj_id=proj_id)),
         ):
             logger.info(
                 f"Removing SourceDocument File {f.name} of project with ID={proj_id}"
@@ -259,23 +261,23 @@ class RepoService(metaclass=SingletonMeta):
             logger.error(
                 (
                     f"SourceDocument {filename} with ID {sdoc.id} from Project {sdoc.project_id} cannot be"
-                    f" found in Repository at {dst_path}!"
+                    f" found in Filesystem at {dst_path}!"
                 )
             )
-            raise SourceDocumentNotFoundInRepositoryError(sdoc=sdoc, dst=str(dst_path))
+            raise SourceDocumentNotFoundInFilesystemError(sdoc=sdoc, dst=str(dst_path))
         return dst_path
 
-    def get_project_repo_root_path(self, proj_id: int) -> Path:
+    def get_project_root_dir_path(self, proj_id: int) -> Path:
         return self.proj_root.joinpath(f"{proj_id}/")
 
-    def _get_project_repo_sdocs_root_path(self, proj_id: int) -> Path:
-        return self.get_project_repo_root_path(proj_id=proj_id).joinpath("docs/")
+    def _get_project_dir_sdocs_root_path(self, proj_id: int) -> Path:
+        return self.get_project_root_dir_path(proj_id=proj_id).joinpath("docs/")
 
     def _get_dst_path_for_project_sdoc_file(
         self, proj_id: int, filename: Union[str, Path]
     ) -> Path:
         filename = Path(self.truncate_filename(filename))
-        return self._get_project_repo_sdocs_root_path(proj_id=proj_id).joinpath(
+        return self._get_project_dir_sdocs_root_path(proj_id=proj_id).joinpath(
             f"{filename}"
         )
 
@@ -287,7 +289,7 @@ class RepoService(metaclass=SingletonMeta):
         self, proj_id: int, filename: Union[str, Path]
     ) -> bool:
         return (
-            self._get_project_repo_sdocs_root_path(proj_id=proj_id)
+            self._get_project_dir_sdocs_root_path(proj_id=proj_id)
             .joinpath(f"{filename}")
             .exists()
         )
@@ -300,7 +302,7 @@ class RepoService(metaclass=SingletonMeta):
             self.get_models_root_path(proj_id=proj_id),
             self.get_plots_root_path(proj_id=proj_id),
             self.get_dataloaders_root_dir(proj_id=proj_id),
-            self._get_project_repo_sdocs_root_path(proj_id=proj_id),
+            self._get_project_dir_sdocs_root_path(proj_id=proj_id),
         ]
         for dst_path in paths:
             try:
@@ -308,7 +310,7 @@ class RepoService(metaclass=SingletonMeta):
                     logger.warning(
                         "Cannot create project directory structure because it already exists!"
                     )
-                    raise ProjectAlreadyExistsInRepositoryError(proj_id=proj_id)
+                    raise ProjectAlreadyExistsInFilesystemError(proj_id=proj_id)
                 dst_path.mkdir(parents=True, exist_ok=True)
             except Exception as e:
                 # FIXME Flo: Throw or what?!
@@ -325,7 +327,7 @@ class RepoService(metaclass=SingletonMeta):
         )
         if dst_path.exists():
             try:
-                self._safe_remove_file_from_project_repo(
+                self._safe_remove_file_from_project_dir(
                     proj_id=proj_id, filename=filename
                 )
             except FileDeletionNotAllowedError:
@@ -333,7 +335,7 @@ class RepoService(metaclass=SingletonMeta):
                     f"File {filename} already exists in Project {proj_id} and a SourceDocument with that filename"
                     " exists in the DB. Cannot overwrite it!"
                 )
-                raise FileAlreadyExistsInRepositoryError(
+                raise FileAlreadyExistsInFilesystemError(
                     proj_id=proj_id, filename=filename
                 )
 
@@ -368,7 +370,7 @@ class RepoService(metaclass=SingletonMeta):
         print(files)
         for file in files:
             if not file.exists():
-                raise FileNotFoundInRepositoryError(
+                raise FileNotFoundInFilesystemError(
                     proj_id=-1, filename=file.name, dst=file
                 )
 
@@ -441,9 +443,9 @@ class RepoService(metaclass=SingletonMeta):
         fn = Path(self.truncate_filename(fn))
         p = self.temp_files_root / fn
         if not p.exists():
-            raise FileNotFoundInRepositoryError(proj_id=-1, filename=fn, dst=p)
+            raise FileNotFoundInFilesystemError(proj_id=-1, filename=fn, dst=p)
 
-        relative_url = str(p.relative_to(self.repo_root))
+        relative_url = str(p.relative_to(self.root_dir))
         if relative:
             return relative_url
 
@@ -459,24 +461,7 @@ class RepoService(metaclass=SingletonMeta):
         dst_path = self.get_path_to_sdoc_file(
             sdoc, raise_if_not_exists=True, webp=webp, thumbnail=thumbnail
         )
-        relative_url = str(dst_path.relative_to(self.repo_root))
-        if relative:
-            return relative_url
-        return url.urljoin(self.base_url, relative_url)
-
-    def get_url_from_file_in_repo(
-        self,
-        file_path: Path,
-        relative: bool = True,
-        webp: bool = False,
-        thumbnail: bool = False,
-    ) -> str:
-        if not file_path.exists():
-            msg = f"File {file_path} not found in Repository!"
-            logger.error(msg)
-            raise FileNotFoundError(msg)
-
-        relative_url = str(file_path.relative_to(self.repo_root))
+        relative_url = str(dst_path.relative_to(self.root_dir))
         if relative:
             return relative_url
         return url.urljoin(self.base_url, relative_url)
@@ -541,13 +526,13 @@ class RepoService(metaclass=SingletonMeta):
         src_file.rename(in_project_dst)
         return in_project_dst
 
-    def _safe_remove_file_from_project_repo(
+    def _safe_remove_file_from_project_dir(
         self, proj_id: int, filename: Union[str, Path]
     ) -> None:
         # We need to check whether an SDoc with that filename exists in the DB. If not, we can overwrite it.
         from core.doc.source_document_crud import crud_sdoc
 
-        from repos.db.sql_repo import SQLService
+        from repos.db.sql_repo import SQLRepo
 
         dst_path = self._get_dst_path_for_project_sdoc_file(
             proj_id=proj_id, filename=filename
@@ -559,7 +544,7 @@ class RepoService(metaclass=SingletonMeta):
             )
             return
 
-        with SQLService().db_session() as db:
+        with SQLRepo().db_session() as db:
             try:
                 sdoc = crud_sdoc.read_by_filename(
                     db=db,
@@ -609,7 +594,7 @@ class RepoService(metaclass=SingletonMeta):
             f.close()
         return filepath
 
-    def store_uploaded_file_in_project_repo(
+    def store_uploaded_file_in_project_dir(
         self, proj_id: int, uploaded_file: UploadFile
     ) -> Path:
         try:
@@ -623,7 +608,7 @@ class RepoService(metaclass=SingletonMeta):
                 proj_id=proj_id, filename=fn
             )
             logger.info(
-                f"Storing Uploaded File {fn} in Project {proj_id} Repo at {in_project_dst.relative_to(self.repo_root)} ..."
+                f"Storing Uploaded File {fn} in Project {proj_id} directory at {in_project_dst.relative_to(self.root_dir)} ..."
             )
             self.store_uploaded_file(
                 uploaded_file=uploaded_file, filepath=in_project_dst, fn=fn
@@ -646,9 +631,9 @@ class RepoService(metaclass=SingletonMeta):
         )
         if not dst_path.exists():
             logger.error(
-                f"File '{filename}' in Project {proj_id} cannot be found in Repository at {dst_path}!"
+                f"File '{filename}' in Project {proj_id} cannot be found in Filesystem at {dst_path}!"
             )
-            raise FileNotFoundInRepositoryError(
+            raise FileNotFoundInFilesystemError(
                 proj_id=proj_id, filename=filename, dst=str(dst_path)
             )
 
@@ -672,7 +657,7 @@ class RepoService(metaclass=SingletonMeta):
         return dst_path, create_dto
 
     def get_plots_root_path(self, proj_id: int) -> Path:
-        return self.get_project_repo_root_path(proj_id=proj_id).joinpath("plots")
+        return self.get_project_root_dir_path(proj_id=proj_id).joinpath("plots")
 
     def get_plot_path(
         self,
@@ -683,7 +668,7 @@ class RepoService(metaclass=SingletonMeta):
         return name
 
     def get_models_root_path(self, proj_id: int) -> Path:
-        return self.get_project_repo_root_path(proj_id=proj_id).joinpath("models")
+        return self.get_project_root_dir_path(proj_id=proj_id).joinpath("models")
 
     def get_model_dir(
         self,
@@ -705,7 +690,7 @@ class RepoService(metaclass=SingletonMeta):
         return self.get_model_dir(proj_id=proj_id, model_name=model_name).exists()
 
     def get_dataloaders_root_dir(self, proj_id: int) -> Path:
-        return self.get_project_repo_root_path(proj_id=proj_id).joinpath("dataloaders")
+        return self.get_project_root_dir_path(proj_id=proj_id).joinpath("dataloaders")
 
     def get_dataloader_filename(
         self,

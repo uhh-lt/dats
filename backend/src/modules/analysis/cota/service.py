@@ -27,10 +27,10 @@ from modules.analysis.cota.concept_over_time_analysis_dto import (
 from modules.analysis.cota.pipeline import build_cota_refinement_pipeline
 from modules.simsearch.simsearch_service import SimSearchService
 from modules.trainer.trainer_service import TrainerService
-from repos.db.sql_repo import SQLService
-from repos.elasticsearch_repo import ElasticSearchService
-from repos.filesystem_repo import RepoService
-from repos.redis_repo import RedisService
+from repos.db.sql_repo import SQLRepo
+from repos.elasticsearch_repo import ElasticSearchRepo
+from repos.filesystem_repo import FilesystemRepo
+from repos.redis_repo import RedisRepo
 from sqlalchemy.orm import Session
 
 
@@ -38,10 +38,10 @@ class COTAService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.trainer: TrainerService = TrainerService()
         cls.sims: SimSearchService = SimSearchService()
-        cls.es: ElasticSearchService = ElasticSearchService()
-        cls.redis: RedisService = RedisService()
-        cls.repo: RepoService = RepoService()
-        cls.sqls: SQLService = SQLService()
+        cls.es: ElasticSearchRepo = ElasticSearchRepo()
+        cls.redis: RedisRepo = RedisRepo()
+        cls.fsr: FilesystemRepo = FilesystemRepo()
+        cls.sqlr: SQLRepo = SQLRepo()
 
         cls.max_search_space_per_concept: int = 1000
         cls.search_space_sim_search_threshold: float = 0.5
@@ -144,10 +144,10 @@ class COTAService(metaclass=SingletonMeta):
         # make sure that cota with cota_id exists
         cota = self.read_by_id(db=db, cota_id=cota_id)
         # delete the model directories
-        model_dir = self.repo.get_model_dir(cota.project_id, str(cota.id))
+        model_dir = self.fsr.get_model_dir(cota.project_id, str(cota.id))
         if model_dir.exists():
             shutil.rmtree(model_dir)
-        best_model_dir = self.repo.get_model_dir(
+        best_model_dir = self.fsr.get_model_dir(
             cota.project_id, str(cota.id) + "-best-model"
         )
         if best_model_dir.exists():

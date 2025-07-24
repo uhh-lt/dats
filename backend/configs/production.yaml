@@ -43,7 +43,7 @@ ray:
   host: ${oc.env:RAY_HOST, ray}
   port: ${oc.env:RAY_PORT, 8000}
 
-repo:
+filesystem:
   root_directory: /tmp/dats
   content_server:
     https: False

@@ -4,10 +4,10 @@ from loguru import logger
 from modules.ml.embedding_service import EmbeddingService
 from preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
-from repos.vector.weaviate_repo import WeaviateService
+from repos.vector.weaviate_repo import WeaviateRepo
 
 emb = EmbeddingService()
-weaviate = WeaviateService()
+weaviate = WeaviateRepo()
 
 
 def index_image_document_for_simsearch(cargo: PipelineCargo) -> PipelineCargo:

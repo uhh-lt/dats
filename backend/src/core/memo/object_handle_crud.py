@@ -24,7 +24,7 @@ from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
 from psycopg2.errors import UniqueViolation
 from repos.db.crud_base import CRUDBase, NoSuchElementError, UpdateNotAllowed
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -63,7 +63,7 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, UpdateNotAl
             # Flo: return existing OH when UC constraint fails
             if isinstance(e.orig, UniqueViolation):
                 db.close()  # Flo: close the session because we have to start a new transaction
-                with SQLService().db_session() as sess:
+                with SQLRepo().db_session() as sess:
                     obj_id_key, obj_id_val = next(
                         filter(
                             lambda item: item[0] is not None and item[1] is not None,

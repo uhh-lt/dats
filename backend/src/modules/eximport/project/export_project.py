@@ -28,19 +28,19 @@ from modules.eximport.timeline_analysis.export_timeline_analysis import (
 )
 from modules.eximport.user.export_users import export_all_users
 from modules.eximport.whiteboards.export_whiteboards import export_all_whiteboards
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy.orm import Session
 
 
 def export_project(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     project_id: int,
 ) -> Path:
     project = crud_project.read(db=db, id=project_id)
     return __export_project(
         db=db,
-        repo=repo,
+        fsr=fsr,
         fn=f"project_{project_id}",
         project=project,
     )
@@ -48,7 +48,7 @@ def export_project(
 
 def __export_project(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     fn: str,
     project: ProjectORM,
 ) -> Path:
@@ -71,22 +71,22 @@ def __export_project(
             export_files.append(
                 export_fn(
                     db=db,
-                    repo=repo,
+                    fsr=fsr,
                     project_id=project.id,
                 )
             )
         except NoDataToExportError as e:
             logger.warning(e)
 
-    return repo.write_files_to_temp_zip_file(
+    return fsr.write_files_to_temp_zip_file(
         files=export_files,
         fn=fn,
     )
 
 
-def __export_project_details(repo: RepoService, project: ProjectORM) -> Path:
+def __export_project_details(fsr: FilesystemRepo, project: ProjectORM) -> Path:
     export_data = __generate_export_json_for_project_details(project)
-    return repo.write_json_to_temp_file(
+    return fsr.write_json_to_temp_file(
         json_obj=export_data,
         fn=f"project_{project.id}_details",
     )

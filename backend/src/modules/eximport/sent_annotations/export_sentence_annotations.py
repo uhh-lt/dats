@@ -11,13 +11,13 @@ from modules.eximport.sent_annotations.sentence_annotations_export_schema import
     SentenceAnnotationExportCollection,
     SentenceAnnotationExportSchema,
 )
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy.orm import Session
 
 
 def export_selected_sentence_annotations(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     project_id: int,
     sentence_annotation_ids: List[int],
 ) -> Path:
@@ -26,7 +26,7 @@ def export_selected_sentence_annotations(
     )
     return __export_sentence_annotations(
         db=db,
-        repo=repo,
+        fsr=fsr,
         fn=f"project_{project_id}_selected_sentence_annotations",
         sentence_annotations=sentence_annotations,
     )
@@ -34,7 +34,7 @@ def export_selected_sentence_annotations(
 
 def export_all_sentence_annotations(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     project_id: int,
 ) -> Path:
     sentence_annotations = crud_sentence_anno.read_by_project(
@@ -42,7 +42,7 @@ def export_all_sentence_annotations(
     )
     return __export_sentence_annotations(
         db=db,
-        repo=repo,
+        fsr=fsr,
         fn=f"project_{project_id}_all_sentence_annotations",
         sentence_annotations=sentence_annotations,
     )
@@ -50,7 +50,7 @@ def export_all_sentence_annotations(
 
 def __export_sentence_annotations(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     fn: str,
     sentence_annotations: List[SentenceAnnotationORM],
 ) -> Path:
@@ -60,7 +60,7 @@ def __export_sentence_annotations(
     export_data = __generate_export_df_for_sentence_annotations(
         db=db, sentence_annotations=sentence_annotations
     )
-    return repo.write_df_to_temp_file(
+    return fsr.write_df_to_temp_file(
         df=export_data,
         fn=fn,
     )

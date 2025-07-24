@@ -10,20 +10,20 @@ from modules.eximport.span_annotations.span_annotations_export_schema import (
     SpanAnnotationExportCollection,
     SpanAnnotationExportSchema,
 )
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy.orm import Session
 
 
 def export_selected_span_annotations(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     project_id: int,
     span_annotation_ids: List[int],
 ) -> Path:
     span_annotations = crud_span_anno.read_by_ids(db=db, ids=span_annotation_ids)
     return __export_span_annotations(
         db=db,
-        repo=repo,
+        fsr=fsr,
         fn=f"project_{project_id}_selected_span_annotations",
         span_annotations=span_annotations,
     )
@@ -31,13 +31,13 @@ def export_selected_span_annotations(
 
 def export_all_span_annotations(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     project_id: int,
 ) -> Path:
     span_annotations = crud_span_anno.read_by_project(db=db, project_id=project_id)
     return __export_span_annotations(
         db=db,
-        repo=repo,
+        fsr=fsr,
         fn=f"project_{project_id}_all_span_annotations",
         span_annotations=span_annotations,
     )
@@ -45,7 +45,7 @@ def export_all_span_annotations(
 
 def __export_span_annotations(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     fn: str,
     span_annotations: List[SpanAnnotationORM],
 ) -> Path:
@@ -55,7 +55,7 @@ def __export_span_annotations(
     export_data = __generate_export_df_for_span_annotations(
         span_annotations=span_annotations
     )
-    return repo.write_df_to_temp_file(
+    return fsr.write_df_to_temp_file(
         df=export_data,
         fn=fn,
     )

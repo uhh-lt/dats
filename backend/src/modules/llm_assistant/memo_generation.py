@@ -16,8 +16,8 @@ from modules.llm_assistant.prompts.image_captioning_prompt import (
     IMG_CAPTION_USER_PROMPT,
 )
 from pydantic import BaseModel
-from repos.filesystem_repo import RepoService
-from repos.ollama_repo import OllamaService
+from repos.filesystem_repo import FilesystemRepo
+from repos.ollama_repo import OllamaRepo
 from sqlalchemy.orm import Session
 from util.image_utils import image_to_base64, load_image
 
@@ -36,7 +36,7 @@ def summarize_sdoc(
     if obj.doctype == DocType.text:
         return False, "".join(sdoc_data.sentences)
     elif obj.doctype == DocType.image:
-        path = RepoService().get_path_to_sdoc_file(
+        path = FilesystemRepo().get_path_to_sdoc_file(
             sdoc=SourceDocumentRead.model_validate(obj),
             webp=False,
             thumbnail=False,
@@ -82,7 +82,7 @@ def summarize_bbox_anno(
     obj: BBoxAnnotationORM,
     db: Session,
 ) -> Tuple[bool, str]:
-    path = RepoService().get_path_to_sdoc_file(
+    path = FilesystemRepo().get_path_to_sdoc_file(
         sdoc=SourceDocumentRead.model_validate(obj.annotation_document.source_document),
         webp=False,
         thumbnail=False,
@@ -161,12 +161,12 @@ def generate_memo_ollama(
 
     # 3. Send to Ollama for processing
     if isImage:
-        caption, _ = OllamaService().vlm_chat(
+        caption, _ = OllamaRepo().vlm_chat(
             user_prompt=IMG_CAPTION_USER_PROMPT, b64_images=[obj_summary]
         )
         return caption.strip()
     else:
-        response = OllamaService().llm_chat(
+        response = OllamaRepo().llm_chat(
             system_prompt="You are a helpful assistant generating memos.",
             user_prompt=MEMO_GEN_PROMPT.format(obj_summary=obj_summary),
             response_model=OllamaMemoResult,

@@ -6,7 +6,7 @@ import numpy as np
 from common.doc_type import DocType
 from loguru import logger
 from modules.analysis.word_frequency.word_frequency_crud import crud_word_frequency
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from scipy import sparse
 from sklearn.metrics.pairwise import manhattan_distances
 
@@ -14,7 +14,7 @@ from sklearn.metrics.pairwise import manhattan_distances
 def find_duplicates(project_id: int, max_different_words: int) -> List[List[int]]:
     logger.info("Finding duplicate text sdocs")
     t0 = time.time()
-    with SQLService().db_session() as db:
+    with SQLRepo().db_session() as db:
         result = crud_word_frequency.read_by_project_and_doctype(
             db, project_id=project_id, doctype=DocType.text
         )

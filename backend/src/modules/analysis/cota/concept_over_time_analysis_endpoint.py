@@ -15,11 +15,11 @@ from modules.analysis.cota.concept_over_time_analysis_dto import (
     COTAUpdate,
 )
 from modules.analysis.cota.service import COTAService
-from repos.redis_repo import RedisService
+from repos.redis_repo import RedisRepo
 from sqlalchemy.orm import Session
 
 cotas: COTAService = COTAService()
-redis: RedisService = RedisService()
+redis: RedisRepo = RedisRepo()
 
 router = APIRouter(
     prefix="/cota",

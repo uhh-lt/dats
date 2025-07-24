@@ -11,7 +11,7 @@ from modules.eximport.import_job_dto import (
     ImportJobType,
 )
 from modules.eximport.import_service import ImportJobPreparationError, ImportService
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy.orm import Session
 
 router = APIRouter(
@@ -19,7 +19,7 @@ router = APIRouter(
 )
 
 ims: ImportService = ImportService()
-repo: RepoService = RepoService()
+fsr: FilesystemRepo = FilesystemRepo()
 
 
 class FileFormat(TypedDict):
@@ -113,8 +113,8 @@ async def start_import_job(
     # Store the uploaded file
     suffix = uploaded_file.filename.split(".")[-1]
     filename = f"import_{import_job_type}_{authz_user.user.id}_{project_id}.{suffix}"
-    filepath = repo.get_dst_path_for_temp_file(filename)
-    filepath = repo.store_uploaded_file(
+    filepath = fsr.get_dst_path_for_temp_file(filename)
+    filepath = fsr.store_uploaded_file(
         uploaded_file=uploaded_file, filepath=filepath, fn=filename
     )
 

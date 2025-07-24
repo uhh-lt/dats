@@ -20,7 +20,7 @@ from modules.perspectives.perspectives_job import (
     ResetModelParams,
     SplitClusterParams,
 )
-from repos.redis_repo import RedisService
+from repos.redis_repo import RedisRepo
 
 
 class PerspectivesJobPreparationError(Exception):
@@ -93,7 +93,7 @@ class PerspectivesJobService(metaclass=SingletonMeta):
     }
 
     def __new__(cls, *args, **kwargs):
-        cls.redis: RedisService = RedisService()
+        cls.redis: RedisRepo = RedisRepo()
         return super(PerspectivesJobService, cls).__new__(cls)
 
     def prepare_perspectives_job(

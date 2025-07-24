@@ -7,11 +7,11 @@ from config import conf
 from loguru import logger
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 
 cc = conf.celery
 
-repo = RepoService()
+fsr = FilesystemRepo()
 
 
 def __extract_content_in_html_from_word_docs(filepath: Path) -> Tuple[str, List[Path]]:

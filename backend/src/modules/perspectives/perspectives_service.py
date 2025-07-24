@@ -47,11 +47,11 @@ from modules.perspectives.perspectives_job import (
 )
 from pydantic import BaseModel
 from ray_model_worker.dto.promptembedder import PromptEmbedderInput
-from repos.db.sql_repo import SQLService
-from repos.filesystem_repo import RepoService
-from repos.ollama_repo import OllamaService
-from repos.ray_repo import RayModelService
-from repos.vector.weaviate_repo import WeaviateService
+from repos.db.sql_repo import SQLRepo
+from repos.filesystem_repo import FilesystemRepo
+from repos.ollama_repo import OllamaRepo
+from repos.ray_repo import RayRepo
+from repos.vector.weaviate_repo import WeaviateRepo
 from sklearn.feature_extraction.text import CountVectorizer
 from sqlalchemy.orm import Session
 from umap import UMAP
@@ -63,11 +63,11 @@ TMJUpdateFN = Callable[[Optional[int], Optional[str]], PerspectivesJobRead]
 class PerspectivesService:
     def __init__(self, update_status_clbk: TMJUpdateFN):
         self.update_status_clbk: TMJUpdateFN = update_status_clbk
-        self.rms: RayModelService = RayModelService()
-        self.ollama: OllamaService = OllamaService()
-        self.sqls: SQLService = SQLService()
-        self.weaviate: WeaviateService = WeaviateService()
-        self.repo: RepoService = RepoService()
+        self.ray: RayRepo = RayRepo()
+        self.ollama: OllamaRepo = OllamaRepo()
+        self.sqlr: SQLRepo = SQLRepo()
+        self.weaviate: WeaviateRepo = WeaviateRepo()
+        self.fsr: FilesystemRepo = FilesystemRepo()
 
     def _log_status_msg(self, status_msg: str):
         self.update_status_clbk(None, status_msg)
@@ -153,7 +153,7 @@ class PerspectivesService:
         self._log_status_msg(
             f"Computing embeddings for {len(doc_aspects)} document aspects with model {embedding_model}..."
         )
-        embedding_output = self.rms.promptembedder_embedding(
+        embedding_output = self.ray.promptembedder_embedding(
             input=PromptEmbedderInput(
                 model_name=embedding_model,
                 prompt=embedding_prompt,
@@ -167,7 +167,7 @@ class PerspectivesService:
         ), "The number of embeddings does not match the number of documents."
 
         # 2. Compute the 2D coordinates
-        umap_model_path = self.repo.get_model_dir(
+        umap_model_path = self.fsr.get_model_dir(
             proj_id=project_id,
             model_prefix="umap_",
             model_name=f"aspect_{aspect_id}_{embedding_model}",
@@ -246,7 +246,7 @@ class PerspectivesService:
         figure.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
 
         # Save the map thumbnail
-        output_path = self.repo.get_plot_path(
+        output_path = self.fsr.get_plot_path(
             proj_id=aspect.project_id,
             plot_name=f"aspect_{aspect_id}_map_thumbnail.png",
         )
@@ -854,7 +854,7 @@ class PerspectivesService:
         aspect_id: int,
         params: CreateAspectParams,
     ):
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             with self.weaviate.weaviate_session() as client:
                 # 1. Modify the documents based on the prompt
                 self._log_status_step(0)
@@ -902,7 +902,7 @@ class PerspectivesService:
     def create_cluster_with_name(
         self, aspect_id: int, params: CreateClusterWithNameParams
     ):
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             with self.weaviate.weaviate_session() as client:
                 # Read the aspect
                 aspect = crud_aspect.read(db=db, id=aspect_id)
@@ -924,7 +924,7 @@ class PerspectivesService:
                 self._log_status_msg(
                     f"Computing embeddings for the new cluster with model {aspect.embedding_model}..."
                 )
-                embedding_output = self.rms.promptembedder_embedding(
+                embedding_output = self.ray.promptembedder_embedding(
                     input=PromptEmbedderInput(
                         model_name=aspect.embedding_model,
                         prompt=aspect.doc_embedding_prompt,
@@ -1016,7 +1016,7 @@ class PerspectivesService:
     def create_cluster_with_sdocs(
         self, aspect_id: int, params: CreateClusterWithSdocsParams
     ):
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             # Read the current document <-> cluster assignments
             document_clusters = crud_document_cluster.read_by_aspect_id(
                 db=db, aspect_id=aspect_id
@@ -1080,7 +1080,7 @@ class PerspectivesService:
             self._log_status_msg("Successfully created cluster with source documents!")
 
     def remove_cluster(self, aspect_id: int, params: RemoveClusterParams):
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             with self.weaviate.weaviate_session() as client:
                 # 0. Read all relevant data
                 # - Read the cluster to remove
@@ -1202,7 +1202,7 @@ class PerspectivesService:
                 self._log_status_msg("Successfully removed cluster!")
 
     def merge_clusters(self, aspect_id: int, params: MergeClustersParams):
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             with self.weaviate.weaviate_session() as client:
                 # 0. Read the clusters to merge
                 cluster1 = crud_cluster.read(db=db, id=params.cluster_to_keep)
@@ -1247,7 +1247,7 @@ class PerspectivesService:
                 self._log_status_msg("Successfully merged clusters!")
 
     def split_cluster(self, aspect_id: int, params: SplitClusterParams):
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             with self.weaviate.weaviate_session() as client:
                 # 0. Read the cluster to split
                 cluster = crud_cluster.read(db=db, id=params.cluster_id)
@@ -1304,7 +1304,7 @@ class PerspectivesService:
                 self._log_status_msg("Successfully split cluster!")
 
     def change_cluster(self, aspect_id: int, params: ChangeClusterParams):
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             # 0. Read the cluster to change to
             if params.cluster_id == -1:
                 cluster = crud_cluster.read_or_create_outlier_cluster(
@@ -1415,7 +1415,7 @@ class PerspectivesService:
         return train_docs, train_labels, train_doc_ids
 
     def refine_cluster_model(self, aspect_id: int, params: RefineModelParams):
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             with self.weaviate.weaviate_session() as client:
                 # Update the model name, so that a new model is trained
                 aspect = crud_aspect.read(db=db, id=aspect_id)

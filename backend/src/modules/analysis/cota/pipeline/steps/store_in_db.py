@@ -8,9 +8,9 @@ from modules.analysis.cota.concept_over_time_analysis_dto import (
     COTAUpdateIntern,
 )
 from modules.analysis.cota.pipeline.cargo import Cargo
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 
-sqls: SQLService = SQLService()
+sqlr: SQLRepo = SQLRepo()
 
 
 def store_in_db(cargo: Cargo) -> Cargo:
@@ -18,7 +18,7 @@ def store_in_db(cargo: Cargo) -> Cargo:
     search_space: List[COTASentence] = cargo.data["search_space"]
 
     # 2. Store search_space in db
-    with sqls.db_session() as db:
+    with sqlr.db_session() as db:
         search_space_str = srsly.json_dumps(jsonable_encoder(search_space))
         crud_cota.update(
             db=db,

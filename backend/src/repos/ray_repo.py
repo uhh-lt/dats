@@ -28,7 +28,7 @@ from ray_model_worker.dto.whisper import WhisperTranscriptionOutput
 from requests import Response
 
 
-class RayModelService(metaclass=SingletonMeta):
+class RayRepo(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.base_url = f"{conf.ray.protocol}://{conf.ray.host}:{conf.ray.port}"
         logger.info(f"RayModelService base_url: {cls.base_url}")
@@ -55,7 +55,7 @@ class RayModelService(metaclass=SingletonMeta):
             logger.error(msg)
             raise SystemExit(msg)
 
-        return super(RayModelService, cls).__new__(cls)
+        return super(RayRepo, cls).__new__(cls)
 
     def _assert_valid_base_route(self, endpoint: str) -> None:
         for br in self.base_routes:

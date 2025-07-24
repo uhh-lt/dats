@@ -10,19 +10,19 @@ from modules.eximport.codes.code_export_schema import (
     CodeExportSchema,
 )
 from modules.eximport.no_data_export_error import NoDataToExportError
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy.orm import Session
 
 
 def export_all_codes(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     project_id: int,
 ) -> Path:
     codes = crud_project.read(db=db, id=project_id).codes
     return __export_codes(
         db=db,
-        repo=repo,
+        fsr=fsr,
         fn=f"project_{project_id}_all_codes",
         codes=codes,
     )
@@ -30,7 +30,7 @@ def export_all_codes(
 
 def __export_codes(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     fn: str,
     codes: List[CodeORM],
 ) -> Path:
@@ -38,7 +38,7 @@ def __export_codes(
         raise NoDataToExportError("No codes to export.")
 
     export_data = __generate_export_df_for_codes(codes=codes)
-    return repo.write_df_to_temp_file(
+    return fsr.write_df_to_temp_file(
         df=export_data,
         fn=fn,
     )

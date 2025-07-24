@@ -1,10 +1,10 @@
 from alembic.command import upgrade
 from alembic.config import Config
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 
 
 def run_migrations():
-    SQLService().create_database_if_not_exists()
+    SQLRepo().create_database_if_not_exists()
     config = Config("../src/migrations/alembic.ini")
     upgrade(config, "head")
     print("Alembic Migration Successful!")

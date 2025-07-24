@@ -11,9 +11,9 @@ from preprocessing.pipeline.steps.text.storage.persist_sentence_annotations impo
 from preprocessing.pipeline.steps.text.storage.persist_span_annotations import (
     persist_span_annotations,
 )
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 
-sql: SQLService = SQLService()
+sql: SQLRepo = SQLRepo()
 
 
 def add_text_storage_steps(pipeline: PreprocessingPipeline) -> None:

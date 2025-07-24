@@ -15,14 +15,14 @@ from modules.search.column_info import ColumnInfo
 from modules.search.filtering import Filter
 from modules.search.search_builder import SearchBuilder
 from modules.search.sorting import Sort
-from repos.db.sql_repo import SQLService
-from repos.filesystem_repo import RepoService
+from repos.db.sql_repo import SQLRepo
+from repos.filesystem_repo import FilesystemRepo
 
-repo_service = RepoService()
+repo_service = FilesystemRepo()
 
 
 def find_bbox_annotations_info(project_id) -> List[ColumnInfo[BBoxColumns]]:
-    with SQLService().db_session() as db:
+    with SQLRepo().db_session() as db:
         project_metadata = [
             ProjectMetadataRead.model_validate(pm)
             for pm in crud_project_meta.read_by_project(db=db, proj_id=project_id)
@@ -48,7 +48,7 @@ def find_bbox_annotations(
     page: Optional[int] = None,
     page_size: Optional[int] = None,
 ) -> BBoxAnnotationSearchResult:
-    with SQLService().db_session() as db:
+    with SQLRepo().db_session() as db:
         builder = SearchBuilder(db, filter, sorts)
         subquery = builder.init_subquery(
             db.query(

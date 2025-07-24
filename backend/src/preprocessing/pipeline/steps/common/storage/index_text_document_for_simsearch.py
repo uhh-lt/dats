@@ -4,10 +4,10 @@ from loguru import logger
 from modules.ml.embedding_service import EmbeddingService
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
-from repos.vector.weaviate_repo import WeaviateService
+from repos.vector.weaviate_repo import WeaviateRepo
 
 emb = EmbeddingService()
-weaviate = WeaviateService()
+weaviate = WeaviateRepo()
 
 
 def index_text_document_for_simsearch(cargo: PipelineCargo) -> PipelineCargo:

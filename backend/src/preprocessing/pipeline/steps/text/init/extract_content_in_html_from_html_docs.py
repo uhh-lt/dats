@@ -5,10 +5,10 @@ from bs4 import BeautifulSoup, Tag
 from loguru import logger
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from util.image_utils import base64_to_image
 
-repo = RepoService()
+fsr = FilesystemRepo()
 
 
 def __extract_base64_images_from_html_docs(

@@ -13,10 +13,10 @@ from core.celery.background_jobs import (
 from core.job.background_job_base_dto import BackgroundJobStatus
 from fastapi import HTTPException, UploadFile
 from loguru import logger
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import (
-    FileNotFoundInRepositoryError,
-    RepoService,
+    FileNotFoundInFilesystemError,
+    FilesystemRepo,
     UnsupportedDocTypeForSourceDocument,
 )
 from tqdm import tqdm
@@ -43,8 +43,8 @@ class UnsupportedDocTypeForMimeType(Exception):
 
 class PreprocessingService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.sqls: SQLService = SQLService()
-        cls.repo: RepoService = RepoService()
+        cls.sqlr: SQLRepo = SQLRepo()
+        cls.fsr: FilesystemRepo = FilesystemRepo()
         cls._pipelines: Dict[DocType, PreprocessingPipeline] = dict()
 
         return super(PreprocessingService, cls).__new__(cls)
@@ -66,7 +66,7 @@ class PreprocessingService(metaclass=SingletonMeta):
                     status_code=406,
                 )
 
-            file_path = self.repo.store_uploaded_file_in_project_repo(
+            file_path = self.fsr.store_uploaded_file_in_project_dir(
                 proj_id=proj_id, uploaded_file=uploaded_file
             )
 
@@ -129,7 +129,7 @@ class PreprocessingService(metaclass=SingletonMeta):
                 )
 
             except (
-                FileNotFoundInRepositoryError,
+                FileNotFoundInFilesystemError,
                 UnsupportedDocTypeForSourceDocument,
                 UnsupportedDocTypeForMimeType,
                 Exception,
@@ -145,7 +145,7 @@ class PreprocessingService(metaclass=SingletonMeta):
         self, project_id: int, archive_file_path: Path
     ) -> List[PreprocessingJobPayloadCreateWithoutPreproJobId]:
         # store and extract the archive
-        file_dsts: List[Path] = self.repo.extract_archive_in_project(
+        file_dsts: List[Path] = self.fsr.extract_archive_in_project(
             proj_id=project_id, archive_path=archive_file_path
         )
         return self._create_ppj_payloads_from_unimported_project_files(
@@ -159,7 +159,7 @@ class PreprocessingService(metaclass=SingletonMeta):
     ) -> PreprocessingJobRead:
         create_dto = PreprocessingJobCreate(project_id=proj_id, payloads=payloads)
         try:
-            with self.sqls.db_session() as db:
+            with self.sqlr.db_session() as db:
                 db_obj = crud_prepro_job.create(db=db, create_dto=create_dto)
                 read_dto = PreprocessingJobRead.model_validate(db_obj)
         except Exception as e:
@@ -238,7 +238,7 @@ class PreprocessingService(metaclass=SingletonMeta):
 
     def abort_preprocessing_job(self, ppj_id: str) -> PreprocessingJobRead:
         logger.info(f"Aborting PreprocessingJob {ppj_id}...")
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             db_obj = crud_prepro_job.read(db=db, uuid=ppj_id)
             ppj = PreprocessingJobRead.model_validate(db_obj)
         if ppj.status != BackgroundJobStatus.RUNNING:
@@ -248,7 +248,7 @@ class PreprocessingService(metaclass=SingletonMeta):
                 ),
                 status_code=400,
             )
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             db_obj = crud_prepro_job.update(
                 db=db,
                 uuid=ppj_id,
@@ -292,7 +292,7 @@ class PreprocessingService(metaclass=SingletonMeta):
                 )
 
         # update the PreprocessingJob status to IN_PROGRESS
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             db_obj = crud_prepro_job.update(
                 db=db,
                 uuid=ppj.id,

@@ -13,7 +13,7 @@ from alembic import op
 from common.doc_type import DocType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import text
 
@@ -44,11 +44,11 @@ def upgrade() -> None:
 
         sdocs = crud_sdoc.read_by_project(db=db, proj_id=proj_id, only_finished=False)  # type: ignore
 
-        # 3. Use the repo service to get the URL of the Source Document
+        # 3. Use the filesystem repo to get the URL of the Source Document
         urls = []
         for sdoc in sdocs:
             try:
-                url = RepoService().get_sdoc_url(
+                url = FilesystemRepo().get_sdoc_url(
                     sdoc=SourceDocumentRead.model_validate(sdoc),
                     relative=True,
                     webp=sdoc.doctype == DocType.image,

@@ -4,10 +4,10 @@ from preprocessing.pipeline.model.image.autobbox import AutoBBox
 from preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from ray_model_worker.dto.detr import DETRImageInput
-from repos.ray_repo import RayModelService
+from repos.ray_repo import RayRepo
 from util.image_utils import image_to_base64, load_image
 
-rms = RayModelService()
+ray = RayRepo()
 
 
 def run_object_detection(cargo: PipelineCargo) -> PipelineCargo:
@@ -16,7 +16,7 @@ def run_object_detection(cargo: PipelineCargo) -> PipelineCargo:
     input = DETRImageInput(
         base64_image=image_to_base64(load_image(ppid.filepath)),
     )
-    result = rms.detr_object_detection(input)
+    result = ray.detr_object_detection(input)
     logger.info(f"Bounding boxes already found are: {ppid.bboxes}")
     for box in result.bboxes:
         code_name = box.label

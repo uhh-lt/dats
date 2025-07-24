@@ -1,13 +1,13 @@
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SDocStatus
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 
-sqls = SQLService()
+sqlr = SQLRepo()
 
 
 def update_sdoc_status_to_finish(cargo: PipelineCargo) -> PipelineCargo:
     sdoc_id = cargo.data["sdoc_id"]
-    with sqls.db_session() as db:
+    with sqlr.db_session() as db:
         crud_sdoc.update_status(db=db, sdoc_id=sdoc_id, sdoc_status=SDocStatus.finished)
     return cargo

@@ -9,7 +9,7 @@ from modules.perspectives.aspect_collection import AspectCollection
 from modules.perspectives.cluster_collection import ClusterCollection
 
 
-class WeaviateService(metaclass=SingletonMeta):
+class WeaviateRepo(metaclass=SingletonMeta):
     def __new__(cls, flush: bool = False):
         try:
             with cls.weaviate_session() as client:
@@ -30,7 +30,7 @@ class WeaviateService(metaclass=SingletonMeta):
                 AspectCollection.create_collection(client)
                 ClusterCollection.create_collection(client)
 
-            return super(WeaviateService, cls).__new__(cls)
+            return super(WeaviateRepo, cls).__new__(cls)
 
         except Exception as e:
             msg = f"Cannot connect to Weaviate DB - Error '{e}'"

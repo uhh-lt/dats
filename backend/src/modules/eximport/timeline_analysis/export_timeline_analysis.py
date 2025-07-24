@@ -21,13 +21,13 @@ from modules.eximport.timeline_analysis.timeline_analysis_transformations import
     transform_concept_for_export,
     transform_settings_for_export,
 )
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy.orm import Session
 
 
 def export_selected_timeline_analyses(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     project_id: int,
     timeline_analysis_ids: List[int],
 ) -> Path:
@@ -36,7 +36,7 @@ def export_selected_timeline_analyses(
 
     Args:
         db: Database session
-        repo: Repository service for file operations
+        fsr: Filesystem repository service for file operations
         project_id: ID of the project
         timeline_analysis_ids: List of timeline analysis IDs to export
 
@@ -51,7 +51,7 @@ def export_selected_timeline_analyses(
     )
     return __export_timeline_analyses(
         db=db,
-        repo=repo,
+        fsr=fsr,
         fn=f"project_{project_id}_selected_timeline_analyses",
         timeline_analyses=timeline_analyses,
     )
@@ -59,7 +59,7 @@ def export_selected_timeline_analyses(
 
 def export_all_timeline_analyses(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     project_id: int,
 ) -> Path:
     """
@@ -67,7 +67,7 @@ def export_all_timeline_analyses(
 
     Args:
         db: Database session
-        repo: Repository service for file operations
+        fsr: Filesystem repository service for file operations
         project_id: ID of the project
 
     Returns:
@@ -81,7 +81,7 @@ def export_all_timeline_analyses(
     )
     return __export_timeline_analyses(
         db=db,
-        repo=repo,
+        fsr=fsr,
         fn=f"project_{project_id}_all_timeline_analyses",
         timeline_analyses=timeline_analyses,
     )
@@ -89,7 +89,7 @@ def export_all_timeline_analyses(
 
 def __export_timeline_analyses(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     fn: str,
     timeline_analyses: List[TimelineAnalysisORM],
 ) -> Path:
@@ -98,7 +98,7 @@ def __export_timeline_analyses(
 
     Args:
         db: Database session
-        repo: Repository service for file operations
+        fsr: Filesystem repository service for file operations
         fn: Filename for the export
         timeline_analyses: List of timeline analysis ORMs to export
 
@@ -114,7 +114,7 @@ def __export_timeline_analyses(
     export_data = __generate_export_df_for_timeline_analyses(
         db=db, timeline_analyses=timeline_analyses
     )
-    return repo.write_df_to_temp_file(
+    return fsr.write_df_to_temp_file(
         df=export_data,
         fn=fn,
     )

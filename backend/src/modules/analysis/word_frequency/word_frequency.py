@@ -12,15 +12,15 @@ from modules.search.column_info import ColumnInfo
 from modules.search.filtering import Filter
 from modules.search.search_builder import SearchBuilder
 from modules.search.sorting import Sort
-from repos.db.sql_repo import SQLService
-from repos.filesystem_repo import RepoService
+from repos.db.sql_repo import SQLRepo
+from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy import distinct, func
 
 
 def word_frequency_info(
     project_id: int,
 ) -> List[ColumnInfo[WordFrequencyColumns]]:
-    with SQLService().db_session() as db:
+    with SQLRepo().db_session() as db:
         project_metadata = [
             ProjectMetadataRead.model_validate(pm)
             for pm in crud_project_meta.read_by_project(db=db, proj_id=project_id)
@@ -44,7 +44,7 @@ def word_frequency(
     page: Optional[int] = None,
     page_size: Optional[int] = None,
 ) -> WordFrequencyResult:
-    with SQLService().db_session() as db:
+    with SQLRepo().db_session() as db:
         # count all words, all sdocs query (uses filtering)
         builder = SearchBuilder(db=db, filter=filter, sorts=[])
         subquery = builder.init_subquery(
@@ -146,7 +146,7 @@ def word_frequency_export(
     project_id: int,
     filter: Filter[WordFrequencyColumns],
 ) -> str:
-    repo = RepoService()
+    fsr = FilesystemRepo()
 
     wf_result = word_frequency(project_id=project_id, filter=filter, sorts=[])
 
@@ -164,8 +164,8 @@ def word_frequency_export(
     df = pd.DataFrame(data=data)
 
     # export the data frame
-    export_file = repo.write_df_to_temp_file(
+    export_file = fsr.write_df_to_temp_file(
         df=df,
         fn=f"project_{project_id}_word_frequency_export",
     )
-    return repo.get_temp_file_url(export_file.name, relative=True)
+    return fsr.get_temp_file_url(export_file.name, relative=True)

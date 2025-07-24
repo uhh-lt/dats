@@ -16,9 +16,9 @@ from modules.ml.doc_tag_recommendation.document_tag_recommendation_dto import (
     DocumentTagRecommendationMethod,
 )
 from modules.search.search_dto import SimSearchDocumentHit
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from repos.vector.weaviate_models import SimSearchResult
-from repos.vector.weaviate_repo import WeaviateService
+from repos.vector.weaviate_repo import WeaviateRepo
 from weaviate import WeaviateClient
 
 SimSearchHit = TypeVar("SimSearchHit")
@@ -40,8 +40,8 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         Returns:
             DocumentClassificationService: An instance of the class.
         """
-        cls.sqls: SQLService = SQLService()
-        cls.weaviate: WeaviateService = WeaviateService()
+        cls.sqlr: SQLRepo = SQLRepo()
+        cls.weaviate: WeaviateRepo = WeaviateRepo()
         return super(DocumentClassificationService, cls).__new__(cls)
 
     def classify_untagged_documents(
@@ -65,7 +65,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
             tag_ids (List[int]): The IDs of the tags to consider
             exclusive (bool): Whether tags are mutually exclusive, either A or B
         """
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             # Fetch all documents that already have tags for the given project
             sdocs_with_tags = crud_sdoc.read_all_with_tags(
                 db=db, project_id=project_id, tag_ids=tag_ids
@@ -241,7 +241,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         tag_ids: List[int],
     ) -> Iterator[DocumentTagRecommendationLinkCreate]:
         """create suggestions using k-nearest neighbors"""
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             sdocs_without_tags = crud_sdoc.read_all_without_tags(
                 db=db, project_id=project_id, tag_ids=tag_ids
             )
