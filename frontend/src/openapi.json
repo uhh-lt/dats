@@ -4038,80 +4038,6 @@
         }
       }
     },
-    "/search/simsearch/sentences": {
-      "post": {
-        "tags": ["search"],
-        "summary": "Returns similar sentences according to a textual or visual query.",
-        "operationId": "find_similar_sentences",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
-          { "name": "top_k", "in": "query", "required": true, "schema": { "type": "integer", "title": "Top K" } },
-          { "name": "threshold", "in": "query", "required": true, "schema": { "type": "number", "title": "Threshold" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/Body_search-find_similar_sentences" } }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/SimSearchSentenceHit" },
-                  "title": "Response Search-Find Similar Sentences"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/search/simsearch/images": {
-      "post": {
-        "tags": ["search"],
-        "summary": "Returns similar images according to a textual or visual query.",
-        "operationId": "find_similar_images",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
-          { "name": "top_k", "in": "query", "required": true, "schema": { "type": "integer", "title": "Top K" } },
-          { "name": "threshold", "in": "query", "required": true, "schema": { "type": "number", "title": "Threshold" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/Body_search-find_similar_images" } }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/SimSearchImageHit" },
-                  "title": "Response Search-Find Similar Images"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/sentence": {
       "put": {
         "tags": ["sentenceAnnotation"],
@@ -4366,6 +4292,80 @@
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" },
                   "title": "Response Sentenceannotation-Get By User Code"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/simsearch/sentences": {
+      "post": {
+        "tags": ["simsearch"],
+        "summary": "Returns similar sentences according to a textual or visual query.",
+        "operationId": "find_similar_sentences",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          { "name": "top_k", "in": "query", "required": true, "schema": { "type": "integer", "title": "Top K" } },
+          { "name": "threshold", "in": "query", "required": true, "schema": { "type": "number", "title": "Threshold" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_simsearch-find_similar_sentences" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SimSearchSentenceHit" },
+                  "title": "Response Simsearch-Find Similar Sentences"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/simsearch/images": {
+      "post": {
+        "tags": ["simsearch"],
+        "summary": "Returns similar images according to a textual or visual query.",
+        "operationId": "find_similar_images",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          { "name": "top_k", "in": "query", "required": true, "schema": { "type": "integer", "title": "Top K" } },
+          { "name": "threshold", "in": "query", "required": true, "schema": { "type": "number", "title": "Threshold" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_simsearch-find_similar_images" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SimSearchImageHit" },
+                  "title": "Response Simsearch-Find Similar Images"
                 }
               }
             }
@@ -6784,30 +6784,6 @@
         "required": ["query", "sdoc_ids"],
         "title": "Body_rag-rag_session"
       },
-      "Body_search-find_similar_images": {
-        "properties": {
-          "query": {
-            "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }, { "type": "integer" }],
-            "title": "Query"
-          },
-          "filter": { "$ref": "#/components/schemas/Filter_SdocColumns_-Input" }
-        },
-        "type": "object",
-        "required": ["query", "filter"],
-        "title": "Body_search-find_similar_images"
-      },
-      "Body_search-find_similar_sentences": {
-        "properties": {
-          "query": {
-            "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }, { "type": "integer" }],
-            "title": "Query"
-          },
-          "filter": { "$ref": "#/components/schemas/Filter_SdocColumns_-Input" }
-        },
-        "type": "object",
-        "required": ["query", "filter"],
-        "title": "Body_search-find_similar_sentences"
-      },
       "Body_search-search_sdocs": {
         "properties": {
           "filter": { "$ref": "#/components/schemas/Filter_SdocColumns_-Input" },
@@ -6816,6 +6792,30 @@
         "type": "object",
         "required": ["filter", "sorts"],
         "title": "Body_search-search_sdocs"
+      },
+      "Body_simsearch-find_similar_images": {
+        "properties": {
+          "query": {
+            "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }, { "type": "integer" }],
+            "title": "Query"
+          },
+          "filter": { "$ref": "#/components/schemas/Filter_SdocColumns_-Input" }
+        },
+        "type": "object",
+        "required": ["query", "filter"],
+        "title": "Body_simsearch-find_similar_images"
+      },
+      "Body_simsearch-find_similar_sentences": {
+        "properties": {
+          "query": {
+            "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }, { "type": "integer" }],
+            "title": "Query"
+          },
+          "filter": { "$ref": "#/components/schemas/Filter_SdocColumns_-Input" }
+        },
+        "type": "object",
+        "required": ["query", "filter"],
+        "title": "Body_simsearch-find_similar_sentences"
       },
       "BooleanOperator": {
         "type": "string",

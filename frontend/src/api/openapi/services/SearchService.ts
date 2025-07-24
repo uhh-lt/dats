@@ -2,14 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_search_find_similar_images } from "../models/Body_search_find_similar_images";
-import type { Body_search_find_similar_sentences } from "../models/Body_search_find_similar_sentences";
 import type { Body_search_search_sdocs } from "../models/Body_search_search_sdocs";
 import type { ColumnInfo_SdocColumns_ } from "../models/ColumnInfo_SdocColumns_";
 import type { KeywordStat } from "../models/KeywordStat";
 import type { PaginatedSDocHits } from "../models/PaginatedSDocHits";
-import type { SimSearchImageHit } from "../models/SimSearchImageHit";
-import type { SimSearchSentenceHit } from "../models/SimSearchSentenceHit";
 import type { SpanEntityStat } from "../models/SpanEntityStat";
 import type { TagStat } from "../models/TagStat";
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -159,68 +155,6 @@ export class SearchService {
       query: {
         sort_by_global: sortByGlobal,
         top_k: topK,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns similar sentences according to a textual or visual query.
-   * @returns SimSearchSentenceHit Successful Response
-   * @throws ApiError
-   */
-  public static findSimilarSentences({
-    projId,
-    topK,
-    threshold,
-    requestBody,
-  }: {
-    projId: number;
-    topK: number;
-    threshold: number;
-    requestBody: Body_search_find_similar_sentences;
-  }): CancelablePromise<Array<SimSearchSentenceHit>> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/search/simsearch/sentences",
-      query: {
-        proj_id: projId,
-        top_k: topK,
-        threshold: threshold,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns similar images according to a textual or visual query.
-   * @returns SimSearchImageHit Successful Response
-   * @throws ApiError
-   */
-  public static findSimilarImages({
-    projId,
-    topK,
-    threshold,
-    requestBody,
-  }: {
-    projId: number;
-    topK: number;
-    threshold: number;
-    requestBody: Body_search_find_similar_images;
-  }): CancelablePromise<Array<SimSearchImageHit>> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/search/simsearch/images",
-      query: {
-        proj_id: projId,
-        top_k: topK,
-        threshold: threshold,
       },
       body: requestBody,
       mediaType: "application/json",
