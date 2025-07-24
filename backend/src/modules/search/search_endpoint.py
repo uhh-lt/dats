@@ -22,13 +22,10 @@ from modules.search.search_dto import (
     PaginatedSDocHits,
 )
 from modules.search.sorting import Sort
-from repos.elasticsearch_repo import ElasticSearchRepo
 
 router = APIRouter(
     prefix="/search", dependencies=[Depends(get_current_user)], tags=["search"]
 )
-
-es = ElasticSearchRepo()
 
 
 @router.post(

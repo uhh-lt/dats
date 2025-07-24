@@ -15,13 +15,16 @@ from modules.ml.doc_tag_recommendation.document_tag_recommendation_dto import (
     DocumentTagRecommendationLinkCreate,
     DocumentTagRecommendationMethod,
 )
-from modules.search.search_dto import SimSearchDocumentHit
+from modules.simsearch.simsearch_dto import SimSearchDocumentHit
 from repos.db.sql_repo import SQLRepo
 from repos.vector.weaviate_models import SimSearchResult
 from repos.vector.weaviate_repo import WeaviateRepo
 from weaviate import WeaviateClient
 
 SimSearchHit = TypeVar("SimSearchHit")
+
+
+# TODO: This should probably not use SimSearchSentenceHit! Instead, define own DTO
 
 
 class DocumentClassificationService(metaclass=SingletonMeta):
