@@ -17,7 +17,7 @@ from modules.llm_assistant.prompts.image_captioning_prompt import (
 )
 from pydantic import BaseModel
 from repos.filesystem_repo import FilesystemRepo
-from repos.ollama_repo import OllamaService
+from repos.ollama_repo import OllamaRepo
 from sqlalchemy.orm import Session
 from util.image_utils import image_to_base64, load_image
 
@@ -161,12 +161,12 @@ def generate_memo_ollama(
 
     # 3. Send to Ollama for processing
     if isImage:
-        caption, _ = OllamaService().vlm_chat(
+        caption, _ = OllamaRepo().vlm_chat(
             user_prompt=IMG_CAPTION_USER_PROMPT, b64_images=[obj_summary]
         )
         return caption.strip()
     else:
-        response = OllamaService().llm_chat(
+        response = OllamaRepo().llm_chat(
             system_prompt="You are a helpful assistant generating memos.",
             user_prompt=MEMO_GEN_PROMPT.format(obj_summary=obj_summary),
             response_model=OllamaMemoResult,

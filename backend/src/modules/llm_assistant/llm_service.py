@@ -74,7 +74,7 @@ from modules.llm_assistant.prompts.tagging_prompt_builder import (
 from ray_model_worker.dto.seqsenttagger import SeqSentTaggerDoc, SeqSentTaggerJobInput
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
-from repos.ollama_repo import OllamaService
+from repos.ollama_repo import OllamaRepo
 from repos.ray_repo import RayModelService
 from repos.redis_repo import RedisService
 from repos.vector.weaviate_repo import WeaviateRepo
@@ -108,7 +108,7 @@ class LLMService(metaclass=SingletonMeta):
         cls.fsr: FilesystemRepo = FilesystemRepo()
         cls.redis: RedisService = RedisService()
         cls.sqlr: SQLRepo = SQLRepo()
-        cls.ollamas: OllamaService = OllamaService()
+        cls.ollama: OllamaRepo = OllamaRepo()
         cls.rms: RayModelService = RayModelService()
         cls.weaviate: WeaviateRepo = WeaviateRepo()
 
@@ -546,7 +546,7 @@ class LLMService(metaclass=SingletonMeta):
                 )
 
                 # prompt the model
-                response = self.ollamas.llm_chat(
+                response = self.ollama.llm_chat(
                     system_prompt=system_prompt,
                     user_prompt=user_prompt,
                     response_model=OllamaDocumentTaggingResult,
@@ -677,7 +677,7 @@ class LLMService(metaclass=SingletonMeta):
                 )
 
                 # prompt the model
-                response = self.ollamas.llm_chat(
+                response = self.ollama.llm_chat(
                     system_prompt=system_prompt,
                     user_prompt=user_prompt,
                     response_model=OllamaMetadataExtractionResults,
@@ -812,7 +812,7 @@ class LLMService(metaclass=SingletonMeta):
                 )
 
                 # prompt the model
-                response = self.ollamas.llm_chat(
+                response = self.ollama.llm_chat(
                     system_prompt=system_prompt,
                     user_prompt=user_prompt,
                     response_model=OllamaAnnotationResults,
@@ -1008,7 +1008,7 @@ class LLMService(metaclass=SingletonMeta):
                 )
 
                 # prompt the model
-                response = self.ollamas.llm_chat(
+                response = self.ollama.llm_chat(
                     system_prompt=system_prompt,
                     user_prompt=user_prompt,
                     response_model=OllamaSentenceAnnotationResults,

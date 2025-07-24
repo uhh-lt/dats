@@ -152,9 +152,9 @@ def __init_services__(
     SimSearchService()
 
     # import and init OllamaService
-    from repos.ollama_repo import OllamaService
+    from repos.ollama_repo import OllamaRepo
 
-    OllamaService()
+    OllamaRepo()
 
     # import and init LLMService
     from modules.llm_assistant.llm_service import LLMService

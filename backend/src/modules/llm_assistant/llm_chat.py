@@ -6,7 +6,7 @@ from loguru import logger
 from modules.rag.chat_dto import LLMSessionResponse
 from modules.simsearch.simsearch_service import SimSearchService
 from pydantic import BaseModel
-from repos.ollama_repo import OllamaService
+from repos.ollama_repo import OllamaRepo
 from sqlalchemy.orm import Session
 
 
@@ -58,7 +58,7 @@ def retrieval_augmented_generation_with_session(
         f"Answer:"
     )
 
-    response, session_id = OllamaService().llm_chat_with_session(
+    response, session_id = OllamaRepo().llm_chat_with_session(
         system_prompt="You are an assistant helping answer questions based on internal documentation.",
         user_prompt=RAG_PROMPT,
         session_id=session_id,
@@ -72,7 +72,7 @@ def retrieval_augmented_generation_with_session(
 
 
 def chat_session(prompt: str, session_id: Optional[str] = None) -> LLMSessionResponse:
-    response, session_id = OllamaService().llm_chat_with_session(
+    response, session_id = OllamaRepo().llm_chat_with_session(
         system_prompt="You are having a chat session with a user. Respond to their queries.",
         user_prompt=prompt,
         session_id=session_id,

@@ -49,7 +49,7 @@ from pydantic import BaseModel
 from ray_model_worker.dto.promptembedder import PromptEmbedderInput
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
-from repos.ollama_repo import OllamaService
+from repos.ollama_repo import OllamaRepo
 from repos.ray_repo import RayModelService
 from repos.vector.weaviate_repo import WeaviateRepo
 from sklearn.feature_extraction.text import CountVectorizer
@@ -64,7 +64,7 @@ class PerspectivesService:
     def __init__(self, update_status_clbk: TMJUpdateFN):
         self.update_status_clbk: TMJUpdateFN = update_status_clbk
         self.rms: RayModelService = RayModelService()
-        self.ollama: OllamaService = OllamaService()
+        self.ollama: OllamaRepo = OllamaRepo()
         self.sqlr: SQLRepo = SQLRepo()
         self.weaviate: WeaviateRepo = WeaviateRepo()
         self.fsr: FilesystemRepo = FilesystemRepo()
