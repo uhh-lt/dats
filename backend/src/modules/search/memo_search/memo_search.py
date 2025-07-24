@@ -2,15 +2,15 @@ from typing import List, Optional, Tuple
 
 from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_orm import ObjectHandleORM
-from modules.search.column_info import ColumnInfo
-from modules.search.filtering import Filter
 from modules.search.memo_search.memo_search_columns import MemoColumns
-from modules.search.search_builder import SearchBuilder
 from modules.search.search_dto import (
     ElasticSearchDocumentHit,
     PaginatedElasticSearchDocumentHits,
 )
-from modules.search.sorting import Sort
+from modules.search_system.column_info import ColumnInfo
+from modules.search_system.filtering import Filter
+from modules.search_system.search_builder import SearchBuilder
+from modules.search_system.sorting import Sort
 from repos.db.sql_repo import SQLRepo
 from repos.elasticsearch_repo import ElasticSearchRepo
 

@@ -3,8 +3,8 @@ from typing import List, Union
 from common.dependencies import get_current_user
 from core.auth.authz_user import AuthzUser
 from fastapi import APIRouter, Depends
-from modules.search.filtering import Filter
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
+from modules.search_system.filtering import Filter
 from modules.simsearch.simsearch_dto import SimSearchImageHit, SimSearchSentenceHit
 from modules.simsearch.simsearch_service import SimSearchService
 

@@ -7,16 +7,16 @@ from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
-from modules.search.column_info import ColumnInfo
-from modules.search.filtering import Filter
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
-from modules.search.search_builder import SearchBuilder
 from modules.search.search_dto import (
     ElasticSearchDocumentHit,
     PaginatedElasticSearchDocumentHits,
     PaginatedSDocHits,
 )
-from modules.search.sorting import Sort
+from modules.search_system.column_info import ColumnInfo
+from modules.search_system.filtering import Filter
+from modules.search_system.search_builder import SearchBuilder
+from modules.search_system.sorting import Sort
 from repos.db.sql_repo import SQLRepo
 from repos.elasticsearch_repo import ElasticSearchRepo
 from sqlalchemy.orm import Session

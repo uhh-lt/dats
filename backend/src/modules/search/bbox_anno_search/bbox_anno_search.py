@@ -11,10 +11,10 @@ from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from modules.analysis.analysis_dto import BBoxAnnotationRow, BBoxAnnotationSearchResult
 from modules.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
-from modules.search.column_info import ColumnInfo
-from modules.search.filtering import Filter
-from modules.search.search_builder import SearchBuilder
-from modules.search.sorting import Sort
+from modules.search_system.column_info import ColumnInfo
+from modules.search_system.filtering import Filter
+from modules.search_system.search_builder import SearchBuilder
+from modules.search_system.sorting import Sort
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 

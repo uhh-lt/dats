@@ -17,12 +17,6 @@ from core.memo.memo_dto import (
 from core.memo.memo_util import get_object_memo_for_user, get_object_memos
 from fastapi import APIRouter, Depends
 from modules.llm_assistant.memo_generation import generate_memo_ollama
-from modules.search.column_info import ColumnInfo
-from modules.search.filtering import Filter
-from modules.search.memo_search.memo_search import memo_info, memo_search
-from modules.search.memo_search.memo_search_columns import MemoColumns
-from modules.search.search_dto import PaginatedElasticSearchDocumentHits
-from modules.search.sorting import Sort
 from repos.db.util import get_parent_project_id
 from sqlalchemy.orm import Session
 
@@ -222,45 +216,3 @@ def delete_by_id(
     memo = crud_memo.remove(db=db, id=memo_id)
 
     return crud_memo.get_memo_read_dto_from_orm(db, memo)
-
-
-@router.post(
-    "/info",
-    response_model=List[ColumnInfo[MemoColumns]],
-    summary="Returns Memo Table Info.",
-)
-def search_memo_info(
-    *, project_id: int, authz_user: AuthzUser = Depends()
-) -> List[ColumnInfo[MemoColumns]]:
-    authz_user.assert_in_project(project_id)
-
-    return memo_info(project_id=project_id)
-
-
-@router.post(
-    "/search",
-    response_model=PaginatedElasticSearchDocumentHits,
-    summary="Returns all Memo Ids that match the query parameters.",
-)
-def search_memos(
-    *,
-    search_query: str,
-    project_id: int,
-    search_content: bool,
-    page_number: int,
-    page_size: int,
-    filter: Filter[MemoColumns],
-    sorts: List[Sort[MemoColumns]],
-    authz_user: AuthzUser = Depends(),
-) -> PaginatedElasticSearchDocumentHits:
-    authz_user.assert_in_project(project_id)
-
-    return memo_search(
-        project_id=project_id,
-        search_query=search_query,
-        search_content=search_content,
-        filter=filter,
-        sorts=sorts,
-        page_number=page_number,
-        page_size=page_size,
-    )

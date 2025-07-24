@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Generic, List, Set, TypeVar, Union
 
-from modules.search.abstract_column import AbstractColumns
+from modules.search_system.abstract_column import AbstractColumns
 from pydantic import BaseModel
 from sqlalchemy import asc, desc
 from sqlalchemy.orm import QueryableAttribute
