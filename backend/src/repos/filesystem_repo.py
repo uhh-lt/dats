@@ -547,7 +547,7 @@ class RepoService(metaclass=SingletonMeta):
         # We need to check whether an SDoc with that filename exists in the DB. If not, we can overwrite it.
         from core.doc.source_document_crud import crud_sdoc
 
-        from repos.db.sql_repo import SQLService
+        from repos.db.sql_repo import SQLRepo
 
         dst_path = self._get_dst_path_for_project_sdoc_file(
             proj_id=proj_id, filename=filename
@@ -559,7 +559,7 @@ class RepoService(metaclass=SingletonMeta):
             )
             return
 
-        with SQLService().db_session() as db:
+        with SQLRepo().db_session() as db:
             try:
                 sdoc = crud_sdoc.read_by_filename(
                     db=db,

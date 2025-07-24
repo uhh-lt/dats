@@ -2,14 +2,14 @@ from typing import Tuple
 
 from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from sqlalchemy import func
 
 
 def compute_num_sdocs_with_date_metadata(
     project_id: int, date_metadata_id: int
 ) -> Tuple[int, int]:
-    with SQLService().db_session() as db:
+    with SQLRepo().db_session() as db:
         query = (
             db.query(func.count(SourceDocumentORM.id))
             .join(SourceDocumentORM.metadata_)

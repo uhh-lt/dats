@@ -1,5 +1,5 @@
 from config import conf
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from startup import startup
 
 answer = input(
@@ -11,4 +11,4 @@ if answer != "yes":
     exit(1)
 
 startup(reset_data=True, sql_echo=False)
-SQLService().drop_database()
+SQLRepo().drop_database()

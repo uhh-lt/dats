@@ -9,7 +9,7 @@ from fastapi import Depends, Query
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from pydantic import ValidationError
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from repos.vector.weaviate_repo import WeaviateService
 from sqlalchemy.orm import Session
 from weaviate import WeaviateClient
@@ -44,7 +44,7 @@ async def skip_limit_params(
 
 
 async def get_db_session() -> AsyncGenerator[Session, None]:
-    session = SQLService().session_maker()
+    session = SQLRepo().session_maker()
     try:
         yield session
     finally:

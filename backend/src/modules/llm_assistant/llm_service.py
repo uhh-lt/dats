@@ -72,7 +72,7 @@ from modules.llm_assistant.prompts.tagging_prompt_builder import (
     TaggingPromptBuilder,
 )
 from ray_model_worker.dto.seqsenttagger import SeqSentTaggerDoc, SeqSentTaggerJobInput
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import RepoService
 from repos.ollama_repo import OllamaService
 from repos.ray_repo import RayModelService
@@ -107,7 +107,7 @@ class LLMService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.repo: RepoService = RepoService()
         cls.redis: RedisService = RedisService()
-        cls.sqls: SQLService = SQLService()
+        cls.sqlr: SQLRepo = SQLRepo()
         cls.ollamas: OllamaService = OllamaService()
         cls.rms: RayModelService = RayModelService()
         cls.weaviate: WeaviateService = WeaviateService()
@@ -226,7 +226,7 @@ class LLMService(metaclass=SingletonMeta):
         )
 
         try:
-            with self.sqls.db_session() as db:
+            with self.sqlr.db_session() as db:
                 # get the llm method based on the jobtype
                 llm_method = self.llm_method_for_job_approach_type[
                     llmj.parameters.llm_job_type
@@ -310,7 +310,7 @@ class LLMService(metaclass=SingletonMeta):
                 selected_code_ids = llm_job_params.specific_task_parameters.code_ids
 
                 # 1. Find the number of labeled sentences for each code
-                with self.sqls.db_session() as db:
+                with self.sqlr.db_session() as db:
                     sentence_annotations = [
                         sa
                         for sa in crud_sentence_anno.read_by_codes(
@@ -321,7 +321,7 @@ class LLMService(metaclass=SingletonMeta):
                     ]
 
                 # 2. Find the code names
-                with self.sqls.db_session() as db:
+                with self.sqlr.db_session() as db:
                     codes = crud_code.read_by_ids(db=db, ids=selected_code_ids)
                     code_id2name = {code.id: code.name for code in codes}
 
@@ -386,7 +386,7 @@ class LLMService(metaclass=SingletonMeta):
         match task_type:
             case TaskType.SENTENCE_ANNOTATION:
                 # 1. Find existing annotations
-                with self.sqls.db_session() as db:
+                with self.sqlr.db_session() as db:
                     approachtype2userid = {
                         ApproachType.LLM_ZERO_SHOT: ASSISTANT_ZEROSHOT_ID,
                         ApproachType.LLM_FEW_SHOT: ASSISTANT_FEWSHOT_ID,
@@ -423,7 +423,7 @@ class LLMService(metaclass=SingletonMeta):
         approach_type: ApproachType,
         example_ids: Optional[List[int]] = None,
     ) -> List[LLMPromptTemplates]:
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             # get the llm method based on the jobtype
             llm_prompt_builder = self.llm_prompt_builder_for_job_type.get(
                 llm_job_params.llm_job_type, None
@@ -1154,7 +1154,7 @@ class LLMService(metaclass=SingletonMeta):
         logger.info(msg)
 
         # Find all relevant information for creating the training dataset
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             # 1.1 - Find the labeled sentences for each code
             sentence_annotations = [
                 sa
@@ -1262,7 +1262,7 @@ class LLMService(metaclass=SingletonMeta):
         logger.info(msg)
 
         # Find all relevant information for creating the test dataset
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             # 1. Find the sdocs
             test_sdocs = crud_sdoc.read_data_batch(db=db, ids=task_parameters.sdoc_ids)
             assert None not in test_sdocs, "Test sdocs contain None!"
@@ -1340,7 +1340,7 @@ class LLMService(metaclass=SingletonMeta):
 
         # Step: 4 - Delete all existing sentence annotations for the test sdocs
         if task_parameters.delete_existing_annotations:
-            with self.sqls.db_session() as db:
+            with self.sqlr.db_session() as db:
                 previous_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
                     db=db,
                     user_id=ASSISTANT_TRAINED_ID,

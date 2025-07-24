@@ -25,7 +25,7 @@ from modules.ml.source_document_job_status_orm import (
     SourceDocumentJobStatusORM,
 )
 from ray_model_worker.dto.coref import CorefInputDoc, CorefJobInput
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from repos.ray_repo import RayModelService
 from sqlalchemy import ColumnElement, and_
 from sqlalchemy.orm import Session
@@ -33,14 +33,14 @@ from sqlalchemy.orm import Session
 
 class CorefService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.sqls: SQLService = SQLService()
+        cls.sqlr: SQLRepo = SQLRepo()
         cls.rms: RayModelService = RayModelService()
         return super(CorefService, cls).__new__(cls)
 
     def perform_coreference_resolution(
         self, project_id: int, filter_criterion: ColumnElement, recompute=False
     ) -> int:
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             mention_code = self._get_code_id(db, "MENTION", project_id)
             language_metadata = (
                 crud_project_meta.read_by_project_and_key_and_metatype_and_doctype(
@@ -75,7 +75,7 @@ class CorefService(metaclass=SingletonMeta):
         language_metadata_id: int,
         recompute: bool = False,
     ):
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             query = (
                 db.query(SourceDocumentDataORM)
                 .join(
@@ -124,7 +124,7 @@ class CorefService(metaclass=SingletonMeta):
 
         coref_output = self.rms.coref_prediction(coref_input)
 
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             if recompute:
                 subquery = (
                     db.query(SpanAnnotationORM.id)

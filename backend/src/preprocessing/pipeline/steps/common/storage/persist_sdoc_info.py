@@ -19,13 +19,13 @@ from preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.pipeline.model.preprodoc_base import PreProDocBase
 from preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from repos.elasticsearch_repo import ElasticSearchService
 from repos.filesystem_repo import RepoService
 from sqlalchemy.orm import Session
 
 repo: RepoService = RepoService()
-sql: SQLService = SQLService()
+sql: SQLRepo = SQLRepo()
 es = ElasticSearchService()
 
 

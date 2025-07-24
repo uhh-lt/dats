@@ -116,9 +116,9 @@ def __init_services__(
     if create_root_repo_directory_structure:
         repos._create_root_repo_directory_structure(remove_if_exists=reset_repo)
     # create SQL DBs and Tables
-    from repos.db.sql_repo import SQLService
+    from repos.db.sql_repo import SQLRepo
 
-    SQLService(echo=sql_echo, reset_database=reset_database)
+    SQLRepo(echo=sql_echo, reset_database=reset_database)
 
     # create CRUDs
     from common.crud_enum import Crud  # noqa: F401
@@ -171,9 +171,9 @@ def __create_system_user__() -> None:
     from config import conf
     from core.user.user_crud import crud_user
     from core.user.user_dto import UserCreate
-    from repos.db.sql_repo import SQLService
+    from repos.db.sql_repo import SQLRepo
 
-    with SQLService().db_session() as db_session:
+    with SQLRepo().db_session() as db_session:
         if not crud_user.exists(db=db_session, id=1):
             # TODO Flo: this is not nice.. make sure system user cannot be changed, seen from outside, login, etc
             create_dto = UserCreate(
@@ -189,9 +189,9 @@ def __create_demo_user__() -> None:
     from config import conf
     from core.user.user_crud import crud_user
     from core.user.user_dto import UserCreate
-    from repos.db.sql_repo import SQLService
+    from repos.db.sql_repo import SQLRepo
 
-    with SQLService().db_session() as db_session:
+    with SQLRepo().db_session() as db_session:
         if not crud_user.exists(db=db_session, id=2):
             create_dto = UserCreate(
                 email=str(conf.demo_user.email),
@@ -206,9 +206,9 @@ def __create_assistant_users__() -> None:
     from config import conf
     from core.user.user_crud import crud_user
     from core.user.user_dto import UserCreate
-    from repos.db.sql_repo import SQLService
+    from repos.db.sql_repo import SQLRepo
 
-    with SQLService().db_session() as db_session:
+    with SQLRepo().db_session() as db_session:
         for user_id, last_name in [
             (9990, "ZeroShot"),
             (9991, "FewShot"),

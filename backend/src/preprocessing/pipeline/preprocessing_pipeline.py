@@ -5,7 +5,7 @@ from typing import Callable, Dict, List, Optional
 from common.doc_type import DocType
 from core.job.background_job_base_dto import BackgroundJobStatus
 from loguru import logger
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.pipeline.model.pipeline_step import PipelineStep
@@ -29,7 +29,7 @@ class PreprocessingPipeline:
         self._dt: DocType = doc_type
         self._steps_by_ordering: Dict[int, PipelineStep] = dict()
         self._steps_by_name: Dict[str, PipelineStep] = dict()
-        self.sqls: SQLService = SQLService()
+        self.sqlr: SQLRepo = SQLRepo()
 
         self.__is_frozen = False
 
@@ -113,7 +113,7 @@ class PreprocessingPipeline:
         return cargo
 
     def _set_ppj_status_to_finished(self, cargo: PipelineCargo) -> None:
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             ppj_status = crud_prepro_job.get_status_by_id(
                 db=db, uuid=cargo.ppj_payload.prepro_job_id
             )
@@ -128,7 +128,7 @@ class PreprocessingPipeline:
                 )
 
     def _set_ppj_status_to_running(self, cargo: PipelineCargo) -> None:
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             ppj_status = crud_prepro_job.get_status_by_id(
                 db=db, uuid=cargo.ppj_payload.prepro_job_id
             )
@@ -146,7 +146,7 @@ class PreprocessingPipeline:
         ppj_id = cargo.ppj_payload.prepro_job_id
         update_dto = PreprocessingJobUpdate(status=status)
         logger.info(f"Updating PreprocessingJob {ppj_id} Status to {status.value}...")
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             _ = crud_prepro_job.update(db=db, uuid=ppj_id, update_dto=update_dto)
         return cargo
 
@@ -167,7 +167,7 @@ class PreprocessingPipeline:
         self,
         cargo: PipelineCargo,
     ) -> PreprocessingJobRead:
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             db_obj = crud_prepro_job.read(db=db, uuid=cargo.ppj_payload.prepro_job_id)
             ppj = PreprocessingJobRead.model_validate(db_obj)
         return ppj
@@ -275,7 +275,7 @@ class PreprocessingPipeline:
             update_dto.status = status
         if error_msg is not None:
             update_dto.error_message = error_msg
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             db_obj = crud_prepro_job_payload.update(
                 db=db,
                 uuid=cargo.ppj_payload.id,

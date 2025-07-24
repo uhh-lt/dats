@@ -27,7 +27,7 @@ from modules.analysis.cota.concept_over_time_analysis_dto import (
 from modules.analysis.cota.pipeline import build_cota_refinement_pipeline
 from modules.simsearch.simsearch_service import SimSearchService
 from modules.trainer.trainer_service import TrainerService
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from repos.elasticsearch_repo import ElasticSearchService
 from repos.filesystem_repo import RepoService
 from repos.redis_repo import RedisService
@@ -41,7 +41,7 @@ class COTAService(metaclass=SingletonMeta):
         cls.es: ElasticSearchService = ElasticSearchService()
         cls.redis: RedisService = RedisService()
         cls.repo: RepoService = RepoService()
-        cls.sqls: SQLService = SQLService()
+        cls.sqlr: SQLRepo = SQLRepo()
 
         cls.max_search_space_per_concept: int = 1000
         cls.search_space_sim_search_threshold: float = 0.5

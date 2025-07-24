@@ -19,7 +19,7 @@ from modules.ml.source_document_job_status_orm import (
     SourceDocumentJobStatusORM,
 )
 from ray_model_worker.dto.clip import ClipImageEmbeddingInput, ClipTextEmbeddingInput
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import RepoService
 from repos.ollama_repo import OllamaService
 from repos.ray_repo import RayModelService
@@ -31,7 +31,7 @@ from weaviate import WeaviateClient
 
 class EmbeddingService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.sqls: SQLService = SQLService()
+        cls.sqlr: SQLRepo = SQLRepo()
         cls.repo = RepoService()
         cls.rms: RayModelService = RayModelService()
         cls.llm: OllamaService = OllamaService()
@@ -48,7 +48,7 @@ class EmbeddingService(metaclass=SingletonMeta):
         return encoded_query.numpy()
 
     def encode_image(self, sdoc_id: int) -> np.ndarray:
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             sdoc = SourceDocumentRead.model_validate(crud_sdoc.read(db=db, id=sdoc_id))
             assert (
                 sdoc.doctype == DocType.image
@@ -91,7 +91,7 @@ class EmbeddingService(metaclass=SingletonMeta):
         project_id: int,
         batch_size=16,
     ):
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             query = (
                 db.query(SourceDocumentDataORM)
                 .outerjoin(
@@ -176,7 +176,7 @@ class EmbeddingService(metaclass=SingletonMeta):
         batch_size=8,
         force_override=False,
     ):
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             query = (
                 db.query(SourceDocumentDataORM)
                 .outerjoin(

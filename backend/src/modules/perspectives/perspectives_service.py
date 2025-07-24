@@ -47,7 +47,7 @@ from modules.perspectives.perspectives_job import (
 )
 from pydantic import BaseModel
 from ray_model_worker.dto.promptembedder import PromptEmbedderInput
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import RepoService
 from repos.ollama_repo import OllamaService
 from repos.ray_repo import RayModelService
@@ -65,7 +65,7 @@ class PerspectivesService:
         self.update_status_clbk: TMJUpdateFN = update_status_clbk
         self.rms: RayModelService = RayModelService()
         self.ollama: OllamaService = OllamaService()
-        self.sqls: SQLService = SQLService()
+        self.sqlr: SQLRepo = SQLRepo()
         self.weaviate: WeaviateService = WeaviateService()
         self.repo: RepoService = RepoService()
 
@@ -854,7 +854,7 @@ class PerspectivesService:
         aspect_id: int,
         params: CreateAspectParams,
     ):
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             with self.weaviate.weaviate_session() as client:
                 # 1. Modify the documents based on the prompt
                 self._log_status_step(0)
@@ -902,7 +902,7 @@ class PerspectivesService:
     def create_cluster_with_name(
         self, aspect_id: int, params: CreateClusterWithNameParams
     ):
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             with self.weaviate.weaviate_session() as client:
                 # Read the aspect
                 aspect = crud_aspect.read(db=db, id=aspect_id)
@@ -1016,7 +1016,7 @@ class PerspectivesService:
     def create_cluster_with_sdocs(
         self, aspect_id: int, params: CreateClusterWithSdocsParams
     ):
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             # Read the current document <-> cluster assignments
             document_clusters = crud_document_cluster.read_by_aspect_id(
                 db=db, aspect_id=aspect_id
@@ -1080,7 +1080,7 @@ class PerspectivesService:
             self._log_status_msg("Successfully created cluster with source documents!")
 
     def remove_cluster(self, aspect_id: int, params: RemoveClusterParams):
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             with self.weaviate.weaviate_session() as client:
                 # 0. Read all relevant data
                 # - Read the cluster to remove
@@ -1202,7 +1202,7 @@ class PerspectivesService:
                 self._log_status_msg("Successfully removed cluster!")
 
     def merge_clusters(self, aspect_id: int, params: MergeClustersParams):
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             with self.weaviate.weaviate_session() as client:
                 # 0. Read the clusters to merge
                 cluster1 = crud_cluster.read(db=db, id=params.cluster_to_keep)
@@ -1247,7 +1247,7 @@ class PerspectivesService:
                 self._log_status_msg("Successfully merged clusters!")
 
     def split_cluster(self, aspect_id: int, params: SplitClusterParams):
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             with self.weaviate.weaviate_session() as client:
                 # 0. Read the cluster to split
                 cluster = crud_cluster.read(db=db, id=params.cluster_id)
@@ -1304,7 +1304,7 @@ class PerspectivesService:
                 self._log_status_msg("Successfully split cluster!")
 
     def change_cluster(self, aspect_id: int, params: ChangeClusterParams):
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             # 0. Read the cluster to change to
             if params.cluster_id == -1:
                 cluster = crud_cluster.read_or_create_outlier_cluster(
@@ -1415,7 +1415,7 @@ class PerspectivesService:
         return train_docs, train_labels, train_doc_ids
 
     def refine_cluster_model(self, aspect_id: int, params: RefineModelParams):
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             with self.weaviate.weaviate_session() as client:
                 # Update the model name, so that a new model is trained
                 aspect = crud_aspect.read(db=db, id=aspect_id)

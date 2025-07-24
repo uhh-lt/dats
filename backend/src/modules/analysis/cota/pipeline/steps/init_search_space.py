@@ -8,9 +8,9 @@ from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
 from modules.analysis.cota.concept_over_time_analysis_dto import COTASentence
 from modules.analysis.cota.pipeline.cargo import Cargo
 from modules.simsearch.simsearch_service import SimSearchService
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 
-sqls: SQLService = SQLService()
+sqlr: SQLRepo = SQLRepo()
 sims: SimSearchService = SimSearchService()
 
 
@@ -80,7 +80,7 @@ def add_sentences_to_search_space(
     sdoc_ids = list(set([cota_sent.sdoc_id for cota_sent in search_space]))
 
     # get the data from the database
-    with sqls.db_session() as db:
+    with sqlr.db_session() as db:
         sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=sdoc_ids)
 
     # map the data
@@ -122,7 +122,7 @@ def add_dates_to_search_space(
 
     # this is only possible if the cota has a date_metadata_id
     if date_metadata_id is not None:
-        with sqls.db_session() as db:
+        with sqlr.db_session() as db:
             query = (
                 db.query(
                     SourceDocumentORM.id,

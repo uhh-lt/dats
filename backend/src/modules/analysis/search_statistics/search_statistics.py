@@ -12,12 +12,12 @@ from modules.analysis.search_statistics.search_stats_dto import (
     SpanEntityStat,
     TagStat,
 )
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from sqlalchemy import func
 
 
 def compute_tag_statistics(sdoc_ids: Set[int], top_k: int = 20) -> List[TagStat]:
-    with SQLService().db_session() as db:
+    with SQLRepo().db_session() as db:
         # tag statistics for the sdoc_ids
         count = func.count().label("count")
         query = (
@@ -76,7 +76,7 @@ def __count_keywords(
 def compute_keyword_statistics(
     proj_id: int, sdoc_ids: Set[int], top_k: int = 20
 ) -> List[KeywordStat]:
-    with SQLService().db_session() as db:
+    with SQLRepo().db_session() as db:
         # 1. query keyword project metadadta
         project_metadata = crud_project_meta.read_by_project_and_key(
             db=db, project_id=proj_id, key="keywords"
@@ -124,7 +124,7 @@ def compute_code_statistics(
     sdoc_ids: Set[int],
     top_k: int = 20,
 ) -> List[SpanEntityStat]:
-    with SQLService().db_session() as db:
+    with SQLRepo().db_session() as db:
         # code statistics for the sdoc_ids
         count = func.count(AnnotationDocumentORM.source_document_id.distinct()).label(
             "count"

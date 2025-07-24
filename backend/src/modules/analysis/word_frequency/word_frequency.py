@@ -12,7 +12,7 @@ from modules.search.column_info import ColumnInfo
 from modules.search.filtering import Filter
 from modules.search.search_builder import SearchBuilder
 from modules.search.sorting import Sort
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import RepoService
 from sqlalchemy import distinct, func
 
@@ -20,7 +20,7 @@ from sqlalchemy import distinct, func
 def word_frequency_info(
     project_id: int,
 ) -> List[ColumnInfo[WordFrequencyColumns]]:
-    with SQLService().db_session() as db:
+    with SQLRepo().db_session() as db:
         project_metadata = [
             ProjectMetadataRead.model_validate(pm)
             for pm in crud_project_meta.read_by_project(db=db, proj_id=project_id)
@@ -44,7 +44,7 @@ def word_frequency(
     page: Optional[int] = None,
     page_size: Optional[int] = None,
 ) -> WordFrequencyResult:
-    with SQLService().db_session() as db:
+    with SQLRepo().db_session() as db:
         # count all words, all sdocs query (uses filtering)
         builder = SearchBuilder(db=db, filter=filter, sorts=[])
         subquery = builder.init_subquery(

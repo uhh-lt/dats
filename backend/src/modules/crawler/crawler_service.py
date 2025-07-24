@@ -14,7 +14,7 @@ from modules.crawler.crawler_job_dto import (
     CrawlerJobRead,
     CrawlerJobUpdate,
 )
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import RepoService
 from repos.redis_repo import RedisService
 
@@ -108,7 +108,7 @@ class CrawlerService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.repo: RepoService = RepoService()
         cls.redis: RedisService = RedisService()
-        cls.sqls: SQLService = SQLService()
+        cls.sqlr: SQLRepo = SQLRepo()
 
         return super(CrawlerService, cls).__new__(cls)
 
@@ -118,7 +118,7 @@ class CrawlerService(metaclass=SingletonMeta):
         if len(crawler_params.urls) == 0:
             raise NoDataToCrawlError("Number of provided URLs must be at least one!")
 
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             crud_project.exists(
                 db=db,
                 id=crawler_params.project_id,

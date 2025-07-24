@@ -15,7 +15,7 @@ from core.user.user_crud import SYSTEM_USER_ID, crud_user
 from core.user.user_dto import UserCreate, UserRead
 from core.user.user_orm import UserORM
 from repos.db.crud_base import NoSuchElementError
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -38,9 +38,7 @@ def get_number_of_system_codes() -> int:
     return __count_codes_recursively(conf.system_codes, 0, set())
 
 
-def test_update_project(
-    db: Session, sql_service: SQLService, project: ProjectORM
-) -> None:
+def test_update_project(db: Session, sql_repo: SQLRepo, project: ProjectORM) -> None:
     title2 = "".join(random.choices(string.ascii_letters, k=15))
     description2 = "Meow"
 
@@ -61,7 +59,7 @@ def test_update_project(
     with pytest.raises(IntegrityError):
         # Use a throwaway session that will become unusable due
         # to the exeption
-        with sql_service.db_session() as db:
+        with sql_repo.db_session() as db:
             crud_project.update(
                 db=db, id=project.id, update_dto=ProjectUpdate(title=None)
             )
@@ -70,7 +68,7 @@ def test_update_project(
     with pytest.raises(IntegrityError):
         # Use a throwaway session that will become unusable due
         # to the exeption
-        with sql_service.db_session() as db:
+        with sql_repo.db_session() as db:
             crud_project.update(
                 db=db, id=project.id, update_dto=ProjectUpdate(description=None)
             )

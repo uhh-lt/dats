@@ -10,13 +10,13 @@ from preprocessing.pipeline.model.image.autobbox import AutoBBox
 from preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from psycopg2 import OperationalError
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import RepoService
 from sqlalchemy.orm import Session
 from util.color import get_next_color
 
 repo: RepoService = RepoService()
-sql: SQLService = SQLService()
+sql: SQLRepo = SQLRepo()
 
 
 def __persist_bbox_annotations(db: Session, sdoc_id: int, ppid: PreProImageDoc) -> None:

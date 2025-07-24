@@ -4,7 +4,7 @@ import pandas as pd
 from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.document_tag_orm import DocumentTagORM
 from modules.analysis.analysis_dto import SampledSdocsResults
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from repos.db.sql_utils import aggregate_ids
 from sqlalchemy import and_, case, func
 
@@ -15,7 +15,7 @@ def document_sampler_by_tags(
     all_tag_ids = [tag_id for group in tag_ids for tag_id in group]
     tag2group = {tag_id: idx for idx, group in enumerate(tag_ids) for tag_id in group}
 
-    with SQLService().db_session() as db:
+    with SQLRepo().db_session() as db:
         query = (
             db.query(SourceDocumentORM.id, aggregate_ids(DocumentTagORM.id, "tags"))
             .join(SourceDocumentORM.document_tags)

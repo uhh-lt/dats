@@ -11,7 +11,7 @@ from modules.search.search_dto import (
     PaginatedElasticSearchDocumentHits,
 )
 from modules.search.sorting import Sort
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from repos.elasticsearch_repo import ElasticSearchService
 
 
@@ -28,7 +28,7 @@ def filter_memo_ids(
     page_number: Optional[int] = None,
     page_size: Optional[int] = None,
 ) -> Tuple[List[int], int]:
-    with SQLService().db_session() as db:
+    with SQLRepo().db_session() as db:
         builder = SearchBuilder(db=db, filter=filter, sorts=sorts)
         builder.init_query(
             db.query(

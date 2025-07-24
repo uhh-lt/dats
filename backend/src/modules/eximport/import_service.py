@@ -34,7 +34,7 @@ from modules.eximport.timeline_analysis.import_timeline_analysis import (
 )
 from modules.eximport.user.import_users import import_users_to_proj
 from modules.eximport.whiteboards.import_whiteboards import import_whiteboards_to_proj
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import RepoService
 from repos.ray_repo import RayModelService
 from repos.redis_repo import RedisService
@@ -67,7 +67,7 @@ class ImportService(metaclass=SingletonMeta):
     def __new__(cls):
         cls.repo: RepoService = RepoService()
         cls.redis: RedisService = RedisService()
-        cls.sqls: SQLService = SQLService()
+        cls.sqlr: SQLRepo = SQLRepo()
         cls.rms: RayModelService = RayModelService()
         cls.import_method_for_job_type: Dict[ImportJobType, Callable[..., None]] = {
             ImportJobType.TAGS: cls._import_tags_to_proj,
@@ -93,7 +93,7 @@ class ImportService(metaclass=SingletonMeta):
     def prepare_import_job(
         self, import_job_params: ImportJobParameters
     ) -> ImportJobRead:
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             crud_project.exists(
                 db=db,
                 id=import_job_params.project_id,
@@ -145,7 +145,7 @@ class ImportService(metaclass=SingletonMeta):
             update=ImportJobUpdate(status=BackgroundJobStatus.RUNNING),
         )
         try:
-            with self.sqls.db_session() as db:
+            with self.sqlr.db_session() as db:
                 # get the import method based on the jobtype
                 import_method = self.import_method_for_job_type.get(
                     imj.parameters.import_job_type, None

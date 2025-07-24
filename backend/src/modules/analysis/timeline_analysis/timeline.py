@@ -34,7 +34,7 @@ from modules.analysis.timeline_analysis.timeline_analysis_orm import TimelineAna
 from modules.search.filtering import Filter
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.search.search_builder import SearchBuilder
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from repos.db.sql_utils import aggregate_ids
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session, aliased
@@ -175,7 +175,7 @@ def __compute_timeline_analysis(
     if timeline_analysis.settings.date_metadata_id is None:
         return []
 
-    with SQLService().db_session() as db:
+    with SQLRepo().db_session() as db:
         match concept.timeline_analysis_type:
             case TimelineAnalysisType.DOCUMENT:
                 assert isinstance(

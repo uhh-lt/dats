@@ -18,13 +18,13 @@ from modules.search.filtering import Filter
 from modules.search.search_builder import SearchBuilder
 from modules.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
 from modules.search.sorting import Sort
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 
 
 def find_sentence_annotations_info(
     project_id,
 ) -> List[ColumnInfo[SentAnnoColumns]]:
-    with SQLService().db_session() as db:
+    with SQLRepo().db_session() as db:
         project_metadata = [
             ProjectMetadataRead.model_validate(pm)
             for pm in crud_project_meta.read_by_project(db=db, proj_id=project_id)
@@ -47,7 +47,7 @@ def find_sentence_annotations(
     page: Optional[int] = None,
     page_size: Optional[int] = None,
 ) -> SentenceAnnotationSearchResult:
-    with SQLService().db_session() as db:
+    with SQLRepo().db_session() as db:
         builder = SearchBuilder(db, filter, sorts)
         # build the initial subquery that queries all necessary data for the desired output
         subquery = builder.init_subquery(

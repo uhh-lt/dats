@@ -6,7 +6,7 @@ from common.singleton_meta import SingletonMeta
 from config import conf
 from fastapi import Request
 from loguru import logger
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from repos.mail_repo import MailService
 
 from core.user.user_crud import crud_user
@@ -52,7 +52,7 @@ class OAuthService(metaclass=SingletonMeta):
             userinfo = token.get("userinfo")
             print(f"Userinfo: {userinfo}")
 
-            with SQLService().db_session() as db:
+            with SQLRepo().db_session() as db:
                 try:
                     # Warning: Security concern
                     user = crud_user.read_by_email(db=db, email=userinfo["email"])

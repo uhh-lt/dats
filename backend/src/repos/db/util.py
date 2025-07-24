@@ -12,7 +12,7 @@ from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
 from repos.db.orm_base import ORMBase
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from sqlalchemy import inspect
 
 
@@ -28,7 +28,7 @@ def get_parent_project_id(orm: ORMBase) -> Optional[int]:
         return None
 
     if isinstance(orm, ObjectHandleORM):
-        with SQLService().db_session() as db:
+        with SQLRepo().db_session() as db:
             maybe_orm = crud_object_handle.resolve_handled_object(db=db, handle=orm)
 
             if maybe_orm is None:
@@ -36,7 +36,7 @@ def get_parent_project_id(orm: ORMBase) -> Optional[int]:
 
             orm = maybe_orm
 
-    with SQLService().db_session() as db:
+    with SQLRepo().db_session() as db:
         if inspect(orm).detached:
             # TODO this might be dangerous to use in authorization methods
             # which will get called for every request!

@@ -5,9 +5,9 @@ from modules.analysis.word_frequency.word_frequency_crud import crud_word_freque
 from modules.analysis.word_frequency.word_frequency_dto import WordFrequencyCreate
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 
-sql: SQLService = SQLService()
+sql: SQLRepo = SQLRepo()
 
 
 def persist_sdoc_word_frequencies(cargo: PipelineCargo) -> PipelineCargo:

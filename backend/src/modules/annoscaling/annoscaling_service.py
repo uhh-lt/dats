@@ -13,7 +13,7 @@ from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_orm import SourceDocumentORM
 from modules.search.search_dto import SimSearchSentenceHit
 from modules.simsearch.simsearch_service import SimSearchService
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 from repos.vector.weaviate_repo import WeaviateService
 
 SimSearchHit = TypeVar("SimSearchHit")
@@ -21,7 +21,7 @@ SimSearchHit = TypeVar("SimSearchHit")
 
 class AnnoScalingService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.sqls = SQLService()
+        cls.sqlr = SQLRepo()
         cls.sim = SimSearchService()
         cls.weaviate = WeaviateService()
 
@@ -38,7 +38,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
     ):
         sdoc_ids = {sdoc for sdoc, _ in accept + reject}
 
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             sdocs = (
                 db.query(SourceDocumentDataORM)
                 .filter(SourceDocumentDataORM.id.in_(sdoc_ids))
@@ -232,7 +232,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
     def __get_annotations(
         self, project_id: int, user_ids: List[int], code_id: int
     ) -> List[Tuple[int, int, int]]:
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             query = (
                 db.query(
                     SpanAnnotationORM.begin,
@@ -260,7 +260,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
     def __get_sentences(
         self, sdoc_ids: Iterable[int]
     ) -> Dict[int, Tuple[List[int], List[int], str]]:
-        with self.sqls.db_session() as db:
+        with self.sqlr.db_session() as db:
             query = db.query(
                 SourceDocumentDataORM.id,
                 SourceDocumentDataORM.sentence_starts,

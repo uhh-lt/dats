@@ -16,13 +16,13 @@ from modules.search.filtering import Filter
 from modules.search.search_builder import SearchBuilder
 from modules.search.sorting import Sort
 from modules.search.span_anno_search.span_anno_search_columns import SpanColumns
-from repos.db.sql_repo import SQLService
+from repos.db.sql_repo import SQLRepo
 
 
 def find_span_annotations_info(
     project_id,
 ) -> List[ColumnInfo[SpanColumns]]:
-    with SQLService().db_session() as db:
+    with SQLRepo().db_session() as db:
         project_metadata = [
             ProjectMetadataRead.model_validate(pm)
             for pm in crud_project_meta.read_by_project(db=db, proj_id=project_id)
@@ -45,7 +45,7 @@ def find_span_annotations(
     page: Optional[int] = None,
     page_size: Optional[int] = None,
 ) -> SpanAnnotationSearchResult:
-    with SQLService().db_session() as db:
+    with SQLRepo().db_session() as db:
         builder = SearchBuilder(db, filter, sorts)
         # build the initial subquery that queries all necessary data for the desired output
         subquery = builder.init_subquery(
