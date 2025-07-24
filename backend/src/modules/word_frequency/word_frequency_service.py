@@ -5,13 +5,16 @@ from common.doc_type import DocType
 from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
-from modules.analysis.analysis_dto import WordFrequencyResult, WordFrequencyStat
-from modules.analysis.word_frequency.word_frequency_columns import WordFrequencyColumns
-from modules.analysis.word_frequency.word_frequency_orm import WordFrequencyORM
 from modules.search_system.column_info import ColumnInfo
 from modules.search_system.filtering import Filter
 from modules.search_system.search_builder import SearchBuilder
 from modules.search_system.sorting import Sort
+from modules.word_frequency.word_frequency_columns import WordFrequencyColumns
+from modules.word_frequency.word_frequency_dto import (
+    WordFrequencyResult,
+    WordFrequencyStat,
+)
+from modules.word_frequency.word_frequency_orm import WordFrequencyORM
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy import distinct, func

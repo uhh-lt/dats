@@ -4,11 +4,11 @@ import numpy as np
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from loguru import logger
-from modules.analysis.cota.concept_over_time_analysis_dto import (
+from modules.concept_over_time_analysis.concept_over_time_analysis_dto import (
     COTAConcept,
     COTASentence,
 )
-from modules.analysis.cota.pipeline.cargo import Cargo
+from modules.concept_over_time_analysis.pipeline.cargo import Cargo
 from ray_model_worker.dto.cota import (
     RayCOTAJobInput,
     RayCOTAJobResponse,

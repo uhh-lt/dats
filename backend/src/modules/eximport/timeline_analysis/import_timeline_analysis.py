@@ -5,21 +5,21 @@ import srsly
 from core.project.project_crud import crud_project
 from fastapi.encoders import jsonable_encoder
 from loguru import logger
-from modules.analysis.timeline_analysis.timeline_analysis_crud import (
-    crud_timeline_analysis,
-)
-from modules.analysis.timeline_analysis.timeline_analysis_dto import (
-    TimelineAnalysisConceptForExport,
-    TimelineAnalysisCreateIntern,
-    TimelineAnalysisSettingsForExport,
-    TimelineAnalysisType,
-)
 from modules.eximport.timeline_analysis.timeline_analysis_export_schema import (
     TimelineAnalysisExportCollection,
 )
 from modules.eximport.timeline_analysis.timeline_analysis_transformations import (
     transform_concept_for_import,
     transform_settings_for_import,
+)
+from modules.timeline_analysis.timeline_analysis_crud import (
+    crud_timeline_analysis,
+)
+from modules.timeline_analysis.timeline_analysis_dto import (
+    TimelineAnalysisConceptForExport,
+    TimelineAnalysisCreateIntern,
+    TimelineAnalysisSettingsForExport,
+    TimelineAnalysisType,
 )
 from sqlalchemy.orm import Session
 

@@ -1,8 +1,8 @@
 import traceback
 
 from loguru import logger
-from modules.analysis.word_frequency.word_frequency_crud import crud_word_frequency
-from modules.analysis.word_frequency.word_frequency_dto import WordFrequencyCreate
+from modules.word_frequency.word_frequency_crud import crud_word_frequency
+from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from repos.db.sql_repo import SQLRepo

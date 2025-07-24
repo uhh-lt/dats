@@ -11,8 +11,10 @@ from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from fastapi.encoders import jsonable_encoder
 from loguru import logger
-from modules.analysis.cota.concept_over_time_analysis_crud import crud_cota
-from modules.analysis.cota.concept_over_time_analysis_dto import (
+from modules.concept_over_time_analysis.concept_over_time_analysis_crud import (
+    crud_cota,
+)
+from modules.concept_over_time_analysis.concept_over_time_analysis_dto import (
     COTACreateIntern,
     COTARead,
     COTARefinementHyperparameters,
@@ -24,7 +26,9 @@ from modules.analysis.cota.concept_over_time_analysis_dto import (
     COTAUpdate,
     COTAUpdateIntern,
 )
-from modules.analysis.cota.pipeline import build_cota_refinement_pipeline
+from modules.concept_over_time_analysis.pipeline import (
+    build_cota_refinement_pipeline,
+)
 from modules.simsearch.simsearch_service import SimSearchService
 from modules.trainer.trainer_service import TrainerService
 from repos.db.sql_repo import SQLRepo

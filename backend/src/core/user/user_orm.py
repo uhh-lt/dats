@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, List
 
-from modules.analysis.timeline_analysis.timeline_analysis_orm import TimelineAnalysisORM
+from modules.timeline_analysis.timeline_analysis_orm import TimelineAnalysisORM
 from repos.db.orm_base import ORMBase
 from sqlalchemy import DateTime, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from core.memo.memo_orm import MemoORM
     from core.memo.object_handle_orm import ObjectHandleORM
     from core.project.project_orm import ProjectORM
-    from modules.analysis.cota.concept_over_time_analysis_orm import (
+    from modules.concept_over_time_analysis.concept_over_time_analysis_orm import (
         ConceptOverTimeAnalysisORM,
     )
     from modules.whiteboard.whiteboard_orm import WhiteboardORM

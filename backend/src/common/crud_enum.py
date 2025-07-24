@@ -19,11 +19,9 @@ from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.project.project_crud import crud_project
 from core.tag.document_tag_crud import crud_document_tag
 from core.user.user_crud import crud_user
-from modules.analysis.cota.concept_over_time_analysis_crud import crud_cota
-from modules.analysis.timeline_analysis.timeline_analysis_crud import (
-    crud_timeline_analysis,
+from modules.concept_over_time_analysis.concept_over_time_analysis_crud import (
+    crud_cota,
 )
-from modules.analysis.word_frequency.word_frequency_crud import crud_word_frequency
 from modules.ml.doc_tag_recommendation.document_tag_recommendation_crud import (
     crud_document_tag_recommendation_link,
 )
@@ -31,7 +29,11 @@ from modules.ml.source_document_job_status_crud import crud_sdoc_job_status
 from modules.perspectives.aspect_crud import crud_aspect
 from modules.perspectives.cluster_crud import crud_cluster
 from modules.perspectives.document_aspect_crud import crud_document_aspect
+from modules.timeline_analysis.timeline_analysis_crud import (
+    crud_timeline_analysis,
+)
 from modules.whiteboard.whiteboard_crud import crud_whiteboard
+from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from preprocessing.preprocessing_job_crud import crud_prepro_job
 from preprocessing.preprocessing_job_payload_crud import crud_prepro_job_payload
 

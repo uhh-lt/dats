@@ -21,7 +21,7 @@ from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import SourceDocumentMetadataRead
 from fastapi import APIRouter, Depends
 from loguru import logger
-from modules.analysis.word_frequency.word_frequency_dto import WordFrequencyRead
+from modules.word_frequency.word_frequency_dto import WordFrequencyRead
 from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy.orm import Session
 

@@ -4,8 +4,10 @@ from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from fastapi import APIRouter, Depends
-from modules.analysis.cota.concept_over_time_analysis_crud import crud_cota
-from modules.analysis.cota.concept_over_time_analysis_dto import (
+from modules.concept_over_time_analysis.concept_over_time_analysis_crud import (
+    crud_cota,
+)
+from modules.concept_over_time_analysis.concept_over_time_analysis_dto import (
     COTACreate,
     COTACreateIntern,
     COTARead,
@@ -14,7 +16,7 @@ from modules.analysis.cota.concept_over_time_analysis_dto import (
     COTASentenceID,
     COTAUpdate,
 )
-from modules.analysis.cota.service import COTAService
+from modules.concept_over_time_analysis.service import COTAService
 from repos.redis_repo import RedisRepo
 from sqlalchemy.orm import Session
 

@@ -2,12 +2,14 @@ from typing import List
 
 import srsly
 from fastapi.encoders import jsonable_encoder
-from modules.analysis.cota.concept_over_time_analysis_crud import crud_cota
-from modules.analysis.cota.concept_over_time_analysis_dto import (
+from modules.concept_over_time_analysis.concept_over_time_analysis_crud import (
+    crud_cota,
+)
+from modules.concept_over_time_analysis.concept_over_time_analysis_dto import (
     COTASentence,
     COTAUpdateIntern,
 )
-from modules.analysis.cota.pipeline.cargo import Cargo
+from modules.concept_over_time_analysis.pipeline.cargo import Cargo
 from repos.db.sql_repo import SQLRepo
 
 sqlr: SQLRepo = SQLRepo()

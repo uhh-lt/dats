@@ -5,8 +5,10 @@ from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
-from modules.analysis.cota.concept_over_time_analysis_dto import COTASentence
-from modules.analysis.cota.pipeline.cargo import Cargo
+from modules.concept_over_time_analysis.concept_over_time_analysis_dto import (
+    COTASentence,
+)
+from modules.concept_over_time_analysis.pipeline.cargo import Cargo
 from modules.simsearch.simsearch_service import SimSearchService
 from repos.db.sql_repo import SQLRepo
 

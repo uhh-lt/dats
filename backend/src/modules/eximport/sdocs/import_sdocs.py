@@ -21,10 +21,10 @@ from core.metadata.source_document_metadata_dto import SourceDocumentMetadataCre
 from core.project.project_crud import crud_project
 from core.tag.document_tag_crud import crud_document_tag
 from loguru import logger
-from modules.analysis.word_frequency.word_frequency_crud import crud_word_frequency
-from modules.analysis.word_frequency.word_frequency_dto import WordFrequencyCreate
 from modules.eximport.sdocs.sdoc_export_schema import SourceDocumentExportCollection
 from modules.search.search_dto import ElasticSearchDocumentCreate
+from modules.word_frequency.word_frequency_crud import crud_word_frequency
+from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
 from preprocessing.pipeline.steps.image.process.convert_to_webp_and_generate_thumbnail import (
     generate_thumbnails,
 )
