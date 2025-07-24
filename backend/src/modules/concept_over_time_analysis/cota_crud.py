@@ -1,10 +1,10 @@
 from typing import List
 
-from modules.concept_over_time_analysis.concept_over_time_analysis_dto import (
+from modules.concept_over_time_analysis.cota_dto import (
     COTACreateIntern,
     COTAUpdateIntern,
 )
-from modules.concept_over_time_analysis.concept_over_time_analysis_orm import (
+from modules.concept_over_time_analysis.cota_orm import (
     ConceptOverTimeAnalysisORM,
 )
 from repos.db.crud_base import CRUDBase, NoSuchElementError

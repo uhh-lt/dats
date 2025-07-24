@@ -1,5 +1,5 @@
 from loguru import logger
-from modules.concept_over_time_analysis.service import COTAService
+from modules.concept_over_time_analysis.cota_service import COTAService
 
 cs: COTAService = COTAService()
 
