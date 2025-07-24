@@ -43,7 +43,7 @@ from modules.eximport.whiteboards.export_whiteboards import (
     export_selected_whiteboards,
 )
 from repos.db.sql_repo import SQLRepo
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from repos.redis_repo import RedisService
 
 
@@ -71,7 +71,7 @@ class UnsupportedExportJobTypeError(Exception):
 
 class ExportService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.repo: RepoService = RepoService()
+        cls.fsr: FilesystemRepo = FilesystemRepo()
         cls.redis: RedisService = RedisService()
         cls.sqlr: SQLRepo = SQLRepo()
 
@@ -161,7 +161,7 @@ class ExportService(metaclass=SingletonMeta):
                 # execute the export_method with the provided specific parameters
                 results_path = export_method(
                     db=db,
-                    repo=self.repo,
+                    fsr=self.fsr,
                     project_id=exj.parameters.project_id,
                     **(
                         exj.parameters.specific_export_job_parameters.model_dump(
@@ -171,7 +171,7 @@ class ExportService(metaclass=SingletonMeta):
                         else {}
                     ),
                 )
-                results_url = self.repo.get_temp_file_url(
+                results_url = self.fsr.get_temp_file_url(
                     results_path.name, relative=True
                 )
 

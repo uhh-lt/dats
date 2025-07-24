@@ -3,9 +3,9 @@ from core.doc.source_document_dto import SDocStatus
 from loguru import logger
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from repos.db.sql_repo import SQLRepo
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 
-repo: RepoService = RepoService()
+fsr: FilesystemRepo = FilesystemRepo()
 sql: SQLRepo = SQLRepo()
 
 

@@ -3,14 +3,14 @@ from pathlib import Path
 from PIL import Image
 from preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 
-repo: RepoService = RepoService()
+fsr: FilesystemRepo = FilesystemRepo()
 
 
 def generate_thumbnails(image_path: Path):
     with Image.open(image_path) as im:
-        web_p_fn = repo.generate_sdoc_filename(image_path, webp=True, thumbnail=False)
+        web_p_fn = fsr.generate_sdoc_filename(image_path, webp=True, thumbnail=False)
         # convert to webp
         im.save(
             web_p_fn,
@@ -20,9 +20,7 @@ def generate_thumbnails(image_path: Path):
             method=6,
         )
         # create thumbnail
-        thumbnail_fn = repo.generate_sdoc_filename(
-            image_path, webp=True, thumbnail=True
-        )
+        thumbnail_fn = fsr.generate_sdoc_filename(image_path, webp=True, thumbnail=True)
         im.thumbnail((128, 128))
         im.save(
             thumbnail_fn,

@@ -10,19 +10,19 @@ from modules.eximport.user.user_export_schema import (
     UserExportCollection,
     UserExportSchema,
 )
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy.orm import Session
 
 
 def export_all_users(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     project_id: int,
 ) -> Path:
     users = crud_project.read(db=db, id=project_id).users
     return __export_users(
         db=db,
-        repo=repo,
+        fsr=fsr,
         fn=f"project_{project_id}_all_users",
         users=users,
     )
@@ -30,7 +30,7 @@ def export_all_users(
 
 def __export_users(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     fn: str,
     users: List[UserORM],
 ) -> Path:
@@ -38,7 +38,7 @@ def __export_users(
         raise NoDataToExportError("No users to export.")
 
     export_data = __generate_export_df_for_users(users=users)
-    return repo.write_df_to_temp_file(
+    return fsr.write_df_to_temp_file(
         df=export_data,
         fn=fn,
     )

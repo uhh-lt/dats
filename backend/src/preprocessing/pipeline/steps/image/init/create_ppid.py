@@ -1,17 +1,17 @@
 from loguru import logger
 from preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 
-repo = RepoService()
+fsr = FilesystemRepo()
 
 
 def create_ppid(cargo: PipelineCargo) -> PipelineCargo:
-    filepath = repo._get_dst_path_for_project_sdoc_file(
+    filepath = fsr._get_dst_path_for_project_sdoc_file(
         proj_id=cargo.ppj_payload.project_id, filename=cargo.ppj_payload.filename
     )
     if not filepath.exists():
-        raise FileNotFoundError(f"File {filepath} not found in repository!")
+        raise FileNotFoundError(f"File {filepath} not found in filesystem!")
 
     additional_parameters = dict()
     if "metadata" in cargo.data:

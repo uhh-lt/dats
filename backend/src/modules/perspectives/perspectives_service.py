@@ -48,7 +48,7 @@ from modules.perspectives.perspectives_job import (
 from pydantic import BaseModel
 from ray_model_worker.dto.promptembedder import PromptEmbedderInput
 from repos.db.sql_repo import SQLRepo
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from repos.ollama_repo import OllamaService
 from repos.ray_repo import RayModelService
 from repos.vector.weaviate_repo import WeaviateRepo
@@ -67,7 +67,7 @@ class PerspectivesService:
         self.ollama: OllamaService = OllamaService()
         self.sqlr: SQLRepo = SQLRepo()
         self.weaviate: WeaviateRepo = WeaviateRepo()
-        self.repo: RepoService = RepoService()
+        self.fsr: FilesystemRepo = FilesystemRepo()
 
     def _log_status_msg(self, status_msg: str):
         self.update_status_clbk(None, status_msg)
@@ -167,7 +167,7 @@ class PerspectivesService:
         ), "The number of embeddings does not match the number of documents."
 
         # 2. Compute the 2D coordinates
-        umap_model_path = self.repo.get_model_dir(
+        umap_model_path = self.fsr.get_model_dir(
             proj_id=project_id,
             model_prefix="umap_",
             model_name=f"aspect_{aspect_id}_{embedding_model}",
@@ -246,7 +246,7 @@ class PerspectivesService:
         figure.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
 
         # Save the map thumbnail
-        output_path = self.repo.get_plot_path(
+        output_path = self.fsr.get_plot_path(
             proj_id=aspect.project_id,
             plot_name=f"aspect_{aspect_id}_map_thumbnail.png",
         )

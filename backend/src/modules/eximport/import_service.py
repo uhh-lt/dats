@@ -35,7 +35,7 @@ from modules.eximport.timeline_analysis.import_timeline_analysis import (
 from modules.eximport.user.import_users import import_users_to_proj
 from modules.eximport.whiteboards.import_whiteboards import import_whiteboards_to_proj
 from repos.db.sql_repo import SQLRepo
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from repos.ray_repo import RayModelService
 from repos.redis_repo import RedisService
 from sqlalchemy.orm import Session
@@ -65,7 +65,7 @@ class UnsupportedImportJobTypeError(Exception):
 
 class ImportService(metaclass=SingletonMeta):
     def __new__(cls):
-        cls.repo: RepoService = RepoService()
+        cls.fsr: FilesystemRepo = FilesystemRepo()
         cls.redis: RedisService = RedisService()
         cls.sqlr: SQLRepo = SQLRepo()
         cls.rms: RayModelService = RayModelService()
@@ -101,7 +101,7 @@ class ImportService(metaclass=SingletonMeta):
             )
 
         # Check if the file exists
-        if not self.repo._temp_file_exists(filename=import_job_params.file_name):
+        if not self.fsr._temp_file_exists(filename=import_job_params.file_name):
             raise ImportJobPreparationError(
                 cause=Exception(
                     f"The file {import_job_params.file_name} does not exist!"
@@ -180,7 +180,7 @@ class ImportService(metaclass=SingletonMeta):
         imj_parameters: ImportJobParameters,
     ) -> None:
         """Import codes to a project"""
-        path_to_file = self.repo.get_dst_path_for_temp_file(imj_parameters.file_name)
+        path_to_file = self.fsr.get_dst_path_for_temp_file(imj_parameters.file_name)
         df = pd.read_csv(path_to_file)
         import_codes_to_proj(db=db, df=df, project_id=imj_parameters.project_id)
 
@@ -190,7 +190,7 @@ class ImportService(metaclass=SingletonMeta):
         imj_parameters: ImportJobParameters,
     ) -> None:
         """Import tags to a project"""
-        path_to_file = self.repo.get_dst_path_for_temp_file(imj_parameters.file_name)
+        path_to_file = self.fsr.get_dst_path_for_temp_file(imj_parameters.file_name)
         df = pd.read_csv(path_to_file)
         import_tags_to_proj(db=db, df=df, project_id=imj_parameters.project_id)
 
@@ -200,7 +200,7 @@ class ImportService(metaclass=SingletonMeta):
         imj_parameters: ImportJobParameters,
     ) -> None:
         """Import bbox annotations to a project"""
-        path_to_file = self.repo.get_dst_path_for_temp_file(imj_parameters.file_name)
+        path_to_file = self.fsr.get_dst_path_for_temp_file(imj_parameters.file_name)
         df = pd.read_csv(path_to_file)
         import_bbox_annotations_to_proj(
             db=db, df=df, project_id=imj_parameters.project_id
@@ -212,7 +212,7 @@ class ImportService(metaclass=SingletonMeta):
         imj_parameters: ImportJobParameters,
     ) -> None:
         """Import span annotations to a project"""
-        path_to_file = self.repo.get_dst_path_for_temp_file(imj_parameters.file_name)
+        path_to_file = self.fsr.get_dst_path_for_temp_file(imj_parameters.file_name)
         df = pd.read_csv(path_to_file)
         import_span_annotations_to_proj(
             db=db, df=df, project_id=imj_parameters.project_id
@@ -224,7 +224,7 @@ class ImportService(metaclass=SingletonMeta):
         imj_parameters: ImportJobParameters,
     ) -> None:
         """Import sent annotations to a project"""
-        path_to_file = self.repo.get_dst_path_for_temp_file(imj_parameters.file_name)
+        path_to_file = self.fsr.get_dst_path_for_temp_file(imj_parameters.file_name)
         df = pd.read_csv(path_to_file)
         import_span_annotations_to_proj(
             db=db, df=df, project_id=imj_parameters.project_id
@@ -236,7 +236,7 @@ class ImportService(metaclass=SingletonMeta):
         imj_parameters: ImportJobParameters,
     ) -> None:
         """Import whiteboards to a project"""
-        path_to_file = self.repo.get_dst_path_for_temp_file(imj_parameters.file_name)
+        path_to_file = self.fsr.get_dst_path_for_temp_file(imj_parameters.file_name)
         df = pd.read_csv(path_to_file)
         import_whiteboards_to_proj(db=db, df=df, project_id=imj_parameters.project_id)
 
@@ -246,7 +246,7 @@ class ImportService(metaclass=SingletonMeta):
         imj_parameters: ImportJobParameters,
     ) -> None:
         """Import timeline analyses to a project"""
-        path_to_file = self.repo.get_dst_path_for_temp_file(imj_parameters.file_name)
+        path_to_file = self.fsr.get_dst_path_for_temp_file(imj_parameters.file_name)
         df = pd.read_csv(path_to_file)
         import_timeline_analysis_to_proj(
             db=db, df=df, project_id=imj_parameters.project_id
@@ -258,7 +258,7 @@ class ImportService(metaclass=SingletonMeta):
         imj_parameters: ImportJobParameters,
     ) -> None:
         """Import cota to a project"""
-        path_to_file = self.repo.get_dst_path_for_temp_file(imj_parameters.file_name)
+        path_to_file = self.fsr.get_dst_path_for_temp_file(imj_parameters.file_name)
         df = pd.read_csv(path_to_file)
         import_cota_to_proj(db=db, df=df, project_id=imj_parameters.project_id)
 
@@ -268,7 +268,7 @@ class ImportService(metaclass=SingletonMeta):
         imj_parameters: ImportJobParameters,
     ) -> None:
         """Import memos to a project"""
-        path_to_file = self.repo.get_dst_path_for_temp_file(imj_parameters.file_name)
+        path_to_file = self.fsr.get_dst_path_for_temp_file(imj_parameters.file_name)
         df = pd.read_csv(path_to_file)
         import_memos_to_proj(db=db, df=df, project_id=imj_parameters.project_id)
 
@@ -278,7 +278,7 @@ class ImportService(metaclass=SingletonMeta):
         imj_parameters: ImportJobParameters,
     ) -> None:
         """Import users annotations to a project"""
-        path_to_file = self.repo.get_dst_path_for_temp_file(imj_parameters.file_name)
+        path_to_file = self.fsr.get_dst_path_for_temp_file(imj_parameters.file_name)
         df = pd.read_csv(path_to_file)
         import_users_to_proj(db=db, df=df, project_id=imj_parameters.project_id)
 
@@ -288,7 +288,7 @@ class ImportService(metaclass=SingletonMeta):
         imj_parameters: ImportJobParameters,
     ) -> None:
         """Import project metadata to a project"""
-        path_to_file = self.repo.get_dst_path_for_temp_file(imj_parameters.file_name)
+        path_to_file = self.fsr.get_dst_path_for_temp_file(imj_parameters.file_name)
         df = pd.read_csv(path_to_file)
         import_project_metadata_to_proj(
             db=db, df=df, project_id=imj_parameters.project_id
@@ -302,10 +302,10 @@ class ImportService(metaclass=SingletonMeta):
         """Import source documents to a project"""
         # unzip file
         try:
-            path_to_zip_file = self.repo.get_dst_path_for_temp_file(
+            path_to_zip_file = self.fsr.get_dst_path_for_temp_file(
                 imj_parameters.file_name
             )
-            path_to_temp_import_dir = self.repo.create_temp_dir(
+            path_to_temp_import_dir = self.fsr.create_temp_dir(
                 f"import_user_{imj_parameters.user_id}_sdocs_{imj_parameters.project_id}"
             )
             self.__unzip(
@@ -329,10 +329,10 @@ class ImportService(metaclass=SingletonMeta):
         """Import an entire project"""
         # unzip file
         try:
-            path_to_zip_file = self.repo.get_dst_path_for_temp_file(
+            path_to_zip_file = self.fsr.get_dst_path_for_temp_file(
                 imj_parameters.file_name
             )
-            path_to_temp_import_dir = self.repo.create_temp_dir(
+            path_to_temp_import_dir = self.fsr.create_temp_dir(
                 f"import_user_{imj_parameters.user_id}_project_{imj_parameters.project_id}"
             )
             self.__unzip(
@@ -344,7 +344,7 @@ class ImportService(metaclass=SingletonMeta):
 
         import_project(
             db=db,
-            repo=self.repo,
+            fsr=self.fsr,
             path_to_dir=path_to_temp_import_dir,
             proj_id=imj_parameters.project_id,
         )

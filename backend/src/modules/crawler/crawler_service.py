@@ -15,7 +15,7 @@ from modules.crawler.crawler_job_dto import (
     CrawlerJobUpdate,
 )
 from repos.db.sql_repo import SQLRepo
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from repos.redis_repo import RedisService
 
 
@@ -106,7 +106,7 @@ class UnknownCrawlerJobError(Exception):
 
 class CrawlerService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.repo: RepoService = RepoService()
+        cls.fsr: FilesystemRepo = FilesystemRepo()
         cls.redis: RedisService = RedisService()
         cls.sqlr: SQLRepo = SQLRepo()
 
@@ -131,7 +131,7 @@ class CrawlerService(metaclass=SingletonMeta):
         zip_path = Path(cj.output_dir)
         if not zip_path.suffix == ".zip":
             zip_path = zip_path.with_suffix(".zip")
-        export_zip = self.repo.create_temp_file(zip_path)
+        export_zip = self.fsr.create_temp_file(zip_path)
 
         crawled_files = [
             file for file in Path(cj.output_dir).glob("**/*") if file.is_file()
@@ -149,7 +149,7 @@ class CrawlerService(metaclass=SingletonMeta):
         self._assert_all_requested_data_exists(crawler_params=crawler_params)
 
         # create the temporary output directories
-        temp_output_dir = self.repo.create_temp_dir()
+        temp_output_dir = self.fsr.create_temp_dir()
         temp_images_store_path = temp_output_dir / "images"
         temp_images_store_path.mkdir()
         temp_videos_store_path = temp_output_dir / "videos"
@@ -158,10 +158,10 @@ class CrawlerService(metaclass=SingletonMeta):
         temp_audios_store_path.mkdir()
 
         # relative directories to communicate with the celery workers
-        temp_output_dir = temp_output_dir.relative_to(self.repo.repo_root)
-        temp_images_store_path = temp_images_store_path.relative_to(self.repo.repo_root)
-        temp_videos_store_path = temp_videos_store_path.relative_to(self.repo.repo_root)
-        temp_audios_store_path = temp_audios_store_path.relative_to(self.repo.repo_root)
+        temp_output_dir = temp_output_dir.relative_to(self.fsr.root_dir)
+        temp_images_store_path = temp_images_store_path.relative_to(self.fsr.root_dir)
+        temp_videos_store_path = temp_videos_store_path.relative_to(self.fsr.root_dir)
+        temp_audios_store_path = temp_audios_store_path.relative_to(self.fsr.root_dir)
 
         cj_create = CrawlerJobCreate(
             parameters=crawler_params,

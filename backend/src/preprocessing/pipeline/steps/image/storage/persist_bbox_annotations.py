@@ -11,11 +11,11 @@ from preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from psycopg2 import OperationalError
 from repos.db.sql_repo import SQLRepo
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy.orm import Session
 from util.color import get_next_color
 
-repo: RepoService = RepoService()
+fsr: FilesystemRepo = FilesystemRepo()
 sql: SQLRepo = SQLRepo()
 
 

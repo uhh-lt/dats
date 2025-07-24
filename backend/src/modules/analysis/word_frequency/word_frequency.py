@@ -13,7 +13,7 @@ from modules.search.filtering import Filter
 from modules.search.search_builder import SearchBuilder
 from modules.search.sorting import Sort
 from repos.db.sql_repo import SQLRepo
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy import distinct, func
 
 
@@ -146,7 +146,7 @@ def word_frequency_export(
     project_id: int,
     filter: Filter[WordFrequencyColumns],
 ) -> str:
-    repo = RepoService()
+    fsr = FilesystemRepo()
 
     wf_result = word_frequency(project_id=project_id, filter=filter, sorts=[])
 
@@ -164,8 +164,8 @@ def word_frequency_export(
     df = pd.DataFrame(data=data)
 
     # export the data frame
-    export_file = repo.write_df_to_temp_file(
+    export_file = fsr.write_df_to_temp_file(
         df=df,
         fn=f"project_{project_id}_word_frequency_export",
     )
-    return repo.get_temp_file_url(export_file.name, relative=True)
+    return fsr.get_temp_file_url(export_file.name, relative=True)

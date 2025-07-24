@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 
-repo = RepoService()
+fsr = FilesystemRepo()
 
 
 def generate_webp_thumbnail_for_audio(cargo: PipelineCargo) -> PipelineCargo:
@@ -20,11 +20,11 @@ def generate_webp_thumbnail_for_audio(cargo: PipelineCargo) -> PipelineCargo:
             f"Cannot read uncompressed audio file {str(ppad.uncompressed_audio_filepath)}!"
         )
 
-    thumbnail_filename = repo.generate_sdoc_filename(
+    thumbnail_filename = fsr.generate_sdoc_filename(
         ppad.filepath, webp=True, thumbnail=True
     )
 
-    webp_filename = repo.generate_sdoc_filename(
+    webp_filename = fsr.generate_sdoc_filename(
         ppad.filepath, webp=True, thumbnail=False
     )
 

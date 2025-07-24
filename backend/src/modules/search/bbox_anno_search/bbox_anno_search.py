@@ -16,9 +16,9 @@ from modules.search.filtering import Filter
 from modules.search.search_builder import SearchBuilder
 from modules.search.sorting import Sort
 from repos.db.sql_repo import SQLRepo
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 
-repo_service = RepoService()
+repo_service = FilesystemRepo()
 
 
 def find_bbox_annotations_info(project_id) -> List[ColumnInfo[BBoxColumns]]:

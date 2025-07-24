@@ -73,7 +73,7 @@ from modules.llm_assistant.prompts.tagging_prompt_builder import (
 )
 from ray_model_worker.dto.seqsenttagger import SeqSentTaggerDoc, SeqSentTaggerJobInput
 from repos.db.sql_repo import SQLRepo
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from repos.ollama_repo import OllamaService
 from repos.ray_repo import RayModelService
 from repos.redis_repo import RedisService
@@ -105,7 +105,7 @@ class UnsupportedLLMJobTypeError(Exception):
 
 class LLMService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.repo: RepoService = RepoService()
+        cls.fsr: FilesystemRepo = FilesystemRepo()
         cls.redis: RedisService = RedisService()
         cls.sqlr: SQLRepo = SQLRepo()
         cls.ollamas: OllamaService = OllamaService()

@@ -18,7 +18,7 @@ from fastapi.encoders import jsonable_encoder
 from modules.perspectives.aspect_embedding_crud import crud_aspect_embedding
 from modules.perspectives.cluster_embedding_crud import crud_cluster_embedding
 from repos.db.crud_base import CRUDBase
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy.orm import Session
 
@@ -52,16 +52,16 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         # 5) create project metadata
         crud_project_meta.create_project_metadata_for_project(db=db, proj_id=project_id)
 
-        # 6) create repo directory structure
-        RepoService().create_directory_structure_for_project(proj_id=project_id)
+        # 6) create filesystem directory structure
+        FilesystemRepo().create_directory_structure_for_project(proj_id=project_id)
 
         return db_obj
 
     def remove(self, db: Session, *, id: int) -> ProjectORM:
         # 1) delete the project and all connected data via cascading delete
         proj_db_obj = super().remove(db=db, id=id)
-        # 2) delete the files from repo
-        RepoService().purge_project_data(proj_id=id)
+        # 2) delete the files from filesystem
+        FilesystemRepo().purge_project_data(proj_id=id)
         # 3) Remove embeddings
         with WeaviateRepo().weaviate_session() as client:
             crud_document_embedding.remove_embeddings_by_project(

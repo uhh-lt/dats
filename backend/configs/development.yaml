@@ -43,8 +43,8 @@ ray:
   host: ${oc.env:RAY_HOST, localhost}
   port: ${oc.env:RAY_PORT, 13130}
 
-repo:
-  root_directory: ${oc.env:SHARED_REPO_ROOT, ""}
+filesystem:
+  root_directory: ${oc.env:SHARED_FILESYSTEM_ROOT, ""}
   content_server:
     https: False
     host: 127.0.0.1

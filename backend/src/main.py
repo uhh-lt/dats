@@ -53,10 +53,10 @@ from modules.eximport.no_data_export_error import NoDataToExportError
 from repos.db.crud_base import NoSuchElementError
 from repos.elasticsearch_repo import NoSuchMemoInElasticSearchError
 from repos.filesystem_repo import (
-    FileAlreadyExistsInRepositoryError,
-    FileNotFoundInRepositoryError,
-    RepoService,
-    SourceDocumentNotFoundInRepositoryError,
+    FileAlreadyExistsInFilesystemError,
+    FileNotFoundInFilesystemError,
+    FilesystemRepo,
+    SourceDocumentNotFoundInFilesystemError,
 )
 
 # import all endpoints dynamically
@@ -75,7 +75,7 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown
     logger.info("Stopping Discourse Analysis Tool Suite FastAPI!")
-    RepoService().purge_temporary_files()
+    FilesystemRepo().purge_temporary_files()
 
 
 # create the FastAPI app
@@ -171,9 +171,9 @@ async def no_such_memo_in_es_error_handler(_, exc: NoSuchMemoInElasticSearchErro
     return PlainTextResponse(str(exc), status_code=500)
 
 
-@app.exception_handler(SourceDocumentNotFoundInRepositoryError)
-async def source_document_not_found_in_repository_error_handler(
-    _, exc: SourceDocumentNotFoundInRepositoryError
+@app.exception_handler(SourceDocumentNotFoundInFilesystemError)
+async def source_document_not_found_in_filesystem_error_handler(
+    _, exc: SourceDocumentNotFoundInFilesystemError
 ):
     return PlainTextResponse(str(exc), status_code=500)
 
@@ -185,16 +185,16 @@ async def source_document_preprocessing_unfinished_error_handler(
     return PlainTextResponse(str(exc), status_code=500)
 
 
-@app.exception_handler(FileNotFoundInRepositoryError)
-async def file_not_found_in_repository_error_handler(
-    _, exc: FileNotFoundInRepositoryError
+@app.exception_handler(FileNotFoundInFilesystemError)
+async def file_not_found_in_filesystem_error_handler(
+    _, exc: FileNotFoundInFilesystemError
 ):
     return PlainTextResponse(str(exc), status_code=500)
 
 
-@app.exception_handler(FileAlreadyExistsInRepositoryError)
-async def file_already_exists_in_repository_error_handler(
-    _, exc: FileAlreadyExistsInRepositoryError
+@app.exception_handler(FileAlreadyExistsInFilesystemError)
+async def file_already_exists_in_filesystem_error_handler(
+    _, exc: FileAlreadyExistsInFilesystemError
 ):
     return PlainTextResponse(str(exc), status_code=406)
 

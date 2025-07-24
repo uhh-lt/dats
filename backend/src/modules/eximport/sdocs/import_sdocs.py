@@ -29,12 +29,12 @@ from preprocessing.pipeline.steps.image.process.convert_to_webp_and_generate_thu
     generate_thumbnails,
 )
 from repos.elasticsearch_repo import ElasticSearchRepo
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy.orm import Session
 
 es = ElasticSearchRepo()
-repo = RepoService()
+fsr = FilesystemRepo()
 
 
 class ImportSourceDocumentsError(Exception):
@@ -171,10 +171,10 @@ def import_sdocs_to_proj(
     for sdoc_export in sdoc_collection.source_documents:
         # 1. Move the source files to the project repository
         source_file = source_file_by_name[sdoc_export.filename]
-        repo_path = repo.move_file_to_project_sdoc_files(
+        repo_path = fsr.move_file_to_project_sdoc_files(
             proj_id=project_id, src_file=source_file
         )
-        relative_url = str(repo_path.relative_to(repo.repo_root))
+        relative_url = str(repo_path.relative_to(fsr.root_dir))
         # generate thumbnail if needed
         if DocType(sdoc_export.doctype) == DocType.image:
             generate_thumbnails(repo_path)

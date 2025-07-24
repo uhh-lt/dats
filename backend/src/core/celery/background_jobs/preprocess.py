@@ -4,12 +4,12 @@ from loguru import logger
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.preprocessing_service import PreprocessingService
 from repos.db.sql_repo import SQLRepo
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from repos.redis_repo import RedisService
 
 sql: SQLRepo = SQLRepo(echo=False)
 redis: RedisService = RedisService()
-repo: RepoService = RepoService()
+fsr: FilesystemRepo = FilesystemRepo()
 prepro: PreprocessingService = PreprocessingService()
 
 

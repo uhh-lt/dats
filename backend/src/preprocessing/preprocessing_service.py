@@ -15,8 +15,8 @@ from fastapi import HTTPException, UploadFile
 from loguru import logger
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import (
-    FileNotFoundInRepositoryError,
-    RepoService,
+    FileNotFoundInFilesystemError,
+    FilesystemRepo,
     UnsupportedDocTypeForSourceDocument,
 )
 from tqdm import tqdm
@@ -44,7 +44,7 @@ class UnsupportedDocTypeForMimeType(Exception):
 class PreprocessingService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.sqlr: SQLRepo = SQLRepo()
-        cls.repo: RepoService = RepoService()
+        cls.fsr: FilesystemRepo = FilesystemRepo()
         cls._pipelines: Dict[DocType, PreprocessingPipeline] = dict()
 
         return super(PreprocessingService, cls).__new__(cls)
@@ -66,7 +66,7 @@ class PreprocessingService(metaclass=SingletonMeta):
                     status_code=406,
                 )
 
-            file_path = self.repo.store_uploaded_file_in_project_repo(
+            file_path = self.fsr.store_uploaded_file_in_project_dir(
                 proj_id=proj_id, uploaded_file=uploaded_file
             )
 
@@ -129,7 +129,7 @@ class PreprocessingService(metaclass=SingletonMeta):
                 )
 
             except (
-                FileNotFoundInRepositoryError,
+                FileNotFoundInFilesystemError,
                 UnsupportedDocTypeForSourceDocument,
                 UnsupportedDocTypeForMimeType,
                 Exception,
@@ -145,7 +145,7 @@ class PreprocessingService(metaclass=SingletonMeta):
         self, project_id: int, archive_file_path: Path
     ) -> List[PreprocessingJobPayloadCreateWithoutPreproJobId]:
         # store and extract the archive
-        file_dsts: List[Path] = self.repo.extract_archive_in_project(
+        file_dsts: List[Path] = self.fsr.extract_archive_in_project(
             proj_id=project_id, archive_path=archive_file_path
         )
         return self._create_ppj_payloads_from_unimported_project_files(

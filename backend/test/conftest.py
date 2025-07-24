@@ -23,7 +23,7 @@ from loguru import logger
 from pytest import FixtureRequest
 from repos.db.sql_repo import SQLRepo
 from repos.elasticsearch_repo import ElasticSearchRepo
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from repos.redis_repo import RedisService
 from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy.orm import Session
@@ -37,7 +37,7 @@ def pytest_sessionfinish():
     ElasticSearchRepo().drop_indices()
     WeaviateRepo().drop_indices()
     RedisService().flush_all_clients()
-    RepoService().purge_repo()
+    FilesystemRepo().purge_filesystem()
 
 
 # Flo: just do it once. We have to check because if we start the main function, unvicorn will import this

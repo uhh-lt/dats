@@ -20,7 +20,7 @@ from modules.ml.source_document_job_status_orm import (
 )
 from ray_model_worker.dto.clip import ClipImageEmbeddingInput, ClipTextEmbeddingInput
 from repos.db.sql_repo import SQLRepo
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from repos.ollama_repo import OllamaService
 from repos.ray_repo import RayModelService
 from repos.vector.weaviate_repo import WeaviateRepo
@@ -32,7 +32,7 @@ from weaviate import WeaviateClient
 class EmbeddingService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.sqlr: SQLRepo = SQLRepo()
-        cls.repo = RepoService()
+        cls.fsr = FilesystemRepo()
         cls.rms: RayModelService = RayModelService()
         cls.llm: OllamaService = OllamaService()
         cls.weaviate: WeaviateRepo = WeaviateRepo()
@@ -54,7 +54,7 @@ class EmbeddingService(metaclass=SingletonMeta):
                 sdoc.doctype == DocType.image
             ), f"SourceDocument with {sdoc_id=} is not an image!"
 
-        image_fp = self.repo.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
+        image_fp = self.fsr.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
         image = load_image(image_fp)
         base64_image = image_to_base64(image)
 

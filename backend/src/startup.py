@@ -67,10 +67,10 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
 
         # start and init services
         __init_services__(
-            create_root_repo_directory_structure=not startup_in_progress,
+            create_root_directory_structure=not startup_in_progress,
             sql_echo=sql_echo,
             reset_database=reset_data,
-            reset_repo=reset_data,
+            reset_filesystem=reset_data,
             reset_elasticsearch=reset_data,
             reset_vector_index=reset_data,
         )
@@ -101,20 +101,20 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
 
 # noinspection PyUnresolvedReferences,PyProtectedMember
 def __init_services__(
-    create_root_repo_directory_structure: bool = False,
+    create_root_directory_structure: bool = False,
     sql_echo: bool = False,
     reset_database: bool = False,
-    reset_repo: bool = False,
+    reset_filesystem: bool = False,
     reset_elasticsearch: bool = False,
     reset_vector_index: bool = False,
 ) -> None:
     # import celery workers to configure
     # import and init RepoService
-    from repos.filesystem_repo import RepoService
+    from repos.filesystem_repo import FilesystemRepo
 
-    repos = RepoService()
-    if create_root_repo_directory_structure:
-        repos._create_root_repo_directory_structure(remove_if_exists=reset_repo)
+    fsr = FilesystemRepo()
+    if create_root_directory_structure:
+        fsr._create_root_directory_structure(remove_if_exists=reset_filesystem)
     # create SQL DBs and Tables
     from repos.db.sql_repo import SQLRepo
 

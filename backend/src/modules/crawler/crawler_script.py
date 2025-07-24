@@ -7,7 +7,7 @@ from pathlib import Path
 
 from loguru import logger
 from modules.crawler.crawler_job_dto import CrawlerJobRead
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from scrapy.crawler import CrawlerProcess
 from twisted.internet import asyncioreactor
 
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     crawler_job_id = args.crawler_job_id
 
     cs: CrawlerService = CrawlerService()
-    repo: RepoService = RepoService()
+    fsr: FilesystemRepo = FilesystemRepo()
 
     cj: CrawlerJobRead = cs.get_crawler_job(crawler_job_id=crawler_job_id)
 
@@ -43,10 +43,10 @@ if __name__ == "__main__":
         logger.info(f"Successfully loaded CrawlerJob {cj.id}!")
 
         # resolve relative path
-        cj.images_store_path = str(repo.repo_root / cj.images_store_path)
-        cj.videos_store_path = str(repo.repo_root / cj.videos_store_path)
-        cj.audios_store_path = str(repo.repo_root / cj.audios_store_path)
-        cj.output_dir = str(repo.repo_root / cj.output_dir)
+        cj.images_store_path = str(fsr.root_dir / cj.images_store_path)
+        cj.videos_store_path = str(fsr.root_dir / cj.videos_store_path)
+        cj.audios_store_path = str(fsr.root_dir / cj.audios_store_path)
+        cj.output_dir = str(fsr.root_dir / cj.output_dir)
 
         logger.info(f"Storing output at {cj.output_dir}!")
 
@@ -73,7 +73,7 @@ if __name__ == "__main__":
         shutil.rmtree(cj.output_dir)
 
         # move the zip to the project to import it afterward
-        repo.move_file_to_project_sdoc_files(
+        fsr.move_file_to_project_sdoc_files(
             proj_id=cj.parameters.project_id, src_file=crawled_data_zip
         )
         cs._update_crawler_job(

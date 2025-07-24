@@ -21,10 +21,10 @@ from preprocessing.pipeline.model.preprodoc_base import PreProDocBase
 from preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from repos.db.sql_repo import SQLRepo
 from repos.elasticsearch_repo import ElasticSearchRepo
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy.orm import Session
 
-repo: RepoService = RepoService()
+fsr: FilesystemRepo = FilesystemRepo()
 sql: SQLRepo = SQLRepo()
 es = ElasticSearchRepo()
 
@@ -32,7 +32,7 @@ es = ElasticSearchRepo()
 def __create_and_persist_sdoc(db: Session, ppdb: PreProDocBase) -> SourceDocumentORM:
     logger.info(f"Persisting SourceDocument for {ppdb.filename}...")
     # generate the create_dto
-    _, create_dto = repo.build_source_document_create_dto_from_file(
+    _, create_dto = fsr.build_source_document_create_dto_from_file(
         proj_id=ppdb.project_id,
         filename=ppdb.filename,
     )
@@ -48,7 +48,7 @@ def __persist_sdoc_metadata(
     logger.info(f"Persisting SourceDocument Metadata for {ppdb.filename}...")
     sdoc_id = sdoc_db_obj.id
     sdoc = SourceDocumentRead.model_validate(sdoc_db_obj)
-    ppdb.metadata["url"] = str(RepoService().get_sdoc_url(sdoc=sdoc))
+    ppdb.metadata["url"] = str(FilesystemRepo().get_sdoc_url(sdoc=sdoc))
     doctype: DocType = DocType(sdoc.doctype)
 
     project_metadata = [
@@ -124,7 +124,7 @@ def __persist_sdoc_data(
         ]
 
     sdoc = SourceDocumentRead.model_validate(sdoc_db_obj)
-    url = RepoService().get_sdoc_url(
+    url = FilesystemRepo().get_sdoc_url(
         sdoc=SourceDocumentRead.model_validate(sdoc),
         relative=True,
         webp=sdoc.doctype == DocType.image,

@@ -14,13 +14,13 @@ from modules.eximport.whiteboards.whiteboard_transformations import (
 from modules.whiteboard.whiteboard_crud import crud_whiteboard
 from modules.whiteboard.whiteboard_dto import WhiteboardRead
 from modules.whiteboard.whiteboard_orm import WhiteboardORM
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy.orm import Session
 
 
 def export_selected_whiteboards(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     project_id: int,
     whiteboard_ids: List[int],
 ) -> Path:
@@ -29,7 +29,7 @@ def export_selected_whiteboards(
 
     Args:
         db: Database session
-        repo: Repository service for file operations
+        fsr: Filesystem repository service for file operations
         project_id: ID of the project containing the whiteboards
         whiteboard_ids: List of whiteboard IDs to export
 
@@ -42,7 +42,7 @@ def export_selected_whiteboards(
     whiteboards = crud_whiteboard.read_by_ids(db=db, ids=whiteboard_ids)
     return __export_whiteboards(
         db=db,
-        repo=repo,
+        fsr=fsr,
         fn=f"project_{project_id}_selected_whiteboards",
         whiteboards=whiteboards,
     )
@@ -50,7 +50,7 @@ def export_selected_whiteboards(
 
 def export_all_whiteboards(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     project_id: int,
 ) -> Path:
     """
@@ -58,7 +58,7 @@ def export_all_whiteboards(
 
     Args:
         db: Database session
-        repo: Repository service for file operations
+        fsr: Filesystem repository service for file operations
         project_id: ID of the project containing the whiteboards
 
     Returns:
@@ -70,7 +70,7 @@ def export_all_whiteboards(
     whiteboards = crud_whiteboard.read_by_project(db=db, project_id=project_id)
     return __export_whiteboards(
         db=db,
-        repo=repo,
+        fsr=fsr,
         fn=f"project_{project_id}_all_whiteboards",
         whiteboards=whiteboards,
     )
@@ -78,7 +78,7 @@ def export_all_whiteboards(
 
 def __export_whiteboards(
     db: Session,
-    repo: RepoService,
+    fsr: FilesystemRepo,
     fn: str,
     whiteboards: List[WhiteboardORM],
 ) -> Path:
@@ -87,7 +87,7 @@ def __export_whiteboards(
 
     Args:
         db: Database session
-        repo: Repository service for file operations
+        fsr: Filesystem repository service for file operations
         fn: Base filename for the export
         whiteboards: List of whiteboards to export
 
@@ -101,7 +101,7 @@ def __export_whiteboards(
         raise NoDataToExportError("No whiteboards to export.")
 
     export_data = __generate_export_df_for_whiteboards(db=db, whiteboards=whiteboards)
-    return repo.write_df_to_temp_file(
+    return fsr.write_df_to_temp_file(
         df=export_data,
         fn=fn,
     )

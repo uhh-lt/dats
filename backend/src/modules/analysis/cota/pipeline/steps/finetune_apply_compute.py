@@ -14,13 +14,13 @@ from ray_model_worker.dto.cota import (
     RayCOTAJobResponse,
     RayCOTASentenceBase,
 )
-from repos.filesystem_repo import RepoService
+from repos.filesystem_repo import FilesystemRepo
 from repos.ray_repo import RayModelService
 from repos.vector.weaviate_repo import WeaviateRepo
 from umap.umap_ import UMAP
 
 rms: RayModelService = RayModelService()
-repo: RepoService = RepoService()
+fsr: FilesystemRepo = FilesystemRepo()
 weaviate: WeaviateRepo = WeaviateRepo()
 
 
