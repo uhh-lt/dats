@@ -1,6 +1,5 @@
-from typing import List, Optional, Union
+from typing import List, Optional
 
-import modules.search.sdoc_search.sdoc_search as sdoc_search
 from common.crud_enum import Crud
 from common.dependencies import get_current_user
 from core.auth.authz_user import AuthzUser
@@ -18,10 +17,9 @@ from modules.analysis.search_statistics.search_stats_dto import (
 from modules.search.column_info import ColumnInfo
 from modules.search.filtering import Filter
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
+from modules.search.sdoc_search.sdoc_search_service import SdocSearchService
 from modules.search.search_dto import (
     PaginatedSDocHits,
-    SimSearchImageHit,
-    SimSearchSentenceHit,
 )
 from modules.search.sorting import Sort
 from repos.elasticsearch_repo import ElasticSearchRepo
@@ -43,7 +41,7 @@ def search_sdocs_info(
 ) -> List[ColumnInfo[SdocColumns]]:
     authz_user.assert_in_project(project_id)
 
-    return sdoc_search.search_info(project_id=project_id)
+    return SdocSearchService().search_info(project_id=project_id)
 
 
 @router.post(
@@ -64,7 +62,7 @@ def search_sdocs(
     authz_user: AuthzUser = Depends(),
 ) -> PaginatedSDocHits:
     authz_user.assert_in_project(project_id)
-    return sdoc_search.search(
+    return SdocSearchService().search(
         search_query=search_query,
         expert_mode=expert_mode,
         highlight=highlight,
@@ -153,43 +151,3 @@ def filter_tag_stats(
     if sort_by_global:
         tag_stats.sort(key=lambda x: x.global_count, reverse=True)
     return tag_stats
-
-
-@router.post(
-    "/simsearch/sentences",
-    response_model=List[SimSearchSentenceHit],
-    summary="Returns similar sentences according to a textual or visual query.",
-)
-def find_similar_sentences(
-    proj_id: int,
-    query: Union[str, List[str], int],
-    top_k: int,
-    threshold: float,
-    filter: Filter[SdocColumns],
-    authz_user: AuthzUser = Depends(),
-) -> List[SimSearchSentenceHit]:
-    authz_user.assert_in_project(proj_id)
-
-    return sdoc_search.find_similar_sentences(
-        proj_id=proj_id, query=query, top_k=top_k, threshold=threshold, filter=filter
-    )
-
-
-@router.post(
-    "/simsearch/images",
-    response_model=List[SimSearchImageHit],
-    summary="Returns similar images according to a textual or visual query.",
-)
-def find_similar_images(
-    proj_id: int,
-    query: Union[str, List[str], int],
-    top_k: int,
-    threshold: float,
-    filter: Filter[SdocColumns],
-    authz_user: AuthzUser = Depends(),
-) -> List[SimSearchImageHit]:
-    authz_user.assert_in_project(proj_id)
-
-    return sdoc_search.find_similar_images(
-        proj_id=proj_id, query=query, top_k=top_k, threshold=threshold, filter=filter
-    )

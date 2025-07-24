@@ -1,0 +1,56 @@
+from typing import List, Union
+
+from common.dependencies import get_current_user
+from core.auth.authz_user import AuthzUser
+from fastapi import APIRouter, Depends
+from modules.search.filtering import Filter
+from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
+from modules.search.search_dto import (
+    SimSearchImageHit,
+    SimSearchSentenceHit,
+)
+from modules.simsearch.simsearch_service import SimSearchService
+
+router = APIRouter(
+    prefix="/simsearch", dependencies=[Depends(get_current_user)], tags=["simsearch"]
+)
+
+
+@router.post(
+    "/sentences",
+    response_model=List[SimSearchSentenceHit],
+    summary="Returns similar sentences according to a textual or visual query.",
+)
+def find_similar_sentences(
+    proj_id: int,
+    query: Union[str, List[str], int],
+    top_k: int,
+    threshold: float,
+    filter: Filter[SdocColumns],
+    authz_user: AuthzUser = Depends(),
+) -> List[SimSearchSentenceHit]:
+    authz_user.assert_in_project(proj_id)
+
+    return SimSearchService().find_similar_sentences_with_filter(
+        proj_id=proj_id, query=query, top_k=top_k, threshold=threshold, filter=filter
+    )
+
+
+@router.post(
+    "/images",
+    response_model=List[SimSearchImageHit],
+    summary="Returns similar images according to a textual or visual query.",
+)
+def find_similar_images(
+    proj_id: int,
+    query: Union[str, List[str], int],
+    top_k: int,
+    threshold: float,
+    filter: Filter[SdocColumns],
+    authz_user: AuthzUser = Depends(),
+) -> List[SimSearchImageHit]:
+    authz_user.assert_in_project(proj_id)
+
+    return SimSearchService().find_similar_images_with_filter(
+        proj_id=proj_id, query=query, top_k=top_k, threshold=threshold, filter=filter
+    )
