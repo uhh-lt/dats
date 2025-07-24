@@ -14,14 +14,32 @@ from modules.analysis.search_statistics.search_stats_dto import (
     SpanEntityStat,
     TagStat,
 )
+from modules.search.bbox_anno_search.bbox_anno_search import (
+    find_bbox_annotations,
+    find_bbox_annotations_info,
+)
+from modules.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
 from modules.search.memo_search.memo_search import memo_info, memo_search
 from modules.search.memo_search.memo_search_columns import MemoColumns
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.search.sdoc_search.sdoc_search_service import SdocSearchService
 from modules.search.search_dto import (
+    BBoxAnnotationSearchResult,
     PaginatedElasticSearchDocumentHits,
     PaginatedSDocHits,
+    SentenceAnnotationSearchResult,
+    SpanAnnotationSearchResult,
 )
+from modules.search.sent_anno_search.sent_anno_search import (
+    find_sentence_annotations,
+    find_sentence_annotations_info,
+)
+from modules.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
+from modules.search.span_anno_search.span_anno_search import (
+    find_span_annotations,
+    find_span_annotations_info,
+)
+from modules.search.span_anno_search.span_anno_search_columns import SpanColumns
 from modules.search_system.column_info import ColumnInfo
 from modules.search_system.filtering import Filter
 from modules.search_system.sorting import Sort
@@ -36,7 +54,7 @@ router = APIRouter(
     response_model=List[ColumnInfo[SdocColumns]],
     summary="Returns Search Info.",
 )
-def search_sdocs_info(
+def search_sdoc_info(
     *, project_id: int, authz_user: AuthzUser = Depends()
 ) -> List[ColumnInfo[SdocColumns]]:
     authz_user.assert_in_project(project_id)
@@ -75,7 +93,7 @@ def search_sdocs(
 
 
 @router.post(
-    "/info",
+    "/memo_info",
     response_model=List[ColumnInfo[MemoColumns]],
     summary="Returns Memo Table Info.",
 )
@@ -88,7 +106,7 @@ def search_memo_info(
 
 
 @router.post(
-    "/search",
+    "/memo",
     response_model=PaginatedElasticSearchDocumentHits,
     summary="Returns all Memo Ids that match the query parameters.",
 )
@@ -113,6 +131,129 @@ def search_memos(
         sorts=sorts,
         page_number=page_number,
         page_size=page_size,
+    )
+
+
+@router.post(
+    "/span_annotation_info",
+    response_model=List[ColumnInfo[SpanColumns]],
+    summary="Returns SpanAnnotationSearch Info.",
+)
+def search_span_annotation_info(
+    *,
+    project_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> List[ColumnInfo[SpanColumns]]:
+    authz_user.assert_in_project(project_id)
+    return find_span_annotations_info(
+        project_id=project_id,
+    )
+
+
+@router.post(
+    "/span_annotation",
+    response_model=SpanAnnotationSearchResult,
+    summary="Returns SpanAnnotationSearch.",
+)
+def search_span_annotations(
+    *,
+    project_id: int,
+    filter: Filter[SpanColumns],
+    page: Optional[int] = None,
+    page_size: Optional[int] = None,
+    sorts: List[Sort[SpanColumns]],
+    authz_user: AuthzUser = Depends(),
+) -> SpanAnnotationSearchResult:
+    authz_user.assert_in_project(project_id)
+
+    return find_span_annotations(
+        project_id=project_id,
+        filter=filter,
+        page=page,
+        page_size=page_size,
+        sorts=sorts,
+    )
+
+
+@router.post(
+    "/sentence_annotation_info",
+    response_model=List[ColumnInfo[SentAnnoColumns]],
+    summary="Returns SentenceAnnotationSearch Info.",
+)
+def search_sentence_annotation_info(
+    *,
+    project_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> List[ColumnInfo[SentAnnoColumns]]:
+    authz_user.assert_in_project(project_id)
+    return find_sentence_annotations_info(
+        project_id=project_id,
+    )
+
+
+@router.post(
+    "/sentence_annotation",
+    response_model=SentenceAnnotationSearchResult,
+    summary="Returns Sentence Annotations.",
+)
+def search_sentence_annotations(
+    *,
+    project_id: int,
+    filter: Filter[SentAnnoColumns],
+    page: Optional[int] = None,
+    page_size: Optional[int] = None,
+    sorts: List[Sort[SentAnnoColumns]],
+    authz_user: AuthzUser = Depends(),
+) -> SentenceAnnotationSearchResult:
+    authz_user.assert_in_project(project_id)
+
+    return find_sentence_annotations(
+        project_id=project_id,
+        filter=filter,
+        page=page,
+        page_size=page_size,
+        sorts=sorts,
+    )
+
+
+@router.post(
+    "/bbox_annotation_info",
+    response_model=List[ColumnInfo[BBoxColumns]],
+    summary="Returns BBoxAnnotationSearch Info.",
+)
+def search_bbox_annotation_info(
+    *,
+    project_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> List[ColumnInfo[BBoxColumns]]:
+    authz_user.assert_in_project(project_id)
+    return find_bbox_annotations_info(
+        project_id=project_id,
+    )
+
+
+@router.post(
+    "/bbox_annotation",
+    response_model=BBoxAnnotationSearchResult,
+    summary="Returns BBoxAnnotationSearchResult.",
+)
+def search_bbox_annotations(
+    *,
+    project_id: int,
+    filter: Filter[BBoxColumns],
+    page: Optional[int] = None,
+    page_size: Optional[int] = None,
+    sorts: List[Sort[BBoxColumns]],
+    authz_user: AuthzUser = Depends(),
+) -> BBoxAnnotationSearchResult:
+    authz_user.assert_in_project(project_id)
+
+    return find_bbox_annotations(
+        project_id=project_id,
+        filter=filter,
+        page=page,
+        page_size=page_size,
+        sorts=sorts,
     )
 
 

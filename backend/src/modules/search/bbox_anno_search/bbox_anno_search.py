@@ -9,8 +9,8 @@ from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
-from modules.analysis.analysis_dto import BBoxAnnotationRow, BBoxAnnotationSearchResult
 from modules.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
+from modules.search.search_dto import BBoxAnnotationRow, BBoxAnnotationSearchResult
 from modules.search_system.column_info import ColumnInfo
 from modules.search_system.filtering import Filter
 from modules.search_system.search_builder import SearchBuilder
