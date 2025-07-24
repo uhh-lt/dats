@@ -4,7 +4,7 @@ from modules.analysis.timeline_analysis.timeline_analysis_dto import (
     TimelineAnalysisSettings,
     TimelineAnalysisSettingsForExport,
 )
-from modules.search.filtering import Filter
+from modules.search_system.filtering import Filter
 from sqlalchemy.orm import Session
 
 

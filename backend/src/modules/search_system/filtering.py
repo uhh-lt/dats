@@ -1,8 +1,8 @@
 from enum import Enum
 from typing import Generic, List, Set, TypeVar, Union
 
-from modules.search.abstract_column import AbstractColumns
-from modules.search.filtering_operators import (
+from modules.search_system.abstract_column import AbstractColumns
+from modules.search_system.filtering_operators import (
     BooleanOperator,
     DateOperator,
     FilterValue,

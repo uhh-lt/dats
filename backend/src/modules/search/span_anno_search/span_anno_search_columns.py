@@ -9,9 +9,9 @@ from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_orm import ObjectHandleORM
 from core.tag.document_tag_orm import DocumentTagORM
 from core.user.user_orm import UserORM
-from modules.search.column_info import AbstractColumns
-from modules.search.filtering_operators import FilterOperator, FilterValueType
-from modules.search.search_builder import SearchBuilder
+from modules.search_system.column_info import AbstractColumns
+from modules.search_system.filtering_operators import FilterOperator, FilterValueType
+from modules.search_system.search_builder import SearchBuilder
 from repos.db.sql_utils import aggregate_ids
 from sqlalchemy.orm import Session
 

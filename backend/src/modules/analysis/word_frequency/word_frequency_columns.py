@@ -5,9 +5,9 @@ from core.annotation.span_text_orm import SpanTextORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.document_tag_orm import DocumentTagORM
 from modules.analysis.word_frequency.word_frequency_orm import WordFrequencyORM
-from modules.search.column_info import AbstractColumns
-from modules.search.filtering_operators import FilterOperator, FilterValueType
-from modules.search.search_builder import SearchBuilder
+from modules.search_system.abstract_column import AbstractColumns
+from modules.search_system.filtering_operators import FilterOperator, FilterValueType
+from modules.search_system.search_builder import SearchBuilder
 from repos.db.sql_utils import aggregate_ids, aggregate_two_ids
 from sqlalchemy import String, cast, func
 from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg

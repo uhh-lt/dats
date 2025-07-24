@@ -14,14 +14,17 @@ from modules.analysis.search_statistics.search_stats_dto import (
     SpanEntityStat,
     TagStat,
 )
-from modules.search.column_info import ColumnInfo
-from modules.search.filtering import Filter
+from modules.search.memo_search.memo_search import memo_info, memo_search
+from modules.search.memo_search.memo_search_columns import MemoColumns
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.search.sdoc_search.sdoc_search_service import SdocSearchService
 from modules.search.search_dto import (
+    PaginatedElasticSearchDocumentHits,
     PaginatedSDocHits,
 )
-from modules.search.sorting import Sort
+from modules.search_system.column_info import ColumnInfo
+from modules.search_system.filtering import Filter
+from modules.search_system.sorting import Sort
 
 router = APIRouter(
     prefix="/search", dependencies=[Depends(get_current_user)], tags=["search"]
@@ -64,6 +67,48 @@ def search_sdocs(
         expert_mode=expert_mode,
         highlight=highlight,
         project_id=project_id,
+        filter=filter,
+        sorts=sorts,
+        page_number=page_number,
+        page_size=page_size,
+    )
+
+
+@router.post(
+    "/info",
+    response_model=List[ColumnInfo[MemoColumns]],
+    summary="Returns Memo Table Info.",
+)
+def search_memo_info(
+    *, project_id: int, authz_user: AuthzUser = Depends()
+) -> List[ColumnInfo[MemoColumns]]:
+    authz_user.assert_in_project(project_id)
+
+    return memo_info(project_id=project_id)
+
+
+@router.post(
+    "/search",
+    response_model=PaginatedElasticSearchDocumentHits,
+    summary="Returns all Memo Ids that match the query parameters.",
+)
+def search_memos(
+    *,
+    search_query: str,
+    project_id: int,
+    search_content: bool,
+    page_number: int,
+    page_size: int,
+    filter: Filter[MemoColumns],
+    sorts: List[Sort[MemoColumns]],
+    authz_user: AuthzUser = Depends(),
+) -> PaginatedElasticSearchDocumentHits:
+    authz_user.assert_in_project(project_id)
+
+    return memo_search(
+        project_id=project_id,
+        search_query=search_query,
+        search_content=search_content,
         filter=filter,
         sorts=sorts,
         page_number=page_number,

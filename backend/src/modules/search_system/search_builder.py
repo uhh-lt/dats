@@ -5,13 +5,17 @@ from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from core.metadata.project_metadata_orm import ProjectMetadataORM
 from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
-from modules.search.filtering import (
+from modules.search_system.filtering import (
     Filter,
     apply_filtering,
     get_columns_affected_by_filter,
 )
-from modules.search.pagination import apply_pagination
-from modules.search.sorting import Sort, apply_sorting, get_columns_affected_by_sorts
+from modules.search_system.pagination import apply_pagination
+from modules.search_system.sorting import (
+    Sort,
+    apply_sorting,
+    get_columns_affected_by_sorts,
+)
 from sqlalchemy import desc
 from sqlalchemy.orm import Query, Session, aliased
 from sqlalchemy.sql._typing import (
@@ -22,7 +26,7 @@ from sqlalchemy.sql._typing import (
 from sqlalchemy.sql.selectable import Subquery
 
 if TYPE_CHECKING:
-    from modules.search.abstract_column import AbstractColumns
+    from modules.search_system.abstract_column import AbstractColumns
 
 T = TypeVar("T", bound="AbstractColumns")
 

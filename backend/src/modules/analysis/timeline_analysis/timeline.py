@@ -31,9 +31,9 @@ from modules.analysis.timeline_analysis.timeline_analysis_dto import (
     TimelineAnalysisUpdateIntern,
 )
 from modules.analysis.timeline_analysis.timeline_analysis_orm import TimelineAnalysisORM
-from modules.search.filtering import Filter
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
-from modules.search.search_builder import SearchBuilder
+from modules.search_system.filtering import Filter
+from modules.search_system.search_builder import SearchBuilder
 from repos.db.sql_repo import SQLRepo
 from repos.db.sql_utils import aggregate_ids
 from sqlalchemy import and_, func

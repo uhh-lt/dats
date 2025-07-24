@@ -6,9 +6,9 @@ from core.doc.image_embedding_crud import crud_image_embedding
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from loguru import logger
 from modules.ml.embedding_service import EmbeddingService
-from modules.search.filtering import Filter
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.search.sdoc_search.sdoc_search_service import SdocSearchService
+from modules.search_system.filtering import Filter
 from modules.simsearch.simsearch_dto import SimSearchImageHit, SimSearchSentenceHit
 from repos.db.sql_repo import SQLRepo
 from repos.vector.weaviate_repo import WeaviateRepo

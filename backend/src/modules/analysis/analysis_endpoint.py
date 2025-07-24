@@ -32,19 +32,19 @@ from modules.search.bbox_anno_search.bbox_anno_search import (
     find_bbox_annotations_info,
 )
 from modules.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
-from modules.search.column_info import ColumnInfo
-from modules.search.filtering import Filter
 from modules.search.sent_anno_search.sent_anno_search import (
     find_sentence_annotations,
     find_sentence_annotations_info,
 )
 from modules.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
-from modules.search.sorting import Sort
 from modules.search.span_anno_search.span_anno_search import (
     find_span_annotations,
     find_span_annotations_info,
 )
 from modules.search.span_anno_search.span_anno_search_columns import SpanColumns
+from modules.search_system.column_info import ColumnInfo
+from modules.search_system.filtering import Filter
+from modules.search_system.sorting import Sort
 from sqlalchemy.orm import Session
 
 router = APIRouter(

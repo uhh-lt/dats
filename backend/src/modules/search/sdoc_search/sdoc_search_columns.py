@@ -8,9 +8,9 @@ from core.code.code_orm import CodeORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.document_tag_orm import DocumentTagORM
 from core.user.user_orm import UserORM
-from modules.search.column_info import AbstractColumns
-from modules.search.filtering_operators import FilterOperator, FilterValueType
-from modules.search.search_builder import SearchBuilder
+from modules.search_system.column_info import AbstractColumns
+from modules.search_system.filtering_operators import FilterOperator, FilterValueType
+from modules.search_system.search_builder import SearchBuilder
 from repos.db.sql_utils import aggregate_ids, aggregate_two_ids
 from sqlalchemy import String, cast, func
 from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg

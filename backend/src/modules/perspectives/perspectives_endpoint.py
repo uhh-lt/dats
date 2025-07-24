@@ -32,10 +32,10 @@ from modules.perspectives.perspectives_vis_dto import (
     PerspectivesDoc,
     PerspectivesVisualization,
 )
-from modules.search.filtering import Filter
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.search.sdoc_search.sdoc_search_service import SdocSearchService
-from modules.search.sorting import Sort
+from modules.search_system.filtering import Filter
+from modules.search_system.sorting import Sort
 from sqlalchemy.orm import Session
 from weaviate import WeaviateClient
 

@@ -13,11 +13,11 @@ from modules.analysis.analysis_dto import (
     SentenceAnnotationRow,
     SentenceAnnotationSearchResult,
 )
-from modules.search.column_info import ColumnInfo
-from modules.search.filtering import Filter
-from modules.search.search_builder import SearchBuilder
 from modules.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
-from modules.search.sorting import Sort
+from modules.search_system.column_info import ColumnInfo
+from modules.search_system.filtering import Filter
+from modules.search_system.search_builder import SearchBuilder
+from modules.search_system.sorting import Sort
 from repos.db.sql_repo import SQLRepo
 
 
