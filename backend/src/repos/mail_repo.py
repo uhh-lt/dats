@@ -6,7 +6,7 @@ from loguru import logger
 from pydantic import EmailStr
 
 
-class MailService(metaclass=SingletonMeta):
+class MailRepo(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.is_enabled = conf.mail.enabled == "True"
 
@@ -23,7 +23,7 @@ class MailService(metaclass=SingletonMeta):
         )
         logger.info(f"MailService config: {config}")
         cls.fast_mail = FastMail(config)
-        return super(MailService, cls).__new__(cls)
+        return super(MailRepo, cls).__new__(cls)
 
     async def send_mail(self, email: EmailStr, subject: str, body: str):
         if self.is_enabled:

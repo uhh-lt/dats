@@ -133,9 +133,9 @@ def __init_services__(
     RedisService(flush_all_clients=reset_database)
 
     # import and init MailService
-    from repos.mail_repo import MailService
+    from repos.mail_repo import MailRepo
 
-    MailService()
+    MailRepo()
     # import and init RayModelService
     from repos.ray_repo import RayModelService
 
