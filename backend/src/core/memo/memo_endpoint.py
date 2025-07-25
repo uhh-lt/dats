@@ -16,7 +16,7 @@ from core.memo.memo_dto import (
 )
 from core.memo.memo_util import get_object_memo_for_user, get_object_memos
 from fastapi import APIRouter, Depends
-from modules.llm_assistant.memo_generation import generate_memo_ollama
+from modules.memo_generation.memo_generation_service import generate_memo_ollama
 from repos.db.util import get_parent_project_id
 from sqlalchemy.orm import Session
 
