@@ -25,8 +25,6 @@ from core.user.user_crud import crud_user
 from core.user.user_dto import UserRead
 from core.user.user_orm import UserORM
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
-from modules.analysis.duplicate_finder import find_duplicates
-from modules.perspectives.aspect_dto import AspectRead
 from preprocessing.preprocessing_job_dto import PreprocessingJobRead
 from preprocessing.preprocessing_service import PreprocessingService
 from repos.db.crud_base import NoSuchElementError
@@ -354,40 +352,6 @@ def get_all_metadata(
     db_objs = crud_project_meta.read_by_project(db=db, proj_id=proj_id)
     metadata = [ProjectMetadataRead.model_validate(meta) for meta in db_objs]
     return metadata
-
-
-@router.get(
-    "/{proj_id}/aspects",
-    response_model=List[AspectRead],
-    summary="Returns all Aspects of the Project with the given ID if it exists",
-)
-def get_all_aspects(
-    *,
-    db: Session = Depends(get_db_session),
-    proj_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> List[AspectRead]:
-    authz_user.assert_in_project(proj_id)
-
-    project = crud_project.read(db=db, id=proj_id)
-    aspects = [AspectRead.model_validate(a) for a in project.aspects]
-    return aspects
-
-
-@router.post(
-    "/{proj_id}/find_duplicate_text_sdocs",
-    response_model=List[List[int]],
-    summary="Returns groups of duplicate sdoc ids.",
-)
-def find_duplicate_text_sdocs(
-    *,
-    db: Session = Depends(get_db_session),
-    proj_id: int,
-    max_different_words: int,
-    authz_user: AuthzUser = Depends(),
-) -> List[List[int]]:
-    authz_user.assert_in_project(proj_id)
-    return find_duplicates(project_id=proj_id, max_different_words=max_different_words)
 
 
 @router.get(
