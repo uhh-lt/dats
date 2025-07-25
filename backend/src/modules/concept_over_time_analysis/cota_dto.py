@@ -106,7 +106,6 @@ class COTACreate(ConceptOverTimeAnalysisBaseDTO):
 
 
 class COTACreateIntern(COTACreate, UpdateDTOBase):
-    user_id: int = Field(description="User the ConceptOverTimeAnalysis belongs to")
     timeline_settings: Optional[str] = Field(
         description="JSON Representation of the Timeline Settings of the ConceptOverTimeAnalysis.",
         default=None,
@@ -175,7 +174,6 @@ class COTAUpdateIntern(BaseModel, UpdateDTOBase):
 
 class COTARead(ConceptOverTimeAnalysisBaseDTO):
     id: int = Field(description="ID of the ConceptOverTimeAnalysis")
-    user_id: int = Field(description="User the ConceptOverTimeAnalysis belongs to")
     project_id: int = Field(
         description="Project the ConceptOverTimeAnalysis belongs to"
     )
@@ -284,7 +282,7 @@ class COTARead(ConceptOverTimeAnalysisBaseDTO):
     model_config = ConfigDict(from_attributes=True)
 
     def __str__(self) -> str:
-        return f"COTARead(id={self.id}, name={self.name}, user_id={self.user_id}, project_id={self.project_id}, timeline_settings={self.timeline_settings}, training_settings={self.training_settings}, concepts={self.concepts}, search_space={len(self.search_space)}, created={self.created}, updated={self.updated})"
+        return f"COTARead(id={self.id}, name={self.name}, project_id={self.project_id}, timeline_settings={self.timeline_settings}, training_settings={self.training_settings}, concepts={self.concepts}, search_space={len(self.search_space)}, created={self.created}, updated={self.updated})"
 
     def __repr__(self) -> str:
         return str(self)

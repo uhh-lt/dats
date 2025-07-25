@@ -36,9 +36,7 @@ def create(
     return WhiteboardRead.model_validate(
         crud_whiteboard.create(
             db=db,
-            create_dto=WhiteboardCreateIntern(
-                **whiteboard.model_dump(), user_id=authz_user.user.id
-            ),
+            create_dto=WhiteboardCreateIntern(**whiteboard.model_dump()),
         )
     )
 
@@ -93,25 +91,6 @@ def get_by_project(
     return [WhiteboardRead.model_validate(db_obj) for db_obj in db_objs]
 
 
-@router.get(
-    "/project/{project_id}/user",
-    response_model=List[WhiteboardRead],
-    summary="Returns the Whiteboard of the Project with the given ID and the logged-in User if it exists",
-)
-def get_by_project_and_user(
-    *,
-    db: Session = Depends(get_db_session),
-    project_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> List[WhiteboardRead]:
-    authz_user.assert_in_project(project_id)
-
-    db_objs = crud_whiteboard.read_by_project_and_user(
-        db=db, project_id=project_id, user_id=authz_user.user.id
-    )
-    return [WhiteboardRead.model_validate(db_obj) for db_obj in db_objs]
-
-
 @router.patch(
     "/{whiteboard_id}",
     response_model=WhiteboardRead,
@@ -153,9 +132,7 @@ def duplicate_by_id(
 ) -> WhiteboardRead:
     authz_user.assert_in_same_project_as(Crud.WHITEBOARD, whiteboard_id)
 
-    db_obj = crud_whiteboard.duplicate_by_id(
-        db=db, whiteboard_id=whiteboard_id, user_id=authz_user.user.id
-    )
+    db_obj = crud_whiteboard.duplicate_by_id(db=db, whiteboard_id=whiteboard_id)
     return WhiteboardRead.model_validate(db_obj)
 
 

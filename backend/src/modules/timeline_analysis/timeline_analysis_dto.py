@@ -133,7 +133,6 @@ class TimelineAnalysisCreate(TimelineAnalysisBaseDTO):
 
 
 class TimelineAnalysisCreateIntern(TimelineAnalysisCreate, UpdateDTOBase):
-    user_id: int = Field(description="User the TimelineAnalysis belongs to")
     settings: Optional[str] = Field(
         description="JSON Representation of the TimelineAnalysisSettings.",
         default=None,
@@ -182,7 +181,6 @@ class TimelineAnalysisUpdateIntern(BaseModel, UpdateDTOBase):
 
 class TimelineAnalysisRead(TimelineAnalysisBaseDTO):
     id: int = Field(description="ID of the TimelineAnalysis")
-    user_id: int = Field(description="User the TimelineAnalysis belongs to")
     project_id: int = Field(description="Project the TimelineAnalysis belongs to")
     settings: TimelineAnalysisSettings = Field(
         description="Timeline Analysis Settings of the TimelineAnalysis."
@@ -236,7 +234,7 @@ class TimelineAnalysisRead(TimelineAnalysisBaseDTO):
     model_config = ConfigDict(from_attributes=True)
 
     def __str__(self) -> str:
-        return f"TimelineAnalysisRead(id={self.id}, name={self.name}, user_id={self.user_id}, project_id={self.project_id}, settings={self.settings}, concepts={self.concepts}, created={self.created}, updated={self.updated})"
+        return f"TimelineAnalysisRead(id={self.id}, name={self.name},  project_id={self.project_id}, settings={self.settings}, concepts={self.concepts}, created={self.created}, updated={self.updated})"
 
     def __repr__(self) -> str:
         return str(self)

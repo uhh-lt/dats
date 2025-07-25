@@ -46,11 +46,7 @@ async def create(
 
     return cotas.create(
         db=db,
-        cota_create=COTACreateIntern(
-            name=cota.name,
-            project_id=cota.project_id,
-            user_id=authz_user.user.id,
-        ),
+        cota_create=COTACreateIntern(name=cota.name, project_id=cota.project_id),
     )
 
 
@@ -73,12 +69,12 @@ async def get_by_id(
 
 
 @router.get(
-    "/{project_id}/user",
+    "/project/{project_id}",
     response_model=List[COTARead],
-    summary="Returns COTAs of the Project of the User",
-    description="Returns the COTA of the Project with the given ID and the logged-in User if it exists",
+    summary="Returns COTAs of the Project",
+    description="Returns the COTA of the Project with the given ID if it exists",
 )
-async def get_by_project_and_user(
+async def get_by_project(
     *,
     db: Session = Depends(get_db_session),
     project_id: int,
@@ -86,9 +82,7 @@ async def get_by_project_and_user(
 ) -> List[COTARead]:
     authz_user.assert_in_project(project_id)
 
-    db_objs = crud_cota.read_by_project_and_user(
-        db=db, project_id=project_id, user_id=authz_user.user.id, raise_error=False
-    )
+    db_objs = crud_cota.read_by_project(db=db, project_id=project_id)
     return [COTARead.model_validate(db_obj) for db_obj in db_objs]
 
 
@@ -127,9 +121,7 @@ def duplicate_by_id(
 ) -> COTARead:
     authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, cota_id)
 
-    db_obj = crud_cota.duplicate_by_id(
-        db=db, cota_id=cota_id, user_id=authz_user.user.id
-    )
+    db_obj = crud_cota.duplicate_by_id(db=db, cota_id=cota_id)
     return COTARead.model_validate(db_obj)
 
 

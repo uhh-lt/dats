@@ -135,7 +135,6 @@ def __generate_export_df_for_whiteboards(
         whiteboard_export_items.append(
             WhiteboardExportSchema(
                 title=wb.title,
-                user_email=wb.user.email,
                 content=transformed_content.model_dump_json(),
             )
         )

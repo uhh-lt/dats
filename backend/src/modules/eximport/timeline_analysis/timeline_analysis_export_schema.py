@@ -16,13 +16,10 @@ class TimelineAnalysisExportSchema(BaseModel):
     type: str = Field(
         description="Type of the timeline analysis (document, span_annotation, etc.)"
     )
-    user_email: str = Field(
-        description="Email of the user who created the timeline analysis"
-    )
     settings: str = Field(description="JSON string of timeline analysis settings")
     concepts: str = Field(description="JSON string of timeline analysis concepts")
 
-    @field_validator("name", "user_email", "type", "settings", "concepts")
+    @field_validator("name", "type", "settings", "concepts")
     @classmethod
     def validate_required_fields(cls, v, info):
         if not v or v.strip() == "":

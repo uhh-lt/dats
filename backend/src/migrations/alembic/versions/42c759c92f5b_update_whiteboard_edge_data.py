@@ -11,8 +11,7 @@ from typing import Sequence, Union
 
 from alembic import op
 from sqlalchemy import Integer, String
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Mapped, Session, mapped_column
+from sqlalchemy.orm import Mapped, Session, declarative_base, mapped_column
 
 # revision identifiers, used by Alembic.
 revision: str = "42c759c92f5b"
