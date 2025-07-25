@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { CodeRead } from "../models/CodeRead";
 import type { SentenceAnnotationCreate } from "../models/SentenceAnnotationCreate";
 import type { SentenceAnnotationRead } from "../models/SentenceAnnotationRead";
 import type { SentenceAnnotationUpdate } from "../models/SentenceAnnotationUpdate";
@@ -145,23 +144,6 @@ export class SentenceAnnotationService {
       url: "/sentence/bulk/delete",
       body: requestBody,
       mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the Code of the SentenceAnnotation with the given ID if it exists.
-   * @returns CodeRead Successful Response
-   * @throws ApiError
-   */
-  public static getCode({ sentenceAnnoId }: { sentenceAnnoId: number }): CancelablePromise<CodeRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/sentence/{sentence_anno_id}/code",
-      path: {
-        sentence_anno_id: sentenceAnnoId,
-      },
       errors: {
         422: `Validation Error`,
       },

@@ -14,7 +14,6 @@ from core.annotation.bbox_annotation_dto import (
 )
 from core.auth.authz_user import AuthzUser
 from core.auth.validation import Validate
-from core.code.code_dto import CodeRead
 
 router = APIRouter(
     prefix="/bbox", dependencies=[Depends(get_current_user)], tags=["bboxAnnotation"]
@@ -138,23 +137,6 @@ def delete_bulk_by_id(
 
     db_objs = crud_bbox_anno.remove_bulk(db=db, ids=bbox_anno_ids)
     return [BBoxAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
-
-
-@router.get(
-    "/{bbox_id}/code",
-    response_model=CodeRead,
-    summary="Returns the Code of the BBoxAnnotation with the given ID if it exists.",
-)
-def get_code(
-    *,
-    db: Session = Depends(get_db_session),
-    bbox_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> CodeRead:
-    authz_user.assert_in_same_project_as(Crud.BBOX_ANNOTATION, bbox_id)
-
-    bbox_db_obj = crud_bbox_anno.read(db=db, id=bbox_id)
-    return CodeRead.model_validate(bbox_db_obj.code)
 
 
 @router.get(

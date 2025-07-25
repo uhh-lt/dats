@@ -14,7 +14,6 @@ from core.annotation.sentence_annotation_dto import (
 )
 from core.auth.authz_user import AuthzUser
 from core.auth.validation import Validate
-from core.code.code_dto import CodeRead
 
 router = APIRouter(
     prefix="/sentence",
@@ -176,23 +175,6 @@ def delete_bulk_by_id(
 
     db_objs = crud_sentence_anno.remove_bulk(db=db, ids=sentence_anno_ids)
     return [SentenceAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
-
-
-@router.get(
-    "/{sentence_anno_id}/code",
-    response_model=CodeRead,
-    summary="Returns the Code of the SentenceAnnotation with the given ID if it exists.",
-)
-def get_code(
-    *,
-    db: Session = Depends(get_db_session),
-    sentence_anno_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> CodeRead:
-    authz_user.assert_in_same_project_as(Crud.SENTENCE_ANNOTATION, sentence_anno_id)
-
-    sentence_annotation_db_obj = crud_sentence_anno.read(db=db, id=sentence_anno_id)
-    return CodeRead.model_validate(sentence_annotation_db_obj.code)
 
 
 @router.get(

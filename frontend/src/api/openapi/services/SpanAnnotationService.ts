@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { CodeRead } from "../models/CodeRead";
 import type { SpanAnnotationCreate } from "../models/SpanAnnotationCreate";
 import type { SpanAnnotationDeleted } from "../models/SpanAnnotationDeleted";
 import type { SpanAnnotationRead } from "../models/SpanAnnotationRead";
@@ -147,23 +146,6 @@ export class SpanAnnotationService {
       url: "/span/bulk/delete",
       body: requestBody,
       mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the Code of the SpanAnnotation with the given ID if it exists.
-   * @returns CodeRead Successful Response
-   * @throws ApiError
-   */
-  public static getCode({ spanId }: { spanId: number }): CancelablePromise<CodeRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/span/{span_id}/code",
-      path: {
-        span_id: spanId,
-      },
       errors: {
         422: `Validation Error`,
       },
