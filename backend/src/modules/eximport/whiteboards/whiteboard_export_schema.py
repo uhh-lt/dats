@@ -86,10 +86,9 @@ class WhiteboardExportSchema(BaseModel):
     """Schema definition for whiteboard export/import operations."""
 
     title: str = Field(description="Title of the whiteboard")
-    user_email: str = Field(description="Email of the whiteboard owner")
     content: str = Field(description="JSON content of the whiteboard")
 
-    @field_validator("title", "user_email", "content")
+    @field_validator("title", "content")
     @classmethod
     def validate_required_fields(cls, v, info):
         if not v or v.strip() == "":

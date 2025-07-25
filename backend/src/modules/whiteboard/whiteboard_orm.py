@@ -7,7 +7,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
     from core.project.project_orm import ProjectORM
-    from core.user.user_orm import UserORM
 
 
 class WhiteboardORM(ORMBase):
@@ -36,8 +35,3 @@ class WhiteboardORM(ORMBase):
     project: Mapped["ProjectORM"] = relationship(
         "ProjectORM", back_populates="whiteboards"
     )
-
-    user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True
-    )
-    user: Mapped["UserORM"] = relationship("UserORM", back_populates="whiteboards")

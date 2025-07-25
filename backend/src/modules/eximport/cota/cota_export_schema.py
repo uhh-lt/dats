@@ -14,16 +14,12 @@ class COTAExportSchema(BaseModel):
     """Schema definition for concept over time analysis export/import operations."""
 
     name: str = Field(description="Name of the concept over time analysis")
-    user_email: str = Field(
-        description="Email of the user who created the concept over time analysis"
-    )
+
     timeline_settings: str = Field(description="JSON string of COTA timeline settings")
     training_settings: str = Field(description="JSON string of COTA training settings")
     concepts: str = Field(description="JSON string of COTA concepts")
 
-    @field_validator(
-        "name", "user_email", "timeline_settings", "training_settings", "concepts"
-    )
+    @field_validator("name", "timeline_settings", "training_settings", "concepts")
     @classmethod
     def validate_required_fields(cls, v, info):
         if not v or v.strip() == "":

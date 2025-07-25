@@ -1,8 +1,7 @@
-from typing import List, Set
+from typing import List
 
 import pandas as pd
 import srsly
-from core.project.project_crud import crud_project
 from fastapi.encoders import jsonable_encoder
 from loguru import logger
 from modules.concept_over_time_analysis.cota_crud import (
@@ -66,20 +65,7 @@ def import_cota_to_proj(
         f"Importing {len(cota_collection.cota_analyses)} concept over time analyses..."
     )
 
-    # Get the project
     error_messages = []
-    project = crud_project.read(db=db, id=project_id)
-
-    # COTA analyses need Users. We need to check if they exist in the project:
-    user_emails: Set[str] = set()
-    for cota in cota_collection.cota_analyses:
-        user_emails.add(cota.user_email)
-    project_user_emails = {user.email: user for user in project.users}
-    for email in user_emails:
-        if email not in project_user_emails:
-            error_messages.append(
-                f"User '{email}' is not part of the project {project_id}"
-            )
 
     # Transform the COTA analyses for import
     transformed_cotas: List[COTACreateIntern] = []
@@ -119,15 +105,10 @@ def import_cota_to_proj(
             continue
 
         # 4. Create a COTACreateIntern object for each analysis
-        user = project_user_emails.get(cota.user_email, None)
-        if user is None:
-            continue
-
         transformed_cotas.append(
             COTACreateIntern(
                 name=cota.name,
                 project_id=project_id,
-                user_id=project_user_emails[cota.user_email].id,
                 concepts=srsly.json_dumps(jsonable_encoder(transformed_concepts)),
                 timeline_settings=transformed_timeline_settings.model_dump_json(),
                 training_settings=transformed_training_settings.model_dump_json(),

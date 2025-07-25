@@ -1,7 +1,6 @@
-from typing import List, Set
+from typing import List
 
 import pandas as pd
-from core.project.project_crud import crud_project
 from loguru import logger
 from modules.eximport.whiteboards.whiteboard_export_schema import (
     WhiteboardContentForExport,
@@ -54,20 +53,7 @@ def import_whiteboards_to_proj(
 
     logger.info(f"Importing {len(whiteboard_collection.whiteboards)} whiteboards...")
 
-    # Get the project
     error_messages = []
-    project = crud_project.read(db=db, id=project_id)
-
-    # Whiteboards need a User. We need to check if all users exist in the database
-    user_emails: Set[str] = set()
-    for whiteboard in whiteboard_collection.whiteboards:
-        user_emails.add(whiteboard.user_email)
-    project_user_emails = {user.email: user for user in project.users}
-    for user_email in user_emails:
-        if user_email not in project_user_emails:
-            error_messages.append(
-                f"User '{user_email}' is not part of the project {project_id}"
-            )
 
     # Transform the whiteboards for import
     transformed_wbs: List[WhiteboardCreateIntern] = []
@@ -82,15 +68,10 @@ def import_whiteboards_to_proj(
             error_messages.append(f"An error occured for whiteboard '{wb.title}': {e}")
             continue
 
-        user = project_user_emails.get(wb.user_email, None)
-        if user is None:
-            continue
-
         transformed_wbs.append(
             WhiteboardCreateIntern(
                 title=wb.title,
                 project_id=project_id,
-                user_id=user.id,
                 content=transformed_content.model_dump_json(),
             )
         )

@@ -156,7 +156,6 @@ def __generate_export_df_for_cota(
         cota_export_items.append(
             COTAExportSchema(
                 name=cota.name,
-                user_email=cota.user.email,
                 timeline_settings=transformed_timeline_settings.model_dump_json(),
                 training_settings=transformed_training_settings.model_dump_json(),
                 concepts=srsly.json_dumps(jsonable_encoder(transformed_concepts)),

@@ -27,19 +27,6 @@ class CRUDTimelineAnalysis(
         )
         return db_obj
 
-    def read_by_project_and_user(
-        self, db: Session, *, project_id: int, user_id: int
-    ) -> List[TimelineAnalysisORM]:
-        db_obj = (
-            db.query(self.model)
-            .filter(
-                self.model.project_id == project_id,
-                self.model.user_id == user_id,
-            )
-            .all()
-        )
-        return db_obj
-
     def duplicate_by_id(
         self, db: Session, *, timeline_analysis_id: int, user_id: int
     ) -> TimelineAnalysisORM:
@@ -48,7 +35,6 @@ class CRUDTimelineAnalysis(
             db,
             create_dto=TimelineAnalysisCreateIntern(
                 project_id=db_obj.project_id,
-                user_id=user_id,
                 name=db_obj.name + " (Copy)",
                 concepts=db_obj.concepts,
                 settings=db_obj.settings,

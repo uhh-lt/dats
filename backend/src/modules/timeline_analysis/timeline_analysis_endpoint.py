@@ -43,7 +43,7 @@ def create(
         crud_timeline_analysis.create(
             db=db,
             create_dto=TimelineAnalysisCreateIntern(
-                **timeline_analysis.model_dump(), user_id=authz_user.user.id
+                **timeline_analysis.model_dump(),
             ),
         )
     )
@@ -67,11 +67,11 @@ def get_by_id(
 
 
 @router.get(
-    "/project/{project_id}/user",
+    "/project/{project_id}",
     response_model=List[TimelineAnalysisRead],
-    summary="Returns the TimelineAnalysis of the Project with the given ID and the logged-in User if it exists",
+    summary="Returns the TimelineAnalysis of the Project with the given ID if it exists",
 )
-def get_by_project_and_user(
+def get_by_project(
     *,
     db: Session = Depends(get_db_session),
     project_id: int,
@@ -79,9 +79,7 @@ def get_by_project_and_user(
 ) -> List[TimelineAnalysisRead]:
     authz_user.assert_in_project(project_id)
 
-    db_objs = crud_timeline_analysis.read_by_project_and_user(
-        db=db, project_id=project_id, user_id=authz_user.user.id
-    )
+    db_objs = crud_timeline_analysis.read_by_project(db=db, project_id=project_id)
     return [TimelineAnalysisRead.model_validate(db_obj) for db_obj in db_objs]
 
 

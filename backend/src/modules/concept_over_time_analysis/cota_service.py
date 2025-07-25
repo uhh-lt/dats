@@ -84,16 +84,13 @@ class COTAService(metaclass=SingletonMeta):
         db_obj = crud_cota.read(db=db, id=cota_id)
         return COTARead.model_validate(db_obj)
 
-    def read_by_project_and_user(
+    def read_by_project(
         self,
         *,
         db: Session,
         project_id: int,
-        user_id: int,
     ) -> List[COTARead]:
-        db_objs = crud_cota.read_by_project_and_user(
-            db=db, project_id=project_id, user_id=user_id, raise_error=False
-        )
+        db_objs = crud_cota.read_by_project(db=db, project_id=project_id)
         return [COTARead.model_validate(db_obj) for db_obj in db_objs]
 
     def update(

@@ -290,7 +290,6 @@ class WhiteboardCreate(WhiteboardBaseDTO):
 
 
 class WhiteboardCreateIntern(WhiteboardCreate):
-    user_id: int = Field(description="User the Whiteboard belongs to")
     content: Optional[str] = Field(
         description="Content of the Whiteboard", default=None
     )
@@ -322,7 +321,6 @@ class WhiteboardUpdateIntern(BaseModel, UpdateDTOBase):
 class WhiteboardRead(WhiteboardBaseDTO):
     id: int = Field(description="ID of the Whiteboard")
     project_id: int = Field(description="Project the Whiteboard belongs to")
-    user_id: int = Field(description="User the Whiteboard belongs to")
     created: datetime = Field(description="Created timestamp of the Whiteboard")
     updated: datetime = Field(description="Updated timestamp of the Whiteboard")
     content: WhiteboardContent = Field(description="Content of the Whiteboard")
