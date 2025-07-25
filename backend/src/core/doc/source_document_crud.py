@@ -155,6 +155,7 @@ class CRUDSourceDocument(
         )
 
         # remove from index
+        # TODO: we need some kind of message system to decouple this from the CRUD operation
         with WeaviateRepo().weaviate_session() as client:
             crud_aspect_embedding.remove_by_sdoc_id(
                 client=client, project_id=sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id

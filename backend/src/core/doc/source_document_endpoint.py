@@ -21,7 +21,6 @@ from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import SourceDocumentMetadataRead
 from fastapi import APIRouter, Depends
 from loguru import logger
-from modules.word_frequency.word_frequency_dto import WordFrequencyRead
 from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy.orm import Session
 
@@ -221,23 +220,6 @@ def get_all_tags(
 
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     return [doc_tag_db_obj.id for doc_tag_db_obj in sdoc_db_obj.document_tags]
-
-
-@router.get(
-    "/{sdoc_id}/word_frequencies",
-    response_model=List[WordFrequencyRead],
-    summary="Returns the SourceDocument's word frequencies with the given ID if it exists",
-)
-def get_word_frequencies(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> List[WordFrequencyRead]:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
-
-    sdoc = crud_sdoc.read(db=db, id=sdoc_id)
-    return [WordFrequencyRead.model_validate(wf) for wf in sdoc.word_frequencies]
 
 
 @router.get(

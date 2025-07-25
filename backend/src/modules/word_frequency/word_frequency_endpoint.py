@@ -1,5 +1,6 @@
 from typing import List
 
+from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from fastapi import APIRouter, Depends
@@ -7,7 +8,10 @@ from modules.search_system.column_info import ColumnInfo
 from modules.search_system.filtering import Filter
 from modules.search_system.sorting import Sort
 from modules.word_frequency.word_frequency_columns import WordFrequencyColumns
-from modules.word_frequency.word_frequency_dto import WordFrequencyResult
+from modules.word_frequency.word_frequency_dto import (
+    WordFrequencyRead,
+    WordFrequencyResult,
+)
 from modules.word_frequency.word_frequency_service import (
     word_frequency,
     word_frequency_export,
@@ -84,3 +88,20 @@ def word_frequency_analysis_export(
         project_id=project_id,
         filter=filter,
     )
+
+
+@router.get(
+    "/sdoc/{sdoc_id}",
+    response_model=List[WordFrequencyRead],
+    summary="Returns the SourceDocument's word frequencies with the given ID if it exists",
+)
+def get_word_frequencies(
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> List[WordFrequencyRead]:
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
+    sdoc = Crud.SOURCE_DOCUMENT.value.read(db=db, id=sdoc_id)
+    return [WordFrequencyRead.model_validate(wf) for wf in sdoc.word_frequencies]
