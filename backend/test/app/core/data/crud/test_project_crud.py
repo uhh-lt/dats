@@ -90,7 +90,7 @@ def test_create_remove_project(db: Session) -> None:
     title = "".join(random.choices(string.ascii_letters, k=15))
     description = "Test description"
 
-    system_user = UserRead.model_validate(crud_user.read(db, SYSTEM_USER_ID))
+    system_user = crud_user.read(db, SYSTEM_USER_ID)
     id = crud_project.create(
         db=db,
         create_dto=ProjectCreate(title=title, description=description),

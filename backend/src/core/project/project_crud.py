@@ -12,7 +12,6 @@ from core.user.user_crud import (
     SYSTEM_USER_ID,
     crud_user,
 )
-from core.user.user_dto import UserRead
 from core.user.user_orm import UserORM
 from fastapi.encoders import jsonable_encoder
 from modules.perspectives.aspect_embedding_crud import crud_aspect_embedding
@@ -25,7 +24,7 @@ from sqlalchemy.orm import Session
 
 class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
     def create(
-        self, db: Session, *, create_dto: ProjectCreate, creating_user: UserRead
+        self, db: Session, *, create_dto: ProjectCreate, creating_user: UserORM
     ) -> ProjectORM:
         # 1) create the project
         dto_obj_data = jsonable_encoder(create_dto)
@@ -43,7 +42,12 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         self.associate_user(db=db, proj_id=project_id, user_id=ASSISTANT_TRAINED_ID)
 
         # 3) associate the user that created the project
-        if creating_user.id != SYSTEM_USER_ID:
+        if creating_user.id not in [
+            SYSTEM_USER_ID,
+            ASSISTANT_ZEROSHOT_ID,
+            ASSISTANT_FEWSHOT_ID,
+            ASSISTANT_TRAINED_ID,
+        ]:
             self.associate_user(db=db, proj_id=project_id, user_id=creating_user.id)
 
         # 4) create system codes

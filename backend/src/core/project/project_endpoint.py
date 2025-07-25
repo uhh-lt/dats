@@ -23,6 +23,7 @@ from core.project.project_dto import (
 from core.tag.document_tag_dto import DocumentTagRead
 from core.user.user_crud import crud_user
 from core.user.user_dto import UserRead
+from core.user.user_orm import UserORM
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from modules.analysis.duplicate_finder import find_duplicates
 from modules.perspectives.aspect_dto import AspectRead
@@ -48,7 +49,7 @@ def create_new_project(
     *,
     db: Session = Depends(get_db_session),
     proj: ProjectCreate,
-    current_user: UserRead = Depends(get_current_user),
+    current_user: UserORM = Depends(get_current_user),
 ) -> ProjectRead:
     db_obj = crud_project.create(db=db, create_dto=proj, creating_user=current_user)
 

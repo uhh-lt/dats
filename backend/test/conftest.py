@@ -64,7 +64,7 @@ from core.code.code_dto import CodeCreate
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectCreate
 from core.user.user_crud import SYSTEM_USER_ID, crud_user
-from core.user.user_dto import UserCreate, UserRead
+from core.user.user_dto import UserCreate
 from main import app
 
 
@@ -128,7 +128,7 @@ def make_project(
         title = "".join(random.choices(string.ascii_letters, k=15))
         description = "Test description"
 
-        system_user = UserRead.model_validate(crud_user.read(db, SYSTEM_USER_ID))
+        system_user = crud_user.read(db, SYSTEM_USER_ID)
         project = crud_project.create(
             db=db,
             create_dto=ProjectCreate(
