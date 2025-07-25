@@ -6,6 +6,7 @@ from common.dependencies import get_current_user, get_db_session, get_weaviate_s
 from core.auth.authz_user import AuthzUser
 from core.celery.background_jobs import prepare_and_start_perspectives_job_async
 from core.job.background_job_base_dto import BackgroundJobStatus
+from core.project.project_crud import crud_project
 from fastapi import APIRouter, Depends
 from modules.perspectives.aspect_crud import crud_aspect
 from modules.perspectives.aspect_dto import (
@@ -144,6 +145,24 @@ def create_aspect(
     )
 
     return AspectRead.model_validate(db_aspect)
+
+
+@router.get(
+    "/project/{proj_id}/aspects",
+    response_model=List[AspectRead],
+    summary="Returns all Aspects of the Project with the given ID if it exists",
+)
+def get_all_aspects(
+    *,
+    db: Session = Depends(get_db_session),
+    proj_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> List[AspectRead]:
+    authz_user.assert_in_project(proj_id)
+
+    project = crud_project.read(db=db, id=proj_id)
+    aspects = [AspectRead.model_validate(a) for a in project.aspects]
+    return aspects
 
 
 @router.get(
@@ -311,9 +330,9 @@ def visualize_documents(
     )
     sdoc_id2dt = {dt.sdoc_id: dt for dt in document_clusters}
     cluster_id2cluster = {t.id: t for t in clusters}
-    assert (
-        len(document_aspects) == len(document_clusters)
-    ), "The number of DocumentAspects and DocumentClusters must match for visualization."
+    assert len(document_aspects) == len(document_clusters), (
+        "The number of DocumentAspects and DocumentClusters must match for visualization."
+    )
 
     # Search documents
     sdoc_id_in_search_result: Dict[int, bool]
