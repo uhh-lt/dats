@@ -543,27 +543,6 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/bbox/{bbox_id}/code": {
-      "get": {
-        "tags": ["bboxAnnotation"],
-        "summary": "Returns the Code of the BBoxAnnotation with the given ID if it exists.",
-        "operationId": "get_code",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "bbox_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Bbox Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/bbox/code/{code_id}/user": {
       "get": {
         "tags": ["bboxAnnotation"],
@@ -3990,32 +3969,6 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/sentence/{sentence_anno_id}/code": {
-      "get": {
-        "tags": ["sentenceAnnotation"],
-        "summary": "Returns the Code of the SentenceAnnotation with the given ID if it exists.",
-        "operationId": "get_code",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "sentence_anno_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Sentence Anno Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/sentence/code/{code_id}/user": {
       "get": {
         "tags": ["sentenceAnnotation"],
@@ -4958,27 +4911,6 @@
           }
         },
         "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/span/{span_id}/code": {
-      "get": {
-        "tags": ["spanAnnotation"],
-        "summary": "Returns the Code of the SpanAnnotation with the given ID if it exists.",
-        "operationId": "get_code",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "span_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Span Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
       }
     },
     "/span/{span_id}/groups": {

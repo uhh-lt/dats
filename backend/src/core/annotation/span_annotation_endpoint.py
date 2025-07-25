@@ -16,7 +16,6 @@ from core.annotation.span_annotation_dto import (
 from core.annotation.span_group_dto import SpanGroupRead
 from core.auth.authz_user import AuthzUser
 from core.auth.validation import Validate
-from core.code.code_dto import CodeRead
 
 router = APIRouter(
     prefix="/span", dependencies=[Depends(get_current_user)], tags=["spanAnnotation"]
@@ -179,23 +178,6 @@ def delete_bulk_by_id(
 
     db_objs = crud_span_anno.remove_bulk(db=db, ids=span_anno_ids)
     return [SpanAnnotationDeleted.model_validate(db_obj) for db_obj in db_objs]
-
-
-@router.get(
-    "/{span_id}/code",
-    response_model=CodeRead,
-    summary="Returns the Code of the SpanAnnotation with the given ID if it exists.",
-)
-def get_code(
-    *,
-    db: Session = Depends(get_db_session),
-    span_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> CodeRead:
-    authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
-
-    span_db_obj = crud_span_anno.read(db=db, id=span_id)
-    return CodeRead.model_validate(span_db_obj.code)
 
 
 @router.get(
