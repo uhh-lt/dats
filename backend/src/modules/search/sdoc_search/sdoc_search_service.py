@@ -2,6 +2,7 @@ from typing import List, Optional, Tuple
 
 from common.doc_type import DocType
 from common.singleton_meta import SingletonMeta
+from core.doc.sdoc_elastic_crud import crud_elastic_sdoc
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
@@ -9,8 +10,6 @@ from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.search.search_dto import (
-    ElasticSearchDocumentHit,
-    PaginatedElasticSearchDocumentHits,
     PaginatedSDocHits,
 )
 from modules.search_system.column_info import ColumnInfo
@@ -18,7 +17,8 @@ from modules.search_system.filtering import Filter
 from modules.search_system.search_builder import SearchBuilder
 from modules.search_system.sorting import Sort
 from repos.db.sql_repo import SQLRepo
-from repos.elasticsearch_repo import ElasticSearchRepo
+from repos.elastic.elastic_dto_base import ElasticSearchHit, PaginatedElasticSearchHits
+from repos.elastic.elastic_repo import ElasticSearchRepo
 from sqlalchemy.orm import Session
 
 
@@ -89,7 +89,7 @@ class SdocSearchService(metaclass=SingletonMeta):
         sorts: List[Sort[SdocColumns]],
         page_number: Optional[int] = None,
         page_size: Optional[int] = None,
-    ) -> PaginatedElasticSearchDocumentHits:
+    ) -> PaginatedElasticSearchHits:
         if search_query.strip() == "":
             with SQLRepo().db_session() as db:
                 filtered_sdoc_ids, total_results = self.filter_sdoc_ids(
@@ -100,11 +100,8 @@ class SdocSearchService(metaclass=SingletonMeta):
                     page_number=page_number,
                     page_size=page_size,
                 )
-            return PaginatedElasticSearchDocumentHits(
-                hits=[
-                    ElasticSearchDocumentHit(id=sdoc_id)
-                    for sdoc_id in filtered_sdoc_ids
-                ],
+            return PaginatedElasticSearchHits(
+                hits=[ElasticSearchHit(id=sdoc_id) for sdoc_id in filtered_sdoc_ids],
                 total_results=total_results,
             )
         else:
@@ -125,7 +122,8 @@ class SdocSearchService(metaclass=SingletonMeta):
             else:
                 skip = None
                 limit = None
-            return ElasticSearchRepo().search_sdocs_by_content_query(
+            return crud_elastic_sdoc.search_sdocs_by_content_query(
+                client=ElasticSearchRepo().client,
                 proj_id=project_id,
                 query=search_query,
                 sdoc_ids=filtered_sdoc_ids,

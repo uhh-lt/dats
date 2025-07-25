@@ -8,6 +8,8 @@ from core.doc.document_embedding_crud import crud_document_embedding
 from core.doc.document_embedding_dto import DocumentObjectIdentifier
 from core.doc.image_embedding_crud import crud_image_embedding
 from core.doc.image_embedding_dto import ImageObjectIdentifier
+from core.doc.sdoc_elastic_crud import crud_elastic_sdoc
+from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_crud import crud_sdoc
@@ -23,13 +25,12 @@ from core.project.project_crud import crud_project
 from core.tag.document_tag_crud import crud_document_tag
 from loguru import logger
 from modules.eximport.sdocs.sdoc_export_schema import SourceDocumentExportCollection
-from modules.search.search_dto import ElasticSearchDocumentCreate
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
 from preprocessing.pipeline.steps.image.process.convert_to_webp_and_generate_thumbnail import (
     generate_thumbnails,
 )
-from repos.elasticsearch_repo import ElasticSearchRepo
+from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy.orm import Session
@@ -282,9 +283,10 @@ def import_sdocs_to_proj(
                 )
 
         # 6. Add the source documents to the Elasticsearch index
-        es.add_document_to_index(
+        crud_elastic_sdoc.create(
+            client=ElasticSearchRepo().client,
             proj_id=project_id,
-            esdoc=ElasticSearchDocumentCreate(
+            create_dto=ElasticSearchDocumentCreate(
                 project_id=project_id,
                 sdoc_id=created_sdoc.id,
                 filename=created_sdoc.filename,

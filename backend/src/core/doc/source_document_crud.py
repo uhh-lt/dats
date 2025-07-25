@@ -7,6 +7,7 @@ from core.doc.document_embedding_crud import crud_document_embedding
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderCreate, FolderType
 from core.doc.image_embedding_crud import crud_image_embedding
+from core.doc.sdoc_elastic_crud import crud_elastic_sdoc
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.source_document_data_dto import SourceDocumentDataRead
 from core.doc.source_document_data_orm import SourceDocumentDataORM
@@ -23,7 +24,7 @@ from modules.perspectives.aspect_embedding_crud import crud_aspect_embedding
 from modules.perspectives.document_aspect_orm import DocumentAspectORM
 from repos.db.crud_base import CRUDBase, NoSuchElementError
 from repos.db.sql_utils import aggregate_ids
-from repos.elasticsearch_repo import ElasticSearchRepo
+from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy import and_, desc, func, or_
@@ -150,8 +151,10 @@ class CRUDSourceDocument(
         )
 
         # remove from elasticsearch
-        ElasticSearchRepo().delete_document_from_index(
-            sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
+        crud_elastic_sdoc.delete(
+            client=ElasticSearchRepo().client,
+            proj_id=sdoc_db_obj.project_id,
+            id=sdoc_db_obj.id,
         )
 
         # remove from index

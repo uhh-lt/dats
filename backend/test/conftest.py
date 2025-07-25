@@ -22,7 +22,7 @@ from fastapi.testclient import TestClient
 from loguru import logger
 from pytest import FixtureRequest
 from repos.db.sql_repo import SQLRepo
-from repos.elasticsearch_repo import ElasticSearchRepo
+from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.redis_repo import RedisRepo
 from repos.vector.weaviate_repo import WeaviateRepo
@@ -320,9 +320,9 @@ def api_document(client: TestClient):
             response = client.put(
                 f"/project/{project['id']}/sdoc", headers=user_headers, files=files
             )
-            assert (
-                response.status_code == 200
-            ), f"Failed to upload files. Response: {response}. Files: {files}"
+            assert response.status_code == 200, (
+                f"Failed to upload files. Response: {response}. Files: {files}"
+            )
             response = response.json()
             docs = {}
             for file in response["payloads"]:

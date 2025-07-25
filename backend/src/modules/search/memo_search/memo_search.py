@@ -1,18 +1,16 @@
 from typing import List, Optional, Tuple
 
+from core.memo.memo_elastic_crud import crud_elastic_memo
 from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_orm import ObjectHandleORM
 from modules.search.memo_search.memo_search_columns import MemoColumns
-from modules.search.search_dto import (
-    ElasticSearchDocumentHit,
-    PaginatedElasticSearchDocumentHits,
-)
 from modules.search_system.column_info import ColumnInfo
 from modules.search_system.filtering import Filter
 from modules.search_system.search_builder import SearchBuilder
 from modules.search_system.sorting import Sort
 from repos.db.sql_repo import SQLRepo
-from repos.elasticsearch_repo import ElasticSearchRepo
+from repos.elastic.elastic_dto_base import ElasticSearchHit, PaginatedElasticSearchHits
+from repos.elastic.elastic_repo import ElasticSearchRepo
 
 
 def memo_info(
@@ -55,7 +53,7 @@ def memo_search(
     sorts: List[Sort[MemoColumns]],
     page_number: Optional[int],
     page_size: Optional[int],
-) -> PaginatedElasticSearchDocumentHits:
+) -> PaginatedElasticSearchHits:
     if search_query.strip() == "":
         memo_ids, total_results = filter_memo_ids(
             project_id=project_id,
@@ -64,8 +62,8 @@ def memo_search(
             page_size=page_size,
             sorts=sorts,
         )
-        return PaginatedElasticSearchDocumentHits(
-            hits=[ElasticSearchDocumentHit(id=memo_id) for memo_id in memo_ids],
+        return PaginatedElasticSearchHits(
+            hits=[ElasticSearchHit(id=memo_id) for memo_id in memo_ids],
             total_results=total_results,
         )
     else:
@@ -83,7 +81,8 @@ def memo_search(
             limit = None
 
         if search_content:
-            return ElasticSearchRepo().search_memos_by_content_query(
+            return crud_elastic_memo.search_memos_by_content_query(
+                client=ElasticSearchRepo().client,
                 proj_id=project_id,
                 query=search_query,
                 memo_ids=set(filtered_memo_ids),
@@ -91,7 +90,8 @@ def memo_search(
                 limit=limit,
             )
         else:
-            return ElasticSearchRepo().search_memos_by_title_query(
+            return crud_elastic_memo.search_memos_by_title_query(
+                client=ElasticSearchRepo().client,
                 proj_id=project_id,
                 query=search_query,
                 memo_ids=set(filtered_memo_ids),

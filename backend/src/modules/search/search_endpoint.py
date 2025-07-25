@@ -14,7 +14,6 @@ from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.search.sdoc_search.sdoc_search_service import SdocSearchService
 from modules.search.search_dto import (
     BBoxAnnotationSearchResult,
-    PaginatedElasticSearchDocumentHits,
     PaginatedSDocHits,
     SentenceAnnotationSearchResult,
     SpanAnnotationSearchResult,
@@ -32,6 +31,7 @@ from modules.search.span_anno_search.span_anno_search_columns import SpanColumns
 from modules.search_system.column_info import ColumnInfo
 from modules.search_system.filtering import Filter
 from modules.search_system.sorting import Sort
+from repos.elastic.elastic_dto_base import PaginatedElasticSearchHits
 
 router = APIRouter(
     prefix="/search", dependencies=[Depends(get_current_user)], tags=["search"]
@@ -96,7 +96,7 @@ def search_memo_info(
 
 @router.post(
     "/memo",
-    response_model=PaginatedElasticSearchDocumentHits,
+    response_model=PaginatedElasticSearchHits,
     summary="Returns all Memo Ids that match the query parameters.",
 )
 def search_memos(
@@ -109,7 +109,7 @@ def search_memos(
     filter: Filter[MemoColumns],
     sorts: List[Sort[MemoColumns]],
     authz_user: AuthzUser = Depends(),
-) -> PaginatedElasticSearchDocumentHits:
+) -> PaginatedElasticSearchHits:
     authz_user.assert_in_project(project_id)
 
     return memo_search(

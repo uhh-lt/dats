@@ -13,6 +13,7 @@ from fastapi.responses import PlainTextResponse
 from fastapi.routing import APIRoute
 from loguru import logger
 from psycopg2.errors import UniqueViolation
+from repos.elastic.elastic_crud_base import NoSuchObjectInElasticSearchError
 from sqlalchemy.exc import IntegrityError
 from starlette.middleware.sessions import SessionMiddleware
 from utils.import_util import import_by_suffix
@@ -51,7 +52,6 @@ from modules.eximport.export_service import (
 from modules.eximport.import_service import ImportJobPreparationError
 from modules.eximport.no_data_export_error import NoDataToExportError
 from repos.db.crud_base import NoSuchElementError
-from repos.elasticsearch_repo import NoSuchMemoInElasticSearchError
 from repos.filesystem_repo import (
     FileAlreadyExistsInFilesystemError,
     FileNotFoundInFilesystemError,
@@ -166,8 +166,8 @@ async def import_job_preparation_error_handler(_, exc: ImportJobPreparationError
     return PlainTextResponse(str(exc), status_code=500)
 
 
-@app.exception_handler(NoSuchMemoInElasticSearchError)
-async def no_such_memo_in_es_error_handler(_, exc: NoSuchMemoInElasticSearchError):
+@app.exception_handler(NoSuchObjectInElasticSearchError)
+async def no_such_object_in_es_error_handler(_, exc: NoSuchObjectInElasticSearchError):
     return PlainTextResponse(str(exc), status_code=500)
 
 
@@ -227,9 +227,9 @@ for em in endpoint_modules:
 def main() -> None:
     # read port from config
     port = int(conf.api.port)
-    assert (
-        port is not None and isinstance(port, int) and port > 0
-    ), "The API port has to be a positive integer! E.g. 8081"
+    assert port is not None and isinstance(port, int) and port > 0, (
+        "The API port has to be a positive integer! E.g. 8081"
+    )
 
     is_debug = conf.api.production_mode == "0"
 

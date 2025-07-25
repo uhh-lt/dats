@@ -1,7 +1,8 @@
-from modules.search.search_dto import ElasticSearchDocumentCreate
+from core.doc.sdoc_elastic_crud import crud_elastic_sdoc
+from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
-from repos.elasticsearch_repo import ElasticSearchRepo
+from repos.elastic.elastic_repo import ElasticSearchRepo
 
 es = ElasticSearchRepo()
 
@@ -19,6 +20,10 @@ def store_document_in_elasticsearch(cargo: PipelineCargo) -> PipelineCargo:
         project_id=pptd.project_id,
     )
 
-    es.add_document_to_index(proj_id=proj_id, esdoc=esdoc)
+    crud_elastic_sdoc.create(
+        client=es.client,
+        create_dto=esdoc,
+        proj_id=proj_id,
+    )
 
     return cargo
