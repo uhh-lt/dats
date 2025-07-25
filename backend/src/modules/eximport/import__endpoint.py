@@ -1,9 +1,8 @@
 from typing import Dict, List, TypedDict
 
-from common.dependencies import get_current_user, get_db_session
+from common.dependencies import get_current_user
 from core.auth.authz_user import AuthzUser
 from core.celery.background_jobs import prepare_and_start_import_job_async
-from core.user.user_dto import UserRead
 from fastapi import APIRouter, Depends, UploadFile
 from modules.eximport.import_job_dto import (
     ImportJobParameters,
@@ -12,7 +11,6 @@ from modules.eximport.import_job_dto import (
 )
 from modules.eximport.import_service import ImportJobPreparationError, ImportService
 from repos.filesystem_repo import FilesystemRepo
-from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/import", dependencies=[Depends(get_current_user)], tags=["import"]
@@ -79,9 +77,7 @@ async def start_import_job(
     project_id: int,
     import_job_type: ImportJobType,
     uploaded_file: UploadFile,
-    db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
-    current_user: UserRead = Depends(get_current_user),
 ) -> ImportJobRead:
     authz_user.assert_in_project(project_id)
 
