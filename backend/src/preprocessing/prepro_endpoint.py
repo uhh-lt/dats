@@ -2,9 +2,9 @@ from typing import List
 
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
+from common.sdoc_status_enum import SDocStatus
 from core.auth.authz_user import AuthzUser
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_dto import SDocStatus
 from core.job.background_job_base_dto import BackgroundJobStatus
 from core.project.project_crud import crud_project
 from fastapi import APIRouter, Depends

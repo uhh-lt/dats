@@ -12,12 +12,12 @@ from zipfile import ZipFile
 import magic
 import pandas as pd
 from common.doc_type import DocType, get_doc_type
+from common.sdoc_status_enum import SDocStatus
 from common.singleton_meta import SingletonMeta
 from config import conf
 from core.doc.source_document_dto import (
     SDOC_FILENAME_MAX_LENGTH,
     SDOC_SUFFIX_MAX_LENGTH,
-    SDocStatus,
     SourceDocumentCreate,
     SourceDocumentRead,
 )
