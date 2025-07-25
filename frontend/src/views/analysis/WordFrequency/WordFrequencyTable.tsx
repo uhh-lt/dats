@@ -16,7 +16,7 @@ import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { WordFrequencyColumns } from "../../../api/openapi/models/WordFrequencyColumns.ts";
 import { WordFrequencyResult } from "../../../api/openapi/models/WordFrequencyResult.ts";
 import { WordFrequencyStat } from "../../../api/openapi/models/WordFrequencyStat.ts";
-import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
+import { WordFrequencyService } from "../../../api/openapi/services/WordFrequencyService.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import ReduxFilterDialog from "../../../components/FilterDialog/ReduxFilterDialog.tsx";
 import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
@@ -127,7 +127,7 @@ function WordFrequencyTable() {
       sortingModel, //refetch when sorting changes
     ],
     queryFn: ({ pageParam }) =>
-      AnalysisService.wordFrequencyAnalysis({
+      WordFrequencyService.wordFrequencyAnalysis({
         projectId: projectId!,
         requestBody: {
           filter: filter as MyFilter<WordFrequencyColumns>,

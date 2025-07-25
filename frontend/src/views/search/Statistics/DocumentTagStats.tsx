@@ -1,7 +1,7 @@
 import { TabPanel } from "@mui/lab";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useMemo } from "react";
-import SearchHooks from "../../../api/SearchStatisticsHooks.ts";
+import StatisticsHooks from "../../../api/StatisticsHooks.ts";
 import TagHooks from "../../../api/TagHooks.ts";
 import { TagStat } from "../../../api/openapi/models/TagStat.ts";
 import StatsDisplayButton, { StatsDisplayButtonProps } from "./StatsDisplayButton.tsx";
@@ -25,7 +25,7 @@ function DocumentTagStats(props: DocumentTagStatsProps) {
 }
 
 function DocumentTagStatsContent({ ...props }: DocumentTagStatsProps) {
-  const tagStats = SearchHooks.useFilterTagStats(props.sdocIds);
+  const tagStats = StatisticsHooks.useFilterTagStats(props.sdocIds);
   return (
     <>
       {tagStats.isSuccess ? (

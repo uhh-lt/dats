@@ -2,7 +2,7 @@ import { Box } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMemo, useRef } from "react";
 import { KeywordStat } from "../../../../../api/openapi/models/KeywordStat.ts";
-import SearchHooks from "../../../../../api/SearchStatisticsHooks.ts";
+import StatisticsHooks from "../../../../../api/StatisticsHooks.ts";
 import StatsDisplayButton from "../../../../search/Statistics/StatsDisplayButton.tsx";
 
 interface MapKeywordStatsProps {
@@ -12,7 +12,7 @@ interface MapKeywordStatsProps {
 }
 
 function MapKeywordStats({ projectId, sdocIds, ...props }: MapKeywordStatsProps) {
-  const keywordStats = SearchHooks.useFilterKeywordStats(projectId, sdocIds);
+  const keywordStats = StatisticsHooks.useFilterKeywordStats(projectId, sdocIds);
   return (
     <>
       {keywordStats.isSuccess ? (

@@ -10,7 +10,7 @@ const useGetPerspectivesFilterInfo = (projectId: number, dispatch: AppDispatch) 
   useQuery<ColumnInfo[]>({
     queryKey: tableInfoQueryKey("perspectives", projectId),
     queryFn: async () => {
-      const result = await SearchService.searchSdocsInfo({ projectId });
+      const result = await SearchService.searchSdocInfo({ projectId });
       const columnInfo = result.map((info) => {
         return {
           ...info,

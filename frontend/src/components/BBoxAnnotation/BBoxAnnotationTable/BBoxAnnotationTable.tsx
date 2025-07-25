@@ -15,7 +15,7 @@ import { BBoxAnnotationRow } from "../../../api/openapi/models/BBoxAnnotationRow
 import { BBoxAnnotationSearchResult } from "../../../api/openapi/models/BBoxAnnotationSearchResult.ts";
 import { BBoxColumns } from "../../../api/openapi/models/BBoxColumns.ts";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
-import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
+import { SearchService } from "../../../api/openapi/services/SearchService.ts";
 import { QueryKey } from "../../../api/QueryKey.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
@@ -179,7 +179,7 @@ function BBoxAnnotationTable({
       fetchSize,
     ],
     queryFn: ({ pageParam }) =>
-      AnalysisService.bboxAnnotationSearch({
+      SearchService.searchBboxAnnotations({
         projectId: projectId!,
         requestBody: {
           filter: filter as MyFilter<BBoxColumns>,

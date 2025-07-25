@@ -7,7 +7,7 @@ import { SentAnnoColumns } from "../../../api/openapi/models/SentAnnoColumns.ts"
 import { SentenceAnnotationRow } from "../../../api/openapi/models/SentenceAnnotationRow.ts";
 import { SentenceAnnotationSearchResult } from "../../../api/openapi/models/SentenceAnnotationSearchResult.ts";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
-import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
+import { SearchService } from "../../../api/openapi/services/SearchService.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
@@ -156,7 +156,7 @@ function SentenceAnnotationTable({
       fetchSize,
     ],
     queryFn: ({ pageParam }) =>
-      AnalysisService.sentenceAnnotationSearch({
+      SearchService.searchSentenceAnnotations({
         projectId: projectId!,
         requestBody: {
           filter: filter as MyFilter<SentAnnoColumns>,

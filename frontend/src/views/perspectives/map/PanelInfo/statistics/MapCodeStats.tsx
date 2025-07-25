@@ -2,7 +2,7 @@ import { Box } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMemo, useRef } from "react";
 import { SpanEntityStat } from "../../../../../api/openapi/models/SpanEntityStat.ts";
-import SearchHooks from "../../../../../api/SearchStatisticsHooks.ts";
+import StatisticsHooks from "../../../../../api/StatisticsHooks.ts";
 import StatsDisplayButton from "../../../../search/Statistics/StatsDisplayButton.tsx";
 
 interface MapCodeStatsProps {
@@ -12,7 +12,7 @@ interface MapCodeStatsProps {
 }
 
 function MapCodeStats({ codeId, sdocIds, ...props }: MapCodeStatsProps) {
-  const codeStats = SearchHooks.useFilterCodeStats(codeId, sdocIds);
+  const codeStats = StatisticsHooks.useFilterCodeStats(codeId, sdocIds);
   return (
     <>
       {codeStats.isSuccess ? (

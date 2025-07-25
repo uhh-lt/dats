@@ -1,7 +1,7 @@
 import { TabPanel } from "@mui/lab";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useMemo } from "react";
-import SearchHooks from "../../../api/SearchStatisticsHooks.ts";
+import StatisticsHooks from "../../../api/StatisticsHooks.ts";
 import { KeywordStat } from "../../../api/openapi/models/KeywordStat.ts";
 import StatsDisplayButton from "./StatsDisplayButton.tsx";
 import { useFilterStats } from "./useFilterStats.ts";
@@ -24,7 +24,7 @@ function KeywordStats(props: KeywordStatsProps) {
 }
 
 function KeywordStatsContent({ projectId, sdocIds, ...props }: KeywordStatsProps) {
-  const keywordStats = SearchHooks.useFilterKeywordStats(projectId, sdocIds);
+  const keywordStats = StatisticsHooks.useFilterKeywordStats(projectId, sdocIds);
   return (
     <>
       {keywordStats.isSuccess ? (

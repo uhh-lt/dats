@@ -5,7 +5,7 @@ import { useAppSelector } from "../plugins/ReduxHooks.ts";
 import { KeywordStat } from "./openapi/models/KeywordStat.ts";
 import { SpanEntityStat } from "./openapi/models/SpanEntityStat.ts";
 import { TagStat } from "./openapi/models/TagStat.ts";
-import { SearchService } from "./openapi/services/SearchService.ts";
+import { StatisticsService } from "./openapi/services/StatisticsService.ts";
 
 const useFilterCodeStats = (codeId: number, sdocIds: number[] | null | undefined) => {
   // global client state (redux)
@@ -14,7 +14,7 @@ const useFilterCodeStats = (codeId: number, sdocIds: number[] | null | undefined
   return useQuery<SpanEntityStat[], Error>({
     queryKey: [QueryKey.FILTER_ENTITY_STATISTICS, sdocIds, codeId, sortStatsByGlobal],
     queryFn: () =>
-      SearchService.filterCodeStats({
+      StatisticsService.filterCodeStats({
         codeId,
         requestBody: sdocIds!,
         sortByGlobal: sortStatsByGlobal,
@@ -31,7 +31,7 @@ const useFilterKeywordStats = (projectId: number, sdocIds: number[] | null | und
   return useQuery<KeywordStat[], Error>({
     queryKey: [QueryKey.FILTER_KEYWORD_STATISTICS, projectId, sdocIds, sortStatsByGlobal],
     queryFn: () =>
-      SearchService.filterKeywordStats({
+      StatisticsService.filterKeywordStats({
         projectId,
         requestBody: sdocIds!,
         sortByGlobal: sortStatsByGlobal,
@@ -48,7 +48,7 @@ const useFilterTagStats = (sdocIds: number[] | null | undefined) => {
   return useQuery<TagStat[], Error>({
     queryKey: [QueryKey.FILTER_TAG_STATISTICS, sdocIds, sortStatsByGlobal],
     queryFn: () =>
-      SearchService.filterTagStats({
+      StatisticsService.filterTagStats({
         requestBody: sdocIds!,
         sortByGlobal: sortStatsByGlobal,
       }),
@@ -57,10 +57,10 @@ const useFilterTagStats = (sdocIds: number[] | null | undefined) => {
   });
 };
 
-const SearchHooks = {
+const StatisticsHooks = {
   useFilterCodeStats,
   useFilterKeywordStats,
   useFilterTagStats,
 };
 
-export default SearchHooks;
+export default StatisticsHooks;

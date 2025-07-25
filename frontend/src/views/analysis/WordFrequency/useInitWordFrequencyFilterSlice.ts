@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
+import { WordFrequencyService } from "../../../api/openapi/services/WordFrequencyService.ts";
 import { tableInfoQueryKey } from "../../../components/FilterDialog/filterSlice.ts";
 import { ColumnInfo } from "../../../components/FilterDialog/filterUtils.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
@@ -10,7 +10,7 @@ const useGetWordFrequencyTableInfo = (projectId: number, dispatch: AppDispatch) 
   useQuery<ColumnInfo[]>({
     queryKey: tableInfoQueryKey("wordFrequency", projectId),
     queryFn: async () => {
-      const result = await AnalysisService.wordFrequencyAnalysisInfo({ projectId });
+      const result = await WordFrequencyService.wordFrequencyAnalysisInfo({ projectId });
       const columnInfo = result.map((info) => {
         return {
           ...info,

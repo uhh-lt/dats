@@ -12,7 +12,7 @@ import { ElasticSearchDocumentHit } from "../../../api/openapi/models/ElasticSea
 import { MemoColumns } from "../../../api/openapi/models/MemoColumns.ts";
 import { PaginatedElasticSearchDocumentHits } from "../../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
-import { MemoService } from "../../../api/openapi/services/MemoService.ts";
+import { SearchService } from "../../../api/openapi/services/SearchService.ts";
 import { QueryKey } from "../../../api/QueryKey.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
@@ -128,7 +128,7 @@ function SearchMemoTable({
       fetchSize,
     ],
     queryFn: ({ pageParam }) =>
-      MemoService.searchMemos({
+      SearchService.searchMemos({
         searchQuery: searchQuery || "",
         searchContent: isSearchContent,
         projectId: projectId!,

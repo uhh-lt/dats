@@ -2,7 +2,7 @@ import { Box } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMemo, useRef } from "react";
 import { TagStat } from "../../../../../api/openapi/models/TagStat.ts";
-import SearchHooks from "../../../../../api/SearchStatisticsHooks.ts";
+import StatisticsHooks from "../../../../../api/StatisticsHooks.ts";
 import TagHooks from "../../../../../api/TagHooks.ts";
 import StatsDisplayButton, { StatsDisplayButtonProps } from "../../../../search/Statistics/StatsDisplayButton.tsx";
 
@@ -13,7 +13,7 @@ interface MapTagStatsProps {
 }
 
 function MapTagStats(props: MapTagStatsProps) {
-  const tagStats = SearchHooks.useFilterTagStats(props.sdocIds);
+  const tagStats = StatisticsHooks.useFilterTagStats(props.sdocIds);
   return (
     <>
       {tagStats.isSuccess ? (

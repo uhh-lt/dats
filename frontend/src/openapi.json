@@ -83,248 +83,6 @@
         }
       }
     },
-    "/analysis/span_annotation_search_info": {
-      "post": {
-        "tags": ["analysis"],
-        "summary": "Returns SpanAnnotationSearch Info.",
-        "operationId": "span_annotation_search_info",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/ColumnInfo_SpanColumns_" },
-                  "title": "Response Analysis-Span Annotation Search Info"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/analysis/span_annotation_search": {
-      "post": {
-        "tags": ["analysis"],
-        "summary": "Returns SpanAnnotationSearch.",
-        "operationId": "span_annotation_search",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page" }
-          },
-          {
-            "name": "page_size",
-            "in": "query",
-            "required": false,
-            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page Size" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/Body_analysis-span_annotation_search" } }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationSearchResult" } }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/analysis/sentence_annotation_search_info": {
-      "post": {
-        "tags": ["analysis"],
-        "summary": "Returns SentenceAnnotationSearch Info.",
-        "operationId": "sentence_annotation_search_info",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/ColumnInfo_SentAnnoColumns_" },
-                  "title": "Response Analysis-Sentence Annotation Search Info"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/analysis/sentence_annotation_search": {
-      "post": {
-        "tags": ["analysis"],
-        "summary": "Returns Sentence Annotations.",
-        "operationId": "sentence_annotation_search",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page" }
-          },
-          {
-            "name": "page_size",
-            "in": "query",
-            "required": false,
-            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page Size" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/Body_analysis-sentence_annotation_search" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotationSearchResult" } }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/analysis/bbox_annotation_search_info": {
-      "post": {
-        "tags": ["analysis"],
-        "summary": "Returns BBoxAnnotationSearch Info.",
-        "operationId": "bbox_annotation_search_info",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/ColumnInfo_BBoxColumns_" },
-                  "title": "Response Analysis-Bbox Annotation Search Info"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/analysis/bbox_annotation_search": {
-      "post": {
-        "tags": ["analysis"],
-        "summary": "Returns BBoxAnnotationSearchResult.",
-        "operationId": "bbox_annotation_search",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page" }
-          },
-          {
-            "name": "page_size",
-            "in": "query",
-            "required": false,
-            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page Size" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/Body_analysis-bbox_annotation_search" } }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/BBoxAnnotationSearchResult" } }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/analysis/count_sdocs_with_date_metadata/{project_id}/metadata/{date_metadata_id}}": {
       "get": {
         "tags": ["analysis"],
@@ -357,117 +115,6 @@
                   "maxItems": 2,
                   "title": "Response Analysis-Count Sdocs With Date Metadata"
                 }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/analysis/word_frequency_analysis_info/{project_id}": {
-      "get": {
-        "tags": ["analysis"],
-        "summary": "Returns WordFrequency Info.",
-        "operationId": "word_frequency_analysis_info",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/ColumnInfo_WordFrequencyColumns_" },
-                  "title": "Response Analysis-Word Frequency Analysis Info"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/analysis/word_frequency_analysis": {
-      "post": {
-        "tags": ["analysis"],
-        "summary": "Perform word frequency analysis.",
-        "operationId": "word_frequency_analysis",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          },
-          { "name": "page", "in": "query", "required": true, "schema": { "type": "integer", "title": "Page" } },
-          {
-            "name": "page_size",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Page Size" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/Body_analysis-word_frequency_analysis" } }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WordFrequencyResult" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/analysis/word_frequency_analysis_export": {
-      "post": {
-        "tags": ["analysis"],
-        "summary": "Export the word frequency analysis.",
-        "operationId": "word_frequency_analysis_export",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/Body_analysis-word_frequency_analysis_export" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": { "type": "string", "title": "Response Analysis-Word Frequency Analysis Export" }
               }
             }
           },
@@ -2536,96 +2183,6 @@
         }
       }
     },
-    "/memo/info": {
-      "post": {
-        "tags": ["memo"],
-        "summary": "Returns Memo Table Info.",
-        "operationId": "search_memo_info",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/ColumnInfo_MemoColumns_" },
-                  "title": "Response Memo-Search Memo Info"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/memo/search": {
-      "post": {
-        "tags": ["memo"],
-        "summary": "Returns all Memo Ids that match the query parameters.",
-        "operationId": "search_memos",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "search_query",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "string", "title": "Search Query" }
-          },
-          {
-            "name": "project_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          },
-          {
-            "name": "search_content",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "boolean", "title": "Search Content" }
-          },
-          {
-            "name": "page_number",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Page Number" }
-          },
-          {
-            "name": "page_size",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Page Size" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Body_memo-search_memos" } } }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedElasticSearchDocumentHits" } }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/ml": {
       "post": {
         "tags": ["ml"],
@@ -3803,7 +3360,7 @@
       "post": {
         "tags": ["search"],
         "summary": "Returns Search Info.",
-        "operationId": "search_sdocs_info",
+        "operationId": "search_sdoc_info",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -3821,7 +3378,7 @@
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/ColumnInfo_SdocColumns_" },
-                  "title": "Response Search-Search Sdocs Info"
+                  "title": "Response Search-Search Sdoc Info"
                 }
               }
             }
@@ -3893,33 +3450,20 @@
         }
       }
     },
-    "/search/code_stats_by_sdocs": {
+    "/search/memo_info": {
       "post": {
         "tags": ["search"],
-        "summary": "Returns SpanEntityStats for the given SourceDocuments.",
-        "operationId": "filter_code_stats",
+        "summary": "Returns Memo Table Info.",
+        "operationId": "search_memo_info",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "code_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Code Id" } },
           {
-            "name": "sort_by_global",
+            "name": "project_id",
             "in": "query",
-            "required": false,
-            "schema": { "type": "boolean", "default": false, "title": "Sort By Global" }
-          },
-          {
-            "name": "top_k",
-            "in": "query",
-            "required": false,
-            "schema": { "type": "integer", "default": 20, "title": "Top K" }
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "Sdoc Ids" } }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -3927,8 +3471,8 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/SpanEntityStat" },
-                  "title": "Response Search-Filter Code Stats"
+                  "items": { "$ref": "#/components/schemas/ColumnInfo_MemoColumns_" },
+                  "title": "Response Search-Search Memo Info"
                 }
               }
             }
@@ -3940,11 +3484,101 @@
         }
       }
     },
-    "/search/keyword_stats_by_sdocs": {
+    "/search/memo": {
       "post": {
         "tags": ["search"],
-        "summary": "Returns KeywordStats for the given SourceDocuments.",
-        "operationId": "filter_keyword_stats",
+        "summary": "Returns all Memo Ids that match the query parameters.",
+        "operationId": "search_memos",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "search_query",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "title": "Search Query" }
+          },
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "search_content",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "boolean", "title": "Search Content" }
+          },
+          {
+            "name": "page_number",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Page Number" }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Page Size" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Body_search-search_memos" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedElasticSearchDocumentHits" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/search/span_annotation_info": {
+      "post": {
+        "tags": ["search"],
+        "summary": "Returns SpanAnnotationSearch Info.",
+        "operationId": "search_span_annotation_info",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ColumnInfo_SpanColumns_" },
+                  "title": "Response Search-Search Span Annotation Info"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/search/span_annotation": {
+      "post": {
+        "tags": ["search"],
+        "summary": "Returns SpanAnnotationSearch.",
+        "operationId": "search_span_annotations",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -3954,24 +3588,52 @@
             "schema": { "type": "integer", "title": "Project Id" }
           },
           {
-            "name": "sort_by_global",
+            "name": "page",
             "in": "query",
             "required": false,
-            "schema": { "type": "boolean", "default": false, "title": "Sort By Global" }
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page" }
           },
           {
-            "name": "top_k",
+            "name": "page_size",
             "in": "query",
             "required": false,
-            "schema": { "type": "integer", "default": 20, "title": "Top K" }
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page Size" }
           }
         ],
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "Sdoc Ids" } }
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_search-search_span_annotations" } }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationSearchResult" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/search/sentence_annotation_info": {
+      "post": {
+        "tags": ["search"],
+        "summary": "Returns SentenceAnnotationSearch Info.",
+        "operationId": "search_sentence_annotation_info",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -3979,8 +3641,8 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/KeywordStat" },
-                  "title": "Response Search-Filter Keyword Stats"
+                  "items": { "$ref": "#/components/schemas/ColumnInfo_SentAnnoColumns_" },
+                  "title": "Response Search-Search Sentence Annotation Info"
                 }
               }
             }
@@ -3992,32 +3654,66 @@
         }
       }
     },
-    "/search/tag_stats_by_sdocs": {
+    "/search/sentence_annotation": {
       "post": {
         "tags": ["search"],
-        "summary": "Returns Stat for the given SourceDocuments.",
-        "operationId": "filter_tag_stats",
+        "summary": "Returns Sentence Annotations.",
+        "operationId": "search_sentence_annotations",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
-            "name": "sort_by_global",
+            "name": "project_id",
             "in": "query",
-            "required": false,
-            "schema": { "type": "boolean", "default": false, "title": "Sort By Global" }
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
           },
           {
-            "name": "top_k",
+            "name": "page",
             "in": "query",
             "required": false,
-            "schema": { "type": "integer", "default": 20, "title": "Top K" }
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page" }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page Size" }
           }
         ],
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "Sdoc Ids" } }
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_search-search_sentence_annotations" } }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotationSearchResult" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/search/bbox_annotation_info": {
+      "post": {
+        "tags": ["search"],
+        "summary": "Returns BBoxAnnotationSearch Info.",
+        "operationId": "search_bbox_annotation_info",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -4025,10 +3721,56 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/TagStat" },
-                  "title": "Response Search-Filter Tag Stats"
+                  "items": { "$ref": "#/components/schemas/ColumnInfo_BBoxColumns_" },
+                  "title": "Response Search-Search Bbox Annotation Info"
                 }
               }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/search/bbox_annotation": {
+      "post": {
+        "tags": ["search"],
+        "summary": "Returns BBoxAnnotationSearchResult.",
+        "operationId": "search_bbox_annotations",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page" }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page Size" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_search-search_bbox_annotations" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/BBoxAnnotationSearchResult" } }
             }
           },
           "422": {
@@ -5520,6 +5262,151 @@
         }
       }
     },
+    "/statistics/code": {
+      "post": {
+        "tags": ["statistics"],
+        "summary": "Returns SpanEntityStats for the given SourceDocuments.",
+        "operationId": "filter_code_stats",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "code_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Code Id" } },
+          {
+            "name": "sort_by_global",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": false, "title": "Sort By Global" }
+          },
+          {
+            "name": "top_k",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 20, "title": "Top K" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "Sdoc Ids" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SpanEntityStat" },
+                  "title": "Response Statistics-Filter Code Stats"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/statistics/keyword": {
+      "post": {
+        "tags": ["statistics"],
+        "summary": "Returns KeywordStats for the given SourceDocuments.",
+        "operationId": "filter_keyword_stats",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "sort_by_global",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": false, "title": "Sort By Global" }
+          },
+          {
+            "name": "top_k",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 20, "title": "Top K" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "Sdoc Ids" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/KeywordStat" },
+                  "title": "Response Statistics-Filter Keyword Stats"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/statistics/tag": {
+      "post": {
+        "tags": ["statistics"],
+        "summary": "Returns Stat for the given SourceDocuments.",
+        "operationId": "filter_tag_stats",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "sort_by_global",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": false, "title": "Sort By Global" }
+          },
+          {
+            "name": "top_k",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 20, "title": "Top K" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "Sdoc Ids" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TagStat" },
+                  "title": "Response Statistics-Filter Tag Stats"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/timelineAnalysis": {
       "put": {
         "tags": ["timelineAnalysis"],
@@ -6158,6 +6045,119 @@
           }
         }
       }
+    },
+    "/word_frequency/info/{project_id}": {
+      "get": {
+        "tags": ["word_frequency"],
+        "summary": "Returns WordFrequency Info.",
+        "operationId": "word_frequency_analysis_info",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ColumnInfo_WordFrequencyColumns_" },
+                  "title": "Response Word Frequency-Word Frequency Analysis Info"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/word_frequency/analysis": {
+      "post": {
+        "tags": ["word_frequency"],
+        "summary": "Perform word frequency analysis.",
+        "operationId": "word_frequency_analysis",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "page", "in": "query", "required": true, "schema": { "type": "integer", "title": "Page" } },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Page Size" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Body_word_frequency-word_frequency_analysis" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WordFrequencyResult" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/word_frequency/export": {
+      "post": {
+        "tags": ["word_frequency"],
+        "summary": "Export the word frequency analysis.",
+        "operationId": "word_frequency_analysis_export",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Body_word_frequency-word_frequency_analysis_export" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "string", "title": "Response Word Frequency-Word Frequency Analysis Export" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -6618,15 +6618,6 @@
         "enum": ["Waiting", "Running", "Finished", "Errorneous", "Aborted"],
         "title": "BackgroundJobStatus"
       },
-      "Body_analysis-bbox_annotation_search": {
-        "properties": {
-          "filter": { "$ref": "#/components/schemas/Filter_BBoxColumns_-Input" },
-          "sorts": { "items": { "$ref": "#/components/schemas/Sort_BBoxColumns_" }, "type": "array", "title": "Sorts" }
-        },
-        "type": "object",
-        "required": ["filter", "sorts"],
-        "title": "Body_analysis-bbox_annotation_search"
-      },
       "Body_analysis-code_frequencies": {
         "properties": {
           "code_ids": { "items": { "type": "integer" }, "type": "array", "title": "Code Ids" },
@@ -6636,54 +6627,6 @@
         "type": "object",
         "required": ["code_ids", "user_ids", "doctypes"],
         "title": "Body_analysis-code_frequencies"
-      },
-      "Body_analysis-sentence_annotation_search": {
-        "properties": {
-          "filter": { "$ref": "#/components/schemas/Filter_SentAnnoColumns_-Input" },
-          "sorts": {
-            "items": { "$ref": "#/components/schemas/Sort_SentAnnoColumns_" },
-            "type": "array",
-            "title": "Sorts"
-          }
-        },
-        "type": "object",
-        "required": ["filter", "sorts"],
-        "title": "Body_analysis-sentence_annotation_search"
-      },
-      "Body_analysis-span_annotation_search": {
-        "properties": {
-          "filter": { "$ref": "#/components/schemas/Filter_SpanColumns_-Input" },
-          "sorts": { "items": { "$ref": "#/components/schemas/Sort_SpanColumns_" }, "type": "array", "title": "Sorts" }
-        },
-        "type": "object",
-        "required": ["filter", "sorts"],
-        "title": "Body_analysis-span_annotation_search"
-      },
-      "Body_analysis-word_frequency_analysis": {
-        "properties": {
-          "filter": { "$ref": "#/components/schemas/Filter_WordFrequencyColumns_" },
-          "sorts": {
-            "items": { "$ref": "#/components/schemas/Sort_WordFrequencyColumns_" },
-            "type": "array",
-            "title": "Sorts"
-          }
-        },
-        "type": "object",
-        "required": ["filter", "sorts"],
-        "title": "Body_analysis-word_frequency_analysis"
-      },
-      "Body_analysis-word_frequency_analysis_export": {
-        "properties": {
-          "filter": { "$ref": "#/components/schemas/Filter_WordFrequencyColumns_" },
-          "sorts": {
-            "items": { "$ref": "#/components/schemas/Sort_WordFrequencyColumns_" },
-            "type": "array",
-            "title": "Sorts"
-          }
-        },
-        "type": "object",
-        "required": ["filter", "sorts"],
-        "title": "Body_analysis-word_frequency_analysis_export"
       },
       "Body_authentication-login": {
         "properties": {
@@ -6738,15 +6681,6 @@
         "required": ["llm_job_params"],
         "title": "Body_llm-create_prompt_templates"
       },
-      "Body_memo-search_memos": {
-        "properties": {
-          "filter": { "$ref": "#/components/schemas/Filter_MemoColumns_" },
-          "sorts": { "items": { "$ref": "#/components/schemas/Sort_MemoColumns_" }, "type": "array", "title": "Sorts" }
-        },
-        "type": "object",
-        "required": ["filter", "sorts"],
-        "title": "Body_memo-search_memos"
-      },
       "Body_perspectives-visualize_documents": {
         "properties": {
           "filter": { "$ref": "#/components/schemas/Filter_SdocColumns_-Input" },
@@ -6784,6 +6718,24 @@
         "required": ["query", "sdoc_ids"],
         "title": "Body_rag-rag_session"
       },
+      "Body_search-search_bbox_annotations": {
+        "properties": {
+          "filter": { "$ref": "#/components/schemas/Filter_BBoxColumns_-Input" },
+          "sorts": { "items": { "$ref": "#/components/schemas/Sort_BBoxColumns_" }, "type": "array", "title": "Sorts" }
+        },
+        "type": "object",
+        "required": ["filter", "sorts"],
+        "title": "Body_search-search_bbox_annotations"
+      },
+      "Body_search-search_memos": {
+        "properties": {
+          "filter": { "$ref": "#/components/schemas/Filter_MemoColumns_" },
+          "sorts": { "items": { "$ref": "#/components/schemas/Sort_MemoColumns_" }, "type": "array", "title": "Sorts" }
+        },
+        "type": "object",
+        "required": ["filter", "sorts"],
+        "title": "Body_search-search_memos"
+      },
       "Body_search-search_sdocs": {
         "properties": {
           "filter": { "$ref": "#/components/schemas/Filter_SdocColumns_-Input" },
@@ -6792,6 +6744,28 @@
         "type": "object",
         "required": ["filter", "sorts"],
         "title": "Body_search-search_sdocs"
+      },
+      "Body_search-search_sentence_annotations": {
+        "properties": {
+          "filter": { "$ref": "#/components/schemas/Filter_SentAnnoColumns_-Input" },
+          "sorts": {
+            "items": { "$ref": "#/components/schemas/Sort_SentAnnoColumns_" },
+            "type": "array",
+            "title": "Sorts"
+          }
+        },
+        "type": "object",
+        "required": ["filter", "sorts"],
+        "title": "Body_search-search_sentence_annotations"
+      },
+      "Body_search-search_span_annotations": {
+        "properties": {
+          "filter": { "$ref": "#/components/schemas/Filter_SpanColumns_-Input" },
+          "sorts": { "items": { "$ref": "#/components/schemas/Sort_SpanColumns_" }, "type": "array", "title": "Sorts" }
+        },
+        "type": "object",
+        "required": ["filter", "sorts"],
+        "title": "Body_search-search_span_annotations"
       },
       "Body_simsearch-find_similar_images": {
         "properties": {
@@ -6816,6 +6790,32 @@
         "type": "object",
         "required": ["query", "filter"],
         "title": "Body_simsearch-find_similar_sentences"
+      },
+      "Body_word_frequency-word_frequency_analysis": {
+        "properties": {
+          "filter": { "$ref": "#/components/schemas/Filter_WordFrequencyColumns_" },
+          "sorts": {
+            "items": { "$ref": "#/components/schemas/Sort_WordFrequencyColumns_" },
+            "type": "array",
+            "title": "Sorts"
+          }
+        },
+        "type": "object",
+        "required": ["filter", "sorts"],
+        "title": "Body_word_frequency-word_frequency_analysis"
+      },
+      "Body_word_frequency-word_frequency_analysis_export": {
+        "properties": {
+          "filter": { "$ref": "#/components/schemas/Filter_WordFrequencyColumns_" },
+          "sorts": {
+            "items": { "$ref": "#/components/schemas/Sort_WordFrequencyColumns_" },
+            "type": "array",
+            "title": "Sorts"
+          }
+        },
+        "type": "object",
+        "required": ["filter", "sorts"],
+        "title": "Body_word_frequency-word_frequency_analysis_export"
       },
       "BooleanOperator": {
         "type": "string",

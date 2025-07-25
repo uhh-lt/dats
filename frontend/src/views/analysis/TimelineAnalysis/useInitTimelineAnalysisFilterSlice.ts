@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
 import { TimelineAnalysisType } from "../../../api/openapi/models/TimelineAnalysisType.ts";
-import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
 import { SearchService } from "../../../api/openapi/services/SearchService.ts";
 import { QueryKey } from "../../../api/QueryKey.ts";
 import { ColumnInfo } from "../../../components/FilterDialog/filterUtils.ts";
@@ -23,7 +22,7 @@ const useGetTimelineAnalysisInfo = (timelineAnalysis: TimelineAnalysisRead, disp
       let columnInfo: ColumnInfo[] = [];
       switch (timelineAnalysis.timeline_analysis_type) {
         case TimelineAnalysisType.DOCUMENT: {
-          const sdocInfo = await SearchService.searchSdocsInfo({ projectId });
+          const sdocInfo = await SearchService.searchSdocInfo({ projectId });
           columnInfo = sdocInfo.map((info) => {
             return {
               ...info,
@@ -33,7 +32,7 @@ const useGetTimelineAnalysisInfo = (timelineAnalysis: TimelineAnalysisRead, disp
           break;
         }
         case TimelineAnalysisType.BBOX_ANNOTATION: {
-          const bboxInfo = await AnalysisService.bboxAnnotationSearchInfo({ projectId });
+          const bboxInfo = await SearchService.searchBboxAnnotationInfo({ projectId });
           columnInfo = bboxInfo.map((info) => {
             return {
               ...info,
@@ -43,7 +42,7 @@ const useGetTimelineAnalysisInfo = (timelineAnalysis: TimelineAnalysisRead, disp
           break;
         }
         case TimelineAnalysisType.SENTENCE_ANNOTATION: {
-          const sentAnnoInfo = await AnalysisService.sentenceAnnotationSearchInfo({ projectId });
+          const sentAnnoInfo = await SearchService.searchSentenceAnnotationInfo({ projectId });
           columnInfo = sentAnnoInfo.map((info) => {
             return {
               ...info,
@@ -53,7 +52,7 @@ const useGetTimelineAnalysisInfo = (timelineAnalysis: TimelineAnalysisRead, disp
           break;
         }
         case TimelineAnalysisType.SPAN_ANNOTATION: {
-          const spanAnnoInfo = await AnalysisService.spanAnnotationSearchInfo({ projectId });
+          const spanAnnoInfo = await SearchService.searchSpanAnnotationInfo({ projectId });
           columnInfo = spanAnnoInfo.map((info) => {
             return {
               ...info,
