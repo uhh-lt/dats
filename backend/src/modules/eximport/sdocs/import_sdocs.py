@@ -3,6 +3,7 @@ from typing import Dict, List, Set, Tuple
 
 import pandas as pd
 from common.doc_type import DocType
+from common.sdoc_status_enum import SDocStatus
 from core.doc.document_embedding_crud import crud_document_embedding
 from core.doc.document_embedding_dto import DocumentObjectIdentifier
 from core.doc.image_embedding_crud import crud_image_embedding
@@ -12,7 +13,7 @@ from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
-from core.doc.source_document_dto import SDocStatus, SourceDocumentCreate
+from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_link_crud import crud_sdoc_link
 from core.doc.source_document_link_dto import SourceDocumentLinkCreate
 from core.metadata.project_metadata_orm import ProjectMetadataORM

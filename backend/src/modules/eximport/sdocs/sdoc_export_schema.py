@@ -2,7 +2,7 @@ from typing import List, Optional, Tuple, Union
 
 import pandas as pd
 from common.doc_type import DocType
-from core.doc.source_document_dto import SDocStatus
+from common.sdoc_status_enum import SDocStatus
 from pydantic import BaseModel, Field, field_validator
 
 

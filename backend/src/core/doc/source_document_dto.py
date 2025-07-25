@@ -1,18 +1,13 @@
 from datetime import datetime
-from enum import Enum
 from typing import Optional
 
 from common.doc_type import DocType
+from common.sdoc_status_enum import SDocStatus
 from pydantic import BaseModel, ConfigDict, Field
 from repos.db.dto_base import UpdateDTOBase
 
 SDOC_FILENAME_MAX_LENGTH = 200
 SDOC_SUFFIX_MAX_LENGTH = 30
-
-
-class SDocStatus(str, Enum):
-    unfinished_or_erroneous = "unfinished_or_erroneous"
-    finished = "finished"  # preprocessing has finished
 
 
 # Properties shared across all DTOs
