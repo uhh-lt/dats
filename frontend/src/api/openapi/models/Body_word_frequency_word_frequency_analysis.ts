@@ -4,7 +4,7 @@
 /* eslint-disable */
 import type { Filter_WordFrequencyColumns_ } from "./Filter_WordFrequencyColumns_";
 import type { Sort_WordFrequencyColumns_ } from "./Sort_WordFrequencyColumns_";
-export type Body_analysis_word_frequency_analysis_export = {
+export type Body_word_frequency_word_frequency_analysis = {
   filter: Filter_WordFrequencyColumns_;
   sorts: Array<Sort_WordFrequencyColumns_>;
 };

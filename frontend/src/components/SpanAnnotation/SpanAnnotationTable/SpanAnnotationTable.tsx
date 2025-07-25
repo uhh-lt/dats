@@ -15,7 +15,7 @@ import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { SpanAnnotationRow } from "../../../api/openapi/models/SpanAnnotationRow.ts";
 import { SpanAnnotationSearchResult } from "../../../api/openapi/models/SpanAnnotationSearchResult.ts";
 import { SpanColumns } from "../../../api/openapi/models/SpanColumns.ts";
-import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
+import { SearchService } from "../../../api/openapi/services/SearchService.ts";
 import { QueryKey } from "../../../api/QueryKey.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
@@ -177,7 +177,7 @@ function SpanAnnotationTable({
       fetchSize,
     ],
     queryFn: ({ pageParam }) =>
-      AnalysisService.spanAnnotationSearch({
+      SearchService.searchSpanAnnotations({
         projectId: projectId!,
         requestBody: {
           filter: filter as MyFilter<SpanColumns>,

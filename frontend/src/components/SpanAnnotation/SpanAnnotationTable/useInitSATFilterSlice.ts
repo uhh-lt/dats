@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
+import { SearchService } from "../../../api/openapi/services/SearchService.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { AppDispatch } from "../../../store/store.ts";
 import { tableInfoQueryKey } from "../../FilterDialog/filterSlice.ts";
@@ -10,7 +10,7 @@ const useGetSATInfo = (projectId: number, dispatch: AppDispatch) =>
   useQuery<ColumnInfo[]>({
     queryKey: tableInfoQueryKey("satFilter", projectId),
     queryFn: async () => {
-      const result = await AnalysisService.spanAnnotationSearchInfo({ projectId });
+      const result = await SearchService.searchSpanAnnotationInfo({ projectId });
       const columnInfo = result.map((info) => {
         return {
           ...info,

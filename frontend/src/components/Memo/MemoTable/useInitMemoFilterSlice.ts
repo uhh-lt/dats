@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { MemoService } from "../../../api/openapi/services/MemoService.ts";
+import { SearchService } from "../../../api/openapi/services/SearchService.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { AppDispatch } from "../../../store/store.ts";
 import { tableInfoQueryKey } from "../../FilterDialog/filterSlice.ts";
@@ -10,7 +10,7 @@ const useGetMemoSearchInfo = (projectId: number, dispatch: AppDispatch) =>
   useQuery<ColumnInfo[]>({
     queryKey: tableInfoQueryKey("memoFilter", projectId),
     queryFn: async () => {
-      const result = await MemoService.searchMemoInfo({ projectId });
+      const result = await SearchService.searchMemoInfo({ projectId });
       const columnInfo = result.map((info) => {
         return {
           ...info,

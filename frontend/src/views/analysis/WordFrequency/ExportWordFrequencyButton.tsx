@@ -2,7 +2,7 @@ import { CircularProgress, IconButton, Tooltip } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { WordFrequencyColumns } from "../../../api/openapi/models/WordFrequencyColumns.ts";
-import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
+import { WordFrequencyService } from "../../../api/openapi/services/WordFrequencyService.ts";
 import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { downloadFile } from "../../../utils/ExportUtils.ts";
@@ -17,7 +17,7 @@ export default function ExportWordFrequencyButton({ filter }: ExportWordFrequenc
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   const exportWordFrequencies = useMutation({
-    mutationFn: AnalysisService.wordFrequencyAnalysisExport,
+    mutationFn: WordFrequencyService.wordFrequencyAnalysisExport,
   });
 
   // snackbar
