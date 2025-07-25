@@ -96,7 +96,7 @@
       "name": "Alembic: check",
       "type": "node-terminal",
       "request": "launch",
-      "command": "uv run alembic check",
+      "command": "uv run alembic -c migrations/alembic.ini check",
       "cwd": "${workspaceFolder}/backend/src",
       "envFile": "${workspaceFolder}/backend/.env"
     },
@@ -104,7 +104,7 @@
       "name": "Alembic: revision",
       "type": "node-terminal",
       "request": "launch",
-      "command": "uv run alembic revision --autogenerate -m \"vscode launcher\"",
+      "command": "uv run alembic -c migrations/alembic.ini revision --autogenerate -m \"vscode launcher\"",
       "cwd": "${workspaceFolder}/backend/src",
       "envFile": "${workspaceFolder}/backend/.env"
     },
