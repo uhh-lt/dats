@@ -13,15 +13,16 @@ from core.memo.memo_dto import (
     MemoRead,
     MemoUpdate,
 )
+from core.memo.memo_elastic_crud import crud_elastic_memo
+from core.memo.memo_elastic_dto import ElasticSearchMemoCreate, ElasticSearchMemoUpdate
 from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_dto import ObjectHandleCreate
 from core.memo.object_handle_orm import ObjectHandleORM
 from core.project.project_orm import ProjectORM
 from core.tag.document_tag_orm import DocumentTagORM
 from fastapi.encoders import jsonable_encoder
-from modules.search.search_dto import ElasticSearchMemoCreate, ElasticSearchMemoUpdate
 from repos.db.crud_base import CRUDBase
-from repos.elasticsearch_repo import ElasticSearchRepo
+from repos.elastic.elastic_repo import ElasticSearchRepo
 from sqlalchemy.orm import Session
 
 
@@ -151,9 +152,9 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
                 oh_create_dto = ObjectHandleCreate(project_id=attached_object_id)
             case AttachedObjectType.document_tag:
                 oh_create_dto = ObjectHandleCreate(document_tag_id=attached_object_id)
-        assert (
-            oh_create_dto is not None
-        ), f"Unknown AttachedObjectType: {attached_object_type}"
+        assert oh_create_dto is not None, (
+            f"Unknown AttachedObjectType: {attached_object_type}"
+        )
 
         # create an ObjectHandle for the attached object
         oh_db_obj = crud_object_handle.create(db=db, create_dto=oh_create_dto)
@@ -254,8 +255,10 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             attached_object_id=attached_object_id,
             attached_object_type=attached_object_type,
         )
-        ElasticSearchRepo().add_memo_to_index(
-            proj_id=memo_orm.project_id, esmemo=esmemo
+        crud_elastic_memo.create(
+            client=ElasticSearchRepo().client,
+            create_dto=esmemo,
+            proj_id=memo_orm.project_id,
         )
 
     @staticmethod
@@ -263,14 +266,16 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         memo_orm: MemoORM,
     ):
         update_es_dto = ElasticSearchMemoUpdate(
-            memo_id=memo_orm.id,
             title=memo_orm.title,
             content=memo_orm.content,
             starred=memo_orm.starred,
         )
 
-        ElasticSearchRepo().update_memo_in_index(
-            proj_id=memo_orm.project_id, update=update_es_dto
+        crud_elastic_memo.update(
+            client=ElasticSearchRepo().client,
+            id=memo_orm.id,
+            update_dto=update_es_dto,
+            proj_id=memo_orm.project_id,
         )
 
 

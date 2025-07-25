@@ -32,7 +32,7 @@ from modules.concept_over_time_analysis.pipeline import (
 from modules.simsearch.simsearch_service import SimSearchService
 from modules.trainer.trainer_service import TrainerService
 from repos.db.sql_repo import SQLRepo
-from repos.elasticsearch_repo import ElasticSearchRepo
+from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.redis_repo import RedisRepo
 from sqlalchemy.orm import Session

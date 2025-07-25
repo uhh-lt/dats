@@ -20,7 +20,7 @@ from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.pipeline.model.preprodoc_base import PreProDocBase
 from preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from repos.db.sql_repo import SQLRepo
-from repos.elasticsearch_repo import ElasticSearchRepo
+from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy.orm import Session
 

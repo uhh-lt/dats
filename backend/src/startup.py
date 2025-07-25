@@ -124,9 +124,9 @@ def __init_services__(
     from common.crud_enum import Crud  # noqa: F401
 
     # import and init ElasticSearch
-    from repos.elasticsearch_repo import ElasticSearchRepo
+    from repos.elastic.elastic_repo import ElasticSearchRepo
 
-    ElasticSearchRepo(remove_all_indices=reset_elasticsearch)
+    ElasticSearchRepo(flush=reset_elasticsearch)
     # import and init RedisService
     from repos.redis_repo import RedisRepo
 

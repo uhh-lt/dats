@@ -28,7 +28,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from preprocessing.preprocessing_job_dto import PreprocessingJobRead
 from preprocessing.preprocessing_service import PreprocessingService
 from repos.db.crud_base import NoSuchElementError
-from repos.elasticsearch_repo import ElasticSearchRepo
+from repos.elastic.elastic_repo import ElasticSearchRepo
 from sqlalchemy.orm import Session
 
 router = APIRouter(
