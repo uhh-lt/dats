@@ -16,7 +16,6 @@ from core.memo.memo_dto import (
 )
 from core.memo.memo_util import get_object_memo_for_user, get_object_memos
 from fastapi import APIRouter, Depends
-from modules.memo_generation.memo_generation_service import generate_memo_ollama
 from repos.db.util import get_parent_project_id
 from sqlalchemy.orm import Session
 
@@ -154,32 +153,6 @@ def get_user_memo_by_attached_object_id(
     authz_user.assert_in_project(project_id=proj_id)
 
     return get_object_memo_for_user(db_obj=attached_object, user_id=authz_user.user.id)
-
-
-@router.get(
-    "/generate_suggestion/{attached_obj_type}/{attached_obj_id}",
-    response_model=str,
-    summary="Generates a 1–2 sentence memo suggestion using Ollama based on the attached object",
-)
-def generate_memo_suggestion(
-    *,
-    db: Session = Depends(get_db_session),
-    attached_obj_id: int,
-    attached_obj_type: AttachedObjectType,
-    authz_user: AuthzUser = Depends(),
-) -> str:
-    crud = attachedObject2Crud.get(attached_obj_type)
-    if crud is None:
-        raise ValueError("Invalid attached_object_type")
-
-    attached_object = crud.value.read(db=db, id=attached_obj_id)
-    proj_id = get_parent_project_id(attached_object)
-    if proj_id is None:
-        raise ValueError("Attached object has no project")
-
-    authz_user.assert_in_project(project_id=proj_id)
-
-    return generate_memo_ollama(attached_object, db)
 
 
 @router.patch(
