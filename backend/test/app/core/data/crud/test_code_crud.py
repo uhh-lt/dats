@@ -8,7 +8,7 @@ from core.code.code_dto import CodeCreate, CodeRead, CodeUpdate
 from core.code.code_orm import CodeORM
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import AttachedObjectType, MemoCreateIntern, MemoInDB, MemoRead
-from core.memo.memo_util import get_object_memo_for_user, get_object_memos
+from core.memo.memo_utils import get_object_memo_for_user, get_object_memos
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
 from repos.db.crud_base import NoSuchElementError

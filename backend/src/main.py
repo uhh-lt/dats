@@ -16,7 +16,7 @@ from psycopg2.errors import UniqueViolation
 from repos.elastic.elastic_crud_base import NoSuchObjectInElasticSearchError
 from sqlalchemy.exc import IntegrityError
 from starlette.middleware.sessions import SessionMiddleware
-from utils.import_util import import_by_suffix
+from utils.import_utils import import_by_suffix
 from uvicorn.main import run
 
 #####################################################################################################################

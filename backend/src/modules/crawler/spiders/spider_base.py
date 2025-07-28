@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 
 import scrapy
 from modules.crawler.crawled_item import CrawledItem
-from modules.crawler.utils import slugify
+from modules.crawler.crawler_utils import slugify
 
 
 class SpiderBase(scrapy.Spider):

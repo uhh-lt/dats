@@ -78,7 +78,7 @@ class ElasticCrudBase(Generic[IndexType, ModelDTOType, CreateDTOType, UpdateDTOT
         :param skip: The number of skipped elements
         :param limit: The maximum number of returned elements
         :return: A (possibly empty) list of Memo matching the query
-        :rtype: PaginatedElasticSearchDocumentHits
+        :rtype: PaginatedElasticSearchHits
         """
         index_name = self.index.get_index_name(proj_id)
         if not client.indices.exists(index=index_name):

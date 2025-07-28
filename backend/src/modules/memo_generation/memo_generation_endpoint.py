@@ -8,7 +8,7 @@ from core.memo.memo_dto import (
 )
 from fastapi import APIRouter, Depends
 from modules.memo_generation.memo_generation_service import generate_memo_ollama
-from repos.db.util import get_parent_project_id
+from repos.db.sql_utils import get_parent_project_id
 from sqlalchemy.orm import Session
 
 router = APIRouter(

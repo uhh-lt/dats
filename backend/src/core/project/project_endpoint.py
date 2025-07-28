@@ -10,7 +10,7 @@ from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import AttachedObjectType, MemoCreateIntern, MemoInDB, MemoRead
-from core.memo.memo_util import get_object_memo_for_user
+from core.memo.memo_utils import get_object_memo_for_user
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from core.project.project_crud import crud_project

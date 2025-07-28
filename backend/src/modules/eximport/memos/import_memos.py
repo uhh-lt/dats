@@ -8,7 +8,7 @@ from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import AttachedObjectType, MemoCreateIntern
-from core.memo.memo_util import get_object_memo_for_user
+from core.memo.memo_utils import get_object_memo_for_user
 from core.project.project_crud import crud_project
 from core.tag.document_tag_crud import crud_document_tag
 from loguru import logger

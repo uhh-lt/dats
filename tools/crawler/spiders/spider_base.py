@@ -6,7 +6,7 @@ import scrapy
 from scrapy.http import Response
 
 from crawler.items import GenericWebsiteItem
-from crawler.spiders.utils import slugify, validate_output_dir
+from tools.crawler.spiders.spider_utils import slugify, validate_output_dir
 
 
 class SpiderBase(scrapy.Spider):

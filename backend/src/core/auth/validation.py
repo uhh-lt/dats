@@ -5,7 +5,7 @@ from common.dependencies import get_db_session
 from fastapi import Depends
 from repos.db.crud_base import NoSuchElementError
 from repos.db.orm_base import ORMBase
-from repos.db.util import get_parent_project_id
+from repos.db.sql_utils import get_parent_project_id
 from sqlalchemy.orm import Session
 
 
