@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AspectRead } from "../models/AspectRead";
 import type { Body_project_upload_project_sdoc } from "../models/Body_project_upload_project_sdoc";
 import type { CodeRead } from "../models/CodeRead";
 import type { DocumentTagRead } from "../models/DocumentTagRead";
@@ -305,49 +304,6 @@ export class ProjectService {
       url: "/project/{proj_id}/metadata",
       path: {
         proj_id: projId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns all Aspects of the Project with the given ID if it exists
-   * @returns AspectRead Successful Response
-   * @throws ApiError
-   */
-  public static getAllAspects({ projId }: { projId: number }): CancelablePromise<Array<AspectRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/project/{proj_id}/aspects",
-      path: {
-        proj_id: projId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns groups of duplicate sdoc ids.
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static findDuplicateTextSdocs({
-    projId,
-    maxDifferentWords,
-  }: {
-    projId: number;
-    maxDifferentWords: number;
-  }): CancelablePromise<Array<Array<number>>> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/project/{proj_id}/find_duplicate_text_sdocs",
-      path: {
-        proj_id: projId,
-      },
-      query: {
-        max_different_words: maxDifferentWords,
       },
       errors: {
         422: `Validation Error`,

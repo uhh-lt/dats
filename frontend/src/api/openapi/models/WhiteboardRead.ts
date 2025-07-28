@@ -17,10 +17,6 @@ export type WhiteboardRead = {
    */
   project_id: number;
   /**
-   * User the Whiteboard belongs to
-   */
-  user_id: number;
-  /**
    * Created timestamp of the Whiteboard
    */
   created: string;

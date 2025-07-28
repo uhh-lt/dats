@@ -5,6 +5,7 @@ import { QueryKey } from "./QueryKey.ts";
 import { PreprocessingJobRead } from "./openapi/models/PreprocessingJobRead.ts";
 import { ProjectCreate } from "./openapi/models/ProjectCreate.ts";
 import { ProjectRead } from "./openapi/models/ProjectRead.ts";
+import { AnalysisService } from "./openapi/services/AnalysisService.ts";
 import { ProjectService } from "./openapi/services/ProjectService.ts";
 import { UserService } from "./openapi/services/UserService.ts";
 
@@ -90,7 +91,7 @@ const useUploadDocument = () =>
 // duplicates
 const useFindDuplicateTextDocuments = () =>
   useMutation({
-    mutationFn: ProjectService.findDuplicateTextSdocs,
+    mutationFn: AnalysisService.findDuplicateTextSdocs,
     meta: {
       successMessage: () => "Document duplicate search completed",
     },

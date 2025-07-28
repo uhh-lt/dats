@@ -15,12 +15,12 @@ interface UseTimelineAnalysisQueryParams<T> {
   enabled?: boolean;
 }
 
-const useUserTimelinesQuery = <T = TimelineMap>({ select, enabled }: UseTimelineAnalysisQueryParams<T>) => {
+const useTimelinesQuery = <T = TimelineMap>({ select, enabled }: UseTimelineAnalysisQueryParams<T>) => {
   const projectId = useAppSelector((state: RootState) => state.project.projectId);
   return useQuery({
-    queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, projectId],
+    queryKey: [QueryKey.PROJECT_TIMELINE_ANALYSIS, projectId],
     queryFn: async () => {
-      const data = await TimelineAnalysisService.getByProjectAndUser({ projectId: projectId! });
+      const data = await TimelineAnalysisService.getByProject({ projectId: projectId! });
       return data.reduce((acc, timeline) => {
         acc[timeline.id] = timeline;
         return acc;
@@ -33,19 +33,19 @@ const useUserTimelinesQuery = <T = TimelineMap>({ select, enabled }: UseTimeline
 };
 
 const useGetTimelineAnalysis = (timelineAnalysisId: number | null | undefined) =>
-  useUserTimelinesQuery({
+  useTimelinesQuery({
     select: (data) => data[timelineAnalysisId!],
     enabled: !!timelineAnalysisId,
   });
 
-const useGetUserTimelineAnalysisList = () => useUserTimelinesQuery({ select: (data) => Object.values(data) });
+const useGetProjectTimelineAnalysisList = () => useTimelinesQuery({ select: (data) => Object.values(data) });
 
 // TIMELINE MUTATIONS
 const useCreateTimelineAnalysis = () =>
   useMutation({
     mutationFn: TimelineAnalysisService.create,
     onSuccess(data) {
-      queryClient.setQueryData<TimelineMap>([QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id], (prev) =>
+      queryClient.setQueryData<TimelineMap>([QueryKey.PROJECT_TIMELINE_ANALYSIS, data.project_id], (prev) =>
         prev ? { ...prev, [data.id]: data } : { [data.id]: data },
       );
     },
@@ -58,7 +58,7 @@ const useUpdateTimelineAnalysis = () =>
   useMutation({
     mutationFn: TimelineAnalysisService.updateById,
     onSuccess(data) {
-      queryClient.setQueryData<TimelineMap>([QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id], (prev) =>
+      queryClient.setQueryData<TimelineMap>([QueryKey.PROJECT_TIMELINE_ANALYSIS, data.project_id], (prev) =>
         prev ? { ...prev, [data.id]: data } : { [data.id]: data },
       );
     },
@@ -71,7 +71,7 @@ const useRecomputeTimelineAnalysis = () =>
   useMutation({
     mutationFn: TimelineAnalysisService.recomputeById,
     onSuccess(data) {
-      queryClient.setQueryData<TimelineMap>([QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id], (prev) =>
+      queryClient.setQueryData<TimelineMap>([QueryKey.PROJECT_TIMELINE_ANALYSIS, data.project_id], (prev) =>
         prev ? { ...prev, [data.id]: data } : { [data.id]: data },
       );
     },
@@ -84,7 +84,7 @@ const useDuplicateTimelineAnalysis = () =>
   useMutation({
     mutationFn: TimelineAnalysisService.duplicateById,
     onSuccess(data) {
-      queryClient.setQueryData<TimelineMap>([QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id], (prev) =>
+      queryClient.setQueryData<TimelineMap>([QueryKey.PROJECT_TIMELINE_ANALYSIS, data.project_id], (prev) =>
         prev ? { ...prev, [data.id]: data } : { [data.id]: data },
       );
     },
@@ -97,7 +97,7 @@ const useDeleteTimelineAnalysis = () =>
   useMutation({
     mutationFn: TimelineAnalysisService.deleteById,
     onSuccess(data) {
-      queryClient.setQueryData<TimelineMap>([QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id], (prev) => {
+      queryClient.setQueryData<TimelineMap>([QueryKey.PROJECT_TIMELINE_ANALYSIS, data.project_id], (prev) => {
         if (!prev) return prev;
         const newData = { ...prev };
         delete newData[data.id];
@@ -110,7 +110,7 @@ const useDeleteTimelineAnalysis = () =>
   });
 
 const TimelineAnalysisHooks = {
-  useGetUserTimelineAnalysisList,
+  useGetProjectTimelineAnalysisList,
   useGetTimelineAnalysis,
   useCreateTimelineAnalysis,
   useUpdateTimelineAnalysis,

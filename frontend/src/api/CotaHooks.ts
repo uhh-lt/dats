@@ -17,12 +17,12 @@ interface UseCotaQueryParams<T> {
   enabled?: boolean;
 }
 
-const useUserCotasQuery = <T = CotaMap>({ select, enabled }: UseCotaQueryParams<T>) => {
+const useCotasQuery = <T = CotaMap>({ select, enabled }: UseCotaQueryParams<T>) => {
   const projectId = useAppSelector((state: RootState) => state.project.projectId);
   return useQuery({
-    queryKey: [QueryKey.COTAS_PROJECT_USER, projectId],
+    queryKey: [QueryKey.PROJECT_COTAS, projectId],
     queryFn: async () => {
-      const data = await ConceptOverTimeAnalysisService.getByProjectAndUser({ projectId: projectId! });
+      const data = await ConceptOverTimeAnalysisService.getByProject({ projectId: projectId! });
       return data.reduce((acc, cota) => {
         acc[cota.id] = cota;
         return acc;
@@ -35,12 +35,12 @@ const useUserCotasQuery = <T = CotaMap>({ select, enabled }: UseCotaQueryParams<
 };
 
 const useGetCota = (cotaId: number | null | undefined) =>
-  useUserCotasQuery({
+  useCotasQuery({
     select: (data) => data[cotaId!],
     enabled: !!cotaId,
   });
 
-const useGetUserCotaList = () => useUserCotasQuery({ select: (data) => Object.values(data) });
+const useGetProjectCotaList = () => useCotasQuery({ select: (data) => Object.values(data) });
 
 // COTA MUTATIONS
 
@@ -49,7 +49,7 @@ const useCreateCota = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.create,
     onSuccess: (cota) => {
-      queryClient.setQueryData<CotaMap>([QueryKey.COTAS_PROJECT_USER, cota.project_id], (prev) =>
+      queryClient.setQueryData<CotaMap>([QueryKey.PROJECT_COTAS, cota.project_id], (prev) =>
         prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
       );
     },
@@ -62,7 +62,7 @@ const useDuplicateCota = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.duplicateById,
     onSuccess(cota) {
-      queryClient.setQueryData<CotaMap>([QueryKey.COTAS_PROJECT_USER, cota.project_id], (prev) =>
+      queryClient.setQueryData<CotaMap>([QueryKey.PROJECT_COTAS, cota.project_id], (prev) =>
         prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
       );
     },
@@ -76,7 +76,7 @@ const useUpdateCota = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.updateById,
     onSuccess: (cota) => {
-      queryClient.setQueryData<CotaMap>([QueryKey.COTAS_PROJECT_USER, cota.project_id], (prev) =>
+      queryClient.setQueryData<CotaMap>([QueryKey.PROJECT_COTAS, cota.project_id], (prev) =>
         prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
       );
     },
@@ -89,7 +89,7 @@ const useAnnotateCotaSentences = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.annotateCotaSentence,
     onSuccess: (cota) => {
-      queryClient.setQueryData<CotaMap>([QueryKey.COTAS_PROJECT_USER, cota.project_id], (prev) =>
+      queryClient.setQueryData<CotaMap>([QueryKey.PROJECT_COTAS, cota.project_id], (prev) =>
         prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
       );
     },
@@ -102,7 +102,7 @@ const useRemoveCotaSentences = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.removeCotaSentence,
     onSuccess: (cota) => {
-      queryClient.setQueryData<CotaMap>([QueryKey.COTAS_PROJECT_USER, cota.project_id], (prev) =>
+      queryClient.setQueryData<CotaMap>([QueryKey.PROJECT_COTAS, cota.project_id], (prev) =>
         prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
       );
     },
@@ -115,7 +115,7 @@ const useResetCota = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.resetCota,
     onSuccess: (cota) => {
-      queryClient.setQueryData<CotaMap>([QueryKey.COTAS_PROJECT_USER, cota.project_id], (prev) =>
+      queryClient.setQueryData<CotaMap>([QueryKey.PROJECT_COTAS, cota.project_id], (prev) =>
         prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
       );
       queryClient.invalidateQueries({ queryKey: [QueryKey.COTA_MOST_RECENT_REFINEMENT_JOB, cota.id] });
@@ -130,7 +130,7 @@ const useDeleteCota = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.deleteById,
     onSuccess: (cota) => {
-      queryClient.setQueryData<CotaMap>([QueryKey.COTAS_PROJECT_USER, cota.project_id], (prev) => {
+      queryClient.setQueryData<CotaMap>([QueryKey.PROJECT_COTAS, cota.project_id], (prev) => {
         if (!prev) return prev;
         const newData = { ...prev };
         delete newData[cota.id];
@@ -184,7 +184,7 @@ const useRefineCota = () =>
 
 const CotaHooks = {
   useGetCota,
-  useGetUserCotaList,
+  useGetProjectCotaList,
   useCreateCota,
   useDuplicateCota,
   useUpdateCota,

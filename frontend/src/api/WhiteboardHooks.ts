@@ -19,7 +19,7 @@ interface UseProjectWhiteboardsQueryParams<T> {
 const useProjectWhiteboardsQuery = <T = WhiteboardMap>({ select, enabled }: UseProjectWhiteboardsQueryParams<T>) => {
   const projectId = useAppSelector((state: RootState) => state.project.projectId);
   return useQuery({
-    queryKey: [QueryKey.WHITEBOARDS_PROJECT, projectId],
+    queryKey: [QueryKey.PROJECT_WHITEBOARDS, projectId],
     queryFn: async () => {
       const data = await WhiteboardService.getByProject({ projectId: projectId! });
       return data.reduce((acc, whiteboard) => {
@@ -48,7 +48,7 @@ const useCreateWhiteboard = () =>
     mutationFn: WhiteboardService.create,
     onSuccess(data) {
       const newWhiteboard = { ...data, content: { nodes: [], edges: [] } };
-      queryClient.setQueryData<WhiteboardMap>([QueryKey.WHITEBOARDS_PROJECT, data.project_id], (prevWhiteboards) => {
+      queryClient.setQueryData<WhiteboardMap>([QueryKey.PROJECT_WHITEBOARDS, data.project_id], (prevWhiteboards) => {
         return prevWhiteboards ? { ...prevWhiteboards, [data.id]: newWhiteboard } : { [data.id]: newWhiteboard };
       });
     },
@@ -62,7 +62,7 @@ const useUpdateWhiteboard = () =>
     mutationFn: WhiteboardService.updateById,
     onSuccess(data) {
       const updatedWhiteboard = { ...data };
-      queryClient.setQueryData<WhiteboardMap>([QueryKey.WHITEBOARDS_PROJECT, data.project_id], (prevWhiteboards) => {
+      queryClient.setQueryData<WhiteboardMap>([QueryKey.PROJECT_WHITEBOARDS, data.project_id], (prevWhiteboards) => {
         return prevWhiteboards
           ? { ...prevWhiteboards, [data.id]: updatedWhiteboard }
           : { [data.id]: updatedWhiteboard };
@@ -79,7 +79,7 @@ const useDuplicateWhiteboard = () => {
     mutationFn: WhiteboardService.duplicateById,
     onSuccess(data) {
       const duplicatedWhiteboard = { ...data };
-      queryClient.setQueryData<WhiteboardMap>([QueryKey.WHITEBOARDS_PROJECT, projectId], (prevWhiteboards) =>
+      queryClient.setQueryData<WhiteboardMap>([QueryKey.PROJECT_WHITEBOARDS, projectId], (prevWhiteboards) =>
         prevWhiteboards ? { ...prevWhiteboards, [data.id]: duplicatedWhiteboard } : { [data.id]: duplicatedWhiteboard },
       );
     },
@@ -94,7 +94,7 @@ const useDeleteWhiteboard = () => {
   return useMutation({
     mutationFn: WhiteboardService.deleteById,
     onSuccess(data) {
-      queryClient.setQueryData<WhiteboardMap>([QueryKey.WHITEBOARDS_PROJECT, projectId], (prevWhiteboards) => {
+      queryClient.setQueryData<WhiteboardMap>([QueryKey.PROJECT_WHITEBOARDS, projectId], (prevWhiteboards) => {
         if (!prevWhiteboards) return prevWhiteboards;
         const newData = { ...prevWhiteboards };
         delete newData[data.id];

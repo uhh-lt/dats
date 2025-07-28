@@ -2,13 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ElasticSearchDocumentHit } from "./ElasticSearchDocumentHit";
+import type { ElasticSearchHit } from "./ElasticSearchHit";
 import type { SourceDocumentRead } from "./SourceDocumentRead";
 export type PaginatedSDocHits = {
   /**
    * The IDs, scores and (optional) highlights of Document search results on the requested page.
    */
-  hits: Array<ElasticSearchDocumentHit>;
+  hits: Array<ElasticSearchHit>;
   /**
    * A dictionary with the additional information about the documents. The key is the document ID and the value is a dictionary with the additional information.
    */

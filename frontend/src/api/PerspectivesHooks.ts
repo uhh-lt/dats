@@ -11,7 +11,6 @@ import { CodeRead } from "./openapi/models/CodeRead.ts";
 import { PerspectivesJobRead } from "./openapi/models/PerspectivesJobRead.ts";
 import { SdocColumns } from "./openapi/models/SdocColumns.ts";
 import { PerspectivesService } from "./openapi/services/PerspectivesService.ts";
-import { ProjectService } from "./openapi/services/ProjectService.ts";
 import { RagService } from "./openapi/services/RagService.ts";
 
 // ASPECTS
@@ -28,7 +27,7 @@ const useProjectAspectsQuery = <T = AspectMap>({ select, enabled }: UseProjectAs
   return useQuery({
     queryKey: [QueryKey.PROJECT_ASPECTS, projectId],
     queryFn: async () => {
-      const aspects = await ProjectService.getAllAspects({
+      const aspects = await PerspectivesService.getAllAspects({
         projId: projectId!,
       });
       return aspects.reduce((acc, aspect) => {

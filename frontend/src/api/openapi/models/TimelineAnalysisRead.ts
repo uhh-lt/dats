@@ -19,10 +19,6 @@ export type TimelineAnalysisRead = {
    */
   id: number;
   /**
-   * User the TimelineAnalysis belongs to
-   */
-  user_id: number;
-  /**
    * Project the TimelineAnalysis belongs to
    */
   project_id: number;

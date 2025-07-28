@@ -1,6 +1,6 @@
 import { Stack } from "@mui/material";
 import { useMemo } from "react";
-import { ElasticSearchDocumentHit } from "../../../api/openapi/models/ElasticSearchDocumentHit.ts";
+import { ElasticSearchHit } from "../../../api/openapi/models/ElasticSearchHit.ts";
 import ReduxFilterDialog from "../../FilterDialog/ReduxFilterDialog.tsx";
 import { FilterTableToolbarProps } from "../../FilterTable/FilterTableToolbarProps.ts";
 import MemoDeleteButton from "../MemoDeleteButton.tsx";
@@ -12,7 +12,7 @@ function MemoToolbarLeft({
   filterName,
   filterStateSelector,
   filterActions,
-}: FilterTableToolbarProps<ElasticSearchDocumentHit>) {
+}: FilterTableToolbarProps<ElasticSearchHit>) {
   const selectedMemoIds = useMemo(() => selectedData.map((memo) => memo.id), [selectedData]);
 
   return (

@@ -118,4 +118,30 @@ export class AnalysisService {
       },
     });
   }
+  /**
+   * Returns groups of duplicate sdoc ids.
+   * @returns number Successful Response
+   * @throws ApiError
+   */
+  public static findDuplicateTextSdocs({
+    projId,
+    maxDifferentWords,
+  }: {
+    projId: number;
+    maxDifferentWords: number;
+  }): CancelablePromise<Array<Array<number>>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/analysis/{proj_id}/find_duplicate_text_sdocs",
+      path: {
+        proj_id: projId,
+      },
+      query: {
+        max_different_words: maxDifferentWords,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }

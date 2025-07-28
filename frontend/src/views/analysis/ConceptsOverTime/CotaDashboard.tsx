@@ -23,14 +23,13 @@ function CotaDashboard() {
     isLoading: isLoadingAnalysis,
     isFetching: isFetchingAnalysis,
     isError: isLoadingAnalysisError,
-  } = CotaHooks.useGetUserCotaList();
-  const userAnalysisTableData: AnalysisDashboardRow[] = useMemo(
+  } = CotaHooks.useGetProjectCotaList();
+  const projectAnalysisTableData: AnalysisDashboardRow[] = useMemo(
     () =>
       userAnalysis?.map((analysis) => ({
         id: analysis.id,
         title: analysis.name,
         updated: analysis.updated,
-        user_id: analysis.user_id,
       })) || [],
     [userAnalysis],
   );
@@ -102,7 +101,7 @@ function CotaDashboard() {
   // table
   const table = useAnalysisDashboardTable({
     analysisName: "COTA",
-    data: userAnalysisTableData,
+    data: projectAnalysisTableData,
     isLoadingData: isLoadingAnalysis,
     isFetchingData: isFetchingAnalysis,
     isLoadingDataError: isLoadingAnalysisError,

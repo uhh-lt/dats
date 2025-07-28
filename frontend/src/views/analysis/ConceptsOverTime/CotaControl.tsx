@@ -51,7 +51,7 @@ function CotaControl({ cota }: CotaControlProps) {
   useEffect(() => {
     if (!refinementJob.data) return;
     if (refinementJob.data.status === BackgroundJobStatus.FINISHED) {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.COTAS_PROJECT_USER, refinementJob.data.cota.project_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_COTAS, refinementJob.data.cota.project_id] });
     }
   }, [refinementJob.data]);
 

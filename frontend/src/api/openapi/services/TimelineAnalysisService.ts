@@ -97,18 +97,14 @@ export class TimelineAnalysisService {
     });
   }
   /**
-   * Returns the TimelineAnalysis of the Project with the given ID and the logged-in User if it exists
+   * Returns the TimelineAnalysis of the Project with the given ID if it exists
    * @returns TimelineAnalysisRead Successful Response
    * @throws ApiError
    */
-  public static getByProjectAndUser({
-    projectId,
-  }: {
-    projectId: number;
-  }): CancelablePromise<Array<TimelineAnalysisRead>> {
+  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<TimelineAnalysisRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/timelineAnalysis/project/{project_id}/user",
+      url: "/timelineAnalysis/project/{project_id}",
       path: {
         project_id: projectId,
       },

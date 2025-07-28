@@ -75,11 +75,11 @@ export const QueryKey = {
 
   // managed by WhiteboardHooks:
   // WhiteboardMap of a project (by project id)
-  WHITEBOARDS_PROJECT: "whiteboardsProject",
+  PROJECT_WHITEBOARDS: "projectWhiteboards",
 
   // managed by TimelineAnalysisHooks:
-  // TimelineMap of a project of the logged-in user (by project id)
-  TIMELINE_ANALYSIS_PROJECT_USER: "timelineAnalysisProjectUser",
+  // TimelineMap of a project (by project id)
+  PROJECT_TIMELINE_ANALYSIS: "projectTimelineAnalysis",
 
   // managed by CodeFrequencyHooks:
   // CodeFrequency[] (by project id, user ids, code ids, doc types)
@@ -88,8 +88,8 @@ export const QueryKey = {
   ANALYSIS_CODE_OCCURRENCES: "analysisCodeOccurrences",
 
   // managed by CotaHooks:
-  // CotaMap of a project of the logged-in user (by project id)
-  COTAS_PROJECT_USER: "cotasProjectUser",
+  // CotaMap of a project (by project id)
+  PROJECT_COTAS: "projectCotas",
   // the most recent COTARefinementJobRead of a cota (by cota id)
   COTA_MOST_RECENT_REFINEMENT_JOB: "cotaMostRecentRefinementJob",
 

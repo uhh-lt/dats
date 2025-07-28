@@ -16,10 +16,6 @@ export type COTARead = {
    */
   id: number;
   /**
-   * User the ConceptOverTimeAnalysis belongs to
-   */
-  user_id: number;
-  /**
    * Project the ConceptOverTimeAnalysis belongs to
    */
   project_id: number;

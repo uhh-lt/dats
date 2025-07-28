@@ -11,7 +11,6 @@ import type { SourceDocumentUpdate } from "../models/SourceDocumentUpdate";
 import type { SpanAnnotationRead } from "../models/SpanAnnotationRead";
 import type { SpanGroupRead } from "../models/SpanGroupRead";
 import type { SpanGroupWithAnnotationsRead } from "../models/SpanGroupWithAnnotationsRead";
-import type { WordFrequencyRead } from "../models/WordFrequencyRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -226,23 +225,6 @@ export class SourceDocumentService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/tags",
-      path: {
-        sdoc_id: sdocId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the SourceDocument's word frequencies with the given ID if it exists
-   * @returns WordFrequencyRead Successful Response
-   * @throws ApiError
-   */
-  public static getWordFrequencies({ sdocId }: { sdocId: number }): CancelablePromise<Array<WordFrequencyRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/sdoc/{sdoc_id}/word_frequencies",
       path: {
         sdoc_id: sdocId,
       },

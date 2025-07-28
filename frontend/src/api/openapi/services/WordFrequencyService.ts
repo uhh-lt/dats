@@ -5,6 +5,7 @@
 import type { Body_word_frequency_word_frequency_analysis } from "../models/Body_word_frequency_word_frequency_analysis";
 import type { Body_word_frequency_word_frequency_analysis_export } from "../models/Body_word_frequency_word_frequency_analysis_export";
 import type { ColumnInfo_WordFrequencyColumns_ } from "../models/ColumnInfo_WordFrequencyColumns_";
+import type { WordFrequencyRead } from "../models/WordFrequencyRead";
 import type { WordFrequencyResult } from "../models/WordFrequencyResult";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -82,6 +83,23 @@ export class WordFrequencyService {
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the SourceDocument's word frequencies with the given ID if it exists
+   * @returns WordFrequencyRead Successful Response
+   * @throws ApiError
+   */
+  public static getWordFrequencies({ sdocId }: { sdocId: number }): CancelablePromise<Array<WordFrequencyRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/word_frequency/sdoc/{sdoc_id}",
+      path: {
+        sdoc_id: sdocId,
+      },
       errors: {
         422: `Validation Error`,
       },

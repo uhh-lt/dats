@@ -3,7 +3,7 @@ import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "ma
 import { useCallback, useState } from "react";
 import { XYPosition } from "reactflow";
 import MetadataHooks from "../../../api/MetadataHooks.ts";
-import { ElasticSearchDocumentHit } from "../../../api/openapi/models/ElasticSearchDocumentHit.ts";
+import { ElasticSearchHit } from "../../../api/openapi/models/ElasticSearchHit.ts";
 import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
 import { FilterTableToolbarProps } from "../../../components/FilterTable/FilterTableToolbarProps.ts";
 import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
@@ -109,7 +109,7 @@ function AddMemoNodeDialogContent({
 
   // rendering
   const renderBottomToolbar = useCallback(
-    (props: FilterTableToolbarProps<ElasticSearchDocumentHit>) => (
+    (props: FilterTableToolbarProps<ElasticSearchHit>) => (
       <Button onClick={handleConfirmSelection} disabled={props.selectedData.length === 0}>
         Add {props.selectedData.length > 0 ? props.selectedData.length : null} Memos
       </Button>

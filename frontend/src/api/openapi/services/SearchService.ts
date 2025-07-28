@@ -13,7 +13,7 @@ import type { ColumnInfo_MemoColumns_ } from "../models/ColumnInfo_MemoColumns_"
 import type { ColumnInfo_SdocColumns_ } from "../models/ColumnInfo_SdocColumns_";
 import type { ColumnInfo_SentAnnoColumns_ } from "../models/ColumnInfo_SentAnnoColumns_";
 import type { ColumnInfo_SpanColumns_ } from "../models/ColumnInfo_SpanColumns_";
-import type { PaginatedElasticSearchDocumentHits } from "../models/PaginatedElasticSearchDocumentHits";
+import type { PaginatedElasticSearchHits } from "../models/PaginatedElasticSearchHits";
 import type { PaginatedSDocHits } from "../models/PaginatedSDocHits";
 import type { SentenceAnnotationSearchResult } from "../models/SentenceAnnotationSearchResult";
 import type { SpanAnnotationSearchResult } from "../models/SpanAnnotationSearchResult";
@@ -105,7 +105,7 @@ export class SearchService {
   }
   /**
    * Returns all Memo Ids that match the query parameters.
-   * @returns PaginatedElasticSearchDocumentHits Successful Response
+   * @returns PaginatedElasticSearchHits Successful Response
    * @throws ApiError
    */
   public static searchMemos({
@@ -122,7 +122,7 @@ export class SearchService {
     pageNumber: number;
     pageSize: number;
     requestBody: Body_search_search_memos;
-  }): CancelablePromise<PaginatedElasticSearchDocumentHits> {
+  }): CancelablePromise<PaginatedElasticSearchHits> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/memo",
