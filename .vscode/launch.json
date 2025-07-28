@@ -7,29 +7,12 @@
       "request": "launch",
       "program": "${workspaceFolder}/backend/src/main.py",
       "console": "integratedTerminal",
-      "cwd": "${workspaceFolder}/backend/src",
       "justMyCode": true,
+      "cwd": "${workspaceFolder}/backend",
+      "envFile": "${workspaceFolder}/backend/.env",
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/backend/src",
-        "HUGGINGFACE_HUB_CACHE": "${workspaceFolder}/docker/models_cache",
-        "HF_HOME": "${workspaceFolder}/docker/models_cache",
-        "TORCH_HOME": "${workspaceFolder}/docker/models_cache"
-      },
-      "envFile": "${workspaceFolder}/backend/.env"
-    },
-    {
-      "name": "Pytest Backend",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "pytest",
-      "console": "integratedTerminal",
-      "justMyCode": true,
-      "env": {
-        "PYTHONPATH": "${workspaceFolder}/backend/src",
-        "RESET_DATABASE_FOR_TESTING": "1"
-      },
-      "cwd": "${workspaceFolder}/backend/test",
-      "envFile": "${workspaceFolder}/backend/.env"
+        "PYTHONPATH": "${workspaceFolder}/backend/src"
+      }
     },
     {
       "name": "frontend",
@@ -41,14 +24,6 @@
     },
     {
       "name": "celery",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "uv run celery -A core.celery.background_jobs.tasks worker -Q bgJobsQ,celery -P threads -l info -c 1 --without-gossip --without-mingle --without-heartbeat",
-      "cwd": "${workspaceFolder}/backend/src",
-      "envFile": "${workspaceFolder}/backend/.env"
-    },
-    {
-      "name": "debug-celery",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/backend/.venv/bin/celery",
@@ -69,25 +44,47 @@
         "--without-heartbeat"
       ],
       "console": "integratedTerminal",
-      "cwd": "${workspaceFolder}/backend/src",
       "justMyCode": true,
-      "envFile": "${workspaceFolder}/backend/.env"
+      "cwd": "${workspaceFolder}/backend",
+      "envFile": "${workspaceFolder}/backend/.env",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/backend/src"
+      }
     },
     {
-      "name": "Pyright",
+      "name": "pytest",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "cwd": "${workspaceFolder}/backend",
+      "envFile": "${workspaceFolder}/backend/.env",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/backend/src",
+        "RESET_DATABASE_FOR_TESTING": "1"
+      }
+    },
+    {
+      "name": "pyright",
       "type": "node-terminal",
       "request": "launch",
       "command": "uv run pyright",
-      "cwd": "${workspaceFolder}/backend"
+      "cwd": "${workspaceFolder}/backend",
+      "envFile": "${workspaceFolder}/backend/.env",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/backend/src"
+      }
     },
     {
-      "name": "Python: run_migrations.py",
+      "name": "Alembic: migrate",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/backend/src/migration/run_migrations.py",
       "console": "integratedTerminal",
-      "cwd": "${workspaceFolder}/backend/src",
       "justMyCode": true,
+      "cwd": "${workspaceFolder}/backend",
+      "envFile": "${workspaceFolder}/backend/.env",
       "env": {
         "PYTHONPATH": "${workspaceFolder}/backend/src"
       }
@@ -96,24 +93,19 @@
       "name": "Alembic: check",
       "type": "node-terminal",
       "request": "launch",
-      "command": "uv run alembic -c migrations/alembic.ini check",
-      "cwd": "${workspaceFolder}/backend/src",
-      "envFile": "${workspaceFolder}/backend/.env"
+      "command": "uv run alembic -c src/migrations/alembic.ini check",
+      "cwd": "${workspaceFolder}/backend",
+      "envFile": "${workspaceFolder}/backend/.env",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/backend/src"
+      }
     },
     {
       "name": "Alembic: revision",
       "type": "node-terminal",
       "request": "launch",
-      "command": "uv run alembic -c migrations/alembic.ini revision --autogenerate -m \"vscode launcher\"",
-      "cwd": "${workspaceFolder}/backend/src",
-      "envFile": "${workspaceFolder}/backend/.env"
-    },
-    {
-      "name": "pytest",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "mamba activate dats && pytest",
-      "cwd": "${workspaceFolder}/backend/src",
+      "command": "uv run alembic -c src/migrations/alembic.ini revision --autogenerate -m \"vscode launcher\"",
+      "cwd": "${workspaceFolder}/backend",
       "envFile": "${workspaceFolder}/backend/.env",
       "env": {
         "PYTHONPATH": "${workspaceFolder}/backend/src"

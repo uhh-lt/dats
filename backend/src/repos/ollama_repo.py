@@ -353,3 +353,9 @@ class OllamaRepo(metaclass=SingletonMeta):
             model=self.__model["emb"], input=inputs, options=options
         )
         return np.array(response.embeddings)
+
+    def close_connection(self):
+        """
+        Close the connection to the Ollama client.
+        """
+        self.__client._client._client.close()

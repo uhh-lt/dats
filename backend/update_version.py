@@ -1,4 +1,5 @@
 import argparse
+import os
 
 from omegaconf import OmegaConf
 
@@ -12,23 +13,25 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
+root_dir = os.path.dirname(__file__)
+
 # Update config file
-version_conf = OmegaConf.load("./src/configs/version.yaml")
+version_conf = OmegaConf.load(os.path.join(root_dir, "configs/version.yaml"))
 version_conf.api.version = args.version
-OmegaConf.save(version_conf, "./src/configs/version.yaml")
+OmegaConf.save(version_conf, os.path.join(root_dir, "configs/version.yaml"))
 
 # Update pyproject.toml
-with open("./pyproject.toml", "r") as f:
+with open(os.path.join(root_dir, "pyproject.toml"), "r") as f:
     pyproject = f.readlines()
 for i, line in enumerate(pyproject):
     if line.startswith("version = "):
         pyproject[i] = f'version = "{args.version}"\n'
         break
-with open("./pyproject.toml", "w") as f:
+with open(os.path.join(root_dir, "pyproject.toml"), "w") as f:
     f.writelines(pyproject)
 
 # Update uv.lock
-with open("./uv.lock", "r") as f:
+with open(os.path.join(root_dir, "uv.lock"), "r") as f:
     uv_lock = f.readlines()
 previous_line = ""
 for i, line in enumerate(uv_lock):
@@ -38,5 +41,5 @@ for i, line in enumerate(uv_lock):
         uv_lock[i] = f'version = "{args.version}"\n'
         break
     previous_line = line
-with open("./uv.lock", "w") as f:
+with open(os.path.join(root_dir, "uv.lock"), "w") as f:
     f.writelines(uv_lock)

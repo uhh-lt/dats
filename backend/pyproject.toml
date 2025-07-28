@@ -141,3 +141,13 @@ extraPaths = ["src"]
 reportIncompatibleMethodOverride = false
 reportIncompatibleVariableOverride = false
 reportUnreachable = true
+
+[tool.pytest.ini_options]
+pythonpath = "src"
+addopts = [
+    "--import-mode=importlib",
+    "-ra -q",
+]
+testpaths = [
+    "test"
+]
