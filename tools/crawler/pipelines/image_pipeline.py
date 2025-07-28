@@ -3,7 +3,6 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from scrapy.pipelines.images import ImagesPipeline
-
 from tools.crawler.spiders.spider_utils import slugify
 
 

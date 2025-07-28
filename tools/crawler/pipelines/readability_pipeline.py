@@ -1,13 +1,5 @@
-# Define your item pipelines here
-#
-# Don't forget to add your pipeline to the ITEM_PIPELINES setting
-# See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-
-
-# useful for handling different item types with a single interface
-from readability.readability import Readability  # type: ignore
-
 from crawler.items import GenericWebsiteItem
+from readability.readability import Readability  # type: ignore
 
 
 class ReadabilityPipeline:

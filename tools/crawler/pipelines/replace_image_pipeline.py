@@ -1,6 +1,5 @@
-from scrapy import Selector
-
 from crawler.items import GenericWebsiteItem
+from scrapy import Selector
 
 
 class ReplaceImagePipeline:

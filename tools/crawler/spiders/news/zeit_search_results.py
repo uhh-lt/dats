@@ -1,10 +1,9 @@
 from typing import List
 
-from dateutil import parser
-
 from crawler.spiders.news.news_search_results_spider_base import (
     NewsSearchResultsSpiderBase,
 )
+from dateutil import parser
 
 
 class ZeitSearchResultsSpider(NewsSearchResultsSpiderBase):

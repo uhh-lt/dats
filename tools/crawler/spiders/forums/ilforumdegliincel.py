@@ -1,7 +1,6 @@
 import re
 
 import scrapy
-
 from crawler.spiders.spider_base import SpiderBase
 from tools.crawler.spiders.spider_utils import slugify
 
