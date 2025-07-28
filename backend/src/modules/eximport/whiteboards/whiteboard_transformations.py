@@ -217,9 +217,9 @@ def transform_nodes_for_export(
             # Resolve spanAnnotationId to UUID
             span_annotation_ids: List[int] = []
             for node in nodes:
-                assert isinstance(
-                    node.data, SpanAnnotationNodeData
-                ), "Expected SpanAnnotationNodeData type"
+                assert isinstance(node.data, SpanAnnotationNodeData), (
+                    "Expected SpanAnnotationNodeData type"
+                )
                 span_annotation_ids.append(node.data.spanAnnotationId)
 
             span_annotations = crud_span_anno.read_by_ids(
@@ -230,9 +230,9 @@ def transform_nodes_for_export(
             }
 
             for node in nodes:
-                assert isinstance(
-                    node.data, SpanAnnotationNodeData
-                ), "Expected SpanAnnotationNodeData type"
+                assert isinstance(node.data, SpanAnnotationNodeData), (
+                    "Expected SpanAnnotationNodeData type"
+                )
                 span_annotation_uuid = span_annotation_id_to_uuid.get(
                     node.data.spanAnnotationId,
                     f"unknown-span-annotation-{node.data.spanAnnotationId}",
@@ -256,9 +256,9 @@ def transform_nodes_for_export(
             # Resolve sentenceAnnotationId to UUID
             sentence_annotation_ids: List[int] = []
             for node in nodes:
-                assert isinstance(
-                    node.data, SentenceAnnotationNodeData
-                ), "Expected SentenceAnnotationNodeData type"
+                assert isinstance(node.data, SentenceAnnotationNodeData), (
+                    "Expected SentenceAnnotationNodeData type"
+                )
                 sentence_annotation_ids.append(node.data.sentenceAnnotationId)
 
             sentence_annotations = crud_sentence_anno.read_by_ids(
@@ -269,9 +269,9 @@ def transform_nodes_for_export(
             }
 
             for node in nodes:
-                assert isinstance(
-                    node.data, SentenceAnnotationNodeData
-                ), "Expected SentenceAnnotationNodeData type"
+                assert isinstance(node.data, SentenceAnnotationNodeData), (
+                    "Expected SentenceAnnotationNodeData type"
+                )
                 sentence_annotation_uuid = sentence_annotation_id_to_uuid.get(
                     node.data.sentenceAnnotationId,
                     f"unknown-sentence-annotation-{node.data.sentenceAnnotationId}",
@@ -295,9 +295,9 @@ def transform_nodes_for_export(
             # Resolve bboxAnnotationId to UUID
             bbox_annotation_ids: List[int] = []
             for node in nodes:
-                assert isinstance(
-                    node.data, BBoxAnnotationNodeData
-                ), "Expected BBoxAnnotationNodeData type"
+                assert isinstance(node.data, BBoxAnnotationNodeData), (
+                    "Expected BBoxAnnotationNodeData type"
+                )
                 bbox_annotation_ids.append(node.data.bboxAnnotationId)
 
             bbox_annotations = crud_bbox_anno.read_by_ids(
@@ -308,9 +308,9 @@ def transform_nodes_for_export(
             }
 
             for node in nodes:
-                assert isinstance(
-                    node.data, BBoxAnnotationNodeData
-                ), "Expected BBoxAnnotationNodeData type"
+                assert isinstance(node.data, BBoxAnnotationNodeData), (
+                    "Expected BBoxAnnotationNodeData type"
+                )
                 bbox_annotation_uuid = bbox_annotation_id_to_uuid.get(
                     node.data.bboxAnnotationId,
                     f"unknown-bbox-annotation-{node.data.bboxAnnotationId}",
@@ -437,9 +437,9 @@ def transform_nodes_for_import(
         case WhiteboardNodeType.SDOC:
             # Resolve sdoc_filename to sdocId
             for node in nodes:
-                assert isinstance(
-                    node.data, SdocNodeDataForExport
-                ), "Expected SdocNodeDataForExport type"
+                assert isinstance(node.data, SdocNodeDataForExport), (
+                    "Expected SdocNodeDataForExport type"
+                )
                 sdoc = crud_sdoc.read_by_filename(
                     db=db,
                     proj_id=project_id,
@@ -473,9 +473,9 @@ def transform_nodes_for_import(
             }
 
             for node in nodes:
-                assert isinstance(
-                    node.data, CodeNodeDataForExport
-                ), "Expected CodeNodeDataForExport type"
+                assert isinstance(node.data, CodeNodeDataForExport), (
+                    "Expected CodeNodeDataForExport type"
+                )
                 code_id = code_name_to_id.get(node.data.code_name)
                 if code_id is None:
                     errors.append(
@@ -512,9 +512,9 @@ def transform_nodes_for_import(
             tag_name_to_id: Dict[str, int] = {tag.name: tag.id for tag in project_tags}
             # Check if all tags exist in the project
             for node in nodes:
-                assert isinstance(
-                    node.data, TagNodeDataForExport
-                ), "Expected TagNodeDataForExport type"
+                assert isinstance(node.data, TagNodeDataForExport), (
+                    "Expected TagNodeDataForExport type"
+                )
                 tag_id = tag_name_to_id.get(node.data.tag_name)
                 if tag_id is None:
                     errors.append(
@@ -538,9 +538,9 @@ def transform_nodes_for_import(
         case WhiteboardNodeType.SPAN_ANNOTATION:
             # Resolve span_annotation_uuid to spanAnnotationId
             for node in nodes:
-                assert isinstance(
-                    node.data, SpanAnnotationNodeDataForExport
-                ), "Expected SpanAnnotationNodeDataForExport type"
+                assert isinstance(node.data, SpanAnnotationNodeDataForExport), (
+                    "Expected SpanAnnotationNodeDataForExport type"
+                )
                 span_annotation = crud_span_anno.read_by_project_and_uuid(
                     db=db, project_id=project_id, uuid=node.data.span_annotation_uuid
                 )
@@ -566,9 +566,9 @@ def transform_nodes_for_import(
         case WhiteboardNodeType.SENTENCE_ANNOTATION:
             # Resolve sentence_annotation_uuid to sentenceAnnotationId
             for node in nodes:
-                assert isinstance(
-                    node.data, SentenceAnnotationNodeDataForExport
-                ), "Expected SentenceAnnotationNodeDataForExport type"
+                assert isinstance(node.data, SentenceAnnotationNodeDataForExport), (
+                    "Expected SentenceAnnotationNodeDataForExport type"
+                )
                 sentence_annotation = crud_sentence_anno.read_by_project_and_uuid(
                     db=db,
                     project_id=project_id,
@@ -596,9 +596,9 @@ def transform_nodes_for_import(
         case WhiteboardNodeType.BBOX_ANNOTATION:
             # Resolve bbox_annotation_uuid to bboxAnnotationId
             for node in nodes:
-                assert isinstance(
-                    node.data, BBoxAnnotationNodeDataForExport
-                ), "Expected BBoxAnnotationNodeDataForExport type"
+                assert isinstance(node.data, BBoxAnnotationNodeDataForExport), (
+                    "Expected BBoxAnnotationNodeDataForExport type"
+                )
                 bbox_annotation = crud_bbox_anno.read_by_project_and_uuid(
                     db=db,
                     project_id=project_id,
