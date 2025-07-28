@@ -2,11 +2,11 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Literal, Optional, Union
 
-from core.job.background_job_base_dto import BackgroundJobStatus
 from modules.ml.doc_tag_recommendation.document_tag_recommendation_dto import (
     DocumentTagRecommendationMethod,
 )
 from pydantic import BaseModel, Field
+from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
 
 class MLJobType(StrEnum):

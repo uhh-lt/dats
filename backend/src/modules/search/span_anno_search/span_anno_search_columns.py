@@ -9,11 +9,11 @@ from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_orm import ObjectHandleORM
 from core.tag.document_tag_orm import DocumentTagORM
 from core.user.user_orm import UserORM
-from modules.search_system.column_info import AbstractColumns
-from modules.search_system.filtering_operators import FilterOperator, FilterValueType
-from modules.search_system.search_builder import SearchBuilder
 from repos.db.sql_utils import aggregate_ids
 from sqlalchemy.orm import Session
+from systems.search_system.column_info import AbstractColumns
+from systems.search_system.filtering_operators import FilterOperator, FilterValueType
+from systems.search_system.search_builder import SearchBuilder
 
 
 class SpanColumns(str, AbstractColumns):

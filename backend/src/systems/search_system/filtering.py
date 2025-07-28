@@ -1,8 +1,11 @@
 from enum import Enum
 from typing import Generic, List, Set, TypeVar, Union
 
-from modules.search_system.abstract_column import AbstractColumns
-from modules.search_system.filtering_operators import (
+from pydantic import BaseModel
+from sqlalchemy import and_, or_
+from sqlalchemy.orm import Session
+from systems.search_system.abstract_column import AbstractColumns
+from systems.search_system.filtering_operators import (
     BooleanOperator,
     DateOperator,
     FilterValue,
@@ -12,9 +15,6 @@ from modules.search_system.filtering_operators import (
     NumberOperator,
     StringOperator,
 )
-from pydantic import BaseModel
-from sqlalchemy import and_, or_
-from sqlalchemy.orm import Session
 
 T = TypeVar("T", bound=AbstractColumns)
 

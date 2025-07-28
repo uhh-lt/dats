@@ -1,4 +1,3 @@
-from modules.search_system.filtering import Filter
 from modules.timeline_analysis.timeline_analysis_dto import (
     TimelineAnalysisConcept,
     TimelineAnalysisConceptForExport,
@@ -6,6 +5,7 @@ from modules.timeline_analysis.timeline_analysis_dto import (
     TimelineAnalysisSettingsForExport,
 )
 from sqlalchemy.orm import Session
+from systems.search_system.filtering import Filter
 
 
 def transform_settings_for_export(

@@ -4,7 +4,7 @@ from core.doc.sentence_collection import SentenceCollection
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from repos.vector.embedding_crud_base import CRUDBase
 from repos.vector.weaviate_models import EmbeddingSearchResult
-from systems.events import project_deleted, source_document_deleted
+from systems.event_system.events import project_deleted, source_document_deleted
 from weaviate import WeaviateClient
 from weaviate.classes.query import Filter
 

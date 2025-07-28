@@ -28,10 +28,10 @@ from modules.search.span_anno_search.span_anno_search import (
     find_span_annotations_info,
 )
 from modules.search.span_anno_search.span_anno_search_columns import SpanColumns
-from modules.search_system.column_info import ColumnInfo
-from modules.search_system.filtering import Filter
-from modules.search_system.sorting import Sort
 from repos.elastic.elastic_dto_base import PaginatedElasticSearchHits
+from systems.search_system.column_info import ColumnInfo
+from systems.search_system.filtering import Filter
+from systems.search_system.sorting import Sort
 
 router = APIRouter(
     prefix="/search", dependencies=[Depends(get_current_user)], tags=["search"]

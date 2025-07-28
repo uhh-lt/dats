@@ -1,6 +1,5 @@
 from common.singleton_meta import SingletonMeta
 from core.celery.background_jobs import start_trainer_job_async
-from core.job.background_job_base_dto import BackgroundJobStatus
 from core.project.project_crud import crud_project
 from loguru import logger
 from modules.trainer.trainer_job_dto import (
@@ -11,6 +10,7 @@ from modules.trainer.trainer_job_dto import (
 from repos.filesystem_repo import FilesystemRepo
 from repos.redis_repo import RedisRepo
 from sqlalchemy.orm import Session
+from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
 
 class TrainerService(metaclass=SingletonMeta):

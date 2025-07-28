@@ -9,7 +9,11 @@ from core.doc.sdoc_elastic_index import SdocIndex
 from elasticsearch import Elasticsearch
 from repos.elastic.elastic_crud_base import ElasticCrudBase
 from repos.elastic.elastic_dto_base import PaginatedElasticSearchHits
-from systems.events import project_created, project_deleted, source_document_deleted
+from systems.event_system.events import (
+    project_created,
+    project_deleted,
+    source_document_deleted,
+)
 
 
 class SdocElasticCrud(

@@ -1,12 +1,12 @@
 from enum import Enum, EnumMeta
 from typing import TYPE_CHECKING, Any, List
 
-from modules.search_system.filtering_operators import FilterOperator, FilterValueType
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.base import ReadOnlyColumnCollection
+from systems.search_system.filtering_operators import FilterOperator, FilterValueType
 
 if TYPE_CHECKING:
-    from modules.search_system.search_builder import SearchBuilder
+    from systems.search_system.search_builder import SearchBuilder
 
 
 class AbstractColumns(Enum, metaclass=EnumMeta):

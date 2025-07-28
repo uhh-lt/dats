@@ -14,7 +14,6 @@ from core.code.code_crud import crud_code
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_crud import crud_sdoc
-from core.job.background_job_base_dto import BackgroundJobStatus
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataReadResolved,
@@ -79,6 +78,7 @@ from repos.ray_repo import RayRepo
 from repos.redis_repo import RedisRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy.orm import Session
+from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
 lac = conf.llm_assistant
 
@@ -472,12 +472,12 @@ class LLMService(metaclass=SingletonMeta):
         approach_parameters: ZeroShotParams,
         task_parameters: DocumentTaggingParams,
     ) -> LLMJobResult:
-        assert isinstance(
-            task_parameters, DocumentTaggingParams
-        ), "Wrong task parameters!"
-        assert isinstance(
-            approach_parameters, ZeroShotParams
-        ), "Wrong approach parameters!"
+        assert isinstance(task_parameters, DocumentTaggingParams), (
+            "Wrong task parameters!"
+        )
+        assert isinstance(approach_parameters, ZeroShotParams), (
+            "Wrong approach parameters!"
+        )
 
         msg = f"Started LLMJob - Document Tagging, num docs: {len(task_parameters.sdoc_ids)}"
         self._update_llm_job_description(
@@ -597,12 +597,12 @@ class LLMService(metaclass=SingletonMeta):
         approach_parameters: ZeroShotParams,
         task_parameters: MetadataExtractionParams,
     ) -> LLMJobResult:
-        assert isinstance(
-            task_parameters, MetadataExtractionParams
-        ), "Wrong task parameters!"
-        assert isinstance(
-            approach_parameters, ZeroShotParams
-        ), "Wrong approach parameters!"
+        assert isinstance(task_parameters, MetadataExtractionParams), (
+            "Wrong task parameters!"
+        )
+        assert isinstance(approach_parameters, ZeroShotParams), (
+            "Wrong approach parameters!"
+        )
 
         msg = f"Started LLMJob - Metadata Extraction, num docs: {len(task_parameters.sdoc_ids)}"
         self._update_llm_job_description(
@@ -745,9 +745,9 @@ class LLMService(metaclass=SingletonMeta):
         task_parameters: AnnotationParams,
     ) -> LLMJobResult:
         assert isinstance(task_parameters, AnnotationParams), "Wrong task parameters!"
-        assert isinstance(
-            approach_parameters, ZeroShotParams
-        ), "Wrong approach parameters!"
+        assert isinstance(approach_parameters, ZeroShotParams), (
+            "Wrong approach parameters!"
+        )
 
         msg = f"Started LLMJob - Annotation, num docs: {len(task_parameters.sdoc_ids)}"
         self._update_llm_job_description(
@@ -913,9 +913,9 @@ class LLMService(metaclass=SingletonMeta):
         approach_parameters: Union[ZeroShotParams, FewShotParams],
         task_parameters: SentenceAnnotationParams,
     ) -> LLMJobResult:
-        assert isinstance(
-            task_parameters, SentenceAnnotationParams
-        ), "Wrong task parameters!"
+        assert isinstance(task_parameters, SentenceAnnotationParams), (
+            "Wrong task parameters!"
+        )
         assert isinstance(approach_parameters, ZeroShotParams) or isinstance(
             approach_parameters, FewShotParams
         ), "Wrong approach parameters!"
@@ -1128,12 +1128,12 @@ class LLMService(metaclass=SingletonMeta):
         approach_parameters: ModelTrainingParams,
         task_parameters: SentenceAnnotationParams,
     ) -> LLMJobResult:
-        assert isinstance(
-            task_parameters, SentenceAnnotationParams
-        ), "Wrong task parameters!"
-        assert isinstance(
-            approach_parameters, ModelTrainingParams
-        ), "Wrong approach parameters!"
+        assert isinstance(task_parameters, SentenceAnnotationParams), (
+            "Wrong task parameters!"
+        )
+        assert isinstance(approach_parameters, ModelTrainingParams), (
+            "Wrong approach parameters!"
+        )
 
         msg = f"Started LLMJob - Sentence Annotation (RAY), num docs: {len(task_parameters.sdoc_ids)}"
         self._update_llm_job(

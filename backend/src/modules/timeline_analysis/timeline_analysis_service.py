@@ -15,8 +15,6 @@ from fastapi.encoders import jsonable_encoder
 from loguru import logger
 from modules.analysis.analysis_dto import DateGroupBy
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
-from modules.search_system.filtering import Filter
-from modules.search_system.search_builder import SearchBuilder
 from modules.timeline_analysis.timeline_analysis_crud import (
     crud_timeline_analysis,
 )
@@ -38,6 +36,8 @@ from repos.db.sql_repo import SQLRepo
 from repos.db.sql_utils import aggregate_ids
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session, aliased
+from systems.search_system.filtering import Filter
+from systems.search_system.search_builder import SearchBuilder
 
 
 class TimelineAnalysisRow(TypedDict):

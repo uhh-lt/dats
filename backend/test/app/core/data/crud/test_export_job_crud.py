@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from core.job.background_job_base_dto import BackgroundJobStatus
 from modules.eximport.export_job_dto import (
     ExportJobCreate,
     ExportJobParameters,
@@ -8,6 +7,7 @@ from modules.eximport.export_job_dto import (
     ExportJobUpdate,
 )
 from repos.redis_repo import RedisRepo
+from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
 
 def test_crud_cycle() -> None:

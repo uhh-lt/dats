@@ -14,7 +14,7 @@ from fastapi.encoders import jsonable_encoder
 from repos.db.crud_base import CRUDBase
 from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy.orm import Session
-from systems.events import project_created, project_deleted
+from systems.event_system.events import project_created, project_deleted
 
 
 class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):

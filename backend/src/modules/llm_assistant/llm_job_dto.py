@@ -4,12 +4,12 @@ from typing import Dict, List, Literal, Optional, Union
 
 from core.annotation.sentence_annotation_dto import SentenceAnnotationRead
 from core.annotation.span_annotation_dto import SpanAnnotationRead
-from core.job.background_job_base_dto import BackgroundJobStatus
 from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataReadResolved,
 )
 from pydantic import BaseModel, Field
 from repos.db.dto_base import UpdateDTOBase
+from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
 # --- START TASK PARAMETERS ---
 

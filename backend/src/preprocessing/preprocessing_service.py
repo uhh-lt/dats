@@ -10,17 +10,8 @@ from core.celery.background_jobs import (
     execute_text_preprocessing_pipeline_apply_async,
     execute_video_preprocessing_pipeline_apply_async,
 )
-from core.job.background_job_base_dto import BackgroundJobStatus
 from fastapi import HTTPException, UploadFile
 from loguru import logger
-from repos.db.sql_repo import SQLRepo
-from repos.filesystem_repo import (
-    FileNotFoundInFilesystemError,
-    FilesystemRepo,
-    UnsupportedDocTypeForSourceDocument,
-)
-from tqdm import tqdm
-
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.pipeline.preprocessing_pipeline import PreprocessingPipeline
 from preprocessing.preprocessing_job_crud import crud_prepro_job
@@ -32,6 +23,14 @@ from preprocessing.preprocessing_job_dto import (
 from preprocessing.preprocessing_job_payload_dto import (
     PreprocessingJobPayloadCreateWithoutPreproJobId,
 )
+from repos.db.sql_repo import SQLRepo
+from repos.filesystem_repo import (
+    FileNotFoundInFilesystemError,
+    FilesystemRepo,
+    UnsupportedDocTypeForSourceDocument,
+)
+from systems.job_system.background_job_base_dto import BackgroundJobStatus
+from tqdm import tqdm
 
 
 class UnsupportedDocTypeForMimeType(Exception):
@@ -206,9 +205,9 @@ class PreprocessingService(metaclass=SingletonMeta):
         # append cargo for each payload and respective metadata/annotations
         for payload in ppj.payloads:
             filename = payload.filename
-            assert (
-                filename in sdoc_specific_payloads
-            ), f"Expected filename {filename} to be in dict, but was not in {sdoc_specific_payloads.keys()}, {payload.source_document_id}"
+            assert filename in sdoc_specific_payloads, (
+                f"Expected filename {filename} to be in dict, but was not in {sdoc_specific_payloads.keys()}, {payload.source_document_id}"
+            )
 
             # generate cargo with one payload
             cargo = PipelineCargo(ppj_payload=payload, ppj_id=ppj.id)

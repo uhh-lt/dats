@@ -2,7 +2,6 @@ from datetime import datetime
 from typing import List, Union
 
 from common.singleton_meta import SingletonMeta
-from core.job.background_job_base_dto import BackgroundJobStatus
 from modules.ml.coref_service import CorefService
 from modules.ml.doc_tag_recommendation.doc_tag_recommendation_service import (
     DocumentClassificationService,
@@ -27,6 +26,7 @@ from modules.ml.source_document_job_status_orm import (
 )
 from repos.redis_repo import RedisRepo
 from sqlalchemy import and_, or_
+from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
 
 class MLJobPreparationError(Exception):

@@ -4,7 +4,6 @@ from typing import Callable, Dict, List
 
 import pandas as pd
 from common.singleton_meta import SingletonMeta
-from core.job.background_job_base_dto import BackgroundJobStatus
 from core.project.project_crud import crud_project
 from loguru import logger
 from modules.eximport.bbox_annotations.import_bbox_annotations import (
@@ -38,6 +37,7 @@ from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.redis_repo import RedisRepo
 from sqlalchemy.orm import Session
+from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
 
 class ImportJobPreparationError(Exception):

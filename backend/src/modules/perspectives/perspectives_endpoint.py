@@ -5,7 +5,6 @@ from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session, get_weaviate_session
 from core.auth.authz_user import AuthzUser
 from core.celery.background_jobs import prepare_and_start_perspectives_job_async
-from core.job.background_job_base_dto import BackgroundJobStatus
 from core.project.project_crud import crud_project
 from fastapi import APIRouter, Depends
 from modules.perspectives.aspect_crud import crud_aspect
@@ -35,9 +34,10 @@ from modules.perspectives.perspectives_vis_dto import (
 )
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.search.sdoc_search.sdoc_search_service import SdocSearchService
-from modules.search_system.filtering import Filter
-from modules.search_system.sorting import Sort
 from sqlalchemy.orm import Session
+from systems.job_system.background_job_base_dto import BackgroundJobStatus
+from systems.search_system.filtering import Filter
+from systems.search_system.sorting import Sort
 from weaviate import WeaviateClient
 
 pjs = PerspectivesJobService()

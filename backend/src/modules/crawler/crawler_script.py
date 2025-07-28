@@ -13,13 +13,13 @@ from twisted.internet import asyncioreactor
 
 asyncioreactor.install()
 
-from core.job.background_job_base_dto import BackgroundJobStatus
 from modules.crawler.crawler_service import (
     CrawlerJobAlreadyStartedOrDoneError,
     CrawlerService,
 )
 from modules.crawler.crawler_settings import get_settings
 from modules.crawler.spiders.list_of_urls_spider import ListOfURLSSpider
+from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

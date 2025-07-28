@@ -3,8 +3,8 @@ from enum import Enum
 from typing import List
 
 from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
-from modules.search_system.filtering_operators import FilterOperator
 from sqlalchemy.orm import QueryableAttribute
+from systems.search_system.filtering_operators import FilterOperator
 
 
 class MetaType(str, Enum):

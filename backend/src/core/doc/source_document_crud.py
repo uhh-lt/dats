@@ -21,7 +21,7 @@ from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
-from systems.events import source_document_deleted
+from systems.event_system.events import source_document_deleted
 
 
 class SourceDocumentPreprocessingUnfinishedError(Exception):

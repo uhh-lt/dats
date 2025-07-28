@@ -2,9 +2,9 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Literal, Optional, Union
 
-from core.job.background_job_base_dto import BackgroundJobStatus
 from pydantic import BaseModel, Field
 from repos.db.dto_base import UpdateDTOBase
+from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
 
 class ExportJobType(str, Enum):

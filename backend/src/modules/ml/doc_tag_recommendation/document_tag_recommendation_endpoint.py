@@ -2,7 +2,6 @@ from typing import Dict, List
 
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
-from core.job.background_job_base_dto import BackgroundJobStatus
 from core.tag.document_tag_crud import crud_document_tag
 from fastapi import APIRouter, Depends
 from modules.ml.doc_tag_recommendation.doc_tag_recommendation_service import (
@@ -22,6 +21,7 @@ from modules.ml.doc_tag_recommendation.document_tag_recommendation_orm import (
 from modules.ml.ml_job_dto import MLJobRead, MLJobType
 from modules.ml.ml_service import MLService
 from sqlalchemy.orm import Session
+from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
 dcs: DocumentClassificationService = DocumentClassificationService()
 mls: MLService = MLService()

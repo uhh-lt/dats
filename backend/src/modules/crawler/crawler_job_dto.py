@@ -1,9 +1,9 @@
 from datetime import datetime
 from typing import List, Optional
 
-from core.job.background_job_base_dto import BackgroundJobStatus
 from pydantic import BaseModel, Field
 from repos.db.dto_base import UpdateDTOBase
+from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
 # TODO: unify with export job and extract duplicate code to utils!
 

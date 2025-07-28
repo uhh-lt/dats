@@ -1,14 +1,13 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, List
 
-from core.job.background_job_base_dto import BackgroundJobStatus
 from repos.db.orm_base import ORMBase
 from sqlalchemy import DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
 if TYPE_CHECKING:
     from core.project.project_orm import ProjectORM
-
     from preprocessing.preprocessing_job_payload_orm import PreprocessingJobPayloadORM
 
 

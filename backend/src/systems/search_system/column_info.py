@@ -1,9 +1,9 @@
 from typing import Generic, TypeVar, Union
 
 from core.metadata.project_metadata_dto import ProjectMetadataRead
-from modules.search_system.abstract_column import AbstractColumns
-from modules.search_system.filtering_operators import FilterOperator, FilterValueType
 from pydantic import BaseModel
+from systems.search_system.abstract_column import AbstractColumns
+from systems.search_system.filtering_operators import FilterOperator, FilterValueType
 
 T = TypeVar("T", bound=AbstractColumns)
 
