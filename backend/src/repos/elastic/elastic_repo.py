@@ -91,3 +91,9 @@ class ElasticSearchRepo(metaclass=SingletonMeta):
                 client=self.client,
                 proj_id=proj_id,
             )
+
+    def close_connection(self):
+        """
+        Close the connection to the ElasticSearch client.
+        """
+        self.client.close()

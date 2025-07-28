@@ -120,12 +120,6 @@ elasticsearch:
   sniff_on_start: False
   sniff_on_connection_fail: False
   sniffer_timeout: 120
-  index_mappings:
-    docs: ../configs/default_sdoc_index_mapping.json
-    memos: ../configs/default_memo_index_mapping.json
-  index_settings:
-    docs: ../configs/default_sdoc_index_settings.json
-    memos: ../configs/default_memo_index_settings.json
 
 ollama:
   host: ${oc.env:OLLAMA_HOST, localhost}

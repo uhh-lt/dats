@@ -5,15 +5,19 @@ from loguru import logger
 from omegaconf import OmegaConf
 
 # global config
-__conf_file__ = os.getenv("DATS_BACKEND_CONFIG", None)
+backend_mode = os.getenv("DATS_BACKEND_MODE", None)
 
-if __conf_file__ is None:
+if backend_mode != "production" and backend_mode != "development":
     raise Exception(
-        "No config file specified! Please set the DATS_BACKEND_CONFIG environment variable."
+        "No backend mode specified! Please set the DATS_BACKEND_MODE environment variable to either 'production' or 'development'."
     )
 
-conf = OmegaConf.load(__conf_file__)
-version_conf = OmegaConf.load("../configs/version.yaml")
+conf = OmegaConf.load(
+    os.path.join(os.path.dirname(__file__), f"../configs/{backend_mode}.yaml")
+)
+version_conf = OmegaConf.load(
+    os.path.join(os.path.dirname(__file__), "../configs/version.yaml")
+)
 conf = OmegaConf.merge(conf, version_conf)
 
 # setup loguru logging
@@ -25,7 +29,7 @@ logger.add(sys.stderr, level=conf.logging.level.upper())
 #            rotation=f"{conf.logging.max_file_size} MB",
 #            level=conf.logging.level.upper())
 
-logger.info(f"Loaded config '{__conf_file__}'")
+logger.info(f"Loaded config '{backend_mode}.yaml'")
 
 
 def verify_config():

@@ -14,6 +14,8 @@ from fastapi.routing import APIRoute
 from loguru import logger
 from psycopg2.errors import UniqueViolation
 from repos.elastic.elastic_crud_base import NoSuchObjectInElasticSearchError
+from repos.elastic.elastic_repo import ElasticSearchRepo
+from repos.ollama_repo import OllamaRepo
 from sqlalchemy.exc import IntegrityError
 from starlette.middleware.sessions import SessionMiddleware
 from utils.import_utils import import_by_suffix
@@ -76,6 +78,9 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logger.info("Stopping Discourse Analysis Tool Suite FastAPI!")
     FilesystemRepo().purge_temporary_files()
+    # Close repo connections
+    OllamaRepo().close_connection()
+    ElasticSearchRepo().close_connection()
 
 
 # create the FastAPI app

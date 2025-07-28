@@ -66,13 +66,13 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
         config.verify_config()
 
         # start and init services
-        __init_services__(
+        __init_repos__(
             create_root_directory_structure=not startup_in_progress,
             sql_echo=sql_echo,
-            reset_database=reset_data,
+            reset_db=reset_data,
             reset_filesystem=reset_data,
-            reset_elasticsearch=reset_data,
-            reset_vector_index=reset_data,
+            reset_elastic=reset_data,
+            reset_vector=reset_data,
         )
 
         if not startup_in_progress:
@@ -100,25 +100,25 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
 
 
 # noinspection PyUnresolvedReferences,PyProtectedMember
-def __init_services__(
+def __init_repos__(
     create_root_directory_structure: bool = False,
     sql_echo: bool = False,
-    reset_database: bool = False,
+    reset_db: bool = False,
     reset_filesystem: bool = False,
-    reset_elasticsearch: bool = False,
-    reset_vector_index: bool = False,
+    reset_elastic: bool = False,
+    reset_vector: bool = False,
 ) -> None:
-    # import celery workers to configure
     # import and init RepoService
     from repos.filesystem_repo import FilesystemRepo
 
     fsr = FilesystemRepo()
     if create_root_directory_structure:
         fsr._create_root_directory_structure(remove_if_exists=reset_filesystem)
+
     # create SQL DBs and Tables
     from repos.db.sql_repo import SQLRepo
 
-    SQLRepo(echo=sql_echo, reset_database=reset_database)
+    SQLRepo(echo=sql_echo, reset_database=reset_db)
 
     # create CRUDs
     from common.crud_enum import Crud  # noqa: F401
@@ -126,42 +126,35 @@ def __init_services__(
     # import and init ElasticSearch
     from repos.elastic.elastic_repo import ElasticSearchRepo
 
-    ElasticSearchRepo(flush=reset_elasticsearch)
-    # import and init RedisService
+    ElasticSearchRepo(flush=reset_elastic)
+
+    # import and init Reds
     from repos.redis_repo import RedisRepo
 
-    RedisRepo(flush_all_clients=reset_database)
+    RedisRepo(flush_all_clients=reset_db)
 
-    # import and init MailService
+    # import and init Mail
     from repos.mail_repo import MailRepo
 
     MailRepo()
-    # import and init RayModelService
+
+    # import and init Ray
     from repos.ray_repo import RayRepo
 
     RayRepo()
 
-    # import and init WeaviateService
+    # import and init Weaviate
     from repos.vector.weaviate_repo import WeaviateRepo
 
-    WeaviateRepo(flush=reset_vector_index)
+    WeaviateRepo(flush=reset_vector)
 
-    # import and init SimSearchService
-    from modules.simsearch.simsearch_service import SimSearchService
-
-    SimSearchService()
-
-    # import and init OllamaService
+    # import and init Ollama
     from repos.ollama_repo import OllamaRepo
 
     OllamaRepo()
 
-    # import and init LLMService
-    from modules.llm_assistant.llm_service import LLMService
-
-    LLMService()
-
-    # import and init AuthServide
+    # TODO: This should be a repo, no?
+    # import and init AuthService
     from core.auth.oauth_service import OAuthService
 
     OAuthService()

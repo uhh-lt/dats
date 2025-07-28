@@ -13,13 +13,20 @@ import requests
 from config import conf
 from core.auth.authz_user import AuthzUser
 from core.auth.validation import Validate
+from core.code.code_crud import crud_code
+from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
+from core.project.project_crud import crud_project
+from core.project.project_dto import ProjectCreate
 from core.project.project_orm import ProjectORM
+from core.user.user_crud import SYSTEM_USER_ID, crud_user
+from core.user.user_dto import UserCreate
 from core.user.user_orm import UserORM
 from fastapi import Request
 from fastapi.datastructures import Headers
 from fastapi.testclient import TestClient
 from loguru import logger
+from main import app
 from pytest import FixtureRequest
 from repos.db.sql_repo import SQLRepo
 from repos.elastic.elastic_repo import ElasticSearchRepo
@@ -27,8 +34,6 @@ from repos.filesystem_repo import FilesystemRepo
 from repos.redis_repo import RedisRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy.orm import Session
-
-os.environ["RESET_DATA"] = "1"
 
 
 def pytest_sessionfinish():
@@ -38,34 +43,30 @@ def pytest_sessionfinish():
     WeaviateRepo().drop_indices()
     RedisRepo().flush_all_clients()
     FilesystemRepo().purge_filesystem()
+    return True
 
 
-# Flo: just do it once. We have to check because if we start the main function, unvicorn will import this
-# file once more manually, so it would be executed twice.
-STARTUP_DONE = bool(int(os.environ.get("STARTUP_DONE", "0")))
-if not STARTUP_DONE:
-    if SQLRepo().database_contains_data():
-        # Make sure we don't accidentally delete important data
-        logger.error(
-            f"Database '{conf.postgres.db}' is not empty. The tests will only run given a database without any tables in it. Drop database? Type 'yes' to clear all data"
-        )
-        if sys.stdin.isatty() and sys.stdin.readline().strip() == "yes":
-            pytest_sessionfinish()
-        elif (
-            not sys.stdin.isatty()
-            and os.environ.get("RESET_DATABASE_FOR_TESTING", "0") == "1"
-        ):
-            pytest_sessionfinish()
-        else:
-            exit(1)
-
-from core.code.code_crud import crud_code
-from core.code.code_dto import CodeCreate
-from core.project.project_crud import crud_project
-from core.project.project_dto import ProjectCreate
-from core.user.user_crud import SYSTEM_USER_ID, crud_user
-from core.user.user_dto import UserCreate
-from main import app
+# Use this once to clear all databases
+@pytest.fixture
+def reset_data():
+    # Flo: just do it once. We have to check because if we start the main function, unvicorn will import this
+    # file once more manually, so it would be executed twice.
+    STARTUP_DONE = bool(int(os.environ.get("STARTUP_DONE", "0")))
+    if not STARTUP_DONE:
+        if SQLRepo().database_contains_data():
+            # Make sure we don't accidentally delete important data
+            logger.error(
+                f"Database '{conf.postgres.db}' is not empty. The tests will only run given a database without any tables in it. Drop database? Type 'yes' to clear all data"
+            )
+            if sys.stdin.isatty() and sys.stdin.readline().strip() == "yes":
+                pytest_sessionfinish()
+            elif (
+                not sys.stdin.isatty()
+                and os.environ.get("RESET_DATABASE_FOR_TESTING", "0") == "1"
+            ):
+                pytest_sessionfinish()
+            else:
+                exit(1)
 
 
 # Always use the asyncio backend for async tests

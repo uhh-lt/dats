@@ -61,3 +61,6 @@ class UserORM(ORMBase):
     projects: Mapped[List["ProjectORM"]] = relationship(
         "ProjectORM", secondary="ProjectUserLinkTable".lower(), back_populates="users"
     )
+
+    def get_project_id(self) -> None:
+        return None
