@@ -50,9 +50,8 @@ def import_uploaded_archive_apply_async(
 def prepare_and_start_export_job_async(
     export_params: ExportJobParameters,
 ) -> ExportJobRead:
-    from modules.eximport.export_service import ExportService
-
     from core.celery.background_jobs.tasks import start_export_job
+    from modules.eximport.export_service import ExportService
 
     assert isinstance(start_export_job, Task), "Not a Celery Task"
 
@@ -66,9 +65,8 @@ def prepare_and_start_export_job_async(
 def prepare_and_start_import_job_async(
     import_job_params: ImportJobParameters,
 ) -> ImportJobRead:
-    from modules.eximport.import_service import ImportService
-
     from core.celery.background_jobs.tasks import start_import_job
+    from modules.eximport.import_service import ImportService
 
     assert isinstance(start_import_job, Task), "Not a Celery Task"
     ims: ImportService = ImportService()
@@ -80,12 +78,11 @@ def prepare_and_start_import_job_async(
 def prepare_and_start_crawling_job_async(
     crawler_params: CrawlerJobParameters,
 ) -> CrawlerJobRead:
-    from modules.crawler.crawler_service import CrawlerService
-
     from core.celery.background_jobs.tasks import (
         import_uploaded_archive,
         start_crawler_job,
     )
+    from modules.crawler.crawler_service import CrawlerService
 
     assert isinstance(start_crawler_job, Task), "Not a Celery Task"
     assert isinstance(import_uploaded_archive, Task), "Not a Celery Task"
@@ -109,9 +106,8 @@ def prepare_and_start_crawling_job_async(
 def prepare_and_start_llm_job_async(
     llm_job_params: LLMJobParameters2,
 ) -> LLMJobRead:
-    from modules.llm_assistant.llm_service import LLMService
-
     from core.celery.background_jobs.tasks import start_llm_job
+    from modules.llm_assistant.llm_service import LLMService
 
     assert isinstance(start_llm_job, Task), "Not a Celery Task"
 
@@ -124,9 +120,8 @@ def prepare_and_start_llm_job_async(
 def prepare_and_start_ml_job_async(
     ml_job_params: MLJobParameters,
 ) -> MLJobRead:
-    from modules.ml.ml_service import MLService
-
     from core.celery.background_jobs.tasks import start_ml_job
+    from modules.ml.ml_service import MLService
 
     assert isinstance(start_ml_job, Task), "Not a Celery Task"
 
@@ -141,9 +136,8 @@ def prepare_and_start_perspectives_job_async(
     aspect_id: int,
     perspectives_job_params: PerspectivesJobParams,
 ) -> PerspectivesJobRead:
-    from modules.perspectives.perspectives_job_service import PerspectivesJobService
-
     from core.celery.background_jobs.tasks import start_perspectives_job
+    from modules.perspectives.perspectives_job_service import PerspectivesJobService
 
     assert isinstance(start_perspectives_job, Task), "Not a Celery Task"
 
