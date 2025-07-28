@@ -49,5 +49,9 @@ repos:
             "--cache-location",
             "frontend/node_modules/.cache/prettier",
           ]
+  - repo: https://github.com/scop/pre-commit-shfmt
+    rev: v3.12.0-2
+    hooks:
+      - id: shfmt
 
 exclude: ^tools/
