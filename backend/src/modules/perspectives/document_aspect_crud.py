@@ -1,3 +1,6 @@
+from common.doc_type import DocType
+from core.doc.source_document_data_orm import SourceDocumentDataORM
+from core.doc.source_document_orm import SourceDocumentORM
 from fastapi.encoders import jsonable_encoder
 from modules.perspectives.cluster_orm import ClusterORM
 from modules.perspectives.document_aspect_dto import (
@@ -93,6 +96,35 @@ class CRUDDocumentAspect(
             .all()
         )
 
+    def read_text_data_with_no_aspect(
+        self, db: Session, *, project_id: int, aspect_id: int
+    ) -> list[SourceDocumentDataORM]:
+        """
+        Read all source documents that have no aspect and are of type text.
+        This is used to find all source documents that need to be preprocessed.
+
+        :param db: The database session.
+        :param project_id: The ID of the project.
+        :param aspect_id: The ID of the aspect.
+        :return: A list of source documents of the given project that have no aspect and are of type text.
+        """
+        return (
+            db.query(SourceDocumentDataORM)
+            .join(SourceDocumentORM, SourceDocumentORM.id == SourceDocumentDataORM.id)
+            .outerjoin(
+                DocumentAspectORM,
+                (DocumentAspectORM.sdoc_id == SourceDocumentDataORM.id)
+                & (DocumentAspectORM.aspect_id == aspect_id),
+            )
+            .filter(
+                DocumentAspectORM.sdoc_id.is_(None),
+                DocumentAspectORM.aspect_id.is_(None),
+                SourceDocumentORM.project_id == project_id,
+                SourceDocumentORM.doctype == DocType.text,
+            )
+            .all()
+        )
+
     def update_multi(
         self,
         db: Session,
@@ -118,9 +150,6 @@ class CRUDDocumentAspect(
         db.add_all(db_objects)
         db.commit()
         return db_objects
-
-
-crud_document_aspect = CRUDDocumentAspect(DocumentAspectORM)
 
 
 crud_document_aspect = CRUDDocumentAspect(DocumentAspectORM)

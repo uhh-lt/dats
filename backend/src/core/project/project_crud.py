@@ -1,7 +1,4 @@
 from core.code.code_crud import crud_code
-from core.doc.document_embedding_crud import crud_document_embedding
-from core.doc.image_embedding_crud import crud_image_embedding
-from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.project.project_dto import ProjectCreate, ProjectUpdate
 from core.project.project_orm import ProjectORM
@@ -14,12 +11,10 @@ from core.user.user_crud import (
 )
 from core.user.user_orm import UserORM
 from fastapi.encoders import jsonable_encoder
-from modules.perspectives.aspect_embedding_crud import crud_aspect_embedding
-from modules.perspectives.cluster_embedding_crud import crud_cluster_embedding
 from repos.db.crud_base import CRUDBase
 from repos.filesystem_repo import FilesystemRepo
-from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy.orm import Session
+from systems.events import project_created, project_deleted
 
 
 class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
@@ -59,30 +54,20 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         # 6) create filesystem directory structure
         FilesystemRepo().create_directory_structure_for_project(proj_id=project_id)
 
+        # 7) emit project created event
+        project_created.send(sender=self, project_id=project_id)
+
         return db_obj
 
     def remove(self, db: Session, *, id: int) -> ProjectORM:
         # 1) delete the project and all connected data via cascading delete
         proj_db_obj = super().remove(db=db, id=id)
+
         # 2) delete the files from filesystem
         FilesystemRepo().purge_project_data(proj_id=id)
-        # 3) Remove embeddings
-        with WeaviateRepo().weaviate_session() as client:
-            crud_document_embedding.remove_embeddings_by_project(
-                client=client, project_id=id
-            )
-            crud_image_embedding.remove_embeddings_by_project(
-                client=client, project_id=id
-            )
-            crud_sentence_embedding.remove_embeddings_by_project(
-                client=client, project_id=id
-            )
-            crud_cluster_embedding.remove_embeddings_by_project(
-                client=client, project_id=id
-            )
-            crud_aspect_embedding.remove_embeddings_by_project(
-                client=client, project_id=id
-            )
+
+        # 3) Emit project deleted event
+        project_deleted.send(sender=self, project_id=id)
 
         return proj_db_obj
 

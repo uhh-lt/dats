@@ -1,14 +1,9 @@
 from typing import Dict, List, Optional
 
-from common.doc_type import DocType
 from common.sdoc_status_enum import SDocStatus
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
-from core.doc.document_embedding_crud import crud_document_embedding
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderCreate, FolderType
-from core.doc.image_embedding_crud import crud_image_embedding
-from core.doc.sdoc_elastic_crud import crud_elastic_sdoc
-from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.source_document_data_dto import SourceDocumentDataRead
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_dto import (
@@ -20,16 +15,13 @@ from core.doc.source_document_link_orm import SourceDocumentLinkORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.document_tag_orm import DocumentTagORM
 from fastapi.encoders import jsonable_encoder
-from modules.perspectives.aspect_embedding_crud import crud_aspect_embedding
-from modules.perspectives.document_aspect_orm import DocumentAspectORM
 from repos.db.crud_base import CRUDBase, NoSuchElementError
 from repos.db.sql_utils import aggregate_ids
-from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
-from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
+from systems.events import source_document_deleted
 
 
 class SourceDocumentPreprocessingUnfinishedError(Exception):
@@ -113,35 +105,6 @@ class CRUDSourceDocument(
         id2data = {db_obj.id: db_obj for db_obj in db_objs}
         return [id2data.get(id) for id in ids]
 
-    def read_text_data_with_no_aspect(
-        self, db: Session, *, project_id: int, aspect_id: int
-    ) -> List[SourceDocumentDataORM]:
-        """
-        Read all source documents that have no aspect and are of type text.
-        This is used to find all source documents that need to be preprocessed.
-
-        :param db: The database session.
-        :param project_id: The ID of the project.
-        :param aspect_id: The ID of the aspect.
-        :return: A list of source documents of the given project that have no aspect and are of type text.
-        """
-        return (
-            db.query(SourceDocumentDataORM)
-            .join(SourceDocumentORM, SourceDocumentORM.id == SourceDocumentDataORM.id)
-            .outerjoin(
-                DocumentAspectORM,
-                (DocumentAspectORM.sdoc_id == SourceDocumentDataORM.id)
-                & (DocumentAspectORM.aspect_id == aspect_id),
-            )
-            .filter(
-                DocumentAspectORM.sdoc_id.is_(None),
-                DocumentAspectORM.aspect_id.is_(None),
-                SourceDocumentORM.project_id == project_id,
-                SourceDocumentORM.doctype == DocType.text,
-            )
-            .all()
-        )
-
     def remove(self, db: Session, *, id: int) -> SourceDocumentORM:
         sdoc_db_obj = super().remove(db=db, id=id)
 
@@ -150,28 +113,10 @@ class CRUDSourceDocument(
             sdoc=SourceDocumentRead.model_validate(sdoc_db_obj)
         )
 
-        # remove from elasticsearch
-        crud_elastic_sdoc.delete(
-            client=ElasticSearchRepo().client,
-            proj_id=sdoc_db_obj.project_id,
-            id=sdoc_db_obj.id,
+        # emit event
+        source_document_deleted.send(
+            self, project_id=sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
         )
-
-        # remove from index
-        # TODO: we need some kind of message system to decouple this from the CRUD operation
-        with WeaviateRepo().weaviate_session() as client:
-            crud_aspect_embedding.remove_by_sdoc_id(
-                client=client, project_id=sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
-            )
-            crud_document_embedding.remove_by_sdoc_id(
-                client=client, project_id=sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
-            )
-            crud_image_embedding.remove_by_sdoc_id(
-                client=client, project_id=sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
-            )
-            crud_sentence_embedding.remove_by_sdoc_id(
-                client=client, project_id=sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
-            )
 
         return sdoc_db_obj
 

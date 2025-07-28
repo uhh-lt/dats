@@ -9,6 +9,7 @@ from core.memo.memo_elastic_index import MemoIndex
 from elasticsearch import Elasticsearch
 from repos.elastic.elastic_crud_base import ElasticCrudBase
 from repos.elastic.elastic_dto_base import PaginatedElasticSearchHits
+from systems.events import project_created, project_deleted, source_document_deleted
 
 
 class MemoElasticCrud(
@@ -73,3 +74,28 @@ class MemoElasticCrud(
 
 
 crud_elastic_memo = MemoElasticCrud(index=MemoIndex, model=ElasticSearchMemo)
+
+
+@source_document_deleted.connect
+def handle_source_document_deleted(sender, sdoc_id: int, project_id: int):
+    # TODO: Implement memo deletion logic
+    print("TODO! Handle source document deleted for memos")
+
+
+@project_created.connect
+def handle_project_created(sender, project_id: int):
+    from repos.elastic.elastic_repo import ElasticSearchRepo
+
+    crud_elastic_memo.index.create_index(
+        client=ElasticSearchRepo().client, proj_id=project_id
+    )
+
+
+@project_deleted.connect
+def handle_project_deleted(sender, project_id: int):
+    from repos.elastic.elastic_repo import ElasticSearchRepo
+
+    crud_elastic_memo.index.delete_index(
+        client=ElasticSearchRepo().client,
+        proj_id=project_id,
+    )

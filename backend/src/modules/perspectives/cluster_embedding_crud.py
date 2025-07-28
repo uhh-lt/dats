@@ -1,6 +1,7 @@
 from modules.perspectives.cluster_collection import ClusterCollection
 from modules.perspectives.cluster_embedding_dto import ClusterObjectIdentifier
 from repos.vector.embedding_crud_base import CRUDBase
+from systems.events import project_deleted
 from weaviate import WeaviateClient
 from weaviate.classes.query import Filter
 
@@ -48,3 +49,13 @@ crud_cluster_embedding = CRUDClusterEmbedding(
     collection_class=ClusterCollection,
     object_identifier=ClusterObjectIdentifier,
 )
+
+
+@project_deleted.connect
+def handle_project_deleted(sender, project_id: int):
+    from repos.vector.weaviate_repo import WeaviateRepo
+
+    with WeaviateRepo().weaviate_session() as client:
+        crud_cluster_embedding.remove_embeddings_by_project(
+            client=client, project_id=project_id
+        )
