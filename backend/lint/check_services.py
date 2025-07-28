@@ -8,6 +8,7 @@ This script enforces multiple rules for *_service.py files:
 """
 
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -24,11 +25,8 @@ def check_no_endpoint_imports(service_path):
     with open(service_path, encoding="utf-8") as f:
         lines = f.readlines()
     for i, line in enumerate(lines, 1):
-        stripped = line.strip()
-        if (
-            stripped.startswith("from ") or stripped.startswith("import ")
-        ) and "_endpoint" in stripped:
-            violations.append((i, stripped))
+        if re.search(r"^(from|import)\s+.*_endpoint\b", line):
+            violations.append((i, line.strip()))
     if violations:
         print(f"Violation in {service_path}: imports endpoint files:")
         for lineno, code in violations:

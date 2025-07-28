@@ -10,6 +10,7 @@ This script enforces multiple rules for *_dto.py files:
 """
 
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -26,11 +27,8 @@ def check_no_service_imports(dto_path):
     with open(dto_path, encoding="utf-8") as f:
         lines = f.readlines()
     for i, line in enumerate(lines, 1):
-        stripped = line.strip()
-        if (
-            stripped.startswith("from ") or stripped.startswith("import ")
-        ) and "_service" in stripped:
-            violations.append((i, stripped))
+        if re.search(r"^(from|import)\s+.*_service\b", line):
+            violations.append((i, line.strip()))
     if violations:
         print(f"Violation in {dto_path}: imports service files:")
         for lineno, code in violations:
@@ -44,11 +42,8 @@ def check_no_repo_imports(dto_path):
     with open(dto_path, encoding="utf-8") as f:
         lines = f.readlines()
     for i, line in enumerate(lines, 1):
-        stripped = line.strip()
-        if (
-            stripped.startswith("from ") or stripped.startswith("import ")
-        ) and "_repo" in stripped:
-            violations.append((i, stripped))
+        if re.search(r"^(from|import)\s+.*_repo\b", line):
+            violations.append((i, line.strip()))
     if violations:
         print(f"Violation in {dto_path}: imports repo files:")
         for lineno, code in violations:
@@ -62,11 +57,8 @@ def check_no_orm_imports(dto_path):
     with open(dto_path, encoding="utf-8") as f:
         lines = f.readlines()
     for i, line in enumerate(lines, 1):
-        stripped = line.strip()
-        if (
-            stripped.startswith("from ") or stripped.startswith("import ")
-        ) and "_orm" in stripped:
-            violations.append((i, stripped))
+        if re.search(r"^(from|import)\s+.*_orm\b", line):
+            violations.append((i, line.strip()))
     if violations:
         print(f"Violation in {dto_path}: imports orm files:")
         for lineno, code in violations:
@@ -80,11 +72,8 @@ def check_no_endpoint_imports(dto_path):
     with open(dto_path, encoding="utf-8") as f:
         lines = f.readlines()
     for i, line in enumerate(lines, 1):
-        stripped = line.strip()
-        if (
-            stripped.startswith("from ") or stripped.startswith("import ")
-        ) and "_endpoint" in stripped:
-            violations.append((i, stripped))
+        if re.search(r"^(from|import)\s+.*_endpoint\b", line):
+            violations.append((i, line.strip()))
     if violations:
         print(f"Violation in {dto_path}: imports endpoint files:")
         for lineno, code in violations:
