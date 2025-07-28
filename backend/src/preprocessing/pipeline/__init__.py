@@ -1,7 +1,6 @@
 from functools import lru_cache
 
 from common.doc_type import DocType
-
 from preprocessing.pipeline.preprocessing_pipeline import PreprocessingPipeline
 from preprocessing.pipeline.steps.audio.process.add_audio_processing_steps import (
     add_audio_processing_steps,
