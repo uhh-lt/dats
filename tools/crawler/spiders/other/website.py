@@ -1,9 +1,8 @@
 from urllib.parse import urlparse
 
+from crawler.spiders.crawl_spider_base import CrawlSpiderBase
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
-
-from crawler.spiders.crawl_spider_base import CrawlSpiderBase
 
 
 class WebsiteSpider(CrawlSpiderBase):

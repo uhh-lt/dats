@@ -3,9 +3,8 @@ from typing import Dict, Optional
 from urllib.parse import urlparse
 
 import scrapy
-from scrapy.http import Response
-
 from crawler.items import GenericWebsiteItem
+from scrapy.http import Response
 from tools.crawler.spiders.spider_utils import slugify, validate_output_dir
 
 

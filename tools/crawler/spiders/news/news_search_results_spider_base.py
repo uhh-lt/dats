@@ -4,7 +4,6 @@ from typing import List, Set
 
 import scrapy
 import srsly
-
 from crawler.items import GenericWebsiteItem
 from crawler.spiders.spider_base import SpiderBase
 from tools.crawler.spiders.spider_utils import slugify

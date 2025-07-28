@@ -6,11 +6,10 @@ from typing import Any, Dict, List
 from uuid import uuid4
 
 import requests
-from dateutil import parser
-
 from crawler.spiders.news.news_search_results_spider_base import (
     NewsSearchResultsSpiderBase,
 )
+from dateutil import parser
 
 
 class CNNSearchResultsSpider(NewsSearchResultsSpiderBase):

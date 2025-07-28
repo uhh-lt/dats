@@ -6,11 +6,10 @@ import requests
 import scrapy
 import srsly
 from bs4 import BeautifulSoup
-from tqdm.auto import tqdm
-
 from crawler.items import GenericWebsiteItem
 from crawler.spiders.spider_base import SpiderBase
 from tools.crawler.spiders.spider_utils import slugify
+from tqdm.auto import tqdm
 
 EN_TOPIC_BASE_URL = "https://globalvoices.org/-/world/{TOPIC}/page/{PAGE_NUMBER}/"
 NON_EN_TOPIC_BASE_URL = (
