@@ -1,13 +1,13 @@
 from enum import Enum
 from typing import Literal, Optional, Union
 
-from core.job.background_job_base_dto import (
+from modules.perspectives.cluster_dto import ClusterCreate
+from pydantic import BaseModel, Field
+from systems.job_system.background_job_base_dto import (
     BackgroundJobBaseCreate,
     BackgroundJobBaseRead,
     BackgroundJobBaseUpdate,
 )
-from modules.perspectives.cluster_dto import ClusterCreate
-from pydantic import BaseModel, Field
 
 
 class PerspectivesJobType(str, Enum):

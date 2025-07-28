@@ -6,7 +6,6 @@ from common.doc_type import DocType
 from common.meta_type import MetaType
 from common.singleton_meta import SingletonMeta
 from core.celery.background_jobs import start_cota_refinement_job_async
-from core.job.background_job_base_dto import BackgroundJobStatus
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from fastapi.encoders import jsonable_encoder
@@ -36,6 +35,7 @@ from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.redis_repo import RedisRepo
 from sqlalchemy.orm import Session
+from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
 
 class COTAService(metaclass=SingletonMeta):

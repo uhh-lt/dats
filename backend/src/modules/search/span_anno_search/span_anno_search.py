@@ -12,11 +12,11 @@ from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from modules.search.search_dto import SpanAnnotationRow, SpanAnnotationSearchResult
 from modules.search.span_anno_search.span_anno_search_columns import SpanColumns
-from modules.search_system.column_info import ColumnInfo
-from modules.search_system.filtering import Filter
-from modules.search_system.search_builder import SearchBuilder
-from modules.search_system.sorting import Sort
 from repos.db.sql_repo import SQLRepo
+from systems.search_system.column_info import ColumnInfo
+from systems.search_system.filtering import Filter
+from systems.search_system.search_builder import SearchBuilder
+from systems.search_system.sorting import Sort
 
 
 def find_span_annotations_info(

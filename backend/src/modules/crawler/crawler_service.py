@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import List, Optional
 
 from common.singleton_meta import SingletonMeta
-from core.job.background_job_base_dto import BackgroundJobStatus
 from core.project.project_crud import crud_project
 from loguru import logger
 from modules.crawler.crawler_job_dto import (
@@ -17,6 +16,7 @@ from modules.crawler.crawler_job_dto import (
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.redis_repo import RedisRepo
+from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
 
 class NoDataToCrawlError(Exception):

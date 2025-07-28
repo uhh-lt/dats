@@ -12,14 +12,14 @@ from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.search.search_dto import (
     PaginatedSDocHits,
 )
-from modules.search_system.column_info import ColumnInfo
-from modules.search_system.filtering import Filter
-from modules.search_system.search_builder import SearchBuilder
-from modules.search_system.sorting import Sort
 from repos.db.sql_repo import SQLRepo
 from repos.elastic.elastic_dto_base import ElasticSearchHit, PaginatedElasticSearchHits
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from sqlalchemy.orm import Session
+from systems.search_system.column_info import ColumnInfo
+from systems.search_system.filtering import Filter
+from systems.search_system.search_builder import SearchBuilder
+from systems.search_system.sorting import Sort
 
 
 class SdocSearchService(metaclass=SingletonMeta):

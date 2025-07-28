@@ -11,12 +11,12 @@ from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from modules.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
 from modules.search.search_dto import BBoxAnnotationRow, BBoxAnnotationSearchResult
-from modules.search_system.column_info import ColumnInfo
-from modules.search_system.filtering import Filter
-from modules.search_system.search_builder import SearchBuilder
-from modules.search_system.sorting import Sort
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
+from systems.search_system.column_info import ColumnInfo
+from systems.search_system.filtering import Filter
+from systems.search_system.search_builder import SearchBuilder
+from systems.search_system.sorting import Sort
 
 repo_service = FilesystemRepo()
 

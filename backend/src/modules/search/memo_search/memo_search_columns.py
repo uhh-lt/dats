@@ -1,7 +1,7 @@
 from core.memo.memo_orm import MemoORM
-from modules.search_system.column_info import AbstractColumns
-from modules.search_system.filtering_operators import FilterOperator, FilterValueType
-from modules.search_system.search_builder import SearchBuilder
+from systems.search_system.column_info import AbstractColumns
+from systems.search_system.filtering_operators import FilterOperator, FilterValueType
+from systems.search_system.search_builder import SearchBuilder
 
 
 class MemoColumns(str, AbstractColumns):

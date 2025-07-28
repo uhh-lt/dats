@@ -1,11 +1,6 @@
 from typing import List, Optional
 
-from core.job.background_job_base_dto import BackgroundJobStatus
 from fastapi.encoders import jsonable_encoder
-from repos.db.crud_base import CRUDBase, NoSuchElementError
-from sqlalchemy import and_, func, or_
-from sqlalchemy.orm import Session
-
 from preprocessing.preprocessing_job_dto import (
     PreprocessingJobCreate,
     PreprocessingJobUpdate,
@@ -13,6 +8,10 @@ from preprocessing.preprocessing_job_dto import (
 from preprocessing.preprocessing_job_orm import PreprocessingJobORM
 from preprocessing.preprocessing_job_payload_crud import crud_prepro_job_payload
 from preprocessing.preprocessing_job_payload_dto import PreprocessingJobPayloadCreate
+from repos.db.crud_base import CRUDBase, NoSuchElementError
+from sqlalchemy import and_, func, or_
+from sqlalchemy.orm import Session
+from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
 
 class CRUDPreprocessingJob(

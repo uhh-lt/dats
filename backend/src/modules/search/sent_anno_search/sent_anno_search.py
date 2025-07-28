@@ -14,11 +14,11 @@ from modules.search.search_dto import (
     SentenceAnnotationSearchResult,
 )
 from modules.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
-from modules.search_system.column_info import ColumnInfo
-from modules.search_system.filtering import Filter
-from modules.search_system.search_builder import SearchBuilder
-from modules.search_system.sorting import Sort
 from repos.db.sql_repo import SQLRepo
+from systems.search_system.column_info import ColumnInfo
+from systems.search_system.filtering import Filter
+from systems.search_system.search_builder import SearchBuilder
+from systems.search_system.sorting import Sort
 
 
 def find_sentence_annotations_info(

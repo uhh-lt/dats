@@ -1,7 +1,6 @@
 from typing import Callable, List, Optional, Union
 
 from common.singleton_meta import SingletonMeta
-from core.job.background_job_base_dto import BackgroundJobStatus
 from loguru import logger
 from modules.perspectives.perspectives_job import (
     AddMissingDocsToAspectParams,
@@ -21,6 +20,7 @@ from modules.perspectives.perspectives_job import (
     SplitClusterParams,
 )
 from repos.redis_repo import RedisRepo
+from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
 
 class PerspectivesJobPreparationError(Exception):

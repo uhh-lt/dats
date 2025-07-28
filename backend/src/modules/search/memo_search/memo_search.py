@@ -4,13 +4,13 @@ from core.memo.memo_elastic_crud import crud_elastic_memo
 from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_orm import ObjectHandleORM
 from modules.search.memo_search.memo_search_columns import MemoColumns
-from modules.search_system.column_info import ColumnInfo
-from modules.search_system.filtering import Filter
-from modules.search_system.search_builder import SearchBuilder
-from modules.search_system.sorting import Sort
 from repos.db.sql_repo import SQLRepo
 from repos.elastic.elastic_dto_base import ElasticSearchHit, PaginatedElasticSearchHits
 from repos.elastic.elastic_repo import ElasticSearchRepo
+from systems.search_system.column_info import ColumnInfo
+from systems.search_system.filtering import Filter
+from systems.search_system.search_builder import SearchBuilder
+from systems.search_system.sorting import Sort
 
 
 def memo_info(

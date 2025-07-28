@@ -1,7 +1,6 @@
 import time
 from typing import Callable, Dict, List, Optional
 
-from core.job.background_job_base_dto import BackgroundJobStatus
 from loguru import logger
 from modules.concept_over_time_analysis.cota_dto import (
     COTARefinementJobRead,
@@ -10,6 +9,7 @@ from modules.concept_over_time_analysis.cota_dto import (
 from modules.concept_over_time_analysis.pipeline.cargo import Cargo
 from modules.concept_over_time_analysis.pipeline.step import PipelineStep
 from repos.redis_repo import RedisRepo
+from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
 
 class COTARefinementPipeline:

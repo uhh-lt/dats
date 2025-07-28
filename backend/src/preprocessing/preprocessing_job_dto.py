@@ -2,15 +2,14 @@ import uuid
 from datetime import datetime
 from typing import List, Optional
 
-from core.job.background_job_base_dto import BackgroundJobStatus
-from pydantic import BaseModel, ConfigDict, Field, field_validator
-from repos.db.dto_base import UpdateDTOBase
-
 from preprocessing.preprocessing_job_payload_dto import (
     PreprocessingJobPayloadCreate,
     PreprocessingJobPayloadCreateWithoutPreproJobId,
     PreprocessingJobPayloadRead,
 )
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from repos.db.dto_base import UpdateDTOBase
+from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
 
 # Properties shared across all DTOs

@@ -3,10 +3,7 @@ import time
 from typing import Callable, Dict, List, Optional
 
 from common.doc_type import DocType
-from core.job.background_job_base_dto import BackgroundJobStatus
 from loguru import logger
-from repos.db.sql_repo import SQLRepo
-
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.pipeline.model.pipeline_step import PipelineStep
 from preprocessing.preprocessing_job_crud import crud_prepro_job
@@ -19,6 +16,8 @@ from preprocessing.preprocessing_job_payload_dto import (
     PreprocessingJobPayloadRead,
     PreprocessingJobPayloadUpdate,
 )
+from repos.db.sql_repo import SQLRepo
+from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
 
 class PreprocessingPipeline:

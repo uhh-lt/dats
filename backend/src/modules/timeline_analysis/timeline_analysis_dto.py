@@ -8,10 +8,10 @@ from modules.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
 from modules.search.span_anno_search.span_anno_search_columns import SpanColumns
-from modules.search_system.filtering import Filter
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.functional_validators import field_validator
 from repos.db.dto_base import UpdateDTOBase
+from systems.search_system.filtering import Filter
 
 ####################
 # Base Types

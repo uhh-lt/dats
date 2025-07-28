@@ -4,11 +4,14 @@ from enum import Enum
 from typing import Dict, List, Optional, Union
 
 import srsly
-from core.job.background_job_base_dto import BackgroundJobBase, BackgroundJobBaseUpdate
 from modules.analysis.analysis_dto import DateGroupBy
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.functional_validators import field_validator
 from repos.db.dto_base import UpdateDTOBase
+from systems.job_system.background_job_base_dto import (
+    BackgroundJobBase,
+    BackgroundJobBaseUpdate,
+)
 
 ####################
 # COTA Base Types
