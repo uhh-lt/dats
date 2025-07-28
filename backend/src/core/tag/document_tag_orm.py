@@ -93,6 +93,9 @@ class DocumentTagORM(ORMBase):
             return []
         return [memo.id for memo in self.object_handle.attached_memos]
 
+    def get_project_id(self) -> int:
+        return self.project_id
+
 
 class SourceDocumentDocumentTagLinkTable(ORMBase):
     source_document_id: Mapped[int] = mapped_column(

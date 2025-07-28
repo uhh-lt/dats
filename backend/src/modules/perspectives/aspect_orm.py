@@ -52,3 +52,6 @@ class AspectORM(ORMBase):
 
     def __repr__(self) -> str:
         return f"<AspectORM(id={self.id}, name='{self.name}')>"
+
+    def get_project_id(self) -> int:
+        return self.project_id

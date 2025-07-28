@@ -145,3 +145,27 @@ class ObjectHandleORM(ORMBase):
             name="UC_only_one_object_handle_per_instance",
         ),
     )
+
+    def get_project_id(self) -> int:
+        if self.project_id is not None:
+            return self.project_id
+        elif self.memo_id is not None:
+            return self.memo.get_project_id()
+        elif self.code_id is not None:
+            return self.code.get_project_id()
+        elif self.source_document_id is not None:
+            return self.source_document.get_project_id()
+        elif self.span_annotation_id is not None:
+            return self.span_annotation.get_project_id()
+        elif self.bbox_annotation_id is not None:
+            return self.bbox_annotation.get_project_id()
+        elif self.sentence_annotation_id is not None:
+            return self.sentence_annotation.get_project_id()
+        elif self.span_group_id is not None:
+            return self.span_group.get_project_id()
+        elif self.document_tag_id is not None:
+            return self.document_tag.get_project_id()
+        else:
+            raise ValueError(
+                "No project ID available for this ObjectHandleORM instance."
+            )

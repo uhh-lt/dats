@@ -59,3 +59,6 @@ class ClusterORM(ORMBase):
 
     def __repr__(self) -> str:
         return f"<ClusterORM(id={self.id}, name='{self.name}')>"
+
+    def get_project_id(self) -> int:
+        return self.aspect.get_project_id()

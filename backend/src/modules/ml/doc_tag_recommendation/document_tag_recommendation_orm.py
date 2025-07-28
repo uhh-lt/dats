@@ -35,3 +35,6 @@ class DocumentTagRecommendationLinkORM(ORMBase):
         "DocumentTagORM",
         back_populates="document_tag_recommendation_links",
     )
+
+    def get_project_id(self) -> int:
+        return self.source_document.get_project_id()

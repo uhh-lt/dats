@@ -19,14 +19,6 @@ class SdocElasticCrud(
         ElasticSearchDocumentUpdate,
     ]
 ):
-    def create(
-        self,
-        client: Elasticsearch,
-        create_dto: ElasticSearchDocumentCreate,
-        proj_id: int,
-    ) -> int:
-        raise NotImplementedError("Creating SourceDocuments is not supported!")
-
     def search_sdocs_by_content_query(
         self,
         *,

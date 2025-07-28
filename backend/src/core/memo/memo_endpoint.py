@@ -16,7 +16,6 @@ from core.memo.memo_dto import (
 )
 from core.memo.memo_utils import get_object_memo_for_user, get_object_memos
 from fastapi import APIRouter, Depends
-from repos.db.sql_utils import get_parent_project_id
 from sqlalchemy.orm import Session
 
 router = APIRouter(
@@ -56,7 +55,7 @@ def add_memo(
 
     # get project id of the attached object
     attached_object = crud.value.read(db=db, id=attached_object_id)
-    proj_id = get_parent_project_id(attached_object)
+    proj_id = attached_object.get_project_id()
     if proj_id is None:
         raise ValueError("Attached object has no project")
 
@@ -117,7 +116,7 @@ def get_memos_by_attached_object_id(
 
     # get project id of the attached object
     attached_object = crud.value.read(db=db, id=attached_obj_id)
-    proj_id = get_parent_project_id(attached_object)
+    proj_id = attached_object.get_project_id()
     if proj_id is None:
         raise ValueError("Attached object has no project")
 
@@ -145,7 +144,7 @@ def get_user_memo_by_attached_object_id(
 
     # get project id of the attached object
     attached_object = crud.value.read(db=db, id=attached_obj_id)
-    proj_id = get_parent_project_id(attached_object)
+    proj_id = attached_object.get_project_id()
     if proj_id is None:
         raise ValueError("Attached object has no project")
 

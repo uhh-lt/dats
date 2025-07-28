@@ -18,3 +18,6 @@ class WordFrequencyORM(ORMBase):
 
     word: Mapped[str] = mapped_column(String, primary_key=True)
     count: Mapped[int] = mapped_column(Integer)
+
+    def get_project_id(self) -> int:
+        return self.source_document.get_project_id()

@@ -139,6 +139,9 @@ class ProjectORM(ORMBase):
         "UserORM", secondary="ProjectUserLinkTable".lower(), back_populates="projects"
     )
 
+    def get_project_id(self) -> int:
+        return self.id
+
 
 class ProjectUserLinkTable(ORMBase):
     project_id: Mapped[int] = mapped_column(

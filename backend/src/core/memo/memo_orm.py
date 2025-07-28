@@ -78,3 +78,6 @@ class MemoORM(ORMBase):
             name="UC_memo_uuid_unique_per_project",
         ),
     )
+
+    def get_project_id(self) -> int:
+        return self.project_id

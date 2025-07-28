@@ -6,7 +6,6 @@ from fastapi import Depends, Request
 from loguru import logger
 from repos.db.crud_base import NoSuchElementError
 from repos.db.orm_base import ORMBase
-from repos.db.sql_utils import get_orm_user_id, get_parent_project_id
 from sqlalchemy.orm import Session
 
 from core.user.user_orm import UserORM
@@ -39,7 +38,7 @@ class AuthzUser:
     def assert_in_same_project_as(self, crud: Crud, object_id: int | str):
         orm_object = self.read_crud(crud, object_id)
 
-        project_id = get_parent_project_id(orm_object)
+        project_id = orm_object.get_project_id()
         if project_id is None:
             self.deny_access("Object has no parent project")
 
@@ -63,7 +62,7 @@ class AuthzUser:
                 f"One or several objects were not found: {set(object_ids) - loaded_object_ids}"
             )
 
-        required_project_ids = {get_parent_project_id(obj) for obj in objs}
+        required_project_ids = {obj.get_project_id() for obj in objs}
         if None in required_project_ids:
             self.deny_access("One or several objects have no parent project")
 
@@ -75,7 +74,7 @@ class AuthzUser:
     def assert_object_has_same_user_id(self, crud: Crud, object_id: int | str):
         orm_object = self.read_crud(crud, object_id)
 
-        user_id = get_orm_user_id(orm_object)
+        user_id = orm_object.get_user_id()
         if user_id is None:
             self.deny_access("Object has no user id set")
 

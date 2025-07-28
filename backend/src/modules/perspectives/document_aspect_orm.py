@@ -29,7 +29,7 @@ class DocumentAspectORM(ORMBase):
     x: Mapped[float] = mapped_column(Float, nullable=True)
     y: Mapped[float] = mapped_column(Float, nullable=True)
 
-    # many to one
+    # many to many
     source_document: Mapped["SourceDocumentORM"] = relationship(
         "SourceDocumentORM",
         back_populates="document_aspects",
@@ -42,3 +42,6 @@ class DocumentAspectORM(ORMBase):
         return (
             f"<DocumentAspectORM(sdoc_id={self.sdoc_id}, aspect_id={self.aspect_id})>"
         )
+
+    def get_project_id(self) -> int:
+        return self.source_document.get_project_id()

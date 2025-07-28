@@ -75,3 +75,6 @@ class FolderORM(ORMBase):
     __table_args__ = (
         UniqueConstraint("parent_id", "name", name="UC_unique_folder_name_in_parent"),
     )
+
+    def get_project_id(self) -> int:
+        return self.project_id

@@ -41,3 +41,6 @@ class PreprocessingJobORM(ORMBase):
     project: Mapped["ProjectORM"] = relationship(
         "ProjectORM", back_populates="preprocessing_jobs"
     )
+
+    def get_project_id(self) -> int:
+        return self.project_id

@@ -44,3 +44,6 @@ class ProjectMetadataORM(ORMBase):
             name="UC_unique_metadata_key_doctype_per_project",
         ),
     )
+
+    def get_project_id(self) -> int:
+        return self.project_id
