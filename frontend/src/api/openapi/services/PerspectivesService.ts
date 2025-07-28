@@ -95,6 +95,23 @@ export class PerspectivesService {
     });
   }
   /**
+   * Returns all Aspects of the Project with the given ID if it exists
+   * @returns AspectRead Successful Response
+   * @throws ApiError
+   */
+  public static getAllAspects({ projId }: { projId: number }): CancelablePromise<Array<AspectRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/perspectives/project/{proj_id}/aspects",
+      path: {
+        proj_id: projId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Returns the Aspect with the given ID.
    * @returns AspectRead Successful Response
    * @throws ApiError

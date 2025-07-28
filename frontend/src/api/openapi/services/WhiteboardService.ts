@@ -120,23 +120,6 @@ export class WhiteboardService {
     });
   }
   /**
-   * Returns the Whiteboard of the Project with the given ID and the logged-in User if it exists
-   * @returns WhiteboardRead Successful Response
-   * @throws ApiError
-   */
-  public static getByProjectAndUser({ projectId }: { projectId: number }): CancelablePromise<Array<WhiteboardRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/whiteboard/project/{project_id}/user",
-      path: {
-        project_id: projectId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Duplicates the Whiteboard with the given ID if it exists
    * @returns WhiteboardRead Successful Response
    * @throws ApiError

@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type ElasticSearchDocumentHit = {
+export type ElasticSearchHit = {
   /**
    * The ID of the Document
    */

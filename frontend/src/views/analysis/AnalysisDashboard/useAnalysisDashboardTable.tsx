@@ -14,7 +14,6 @@ import {
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ExportAnalysisButtonProps } from "../../../components/Export/ExportTimelineAnalysisButton.tsx";
-import UserName from "../../../components/User/UserName.tsx";
 import { dateToLocaleString } from "../../../utils/DateUtils.ts";
 import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 
@@ -22,7 +21,6 @@ export type AnalysisDashboardRow = {
   id: number;
   title: string;
   updated: string;
-  user_id: number;
 };
 
 export type AnalysisCreateOption = {
@@ -73,12 +71,6 @@ export const useAnalysisDashboardTable = <T extends AnalysisDashboardRow>(props:
         accessorFn: (params) => dateToLocaleString(params.updated as string),
         enableEditing: false,
       },
-      {
-        accessorKey: "user_id",
-        header: "Owner",
-        enableEditing: false,
-        Cell: ({ row }) => (row.original.user_id === -1 ? "..." : <UserName userId={row.original.user_id} />),
-      },
       ...(props.additionalColumns ?? []),
     ];
     return columns;
@@ -100,7 +92,6 @@ export const useAnalysisDashboardTable = <T extends AnalysisDashboardRow>(props:
         id: -1,
         title: "",
         updated: new Date().toISOString(),
-        user_id: -1,
       } as T),
     );
     table.setEditingRow(null); //exit editing mode

@@ -92,15 +92,15 @@ export class ConceptOverTimeAnalysisService {
     });
   }
   /**
-   * Returns COTAs of the Project of the User
-   * Returns the COTA of the Project with the given ID and the logged-in User if it exists
+   * Returns COTAs of the Project
+   * Returns the COTA of the Project with the given ID if it exists
    * @returns COTARead Successful Response
    * @throws ApiError
    */
-  public static getByProjectAndUser({ projectId }: { projectId: number }): CancelablePromise<Array<COTARead>> {
+  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<COTARead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/cota/{project_id}/user",
+      url: "/cota/project/{project_id}",
       path: {
         project_id: projectId,
       },

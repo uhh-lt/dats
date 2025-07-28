@@ -173,6 +173,41 @@
         }
       }
     },
+    "/analysis/{proj_id}/find_duplicate_text_sdocs": {
+      "post": {
+        "tags": ["analysis"],
+        "summary": "Returns groups of duplicate sdoc ids.",
+        "operationId": "find_duplicate_text_sdocs",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          {
+            "name": "max_different_words",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Max Different Words" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "type": "array", "items": { "type": "integer" } },
+                  "title": "Response Analysis-Find Duplicate Text Sdocs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/annoscaling/suggest": {
       "post": {
         "tags": ["annoscaling"],
@@ -746,12 +781,12 @@
         }
       }
     },
-    "/cota/{project_id}/user": {
+    "/cota/project/{project_id}": {
       "get": {
         "tags": ["conceptOverTimeAnalysis"],
-        "summary": "Returns COTAs of the Project of the User",
-        "description": "Returns the COTA of the Project with the given ID and the logged-in User if it exists",
-        "operationId": "get_by_project_and_user",
+        "summary": "Returns COTAs of the Project",
+        "description": "Returns the COTA of the Project with the given ID if it exists",
+        "operationId": "get_by_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -769,7 +804,7 @@
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/COTARead" },
-                  "title": "Response Conceptovertimeanalysis-Get By Project And User"
+                  "title": "Response Conceptovertimeanalysis-Get By Project"
                 }
               }
             }
@@ -2128,10 +2163,10 @@
         }
       }
     },
-    "/memo/generate_suggestion/{attached_obj_type}/{attached_obj_id}": {
+    "/memo_generation/generate_suggestion/{attached_obj_type}/{attached_obj_id}": {
       "get": {
-        "tags": ["memo"],
-        "summary": "Generates a 1–2 sentence memo suggestion using Ollama based on the attached object",
+        "tags": ["memo_generation"],
+        "summary": "Generates a 1–2 sentence memo suggestion using LLM based on the attached object",
         "operationId": "generate_memo_suggestion",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2152,7 +2187,9 @@
           "200": {
             "description": "Successful Response",
             "content": {
-              "application/json": { "schema": { "type": "string", "title": "Response Memo-Generate Memo Suggestion" } }
+              "application/json": {
+                "schema": { "type": "string", "title": "Response Memo Generation-Generate Memo Suggestion" }
+              }
             }
           },
           "422": {
@@ -2327,6 +2364,35 @@
           }
         },
         "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/perspectives/project/{proj_id}/aspects": {
+      "get": {
+        "tags": ["perspectives"],
+        "summary": "Returns all Aspects of the Project with the given ID if it exists",
+        "operationId": "get_all_aspects",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AspectRead" },
+                  "title": "Response Perspectives-Get All Aspects"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
       }
     },
     "/perspectives/aspect/{aspect_id}": {
@@ -3072,70 +3138,6 @@
         }
       }
     },
-    "/project/{proj_id}/aspects": {
-      "get": {
-        "tags": ["project"],
-        "summary": "Returns all Aspects of the Project with the given ID if it exists",
-        "operationId": "get_all_aspects",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/AspectRead" },
-                  "title": "Response Project-Get All Aspects"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/project/{proj_id}/find_duplicate_text_sdocs": {
-      "post": {
-        "tags": ["project"],
-        "summary": "Returns groups of duplicate sdoc ids.",
-        "operationId": "find_duplicate_text_sdocs",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
-          {
-            "name": "max_different_words",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Max Different Words" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "type": "array", "items": { "type": "integer" } },
-                  "title": "Response Project-Find Duplicate Text Sdocs"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/project/tree/{project_id}": {
       "get": {
         "tags": ["project"],
@@ -3509,7 +3511,7 @@
           "200": {
             "description": "Successful Response",
             "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedElasticSearchDocumentHits" } }
+              "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedElasticSearchHits" } }
             }
           },
           "422": {
@@ -4343,35 +4345,6 @@
                   "type": "array",
                   "items": { "type": "integer" },
                   "title": "Response Sourcedocument-Get All Tags"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/sdoc/{sdoc_id}/word_frequencies": {
-      "get": {
-        "tags": ["sourceDocument"],
-        "summary": "Returns the SourceDocument's word frequencies with the given ID if it exists",
-        "operationId": "get_word_frequencies",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/WordFrequencyRead" },
-                  "title": "Response Sourcedocument-Get Word Frequencies"
                 }
               }
             }
@@ -5439,11 +5412,11 @@
         }
       }
     },
-    "/timelineAnalysis/project/{project_id}/user": {
+    "/timelineAnalysis/project/{project_id}": {
       "get": {
         "tags": ["timelineAnalysis"],
-        "summary": "Returns the TimelineAnalysis of the Project with the given ID and the logged-in User if it exists",
-        "operationId": "get_by_project_and_user",
+        "summary": "Returns the TimelineAnalysis of the Project with the given ID if it exists",
+        "operationId": "get_by_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -5461,7 +5434,7 @@
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/TimelineAnalysisRead" },
-                  "title": "Response Timelineanalysis-Get By Project And User"
+                  "title": "Response Timelineanalysis-Get By Project"
                 }
               }
             }
@@ -5918,40 +5891,6 @@
         }
       }
     },
-    "/whiteboard/project/{project_id}/user": {
-      "get": {
-        "tags": ["whiteboard"],
-        "summary": "Returns the Whiteboard of the Project with the given ID and the logged-in User if it exists",
-        "operationId": "get_by_project_and_user",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/WhiteboardRead" },
-                  "title": "Response Whiteboard-Get By Project And User"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/whiteboard/duplicate/{whiteboard_id}": {
       "post": {
         "tags": ["whiteboard"],
@@ -6081,6 +6020,35 @@
             "content": {
               "application/json": {
                 "schema": { "type": "string", "title": "Response Word Frequency-Word Frequency Analysis Export" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/word_frequency/sdoc/{sdoc_id}": {
+      "get": {
+        "tags": ["word_frequency"],
+        "summary": "Returns the SourceDocument's word frequencies with the given ID if it exists",
+        "operationId": "get_word_frequencies",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/WordFrequencyRead" },
+                  "title": "Response Word Frequency-Get Word Frequencies"
+                }
               }
             }
           },
@@ -6840,11 +6808,6 @@
         "properties": {
           "name": { "type": "string", "title": "Name", "description": "Name of the ConceptOverTimeAnalysis" },
           "id": { "type": "integer", "title": "Id", "description": "ID of the ConceptOverTimeAnalysis" },
-          "user_id": {
-            "type": "integer",
-            "title": "User Id",
-            "description": "User the ConceptOverTimeAnalysis belongs to"
-          },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
@@ -6887,7 +6850,6 @@
         "required": [
           "name",
           "id",
-          "user_id",
           "project_id",
           "timeline_settings",
           "training_settings",
@@ -7868,7 +7830,7 @@
         "required": ["status", "status_message", "sdoc_id", "current_tag_ids", "suggested_tag_ids", "reasoning"],
         "title": "DocumentTaggingResult"
       },
-      "ElasticSearchDocumentHit": {
+      "ElasticSearchHit": {
         "properties": {
           "id": { "type": "integer", "title": "Id", "description": "The ID of the Document" },
           "score": {
@@ -7886,7 +7848,7 @@
         },
         "type": "object",
         "required": ["id"],
-        "title": "ElasticSearchDocumentHit"
+        "title": "ElasticSearchHit"
       },
       "ExportJobParameters": {
         "properties": {
@@ -9376,10 +9338,10 @@
         "enum": ["NUMBER_EQUALS", "NUMBER_NOT_EQUALS", "NUMBER_GT", "NUMBER_LT", "NUMBER_GTE", "NUMBER_LTE"],
         "title": "NumberOperator"
       },
-      "PaginatedElasticSearchDocumentHits": {
+      "PaginatedElasticSearchHits": {
         "properties": {
           "hits": {
-            "items": { "$ref": "#/components/schemas/ElasticSearchDocumentHit" },
+            "items": { "$ref": "#/components/schemas/ElasticSearchHit" },
             "type": "array",
             "title": "Hits",
             "description": "The IDs, scores and (optional) highlights of Document search results on the requested page."
@@ -9392,12 +9354,12 @@
         },
         "type": "object",
         "required": ["hits", "total_results"],
-        "title": "PaginatedElasticSearchDocumentHits"
+        "title": "PaginatedElasticSearchHits"
       },
       "PaginatedSDocHits": {
         "properties": {
           "hits": {
-            "items": { "$ref": "#/components/schemas/ElasticSearchDocumentHit" },
+            "items": { "$ref": "#/components/schemas/ElasticSearchHit" },
             "type": "array",
             "title": "Hits",
             "description": "The IDs, scores and (optional) highlights of Document search results on the requested page."
@@ -11395,7 +11357,6 @@
             "description": "The type of the TimelineAnalysis"
           },
           "id": { "type": "integer", "title": "Id", "description": "ID of the TimelineAnalysis" },
-          "user_id": { "type": "integer", "title": "User Id", "description": "User the TimelineAnalysis belongs to" },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
@@ -11429,7 +11390,6 @@
           "name",
           "timeline_analysis_type",
           "id",
-          "user_id",
           "project_id",
           "settings",
           "concepts",
@@ -12060,7 +12020,6 @@
             "title": "Project Id",
             "description": "Project the Whiteboard belongs to"
           },
-          "user_id": { "type": "integer", "title": "User Id", "description": "User the Whiteboard belongs to" },
           "created": {
             "type": "string",
             "format": "date-time",
@@ -12079,7 +12038,7 @@
           }
         },
         "type": "object",
-        "required": ["title", "id", "project_id", "user_id", "created", "updated", "content"],
+        "required": ["title", "id", "project_id", "created", "updated", "content"],
         "title": "WhiteboardRead"
       },
       "WhiteboardUpdate": {

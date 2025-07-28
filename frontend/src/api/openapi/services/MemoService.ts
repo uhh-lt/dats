@@ -145,28 +145,4 @@ export class MemoService {
       },
     });
   }
-  /**
-   * Generates a 1–2 sentence memo suggestion using Ollama based on the attached object
-   * @returns string Successful Response
-   * @throws ApiError
-   */
-  public static generateMemoSuggestion({
-    attachedObjId,
-    attachedObjType,
-  }: {
-    attachedObjId: number;
-    attachedObjType: AttachedObjectType;
-  }): CancelablePromise<string> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/memo/generate_suggestion/{attached_obj_type}/{attached_obj_id}",
-      path: {
-        attached_obj_id: attachedObjId,
-        attached_obj_type: attachedObjType,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
 }

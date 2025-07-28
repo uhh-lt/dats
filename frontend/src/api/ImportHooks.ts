@@ -60,15 +60,15 @@ const usePollImportJob = (importJobId: string | undefined, initialData: ImportJo
               break;
             case ImportJobType.TIMELINE_ANALYSES:
               console.log("Invalidating timeline analyses");
-              queryClient.invalidateQueries({ queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, projectId] });
+              queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_TIMELINE_ANALYSIS, projectId] });
               break;
             case ImportJobType.WHITEBOARDS:
               console.log("Invalidating whiteboads");
-              queryClient.invalidateQueries({ queryKey: [QueryKey.WHITEBOARDS_PROJECT, projectId] });
+              queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_WHITEBOARDS, projectId] });
               break;
             case ImportJobType.COTA:
               console.log("Invalidating cota");
-              queryClient.invalidateQueries({ queryKey: [QueryKey.COTAS_PROJECT_USER, projectId] });
+              queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_COTAS, projectId] });
               break;
             case ImportJobType.DOCUMENTS:
               console.log("Invalidating search documents");
@@ -86,9 +86,9 @@ const usePollImportJob = (importJobId: string | undefined, initialData: ImportJo
               queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CODES, projectId] });
               queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_METADATAS, projectId] });
               queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_USERS, projectId] });
-              queryClient.invalidateQueries({ queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, projectId] });
-              queryClient.invalidateQueries({ queryKey: [QueryKey.WHITEBOARDS_PROJECT, projectId] });
-              queryClient.invalidateQueries({ queryKey: [QueryKey.COTAS_PROJECT_USER, projectId] });
+              queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_TIMELINE_ANALYSIS, projectId] });
+              queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_WHITEBOARDS, projectId] });
+              queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_COTAS, projectId] });
               queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE, projectId] });
               queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMO] });
               queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO] });

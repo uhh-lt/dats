@@ -4,8 +4,8 @@ import parse from "html-react-parser";
 import { MRT_ColumnDef, MRT_RowVirtualizer, MaterialReactTable, useMaterialReactTable } from "material-react-table";
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from "react";
 import { QueryKey } from "../../../api/QueryKey.ts";
-import { ElasticSearchDocumentHit } from "../../../api/openapi/models/ElasticSearchDocumentHit.ts";
-import { PaginatedElasticSearchDocumentHits } from "../../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
+import { ElasticSearchHit } from "../../../api/openapi/models/ElasticSearchHit.ts";
+import { PaginatedElasticSearchHits } from "../../../api/openapi/models/PaginatedElasticSearchHits.ts";
 import { SdocColumns } from "../../../api/openapi/models/SdocColumns.ts";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { SearchService } from "../../../api/openapi/services/SearchService.ts";
@@ -24,7 +24,7 @@ import SdocTagsRenderer from "../SdocTagRenderer.tsx";
 import { DocumentTableFilterActions } from "./documentTableFilterSlice.ts";
 import { useInitDocumentTableFilterSlice } from "./useInitDocumentTableFilterSlice.ts";
 
-const flatMapData = (page: PaginatedElasticSearchDocumentHits) => page.hits;
+const flatMapData = (page: PaginatedElasticSearchHits) => page.hits;
 
 // this defines which filter slice is used
 const filterStateSelector = (state: RootState) => state.documentTableFilter;
@@ -45,7 +45,7 @@ function SdocTable({
   renderTopRightToolbar = FilterTableToolbarRight,
   renderTopLeftToolbar = FilterTableToolbarLeft,
   renderBottomToolbar,
-}: FilterTableProps<ElasticSearchDocumentHit>) {
+}: FilterTableProps<ElasticSearchHit>) {
   // local st ate
   const [searchQuery, setSearchQuery] = useState<string | undefined>("");
 
@@ -62,7 +62,7 @@ function SdocTable({
     if (!tableInfo) return [];
 
     const result = tableInfo.map((column) => {
-      const colDef: MRT_ColumnDef<ElasticSearchDocumentHit> = {
+      const colDef: MRT_ColumnDef<ElasticSearchHit> = {
         id: column.column,
         header: column.label,
         enableSorting: column.sortable,
@@ -72,25 +72,25 @@ function SdocTable({
           return {
             ...colDef,
             Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderDoctypeIcon />,
-          } as MRT_ColumnDef<ElasticSearchDocumentHit>;
+          } as MRT_ColumnDef<ElasticSearchHit>;
         case SdocColumns.SD_SOURCE_DOCUMENT_FILENAME:
           return {
             ...colDef,
             flex: 2,
             Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderFilename />,
-          } as MRT_ColumnDef<ElasticSearchDocumentHit>;
+          } as MRT_ColumnDef<ElasticSearchHit>;
         case SdocColumns.SD_DOCUMENT_TAG_ID_LIST:
           return {
             ...colDef,
             flex: 2,
             Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.id} />,
-          } as MRT_ColumnDef<ElasticSearchDocumentHit>;
+          } as MRT_ColumnDef<ElasticSearchHit>;
         case SdocColumns.SD_USER_ID_LIST:
           return {
             ...colDef,
             flex: 2,
             Cell: ({ row }) => <SdocAnnotatorsRenderer sdocId={row.original.id} />,
-          } as MRT_ColumnDef<ElasticSearchDocumentHit>;
+          } as MRT_ColumnDef<ElasticSearchHit>;
         case SdocColumns.SD_CODE_ID_LIST:
           return null;
         case SdocColumns.SD_SPAN_ANNOTATIONS:
@@ -104,21 +104,21 @@ function SdocTable({
               Cell: ({ row }) => (
                 <SdocMetadataRenderer sdocId={row.original.id} projectMetadataId={parseInt(column.column)} />
               ),
-            } as MRT_ColumnDef<ElasticSearchDocumentHit>;
+            } as MRT_ColumnDef<ElasticSearchHit>;
           } else {
             return {
               ...colDef,
               Cell: () => <i>Cannot render column {column.column}</i>,
-            } as MRT_ColumnDef<ElasticSearchDocumentHit>;
+            } as MRT_ColumnDef<ElasticSearchHit>;
           }
       }
     });
     // unwanted columns are set to null, so we filter those out
-    return result.filter((column) => column !== null) as MRT_ColumnDef<ElasticSearchDocumentHit>[];
+    return result.filter((column) => column !== null) as MRT_ColumnDef<ElasticSearchHit>[];
   }, [tableInfo]);
 
   // table data
-  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchDocumentHits>({
+  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchHits>({
     queryKey: [
       QueryKey.SDOC_TABLE,
       projectId,
@@ -200,7 +200,7 @@ function SdocTable({
   const renderDetailPanel = useMemo(() => {
     if (!searchQuery || searchQuery.trim().length === 0) return undefined;
 
-    return ({ row }: { row: { original: ElasticSearchDocumentHit } }) =>
+    return ({ row }: { row: { original: ElasticSearchHit } }) =>
       row.original.highlights ? (
         <Box className="search-result-highlight">
           {row.original.highlights.map((highlight, index) => (
@@ -213,7 +213,7 @@ function SdocTable({
   }, [searchQuery]);
 
   // table
-  const table = useMaterialReactTable<ElasticSearchDocumentHit>({
+  const table = useMaterialReactTable<ElasticSearchHit>({
     data: flatData,
     columns: columns,
     getRowId: (row) => `${row.id}`,

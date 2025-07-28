@@ -37,14 +37,13 @@ function TimelineAnalysisDashboard() {
     isLoading: isLoadingAnalysis,
     isFetching: isFetchingAnalysis,
     isError: isLoadingAnalysisError,
-  } = TimelineAnalysisHooks.useGetUserTimelineAnalysisList();
+  } = TimelineAnalysisHooks.useGetProjectTimelineAnalysisList();
   const userAnalysisTableData: TimelineAnaylsisDashboardRow[] = useMemo(
     () =>
       userAnalysis?.map((analysis) => ({
         id: analysis.id,
         title: analysis.name,
         updated: analysis.updated,
-        user_id: analysis.user_id,
         type: analysis.timeline_analysis_type,
       })) || [],
     [userAnalysis],

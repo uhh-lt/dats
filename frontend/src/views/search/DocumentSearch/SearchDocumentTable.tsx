@@ -14,8 +14,8 @@ import {
 import { useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { QueryKey } from "../../../api/QueryKey.ts";
-import { ElasticSearchDocumentHit } from "../../../api/openapi/models/ElasticSearchDocumentHit.ts";
-import { PaginatedElasticSearchDocumentHits } from "../../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
+import { ElasticSearchHit } from "../../../api/openapi/models/ElasticSearchHit.ts";
+import { PaginatedElasticSearchHits } from "../../../api/openapi/models/PaginatedElasticSearchHits.ts";
 import { SdocColumns } from "../../../api/openapi/models/SdocColumns.ts";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
@@ -50,7 +50,7 @@ import { SearchActions } from "./searchSlice.ts";
 const filterStateSelector = (state: RootState) => state.search;
 const filterName = "root";
 
-const flatMapData = (page: PaginatedElasticSearchDocumentHits) => page.hits;
+const flatMapData = (page: PaginatedElasticSearchHits) => page.hits;
 
 interface DocumentTableProps {
   projectId: number;
@@ -102,7 +102,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
     if (!tableInfo || !user) return [];
 
     const result = tableInfo.map((column) => {
-      const colDef: MRT_ColumnDef<ElasticSearchDocumentHit> = {
+      const colDef: MRT_ColumnDef<ElasticSearchHit> = {
         id: column.column,
         accessorFn: () => null,
         header: column.label,
@@ -115,23 +115,23 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
             ...colDef,
             size: 100,
             Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderDoctypeIcon />,
-          } as MRT_ColumnDef<ElasticSearchDocumentHit>;
+          } as MRT_ColumnDef<ElasticSearchHit>;
         case SdocColumns.SD_SOURCE_DOCUMENT_FILENAME:
           return {
             ...colDef,
             size: 360,
             Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderFilename />,
-          } as MRT_ColumnDef<ElasticSearchDocumentHit>;
+          } as MRT_ColumnDef<ElasticSearchHit>;
         case SdocColumns.SD_DOCUMENT_TAG_ID_LIST:
           return {
             ...colDef,
             Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.id} />,
-          } as MRT_ColumnDef<ElasticSearchDocumentHit>;
+          } as MRT_ColumnDef<ElasticSearchHit>;
         case SdocColumns.SD_USER_ID_LIST:
           return {
             ...colDef,
             Cell: ({ row }) => <SdocAnnotatorsRenderer sdocId={row.original.id} />,
-          } as MRT_ColumnDef<ElasticSearchDocumentHit>;
+          } as MRT_ColumnDef<ElasticSearchHit>;
         case SdocColumns.SD_CODE_ID_LIST:
           return null;
         case SdocColumns.SD_SPAN_ANNOTATIONS:
@@ -144,24 +144,24 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
               Cell: ({ row }) => (
                 <SdocMetadataRenderer sdocId={row.original.id} projectMetadataId={parseInt(column.column)} />
               ),
-            } as MRT_ColumnDef<ElasticSearchDocumentHit>;
+            } as MRT_ColumnDef<ElasticSearchHit>;
           } else {
             return {
               ...colDef,
               Cell: () => <i>Cannot render column {column.column}</i>,
-            } as MRT_ColumnDef<ElasticSearchDocumentHit>;
+            } as MRT_ColumnDef<ElasticSearchHit>;
           }
       }
     });
 
     // unwanted columns are set to null, so we filter those out
-    return result.filter((column) => column !== null) as MRT_ColumnDef<ElasticSearchDocumentHit>[];
+    return result.filter((column) => column !== null) as MRT_ColumnDef<ElasticSearchHit>[];
   }, [tableInfo, user]);
 
   // search
   const fetchSize = useAppSelector((state) => state.search.fetchSize);
   const filter = useAppSelector((state) => state.search.filter[filterName]);
-  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchDocumentHits>({
+  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchHits>({
     queryKey: [
       QueryKey.SEARCH_TABLE,
       projectId,
@@ -222,7 +222,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
   }, [onSearchResultsChange, flatData]);
 
   // table
-  const table = useMaterialReactTable<ElasticSearchDocumentHit>({
+  const table = useMaterialReactTable<ElasticSearchHit>({
     data: flatData,
     columns: columns,
     getRowId: (row) => `${row.id}`,

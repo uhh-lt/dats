@@ -1,6 +1,6 @@
 import InterestsIcon from "@mui/icons-material/Interests";
 import SaveIcon from "@mui/icons-material/Save";
-import { Box, Button, IconButton, Menu, MenuItem, Paper, Stack, Tooltip, Typography } from "@mui/material";
+import { Box, Button, IconButton, Menu, MenuItem, Paper, Stack, Tooltip } from "@mui/material";
 import { toPng } from "html-to-image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useBlocker, useParams } from "react-router-dom";
@@ -158,10 +158,9 @@ const connectionHandleIdSelector = (state: ReactFlowState) => state.connectionHa
 
 interface WhiteboardFlowProps {
   whiteboard: WhiteboardRead;
-  readonly: boolean;
 }
 
-function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
+function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
   // whiteboard (react-flow)
   const reactFlowInstance = useReactFlow<DATSNodeData>();
   const reactFlowService = useReactFlowService(reactFlowInstance);
@@ -434,7 +433,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
             onEdgesChange={onEdgesChange}
             onEdgeClick={onEdgeClick}
             onEdgeContextMenu={onEdgeClick}
-            onEdgeUpdate={readonly ? undefined : onEdgeUpdate}
+            onEdgeUpdate={onEdgeUpdate}
             onSelectionChange={handleSelectionChange}
             onConnect={onConnect}
             connectionLineComponent={connectionHandleId === "database" ? StraightConnectionLine : undefined}
@@ -458,11 +457,13 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
             proOptions={{ hideAttribution: true }}
             minZoom={0.1}
             maxZoom={2}
-            elementsSelectable={!readonly}
-            nodesDraggable={!readonly}
-            nodesConnectable={!readonly} // we misuse this as readonly flag for database nodes
-            nodesFocusable={!readonly}
-            edgesFocusable={!readonly}
+            // readonly:
+            // onEdgeUpdate={readonly ? undefined : onEdgeUpdate}
+            // elementsSelectable={!readonly}
+            // nodesDraggable={!readonly}
+            // nodesConnectable={!readonly} // we misuse this as readonly flag for database nodes
+            // nodesFocusable={!readonly}
+            // edgesFocusable={!readonly}
             onKeyDown={(event) => {
               // copy
               if (event.key === "c" && (event.metaKey || event.ctrlKey)) {
@@ -479,155 +480,142 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
               }
             }}
           >
-            {!readonly && (
-              <>
-                <Panel position="top-left">
-                  <Paper elevation={1} sx={{ mb: 3, width: "fit-content" }}>
-                    <Stack spacing={1} sx={{ p: 1 }}>
-                      <Stack direction="row" alignItems="center" spacing={1}>
-                        <EditableTypography
-                          value={whiteboard.title}
-                          onChange={handleTitleChange}
-                          whiteColor={false}
-                          variant="h5"
-                        />
-                        <Tooltip title="Save whiteboard" placement="bottom" arrow>
-                          <IconButton size="small" loading={updateWhiteboard.isPending} onClick={handleSaveWhiteboard}>
-                            <SaveIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Export whiteboard" placement="bottom" arrow>
-                          <IconButton onClick={handleExportWhiteboard} size="small" sx={{ ml: 1 }}>
-                            {getIconComponent(Icon.EXPORT)}
-                          </IconButton>
-                        </Tooltip>
-                      </Stack>
-                    </Stack>
-                  </Paper>
-                  <Paper elevation={1} sx={{ mb: 3, width: "fit-content" }}>
-                    <Stack>
-                      <AddDocumentNodeDialog
-                        projectId={projectId}
+            <Panel position="top-left">
+              <Paper elevation={1} sx={{ mb: 3, width: "fit-content" }}>
+                <Stack spacing={1} sx={{ p: 1 }}>
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <EditableTypography
+                      value={whiteboard.title}
+                      onChange={handleTitleChange}
+                      whiteColor={false}
+                      variant="h5"
+                    />
+                    <Tooltip title="Save whiteboard" placement="bottom" arrow>
+                      <IconButton size="small" loading={updateWhiteboard.isPending} onClick={handleSaveWhiteboard}>
+                        <SaveIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Export whiteboard" placement="bottom" arrow>
+                      <IconButton onClick={handleExportWhiteboard} size="small" sx={{ ml: 1 }}>
+                        {getIconComponent(Icon.EXPORT)}
+                      </IconButton>
+                    </Tooltip>
+                  </Stack>
+                </Stack>
+              </Paper>
+              <Paper elevation={1} sx={{ mb: 3, width: "fit-content" }}>
+                <Stack>
+                  <AddDocumentNodeDialog
+                    projectId={projectId}
+                    onClick={handleChangePendingAction}
+                    buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
+                  />
+                  <AddTagNodeDialog
+                    projectId={projectId}
+                    onClick={handleChangePendingAction}
+                    buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
+                  />
+                  <AddCodeNodeDialog
+                    projectId={projectId}
+                    onClick={handleChangePendingAction}
+                    buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
+                  />
+                  <AddSpanAnnotationNodeDialog
+                    projectId={projectId}
+                    onClick={handleChangePendingAction}
+                    buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
+                  />
+                  <AddSentenceAnnotationNodeDialog
+                    projectId={projectId}
+                    onClick={handleChangePendingAction}
+                    buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
+                  />
+                  <AddBBoxAnnotationNodeDialog
+                    projectId={projectId}
+                    onClick={handleChangePendingAction}
+                    buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
+                  />
+                  <AddMemoNodeDialog
+                    projectId={projectId}
+                    onClick={handleChangePendingAction}
+                    buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
+                  />
+                </Stack>
+              </Paper>
+              <Paper elevation={1} sx={{ width: "fit-content" }}>
+                <Stack>
+                  <AddNoteNodeButton
+                    onClick={handleChangePendingAction}
+                    buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
+                  />
+                  <AddTextNodeButton
+                    onClick={handleChangePendingAction}
+                    buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
+                  />
+                  <Tooltip title="Add shape" placement="right" arrow>
+                    <Button onClick={handleShapeMenuClick} sx={{ minWidth: 0, p: 1, color: "black" }} variant="text">
+                      <InterestsIcon />
+                    </Button>
+                  </Tooltip>
+                  <Menu
+                    id="shape-menu"
+                    anchorEl={shapeMenuAnchor}
+                    open={shapeMenuOpen}
+                    onClose={handleShapeMenuClose}
+                    anchorOrigin={{
+                      vertical: "top",
+                      horizontal: "right",
+                    }}
+                    transformOrigin={{
+                      vertical: "top",
+                      horizontal: "left",
+                    }}
+                    slotProps={{
+                      paper: {
+                        sx: {
+                          minWidth: "auto",
+                          width: "fit-content",
+                          marginLeft: 0.8,
+                          elevation: 1,
+                          boxShadow: 1,
+                        },
+                      },
+                      list: {
+                        sx: { p: 0 },
+                      },
+                    }}
+                  >
+                    <MenuItem onClick={handleShapeMenuClose} sx={{ p: 0, px: 0, py: 0, minHeight: "auto" }}>
+                      <AddBorderNodeButton
+                        type="Rectangle"
                         onClick={handleChangePendingAction}
                         buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
                       />
-                      <AddTagNodeDialog
-                        projectId={projectId}
+                    </MenuItem>
+                    <MenuItem onClick={handleShapeMenuClose} sx={{ p: 0, px: 0, py: 0, minHeight: "auto" }}>
+                      <AddBorderNodeButton
+                        type="Ellipse"
                         onClick={handleChangePendingAction}
                         buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
                       />
-                      <AddCodeNodeDialog
-                        projectId={projectId}
+                    </MenuItem>
+                    <MenuItem onClick={handleShapeMenuClose} sx={{ p: 0, px: 0, py: 0, minHeight: "auto" }}>
+                      <AddBorderNodeButton
+                        type="Rounded"
                         onClick={handleChangePendingAction}
                         buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
                       />
-                      <AddSpanAnnotationNodeDialog
-                        projectId={projectId}
-                        onClick={handleChangePendingAction}
-                        buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
-                      />
-                      <AddSentenceAnnotationNodeDialog
-                        projectId={projectId}
-                        onClick={handleChangePendingAction}
-                        buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
-                      />
-                      <AddBBoxAnnotationNodeDialog
-                        projectId={projectId}
-                        onClick={handleChangePendingAction}
-                        buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
-                      />
-                      <AddMemoNodeDialog
-                        projectId={projectId}
-                        onClick={handleChangePendingAction}
-                        buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
-                      />
-                    </Stack>
-                  </Paper>
-                  <Paper elevation={1} sx={{ width: "fit-content" }}>
-                    <Stack>
-                      <AddNoteNodeButton
-                        onClick={handleChangePendingAction}
-                        buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
-                      />
-                      <AddTextNodeButton
-                        onClick={handleChangePendingAction}
-                        buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
-                      />
-                      <Tooltip title="Add shape" placement="right" arrow>
-                        <Button
-                          onClick={handleShapeMenuClick}
-                          sx={{ minWidth: 0, p: 1, color: "black" }}
-                          variant="text"
-                        >
-                          <InterestsIcon />
-                        </Button>
-                      </Tooltip>
-                      <Menu
-                        id="shape-menu"
-                        anchorEl={shapeMenuAnchor}
-                        open={shapeMenuOpen}
-                        onClose={handleShapeMenuClose}
-                        anchorOrigin={{
-                          vertical: "top",
-                          horizontal: "right",
-                        }}
-                        transformOrigin={{
-                          vertical: "top",
-                          horizontal: "left",
-                        }}
-                        slotProps={{
-                          paper: {
-                            sx: {
-                              minWidth: "auto",
-                              width: "fit-content",
-                              marginLeft: 0.8,
-                              elevation: 1,
-                              boxShadow: 1,
-                            },
-                          },
-                          list: {
-                            sx: { p: 0 },
-                          },
-                        }}
-                      >
-                        <MenuItem onClick={handleShapeMenuClose} sx={{ p: 0, px: 0, py: 0, minHeight: "auto" }}>
-                          <AddBorderNodeButton
-                            type="Rectangle"
-                            onClick={handleChangePendingAction}
-                            buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
-                          />
-                        </MenuItem>
-                        <MenuItem onClick={handleShapeMenuClose} sx={{ p: 0, px: 0, py: 0, minHeight: "auto" }}>
-                          <AddBorderNodeButton
-                            type="Ellipse"
-                            onClick={handleChangePendingAction}
-                            buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
-                          />
-                        </MenuItem>
-                        <MenuItem onClick={handleShapeMenuClose} sx={{ p: 0, px: 0, py: 0, minHeight: "auto" }}>
-                          <AddBorderNodeButton
-                            type="Rounded"
-                            onClick={handleChangePendingAction}
-                            buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
-                          />
-                        </MenuItem>
-                      </Menu>
-                    </Stack>
-                  </Paper>
-                  {readonly && (
-                    <Typography mt={3} textAlign="center" variant="h6">
-                      Read-only!
-                    </Typography>
-                  )}
-                </Panel>
-                <Panel position="top-center" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                  {pendingAction && <Paper sx={{ p: 1 }}>Click anywhere to add node(s)!</Paper>}
-                  <NodeEditMenu ref={nodeEditMenuRef} />
-                  <EdgeEditMenu ref={edgeEditMenuRef} />
-                  <DatabaseEdgeEditMenu ref={databaseEdgeEditMenuRef} />
-                </Panel>
-              </>
-            )}
+                    </MenuItem>
+                  </Menu>
+                </Stack>
+              </Paper>
+            </Panel>
+            <Panel position="top-center" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+              {pendingAction && <Paper sx={{ p: 1 }}>Click anywhere to add node(s)!</Paper>}
+              <NodeEditMenu ref={nodeEditMenuRef} />
+              <EdgeEditMenu ref={edgeEditMenuRef} />
+              <DatabaseEdgeEditMenu ref={databaseEdgeEditMenuRef} />
+            </Panel>
             <Background />
             <Controls />
             <MiniMap />

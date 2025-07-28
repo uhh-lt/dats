@@ -8,9 +8,9 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from "react";
-import { ElasticSearchDocumentHit } from "../../../api/openapi/models/ElasticSearchDocumentHit.ts";
+import { ElasticSearchHit } from "../../../api/openapi/models/ElasticSearchHit.ts";
 import { MemoColumns } from "../../../api/openapi/models/MemoColumns.ts";
-import { PaginatedElasticSearchDocumentHits } from "../../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
+import { PaginatedElasticSearchHits } from "../../../api/openapi/models/PaginatedElasticSearchHits.ts";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { SearchService } from "../../../api/openapi/services/SearchService.ts";
 import { QueryKey } from "../../../api/QueryKey.ts";
@@ -26,7 +26,7 @@ import MemoToolbarLeft from "./MemoToolbarLeft.tsx";
 import MemoToolbarRight from "./MemoToolbarRight.tsx";
 import { useInitMemoFilterSlice } from "./useInitMemoFilterSlice.ts";
 
-const flatMapData = (page: PaginatedElasticSearchDocumentHits) => page.hits;
+const flatMapData = (page: PaginatedElasticSearchHits) => page.hits;
 
 // this defines which filter slice is used
 const filterStateSelector = (state: RootState) => state.memoFilter;
@@ -47,7 +47,7 @@ function SearchMemoTable({
   renderTopRightToolbar = MemoToolbarRight,
   renderTopLeftToolbar = MemoToolbarLeft,
   renderBottomToolbar,
-}: FilterTableProps<ElasticSearchDocumentHit>) {
+}: FilterTableProps<ElasticSearchHit>) {
   // local state
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isSearchContent, setIsSearchContent] = useState<boolean>(false);
@@ -65,7 +65,7 @@ function SearchMemoTable({
     if (!tableInfo) return [];
 
     const result = tableInfo.map((column) => {
-      const colDef: MRT_ColumnDef<ElasticSearchDocumentHit> = {
+      const colDef: MRT_ColumnDef<ElasticSearchHit> = {
         id: column.column,
         accessorFn: () => null,
         header: column.label,
@@ -78,28 +78,28 @@ function SearchMemoTable({
             ...colDef,
             size: 100,
             Cell: ({ row }) => <MemoRenderer memo={row.original.id} showTitle />,
-          } as MRT_ColumnDef<ElasticSearchDocumentHit>;
+          } as MRT_ColumnDef<ElasticSearchHit>;
         case MemoColumns.M_CONTENT:
           return {
             ...colDef,
             size: 360,
             Cell: ({ row }) => <MemoRenderer memo={row.original.id} showContent />,
-          } as MRT_ColumnDef<ElasticSearchDocumentHit>;
+          } as MRT_ColumnDef<ElasticSearchHit>;
         case MemoColumns.M_STARRED:
           return {
             ...colDef,
             Cell: ({ row }) => <MemoRenderer memo={row.original.id} showStar />,
-          } as MRT_ColumnDef<ElasticSearchDocumentHit>;
+          } as MRT_ColumnDef<ElasticSearchHit>;
         case MemoColumns.M_USER_ID:
           return {
             ...colDef,
             Cell: ({ row }) => <MemoRenderer memo={row.original.id} showUser />,
-          } as MRT_ColumnDef<ElasticSearchDocumentHit>;
+          } as MRT_ColumnDef<ElasticSearchHit>;
         default:
           return {
             ...colDef,
             Cell: () => <i>Cannot render column {column.column}</i>,
-          } as MRT_ColumnDef<ElasticSearchDocumentHit>;
+          } as MRT_ColumnDef<ElasticSearchHit>;
       }
     });
 
@@ -110,14 +110,14 @@ function SearchMemoTable({
       enableSorting: false,
       accessorFn: () => null,
       Cell: ({ row }) => <MemoRenderer memo={row.original.id} showAttachedObject attachedObjectLink />,
-    } as MRT_ColumnDef<ElasticSearchDocumentHit>;
+    } as MRT_ColumnDef<ElasticSearchHit>;
 
     // unwanted columns are set to null, so we filter those out
     return [...result, attachedToCell];
   }, [tableInfo]);
 
   // table data
-  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchDocumentHits>({
+  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchHits>({
     queryKey: [
       QueryKey.MEMO_TABLE,
       projectId,
@@ -179,7 +179,7 @@ function SearchMemoTable({
 
   // rendering
   const renderTopLeftToolbarContent = useCallback(
-    (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) =>
+    (props: { table: MRT_TableInstance<ElasticSearchHit> }) =>
       renderTopLeftToolbar({
         table: props.table,
         selectedData: flatData.filter((row) => rowSelectionModel[row.id]),
@@ -192,7 +192,7 @@ function SearchMemoTable({
   );
 
   const renderBottomToolbarContent = useCallback(
-    (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) => (
+    (props: { table: MRT_TableInstance<ElasticSearchHit> }) => (
       <Stack direction={"row"} spacing={1} alignItems="center" width="100%">
         <Typography>
           Fetched {totalFetched} of {totalResults} total memos.
@@ -216,7 +216,7 @@ function SearchMemoTable({
   );
 
   const renderTopRightToolbarContent = useCallback(
-    (props: { table: MRT_TableInstance<ElasticSearchDocumentHit> }) => (
+    (props: { table: MRT_TableInstance<ElasticSearchHit> }) => (
       <Stack direction="row" spacing={1} alignItems="center">
         <MemoTableOptionsMenu
           isSearchContent={isSearchContent}
@@ -236,7 +236,7 @@ function SearchMemoTable({
   );
 
   // table
-  const table = useMaterialReactTable<ElasticSearchDocumentHit>({
+  const table = useMaterialReactTable<ElasticSearchHit>({
     data: flatData,
     columns: columns,
     getRowId: (row) => `${row.id}`,
