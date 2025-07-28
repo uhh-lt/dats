@@ -215,7 +215,7 @@ class CrawlerService(metaclass=SingletonMeta):
             output = subprocess.Popen(
                 [
                     "python",
-                    "app/core/data/crawler/crawler_script.py",
+                    "modules/crawler/crawler_script.py",
                     crawler_job_id,
                 ],
                 env=script_env,

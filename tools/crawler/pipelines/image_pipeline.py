@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 
 from scrapy.pipelines.images import ImagesPipeline
 
-from crawler.spiders.utils import slugify
+from tools.crawler.spiders.spider_utils import slugify
 
 
 class MyImagesPipeline(ImagesPipeline):

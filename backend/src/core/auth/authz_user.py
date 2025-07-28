@@ -6,7 +6,7 @@ from fastapi import Depends, Request
 from loguru import logger
 from repos.db.crud_base import NoSuchElementError
 from repos.db.orm_base import ORMBase
-from repos.db.util import get_orm_user_id, get_parent_project_id
+from repos.db.sql_utils import get_orm_user_id, get_parent_project_id
 from sqlalchemy.orm import Session
 
 from core.user.user_orm import UserORM

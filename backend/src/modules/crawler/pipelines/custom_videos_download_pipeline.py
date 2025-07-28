@@ -7,7 +7,7 @@ from modules.crawler.crawled_item import CrawledItem
 from scrapy.http import Request
 from scrapy.pipelines.files import FilesPipeline
 
-from ..utils import slugify
+from ..crawler_utils import slugify
 
 
 class CustomVideosDownloadPipeline(FilesPipeline):

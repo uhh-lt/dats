@@ -8,7 +8,7 @@ from sqlalchemy import create_engine, inspect
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy_utils import create_database, database_exists, drop_database
-from utils.import_util import import_by_suffix
+from utils.import_utils import import_by_suffix
 
 import_by_suffix("_orm.py")
 

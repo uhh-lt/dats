@@ -3,7 +3,7 @@ import re
 import scrapy
 
 from crawler.spiders.spider_base import SpiderBase
-from crawler.spiders.utils import slugify
+from tools.crawler.spiders.spider_utils import slugify
 
 
 class UnbruttoforumSpider(SpiderBase):

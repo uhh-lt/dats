@@ -14,9 +14,9 @@ from core.memo.memo_dto import (
     MemoRead,
     MemoUpdate,
 )
-from core.memo.memo_util import get_object_memo_for_user, get_object_memos
+from core.memo.memo_utils import get_object_memo_for_user, get_object_memos
 from fastapi import APIRouter, Depends
-from repos.db.util import get_parent_project_id
+from repos.db.sql_utils import get_parent_project_id
 from sqlalchemy.orm import Session
 
 router = APIRouter(

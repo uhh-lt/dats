@@ -7,7 +7,7 @@ import srsly
 
 from crawler.items import GenericWebsiteItem
 from crawler.spiders.spider_base import SpiderBase
-from crawler.spiders.utils import slugify
+from tools.crawler.spiders.spider_utils import slugify
 
 
 class NewsSearchResultsSpiderBase(SpiderBase):
