@@ -8,6 +8,7 @@ This script enforces multiple rules for *_endpoint.py files:
 """
 
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -26,17 +27,9 @@ def check_dto_imports(endpoint_path, src_root):
         lines = f.readlines()
     imports = set()
     for line in lines:
-        line = line.strip()
-        if line.startswith("from "):
-            parts = line.split()
-            if len(parts) >= 2 and parts[1].endswith("_dto"):
-                imports.add(parts[1])
-        elif line.startswith("import "):
-            modules = line[len("import ") :].split(",")
-            for mod in modules:
-                mod = mod.strip().split()[0]
-                if mod.endswith("_dto"):
-                    imports.add(mod)
+        match = re.search(r"^(?:from|import)\s+([\w\.]+_dto)\b", line)
+        if match:
+            imports.add(match.group(1))
     for imported in imports:
         import_path = imported.replace(".", os.sep) + ".py"
         imported_file = (src_root / import_path).resolve()

@@ -10,6 +10,7 @@ This script enforces multiple rules for *_repo.py files:
 """
 
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -58,7 +59,7 @@ def check_no_service_imports(repo_path):
     with open(repo_path, encoding="utf-8") as f:
         lines = f.readlines()
     for i, line in enumerate(lines, 1):
-        if "_service" in line:
+        if re.search(r"^(from|import)\s+.*_service\b", line):
             violations.append((i, line.strip()))
     if violations:
         print(f"Violation in {repo_path}: imports service files:")
@@ -73,7 +74,7 @@ def check_no_endpoint_imports(repo_path):
     with open(repo_path, encoding="utf-8") as f:
         lines = f.readlines()
     for i, line in enumerate(lines, 1):
-        if "_endpoint" in line:
+        if re.search(r"^(from|import)\s+.*_endpoint\b", line):
             violations.append((i, line.strip()))
     if violations:
         print(f"Violation in {repo_path}: imports endpoint files:")
