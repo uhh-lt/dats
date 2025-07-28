@@ -114,3 +114,6 @@ class SourceDocumentDataORM(ORMBase):
                 current_sent_end = self.sentence_ends[current_sent]
             sentence_ids.append(current_sent)
         return sentence_ids
+
+    def get_project_id(self) -> int:
+        return self.project_id

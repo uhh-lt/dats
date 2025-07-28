@@ -48,3 +48,6 @@ class PreprocessingJobPayloadORM(ORMBase):
         ForeignKey("sourcedocument.id", ondelete="CASCADE"),
         default=None,
     )
+
+    def get_project_id(self) -> int:
+        return self.project_id

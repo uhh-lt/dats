@@ -26,7 +26,7 @@ class DocumentClusterORM(ORMBase):
     similarity: Mapped[float] = mapped_column(Float, nullable=True)
     is_accepted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
-    # many to one
+    # many to many
     source_document: Mapped["SourceDocumentORM"] = relationship(
         "SourceDocumentORM",
         back_populates="document_clusters",
@@ -38,3 +38,6 @@ class DocumentClusterORM(ORMBase):
 
     def __repr__(self) -> str:
         return f"<DocumentClusterORM(sdoc_id={self.sdoc_id}, cluster_id={self.cluster_id}, is_accepted={self.is_accepted})>"
+
+    def get_project_id(self) -> int:
+        return self.source_document.get_project_id()

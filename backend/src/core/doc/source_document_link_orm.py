@@ -35,3 +35,6 @@ class SourceDocumentLinkORM(ORMBase):
     linked_source_document_filename: Mapped[Optional[str]] = mapped_column(
         String, index=True
     )
+
+    def get_project_id(self) -> int:
+        return self.parent_source_document.get_project_id()

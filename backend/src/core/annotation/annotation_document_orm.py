@@ -77,3 +77,6 @@ class AnnotationDocumentORM(ORMBase):
     user: Mapped["UserORM"] = relationship(
         "UserORM", back_populates="annotation_documents"
     )
+
+    def get_project_id(self) -> int:
+        return self.source_document.get_project_id()

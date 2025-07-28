@@ -35,3 +35,6 @@ class WhiteboardORM(ORMBase):
     project: Mapped["ProjectORM"] = relationship(
         "ProjectORM", back_populates="whiteboards"
     )
+
+    def get_project_id(self) -> int:
+        return self.project_id

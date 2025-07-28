@@ -56,6 +56,9 @@ class SpanGroupORM(ORMBase):
     def sdoc_id(self):
         return self.annotation_document.source_document_id
 
+    def get_project_id(self) -> int:
+        return self.annotation_document.get_project_id()
+
 
 class SpanAnnotationSpanGroupLinkTable(ORMBase):
     span_annotation_id: Mapped[int] = mapped_column(

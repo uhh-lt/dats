@@ -8,7 +8,6 @@ from core.memo.memo_dto import (
 )
 from fastapi import APIRouter, Depends
 from modules.memo_generation.memo_generation_service import generate_memo_ollama
-from repos.db.sql_utils import get_parent_project_id
 from sqlalchemy.orm import Session
 
 router = APIRouter(
@@ -47,7 +46,7 @@ def generate_memo_suggestion(
         raise ValueError("Invalid attached_object_type")
 
     attached_object = crud.value.read(db=db, id=attached_obj_id)
-    proj_id = get_parent_project_id(attached_object)
+    proj_id = attached_object.get_project_id()
     if proj_id is None:
         raise ValueError("Attached object has no project")
 

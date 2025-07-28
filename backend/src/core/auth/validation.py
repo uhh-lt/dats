@@ -5,7 +5,6 @@ from common.dependencies import get_db_session
 from fastapi import Depends
 from repos.db.crud_base import NoSuchElementError
 from repos.db.orm_base import ORMBase
-from repos.db.sql_utils import get_parent_project_id
 from sqlalchemy.orm import Session
 
 
@@ -27,7 +26,7 @@ class Validate:
     def validate_objects_in_same_project(self, specs: Sequence[Tuple[Crud, int | str]]):
         orms = [self.read_crud(spec[0], spec[1]) for spec in specs]
 
-        project_ids = {get_parent_project_id(orm) for orm in orms}
+        project_ids = {orm.get_project_id() for orm in orms}
 
         if None in project_ids:
             raise InvalidError("Object has no parent project")
