@@ -24,11 +24,10 @@ from core.tag.document_tag_dto import DocumentTagRead
 from core.user.user_crud import crud_user
 from core.user.user_dto import UserRead
 from core.user.user_orm import UserORM
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, File, Query, UploadFile
 from preprocessing.preprocessing_job_dto import PreprocessingJobRead
 from preprocessing.preprocessing_service import PreprocessingService
 from repos.db.crud_base import NoSuchElementError
-from repos.elastic.elastic_repo import ElasticSearchRepo
 from sqlalchemy.orm import Session
 
 router = APIRouter(
@@ -50,16 +49,6 @@ def create_new_project(
     current_user: UserORM = Depends(get_current_user),
 ) -> ProjectRead:
     db_obj = crud_project.create(db=db, create_dto=proj, creating_user=current_user)
-
-    try:
-        # create the ES Indices
-        ElasticSearchRepo().create_project_indices(proj_id=db_obj.id)
-    except Exception:
-        crud_project.remove(db=db, id=db_obj.id)
-        raise HTTPException(
-            status_code=500,
-            detail="Cannot create ElasticSearch Indices for the Project!",
-        )
     return ProjectRead.model_validate(db_obj)
 
 
@@ -109,19 +98,7 @@ def delete_project(
     authz_user: AuthzUser = Depends(),
 ) -> ProjectRead:
     authz_user.assert_in_project(proj_id)
-
     db_obj = crud_project.remove(db=db, id=proj_id)
-
-    try:
-        # remove the ES Indices # Flo Do we want this?!
-        ElasticSearchRepo().remove_project_indices(proj_id=db_obj.id)
-    except Exception:
-        crud_project.remove(db=db, id=db_obj.id)
-        raise HTTPException(
-            status_code=500,
-            detail="Cannot create ElasticSearch Indices for the Project!",
-        )
-
     return ProjectRead.model_validate(db_obj)
 
 

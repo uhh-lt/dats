@@ -1,12 +1,7 @@
-from typing import List
-
 from common.singleton_meta import SingletonMeta
 from config import conf
-from core.doc.sdoc_elastic_index import SdocIndex
-from core.memo.memo_elastic_index import MemoIndex
 from elasticsearch import Elasticsearch
 from loguru import logger
-from repos.elastic.elastic_index_base import IndexBase
 
 
 class ElasticSearchRepo(metaclass=SingletonMeta):
@@ -38,9 +33,6 @@ class ElasticSearchRepo(metaclass=SingletonMeta):
 
             cls.client = esc
 
-            # Register indices
-            cls.indices: List[IndexBase] = [MemoIndex(), SdocIndex()]
-
         except Exception as e:
             msg = f"Cannot instantiate ElasticSearchService - Error '{e}'"
             logger.error(msg)
@@ -63,34 +55,6 @@ class ElasticSearchRepo(metaclass=SingletonMeta):
     def drop_indices(cls) -> None:
         logger.warning("Dropping all ElasticSearch indices!")
         cls.client.indices.delete(index="dats_*", allow_no_indices=True)
-
-    def exist_project_indices(self, *, proj_id: int) -> bool:
-        """
-        Check if the ElasticSearch indices for a project exist
-        :param proj_id: The ID of the project
-        :return: True if the indices exist, False otherwise
-        """
-        for index in self.indices:
-            index_name = index.get_index_name(proj_id)
-            if not self.client.indices.exists(index=index_name):
-                return False
-
-        return True
-
-    def create_project_indices(self, *, proj_id: int) -> None:
-        for index in self.indices:
-            index.create_index(
-                client=self.client,
-                proj_id=proj_id,
-                replace_if_exists=True,
-            )
-
-    def remove_project_indices(self, *, proj_id: int) -> None:
-        for index in self.indices:
-            index.delete_index(
-                client=self.client,
-                proj_id=proj_id,
-            )
 
     def close_connection(self):
         """
