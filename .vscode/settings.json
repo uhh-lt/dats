@@ -6,7 +6,7 @@
   },
   "files.insertFinalNewline": true,
 
-  // python / backend
+  // python
   "python.envFile": "${workspaceFolder}/backend/.env",
   "python.autoComplete.extraPaths": ["${workspaceFolder}/backend/src"],
   "python.analysis.diagnosticMode": "workspace",
@@ -14,6 +14,7 @@
   "python.analysis.autoFormatStrings": true,
   "python.analysis.typeCheckingMode": "basic",
   "python.analysis.pyrightVersion": "1.1.385", // this has to match pyproject.toml
+  "python.analysis.exclude": ["**/node_modules", "**/__pycache__", ".git", "./backend/.venv", "./docker"],
 
   // pytest
   "python.testing.unittestEnabled": false,
@@ -29,9 +30,11 @@
   "javascript.preferences.importModuleSpecifierEnding": "js",
   "typescript.preferences.importModuleSpecifierEnding": "js",
 
-  // formatting
+  // prettier
   "prettier.prettierPath": "./frontend/node_modules/prettier",
   "prettier.configPath": "./frontend/package.json",
+
+  // formatting
   "[yaml]": {
     "editor.tabSize": 2,
     "editor.insertSpaces": true
@@ -53,6 +56,5 @@
   },
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "python.analysis.exclude": ["**/node_modules", "**/__pycache__", ".git", "./backend/.venv", "./docker"]
+  }
 }
