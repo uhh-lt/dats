@@ -65,12 +65,6 @@ services:
   celery-background-jobs-worker:
     volumes:
       - ../backend/src:/dats_code/src
-    environment:
-      INSTALL_JUPYTER: ${CELERY_INSTALL_JUPYTER:-false}
-      CELERY_DEBUG_MODE: ${CELERY_DEBUG_MODE:-0}
-    ports:
-      - "${JUPYTER_CELERY_EXPOSED:-13129}:8888"
-      - "${CELERY_DEBUG_PORT:-45678}:6900"
 
   dats-backend-api:
     volumes:
