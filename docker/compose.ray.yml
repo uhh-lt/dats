@@ -10,7 +10,7 @@ services:
       context: ../backend/src/ray_model_worker
       dockerfile: Dockerfile
     healthcheck:
-      test: [ "CMD-SHELL", "python /dats_code_ray/check_ray_health.py" ]
+      test: ["CMD-SHELL", "python /dats_code_ray/check_ray_health.py"]
       start_period: 60s
       interval: 60s
       timeout: 60s
@@ -37,8 +37,8 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: [ "${RAY_DEVICE_IDS:-0}" ]
-              capabilities: [ gpu ]
+              device_ids: ["${RAY_DEVICE_IDS:-0}"]
+              capabilities: [gpu]
     networks:
       - ray_network
 
