@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, Union
 
 from pydantic import BaseModel
 from sqlalchemy import and_, or_
@@ -151,7 +151,7 @@ class Filter(BaseModel, Generic[T]):
     comparisons."""
 
     id: str
-    items: list[FilterExpression[T] | "Filter[T]"]
+    items: list[Union[FilterExpression[T], "Filter[T]"]]
     logic_operator: LogicalOperator
 
     def get_sqlalchemy_expression(self, subquery_dict):
@@ -169,7 +169,7 @@ class Filter(BaseModel, Generic[T]):
         """
 
         resolved = filter.model_copy(deep=True)
-        resolved_items: list[FilterExpression[T] | "Filter[T]"] = []
+        resolved_items: list[Union[FilterExpression[T], "Filter[T]"]] = []
 
         # Resolve IDs for each FilterExpression in the filter
         for item in filter.items:
@@ -195,7 +195,7 @@ class Filter(BaseModel, Generic[T]):
         """
 
         resolved = filter.model_copy(deep=True)
-        resolved_items: list[FilterExpression[T] | "Filter[T]"] = []
+        resolved_items: list[Union[FilterExpression[T], "Filter[T]"]] = []
 
         # Resolve names for each FilterExpression in the filter
         for item in filter.items:
