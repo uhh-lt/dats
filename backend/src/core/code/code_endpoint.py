@@ -55,7 +55,7 @@ def get_by_id(
     response_model=List[CodeRead],
     summary="Returns all Codes of the Project with the given ID",
 )
-def get_project_codes(
+def get_by_project(
     *,
     proj_id: int,
     db: Session = Depends(get_db_session),
