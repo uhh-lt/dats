@@ -4,7 +4,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from repos.db.dto_base import UpdateDTOBase
 
 
-class DocumentTagRecommendationLinkBaseDTO(BaseModel):
+class TagRecommendationLinkBaseDTO(BaseModel):
     ml_job_id: str = Field(description="Identifier of the corresponding ML Job.")
     source_document_id: int = Field(description="ID of the source document")
     predicted_tag_id: int = Field(description="ID of the predicted tag")
@@ -14,23 +14,23 @@ class DocumentTagRecommendationLinkBaseDTO(BaseModel):
     )
 
 
-class DocumentTagRecommendationLinkCreate(DocumentTagRecommendationLinkBaseDTO):
+class TagRecommendationLinkCreate(TagRecommendationLinkBaseDTO):
     pass
 
 
-class DocumentTagRecommendationLinkRead(DocumentTagRecommendationLinkBaseDTO):
+class TagRecommendationLinkRead(TagRecommendationLinkBaseDTO):
     model_config = ConfigDict(from_attributes=True)
 
 
-class DocumentTagRecommendationLinkUpdate(BaseModel, UpdateDTOBase):
+class TagRecommendationLinkUpdate(BaseModel, UpdateDTOBase):
     # set timestamp in backend
     is_reviewed: bool = Field(description="Reviewed status of the recommendation")
 
 
-class DocumentTagRecommendationResult(BaseModel):
+class TagRecommendationResult(BaseModel):
     sdoc_id: int = Field(description="ID of the source document")
     recommendation_ids: list[int] = Field(
-        description="List of the corresponding DocumentTagRecommendationLinks"
+        description="List of the corresponding TagRecommendationLinks"
     )
     current_tag_ids: list[int] = Field(
         description="List of current tag IDs for the source document"
@@ -41,7 +41,7 @@ class DocumentTagRecommendationResult(BaseModel):
     scores: list[float] = Field(description="List of the scores of the suggested tags")
 
 
-class DocumentTagRecommendationMethod(StrEnum):
+class TagRecommendationMethod(StrEnum):
     SIMPLE = "SIMPLE"
     KNN = "KNN"
     EXCLUSIVE = "EXCLUSIVE"

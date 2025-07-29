@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 from core.project.project_crud import crud_project
-from core.tag.document_tag_orm import DocumentTagORM
+from core.tag.tag_orm import TagORM
 from loguru import logger
 from modules.eximport.no_data_export_error import NoDataToExportError
 from modules.eximport.tags.tag_export_schema import TagExportCollection, TagExportSchema
@@ -15,7 +15,7 @@ def export_all_tags(
     fsr: FilesystemRepo,
     project_id: int,
 ) -> Path:
-    tags = crud_project.read(db=db, id=project_id).document_tags
+    tags = crud_project.read(db=db, id=project_id).tags
     return __export_tags(
         db=db,
         fsr=fsr,
@@ -28,7 +28,7 @@ def __export_tags(
     db: Session,
     fsr: FilesystemRepo,
     fn: str,
-    tags: list[DocumentTagORM],
+    tags: list[TagORM],
 ) -> Path:
     if len(tags) == 0:
         raise NoDataToExportError("No tags to export.")
@@ -39,7 +39,7 @@ def __export_tags(
     )
 
 
-def __generate_export_df_for_tags(tags: list[DocumentTagORM]) -> pd.DataFrame:
+def __generate_export_df_for_tags(tags: list[TagORM]) -> pd.DataFrame:
     logger.info(f"Exporting {len(tags)} Tags ...")
     tag_export_items = []
     for tag in tags:

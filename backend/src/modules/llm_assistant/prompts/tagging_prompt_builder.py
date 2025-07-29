@@ -4,12 +4,12 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 
-class OllamaParsedDocumentTaggingResult(BaseModel):
+class OllamaParsedTaggingResult(BaseModel):
     tag_ids: list[int]
     reasoning: str
 
 
-class OllamaDocumentTaggingResult(BaseModel):
+class OllamaTaggingResult(BaseModel):
     categories: list[str]
     reasoning: str
 
@@ -78,9 +78,9 @@ class TaggingPromptBuilder(PromptBuilder):
         super().__init__(db, project_id, is_fewshot)
 
         project = crud_project.read(db=db, id=project_id)
-        self.document_tags = project.document_tags
-        self.tagid2tag = {tag.id: tag for tag in self.document_tags}
-        self.tagname2id_dict = {tag.name.lower(): tag.id for tag in self.document_tags}
+        self.tags = project.tags
+        self.tagid2tag = {tag.id: tag for tag in self.tags}
+        self.tagname2id_dict = {tag.name.lower(): tag.id for tag in self.tags}
 
     def _build_example(self, language: str, tag_id: int) -> str:
         tag = self.tagid2tag[tag_id]
@@ -103,10 +103,8 @@ class TaggingPromptBuilder(PromptBuilder):
 
         return self.prompt_templates[language].format(task_data, answer_example)
 
-    def parse_result(
-        self, result: OllamaDocumentTaggingResult
-    ) -> OllamaParsedDocumentTaggingResult:
-        return OllamaParsedDocumentTaggingResult(
+    def parse_result(self, result: OllamaTaggingResult) -> OllamaParsedTaggingResult:
+        return OllamaParsedTaggingResult(
             tag_ids=[
                 self.tagname2id_dict[category.lower()]
                 for category in result.categories

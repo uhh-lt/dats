@@ -21,7 +21,7 @@ from core.metadata.project_metadata_orm import ProjectMetadataORM
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import SourceDocumentMetadataCreate
 from core.project.project_crud import crud_project
-from core.tag.document_tag_crud import crud_document_tag
+from core.tag.tag_crud import crud_tag
 from loguru import logger
 from modules.eximport.sdocs.sdoc_export_schema import SourceDocumentExportCollection
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
@@ -122,7 +122,7 @@ def import_sdocs_to_proj(
     needed_tags: set[str] = set()
     for sdoc in sdoc_collection.source_documents:
         needed_tags.update(sdoc.tags)
-    existing_tags = {tag.name: tag for tag in project.document_tags}
+    existing_tags = {tag.name: tag for tag in project.tags}
     for tag_name in needed_tags:
         if tag_name not in existing_tags:
             error_messages.append(
@@ -212,9 +212,7 @@ def import_sdocs_to_proj(
         # 4. Link the source documents with the attached data (tags, metadata, word frequencies)
         # Tags
         tag_ids = [existing_tags[tag_name].id for tag_name in sdoc_export.tags]
-        crud_document_tag.link_multiple_document_tags(
-            db=db, sdoc_ids=[created_sdoc.id], tag_ids=tag_ids
-        )
+        crud_tag.link_multiple_tags(db=db, sdoc_ids=[created_sdoc.id], tag_ids=tag_ids)
 
         # Word frequencies
         wf_create_dtos = [

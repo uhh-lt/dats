@@ -1,6 +1,6 @@
 import pandas as pd
-from core.tag.document_tag_crud import crud_document_tag
-from core.tag.document_tag_dto import DocumentTagCreate
+from core.tag.tag_crud import crud_tag
+from core.tag.tag_dto import TagCreate
 from loguru import logger
 from modules.eximport.tags.tag_export_schema import TagExportCollection, TagExportSchema
 from sqlalchemy.orm import Session
@@ -52,7 +52,7 @@ class TagImporter:
             )
 
             # Process each layer in order
-            create_dtos: list[DocumentTagCreate] = []
+            create_dtos: list[TagCreate] = []
             for layer in sorted_layers:
                 for tag in layer:
                     create_dto = self._prepare_create_if_not_exists(tag)
@@ -65,7 +65,7 @@ class TagImporter:
                 return {}
 
             # Everything is valid, we can create the tags
-            created_tags = crud_document_tag.create_multi(
+            created_tags = crud_tag.create_multi(
                 db=self.db,
                 create_dtos=create_dtos,
             )
@@ -133,9 +133,7 @@ class TagImporter:
 
         return layers
 
-    def _prepare_create_if_not_exists(
-        self, tag: TagExportSchema
-    ) -> DocumentTagCreate | None:
+    def _prepare_create_if_not_exists(self, tag: TagExportSchema) -> TagCreate | None:
         """
         Prepare the creation of a tag if it doesn't exist.
         Args:
@@ -148,7 +146,7 @@ class TagImporter:
         )
 
         # Check if tag already exists
-        existing_tag = crud_document_tag.read_by_name_and_project(
+        existing_tag = crud_tag.read_by_name_and_project(
             db=self.db, name=tag.tag_name, project_id=self.project_id
         )
 
@@ -158,7 +156,7 @@ class TagImporter:
             self.tag_id_mapping[tag.tag_name] = existing_tag.id
             return None
         else:
-            return DocumentTagCreate(
+            return TagCreate(
                 name=tag.tag_name,
                 description=tag.description,
                 parent_id=parent_id,

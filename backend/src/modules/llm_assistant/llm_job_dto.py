@@ -15,7 +15,7 @@ from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
 
 class TaskType(str, Enum):
-    DOCUMENT_TAGGING = "DOCUMENT_TAGGING"
+    TAGGING = "TAGGING"
     METADATA_EXTRACTION = "METADATA_EXTRACTION"
     ANNOTATION = "ANNOTATION"
     SENTENCE_ANNOTATION = "SENTENCE_ANNOTATION"
@@ -29,8 +29,8 @@ class DocumentBasedTaskParams(SpecificTaskParameters):
     sdoc_ids: list[int] = Field(description="IDs of the source documents to analyse")
 
 
-class DocumentTaggingParams(DocumentBasedTaskParams):
-    llm_job_type: Literal[TaskType.DOCUMENT_TAGGING]
+class TaggingParams(DocumentBasedTaskParams):
+    llm_job_type: Literal[TaskType.TAGGING]
     tag_ids: list[int] = Field(
         description="IDs of the tags to use for the document tagging"
     )
@@ -64,7 +64,7 @@ class LLMJobParameters(BaseModel):
     llm_job_type: TaskType = Field(description="The type of the LLMJob (what to llm)")
     project_id: int = Field(description="The ID of the Project to analyse")
     specific_task_parameters: (
-        DocumentTaggingParams
+        TaggingParams
         | MetadataExtractionParams
         | AnnotationParams
         | SentenceAnnotationParams
@@ -152,7 +152,7 @@ class LLMResultWithStatus(BaseModel):
     status_message: str = Field(description="Status message of the result")
 
 
-class DocumentTaggingResult(LLMResultWithStatus):
+class TaggingResult(LLMResultWithStatus):
     sdoc_id: int = Field(description="ID of the source document")
     current_tag_ids: list[int] = Field(
         description="IDs of the tags currently assigned to the document"
@@ -163,9 +163,9 @@ class DocumentTaggingResult(LLMResultWithStatus):
     reasoning: str = Field(description="Reasoning for the tagging")
 
 
-class DocumentTaggingLLMJobResult(BaseModel):
-    llm_job_type: Literal[TaskType.DOCUMENT_TAGGING]
-    results: list[DocumentTaggingResult]
+class TaggingLLMJobResult(BaseModel):
+    llm_job_type: Literal[TaskType.TAGGING]
+    results: list[TaggingResult]
 
 
 class MetadataExtractionResult(LLMResultWithStatus):
@@ -210,7 +210,7 @@ class SentenceAnnotationLLMJobResult(BaseModel):
 class LLMJobResult(BaseModel):
     llm_job_type: TaskType = Field(description="The type of the LLMJob (what to llm)")
     specific_task_result: (
-        DocumentTaggingLLMJobResult
+        TaggingLLMJobResult
         | MetadataExtractionLLMJobResult
         | AnnotationLLMJobResult
         | SentenceAnnotationLLMJobResult

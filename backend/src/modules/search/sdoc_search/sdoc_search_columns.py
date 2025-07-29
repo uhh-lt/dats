@@ -4,7 +4,7 @@ from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_text_orm import SpanTextORM
 from core.code.code_orm import CodeORM
 from core.doc.source_document_orm import SourceDocumentORM
-from core.tag.document_tag_orm import DocumentTagORM
+from core.tag.tag_orm import TagORM
 from core.user.user_orm import UserORM
 from repos.db.sql_utils import aggregate_ids, aggregate_two_ids
 from sqlalchemy import String, cast, func
@@ -18,7 +18,7 @@ from systems.search_system.search_builder import SearchBuilder
 class SdocColumns(str, AbstractColumns):
     SOURCE_DOCUMENT_TYPE = "SD_SOURCE_DOCUMENT_TYPE"
     SOURCE_DOCUMENT_FILENAME = "SD_SOURCE_DOCUMENT_FILENAME"
-    DOCUMENT_TAG_ID_LIST = "SD_DOCUMENT_TAG_ID_LIST"
+    TAG_ID_LIST = "SD_TAG_ID_LIST"
     CODE_ID_LIST = "SD_CODE_ID_LIST"
     USER_ID_LIST = "SD_USER_ID_LIST"
     SPAN_ANNOTATIONS = "SD_SPAN_ANNOTATIONS"
@@ -29,8 +29,8 @@ class SdocColumns(str, AbstractColumns):
                 return SourceDocumentORM.filename
             case SdocColumns.SOURCE_DOCUMENT_TYPE:
                 return SourceDocumentORM.doctype
-            case SdocColumns.DOCUMENT_TAG_ID_LIST:
-                return subquery_dict[SdocColumns.DOCUMENT_TAG_ID_LIST.value]
+            case SdocColumns.TAG_ID_LIST:
+                return subquery_dict[SdocColumns.TAG_ID_LIST.value]
             case SdocColumns.CODE_ID_LIST:
                 return subquery_dict[SdocColumns.CODE_ID_LIST.value]
             case SdocColumns.USER_ID_LIST:
@@ -44,7 +44,7 @@ class SdocColumns(str, AbstractColumns):
                 return FilterOperator.STRING
             case SdocColumns.SOURCE_DOCUMENT_TYPE:
                 return FilterOperator.ID
-            case SdocColumns.DOCUMENT_TAG_ID_LIST:
+            case SdocColumns.TAG_ID_LIST:
                 return FilterOperator.ID_LIST
             case SdocColumns.CODE_ID_LIST:
                 return FilterOperator.ID_LIST
@@ -59,7 +59,7 @@ class SdocColumns(str, AbstractColumns):
                 return FilterValueType.INFER_FROM_OPERATOR
             case SdocColumns.SOURCE_DOCUMENT_TYPE:
                 return FilterValueType.DOC_TYPE
-            case SdocColumns.DOCUMENT_TAG_ID_LIST:
+            case SdocColumns.TAG_ID_LIST:
                 return FilterValueType.TAG_ID
             case SdocColumns.CODE_ID_LIST:
                 return FilterValueType.CODE_ID
@@ -74,7 +74,7 @@ class SdocColumns(str, AbstractColumns):
                 return SourceDocumentORM.filename
             case SdocColumns.SOURCE_DOCUMENT_TYPE:
                 return SourceDocumentORM.doctype
-            case SdocColumns.DOCUMENT_TAG_ID_LIST:
+            case SdocColumns.TAG_ID_LIST:
                 return None
             case SdocColumns.CODE_ID_LIST:
                 return None
@@ -89,7 +89,7 @@ class SdocColumns(str, AbstractColumns):
                 return "Document name"
             case SdocColumns.SOURCE_DOCUMENT_TYPE:
                 return "Type"
-            case SdocColumns.DOCUMENT_TAG_ID_LIST:
+            case SdocColumns.TAG_ID_LIST:
                 return "Tags"
             case SdocColumns.CODE_ID_LIST:
                 return "Code"
@@ -100,16 +100,14 @@ class SdocColumns(str, AbstractColumns):
 
     def add_subquery_filter_statements(self, query_builder: SearchBuilder):
         match self:
-            case SdocColumns.DOCUMENT_TAG_ID_LIST:
+            case SdocColumns.TAG_ID_LIST:
                 query_builder._add_subquery_column(
                     aggregate_ids(
-                        DocumentTagORM.id,
-                        label=SdocColumns.DOCUMENT_TAG_ID_LIST.value,
+                        TagORM.id,
+                        label=SdocColumns.TAG_ID_LIST.value,
                     )
                 )
-                query_builder._join_subquery(
-                    SourceDocumentORM.document_tags, isouter=True
-                )
+                query_builder._join_subquery(SourceDocumentORM.tags, isouter=True)
             case SdocColumns.CODE_ID_LIST:
                 query_builder._add_subquery_column(
                     aggregate_two_ids(
@@ -185,11 +183,11 @@ class SdocColumns(str, AbstractColumns):
 
     def resolve_ids(self, db: Session, ids: list[int]) -> list[str]:
         match self:
-            case SdocColumns.DOCUMENT_TAG_ID_LIST:
+            case SdocColumns.TAG_ID_LIST:
                 result = (
-                    db.query(DocumentTagORM)
+                    db.query(TagORM)
                     .filter(
-                        DocumentTagORM.id.in_(ids),
+                        TagORM.id.in_(ids),
                     )
                     .all()
                 )
@@ -219,12 +217,12 @@ class SdocColumns(str, AbstractColumns):
         self, db: Session, project_id: int, names: list[str]
     ) -> list[int]:
         match self:
-            case SdocColumns.DOCUMENT_TAG_ID_LIST:
+            case SdocColumns.TAG_ID_LIST:
                 result = (
-                    db.query(DocumentTagORM)
+                    db.query(TagORM)
                     .filter(
-                        DocumentTagORM.project_id == project_id,
-                        DocumentTagORM.name.in_(names),
+                        TagORM.project_id == project_id,
+                        TagORM.name.in_(names),
                     )
                     .all()
                 )

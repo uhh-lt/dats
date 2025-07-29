@@ -11,7 +11,7 @@ from core.doc.source_document_dto import (
 )
 from core.doc.source_document_link_orm import SourceDocumentLinkORM
 from core.doc.source_document_orm import SourceDocumentORM
-from core.tag.document_tag_orm import DocumentTagORM
+from core.tag.tag_orm import TagORM
 from fastapi.encoders import jsonable_encoder
 from repos.db.crud_base import CRUDBase, NoSuchElementError
 from repos.db.sql_utils import aggregate_ids
@@ -97,7 +97,7 @@ class CRUDSourceDocument(
         id2data = {db_obj.id: db_obj for db_obj in db_objs}
         return [id2data.get(id) for id in ids]
 
-    def read_by_project_and_document_tag(
+    def read_by_project_and_tag(
         self,
         db: Session,
         *,
@@ -107,19 +107,15 @@ class CRUDSourceDocument(
         skip: int | None = None,
         limit: int | None = None,
     ) -> list[SourceDocumentORM]:
-        query = db.query(self.model).join(
-            SourceDocumentORM, DocumentTagORM.source_documents
-        )
+        query = db.query(self.model).join(SourceDocumentORM, TagORM.source_documents)
         if only_finished:
             query = query.filter(
                 self.model.project_id == proj_id,
                 self.model.status == SDocStatus.finished,
-                DocumentTagORM.id == tag_id,
+                TagORM.id == tag_id,
             )
         else:
-            query = query.filter(
-                self.model.project_id == proj_id, DocumentTagORM.id == tag_id
-            )
+            query = query.filter(self.model.project_id == proj_id, TagORM.id == tag_id)
 
         if skip is not None:
             query = query.offset(skip)
@@ -177,11 +173,11 @@ class CRUDSourceDocument(
         return (
             db.query(SourceDocumentORM)
             .filter(SourceDocumentORM.project_id == project_id)
-            .outerjoin(SourceDocumentORM.document_tags)
+            .outerjoin(SourceDocumentORM.tags)
             .filter(
-                SourceDocumentORM.document_tags == None  # noqa: E711
+                SourceDocumentORM.tags == None  # noqa: E711
                 if len(tag_ids) == 0
-                else DocumentTagORM.id.notin_(tag_ids)
+                else TagORM.id.notin_(tag_ids)
             )
             .all()
         )
@@ -192,11 +188,11 @@ class CRUDSourceDocument(
         return (
             db.query(SourceDocumentORM)
             .filter(SourceDocumentORM.project_id == project_id)
-            .join(SourceDocumentORM.document_tags)
+            .join(SourceDocumentORM.tags)
             .filter(
-                SourceDocumentORM.document_tags != None  # noqa: E711
+                SourceDocumentORM.tags != None  # noqa: E711
                 if len(tag_ids) == 0
-                else DocumentTagORM.id.in_(tag_ids)
+                else TagORM.id.in_(tag_ids)
             )
             .all()
         )
@@ -218,11 +214,11 @@ class CRUDSourceDocument(
         return {row[0]: row[1] for row in rows}
 
     def read_tags(self, db: Session, *, sdoc_ids: list[int]) -> dict[int, list[int]]:
-        tag_ids_agg = aggregate_ids(DocumentTagORM.id, label="tag_ids")
+        tag_ids_agg = aggregate_ids(TagORM.id, label="tag_ids")
         rows = (
             db.query(SourceDocumentORM.id, tag_ids_agg)
             .join(
-                SourceDocumentORM.document_tags,
+                SourceDocumentORM.tags,
                 isouter=True,
             )
             .filter(SourceDocumentORM.id.in_(sdoc_ids))

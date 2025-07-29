@@ -4,7 +4,7 @@ from core.code.code_orm import CodeORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_orm import ObjectHandleORM
-from core.tag.document_tag_orm import DocumentTagORM
+from core.tag.tag_orm import TagORM
 from core.user.user_orm import UserORM
 from repos.db.sql_utils import aggregate_ids
 from sqlalchemy.orm import Session
@@ -21,14 +21,14 @@ class SentAnnoColumns(str, AbstractColumns):
     USER_ID = "SentAnno_USER_ID"
     MEMO_CONTENT = "SentAnno_MEMO_CONTENT"
     SOURCE_DOCUMENT_FILENAME = "SentAnno_SOURCE_SOURCE_DOCUMENT_FILENAME"
-    DOCUMENT_TAG_ID_LIST = "SentAnno_DOCUMENT_DOCUMENT_TAG_ID_LIST"
+    TAG_ID_LIST = "SentAnno_DOCUMENT_TAG_ID_LIST"
 
     def get_filter_column(self, subquery_dict):
         match self:
             case SentAnnoColumns.SOURCE_DOCUMENT_FILENAME:
                 return SourceDocumentORM.filename
-            case SentAnnoColumns.DOCUMENT_TAG_ID_LIST:
-                return subquery_dict[SentAnnoColumns.DOCUMENT_TAG_ID_LIST.value]
+            case SentAnnoColumns.TAG_ID_LIST:
+                return subquery_dict[SentAnnoColumns.TAG_ID_LIST.value]
             case SentAnnoColumns.CODE_ID:
                 return SentenceAnnotationORM.code_id
             # case SentAnnoColumns.TEXT:
@@ -42,7 +42,7 @@ class SentAnnoColumns(str, AbstractColumns):
         match self:
             case SentAnnoColumns.SOURCE_DOCUMENT_FILENAME:
                 return FilterOperator.STRING
-            case SentAnnoColumns.DOCUMENT_TAG_ID_LIST:
+            case SentAnnoColumns.TAG_ID_LIST:
                 return FilterOperator.ID_LIST
             case SentAnnoColumns.CODE_ID:
                 return FilterOperator.ID
@@ -57,7 +57,7 @@ class SentAnnoColumns(str, AbstractColumns):
         match self:
             case SentAnnoColumns.SOURCE_DOCUMENT_FILENAME:
                 return FilterValueType.INFER_FROM_OPERATOR
-            case SentAnnoColumns.DOCUMENT_TAG_ID_LIST:
+            case SentAnnoColumns.TAG_ID_LIST:
                 return FilterValueType.TAG_ID
             case SentAnnoColumns.CODE_ID:
                 return FilterValueType.CODE_ID
@@ -72,7 +72,7 @@ class SentAnnoColumns(str, AbstractColumns):
         match self:
             case SentAnnoColumns.SOURCE_DOCUMENT_FILENAME:
                 return SourceDocumentORM.filename
-            case SentAnnoColumns.DOCUMENT_TAG_ID_LIST:
+            case SentAnnoColumns.TAG_ID_LIST:
                 return None
             case SentAnnoColumns.CODE_ID:
                 return CodeORM.name
@@ -87,7 +87,7 @@ class SentAnnoColumns(str, AbstractColumns):
         match self:
             case SentAnnoColumns.SOURCE_DOCUMENT_FILENAME:
                 return "Document name"
-            case SentAnnoColumns.DOCUMENT_TAG_ID_LIST:
+            case SentAnnoColumns.TAG_ID_LIST:
                 return "Tags"
             case SentAnnoColumns.CODE_ID:
                 return "Code"
@@ -100,11 +100,11 @@ class SentAnnoColumns(str, AbstractColumns):
 
     def add_subquery_filter_statements(self, query_builder: SearchBuilder):
         match self:
-            case SentAnnoColumns.DOCUMENT_TAG_ID_LIST:
+            case SentAnnoColumns.TAG_ID_LIST:
                 query_builder._add_subquery_column(
                     aggregate_ids(
-                        DocumentTagORM.id,
-                        label=SentAnnoColumns.DOCUMENT_TAG_ID_LIST.value,
+                        TagORM.id,
+                        label=SentAnnoColumns.TAG_ID_LIST.value,
                     )
                 )
                 query_builder._join_subquery(
@@ -116,9 +116,7 @@ class SentAnnoColumns(str, AbstractColumns):
                     SourceDocumentORM,
                     SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
                 )
-                query_builder._join_subquery(
-                    SourceDocumentORM.document_tags, isouter=True
-                )
+                query_builder._join_subquery(SourceDocumentORM.tags, isouter=True)
 
     def add_query_filter_statements(self, query_builder: SearchBuilder):
         match self:
@@ -149,11 +147,11 @@ class SentAnnoColumns(str, AbstractColumns):
 
     def resolve_ids(self, db: Session, ids: list[int]) -> list[str]:
         match self:
-            case SentAnnoColumns.DOCUMENT_TAG_ID_LIST:
+            case SentAnnoColumns.TAG_ID_LIST:
                 result = (
-                    db.query(DocumentTagORM)
+                    db.query(TagORM)
                     .filter(
-                        DocumentTagORM.id.in_(ids),
+                        TagORM.id.in_(ids),
                     )
                     .all()
                 )
@@ -183,12 +181,12 @@ class SentAnnoColumns(str, AbstractColumns):
         self, db: Session, project_id: int, names: list[str]
     ) -> list[int]:
         match self:
-            case SentAnnoColumns.DOCUMENT_TAG_ID_LIST:
+            case SentAnnoColumns.TAG_ID_LIST:
                 result = (
-                    db.query(DocumentTagORM)
+                    db.query(TagORM)
                     .filter(
-                        DocumentTagORM.project_id == project_id,
-                        DocumentTagORM.name.in_(names),
+                        TagORM.project_id == project_id,
+                        TagORM.name.in_(names),
                     )
                     .all()
                 )

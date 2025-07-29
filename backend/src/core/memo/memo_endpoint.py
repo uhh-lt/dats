@@ -24,7 +24,7 @@ router = APIRouter(
 
 
 attachedObject2Crud: dict[AttachedObjectType, MemoCrud] = {
-    AttachedObjectType.document_tag: MemoCrud.DOCUMENT_TAG,
+    AttachedObjectType.tag: MemoCrud.TAG,
     AttachedObjectType.source_document: MemoCrud.SOURCE_DOCUMENT,
     AttachedObjectType.code: MemoCrud.CODE,
     AttachedObjectType.bbox_annotation: MemoCrud.BBOX_ANNOTATION,

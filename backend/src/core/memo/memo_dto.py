@@ -22,7 +22,7 @@ class AttachedObjectType(str, Enum):
     span_group = "span_group"
     bbox_annotation = "bbox_annotation"
     project = "project"
-    document_tag = "document_tag"
+    tag = "tag"
 
 
 # Properties shared across all DTOs

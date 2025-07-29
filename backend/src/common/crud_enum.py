@@ -17,15 +17,15 @@ from core.memo.object_handle_crud import crud_object_handle
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.project.project_crud import crud_project
-from core.tag.document_tag_crud import crud_document_tag
+from core.tag.tag_crud import crud_tag
 from core.user.user_crud import crud_user
 from modules.concept_over_time_analysis.cota_crud import (
     crud_cota,
 )
-from modules.ml.doc_tag_recommendation.document_tag_recommendation_crud import (
-    crud_document_tag_recommendation_link,
-)
 from modules.ml.source_document_job_status_crud import crud_sdoc_job_status
+from modules.ml.tag_recommendation.tag_recommendation_crud import (
+    crud_tag_recommendation_link,
+)
 from modules.perspectives.aspect_crud import crud_aspect
 from modules.perspectives.cluster_crud import crud_cluster
 from modules.perspectives.document_aspect_crud import crud_document_aspect
@@ -46,8 +46,8 @@ class Crud(Enum):
     CODE = crud_code
     COTA_ANALYSIS = crud_cota
     DOCUMENT_ASPECT = crud_document_aspect
-    DOCUMENT_TAG = crud_document_tag
-    DOCUMENT_TAG_RECOMMENDATION = crud_document_tag_recommendation_link
+    TAG = crud_tag
+    TAG_RECOMMENDATION = crud_tag_recommendation_link
     FOLDER = crud_folder
     MEMO = crud_memo
     OBJECT_HANDLE = crud_object_handle
@@ -74,7 +74,7 @@ class Crud(Enum):
 class MemoCrud(Enum):
     PROJECT = crud_project
     SOURCE_DOCUMENT = crud_sdoc
-    DOCUMENT_TAG = crud_document_tag
+    TAG = crud_tag
     CODE = crud_code
     SPAN_ANNOTATION = crud_span_anno
     BBOX_ANNOTATION = crud_bbox_anno

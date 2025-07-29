@@ -128,7 +128,7 @@ class IDListOperator(Enum):
         # value should be str | list[str]
         if isinstance(column, tuple):
             if isinstance(value, (str, int)) and (len(column) == 2):
-                # Column is tuple of ORMs, e.g. (SourceDocumentORM.document_tags, DocumentTagORM.id)
+                # Column is tuple of ORMs, e.g. (SourceDocumentORM.tags, TagORM.id)
                 match self:
                     case IDListOperator.CONTAINS:
                         return column[0].any(column[1] == int(value))

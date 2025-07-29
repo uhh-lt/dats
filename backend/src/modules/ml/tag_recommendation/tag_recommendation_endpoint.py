@@ -1,23 +1,23 @@
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
-from core.tag.document_tag_crud import crud_document_tag
+from core.tag.tag_crud import crud_tag
 from fastapi import APIRouter, Depends
-from modules.ml.doc_tag_recommendation.doc_tag_recommendation_service import (
-    DocumentClassificationService,
-)
-from modules.ml.doc_tag_recommendation.document_tag_recommendation_crud import (
-    crud_document_tag_recommendation_link,
-)
-from modules.ml.doc_tag_recommendation.document_tag_recommendation_dto import (
-    DocumentTagRecommendationLinkRead,
-    DocumentTagRecommendationLinkUpdate,
-    DocumentTagRecommendationResult,
-)
-from modules.ml.doc_tag_recommendation.document_tag_recommendation_orm import (
-    DocumentTagRecommendationLinkORM,
-)
 from modules.ml.ml_job_dto import MLJobRead, MLJobType
 from modules.ml.ml_service import MLService
+from modules.ml.tag_recommendation.tag_recommendation_crud import (
+    crud_tag_recommendation_link,
+)
+from modules.ml.tag_recommendation.tag_recommendation_dto import (
+    TagRecommendationLinkRead,
+    TagRecommendationLinkUpdate,
+    TagRecommendationResult,
+)
+from modules.ml.tag_recommendation.tag_recommendation_orm import (
+    TagRecommendationLinkORM,
+)
+from modules.ml.tag_recommendation.tag_recommendation_service import (
+    DocumentClassificationService,
+)
 from sqlalchemy.orm import Session
 from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
@@ -25,18 +25,18 @@ dcs: DocumentClassificationService = DocumentClassificationService()
 mls: MLService = MLService()
 
 router = APIRouter(
-    prefix="/doctagrecommendation",
+    prefix="/tagrecommendation",
     dependencies=[Depends(get_current_user)],
-    tags=["documentTagRecommendation"],
+    tags=["TagRecommendation"],
 )
 
 
 @router.get(
     "/{project_id}",
     response_model=list[MLJobRead],
-    summary="Retrieve all finished document tag recommendation MLJobs.",
+    summary="Retrieve all finished tag recommendation MLJobs.",
 )
-def get_all_doctagrecommendation_jobs(
+def get_all_tagrecommendation_jobs(
     *,
     db: Session = Depends(get_db_session),
     project_id: int,
@@ -49,7 +49,7 @@ def get_all_doctagrecommendation_jobs(
         ml_job
         for ml_job in ml_jobs
         if ml_job.status == BackgroundJobStatus.FINISHED
-        and ml_job.parameters.ml_job_type == MLJobType.DOC_TAG_RECOMMENDATION
+        and ml_job.parameters.ml_job_type == MLJobType.TAG_RECOMMENDATION
     ]
     ml_jobs.sort(key=lambda x: x.created, reverse=True)
     return ml_jobs
@@ -57,35 +57,33 @@ def get_all_doctagrecommendation_jobs(
 
 @router.get(
     "/job/{ml_job_id}",
-    response_model=list[DocumentTagRecommendationResult],
+    response_model=list[TagRecommendationResult],
     summary="Retrieve all (non-reviewed) document tag recommendations for the given ml job ID.",
 )
-def get_all_doctagrecommendations_from_job(
+def get_all_tagrecommendations_from_job(
     *,
     db: Session = Depends(get_db_session),
     ml_job_id: str,
     authz_user: AuthzUser = Depends(),
-) -> list[DocumentTagRecommendationResult]:
-    recommendations = crud_document_tag_recommendation_link.read_by_ml_job_id(
+) -> list[TagRecommendationResult]:
+    recommendations = crud_tag_recommendation_link.read_by_ml_job_id(
         db=db, ml_job_id=ml_job_id, exclude_reviewed=True
     )
     if len(recommendations) == 0:
         return []
     authz_user.assert_in_project(recommendations[0].source_document.project_id)
 
-    sdoc2recommendations: dict[int, list[DocumentTagRecommendationLinkORM]] = {}
+    sdoc2recommendations: dict[int, list[TagRecommendationLinkORM]] = {}
     for recommendation in recommendations:
         sdoc2recommendations.setdefault(recommendation.source_document_id, []).append(
             recommendation
         )
 
     affected_sdoc_ids = list(sdoc2recommendations.keys())
-    sdoc2tags = crud_document_tag.read_tags_for_documents(
-        db=db, sdoc_ids=affected_sdoc_ids
-    )
+    sdoc2tags = crud_tag.read_tags_for_documents(db=db, sdoc_ids=affected_sdoc_ids)
 
     results = [
-        DocumentTagRecommendationResult(
+        TagRecommendationResult(
             sdoc_id=sdoc_id,
             recommendation_ids=[
                 recommendation.id for recommendation in recommendations
@@ -105,7 +103,7 @@ def get_all_doctagrecommendations_from_job(
 
 @router.patch(
     "/review_recommendations",
-    response_model=list[DocumentTagRecommendationLinkRead],
+    response_model=list[TagRecommendationLinkRead],
     summary="The endpoint receives IDs of wrongly and correctly tagged document recommendations and sets `is_accepted` to `true` or `false`, while setting the corresponding document tags if `true`.",
 )
 def update_recommendations(
@@ -113,13 +111,13 @@ def update_recommendations(
     db: Session = Depends(get_db_session),
     reviewd_recommendation_ids: list[int],
     authz_user: AuthzUser = Depends(),
-) -> list[DocumentTagRecommendationLinkRead]:
-    modifications = crud_document_tag_recommendation_link.update_multi(
+) -> list[TagRecommendationLinkRead]:
+    modifications = crud_tag_recommendation_link.update_multi(
         db=db,
         ids=reviewd_recommendation_ids,
         update_dtos=[
-            DocumentTagRecommendationLinkUpdate(is_reviewed=True)
+            TagRecommendationLinkUpdate(is_reviewed=True)
             for _ in reviewd_recommendation_ids
         ],
     )
-    return [DocumentTagRecommendationLinkRead.model_validate(m) for m in modifications]
+    return [TagRecommendationLinkRead.model_validate(m) for m in modifications]

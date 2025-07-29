@@ -5,7 +5,7 @@ from core.code.code_orm import CodeORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_orm import ObjectHandleORM
-from core.tag.document_tag_orm import DocumentTagORM
+from core.tag.tag_orm import TagORM
 from core.user.user_orm import UserORM
 from repos.db.sql_utils import aggregate_ids
 from sqlalchemy.orm import Session
@@ -20,14 +20,14 @@ class SpanColumns(str, AbstractColumns):
     USER_ID = "SP_USER_ID"
     MEMO_CONTENT = "SP_MEMO_CONTENT"
     SOURCE_DOCUMENT_FILENAME = "SP_SOURCE_SOURCE_DOCUMENT_FILENAME"
-    DOCUMENT_TAG_ID_LIST = "SP_DOCUMENT_DOCUMENT_TAG_ID_LIST"
+    TAG_ID_LIST = "SP_DOCUMENT_TAG_ID_LIST"
 
     def get_filter_column(self, subquery_dict):
         match self:
             case SpanColumns.SOURCE_DOCUMENT_FILENAME:
                 return SourceDocumentORM.filename
-            case SpanColumns.DOCUMENT_TAG_ID_LIST:
-                return subquery_dict[SpanColumns.DOCUMENT_TAG_ID_LIST.value]
+            case SpanColumns.TAG_ID_LIST:
+                return subquery_dict[SpanColumns.TAG_ID_LIST.value]
             case SpanColumns.CODE_ID:
                 return SpanAnnotationORM.code_id
             case SpanColumns.SPAN_TEXT:
@@ -41,7 +41,7 @@ class SpanColumns(str, AbstractColumns):
         match self:
             case SpanColumns.SOURCE_DOCUMENT_FILENAME:
                 return FilterOperator.STRING
-            case SpanColumns.DOCUMENT_TAG_ID_LIST:
+            case SpanColumns.TAG_ID_LIST:
                 return FilterOperator.ID_LIST
             case SpanColumns.CODE_ID:
                 return FilterOperator.ID
@@ -56,7 +56,7 @@ class SpanColumns(str, AbstractColumns):
         match self:
             case SpanColumns.SOURCE_DOCUMENT_FILENAME:
                 return FilterValueType.INFER_FROM_OPERATOR
-            case SpanColumns.DOCUMENT_TAG_ID_LIST:
+            case SpanColumns.TAG_ID_LIST:
                 return FilterValueType.TAG_ID
             case SpanColumns.CODE_ID:
                 return FilterValueType.CODE_ID
@@ -71,7 +71,7 @@ class SpanColumns(str, AbstractColumns):
         match self:
             case SpanColumns.SOURCE_DOCUMENT_FILENAME:
                 return SourceDocumentORM.filename
-            case SpanColumns.DOCUMENT_TAG_ID_LIST:
+            case SpanColumns.TAG_ID_LIST:
                 return None
             case SpanColumns.CODE_ID:
                 return CodeORM.name
@@ -86,7 +86,7 @@ class SpanColumns(str, AbstractColumns):
         match self:
             case SpanColumns.SOURCE_DOCUMENT_FILENAME:
                 return "Document name"
-            case SpanColumns.DOCUMENT_TAG_ID_LIST:
+            case SpanColumns.TAG_ID_LIST:
                 return "Tags"
             case SpanColumns.CODE_ID:
                 return "Code"
@@ -99,11 +99,11 @@ class SpanColumns(str, AbstractColumns):
 
     def add_subquery_filter_statements(self, query_builder: SearchBuilder):
         match self:
-            case SpanColumns.DOCUMENT_TAG_ID_LIST:
+            case SpanColumns.TAG_ID_LIST:
                 query_builder._add_subquery_column(
                     aggregate_ids(
-                        DocumentTagORM.id,
-                        label=SpanColumns.DOCUMENT_TAG_ID_LIST.value,
+                        TagORM.id,
+                        label=SpanColumns.TAG_ID_LIST.value,
                     )
                 )
                 query_builder._join_subquery(
@@ -115,9 +115,7 @@ class SpanColumns(str, AbstractColumns):
                     SourceDocumentORM,
                     SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
                 )
-                query_builder._join_subquery(
-                    SourceDocumentORM.document_tags, isouter=True
-                )
+                query_builder._join_subquery(SourceDocumentORM.tags, isouter=True)
 
     def add_query_filter_statements(self, query_builder: SearchBuilder):
         match self:
@@ -153,11 +151,11 @@ class SpanColumns(str, AbstractColumns):
 
     def resolve_ids(self, db: Session, ids: list[int]) -> list[str]:
         match self:
-            case SpanColumns.DOCUMENT_TAG_ID_LIST:
+            case SpanColumns.TAG_ID_LIST:
                 result = (
-                    db.query(DocumentTagORM)
+                    db.query(TagORM)
                     .filter(
-                        DocumentTagORM.id.in_(ids),
+                        TagORM.id.in_(ids),
                     )
                     .all()
                 )
@@ -187,12 +185,12 @@ class SpanColumns(str, AbstractColumns):
         self, db: Session, project_id: int, names: list[str]
     ) -> list[int]:
         match self:
-            case SpanColumns.DOCUMENT_TAG_ID_LIST:
+            case SpanColumns.TAG_ID_LIST:
                 result = (
-                    db.query(DocumentTagORM)
+                    db.query(TagORM)
                     .filter(
-                        DocumentTagORM.project_id == project_id,
-                        DocumentTagORM.name.in_(names),
+                        TagORM.project_id == project_id,
+                        TagORM.name.in_(names),
                     )
                     .all()
                 )

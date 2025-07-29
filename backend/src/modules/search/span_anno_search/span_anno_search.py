@@ -92,7 +92,7 @@ def find_span_annotations(
                     user_id=row[2],
                     code=CodeRead.model_validate(row[3]),
                     sdoc=SourceDocumentRead.model_validate(sdoc_orm),
-                    tag_ids=[tag.id for tag in sdoc_orm.document_tags],
+                    tag_ids=[tag.id for tag in sdoc_orm.tags],
                     memo=None,
                 )
             )

@@ -1,6 +1,6 @@
 import pandas as pd
 from core.doc.source_document_orm import SourceDocumentORM
-from core.tag.document_tag_orm import DocumentTagORM
+from core.tag.tag_orm import TagORM
 from modules.analysis.analysis_dto import SampledSdocsResults
 from repos.db.sql_repo import SQLRepo
 from repos.db.sql_utils import aggregate_ids
@@ -15,9 +15,9 @@ def document_sampler_by_tags(
 
     with SQLRepo().db_session() as db:
         query = (
-            db.query(SourceDocumentORM.id, aggregate_ids(DocumentTagORM.id, "tags"))
-            .join(SourceDocumentORM.document_tags)
-            .where(DocumentTagORM.id.in_(all_tag_ids))
+            db.query(SourceDocumentORM.id, aggregate_ids(TagORM.id, "tags"))
+            .join(SourceDocumentORM.tags)
+            .where(TagORM.id.in_(all_tag_ids))
             .group_by(SourceDocumentORM.id)
             # this having clause ensures that the document has one tag from each group
             .having(
@@ -25,7 +25,7 @@ def document_sampler_by_tags(
                     *[
                         func.sum(
                             case(
-                                (DocumentTagORM.id.in_(group_ids), 1),
+                                (TagORM.id.in_(group_ids), 1),
                                 else_=0,
                             )
                         )

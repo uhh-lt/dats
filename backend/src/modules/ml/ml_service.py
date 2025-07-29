@@ -2,9 +2,6 @@ from datetime import datetime
 
 from common.singleton_meta import SingletonMeta
 from modules.ml.coref_service import CorefService
-from modules.ml.doc_tag_recommendation.doc_tag_recommendation_service import (
-    DocumentClassificationService,
-)
 from modules.ml.embedding_service import EmbeddingService
 from modules.ml.ml_job_dto import (
     CoreferenceResolutionParams,
@@ -22,6 +19,9 @@ from modules.ml.quote_service import QuoteService
 from modules.ml.source_document_job_status_orm import (
     JobStatus,
     SourceDocumentJobStatusORM,
+)
+from modules.ml.tag_recommendation.tag_recommendation_service import (
+    DocumentClassificationService,
 )
 from repos.redis_repo import RedisRepo
 from sqlalchemy import and_, or_
@@ -85,7 +85,7 @@ class MLService(metaclass=SingletonMeta):
                     QuoteService().perform_quotation_detection(
                         mlj.parameters.project_id, filter_criterion, recompute
                     )
-                case MLJobType.DOC_TAG_RECOMMENDATION:
+                case MLJobType.TAG_RECOMMENDATION:
                     assert isinstance(
                         mlj.parameters.specific_ml_job_parameters,
                         DocTagRecommendationParams,

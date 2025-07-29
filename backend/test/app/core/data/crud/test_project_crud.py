@@ -10,7 +10,7 @@ from core.memo.memo_dto import AttachedObjectType, MemoCreateIntern, MemoInDB, M
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectCreate, ProjectRead, ProjectUpdate
 from core.project.project_orm import ProjectORM
-from core.tag.document_tag_dto import DocumentTagRead
+from core.tag.tag_dto import TagRead
 from core.user.user_crud import SYSTEM_USER_ID, crud_user
 from core.user.user_dto import UserCreate, UserRead
 from core.user.user_orm import UserORM
@@ -164,7 +164,7 @@ def test_project_users(db: Session, project: ProjectORM, user: UserORM) -> None:
 
 def test_get_project_tags(db: Session, project: ProjectORM) -> None:
     proj_db_obj = crud_project.read(db=db, id=project.id)
-    s = [DocumentTagRead.model_validate(tag) for tag in proj_db_obj.document_tags]
+    s = [TagRead.model_validate(tag) for tag in proj_db_obj.tags]
 
     assert len(s) == 0
 

@@ -17,7 +17,7 @@ from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_dto import ObjectHandleCreate
 from core.memo.object_handle_orm import ObjectHandleORM
 from core.project.project_orm import ProjectORM
-from core.tag.document_tag_orm import DocumentTagORM
+from core.tag.tag_orm import TagORM
 from fastapi.encoders import jsonable_encoder
 from repos.db.crud_base import CRUDBase
 from repos.elastic.elastic_repo import ElasticSearchRepo
@@ -80,8 +80,8 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
                 )
             case AttachedObjectType.project:
                 oh_create_dto = ObjectHandleCreate(project_id=attached_object_id)
-            case AttachedObjectType.document_tag:
-                oh_create_dto = ObjectHandleCreate(document_tag_id=attached_object_id)
+            case AttachedObjectType.tag:
+                oh_create_dto = ObjectHandleCreate(tag_id=attached_object_id)
         assert oh_create_dto is not None, (
             f"Unknown AttachedObjectType: {attached_object_type}"
         )
@@ -276,11 +276,11 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
                 attached_object_id=attached_to.id,
                 attached_object_type=AttachedObjectType.project,
             )
-        elif isinstance(attached_to, DocumentTagORM):
+        elif isinstance(attached_to, TagORM):
             return MemoRead(
                 **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
                 attached_object_id=attached_to.id,
-                attached_object_type=AttachedObjectType.document_tag,
+                attached_object_type=AttachedObjectType.tag,
             )
         else:
             raise NotImplementedError(
