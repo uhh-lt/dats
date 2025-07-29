@@ -172,6 +172,40 @@ export class DocumentTagService {
     });
   }
   /**
+   * Returns all DocumentTags of the Project with the given ID
+   * @returns DocumentTagRead Successful Response
+   * @throws ApiError
+   */
+  public static getByProject({ projId }: { projId: number }): CancelablePromise<Array<DocumentTagRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/doctag/project/{proj_id}",
+      path: {
+        proj_id: projId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns all DocumentTagIDs linked with the SourceDocument.
+   * @returns number Successful Response
+   * @throws ApiError
+   */
+  public static getBySdoc({ sdocId }: { sdocId: number }): CancelablePromise<Array<number>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/doctag/sdoc/{sdoc_id}",
+      path: {
+        sdoc_id: sdocId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Returns all SourceDocument IDs attached to the Tag with the given ID if it exists.
    * @returns number Successful Response
    * @throws ApiError

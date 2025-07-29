@@ -6,6 +6,7 @@ import type { SpanAnnotationRead } from "../models/SpanAnnotationRead";
 import type { SpanGroupCreate } from "../models/SpanGroupCreate";
 import type { SpanGroupRead } from "../models/SpanGroupRead";
 import type { SpanGroupUpdate } from "../models/SpanGroupUpdate";
+import type { SpanGroupWithAnnotationsRead } from "../models/SpanGroupWithAnnotationsRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -100,6 +101,67 @@ export class SpanGroupService {
       url: "/spangroup/{span_group_id}/span_annotations",
       path: {
         span_group_id: spanGroupId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns all SpanGroups of the logged-in User if it exists
+   * @returns SpanGroupRead Successful Response
+   * @throws ApiError
+   */
+  public static getBySdoc({
+    sdocId,
+    skip,
+    limit,
+  }: {
+    sdocId: number;
+    /**
+     * The number of elements to skip (offset)
+     */
+    skip?: number | null;
+    /**
+     * The maximum number of returned elements
+     */
+    limit?: number | null;
+  }): CancelablePromise<Array<SpanGroupRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/spangroup/sdoc/{sdoc_id}",
+      path: {
+        sdoc_id: sdocId,
+      },
+      query: {
+        skip: skip,
+        limit: limit,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns all SpanGroupWithAnnotations of the User in the sDoc
+   * @returns SpanGroupWithAnnotationsRead Successful Response
+   * @throws ApiError
+   */
+  public static getBySdocAndUser({
+    userId,
+    sdocId,
+  }: {
+    userId: number;
+    sdocId: number;
+  }): CancelablePromise<Array<SpanGroupWithAnnotationsRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/spangroup/sdoc/{sdoc}/user/{user_id}",
+      path: {
+        user_id: userId,
+      },
+      query: {
+        sdoc_id: sdocId,
       },
       errors: {
         422: `Validation Error`,

@@ -3,17 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Body_project_upload_project_sdoc } from "../models/Body_project_upload_project_sdoc";
-import type { CodeRead } from "../models/CodeRead";
-import type { DocumentTagRead } from "../models/DocumentTagRead";
-import type { FolderTreeRead } from "../models/FolderTreeRead";
-import type { MemoRead } from "../models/MemoRead";
 import type { PreprocessingJobRead } from "../models/PreprocessingJobRead";
-import type { ProjectAddUser } from "../models/ProjectAddUser";
 import type { ProjectCreate } from "../models/ProjectCreate";
-import type { ProjectMetadataRead } from "../models/ProjectMetadataRead";
 import type { ProjectRead } from "../models/ProjectRead";
 import type { ProjectUpdate } from "../models/ProjectUpdate";
-import type { UserRead } from "../models/UserRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -119,152 +112,6 @@ export class ProjectService {
     });
   }
   /**
-   * Associates an existing User to the Project with the given ID if it exists
-   * @returns UserRead Successful Response
-   * @throws ApiError
-   */
-  public static associateUserToProject({
-    projId,
-    requestBody,
-  }: {
-    projId: number;
-    requestBody: ProjectAddUser;
-  }): CancelablePromise<UserRead> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/project/{proj_id}/user",
-      path: {
-        proj_id: projId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns all Users of the Project with the given ID
-   * @returns UserRead Successful Response
-   * @throws ApiError
-   */
-  public static getProjectUsers({ projId }: { projId: number }): CancelablePromise<Array<UserRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/project/{proj_id}/user",
-      path: {
-        proj_id: projId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Dissociates the Users with the Project with the given ID if it exists
-   * @returns UserRead Successful Response
-   * @throws ApiError
-   */
-  public static dissociateUserFromProject({
-    projId,
-    userId,
-  }: {
-    projId: number;
-    userId: number;
-  }): CancelablePromise<UserRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/project/{proj_id}/user/{user_id}",
-      path: {
-        proj_id: projId,
-        user_id: userId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns all Codes of the Project with the given ID
-   * @returns CodeRead Successful Response
-   * @throws ApiError
-   */
-  public static getProjectCodes({ projId }: { projId: number }): CancelablePromise<Array<CodeRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/project/{proj_id}/code",
-      path: {
-        proj_id: projId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns all DocumentTags of the Project with the given ID
-   * @returns DocumentTagRead Successful Response
-   * @throws ApiError
-   */
-  public static getProjectTags({ projId }: { projId: number }): CancelablePromise<Array<DocumentTagRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/project/{proj_id}/tag",
-      path: {
-        proj_id: projId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns all Memos of the Project from the logged-in User
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static getUserMemosOfProject({
-    projId,
-    onlyStarred,
-  }: {
-    projId: number;
-    /**
-     * If true only starred Memos are returned
-     */
-    onlyStarred?: boolean | null;
-  }): CancelablePromise<Array<MemoRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/project/{proj_id}/user/memo",
-      path: {
-        proj_id: projId,
-      },
-      query: {
-        only_starred: onlyStarred,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Gets or creates the Memo attached to the Project with the given ID of the logged-in User.
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static getOrCreateUserMemo({ projId }: { projId: number }): CancelablePromise<MemoRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/project/{proj_id}/memo/user",
-      path: {
-        proj_id: projId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Returns the Id of the SourceDocument identified by project_id and filename if it exists
    * @returns number Successful Response
    * @throws ApiError
@@ -294,37 +141,14 @@ export class ProjectService {
     });
   }
   /**
-   * Returns all ProjectMetadata of the Project with the given ID if it exists
-   * @returns ProjectMetadataRead Successful Response
+   * Returns all Projects of the logged-in User
+   * @returns ProjectRead Successful Response
    * @throws ApiError
    */
-  public static getAllMetadata({ projId }: { projId: number }): CancelablePromise<Array<ProjectMetadataRead>> {
+  public static getUserProjects(): CancelablePromise<Array<ProjectRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/project/{proj_id}/metadata",
-      path: {
-        proj_id: projId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the folder tree of the project with the given ID
-   * @returns FolderTreeRead Successful Response
-   * @throws ApiError
-   */
-  public static getFolderTree({ projectId }: { projectId: number }): CancelablePromise<Array<FolderTreeRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/project/tree/{project_id}",
-      path: {
-        project_id: projectId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
+      url: "/project/user",
     });
   }
 }

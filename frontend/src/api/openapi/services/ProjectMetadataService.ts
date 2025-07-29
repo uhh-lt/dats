@@ -88,4 +88,21 @@ export class ProjectMetadataService {
       },
     });
   }
+  /**
+   * Returns all ProjectMetadata of the Project with the given ID if it exists
+   * @returns ProjectMetadataRead Successful Response
+   * @throws ApiError
+   */
+  public static getByProject({ projId }: { projId: number }): CancelablePromise<Array<ProjectMetadataRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projmeta/project/{proj_id}",
+      path: {
+        proj_id: projId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }

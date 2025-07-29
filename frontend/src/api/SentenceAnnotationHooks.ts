@@ -7,7 +7,6 @@ import { SentenceAnnotationRead } from "./openapi/models/SentenceAnnotationRead.
 import { SentenceAnnotationUpdate } from "./openapi/models/SentenceAnnotationUpdate.ts";
 import { SentenceAnnotatorResult } from "./openapi/models/SentenceAnnotatorResult.ts";
 import { SentenceAnnotationService } from "./openapi/services/SentenceAnnotationService.ts";
-import { SourceDocumentService } from "./openapi/services/SourceDocumentService.ts";
 
 export const FAKE_SENTENCE_ANNOTATION_ID = -1;
 
@@ -17,7 +16,7 @@ const useGetSentenceAnnotator = (sdocId: number | null | undefined, userId: numb
   return useQuery<SentenceAnnotatorResult, Error>({
     queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR, sdocId, userId],
     queryFn: () =>
-      SourceDocumentService.getSentenceAnnotator({
+      SentenceAnnotationService.getBySdocAndUser({
         sdocId: sdocId!,
         userId: userId!,
       }),

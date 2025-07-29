@@ -6,6 +6,7 @@ import type { SentenceAnnotationCreate } from "../models/SentenceAnnotationCreat
 import type { SentenceAnnotationRead } from "../models/SentenceAnnotationRead";
 import type { SentenceAnnotationUpdate } from "../models/SentenceAnnotationUpdate";
 import type { SentenceAnnotationUpdateBulk } from "../models/SentenceAnnotationUpdateBulk";
+import type { SentenceAnnotatorResult } from "../models/SentenceAnnotatorResult";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -103,6 +104,30 @@ export class SentenceAnnotationService {
       url: "/sentence/{sentence_anno_id}",
       path: {
         sentence_anno_id: sentenceAnnoId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns all SentenceAnnotations of the User for the SourceDocument
+   * @returns SentenceAnnotatorResult Successful Response
+   * @throws ApiError
+   */
+  public static getBySdocAndUser({
+    sdocId,
+    userId,
+  }: {
+    sdocId: number;
+    userId: number;
+  }): CancelablePromise<SentenceAnnotatorResult> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/sentence/sdoc/{sdoc_id}/user/{user_id}",
+      path: {
+        sdoc_id: sdocId,
+        user_id: userId,
       },
       errors: {
         422: `Validation Error`,

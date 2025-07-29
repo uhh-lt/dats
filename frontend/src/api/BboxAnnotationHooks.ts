@@ -7,7 +7,6 @@ import { BBoxAnnotationCreate } from "./openapi/models/BBoxAnnotationCreate.ts";
 import { BBoxAnnotationRead } from "./openapi/models/BBoxAnnotationRead.ts";
 import { BBoxAnnotationUpdate } from "./openapi/models/BBoxAnnotationUpdate.ts";
 import { BboxAnnotationService } from "./openapi/services/BboxAnnotationService.ts";
-import { SourceDocumentService } from "./openapi/services/SourceDocumentService.ts";
 
 export const FAKE_BBOX_ID = -1;
 
@@ -37,7 +36,7 @@ const useGetBBoxAnnotationsBatch = (sdocId: number | null | undefined, userId: n
   return useQuery<BBoxAnnotationRead[], Error>({
     queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS, sdocId, userId],
     queryFn: () =>
-      SourceDocumentService.getAllBboxAnnotationsBulk({
+      BboxAnnotationService.getBySdocAndUser({
         sdocId: sdocId!,
         userId: userId!,
       }) as Promise<BBoxAnnotationRead[]>,

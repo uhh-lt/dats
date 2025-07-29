@@ -7,7 +7,6 @@ import { ProjectCreate } from "./openapi/models/ProjectCreate.ts";
 import { ProjectRead } from "./openapi/models/ProjectRead.ts";
 import { AnalysisService } from "./openapi/services/AnalysisService.ts";
 import { ProjectService } from "./openapi/services/ProjectService.ts";
-import { UserService } from "./openapi/services/UserService.ts";
 
 // PROJECT QUERIES
 interface UseProjectsQueryParams<T> {
@@ -18,7 +17,7 @@ interface UseProjectsQueryParams<T> {
 const useProjectsQuery = <T = ProjectRead[]>({ select, enabled }: UseProjectsQueryParams<T>) =>
   useQuery({
     queryKey: [QueryKey.USER_PROJECTS],
-    queryFn: () => UserService.getUserProjects(),
+    queryFn: () => ProjectService.getUserProjects(),
     staleTime: 1000 * 60 * 5,
     select,
     enabled,

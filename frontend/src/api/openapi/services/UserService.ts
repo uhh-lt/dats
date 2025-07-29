@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ProjectRead } from "../models/ProjectRead";
+import type { ProjectAddUser } from "../models/ProjectAddUser";
 import type { PublicUserRead } from "../models/PublicUserRead";
 import type { UserRead } from "../models/UserRead";
 import type { UserUpdate } from "../models/UserUpdate";
@@ -33,6 +33,48 @@ export class UserService {
       path: {
         user_id: userId,
       },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns all Users of the Project with the given ID
+   * @returns UserRead Successful Response
+   * @throws ApiError
+   */
+  public static getByProject({ projId }: { projId: number }): CancelablePromise<Array<UserRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/user/{proj_id}/user",
+      path: {
+        proj_id: projId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Associates an existing User to the Project with the given ID if it exists
+   * @returns UserRead Successful Response
+   * @throws ApiError
+   */
+  public static associateUserToProject({
+    projId,
+    requestBody,
+  }: {
+    projId: number;
+    requestBody: ProjectAddUser;
+  }): CancelablePromise<UserRead> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/user/{proj_id}/user",
+      path: {
+        proj_id: projId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },
@@ -96,14 +138,27 @@ export class UserService {
     });
   }
   /**
-   * Returns all Projects of the logged-in User
-   * @returns ProjectRead Successful Response
+   * Dissociates the Users with the Project with the given ID if it exists
+   * @returns UserRead Successful Response
    * @throws ApiError
    */
-  public static getUserProjects(): CancelablePromise<Array<ProjectRead>> {
+  public static dissociateUserFromProject({
+    projId,
+    userId,
+  }: {
+    projId: number;
+    userId: number;
+  }): CancelablePromise<UserRead> {
     return __request(OpenAPI, {
-      method: "GET",
-      url: "/user/project",
+      method: "DELETE",
+      url: "/user/{proj_id}/user/{user_id}",
+      path: {
+        proj_id: projId,
+        user_id: userId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
     });
   }
 }
